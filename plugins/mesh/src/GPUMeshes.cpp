@@ -68,7 +68,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                 primitive_type = GL_TRIANGLE_FAN;
                 break;
             default:
-                vislib::sys::Log::DefaultLog.WriteError("There was no matching primitive type found!");
+                core::utility::log::Log::DefaultLog.WriteError("There was no matching primitive type found!");
                 return false;
             }
 

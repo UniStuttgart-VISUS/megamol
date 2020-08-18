@@ -13,10 +13,6 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmvtkm/mmvtkmDataCall.h"
-#include "vislib/String.h"
-#include "vislib/sys/FastFile.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/SystemInformation.h"
 //#include "vtkm/io/reader/VTKPolyDataReader.h"
 #include "vtkm/cont/DataSetBuilderExplicit.h"
 #include "vtkm/cont/DataSetFieldAdd.h"
@@ -104,16 +100,16 @@ void mmvtkmDataSource::release(void) {
 bool mmvtkmDataSource::filenameChanged(core::param::ParamSlot& slot) {
     vtkmDataFile = this->filename.Param<core::param::FilePathParam>()->ValueString();
     if (vtkmDataFile.empty()) {
-        vislib::sys::Log::DefaultLog.WriteInfo("Empty vtkm file!");
+        core::utility::log::Log::DefaultLog.WriteInfo("Empty vtkm file!");
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo(
+    core::utility::log::Log::DefaultLog.WriteInfo(
         "If no \"Safety check\" is shown, something went wrong reading the data. Probably the necessary line "
         "is not commented out. See readme");
 
     vtkm::io::reader::VTKDataSetReader readData(vtkmDataFile);
     vtkmData = readData.ReadDataSet();
-    vislib::sys::Log::DefaultLog.WriteInfo("Safety check");
+    core::utility::log::Log::DefaultLog.WriteInfo("Safety check");
 
     return true;
 }
@@ -128,24 +124,24 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
 
     adios::CallADIOSData* nodesCad = this->nodesAdiosCallerSlot.CallAs<adios::CallADIOSData>();
     if (nodesCad == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("nodesCallADIOSData is nullptr");
+        core::utility::log::Log::DefaultLog.WriteError("nodesCallADIOSData is nullptr");
         return false;
     }
 
     adios::CallADIOSData* labelCad = this->labelAdiosCallerSlot.CallAs<adios::CallADIOSData>();
     if (labelCad == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("labelCallADIOSData is nullptr");
+        core::utility::log::Log::DefaultLog.WriteError("labelCallADIOSData is nullptr");
         return false;
     }
 
 	// getDataCallback
     if (!(*nodesCad)(0)) {
-        vislib::sys::Log::DefaultLog.WriteError("Error during nodes getData");
+        core::utility::log::Log::DefaultLog.WriteError("Error during nodes getData");
         return false;
     }
 
     if (!(*labelCad)(0)) {
-        vislib::sys::Log::DefaultLog.WriteError("Error during label getData");
+        core::utility::log::Log::DefaultLog.WriteError("Error during label getData");
         return false;
     }
 
@@ -258,7 +254,7 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
 		        auto it = std::find(node_labels.begin(), node_labels.end(), labels[j]);
 		        int node_index = std::distance(node_labels.begin(), it);
 		        if (node_index == node_labels.size()) {
-		            // vislib::sys::Log::DefaultLog.WriteInfo("(%i, %i) with %i", i, j, labels[j]);
+		            // core::utility::log::Log::DefaultLog.WriteInfo("(%i, %i) with %i", i, j, labels[j]);
 		            ++num_skipped;
 		            not_found = true;
 		            break;
@@ -277,7 +273,7 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
 		    }
 		}
 
-		vislib::sys::Log::DefaultLog.WriteInfo("Number of skipped tetrahedrons: %i", num_skipped);
+		core::utility::log::Log::DefaultLog.WriteInfo("Number of skipped tetrahedrons: %i", num_skipped);
 
 		vtkmData = dataSetBuilder.Create(points, cell_shapes, num_indices, cell_indices);
 		dataSetFieldAdd.AddPointField(vtkmData, "hs1", point_hs1);
@@ -287,7 +283,7 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
 
 		vtkm::io::writer::VTKDataSetWriter writer("tetrahedron.vtk");
 		writer.WriteDataSet(vtkmData);
-		vislib::sys::Log::DefaultLog.WriteInfo("vtkmData is successfully stored in tetrahedron.vtk.");
+		core::utility::log::Log::DefaultLog.WriteInfo("vtkmData is successfully stored in tetrahedron.vtk.");
 
 		// get min max bounds from dataset
         minMaxBounds = vtkmData.GetCoordinateSystem(0).GetBounds();
@@ -313,13 +309,13 @@ bool mmvtkmDataSource::getMetaDataCallback(core::Call& caller) {
 
 	adios::CallADIOSData* nodesCad = this->nodesAdiosCallerSlot.CallAs<adios::CallADIOSData>();
     if (nodesCad == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("nodesCallADIOSData is nullptr");
+        core::utility::log::Log::DefaultLog.WriteError("nodesCallADIOSData is nullptr");
         return false;
     }
 
     adios::CallADIOSData* labelCad = this->labelAdiosCallerSlot.CallAs<adios::CallADIOSData>();
     if (labelCad == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("labelCallADIOSData is nullptr");
+        core::utility::log::Log::DefaultLog.WriteError("labelCallADIOSData is nullptr");
         return false;
     }
 

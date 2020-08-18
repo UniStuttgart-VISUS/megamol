@@ -810,13 +810,8 @@ function(require_external NAME)
 
     add_external_library(vtkm_worklet
       PROJECT vtkm
-<<<<<<< HEAD:CMakeExternals.cmake
       LIBRARY ${VTKM_WORKLET_LIB})
 
-=======
-      LIBRARY_RELEASE "${VTKM_LIB_WORKLET}"
-      LIBRARY_DEBUG "${VTKM_LIB_DEBUG_WORKLET}")
->>>>>>> upstream/master:externals/CMakeExternals.cmake
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
   endif()

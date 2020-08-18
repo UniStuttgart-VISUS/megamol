@@ -91,21 +91,25 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     this->seedPlaneMode_.Param<core::param::EnumParam>()->SetTypePair(1, "parameter");
     this->seedPlaneMode_.SetUpdateCallback(&mmvtkmStreamLines::planeModeChanged);
     this->MakeSlotAvailable(&this->seedPlaneMode_);
+    this->seedPlaneMode_.Parameter()->setDirty();
 
     // TODO add seedPlaneColor_ Paramslot
 
     this->lowerLeftSeedPoint_.SetParameter(new core::param::Vector3fParam({-50.f, -50.f, 0}));
     this->lowerLeftSeedPoint_.SetUpdateCallback(&mmvtkmStreamLines::dataChanged);
     this->MakeSlotAvailable(&this->lowerLeftSeedPoint_);
+    //this->lowerLeftSeedPoint_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
 
     this->upperRightSeedPoint_.SetParameter(new core::param::Vector3fParam({50.f, 50.f, 100.f}));
     this->upperRightSeedPoint_.SetUpdateCallback(&mmvtkmStreamLines::dataChanged);
     this->MakeSlotAvailable(&this->upperRightSeedPoint_);
+    //this->upperRightSeedPoint_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
 
     this->seedPlaneNormal_.SetParameter(new core::param::Vector3fParam({1.f, 0.f, 0.f}));
     this->seedPlaneNormal_.SetUpdateCallback(&mmvtkmStreamLines::dataChanged);
-    //this->seedPlaneNormal_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::)
     this->MakeSlotAvailable(&this->seedPlaneNormal_);
+    this->seedPlaneNormal_.Parameter()->SetGUIPresentation(
+        core::param::AbstractParamPresentation::Presentation::Rotation3D_Direction);
 
     this->seedPlanePoint_.SetParameter(new core::param::Vector3fParam({0.f, 0.f, 0.f}));
     this->seedPlanePoint_.SetUpdateCallback(&mmvtkmStreamLines::dataChanged);
@@ -134,7 +138,7 @@ bool mmvtkmStreamLines::create() {
 
 
 bool mmvtkmStreamLines::dataChanged(core::param::ParamSlot& slot) {
-    vislib::sys::Log::DefaultLog.WriteInfo("changed");
+    core::utility::log::Log::DefaultLog.WriteInfo("changed");
     // this->new_version_++;
 
     return true;
@@ -180,7 +184,7 @@ bool mmvtkmStreamLines::setConfiguration(core::param::ParamSlot& slot) {
 
     this->new_version_++;
 
-    vislib::sys::Log::DefaultLog.WriteInfo("Configuration set");
+    core::utility::log::Log::DefaultLog.WriteInfo("Configuration set");
     return true;
 }
 
@@ -229,7 +233,7 @@ bool mmvtkmStreamLines::seedBoundCheck() {
     bool compareZ = lowerZ > upperZ;
 
     if (compareX || compareY || compareZ) {
-        vislib::sys::Log::DefaultLog.WriteError("lower bound is higher than upper bound");
+        core::utility::log::Log::DefaultLog.WriteError("lower bound is higher than upper bound");
         return false;
     }
 
@@ -393,7 +397,7 @@ std::vector<mmvtkmStreamLines::Triangle> mmvtkmStreamLines::decomposePolygon(con
 bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
     mmvtkm::mmvtkmDataCall* vtkm_dc = this->vtkCallerSlot_.CallAs<mmvtkm::mmvtkmDataCall>();
     if (vtkm_dc == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("vtkm_dc is nullptr. In %s at line %d", __FILE__, __LINE__);
+        core::utility::log::Log::DefaultLog.WriteError("vtkm_dc is nullptr. In %s at line %d", __FILE__, __LINE__);
         return false;
     }
 
@@ -418,7 +422,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
         mesh::CallMesh* mesh_dc = dynamic_cast<mesh::CallMesh*>(&caller);
         if (mesh_dc == nullptr) {
-            vislib::sys::Log::DefaultLog.WriteError("mesh_dc is nullptr. In %s at line %d", __FILE__, __LINE__);
+            core::utility::log::Log::DefaultLog.WriteError("mesh_dc is nullptr. In %s at line %d", __FILE__, __LINE__);
             return false;
         }
 
@@ -512,7 +516,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         vtkm_streamlines.SetNumberOfSteps(tmp_num_steps_);
         vtkm_streamlines.SetSeeds(seedArray);
 
-        vislib::sys::Log::DefaultLog.WriteInfo(
+        core::utility::log::Log::DefaultLog.WriteInfo(
             "NumSeeds: %i. StepSize: %f. NumSteps: %i.", numSeeds, tmp_step_size_, tmp_num_steps_);
 
 
@@ -676,7 +680,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         this->old_version_ = this->new_version_;
 
 
-        vislib::sys::Log::DefaultLog.WriteInfo("Streamlines done.");
+        core::utility::log::Log::DefaultLog.WriteInfo("Streamlines done.");
         return true;
     }
 
@@ -687,13 +691,13 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 bool mmvtkmStreamLines::getMetaDataCallback(core::Call& caller) {
     mmvtkm::mmvtkmDataCall* vtkm_dc = this->vtkCallerSlot_.CallAs<mmvtkm::mmvtkmDataCall>();
     if (vtkm_dc == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("vtkm_dc is nullptr. In %s at line %d", __FILE__, __LINE__);
+        core::utility::log::Log::DefaultLog.WriteError("vtkm_dc is nullptr. In %s at line %d", __FILE__, __LINE__);
         return false;
     }
 
     mesh::CallMesh* mesh_dc = dynamic_cast<mesh::CallMesh*>(&caller);
     if (mesh_dc == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("mesh_dc is nullptr. In %s at line %d", __FILE__, __LINE__);
+        core::utility::log::Log::DefaultLog.WriteError("mesh_dc is nullptr. In %s at line %d", __FILE__, __LINE__);
         return false;
     }
 
