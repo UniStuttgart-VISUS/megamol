@@ -338,5 +338,5 @@ bool mmvtkmDataSource::getMetaDataCallback(core::Call& caller) {
 		return true;
     }
 
-    return false;
+    return true;
 }

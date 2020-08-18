@@ -40,6 +40,8 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
 
     if (something_has_changed)
     {
+        rt_collection->clear();
+
         ++m_version;
 
         auto gpu_mtl_storage = mtlc->getData();

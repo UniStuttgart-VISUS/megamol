@@ -19,7 +19,7 @@ class MESH_API MeshDataAccessCollection {
 public:
     enum ValueType { BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT, INT, UNSIGNED_INT, HALF_FLOAT, FLOAT, DOUBLE };
     enum AttributeSemanticType { POSITION, NORMAL, COLOR, TEXCOORD, TANGENT};
-    enum PrimitiveType { TRIANGLES, QUADS, LINES };
+    enum PrimitiveType { TRIANGLES, QUADS, LINES, LINE_STRIP, TRIANGLE_FAN };
 
     static constexpr unsigned int convertToGLType(ValueType value_type) {
         unsigned int retval = 0;

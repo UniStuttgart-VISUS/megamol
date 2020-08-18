@@ -79,7 +79,7 @@ bool mmvtkmDataRenderer::GetData(core::view::CallRender3D_2& call) {
             // compute the bounds and extends of the input data
             vtkm::cont::ColorTable colorTable("inferno");
             vtkm::rendering::Actor actor(vtkmDataSet->GetCellSet(), vtkmDataSet->GetCoordinateSystem(),
-                vtkmDataSet->GetPointField("pointvar"),
+                vtkmDataSet->GetPointField(0),
                 colorTable); // depending on dataset change to getCellField with according FrameID
             scene = vtkm::rendering::Scene();
             scene.AddActor(actor); // makeScene(...)
@@ -103,7 +103,7 @@ bool mmvtkmDataRenderer::Render(core::view::CallRender3D_2& call) {
     glm::vec4 viewport = glm::vec4(0, 0, cam.resolution_gate().width(), cam.resolution_gate().height());
     if (viewport.z < 1.0f) viewport.z = 1.0f;
     if (viewport.w < 1.0f) viewport.w = 1.0f;
-    float shaderPointSize = vislib::math::Max(viewport.z, viewport.w);
+    // float shaderPointSize = vislib::math::Max(viewport.z, viewport.w); ?
     viewport = glm::vec4(0, 0, 2.f / viewport.z, 2.f / viewport.w);
 
     glm::vec4 camView = snapshot.view_vector;

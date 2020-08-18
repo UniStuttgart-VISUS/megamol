@@ -124,7 +124,9 @@ inline size_t GPUMeshCollection::addMesh(
             // TODO check interleaved vs non-interleaved
             bool idx_type_check = (index_type == it->mesh->getIndexType());
 
-            if (layout_check && idx_type_check) {
+			bool primitive_type_check = (primitive_type == it->mesh->getPrimitiveType());
+
+            if (layout_check && idx_type_check && primitive_type_check) {
                 // check whether there is enough space left in batch
                 size_t ava_vertex_cnt = (it->vertices_allocated - it->vertices_used);
                 size_t ava_index_cnt = (it->indices_allocated - it->indices_used);

@@ -28,8 +28,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   string(REPLACE "-src" "-build" BUILD_DIR "${SOURCE_DIR}")
 
   # Target definition
-  #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
+  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC
@@ -64,5 +63,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Public Header Files" FILES ${public_header_files})
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
-  #source_group("Shaders" FILES ${shader_files})
+  source_group("Shaders" FILES ${shader_files})
+
 endif()

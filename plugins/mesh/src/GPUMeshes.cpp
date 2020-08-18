@@ -4,9 +4,7 @@
 #include "mesh/MeshCalls.h"
 
 megamol::mesh::GPUMeshes::GPUMeshes()
-    : m_version(0)
-    , m_mesh_slot("CallMeshes", "Connects mesh data to be uploaded to the GPU")
-{
+    : m_version(0), m_mesh_slot("CallMeshes", "Connects mesh data to be uploaded to the GPU") {
     this->m_mesh_slot.SetCompatibleCall<CallMeshDescription>();
     this->MakeSlotAvailable(&this->m_mesh_slot);
 }
@@ -37,12 +35,13 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     if (something_has_changed) {
         ++m_version;
 
+        mesh_collection->clear();
+
         if (!m_mesh_collection_indices.empty()) {
             // TODO delete all exisiting render task from this module
             for (auto& submesh_idx : m_mesh_collection_indices) {
                 // mesh_collection->deleteSubMesh()
             }
-
             m_mesh_collection_indices.clear();
         }
 
@@ -52,7 +51,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
             // check if primtives type
             GLenum primitive_type = GL_NONE;
-			switch (mesh.primitive_type) {
+            switch (mesh.primitive_type) {
             case 0:
                 primitive_type = GL_TRIANGLES;
                 break;
@@ -62,10 +61,16 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
             case 2:
                 primitive_type = GL_LINES;
                 break;
+            case 3:
+                primitive_type = GL_LINE_STRIP;
+                break;
+            case 4:
+                primitive_type = GL_TRIANGLE_FAN;
+                break;
             default:
                 vislib::sys::Log::DefaultLog.WriteError("There was no matching primitive type found!");
                 return false;
-			}
+            }
 
             std::vector<glowl::VertexLayout::Attribute> attribs;
             std::vector<std::pair<uint8_t*, uint8_t*>> vb_iterators;
@@ -97,11 +102,11 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     // if there is a mesh connection to the right, pass on the mesh collection
     CallGPUMeshData* rhs_mesh_call = this->m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
     if (rhs_mesh_call != NULL) {
-        rhs_mesh_call->setData(mesh_collection,0);
+        rhs_mesh_call->setData(mesh_collection, 0);
 
         if (!(*rhs_mesh_call)(0)) return false;
 
-        if (rhs_mesh_call->hasUpdate()){
+        if (rhs_mesh_call->hasUpdate()) {
             ++m_version;
             rhs_mesh_call->getData();
         }
@@ -122,16 +127,14 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
     lhs_mesh_call->setMetaData(lhs_meta_data);
 
-    if (lhs_mesh_call->version() < m_version)
-    {
+    if (lhs_mesh_call->version() < m_version) {
         lhs_mesh_call->setData(mesh_collection, m_version);
     }
 
     return true;
 }
 
-bool megamol::mesh::GPUMeshes::getMetaDataCallback(core::Call& caller)
-{
+bool megamol::mesh::GPUMeshes::getMetaDataCallback(core::Call& caller) {
     CallGPUMeshData* lhs_mesh_call = dynamic_cast<CallGPUMeshData*>(&caller);
     CallGPUMeshData* rhs_mesh_call = m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
     CallMesh* src_mesh_call = m_mesh_slot.CallAs<CallMesh>();
@@ -148,16 +151,13 @@ bool megamol::mesh::GPUMeshes::getMetaDataCallback(core::Call& caller)
     if (!(*src_mesh_call)(1)) return false;
     src_meta_data = src_mesh_call->getMetaData();
 
-    if (rhs_mesh_call != NULL)
-    {
+    if (rhs_mesh_call != NULL) {
         rhs_meta_data = rhs_mesh_call->getMetaData();
         rhs_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
         rhs_mesh_call->setMetaData(rhs_meta_data);
         if (!(*rhs_mesh_call)(1)) return false;
         rhs_meta_data = rhs_mesh_call->getMetaData();
-    }
-    else
-    {
+    } else {
         rhs_meta_data.m_frame_cnt = 1;
     }
 
