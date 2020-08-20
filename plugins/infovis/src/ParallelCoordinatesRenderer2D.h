@@ -310,6 +310,8 @@ private:
     //glowl::FramebufferObject nuFB2 = glowl::FramebufferObject(1, 1, false, false);
     GLuint nuDRB;
     GLuint nuSRB;
+    //res should be a parameter
+    GLfloat res[2];
     std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_shdr;
 
     // float xMinOffset;

@@ -736,7 +736,7 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #    ifdef USE_TESSELLATION
     vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteTessProgram;
 #    else
-    //vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
+    // vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
     vislib::graphics::gl::GLSLShader& prog = this->drawItemsTriangleProgram;
 #    endif
 #endif
@@ -744,9 +744,10 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     this->enableProgramAndBind(prog);
     // vislib::sys::Log::DefaultLog.WriteInfo("setting tf range to [%f, %f]", tf->Range()[0], tf->Range()[1]);
     tf->BindConvenience(prog, GL_TEXTURE5, 5);
-
     glUniform4fv(prog.ParameterLocation("color"), 1, color);
     glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);
+    glUniform1f(prog.ParameterLocation("widthR"), res[0]);
+    glUniform1f(prog.ParameterLocation("heightR"), res[1]);
     try {
         auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
         glUniform1i(prog.ParameterLocation("colorColumn"), colcol);
@@ -1005,6 +1006,8 @@ void ParallelCoordinatesRenderer2D::load_filters() {
 bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     int w = call.GetViewport().Width() ;
     int h = call.GetViewport().Height();
+    res[0] = 1.0*w;
+    res[1] = 1.0*h;
 
     windowWidth = call.GetViewport().Width();
     windowHeight = call.GetViewport().Height();
@@ -1016,6 +1019,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &origFBOr);
+
 
     if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
         w = w / 2;
