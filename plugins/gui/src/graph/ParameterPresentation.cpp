@@ -807,7 +807,8 @@ bool megamol::gui::ParameterPresentation::widget_enum(megamol::gui::ParameterPre
         /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         std::string utf8Str = storage[value];
         GUIUtils::Utf8Encode(utf8Str);
-        if (ImGui::BeginCombo(label.c_str(), utf8Str.c_str())) {
+        auto combo_flags = ImGuiComboFlags_HeightRegular;
+        if (ImGui::BeginCombo(label.c_str(), utf8Str.c_str(), combo_flags)) {
             for (auto& pair : storage) {
                 bool isSelected = (pair.first == value);
                 utf8Str = pair.second;
@@ -836,7 +837,8 @@ bool megamol::gui::ParameterPresentation::widget_flexenum(megamol::gui::Paramete
         }
         std::string utf8Str = value;
         GUIUtils::Utf8Encode(utf8Str);
-        if (ImGui::BeginCombo(label.c_str(), utf8Str.c_str())) {
+        auto combo_flags = ImGuiComboFlags_HeightRegular;
+        if (ImGui::BeginCombo(label.c_str(), utf8Str.c_str(), combo_flags)) {
             bool one_present = false;
             for (auto& valueOption : storage) {
                 bool isSelected = (valueOption == value);
@@ -1258,7 +1260,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
             this->tf_editor_hash = inout_parameter.GetTransferFunctionHash();
         }
 
-        ImGui::Separator();
+        /// ImGui::Separator();
         ImGui::EndGroup();
     }
     // GLOBAL -----------------------------------------------------------

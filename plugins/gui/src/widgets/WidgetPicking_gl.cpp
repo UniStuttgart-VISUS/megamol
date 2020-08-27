@@ -212,7 +212,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
     if (id > 0) {
         this->cursor_on_interaction_obj = {true, id, depth};
         this->pending_manipulations.emplace_back(Manipulation{InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f});
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[[[DEBUG]]] ID = %i | Depth = %f", id, depth);
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("[[[DEBUG]]] ID = %i | Depth = %f", id, depth);
     } else {
         this->cursor_on_interaction_obj = GUI_INTERACTION_TUPLE_INIT;
     }
@@ -243,7 +243,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
                                    "    vec4 color = texture(col_tex, uv_coord).rgba; \n"
                                    "    if (color == vec4(0.0)) discard; \n"
                                    "    float depth = texture(depth_tex, uv_coord).g; \n"
-                                   "    gl_FragDepth = 0.9998; \n" ////////// <================ !!!!!
+                                   "    gl_FragDepth = depth; \n"
                                    "    outFragColor = color; \n"
                                    "} ";
 
@@ -311,10 +311,11 @@ void megamol::gui::PickableTriangle::Draw(
     unsigned int id, glm::vec2 pixel_dir, glm::vec2 vp_dim, ManipVector& pending_manipulations) {
 
     // Shader data
+    float depth = -0.9996f; /// <=== !!!
     glm::mat4 ortho = glm::ortho(0.0f, vp_dim.x, 0.0f, vp_dim.y, -1.0f, 1.0f);
-    glm::vec3 dir0 = glm::vec3(this->pixel_direction.x, this->pixel_direction.y, -1.0f);
-    glm::vec3 dir1 = glm::vec3(dir0.y / 2.0f, -dir0.x / 2.0f, 1.0f);
-    glm::vec3 dir2 = glm::vec3(-dir0.y / 2.0f, dir0.x / 2.0f, 0.0f);
+    glm::vec3 dir0 = glm::vec3(this->pixel_direction.x, this->pixel_direction.y, depth);
+    glm::vec3 dir1 = glm::vec3(dir0.y / 2.0f, -dir0.x / 2.0f, depth);
+    glm::vec3 dir2 = glm::vec3(-dir0.y / 2.0f, dir0.x / 2.0f, -0.9999f);
 
     glm::vec3 vp_vec = glm::vec3(vp_dim.x, vp_dim.y, 0.0f);
     dir0 = vp_vec / 2.0f + dir0;
@@ -342,20 +343,23 @@ void megamol::gui::PickableTriangle::Draw(
 
     // Create shader once
     if (this->shader == nullptr) {
-        std::string vertex_src = "#version 130 \n"
-                                 "uniform mat4 ortho; \n"
-                                 "uniform vec3 dir0; \n"
-                                 "uniform vec3 dir1; \n"
-                                 "uniform vec3 dir2; \n"
-                                 "uniform vec4 color; \n"
-                                 "out vec4 frag_color; \n"
-                                 "void main(void) {  \n"
-                                 "    vec3 pos = dir0; \n"
-                                 "    frag_color = color; \n"
-                                 "    if (gl_VertexID == 1) { pos = dir1; } \n"
-                                 "    else if (gl_VertexID == 2)  { pos = dir2; } \n"
-                                 "    gl_Position = ortho * vec4(pos.xyz, 1.0); \n"
-                                 "} ";
+        std::string vertex_src =
+            "#version 130 \n"
+            "uniform mat4 ortho; \n"
+            "uniform vec3 dir0; \n"
+            "uniform vec3 dir1; \n"
+            "uniform vec3 dir2; \n"
+            "uniform vec4 color; \n"
+            "out vec4 frag_color; \n"
+            "void main(void) {  \n"
+            "    vec3 dir_pos = dir0; \n"
+            "    frag_color = color; \n"
+            "    if (gl_VertexID == 1) { dir_pos = dir1; frag_color = vec4(1.0, 0.0, 0.0, 1.0); } \n"
+            "    else if (gl_VertexID == 2)  { dir_pos = dir2; frag_color = vec4(0.0, 1.0, 0.0, 1.0);  } \n"
+            "    vec4 pos = ortho * vec4(dir_pos.xyz, 1.0); \n"
+            "    pos /= pos.w; \n"
+            "    gl_Position = pos; \n"
+            "} ";
 
         std::string fragment_src = "#version 130  \n"
                                    "#extension GL_ARB_explicit_attrib_location : require \n"
@@ -364,6 +368,7 @@ void megamol::gui::PickableTriangle::Draw(
                                    "layout(location = 0) out vec4 outFragColor; \n"
                                    "layout(location = 1) out vec2 outFragInfo; \n"
                                    "void main(void) { \n"
+                                   "    float depth  = gl_FragCoord.z; \n"
                                    "    outFragColor = frag_color; \n"
                                    "    outFragInfo  = vec2(float(id), depth); \n"
                                    "} ";
