@@ -25,7 +25,6 @@
 #include "CorporateWhiteStyle.h"
 #include "FileUtils.h"
 #include "WindowCollection.h"
-#include "graph/GraphCollection.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/MinimalPopUp.h"

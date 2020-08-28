@@ -1,5 +1,5 @@
 /*
- * ParameterGroups.h
+ * ParameterGroupsPresentation.h
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -26,12 +26,12 @@ namespace gui {
 /** ************************************************************************
  * Defines parameter widget groups depending on parameter namespaces.
  */
-class ParameterGroups {
+class ParameterGroupsPresentation {
 public:
     // FUCNTIONS --------------------------------------------------------------
 
-    ParameterGroups(void);
-    ~ParameterGroups(void);
+    ParameterGroupsPresentation(void);
+    ~ParameterGroupsPresentation(void);
 
     bool PresentGUI(megamol::gui::ParamVector_t& inout_params, const std::string& in_module_fullname,
         const std::string& in_search, vislib::math::Ternary in_extended, bool in_indent,

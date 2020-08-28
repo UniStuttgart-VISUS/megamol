@@ -311,7 +311,7 @@ void megamol::gui::PickableTriangle::Draw(
     unsigned int id, glm::vec2 pixel_dir, glm::vec2 vp_dim, ManipVector& pending_manipulations) {
 
     // Shader data
-    float depth = -0.9996f; /// <=== !!!
+    float depth = -0.9996f; /// <=== DEBUG !!!
     glm::mat4 ortho = glm::ortho(0.0f, vp_dim.x, 0.0f, vp_dim.y, -1.0f, 1.0f);
     glm::vec3 dir0 = glm::vec3(this->pixel_direction.x, this->pixel_direction.y, depth);
     glm::vec3 dir1 = glm::vec3(dir0.y / 2.0f, -dir0.x / 2.0f, depth);

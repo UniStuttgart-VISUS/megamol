@@ -11,9 +11,7 @@
 
 #include "GraphPresentation.h"
 
-#include "Call.h"
 #include "Group.h"
-#include "Module.h"
 
 #include "vislib/math/Ternary.h"
 
