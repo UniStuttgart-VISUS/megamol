@@ -122,6 +122,7 @@ void main()
   } else {
     out_.color = mix(color, tflookup(value), tfColorFactor);
   }
+  
   //aktuell betrachteter Vertex
   vec4 vertex = pc_item_vertex(out_.itemID, out_.dataID, out_.dataDimension, out_.worldSpaceAxis);
   //Vertices auf der linken und rechten Achse
@@ -132,8 +133,9 @@ void main()
   
   vec2 tempL = vec2(0, 0.0);
   vec2 tempR = vec2(0.0, 0.0);
-  // magic number aktuell, sehr dick gewaehlt fuer bessere sichtbarkeit
-  float thickness = 0.5;
+  // magic number, to be changed to resolution based calculation
+  float thickness = 6/widthR;
+  
   if(out_.worldSpaceAxis != 0 && out_.worldSpaceAxis != dimensionCount){
 	//Vektoren von linken zum aktuellen Vertex, dies ist die Linie die von links kommt
 	tempL =  (projection * modelView * vertex - projection * modelView * vertexL).xy;
@@ -159,27 +161,29 @@ void main()
     
 	// h ist winkelhalbierende
     vec2 h = normalize(oL + oR);
-	out_.color = vec4(heightR/widthR,0, 0.0, 1.0);
+	//out_.color = vec4(heightR/widthR,0, 0.0, 1.0);
 	
 	//laenge der winkelhalbierenden um dicke zu garantieren, berechnet aus Winkel der rechten orthogonalen und der winkelhalbierenden
 	h = h * thickness / dot(oR, h) * (length(oR)*length(h));
 	h.x *= 1.0*heightR/widthR ;
 	tempL = h;
   }
+  
   if(out_.worldSpaceAxis == 0){
-    float dDataL = pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID+1)), pc_dimension(theID+1)) - pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID)), pc_dimension(theID));
-    //tempL = vec2(axisDistance, dDataL*axisHeight);
-	vec2 oL = vec2(-dDataL * axisHeight, axisDistance);
-	oL = thickness * normalize(oL);
-	tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oL, vec2(0.0, 1.0));
-	out_.color = vec4(pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID+1)), pc_dimension(theID+1)), 0.0, 1.0, 1.0);
+	tempR = (projection * modelView * vertexR - projection * modelView * vertex).xy;
+	tempR = normalize(tempR);
+	tempR.x *= widthR;
+	tempR.y *= heightR;
+	vec2 oR = vec2(-tempR.y, tempR.x);
+	oR = thickness * normalize(oR);
+	tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oR, vec2(0.0, 1.0));
+	//out_.color = vec4(pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID+1)), pc_dimension(theID+1)), 0.0, 1.0, 1.0);
   }
   if(out_.worldSpaceAxis == dimensionCount - 1){
-    float dDataL = pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID)), pc_dimension(theID)) - pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID-1)), pc_dimension(theID-1));
-    vec2 oL = vec2(-dDataL * axisHeight, axisDistance);
-	oL = thickness * normalize(oL);
+    tempL =  (projection * modelView * vertex - projection * modelView * vertexL).xy;
+    vec2 oL = vec2(-tempL.y, tempL.x);
 	tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oL, vec2(0.0, 1.0));
-	out_.color = vec4(1.0, 0.0, 1.0, 1.0);
+	//out_.color = vec4(1.0, 0.0, 1.0, 1.0);
   }
   vec2 offset = (-0.5 + (gl_VertexID % 2)) * tempL;
   //offset.y *= 2.3839096683;
@@ -199,7 +203,7 @@ void main()
     gl_ClipDistance[0] = -1.0;
   }
   //vertex = vertexL;
-  gl_Position = projection * modelView * (vertex) + (vec4(offset*0.02, 0.0, 0.0));
+  gl_Position = projection * modelView * (vertex) + (vec4(offset, 0.0, 0.0));
 }
     ]]>
 </snippet>

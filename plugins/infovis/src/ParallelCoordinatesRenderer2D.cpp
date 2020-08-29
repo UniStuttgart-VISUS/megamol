@@ -242,21 +242,28 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGenRenderbuffers(1, &nuDRB);
     glGenRenderbuffers(1, &nuSRB);
     glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
-    glBindTexture(GL_TEXTURE_2D, imStoreI);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    //glBindTexture(GL_TEXTURE_2D, imStoreI);
+    glEnable(GL_MULTISAMPLE);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, imStoreI);
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 1, GL_RGB, 1, 1, GL_TRUE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
+    //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, imStoreI, 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     
 
 
     glBindFramebuffer(GL_TEXTURE_2D, nuFBb2);
-    glBindTexture(GL_TEXTURE_2D, imStoreI2);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glEnable(GL_MULTISAMPLE);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, imStoreI2);
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 1, GL_RGB, 1, 1, GL_TRUE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
+    //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, imStoreI2, 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
 
@@ -736,8 +743,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #    ifdef USE_TESSELLATION
     vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteTessProgram;
 #    else
-    // vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
-    vislib::graphics::gl::GLSLShader& prog = this->drawItemsTriangleProgram;
+    vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
+    //vislib::graphics::gl::GLSLShader& prog = this->drawItemsTriangleProgram;
 #    endif
 #endif
 
@@ -771,8 +778,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #    else
     // glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
     // glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, this->columnCount * 2, this->itemCount);
-    //glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
-     glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
+    glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
+     //glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
 #    endif
 #endif
     prog.Disable();
@@ -845,7 +852,6 @@ void ParallelCoordinatesRenderer2D::doStroking(float x0, float y0, float x1, flo
     strokeProgram.Disable();
     debugPop();
 }
-
 
 void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
     debugPush(4, "doFragmentCount");
@@ -1023,6 +1029,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
         w = w / 2;
+        h = h / 2;
         //nuFB->resize(w, h);
         //nuFB->bind();
         //nuFB->getColorAttachment(0)->bindTexture();
@@ -1033,20 +1040,26 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         if (call.frametype == 1 || call.frametype == 0) {
             glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
+            glEnable(GL_MULTISAMPLE);
 
             glActiveTexture(GL_TEXTURE10);
-            glBindTexture(GL_TEXTURE_2D, imStoreI);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
-            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
+            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, imStoreI);
+            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 2, GL_RGBA8, w, h, GL_TRUE);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, imStoreI, 0);
+
+            //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
             glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
             glClear(GL_COLOR_BUFFER_BIT);
         }
         if (call.frametype == 2) {
             glBindFramebuffer(GL_FRAMEBUFFER, nuFBb2);
+            glEnable(GL_MULTISAMPLE);
             glActiveTexture(GL_TEXTURE11);
-            glBindTexture(GL_TEXTURE_2D, imStoreI2);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
-            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
+            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, imStoreI2);
+            //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 2, GL_RGB8, w, h, GL_TRUE);
+            //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, imStoreI2, 0);
             glClearColor(0.2, 0, 0, 1);
             glClear(GL_COLOR_BUFFER_BIT);
         }
@@ -1329,9 +1342,9 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         if (call.frametype == 0 || call.frametype == 1) {
             glActiveTexture(GL_TEXTURE10);
             //nuFB->getColorAttachment(0)->bindTexture();
-            glBindTexture(GL_TEXTURE_2D, imStoreI);
-            
+            glBindTexture(GL_TEXTURE_2D, imStoreI);  
             glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 10);
+
         }
         if (call.frametype == 2) {
             glActiveTexture(GL_TEXTURE11);
@@ -1344,7 +1357,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
 
         glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("h"), call.GetViewport().Width());
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("h"), call.GetViewport().Height());
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("w"), call.GetViewport().Width());
 
         glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("frametype"), call.frametype);
 

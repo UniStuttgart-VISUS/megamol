@@ -300,6 +300,8 @@ private:
     GLint origFBO = 0;
     GLint origFBOr = 0;
     GLuint imStoreI;
+    GLuint interColStore;
+    GLuint interColStore2;
     GLuint imStoreI2;
     GLuint depthStore;
     GLuint stenStore;
