@@ -306,15 +306,15 @@ bool GUIWindows::PostDraw(void) {
             if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
                 float y_offset = (this->state.menu_visible) ? (ImGui::GetFrameHeight()) : (0.0f);
                 ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
-
                 if ((wc.win_size.x == window_viewport.x) && (wc.win_size.y == window_viewport.y)) {
                     // Window is maximized
                     wc.win_size = wc.win_reset_size;
-                    wc.win_position = ImVec2(0.0f, y_offset);
+                    wc.win_position = wc.win_reset_position;
                     wc.win_reset = true;
                 } else {
                     // Window is minimized
                     wc.win_reset_size = wc.win_size;
+                    wc.win_reset_position = wc.win_position;
                     wc.win_size = window_viewport;
                     wc.win_position = ImVec2(0.0f, y_offset);
                     wc.win_reset = true;
@@ -840,6 +840,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_store_config = true;
     buf_win.win_reset = true;
     buf_win.win_position = ImVec2(0.0f, 0.0f);
+    buf_win.win_reset_position = ImVec2(0.0f, 0.0f);
     buf_win.win_size = ImVec2(400.0f, 600.0f);
 
     // MAIN Window ------------------------------------------------------------
@@ -879,8 +880,8 @@ bool GUIWindows::createContext(void) {
     buf_win.win_name = "Configurator";
     buf_win.win_show = false;
     /// XXX Better initial size -> access to current viewport?!
-    buf_win.win_position = ImVec2(0.0f, 0.0f);
     buf_win.win_size = ImVec2(800.0f, 600.0f);
+    buf_win.win_reset_size = buf_win.win_size;
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
     buf_win.win_callback = WindowCollection::DrawCallbacks::CONFIGURATOR;
