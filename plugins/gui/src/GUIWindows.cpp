@@ -298,13 +298,27 @@ bool GUIWindows::PostDraw(void) {
                 ImGui::End(); // early ending
                 return;
             }
+            this->tooltip.ToolTip(
+                "[Double Left Click] Minimize/Maximize Window", ImGui::GetID(wc.win_name.c_str()), 0.5f, 1.5f);
 
-            // Always set configurator window size to current viewport
-            if (wc.win_callback == WindowCollection::DrawCallbacks::CONFIGURATOR) {
+            // Set size to current viewport if title is double clicked
+            /// XXX Add minmize/maximaze buttons
+            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
                 float y_offset = (this->state.menu_visible) ? (ImGui::GetFrameHeight()) : (0.0f);
-                wc.win_size = ImVec2(viewport.x, viewport.y - y_offset);
-                wc.win_position = ImVec2(0.0f, y_offset);
-                wc.win_reset = true;
+                ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
+
+                if ((wc.win_size.x == window_viewport.x) && (wc.win_size.y == window_viewport.y)) {
+                    // Window is maximized
+                    wc.win_size = wc.win_reset_size;
+                    wc.win_position = ImVec2(0.0f, y_offset);
+                    wc.win_reset = true;
+                } else {
+                    // Window is minimized
+                    wc.win_reset_size = wc.win_size;
+                    wc.win_size = window_viewport;
+                    wc.win_position = ImVec2(0.0f, y_offset);
+                    wc.win_reset = true;
+                }
             }
 
             // Force window menu
@@ -613,7 +627,7 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
 
-    // 1) Load all known calls from core instance once ---------------------------
+    // 1) Load all known calls from core instance ONCS ---------------------------
     if (!this->configurator.GetGraphCollection()->LoadCallStock(core_instance)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -832,7 +846,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_name = "All Parameters";
     buf_win.win_show = true;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
-    buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
+    buf_win.win_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse;
     buf_win.win_callback = WindowCollection::DrawCallbacks::MAIN_PARAMETERS;
     buf_win.win_reset_size = buf_win.win_size;
     this->window_collection.AddWindowConfiguration(buf_win);
@@ -841,7 +855,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_name = "Performance Metrics";
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
-    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
+    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse;
     buf_win.win_callback = WindowCollection::DrawCallbacks::PERFORMANCE;
     this->window_collection.AddWindowConfiguration(buf_win);
 
@@ -849,7 +863,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_name = "Font Settings";
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
-    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
+    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse;
     buf_win.win_callback = WindowCollection::DrawCallbacks::FONT;
     this->window_collection.AddWindowConfiguration(buf_win);
 
@@ -857,19 +871,18 @@ bool GUIWindows::createContext(void) {
     buf_win.win_name = "Transfer Function Editor";
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
-    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
+    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse;
     buf_win.win_callback = WindowCollection::DrawCallbacks::TRANSFER_FUNCTION;
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // CONFIGURATOR Window -----------------------------------------------
     buf_win.win_name = "Configurator";
     buf_win.win_show = false;
-    // State of configurator not needed to be stored
-    //(visibility is configured via auto load parameter and will always be viewport size).
-    /// buf_win.win_store_config = false;
+    /// XXX Better initial size -> access to current viewport?!
+    buf_win.win_position = ImVec2(0.0f, 0.0f);
+    buf_win.win_size = ImVec2(800.0f, 600.0f);
+    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
-    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar;
     buf_win.win_callback = WindowCollection::DrawCallbacks::CONFIGURATOR;
     // buf_win.win_size is set to current viewport later
     this->window_collection.AddWindowConfiguration(buf_win);
