@@ -744,7 +744,6 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 }
                 auto graph_module = graph_ptr->GetModules().back();
                 graph_module->name = view_name;
-                graph_module->is_view_instance = (graph_ptr->IsMainViewSet()) ? (false) : (true);
                 graph_ptr->AddGroupModule(view_namespace, graph_module);
 
                 found_main_view = true;

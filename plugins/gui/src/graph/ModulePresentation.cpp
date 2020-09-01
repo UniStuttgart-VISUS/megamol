@@ -325,11 +325,6 @@ void megamol::gui::ModulePresentation::Present(
                     draw_list->AddRectFilled(module_rect_min, module_rect_max, module_bg_color, GUI_RECT_CORNER_RADIUS,
                         ImDrawCornerFlags_All);
 
-                    // Draw Outline
-                    float border = ((inout_module.is_view_instance) ? (4.0f) : (1.0f)) * state.canvas.zooming;
-                    draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, GUI_RECT_CORNER_RADIUS,
-                        ImDrawCornerFlags_All, border);
-
                     // Draw Text and Option Buttons
                     float text_width;
                     ImVec2 text_pos_left_upper;
@@ -454,6 +449,11 @@ void megamol::gui::ModulePresentation::Present(
                             }
                         }
                     }
+
+                    // Draw Outline
+                    float border = ((inout_module.is_view_instance) ? (4.0f) : (1.0f)) * state.canvas.zooming;
+                    draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, GUI_RECT_CORNER_RADIUS,
+                        ImDrawCornerFlags_All, border);
                 }
             }
 

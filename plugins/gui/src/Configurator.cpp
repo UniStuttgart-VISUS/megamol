@@ -125,16 +125,16 @@ bool megamol::gui::Configurator::Draw(
         if (graph_count == 1) {
             auto graph_ptr = this->graph_collection->GetGraphs().front();
             if (graph_ptr->RunningState().IsFalse()) {
-                this->graph_collection->LoadProjectFromCore(core_instance, nullptr);
+                // Load inital project
+                /// this->graph_collection->LoadProjectFromCore(core_instance, nullptr);
+                /// or: this->add_empty_project();
             }
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Invalid expected number of graphs: %i (should be 1). [%s, %s, line %d]\n", graph_count, __FILE__,
-                __FUNCTION__, __LINE__);
+                "[GUI] Invalid expected number of graphs: %i (should be 1, for loaded running graph). [%s, %s, line "
+                "%d]\n",
+                graph_count, __FILE__, __FUNCTION__, __LINE__);
         }
-        // Load inital project
-        /// this->graph_collection->LoadProjectFromCore(core_instance, nullptr);
-        /// or: this->add_empty_project();
 
         // Enable drag and drop of files for configurator (if glfw is available here)
 #ifdef GUI_USE_GLFW
@@ -549,22 +549,20 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
                 }
 
             } else if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
-                /// DISABLED - todo: prevent multiple loading of same project file
-                // for (auto& config_item : header_item.value().items()) {
-                //    std::string json_graph_id = config_item.key(); /// = graph filename
-                //    // Load graph from file
-                //    // ImGuiID graph_uid =
-                //    auto graph_uid = this->graph_collection.LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
-                //    // Overwrite graph states with the one found in this project
-                //    /// TODO Comment for ignoring graph state stored in this project
-                //    if (graph_uid != GUI_INVALID_ID) {
-                //        GraphPtr_t graph_ptr;
-                //        if (this->graph_collection.GetGraph(graph_uid, graph_ptr)) {
-                //            // Let graph search for his configurator state
-                //            graph_ptr->GUIStateFromJsonString(in_json_string);
-                //        }
-                //    }
-                //}
+                for (auto& config_item : header_item.value().items()) {
+                    std::string json_graph_id = config_item.key(); /// = graph filename
+                    // Load graph from file
+                    auto graph_uid = this->graph_collection->LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
+                    // Overwrite graph states with the one found in this project
+                    /// XXX Comment for ignoring graph state stored in this project
+                    // if (graph_uid != GUI_INVALID_ID) {
+                    //    GraphPtr_t graph_ptr;
+                    //    if (this->graph_collection->GetGraph(graph_uid, graph_ptr)) {
+                    //        // Let graph search for his configurator state in this project
+                    //        graph_ptr->GUIStateFromJsonString(in_json_string);
+                    //    }
+                    //}
+                }
             }
         }
 
