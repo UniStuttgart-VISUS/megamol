@@ -718,6 +718,24 @@ function(require_external NAME)
       LIBRARY ${SPDLOG_LIB}
       DEBUG_SUFFIX "d"
       DEPENDS fmt)
+  elseif(NAME STREQUAL "megamol-shader-factory")
+      if(TARGET megamol-shader-factory)
+        return()
+      endif()
+      
+      if(WIN32)
+        set(MEGAMOL_SHADER_FACTORY_LIB "lib/megamol-shader-factory.lib")
+      else()
+        include(GNUInstallDirs)
+        set(MEGAMOL_SHADER_FACTORY_LIB "${CMAKE_INSTALL_LIBDIR}/libmegamol-shader-factory.a")
+      endif()
+      
+      add_external_project(megamol-shader-factory STATIC
+        GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
+        BUILD_BYPRODUCTS "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}")
+    
+      add_external_library(megamol-shader-factory
+        LIBRARY ${MEGAMOL_SHADER_FACTORY_LIB})
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
   endif()
