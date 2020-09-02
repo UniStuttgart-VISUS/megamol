@@ -332,6 +332,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         std::vector<megamol::core::Module*> module_ptr_list;
         std::map<std::string, std::string> view_instances;
         if (use_megamol_graph) {
+            /* XXX
             for (auto& module_inst : megamol_graph->ListModules()) {
                 std::string module_fullname = std::string(module_inst.modulePtr->FullName().PeekBuffer());
                 if (!graph_ptr->ModuleExists(module_fullname)) {
@@ -341,6 +342,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                     }
                 }
             }
+            */
         } else if (use_core_instance) {
             const auto module_func = [&, this](megamol::core::Module* mod) {
                 std::string module_fullname = std::string(mod->FullName().PeekBuffer());
@@ -509,6 +511,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         }
         // Add/Create call connection data from core graph
         if (use_megamol_graph) {
+            /* XXX
             for (auto& call : megamol_graph->ListCalls()) {
                 auto call_ptr = call.first;
                 if (call_ptr == nullptr) continue;
@@ -578,6 +581,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 cd.callee_module_callslot_name = call_callee_name;
                 call_data.emplace_back(cd);
             }
+            */
         }
         // Create calls
         for (auto& cd : call_data) {
@@ -740,7 +744,6 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 }
                 auto graph_module = graph_ptr->GetModules().back();
                 graph_module->name = view_name;
-                graph_module->is_view_instance = (graph_ptr->IsMainViewSet()) ? (false) : (true);
                 graph_ptr->AddGroupModule(view_namespace, graph_module);
 
                 found_main_view = true;

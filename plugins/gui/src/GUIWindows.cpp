@@ -299,12 +299,36 @@ bool GUIWindows::PostDraw(void) {
                 return;
             }
 
-            // Always set configurator window size to current viewport
-            if (wc.win_callback == WindowCollection::DrawCallbacks::CONFIGURATOR) {
-                float y_offset = (this->state.menu_visible) ? (ImGui::GetFrameHeight()) : (0.0f);
-                wc.win_size = ImVec2(viewport.x, viewport.y - y_offset);
-                wc.win_position = ImVec2(0.0f, y_offset);
-                wc.win_reset = true;
+            float y_offset = (this->state.menu_visible) ? (ImGui::GetFrameHeight()) : (0.0f);
+            ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
+            bool window_minimized = ((wc.win_size.x == window_viewport.x) && (wc.win_size.y == window_viewport.y));
+            bool change_window_size = (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0));
+
+            // Context Menu
+            if (ImGui::BeginPopupContextItem()) {
+                if (ImGui::MenuItem(((window_minimized) ? ("Minimize") : ("Maximize")), "Double Left Click")) {
+                    change_window_size = true;
+                }
+                ImGui::EndPopup();
+            }
+
+            // Set size to current viewport if title is double clicked
+            /// XXX Add minmize/maximaze buttons
+            if (change_window_size) {
+                if (window_minimized) {
+                    // Window is maximized
+                    wc.win_size = wc.win_reset_size;
+                    wc.win_position = wc.win_reset_position;
+                    wc.win_reset = true;
+                } else {
+                    // Window is minimized
+                    ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
+                    wc.win_reset_size = wc.win_size;
+                    wc.win_reset_position = wc.win_position;
+                    wc.win_size = window_viewport;
+                    wc.win_position = ImVec2(0.0f, y_offset);
+                    wc.win_reset = true;
+                }
             }
 
             // Force window menu
@@ -350,7 +374,7 @@ bool GUIWindows::PostDraw(void) {
 
     // Draw global parameter widgets -------------------------------------------
 
-    /// DEBUG picking
+    /// DEBUG TEST OpenGL Picking
     // auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
     // this->picking_buffer.EnableInteraction(viewport_dim);
 
@@ -366,7 +390,7 @@ bool GUIWindows::PostDraw(void) {
         }
     }
 
-    /// DEBUG picking
+    /// DEBUG TEST OpenGL Picking
     // unsigned int id = 5;
     // this->picking_buffer.AddInteractionObject(id, this->triangle_widget.GetInteractions(id));
     // this->triangle_widget.Draw(
@@ -613,7 +637,7 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
 
-    // 1) Load all known calls from core instance once ---------------------------
+    // 1) Load all known calls from core instance ONCS ---------------------------
     if (!this->configurator.GetGraphCollection()->LoadCallStock(core_instance)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -628,6 +652,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
     bool found_graph = this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr);
 
     // 2) Synchronize GUI graph -> Core graph ------------------------------------
+    /* XXX
     bool graph_sync_success = true;
     if (found_graph) {
         auto queue = graph_ptr->GetSyncQueue();
@@ -728,7 +753,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             __LINE__);
     }
     sync_success &= graph_sync_success;
-
+    */
 
     // 3) Synchronize Core graph -> GUI graph ------------------------------------
     // Create new gui graph for running graph once and then check for updates
@@ -825,13 +850,14 @@ bool GUIWindows::createContext(void) {
     buf_win.win_store_config = true;
     buf_win.win_reset = true;
     buf_win.win_position = ImVec2(0.0f, 0.0f);
+    buf_win.win_reset_position = ImVec2(0.0f, 0.0f);
     buf_win.win_size = ImVec2(400.0f, 600.0f);
 
     // MAIN Window ------------------------------------------------------------
     buf_win.win_name = "All Parameters";
     buf_win.win_show = true;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
-    buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
+    buf_win.win_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse;
     buf_win.win_callback = WindowCollection::DrawCallbacks::MAIN_PARAMETERS;
     buf_win.win_reset_size = buf_win.win_size;
     this->window_collection.AddWindowConfiguration(buf_win);
@@ -840,7 +866,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_name = "Performance Metrics";
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
-    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
+    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse;
     buf_win.win_callback = WindowCollection::DrawCallbacks::PERFORMANCE;
     this->window_collection.AddWindowConfiguration(buf_win);
 
@@ -848,7 +874,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_name = "Font Settings";
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
-    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
+    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse;
     buf_win.win_callback = WindowCollection::DrawCallbacks::FONT;
     this->window_collection.AddWindowConfiguration(buf_win);
 
@@ -856,19 +882,18 @@ bool GUIWindows::createContext(void) {
     buf_win.win_name = "Transfer Function Editor";
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
-    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
+    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse;
     buf_win.win_callback = WindowCollection::DrawCallbacks::TRANSFER_FUNCTION;
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // CONFIGURATOR Window -----------------------------------------------
     buf_win.win_name = "Configurator";
     buf_win.win_show = false;
-    // State of configurator not needed to be stored
-    //(visibility is configured via auto load parameter and will always be viewport size).
-    /// buf_win.win_store_config = false;
+    /// XXX Better initial size -> access to current viewport?!
+    buf_win.win_size = ImVec2(800.0f, 600.0f);
+    buf_win.win_reset_size = buf_win.win_size;
+    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
-    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar;
     buf_win.win_callback = WindowCollection::DrawCallbacks::CONFIGURATOR;
     // buf_win.win_size is set to current viewport later
     this->window_collection.AddWindowConfiguration(buf_win);
@@ -1115,10 +1140,10 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
 
     // Info
     std::string help_marker = "[INFO]";
-    std::string param_help = "Show Parameter Description Tooltip\n"
-                             "Context Menu\n"
-                             "Move Module to other Parameter Window\n"
-                             "Confirm input changes";
+    std::string param_help = "[Hover] Show Parameter Description Tooltip\n"
+                             "[Right Click] Context Menu\n"
+                             "[Drag & Drop] Move Module to other Parameter Window\n"
+                             "[Enter], [Tab], [Left Click outside Widget] Confirm input changes";
     ImGui::AlignTextToFramePadding();
     ImGui::TextDisabled(help_marker.c_str());
     this->tooltip.ToolTip(param_help);
@@ -1462,28 +1487,37 @@ void GUIWindows::drawMenu(void) {
     // Windows
     if (ImGui::BeginMenu("Windows")) {
 
-        ImGui::MenuItem("Menu", std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU]).ToString().c_str(),
-            &this->state.menu_visible);
+        std::string menu_label = "Show";
+        if (this->state.menu_visible) menu_label = "Hide";
+        if (ImGui::BeginMenu("Menu")) {
+            if (ImGui::MenuItem(menu_label.c_str(),
+                    std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU]).ToString().c_str(), nullptr)) {
+                this->state.menu_visible = !this->state.menu_visible;
+            }
+            ImGui::EndMenu();
+        }
 
         const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
-            std::string hotkey_label = wc.win_hotkey.ToString();
-            if (!hotkey_label.empty()) {
-                hotkey_label = "(SHIFT +) " + hotkey_label;
-            }
-            ImGui::MenuItem(wc.win_name.c_str(), hotkey_label.c_str(), &wc.win_show);
-
-            // Add conext menu for deleting windows without hotkey (= custom parameter windows).
-            if (wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN) {
-                if (ImGui::BeginPopupContextItem()) {
+            if (ImGui::BeginMenu(wc.win_name.c_str())) {
+                std::string hotkey_label = wc.win_hotkey.ToString();
+                std::string menu_label = "Show";
+                if (wc.win_show) menu_label = "Hide";
+                if (ImGui::MenuItem(menu_label.c_str(), hotkey_label.c_str(), nullptr)) {
+                    wc.win_show = !wc.win_show;
+                }
+                std::string hotkey_reset_label;
+                if (!hotkey_label.empty()) {
+                    hotkey_reset_label = "SHIFT + " + hotkey_label;
+                }
+                if (ImGui::MenuItem("Reset Size and Position", hotkey_reset_label.c_str(), nullptr)) {
+                    wc.win_soft_reset = true;
+                }
+                if (wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN) {
                     if (ImGui::MenuItem("Delete Window")) {
                         this->state.win_delete = wc.win_name;
                     }
-                    ImGui::EndPopup();
                 }
-                this->tooltip.ToolTip("Open Context Menu for Deleting Window Permanently.");
-            } else {
-                this->tooltip.ToolTip("Reset Size "
-                                      "and Position of Window.");
+                ImGui::EndMenu();
             }
         };
         this->window_collection.EnumWindows(func);

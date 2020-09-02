@@ -27,7 +27,7 @@ megamol::gui::ModulePresentation::ModulePresentation(void)
     , selected(false)
     , update(true)
     , param_child_show(false)
-    , param_child_height(0.0f)
+    , param_child_height(1.0f)
     , set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
     , set_selected_slot_position(false)
     , tooltip()
@@ -329,11 +329,9 @@ void megamol::gui::ModulePresentation::Present(
                     float text_width;
                     ImVec2 text_pos_left_upper;
                     const float line_height = ImGui::GetTextLineHeightWithSpacing();
-                    ImVec2 param_child_pos;
                     bool other_item_hovered = false;
 
                     if (this->label_visible) {
-
                         bool main_view_button = inout_module.is_view;
                         bool parameter_button = (inout_module.parameters.size() > 0);
                         bool any_option_button = (main_view_button || parameter_button);
@@ -379,13 +377,70 @@ void megamol::gui::ModulePresentation::Present(
                             }
 
                             if (parameter_button) {
-                                param_child_pos = ImGui::GetCursorScreenPos();
-                                param_child_pos.x += ImGui::GetFrameHeight();
-                                if (ImGui::ArrowButton("###parameter_toggle",
-                                        ((this->param_child_show) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
-                                    if (hovered) {
-                                        this->param_child_show = !this->param_child_show;
+                                bool param_child_hovered = false;
+                                ImVec2 param_button_pos = ImGui::GetCursorScreenPos();
+
+                                // Parameter Child Window
+                                if (this->param_child_show) {
+                                    ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_MODULE_BACKGROUND);
+                                    const ImGuiID last_active_id = ImGui::GetActiveID();
+
+                                    const float param_child_width = 325.0f * state.canvas.zooming;
+                                    ImVec2 param_child_pos = param_button_pos;
+                                    param_child_pos.x +=
+                                        ImGui::GetFrameHeight(); // Fix x position to right side of button
+                                    float avail_height =
+                                        (state.canvas.position.y + state.canvas.size.y) - param_child_pos.y;
+                                    this->param_child_height = std::min(state.canvas.size.y, this->param_child_height);
+                                    if (this->param_child_height > avail_height) {
+                                        param_child_pos.y -= (this->param_child_height - avail_height);
                                     }
+
+                                    ImGui::SetCursorScreenPos(param_child_pos);
+
+                                    auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove |
+                                                       ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                                                       ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NavFlattened;
+                                    ImGui::BeginChild("module_parameter_child",
+                                        ImVec2(param_child_width, this->param_child_height), true, child_flags);
+
+                                    float cursor_pos_y = ImGui::GetCursorPosY();
+
+                                    // Draw parameters
+                                    this->param_groups.PresentGUI(inout_module.parameters, inout_module.FullName(), "",
+                                        vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN), false,
+                                        ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
+
+                                    this->param_child_height = ImGui::GetCursorPosY() - cursor_pos_y +
+                                                               ImGui::GetFrameHeight() + ImGui::GetFrameHeight();
+
+                                    ImGui::EndChild();
+                                    ImGui::PopStyleColor();
+
+                                    // Also check for active items because combo box might fold out below the child
+                                    // window's border
+                                    bool param_active = last_active_id != ImGui::GetActiveID();
+                                    if (((ImGui::GetMousePos().x >= param_child_pos.x) &&
+                                            (ImGui::GetMousePos().x <= (param_child_pos.x + param_child_width)) &&
+                                            (ImGui::GetMousePos().y >= param_child_pos.y) &&
+                                            (ImGui::GetMousePos().y <=
+                                                (param_child_pos.y + this->param_child_height))) ||
+                                        param_active) {
+                                        param_child_hovered = true;
+                                    }
+                                }
+
+                                // Param Button
+                                ImGui::SetCursorScreenPos(param_button_pos);
+                                if (ImGui::ArrowButton("###parameter_toggle",
+                                        ((this->param_child_show) ? (ImGuiDir_Down) : (ImGuiDir_Up))) &&
+                                    hovered) {
+                                    this->param_child_show = !this->param_child_show;
+                                } else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)) ||
+                                           (ImGui::IsMouseClicked(0) && !param_child_hovered &&
+                                               !ImGui::IsItemHovered())) { /// Ignore if button is hovered
+                                    // Close child window: 'Escape' and 'Mouse Click' outside param window
+                                    this->param_child_show = false;
                                 }
                                 ImGui::SetItemAllowOverlap();
                                 if (hovered) {
@@ -399,55 +454,6 @@ void megamol::gui::ModulePresentation::Present(
                     float border = ((inout_module.is_view_instance) ? (4.0f) : (1.0f)) * state.canvas.zooming;
                     draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, GUI_RECT_CORNER_RADIUS,
                         ImDrawCornerFlags_All, border);
-
-                    // Parameter Child Window
-                    if (this->label_visible && this->param_child_show) {
-                        ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_MODULE_BACKGROUND);
-
-                        float avail_height = (state.canvas.position.y + state.canvas.size.y) - param_child_pos.y;
-                        this->param_child_height = std::min(state.canvas.size.y, this->param_child_height);
-                        if (this->param_child_height > avail_height) {
-                            param_child_pos.y -= (this->param_child_height - avail_height);
-                        }
-
-                        ImGui::SetCursorScreenPos(param_child_pos);
-                        float param_child_width = 325.0f * state.canvas.zooming;
-                        auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove |
-                                           ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                                           ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NavFlattened;
-                        ImGui::BeginChild("module_parameter_child", ImVec2(param_child_width, this->param_child_height),
-                            true, child_flags);
-
-                        float cursor_pos_y = ImGui::GetCursorPosY();
-
-                        // Draw parameters
-                        /// Use extended mode currently set in parameter
-                        this->param_groups.PresentGUI(inout_module.parameters, inout_module.FullName(), "",
-                            vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN), false,
-                            ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
-
-                        this->param_child_height = ImGui::GetCursorPosY() - cursor_pos_y + ImGui::GetFrameHeight();
-                        ImGui::EndChild();
-                        ImGui::PopStyleColor();
-
-                        bool param_popup_hovered = false;
-                        /// Also check for hovered items because selectable list might fold out below child window
-                        /// border
-                        bool item_hovered = ImGui::IsAnyItemHovered();
-                        if (((ImGui::GetMousePos().x >= param_child_pos.x) &&
-                                (ImGui::GetMousePos().x <= (param_child_pos.x + param_child_width)) &&
-                                (ImGui::GetMousePos().y >= param_child_pos.y) &&
-                                (ImGui::GetMousePos().y <= (param_child_pos.y + this->param_child_height))) ||
-                            item_hovered) {
-                            param_popup_hovered = true;
-                        }
-
-                        // Close child window on 'Escape' and 'Mouse Click' outside param window
-                        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)) ||
-                            (ImGui::IsMouseClicked(0) && !param_popup_hovered)) {
-                            this->param_child_show = false;
-                        }
-                    }
                 }
             }
 

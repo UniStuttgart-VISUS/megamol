@@ -25,7 +25,6 @@
 #include "CorporateWhiteStyle.h"
 #include "FileUtils.h"
 #include "WindowCollection.h"
-#include "graph/GraphCollection.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/MinimalPopUp.h"
@@ -34,10 +33,10 @@
 #include "widgets/WidgetPicking_gl.h"
 
 #include "mmcore/CoreInstance.h"
-#include "mmcore/MegaMolGraph.h"
+///#include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/versioninfo.h"
-#include "mmcore/view/AbstractView_EventConsumption.h"
+///#include "mmcore/view/AbstractView_EventConsumption.h"
 
 #include "vislib/math/Rectangle.h"
 
@@ -49,6 +48,14 @@
 #ifdef GUI_USE_GLFW
 #    include "GLFW/glfw3.h"
 #endif
+
+/// TEMP
+namespace megamol {
+namespace core {
+class MegaMolGraph;
+}
+} // namespace megamol
+///
 
 
 namespace megamol {

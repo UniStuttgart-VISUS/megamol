@@ -11,9 +11,6 @@
 
 #include "ModulePresentation.h"
 
-#include "CallSlot.h"
-#include "Parameter.h"
-
 
 namespace megamol {
 namespace gui {

@@ -50,6 +50,7 @@ public:
         ImVec2 win_size;                // size for reset on state loading (current size)
         bool win_soft_reset;            // soft reset of window position and size
         ImVec2 win_reset_size;          // minimum window size for soft reset
+        ImVec2 win_reset_position;      // window position for minimize reset
         bool win_reset;                 // flag for reset window position and size on state loading [NOT SAVED]
         // ---------- Parameter specific configuration ----------
         bool param_show_hotkeys;                     // flag to toggle showing only parameter hotkeys
@@ -87,6 +88,7 @@ public:
             , win_size(ImVec2(0.0f, 0.0f))
             , win_soft_reset(true)
             , win_reset_size(ImVec2(0.0f, 0.0f))
+            , win_reset_position(ImVec2(0.0f, 0.0f))
             , win_reset(true)
             // Window specific configurations
             , param_show_hotkeys(false)
