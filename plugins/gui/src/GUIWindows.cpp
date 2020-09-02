@@ -662,6 +662,35 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             case (Graph::QueueChange::ADD_MODULE): {
                 if (megamol_graph != nullptr) {
                     graph_sync_success &= megamol_graph->CreateModule(data.classname, data.id);
+
+                    // Connect pointer of new parameters of core module to paramters in gui
+                    ModulePtr_t gui_module;
+                    for (auto& mod_ptr : graph_ptr->GetModules()) {
+                        if (mod_ptr->FullName() == data.id) {
+                            gui_module = mod_ptr;
+                        }
+                    }
+                    megamol::core::Module::ptr_type core_module = megamol_graph->FindModule(data.id);
+                    if ((gui_module != nullptr) && (core_module != nullptr)) {
+
+                        megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator se =
+                            core_module->ChildList_End();
+                        for (megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator si =
+                                 core_module->ChildList_Begin();
+                             si != se; ++si) {
+                            auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
+                            if (param_slot != nullptr) {
+                                std::string param_full_name(param_slot->Name().PeekBuffer());
+                                for (auto& parameter : gui_module->parameters) {
+                                    if (parameter.full_name == param_full_name) {
+                                        megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
+                                            (*param_slot), parameter, true, false, true);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Create/Add new graph entry
                     if (graph_sync_success && data.graph_entry) {
                         /// XXX This code is copied from main3000.cpp ---------
