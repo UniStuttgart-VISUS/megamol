@@ -1141,9 +1141,9 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     // Info
     std::string help_marker = "[INFO]";
     std::string param_help = "[Hover] Show Parameter Description Tooltip\n"
-                             "[Right-Click] Context Menu\n"
+                             "[Right Click] Context Menu\n"
                              "[Drag & Drop] Move Module to other Parameter Window\n"
-                             "[Enter],[Tab],[Left-Click outside Widget] Confirm input changes";
+                             "[Enter], [Tab], [Left Click outside Widget] Confirm input changes";
     ImGui::AlignTextToFramePadding();
     ImGui::TextDisabled(help_marker.c_str());
     this->tooltip.ToolTip(param_help);

@@ -391,7 +391,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->nodes[this->currentNode][4] = new_x;
             this->textureInvalid = true;
         }
-        help = "[Ctrl-Click] for keyboard input";
+        help = "[Ctrl + Left Click] for keyboard input";
         this->tooltip.Marker(help);
 
         // Sigma slider -------------------------------------------------------
@@ -400,7 +400,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 this->nodes[this->currentNode][5] = this->widget_buffer.gauss_sigma;
                 this->textureInvalid = true;
             }
-            help = "[Ctrl-Click] for keyboard input";
+            help = "[Ctrl + Left Click] for keyboard input";
             this->tooltip.Marker(help);
         }
 
@@ -432,9 +432,9 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->nodes[this->currentNode][3] = edit_col[3];
             this->textureInvalid = true;
         }
-        help = "[Click] on the colored square to open a color picker.\n"
-               "[CTRL+Click] on individual component to input value.\n"
-               "[Right-Click] on the individual color widget to show options.";
+        help = "[Left Click] on the colored square to open a color picker.\n"
+               "[CTRL + Left Click] on individual component to input value.\n"
+               "[Right Click] on the individual color widget to show options.";
         this->tooltip.Marker(help);
 
         // Interpolation mode -------------------------------------------------

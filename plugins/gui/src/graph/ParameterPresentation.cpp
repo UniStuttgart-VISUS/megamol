@@ -790,9 +790,9 @@ bool megamol::gui::ParameterPresentation::widget_color(
         auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
         retval = ImGui::ColorEdit4(label.c_str(), glm::value_ptr(value), color_flags);
 
-        this->help = "[Click] on the colored square to open a color picker.\n"
-                     "[CTRL+Click] on individual component to input value.\n"
-                     "[Right-Click] on the individual color widget to show options.";
+        this->help = "[Left Click] on the colored square to open a color picker.\n"
+                     "[CTRL + Left Click] on individual component to input value.\n"
+                     "[Right Click] on the individual color widget to show options.";
     }
     return retval;
 }
