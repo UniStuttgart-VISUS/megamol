@@ -775,7 +775,7 @@ bool megamol::gui::ParameterPresentation::widget_string(
         ImGui::TextUnformatted(label.c_str());
         ImGui::EndGroup();
 
-        this->help = "to confirm changes.";
+        this->help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
     }
     return retval;
 }
@@ -790,9 +790,9 @@ bool megamol::gui::ParameterPresentation::widget_color(
         auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
         retval = ImGui::ColorEdit4(label.c_str(), glm::value_ptr(value), color_flags);
 
-        this->help = "on the colored square to open a color picker.\n"
-                     "on individual component to input value.\n"
-                     "on the individual color widget to show options.";
+        this->help = "[Click] on the colored square to open a color picker.\n"
+                     "[CTRL+Click] on individual component to input value.\n"
+                     "[Right-Click] on the individual color widget to show options.";
     }
     return retval;
 }

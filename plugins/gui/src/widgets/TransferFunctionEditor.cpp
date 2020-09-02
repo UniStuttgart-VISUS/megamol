@@ -370,8 +370,8 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 this->textureInvalid = true;
             }
         }
-        help = "for overwriting value range propagated from connected module(s).\n"
-               "for recovery of last value range or last value range propagated from connected module(s).";
+        help = "[Enable] for overwriting value range propagated from connected module(s).\n"
+               "[Disable] for recovery of last value range or last value range propagated from connected module(s).";
         this->tooltip.Marker(help);
 
         // Value slider -------------------------------------------------------
@@ -391,7 +391,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->nodes[this->currentNode][4] = new_x;
             this->textureInvalid = true;
         }
-        help = "for keyboard input";
+        help = "[Ctrl-Click] for keyboard input";
         this->tooltip.Marker(help);
 
         // Sigma slider -------------------------------------------------------
@@ -400,7 +400,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 this->nodes[this->currentNode][5] = this->widget_buffer.gauss_sigma;
                 this->textureInvalid = true;
             }
-            help = "for keyboard input";
+            help = "[Ctrl-Click] for keyboard input";
             this->tooltip.Marker(help);
         }
 
@@ -432,9 +432,9 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->nodes[this->currentNode][3] = edit_col[3];
             this->textureInvalid = true;
         }
-        help = "on the colored square to open a color picker.\n"
-               "on individual component to input value.\n"
-               "on the individual color widget to show options.";
+        help = "[Click] on the colored square to open a color picker.\n"
+               "[CTRL+Click] on individual component to input value.\n"
+               "[Right-Click] on the individual color widget to show options.";
         this->tooltip.Marker(help);
 
         // Interpolation mode -------------------------------------------------

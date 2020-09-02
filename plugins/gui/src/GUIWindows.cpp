@@ -1129,7 +1129,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     if (ImGui::Button("Collapse All")) {
         overrideState = 0; // close
     }
-    /// ImGui::SameLine();
+    ImGui::SameLine();
 
     /// DISBALED --- Does anybody use this?
     /// Toggel Hotkeys
@@ -1138,16 +1138,15 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     // ImGui::Checkbox("Show Hotkeys", &show_only_hotkeys);
     // wc.param_show_hotkeys = show_only_hotkeys;
 
-    /// DISBALED --- ???
     // Info
-    // std::string help_marker = "[INFO]";
-    // std::string param_help = "Show Parameter Description Tooltip\n"
-    //                         "Context Menu\n"
-    //                         "Move Module to other Parameter Window\n"
-    //                         "Confirm input changes";
-    // ImGui::AlignTextToFramePadding();
-    // ImGui::TextDisabled(help_marker.c_str());
-    // this->tooltip.ToolTip(param_help);
+    std::string help_marker = "[INFO]";
+    std::string param_help = "[Hover] Show Parameter Description Tooltip\n"
+                             "[Right-Click] Context Menu\n"
+                             "[Drag & Drop] Move Module to other Parameter Window\n"
+                             "[Enter],[Tab],[Left-Click outside Widget] Confirm input changes";
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextDisabled(help_marker.c_str());
+    this->tooltip.ToolTip(param_help);
 
     // Paramter substring name filtering (only for main parameter view)
     if (wc.win_callback == WindowCollection::DrawCallbacks::MAIN_PARAMETERS) {
