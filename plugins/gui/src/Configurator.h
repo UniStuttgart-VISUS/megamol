@@ -69,6 +69,11 @@ public:
      */
     void UpdateStateParameter(void);
 
+    /**
+     * Return graph collection.
+     */
+    GraphCollection& GetGraphCollection(void) { return this->graph_collection; }
+
 private:
     // VARIABLES --------------------------------------------------------------
 

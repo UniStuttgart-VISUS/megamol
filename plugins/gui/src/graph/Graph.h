@@ -9,13 +9,14 @@
 #define MEGAMOL_GUI_GRAPH_GRAPH_H_INCLUDED
 
 
-#include "Call.h"
+#include "GraphPresentation.h"
+
 #include "Group.h"
-#include "Module.h"
-#include "widgets/HoverToolTip.h"
-#include "widgets/RenamePopUp.h"
-#include "widgets/SplitterWidget.h"
-#include "widgets/StringSearchWidget.h"
+
+#include "vislib/math/Ternary.h"
+
+#include <queue>
+#include <tuple>
 
 
 namespace megamol {
@@ -31,104 +32,23 @@ typedef std::vector<Call::StockCall> CallStockVector_t;
 
 
 /** ************************************************************************
- * Defines GUI graph presentation.
- */
-class GraphPresentation {
-public:
-    friend class Graph;
-
-    // VARIABLES --------------------------------------------------------------
-
-    bool params_visible;
-    bool params_readonly;
-    bool param_extended_mode;
-
-    // FUNCTIONS --------------------------------------------------------------
-
-    GraphPresentation(void);
-    ~GraphPresentation(void);
-
-    void ForceUpdate(void) { this->update = true; }
-    void ResetStatePointers(void) {
-        this->graph_state.interact.callslot_compat_ptr.reset();
-        this->graph_state.interact.interfaceslot_compat_ptr.reset();
-    }
-
-    bool StateFromJsonString(Graph& inout_graph, const std::string& json_string);
-
-    ImGuiID GetHoveredGroup(void) const { return this->graph_state.interact.group_hovered_uid; }
-    ImGuiID GetSelectedGroup(void) const { return this->graph_state.interact.group_selected_uid; }
-    ImGuiID GetSelectedCallSlot(void) const { return this->graph_state.interact.callslot_selected_uid; }
-    ImGuiID GetSelectedInterfaceSlot(void) const { return this->graph_state.interact.interfaceslot_selected_uid; }
-    ImGuiID GetDropSlot(void) const { return this->graph_state.interact.slot_dropped_uid; }
-    bool GetModuleLabelVisibility(void) const { return this->show_module_names; }
-    bool GetCallSlotLabelVisibility(void) const { return this->show_slot_names; }
-    bool GetCallLabelVisibility(void) const { return this->show_call_names; }
-    bool IsCanvasHoverd(void) const { return this->canvas_hovered; }
-
-    void SetLayoutGraph(void) { this->graph_layout = 1; }
-
-private:
-    // VARIABLES --------------------------------------------------------------
-
-    bool update;
-    bool show_grid;
-    bool show_call_names;
-    bool show_slot_names;
-    bool show_module_names;
-    bool show_parameter_sidebar;
-    bool change_show_parameter_sidebar;
-    unsigned int graph_layout;
-    float parameter_sidebar_width;
-    bool reset_zooming;
-    std::string param_name_space;
-    ImVec2 multiselect_start_pos;
-    ImVec2 multiselect_end_pos;
-    bool multiselect_done;
-    bool canvas_hovered;
-    float current_font_scaling;
-    // State propagated and shared by all graph items.
-    megamol::gui::GraphItemsState_t graph_state;
-
-    // Widgets
-    StringSearchWidget search_widget;
-    SplitterWidget splitter_widget;
-    RenamePopUp rename_popup;
-    HoverToolTip tooltip;
-
-    // FUNCTIONS --------------------------------------------------------------
-
-    void Present(Graph& inout_graph, GraphState_t& state);
-    bool StateToJSON(Graph& inout_graph, nlohmann::json& out_json);
-
-    void present_menu(Graph& inout_graph);
-    void present_canvas(Graph& inout_graph, float child_width);
-    void present_parameters(Graph& inout_graph, float child_width);
-
-    void present_canvas_grid(void);
-    void present_canvas_dragged_call(Graph& inout_graph);
-    void present_canvas_multiselection(Graph& inout_graph);
-
-    void layout_graph(Graph& inout_graph);
-    void layout(const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, ImVec2 init_position);
-
-    bool connected_callslot(
-        const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, const CallSlotPtr_t& callslot_ptr);
-    bool connected_interfaceslot(
-        const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, const InterfaceSlotPtr_t& interfaceslot_ptr);
-    bool contains_callslot(const ModulePtrVector_t& modules, ImGuiID callslot_uid);
-    bool contains_interfaceslot(const GroupPtrVector_t& groups, ImGuiID interfaceslot_uid);
-    bool contains_module(const ModulePtrVector_t& modules, ImGuiID module_uid);
-    bool contains_group(const GroupPtrVector_t& groups, ImGuiID group_uid);
-};
-
-
-/** ************************************************************************
  * Defines the graph.
  */
 
 class Graph {
 public:
+    enum QueueChange { ADD_MODULE, DELETE_MODULE, ADD_CALL, DELETE_CALL };
+    struct QueueData {
+        std::string classname = "";
+        std::string id = "";
+        std::string caller = "";
+        std::string callee = "";
+        bool graph_entry = false;
+    };
+    typedef std::tuple<QueueChange, QueueData> SyncQueueData_t;
+    typedef std::queue<SyncQueueData_t> SyncQueue_t;
+    typedef std::shared_ptr<SyncQueue_t> SyncQueuePtr_t;
+
     // VARIABLES --------------------------------------------------------------
 
     const ImGuiID uid;
@@ -145,6 +65,7 @@ public:
     bool DeleteModule(ImGuiID module_uid);
     inline const ModulePtrVector_t& GetModules(void) { return this->modules; }
     bool GetModule(ImGuiID module_uid, ModulePtr_t& out_module_ptr);
+    bool ModuleExists(const std::string& module_fullname);
 
     bool AddCall(const CallStockVector_t& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid);
     bool AddCall(const CallStockVector_t& stock_calls, CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
@@ -170,6 +91,11 @@ public:
     const std::string GetFilename(void) const { return this->filename; }
     void SetFilename(const std::string& filename) { this->filename = filename; }
 
+    const SyncQueuePtr_t& GetSyncQueue(void) { return this->sync_queue; }
+
+    inline vislib::math::Ternary RunningState(void) const { return this->running_state; }
+    inline void SetRunning(vislib::math::Ternary p) { this->running_state = p; }
+
     // Presentation ----------------------------------------------------
 
     inline void PresentGUI(GraphState_t& state) { this->present.Present(*this, state); }
@@ -187,10 +113,11 @@ private:
     GroupPtrVector_t groups;
     bool dirty_flag;
     std::string filename;
+    SyncQueuePtr_t sync_queue;
+    vislib::math::Ternary running_state;
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool delete_disconnected_calls(void);
     const std::string generate_unique_group_name(void);
     const std::string generate_unique_module_name(const std::string& name);
 };

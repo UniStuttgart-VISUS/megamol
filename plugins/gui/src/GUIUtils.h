@@ -47,7 +47,7 @@ namespace gui {
 
 /********** Defines **********/
 
-/// #define GUI_VERBOSE
+#define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f)
@@ -181,7 +181,7 @@ typedef struct _graph_state_ {
 /********** Global Unique ID **********/
 
 extern ImGuiID gui_generated_uid;
-static ImGuiID GenerateUniqueID(void) { return (++megamol::gui::gui_generated_uid); }
+inline ImGuiID GenerateUniqueID(void) { return (++megamol::gui::gui_generated_uid); }
 
 
 /********** Class **********/

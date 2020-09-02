@@ -54,7 +54,7 @@ bool megamol::gui::StringSearchWidget::Widget(const std::string& id, const std::
     ImGui::PopItemWidth();
     ImGui::SameLine();
 
-    this->tooltip.ToolTip(help);
+    this->tooltip.Marker(help);
 
     ImGui::PopID();
     ImGui::EndGroup();

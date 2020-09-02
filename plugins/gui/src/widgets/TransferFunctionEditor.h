@@ -10,13 +10,12 @@
 
 
 #include "ColorPalettes.h"
-
-#include "mmcore/param/TransferFunctionParam.h"
-#include "mmcore/view/TransferFunction.h"
-
 #include "GUIUtils.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ImageWidget_gl.h"
+
+#include "mmcore/param/TransferFunctionParam.h"
+#include "mmcore/view/TransferFunction.h"
 
 #include <cmath>
 #include <iomanip>

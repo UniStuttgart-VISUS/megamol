@@ -271,7 +271,7 @@ mmSetParamValue("::gui::state",[=[{
       "tfe_view_minimized": false,
       "tfe_view_vertical": false,
       "win_callback": 1,
-      "win_flags": 8,
+      "win_flags": 40,
       "win_hotkey": [
         300,
         0
@@ -279,6 +279,10 @@ mmSetParamValue("::gui::state",[=[{
       "win_position": [
         0.0,
         18.0
+      ],
+      "win_reset_position": [
+        0.0,
+        0.0
       ],
       "win_reset_size": [
         400.0,
@@ -305,28 +309,32 @@ mmSetParamValue("::gui::state",[=[{
       "tfe_view_minimized": false,
       "tfe_view_vertical": false,
       "win_callback": 6,
-      "win_flags": 1070,
+      "win_flags": 1064,
       "win_hotkey": [
         296,
         0
       ],
       "win_position": [
         0.0,
-        -18.0
+        0.0
+      ],
+      "win_reset_position": [
+        0.0,
+        0.0
       ],
       "win_reset_size": [
-        400.0,
+        800.0,
         600.0
       ],
       "win_show": false,
       "win_size": [
-        1280.0,
-        702.0
+        800.0,
+        600.0
       ],
-      "win_soft_reset": false
+      "win_soft_reset": true
     },
     "Font Settings": {
-      "font_name": "Roboto-Regular.ttf, 12px",
+      "font_name": "",
       "ms_max_history_count": 20,
       "ms_mode": 0,
       "ms_refresh_rate": 2.0,
@@ -339,14 +347,18 @@ mmSetParamValue("::gui::state",[=[{
       "tfe_view_minimized": false,
       "tfe_view_vertical": false,
       "win_callback": 4,
-      "win_flags": 64,
+      "win_flags": 96,
       "win_hotkey": [
         298,
         0
       ],
       "win_position": [
         0.0,
-        18.0
+        0.0
+      ],
+      "win_reset_position": [
+        0.0,
+        0.0
       ],
       "win_reset_size": [
         400.0,
@@ -354,10 +366,10 @@ mmSetParamValue("::gui::state",[=[{
       ],
       "win_show": false,
       "win_size": [
-        306.0,
-        139.0
+        400.0,
+        600.0
       ],
-      "win_soft_reset": false
+      "win_soft_reset": true
     },
     "Performance Metrics": {
       "font_name": "",
@@ -373,14 +385,18 @@ mmSetParamValue("::gui::state",[=[{
       "tfe_view_minimized": false,
       "tfe_view_vertical": false,
       "win_callback": 3,
-      "win_flags": 65,
+      "win_flags": 97,
       "win_hotkey": [
         299,
         0
       ],
       "win_position": [
-        377.0,
-        208.0
+        0.0,
+        0.0
+      ],
+      "win_reset_position": [
+        0.0,
+        0.0
       ],
       "win_reset_size": [
         400.0,
@@ -388,10 +404,10 @@ mmSetParamValue("::gui::state",[=[{
       ],
       "win_show": false,
       "win_size": [
-        208.0,
-        110.0
+        400.0,
+        600.0
       ],
-      "win_soft_reset": false
+      "win_soft_reset": true
     },
     "Transfer Function Editor": {
       "font_name": "",
@@ -407,14 +423,18 @@ mmSetParamValue("::gui::state",[=[{
       "tfe_view_minimized": false,
       "tfe_view_vertical": false,
       "win_callback": 5,
-      "win_flags": 64,
+      "win_flags": 96,
       "win_hotkey": [
         297,
         0
       ],
       "win_position": [
         0.0,
-        18.0
+        0.0
+      ],
+      "win_reset_position": [
+        0.0,
+        0.0
       ],
       "win_reset_size": [
         400.0,
@@ -422,14 +442,18 @@ mmSetParamValue("::gui::state",[=[{
       ],
       "win_show": false,
       "win_size": [
-        381.0,
-        494.0
+        400.0,
+        600.0
       ],
-      "win_soft_reset": false
+      "win_soft_reset": true
     }
   }
 }]=])
 ```
+
+#### GUI Graph Structure
+
+![gui graph structure](graph_structure.png)
 
 #### Plugin Class Dependencies
 
