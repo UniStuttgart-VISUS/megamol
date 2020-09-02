@@ -298,21 +298,31 @@ bool GUIWindows::PostDraw(void) {
                 ImGui::End(); // early ending
                 return;
             }
-            this->tooltip.ToolTip(
-                "[Double Left Click] Minimize/Maximize Window", ImGui::GetID(wc.win_name.c_str()), 0.5f, 1.5f);
+
+            float y_offset = (this->state.menu_visible) ? (ImGui::GetFrameHeight()) : (0.0f);
+            ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
+            bool window_minimized = ((wc.win_size.x == window_viewport.x) && (wc.win_size.y == window_viewport.y));
+            bool change_window_size = (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0));
+
+            // Context Menu
+            if (ImGui::BeginPopupContextItem()) {
+                if (ImGui::MenuItem(((window_minimized) ? ("Minimize") : ("Maximize")), "Double Left Click")) {
+                    change_window_size = true;
+                }
+                ImGui::EndPopup();
+            }
 
             // Set size to current viewport if title is double clicked
             /// XXX Add minmize/maximaze buttons
-            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
-                float y_offset = (this->state.menu_visible) ? (ImGui::GetFrameHeight()) : (0.0f);
-                ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
-                if ((wc.win_size.x == window_viewport.x) && (wc.win_size.y == window_viewport.y)) {
+            if (change_window_size) {
+                if (window_minimized) {
                     // Window is maximized
                     wc.win_size = wc.win_reset_size;
                     wc.win_position = wc.win_reset_position;
                     wc.win_reset = true;
                 } else {
                     // Window is minimized
+                    ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
                     wc.win_reset_size = wc.win_size;
                     wc.win_reset_position = wc.win_position;
                     wc.win_size = window_viewport;
@@ -364,9 +374,9 @@ bool GUIWindows::PostDraw(void) {
 
     // Draw global parameter widgets -------------------------------------------
 
-    /// DEBUG picking
-    auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
-    this->picking_buffer.EnableInteraction(viewport_dim);
+    /// DEBUG TEST OpenGL Picking
+    // auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
+    // this->picking_buffer.EnableInteraction(viewport_dim);
 
     GraphPtr_t graph_ptr;
     if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
@@ -380,12 +390,12 @@ bool GUIWindows::PostDraw(void) {
         }
     }
 
-    /// DEBUG picking
-    unsigned int id = 5;
-    this->picking_buffer.AddInteractionObject(id, this->triangle_widget.GetInteractions(id));
-    this->triangle_widget.Draw(
-        id, glm::vec2(0.0f, 200.0f), viewport_dim, this->picking_buffer.GetPendingManipulations());
-    this->picking_buffer.DisableInteraction();
+    /// DEBUG TEST OpenGL Picking
+    // unsigned int id = 5;
+    // this->picking_buffer.AddInteractionObject(id, this->triangle_widget.GetInteractions(id));
+    // this->triangle_widget.Draw(
+    //    id, glm::vec2(0.0f, 200.0f), viewport_dim, this->picking_buffer.GetPendingManipulations());
+    // this->picking_buffer.DisableInteraction();
 
     // Draw pop-ups ------------------------------------------------------------
     this->drawPopUps();
@@ -1119,7 +1129,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     if (ImGui::Button("Collapse All")) {
         overrideState = 0; // close
     }
-    ImGui::SameLine();
+    /// ImGui::SameLine();
 
     /// DISBALED --- Does anybody use this?
     /// Toggel Hotkeys
@@ -1128,15 +1138,16 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     // ImGui::Checkbox("Show Hotkeys", &show_only_hotkeys);
     // wc.param_show_hotkeys = show_only_hotkeys;
 
+    /// DISBALED --- ???
     // Info
-    std::string help_marker = "[INFO]";
-    std::string param_help = "Show Parameter Description Tooltip\n"
-                             "Context Menu\n"
-                             "Move Module to other Parameter Window\n"
-                             "Confirm input changes";
-    ImGui::AlignTextToFramePadding();
-    ImGui::TextDisabled(help_marker.c_str());
-    this->tooltip.ToolTip(param_help);
+    // std::string help_marker = "[INFO]";
+    // std::string param_help = "Show Parameter Description Tooltip\n"
+    //                         "Context Menu\n"
+    //                         "Move Module to other Parameter Window\n"
+    //                         "Confirm input changes";
+    // ImGui::AlignTextToFramePadding();
+    // ImGui::TextDisabled(help_marker.c_str());
+    // this->tooltip.ToolTip(param_help);
 
     // Paramter substring name filtering (only for main parameter view)
     if (wc.win_callback == WindowCollection::DrawCallbacks::MAIN_PARAMETERS) {
@@ -1477,28 +1488,37 @@ void GUIWindows::drawMenu(void) {
     // Windows
     if (ImGui::BeginMenu("Windows")) {
 
-        ImGui::MenuItem("Menu", std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU]).ToString().c_str(),
-            &this->state.menu_visible);
+        std::string menu_label = "Show";
+        if (this->state.menu_visible) menu_label = "Hide";
+        if (ImGui::BeginMenu("Menu")) {
+            if (ImGui::MenuItem(menu_label.c_str(),
+                    std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU]).ToString().c_str(), nullptr)) {
+                this->state.menu_visible = !this->state.menu_visible;
+            }
+            ImGui::EndMenu();
+        }
 
         const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
-            std::string hotkey_label = wc.win_hotkey.ToString();
-            if (!hotkey_label.empty()) {
-                hotkey_label = "(SHIFT +) " + hotkey_label;
-            }
-            ImGui::MenuItem(wc.win_name.c_str(), hotkey_label.c_str(), &wc.win_show);
-
-            // Add conext menu for deleting windows without hotkey (= custom parameter windows).
-            if (wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN) {
-                if (ImGui::BeginPopupContextItem()) {
+            if (ImGui::BeginMenu(wc.win_name.c_str())) {
+                std::string hotkey_label = wc.win_hotkey.ToString();
+                std::string menu_label = "Show";
+                if (wc.win_show) menu_label = "Hide";
+                if (ImGui::MenuItem(menu_label.c_str(), hotkey_label.c_str(), nullptr)) {
+                    wc.win_show = !wc.win_show;
+                }
+                std::string hotkey_reset_label;
+                if (!hotkey_label.empty()) {
+                    hotkey_reset_label = "SHIFT + " + hotkey_label;
+                }
+                if (ImGui::MenuItem("Reset Size and Position", hotkey_reset_label.c_str(), nullptr)) {
+                    wc.win_soft_reset = true;
+                }
+                if (wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN) {
                     if (ImGui::MenuItem("Delete Window")) {
                         this->state.win_delete = wc.win_name;
                     }
-                    ImGui::EndPopup();
                 }
-                this->tooltip.ToolTip("Open Context Menu for Deleting Window Permanently.");
-            } else {
-                this->tooltip.ToolTip("Reset Size "
-                                      "and Position of Window.");
+                ImGui::EndMenu();
             }
         };
         this->window_collection.EnumWindows(func);
