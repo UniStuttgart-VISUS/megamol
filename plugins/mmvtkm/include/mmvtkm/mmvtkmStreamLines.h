@@ -15,7 +15,6 @@ namespace mmvtkm {
 
 typedef vislib::math::Point<float, 3> visPoint3f;
 typedef vislib::math::Vector<float, 3> visVec3f;
-//typedef vtkm::Vec<float, 3> visVec3f;
 typedef vislib::math::Plane<float> visPlanef;
 
 
@@ -92,12 +91,13 @@ private:
     enum planeMode { NORMAL, PARAMETER };
     
 	struct Triangle {
-        visPoint3f a;
-        visPoint3f b;
-        visPoint3f c;
+        glm::vec3 a;
+        glm::vec3 b;
+        glm::vec3 c;
+		glm::vec3 o;
 
-		visVec3f v1;
-		visVec3f v2;
+		glm::vec3 v1;
+		glm::vec3 v2;
 
 		float area = 0.f;
 
@@ -105,39 +105,71 @@ private:
 		// weight = triangle_area / polygon_area
         float weight = 0.f;
 
-		Triangle(visPoint3f rhs_a, visPoint3f rhs_b, visPoint3f rhs_c) : a(rhs_a), b(rhs_b), c(rhs_c) 
+		Triangle(const glm::vec3& rhsA, const glm::vec3& rhsB, const glm::vec3& rhsC) : a(rhsA), b(rhsB), c(rhsC) 
 		{
-            this->v1 = this->b - this->a;
-            this->v2 = this->c - this->a;
+            float ab = glm::length(rhsB - rhsA);
+            float ac = glm::length(rhsC - rhsA);
+            float bc = glm::length(rhsC - rhsB);
+            float max = std::max(ab, std::max(ac, bc));
 
-            float ab = (this->a - this->b).Length();
-            float ac = (this->a - this->c).Length();
-            float theta = acos(ac / ab);
+			// get hypothenuse in v1 and adjacent in v2
+            if (ab == max) {
+                this->v1 = rhsB - rhsA;
+                this->v2 = rhsC - rhsA;
+                this->o = rhsA;
+            } else if (ac == max) {
+                this->v1 = rhsC - rhsA;
+                this->v2 = rhsB - rhsA;
+                this->o = rhsA;
+            } else {
+                this->v1 = rhsC - rhsB;
+                this->v2 = rhsA - rhsB;
+                this->o = rhsB;
+            }
 
-            this->area = 0.5f * ab * ac * sin(theta);
+			float v1_length = glm::length(v1);
+            float v2_length = glm::length(v2);
+            
+			// alternatively: 
+			// float cos_theta = v1.Dot(v2) / (v1_length * v2_length);
+			// float sin_theta = sqrt(1.f - cos_theta * cos_theta)
+            float arg = glm::dot(v1, v2) / (v1_length * v2_length); // angle via dot product
+            float theta = acos(trunc(arg * 1000000.f) / 1000000.f);		// avoids -nan in late decimal positions
+            this->area = 0.5f * v1_length * v2_length * sin(theta);
 		}
 	};
 
-	/** Calculates intersectin points of sampling plane and bounding box */
-    std::vector<visPoint3f> calcPlaneBboxIntersectionPoints(const visPlanef& sample_plane, const vtkm::Bounds& bounds);
-
-	/** Decomposes a (convex) polygon into triangles */
-    std::vector<Triangle> decomposePolygon(const std::vector<visPoint3f>& polygon);
-
-	/** Checks whether a point is outside the given boundaries */
-    bool isOutsideCube(const visPoint3f& p, const vtkm::Bounds& bounds);
-
-    /** Callback functions to update the version after changing data */
+	/** Callback functions to update the version after changing data */
     bool dataChanged(core::param::ParamSlot& slot);
     bool setConfiguration(core::param::ParamSlot& slot);
     bool planeModeChanged(core::param::ParamSlot& slot);
 
-    /** Callback functions for the seed bounds */
-    bool lowerBoundChanged(core::param::ParamSlot& slot);
-    bool upperBoundChanged(core::param::ParamSlot& slot);
 
-    /** Check whether the lower bound is actually lower than the upper bound */
-    bool seedBoundCheck();
+	/** Calculates intersectin points of sampling plane and bounding box */
+    std::vector<glm::vec3> calcPlaneBboxIntersectionPoints(const visPlanef& samplePlane, const vtkm::Bounds& bounds);
+
+	/** Checks whether a point is outside the given boundaries */
+    bool isOutsideCube(const glm::vec3& p, const vtkm::Bounds& bounds);
+
+	/** Orders vertices that form a polygon, so that the order can be used for a triangle fan */
+    void orderPolygonVertices(std::vector<glm::vec3>& vertices);
+
+	/** Decomposes a (convex) polygon into triangles */
+    std::vector<Triangle> decomposePolygon(const std::vector<glm::vec3>& polygon);
+
+	/** Checks whether a point is inside a given triangle */
+    bool isInsideTri(const glm::vec3& p, const Triangle& tri);
+
+	/** Creates and adds MeshDataAccessCollection to the mesh datacall */
+    bool createAndAddMeshDataToCall(std::vector<glm::vec3>& lineData, std::vector<glm::vec3>& lineColor,
+        std::vector<unsigned int>& lineIdcs,
+        int numPoints, int numIndices,
+        MeshDataAccessCollection::PrimitiveType linePt = MeshDataAccessCollection::PrimitiveType::TRIANGLES);
+
+	/** Adds the MeshDataAccessCollection to the mesh datacall */
+	bool addMeshDataToCall(const std::vector<MeshDataAccessCollection::VertexAttribute>& va, const MeshDataAccessCollection::IndexData& id,
+        MeshDataAccessCollection::PrimitiveType pt);
+
 
     /** Gets converted vtk streamline data as megamol mesh */
     core::CalleeSlot meshCalleeSlot_;
@@ -146,87 +178,84 @@ private:
     core::CallerSlot vtkCallerSlot_;
 
     /** Paramslot to specify the field name of streamline vector field */
-    core::param::ParamSlot streamlineFieldName_;
+    core::param::ParamSlot psStreamlineFieldName_;
 
     /** Paramslot to specify the seeds for the streamline */
-    core::param::ParamSlot numStreamlineSeed_;
+    core::param::ParamSlot psNumStreamlineSeed_;
 
     /** Paramslot to specify the step size of the streamline */
-    core::param::ParamSlot streamlineStepSize_;
+    core::param::ParamSlot psStreamlineStepSize_;
 
     /** Paramslot to specify the number of steps of the streamline */
-    core::param::ParamSlot numStreamlineSteps_;
+    core::param::ParamSlot psNumStreamlineSteps_;
 
     /** Paramslot to specify the seeds for the streamline */
-    core::param::ParamSlot lowerStreamlineSeedBound_;
+    core::param::ParamSlot psLowerStreamlineSeedBound_;
 
     /** Paramslot to specify the seeds for the streamline */
-    core::param::ParamSlot upperStreamlineSeedBound_;
+    core::param::ParamSlot psUpperStreamlineSeedBound_;
 
     /** Paramslot for plane mode */
-    core::param::ParamSlot seedPlaneMode_;
-
-	/** Paramslot for plane color */
-    //core::param::ParamSlot seedPlaneColor_;
+    core::param::ParamSlot psSeedPlaneMode_;
 
     /** Paramslot for lower left corner of seed plane */
-    core::param::ParamSlot lowerLeftSeedPoint_;
+    core::param::ParamSlot psLowerLeftSeedPoint_;
 
     /** Paramslot for lower left corner of seed plane */
-    core::param::ParamSlot upperRightSeedPoint_;
+    core::param::ParamSlot psUpperRightSeedPoint_;
 
     /** Paramslot for normal of seed plane */
-    core::param::ParamSlot seedPlaneNormal_;
+    core::param::ParamSlot psSeedPlaneNormal_;
 
 	/** Paramslot for point on seed plane */
-    core::param::ParamSlot seedPlanePoint_;
+    core::param::ParamSlot psSeedPlanePoint_;
 
 	/** Paramslot for seed plane distance */
-    //core::param::ParamSlot seedPlaneDistance_;
+    //core::param::ParamSlot psSeedPlaneDistance_;
+
+	/** Paramslot for seed plane color */
+    core::param::ParamSlot psSeedPlaneColor_;
 
     /** Paramslot to apply changes to streamline configurations */
     core::param::ParamSlot applyChanges_;
 
-    /** Used for conversion seed bounding param type to vtkm vec type */
-    visVec3f lowerSeedBound_;
-    visVec3f upperSeedBound_;
 
     /** Used for data version control, same as 'hash_data' */
-    uint32_t old_version_;
-    uint32_t new_version_;
+    uint32_t oldVersion_;
+    uint32_t newVersion_;
 
     /** Used for mesh data call */
-    std::shared_ptr<MeshDataAccessCollection> mesh_data_access_;
-    core::Spatial3DMetaData meta_data_;
+    std::shared_ptr<MeshDataAccessCollection> meshDataAccess_;
+    core::Spatial3DMetaData metaData_;
 
     /** Pointers to streamline data */
-    std::vector<std::vector<float>> streamline_data_;
-    std::vector<std::vector<float>> streamline_color_;
-    std::vector<std::vector<unsigned int>> streamline_indices_;
+    std::vector<std::vector<glm::vec3>> streamlineData_;
+    std::vector<std::vector<glm::vec3>> streamlineColor_;
+    std::vector<std::vector<unsigned int>> streamlineIndices_;
 
-    /** Temporary data storage for streamline parameter changes */
-    vtkm::Id tmp_num_seeds_;
-    vtkm::Id tmp_num_steps_;
-    vtkm::FloatDefault tmp_step_size_;
-    vislib::TString tmp_active_field_;
-    visPoint3f tmp_lower_left_seed_point_;
-    visPoint3f tmp_upper_right_seed_point_;
-    visVec3f tmp_seed_plane_normal_;
-    visPoint3f tmp_seed_plane_point_;
-    float tmp_seed_plane_distance_;
+    /** Data storage for streamline parameters */
+    vtkm::Id numSeeds_;
+    vtkm::Id numSteps_;
+    vtkm::FloatDefault stepSize_;
+    vislib::TString activeField_;
+    glm::vec3 lowerLeftSeedPoint_;
+    glm::vec3 upperRightSeedPoint_;
+    glm::vec3 seedPlaneNormal_;
+    glm::vec3 seedPlanePoint_;
+    glm::vec3 seedPlaneColor_;
+    float seedPlaneDistance_;
 
-    std::vector<visPoint3f> seed_plane_;
-    std::vector<visVec3f> seed_plane_colors_;
-    std::vector<float> seed_plane_color_;
-    std::vector<unsigned int> plane_idx_;
+    std::vector<glm::vec3> seedPlane_;
+    std::vector<glm::vec3> seedPlaneColorVec_;
+    std::vector<unsigned int> seedPlaneIdcs_;
 
     /** used for plane mode */
-    int plane_mode_;
+    int planeMode_;
 
 	/** some colors for testing */
-    visPoint3f red = visPoint3f(0.5f, 0.f, 0.f);
-    visPoint3f green = visPoint3f(0.f, 0.5f, 0.f);
-    visPoint3f blue = visPoint3f(0.f, 0.f, 0.5);
+    glm::vec3 red_ = glm::vec3(0.5f, 0.f, 0.f);
+    glm::vec3 green_ = glm::vec3(0.f, 0.5f, 0.f);
+    glm::vec3 blue_ = glm::vec3(0.f, 0.f, 0.5f);
 };
 
 } // end namespace mmvtkm
