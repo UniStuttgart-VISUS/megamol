@@ -297,7 +297,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
 
     ImGui::BeginGroup();
 
-    const float search_child_height = ImGui::GetFrameHeightWithSpacing() * 2.25f;
+    const float search_child_height = ImGui::GetFrameHeightWithSpacing() * 2.5f;
     auto child_flags =
         ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
     ImGui::BeginChild("module_search_child_window", ImVec2(width, search_child_height), false, child_flags);
@@ -316,6 +316,8 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
     auto search_string = this->search_widget.GetSearchString();
 
     ImGui::EndChild();
+
+    // ------------------------------------------------------------------------
 
     child_flags = ImGuiWindowFlags_NavFlattened;
     ImGui::BeginChild("module_list_child_window", ImVec2(width, 0.0f), true, child_flags);
@@ -677,20 +679,18 @@ void megamol::gui::Configurator::drawPopUps(void) {
         ImGuiID selected_callslot_uid = selected_graph_ptr->present.GetSelectedCallSlot();
         ImGuiID selected_group_uid = selected_graph_ptr->present.GetSelectedGroup();
 
-        bool valid_double_click =
-            (ImGui::IsMouseDoubleClicked(0) && !this->show_module_list_child &&
-                selected_graph_ptr->present.IsCanvasHoverd() && (selected_group_uid == GUI_INVALID_ID));
-        bool double_click_callslot =
+        bool valid_double_click = (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->present.IsCanvasHoverd() &&
+                                   (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_child));
+        bool valid_double_click_callslot =
             (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->present.IsCanvasHoverd() &&
                 (selected_callslot_uid != GUI_INVALID_ID) &&
                 ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)));
 
-        if (valid_double_click || double_click_callslot) {
+        if (valid_double_click || valid_double_click_callslot) {
             std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
             this->last_selected_callslot_uid = selected_callslot_uid;
             // Force consume double click!
             ImGui::GetIO().MouseDoubleClicked[0] = false;
-            /// ImGui::GetIO().MouseClicked[0] = false;
         }
     }
     if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
@@ -706,14 +706,16 @@ void megamol::gui::Configurator::drawPopUps(void) {
         ImGui::SetCursorScreenPos(this->module_list_popup_pos);
         const float child_width = 250.0f;
         const float child_height = 350.0f;
-        float diff_width = (ImGui::GetWindowSize().x - this->module_list_popup_pos.x);
-        float diff_height = (ImGui::GetWindowSize().y - this->module_list_popup_pos.y);
+        float diff_width = (ImGui::GetWindowPos().x + ImGui::GetWindowSize().x - this->module_list_popup_pos.x);
+        float diff_height = (ImGui::GetWindowPos().y + ImGui::GetWindowSize().y - this->module_list_popup_pos.y);
         if (diff_width < child_width) {
             this->module_list_popup_pos.x -= (child_width - diff_width);
         }
+        this->module_list_popup_pos.x = std::max(this->module_list_popup_pos.x, ImGui::GetWindowPos().x);
         if (diff_height < child_height) {
             this->module_list_popup_pos.y -= (child_height - diff_height);
         }
+        this->module_list_popup_pos.y = std::max(this->module_list_popup_pos.y, ImGui::GetWindowPos().y);
         ImGui::SetCursorScreenPos(this->module_list_popup_pos);
         auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NavFlattened;
         ImGui::BeginChild("module_list_child", ImVec2(child_width, child_height), true, child_flags);

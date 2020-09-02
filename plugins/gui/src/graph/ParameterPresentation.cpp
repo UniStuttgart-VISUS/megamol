@@ -349,7 +349,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
             if constexpr (std::is_same_v<T, bool>) {
                 auto value = arg;
                 if (this->widget_bool(scope, param_label, value)) {
-                    inout_parameter.SetValue(value, false, true);
+                    inout_parameter.SetValue(value);
                     retval = true;
                 }
                 error = false;
@@ -359,7 +359,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 auto value = arg;
                 if (this->widget_float(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                         inout_parameter.GetMaxValue<T>())) {
-                    inout_parameter.SetValue(value, false, true);
+                    inout_parameter.SetValue(value);
                     retval = true;
                 }
                 error = false;
@@ -370,7 +370,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     auto value = arg;
                     if (this->widget_int(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                             inout_parameter.GetMaxValue<T>())) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -379,7 +379,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::ENUM): {
                     auto value = arg;
                     if (this->widget_enum(scope, param_label, value, inout_parameter.GetStorage<EnumStorage_t>())) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -393,7 +393,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::STRING): {
                     auto value = arg;
                     if (this->widget_string(scope, param_label, value)) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -402,7 +402,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::TRANSFERFUNCTION): {
                     auto value = arg;
                     if (this->widget_string(scope, param_label, value)) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -411,7 +411,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::FILEPATH): {
                     auto value = arg;
                     if (this->widget_string(scope, param_label, value)) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -421,7 +421,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     auto value = arg;
                     if (this->widget_flexenum(scope, param_label, value,
                             inout_parameter.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>())) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -434,7 +434,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
             else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
                 auto value = arg;
                 if (this->widget_ternary(scope, param_label, value)) {
-                    inout_parameter.SetValue(value, false, true);
+                    inout_parameter.SetValue(value);
                     retval = true;
                 }
                 error = false;
@@ -444,7 +444,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 auto value = arg;
                 if (this->widget_vector2f(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                         inout_parameter.GetMaxValue<T>())) {
-                    inout_parameter.SetValue(value, false, true);
+                    inout_parameter.SetValue(value);
                     retval = true;
                 }
                 error = false;
@@ -454,7 +454,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 auto value = arg;
                 if (this->widget_vector3f(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                         inout_parameter.GetMaxValue<T>())) {
-                    inout_parameter.SetValue(value, false, true);
+                    inout_parameter.SetValue(value);
                     retval = true;
                 }
                 error = false;
@@ -465,7 +465,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     auto value = arg;
                     if (this->widget_vector4f(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                             inout_parameter.GetMaxValue<T>())) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -474,7 +474,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::COLOR): {
                     auto value = arg;
                     if (this->widget_vector4f(scope, param_label, value, glm::vec4(0.0f), glm::vec4(1.0f))) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -515,7 +515,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::VECTOR4F): {
                     auto value = arg;
                     if (this->widget_color(scope, param_label, value)) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -524,7 +524,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::COLOR): {
                     auto value = arg;
                     if (this->widget_color(scope, param_label, value)) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -542,7 +542,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::FILEPATH): {
                     auto value = arg;
                     if (this->widget_filepath(scope, param_label, value)) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -614,7 +614,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 auto value = arg;
                 if (this->widget_knob(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                         inout_parameter.GetMaxValue<T>())) {
-                    inout_parameter.SetValue(value, false, true);
+                    inout_parameter.SetValue(value);
                     retval = true;
                 }
                 error = false;
@@ -630,7 +630,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     auto value = arg;
                     if (this->widget_rotation_axes(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                             inout_parameter.GetMaxValue<T>())) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -650,7 +650,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     auto value = arg;
                     if (this->widget_rotation_direction(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                             inout_parameter.GetMaxValue<T>())) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -1220,7 +1220,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
         if (ImGui::Button("Paste")) {
 #ifdef GUI_USE_GLFW
             auto glfw_win = ::glfwGetCurrentContext();
-            inout_parameter.SetValue(std::string(::glfwGetClipboardString(glfw_win)), false, true);
+            inout_parameter.SetValue(std::string(::glfwGetClipboardString(glfw_win)));
 #elif _WIN32
             inout_parameter.SetValue(std::string(ImGui::GetClipboardText()));
 #else // LINUX
@@ -1251,7 +1251,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
                 if (this->tf_editor_internal.Widget(false)) {
                     std::string value;
                     if (this->tf_editor_internal.GetTransferFunction(value)) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = false; /// (Returning true opens external editor)
                     }
                 }

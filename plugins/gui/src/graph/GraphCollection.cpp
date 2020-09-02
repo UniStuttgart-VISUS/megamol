@@ -312,7 +312,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         const bool use_core_instance = (core_instance != nullptr);
         if (use_megamol_graph == use_core_instance) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Invalid references to the graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Ambiguous references to the graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -1144,7 +1144,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                                     std::string new_configurator_graph_state;
                                     this->replace_graph_state(
                                         graph_ptr, parameter.GetValueString(), new_configurator_graph_state);
-                                    parameter.SetValue(new_configurator_graph_state, false, true);
+                                    parameter.SetValue(new_configurator_graph_state);
                                     wrote_graph_state = true;
                                 }
                             }
@@ -1155,7 +1155,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                                 std::string new_parameter_gui_state;
                                 this->replace_parameter_gui_state(
                                     graph_ptr, parameter.GetValueString(), new_parameter_gui_state);
-                                parameter.SetValue(new_parameter_gui_state, false, true);
+                                parameter.SetValue(new_parameter_gui_state);
                                 wrote_parameter_gui_state = true;
                             }
                         }
