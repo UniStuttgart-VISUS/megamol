@@ -72,12 +72,12 @@ public:
     /**
      * Return graph collection.
      */
-    const GraphCollectionhPtr_t& GetGraphCollection(void) { return this->graph_collection; }
+    GraphCollection& GetGraphCollection(void) { return this->graph_collection; }
 
 private:
     // VARIABLES --------------------------------------------------------------
 
-    GraphCollectionhPtr_t graph_collection;
+    GraphCollection graph_collection;
 
     std::vector<megamol::core::param::ParamSlot*> param_slots;
     megamol::core::param::ParamSlot state_param;

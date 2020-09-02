@@ -26,7 +26,7 @@ std::vector<std::string> megamol::gui::Configurator::dropped_files;
 
 
 megamol::gui::Configurator::Configurator()
-    : graph_collection(nullptr)
+    : graph_collection()
     , param_slots()
     , state_param(GUI_CONFIGURATOR_STATE_PARAM_NAME, "State of the configurator.")
     , init_state(0)
@@ -68,9 +68,6 @@ megamol::gui::Configurator::Configurator()
     this->graph_state.graph_selected_uid = GUI_INVALID_ID;
     this->graph_state.graph_delete = false;
     this->graph_state.graph_save = false;
-
-    this->graph_collection = std::make_shared<GraphCollection>();
-    ASSERT(this->graph_collection != nullptr);
 }
 
 
@@ -96,7 +93,7 @@ bool megamol::gui::Configurator::Draw(
     if (this->init_state < 2) {
         /// Step 1] (two frames!)
 
-        // Show pop-up before calling this->graph_collection->LoadModulesCallsStock().
+        // Show pop-up before calling this->graph_collection.LoadModulesCallsStock().
         /// Rendering of pop-up requires two complete draw calls!
         bool open = true;
         std::string popup_label("Loading");
@@ -115,18 +112,18 @@ bool megamol::gui::Configurator::Draw(
         /// Step 2] (one frame)
 
         // Load available modules and calls and currently loaded project from core once(!)
-        this->graph_collection->LoadCallStock(core_instance);
-        this->graph_collection->LoadModuleStock(core_instance);
+        this->graph_collection.LoadCallStock(core_instance);
+        this->graph_collection.LoadModuleStock(core_instance);
 
         // Loading separate gui graph for running graph of core instance,
         // because initial gui graph is hidden. It should not be manipulated
         // since there is no synchronization for the core instance graph (yet)
-        auto graph_count = this->graph_collection->GetGraphs().size();
+        auto graph_count = this->graph_collection.GetGraphs().size();
         if (graph_count == 1) {
-            auto graph_ptr = this->graph_collection->GetGraphs().front();
+            auto graph_ptr = this->graph_collection.GetGraphs().front();
             if (graph_ptr->RunningState().IsFalse()) {
                 // Load inital project
-                /// this->graph_collection->LoadProjectFromCore(core_instance, nullptr);
+                /// this->graph_collection.LoadProjectFromCore(core_instance, nullptr);
                 /// or: this->add_empty_project();
             }
         } else {
@@ -169,7 +166,7 @@ bool megamol::gui::Configurator::Draw(
             // ... only if configurator is focused.
             if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
                 for (auto& dropped_file : megamol::gui::Configurator::dropped_files) {
-                    this->graph_collection->LoadAddProjectFromFile(this->graph_state.graph_selected_uid, dropped_file);
+                    this->graph_collection.LoadAddProjectFromFile(this->graph_state.graph_selected_uid, dropped_file);
                 }
             }
             megamol::gui::Configurator::dropped_files.clear();
@@ -184,7 +181,7 @@ bool megamol::gui::Configurator::Draw(
             this->draw_window_module_list(this->module_list_sidebar_width);
             ImGui::SameLine();
         }
-        this->graph_collection->PresentGUI(this->graph_state);
+        this->graph_collection.PresentGUI(this->graph_state);
         // Process Pop-ups
         this->drawPopUps();
 
@@ -232,7 +229,7 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
                     this->open_popup_load = true;
                 }
                 if (ImGui::MenuItem("Running")) {
-                    this->graph_collection->LoadProjectFromCore(core_instance, nullptr);
+                    this->graph_collection.LoadProjectFromCore(core_instance, nullptr);
                 }
                 ImGui::EndMenu();
             }
@@ -245,7 +242,7 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
                 }
                 if (ImGui::MenuItem(
                         "Running", nullptr, false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
-                    this->graph_collection->AddUpdateProjectFromCore(
+                    this->graph_collection.AddUpdateProjectFromCore(
                         this->graph_state.graph_selected_uid, core_instance, nullptr, true);
                 }
                 ImGui::EndMenu();
@@ -330,7 +327,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
     std::string compat_callslot_name;
     CallSlotPtr_t selected_callslot_ptr;
     GraphPtr_t selected_graph_ptr;
-    if (this->graph_collection->GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
+    if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
 
         auto callslot_id = selected_graph_ptr->present.GetSelectedCallSlot();
         if (callslot_id != GUI_INVALID_ID) {
@@ -357,7 +354,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
     }
 
     ImGuiID id = 1;
-    for (auto& mod : this->graph_collection->GetModulesStock()) {
+    for (auto& mod : this->graph_collection.GetModulesStock()) {
 
         // Filter module by given search string
         search_filter = true;
@@ -406,7 +403,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
             if (add_module) {
                 if (selected_graph_ptr != nullptr) {
                     ImGuiID module_uid =
-                        selected_graph_ptr->AddModule(this->graph_collection->GetModulesStock(), mod.class_name);
+                        selected_graph_ptr->AddModule(this->graph_collection.GetModulesStock(), mod.class_name);
                     ModulePtr_t module_ptr;
                     if (selected_graph_ptr->GetModule(module_uid, module_ptr)) {
 
@@ -417,9 +414,8 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
                             for (auto& callslot_map : module_ptr->GetCallSlots()) {
                                 for (auto& callslot_ptr : callslot_map.second) {
                                     if (callslot_ptr->name == compat_callslot_name) {
-                                        added_call =
-                                            selected_graph_ptr->AddCall(this->graph_collection->GetCallsStock(),
-                                                selected_callslot_ptr, callslot_ptr);
+                                        added_call = selected_graph_ptr->AddCall(this->graph_collection.GetCallsStock(),
+                                            selected_callslot_ptr, callslot_ptr);
                                         if (added_call) {
                                             module_ptr->present.SetSelectedSlotPosition();
                                         }
@@ -478,14 +474,14 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
 
 void megamol::gui::Configurator::add_empty_project(void) {
 
-    ImGuiID graph_uid = this->graph_collection->AddGraph();
+    ImGuiID graph_uid = this->graph_collection.AddGraph();
     if (graph_uid != GUI_INVALID_ID) {
 
         // Add initial GUIView and set as view instance
         GraphPtr_t graph_ptr;
-        if (this->graph_collection->GetGraph(graph_uid, graph_ptr)) {
+        if (this->graph_collection.GetGraph(graph_uid, graph_ptr)) {
             std::string guiview_class_name("GUIView");
-            ImGuiID module_uid = graph_ptr->AddModule(this->graph_collection->GetModulesStock(), guiview_class_name);
+            ImGuiID module_uid = graph_ptr->AddModule(this->graph_collection.GetModulesStock(), guiview_class_name);
             ModulePtr_t module_ptr;
             if (graph_ptr->GetModule(module_uid, module_ptr)) {
                 auto graph_module = graph_ptr->GetModules().back();
@@ -552,12 +548,12 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
                 for (auto& config_item : header_item.value().items()) {
                     std::string json_graph_id = config_item.key(); /// = graph filename
                     // Load graph from file
-                    auto graph_uid = this->graph_collection->LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
+                    auto graph_uid = this->graph_collection.LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
                     // Overwrite graph states with the one found in this project
                     /// XXX Comment for ignoring graph state stored in this project
                     // if (graph_uid != GUI_INVALID_ID) {
                     //    GraphPtr_t graph_ptr;
-                    //    if (this->graph_collection->GetGraph(graph_uid, graph_ptr)) {
+                    //    if (this->graph_collection.GetGraph(graph_uid, graph_ptr)) {
                     //        // Let graph search for his configurator state in this project
                     //        graph_ptr->GUIStateFromJsonString(in_json_string);
                     //    }
@@ -614,7 +610,7 @@ bool megamol::gui::Configurator::configurator_state_to_json(nlohmann::json& out_
         out_json[GUI_JSON_TAG_CONFIGURATOR]["show_module_list_sidebar"] = this->show_module_list_sidebar;
         out_json[GUI_JSON_TAG_CONFIGURATOR]["module_list_sidebar_width"] = this->module_list_sidebar_width;
 
-        for (auto& graph_ptr : this->graph_collection->GetGraphs()) {
+        for (auto& graph_ptr : this->graph_collection.GetGraphs()) {
             graph_ptr->GUIStateToJSON(out_json);
         }
 #ifdef GUI_VERBOSE
@@ -657,12 +653,12 @@ void megamol::gui::Configurator::drawPopUps(void) {
     bool popup_failed = false;
     std::string project_filename;
     GraphPtr_t graph_ptr;
-    if (this->graph_collection->GetGraph(this->add_project_graph_uid, graph_ptr)) {
+    if (this->graph_collection.GetGraph(this->add_project_graph_uid, graph_ptr)) {
         project_filename = graph_ptr->GetFilename();
     }
     if (this->file_browser.PopUp(
             FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->open_popup_load, project_filename)) {
-        popup_failed = !this->graph_collection->LoadAddProjectFromFile(this->add_project_graph_uid, project_filename);
+        popup_failed = !this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename);
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
     MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
@@ -671,7 +667,7 @@ void megamol::gui::Configurator::drawPopUps(void) {
 
     // Module Stock List Child Window ------------------------------------------
     GraphPtr_t selected_graph_ptr;
-    if (this->graph_collection->GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
+    if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
 
         if (this->show_module_list_child && ((ImGui::IsMouseClicked(0) && !this->module_list_popup_hovered) ||
                                                 ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))) {
