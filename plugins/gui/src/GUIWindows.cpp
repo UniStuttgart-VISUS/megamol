@@ -261,7 +261,7 @@ bool GUIWindows::PostDraw(void) {
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
 
             GraphPtr_t graph_ptr;
-            if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
+            if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
                 for (auto& module_ptr : graph_ptr->GetModules()) {
                     std::string module_full_name = module_ptr->FullName();
                     for (auto& param : module_ptr->parameters) {
@@ -379,7 +379,7 @@ bool GUIWindows::PostDraw(void) {
     // this->picking_buffer.EnableInteraction(viewport_dim);
 
     GraphPtr_t graph_ptr;
-    if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
+    if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
 
             /// TODO Pass picked UID to parameters
@@ -534,7 +534,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     // Check for parameter hotkeys
     hotkeyPressed = false;
     GraphPtr_t graph_ptr;
-    if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
+    if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             if (check_all_modules || this->considerModule(module_ptr->FullName(), modules_list)) {
                 for (auto& param : module_ptr->parameters) {
@@ -638,7 +638,7 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
 
     // 1) Load all known calls from core instance ONCS ---------------------------
-    if (!this->configurator.GetGraphCollection()->LoadCallStock(core_instance)) {
+    if (!this->configurator.GetGraphCollection().LoadCallStock(core_instance)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -649,7 +649,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
     bool sync_success = true;
 
     GraphPtr_t graph_ptr;
-    bool found_graph = this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr);
+    bool found_graph = this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr);
 
     // 2) Synchronize GUI graph -> Core graph ------------------------------------
     /* XXX
@@ -760,7 +760,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
     /// vislib::math::Ternary::TRI_TRUE:  Show running mogamol graph in configurator
     /// vislib::math::Ternary::TRI_FALSE: Hide running graph of core instance in cofigurator,
     ///     because this graph has no synchronization and should not be edited
-    sync_success &= this->configurator.GetGraphCollection()->LoadUpdateProjectFromCore(this->graph_uid,
+    sync_success &= this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(this->graph_uid,
         ((megamol_graph == nullptr) ? (this->core_instance) : (nullptr)), megamol_graph,
         ((megamol_graph == nullptr) ? (vislib::math::Ternary::TRI_FALSE) : (vislib::math::Ternary::TRI_TRUE)));
     if (!sync_success) {
@@ -1170,7 +1170,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     auto currentSearchString = this->search_widget.GetSearchString();
     GraphPtr_t graph_ptr;
     // Listing modules and their parameters
-    if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
+    if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             std::string module_label = module_ptr->FullName();
 
@@ -1628,8 +1628,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         /// Serialize current state to parameter.
         this->save_state_to_parameter();
         /// Save to file
-        popup_failed = !this->configurator.GetGraphCollection()->SaveProjectToFile(
-            this->graph_uid, this->state.project_file, true);
+        popup_failed =
+            !this->configurator.GetGraphCollection().SaveProjectToFile(this->graph_uid, this->state.project_file, true);
     }
     MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
@@ -1696,7 +1696,7 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
         }
 
         GraphPtr_t graph_ptr;
-        if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
+        if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 for (auto& param : module_ptr->parameters) {
 
@@ -1771,7 +1771,7 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
     }
 
     GraphPtr_t graph_ptr;
-    if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
+    if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             for (auto& param : module_ptr->parameters) {
                 if (!param.core_param_ptr.IsNull()) {
@@ -1786,7 +1786,7 @@ void megamol::gui::GUIWindows::save_state_to_parameter(void) {
 bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const std::string& in_json_string) {
 
     GraphPtr_t graph_ptr;
-    if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
+    if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             std::string module_full_name = module_ptr->FullName();
             module_ptr->present.param_groups.ParameterGroupGUIStateFromJSONString(in_json_string, module_full_name);
@@ -1883,7 +1883,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
         inout_json[GUI_JSON_TAG_GUISTATE]["menu_visible"] = this->state.menu_visible;
 
         GraphPtr_t graph_ptr;
-        if (this->configurator.GetGraphCollection()->GetGraph(this->graph_uid, graph_ptr)) {
+        if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 std::string module_full_name = module_ptr->FullName();
                 module_ptr->present.param_groups.ParameterGroupGUIStateToJSON(inout_json, module_full_name);
