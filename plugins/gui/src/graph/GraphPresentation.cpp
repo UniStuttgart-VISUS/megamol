@@ -1416,9 +1416,9 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
     this->search_widget.Widget("graph_parameter_search", help_text);
     auto search_string = this->search_widget.GetSearchString();
 
-    ImGui::Separator();
-
     ImGui::EndChild();
+
+    // ------------------------------------------------------------------------
 
     child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NavFlattened |
                   ImGuiWindowFlags_AlwaysUseWindowPadding;

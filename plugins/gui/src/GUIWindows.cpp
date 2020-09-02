@@ -1512,10 +1512,10 @@ void GUIWindows::drawMenu(void) {
                 if (ImGui::MenuItem("Reset Size and Position", hotkey_reset_label.c_str(), nullptr)) {
                     wc.win_soft_reset = true;
                 }
-                if (wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN) {
-                    if (ImGui::MenuItem("Delete Window")) {
-                        this->state.win_delete = wc.win_name;
-                    }
+                // Enable option to delete window if it is a newly created custom parameter window
+                if (ImGui::MenuItem(
+                        "Delete Window", nullptr, false, (wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN))) {
+                    this->state.win_delete = wc.win_name;
                 }
                 ImGui::EndMenu();
             }
