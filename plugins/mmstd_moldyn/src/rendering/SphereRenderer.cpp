@@ -1139,10 +1139,10 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
 
     // ------------------------------------------------------------------------
 
-    // Set OpenGL state
+    // Set OpenGL state ----------------------------------------------------
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS); /// Necessary for early depth test in fragment shader (default)
+    glDepthFunc(GL_LESS); // Necessary for early depth test in fragment shader (default)
     glEnable(GL_CLIP_DISTANCE0);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
@@ -1174,10 +1174,14 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
         break;
     }
 
-    // Reset OpenGl state
+    // Reset default OpenGL state ---------------------------------------------
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-    glDisable(GL_DEPTH_TEST);
     glDisable(GL_CLIP_DISTANCE0);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glDisable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_POINT_SPRITE);
 
     // Save some current data
     this->lastVpHeight = this->curVpHeight;
@@ -1445,23 +1449,19 @@ bool SphereRenderer::renderSSBO(view::CallRender3D_2& call, MultiParticleDataCal
 
 bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCall* mpdc) {
 
+    // Set OpenGL state -----------------------------------------------
     glDisable(GL_DEPTH_TEST);
-
+    glEnable(GL_POINT_SPRITE);
     glEnable(GL_BLEND);
-    glBlendEquation(GL_FUNC_ADD);
-
-#if 1
     // Should be default for splat rendering (Hint: Background colour should not be WHITE)
     glBlendFunc(GL_ONE, GL_ONE);
-#else
+    glBlendEquation(GL_FUNC_ADD);
+
     // Maybe for blending against white, remove pre-mult alpha and use this:
     // @gl.blendFuncSeparate @gl.SRC_ALPHA, @gl.ONE_MINUS_SRC_ALPHA, @gl.ONE, @gl.ONE_MINUS_SRC_ALPHA
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
+    //glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     // glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
-#endif
 
-    glEnable(GL_POINT_SPRITE);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, this->theSingleBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SSBOvertexBindingPoint, this->theSingleBuffer);
 
@@ -1561,10 +1561,6 @@ bool SphereRenderer::renderSplat(view::CallRender3D_2& call, MultiParticleDataCa
 
         flagPartsCount += parts.GetCount();
     }
-
-    glDisable(GL_POINT_SPRITE);
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
 
     mpdc->Unlock();
 
@@ -1764,6 +1760,7 @@ bool SphereRenderer::renderAmbientOcclusion(view::CallRender3D_2& call, MultiPar
 
     GLint prevFBO;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
+
     glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer.fbo);
     GLenum bufs[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
     glDrawBuffers(2, bufs);
