@@ -652,7 +652,6 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
     bool found_graph = this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr);
 
     // 2) Synchronize GUI graph -> Core graph ------------------------------------
-    /* XXX
     bool graph_sync_success = true;
     if (found_graph) {
         auto queue = graph_ptr->GetSyncQueue();
@@ -753,7 +752,6 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             __LINE__);
     }
     sync_success &= graph_sync_success;
-    */
 
     // 3) Synchronize Core graph -> GUI graph ------------------------------------
     // Create new gui graph for running graph once and then check for updates
