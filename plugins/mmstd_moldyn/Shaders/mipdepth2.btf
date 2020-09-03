@@ -47,10 +47,18 @@ uniform ivec3 depthTexParams;
 #define DEPTHMIP_WIDTH depthTexParams.x
 #define DEPTHMIP_HEIGHT depthTexParams.y
 #define DEPTHMIP_MAXLEVEL depthTexParams.z
-
+// new camera
+uniform mat4 mv_inv;
+uniform mat4 mv_inv_transp;
+uniform mat4 mvp;
+uniform mat4 mvp_inv;
+uniform mat4 mvp_transp;
+uniform vec4 light_dir;
+uniform vec4 cam_pos;
+// end new camera
 out vec4 objPos;
 out vec4 camPos;
-out vec4 lightPos;
+out vec4 lightDir;
 out float squarRad;
 out float rad;
 
@@ -92,15 +100,15 @@ void main(void) {
     vec4 objPos1 = inPos1;
     vec4 objPos2 = inPos2;
 
-    vec4 camPos1 = gl_ModelViewMatrixInverse[3];
+    vec4 camPos1 = cam_pos;
     vec4 camPos2 = camPos1;
     camPos1.xyz -= objPos1.xyz; // cam pos to glyph space
     camPos2.xyz -= objPos2.xyz;
 
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position;
-    lightPos.w = 1.0;
+    lightDir = light_dir;
+    lightDir.w = 1.0;
 
-    // Sphere-Touch-Plane-Approach™
+    // Sphere-Touch-Plane-Approach
     vec2 winHalf = 2.0 / viewAttr.zw; // window size
     vec4 d, p, q, h, dd;
 
@@ -148,8 +156,8 @@ void main(void) {
 
     testPos1 = objPos1.xyz + cpj1_1 + cpm1_1;
     testPos2 = objPos2.xyz + cpj1_2 + cpm1_2;
-    projPos1 = gl_ModelViewProjectionMatrix * vec4(testPos1, 1.0);
-    projPos2 = gl_ModelViewProjectionMatrix * vec4(testPos2, 1.0);
+    projPos1 = mvp * vec4(testPos1, 1.0);
+    projPos2 = mvp * vec4(testPos2, 1.0);
     projPos1 /= projPos1.w;
     projPos2 /= projPos2.w;
     mins.xy = projPos1.xy;
@@ -158,8 +166,8 @@ void main(void) {
 
     testPos1 -= 2.0 * cpm1_1;
     testPos2 -= 2.0 * cpm1_2;
-    projPos1 = gl_ModelViewProjectionMatrix * vec4(testPos1, 1.0);
-    projPos2 = gl_ModelViewProjectionMatrix * vec4(testPos2, 1.0);
+    projPos1 = mvp * vec4(testPos1, 1.0);
+    projPos2 = mvp * vec4(testPos2, 1.0);
     projPos1 /= projPos1.w;
     projPos2 /= projPos2.w;
     mins = min(mins, vec4(projPos1.xy, projPos2.xy));
@@ -167,8 +175,8 @@ void main(void) {
 
     testPos1 = objPos1.xyz + cpj2_1 + cpm2_1;
     testPos2 = objPos2.xyz + cpj2_2 + cpm2_2;
-    projPos1 = gl_ModelViewProjectionMatrix * vec4(testPos1, 1.0);
-    projPos2 = gl_ModelViewProjectionMatrix * vec4(testPos2, 1.0);
+    projPos1 = mvp * vec4(testPos1, 1.0);
+    projPos2 = mvp * vec4(testPos2, 1.0);
     projPos1 /= projPos1.w;
     projPos2 /= projPos2.w;
     mins = min(mins, vec4(projPos1.xy, projPos2.xy));
@@ -176,8 +184,8 @@ void main(void) {
 
     testPos1 -= 2.0 * cpm2_1;
     testPos2 -= 2.0 * cpm2_2;
-    projPos1 = gl_ModelViewProjectionMatrix * vec4(testPos1, 1.0);
-    projPos2 = gl_ModelViewProjectionMatrix * vec4(testPos2, 1.0);
+    projPos1 = mvp * vec4(testPos1, 1.0);
+    projPos2 = mvp * vec4(testPos2, 1.0);
     projPos1 /= projPos1.w;
     projPos2 /= projPos2.w;
     mins = min(mins, vec4(projPos1.xy, projPos2.xy));
@@ -234,9 +242,9 @@ void main(void) {
 //////////////    depthPos.xyz = gl_ModelViewMatrixInverse[3].xyz + v;
 //////////////    depthPos.w = 1.0;
 
-    depthPos1 = gl_ModelViewProjectionMatrix * depthPos1;
+    depthPos1 = mvp * depthPos1;
     depthPos1.xyz /= depthPos1.w;
-    depthPos2 = gl_ModelViewProjectionMatrix * depthPos2;
+    depthPos2 = mvp * depthPos2;
     depthPos2.xyz /= depthPos2.w;
 
     depthPos1.z -= gl_DepthRange.near;
@@ -325,10 +333,18 @@ uniform ivec3 depthTexParams;
 #define DEPTHMIP_WIDTH depthTexParams.x
 #define DEPTHMIP_HEIGHT depthTexParams.y
 #define DEPTHMIP_MAXLEVEL depthTexParams.z
-
+// new camera
+uniform mat4 mv_inv;
+uniform mat4 mv_inv_transp;
+uniform mat4 mvp;
+uniform mat4 mvp_inv;
+uniform mat4 mvp_transp;
+uniform vec4 light_dir;
+uniform vec4 cam_pos;
+// end new camera
 out vec4 objPos;
 out vec4 camPos;
-out vec4 lightPos;
+out vec4 lightDir;
 out float squarRad;
 out float rad;
 
@@ -383,11 +399,11 @@ void main(void) {
     objPos = inPos; // no w-div needed, because w is 1.0 (Because I know)
 
     // calculate cam position
-    camPos = gl_ModelViewMatrixInverse[3]; // (C) by Christoph
+    camPos = cam_pos; // (C) by Christoph
     camPos.xyz -= objPos.xyz; // cam pos to glyph space
 
     // calculate light position in glyph space
-    lightPos = gl_ModelViewMatrixInverse * gl_LightSource[0].position;
+    lightDir = light_dir;
 ]]>
         </snippet>
 
@@ -417,9 +433,9 @@ void main(void) {
 
 #ifdef SMALL_SPRITE_LIGHTING
     // for normal crowbaring on very small sprites
-    lightPos.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
+    lightDir.w = (clamp(gl_PointSize, 1.0, 5.0) - 1.0) / 4.0;
 #else
-    lightPos.w = 1.0;
+    lightDir.w = 1.0;
 #endif // SMALL_SPRITE_LIGHTING
     
 #ifdef RETICLE
@@ -454,13 +470,13 @@ void main(void) {
     float depth = max(max(depth1.x, depth2.x), max(depth3.x, depth4.x));
 
     vec4 depthPos; // ass of sphere in object space
-    vec3 v = objPos.xyz - gl_ModelViewMatrixInverse[3].xyz;
+    vec3 v = objPos.xyz - cam_pos.xyz;
     //float l = length(v);
     //v *= (l - rad) / l;
-    depthPos.xyz = gl_ModelViewMatrixInverse[3].xyz + v;
+    depthPos.xyz = cam_pos.xyz + v;
     depthPos.w = 1.0;
 
-    depthPos = gl_ModelViewProjectionMatrix * depthPos;
+    depthPos = mvp * depthPos;
     depthPos.xyz /= depthPos.w;
 
     depthPos.z -= gl_DepthRange.near;

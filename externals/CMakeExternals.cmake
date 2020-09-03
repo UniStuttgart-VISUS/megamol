@@ -2,7 +2,7 @@
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
   message(STATUS "Downloading external scripts")
   execute_process(COMMAND
-    ${GIT_EXECUTABLE} clone https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
+    ${GIT_EXECUTABLE} clone -b v2.0 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
@@ -143,6 +143,7 @@ function(require_external NAME)
         -DADIOS2_USE_BZip2=OFF
         -DADIOS2_USE_Fortran=OFF
         -DADIOS2_USE_HDF5=OFF
+        -DADIOS2_USE_PNG=OFF
         -DADIOS2_USE_Python=OFF
         -DADIOS2_USE_SST=OFF
         -DADIOS2_USE_SZ=OFF
@@ -191,11 +192,68 @@ function(require_external NAME)
       GIT_TAG "36b169c88250d0afe51828448dfdeeaa508f13bc"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${BHTSNE_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/cmake/bhtsne/CMakeLists.txt"
+        "${CMAKE_SOURCE_DIR}/externals/bhtsne/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt")
 
     add_external_library(bhtsne
       LIBRARY ${BHTSNE_LIB})
+
+  # fmt
+  elseif(NAME STREQUAL "fmt")
+    if(TARGET fmt)
+      return()
+    endif()
+
+    if(WIN32)
+      set(FMT_LIB "lib/fmt<SUFFIX>.lib")
+    else()
+      include(GNUInstallDirs)
+      set(FMT_LIB "${CMAKE_INSTALL_LIBDIR}/libfmt<SUFFIX>.a")
+    endif()
+
+    add_external_project(fmt STATIC
+      GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+      GIT_TAG "6.2.1"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${FMT_LIB}"
+      DEBUG_SUFFIX "d"
+      CMAKE_ARGS
+        -DFMT_DOC=OFF
+        -DFMT_TEST=OFF
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC)
+
+    add_external_library(fmt
+      LIBRARY ${FMT_LIB}
+      DEBUG_SUFFIX "d")
+
+  #glad 
+  elseif(NAME STREQUAL "glad")
+    if(TARGET glad)
+      return()
+    endif()
+
+    include(GNUInstallDirs)
+
+    if(WIN32)
+      set(GLAD_LIB "bin/glad.dll")
+      set(GLAD_LIB_IMPORT "lib/glad.lib")
+    else()
+      #set(GLAD_LIB "lib/libglad.a")
+      set(GLAD_LIB "lib/libglad.so")
+      set(GLAD_LIB2 "lib/libglad.so.1")
+    endif()
+
+    add_external_project(glad SHARED
+      SOURCE_DIR glad
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}" "<INSTALL_DIR>/${GLAD_LIB2}" "<INSTALL_DIR>/${GLAD_LIB_IMPORT}")
+
+    add_external_library(glad
+      PROJECT glad
+      IMPORT_LIBRARY ${GLAD_LIB_IMPORT}
+      LIBRARY ${GLAD_LIB})
+
+    # glad needs to announce dll export also in header files used by megamol libraries	
+    target_compile_definitions(glad INTERFACE GLAD_GLAPI_EXPORT)
 
   # glfw3
   elseif(NAME STREQUAL "glfw3")
@@ -278,7 +336,6 @@ function(require_external NAME)
   # imgui
   elseif(NAME STREQUAL "imgui")
     if(NOT TARGET imgui)
-      
       if(WIN32)
         set(IMGUI_LIB "lib/imgui.lib")
       else()
@@ -290,12 +347,11 @@ function(require_external NAME)
         GIT_TAG "v1.70"
         BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
         PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-          "${CMAKE_SOURCE_DIR}/cmake/imgui/CMakeLists.txt"
+          "${CMAKE_SOURCE_DIR}/externals/imgui/CMakeLists.txt"
           "<SOURCE_DIR>/CMakeLists.txt")
 
       add_external_library(imgui
         LIBRARY ${IMGUI_LIB})
-
     endif()
 
     external_get_property(imgui SOURCE_DIR)
@@ -308,6 +364,48 @@ function(require_external NAME)
       "${SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
       "${SOURCE_DIR}/misc/cpp/imgui_stdlib.h"
       PARENT_SCOPE)
+
+  # imguizmoquat
+  elseif(NAME STREQUAL "imguizmoquat")
+    if(TARGET imguizmoquat)
+      return()
+    endif()
+
+    require_external(imgui)
+
+    if(WIN32)
+      set(IMGUIZMOQUAT_LIB "lib/imguizmoquat.lib")
+    else()
+      set(IMGUIZMOQUAT_LIB "lib/libimguizmoquat.a")
+    endif()
+
+    if(WIN32)
+      set(IMGUI_LIB "lib/imgui.lib")
+    else()
+      set(IMGUI_LIB "lib/libimgui.a")
+    endif()
+
+    external_get_property(imgui INSTALL_DIR)
+
+    add_external_project(imguizmoquat STATIC
+      GIT_REPOSITORY https://github.com/BrutPitt/imGuIZMO.quat.git
+      GIT_TAG "v3.0"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUIZMOQUAT_LIB}"
+      DEPENDS imgui
+      CMAKE_ARGS
+        -DIMGUI_LIBRARY:PATH=${INSTALL_DIR}/${IMGUI_LIB}
+        -DIMGUI_INCLUDE_DIR:PATH=${INSTALL_DIR}/include
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+          "${CMAKE_SOURCE_DIR}/externals/imguizmoquat/CMakeLists.txt"
+          "<SOURCE_DIR>/CMakeLists.txt")
+
+    add_external_library(imguizmoquat
+        LIBRARY ${IMGUIZMOQUAT_LIB})
+
+    external_get_property(imguizmoquat SOURCE_DIR)
+    target_include_directories(imguizmoquat INTERFACE "${SOURCE_DIR}/imGuIZMO.quat")
 
   # libpng
   elseif(NAME STREQUAL "libpng")
@@ -401,6 +499,33 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
       GIT_TAG "v4.4.1")
 
+  # megamol-shader-factory
+  elseif(NAME STREQUAL "megamol-shader-factory")
+      if(TARGET megamol-shader-factory)
+        return()
+      endif()
+      
+      if(WIN32)
+        set(MEGAMOL_SHADER_FACTORY_LIB "lib/megamol-shader-factory.lib")
+        set(SHADERC_LIB "lib/shaderc_combined.lib")
+      else()
+        include(GNUInstallDirs)
+        set(MEGAMOL_SHADER_FACTORY_LIB "${CMAKE_INSTALL_LIBDIR}/libmegamol-shader-factory.a")
+        set(SHADERC_LIB "${CMAKE_INSTALL_LIBDIR}/libshaderc_combined.a")
+      endif()
+      
+      add_external_project(megamol-shader-factory STATIC
+        GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
+        BUILD_BYPRODUCTS 
+        "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
+        "<INSTALL_DIR>/${SHADERC_LIB}")
+    
+      external_get_property(megamol-shader-factory INSTALL_DIR)
+
+      add_external_library(megamol-shader-factory
+        LIBRARY ${MEGAMOL_SHADER_FACTORY_LIB}
+        INTERFACE_LIBRARIES ${INSTALL_DIR}/${SHADERC_LIB})
+
   # quickhull
   elseif(NAME STREQUAL "quickhull")
     if(TARGET quickhull)
@@ -418,7 +543,7 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/akuukka/quickhull.git
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${QUICKHULL_LIB}" "<INSTALL_DIR>/${QUICKHULL_IMPORT_LIB}"
       PATCH_COMMAND ${CMAKE_COMMAND} -E copy
-        "${CMAKE_SOURCE_DIR}/cmake/quickhull/CMakeLists.txt"
+        "${CMAKE_SOURCE_DIR}/externals/quickhull/CMakeLists.txt"
         "<SOURCE_DIR>/CMakeLists.txt"
       CMAKE_ARGS
         -DCMAKE_C_FLAGS=-fPIC
@@ -454,6 +579,44 @@ function(require_external NAME)
     add_external_library(snappy
       IMPORT_LIBRARY ${SNAPPY_IMPORT_LIB}
       LIBRARY ${SNAPPY_LIB})
+
+  # spdlog
+  elseif(NAME STREQUAL "spdlog")
+    if(TARGET spdlog)
+      return()
+    endif()
+
+    require_external(fmt)
+
+    if(WIN32)
+      set(SPDLOG_LIB "lib/spdlog<SUFFIX>.lib")
+    else()
+      include(GNUInstallDirs)
+      set(SPDLOG_LIB "${CMAKE_INSTALL_LIBDIR}/libspdlog<SUFFIX>.a")
+    endif()
+
+    external_get_property(fmt BINARY_DIR)
+
+    add_external_project(spdlog STATIC
+      GIT_REPOSITORY https://github.com/gabime/spdlog.git
+      GIT_TAG "v1.7.0"
+      DEPENDS fmt
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SPDLOG_LIB}"
+      DEBUG_SUFFIX "d"
+      CMAKE_ARGS
+        -DSPDLOG_BUILD_EXAMPLE=OFF
+        -DSPDLOG_BUILD_TESTS=OFF
+        -DSPDLOG_FMT_EXTERNAL=ON
+        -Dfmt_DIR=${BINARY_DIR}
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC)
+
+    add_external_library(spdlog
+      LIBRARY ${SPDLOG_LIB}
+      DEBUG_SUFFIX "d"
+      DEPENDS fmt)
+
+    target_compile_definitions(spdlog INTERFACE SPDLOG_FMT_EXTERNAL;SPDLOG_COMPILED_LIB)
 
   # tinyobjloader
   elseif(NAME STREQUAL "tinyobjloader")
@@ -659,90 +822,6 @@ function(require_external NAME)
       PROJECT vtkm
       LIBRARY_RELEASE "${VTKM_LIB_WORKLET}"
       LIBRARY_DEBUG "${VTKM_LIB_DEBUG_WORKLET}")
-
-  elseif(NAME STREQUAL "fmt")
-    if(TARGET fmt)
-      return()
-    endif()
-  
-    if(WIN32)
-      set(FMT_LIB "lib/fmt<SUFFIX>.lib")
-    else()
-      include(GNUInstallDirs)
-      set(FMT_LIB "${CMAKE_INSTALL_LIBDIR}/libfmt.a")
-    endif()
-  
-    add_external_project(fmt STATIC
-      GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-      GIT_TAG "6.2.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${FMT_LIB}"
-      DEBUG_SUFFIX "d"
-      CMAKE_ARGS
-        -DFMT_DOC=OFF
-        -DFMT_TEST=OFF
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
-  
-    add_external_library(fmt
-      LIBRARY ${FMT_LIB}
-      DEBUG_SUFFIX "d")
-  elseif(NAME STREQUAL "spdlog")
-    if(TARGET spdlog)
-      return()
-    endif()
-
-    require_external(fmt)
-  
-    if(WIN32)
-      set(SPDLOG_LIB "lib/spdlog<SUFFIX>.lib")
-    else()
-      include(GNUInstallDirs)
-      set(SPDLOG_LIB "${CMAKE_INSTALL_LIBDIR}/libspdlog.a")
-    endif()
-  
-    external_get_property(fmt BINARY_DIR)
-
-    add_external_project(spdlog STATIC
-      GIT_REPOSITORY https://github.com/gabime/spdlog.git
-      GIT_TAG "v1.5.0"
-      DEPENDS fmt
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SPDLOG_LIB}"
-      DEBUG_SUFFIX "d"
-      CMAKE_ARGS
-        -DSPDLOG_BUILD_EXAMPLE=OFF
-        -DSPDLOG_BUILD_TESTS=OFF
-        -DSPDLOG_FMT_EXTERNAL=ON
-        -Dfmt_DIR=${BINARY_DIR})
-  
-    add_external_library(spdlog
-      LIBRARY ${SPDLOG_LIB}
-      DEBUG_SUFFIX "d"
-      DEPENDS fmt)
-  elseif(NAME STREQUAL "megamol-shader-factory")
-      if(TARGET megamol-shader-factory)
-        return()
-      endif()
-      
-      if(WIN32)
-        set(MEGAMOL_SHADER_FACTORY_LIB "lib/megamol-shader-factory.lib")
-        set(SHADERC_LIB "lib/shaderc_combined.lib")
-      else()
-        include(GNUInstallDirs)
-        set(MEGAMOL_SHADER_FACTORY_LIB "${CMAKE_INSTALL_LIBDIR}/libmegamol-shader-factory.a")
-        set(SHADERC_LIB "${CMAKE_INSTALL_LIBDIR}/libshaderc_combined.a")
-      endif()
-      
-      add_external_project(megamol-shader-factory STATIC
-        GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-        BUILD_BYPRODUCTS 
-        "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
-        "<INSTALL_DIR>/${SHADERC_LIB}")
-    
-      external_get_property(megamol-shader-factory INSTALL_DIR)
-
-      add_external_library(megamol-shader-factory
-        LIBRARY ${MEGAMOL_SHADER_FACTORY_LIB}
-        INTERFACE_LIBRARIES ${INSTALL_DIR}/${SHADERC_LIB})
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
   endif()

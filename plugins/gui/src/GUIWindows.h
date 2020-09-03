@@ -9,12 +9,22 @@
 #define MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
 
 
+#ifdef _WIN32
+#    ifdef GUI_EXPORTS
+#        define GUI_API __declspec(dllexport)
+#    else
+#        define GUI_API __declspec(dllimport)
+#    endif
+#else // _WIN32
+#    define GUI_API
+#endif // _WIN32
+
+
 #include "Configurator.h"
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
 #include "FileUtils.h"
-#include "WindowManager.h"
-#include "graph/GraphManager.h"
+#include "WindowCollection.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/MinimalPopUp.h"
@@ -23,12 +33,14 @@
 #include "widgets/WidgetPicking_gl.h"
 
 #include "mmcore/CoreInstance.h"
-
+///#include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/versioninfo.h"
+///#include "mmcore/view/AbstractView_EventConsumption.h"
 
 #include "vislib/math/Rectangle.h"
 
+#include <ctime>
 #include <iomanip>
 #include <sstream>
 
@@ -37,21 +49,29 @@
 #    include "GLFW/glfw3.h"
 #endif
 
+/// TEMP
+namespace megamol {
+namespace core {
+class MegaMolGraph;
+}
+} // namespace megamol
+///
+
 
 namespace megamol {
 namespace gui {
 
-class GUIWindows {
+class GUI_API GUIWindows {
 public:
     /**
      * CTOR.
      */
-    GUIWindows();
+    GUIWindows(void);
 
     /**
      * DTOR.
      */
-    virtual ~GUIWindows();
+    virtual ~GUIWindows(void);
 
     /**
      * Create ImGui context using OpenGL.
@@ -63,15 +83,14 @@ public:
     /**
      * Setup and enable ImGui context for subsequent use.
      *
-     * @param module_fullname   The full name of the parent module incorporating this GUI (needed for module filtering).
-     * @param viewport          The currently available viewport.
-     * @param instanceTime      The current instance time.
+     * @param framebuffer_size   The currently available size of the framebuffer.
+     * @param window_size        The currently available size of the window.
+     * @param instance_time      The current instance time.
      */
-    bool PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime);
-
+    bool PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time);
 
     /**
-     * Actual Gui windows drawing and final rednering of pushed ImGui draw commands.
+     * Actual drawing of Gui windows and final rendering of pushed ImGui draw commands.
      */
     bool PostDraw(void);
 
@@ -105,6 +124,18 @@ public:
      * Return list of parameter slots provided by this class. Make available in module which uses this class.
      */
     inline const std::vector<megamol::core::param::ParamSlot*> GetParams(void) const { return this->param_slots; }
+
+    /**
+     * Return true if user triggered shutdown via gui.
+     */
+    inline bool ShouldShutdown(void) const { return this->shutdown; }
+
+    /**
+     * Synchronise changes between core graph and gui graph.
+     *
+     * @param megamol_graph    If no megamol_graph is given, try to synchronise 'old' graph via core_instance.
+     */
+    bool SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph = nullptr);
 
 private:
     /** Available GUI styles. */
@@ -146,7 +177,7 @@ private:
 
     // VARIABLES --------------------------------------------------------------
 
-    /** Pointer to core isntance. */
+    /** Pointer to core instance. */
     megamol::core::CoreInstance* core_instance;
 
     /** List of pointers to all paramters. */
@@ -160,7 +191,7 @@ private:
     megamol::core::param::ParamSlot autostart_configurator;
 
     /** Hotkeys */
-    std::array<megamol::gui::HotkeyDataType, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
+    std::array<megamol::gui::HotkeyData_t, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
 
     /** The ImGui context created and used by this GUIWindows */
     ImGuiContext* context;
@@ -168,8 +199,8 @@ private:
     /** The currently initialized ImGui API */
     GUIImGuiAPI api;
 
-    /** The window manager. */
-    WindowManager window_manager;
+    /** The window collection. */
+    WindowCollection window_collection;
 
     /** The configurator. */
     megamol::gui::Configurator configurator;
@@ -177,14 +208,14 @@ private:
     /** The current local state of the gui. */
     StateBuffer state;
 
+    /** Flag indicating user triggered shutdown. */
+    bool shutdown = false;
+
     /** Numer of fonts reserved for the configurator graph canvas. */
     unsigned int graph_fonts_reserved;
 
-    /** UID of graph */
+    /** UID of currently running graph */
     ImGuiID graph_uid;
-
-    /** The graph manager holding the graph of the currently running project. */
-    GraphManager graph_manager;
 
     // Widgets
     FileBrowserWidget file_browser;
@@ -202,11 +233,11 @@ private:
     void validateParameters();
 
     // Window Draw Callbacks
-    void drawParamWindowCallback(WindowManager::WindowConfiguration& wc);
-    void drawFpsWindowCallback(WindowManager::WindowConfiguration& wc);
-    void drawFontWindowCallback(WindowManager::WindowConfiguration& wc);
-    void drawTransferFunctionWindowCallback(WindowManager::WindowConfiguration& wc);
-    void drawConfiguratorWindowCallback(WindowManager::WindowConfiguration& wc);
+    void drawParamWindowCallback(WindowCollection::WindowConfiguration& wc);
+    void drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc);
+    void drawFontWindowCallback(WindowCollection::WindowConfiguration& wc);
+    void drawTransferFunctionWindowCallback(WindowCollection::WindowConfiguration& wc);
+    void drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc);
 
     void drawMenu(void);
     void drawPopUps(void);
@@ -214,7 +245,7 @@ private:
     bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
     void checkMultipleHotkeyAssignement(void);
     bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
-    void shutdown(void);
+    void triggerCoreInstanceShutdown(void);
 
     void save_state_to_parameter(void);
     bool gui_and_parameters_state_from_json_string(const std::string& in_json_string);

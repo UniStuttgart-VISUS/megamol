@@ -163,9 +163,9 @@ public:
          */
         inline void SetGlobalColour(const unsigned char *col) {
             this->col[0] = col[0];
-            this->col[1] = col[0];
-            this->col[2] = col[0];
-            this->col[3] = col[0];
+            this->col[1] = col[1];
+            this->col[2] = col[2];
+            this->col[3] = col[3];
         }
 
         /**
