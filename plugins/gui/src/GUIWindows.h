@@ -33,6 +33,7 @@
 #include "widgets/WidgetPicking_gl.h"
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore/ViewDescription.h"
 ///#include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/versioninfo.h"

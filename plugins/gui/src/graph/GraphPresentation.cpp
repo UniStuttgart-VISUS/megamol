@@ -979,10 +979,10 @@ bool megamol::gui::GraphPresentation::StateToJSON(Graph& inout_graph, nlohmann::
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote graph state to JSON.");
 #endif // GUI_VERBOSE
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] State of project '%s' is not being saved. Save project to file in "
-                "order to get its state saved. [%s, %s, line %d]\n",
-                inout_graph.name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            // megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            //    "[GUI] State of project '%s' is not being saved. Save project to file in "
+            //    "order to get its state saved. [%s, %s, line %d]\n",
+            //    inout_graph.name.c_str(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 

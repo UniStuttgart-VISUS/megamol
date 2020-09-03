@@ -301,6 +301,15 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
+                    // collapsed
+                    if (config_values.at("win_collapsed").is_boolean()) {
+                        config_values.at("win_collapsed").get_to(tmp_config.win_collapsed);
+                    } else {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] JSON state: Failed to read 'win_collapsed' as boolean. [%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
+                        valid = false;
+                    }
                     // ParamConfig --------------------------------------------
                     // show_hotkeys
                     if (config_values.at("param_show_hotkeys").is_boolean()) {
@@ -539,6 +548,8 @@ bool WindowCollection::StateToJSON(nlohmann::json& out_json) {
                     window_config.win_reset_size.x, window_config.win_reset_size.y};
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_reset_position"] = {
                     window_config.win_reset_position.x, window_config.win_reset_position.y};
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_collapsed"] =
+                    window_config.win_collapsed;
 
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_show_hotkeys"] =
                     window_config.param_show_hotkeys;
