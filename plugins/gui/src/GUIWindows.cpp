@@ -650,13 +650,13 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
 
-    // 1) Load all known calls from core instance ONCS ---------------------------
+    // 1) Load all known calls from core instance ONCE ---------------------------
     if (!this->configurator.GetGraphCollection().LoadCallStock(core_instance)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    /// TODO Load all known modules from core instance once to module stock
+    /// TODO Load all known modules from core instance ONCE
     /// XXX  => Omitted since this takes ~2 seconds and would always block megamol for this period at start up!
 
     bool synced = false;
@@ -664,112 +664,110 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
     GraphPtr_t graph_ptr;
     bool found_graph = this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr);
     // 2a) Either synchronize GUI Graph -> Core Graph ... ----------------------
-    if (!synced) {
+    if (!synced && found_graph) {
         bool graph_sync_success = true;
-        if (found_graph) {
-            auto queue = graph_ptr->GetSyncQueue();
-            synced = !queue->empty();
-            while (!queue->empty()) {
-                auto change = std::get<0>(queue->front());
-                auto data = std::get<1>(queue->front());
-                switch (change) {
-                case (Graph::QueueChange::ADD_MODULE): {
-                    if (megamol_graph != nullptr) {
-                        /* XXX
-                        graph_sync_success &= megamol_graph->CreateModule(data.classname, data.id);
-                        // Create/Add new graph entry
-                        if (graph_sync_success && data.graph_entry) {
-                            /// XXX This code is copied from main3000.cpp ---------
-                            static std::vector<std::string> view_resource_requests = {
-                                "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents",
-                        "IOpenGL_Context"}; auto view_rendering_execution =
-                                [&](megamol::core::Module::ptr_type module_ptr,
-                                    std::vector<megamol::frontend::ModuleResource> const& resources) {
-                                    megamol::core::view::AbstractView* view_ptr =
-                                        dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
-                                    assert(view_resource_requests.size() == resources.size());
-                                    if (!view_ptr) {
-                                        std::cout << "error. module is not a view module. could not set as graph
-                        rendering " "entry point."
-                                                  << std::endl;
-                                        return false;
-                                    }
-                                    megamol::core::view::AbstractView& view = *view_ptr;
-                                    int i = 0;
-                                    // resources are in order of initial requests
-                                    megamol::core::view::view_consume_keyboard_events(view, resources[i++]);
-                                    megamol::core::view::view_consume_mouse_events(view, resources[i++]);
-                                    megamol::core::view::view_consume_window_events(view, resources[i++]);
-                                    megamol::core::view::view_consume_framebuffer_events(view, resources[i++]);
-                                    megamol::core::view::view_poke_rendering(view, resources[i++]);
-                                };
-                            megamol_graph->SetGraphEntryPoint(data.id, view_resource_requests,
-                        view_rendering_execution);
-                            /// XXX -----------------------------------------------
+        auto queue = graph_ptr->GetSyncQueue();
+        synced = !queue->empty();
+        while (!queue->empty()) {
+            auto change = std::get<0>(queue->front());
+            auto data = std::get<1>(queue->front());
+            switch (change) {
+            case (Graph::QueueChange::ADD_MODULE): {
+                if (megamol_graph != nullptr) {
+                    /* XXX
+                    graph_sync_success &= megamol_graph->CreateModule(data.classname, data.id);
+                    // Create/Add new graph entry
+                    if (graph_sync_success && data.graph_entry) {
+                        /// XXX This code is copied from main3000.cpp ---------
+                        static std::vector<std::string> view_resource_requests = {
+                            "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
+                            auto view_rendering_execution =
+                            [&](megamol::core::Module::ptr_type module_ptr,
+                                std::vector<megamol::frontend::ModuleResource> const& resources) {
+                                megamol::core::view::AbstractView* view_ptr =
+                                    dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
+                                assert(view_resource_requests.size() == resources.size());
+                                if (!view_ptr) {
+                                    std::cout << "error. module is not a view module. could not set as graph rendering
+                    entry point."
+                                              << std::endl;
+                                    return false;
+                                }
+                                megamol::core::view::AbstractView& view = *view_ptr;
+                                int i = 0;
+                                // resources are in order of initial requests
+                                megamol::core::view::view_consume_keyboard_events(view, resources[i++]);
+                                megamol::core::view::view_consume_mouse_events(view, resources[i++]);
+                                megamol::core::view::view_consume_window_events(view, resources[i++]);
+                                megamol::core::view::view_consume_framebuffer_events(view, resources[i++]);
+                                megamol::core::view::view_poke_rendering(view, resources[i++]);
+                            };
+                        megamol_graph->SetGraphEntryPoint(data.id, view_resource_requests, view_rendering_execution);
+                        /// XXX -----------------------------------------------
+                    }
+                    */
+                } else if (this->core_instance != nullptr) {
+                    if (data.graph_entry) {
+                        /*XXX
+                        auto view_name = vislib::StringA(graph_ptr->name.c_str());
+                        auto module_name = vislib::StringA(data.id.c_str());
+                        auto vd = std::make_shared<megamol::core::ViewDescription>(view_name.PeekBuffer());
+                        vd->AddModule(
+                            this->core_instance->GetModuleDescriptionManager().Find(data.classname.c_str()),
+                            module_name);
+                        vd->SetViewModuleID(module_name);
+                        try {
+                            /// XXX => Requires "friend class megamol::gui::GuiWindows;" in CoreInstance.h ...
+                            /// this->core_instance->projViewDescs.Register(vd);
+                            this->core_instance->RequestViewInstantiation(vd.get(), view_name);
+                            graph_sync_success &= true;
+                        } catch (vislib::AlreadyExistsException) {
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                "[GUI] View '%s' already exists. [%s, %s, line %d]\n", view_name.PeekBuffer(),
+                                __FILE__, __FUNCTION__, __LINE__);
+                            graph_sync_success &= false;
                         }
                         */
-                    } else if (this->core_instance != nullptr) {
-                        if (data.graph_entry) {
-                            auto view_name = vislib::StringA(graph_ptr->name.c_str());
-                            auto module_name = vislib::StringA(data.id.c_str());
-                            auto vd = std::make_shared<megamol::core::ViewDescription>(view_name.PeekBuffer());
-                            vd->AddModule(
-                                this->core_instance->GetModuleDescriptionManager().Find(data.classname.c_str()),
-                                module_name);
-                            vd->SetViewModuleID(module_name);
-                            try {
-                                /// XXX Requires friend class megamol::gui::GuiWindows; in CoreInstance.h
-                                /// this->core_instance->projViewDescs.Register(vd);
-                                this->core_instance->RequestViewInstantiation(vd.get(), view_name);
-                                graph_sync_success &= true;
-                            } catch (vislib::AlreadyExistsException) {
-                                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "[GUI] View '%s' already exists. [%s, %s, line %d]\n", view_name.PeekBuffer(),
-                                    __FILE__, __FUNCTION__, __LINE__);
-                                graph_sync_success &= false;
-                            }
-                        } else {
-                            graph_sync_success &= this->core_instance->RequestModuleInstantiation(
-                                vislib::StringA(data.classname.c_str()), vislib::StringA(data.id.c_str()));
-                        }
+                    } else {
+                        graph_sync_success &= this->core_instance->RequestModuleInstantiation(
+                            vislib::StringA(data.classname.c_str()), vislib::StringA(data.id.c_str()));
                     }
-                } break;
-                case (Graph::QueueChange::DELETE_MODULE): {
-                    if (megamol_graph != nullptr) {
-                        /* XXX
-                        graph_sync_success &= megamol_graph->DeleteModule(data.id);
-                        */
-                    } else if (this->core_instance != nullptr) {
-                        graph_sync_success &=
-                            this->core_instance->RequestModuleDeletion(vislib::StringA(data.id.c_str()));
-                    }
-                } break;
-                case (Graph::QueueChange::ADD_CALL): {
-                    if (megamol_graph != nullptr) {
-                        /* XXX
-                        graph_sync_success &= megamol_graph->CreateCall(data.classname, data.caller, data.callee);
-                        */
-                    } else if (this->core_instance != nullptr) {
-                        graph_sync_success &=
-                            this->core_instance->RequestCallInstantiation(vislib::StringA(data.classname.c_str()),
-                                vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
-                    }
-                } break;
-                case (Graph::QueueChange::DELETE_CALL): {
-                    if (megamol_graph != nullptr) {
-                        /* XXX
-                        graph_sync_success &= megamol_graph->DeleteCall(data.caller, data.callee);
-                        */
-                    } else if (this->core_instance != nullptr) {
-                        graph_sync_success &= this->core_instance->RequestCallDeletion(
-                            vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
-                    }
-                } break;
-                default:
-                    break;
                 }
-                queue->pop(); // pop even when sync fails!
+            } break;
+            case (Graph::QueueChange::DELETE_MODULE): {
+                if (megamol_graph != nullptr) {
+                    /* XXX
+                    graph_sync_success &= megamol_graph->DeleteModule(data.id);
+                    */
+                } else if (this->core_instance != nullptr) {
+                    graph_sync_success &= this->core_instance->RequestModuleDeletion(vislib::StringA(data.id.c_str()));
+                }
+            } break;
+            case (Graph::QueueChange::ADD_CALL): {
+                if (megamol_graph != nullptr) {
+                    /* XXX
+                    graph_sync_success &= megamol_graph->CreateCall(data.classname, data.caller, data.callee);
+                    */
+                } else if (this->core_instance != nullptr) {
+                    graph_sync_success &=
+                        this->core_instance->RequestCallInstantiation(vislib::StringA(data.classname.c_str()),
+                            vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
+                }
+            } break;
+            case (Graph::QueueChange::DELETE_CALL): {
+                if (megamol_graph != nullptr) {
+                    /* XXX
+                    graph_sync_success &= megamol_graph->DeleteCall(data.caller, data.callee);
+                    */
+                } else if (this->core_instance != nullptr) {
+                    graph_sync_success &= this->core_instance->RequestCallDeletion(
+                        vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
+                }
+            } break;
+            default:
+                break;
             }
+            queue->pop(); // pop even when sync fails!
         }
         if (!graph_sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -785,6 +783,9 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         sync_success &= this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(this->graph_uid,
             ((megamol_graph == nullptr) ? (this->core_instance) : (nullptr)), megamol_graph,
             vislib::math::Ternary::TRI_TRUE);
+
+        if (found_graph) graph_ptr->SetFilename(this->state.project_file);
+
         if (!sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
@@ -798,7 +799,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         for (auto& module_ptr : graph_ptr->GetModules()) {
             for (auto& param : module_ptr->parameters) {
 
-                // Try to connect parameters to newly created modules
+                // Try to connect gui parameters to newly created parameters of core modules
                 if (param.core_param_ptr.IsNull()) {
                     auto module_name = module_ptr->FullName();
                     megamol::core::Module* core_module_ptr = nullptr;
@@ -1691,6 +1692,10 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     bool popup_failed = false;
     if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Save Editor Project",
             this->state.open_popup_save, this->state.project_file)) {
+        // Save file name in graph, too
+        GraphPtr_t graph_ptr;
+        bool found_graph = this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr);
+        if (found_graph) graph_ptr->SetFilename(this->state.project_file);
         /// Serialize current state to parameter.
         this->save_state_to_parameter();
         /// Save to file

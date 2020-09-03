@@ -260,6 +260,7 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
     megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph,
     vislib::math::Ternary running_graph) {
 
+    bool created_new_graph = false;
     ImGuiID valid_graph_id = inout_graph_uid;
     if (valid_graph_id == GUI_INVALID_ID) {
         // Create new graph
@@ -269,6 +270,7 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
                 "[GUI] Failed to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
+        created_new_graph = true;
     }
 
     GraphPtr_t graph_ptr;
@@ -281,6 +283,10 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
     if (this->AddUpdateProjectFromCore(valid_graph_id, core_instance, megamol_graph, false)) {
         graph_ptr->SetRunning(running_graph);
         inout_graph_uid = valid_graph_id;
+        if (created_new_graph) {
+            graph_ptr->present.SetLayoutGraph();
+            graph_ptr->ResetDirty();
+        }
         return true;
     }
     // else { this->DeleteGraph(valid_graph_id); }
@@ -615,8 +621,6 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             while (!queue->empty()) {
                 queue->pop();
             }
-            graph_ptr->present.SetLayoutGraph();
-            // graph_ptr->ResetDirty();
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[GUI] Successfully loaded/updated project '%s' from running MegaMol.\n", graph_ptr->name.c_str());
         }

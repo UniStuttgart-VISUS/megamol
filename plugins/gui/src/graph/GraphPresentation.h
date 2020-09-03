@@ -65,7 +65,7 @@ public:
     bool GetCallLabelVisibility(void) const { return this->show_call_names; }
     bool IsCanvasHoverd(void) const { return this->canvas_hovered; }
 
-    void SetLayoutGraph(void) { this->graph_layout = 1; }
+    void SetLayoutGraph(bool l = true) { this->graph_layout = ((l) ? (1) : (0)); }
 
 private:
     // VARIABLES --------------------------------------------------------------

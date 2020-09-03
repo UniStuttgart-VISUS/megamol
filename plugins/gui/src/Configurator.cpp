@@ -161,7 +161,7 @@ bool megamol::gui::Configurator::Draw(
         if (ImGui::IsWindowAppearing()) {
             megamol::gui::Configurator::dropped_files.clear();
         }
-        // Process dropped files
+        // Process dropped files ...
         if (!megamol::gui::Configurator::dropped_files.empty()) {
             // ... only if configurator is focused.
             if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
@@ -173,15 +173,23 @@ bool megamol::gui::Configurator::Draw(
         }
 
         // Draw Windows -------------------------------------------------------
+
+        // Menu
         this->draw_window_menu(core_instance);
+
+        // Splitter
         this->graph_state.graph_width = 0.0f;
         if (this->show_module_list_sidebar) {
             this->splitter_widget.Widget(SplitterWidget::FixedSplitterSide::LEFT, this->module_list_sidebar_width,
                 this->graph_state.graph_width);
+
+            // Module List
             this->draw_window_module_list(this->module_list_sidebar_width);
             ImGui::SameLine();
         }
+        // Graphs
         this->graph_collection.PresentGUI(this->graph_state);
+
         // Process Pop-ups
         this->drawPopUps();
 
@@ -548,18 +556,24 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
 
             } else if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
                 for (auto& config_item : header_item.value().items()) {
-                    std::string json_graph_id = config_item.key(); /// = graph filename
-                    // Load graph from file
-                    auto graph_uid = this->graph_collection.LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
-                    // Overwrite graph states with the one found in this project
-                    /// XXX Comment for ignoring graph state stored in this project
-                    // if (graph_uid != GUI_INVALID_ID) {
-                    //    GraphPtr_t graph_ptr;
-                    //    if (this->graph_collection.GetGraph(graph_uid, graph_ptr)) {
-                    //        // Let graph search for his configurator state in this project
-                    //        graph_ptr->GUIStateFromJsonString(in_json_string);
-                    //    }
-                    //}
+                    std::string json_graph_id = config_item.key(); /// = graph file name
+
+                    // Let running graph search for its configurator state in this project
+                    bool found_running_graph = false;
+                    for (auto& graph_ptr : this->graph_collection.GetGraphs()) {
+                        if (graph_ptr->GetFilename() == json_graph_id) {
+                            if (graph_ptr->GUIStateFromJsonString(in_json_string)) {
+                                // Disable layouting if graph state was found
+                                graph_ptr->present.SetLayoutGraph(false);
+                            }
+                            found_running_graph = true;
+                        }
+                    }
+
+                    // Otherwise load new graph from file
+                    if (!found_running_graph) {
+                        auto graph_uid = this->graph_collection.LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
+                    }
                 }
             }
         }
