@@ -168,8 +168,8 @@ TransferFunctionEditor::TransferFunctionEditor(void)
     , last_range({0.0f, 1.0f})
     , range_overwrite(false)
     , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
-    , textureSize(256)
     , textureInvalid(true)
+    , textureSize(256)
     , pendingChanges(true)
     , activeChannels{false, false, false, false}
     , currentNode(0)
@@ -200,8 +200,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
 void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool connected_parameter_mode) {
 
     if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[TransferFunctionEditor] Missing active parameter to edit");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Missing active parameter to edit");
         return;
     }
 
@@ -211,8 +210,7 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
         tfs, this->nodes, this->mode, tex_size, new_range);
 
     if (!ok) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[TransferFunctionEditor] Could not parse transfer function");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Could not parse transfer function");
         return;
     }
 
@@ -258,7 +256,7 @@ void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const s
             }
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Wrong parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
 }
@@ -289,11 +287,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
 
     const float tfw_item_width = ImGui::GetContentRegionAvail().x * 0.75f;
     ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
-
     ImVec2 image_size = ImVec2(tfw_item_width, 30.0f);
-    if (!this->showOptions) {
-        if (image_size.x < 300.0f) image_size.x = 300.0f;
-    }
 
     ImGui::BeginGroup();
     this->drawTextureBox(image_size, this->flip_legend);
@@ -309,15 +303,6 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
     if (this->showOptions) {
         ImGui::Separator();
 
-        /*
-        if (connected_parameter_mode) {
-            ImGui::TextUnformatted("Parameter:");
-            ImGui::TextColored(GUI_COLOR_TEXT_WARN,
-                ((this->connected_parameter_ptr == nullptr) ? ("-")
-                                                            : (this->connected_parameter_ptr->GetName().c_str())));
-        }
-        */
-
         // Legend alignment ---------------------------------------------------
         ImGui::BeginGroup();
         if (ImGui::RadioButton("Vertical", this->flip_legend)) {
@@ -329,7 +314,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->flip_legend = false;
             this->textureInvalid = true;
         }
-        ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x);
+        ImGui::SameLine(tfw_item_width + style.ItemInnerSpacing.x + ImGui::GetScrollX());
         ImGui::TextUnformatted("Legend Alignment");
         ImGui::EndGroup();
 
@@ -406,7 +391,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->nodes[this->currentNode][4] = new_x;
             this->textureInvalid = true;
         }
-        help = "[Ctrl-Click] for keyboard input";
+        help = "[Ctrl + Left Click] for keyboard input";
         this->tooltip.Marker(help);
 
         // Sigma slider -------------------------------------------------------
@@ -415,7 +400,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 this->nodes[this->currentNode][5] = this->widget_buffer.gauss_sigma;
                 this->textureInvalid = true;
             }
-            help = "[Ctrl-Click] for keyboard input";
+            help = "[Ctrl + Left Click] for keyboard input";
             this->tooltip.Marker(help);
         }
 
@@ -447,9 +432,9 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             this->nodes[this->currentNode][3] = edit_col[3];
             this->textureInvalid = true;
         }
-        help = "[Click] on the colored square to open a color picker.\n"
-               "[CTRL+Click] on individual component to input value.\n"
-               "[Right-Click] on the individual color widget to show options.";
+        help = "[Left Click] on the colored square to open a color picker.\n"
+               "[CTRL + Left Click] on individual component to input value.\n"
+               "[Right Click] on the individual color widget to show options.";
         this->tooltip.Marker(help);
 
         // Interpolation mode -------------------------------------------------
@@ -566,7 +551,6 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
 
 void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_legend) {
 
-    ImGuiStyle& style = ImGui::GetStyle();
     ImVec2 pos = ImGui::GetCursorScreenPos();
 
     ImVec2 image_size = size;
@@ -629,7 +613,7 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     float width_delta = 0.0f;
     float height_delta = 0.0f;
     if (flip_legend) {
-        init_pos.x += width;
+        init_pos.x += width + item_x_spacing / 2.0f;
         init_pos.y -= (height + item_y_spacing);
         height_delta = height / static_cast<float>(scale_count - 1);
     } else {
@@ -693,11 +677,11 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
         // Middle Values
         float mid_value_width = (width - min_item_width - max_item_width - (2.0f * item_x_spacing));
         if ((mid_value_width > mid_item_width)) {
-            ImGui::SameLine((width / 2.0f) - (mid_item_width / 2.0f));
+            ImGui::SameLine((width / 2.0f) - (mid_item_width / 2.0f) + ImGui::GetScrollX());
             ImGui::TextUnformatted(mid_label_str.c_str());
         }
         // Max Value
-        ImGui::SameLine(width - max_item_width);
+        ImGui::SameLine(width - max_item_width + ImGui::GetScrollX());
         ImGui::TextUnformatted(max_label_str.c_str());
     }
 

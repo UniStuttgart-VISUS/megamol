@@ -9,8 +9,7 @@
 #define MEGAMOL_GUI_GRAPH_CALL_H_INCLUDED
 
 
-#include "GUIUtils.h"
-#include "widgets/HoverToolTip.h"
+#include "CallPresentation.h"
 
 
 namespace megamol {
@@ -34,36 +33,6 @@ typedef std::shared_ptr<Module> ModulePtr_t;
 // Types
 typedef std::shared_ptr<Call> CallPtr_t;
 typedef std::vector<CallPtr_t> CallPtrVector_t;
-
-
-/** ************************************************************************
- * Defines GUI call presentation.
- */
-class CallPresentation {
-public:
-    friend class Call;
-
-    // VARIABLES --------------------------------------------------------------
-
-    bool label_visible;
-
-    // FUNCTIONS --------------------------------------------------------------
-
-    CallPresentation(void);
-    ~CallPresentation(void);
-
-private:
-    // VARIABLES --------------------------------------------------------------
-
-    bool selected;
-
-    // Widgets
-    HoverToolTip tooltip;
-
-    // FUNCTIONS --------------------------------------------------------------
-
-    void Present(megamol::gui::PresentPhase phase, Call& inout_call, GraphItemsState_t& state);
-};
 
 
 /** ************************************************************************

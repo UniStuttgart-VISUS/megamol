@@ -26,11 +26,11 @@ template <class T> void megamol::core::thecam::rotate_manipulator<T>::pitch(cons
 /*
  * megamol::core::thecam::rotate_manipulator<T>::yaw
  */
-template <class T> void megamol::core::thecam::rotate_manipulator<T>::yaw(const world_type angle) {
+template <class T> void megamol::core::thecam::rotate_manipulator<T>::yaw(const world_type angle, bool fixToWorldUp) {
     if (this->enabled()) {
         auto cam = this->camera();
         quaternion_type rotquat;
-        auto up = cam->up_vector();
+        auto up = fixToWorldUp ? vector_type(0.0f, 1.0f, 0.0f, 0.0f) : cam->up_vector();
         set_from_angle_axis(rotquat, math::angle_deg2rad(angle), up);
         cam->orientation(rotquat * cam->orientation());
     }

@@ -1,12 +1,12 @@
 /*
- * ParameterGroups.cpp
+ * ParameterGroupsPresentation.cpp
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "ParameterGroups.h"
+#include "ParameterGroupsPresentation.h"
 
 
 using namespace megamol;
@@ -14,7 +14,7 @@ using namespace megamol::core;
 using namespace megamol::gui;
 
 
-megamol::gui::ParameterGroups::ParameterGroups(void)
+megamol::gui::ParameterGroupsPresentation::ParameterGroupsPresentation(void)
     : group_widget_ids()
     , tooltip()
     , speed_knob_pos(ImVec2(0.0f, 0.0f))
@@ -37,12 +37,12 @@ megamol::gui::ParameterGroups::ParameterGroups(void)
 }
 
 
-megamol::gui::ParameterGroups::~ParameterGroups(void) {}
+megamol::gui::ParameterGroupsPresentation::~ParameterGroupsPresentation(void) {}
 
 
-bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inout_params,
-    const std::string& in_module_fullname, const std::string& in_search, bool in_extended, bool in_ignore_extended,
-    megamol::gui::ParameterPresentation::WidgetScope in_scope,
+bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVector_t& inout_params,
+    const std::string& in_module_fullname, const std::string& in_search, vislib::math::Ternary in_extended,
+    bool in_indent, megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
 
     if (out_open_external_tf_editor != nullptr) (*out_open_external_tf_editor) = false;
@@ -54,15 +54,15 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inou
         /// LOCAL
 
         ImGui::BeginGroup();
-        ImGui::Indent();
+        if (in_indent) ImGui::Indent();
     }
 
     // Analyse parameter group membership and draw ungrouped parameters
     ParamGroup_t group_map;
     for (auto& param : inout_params) {
         auto param_namespace = param.GetNameSpace();
-        if (!in_ignore_extended) {
-            param.present.extended = in_extended;
+        if (!in_extended.IsUnknown()) {
+            param.present.extended = in_extended.IsTrue();
         }
 
         if (!param_namespace.empty()) {
@@ -94,7 +94,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inou
 
                 if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
 
-                    if (in_extended) {
+                    if (in_extended.IsTrue()) {
                         // Visibility
                         bool visible = group_widget_id.second.IsGUIVisible();
                         if (ImGui::RadioButton("###visibile", visible)) {
@@ -129,7 +129,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inou
                     }
 
                     // Call group widget draw function
-                    if (group_widget_id.second.IsGUIVisible() || in_extended) {
+                    if (group_widget_id.second.IsGUIVisible() || in_extended.IsTrue()) {
 
                         if (group_widget_id.second.IsGUIReadOnly()) {
                             GUIUtils::ReadOnlyWigetStyle(true);
@@ -145,7 +145,8 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inou
                                     group.second.first, group_widget_id.second.GetGUIPresentation(), in_scope)) {
 
                                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "No widget presentation '%s' available for group widget '%s'. [%s, %s, line %d]\n",
+                                    "[GUI] No widget presentation '%s' available for group widget '%s'. [%s, %s, line "
+                                    "%d]\n",
                                     group_widget_id.second
                                         .GetPresentationName(group_widget_id.second.GetGUIPresentation())
                                         .c_str(),
@@ -190,7 +191,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inou
     if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
         /// LOCAL
 
-        ImGui::Unindent();
+        if (in_indent) ImGui::Unindent();
         ImGui::EndGroup();
     }
 
@@ -198,7 +199,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inou
 }
 
 
-bool megamol::gui::ParameterGroups::ParameterGroupGUIStateToJSON(
+bool megamol::gui::ParameterGroupsPresentation::ParameterGroupGUIStateToJSON(
     nlohmann::json& inout_json, const std::string& module_fullname) {
 
     for (auto& group_widget_id : group_widget_ids) {
@@ -213,7 +214,7 @@ bool megamol::gui::ParameterGroups::ParameterGroupGUIStateToJSON(
 }
 
 
-bool megamol::gui::ParameterGroups::ParameterGroupGUIStateFromJSONString(
+bool megamol::gui::ParameterGroupsPresentation::ParameterGroupGUIStateFromJSONString(
     const std::string& in_json_string, const std::string& module_fullname) {
 
     for (auto& group_widget_id : group_widget_ids) {
@@ -228,7 +229,7 @@ bool megamol::gui::ParameterGroups::ParameterGroupGUIStateFromJSONString(
 }
 
 
-void megamol::gui::ParameterGroups::draw_parameter(megamol::gui::Parameter& inout_param,
+void megamol::gui::ParameterGroupsPresentation::draw_parameter(megamol::gui::Parameter& inout_param,
     const std::string& in_module_fullname, const std::string& in_search,
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
@@ -266,8 +267,8 @@ void megamol::gui::ParameterGroups::draw_parameter(megamol::gui::Parameter& inou
 }
 
 
-void megamol::gui::ParameterGroups::draw_grouped_parameters(const std::string& in_group_name, ParamPtrVector_t& params,
-    const std::string& in_module_fullname, const std::string& in_search,
+void megamol::gui::ParameterGroupsPresentation::draw_grouped_parameters(const std::string& in_group_name,
+    ParamPtrVector_t& params, const std::string& in_module_fullname, const std::string& in_search,
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
 
@@ -296,7 +297,7 @@ void megamol::gui::ParameterGroups::draw_grouped_parameters(const std::string& i
 }
 
 
-bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVector_t& params,
+bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(ParamPtrVector_t& params,
     megamol::core::param::AbstractParamPresentation::Presentation presentation,
     megamol::gui::ParameterPresentation::WidgetScope in_scope) {
 
@@ -333,8 +334,8 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVector_t& par
     }
     if ((param_play == nullptr) || (param_time == nullptr) || (param_speed == nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to find all required parameters by name for animation group widget. [%s, %s, line %d]\n", __FILE__,
-            __FUNCTION__, __LINE__);
+            "[GUI] Unable to find all required parameters by name for animation group widget. [%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -354,8 +355,8 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVector_t& par
     if ((!this->image_buttons.play.IsLoaded()) || (!this->image_buttons.pause.IsLoaded()) ||
         (!this->image_buttons.fastforward.IsLoaded()) || (!this->image_buttons.fastrewind.IsLoaded())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to load all required button textures for animation group widget. [%s, %s, line %d]\n", __FILE__,
-            __FUNCTION__, __LINE__);
+            "[GUI] Unable to load all required button textures for animation group widget. [%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -388,7 +389,6 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVector_t& par
     float time = std::get<float>(param_time->GetValue());
     float speed = std::get<float>(param_speed->GetValue());
     std::string button_label;
-    ImTextureID button_tex;
 
     /// PLAY - PAUSE
     if (!play) {
@@ -416,7 +416,7 @@ bool megamol::gui::ParameterGroups::group_widget_animation(ParamPtrVector_t& par
         speed *= 1.5f;
     }
 
-    ImGui::PopStyleColor(3);
+    ImGui::PopStyleColor(2);
 
     // ImGui::SameLine();
     ImVec2 cursor_pos = ImGui::GetCursorPos();
