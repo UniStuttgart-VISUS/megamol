@@ -55,14 +55,20 @@ bool megamol::probe_gl::ProbeInteraction::OnMouseButton(
 
     if (button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS && mods.none()) {
         
+        m_interactions->accessPendingManipulations().push_back(
+            ProbeManipulation{InteractionType::CLEAR_SELECTION, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
+        m_selected_probes.clear();
+
         if (last_active_probe_id > 0)
         {
             // clear current selection
-            for (auto probe_id : m_selected_probes) {
-                m_interactions->accessPendingManipulations().push_back(
-                    ProbeManipulation{InteractionType::DESELECT, static_cast<uint32_t>(probe_id), 0, 0, 0});
-            }
-            m_selected_probes.clear();
+            //for (auto probe_id : m_selected_probes) {
+            //    m_interactions->accessPendingManipulations().push_back(
+            //        ProbeManipulation{InteractionType::DESELECT, static_cast<uint32_t>(probe_id), 0, 0, 0});
+            //}
+            //m_interactions->accessPendingManipulations().push_back(
+            //    ProbeManipulation{InteractionType::CLEAR_SELECTION, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
+            //m_selected_probes.clear();
 
             // create new selection
             m_selected_probes.push_back(last_active_probe_id);
