@@ -71,7 +71,8 @@ bool megamol::gui::FileUtils::WriteFile(const std::string& filename, const std::
             file.close();
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unable to create file. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Unable to create file '%s'. [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
+                __LINE__);
             file.close();
             return false;
         }

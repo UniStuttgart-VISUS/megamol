@@ -199,7 +199,9 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                     ImGui::Separator();
                     ImGui::TextDisabled("Filename");
                     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
-                    ImGui::TextUnformatted(inout_graph.GetFilename().c_str());
+                    std::string filename = inout_graph.GetFilename();
+                    GUIUtils::Utf8Encode(filename);
+                    ImGui::TextUnformatted(filename.c_str());
                     ImGui::PopTextWrapPos();
                 }
 
@@ -576,9 +578,10 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
             if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
                 for (auto& content_item : header_item.value().items()) {
                     std::string json_graph_id = content_item.key();
-                    if (json_graph_id == inout_graph.GetFilename()) { /// = graph filename
-                        found = true;
+                    GUIUtils::Utf8Decode(json_graph_id);
+                    if (json_graph_id == inout_graph.GetFilename()) {
                         auto config_state = content_item.value();
+                        found = true;
 
                         // show_parameter_sidebar
                         bool tmp_show_parameter_sidebar;
@@ -800,8 +803,9 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                                         std::vector<std::string> calleslot_fullnames;
                                         for (auto& callslot_item : interfaceslot_item.value().items()) {
                                             if (callslot_item.value().is_string()) {
-                                                calleslot_fullnames.emplace_back(
-                                                    callslot_item.value().get<std::string>());
+                                                std::string callslot_name = callslot_item.value().get<std::string>();
+                                                GUIUtils::Utf8Decode(callslot_name);
+                                                calleslot_fullnames.emplace_back(callslot_name);
                                             } else {
                                                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                                                     "[GUI] JSON state: Failed to read value of call slot as string. "
@@ -932,6 +936,7 @@ bool megamol::gui::GraphPresentation::StateToJSON(Graph& inout_graph, nlohmann::
         // out_json.clear();
 
         std::string json_graph_id = inout_graph.GetFilename(); /// = graph filename
+        GUIUtils::Utf8Encode(json_graph_id);
 
         // ! State of graph is only stored if project was saved to file previously. Otherwise the project could not be
         // loaded again.
@@ -967,7 +972,7 @@ bool megamol::gui::GraphPresentation::StateToJSON(Graph& inout_graph, nlohmann::
                                 callslot_fullname =
                                     callslot_ptr->GetParentModule()->FullName() + "::" + callslot_ptr->name;
                             }
-
+                            GUIUtils::Utf8Encode(callslot_fullname);
                             out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["interfaces"][group_ptr->name]
                                     [interface_label] += callslot_fullname;
                         }
@@ -1431,10 +1436,10 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
                 ImGui::PushID(module_ptr->uid);
 
                 // Set default state of header
+                /// TODO utf8 encode required?
                 auto headerId = ImGui::GetID(module_ptr->name.c_str());
                 auto headerState = ImGui::GetStateStorage()->GetInt(headerId, 1); // 0=close 1=open
                 ImGui::GetStateStorage()->SetInt(headerId, headerState);
-
                 if (ImGui::CollapsingHeader(module_ptr->name.c_str(), nullptr, ImGuiTreeNodeFlags_None)) {
 
                     // Draw parameters

@@ -320,14 +320,15 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
-                    // modules_list (no UTF-8 support needed)
+                    // modules_list (supports UTF-8)
                     tmp_config.param_modules_list.clear();
                     if (config_values.at("param_modules_list").is_array()) {
                         size_t buf_size = config_values.at("param_modules_list").size();
                         for (size_t i = 0; i < buf_size; ++i) {
                             if (config_values.at("param_modules_list")[i].is_string()) {
-                                tmp_config.param_modules_list.emplace_back(
-                                    config_values.at("param_modules_list")[i].get<std::string>());
+                                std::string param_module = config_values.at("param_modules_list")[i].get<std::string>();
+                                GUIUtils::Utf8Decode(param_module);
+                                tmp_config.param_modules_list.emplace_back(param_module);
                             } else {
                                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                                     "[GUI] JSON state: Failed to read element of 'param_modules_list' as string. [%s, "
@@ -553,8 +554,16 @@ bool WindowCollection::StateToJSON(nlohmann::json& out_json) {
 
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_show_hotkeys"] =
                     window_config.param_show_hotkeys;
+
+                for (auto& pm : window_config.param_modules_list) {
+                    GUIUtils::Utf8Encode(pm);
+                }
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_modules_list"] =
                     window_config.param_modules_list;
+                for (auto& pm : window_config.param_modules_list) {
+                    GUIUtils::Utf8Decode(pm);
+                }
+
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_module_filter"] =
                     static_cast<int>(window_config.param_module_filter);
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_extended_mode"] =
@@ -571,13 +580,17 @@ bool WindowCollection::StateToJSON(nlohmann::json& out_json) {
 
                 GUIUtils::Utf8Encode(window_config.font_name);
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["font_name"] = window_config.font_name;
+                GUIUtils::Utf8Decode(window_config.font_name);
 
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["tfe_view_minimized"] =
                     window_config.tfe_view_minimized;
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["tfe_view_vertical"] =
                     window_config.tfe_view_vertical;
+
+                GUIUtils::Utf8Encode(window_config.tfe_active_param);
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["tfe_active_param"] =
                     window_config.tfe_active_param;
+                GUIUtils::Utf8Decode(window_config.tfe_active_param);
             }
         }
 #ifdef GUI_VERBOSE

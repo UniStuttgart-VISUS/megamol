@@ -1951,6 +1951,8 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
 
         GUIUtils::Utf8Encode(this->state.project_file);
         inout_json[GUI_JSON_TAG_GUISTATE]["project_file"] = this->state.project_file;
+        GUIUtils::Utf8Decode(this->state.project_file);
+
         inout_json[GUI_JSON_TAG_GUISTATE]["menu_visible"] = this->state.menu_visible;
 
         GraphPtr_t graph_ptr;

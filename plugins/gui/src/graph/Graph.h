@@ -37,7 +37,8 @@ typedef std::vector<Call::StockCall> CallStockVector_t;
 
 class Graph {
 public:
-    enum QueueChange { ADD_MODULE, DELETE_MODULE, ADD_CALL, DELETE_CALL };
+    /// TODO Implement RENAME_MODULE ... !
+    enum QueueChange { ADD_MODULE, DELETE_MODULE, RENAME_MODULE, ADD_CALL, DELETE_CALL };
     struct QueueData {
         std::string classname = "";
         std::string id = "";
@@ -62,7 +63,7 @@ public:
 
     ImGuiID AddModule(const ModuleStockVector_t& stock_modules, const std::string& module_class_name);
     ImGuiID AddEmptyModule(void);
-    bool DeleteModule(ImGuiID module_uid);
+    bool DeleteModule(ImGuiID module_uid, bool force = false);
     inline const ModulePtrVector_t& GetModules(void) { return this->modules; }
     bool GetModule(ImGuiID module_uid, ModulePtr_t& out_module_ptr);
     bool ModuleExists(const std::string& module_fullname);

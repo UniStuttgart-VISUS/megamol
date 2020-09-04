@@ -49,7 +49,7 @@ megamol::gui::Graph::~Graph(void) {
         module_uids.emplace_back(module_ptr->uid);
     }
     for (auto& module_uid : module_uids) {
-        this->DeleteModule(module_uid);
+        this->DeleteModule(module_uid, true);
     }
 
     // 3) Delete all calls
@@ -172,7 +172,7 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
 }
 
 
-bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
+bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
 
     try {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {

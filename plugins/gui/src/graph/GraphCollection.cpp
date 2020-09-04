@@ -1504,7 +1504,8 @@ bool megamol::gui::GraphCollection::replace_graph_state(
                     "[GUI] State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
-            std::string json_graph_id = graph_ptr->GetFilename(); /// = graph filename
+            std::string json_graph_id = graph_ptr->GetFilename();
+            GUIUtils::Utf8Encode(json_graph_id);
             if (!json_graph_id.empty()) {
                 try {
                     json[GUI_JSON_TAG_GRAPHS].erase(json_graph_id);

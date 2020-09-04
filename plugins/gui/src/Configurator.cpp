@@ -209,7 +209,19 @@ void megamol::gui::Configurator::UpdateStateParameter(void) {
     nlohmann::json configurator_json;
     if (this->configurator_state_to_json(configurator_json)) {
         std::string state;
-        state = configurator_json.dump(2);
+
+        try {
+            state = configurator_json.dump(2);
+        } catch (std::exception e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            return;
+        } catch (...) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return;
+        }
+
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
     }
 }
@@ -555,8 +567,11 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
                 }
 
             } else if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
+                // Check for configurator settings of previously loaded graphs
+
                 for (auto& config_item : header_item.value().items()) {
                     std::string json_graph_id = config_item.key(); /// = graph file name
+                    GUIUtils::Utf8Decode(json_graph_id);
 
                     // Let running graph search for its configurator state in this project
                     bool found_running_graph = false;
