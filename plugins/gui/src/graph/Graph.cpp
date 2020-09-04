@@ -178,13 +178,16 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
             if ((*iter)->uid == module_uid) {
 
-                /// XXX Prevent deletion of entry point module / view instance for running graph
-                if (((*iter)->is_view_instance) && (this->RunningState().IsTrue())) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Deleting entry point/ view instance '%s' of running project is not supported yet. [%s, "
-                        "%s, line %d]\n",
-                        (*iter)->FullName().c_str(), __FILE__, __FUNCTION__, __LINE__);
-                    return false;
+                if (!force) {
+                    /// XXX Prevent deletion of entry point module / view instance of running graph in configurator
+                    if (((*iter)->is_view_instance) && (this->RunningState().IsTrue())) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] Deleting entry point/ view instance '%s' of running project is not supported yet. "
+                            "[%s, "
+                            "%s, line %d]\n",
+                            (*iter)->FullName().c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        return false;
+                    }
                 }
 
                 this->present.ResetStatePointers();

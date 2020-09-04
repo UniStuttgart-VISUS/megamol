@@ -576,12 +576,13 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
                     // Let running graph search for its configurator state in this project
                     bool found_running_graph = false;
                     for (auto& graph_ptr : this->graph_collection.GetGraphs()) {
-                        if (graph_ptr->GetFilename() == json_graph_id) {
+                        if ((graph_ptr->RunningState().IsTrue()) && (json_graph_id == GUI_JSON_TAG_RUNNING_GRAPH)) {
                             if (graph_ptr->GUIStateFromJsonString(in_json_string)) {
                                 // Disable layouting if graph state was found
                                 graph_ptr->present.SetLayoutGraph(false);
                             }
                             found_running_graph = true;
+                            break;
                         }
                     }
 

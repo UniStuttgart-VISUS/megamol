@@ -66,6 +66,7 @@ namespace gui {
 #define GUI_JSON_TAG_GUISTATE ("GUI")
 #define GUI_JSON_TAG_CONFIGURATOR ("Configurator")
 #define GUI_JSON_TAG_GRAPHS ("Graphs")
+#define GUI_JSON_TAG_RUNNING_GRAPH ("RunningGraph")
 
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))

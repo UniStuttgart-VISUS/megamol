@@ -162,7 +162,6 @@ private:
         double last_instance_time; // Last instance time.
         bool open_popup_about;     // Flag for opening about pop-up
         bool open_popup_save;      // Flag for opening save pop-up
-        std::string project_file;  // File name of the currently running project
         bool menu_visible;         // Flag indicating menu state
         bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once
     };

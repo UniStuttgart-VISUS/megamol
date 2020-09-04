@@ -783,9 +783,6 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         sync_success &= this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(this->graph_uid,
             ((megamol_graph == nullptr) ? (this->core_instance) : (nullptr)), megamol_graph,
             vislib::math::Ternary::TRI_TRUE);
-
-        if (found_graph) graph_ptr->SetFilename(this->state.project_file);
-
         if (!sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
@@ -992,7 +989,6 @@ bool GUIWindows::createContext(void) {
     this->state.last_instance_time = 0.0;
     this->state.open_popup_about = false;
     this->state.open_popup_save = false;
-    this->state.project_file = "";
     this->state.menu_visible = true;
     this->state.hotkeys_check_once = true;
     // Adding additional utf-8 glyph ranges
@@ -1690,21 +1686,21 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 
     bool confirmed, aborted;
     bool popup_failed = false;
-    if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Save Editor Project",
-            this->state.open_popup_save, this->state.project_file)) {
-        // Save file name in graph, too
-        GraphPtr_t graph_ptr;
-        bool found_graph = this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr);
-        if (found_graph) graph_ptr->SetFilename(this->state.project_file);
-        /// Serialize current state to parameter.
-        this->save_state_to_parameter();
-        /// Save to file
-        popup_failed =
-            !this->configurator.GetGraphCollection().SaveProjectToFile(this->graph_uid, this->state.project_file, true);
+    GraphPtr_t graph_ptr;
+    bool found_running_graph = this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr);
+    if (found_running_graph) {
+        std::string filename = graph_ptr->GetFilename();
+        if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Save Editor Project",
+                this->state.open_popup_save, filename)) {
+            graph_ptr->SetFilename(filename);
+            /// Serialize current state to parameter.
+            this->save_state_to_parameter();
+            /// Save to file
+            popup_failed = !this->configurator.GetGraphCollection().SaveProjectToFile(this->graph_uid, filename, true);
+        }
+        MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
+            confirmed, "Cancel", aborted);
     }
-    MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
-        confirmed, "Cancel", aborted);
-
     if (this->state.open_popup_save) {
         this->state.open_popup_save = false;
         std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
@@ -1896,15 +1892,6 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
                         "[GUI] JSON state: Failed to read 'menu_visible' as boolean. [%s, %s, line %d]\n", __FILE__,
                         __FUNCTION__, __LINE__);
                 }
-                // project_file (supports UTF-8)
-                if (gui_state.at("project_file").is_string()) {
-                    gui_state.at("project_file").get_to(this->state.project_file);
-                    GUIUtils::Utf8Decode(this->state.project_file);
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] JSON state: Failed to read 'project_file' as string. [%s, %s, line %d]\n", __FILE__,
-                        __FUNCTION__, __LINE__);
-                }
             }
         }
 
@@ -1948,11 +1935,6 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
 
     try {
         // Append to given json
-
-        GUIUtils::Utf8Encode(this->state.project_file);
-        inout_json[GUI_JSON_TAG_GUISTATE]["project_file"] = this->state.project_file;
-        GUIUtils::Utf8Decode(this->state.project_file);
-
         inout_json[GUI_JSON_TAG_GUISTATE]["menu_visible"] = this->state.menu_visible;
 
         GraphPtr_t graph_ptr;

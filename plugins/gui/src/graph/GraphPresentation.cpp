@@ -579,7 +579,8 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                 for (auto& content_item : header_item.value().items()) {
                     std::string json_graph_id = content_item.key();
                     GUIUtils::Utf8Decode(json_graph_id);
-                    if (json_graph_id == inout_graph.GetFilename()) {
+                    if ((json_graph_id == inout_graph.GetFilename()) ||
+                        ((inout_graph.RunningState().IsTrue()) && (json_graph_id == GUI_JSON_TAG_RUNNING_GRAPH))) {
                         auto config_state = content_item.value();
                         found = true;
 
@@ -935,8 +936,11 @@ bool megamol::gui::GraphPresentation::StateToJSON(Graph& inout_graph, nlohmann::
         /// Append to given json
         // out_json.clear();
 
-        std::string json_graph_id = inout_graph.GetFilename(); /// = graph filename
+        std::string json_graph_id = inout_graph.GetFilename();
         GUIUtils::Utf8Encode(json_graph_id);
+        if (inout_graph.RunningState().IsTrue()) {
+            json_graph_id = GUI_JSON_TAG_RUNNING_GRAPH;
+        }
 
         // ! State of graph is only stored if project was saved to file previously. Otherwise the project could not be
         // loaded again.
