@@ -758,7 +758,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 "[GUI] Project File '%s': Missing main view lua command '%s'. [%s, %s, line %d]\n",
                 project_filename.c_str(), luacmd_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
         }
-        // Save filename for graph (before saving states!)
+        // Save filename for graph
         graph_ptr->SetFilename(project_filename);
 
         // Find and create modules

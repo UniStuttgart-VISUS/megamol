@@ -1061,20 +1061,24 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     ImGui::SameLine();
     if (ImGui::Button("+###hor_incr_scrolling", button_size)) {
         this->graph_state.canvas.scrolling.x += scroll_fac;
+        this->update = true;
     }
     ImGui::SameLine();
     if (ImGui::Button("-###hor_decr_scrolling", button_size)) {
         this->graph_state.canvas.scrolling.x -= scroll_fac;
+        this->update = true;
     }
     ImGui::SameLine();
     ImGui::TextUnformatted("V:");
     ImGui::SameLine();
     if (ImGui::Button("+###vert_incr_scrolling", button_size)) {
         this->graph_state.canvas.scrolling.y += scroll_fac;
+        this->update = true;
     }
     ImGui::SameLine();
     if (ImGui::Button("-###vert_decr_scrolling", button_size)) {
         this->graph_state.canvas.scrolling.y -= scroll_fac;
+        this->update = true;
     }
     ImGui::SameLine();
     if (ImGui::Button("Reset###reset_scrolling")) {
@@ -1087,7 +1091,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     ImGui::TextUnformatted(delimiter.c_str());
     ImGui::SameLine();
 
-    const float zoom_fac = 1.1f; // =10%
+    const float zoom_fac = 1.1f; // = 10%
     ImGui::Text("Zooming: %.2f", this->graph_state.canvas.zooming);
     ImGui::SameLine();
     if (ImGui::Button("+###incr_zooming", button_size)) {
@@ -1107,9 +1111,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     ImGui::TextUnformatted(delimiter.c_str());
     ImGui::SameLine();
 
-    if (ImGui::Checkbox("Grid", &this->show_grid)) {
-        inout_graph.ForceSetDirty();
-    }
+    ImGui::Checkbox("Grid", &this->show_grid);
 
     ImGui::SameLine();
 
@@ -1198,7 +1200,6 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
 
     // Update position and size of modules (and  call slots) and groups.
     if (this->update) {
-        inout_graph.ForceSetDirty();
         for (auto& mod : inout_graph.GetModules()) {
             mod->UpdateGUI(this->graph_state.canvas);
         }
@@ -1372,7 +1373,6 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
 
     // Mode
     if (megamol::gui::ParameterPresentation::ParameterExtendedModeButton(this->param_extended_mode)) {
-        inout_graph.ForceSetDirty();
         for (auto& module_ptr : inout_graph.GetModules()) {
             for (auto& parameter : module_ptr->parameters) {
                 parameter.present.extended = this->param_extended_mode;
@@ -1385,7 +1385,6 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
 
         // Visibility
         if (ImGui::Checkbox("Visibility", &this->params_visible)) {
-            inout_graph.ForceSetDirty();
             for (auto& module_ptr : inout_graph.GetModules()) {
                 for (auto& parameter : module_ptr->parameters) {
                     parameter.present.SetGUIVisible(this->params_visible);
@@ -1396,7 +1395,6 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
 
         // Read-only option
         if (ImGui::Checkbox("Read-Only", &this->params_readonly)) {
-            inout_graph.ForceSetDirty();
             for (auto& module_ptr : inout_graph.GetModules()) {
                 for (auto& parameter : module_ptr->parameters) {
                     parameter.present.SetGUIReadOnly(this->params_readonly);
