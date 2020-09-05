@@ -113,6 +113,7 @@ void GUIView::Render(const mmcRenderViewContext& context) {
     if (this->doHookCode()) {
         this->doAfterRenderHook();
     }
+
     this->gui.SynchronizeGraphs();
 }
 

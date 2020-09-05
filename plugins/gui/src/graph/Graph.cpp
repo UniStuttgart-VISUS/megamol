@@ -180,7 +180,7 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
 
                 if (!force) {
                     /// XXX Prevent deletion of entry point module / view instance of running graph in configurator
-                    if (((*iter)->is_view_instance) && (this->RunningState().IsTrue())) {
+                    if (((*iter)->is_view_instance) && (this->IsRunning())) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[GUI] Deleting entry point/ view instance '%s' of running project is not supported yet. "
                             "[%s, "

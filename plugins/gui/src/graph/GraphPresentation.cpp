@@ -97,9 +97,6 @@ megamol::gui::GraphPresentation::~GraphPresentation(void) {}
 void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, GraphState_t& state) {
 
     try {
-        /// Hide running graph of core instance
-        if (inout_graph.RunningState().IsFalse()) return;
-
         if (ImGui::GetCurrentContext() == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -175,7 +172,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
         }
         std::string graph_label = "    " + inout_graph.name + "  ###graph" + std::to_string(graph_uid);
-        if (inout_graph.RunningState().IsTrue()) {
+        if (inout_graph.IsRunning()) {
             graph_label = "    [RUNNING]  " + graph_label;
         }
         // Checking for closed tab below
@@ -187,8 +184,12 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 ImGui::TextDisabled("Project");
                 ImGui::Separator();
 
-                if (ImGui::MenuItem("Save")) {
+                bool running_graph = inout_graph.IsRunning();
+                if (ImGui::MenuItem("Save", nullptr, false, !running_graph)) {
                     state.graph_save = true;
+                }
+                if (running_graph) {
+                    this->tooltip.ToolTip("Save running project using project menu.");
                 }
 
                 if (ImGui::MenuItem("Rename")) {
@@ -519,7 +520,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         // Set delete flag if tab was closed
         bool popup_prevent_close_permanent = false;
         if (!open) {
-            if (inout_graph.RunningState().IsTrue()) {
+            if (inout_graph.IsRunning()) {
                 popup_prevent_close_permanent = true;
             } else {
                 state.graph_delete = true;
@@ -559,13 +560,10 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
         if (in_json_string.empty()) {
             return false;
         }
-
         bool found = false;
         bool valid = true;
-
         nlohmann::json json;
         json = nlohmann::json::parse(in_json_string);
-
         if (!json.is_object()) {
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -579,11 +577,20 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
                 for (auto& content_item : header_item.value().items()) {
                     std::string json_graph_id = content_item.key();
                     GUIUtils::Utf8Decode(json_graph_id);
-                    if ((json_graph_id == inout_graph.GetFilename()) ||
-                        ((inout_graph.RunningState().IsTrue()) && (json_graph_id == GUI_JSON_TAG_RUNNING_GRAPH))) {
+                    if (json_graph_id == GUI_JSON_TAG_PROJECT_GRAPH) {
                         auto config_state = content_item.value();
                         found = true;
 
+                        // project_file (supports UTF-8)
+                        if (config_state.at("project_file").is_string()) {
+                            std::string filename = config_state.at("project_file").get<std::string>();
+                            GUIUtils::Utf8Decode(filename);
+                            inout_graph.SetFilename(filename);
+                        } else {
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                "[GUI] JSON state: Failed to read 'project_file' as string. [%s, %s, line %d]\n",
+                                __FILE__, __FUNCTION__, __LINE__);
+                        }
                         // show_parameter_sidebar
                         bool tmp_show_parameter_sidebar;
                         this->change_show_parameter_sidebar = false;
@@ -930,39 +937,40 @@ bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, co
 }
 
 
-bool megamol::gui::GraphPresentation::StateToJSON(Graph& inout_graph, nlohmann::json& out_json) {
+bool megamol::gui::GraphPresentation::StateToJSON(
+    Graph& inout_graph, nlohmann::json& out_json, bool save_as_project_graph) {
 
     try {
-        /// Append to given json
-        // out_json.clear();
+        std::string filename = inout_graph.GetFilename();
+        GUIUtils::Utf8Encode(filename);
 
-        std::string json_graph_id = inout_graph.GetFilename();
-        GUIUtils::Utf8Encode(json_graph_id);
-        if (inout_graph.RunningState().IsTrue()) {
-            json_graph_id = GUI_JSON_TAG_RUNNING_GRAPH;
-        }
+        // For not running graphs save only file name of loaded project
+        if (!save_as_project_graph) {
+            out_json[GUI_JSON_TAG_GRAPHS][filename] = "";
+        } else {
 
-        // ! State of graph is only stored if project was saved to file previously. Otherwise the project could not be
-        // loaded again.
-        if (!json_graph_id.empty()) {
-
-            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_parameter_sidebar"] = this->show_parameter_sidebar;
-            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["parameter_sidebar_width"] = this->parameter_sidebar_width;
-            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_grid"] = this->show_grid;
-            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_call_names"] = this->show_call_names;
-            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_slot_names"] = this->show_slot_names;
-            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["show_module_names"] = this->show_module_names;
-            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["params_visible"] = this->params_visible;
-            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["params_readonly"] = this->params_readonly;
-            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["param_extended_mode"] = this->param_extended_mode;
-            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["canvas_scrolling"] = {
+            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["project_file"] = filename;
+            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["show_parameter_sidebar"] =
+                this->show_parameter_sidebar;
+            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["parameter_sidebar_width"] =
+                this->parameter_sidebar_width;
+            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["show_grid"] = this->show_grid;
+            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["show_call_names"] = this->show_call_names;
+            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["show_slot_names"] = this->show_slot_names;
+            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["show_module_names"] = this->show_module_names;
+            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["params_visible"] = this->params_visible;
+            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["params_readonly"] = this->params_readonly;
+            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["param_extended_mode"] =
+                this->param_extended_mode;
+            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["canvas_scrolling"] = {
                 this->graph_state.canvas.scrolling.x, this->graph_state.canvas.scrolling.y};
-            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["canvas_zooming"] = this->graph_state.canvas.zooming;
+            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["canvas_zooming"] =
+                this->graph_state.canvas.zooming;
 
             // Module positions
             for (auto& module_ptr : inout_graph.GetModules()) {
-                out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["modules"][module_ptr->FullName()]["graph_position"] = {
-                    module_ptr->present.position.x, module_ptr->present.position.y};
+                out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["modules"][module_ptr->FullName()]
+                        ["graph_position"] = {module_ptr->present.position.x, module_ptr->present.position.y};
             }
             // Group interface slots
             size_t interface_number = 0;
@@ -977,7 +985,7 @@ bool megamol::gui::GraphPresentation::StateToJSON(Graph& inout_graph, nlohmann::
                                     callslot_ptr->GetParentModule()->FullName() + "::" + callslot_ptr->name;
                             }
                             GUIUtils::Utf8Encode(callslot_fullname);
-                            out_json[GUI_JSON_TAG_GRAPHS][json_graph_id]["interfaces"][group_ptr->name]
+                            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["interfaces"][group_ptr->name]
                                     [interface_label] += callslot_fullname;
                         }
                         interface_number++;
@@ -987,12 +995,6 @@ bool megamol::gui::GraphPresentation::StateToJSON(Graph& inout_graph, nlohmann::
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote graph state to JSON.");
 #endif // GUI_VERBOSE
-        } else {
-            // megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            //    "[GUI] State of project '%s' is not being saved. Save project to file in "
-            //    "order to get its state saved. [%s, %s, line %d]\n",
-            //    inout_graph.name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
         }
 
     } catch (nlohmann::json::type_error& e) {

@@ -83,8 +83,7 @@ public:
      * @return                 True on success, false otherwise.
      */
     bool LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance,
-        megamol::core::MegaMolGraph* megamol_graph,
-        vislib::math::Ternary running_graph = vislib::math::Ternary::TRI_UNKNOWN);
+        megamol::core::MegaMolGraph* megamol_graph, bool running_graph = false);
 
     ImGuiID LoadProjectFromCore(
         megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph) {
@@ -99,7 +98,7 @@ public:
         megamol::core::MegaMolGraph* megamol_graph, bool use_stock);
 
     ImGuiID LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
-    bool SaveProjectToFile(ImGuiID in_graph_uid, const std::string& project_filename, bool megamol_graph);
+    bool SaveProjectToFile(ImGuiID in_graph_uid, const std::string& project_filename);
 
     // Presentation ----------------------------------------------------
 

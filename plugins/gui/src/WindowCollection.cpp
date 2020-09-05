@@ -524,9 +524,6 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
 bool WindowCollection::StateToJSON(nlohmann::json& out_json) {
 
     try {
-        /// Append to given json
-        // out_json.clear();
-
         for (auto& window : this->windows) {
             if (window.win_store_config) {
                 std::string window_name = window.win_name;

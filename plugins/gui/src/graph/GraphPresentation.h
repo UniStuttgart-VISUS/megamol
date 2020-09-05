@@ -98,7 +98,7 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     void Present(Graph& inout_graph, GraphState_t& state);
-    bool StateToJSON(Graph& inout_graph, nlohmann::json& out_json);
+    bool StateToJSON(Graph& inout_graph, nlohmann::json& out_json, bool save_as_project_graph);
 
     void present_menu(Graph& inout_graph);
     void present_canvas(Graph& inout_graph, float child_width);

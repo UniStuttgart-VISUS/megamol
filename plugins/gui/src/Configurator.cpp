@@ -119,14 +119,7 @@ bool megamol::gui::Configurator::Draw(
         // because initial gui graph is hidden. It should not be manipulated
         // since there is no synchronization for the core instance graph (yet)
         auto graph_count = this->graph_collection.GetGraphs().size();
-        if (graph_count == 1) {
-            auto graph_ptr = this->graph_collection.GetGraphs().front();
-            if (graph_ptr->RunningState().IsFalse()) {
-                // Load inital project
-                /// this->graph_collection.LoadProjectFromCore(core_instance, nullptr);
-                /// or: this->add_empty_project();
-            }
-        } else {
+        if (graph_count != 1) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Invalid expected number of graphs: %i (should be 1, for loaded running graph). [%s, %s, line "
                 "%d]\n",
@@ -154,7 +147,13 @@ bool megamol::gui::Configurator::Draw(
         // Hotkeys
         if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]) &&
             (this->graph_state.graph_selected_uid != GUI_INVALID_ID)) {
-            this->graph_state.graph_save = true;
+
+            bool running_graph = false;
+            GraphPtr_t graph_ptr;
+            if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
+                running_graph = graph_ptr->IsRunning();
+            }
+            this->graph_state.graph_save = !running_graph;
         }
 
         // Clear dropped file list (when configurator window is opened, after it was closed)
@@ -269,11 +268,20 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
             }
 
             // Save currently active project to LUA file
+            bool running_graph = false;
+            GraphPtr_t graph_ptr;
+            if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
+                running_graph = graph_ptr->IsRunning();
+            }
             if (ImGui::MenuItem("Save Editor Project",
                     std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]).ToString().c_str(),
-                    false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
+                    false, ((this->graph_state.graph_selected_uid != GUI_INVALID_ID) && !running_graph))) {
                 this->graph_state.graph_save = true;
             }
+            if (running_graph) {
+                this->tooltip.ToolTip("Save running project using project menu.");
+            }
+
             ImGui::EndMenu();
         }
 
@@ -568,26 +576,22 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
 
             } else if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
                 // Check for configurator settings of previously loaded graphs
-
                 for (auto& config_item : header_item.value().items()) {
-                    std::string json_graph_id = config_item.key(); /// = graph file name
+                    std::string json_graph_id = config_item.key();
                     GUIUtils::Utf8Decode(json_graph_id);
-
-                    // Let running graph search for its configurator state in this project
-                    bool found_running_graph = false;
-                    for (auto& graph_ptr : this->graph_collection.GetGraphs()) {
-                        if ((graph_ptr->RunningState().IsTrue()) && (json_graph_id == GUI_JSON_TAG_RUNNING_GRAPH)) {
-                            if (graph_ptr->GUIStateFromJsonString(in_json_string)) {
-                                // Disable layouting if graph state was found
-                                graph_ptr->present.SetLayoutGraph(false);
+                    if (json_graph_id == GUI_JSON_TAG_PROJECT_GRAPH) {
+                        // Read configurator state for running graph
+                        for (auto& graph_ptr : this->graph_collection.GetGraphs()) {
+                            if (graph_ptr->IsRunning()) {
+                                if (graph_ptr->GUIStateFromJsonString(in_json_string)) {
+                                    // Disable layouting if graph state was found
+                                    graph_ptr->present.SetLayoutGraph(false);
+                                }
+                                break;
                             }
-                            found_running_graph = true;
-                            break;
                         }
-                    }
-
-                    // Otherwise load new graph from file
-                    if (!found_running_graph) {
+                    } else {
+                        // Otherwise load additonal graph from given file name
                         auto graph_uid = this->graph_collection.LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
                     }
                 }
@@ -636,14 +640,11 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
 bool megamol::gui::Configurator::configurator_state_to_json(nlohmann::json& out_json) {
 
     try {
-        /// Append to given json
-        // out_json.clear();
-
         out_json[GUI_JSON_TAG_CONFIGURATOR]["show_module_list_sidebar"] = this->show_module_list_sidebar;
         out_json[GUI_JSON_TAG_CONFIGURATOR]["module_list_sidebar_width"] = this->module_list_sidebar_width;
 
         for (auto& graph_ptr : this->graph_collection.GetGraphs()) {
-            graph_ptr->GUIStateToJSON(out_json);
+            graph_ptr->GUIStateToJSON(out_json, graph_ptr->IsRunning());
         }
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote configurator state to JSON.");

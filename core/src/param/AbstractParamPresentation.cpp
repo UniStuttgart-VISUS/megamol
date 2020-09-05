@@ -8,6 +8,10 @@
 #include "stdafx.h"
 #include "mmcore/param/AbstractParamPresentation.h"
 
+
+/// #define PARAM_PRESENTATION_VERBOSE
+
+
 using namespace megamol::core::param;
 
 
@@ -225,9 +229,9 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
         }
 
         if (retval) {
-#ifdef GUI_VERBOSE
+#ifdef PARAM_PRESENTATION_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Read parameter state from JSON string.");
-#endif // GUI_VERBOSE
+#endif // PARAM_PRESENTATION_VERBOSE
         }
         else {
             /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON for '%s' [%s, %s, line
@@ -277,9 +281,9 @@ bool AbstractParamPresentation::ParameterGUIStateToJSON(nlohmann::json& inout_js
         inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_presentation_mode"] =
             static_cast<int>(this->GetGUIPresentation());
 
-#ifdef GUI_VERBOSE
+#ifdef PARAM_PRESENTATION_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Wrote parameter state to JSON.");
-#endif // GUI_VERBOSE
+#endif // PARAM_PRESENTATION_VERBOSE
 
     }
     catch (nlohmann::json::type_error& e) {
