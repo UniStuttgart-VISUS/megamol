@@ -297,14 +297,14 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
 bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_uid,
     megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph, bool use_stock) {
 
-    // Apply updates from core graph to gui graph
+    // Apply updates from core graph -> gui graph
     //     Implemented synchronisations:
     //     - Add module(s)      - Core Graph and Core Instance
     //     - Add call(s)        - Core Graph
-    /// TODO
-    ///     - Add call(s)       - Core Instance
-    ///     - Delete module(s)  - Core Graph and Core Instance
-    ///     - Delete call(s)    - Core Graph and Core Instance
+    ///    TODO
+    ///        - Add call(s)       - Core Instance
+    ///        - Delete module(s)  - Core Graph and Core Instance
+    ///        - Delete call(s)    - Core Graph and Core Instance
     try {
         GraphPtr_t graph_ptr;
         if (!this->GetGraph(in_graph_uid, graph_ptr)) {
@@ -337,7 +337,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         std::vector<megamol::core::Module*> module_ptr_list;
         std::map<std::string, std::string> view_instances;
         if (use_megamol_graph) {
-            /* XXX
+            /* XXX MEGAMOL GRAPH
             for (auto& module_inst : megamol_graph->ListModules()) {
                 std::string module_fullname = std::string(module_inst.modulePtr->FullName().PeekBuffer());
                 if (!graph_ptr->ModuleExists(module_fullname)) {
@@ -409,7 +409,8 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 if (graph_ptr->GetModule(moduel_uid, new_module_ptr)) {
                     new_module_ptr->class_name = class_name;
                     new_module_ptr->description = "[n/a]";
-                    /// XXX ModuleDescriptionManager is so far only available in graph of core instance
+                    /// XXX ModuleDescriptionManager required for getting module description is so far only available in
+                    /// graph of core instance
                     if (use_core_instance) {
                         auto mod_desc =
                             core_instance->GetModuleDescriptionManager().Find(vislib::StringA(class_name.c_str()));
@@ -516,7 +517,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         }
         // Add/Create call connection data from core graph
         if (use_megamol_graph) {
-            /* XXX
+            /* XXX MEGAMOL GRAPH
             for (auto& call : megamol_graph->ListCalls()) {
                 auto call_ptr = call.first;
                 if (call_ptr == nullptr) continue;

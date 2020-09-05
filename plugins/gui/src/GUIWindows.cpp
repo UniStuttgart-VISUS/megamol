@@ -328,7 +328,8 @@ bool GUIWindows::PostDraw(void) {
                 ImGui::EndPopup();
             }
 
-            // Set window size (TODO: Add minmize/maximize buttons)
+            // Set window size
+            /// TODO Add minmize/maximize buttons
             if (change_window_size) {
                 if (window_maximized) {
                     // Window is maximized
@@ -399,6 +400,7 @@ bool GUIWindows::PostDraw(void) {
     if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
 
+            /// DEBUG TEST OpenGL Picking
             /// TODO Pass picked UID to parameters
 
             module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "",
@@ -661,7 +663,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         return false;
     }
     /// TODO Load all known modules from core instance ONCE
-    /// XXX  => Omitted since this takes ~2 seconds and would always block megamol for this period at start up!
+    /// => Omitted since this takes ~2 seconds and would always block megamol for this period at start up!
 
     bool synced = false;
     bool sync_success = true;
@@ -678,11 +680,11 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             switch (change) {
             case (Graph::QueueChange::ADD_MODULE): {
                 if (megamol_graph != nullptr) {
-                    /* XXX
+                    /* XXX MEGAMOL GRAPH
                     graph_sync_success &= megamol_graph->CreateModule(data.classname, data.id);
                     // Create/Add new graph entry
                     if (graph_sync_success && data.graph_entry) {
-                        /// XXX This code is copied from main3000.cpp ---------
+                        /// This code is copied from main3000.cpp ------------
                         static std::vector<std::string> view_resource_requests = {
                             "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
                             auto view_rendering_execution =
@@ -707,12 +709,12 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                                 megamol::core::view::view_poke_rendering(view, resources[i++]);
                             };
                         megamol_graph->SetGraphEntryPoint(data.id, view_resource_requests, view_rendering_execution);
-                        /// XXX -----------------------------------------------
+                        /// ---------------------------------------------------
                     }
                     */
                 } else if (this->core_instance != nullptr) {
                     if (data.graph_entry) {
-                        /*XXX
+                        /* XXX MEGAMOL GRAPH
                         auto view_name = vislib::StringA(graph_ptr->name.c_str());
                         auto module_name = vislib::StringA(data.id.c_str());
                         auto vd = std::make_shared<megamol::core::ViewDescription>(view_name.PeekBuffer());
@@ -721,8 +723,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                             module_name);
                         vd->SetViewModuleID(module_name);
                         try {
-                            /// XXX => Requires "friend class megamol::gui::GuiWindows;" in CoreInstance.h ...
                             /// this->core_instance->projViewDescs.Register(vd);
+                            /// XXX Requires "friend class megamol::gui::GuiWindows;" in CoreInstance.h ...
                             this->core_instance->RequestViewInstantiation(vd.get(), view_name);
                             graph_sync_success &= true;
                         } catch (vislib::AlreadyExistsException) {
@@ -740,7 +742,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             } break;
             case (Graph::QueueChange::DELETE_MODULE): {
                 if (megamol_graph != nullptr) {
-                    /* XXX
+                    /* XXX MEGAMOL GRAPH
                     graph_sync_success &= megamol_graph->DeleteModule(data.id);
                     */
                 } else if (this->core_instance != nullptr) {
@@ -749,7 +751,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             } break;
             case (Graph::QueueChange::ADD_CALL): {
                 if (megamol_graph != nullptr) {
-                    /* XXX
+                    /* XXX MEGAMOL GRAPH
                     graph_sync_success &= megamol_graph->CreateCall(data.classname, data.caller, data.callee);
                     */
                 } else if (this->core_instance != nullptr) {
@@ -760,7 +762,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             } break;
             case (Graph::QueueChange::DELETE_CALL): {
                 if (megamol_graph != nullptr) {
-                    /* XXX
+                    /* XXX MEGAMOL GRAPH
                     graph_sync_success &= megamol_graph->DeleteCall(data.caller, data.callee);
                     */
                 } else if (this->core_instance != nullptr) {
@@ -804,11 +806,11 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     auto module_name = module_ptr->FullName();
                     megamol::core::Module* core_module_ptr = nullptr;
                     if (megamol_graph != nullptr) {
-                        /* XXX
+                        /* XXX MEGAMOL GRAPH
                         core_module_ptr = megamol_graph->FindModule(module_name).get();
                         */
                     } else if (this->core_instance != nullptr) {
-                        /// XXX New core module will be available next frame after module request is processed.
+                        // New core module will only be available next frame after module request is processed.
                         std::function<void(megamol::core::Module*)> fun =
                             [&core_module_ptr](megamol::core::Module* mod) { core_module_ptr = mod; };
                         this->core_instance->FindModuleNoLock(module_name, fun);
@@ -956,7 +958,7 @@ bool GUIWindows::createContext(void) {
     // CONFIGURATOR Window -----------------------------------------------
     buf_win.win_name = "Configurator";
     buf_win.win_show = false;
-    /// XXX Better initial size -> access to current viewport?!
+    /// TODO Better initial size for configurator (use current viewport?)
     buf_win.win_size = ImVec2(800.0f, 600.0f);
     buf_win.win_reset_size = buf_win.win_size;
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
@@ -1172,7 +1174,6 @@ void GUIWindows::drawTransferFunctionWindowCallback(WindowCollection::WindowConf
 
 void GUIWindows::drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc) {
 
-    /// TODO Decide whether to pass core_instance or new megamol core graph?
     this->configurator.Draw(wc, this->core_instance);
 }
 
@@ -1813,7 +1814,6 @@ bool megamol::gui::GUIWindows::isHotkeyPressed(megamol::core::view::KeyCode keyc
 
 void megamol::gui::GUIWindows::triggerCoreInstanceShutdown(void) {
 
-    /// TODO Decide wheather to use core_instance or new frontend
     if (this->core_instance != nullptr) {
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Shutdown MegaMol instance.");

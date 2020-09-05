@@ -1442,7 +1442,7 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
                 ImGui::PushID(module_ptr->uid);
 
                 // Set default state of header
-                /// TODO utf8 encode required?
+                /// XXX Utf8 encode not required(?)
                 auto headerId = ImGui::GetID(module_ptr->name.c_str());
                 auto headerState = ImGui::GetStateStorage()->GetInt(headerId, 1); // 0=close 1=open
                 ImGui::GetStateStorage()->SetInt(headerId, headerState);
