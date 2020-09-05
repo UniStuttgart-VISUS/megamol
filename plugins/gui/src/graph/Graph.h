@@ -42,6 +42,7 @@ public:
     struct QueueData {
         std::string classname = "";
         std::string id = "";
+        std::string new_id = "";
         std::string caller = "";
         std::string callee = "";
         bool graph_entry = false;
@@ -95,7 +96,7 @@ public:
     const SyncQueuePtr_t& GetSyncQueue(void) { return this->sync_queue; }
 
     inline bool IsRunning(void) const { return this->running_state; }
-    inline void SetRunning(bool p) { this->running_state = p; }
+    inline void SetRunning(bool r) { this->running_state = r; }
 
     // Presentation ----------------------------------------------------
 

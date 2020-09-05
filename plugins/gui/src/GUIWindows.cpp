@@ -120,6 +120,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
 
     // Create new gui graph once if core graph is used (otherwise graph should already exist)
+    // GUI graph of running project should be available before loading states from parameters in validateParameters().
     if (this->graph_uid == GUI_INVALID_ID) this->SynchronizeGraphs();
     // Check if gui graph is present
     if (this->graph_uid == GUI_INVALID_ID) {
@@ -714,7 +715,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     */
                 } else if (this->core_instance != nullptr) {
                     if (data.graph_entry) {
-                        /* XXX MEGAMOL GRAPH
+                        // Create new module as view instance (= entry point of graph)
+                        /* XXX Currently not supported by core graph
                         auto view_name = vislib::StringA(graph_ptr->name.c_str());
                         auto module_name = vislib::StringA(data.id.c_str());
                         auto vd = std::make_shared<megamol::core::ViewDescription>(view_name.PeekBuffer());
@@ -738,6 +740,27 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                         graph_sync_success &= this->core_instance->RequestModuleInstantiation(
                             vislib::StringA(data.classname.c_str()), vislib::StringA(data.id.c_str()));
                     }
+                }
+            } break;
+            case (Graph::QueueChange::RENAME_MODULE): {
+                if (megamol_graph != nullptr) {
+                    /* XXX MEGAMOL GRAPH
+                    bool rename_success = false;
+                    megamol::core::Module::ptr_type core_module = megamol_graph->FindModule(data.id);
+                    if (core_module != nullptr) {
+                        core_module->setName(data.new_id);
+                        rename_success = true;
+                    }
+                    graph_sync_success &= rename_success;
+                    */
+                } else if (this->core_instance != nullptr) {
+                    bool rename_success = false;
+                    std::function<void(megamol::core::Module*)> fun = [&](megamol::core::Module* mod) {
+                        mod->setName(vislib::StringA(data.new_id.c_str()));
+                        rename_success = true;
+                    };
+                    this->core_instance->FindModuleNoLock(data.id, fun);
+                    graph_sync_success &= rename_success;
                 }
             } break;
             case (Graph::QueueChange::DELETE_MODULE): {
@@ -811,8 +834,9 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                         */
                     } else if (this->core_instance != nullptr) {
                         // New core module will only be available next frame after module request is processed.
-                        std::function<void(megamol::core::Module*)> fun =
-                            [&core_module_ptr](megamol::core::Module* mod) { core_module_ptr = mod; };
+                        std::function<void(megamol::core::Module*)> fun = [&](megamol::core::Module* mod) {
+                            core_module_ptr = mod;
+                        };
                         this->core_instance->FindModuleNoLock(module_name, fun);
                     }
                     // Connect pointer of new parameters of core module to parameters in gui module
