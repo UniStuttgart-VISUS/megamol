@@ -273,12 +273,8 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         bool reset_state = false;
         // Add module renaming event to graph synchronization queue -----------
         if (!this->graph_state.interact.module_rename.first.empty()) {
-            auto queue = inout_graph.GetSyncQueue();
-            megamol::gui::Graph::QueueData queue_data;
-            queue_data.id = this->graph_state.interact.module_rename.first;
-            queue_data.new_id = this->graph_state.interact.module_rename.second;
-            inout_graph.GetSyncQueue()->push(
-                megamol::gui::Graph::SyncQueueData_t(megamol::gui::Graph::QueueChange::RENAME_MODULE, queue_data));
+            this->add_rename_module_sync_event(inout_graph, this->graph_state.interact.module_rename.first,
+                this->graph_state.interact.module_rename.second);
             reset_state = true;
         }
         // Add module to group ------------------------------------------------
@@ -293,6 +289,8 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                     }
                 }
                 if (module_ptr != nullptr) {
+                    std::string current_module_fullname = module_ptr->FullName();
+
                     // Add module to new or already existing group
                     // Create new group for multiple selected modules only once!
                     ImGuiID group_uid = GUI_INVALID_ID;
@@ -319,6 +317,8 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                         }
                         // Add module to group
                         add_group_ptr->AddModule(module_ptr);
+                        this->add_rename_module_sync_event(
+                            inout_graph, current_module_fullname, module_ptr->FullName());
                         inout_graph.ForceSetDirty();
                         // Restore interface slots after adding module to new group
                         if (restore_interfaceslots) {
@@ -332,9 +332,18 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         // Remove module from group -------------------------------------------
         if (!this->graph_state.interact.modules_remove_group_uids.empty()) {
             for (auto& module_uid : this->graph_state.interact.modules_remove_group_uids) {
+                ModulePtr_t module_ptr;
+                for (auto& mod : inout_graph.GetModules()) {
+                    if (mod->uid == module_uid) {
+                        module_ptr = mod;
+                    }
+                }
+                std::string current_module_fullname = module_ptr->FullName();
                 for (auto& remove_group_ptr : inout_graph.GetGroups()) {
                     if (remove_group_ptr->ContainsModule(module_uid)) {
                         remove_group_ptr->RemoveModule(module_uid);
+                        this->add_rename_module_sync_event(
+                            inout_graph, current_module_fullname, module_ptr->FullName());
                         inout_graph.ForceSetDirty();
                     }
                 }
@@ -2038,4 +2047,23 @@ bool megamol::gui::GraphPresentation::contains_group(const GroupPtrVector_t& gro
         }
     }
     return false;
+}
+
+
+void megamol::gui::GraphPresentation::add_rename_module_sync_event(
+    Graph& inout_graph, const std::string& current_name, const std::string& new_name) {
+
+    auto queue = inout_graph.GetSyncQueue();
+    megamol::gui::Graph::QueueData queue_data;
+    queue_data.id = current_name;
+    queue_data.new_id = new_name;
+    // Remove leading "::"
+    if (queue_data.id.find_first_of("::") == 0) {
+        queue_data.id = queue_data.id.substr(2);
+    }
+    if (queue_data.new_id.find_first_of("::") == 0) {
+        queue_data.new_id = queue_data.new_id.substr(2);
+    }
+    inout_graph.GetSyncQueue()->push(
+        megamol::gui::Graph::SyncQueueData_t(megamol::gui::Graph::QueueChange::RENAME_MODULE, queue_data));
 }

@@ -249,11 +249,11 @@ void megamol::gui::ModulePresentation::Present(
                     }
 
                     // Rename pop-up
-                    std::string last_module_name = inout_module.name;
+                    std::string current_module_fullname = inout_module.FullName(); /// include group name!
                     if (this->rename_popup.PopUp("Rename Project", popup_rename, inout_module.name)) {
                         this->Update(inout_module, state.canvas);
-                        state.interact.module_rename.first = last_module_name;
-                        state.interact.module_rename.second = inout_module.name;
+                        state.interact.module_rename.first = current_module_fullname;
+                        state.interact.module_rename.second = inout_module.FullName();
                     }
                 } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 

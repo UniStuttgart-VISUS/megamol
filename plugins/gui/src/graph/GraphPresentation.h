@@ -119,6 +119,8 @@ private:
     bool contains_interfaceslot(const GroupPtrVector_t& groups, ImGuiID interfaceslot_uid);
     bool contains_module(const ModulePtrVector_t& modules, ImGuiID module_uid);
     bool contains_group(const GroupPtrVector_t& groups, ImGuiID group_uid);
+
+    void add_rename_module_sync_event(Graph& inout_graph, const std::string& current_name, const std::string& new_name);
 };
 
 
