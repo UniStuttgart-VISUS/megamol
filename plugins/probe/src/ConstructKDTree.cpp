@@ -143,17 +143,20 @@ bool ConstructKDTree::getMetaData(core::Call& call) {
     if (cd == nullptr) return false;
 
     auto meta_data = ct->getMetaData();
-    if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad()) return true;
+    //if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad()) return true;
 
     // get metadata from adios
     cd->setFrameIDtoLoad(meta_data.m_frame_ID);
     if (!(*cd)(1)) return false;
-    auto vars = cd->getAvailableVars();
-    for (auto var : vars) {
-        this->_xSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
-        this->_ySlot.Param<core::param::FlexEnumParam>()->AddValue(var);
-        this->_zSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
-        this->_xyzSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+
+    if (cd->getDataHash() == _old_datahash) {
+        auto vars = cd->getAvailableVars();
+        for (auto var : vars) {
+            this->_xSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+            this->_ySlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+            this->_zSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+            this->_xyzSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+        }
     }
 
     // put metadata in mesh call
