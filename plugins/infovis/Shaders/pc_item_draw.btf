@@ -134,7 +134,7 @@ void main()
   vec2 tempL = vec2(0, 0.0);
   vec2 tempR = vec2(0.0, 0.0);
   // magic number, to be changed to resolution based calculation
-  float thickness = 6/widthR;
+  float thickness = 20/widthR;
   
   if(out_.worldSpaceAxis != 0 && out_.worldSpaceAxis != dimensionCount){
 	//Vektoren von linken zum aktuellen Vertex, dies ist die Linie die von links kommt

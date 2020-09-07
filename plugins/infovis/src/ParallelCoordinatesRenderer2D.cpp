@@ -778,8 +778,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #    else
     // glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
     // glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, this->columnCount * 2, this->itemCount);
-    glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
-     //glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
+    //glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
+     glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
 #    endif
 #endif
     prog.Disable();
