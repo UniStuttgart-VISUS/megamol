@@ -743,8 +743,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #    ifdef USE_TESSELLATION
     vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteTessProgram;
 #    else
-    vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
-    //vislib::graphics::gl::GLSLShader& prog = this->drawItemsTriangleProgram;
+    //vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
+    vislib::graphics::gl::GLSLShader& prog = this->drawItemsTriangleProgram;
 #    endif
 #endif
 
@@ -812,8 +812,8 @@ void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, floa
 
     glUniform4fv(prog.ParameterLocation("indicatorColor"), 1, color);
     // glDisable(GL_DEPTH_TEST);
-    glDrawArrays(GL_LINES, 0, 2);
-    // glEnable(GL_DEPTH_TEST);
+    //glDrawArrays(GL_LINES, 0, 2);
+     glEnable(GL_DEPTH_TEST);
     prog.Disable();
 }
 
@@ -1222,7 +1222,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         pm = jit * pm;
     }
     if (call.frametype == 2) {
-        auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(2.0 / call.GetViewport().Width(), 0, 0));
+        auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(), 0, 0));
         pm = jit * pm;
     }
 
@@ -1333,6 +1333,18 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     // glDepthMask(GL_TRUE);
+
+    if (false) {
+        m_render_to_framebuffer_shdr->Enable();
+        glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
+
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("frametype"), 3);
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("h"), call.GetViewport().Height());
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("w"), call.GetViewport().Width());
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        m_render_to_framebuffer_shdr->Disable();
+    }
+
 
     if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
         glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
