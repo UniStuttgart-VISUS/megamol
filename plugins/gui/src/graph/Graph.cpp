@@ -49,7 +49,7 @@ megamol::gui::Graph::~Graph(void) {
         module_uids.emplace_back(module_ptr->uid);
     }
     for (auto& module_uid : module_uids) {
-        this->DeleteModule(module_uid);
+        this->DeleteModule(module_uid, true);
     }
 
     // 3) Delete all calls
@@ -172,11 +172,24 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
 }
 
 
-bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid) {
+bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
 
     try {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
             if ((*iter)->uid == module_uid) {
+
+                /// XXX Prevent deletion of entry point module / view instance of running graph in configurator
+                /// TODO Implement this possibility to core graph
+                if (!force) {
+                    if (((*iter)->is_view_instance) && (this->IsRunning())) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] Deleting entry point/ view instance '%s' of running project is not supported yet. "
+                            "[%s, "
+                            "%s, line %d]\n",
+                            (*iter)->FullName().c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        return false;
+                    }
+                }
 
                 this->present.ResetStatePointers();
 

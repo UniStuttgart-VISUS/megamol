@@ -65,7 +65,7 @@ public:
     bool GetCallLabelVisibility(void) const { return this->show_call_names; }
     bool IsCanvasHoverd(void) const { return this->canvas_hovered; }
 
-    void SetLayoutGraph(void) { this->graph_layout = 1; }
+    void SetLayoutGraph(bool l = true) { this->graph_layout = ((l) ? (1) : (0)); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -98,7 +98,7 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     void Present(Graph& inout_graph, GraphState_t& state);
-    bool StateToJSON(Graph& inout_graph, nlohmann::json& out_json);
+    bool StateToJSON(Graph& inout_graph, nlohmann::json& out_json, bool save_as_project_graph);
 
     void present_menu(Graph& inout_graph);
     void present_canvas(Graph& inout_graph, float child_width);
@@ -119,6 +119,8 @@ private:
     bool contains_interfaceslot(const GroupPtrVector_t& groups, ImGuiID interfaceslot_uid);
     bool contains_module(const ModulePtrVector_t& modules, ImGuiID module_uid);
     bool contains_group(const GroupPtrVector_t& groups, ImGuiID group_uid);
+
+    void add_rename_module_sync_event(Graph& inout_graph, const std::string& current_name, const std::string& new_name);
 };
 
 

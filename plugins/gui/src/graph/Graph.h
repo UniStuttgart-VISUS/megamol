@@ -37,10 +37,12 @@ typedef std::vector<Call::StockCall> CallStockVector_t;
 
 class Graph {
 public:
-    enum QueueChange { ADD_MODULE, DELETE_MODULE, ADD_CALL, DELETE_CALL };
+    /// TODO Implement RENAME_MODULE ... !
+    enum QueueChange { ADD_MODULE, DELETE_MODULE, RENAME_MODULE, ADD_CALL, DELETE_CALL };
     struct QueueData {
         std::string classname = "";
         std::string id = "";
+        std::string new_id = "";
         std::string caller = "";
         std::string callee = "";
         bool graph_entry = false;
@@ -62,7 +64,7 @@ public:
 
     ImGuiID AddModule(const ModuleStockVector_t& stock_modules, const std::string& module_class_name);
     ImGuiID AddEmptyModule(void);
-    bool DeleteModule(ImGuiID module_uid);
+    bool DeleteModule(ImGuiID module_uid, bool force = false);
     inline const ModulePtrVector_t& GetModules(void) { return this->modules; }
     bool GetModule(ImGuiID module_uid, ModulePtr_t& out_module_ptr);
     bool ModuleExists(const std::string& module_fullname);
@@ -93,8 +95,8 @@ public:
 
     const SyncQueuePtr_t& GetSyncQueue(void) { return this->sync_queue; }
 
-    inline vislib::math::Ternary RunningState(void) const { return this->running_state; }
-    inline void SetRunning(vislib::math::Ternary p) { this->running_state = p; }
+    inline bool IsRunning(void) const { return this->running_state; }
+    inline void SetRunning(bool r) { this->running_state = r; }
 
     // Presentation ----------------------------------------------------
 
@@ -102,7 +104,10 @@ public:
     bool GUIStateFromJsonString(const std::string& json_string) {
         return this->present.StateFromJsonString(*this, json_string);
     }
-    bool GUIStateToJSON(nlohmann::json& out_json) { return this->present.StateToJSON(*this, out_json); }
+
+    bool GUIStateToJSON(nlohmann::json& out_json, bool save_as_project_graph) {
+        return this->present.StateToJSON(*this, out_json, save_as_project_graph);
+    }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -114,7 +119,7 @@ private:
     bool dirty_flag;
     std::string filename;
     SyncQueuePtr_t sync_queue;
-    vislib::math::Ternary running_state;
+    bool running_state;
 
     // FUNCTIONS --------------------------------------------------------------
 

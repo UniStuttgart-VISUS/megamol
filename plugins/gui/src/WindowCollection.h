@@ -52,6 +52,7 @@ public:
         ImVec2 win_reset_size;          // minimum window size for soft reset
         ImVec2 win_reset_position;      // window position for minimize reset
         bool win_reset;                 // flag for reset window position and size on state loading [NOT SAVED]
+        bool win_collapsed;             // flag indicating whether window is collapsed or not.
         // ---------- Parameter specific configuration ----------
         bool param_show_hotkeys;                     // flag to toggle showing only parameter hotkeys
         std::vector<std::string> param_modules_list; // modules to show in a parameter window (show all if empty)
@@ -90,6 +91,7 @@ public:
             , win_reset_size(ImVec2(0.0f, 0.0f))
             , win_reset_position(ImVec2(0.0f, 0.0f))
             , win_reset(true)
+            , win_collapsed(false)
             // Window specific configurations
             , param_show_hotkeys(false)
             , param_modules_list()

@@ -400,7 +400,7 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
     std::shared_ptr<const view::AbstractView> viewptr =
         std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
-    if (viewptr != nullptr) { // XXX move this behind the fbo magic?
+    if (viewptr != nullptr) { // XXX Move this behind the fbo magic?
         auto vp = call.GetViewport();
         glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
         auto backCol = call.BackgroundColor();

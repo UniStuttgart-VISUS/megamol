@@ -34,6 +34,7 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
+#include "mmcore/ViewDescription.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/versioninfo.h"
 #include "mmcore/view/AbstractView_EventConsumption.h"
@@ -123,9 +124,15 @@ public:
     inline bool ShouldShutdown(void) const { return this->shutdown; }
 
     /**
-     * Synchronise changes between core graph and gui graph.
+     * Synchronise changes between core graph <-> gui graph.
      *
-     * @param megamol_graph    If no megamol_graph is given, try to synchronise 'old' graph via core_instance.
+     * - 'Old' core graph:    Call this function after(!) rendering of current frame.
+     *                        This way, graph changes will be applied next frame (and not 2 frames later).
+     *                        In this case in PreDraw() a gui graph is created once.
+     * - 'New' megamol graph: Call this function in GUI_Service::digestChangedRequestedResources() as pre-rendering
+     * step. In this case a new gui graph is created before first call of PreDraw() and a gui graph already exists.
+     *
+     * @param megamol_graph    If no megamol_graph is given, 'old' graph is synchronised via core_instance.
      */
     bool SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph = nullptr);
 
@@ -153,7 +160,6 @@ private:
         double last_instance_time; // Last instance time.
         bool open_popup_about;     // Flag for opening about pop-up
         bool open_popup_save;      // Flag for opening save pop-up
-        std::string project_file;  // File name of the currently running project
         bool menu_visible;         // Flag indicating menu state
         bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once
     };
