@@ -19,9 +19,9 @@
 #include <sstream>
 #include <string>
 
-#ifndef _WIN32    
-#include <sys/types.h>
-#include <unistd.h>
+#ifndef _WIN32
+#    include <sys/types.h>
+#    include <unistd.h>
 #endif // _WIN32
 
 #include "mmcore/CalleeSlot.h"
@@ -31,6 +31,7 @@
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
+#include "mmcore/view/AbstractView_EventConsumption.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Environment.h"
@@ -39,11 +40,11 @@
 
 #include "lua.hpp"
 
- //#define LUA_FULL_ENVIRONMENT
+//#define LUA_FULL_ENVIRONMENT
 
- /*****************************************************************************/
+/*****************************************************************************/
 
- // clang-format off
+// clang-format off
 #define MMC_LUA_MMGETBITHWIDTH "mmGetBitWidth"
 #define MMC_LUA_MMGETCONFIGURATION "mmGetConfiguration"
 #define MMC_LUA_MMGETOS "mmGetOS"
@@ -64,6 +65,8 @@
 #define MMC_LUA_MMSETPARAMVALUE "mmSetParamValue"
 #define MMC_LUA_MMCREATEPARAMGROUP "mmCreateParamGroup"
 #define MMC_LUA_MMSETPARAMGROUPVALUE "mmSetParamGroupValue"
+#define MMC_LUA_MMAPPLYPARAMGROUPVALUES "mmApplyParamGroupValues"
+#define MMC_LUA_MMCREATEVIEW "mmCreateView"
 #define MMC_LUA_MMCREATEMODULE "mmCreateModule"
 #define MMC_LUA_MMDELETEMODULE "mmDeleteModule"
 #define MMC_LUA_MMCREATECALL "mmCreateCall"
@@ -104,7 +107,9 @@ void megamol::core::LuaAPI::commonInit() {
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetParamValue>(MMC_LUA_MMSETPARAMVALUE, "(string name, string value)\n\tSet the value of a parameter slot.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::CreateParamGroup>(MMC_LUA_MMCREATEPARAMGROUP, "(string name, string size)\n\tGenerate a param group that can only be set at once. Sets are queued until size is reached.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetParamGroupValue>(MMC_LUA_MMSETPARAMGROUPVALUE, "(string groupname, string paramname, string value)\n\tQueue the value of a grouped parameter.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ApplyParamGroupValues>(MMC_LUA_MMAPPLYPARAMGROUPVALUES, "(string groupname)\n\tApply queued parameter values of group to graph.");
 
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::CreateView>(MMC_LUA_MMCREATEVIEW, "(string graphName, string className, string moduleName)\n\tCreate a view module instance of class <className> called <moduleName>. The view module is registered as graph entry point. <graphName> is ignored.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::CreateModule>(MMC_LUA_MMCREATEMODULE, "(string className, string moduleName)\n\tCreate a module instance of class <className> called <moduleName>.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::DeleteModule>(MMC_LUA_MMDELETEMODULE, "(string name)\n\tDelete the module called <name>.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::CreateCall>(MMC_LUA_MMCREATECALL, "(string className, string from, string to)\n\tCreate a call of type <className>, connecting CallerSlot <from> and CalleeSlot <to>.");
@@ -144,7 +149,7 @@ void megamol::core::LuaAPI::commonInit() {
 /*
  * megamol::core::LuaAPI::LuaAPI
  */
-megamol::core::LuaAPI::LuaAPI(megamol::core::MegaMolGraph &graph, bool imperativeOnly) : graph_(graph), luaApiInterpreter_(this), imperative_only_(imperativeOnly) {
+megamol::core::LuaAPI::LuaAPI(megamol::core::MegaMolGraph &graph, bool imperativeOnly) : graph_(graph), graph_convenience_(graph), luaApiInterpreter_(this), imperative_only_(imperativeOnly) {
     this->commonInit();
 }
 
@@ -504,43 +509,32 @@ int megamol::core::LuaAPI::GetModuleParams(lua_State* L) {
 bool megamol::core::LuaAPI::getParamSlot(
     const std::string routine, const char* paramName, core::param::ParamSlot** out) {
 
-    //AbstractNamedObjectContainer::ptr_type root =
-    //    std::dynamic_pointer_cast<AbstractNamedObjectContainer>(this->coreInst->namespaceRoot);
-    //if (!root) {
-    //    std::string err = routine + ": no root";
-    //    luaApiInterpreter_.ThrowError(err);
-    //    return false;
-    //}
-    //AbstractNamedObject::ptr_type obj = root.get()->FindNamedObject(paramName);
-    //if (!obj) {
-    //    std::string err = routine + ": parameter \"" + paramName + "\" not found";
-    //    luaApiInterpreter_.ThrowError(err);
-    //    return false;
-    //}
-    //*out = dynamic_cast<core::param::ParamSlot*>(obj.get());
-    //if (*out == nullptr) {
-    //    std::string err = routine + ": parameter name \"" + paramName + "\" did not refer to a ParamSlot";
-    //    luaApiInterpreter_.ThrowError(err);
-    //    return false;
-    //}
+    core::param::ParamSlot* slotPtr = graph_.FindParameterSlot(paramName);
 
-    return false;
+    if (slotPtr == nullptr) {
+        std::string err = routine + ": parameter \"" + paramName + "\" not found";
+        luaApiInterpreter_.ThrowError(err);
+        return false;
+    }
+
+    *out = slotPtr;
+
+    return true;
 }
 
 
 int megamol::core::LuaAPI::GetParamDescription(lua_State* L) {
     auto paramName = luaL_checkstring(L, 1);
 
-    // TODO
-    //core::param::ParamSlot* ps = nullptr;
-    //if (getParamSlot(MMC_LUA_MMGETPARAMDESCRIPTION, paramName, &ps)) {
+    core::param::ParamSlot* ps = nullptr;
+    if (this->getParamSlot(MMC_LUA_MMGETPARAMDESCRIPTION, paramName, &ps)) {
 
-    //    vislib::StringA valUTF8;
-    //    vislib::UTF8Encoder::Encode(valUTF8, ps->Description());
+        vislib::StringA valUTF8;
+        vislib::UTF8Encoder::Encode(valUTF8, ps->Description());
 
-    //    lua_pushstring(L, valUTF8);
-    //    return 1;
-    //}
+        lua_pushstring(L, valUTF8);
+        return 1;
+    }
     // the error is already thrown
     return 0;
 }
@@ -593,55 +587,109 @@ int megamol::core::LuaAPI::SetParamValue(lua_State* L) {
 
 
 int megamol::core::LuaAPI::CreateParamGroup(lua_State* L) {
-    // TODO
-    //auto groupName = luaL_checkstring(L, 1);
-    //auto groupSize = luaL_checkinteger(L, 2);
+    auto groupName = luaL_checkstring(L, 1);
+    auto groupSize = luaL_checkinteger(L, 2);
 
-    //if (!this->coreInst->CreateParamGroup(groupName, groupSize)) {
-    //    std::ostringstream out;
-    //    out << "could not create param group \"";
-    //    out << groupName;
-    //    out << "\" with size \"";
-    //    out << groupSize;
-    //    out << "\" (check MegaMol log)";
-    //    luaApiInterpreter_.ThrowError(out.str());
-    //    return 0;
-    //}
+    this->graph_convenience_.CreateParameterGroup(groupName);
+    // groupSize is ignored because why do we need it?
+
     return 0;
 }
 
 
 int megamol::core::LuaAPI::SetParamGroupValue(lua_State* L) {
-    // TODO
-    //auto paramGroup = luaL_checkstring(L, 1);
-    //auto paramName = luaL_checkstring(L, 2);
-    //auto paramValue = luaL_checkstring(L, 3);
+    auto paramGroup = luaL_checkstring(L, 1);
+    auto paramName = luaL_checkstring(L, 2);
+    auto paramValue = luaL_checkstring(L, 3);
 
-    //if (!this->coreInst->RequestParamGroupValue(paramGroup, paramName, paramValue)) {
-    //    std::ostringstream out;
-    //    out << "could not set \"";
-    //    out << paramName;
-    //    out << "\" in group \"";
-    //    out << paramGroup;
-    //    out << "\" to \"";
-    //    out << paramValue;
-    //    out << "\" (check MegaMol log)";
-    //    luaApiInterpreter_.ThrowError(out.str());
-    //    return 0;
-    //}
+    const auto errorMsg = [&]() {
+        std::ostringstream out;
+        out << "could not set \"";
+        out << paramName;
+        out << "\" in group \"";
+        out << paramGroup;
+        out << "\" to \"";
+        out << paramValue;
+        out << "\" (check MegaMol log)";
+        luaApiInterpreter_.ThrowError(out.str());
+    };
+
+    auto groupPtr = this->graph_convenience_.FindParameterGroup(paramGroup);
+    if (!groupPtr) {
+        errorMsg();
+        return 0;
+    }
+
+    bool queued = groupPtr->QueueParameterValue(paramName, paramValue);
+    if (!queued) {
+        errorMsg();
+        return 0;
+    }
+
     return 0;
 }
 
+int megamol::core::LuaAPI::ApplyParamGroupValues(lua_State* L) {
+    auto paramGroup = luaL_checkstring(L, 1);
+
+    const auto errorMsg = [&](std::string detail) {
+        std::ostringstream out;
+        out << "could not apply group\"";
+        out << paramGroup;
+        out << "\" values to graph ("<< detail <<")";
+        luaApiInterpreter_.ThrowError(out.str());
+    };
+
+    auto groupPtr = this->graph_convenience_.FindParameterGroup(paramGroup);
+    if (!groupPtr) {
+        errorMsg("no such group");
+        return 0;
+    }
+
+    bool queued = groupPtr->ApplyQueuedParameterValues();
+    if (!queued) {
+        errorMsg("some parameter values did not parse");
+        return 0;
+    }
+
+    return 0;
+}
+
+
+int megamol::core::LuaAPI::CreateView(lua_State* L) {
+    const std::string baseName(luaL_checkstring(L, 1));
+    const std::string className(luaL_checkstring(L, 2));
+    const std::string instanceName(luaL_checkstring(L, 3));
+
+    const auto errorMsg = [&](std::string detail) {
+        std::ostringstream out;
+        out << "could not create \"";
+        out << className;
+        out << "\" module ("+ detail +")";
+        luaApiInterpreter_.ThrowError(out.str());
+    };
+
+    if (!graph_.CreateModule(className, instanceName)) {
+        errorMsg("could not create module");
+        return 0;
+    }
+
+    if (!graph_.SetGraphEntryPoint(instanceName, megamol::core::view::get_gl_view_runtime_resources_requests(), megamol::core::view::view_rendering_execution)) {
+        errorMsg("could not set graph entry point");
+    }
+
+    return 0;
+}
 
 int megamol::core::LuaAPI::CreateModule(lua_State* L) {
     const auto *className = luaL_checkstring(L, 1);
     const std::string instanceName(luaL_checkstring(L, 2));
 
-    if (instanceName.compare(0, 2, "::") != 0) {
-        std::string out = "instance name \"" + instanceName + R"(" must be global (starting with "::"))";
-        luaApiInterpreter_.ThrowError(out);
-        return 0;
-    }
+    //if (instanceName.compare(0, 2, "::") != 0) {
+    //    std::string out = "instance name \"" + instanceName + R"(" must be global (starting with "::"))";
+    //    luaApiInterpreter_.ThrowError(out);
+    //    return 0;
+    //}
     if (!graph_.CreateModule(className, instanceName)) {
         std::ostringstream out;
         out << "could not create \"";
@@ -683,24 +731,7 @@ int megamol::core::LuaAPI::CreateChainCall(lua_State* L) {
     std::string chainStart = luaL_checkstring(L, 2);
     std::string to = luaL_checkstring(L, 3);
 
-    // TODO
-
-    //auto pos = chainStart.find_last_of("::");
-    //if (pos < 4 || chainStart.length() < pos + 2) {
-    //    luaApiInterpreter_.ThrowError(MMC_LUA_MMCREATECHAINCALL ": chainStart module/slot name weird");
-    //    return 0;
-    //}
-    //auto moduleName = chainStart.substr(0, pos - 1);
-    //auto slotName = chainStart.substr(pos + 1, -1);
-
-    //if (!this->coreInst->RequestChainCallInstantiation(className, chainStart.c_str(), to.c_str())) {
-    //    std::ostringstream out;
-    //    out << "could not create \"";
-    //    out << className;
-    //    out << "\" call (check MegaMol log)";
-    //    luaApiInterpreter_.ThrowError(out.str());
-    //}
-    return 0;
+    return this->graph_convenience_.CreateChainCall(className, chainStart, to);
 }
 
 
@@ -957,7 +988,8 @@ int megamol::core::LuaAPI::ReadTextFile(lua_State* L) {
 }
 
 int megamol::core::LuaAPI::Flush(lua_State* L) {
-    // TODO
+    // graph changes now happen instantly, no flush needed
+
     //this->coreInst->FlushGraphUpdates();
 
     return 0;
@@ -973,3 +1005,4 @@ int megamol::core::LuaAPI::Invoke(lua_State *L) {
     // TODO
     return 0;
 }
+

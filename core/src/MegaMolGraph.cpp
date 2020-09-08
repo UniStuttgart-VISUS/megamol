@@ -208,11 +208,11 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
     factories::CallDescription::ptr call_description = this->CallProvider().Find(request.className.c_str());
 
     const auto getCallSlotOfModule = [this, &call_description](
-                                         std::string const& name) -> std::pair<bool, AbstractSlot*> {
+                                         std::string const& name) -> std::pair<AbstractSlot*, Module::ptr_type> {
         const auto path = splitPathName(name);
         if (path.empty()) {
             log("error. encountered invalid namespace format: " + name + "\n. valid format is: [::]aa::bb::cc[::]");
-            return {false, nullptr};
+            return {nullptr, nullptr};
         }
 
         auto module_name = name.substr(0, name.size() - (path.back().size() + 2));
@@ -220,7 +220,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
         if (module_it == this->module_list_.end()) {
             log("error. could not find module named: " + module_name +
                 " to connect requested call: " + call_description->ClassName());
-            return {false, nullptr};
+            return {nullptr, nullptr};
         }
 
         Module::ptr_type module_ptr = module_it->modulePtr;
@@ -229,39 +229,39 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
         if (!slot_ptr) {
             log("error. could not find slot named: " + std::string(slot_name.PeekBuffer()) +
                 " to connect requested call: " + std::string(call_description->ClassName()));
-            return {false, nullptr};
+            return {nullptr, nullptr};
         }
 
         if (!slot_ptr->IsCallCompatible(call_description)) {
             log("error. call: " + std::string(call_description->ClassName()) +
                 " is not compatible with slot: " + std::string(slot_name.PeekBuffer()));
-            return {false, nullptr};
+            return {nullptr, nullptr};
         }
 
         if (!slot_ptr->GetStatus() == AbstractSlot::STATUS_ENABLED) {
             log("error. slot: " + std::string(slot_name.PeekBuffer()) +
                 " is not enabled. can not connect call: " + std::string(call_description->ClassName()));
-            return {false, nullptr};
+            return {nullptr, nullptr};
         }
 
-        return {true, slot_ptr};
+        return {slot_ptr, module_ptr};
     };
 
     auto from_slot = getCallSlotOfModule(request.from);
-    if (from_slot.first == false) {
+    if (!from_slot.first) {
         log("error. could not find from-slot: " + request.from +
             " for call: " + std::string(call_description->ClassName()));
         return false; // error when looking for from-slot
     }
-    CallerSlot* caller = dynamic_cast<CallerSlot*>(from_slot.second);
+    CallerSlot* caller = dynamic_cast<CallerSlot*>(from_slot.first);
 
     auto to_slot = getCallSlotOfModule(request.to);
-    if (to_slot.first == false) {
+    if (!to_slot.first) {
         log("error. could not find to-slot: " + request.to +
             " for call: " + std::string(call_description->ClassName()));
         return false; // error when looking for to-slot
     }
-    CalleeSlot* callee = dynamic_cast<CalleeSlot*>(to_slot.second);
+    CalleeSlot* callee = dynamic_cast<CalleeSlot*>(to_slot.first);
 
     if ((caller->GetStatus() == AbstractSlot::STATUS_CONNECTED) ||
         (callee->GetStatus() == AbstractSlot::STATUS_CONNECTED)) {
@@ -274,8 +274,8 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
     }
 
     // TODO: kill parents of modules/calls when new graph structure is in place
-    callee->setParent(this->dummy_namespace);
-    caller->setParent(this->dummy_namespace);
+    caller->setParent(from_slot.second);
+    callee->setParent(to_slot.second);
 
     Call::ptr_type call = Call::ptr_type(call_description->CreateCall());
     if (!callee->ConnectCall(call.get(), call_description)) {
@@ -576,4 +576,5 @@ std::vector<megamol::frontend::ModuleResource> megamol::core::MegaMolGraph::get_
 
 	return result;
 }
+
 
