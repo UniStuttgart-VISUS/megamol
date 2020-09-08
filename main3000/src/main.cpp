@@ -30,10 +30,17 @@ namespace stdfs = std::experimental::filesystem;
 #    endif
 #endif
 
+struct CLIConfig {
+    std::vector<std::string> project_files;
+};
 
-bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::frontend::ModuleResource>& module_resources);
+CLIConfig handle_cli_inputs(int argc, char* argv[]);
+
+bool set_up_graph(megamol::core::MegaMolGraph& graph);
 
 int main(int argc, char* argv[]) {
+
+    auto config = handle_cli_inputs(argc, argv);
 
     // setup log
     megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
@@ -53,7 +60,7 @@ int main(int argc, char* argv[]) {
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
     openglConfig.windowTitlePrefix = openglConfig.windowTitlePrefix + " ~ Main3000";
     openglConfig.versionMajor = 4;
-    openglConfig.versionMinor = 6;
+    openglConfig.versionMinor = 5;
     gl_service.setPriority(1);
 
     megamol::frontend::GUI_Service gui_service;
@@ -66,6 +73,8 @@ int main(int argc, char* argv[]) {
     gui_service.setPriority(23);
 
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
+
+    megamol::core::LuaAPI lua_api(graph, true);
 
     // the main loop is organized around services that can 'do something' in different parts of the main loop
     // a service is something that implements the AbstractFrontendService interface from 'megamol\render_api\include'
@@ -93,7 +102,7 @@ int main(int argc, char* argv[]) {
     // graph is also a resource that may be accessed by services
     // TODO: how to solve const and non-const resources?
     // TODO: graph manipulation during execution of graph modules is problematic, undefined?
-    services.getProvidedResources().push_back({ "MegaMolGraph", graph });
+    services.getProvidedResources().push_back({"MegaMolGraph", graph});
 
     // distribute registered resources among registered services.
     const bool resources_ok = services.assignRequestedResources();
@@ -106,10 +115,23 @@ int main(int argc, char* argv[]) {
         run_megamol = false;
     }
 
-    const bool graph_ok = set_up_graph(graph, services.getProvidedResources()); // fill graph with modules and calls
-    if (!graph_ok) {
-        std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
-        run_megamol = false;
+    auto module_resources = services.getProvidedResources();
+    graph.AddModuleDependencies(module_resources);
+
+	if (config.project_files.empty()) {
+		const bool graph_ok = set_up_graph(graph); // fill graph with modules and calls
+		if (!graph_ok) {
+		    std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
+		    run_megamol = false;
+		}
+    } else {
+		for (const auto& p : config.project_files) {
+		    std::string result;
+		    if (!lua_api.RunFile(p, result)) {
+		        std::cout << "Project file \"" << p << "\" did not execute correctly: " << result << std::endl;
+				run_megamol = false;
+		    }
+		}
     }
 
     while (run_megamol) {
@@ -147,90 +169,55 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-bool set_up_graph(megamol::core::MegaMolGraph& graph, std::vector<megamol::frontend::ModuleResource>& module_resources) {
-#if 0
-    megamol::core::LuaAPI lua_api(graph, true);
+CLIConfig handle_cli_inputs(int argc, char* argv[]) {
+    CLIConfig config;
 
     cxxopts::Options options(argv[0], "MegaMol Frontend 3000");
+
+    // parse input project files
     options.positional_help("<additional project files>");
     options.add_options()("project-files", "projects to load", cxxopts::value<std::vector<std::string>>());
-    options.parse_positional({ "project-files" });
+    options.parse_positional({"project-files"});
+
     auto parsed_options = options.parse(argc, argv);
     std::string res;
+
+	// verify project files exist in file system
     if (parsed_options.count("project-files")) {
         const auto& v = parsed_options["project-files"].as<std::vector<std::string>>();
         for (const auto& p : v) {
-            if (stdfs::exists(p)) {
-                if (!lua_api.RunFile(p, res)) {
-                    std::cout << "Project file \"" << p << "\" did not execute correctly: " << res << std::endl;
-                }
-            }
-            else {
+            if (!stdfs::exists(p)) {
                 std::cout << "Project file \"" << p << "\" does not exist!" << std::endl;
+                std::exit(1);
             }
         }
+
+        config.project_files = v;
     }
 
-#else
+    return config;
+}
 
-#    define check(X)                                                                                                   \
-        if (!X) return false;
+bool set_up_graph(megamol::core::MegaMolGraph& graph) {
+#define check(X) \
+    if (!X) return false;
 
-    graph.AddModuleDependencies(module_resources);
-
-    /// check(graph.CreateModule("GUIView", "::guiview"));
     check(graph.CreateModule("View3D_2", "::view"));
     check(graph.CreateModule("SphereRenderer", "::spheres"));
     check(graph.CreateModule("TestSpheresDataSource", "::datasource"));
     check(graph.CreateCall("CallRender3D_2", "::view::rendering", "::spheres::rendering"));
     check(graph.CreateCall("MultiParticleDataCall", "::spheres::getdata", "::datasource::getData"));
-    /// check(graph.CreateCall("CallRenderView", "::guiview::renderview", "::view::render"));
 
-    static std::vector<std::string> view_resource_requests = {
-        "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context" };
-
-    // note: this is work in progress and more of a working prototype than a final design
-    // callback executed by the graph for each frame
-    // knows how to make a view module process input events and start the rendering
-    auto view_rendering_execution = [&](megamol::core::Module::ptr_type module_ptr,
-        std::vector<megamol::frontend::ModuleResource> const& resources) {
-        megamol::core::view::AbstractView* view_ptr =
-            dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
-
-        assert(view_resource_requests.size() == resources.size());
-
-        if (!view_ptr) {
-            std::cout << "error. module is not a view module. could not set as graph rendering entry point."
-                << std::endl;
-            return false;
-        }
-
-        megamol::core::view::AbstractView& view = *view_ptr;
-
-        int i = 0;
-        // resources are in order of initial requests
-        megamol::core::view::view_consume_keyboard_events(view, resources[i++]);
-        megamol::core::view::view_consume_mouse_events(view, resources[i++]);
-        megamol::core::view::view_consume_window_events(view, resources[i++]);
-        megamol::core::view::view_consume_framebuffer_events(view, resources[i++]);
-        megamol::core::view::view_poke_rendering(view, resources[i++]);
-        
-        return true;
-    };
-
-    /// check(graph.SetGraphEntryPoint("::guiview", view_resource_requests, view_rendering_execution));
-    check(graph.SetGraphEntryPoint("::view", view_resource_requests, view_rendering_execution));
+    check(graph.SetGraphEntryPoint("::view", megamol::core::view::get_gl_view_runtime_resources_requests(), megamol::core::view::view_rendering_execution));
 
     std::string parameter_name("::datasource::numSpheres");
     auto parameterPtr = graph.FindParameter(parameter_name);
     if (parameterPtr) {
         parameterPtr->ParseValue("23");
-    }
-    else {
+    } else {
         std::cout << "ERROR: could not find parameter: " << parameter_name << std::endl;
         return false;
     }
-#endif
 
     return true;
 }
