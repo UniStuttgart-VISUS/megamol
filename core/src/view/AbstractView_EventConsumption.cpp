@@ -106,6 +106,31 @@ void view_poke_rendering(AbstractView& view, megamol::frontend::ModuleResource c
 	}
 }
 
+std::vector<std::string> get_gl_view_runtime_resources_requests() {
+    return {"KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
+}
+
+bool view_rendering_execution(megamol::core::Module::ptr_type module_ptr, std::vector<megamol::frontend::ModuleResource> const& resources) {
+	megamol::core::view::AbstractView* view_ptr =
+		dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
+	
+	if (!view_ptr) {
+		std::cout << "error. module is not a view module. could not set as graph rendering entry point." << std::endl;
+		return false;
+	}
+	
+	megamol::core::view::AbstractView& view = *view_ptr;
+	
+	// resources are in order of initial requests from get_gl_view_runtime_resources_requests()
+	megamol::core::view::view_consume_keyboard_events(view, resources[0]);
+	megamol::core::view::view_consume_mouse_events(view, resources[1]);
+	megamol::core::view::view_consume_window_events(view, resources[2]);
+	megamol::core::view::view_consume_framebuffer_events(view, resources[3]);
+	megamol::core::view::view_poke_rendering(view, resources[4]);
+	
+	return true;
+}
+
 } /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */

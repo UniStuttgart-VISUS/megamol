@@ -215,12 +215,12 @@ private:
     std::vector<megamol::frontend::ModuleResource> get_requested_resources(std::vector<std::string> resource_requests);
 
 
-    /** List of modules that this graph owns */
-    ModuleList_t module_list_;
-
-    // the dummy_namespace must be above the call_list_ because it needs to be destroyed AFTER all calls during
+    // the dummy_namespace must be above the call_list_ and module_list_ because it needs to be destroyed AFTER all calls and modules during
     // ~MegaMolGraph()
     std::shared_ptr<RootModuleNamespace> dummy_namespace; // serves as parent object for stupid fat modules
+
+    /** List of modules that this graph owns */
+    ModuleList_t module_list_;
 
     /** List of call that this graph owns */
     CallList_t call_list_;
@@ -239,7 +239,6 @@ private:
 		EntryPointExecutionCallback execute;
 	};
     std::list<GraphEntryPoint> graph_entry_points;
-
 
     ////////////////////////// old interface stuff //////////////////////////////////////////////
 public:

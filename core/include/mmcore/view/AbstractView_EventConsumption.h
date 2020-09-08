@@ -25,6 +25,12 @@ namespace view {
 	MEGAMOLCORE_API void view_consume_framebuffer_events(AbstractView & view, megamol::frontend::ModuleResource const& resource);
 	MEGAMOLCORE_API void view_poke_rendering(AbstractView & view, megamol::frontend::ModuleResource const& resource);
 
+	// to do this right we should be able to as a view object which runtime resources it expects (keyboard inputs, gl context)
+	// and just pass those resources to the view when rendering a frame
+	// until we implement the 'optimal' approach, this is the best we can do
+	MEGAMOLCORE_API std::vector<std::string> get_gl_view_runtime_resources_requests();
+	MEGAMOLCORE_API bool view_rendering_execution(megamol::core::Module::ptr_type module_ptr, std::vector<megamol::frontend::ModuleResource> const& resources);
+
 } /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */

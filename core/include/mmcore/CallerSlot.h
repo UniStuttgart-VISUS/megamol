@@ -108,6 +108,17 @@ namespace core {
             return false;
         }
 
+        bool IsCallCompatible(std::string const& call_class_name) const {
+            vislib::StringA dcn = call_class_name.c_str();
+
+            for (unsigned int i = 0; i < this->compDesc.size(); i++) {
+                if (dcn.Equals(this->compDesc[i]->ClassName())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /**
          * Answers whether a given call is compatible with this slot.
          *
@@ -116,15 +127,9 @@ namespace core {
          * @return 'true' if the call is compatible, 'false' otherwise.
          */
         bool IsCallCompatible(factories::CallDescription::ptr desc) const override {
-            vislib::StringA dcn;
             if (!desc) return false;
-            dcn = desc->ClassName();
-            for (unsigned int i = 0; i < this->compDesc.size(); i++) {
-                if (dcn.Equals(this->compDesc[i]->ClassName())) {
-                    return true;
-                }
-            }
-            return false;
+
+            return IsCallCompatible(std::string{desc->ClassName()});
         }
 
         /**
