@@ -913,9 +913,11 @@ bool GUIWindows::createContext(void) {
     // Check for existing context and share FontAtlas with new context (required by ImGui).
     bool other_context = (ImGui::GetCurrentContext() != nullptr);
     ImFontAtlas* current_fonts = nullptr;
+    ImFont* default_font = nullptr;
     if (other_context) {
         ImGuiIO& current_io = ImGui::GetIO();
         current_fonts = current_io.Fonts;
+        default_font = current_io.FontDefault;
     }
     IMGUI_CHECKVERSION();
     this->context = ImGui::CreateContext(current_fonts);
@@ -992,7 +994,6 @@ bool GUIWindows::createContext(void) {
     buf_win.win_callback = WindowCollection::DrawCallbacks::CONFIGURATOR;
     // buf_win.win_size is set to current viewport later
     this->window_collection.AddWindowConfiguration(buf_win);
-
 
     // Style settings ---------------------------------------------------------
     ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayRGB |
@@ -1089,6 +1090,12 @@ bool GUIWindows::createContext(void) {
             if (default_font == font_path) {
                 io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
             }
+        }
+    } else {
+        if (default_font != nullptr) {
+            io.FontDefault = default_font;
+        } else {
+            io.FontDefault = io.Fonts->Fonts[(this->configurator.GetGraphFontScalings().size())];
         }
     }
 
