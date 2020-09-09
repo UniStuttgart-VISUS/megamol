@@ -1095,6 +1095,7 @@ bool GUIWindows::createContext(void) {
         if (default_font != nullptr) {
             io.FontDefault = default_font;
         } else {
+            // ... else default font is font loaded after configurator fonts. Index equals number of graph fonts.
             io.FontDefault = io.Fonts->Fonts[(this->configurator.GetGraphFontScalings().size())];
         }
     }

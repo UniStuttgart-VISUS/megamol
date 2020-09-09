@@ -431,7 +431,8 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 new_module_ptr->is_view_instance = false;
                 if (view_instances.find(full_name) != view_instances.end()) {
                     graph_ptr->name = view_instances[full_name];
-                    new_module_ptr->is_view_instance = (graph_ptr->IsMainViewSet()) ? (false) : (true);
+                    new_module_ptr->is_view_instance =
+                        true; /// XXX Allow multiple view instances | (graph_ptr->IsMainViewSet()) ? (false) : (true);
                 }
                 // Add module to group
                 graph_ptr->AddGroupModule(module_namespace, new_module_ptr);
@@ -1100,15 +1101,16 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                             found_error = true;
                         }
                     }
-                    if (mod_1->is_view_instance) {
-                        if (found_instance) {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] Save Project >>> Found multiple view instances. [%s, %s, line %d]\n", __FILE__,
-                                __FUNCTION__, __LINE__);
-                            found_error = true;
-                        }
-                        found_instance = true;
-                    }
+                    /// XXX Disable test for multiple view instances
+                    // if (mod_1->is_view_instance) {
+                    //    if (found_instance) {
+                    //        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    //            "[GUI] Save Project >>> Found multiple view instances. [%s, %s, line %d]\n", __FILE__,
+                    //            __FUNCTION__, __LINE__);
+                    //        found_error = true;
+                    //    }
+                    //    found_instance = true;
+                    //}
                 }
                 if (!found_instance) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
