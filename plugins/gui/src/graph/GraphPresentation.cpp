@@ -1,5 +1,5 @@
 /*
- * Graph.cpp
+ * GraphPresentation.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -1074,14 +1074,15 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         GUIUtils::ReadOnlyWigetStyle(false);
     } else {
         ImGui::Checkbox("Main View", &selected_mod_ptr->is_view_instance);
-        // Set all other (view) modules to non main views
-        if (selected_mod_ptr->is_view_instance) {
-            for (auto& mod : inout_graph.GetModules()) {
-                if (selected_mod_ptr->uid != mod->uid) {
-                    mod->is_view_instance = false;
-                }
-            }
-        }
+        /// XXX Allow multiple view isntances
+        //// Set all other (view) modules to non main views
+        // if (selected_mod_ptr->is_view_instance) {
+        //    for (auto& mod : inout_graph.GetModules()) {
+        //        if (selected_mod_ptr->uid != mod->uid) {
+        //            mod->is_view_instance = false;
+        //        }
+        //    }
+        //}
     }
     ImGui::SameLine();
     ImGui::TextUnformatted(delimiter.c_str());

@@ -1,5 +1,5 @@
 /*
- * Group.cpp
+ * GroupPresentation.cpp
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.

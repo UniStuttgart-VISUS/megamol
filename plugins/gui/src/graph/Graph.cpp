@@ -104,7 +104,8 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                 mod_ptr->plugin_name = mod.plugin_name;
                 mod_ptr->is_view = mod.is_view;
                 mod_ptr->name = this->generate_unique_module_name(mod.class_name);
-                mod_ptr->is_view_instance = !this->IsMainViewSet();
+                mod_ptr->is_view_instance =
+                    (mod.is_view) ? (!this->IsMainViewSet()) : (false); // Set first found view as main view.
                 mod_ptr->present.label_visible = this->present.GetModuleLabelVisibility();
 
                 for (auto& p : mod.parameters) {

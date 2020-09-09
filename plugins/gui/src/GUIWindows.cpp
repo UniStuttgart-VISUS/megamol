@@ -107,21 +107,41 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 
 bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time) {
 
+    // Check for initialized imgui api
     if (this->api == GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    // Check for existing imgui context
     if (this->context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    // Set ImGui context
+    ImGui::SetCurrentContext(this->context);
+    // Check for existing fonts if shared between multiple contexts
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.Fonts->Fonts.Size < 1) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Found no valid fonts. Maybe the ImGui context the fonts were shared with is destroyed. "
+            "[%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+        /// TODO Only solution for now is to shutdown megamol completely
+        // this->triggerCoreInstanceShutdown();
+        // this->shutdown = true;
+        /// Other Option is to create a completely new context
+        this->destroyContext();
+        this->CreateContext_GL(this->core_instance);
         return false;
     }
 
     // Create new gui graph once if core graph is used (otherwise graph should already exist)
     // GUI graph of running project should be available before loading states from parameters in validateParameters().
     if (this->graph_uid == GUI_INVALID_ID) this->SynchronizeGraphs();
+
     // Check if gui graph is present
     if (this->graph_uid == GUI_INVALID_ID) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -130,12 +150,12 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         return false;
     }
 
-    // Set ImGui context
-    ImGui::SetCurrentContext(this->context);
+    // Propagate ImGui context to core instance
     if (this->core_instance != nullptr) {
         this->core_instance->SetCurrentImGuiContext(this->context);
     }
 
+    // Check hotkey, parameters and hotkey assignment
     if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM])) {
         this->triggerCoreInstanceShutdown();
         this->shutdown = true;
@@ -149,7 +169,6 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     this->checkMultipleHotkeyAssignement();
 
     // Set IO stuff for next frame --------------------------------------------
-    ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = ImVec2(window_size.x, window_size.y);
     if ((window_size.x > 0.0f) && (window_size.y > 0.0f)) {
         io.DisplayFramebufferScale = ImVec2(framebuffer_size.x / window_size.x, framebuffer_size.y / window_size.y);
@@ -207,26 +226,34 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
 bool GUIWindows::PostDraw(void) {
 
+    // Check for initialized imgui api
     if (this->api == GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-
-    if (ImGui::GetCurrentContext() != this->context) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[GUI] Unknown ImGui context ... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    ImGui::SetCurrentContext(this->context);
+    // Check for existing imgui context
     if (this->context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-
+    // Check for expected imgui context
+    if (ImGui::GetCurrentContext() != this->context) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[GUI] Unknown ImGui context ... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    // Check for existing font atlas if shared between multiple contexts
     ImGuiIO& io = ImGui::GetIO();
+    if (io.Fonts->Fonts.Size < 1) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Found no valid font atlas. Maybe the ImGui context the font atlas was shared with is destroyed. "
+            "[%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
     ImVec2 viewport = io.DisplaySize;
 
     // Main Menu ---------------------------------------------------------------
@@ -930,9 +957,11 @@ bool GUIWindows::createContext(void) {
     // Check for existing context and share FontAtlas with new context (required by ImGui).
     bool other_context = (ImGui::GetCurrentContext() != nullptr);
     ImFontAtlas* current_fonts = nullptr;
+    ImFont* default_font = nullptr;
     if (other_context) {
         ImGuiIO& current_io = ImGui::GetIO();
         current_fonts = current_io.Fonts;
+        default_font = current_io.FontDefault;
     }
     IMGUI_CHECKVERSION();
     this->context = ImGui::CreateContext(current_fonts);
@@ -1010,7 +1039,6 @@ bool GUIWindows::createContext(void) {
     // buf_win.win_size is set to current viewport later
     this->window_collection.AddWindowConfiguration(buf_win);
 
-
     // Style settings ---------------------------------------------------------
     ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayRGB |
                                ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar |
@@ -1055,6 +1083,7 @@ bool GUIWindows::createContext(void) {
 
     // Load initial fonts only once for all imgui contexts --------------------
     if (!other_context) {
+        ImGuiIO& io = ImGui::GetIO();
         const float default_font_size = 12.0f;
         ImFontConfig config;
         config.OversampleH = 4;
@@ -1062,6 +1091,7 @@ bool GUIWindows::createContext(void) {
         config.GlyphRanges = this->state.font_utf8_ranges.data();
         std::string configurator_font;
         std::string default_font;
+
         // Add other known fonts
         std::vector<std::string> font_paths;
         if (this->core_instance != nullptr) {
@@ -1083,6 +1113,7 @@ bool GUIWindows::createContext(void) {
                 }
             }
         }
+
         // Configurator Graph Font: Add default font at first n indices for exclusive use in configurator graph.
         /// Workaround: Using different font sizes for different graph zooming factors to improve font readability when
         /// zooming.
@@ -1098,6 +1129,7 @@ bool GUIWindows::createContext(void) {
                     configurator_font.c_str(), default_font_size * graph_font_scalings[i], &config);
             }
         }
+
         // Add other fonts for gui.
         io.Fonts->AddFontDefault(&config);
         io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
@@ -1106,6 +1138,16 @@ bool GUIWindows::createContext(void) {
             if (default_font == font_path) {
                 io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
             }
+        }
+    } else {
+        // Fonts are already loaded
+        if (default_font != nullptr) {
+            io.FontDefault = default_font;
+        } else {
+            // ... else default font is font loaded after configurator fonts -> Index equals number of graph fonts.
+            auto default_font_index = static_cast<int>(this->configurator.GetGraphFontScalings().size());
+            default_font_index = std::min(default_font_index, io.Fonts->Fonts.Size - 1);
+            io.FontDefault = io.Fonts->Fonts[default_font_index];
         }
     }
 
