@@ -1,12 +1,12 @@
 /*
- * WindowManager.h
+ * WindowCollection.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_GUI_WINDOWMANAGER_INCLUDED
-#define MEGAMOL_GUI_WINDOWMANAGER_INCLUDED
+#ifndef MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED
+#define MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED
 
 
 #include "GUIUtils.h"
@@ -18,7 +18,7 @@ namespace gui {
 /**
  * This class controls the placement and appearance of windows tied to one GUIView.
  */
-class WindowManager {
+class WindowCollection {
 
 public:
     /** Identifiers for the window draw callbacks. */
@@ -50,6 +50,7 @@ public:
         ImVec2 win_size;                // size for reset on state loading (current size)
         bool win_soft_reset;            // soft reset of window position and size
         ImVec2 win_reset_size;          // minimum window size for soft reset
+        ImVec2 win_reset_position;      // window position for minimize reset
         bool win_reset;                 // flag for reset window position and size on state loading [NOT SAVED]
         // ---------- Parameter specific configuration ----------
         bool param_show_hotkeys;                     // flag to toggle showing only parameter hotkeys
@@ -87,6 +88,7 @@ public:
             , win_size(ImVec2(0.0f, 0.0f))
             , win_soft_reset(true)
             , win_reset_size(ImVec2(0.0f, 0.0f))
+            , win_reset_position(ImVec2(0.0f, 0.0f))
             , win_reset(true)
             // Window specific configurations
             , param_show_hotkeys(false)
@@ -117,9 +119,9 @@ public:
     // --------------------------------------------------------------------
     // WINDOWs
 
-    WindowManager() = default;
+    WindowCollection() = default;
 
-    ~WindowManager(void) = default;
+    ~WindowCollection(void) = default;
 
     /**
      * Register callback function for given callback id.
@@ -151,7 +153,7 @@ public:
      *
      * @param window_config  The window configuration.
      */
-    void SoftResetWindowSizePos(WindowConfiguration& window_config);
+    void SoftResetWindowSizePosition(WindowConfiguration& window_config);
 
     /**
      * Reset position and size after new state has been loaded.
@@ -161,7 +163,7 @@ public:
      *
      * @param window_config  The window configuration.
      */
-    void ResetWindowPosSize(WindowConfiguration& window_config);
+    void ResetWindowSizePosition(WindowConfiguration& window_config);
 
     // --------------------------------------------------------------------
     // CONFIGURATIONs
@@ -244,4 +246,4 @@ private:
 } // namespace gui
 } // namespace megamol
 
-#endif // MEGAMOL_GUI_WINDOWMANAGER_INCLUDED
+#endif // MEGAMOL_GUI_WINDOWCOLLECTION_INCLUDED

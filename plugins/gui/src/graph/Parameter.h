@@ -9,12 +9,7 @@
 #define MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
 
 
-#include "FileUtils.h"
-#include "GUIUtils.h"
-#include "widgets/FileBrowserWidget.h"
-#include "widgets/HoverToolTip.h"
-#include "widgets/ImageWidget_gl.h"
-#include "widgets/TransferFunctionEditor.h"
+#include "ParameterPresentation.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -33,11 +28,6 @@
 
 #include <variant>
 
-// Used for platform independent clipboard (ImGui so far only provides windows implementation)
-#ifdef GUI_USE_GLFW
-#    include "GLFW/glfw3.h"
-#endif
-
 
 namespace megamol {
 namespace gui {
@@ -48,111 +38,13 @@ class Parameter;
 class Call;
 class CallSlot;
 class Module;
-typedef std::shared_ptr<Call> CallPtrType;
-typedef std::shared_ptr<CallSlot> CallSlotPtrType;
-typedef std::shared_ptr<Module> ModulePtrType;
+typedef std::shared_ptr<Call> CallPtr_t;
+typedef std::shared_ptr<CallSlot> CallSlotPtr_t;
+typedef std::shared_ptr<Module> ModulePtr_t;
 
 // Types
-typedef std::shared_ptr<Parameter> ParamPtrType;
-typedef std::vector<Parameter> ParamVectorType;
-
-
-/** ************************************************************************
- * Defines GUI parameter presentation.
- */
-class ParameterPresentation : public megamol::core::param::AbstractParamPresentation {
-public:
-    friend class Parameter;
-
-    /*
-     * Globally scoped widgets (widget parts) are always called each frame.
-     * Locally scoped widgets (widget parts) are only called if respective parameter appears in GUI.
-     */
-    enum WidgetScope { GLOBAL, LOCAL };
-
-    // VARIABLES --------------------------------------------------------------
-
-    bool extended;
-    const std::string float_format;
-
-    // FUCNTIONS --------------------------------------------------------------
-
-    ParameterPresentation(ParamType type);
-    ~ParameterPresentation(void);
-
-    bool IsGUIStateDirty(void) { return this->guistate_dirty; }
-    void ResetGUIStateDirty(void) { this->guistate_dirty = false; }
-    void ForceSetGUIStateDirty(void) { this->guistate_dirty = true; }
-
-    void SetTransferFunctionEditorHash(size_t hash) { this->tf_editor_hash = hash; }
-
-    inline void ConnectExternalTransferFunctionEditor(std::shared_ptr<megamol::gui::TransferFunctionEditor> tfe_ptr) {
-        if (this->tf_editor_external_ptr != tfe_ptr) {
-            this->tf_editor_external_ptr = tfe_ptr;
-            this->use_external_tf_editor = true;
-        }
-    }
-
-    void LoadTransferFunctionTexture(
-        std::vector<float>& in_texture_data, int& in_texture_width, int& in_texture_height);
-
-    /** "Point in Circle" Button for additional drop down Options. */
-    static bool OptionButton(const std::string& id, const std::string& label = "", bool dirty = false);
-
-    /** Knob button for 'circular' float value manipulation. */
-    static bool KnobButton(const std::string& id, float size, float& inout_value, float minval, float maxval);
-
-    /** Extended parameter mode button. */
-    static bool ParameterExtendedModeButton(bool& inout_extended_mode);
-
-private:
-    // VARIABLES --------------------------------------------------------------
-
-    std::string help;
-    std::string description;
-    std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
-    float height;
-    unsigned int set_focus;
-    bool guistate_dirty;
-
-    std::shared_ptr<megamol::gui::TransferFunctionEditor> tf_editor_external_ptr;
-    megamol::gui::TransferFunctionEditor tf_editor_internal;
-    bool use_external_tf_editor;
-    bool show_tf_editor;
-    size_t tf_editor_hash;
-
-    // Widgets
-    FileBrowserWidget file_browser;
-    HoverToolTip tooltip;
-    ImageWidget image_widget;
-
-    // FUNCTIONS --------------------------------------------------------------
-    bool Present(Parameter& inout_param, WidgetScope scope);
-    float GetHeight(Parameter& inout_param);
-
-    bool present_parameter(Parameter& inout_parameter, WidgetScope scope);
-
-    bool widget_button(WidgetScope scope, const std::string& label, const megamol::core::view::KeyCode& keycode);
-    bool widget_bool(WidgetScope scope, const std::string& label, bool& value);
-    bool widget_string(WidgetScope scope, const std::string& label, std::string& value);
-    bool widget_color(WidgetScope scope, const std::string& label, glm::vec4& value);
-    bool widget_enum(WidgetScope scope, const std::string& label, int& value, EnumStorageType storage);
-    bool widget_flexenum(WidgetScope scope, const std::string& label, std::string& value,
-        megamol::core::param::FlexEnumParam::Storage_t storage);
-    bool widget_filepath(WidgetScope scope, const std::string& label, std::string& value);
-    bool widget_ternary(WidgetScope scope, const std::string& label, vislib::math::Ternary& value);
-    bool widget_int(WidgetScope scope, const std::string& label, int& value, int minval, int maxval);
-    bool widget_float(WidgetScope scope, const std::string& label, float& value, float minval, float maxval);
-    bool widget_vector2f(
-        WidgetScope scope, const std::string& label, glm::vec2& value, glm::vec2 minval, glm::vec2 maxval);
-    bool widget_vector3f(
-        WidgetScope scope, const std::string& label, glm::vec3& value, glm::vec3 minval, glm::vec3 maxval);
-    bool widget_vector4f(
-        WidgetScope scope, const std::string& label, glm::vec4& value, glm::vec4 minval, glm::vec4 maxval);
-    bool widget_pinvaluetomouse(WidgetScope scope, const std::string& label, const std::string& value);
-    bool widget_transfer_function_editor(WidgetScope scope, Parameter& inout_parameter);
-    bool widget_knob(WidgetScope scope, const std::string& label, float& value, float minval, float maxval);
-};
+typedef std::shared_ptr<Parameter> ParamPtr_t;
+typedef std::vector<Parameter> ParamVector_t;
 
 
 /** ************************************************************************
@@ -170,7 +62,7 @@ public:
         glm::vec3,                       // VECTOR3F
         glm::vec4                        // VECTOR4F, COLOR
         >
-        ValueType;
+        Value_t;
 
     typedef std::variant<std::monostate, // default (unused/unavailable)
         float,                           // FLOAT
@@ -179,7 +71,7 @@ public:
         glm::vec3,                       // VECTOR_3f
         glm::vec4                        // VECTOR_4f
         >
-        MinType;
+        Min_t;
 
     typedef std::variant<std::monostate, // default (unused/unavailable)
         float,                           // FLOAT
@@ -188,32 +80,32 @@ public:
         glm::vec3,                       // VECTOR_3f
         glm::vec4                        // VECTOR_4f
         >
-        MaxType;
+        Max_t;
 
     typedef std::variant<std::monostate,               // default (unused/unavailable)
         megamol::core::view::KeyCode,                  // BUTTON
-        EnumStorageType,                               // ENUM
+        EnumStorage_t,                                 // ENUM
         megamol::core::param::FlexEnumParam::Storage_t // FLEXENUM
         >
-        StroageType;
+        Stroage_t;
 
     struct StockParameter {
         std::string full_name;
         std::string description;
-        ParamType type;
+        Param_t type;
         std::string default_value;
-        MinType minval;
-        MaxType maxval;
-        StroageType storage;
+        Min_t minval;
+        Max_t maxval;
+        Stroage_t storage;
         bool gui_visibility;
         bool gui_read_only;
-        PresentType gui_presentation;
+        Present_t gui_presentation;
     };
 
     // VARIABLES --------------------------------------------------------------
 
     const ImGuiID uid;
-    const ParamType type;
+    const Param_t type;
     ParameterPresentation present;
 
     // Init when adding parameter from stock
@@ -224,7 +116,7 @@ public:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    Parameter(ImGuiID uid, ParamType type, StroageType store, MinType minval, MaxType maxval);
+    Parameter(ImGuiID uid, Param_t type, Stroage_t store, Min_t minval, Max_t maxval);
     ~Parameter(void);
 
     bool IsValueDirty(void) { return this->value_dirty; }
@@ -235,13 +127,14 @@ public:
         megamol::core::param::ParamSlot& in_param_slot, megamol::gui::Parameter::StockParameter& out_param);
 
     static bool ReadNewCoreParameterToNewParameter(megamol::core::param::ParamSlot& in_param_slot,
-        std::shared_ptr<megamol::gui::Parameter>& out_param, bool set_default_val, bool save_core_param_pointer);
+        std::shared_ptr<megamol::gui::Parameter>& out_param, bool set_default_val, bool set_dirty,
+        bool save_core_param_pointer);
 
     static bool ReadCoreParameterToParameter(vislib::SmartPtr<megamol::core::param::AbstractParam>& in_param_ptr,
-        megamol::gui::Parameter& out_param, bool set_default_val);
+        megamol::gui::Parameter& out_param, bool set_default_val, bool set_dirty);
 
     static bool ReadNewCoreParameterToExistingParameter(megamol::core::param::ParamSlot& in_param_slot,
-        megamol::gui::Parameter& out_param, bool set_default_val, bool save_core_param_pointer);
+        megamol::gui::Parameter& out_param, bool set_default_val, bool set_dirty, bool save_core_param_pointer);
 
     static bool WriteCoreParameterGUIState(
         megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr);
@@ -271,7 +164,7 @@ public:
 
     std::string GetValueString(void);
 
-    ValueType& GetValue(void) { return this->value; }
+    Value_t& GetValue(void) { return this->value; }
 
     template <typename T> const T& GetMinValue(void) const { return std::get<T>(this->minval); }
 
@@ -285,22 +178,24 @@ public:
 
     // SET ----------------------------------
 
-    bool SetValueString(const std::string& val_str, bool set_default_val = false);
+    bool SetValueString(const std::string& val_str, bool set_default_val = false, bool set_dirty = true);
 
-    template <typename T> void SetValue(T val, bool set_default_val = false) {
+    template <typename T> void SetValue(T val, bool set_default_val = false, bool set_dirty = true) {
         if (std::holds_alternative<T>(this->value)) {
 
             // Set value
             if (std::get<T>(this->value) != val) {
                 this->value = val;
-                this->value_dirty = true;
+                if (set_dirty) {
+                    this->value_dirty = true;
+                }
 
                 // Check for new flex enum entry
-                if (this->type == ParamType::FLEXENUM) {
+                if (this->type == Param_t::FLEXENUM) {
                     auto storage = this->GetStorage<megamol::core::param::FlexEnumParam::Storage_t>();
                     storage.insert(std::get<std::string>(this->value));
                     this->SetStorage(storage);
-                } else if (this->type == ParamType::TRANSFERFUNCTION) {
+                } else if (this->type == Param_t::TRANSFERFUNCTION) {
                     if constexpr (std::is_same_v<T, std::string>) {
                         int texture_width, texture_height;
                         std::vector<float> texture_data;
@@ -326,7 +221,7 @@ public:
             }
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
 
@@ -335,7 +230,7 @@ public:
             this->minval = minval;
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
 
@@ -344,7 +239,7 @@ public:
             this->maxval = maxval;
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
 
@@ -353,24 +248,23 @@ public:
             this->storage = store;
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Bad variant access. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
 
     // Presentation ----------------------------------------------------
 
     inline bool PresentGUI(ParameterPresentation::WidgetScope scope) { return this->present.Present(*this, scope); }
-    inline float GetGUIHeight(void) { return this->present.GetHeight(*this); }
 
 private:
     // VARIABLES --------------------------------------------------------------
 
-    MinType minval;
-    MaxType maxval;
-    StroageType storage;
-    ValueType value;
+    Min_t minval;
+    Max_t maxval;
+    Stroage_t storage;
+    Value_t value;
     size_t tf_string_hash;
-    ValueType default_value;
+    Value_t default_value;
     bool default_value_mismatch;
     bool value_dirty;
 };

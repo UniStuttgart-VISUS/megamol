@@ -60,20 +60,20 @@ float GUIView::DefaultTime(double instTime) const {
 
 unsigned int GUIView::GetCameraSyncNumber(void) const {
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return 0u;
 }
 
 
 void GUIView::SerialiseCamera(vislib::Serialiser& serialiser) const {
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 
 void GUIView::DeserialiseCamera(vislib::Serialiser& serialiser) {
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 }
 
 
@@ -82,25 +82,32 @@ void GUIView::Render(const mmcRenderViewContext& context) {
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
+    this->gui.SynchronizeGraphs();
     if (crv) {
         crv->SetOutputBuffer(GL_BACK);
         crv->SetInstanceTime(context.InstanceTime);
         crv->SetTime(
             -1.0f); // Should be negative to trigger animation! (see View3D.cpp line ~660 | View2D.cpp line ~350)
-        this->gui.PreDraw(crv->GetViewport(), crv->InstanceTime());
+        auto viewport_rect = crv->GetViewport();
+        auto viewport =
+            glm::vec2(static_cast<float>(viewport_rect.Width()), static_cast<float>(viewport_rect.Height()));
+        this->gui.PreDraw(viewport, viewport, crv->InstanceTime());
         (*crv)(core::view::AbstractCallRender::FnRender);
         this->gui.PostDraw();
     } else {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         if (this->overrideCall != nullptr) {
-            this->gui.PreDraw(this->overrideCall->GetViewport(), context.InstanceTime);
+            auto viewport_rect = this->overrideCall->GetViewport();
+            auto viewport =
+                glm::vec2(static_cast<float>(viewport_rect.Width()), static_cast<float>(viewport_rect.Height()));
+            this->gui.PreDraw(viewport, viewport, context.InstanceTime);
             this->gui.PostDraw();
         } else {
             GLint vp[4];
             glGetIntegerv(GL_VIEWPORT, vp);
-            vislib::math::Rectangle<int> viewport(vp[0], vp[1], vp[2], vp[3]);
-            this->gui.PreDraw(viewport, context.InstanceTime);
+            auto viewport = glm::vec2(static_cast<float>(vp[2]), static_cast<float>(vp[3]));
+            this->gui.PreDraw(viewport, viewport, context.InstanceTime);
             this->gui.PostDraw();
         }
     }

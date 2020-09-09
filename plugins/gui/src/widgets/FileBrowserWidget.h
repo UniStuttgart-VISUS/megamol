@@ -52,6 +52,9 @@ public:
 
 private:
 #ifdef GUI_USE_FILESYSTEM
+
+    typedef std::pair<stdfs::path, bool> ChildData_t;
+
     // VARIABLES --------------------------------------------------------------
 
     StringSearchWidget search_widget;
@@ -64,13 +67,12 @@ private:
     std::string file_error;
     std::string file_warning;
     // Keeps child path and flag whether child is director or not
-    typedef std::pair<fsns::path, bool> ChildDataType;
-    std::vector<ChildDataType> child_paths;
+    std::vector<ChildData_t> child_paths;
     size_t additional_lines;
 
     // FUNCTIONS --------------------------------------------------------------
 
-    bool splitPath(const fsns::path& in_file_path, std::string& out_path, std::string& out_file);
+    bool splitPath(const stdfs::path& in_file_path, std::string& out_path, std::string& out_file);
     void validateDirectory(const std::string& path_str);
     void validateFile(const std::string& file_str, FileBrowserFlag flag);
 
