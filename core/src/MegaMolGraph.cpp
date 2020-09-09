@@ -8,6 +8,8 @@
 
 #include "mmcore/utility/log/Log.h"
 
+#include <algorithm>
+
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
 static std::vector<std::string> splitPathName(std::string const& path) {
     std::vector<std::string> result;
@@ -527,6 +529,14 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName, std
 
 	auto resources = get_requested_resources(execution_resource_requests);
 
+    if (resources.size() != execution_resource_requests.size() ||
+        !std::equal<>(resources.begin(), resources.end(), 
+            execution_resource_requests.begin(), execution_resource_requests.end(), 
+            [](megamol::frontend::ModuleResource& l, std::string& r) { return l.getIdentifier == r; })) 
+    {
+        return false;
+    }
+
 	this->graph_entry_points.push_back({moduleName, module_ptr, resources, callback});
 
     module_it->isGraphEntryPoint = true;
@@ -573,6 +583,7 @@ std::vector<megamol::frontend::ModuleResource> megamol::core::MegaMolGraph::get_
 		if (dependency_it != provided_resources.end())
 			result.push_back(*dependency_it);
     }
+
 
 	return result;
 }
