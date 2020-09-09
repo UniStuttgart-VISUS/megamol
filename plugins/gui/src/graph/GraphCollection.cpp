@@ -1101,16 +1101,16 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                             found_error = true;
                         }
                     }
-                    /// XXX Disable test for multiple view instances
-                    // if (mod_1->is_view_instance) {
-                    //    if (found_instance) {
-                    //        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    //            "[GUI] Save Project >>> Found multiple view instances. [%s, %s, line %d]\n", __FILE__,
-                    //            __FUNCTION__, __LINE__);
-                    //        found_error = true;
-                    //    }
-                    //    found_instance = true;
-                    //}
+                    if (mod_1->is_view_instance) {
+                        /// XXX Disable test for multiple view instances
+                        // if (found_instance) {
+                        //    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        //        "[GUI] Save Project >>> Found multiple view instances. [%s, %s, line %d]\n", __FILE__,
+                        //        __FUNCTION__, __LINE__);
+                        //    found_error = true;
+                        //}
+                        found_instance = true;
+                    }
                 }
                 if (!found_instance) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
