@@ -191,7 +191,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                     state.graph_save = true;
                 }
                 if (running_graph) {
-                    this->tooltip.ToolTip("Save running project using project menu.");
+                    this->tooltip.ToolTip("Save Running Project using global Project Menu.");
                 }
 
                 if (ImGui::MenuItem("Rename")) {

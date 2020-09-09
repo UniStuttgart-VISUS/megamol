@@ -858,11 +858,13 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                             }
                         }
                     }
+#ifdef GUI_VERBOSE
                     if (param.core_param_ptr.IsNull()) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[GUI] Unable to connect core parameter to gui parameter. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                     }
+#endif // GUI_VERBOSE
                 }
 
                 if (!param.core_param_ptr.IsNull()) {

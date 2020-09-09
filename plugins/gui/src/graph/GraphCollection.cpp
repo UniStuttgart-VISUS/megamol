@@ -299,12 +299,12 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
 
     // Apply updates from core graph -> gui graph
     //     Implemented synchronisations:
-    //     - Add module(s)      - Core Graph and Core Instance
-    //     - Add call(s)        - Core Graph
+    //     - Add module(s)      - MegaMol Graph and Core Instance
+    //     - Add call(s)        - MegaMol Graph
     ///    TODO
     ///        - Add call(s)       - Core Instance
-    ///        - Delete module(s)  - Core Graph and Core Instance
-    ///        - Delete call(s)    - Core Graph and Core Instance
+    ///        - Delete module(s)  - MegaMol Graph and Core Instance
+    ///        - Delete call(s)    - MegaMol Graph and Core Instance
     try {
         GraphPtr_t graph_ptr;
         if (!this->GetGraph(in_graph_uid, graph_ptr)) {
@@ -1628,7 +1628,8 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_callee_idxs(
     for (std::string callName : completeCallNames) {
         size_t calls_cnt = this->calls_stock.size();
         for (size_t idx = 0; idx < calls_cnt; ++idx) {
-            if (this->calls_stock[idx].class_name == callName) {
+            /// XXX Case-Insensitive call slot comparison
+            if (this->case_insensitive_str_comp(this->calls_stock[idx].class_name, callName)) {
                 retval.emplace_back(idx);
             }
         }
@@ -1650,7 +1651,8 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_caller_idxs(
         std::string comp_call_class_name = std::string(caller_slot->GetCompCallClassName(i));
         size_t calls_cnt = this->calls_stock.size();
         for (size_t idx = 0; idx < calls_cnt; ++idx) {
-            if (this->calls_stock[idx].class_name == comp_call_class_name) {
+            /// XXX Case-Insensitive call slot comparison
+            if (this->case_insensitive_str_comp(this->calls_stock[idx].class_name, comp_call_class_name)) {
                 retval.emplace_back(idx);
             }
         }
