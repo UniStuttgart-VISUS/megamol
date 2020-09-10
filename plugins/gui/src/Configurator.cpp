@@ -279,7 +279,7 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
                 this->graph_state.graph_save = true;
             }
             if (running_graph) {
-                this->tooltip.ToolTip("Save running project using project menu.");
+                this->tooltip.ToolTip("Save Running Project using Global Menu.");
             }
 
             ImGui::EndMenu();
@@ -515,7 +515,7 @@ void megamol::gui::Configurator::add_empty_project(void) {
             ModulePtr_t module_ptr;
             if (graph_ptr->GetModule(module_uid, module_ptr)) {
                 auto graph_module = graph_ptr->GetModules().back();
-                graph_module->is_view_instance = true;
+                graph_module->main_view_name = "Instance_1";
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Unable to add initial gui view module: '%s'. [%s, %s, line %d]\n",
@@ -583,7 +583,7 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
                         // Read configurator state for running graph
                         for (auto& graph_ptr : this->graph_collection.GetGraphs()) {
                             if (graph_ptr->IsRunning()) {
-                                if (graph_ptr->GUIStateFromJsonString(in_json_string)) {
+                                if (graph_ptr->StateFromJsonString(in_json_string)) {
                                     // Disable layouting if graph state was found
                                     graph_ptr->present.SetLayoutGraph(false);
                                 }
@@ -644,7 +644,7 @@ bool megamol::gui::Configurator::configurator_state_to_json(nlohmann::json& out_
         out_json[GUI_JSON_TAG_CONFIGURATOR]["module_list_sidebar_width"] = this->module_list_sidebar_width;
 
         for (auto& graph_ptr : this->graph_collection.GetGraphs()) {
-            graph_ptr->GUIStateToJSON(out_json, graph_ptr->IsRunning());
+            graph_ptr->StateToJSON(out_json, graph_ptr->IsRunning());
         }
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote configurator state to JSON.");

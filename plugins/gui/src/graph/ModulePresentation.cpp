@@ -366,15 +366,21 @@ void megamol::gui::ModulePresentation::Present(
                             ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
 
                             if (main_view_button) {
-                                if (ImGui::RadioButton("###main_view_switch", inout_module.is_view_instance)) {
-                                    if (hovered) {
-                                        state.interact.module_mainview_uid = inout_module.uid;
-                                        inout_module.is_view_instance = !inout_module.is_view_instance;
-                                    }
+                                bool is_main_view = inout_module.IsMainView();
+                                ImGui::RadioButton("###main_view_switch", is_main_view);
+                                if (this->selected) {
+                                    state.interact.module_mainview_uid = inout_module.uid;
                                 }
                                 ImGui::SetItemAllowOverlap();
                                 if (hovered) {
-                                    other_item_hovered = other_item_hovered || this->tooltip.ToolTip("Main View");
+                                    std::string tooltip_label;
+                                    if (is_main_view) {
+                                        tooltip_label =
+                                            tooltip_label + "Main View '" + inout_module.main_view_name + "'";
+                                    } else {
+                                        tooltip_label = "No Main View";
+                                    }
+                                    other_item_hovered = other_item_hovered || this->tooltip.ToolTip(tooltip_label);
                                 }
                                 ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
                             }
@@ -454,7 +460,7 @@ void megamol::gui::ModulePresentation::Present(
                     }
 
                     // Draw Outline
-                    float border = ((inout_module.is_view_instance) ? (4.0f) : (1.0f)) * state.canvas.zooming;
+                    float border = ((!inout_module.main_view_name.empty()) ? (4.0f) : (1.0f)) * state.canvas.zooming;
                     draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, GUI_RECT_CORNER_RADIUS,
                         ImDrawCornerFlags_All, border);
                 }

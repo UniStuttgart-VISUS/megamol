@@ -428,12 +428,10 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             // Set remaining module data
             if (new_module_ptr != nullptr) {
                 new_module_ptr->name = module_name;
-                // Instance Name
-                new_module_ptr->is_view_instance = false;
-                if (view_instances.find(full_name) != view_instances.end()) {
-                    graph_ptr->name = view_instances[full_name];
-                    new_module_ptr->is_view_instance =
-                        true; /// XXX Allow multiple view instances | (graph_ptr->IsMainViewSet()) ? (false) : (true);
+                // Check if module is view instance
+                auto view_inst_iter = view_instances.find(full_name);
+                if (view_inst_iter != view_instances.end()) {
+                    new_module_ptr->main_view_name = view_inst_iter->second;
                 }
                 // Add module to group
                 graph_ptr->AddGroupModule(module_namespace, new_module_ptr);
@@ -726,7 +724,6 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                             __FUNCTION__, __LINE__);
                         return GUI_INVALID_ID;
                     }
-                    graph_ptr->name = view_instance;
                     retval = new_graph_uid;
                 }
 
@@ -750,7 +747,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 }
                 auto graph_module = graph_ptr->GetModules().back();
                 graph_module->name = view_name;
-                graph_module->is_view_instance = true;
+                graph_module->main_view_name = view_instance;
                 graph_ptr->AddGroupModule(view_namespace, graph_module);
 
                 found_main_view = true;
@@ -824,7 +821,6 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                     }
                     auto graph_module = graph_ptr->GetModules().back();
                     graph_module->name = module_name;
-                    graph_module->is_view_instance = false;
                     graph_ptr->AddGroupModule(module_namespace, graph_module);
                 }
             }
@@ -1034,7 +1030,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                                         }
                                         if (parameter.full_name == GUI_CONFIGURATOR_STATE_PARAM_NAME) {
                                             // Reading configurator state param containing a graph state
-                                            if (graph_ptr->GUIStateFromJsonString(value_str)) {
+                                            if (graph_ptr->StateFromJsonString(value_str)) {
                                                 found_configurator_positions = true;
                                             }
                                         }
@@ -1105,14 +1101,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                             found_error = true;
                         }
                     }
-                    if (mod_1->is_view_instance) {
-                        /// XXX Disable test for multiple view instances
-                        // if (found_instance) {
-                        //    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        //        "[GUI] Save Project >>> Found multiple view instances. [%s, %s, line %d]\n", __FILE__,
-                        //        __FUNCTION__, __LINE__);
-                        //    found_error = true;
-                        //}
+                    if (mod_1->IsMainView()) {
                         found_instance = true;
                     }
                 }
@@ -1131,17 +1120,16 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                 std::string projectstr;
                 std::stringstream confInstances, confModules, confCalls, confParams;
                 for (auto& module_ptr : graph_ptr->GetModules()) {
-                    std::string instance_name = graph_ptr->name;
-                    if (module_ptr->is_view_instance) {
-                        confInstances << "mmCreateView(\"" << instance_name << "\",\"" << module_ptr->class_name
-                                      << "\",\"" << module_ptr->FullName() << "\") \n";
+                    if (module_ptr->IsMainView()) {
+                        confInstances << "mmCreateView(\"" << module_ptr->main_view_name << "\",\""
+                                      << module_ptr->class_name << "\",\"" << module_ptr->FullName() << "\") \n";
                     } else {
                         confModules << "mmCreateModule(\"" << module_ptr->class_name << "\",\""
                                     << module_ptr->FullName() << "\") \n";
                     }
 
                     for (auto& parameter : module_ptr->parameters) {
-
+                        /*
                         // Store graph state to state parameter of configurator (once)
                         if (module_ptr->class_name == GUI_MODULE_NAME) {
                             if (!wrote_graph_state && (parameter.full_name == GUI_CONFIGURATOR_STATE_PARAM_NAME)) {
@@ -1163,6 +1151,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                             parameter.SetValue(new_parameter_gui_state);
                             wrote_parameter_gui_state = true;
                         }
+                        */
 
                         // Write all parameters for running graph (default value is not available)
                         // For other graphs only write parameters with other values than the default
@@ -1499,7 +1488,7 @@ bool megamol::gui::GraphCollection::replace_graph_state(
             } catch (...) {
             }
         }
-        if (graph_ptr->GUIStateToJSON(json, true)) {
+        if (graph_ptr->StateToJSON(json, true)) {
             out_json_string = json.dump(2);
         } else {
             return false;

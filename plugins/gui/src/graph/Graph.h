@@ -89,8 +89,6 @@ public:
     inline void ResetDirty(void) { this->dirty_flag = false; }
     inline void ForceSetDirty(void) { this->dirty_flag = true; }
 
-    bool IsMainViewSet(void);
-
     bool UniqueModuleRename(const std::string& module_name);
 
     const std::string GetFilename(void) const { return this->filename; }
@@ -104,18 +102,13 @@ public:
     // Presentation ----------------------------------------------------
 
     inline void PresentGUI(GraphState_t& state) { this->present.Present(*this, state); }
-    bool GUIStateFromJsonString(const std::string& json_string) {
-        return this->present.StateFromJsonString(*this, json_string);
-    }
 
-    bool GUIStateToJSON(nlohmann::json& out_json, bool save_as_project_graph) {
-        return this->present.StateToJSON(*this, out_json, save_as_project_graph);
-    }
+    bool StateFromJsonString(const std::string& json_string);
+    bool StateToJSON(nlohmann::json& out_json, bool save_as_project_graph);
 
 private:
     // VARIABLES --------------------------------------------------------------
 
-    unsigned int group_name_uid;
     ModulePtrVector_t modules;
     CallPtrVector_t calls;
     GroupPtrVector_t groups;
@@ -127,6 +120,7 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     const std::string generate_unique_group_name(void);
+    const std::string generate_unique_main_view_name(void);
     const std::string generate_unique_module_name(const std::string& name);
 
     void add_rename_module_sync_event(const std::string& current_name, const std::string& new_name);

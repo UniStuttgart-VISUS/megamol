@@ -135,6 +135,7 @@ void megamol::gui::GroupPresentation::Present(
                 } else {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[GUI] The action [Rename Group] is not yet supported for the graph of the running project. "
+                        "Open project from file to make desired changes."
                         "[%s, %s, line %d]\n",
                         __FILE__, __FUNCTION__, __LINE__);
                 }
