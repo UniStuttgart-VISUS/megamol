@@ -643,7 +643,9 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
     ImGuiID in_graph_uid, const std::string& project_filename) {
 
     std::string projectstr;
+
     if (!FileUtils::ReadFile(project_filename, projectstr)) return false;
+    GUIUtils::Utf8Decode(projectstr);
 
     const std::string luacmd_view("mmCreateView");
     const std::string luacmd_module("mmCreateModule");
@@ -761,7 +763,6 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
 
         // Save filename for graph
         std::string filename = project_filename;
-        GUIUtils::Utf8Decode(filename);
         graph_ptr->SetFilename(filename);
 
         // Find and create modules
@@ -1129,7 +1130,6 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                     }
 
                     for (auto& parameter : module_ptr->parameters) {
-                        /*
                         // Store graph state to state parameter of configurator (once)
                         if (module_ptr->class_name == GUI_MODULE_NAME) {
                             if (!wrote_graph_state && (parameter.full_name == GUI_CONFIGURATOR_STATE_PARAM_NAME)) {
@@ -1151,7 +1151,6 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                             parameter.SetValue(new_parameter_gui_state);
                             wrote_parameter_gui_state = true;
                         }
-                        */
 
                         // Write all parameters for running graph (default value is not available)
                         // For other graphs only write parameters with other values than the default

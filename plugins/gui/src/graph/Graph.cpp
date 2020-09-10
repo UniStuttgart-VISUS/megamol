@@ -830,7 +830,7 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
             if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
                 for (auto& content_item : header_item.value().items()) {
                     std::string json_graph_id = content_item.key();
-                    GUIUtils::Utf8Encode(json_graph_id);
+                    GUIUtils::Utf8Decode(json_graph_id);
                     if (json_graph_id == GUI_JSON_TAG_PROJECT_GRAPH) {
                         auto config_state = content_item.value();
                         found = true;
@@ -838,7 +838,7 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
                         // project_file (supports UTF-8)
                         if (config_state.at("project_file").is_string()) {
                             std::string filename = config_state.at("project_file").get<std::string>();
-                            GUIUtils::Utf8Encode(filename);
+                            GUIUtils::Utf8Decode(filename);
                             this->SetFilename(filename);
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -848,7 +848,7 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
                         // project_name (supports UTF-8)
                         if (config_state.at("project_name").is_string()) {
                             std::string projectname = config_state.at("project_name").get<std::string>();
-                            GUIUtils::Utf8Encode(projectname);
+                            GUIUtils::Utf8Decode(projectname);
                             this->name = projectname;
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1078,7 +1078,7 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
                                         for (auto& callslot_item : interfaceslot_item.value().items()) {
                                             if (callslot_item.value().is_string()) {
                                                 std::string callslot_name = callslot_item.value().get<std::string>();
-                                                GUIUtils::Utf8Encode(callslot_name);
+                                                GUIUtils::Utf8Decode(callslot_name);
                                                 calleslot_fullnames.emplace_back(callslot_name);
                                             } else {
                                                 megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1207,7 +1207,7 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& out_json, bool save_as_pro
 
     try {
         std::string filename = this->GetFilename();
-        GUIUtils::Utf8Decode(filename);
+        GUIUtils::Utf8Encode(filename);
 
         // For not running graphs save only file name of loaded project
         if (!save_as_project_graph) {
@@ -1215,9 +1215,9 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& out_json, bool save_as_pro
         } else {
 
             out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["project_file"] = filename;
-            GUIUtils::Utf8Decode(this->name);
-            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["project_name"] = this->name;
             GUIUtils::Utf8Encode(this->name);
+            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["project_name"] = this->name;
+            GUIUtils::Utf8Decode(this->name);
             out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["show_parameter_sidebar"] =
                 this->present.show_parameter_sidebar;
             out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["parameter_sidebar_width"] =
@@ -1256,7 +1256,7 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& out_json, bool save_as_pro
                                 callslot_fullname =
                                     callslot_ptr->GetParentModule()->FullName() + "::" + callslot_ptr->name;
                             }
-                            GUIUtils::Utf8Decode(callslot_fullname);
+                            GUIUtils::Utf8Encode(callslot_fullname);
                             out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["interfaces"][group_ptr->name]
                                     [interface_label] += callslot_fullname;
                         }
