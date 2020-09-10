@@ -37,16 +37,19 @@ typedef std::vector<Call::StockCall> CallStockVector_t;
 
 class Graph {
 public:
-    /// TODO Implement RENAME_MODULE ... !
+    friend class GraphPresentation;
+
     enum QueueChange { ADD_MODULE, DELETE_MODULE, RENAME_MODULE, ADD_CALL, DELETE_CALL };
+
     struct QueueData {
-        std::string classname = "";
-        std::string id = "";
-        std::string new_id = "";
-        std::string caller = "";
-        std::string callee = "";
-        bool graph_entry = false;
+        std::string id = "";        // Requierd for ALL queue cahnges
+        std::string classname = ""; // Requierd for ADD_MODULE, ADD_CALL
+        bool graph_entry = false;   // Requierd for ADD_MODULE
+        std::string rename_id = ""; // Requierd for RENAME_MODULE
+        std::string caller = "";    // Requierd for ADD_CALL, DELETE_CALL
+        std::string callee = "";    // Requierd for ADD_CALL, DELETE_CALL
     };
+
     typedef std::tuple<QueueChange, QueueData> SyncQueueData_t;
     typedef std::queue<SyncQueueData_t> SyncQueue_t;
     typedef std::shared_ptr<SyncQueue_t> SyncQueuePtr_t;
@@ -125,6 +128,8 @@ private:
 
     const std::string generate_unique_group_name(void);
     const std::string generate_unique_module_name(const std::string& name);
+
+    void add_rename_module_sync_event(const std::string& current_name, const std::string& new_name);
 };
 
 

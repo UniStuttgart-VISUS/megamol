@@ -342,9 +342,10 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 std::string module_fullname = std::string(module_inst.modulePtr->FullName().PeekBuffer());
                 if (!graph_ptr->ModuleExists(module_fullname)) {
                     module_ptr_list.emplace_back(module_inst.modulePtr.get());
-                    if (module_inst.isGraphEntryPoint) {
-                        view_instances[module_fullname] = std::string(module_inst.modulePtr->Name().PeekBuffer());
-                    }
+                    /// XXX Not considered when project is loaded?!
+                    //if (module_inst.isGraphEntryPoint) {
+                    //    view_instances[module_fullname] = this->generate_unique_graph_name();
+                    //}
                 }
             }
             */

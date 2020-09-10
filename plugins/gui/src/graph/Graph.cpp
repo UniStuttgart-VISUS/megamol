@@ -211,8 +211,10 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
                 for (auto& callslot_map : (*iter)->GetCallSlots()) {
                     for (auto& callslot_ptr : callslot_map.second) {
                         for (auto& call_ptr : callslot_ptr->GetConnectedCalls()) {
-                            auto call_uid = call_ptr->uid;
-                            this->DeleteCall(call_uid);
+                            if (call_ptr != nullptr) {
+                                auto call_uid = call_ptr->uid;
+                                this->DeleteCall(call_uid);
+                            }
                         }
                     }
                 }
@@ -807,6 +809,7 @@ bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_name) {
     for (auto& mod : this->modules) {
         if (module_name == mod->name) {
             mod->name = this->generate_unique_module_name(module_name);
+            this->add_rename_module_sync_event(module_name, mod->name);
             this->present.ForceUpdate();
             return true;
         }
@@ -859,4 +862,22 @@ const std::string megamol::gui::Graph::generate_unique_module_name(const std::st
         }
     }
     return std::string(new_name_prefix + std::to_string(new_name_id + 1));
+}
+
+
+void megamol::gui::Graph::add_rename_module_sync_event(const std::string& current_name, const std::string& new_name) {
+
+    auto queue = this->GetSyncQueue();
+    megamol::gui::Graph::QueueData queue_data;
+    queue_data.id = current_name;
+    queue_data.rename_id = new_name;
+    // Remove leading "::"
+    if (queue_data.id.find_first_of("::") == 0) {
+        queue_data.id = queue_data.id.substr(2);
+    }
+    if (queue_data.rename_id.find_first_of("::") == 0) {
+        queue_data.rename_id = queue_data.rename_id.substr(2);
+    }
+    this->GetSyncQueue()->push(
+        megamol::gui::Graph::SyncQueueData_t(megamol::gui::Graph::QueueChange::RENAME_MODULE, queue_data));
 }

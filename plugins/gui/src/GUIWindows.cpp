@@ -129,12 +129,10 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
             "[GUI] Found no valid fonts. Maybe the ImGui context the fonts were shared with is destroyed. "
             "[%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
-        /// TODO Only solution for now is to shutdown megamol completely
-        // this->triggerCoreInstanceShutdown();
-        // this->shutdown = true;
-        /// Other Option is to create a completely new context
-        this->destroyContext();
-        this->CreateContext_GL(this->core_instance);
+        /// XXX TODO Solution for now is to shutdown megamol completely ...
+        /// XXX Because if 'main' (= first) created imgui context is destroyed, fonts can not be restored?!
+        this->triggerCoreInstanceShutdown();
+        this->shutdown = true;
         return false;
     }
 
@@ -702,6 +700,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         bool graph_sync_success = true;
         auto queue = graph_ptr->GetSyncQueue();
         synced = !queue->empty();
+
         while (!queue->empty()) {
             auto change = std::get<0>(queue->front());
             auto data = std::get<1>(queue->front());
@@ -775,7 +774,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     bool rename_success = false;
                     megamol::core::Module::ptr_type core_module = megamol_graph->FindModule(data.id);
                     if (core_module != nullptr) {
-                        core_module->setName(data.new_id);
+                        core_module->setName(data.rename_id);
                         rename_success = true;
                     }
                     graph_sync_success &= rename_success;
@@ -783,7 +782,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                 } else if (this->core_instance != nullptr) {
                     bool rename_success = false;
                     std::function<void(megamol::core::Module*)> fun = [&](megamol::core::Module* mod) {
-                        mod->setName(vislib::StringA(data.new_id.c_str()));
+                        mod->setName(vislib::StringA(data.rename_id.c_str()));
                         rename_success = true;
                     };
                     this->core_instance->FindModuleNoLock(data.id, fun);
