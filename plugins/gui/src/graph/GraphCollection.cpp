@@ -750,6 +750,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 }
                 auto graph_module = graph_ptr->GetModules().back();
                 graph_module->name = view_name;
+                graph_module->is_view_instance = true;
                 graph_ptr->AddGroupModule(view_namespace, graph_module);
 
                 found_main_view = true;
@@ -762,7 +763,9 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
         }
 
         // Save filename for graph
-        graph_ptr->SetFilename(project_filename);
+        std::string filename = project_filename;
+        GUIUtils::Utf8Decode(filename);
+        graph_ptr->SetFilename(filename);
 
         // Find and create modules
         for (unsigned int i = 0; i < lines_count; i++) {

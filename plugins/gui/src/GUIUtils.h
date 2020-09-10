@@ -158,6 +158,9 @@ typedef struct _interact_state_ {
     ImGuiID interfaceslot_hovered_uid;           // in out
     InterfaceSlotPtr_t interfaceslot_compat_ptr; // in
 
+    /// TEMP only used for indicating unsupported actions for running graph
+    bool graph_running; // in
+
 } GraphItemsInteract_t;
 
 /* Data type holding shared state of graph items. */

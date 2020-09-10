@@ -88,6 +88,8 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     this->graph_state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;
     this->graph_state.interact.interfaceslot_compat_ptr.reset();
 
+    this->graph_state.interact.graph_running = false;
+
     this->graph_state.groups.clear();
     // this->graph_state.hotkeys are already initialzed
 }
@@ -123,6 +125,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             this->graph_state.groups.emplace_back(group_pair);
         }
         this->graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
+        this->graph_state.interact.graph_running = inout_graph.IsRunning();
 
         // Compatible slot pointers
         this->graph_state.interact.callslot_compat_ptr.reset();
@@ -203,7 +206,6 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                     ImGui::TextDisabled("Filename");
                     ImGui::PushTextWrapPos(ImGui::GetFontSize() * 13.0f);
                     std::string filename = inout_graph.GetFilename();
-                    GUIUtils::Utf8Encode(filename);
                     ImGui::TextUnformatted(filename.c_str());
                     ImGui::PopTextWrapPos();
                 }
@@ -279,50 +281,53 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         }
         // Add module to group ------------------------------------------------
         if (!this->graph_state.interact.modules_add_group_uids.empty()) {
-            ModulePtr_t module_ptr;
-            ImGuiID new_group_uid = GUI_INVALID_ID;
-            for (auto& uid_pair : this->graph_state.interact.modules_add_group_uids) {
-                module_ptr.reset();
-                for (auto& mod : inout_graph.GetModules()) {
-                    if (mod->uid == uid_pair.first) {
-                        module_ptr = mod;
-                    }
-                }
-                if (module_ptr != nullptr) {
-                    std::string current_module_fullname = module_ptr->FullName();
-
-                    // Add module to new or already existing group
-                    // Create new group for multiple selected modules only once!
-                    ImGuiID group_uid = GUI_INVALID_ID;
-                    if ((uid_pair.second == GUI_INVALID_ID) && (new_group_uid == GUI_INVALID_ID)) {
-                        new_group_uid = inout_graph.AddGroup();
-                    }
-                    if (uid_pair.second == GUI_INVALID_ID) {
-                        group_uid = new_group_uid;
-                    } else {
-                        group_uid = uid_pair.second;
-                    }
-
-                    GroupPtr_t add_group_ptr;
-                    if (inout_graph.GetGroup(group_uid, add_group_ptr)) {
-                        // Remove module from previous associated group
-                        ImGuiID module_group_uid = module_ptr->present.group.uid;
-                        GroupPtr_t remove_group_ptr;
-                        bool restore_interfaceslots = false;
-                        if (inout_graph.GetGroup(module_group_uid, remove_group_ptr)) {
-                            if (remove_group_ptr->uid != add_group_ptr->uid) {
-                                remove_group_ptr->RemoveModule(module_ptr->uid);
-                                restore_interfaceslots = true;
-                            }
+            if (!inout_graph.NOT_SUPPORTED_RUNNING_GRAPH_ACTION("Add Module to Group")) {
+                ModulePtr_t module_ptr;
+                ImGuiID new_group_uid = GUI_INVALID_ID;
+                for (auto& uid_pair : this->graph_state.interact.modules_add_group_uids) {
+                    module_ptr.reset();
+                    for (auto& mod : inout_graph.GetModules()) {
+                        if (mod->uid == uid_pair.first) {
+                            module_ptr = mod;
                         }
-                        // Add module to group
-                        add_group_ptr->AddModule(module_ptr);
-                        /// XXX Group Name is strictly internal to gui and will only be considered if project is saved
-                        /// inout_graph.add_rename_module_sync_event(current_module_fullname, module_ptr->FullName());
-                        inout_graph.ForceSetDirty();
-                        // Restore interface slots after adding module to new group
-                        if (restore_interfaceslots) {
-                            remove_group_ptr->RestoreInterfaceslots();
+                    }
+                    if (module_ptr != nullptr) {
+                        std::string current_module_fullname = module_ptr->FullName();
+
+                        // Add module to new or already existing group
+                        // Create new group for multiple selected modules only once!
+                        ImGuiID group_uid = GUI_INVALID_ID;
+                        if ((uid_pair.second == GUI_INVALID_ID) && (new_group_uid == GUI_INVALID_ID)) {
+                            new_group_uid = inout_graph.AddGroup();
+                        }
+                        if (uid_pair.second == GUI_INVALID_ID) {
+                            group_uid = new_group_uid;
+                        } else {
+                            group_uid = uid_pair.second;
+                        }
+
+                        GroupPtr_t add_group_ptr;
+                        if (inout_graph.GetGroup(group_uid, add_group_ptr)) {
+                            // Remove module from previous associated group
+                            ImGuiID module_group_uid = module_ptr->present.group.uid;
+                            GroupPtr_t remove_group_ptr;
+                            bool restore_interfaceslots = false;
+                            if (inout_graph.GetGroup(module_group_uid, remove_group_ptr)) {
+                                if (remove_group_ptr->uid != add_group_ptr->uid) {
+                                    remove_group_ptr->RemoveModule(module_ptr->uid);
+                                    restore_interfaceslots = true;
+                                }
+                            }
+                            // Add module to group
+                            add_group_ptr->AddModule(module_ptr);
+                            /// XXX Group Name is strictly internal to gui and will only be considered if project is
+                            /// saved inout_graph.add_rename_module_sync_event(current_module_fullname,
+                            /// module_ptr->FullName());
+                            inout_graph.ForceSetDirty();
+                            // Restore interface slots after adding module to new group
+                            if (restore_interfaceslots) {
+                                remove_group_ptr->RestoreInterfaceslots();
+                            }
                         }
                     }
                 }
@@ -331,20 +336,23 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         }
         // Remove module from group -------------------------------------------
         if (!this->graph_state.interact.modules_remove_group_uids.empty()) {
-            for (auto& module_uid : this->graph_state.interact.modules_remove_group_uids) {
-                ModulePtr_t module_ptr;
-                for (auto& mod : inout_graph.GetModules()) {
-                    if (mod->uid == module_uid) {
-                        module_ptr = mod;
+            if (!inout_graph.NOT_SUPPORTED_RUNNING_GRAPH_ACTION("Remove Module from Group")) {
+                for (auto& module_uid : this->graph_state.interact.modules_remove_group_uids) {
+                    ModulePtr_t module_ptr;
+                    for (auto& mod : inout_graph.GetModules()) {
+                        if (mod->uid == module_uid) {
+                            module_ptr = mod;
+                        }
                     }
-                }
-                std::string current_module_fullname = module_ptr->FullName();
-                for (auto& remove_group_ptr : inout_graph.GetGroups()) {
-                    if (remove_group_ptr->ContainsModule(module_uid)) {
-                        remove_group_ptr->RemoveModule(module_uid);
-                        /// XXX Group Name is strictly internal to gui and will only be considered if project is saved
-                        /// inout_graph.add_rename_module_sync_event(current_module_fullname, module_ptr->FullName());
-                        inout_graph.ForceSetDirty();
+                    std::string current_module_fullname = module_ptr->FullName();
+                    for (auto& remove_group_ptr : inout_graph.GetGroups()) {
+                        if (remove_group_ptr->ContainsModule(module_uid)) {
+                            remove_group_ptr->RemoveModule(module_uid);
+                            /// XXX Group Name is strictly internal to gui and will only be considered if project is
+                            /// saved inout_graph.add_rename_module_sync_event(current_module_fullname,
+                            /// module_ptr->FullName());
+                            inout_graph.ForceSetDirty();
+                        }
                     }
                 }
             }
@@ -429,7 +437,8 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             if (this->graph_state.interact.call_selected_uid != GUI_INVALID_ID) {
                 inout_graph.DeleteCall(this->graph_state.interact.call_selected_uid);
             }
-            if (this->graph_state.interact.group_selected_uid != GUI_INVALID_ID) {
+            if (!inout_graph.NOT_SUPPORTED_RUNNING_GRAPH_ACTION("Delete Group") &&
+                (this->graph_state.interact.group_selected_uid != GUI_INVALID_ID)) {
                 inout_graph.DeleteGroup(this->graph_state.interact.group_selected_uid);
             }
             if (this->graph_state.interact.interfaceslot_selected_uid != GUI_INVALID_ID) {
@@ -560,8 +569,10 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             "Close Project", popup_prevent_close_permanent, "Running Project can not be closed!", "OK", tmp, "", tmp);
 
         // Rename pop-up ------------------------------------------------------
-        if (this->rename_popup.PopUp("Rename Project", popup_rename, inout_graph.name)) {
-            inout_graph.ForceSetDirty();
+        if (popup_rename && !inout_graph.NOT_SUPPORTED_RUNNING_GRAPH_ACTION("Rename Project")) {
+            if (this->rename_popup.PopUp("Rename Project", popup_rename, inout_graph.name)) {
+                inout_graph.ForceSetDirty();
+            }
         }
 
         ImGui::PopID();

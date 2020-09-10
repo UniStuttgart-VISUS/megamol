@@ -104,8 +104,7 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                 mod_ptr->plugin_name = mod.plugin_name;
                 mod_ptr->is_view = mod.is_view;
                 mod_ptr->name = this->generate_unique_module_name(mod.class_name);
-                mod_ptr->is_view_instance =
-                    (mod.is_view) ? (!this->IsMainViewSet()) : (false); // Set first found view as main view.
+                mod_ptr->is_view_instance = false;
                 mod_ptr->present.label_visible = this->present.GetModuleLabelVisibility();
 
                 for (auto& p : mod.parameters) {
@@ -179,17 +178,11 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
             if ((*iter)->uid == module_uid) {
 
-                /// XXX Prevent deletion of entry point module / view instance of running graph in configurator
+                /// XXX Prevent not yet supported deletion of entry point / view instance of running graph
                 /// TODO Implement this possibility to core graph
-                if (!force) {
-                    if (((*iter)->is_view_instance) && (this->IsRunning())) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Deleting entry point/ view instance '%s' of running project is not supported yet. "
-                            "[%s, "
-                            "%s, line %d]\n",
-                            (*iter)->FullName().c_str(), __FILE__, __FUNCTION__, __LINE__);
-                        return false;
-                    }
+                if (!force && (*iter)->is_view_instance &&
+                    this->NOT_SUPPORTED_RUNNING_GRAPH_ACTION("Delete entry point/ view instance")) {
+                    return false;
                 }
 
                 this->present.ResetStatePointers();
@@ -880,4 +873,17 @@ void megamol::gui::Graph::add_rename_module_sync_event(const std::string& curren
     }
     this->GetSyncQueue()->push(
         megamol::gui::Graph::SyncQueueData_t(megamol::gui::Graph::QueueChange::RENAME_MODULE, queue_data));
+}
+
+
+bool megamol::gui::Graph::NOT_SUPPORTED_RUNNING_GRAPH_ACTION(const std::string& log_action) {
+
+    if (this->IsRunning()) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] The action [%s] is not yet supported for the graph of the running project. "
+            "[%s, %s, line %d]\n",
+            log_action.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        return true;
+    }
+    return false;
 }

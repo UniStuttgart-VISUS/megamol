@@ -123,12 +123,21 @@ void megamol::gui::GroupPresentation::Present(
             } /// else { this->allow_context = false; }
 
             // Rename pop-up
-            if (this->rename_popup.PopUp("Rename Group", popup_rename, inout_group.name)) {
-                for (auto& module_ptr : inout_group.GetModules()) {
-                    module_ptr->present.group.name = inout_group.name;
-                    module_ptr->UpdateGUI(state.canvas);
+            if (popup_rename) {
+                if (!state.interact.graph_running) {
+                    if (this->rename_popup.PopUp("Rename Group", popup_rename, inout_group.name)) {
+                        for (auto& module_ptr : inout_group.GetModules()) {
+                            module_ptr->present.group.name = inout_group.name;
+                            module_ptr->UpdateGUI(state.canvas);
+                        }
+                        this->UpdatePositionSize(inout_group, state.canvas);
+                    }
+                } else {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] The action [Rename Group] is not yet supported for the graph of the running project. "
+                        "[%s, %s, line %d]\n",
+                        __FILE__, __FUNCTION__, __LINE__);
                 }
-                this->UpdatePositionSize(inout_group, state.canvas);
             }
         } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 

@@ -130,6 +130,10 @@ private:
     const std::string generate_unique_module_name(const std::string& name);
 
     void add_rename_module_sync_event(const std::string& current_name, const std::string& new_name);
+
+    /// TEMP
+    // Returns true if current action is NOT supported for running graphs.
+    bool NOT_SUPPORTED_RUNNING_GRAPH_ACTION(const std::string& log_action);
 };
 
 
