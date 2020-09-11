@@ -104,6 +104,7 @@ private:
     std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> widget_store;
     unsigned int set_focus;
     bool guistate_dirty;
+    bool show_minmax;
 
     std::shared_ptr<megamol::gui::TransferFunctionEditor> tf_editor_external_ptr;
     megamol::gui::TransferFunctionEditor tf_editor_internal;

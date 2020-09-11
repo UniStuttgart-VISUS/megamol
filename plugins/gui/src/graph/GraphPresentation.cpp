@@ -609,11 +609,14 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         }
     }
 
-
+    ImGuiStyle& style = ImGui::GetStyle();
+    const float min_text_width = 3.0f * ImGui::GetFrameHeightWithSpacing();
     if (selected_mod_ptr == nullptr) {
         GUIUtils::ReadOnlyWigetStyle(true);
         bool is_main_view = false;
+        this->main_view_name.clear();
         ImGui::Checkbox("Main View", &is_main_view);
+        ImGui::SameLine(0.0f, min_text_width + 2.0f * style.ItemSpacing.x);
         GUIUtils::ReadOnlyWigetStyle(false);
     } else {
         bool is_main_view = selected_mod_ptr->IsMainView();
@@ -625,17 +628,15 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
             }
         }
         ImGui::SameLine();
-        ImGuiStyle& style = ImGui::GetStyle();
         this->main_view_name = selected_mod_ptr->main_view_name;
-        float input_text_width = ImGui::CalcTextSize(this->main_view_name.c_str()).x + 2.0f * style.ItemSpacing.x;
+        float input_text_width = std::max(
+            min_text_width, (ImGui::CalcTextSize(this->main_view_name.c_str()).x + 2.0f * style.ItemSpacing.x));
         ImGui::PushItemWidth(input_text_width);
         ImGui::InputText("###main_view_name", &this->main_view_name);
-        if (selected_mod_ptr != nullptr) {
-            selected_mod_ptr->main_view_name = this->main_view_name;
-        }
+        selected_mod_ptr->main_view_name = this->main_view_name;
         ImGui::PopItemWidth();
+        ImGui::SameLine();
     }
-    ImGui::SameLine();
     ImGui::TextUnformatted(delimiter.c_str());
     ImGui::SameLine();
 

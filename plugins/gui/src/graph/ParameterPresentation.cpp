@@ -32,7 +32,8 @@ megamol::gui::ParameterPresentation::ParameterPresentation(Param_t type)
     , file_browser()
     , tooltip()
     , image_widget()
-    , rotation_widget() {
+    , rotation_widget()
+    , show_minmax(false) {
 
     this->InitPresentation(type);
 }
@@ -961,6 +962,14 @@ bool megamol::gui::ParameterPresentation::widget_int(megamol::gui::ParameterPres
         if (!std::holds_alternative<int>(this->widget_store)) {
             this->widget_store = value;
         }
+        // Min Max Values
+        ImGui::BeginGroup();
+        if (ImGui::ArrowButton("###_min_max", ((this->show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+            this->show_minmax = !this->show_minmax;
+        }
+        this->tooltip.ToolTip("Min/Max Values");
+        ImGui::SameLine();
+        // Value
         ImGui::InputInt(label.c_str(), &std::get<int>(this->widget_store), 1, 10, ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             this->widget_store = std::max(minval, std::min(std::get<int>(this->widget_store), maxval));
@@ -969,6 +978,15 @@ bool megamol::gui::ParameterPresentation::widget_int(megamol::gui::ParameterPres
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->widget_store = value;
         }
+        if (this->show_minmax) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+            auto min_value = minval;
+            ImGui::InputInt("Min Value", &min_value, 1, 10, ImGuiInputTextFlags_None);
+            auto max_value = maxval;
+            ImGui::InputInt("Max Value", &max_value, 1, 10, ImGuiInputTextFlags_None);
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+        ImGui::EndGroup();
     }
     return retval;
 }
@@ -983,6 +1001,14 @@ bool megamol::gui::ParameterPresentation::widget_float(megamol::gui::ParameterPr
         if (!std::holds_alternative<float>(this->widget_store)) {
             this->widget_store = value;
         }
+        // Min Max Values
+        ImGui::BeginGroup();
+        if (ImGui::ArrowButton("###_min_max", ((this->show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+            this->show_minmax = !this->show_minmax;
+        }
+        this->tooltip.ToolTip("Min/Max Values");
+        ImGui::SameLine();
+        // Value
         ImGui::InputFloat(label.c_str(), &std::get<float>(this->widget_store), 1.0f, 10.0f, this->float_format.c_str(),
             ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -992,6 +1018,17 @@ bool megamol::gui::ParameterPresentation::widget_float(megamol::gui::ParameterPr
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->widget_store = value;
         }
+        if (this->show_minmax) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+            auto min_value = minval;
+            ImGui::InputFloat(
+                "Min Value", &min_value, 1.0f, 10.0f, this->float_format.c_str(), ImGuiInputTextFlags_None);
+            auto max_value = maxval;
+            ImGui::InputFloat(
+                "Max Value", &max_value, 1.0f, 10.0f, this->float_format.c_str(), ImGuiInputTextFlags_None);
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+        ImGui::EndGroup();
     }
     return retval;
 }
@@ -1006,6 +1043,14 @@ bool megamol::gui::ParameterPresentation::widget_vector2f(megamol::gui::Paramete
         if (!std::holds_alternative<glm::vec2>(this->widget_store)) {
             this->widget_store = value;
         }
+        // Min Max Values
+        ImGui::BeginGroup();
+        if (ImGui::ArrowButton("###_min_max", ((this->show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+            this->show_minmax = !this->show_minmax;
+        }
+        this->tooltip.ToolTip("Min/Max Values");
+        ImGui::SameLine();
+        // Value
         ImGui::InputFloat2(label.c_str(), glm::value_ptr(std::get<glm::vec2>(this->widget_store)),
             this->float_format.c_str(), ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -1017,6 +1062,17 @@ bool megamol::gui::ParameterPresentation::widget_vector2f(megamol::gui::Paramete
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->widget_store = value;
         }
+        if (this->show_minmax) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+            auto min_value = minval;
+            ImGui::InputFloat2(
+                "Min Value", glm::value_ptr(min_value), this->float_format.c_str(), ImGuiInputTextFlags_None);
+            auto max_value = maxval;
+            ImGui::InputFloat2(
+                "Max Value", glm::value_ptr(max_value), this->float_format.c_str(), ImGuiInputTextFlags_None);
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+        ImGui::EndGroup();
     }
     return retval;
 }
@@ -1031,6 +1087,14 @@ bool megamol::gui::ParameterPresentation::widget_vector3f(megamol::gui::Paramete
         if (!std::holds_alternative<glm::vec3>(this->widget_store)) {
             this->widget_store = value;
         }
+        // Min Max Values
+        ImGui::BeginGroup();
+        if (ImGui::ArrowButton("###_min_max", ((this->show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+            this->show_minmax = !this->show_minmax;
+        }
+        this->tooltip.ToolTip("Min/Max Values");
+        ImGui::SameLine();
+        // Value
         ImGui::InputFloat3(label.c_str(), glm::value_ptr(std::get<glm::vec3>(this->widget_store)),
             this->float_format.c_str(), ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -1043,6 +1107,17 @@ bool megamol::gui::ParameterPresentation::widget_vector3f(megamol::gui::Paramete
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->widget_store = value;
         }
+        if (this->show_minmax) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+            auto min_value = minval;
+            ImGui::InputFloat3(
+                "Min Value", glm::value_ptr(min_value), this->float_format.c_str(), ImGuiInputTextFlags_None);
+            auto max_value = maxval;
+            ImGui::InputFloat3(
+                "Max Value", glm::value_ptr(max_value), this->float_format.c_str(), ImGuiInputTextFlags_None);
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+        ImGui::EndGroup();
     }
     return retval;
 }
@@ -1057,6 +1132,14 @@ bool megamol::gui::ParameterPresentation::widget_vector4f(megamol::gui::Paramete
         if (!std::holds_alternative<glm::vec4>(this->widget_store)) {
             this->widget_store = value;
         }
+        // Min Max Values
+        ImGui::BeginGroup();
+        if (ImGui::ArrowButton("###_min_max", ((this->show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+            this->show_minmax = !this->show_minmax;
+        }
+        this->tooltip.ToolTip("Min/Max Values");
+        ImGui::SameLine();
+        // Value
         ImGui::InputFloat4(label.c_str(), glm::value_ptr(std::get<glm::vec4>(this->widget_store)),
             this->float_format.c_str(), ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -1070,6 +1153,17 @@ bool megamol::gui::ParameterPresentation::widget_vector4f(megamol::gui::Paramete
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->widget_store = value;
         }
+        if (this->show_minmax) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+            auto min_value = minval;
+            ImGui::InputFloat4(
+                "Min Value", glm::value_ptr(min_value), this->float_format.c_str(), ImGuiInputTextFlags_None);
+            auto max_value = maxval;
+            ImGui::InputFloat4(
+                "Max Value", glm::value_ptr(max_value), this->float_format.c_str(), ImGuiInputTextFlags_None);
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+        ImGui::EndGroup();
     }
     return retval;
 }
