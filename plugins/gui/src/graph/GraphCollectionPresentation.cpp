@@ -108,8 +108,10 @@ void megamol::gui::GraphCollectionPresentation::SaveProjectToFile(
     bool popup_failed = false;
     std::string project_filename;
     GraphPtr_t graph_ptr;
-    if (inout_graph_collection.GetGraph(state.graph_selected_uid, graph_ptr)) {
-        project_filename = graph_ptr->GetFilename();
+    if (open_popup) {
+        if (inout_graph_collection.GetGraph(state.graph_selected_uid, graph_ptr)) {
+            project_filename = graph_ptr->GetFilename();
+        }
     }
     if (this->file_browser.PopUp(
             FileBrowserWidget::FileBrowserFlag::SAVE, "Save Editor Project", open_popup, project_filename)) {

@@ -39,6 +39,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     , parameter_sidebar_width(300.0f)
     , reset_zooming(true)
     , param_name_space()
+    , main_view_name()
     , multiselect_start_pos()
     , multiselect_end_pos()
     , multiselect_done(false)
@@ -88,6 +89,8 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     this->graph_state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;
     this->graph_state.interact.interfaceslot_compat_ptr.reset();
 
+    this->graph_state.interact.graph_running = false;
+
     this->graph_state.groups.clear();
     // this->graph_state.hotkeys are already initialzed
 }
@@ -123,6 +126,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             this->graph_state.groups.emplace_back(group_pair);
         }
         this->graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
+        this->graph_state.interact.graph_running = inout_graph.IsRunning();
 
         // Compatible slot pointers
         this->graph_state.interact.callslot_compat_ptr.reset();
@@ -273,56 +277,59 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         bool reset_state = false;
         // Add module renaming event to graph synchronization queue -----------
         if (!this->graph_state.interact.module_rename.first.empty()) {
-            this->add_rename_module_sync_event(inout_graph, this->graph_state.interact.module_rename.first,
-                this->graph_state.interact.module_rename.second);
+            inout_graph.add_rename_module_sync_event(
+                this->graph_state.interact.module_rename.first, this->graph_state.interact.module_rename.second);
             reset_state = true;
         }
         // Add module to group ------------------------------------------------
         if (!this->graph_state.interact.modules_add_group_uids.empty()) {
-            ModulePtr_t module_ptr;
-            ImGuiID new_group_uid = GUI_INVALID_ID;
-            for (auto& uid_pair : this->graph_state.interact.modules_add_group_uids) {
-                module_ptr.reset();
-                for (auto& mod : inout_graph.GetModules()) {
-                    if (mod->uid == uid_pair.first) {
-                        module_ptr = mod;
-                    }
-                }
-                if (module_ptr != nullptr) {
-                    std::string current_module_fullname = module_ptr->FullName();
-
-                    // Add module to new or already existing group
-                    // Create new group for multiple selected modules only once!
-                    ImGuiID group_uid = GUI_INVALID_ID;
-                    if ((uid_pair.second == GUI_INVALID_ID) && (new_group_uid == GUI_INVALID_ID)) {
-                        new_group_uid = inout_graph.AddGroup();
-                    }
-                    if (uid_pair.second == GUI_INVALID_ID) {
-                        group_uid = new_group_uid;
-                    } else {
-                        group_uid = uid_pair.second;
-                    }
-
-                    GroupPtr_t add_group_ptr;
-                    if (inout_graph.GetGroup(group_uid, add_group_ptr)) {
-                        // Remove module from previous associated group
-                        ImGuiID module_group_uid = module_ptr->present.group.uid;
-                        GroupPtr_t remove_group_ptr;
-                        bool restore_interfaceslots = false;
-                        if (inout_graph.GetGroup(module_group_uid, remove_group_ptr)) {
-                            if (remove_group_ptr->uid != add_group_ptr->uid) {
-                                remove_group_ptr->RemoveModule(module_ptr->uid);
-                                restore_interfaceslots = true;
-                            }
+            if (!inout_graph.NOT_SUPPORTED_RUNNING_GRAPH_ACTION("Add Module to Group")) {
+                ModulePtr_t module_ptr;
+                ImGuiID new_group_uid = GUI_INVALID_ID;
+                for (auto& uid_pair : this->graph_state.interact.modules_add_group_uids) {
+                    module_ptr.reset();
+                    for (auto& mod : inout_graph.GetModules()) {
+                        if (mod->uid == uid_pair.first) {
+                            module_ptr = mod;
                         }
-                        // Add module to group
-                        add_group_ptr->AddModule(module_ptr);
-                        this->add_rename_module_sync_event(
-                            inout_graph, current_module_fullname, module_ptr->FullName());
-                        inout_graph.ForceSetDirty();
-                        // Restore interface slots after adding module to new group
-                        if (restore_interfaceslots) {
-                            remove_group_ptr->RestoreInterfaceslots();
+                    }
+                    if (module_ptr != nullptr) {
+                        std::string current_module_fullname = module_ptr->FullName();
+
+                        // Add module to new or already existing group
+                        // Create new group for multiple selected modules only once!
+                        ImGuiID group_uid = GUI_INVALID_ID;
+                        if ((uid_pair.second == GUI_INVALID_ID) && (new_group_uid == GUI_INVALID_ID)) {
+                            new_group_uid = inout_graph.AddGroup();
+                        }
+                        if (uid_pair.second == GUI_INVALID_ID) {
+                            group_uid = new_group_uid;
+                        } else {
+                            group_uid = uid_pair.second;
+                        }
+
+                        GroupPtr_t add_group_ptr;
+                        if (inout_graph.GetGroup(group_uid, add_group_ptr)) {
+                            // Remove module from previous associated group
+                            ImGuiID module_group_uid = module_ptr->present.group.uid;
+                            GroupPtr_t remove_group_ptr;
+                            bool restore_interfaceslots = false;
+                            if (inout_graph.GetGroup(module_group_uid, remove_group_ptr)) {
+                                if (remove_group_ptr->uid != add_group_ptr->uid) {
+                                    remove_group_ptr->RemoveModule(module_ptr->uid);
+                                    restore_interfaceslots = true;
+                                }
+                            }
+                            // Add module to group
+                            add_group_ptr->AddModule(module_ptr);
+                            /// XXX Group Name is strictly internal to gui and will only be considered if project is
+                            /// saved inout_graph.add_rename_module_sync_event(current_module_fullname,
+                            /// module_ptr->FullName());
+                            inout_graph.ForceSetDirty();
+                            // Restore interface slots after adding module to new group
+                            if (restore_interfaceslots) {
+                                remove_group_ptr->RestoreInterfaceslots();
+                            }
                         }
                     }
                 }
@@ -331,20 +338,23 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         }
         // Remove module from group -------------------------------------------
         if (!this->graph_state.interact.modules_remove_group_uids.empty()) {
-            for (auto& module_uid : this->graph_state.interact.modules_remove_group_uids) {
-                ModulePtr_t module_ptr;
-                for (auto& mod : inout_graph.GetModules()) {
-                    if (mod->uid == module_uid) {
-                        module_ptr = mod;
+            if (!inout_graph.NOT_SUPPORTED_RUNNING_GRAPH_ACTION("Remove Module from Group")) {
+                for (auto& module_uid : this->graph_state.interact.modules_remove_group_uids) {
+                    ModulePtr_t module_ptr;
+                    for (auto& mod : inout_graph.GetModules()) {
+                        if (mod->uid == module_uid) {
+                            module_ptr = mod;
+                        }
                     }
-                }
-                std::string current_module_fullname = module_ptr->FullName();
-                for (auto& remove_group_ptr : inout_graph.GetGroups()) {
-                    if (remove_group_ptr->ContainsModule(module_uid)) {
-                        remove_group_ptr->RemoveModule(module_uid);
-                        this->add_rename_module_sync_event(
-                            inout_graph, current_module_fullname, module_ptr->FullName());
-                        inout_graph.ForceSetDirty();
+                    std::string current_module_fullname = module_ptr->FullName();
+                    for (auto& remove_group_ptr : inout_graph.GetGroups()) {
+                        if (remove_group_ptr->ContainsModule(module_uid)) {
+                            remove_group_ptr->RemoveModule(module_uid);
+                            /// XXX Group Name is strictly internal to gui and will only be considered if project is
+                            /// saved inout_graph.add_rename_module_sync_event(current_module_fullname,
+                            /// module_ptr->FullName());
+                            inout_graph.ForceSetDirty();
+                        }
                     }
                 }
             }
@@ -429,7 +439,8 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             if (this->graph_state.interact.call_selected_uid != GUI_INVALID_ID) {
                 inout_graph.DeleteCall(this->graph_state.interact.call_selected_uid);
             }
-            if (this->graph_state.interact.group_selected_uid != GUI_INVALID_ID) {
+            if (!inout_graph.NOT_SUPPORTED_RUNNING_GRAPH_ACTION("Delete Group") &&
+                (this->graph_state.interact.group_selected_uid != GUI_INVALID_ID)) {
                 inout_graph.DeleteGroup(this->graph_state.interact.group_selected_uid);
             }
             if (this->graph_state.interact.interfaceslot_selected_uid != GUI_INVALID_ID) {
@@ -578,476 +589,6 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 }
 
 
-bool megamol::gui::GraphPresentation::StateFromJsonString(Graph& inout_graph, const std::string& in_json_string) {
-
-    try {
-        if (in_json_string.empty()) {
-            return false;
-        }
-        bool found = false;
-        bool valid = true;
-        nlohmann::json json;
-        json = nlohmann::json::parse(in_json_string);
-        if (!json.is_object()) {
-#ifdef GUI_VERBOSE
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-#endif // GUI_VERBOSE
-            return false;
-        }
-
-        for (auto& header_item : json.items()) {
-            if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
-                for (auto& content_item : header_item.value().items()) {
-                    std::string json_graph_id = content_item.key();
-                    GUIUtils::Utf8Decode(json_graph_id);
-                    if (json_graph_id == GUI_JSON_TAG_PROJECT_GRAPH) {
-                        auto config_state = content_item.value();
-                        found = true;
-
-                        // project_file (supports UTF-8)
-                        if (config_state.at("project_file").is_string()) {
-                            std::string filename = config_state.at("project_file").get<std::string>();
-                            GUIUtils::Utf8Decode(filename);
-                            inout_graph.SetFilename(filename);
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'project_file' as string. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // show_parameter_sidebar
-                        bool tmp_show_parameter_sidebar;
-                        this->change_show_parameter_sidebar = false;
-                        if (config_state.at("show_parameter_sidebar").is_boolean()) {
-                            config_state.at("show_parameter_sidebar").get_to(tmp_show_parameter_sidebar);
-                            this->change_show_parameter_sidebar = true;
-                            this->show_parameter_sidebar = tmp_show_parameter_sidebar;
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'show_parameter_sidebar' as boolean. [%s, %s, line "
-                                "%d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // parameter_sidebar_width
-                        if (config_state.at("parameter_sidebar_width").is_number_float()) {
-                            config_state.at("parameter_sidebar_width").get_to(this->parameter_sidebar_width);
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read first value of "
-                                "'parameter_sidebar_width' as float. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // show_grid
-                        if (config_state.at("show_grid").is_boolean()) {
-                            config_state.at("show_grid").get_to(this->show_grid);
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'show_grid' as boolean. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-
-                        // show_call_names
-                        if (config_state.at("show_call_names").is_boolean()) {
-                            config_state.at("show_call_names").get_to(this->show_call_names);
-                            for (auto& call : inout_graph.GetCalls()) {
-                                call->present.label_visible = this->show_call_names;
-                            }
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'show_call_names' as boolean. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // show_slot_names
-                        if (config_state.at("show_slot_names").is_boolean()) {
-                            config_state.at("show_slot_names").get_to(this->show_slot_names);
-                            for (auto& mod : inout_graph.GetModules()) {
-                                for (auto& callslot_types : mod->GetCallSlots()) {
-                                    for (auto& callslots : callslot_types.second) {
-                                        callslots->present.label_visible = this->show_slot_names;
-                                    }
-                                }
-                            }
-                            for (auto& group_ptr : inout_graph.GetGroups()) {
-                                for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
-                                    for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-                                        interfaceslot_ptr->present.label_visible = this->show_slot_names;
-                                    }
-                                }
-                            }
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'show_slot_names' as boolean. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // show_module_names
-                        if (config_state.at("show_module_names").is_boolean()) {
-                            config_state.at("show_module_names").get_to(this->show_module_names);
-                            for (auto& mod : inout_graph.GetModules()) {
-                                mod->present.label_visible = this->show_module_names;
-                            }
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'show_module_names' as boolean. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // params_visible
-                        if (config_state.at("params_visible").is_boolean()) {
-                            config_state.at("params_visible").get_to(this->params_visible);
-                            /// Do not apply. Already refelcted in parameter gui state.
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'params_visible' as boolean. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // params_readonly
-                        if (config_state.at("params_readonly").is_boolean()) {
-                            config_state.at("params_readonly").get_to(this->params_readonly);
-                            /// Do not apply. Already refelcted in parameter gui state.
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'params_readonly' as boolean. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // param_extended_mode
-                        if (config_state.at("param_extended_mode").is_boolean()) {
-                            config_state.at("param_extended_mode").get_to(this->param_extended_mode);
-                            for (auto& module_ptr : inout_graph.GetModules()) {
-                                for (auto& parameter : module_ptr->parameters) {
-                                    parameter.present.extended = this->param_extended_mode;
-                                }
-                            }
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'param_extended_mode' as boolean. [%s, %s, line "
-                                "%d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // canvas_scrolling
-                        if (config_state.at("canvas_scrolling").is_array() &&
-                            (config_state.at("canvas_scrolling").size() == 2)) {
-                            if (config_state.at("canvas_scrolling")[0].is_number_float()) {
-                                config_state.at("canvas_scrolling")[0].get_to(this->graph_state.canvas.scrolling.x);
-                            } else {
-                                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "[GUI] JSON state: Failed to read first value of 'canvas_scrolling' as float. [%s, "
-                                    "%s, "
-                                    "line %d]\n",
-                                    __FILE__, __FUNCTION__, __LINE__);
-                            }
-                            if (config_state.at("canvas_scrolling")[1].is_number_float()) {
-                                config_state.at("canvas_scrolling")[1].get_to(this->graph_state.canvas.scrolling.y);
-                            } else {
-                                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "[GUI] JSON state: Failed to read second value of 'canvas_scrolling' as float. "
-                                    "[%s, %s, "
-                                    "line %d]\n",
-                                    __FILE__, __FUNCTION__, __LINE__);
-                            }
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'canvas_scrolling' as "
-                                "array of size two. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // canvas_zooming
-                        if (config_state.at("canvas_zooming").is_number_float()) {
-                            config_state.at("canvas_zooming").get_to(this->graph_state.canvas.zooming);
-                            this->reset_zooming = false;
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read first value of "
-                                "'canvas_zooming' as float. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-
-                        // modules
-                        for (auto& module_item : content_item.value().items()) {
-                            if (module_item.key() == "modules") {
-                                for (auto& module_state : module_item.value().items()) {
-                                    std::string module_fullname = module_state.key();
-                                    auto position_item = module_state.value();
-                                    valid = true;
-
-                                    // graph_position
-                                    ImVec2 module_position;
-                                    if (position_item.at("graph_position").is_array() &&
-                                        (position_item.at("graph_position").size() == 2)) {
-                                        if (position_item.at("graph_position")[0].is_number_float()) {
-                                            position_item.at("graph_position")[0].get_to(module_position.x);
-                                        } else {
-                                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                                "[GUI] JSON state: Failed to read first value of 'graph_position' as "
-                                                "float. "
-                                                "[%s, %s, line %d]\n",
-                                                __FILE__, __FUNCTION__, __LINE__);
-                                            valid = false;
-                                        }
-                                        if (position_item.at("graph_position")[1].is_number_float()) {
-                                            position_item.at("graph_position")[1].get_to(module_position.y);
-                                        } else {
-                                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                                "[GUI] JSON state: Failed to read second value of 'graph_position' as "
-                                                "float. "
-                                                "[%s, %s, line %d]\n",
-                                                __FILE__, __FUNCTION__, __LINE__);
-                                            valid = false;
-                                        }
-                                    } else {
-                                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                            "[GUI] JSON state: Failed to read 'graph_position' as array of size two. "
-                                            "[%s, "
-                                            "%s, line %d]\n",
-                                            __FILE__, __FUNCTION__, __LINE__);
-                                        valid = false;
-                                    }
-
-                                    // Apply graph position to module
-                                    if (valid) {
-                                        bool module_found = false;
-                                        for (auto& module_ptr : inout_graph.GetModules()) {
-                                            if (module_ptr->FullName() == module_fullname) {
-                                                module_ptr->present.position = module_position;
-                                                module_found = true;
-                                            }
-                                        }
-                                        if (!module_found) {
-                                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                                "[GUI] JSON state: Unable to find module '%s' to apply graph position "
-                                                "in "
-                                                "configurator. [%s, %s, line %d]\n",
-                                                module_fullname.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // interfaces
-                        for (auto& interfaces_item : content_item.value().items()) {
-                            if (interfaces_item.key() == "interfaces") {
-                                for (auto& interface_state : interfaces_item.value().items()) {
-                                    std::string group_name = interface_state.key();
-                                    auto interfaceslot_items = interface_state.value();
-
-                                    // interfaces
-                                    for (auto& interfaceslot_item : interfaceslot_items.items()) {
-                                        valid = true;
-                                        std::vector<std::string> calleslot_fullnames;
-                                        for (auto& callslot_item : interfaceslot_item.value().items()) {
-                                            if (callslot_item.value().is_string()) {
-                                                std::string callslot_name = callslot_item.value().get<std::string>();
-                                                GUIUtils::Utf8Decode(callslot_name);
-                                                calleslot_fullnames.emplace_back(callslot_name);
-                                            } else {
-                                                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                                    "[GUI] JSON state: Failed to read value of call slot as string. "
-                                                    "[%s, %s, "
-                                                    "line %d]\n",
-                                                    __FILE__, __FUNCTION__, __LINE__);
-                                                valid = false;
-                                            }
-                                        }
-
-                                        // Add interface slot containing found calls slots to group
-                                        if (valid) {
-                                            // Find pointers to call slots by name
-                                            CallSlotPtrVector_t callslot_ptr_vector;
-                                            for (auto& callsslot_fullname : calleslot_fullnames) {
-                                                auto split_pos = callsslot_fullname.rfind("::");
-                                                if (split_pos != std::string::npos) {
-                                                    std::string callslot_name =
-                                                        callsslot_fullname.substr(split_pos + 2);
-                                                    std::string module_fullname =
-                                                        callsslot_fullname.substr(0, (split_pos));
-                                                    for (auto& module_ptr : inout_graph.GetModules()) {
-                                                        if (module_ptr->FullName() == module_fullname) {
-                                                            for (auto& callslot_map : module_ptr->GetCallSlots()) {
-                                                                for (auto& callslot_ptr : callslot_map.second) {
-                                                                    if (callslot_ptr->name == callslot_name) {
-                                                                        callslot_ptr_vector.emplace_back(callslot_ptr);
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            if (!callslot_ptr_vector.empty()) {
-                                                bool group_found = false;
-                                                for (auto& group_ptr : inout_graph.GetGroups()) {
-                                                    if (group_ptr->name == group_name) {
-                                                        auto callslot_ptr = callslot_ptr_vector[0];
-                                                        // First remove previously added interface slot which was
-                                                        // automatically added during adding module to group
-                                                        this->ResetStatePointers();
-                                                        for (size_t i = 1; i < callslot_ptr_vector.size(); i++) {
-                                                            if (group_ptr->InterfaceSlot_ContainsCallSlot(
-                                                                    callslot_ptr_vector[i]->uid)) {
-                                                                group_ptr->InterfaceSlot_RemoveCallSlot(
-                                                                    callslot_ptr_vector[i]->uid, true);
-                                                            }
-                                                        }
-                                                        ImGuiID interfaceslot_uid =
-                                                            group_ptr->AddInterfaceSlot(callslot_ptr);
-                                                        if (interfaceslot_uid != GUI_INVALID_ID) {
-                                                            InterfaceSlotPtr_t interfaceslot_ptr;
-                                                            if (group_ptr->GetInterfaceSlot(
-                                                                    interfaceslot_uid, interfaceslot_ptr)) {
-                                                                for (size_t i = 1; i < callslot_ptr_vector.size();
-                                                                     i++) {
-                                                                    interfaceslot_ptr->AddCallSlot(
-                                                                        callslot_ptr_vector[i], interfaceslot_ptr);
-                                                                }
-                                                            }
-                                                        }
-                                                        group_found = true;
-                                                    }
-                                                }
-                                                if (!group_found) {
-                                                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                                        "[GUI] JSON state: Unable to find group '%s' to add interface "
-                                                        "slot. "
-                                                        "[%s, %s, line %d]\n",
-                                                        group_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (found) {
-            this->update = true;
-#ifdef GUI_VERBOSE
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[GUI] Read graph state for '%s' from JSON string.", inout_graph.name.c_str());
-#endif // GUI_VERBOSE
-        } else {
-#ifdef GUI_VERBOSE
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] Could not find graph state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-#endif // GUI_VERBOSE
-            return false;
-        }
-
-    } catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    return true;
-}
-
-
-bool megamol::gui::GraphPresentation::StateToJSON(
-    Graph& inout_graph, nlohmann::json& out_json, bool save_as_project_graph) {
-
-    try {
-        std::string filename = inout_graph.GetFilename();
-        GUIUtils::Utf8Encode(filename);
-
-        // For not running graphs save only file name of loaded project
-        if (!save_as_project_graph) {
-            out_json[GUI_JSON_TAG_GRAPHS][filename] = "";
-        } else {
-
-            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["project_file"] = filename;
-            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["show_parameter_sidebar"] =
-                this->show_parameter_sidebar;
-            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["parameter_sidebar_width"] =
-                this->parameter_sidebar_width;
-            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["show_grid"] = this->show_grid;
-            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["show_call_names"] = this->show_call_names;
-            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["show_slot_names"] = this->show_slot_names;
-            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["show_module_names"] = this->show_module_names;
-            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["params_visible"] = this->params_visible;
-            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["params_readonly"] = this->params_readonly;
-            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["param_extended_mode"] =
-                this->param_extended_mode;
-            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["canvas_scrolling"] = {
-                this->graph_state.canvas.scrolling.x, this->graph_state.canvas.scrolling.y};
-            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["canvas_zooming"] =
-                this->graph_state.canvas.zooming;
-
-            // Module positions
-            for (auto& module_ptr : inout_graph.GetModules()) {
-                out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["modules"][module_ptr->FullName()]
-                        ["graph_position"] = {module_ptr->present.position.x, module_ptr->present.position.y};
-            }
-            // Group interface slots
-            size_t interface_number = 0;
-            for (auto& group_ptr : inout_graph.GetGroups()) {
-                for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
-                    for (auto& interface_ptr : interfaceslots_map.second) {
-                        std::string interface_label = "interface_slot_" + std::to_string(interface_number);
-                        for (auto& callslot_ptr : interface_ptr->GetCallSlots()) {
-                            std::string callslot_fullname;
-                            if (callslot_ptr->IsParentModuleConnected()) {
-                                callslot_fullname =
-                                    callslot_ptr->GetParentModule()->FullName() + "::" + callslot_ptr->name;
-                            }
-                            GUIUtils::Utf8Encode(callslot_fullname);
-                            out_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT_GRAPH]["interfaces"][group_ptr->name]
-                                    [interface_label] += callslot_fullname;
-                        }
-                        interface_number++;
-                    }
-                }
-            }
-#ifdef GUI_VERBOSE
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote graph state to JSON.");
-#endif // GUI_VERBOSE
-        }
-
-    } catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
-        return false;
-    }
-
-    return true;
-}
-
-
 void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_graph) {
 
     const std::string delimiter("|");
@@ -1067,31 +608,42 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
             }
         }
     }
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    const float min_text_width = 3.0f * ImGui::GetFrameHeightWithSpacing();
     if (selected_mod_ptr == nullptr) {
         GUIUtils::ReadOnlyWigetStyle(true);
-        bool checked = false;
-        ImGui::Checkbox("Main View", &checked);
+        bool is_main_view = false;
+        this->main_view_name.clear();
+        ImGui::Checkbox("Main View", &is_main_view);
+        ImGui::SameLine(0.0f, min_text_width + 2.0f * style.ItemSpacing.x);
         GUIUtils::ReadOnlyWigetStyle(false);
     } else {
-        ImGui::Checkbox("Main View", &selected_mod_ptr->is_view_instance);
-        /// XXX Allow multiple view isntances
-        //// Set all other (view) modules to non main views
-        // if (selected_mod_ptr->is_view_instance) {
-        //    for (auto& mod : inout_graph.GetModules()) {
-        //        if (selected_mod_ptr->uid != mod->uid) {
-        //            mod->is_view_instance = false;
-        //        }
-        //    }
-        //}
+        bool is_main_view = selected_mod_ptr->IsMainView();
+        if (ImGui::Checkbox("Main View", &is_main_view)) {
+            if (is_main_view) {
+                selected_mod_ptr->main_view_name = inout_graph.generate_unique_main_view_name();
+            } else {
+                selected_mod_ptr->main_view_name.clear();
+            }
+        }
+        ImGui::SameLine();
+        this->main_view_name = selected_mod_ptr->main_view_name;
+        float input_text_width = std::max(
+            min_text_width, (ImGui::CalcTextSize(this->main_view_name.c_str()).x + 2.0f * style.ItemSpacing.x));
+        ImGui::PushItemWidth(input_text_width);
+        ImGui::InputText("###main_view_name", &this->main_view_name);
+        selected_mod_ptr->main_view_name = this->main_view_name;
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
     }
-    ImGui::SameLine();
     ImGui::TextUnformatted(delimiter.c_str());
     ImGui::SameLine();
 
     auto button_size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
 
     const float scroll_fac = 10.0f;
-    ImGui::Text("Scrolling: %.2f,%.2f", this->graph_state.canvas.scrolling.x, this->graph_state.canvas.scrolling.y);
+    ImGui::Text("Scrolling: %.2f, %.2f", this->graph_state.canvas.scrolling.x, this->graph_state.canvas.scrolling.y);
     ImGui::SameLine();
     ImGui::TextUnformatted("H:");
     ImGui::SameLine();
@@ -2048,23 +1600,4 @@ bool megamol::gui::GraphPresentation::contains_group(const GroupPtrVector_t& gro
         }
     }
     return false;
-}
-
-
-void megamol::gui::GraphPresentation::add_rename_module_sync_event(
-    Graph& inout_graph, const std::string& current_name, const std::string& new_name) {
-
-    auto queue = inout_graph.GetSyncQueue();
-    megamol::gui::Graph::QueueData queue_data;
-    queue_data.id = current_name;
-    queue_data.new_id = new_name;
-    // Remove leading "::"
-    if (queue_data.id.find_first_of("::") == 0) {
-        queue_data.id = queue_data.id.substr(2);
-    }
-    if (queue_data.new_id.find_first_of("::") == 0) {
-        queue_data.new_id = queue_data.new_id.substr(2);
-    }
-    inout_graph.GetSyncQueue()->push(
-        megamol::gui::Graph::SyncQueueData_t(megamol::gui::Graph::QueueChange::RENAME_MODULE, queue_data));
 }

@@ -58,7 +58,7 @@ public:
 
     // Init when adding module to graph
     std::string name;
-    bool is_view_instance;
+    std::string main_view_name;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -70,6 +70,8 @@ public:
     bool GetCallSlot(ImGuiID callslot_uid, CallSlotPtr_t& out_callslot_ptr);
     const CallSlotPtrVector_t& GetCallSlots(CallSlotType type) { return this->callslots[type]; }
     const CallSlotPtrMap_t& GetCallSlots(void) { return this->callslots; }
+
+    bool IsMainView(void) { return (!this->main_view_name.empty()); }
 
     const inline std::string FullName(void) const {
         std::string fullname = "::" + this->name;

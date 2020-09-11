@@ -53,7 +53,6 @@ public:
         this->graph_state.interact.interfaceslot_compat_ptr.reset();
     }
 
-    bool StateFromJsonString(Graph& inout_graph, const std::string& json_string);
 
     ImGuiID GetHoveredGroup(void) const { return this->graph_state.interact.group_hovered_uid; }
     ImGuiID GetSelectedGroup(void) const { return this->graph_state.interact.group_selected_uid; }
@@ -81,6 +80,7 @@ private:
     float parameter_sidebar_width;
     bool reset_zooming;
     std::string param_name_space;
+    std::string main_view_name;
     ImVec2 multiselect_start_pos;
     ImVec2 multiselect_end_pos;
     bool multiselect_done;
@@ -98,7 +98,6 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     void Present(Graph& inout_graph, GraphState_t& state);
-    bool StateToJSON(Graph& inout_graph, nlohmann::json& out_json, bool save_as_project_graph);
 
     void present_menu(Graph& inout_graph);
     void present_canvas(Graph& inout_graph, float child_width);
@@ -119,8 +118,6 @@ private:
     bool contains_interfaceslot(const GroupPtrVector_t& groups, ImGuiID interfaceslot_uid);
     bool contains_module(const ModulePtrVector_t& modules, ImGuiID module_uid);
     bool contains_group(const GroupPtrVector_t& groups, ImGuiID group_uid);
-
-    void add_rename_module_sync_event(Graph& inout_graph, const std::string& current_name, const std::string& new_name);
 };
 
 
