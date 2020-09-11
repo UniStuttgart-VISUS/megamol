@@ -774,7 +774,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     bool rename_success = false;
                     megamol::core::Module::ptr_type core_module = megamol_graph->FindModule(data.id);
                     if (core_module != nullptr) {
-                        core_module->setName(data.rename_id);
+                        core_module->setName(vislib::StringA(data.rename_id.c_str()));
                         rename_success = true;
                     }
                     graph_sync_success &= rename_success;
