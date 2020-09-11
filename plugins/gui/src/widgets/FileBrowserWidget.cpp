@@ -45,9 +45,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
         if (open_popup) {
 #ifdef GUI_USE_FILESYSTEM
             // Check given file name path
-            std::string filename = inout_filename;
-            GUIUtils::Utf8Encode(filename);
-            stdfs::path tmp_file_path = filename.c_str();
+            stdfs::path tmp_file_path = inout_filename.c_str();
             if (tmp_file_path.empty() || !stdfs::exists(tmp_file_path)) {
                 tmp_file_path = stdfs::current_path();
             }
