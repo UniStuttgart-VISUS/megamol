@@ -1,3 +1,12 @@
+/*
+ * mmvtkmStreamLines.h
+ *
+ * Copyright (C) 2020 by VISUS (Universitaet Stuttgart)
+ * Alle Rechte vorbehalten.
+ */
+
+#pragma once
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -5,17 +14,14 @@
 
 #include "mesh/MeshCalls.h"
 
-#pragma once
-
-using namespace megamol::mesh;
-
-namespace megamol {
-namespace mmvtkm {
-
 
 typedef vislib::math::Point<float, 3> visPoint3f;
 typedef vislib::math::Vector<float, 3> visVec3f;
 typedef vislib::math::Plane<float> visPlanef;
+
+
+namespace megamol {
+namespace mmvtkm {
 
 
 class mmvtkmStreamLines : public core::Module {
@@ -54,7 +60,6 @@ public:
      */
     virtual ~mmvtkmStreamLines();
 
-
 protected:
     /**
      * Implementation of 'Create'.
@@ -89,30 +94,29 @@ protected:
 
 private:
     enum planeMode { NORMAL, PARAMETER };
-    
-	struct Triangle {
+
+    struct Triangle {
         glm::vec3 a;
         glm::vec3 b;
         glm::vec3 c;
-		glm::vec3 o;
+        glm::vec3 o;
 
-		glm::vec3 v1;
-		glm::vec3 v2;
+        glm::vec3 v1;
+        glm::vec3 v2;
 
-		float area = 0.f;
+        float area = 0.f;
 
-		// used for sampling within surrounding polygon
-		// weight = triangle_area / polygon_area
+        // used for sampling within surrounding polygon
+        // weight = triangle_area / polygon_area
         float weight = 0.f;
 
-		Triangle(const glm::vec3& rhsA, const glm::vec3& rhsB, const glm::vec3& rhsC) : a(rhsA), b(rhsB), c(rhsC) 
-		{
+        Triangle(const glm::vec3& rhsA, const glm::vec3& rhsB, const glm::vec3& rhsC) : a(rhsA), b(rhsB), c(rhsC) {
             float ab = glm::length(rhsB - rhsA);
             float ac = glm::length(rhsC - rhsA);
             float bc = glm::length(rhsC - rhsB);
             float max = std::max(ab, std::max(ac, bc));
 
-			// get hypothenuse in v1 and adjacent in v2
+            // get hypothenuse in v1 and adjacent in v2
             if (ab == max) {
                 this->v1 = rhsB - rhsA;
                 this->v2 = rhsC - rhsA;
@@ -127,48 +131,92 @@ private:
                 this->o = rhsB;
             }
 
-			float v1_length = glm::length(v1);
+            float v1_length = glm::length(v1);
             float v2_length = glm::length(v2);
-            
-			// alternatively: 
-			// float cos_theta = v1.Dot(v2) / (v1_length * v2_length);
-			// float sin_theta = sqrt(1.f - cos_theta * cos_theta)
-            float arg = glm::dot(v1, v2) / (v1_length * v2_length); // angle via dot product
-            float theta = acos(trunc(arg * 1000000.f) / 1000000.f);		// avoids -nan in late decimal positions
-            this->area = 0.5f * v1_length * v2_length * sin(theta);
-		}
-	};
 
-	/** Callback functions to update the version after changing data */
-    bool dataChanged(core::param::ParamSlot& slot);
-    bool setConfiguration(core::param::ParamSlot& slot);
+            // alternatively:
+            // float cos_theta = v1.Dot(v2) / (v1_length * v2_length);
+            // float sin_theta = sqrt(1.f - cos_theta * cos_theta)
+            float arg = glm::dot(v1, v2) / (v1_length * v2_length); // angle via dot product
+            float theta = acos(trunc(arg * 1000000.f) / 1000000.f); // avoids -nan in late decimal positions
+            this->area = 0.5f * v1_length * v2_length * sin(theta);
+        }
+    };
+
+    /** Callback functions to update the version after changing data */
+    bool applyChanges(core::param::ParamSlot& slot);
+
+	/** Sets visibility of paramslots of corresponding plane mode */
     bool planeModeChanged(core::param::ParamSlot& slot);
 
+    /**
+     * Indirect Callback function if 'apply' is pressed.
+	 * May be called if corresponding parameter slots are dirty.
+     * Sets values of paramslots to all cooresponding param member variables.
+	 * The corresponding parameter slots are:
+	 * fieldName
+	 * numSeeds
+	 * stepSize
+	 * numSteps
+	 *
+	 * Results in re-calculating the seeds and streamlines.
+     */
+    bool setStreamlineAndResampleSeedsUpdate();
 
-	/** Calculates intersectin points of sampling plane and bounding box */
+	/** 
+	* Indirect Callback function if 'apply' is pressed.
+	* May be called if parameter slots planeColor and/or planeAlpha are dirty.
+    * Sets values of paramslots to all cooresponding param member variables.
+	*
+	* Results in altering the mesh of the plane and sets new color/alpha values.
+	*/
+    bool setPlaneAndAppearanceUpdate();
+
+	/** Callback function if seed re-sampling is set. */
+    bool setResampleSeeds(core::param::ParamSlot& slot);
+
+	/**
+     * Indirect Callback function if 'apply' is pressed.
+     * May be called if corresponding parameter slots are dirty.
+     * Sets values of paramslots to all cooresponding param member variables.
+     * The corresponding parameter slots are:
+     * fieldName
+     * numSeeds
+     * stepSize
+     * numSteps
+     *
+     * Results in re-calculating the plane, seeds, and streamlines.
+     */
+    bool setPlaneUpdate();
+
+    /** Calculates intersectin points of sampling plane and bounding box */
     std::vector<glm::vec3> calcPlaneBboxIntersectionPoints(const visPlanef& samplePlane, const vtkm::Bounds& bounds);
 
-	/** Checks whether a point is outside the given boundaries */
-    bool isOutsideCube(const glm::vec3& p, const vtkm::Bounds& bounds);
+    /**
+     * Checks whether a point is outside the given boundaries.
+     */
+    bool isOutsideBbox(const glm::vec3& p, const vtkm::Bounds& bounds);
 
-	/** Orders vertices that form a polygon, so that the order can be used for a triangle fan */
+    /** Orders convex polygon vertices for a triangle fan */
     void orderPolygonVertices(std::vector<glm::vec3>& vertices);
 
-	/** Decomposes a (convex) polygon into triangles */
+    /** Decomposes a convex polygon into triangles */
     std::vector<Triangle> decomposePolygon(const std::vector<glm::vec3>& polygon);
 
-	/** Checks whether a point is inside a given triangle */
-    bool isInsideTri(const glm::vec3& p, const Triangle& tri);
+    /** Checks whether a point is inside a given triangle */
+    bool isInsideTriangle(const glm::vec3& p, const Triangle& tri);
 
-	/** Creates and adds MeshDataAccessCollection to the mesh datacall */
-    bool createAndAddMeshDataToCall(std::vector<glm::vec3>& lineData, std::vector<glm::vec3>& lineColor,
-        std::vector<unsigned int>& lineIdcs,
-        int numPoints, int numIndices,
-        MeshDataAccessCollection::PrimitiveType linePt = MeshDataAccessCollection::PrimitiveType::TRIANGLES);
+    /** Creates and adds MeshDataAccessCollection to the mesh datacall */
+    bool createAndAddMeshDataToCall(std::vector<glm::vec3>& data, std::vector<glm::vec4>& color,
+        std::vector<unsigned int>& idcs, int numPoints, int numIndices,
+        mesh::MeshDataAccessCollection::PrimitiveType pt = mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES);
 
-	/** Adds the MeshDataAccessCollection to the mesh datacall */
-	bool addMeshDataToCall(const std::vector<MeshDataAccessCollection::VertexAttribute>& va, const MeshDataAccessCollection::IndexData& id,
-        MeshDataAccessCollection::PrimitiveType pt);
+    /** Adds the MeshDataAccessCollection to the mesh datacall */
+    bool addMeshDataToCall(const std::vector<mesh::MeshDataAccessCollection::VertexAttribute>& va,
+        const mesh::MeshDataAccessCollection::IndexData& id, mesh::MeshDataAccessCollection::PrimitiveType pt);
+
+	/** Checks if a float is equal or really close to 0 */
+    inline bool floatIsZero(float x) { return fabs(x) < 1e-6f; }
 
 
     /** Gets converted vtk streamline data as megamol mesh */
@@ -181,7 +229,7 @@ private:
     core::param::ParamSlot psStreamlineFieldName_;
 
     /** Paramslot to specify the seeds for the streamline */
-    core::param::ParamSlot psNumStreamlineSeed_;
+    core::param::ParamSlot psNumStreamlineSeeds_;
 
     /** Paramslot to specify the step size of the streamline */
     core::param::ParamSlot psStreamlineStepSize_;
@@ -198,39 +246,54 @@ private:
     /** Paramslot for plane mode */
     core::param::ParamSlot psSeedPlaneMode_;
 
-    /** Paramslot for lower left corner of seed plane */
-    core::param::ParamSlot psLowerLeftSeedPoint_;
+	/** Paramslot for lower left corner of seed plane */
+    core::param::ParamSlot psPlaneOrigin_;
 
     /** Paramslot for lower left corner of seed plane */
-    core::param::ParamSlot psUpperRightSeedPoint_;
+    core::param::ParamSlot psPlaneConnectionPoint1_;
+
+    /** Paramslot for lower left corner of seed plane */
+    core::param::ParamSlot psPlaneConnectionPoint2_;
 
     /** Paramslot for normal of seed plane */
     core::param::ParamSlot psSeedPlaneNormal_;
 
-	/** Paramslot for point on seed plane */
+    /** Paramslot for point on seed plane */
     core::param::ParamSlot psSeedPlanePoint_;
 
-	/** Paramslot for seed plane distance */
-    //core::param::ParamSlot psSeedPlaneDistance_;
+    /** Paramslot for seed plane distance */
+    // core::param::ParamSlot psSeedPlaneDistance_;
 
-	/** Paramslot for seed plane color */
+    /** Paramslot for seed plane color */
     core::param::ParamSlot psSeedPlaneColor_;
 
+	/** Paramslot for seed plane alpha */
+    core::param::ParamSlot psSeedPlaneAlpha_;
+
     /** Paramslot to apply changes to streamline configurations */
-    core::param::ParamSlot applyChanges_;
+    core::param::ParamSlot psApplyChanges_;
+
+	/** Paramslot to activate re-sampling of seeds */
+    core::param::ParamSlot psResampleSeeds_;
 
 
     /** Used for data version control, same as 'hash_data' */
-    uint32_t oldVersion_;
+    bool streamlineUpdate_;
+    bool planeUpdate_;
+    bool planeAppearanceUpdate_;
     uint32_t newVersion_;
 
     /** Used for mesh data call */
-    std::shared_ptr<MeshDataAccessCollection> meshDataAccess_;
+    std::shared_ptr<mesh::MeshDataAccessCollection> meshDataAccess_;
     core::Spatial3DMetaData metaData_;
+
+	/** Vtkm data structures */
+    vtkm::cont::DataSet streamlineOutput_;
+    vtkm::Bounds dataSetBounds_;
 
     /** Pointers to streamline data */
     std::vector<std::vector<glm::vec3>> streamlineData_;
-    std::vector<std::vector<glm::vec3>> streamlineColor_;
+    std::vector<std::vector<glm::vec4>> streamlineColor_;
     std::vector<std::vector<unsigned int>> streamlineIndices_;
 
     /** Data storage for streamline parameters */
@@ -238,24 +301,34 @@ private:
     vtkm::Id numSteps_;
     vtkm::FloatDefault stepSize_;
     vislib::TString activeField_;
-    glm::vec3 lowerLeftSeedPoint_;
-    glm::vec3 upperRightSeedPoint_;
+    glm::vec3 planeConnectionPoint1_;
+    glm::vec3 planeConnectionPoint2_;
+    glm::vec3 planeOrigin_;
     glm::vec3 seedPlaneNormal_;
     glm::vec3 seedPlanePoint_;
-    glm::vec3 seedPlaneColor_;
     float seedPlaneDistance_;
+    glm::vec3 seedPlaneColor_;
+    float seedPlaneAlpha_;
 
     std::vector<glm::vec3> seedPlane_;
-    std::vector<glm::vec3> seedPlaneColorVec_;
+    std::vector<glm::vec4> seedPlaneColorVec_;
     std::vector<unsigned int> seedPlaneIdcs_;
+    std::vector<Triangle> seedPlaneTriangles_;
+    std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> seeds_;
 
     /** used for plane mode */
     int planeMode_;
 
-	/** some colors for testing */
+    /** some colors for testing */
     glm::vec3 red_ = glm::vec3(0.5f, 0.f, 0.f);
+    glm::vec3 orange_ = glm::vec3(0.5f, 0.25f, 0.f);
+    glm::vec3 yellow_ = glm::vec3(0.5f, 0.5f, 0.f);
     glm::vec3 green_ = glm::vec3(0.f, 0.5f, 0.f);
+    glm::vec3 cyan_ = glm::vec3(0.f, 0.5f, 0.5f);
     glm::vec3 blue_ = glm::vec3(0.f, 0.f, 0.5f);
+    glm::vec3 purple_ = glm::vec3(0.5f, 0.f, 0.5f);
+    glm::vec3 magenta_ = glm::vec3(0.25f, 0.f, 0.5f);
+    std::vector<glm::vec3> colorVec_ = { red_, orange_, yellow_, green_, cyan_, blue_, purple_, magenta_ };
 };
 
 } // end namespace mmvtkm

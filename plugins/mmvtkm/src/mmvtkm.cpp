@@ -1,6 +1,7 @@
 /*
- * MegaMolPlugin.cpp
- * Copyright (C) 2009-2015 by MegaMol Team
+ * mmvtkm.cpp
+ *
+ * Copyright (C) 2009-2020 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
@@ -13,6 +14,8 @@
 #include "vislib/vislibversion.h"
 
 #include "mmvtkm/mmvtkmDataSource.h"
+#include "mmvtkm/mmvtkmFileLoader.h"
+#include "mmvtkm/mmvtkmMeshRenderTasks.h"
 #include "mmvtkm/mmvtkmRenderer.h"
 #include "mmvtkm/mmvtkmStreamLines.h"
 #include "mmvtkm/mmvtkmDataCall.h"
@@ -31,7 +34,7 @@ public:
               "vtkm", // TODO: Change this!
 
               /* human-readable plugin description */
-              "Plugin to read vtkm and render vtkm data."){
+              "Plugin to read and render vtkm data."){
 
               // here we could perform addition initialization
           };
@@ -44,6 +47,8 @@ public:
 
         // register modules here:
         this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmFileLoader>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmMeshRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmDataRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::mmvtkm::mmvtkmStreamLines>();
 

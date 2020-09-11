@@ -1,16 +1,15 @@
 /*
- * mmvtkmDataSource.h
+ * mmvtkmFileLoader.h
  *
  * Copyright (C) 2020 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MMVTKM_MMVTKMDATASOURCE_H_INCLUDED
-#define MEGAMOL_MMVTKM_MMVTKMDATASOURCE_H_INCLUDED
+#ifndef MEGAMOL_MMVTKM_MMVTKMFILELOADER_H_INCLUDED
+#define MEGAMOL_MMVTKM_MMVTKMFILELOADER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
-
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -27,21 +26,21 @@ namespace mmvtkm {
 /**
  * Data source module for mmvtkm files
  */
-class mmvtkmDataSource : public core::view::AnimDataModule {
+class mmvtkmFileLoader : public core::Module {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "vtkmDataSource"; }
+    static const char* ClassName(void) { return "vtkmFileLoader"; }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Data source module for vtkm files."; }
+    static const char* Description(void) { return "File loader module for vtkm files."; }
 
     /**
      * Answers whether this module is available on the current system.
@@ -51,20 +50,12 @@ public:
     static bool IsAvailable(void) { return true; }
 
     /** Ctor. */
-    mmvtkmDataSource(void);
+    mmvtkmFileLoader(void);
 
     /** Dtor. */
-    virtual ~mmvtkmDataSource(void);
+    virtual ~mmvtkmFileLoader(void);
 
 protected:
-    /**
-     * Creates a frame to be used in the frame cache. This method will be
-     * called from within 'initFrameCache'.
-     *
-     * @return The newly created frame object.
-     */
-    virtual core::view::AnimDataModule::Frame* constructFrame(void) const;
-
     /**
      * Implementation of 'Create'.
      *
@@ -73,20 +64,18 @@ protected:
     virtual bool create(void);
 
     /**
-     * Loads one frame of the data set into the given 'frame' object. This
-     * method may be invoked from another thread. You must take
-     * precausions in case you need synchronised access to shared
-     * ressources.
-     *
-     * @param frame The frame to be loaded.
-     * @param idx The index of the frame to be loaded.
-     */
-    virtual void loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx);
-
-    /**
      * Implementation of 'Release'.
      */
     virtual void release(void);
+
+    /**
+     * Callback receiving the update of the file name parameter.
+     *
+     * @param slot The updated ParamSlot.
+     *
+     * @return Always 'true' to reset the dirty flag.
+     */
+    bool filenameChanged(core::param::ParamSlot& slot);
 
     /**
      * Gets the data from the source.
@@ -107,16 +96,11 @@ protected:
     bool getMetaDataCallback(core::Call& caller);
 
 private:
+	/** The file name  */
+    core::param::ParamSlot filename_;
+
     /** The slot for requesting data */
     core::CalleeSlot getDataCalleeSlot_;
-
-    /** caller slot */
-    core::CallerSlot nodesAdiosCallerSlot_;
-    core::CallerSlot labelAdiosCallerSlot_;
-
-    /** Data file load id counter */
-    size_t oldNodeDataHash_;
-    size_t oldLabelDataHash_;
 
     /** The vtkm data holder */
     vtkm::cont::DataSet vtkmData_;
@@ -126,9 +110,12 @@ private:
 
 	/** Min and max boundaries from vtkm data. Used for metadata */
     vtkm::Bounds minMaxBounds_;
+
+	/** Used as flag if file has changed */
+    bool fileChanged_;
 };
 
 } /* end namespace mmvtkm */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_MMVTKM_MMVTKMDATASOURCE_H_INCLUDED */
+#endif /* MEGAMOL_MMVTKM_MMVTKMFILELOADER_H_INCLUDED */

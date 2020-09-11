@@ -1,7 +1,7 @@
 /*
- * mmvtkmDataCall.h (MultiParticleDataCall)
+ * mmvtkmDataCall.h
  *
- * Copyright (C) 2009 by Universitaet Stuttgart (VISUS).
+ * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
@@ -11,20 +11,19 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+
 #include "vtkm/cont/DataSet.h"
 
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
-//#include "mmcore/moldyn/SimpleSphericalParticles.h"
+
 
 namespace megamol {
 namespace mmvtkm {
 
-// MEGAMOLCORE_APIEXT template class MEGAMOLCORE_API AbstractParticleDataCall<SimpleSphericalParticles>;
-
 
 /**
- * Call for multi-stream particle data.
+ * Call for vtkm data.
  */
 class mmvtkmDataCall : public core::AbstractGetData3DCall {
 public:
@@ -81,47 +80,51 @@ public:
      *
      * @param filename The file containing the mmvtkm data set
      */
-    void SetDataSet(vtkm::cont::DataSet* data) { this->mData = data; }
+    void SetDataSet(const vtkm::cont::DataSet* data) { this->data_ = data; }
 
     /**
      * Returns the mmvtkm data set file from the data source
      *
      * @return The file containing the mmvtkm data set
      */
-    vtkm::cont::DataSet* GetDataSet() { return this->mData; }
+    const vtkm::cont::DataSet* GetDataSet() const { return this->data_; }
 
 	/**
      * Sets the value if data has been changed within the vtkm data source
 	 *
 	 * @param true, if data has changed, false otherwise
      */
-    void UpdateDataChanges(bool update) { this->mDataChanges = update; }
+    void UpdateDataChanges(bool update) { this->dataChanges_ = update; }
 
 	/**
      * Returns if the data within the vtkm data source has changed or not
      */
-    bool HasUpdate() { return this->mDataChanges; }
+    bool HasUpdate() const { return this->dataChanges_; }
 
 	/**
 	* Sets lower and upper bounds of the current dataset
 	*/
-	void SetBounds(const vtkm::Bounds &bounds) { 
-		this->minMaxBounds = bounds;
+	void SetBounds(const vtkm::Bounds& bounds) { 
+		this->minMaxBounds_ = bounds;
 	}
 
 	/**
 	* Returns lower and upper bounds of the current dataset
 	*/
-	vtkm::Bounds GetBounds() { 
-		return this->minMaxBounds;
+	const vtkm::Bounds GetBounds() const { 
+		return this->minMaxBounds_;
 	}
 
 
 private:
-    vtkm::cont::DataSet* mData;
+    /** Vtkm dataset storage */
+    const vtkm::cont::DataSet* data_;
+	
+	/** Min and max bounds of the dataset */
+	vtkm::Bounds minMaxBounds_;
 
-    vtkm::Bounds minMaxBounds;
-	bool mDataChanges;
+	/** True, if data was changed, false otherwise */
+	bool dataChanges_;
 };
 
 

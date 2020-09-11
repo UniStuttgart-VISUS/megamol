@@ -1,25 +1,24 @@
 /*
- * mmvtkmDataSource.cpp (MMPLDDataSource)
+ * mmvtkmDataSource.cpp
  *
- * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2020 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
+
 #include "mmvtkm/mmvtkmDataSource.h"
-#include "CallADIOSData.cpp"
+
+#include "adios_plugin/CallADIOSData.h"
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
-#include "mmvtkm/mmvtkmDataCall.h"
-//#include "vtkm/io/reader/VTKPolyDataReader.h"
+
 #include "vtkm/cont/DataSetBuilderExplicit.h"
 #include "vtkm/cont/DataSetFieldAdd.h"
-#include "vtkm/io/reader/VTKDataSetReader.h"
 #include "vtkm/io/writer/VTKDataSetWriter.h"
-#include "vtkm/Math.h"
-#include "vtkm/Matrix.h"
 
 
 using namespace megamol;
@@ -28,47 +27,41 @@ using namespace megamol::mmvtkm;
 typedef vtkm::Vec<float, 3> Vec3f;
 
 /*
- * moldyn::mmvtkmDataSource::mmvtkmDataSource
+ * mmvtkmDataSource::mmvtkmDataSource
  */
 mmvtkmDataSource::mmvtkmDataSource(void)
     : core::view::AnimDataModule()
-    , getData("getdata", "Slot to request data from this data source.")
-    , nodesAdiosCallerSlot("adiosNodeSlot", "Slot to request node data from adios.")
-    , labelAdiosCallerSlot("adiosLabelSlot", "Slot to request label data from adios.")
-    , filename("filename", "The path to the vtkm file to load.")
-    , data_hash(0)
-    , oldNodeDataHash(0) 
-	, oldLabelDataHash(0)
-    , vtkmDataFile("")
-    , vtkmData()
-    , minMaxBounds(0.f, 0.f, 0.f, 0.f, 0.f, 0.f) 
+    , getDataCalleeSlot_("getdata", "Slot to request data from this data source.")
+    , nodesAdiosCallerSlot_("adiosNodeSlot", "Slot to request node data from adios.")
+    , labelAdiosCallerSlot_("adiosLabelSlot", "Slot to request label data from adios.")
+    , oldNodeDataHash_(0) 
+	, oldLabelDataHash_(0)
+    , vtkmData_()
+    , vtkmDataFile_("")
+    , minMaxBounds_(0.f, 0.f, 0.f, 1.f, 1.f, 1.f) 
 {
-
-	// CURRENTLY NOT USED
-    this->filename.SetParameter(new core::param::FilePathParam(""));
-    this->filename.SetUpdateCallback(&mmvtkmDataSource::filenameChanged);
-    this->MakeSlotAvailable(&this->filename);
-
-    this->getData.SetCallback(mmvtkmDataCall::ClassName(), mmvtkmDataCall::FunctionName(0),
+    this->getDataCalleeSlot_.SetCallback(mmvtkmDataCall::ClassName(), mmvtkmDataCall::FunctionName(0),
         &mmvtkmDataSource::getDataCallback); // GetData is FunctionName(0)
-    this->getData.SetCallback(mmvtkmDataCall::ClassName(), mmvtkmDataCall::FunctionName(1),
+    this->getDataCalleeSlot_.SetCallback(mmvtkmDataCall::ClassName(), mmvtkmDataCall::FunctionName(1),
         &mmvtkmDataSource::getMetaDataCallback); // GetExtent is FunctionName(1)
-    this->MakeSlotAvailable(&this->getData);
+    this->MakeSlotAvailable(&this->getDataCalleeSlot_);
 
-    this->nodesAdiosCallerSlot.SetCompatibleCall<adios::CallADIOSDataDescription>();
-    this->MakeSlotAvailable(&this->nodesAdiosCallerSlot);
+    this->nodesAdiosCallerSlot_.SetCompatibleCall<adios::CallADIOSDataDescription>();
+    this->MakeSlotAvailable(&this->nodesAdiosCallerSlot_);
 
-    this->labelAdiosCallerSlot.SetCompatibleCall<adios::CallADIOSDataDescription>();
-    this->MakeSlotAvailable(&this->labelAdiosCallerSlot);
+    this->labelAdiosCallerSlot_.SetCompatibleCall<adios::CallADIOSDataDescription>();
+    this->MakeSlotAvailable(&this->labelAdiosCallerSlot_);
 }
 
 
 /*
- * moldyn::mmvtkmDataSource::~mmvtkmDataSource
+ * mmvtkmDataSource::~mmvtkmDataSource
  */
 mmvtkmDataSource::~mmvtkmDataSource(void) { this->Release(); }
+
+
 /*
- moldyn::mmvtkmDataSource::constructFrame
+ mmvtkmDataSource::constructFrame
  */
 core::view::AnimDataModule::Frame* mmvtkmDataSource::constructFrame(void) const {
     Frame* f = new Frame(*const_cast<mmvtkmDataSource*>(this));
@@ -77,120 +70,105 @@ core::view::AnimDataModule::Frame* mmvtkmDataSource::constructFrame(void) const 
 
 
 /*
- * moldyn::mmvtkmDataSource::create
+ * mmvtkmDataSource::create
  */
 bool mmvtkmDataSource::create(void) { return true; }
 
+
 /*
- * moldyn::mmvtkmDataSource::loadFrame
+ * mmvtkmDataSource::loadFrame
  */
 void mmvtkmDataSource::loadFrame(core::view::AnimDataModule::Frame* frame, unsigned int idx) {
 }
 
 
 /*
- * moldyn::mmvtkmDataSource::release
+ * mmvtkmDataSource::release
  */
 void mmvtkmDataSource::release(void) {
 }
 
-/*
- * moldyn::mmvtkmDataSource::filenameChanged
- */
-bool mmvtkmDataSource::filenameChanged(core::param::ParamSlot& slot) {
-    vtkmDataFile = this->filename.Param<core::param::FilePathParam>()->ValueString();
-    if (vtkmDataFile.empty()) {
-        core::utility::log::Log::DefaultLog.WriteInfo("Empty vtkm file!");
-    }
-
-    core::utility::log::Log::DefaultLog.WriteInfo(
-        "If no \"Safety check\" is shown, something went wrong reading the data. Probably the necessary line "
-        "is not commented out. See readme");
-
-    vtkm::io::reader::VTKDataSetReader readData(vtkmDataFile);
-    vtkmData = readData.ReadDataSet();
-    core::utility::log::Log::DefaultLog.WriteInfo("Safety check");
-
-    return true;
-}
-
 
 /*
- * moldyn::mmvtkmDataSource::getDataCallback
+ * mmvtkmDataSource::getDataCallback
  */
 bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
-    mmvtkmDataCall* c2 = dynamic_cast<mmvtkmDataCall*>(&caller);
-    if (c2 == NULL) return false;
+    mmvtkmDataCall* lhsVtkmDc = dynamic_cast<mmvtkmDataCall*>(&caller);
+    if (lhsVtkmDc == NULL) return false;
 
-    adios::CallADIOSData* nodesCad = this->nodesAdiosCallerSlot.CallAs<adios::CallADIOSData>();
-    if (nodesCad == nullptr) {
-        core::utility::log::Log::DefaultLog.WriteError("nodesCallADIOSData is nullptr");
+    adios::CallADIOSData* rhsTopNodesCad = this->nodesAdiosCallerSlot_.CallAs<adios::CallADIOSData>();
+    if (rhsTopNodesCad == nullptr) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            "In %s at line %d. nodesCallADIOSData is nullptr.", __FILE__, __LINE__);
         return false;
     }
 
-    adios::CallADIOSData* labelCad = this->labelAdiosCallerSlot.CallAs<adios::CallADIOSData>();
-    if (labelCad == nullptr) {
-        core::utility::log::Log::DefaultLog.WriteError("labelCallADIOSData is nullptr");
+    adios::CallADIOSData* rhsBottomLabelCad = this->labelAdiosCallerSlot_.CallAs<adios::CallADIOSData>();
+    if (rhsBottomLabelCad == nullptr) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            "In %s at line %d. labelCallADIOSData is nullptr.", __FILE__, __LINE__);
         return false;
     }
 
 	// getDataCallback
-    if (!(*nodesCad)(0)) {
-        core::utility::log::Log::DefaultLog.WriteError("Error during nodes getData");
+    if (!(*rhsTopNodesCad)(0)) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            "In %s at line %d. Error during nodes getData.", __FILE__, __LINE__);
         return false;
     }
 
-    if (!(*labelCad)(0)) {
-        core::utility::log::Log::DefaultLog.WriteError("Error during label getData");
+    if (!(*rhsBottomLabelCad)(0)) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            "In %s at line %d. Error during label getData.", __FILE__, __LINE__);
         return false;
     }
 
-	size_t newNodeHash = nodesCad->getDataHash();		// TODO how hash is set in tabletoadios or csvdatasource
-	size_t newLabelHash = labelCad->getDataHash();
-    bool update = newNodeHash != oldNodeDataHash || newLabelHash != oldLabelDataHash;
+	size_t newNodeHash = rhsTopNodesCad->getDataHash();		// TODO how hash is set in tabletoadios or csvdatasource
+	size_t newLabelHash = rhsBottomLabelCad->getDataHash();
+    bool update = newNodeHash != oldNodeDataHash_ || newLabelHash != oldLabelDataHash_;
 
 
     if (update) {
 		/////////////////////////////
 		// get tetrahedron coordinates from csv file through adios
 		/////////////////////////////
-		std::string coord_type = nodesCad->getData("x")->getType();
-		std::string label_type = nodesCad->getData("node-label")->getType();
+		std::string coord_type = rhsTopNodesCad->getData("x")->getType();
+		std::string label_type = rhsTopNodesCad->getData("node-label")->getType();
 
 		// this assumes the data type from the file is float
 		// TODO do for general case
-		std::vector<float> node_labels = nodesCad->getData("node-label")->GetAsFloat();
-		std::vector<float> x_coord = nodesCad->getData("x")->GetAsFloat();
-		std::vector<float> y_coord = nodesCad->getData("y")->GetAsFloat();
-		std::vector<float> z_coord = nodesCad->getData("z")->GetAsFloat();
-		std::vector<float> s11 = nodesCad->getData("s11")->GetAsFloat();
-		std::vector<float> s12 = nodesCad->getData("s12")->GetAsFloat();
-		std::vector<float> s13 = nodesCad->getData("s13")->GetAsFloat();
+		std::vector<float> node_labels = rhsTopNodesCad->getData("node-label")->GetAsFloat();
+		std::vector<float> x_coord = rhsTopNodesCad->getData("x")->GetAsFloat();
+		std::vector<float> y_coord = rhsTopNodesCad->getData("y")->GetAsFloat();
+		std::vector<float> z_coord = rhsTopNodesCad->getData("z")->GetAsFloat();
+		std::vector<float> s11 = rhsTopNodesCad->getData("s11")->GetAsFloat();
+		std::vector<float> s12 = rhsTopNodesCad->getData("s12")->GetAsFloat();
+		std::vector<float> s13 = rhsTopNodesCad->getData("s13")->GetAsFloat();
 		std::vector<float> s21 = s12;
-		std::vector<float> s22 = nodesCad->getData("s22")->GetAsFloat();
-		std::vector<float> s23 = nodesCad->getData("s23")->GetAsFloat();
+		std::vector<float> s22 = rhsTopNodesCad->getData("s22")->GetAsFloat();
+		std::vector<float> s23 = rhsTopNodesCad->getData("s23")->GetAsFloat();
 		std::vector<float> s31 = s13;
 		std::vector<float> s32 = s23;
-		std::vector<float> s33 = nodesCad->getData("s33")->GetAsFloat();
-		std::vector<float> hs1_wert = nodesCad->getData("hs1_wert")->GetAsFloat();
-		std::vector<float> hs1_x = nodesCad->getData("hs1_x")->GetAsFloat();
-		std::vector<float> hs1_y = nodesCad->getData("hs1_y")->GetAsFloat();
-		std::vector<float> hs1_z = nodesCad->getData("hs1_z")->GetAsFloat();
-		std::vector<float> hs2_wert = nodesCad->getData("hs2_wert")->GetAsFloat();
-		std::vector<float> hs2_x = nodesCad->getData("hs2_x")->GetAsFloat();
-		std::vector<float> hs2_y = nodesCad->getData("hs2_y")->GetAsFloat();
-		std::vector<float> hs2_z = nodesCad->getData("hs2_z")->GetAsFloat();
-		std::vector<float> hs3_wert = nodesCad->getData("hs3_wert")->GetAsFloat();
-		std::vector<float> hs3_x = nodesCad->getData("hs3_x")->GetAsFloat();
-		std::vector<float> hs3_y = nodesCad->getData("hs3_y")->GetAsFloat();
-		std::vector<float> hs3_z = nodesCad->getData("hs3_z")->GetAsFloat();
+		std::vector<float> s33 = rhsTopNodesCad->getData("s33")->GetAsFloat();
+		std::vector<float> hs1_wert = rhsTopNodesCad->getData("hs1_wert")->GetAsFloat();
+		std::vector<float> hs1_x = rhsTopNodesCad->getData("hs1_x")->GetAsFloat();
+		std::vector<float> hs1_y = rhsTopNodesCad->getData("hs1_y")->GetAsFloat();
+		std::vector<float> hs1_z = rhsTopNodesCad->getData("hs1_z")->GetAsFloat();
+		std::vector<float> hs2_wert = rhsTopNodesCad->getData("hs2_wert")->GetAsFloat();
+		std::vector<float> hs2_x = rhsTopNodesCad->getData("hs2_x")->GetAsFloat();
+		std::vector<float> hs2_y = rhsTopNodesCad->getData("hs2_y")->GetAsFloat();
+		std::vector<float> hs2_z = rhsTopNodesCad->getData("hs2_z")->GetAsFloat();
+		std::vector<float> hs3_wert = rhsTopNodesCad->getData("hs3_wert")->GetAsFloat();
+		std::vector<float> hs3_x = rhsTopNodesCad->getData("hs3_x")->GetAsFloat();
+		std::vector<float> hs3_y = rhsTopNodesCad->getData("hs3_y")->GetAsFloat();
+		std::vector<float> hs3_z = rhsTopNodesCad->getData("hs3_z")->GetAsFloat();
 
 		// TODO check if size of each vector is the same (assert)
-		std::vector<float> element_label = labelCad->getData("element-label")->GetAsFloat();
-		std::vector<float> nodeA = labelCad->getData("nodea")->GetAsFloat();
-		std::vector<float> nodeB = labelCad->getData("nodeb")->GetAsFloat();
-		std::vector<float> nodeC = labelCad->getData("nodec")->GetAsFloat();
-		std::vector<float> nodeD = labelCad->getData("noded")->GetAsFloat();
+		std::vector<float> element_label = rhsBottomLabelCad->getData("element-label")->GetAsFloat();
+		std::vector<float> nodeA = rhsBottomLabelCad->getData("nodea")->GetAsFloat();
+		std::vector<float> nodeB = rhsBottomLabelCad->getData("nodeb")->GetAsFloat();
+		std::vector<float> nodeC = rhsBottomLabelCad->getData("nodec")->GetAsFloat();
+		std::vector<float> nodeD = rhsBottomLabelCad->getData("noded")->GetAsFloat();
 
 
 		int num_elements = element_label.size();
@@ -275,62 +253,61 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
 
 		core::utility::log::Log::DefaultLog.WriteInfo("Number of skipped tetrahedrons: %i", num_skipped);
 
-		vtkmData = dataSetBuilder.Create(points, cell_shapes, num_indices, cell_indices);
-		dataSetFieldAdd.AddPointField(vtkmData, "hs1", point_hs1);
-		dataSetFieldAdd.AddPointField(vtkmData, "hs2", point_hs2);
-		dataSetFieldAdd.AddPointField(vtkmData, "hs3", point_hs3);
-		dataSetFieldAdd.AddPointField(vtkmData, "hs", point_hs);
+		vtkmData_ = dataSetBuilder.Create(points, cell_shapes, num_indices, cell_indices);
+		dataSetFieldAdd.AddPointField(vtkmData_, "hs1", point_hs1);
+		dataSetFieldAdd.AddPointField(vtkmData_, "hs2", point_hs2);
+		dataSetFieldAdd.AddPointField(vtkmData_, "hs3", point_hs3);
+		dataSetFieldAdd.AddPointField(vtkmData_, "hs", point_hs);
 
-		vtkm::io::writer::VTKDataSetWriter writer("tetrahedron.vtk");
-		writer.WriteDataSet(vtkmData);
-		core::utility::log::Log::DefaultLog.WriteInfo("vtkmData is successfully stored in tetrahedron.vtk.");
+		// vtkm::io::writer::VTKDataSetWriter writer("tetrahedron.vtk");
+		// writer.WriteDataSet(vtkmData_);
+		// core::utility::log::Log::DefaultLog.WriteInfo("vtkmData_ is successfully stored in tetrahedron.vtk.");
 
 		// get min max bounds from dataset
-        minMaxBounds = vtkmData.GetCoordinateSystem(0).GetBounds();
+        minMaxBounds_ = vtkmData_.GetCoordinateSystem(0).GetBounds();
 
-		c2->UpdateDataChanges(true);
-        c2->SetDataSet(&this->vtkmData);
+		lhsVtkmDc->UpdateDataChanges(true);
+        lhsVtkmDc->SetDataSet(&this->vtkmData_);
 
         return true;
     }
 
 
-	c2->UpdateDataChanges(false);
+	lhsVtkmDc->UpdateDataChanges(false);
 
     return true;
 }
 
 
 /*
- * moldyn::mmvtkmDataSource::getMetaDataCallback
+ * mmvtkmDataSource::getMetaDataCallback
  */
 bool mmvtkmDataSource::getMetaDataCallback(core::Call& caller) {
-    mmvtkmDataCall* c2 = dynamic_cast<mmvtkmDataCall*>(&caller);
+    mmvtkmDataCall* lhsVtkmDc = dynamic_cast<mmvtkmDataCall*>(&caller);
 
-	adios::CallADIOSData* nodesCad = this->nodesAdiosCallerSlot.CallAs<adios::CallADIOSData>();
-    if (nodesCad == nullptr) {
+	adios::CallADIOSData* rhsTopNodesCad = this->nodesAdiosCallerSlot_.CallAs<adios::CallADIOSData>();
+    if (rhsTopNodesCad == nullptr) {
         core::utility::log::Log::DefaultLog.WriteError("nodesCallADIOSData is nullptr");
         return false;
     }
 
-    adios::CallADIOSData* labelCad = this->labelAdiosCallerSlot.CallAs<adios::CallADIOSData>();
-    if (labelCad == nullptr) {
+    adios::CallADIOSData* rhsBottomLabelCad = this->labelAdiosCallerSlot_.CallAs<adios::CallADIOSData>();
+    if (rhsBottomLabelCad == nullptr) {
         core::utility::log::Log::DefaultLog.WriteError("labelCallADIOSData is nullptr");
         return false;
     }
 
-	size_t newNodeHash = nodesCad->getDataHash();
-    size_t newLabelHash = labelCad->getDataHash();
+	size_t newNodeHash = rhsTopNodesCad->getDataHash();
+    size_t newLabelHash = rhsBottomLabelCad->getDataHash();
 
-	bool update = newNodeHash != oldNodeDataHash || newLabelHash != oldLabelDataHash;
 
-    c2->UpdateDataChanges(update);
+	bool update = newNodeHash != oldNodeDataHash_ || newLabelHash != oldLabelDataHash_;
 
 	if (update) {
-        c2->SetBounds(this->minMaxBounds);
+        lhsVtkmDc->SetBounds(this->minMaxBounds_);
 
-		oldNodeDataHash = newNodeHash;
-		oldLabelDataHash = newLabelHash;
+		oldNodeDataHash_ = newNodeHash;
+		oldLabelDataHash_ = newLabelHash;
 		return true;
     }
 
