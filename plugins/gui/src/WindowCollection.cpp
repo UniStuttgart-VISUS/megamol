@@ -71,12 +71,12 @@ void WindowCollection::ResetWindowSizePosition(WindowConfiguration& window_confi
 bool WindowCollection::AddWindowConfiguration(WindowConfiguration& window_config) {
     if (window_config.win_name.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "No valid window name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No valid window name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (this->windowConfigurationExists(window_config.win_name)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Found already existing window with name '%s'. Window names must be unique. [%s, %s, line %d]\n",
+            "[GUI] Found already existing window with name '%s'. Window names must be unique. [%s, %s, line %d]\n",
             window_config.win_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -88,8 +88,8 @@ bool WindowCollection::AddWindowConfiguration(WindowConfiguration& window_config
 bool WindowCollection::DeleteWindowConfiguration(const std::string& window_name) {
     if (!this->windowConfigurationExists(window_name)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Could not find window with name '%s'. [%s, %s, line %d]\n", window_name.c_str(), __FILE__, __FUNCTION__,
-            __LINE__);
+            "[GUI] Could not find window with name '%s'. [%s, %s, line %d]\n", window_name.c_str(), __FILE__,
+            __FUNCTION__, __LINE__);
         return false;
     }
     for (auto iter = this->windows.begin(); iter != this->windows.end(); iter++) {
@@ -118,7 +118,7 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
 
         if (!json.is_object()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -141,7 +141,7 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                         config_values.at("win_show").get_to(tmp_config.win_show);
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_show' as boolean. [%s, %s, line %d]\n", __FILE__,
+                            "[GUI] JSON state: Failed to read 'win_show' as boolean. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -150,7 +150,7 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                         tmp_config.win_flags = static_cast<ImGuiWindowFlags>(config_values.at("win_flags").get<int>());
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_flags' as integer. [%s, %s, line %d]\n", __FILE__,
+                            "[GUI] JSON state: Failed to read 'win_flags' as integer. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -160,7 +160,7 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                             static_cast<DrawCallbacks>(config_values.at("win_callback").get<int>());
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_callback' as integer. [%s, %s, line %d]\n", __FILE__,
+                            "[GUI] JSON state: Failed to read 'win_callback' as integer. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -174,13 +174,13 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                                 static_cast<core::view::Key>(key), static_cast<core::view::Modifiers>(mods));
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'win_hotkey' values as integers. [%s, %s, line %d]\n",
+                                "[GUI] JSON state: Failed to read 'win_hotkey' values as integers. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
                         }
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_hotkey' as array of size two. [%s, %s, line %d]\n",
+                            "[GUI] JSON state: Failed to read 'win_hotkey' as array of size two. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -190,7 +190,7 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                             config_values.at("win_position")[0].get_to(tmp_config.win_position.x);
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read first value of "
+                                "[GUI] JSON state: Failed to read first value of "
                                 "'win_position' as float. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
@@ -199,14 +199,14 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                             config_values.at("win_position")[1].get_to(tmp_config.win_position.y);
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read second value of "
+                                "[GUI] JSON state: Failed to read second value of "
                                 "'win_position' as float. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
                         }
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_position' as array of size two. [%s, %s, line %d]\n",
+                            "[GUI] JSON state: Failed to read 'win_position' as array of size two. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -216,7 +216,8 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                             config_values.at("win_size")[0].get_to(tmp_config.win_size.x);
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read first value of 'win_size' as float. [%s, %s, line %d]\n",
+                                "[GUI] JSON state: Failed to read first value of 'win_size' as float. [%s, %s, line "
+                                "%d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
                         }
@@ -224,14 +225,15 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                             config_values.at("win_size")[1].get_to(tmp_config.win_size.y);
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read second value of 'win_size' as float. [%s, %s, line %d]\n",
+                                "[GUI] JSON state: Failed to read second value of 'win_size' as float. [%s, %s, line "
+                                "%d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
                         }
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_size' as array of size two. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
+                            "[GUI] JSON state: Failed to read 'win_size' as array of size two. [%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
                     // soft_reset
@@ -239,8 +241,8 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                         config_values.at("win_soft_reset").get_to(tmp_config.win_soft_reset);
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_soft_reset' as boolean. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
+                            "[GUI] JSON state: Failed to read 'win_soft_reset' as boolean. [%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
                     // reset_size
@@ -250,7 +252,7 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                             config_values.at("win_reset_size")[0].get_to(tmp_config.win_reset_size.x);
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read first value of "
+                                "[GUI] JSON state: Failed to read first value of "
                                 "'win_reset_size' as float. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
@@ -259,14 +261,43 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                             config_values.at("win_reset_size")[1].get_to(tmp_config.win_reset_size.y);
                         } else {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read second value  of "
+                                "[GUI] JSON state: Failed to read second value  of "
                                 "'win_reset_size' as float. [%s, %s, line %d]\n",
                                 __FILE__, __FUNCTION__, __LINE__);
                             valid = false;
                         }
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'win_reset_size' as array of size two. [%s, %s, line %d]\n",
+                            "[GUI] JSON state: Failed to read 'win_reset_size' as array of size two. [%s, %s, line "
+                            "%d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
+                        valid = false;
+                    }
+                    // reset_position
+                    if (config_values.at("win_reset_position").is_array() &&
+                        (config_values.at("win_reset_position").size() == 2)) {
+                        if (config_values.at("win_reset_position")[0].is_number_float()) {
+                            config_values.at("win_reset_position")[0].get_to(tmp_config.win_reset_position.x);
+                        } else {
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                "[GUI] JSON state: Failed to read first value of "
+                                "'win_reset_position' as float. [%s, %s, line %d]\n",
+                                __FILE__, __FUNCTION__, __LINE__);
+                            valid = false;
+                        }
+                        if (config_values.at("win_reset_position")[1].is_number_float()) {
+                            config_values.at("win_reset_position")[1].get_to(tmp_config.win_reset_position.y);
+                        } else {
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                "[GUI] JSON state: Failed to read second value  of "
+                                "'win_reset_position' as float. [%s, %s, line %d]\n",
+                                __FILE__, __FUNCTION__, __LINE__);
+                            valid = false;
+                        }
+                    } else {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] JSON state: Failed to read 'win_reset_position' as array of size two. [%s, %s, line "
+                            "%d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -276,8 +307,8 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                         config_values.at("param_show_hotkeys").get_to(tmp_config.param_show_hotkeys);
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'param_show_hotkeys' as boolean. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
+                            "[GUI] JSON state: Failed to read 'param_show_hotkeys' as boolean. [%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
                     // modules_list (no UTF-8 support needed)
@@ -290,7 +321,8 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                                     config_values.at("param_modules_list")[i].get<std::string>());
                             } else {
                                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "JSON state: Failed to read element of 'param_modules_list' as string. [%s, %s, "
+                                    "[GUI] JSON state: Failed to read element of 'param_modules_list' as string. [%s, "
+                                    "%s, "
                                     "line %d]\n",
                                     __FILE__, __FUNCTION__, __LINE__);
                                 valid = false;
@@ -298,8 +330,8 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                         }
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'param_modules_list' as array. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
+                            "[GUI] JSON state: Failed to read 'param_modules_list' as array. [%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
                     // module_filter
@@ -308,7 +340,7 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                             static_cast<FilterModes>(config_values.at("param_module_filter").get<int>());
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'param_module_filter' as integer. [%s, %s, line %d]\n",
+                            "[GUI] JSON state: Failed to read 'param_module_filter' as integer. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -317,7 +349,7 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                         config_values.at("param_extended_mode").get_to(tmp_config.param_extended_mode);
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'param_extended_mode' as boolean. [%s, %s, line %d]\n",
+                            "[GUI] JSON state: Failed to read 'param_extended_mode' as boolean. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -328,8 +360,8 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                         config_values.at("ms_show_options").get_to(tmp_config.ms_show_options);
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'ms_show_options' as boolean. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
+                            "[GUI] JSON state: Failed to read 'ms_show_options' as boolean. [%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
                     // max_value_count
@@ -337,7 +369,7 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                         config_values.at("ms_max_history_count").get_to(tmp_config.ms_max_history_count);
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'ms_max_history_count' as integer. [%s, %s, line %d]\n",
+                            "[GUI] JSON state: Failed to read 'ms_max_history_count' as integer. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -346,8 +378,8 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                         config_values.at("ms_refresh_rate").get_to(tmp_config.ms_refresh_rate);
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'ms_refresh_rate' as float. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
+                            "[GUI] JSON state: Failed to read 'ms_refresh_rate' as float. [%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
                     // mode
@@ -355,7 +387,7 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                         tmp_config.ms_mode = static_cast<TimingModes>(config_values.at("ms_mode").get<int>());
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'ms_mode' as integer. [%s, %s, line %d]\n", __FILE__,
+                            "[GUI] JSON state: Failed to read 'ms_mode' as integer. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -370,7 +402,7 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                         }
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'font_name' as string. [%s, %s, line %d]\n", __FILE__,
+                            "[GUI] JSON state: Failed to read 'font_name' as string. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
                         valid = false;
                     }
@@ -382,8 +414,8 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                         tmp_config.buf_tfe_reset = true;
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'tfe_view_minimized' as boolean. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
+                            "[GUI] JSON state: Failed to read 'tfe_view_minimized' as boolean. [%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
                     // tfe_view_vertical
@@ -393,8 +425,8 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                         tmp_config.buf_tfe_reset = true;
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'tfe_view_vertical' as boolean. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
+                            "[GUI] JSON state: Failed to read 'tfe_view_vertical' as boolean. [%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
                     // tfe_active_param (supports UTF-8)
@@ -407,8 +439,8 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                         }
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "JSON state: Failed to read 'tfe_active_param' as string. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
+                            "[GUI] JSON state: Failed to read 'tfe_active_param' as string. [%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
 
@@ -426,13 +458,13 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
 #endif // GUI_VERBOSE
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "Error while loading window configuration state from JSON. [%s, %s, line %d]\n", __FILE__,
+                    "[GUI] Error while loading window configuration state from JSON. [%s, %s, line %d]\n", __FILE__,
                     __FUNCTION__, __LINE__);
                 return false;
             }
         } else { // !found
-            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not find window configuration state in
-            /// JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Could not find window configuration state
+            /// in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -455,23 +487,23 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
 
     } catch (nlohmann::json::type_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::out_of_range& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::other_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -505,6 +537,8 @@ bool WindowCollection::StateToJSON(nlohmann::json& out_json) {
                     window_config.win_soft_reset;
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_reset_size"] = {
                     window_config.win_reset_size.x, window_config.win_reset_size.y};
+                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_reset_position"] = {
+                    window_config.win_reset_position.x, window_config.win_reset_position.y};
 
                 out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_show_hotkeys"] =
                     window_config.param_show_hotkeys;
@@ -541,23 +575,24 @@ bool WindowCollection::StateToJSON(nlohmann::json& out_json) {
 
     } catch (nlohmann::json::type_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::invalid_iterator& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::out_of_range& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (nlohmann::json::other_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
         return false;
     }
 

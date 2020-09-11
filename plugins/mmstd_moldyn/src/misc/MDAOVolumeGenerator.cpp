@@ -180,11 +180,10 @@ void MDAOVolumeGenerator::StartInsertion(const vislib::math::Cuboid< float >& ob
     auto bmin = obb.GetLeftBottomBack();
     this->boundsMin = glm::vec3(bmin.GetX(), bmin.GetY(), bmin.GetZ());
 
+    // Save previous OpenGL state
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE); checkGLError;
     glEnable(GL_BLEND); checkGLError;
     glBlendFunc(GL_ONE, GL_ONE); checkGLError;
-
-    // Store old viewport
     glGetIntegerv(GL_VIEWPORT, viewport);
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFBO);
 
@@ -225,12 +224,16 @@ void MDAOVolumeGenerator::EndInsertion()
     volumeShader.Disable(); checkGLError;
 
     glBindVertexArray(0);
+
+    // Reset previous OpenGL state
     glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
     glBindTexture(GL_TEXTURE_3D, 0);
+
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_BLEND);
-    //glDisable(GL_VERTEX_PROGRAM_POINT_SIZE); /// Do not disable. Is required globally.
+
+    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE); /// ! Do not disable, still required in sphere renderer !
 
     ++dataVersion;
 
