@@ -17,7 +17,7 @@ void main()
                 frag_out = texelFetch(src_tx2D, ivec2(gl_FragCoord.x / 2, gl_FragCoord.y / 2), 0);
                 //frag_out = vec4(1.0, 0.0, 0.0, 1.0);
             }else{
-                frag_out = texelFetch(src_tx2Db, ivec2((gl_FragCoord.x -1) / 2, gl_FragCoord.y / 2), 0);
+                frag_out = texelFetch(src_tx2Db, ivec2((gl_FragCoord.x -2) / 2, gl_FragCoord.y / 2), 0);
                 //frag_out = vec4(0.0, 1.0, 0.0, 1.0);
             }
         } else {

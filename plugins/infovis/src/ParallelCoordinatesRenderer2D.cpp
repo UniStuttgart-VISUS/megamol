@@ -753,8 +753,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     tf->BindConvenience(prog, GL_TEXTURE5, 5);
     glUniform4fv(prog.ParameterLocation("color"), 1, color);
     glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);
-    glUniform1f(prog.ParameterLocation("widthR"), res[0]);
-    glUniform1f(prog.ParameterLocation("heightR"), res[1]);
+    glUniform1f(prog.ParameterLocation("widthR"),  res[0]);
+    glUniform1f(prog.ParameterLocation("heightR"),  res[1]);
     try {
         auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
         glUniform1i(prog.ParameterLocation("colorColumn"), colcol);
@@ -778,7 +778,7 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #    else
     // glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
     // glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, this->columnCount * 2, this->itemCount);
-    //glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
+     //glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
      glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
 #    endif
 #endif
@@ -1222,7 +1222,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         pm = jit * pm;
     }
     if (call.frametype == 2) {
-        auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(), 0, 0));
+        auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0 / call.GetViewport().Width(), 0, 0));
         pm = jit * pm;
     }
 
