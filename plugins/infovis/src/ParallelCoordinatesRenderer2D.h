@@ -288,10 +288,7 @@ private:
 
     core::param::ParamSlot halveRes;
 
-    core::param::ParamSlot xMinOffset;
-    core::param::ParamSlot xMaxOffset;
-    core::param::ParamSlot yMinOffset;
-    core::param::ParamSlot yMaxOffset;
+    core::param::ParamSlot approachSlot;
 
 
     std::vector<GLfloat> tex;
@@ -316,10 +313,7 @@ private:
     GLfloat res[2];
     std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_shdr;
 
-    // float xMinOffset;
-    // float yMinOffset;
-    // float xMaxOffset;
-    // float xMaxOffset;
+    int frametype = 0;
 
     vislib::graphics::gl::ShaderSource vertex_shader_src;
     vislib::graphics::gl::ShaderSource fragment_shader_src;

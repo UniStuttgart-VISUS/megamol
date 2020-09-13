@@ -12,6 +12,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/CallGetTransferFunction.h"
@@ -64,10 +65,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , filterStateSlot("filterState", "stores filter state for serialization")
 
     , halveRes("halve Resolution", "halve Resolution for FPS test")
-    , xMinOffset("x Min Offset", "xmin")
-    , xMaxOffset("x Max Offset", "xmax")
-    , yMinOffset("y Min Offset", "ymin")
-    , yMaxOffset("y Max Offset", "ymax")
+    , approachSlot("Approach", "Numerical Value assigned to each temporal reconstruction approach")
 
     , numTicks(5)
     , columnCount(0)
@@ -178,14 +176,8 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     this->halveRes << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&halveRes);
 
-    this->xMinOffset << new core::param::FloatParam(0);
-    this->MakeSlotAvailable(&xMinOffset);
-    this->yMinOffset << new core::param::FloatParam(0);
-    this->MakeSlotAvailable(&yMinOffset);
-    this->xMaxOffset << new core::param::FloatParam(0);
-    this->MakeSlotAvailable(&xMaxOffset);
-    this->yMaxOffset << new core::param::FloatParam(0);
-    this->MakeSlotAvailable(&yMaxOffset);
+    this->approachSlot << new core::param::IntParam(0);
+    this->MakeSlotAvailable(&approachSlot);
 
     fragmentMinMax.resize(2);
 }
@@ -267,8 +259,8 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
 
-    instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::vert", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("RaycastVolumeRenderer::frag", fragment_shader_src);
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert", vertex_shader_src);
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag", fragment_shader_src);
     m_render_to_framebuffer_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
     m_render_to_framebuffer_shdr->Compile(
         vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
@@ -1025,20 +1017,37 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &origFBOr);
+    // this is the apex of suck and must die
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
+    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    // end suck
 
-
-    if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
+    int approach = this->approachSlot.Param<core::param::IntParam>()->Value();
+    int framesNeeded = 1;
+    if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        framesNeeded = 2;
         w = w / 2;
         h = h / 2;
-        //nuFB->resize(w, h);
-        //nuFB->bind();
-        //nuFB->getColorAttachment(0)->bindTexture();
-        // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, nuFB->getColorAttachment(0)->getName(), 0);
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-        // nuFB->createColorAttachment(GL_RGBA, GL_RGBA, GL_FLOAT);
-        //nuFB->bindColorbuffer(0);
 
-        if (call.frametype == 1 || call.frametype == 0) {
+        glm::mat4 pm;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                pm[j][i] = projMatrix_column[i + j * 4];
+            }
+        }
+        if (frametype == 0) {
+            auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.0, 0));
+            pm = jit * pm;
+        }
+        if (frametype == 1) {
+            auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0 / call.GetViewport().Width(), 0, 0));
+            pm = jit * pm;
+        }
+
+        for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
+
+        if (frametype == 0) {
             glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
             glEnable(GL_MULTISAMPLE);
 
@@ -1049,9 +1058,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
             //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
             glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-            glClear(GL_COLOR_BUFFER_BIT);
         }
-        if (call.frametype == 2) {
+        if (frametype == 1) {
             glBindFramebuffer(GL_FRAMEBUFFER, nuFBb2);
             glEnable(GL_MULTISAMPLE);
             glActiveTexture(GL_TEXTURE11);
@@ -1061,8 +1069,9 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, imStoreI2, 0);
             glClearColor(0.2, 0, 0, 1);
-            glClear(GL_COLOR_BUFFER_BIT);
         }
+        glClear(GL_COLOR_BUFFER_BIT);
+
 
         glViewport(0, 0, w, h);
     }
@@ -1207,27 +1216,6 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     }
     windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
 
-    // this is the apex of suck and must die
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    // end suck
-    glm::mat4 pm;
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            pm[j][i] = projMatrix_column[i + j * 4];
-        }
-    }
-    if (call.frametype == 1) {
-        auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.0, 0));
-        pm = jit * pm;
-    }
-    if (call.frametype == 2) {
-        auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0 / call.GetViewport().Width(), 0, 0));
-        pm = jit * pm;
-    }
-
-    for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
-
 
     this->assertData(call);
 
@@ -1345,20 +1333,19 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         m_render_to_framebuffer_shdr->Disable();
     }
 
-
     if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
         glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
 
         m_render_to_framebuffer_shdr->Enable();
 
-        if (call.frametype == 0 || call.frametype == 1) {
+        if (frametype == 0) {
             glActiveTexture(GL_TEXTURE10);
             //nuFB->getColorAttachment(0)->bindTexture();
             glBindTexture(GL_TEXTURE_2D, imStoreI);  
             glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 10);
 
         }
-        if (call.frametype == 2) {
+        if (frametype == 1) {
             glActiveTexture(GL_TEXTURE11);
             //nuFB->getColorAttachment(0)->bindTexture();
             glBindTexture(GL_TEXTURE_2D, imStoreI2);
@@ -1372,10 +1359,11 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("h"), call.GetViewport().Height());
         glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("w"), call.GetViewport().Width());
 
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("frametype"), call.frametype);
+        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("frametype"), frametype);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         m_render_to_framebuffer_shdr->Disable();
+        frametype = (frametype + 1) % 2;
     }
 
     //  Method for DepthTest
