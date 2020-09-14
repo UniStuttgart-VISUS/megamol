@@ -33,6 +33,7 @@ namespace stdfs = std::experimental::filesystem;
 
 struct CLIConfig {
     std::vector<std::string> project_files;
+    std::string lua_host_address = "tcp://127.0.0.1:33333";
 };
 
 CLIConfig handle_cli_inputs(int argc, char* argv[]);
@@ -80,6 +81,7 @@ int main(int argc, char* argv[]) {
     megamol::frontend::Lua_Service_Wrapper lua_service_wrapper;
     megamol::frontend::Lua_Service_Wrapper::Config luaConfig;
     luaConfig.lua_api_ptr = &lua_api;
+    luaConfig.host_address = config.lua_host_address;
     lua_service_wrapper.setPriority(0);
 
     // the main loop is organized around services that can 'do something' in different parts of the main loop
@@ -96,6 +98,7 @@ int main(int argc, char* argv[]) {
     megamol::frontend::FrontendServiceCollection services;
     services.add(gl_service, &openglConfig);
     services.add(gui_service, &guiConfig);
+    services.add(lua_service_wrapper, &luaConfig);
 
     const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
 
@@ -193,7 +196,10 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
 
     // parse input project files
     options.positional_help("<additional project files>");
-    options.add_options()("project-files", "projects to load", cxxopts::value<std::vector<std::string>>());
+    options.add_options()
+        ("project-files", "projects to load", cxxopts::value<std::vector<std::string>>())
+        ("host", "address of lua host server, default: "+config.lua_host_address, cxxopts::value<std::string>())
+        ;
     options.parse_positional({"project-files"});
 
     auto parsed_options = options.parse(argc, argv);
@@ -210,6 +216,10 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         }
 
         config.project_files = v;
+    }
+
+    if (parsed_options.count("host")) {
+        config.lua_host_address = parsed_options["host"].as<std::string>();
     }
 
     return config;

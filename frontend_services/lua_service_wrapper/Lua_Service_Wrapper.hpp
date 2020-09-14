@@ -28,9 +28,14 @@ namespace frontend {
 // if executed from the normal main loop, the wrapper executes lua
 // if executed from inside the lua frame flush callback, it does not call the wrapped LuaAPI object, thus eliminating
 // risk of recursive Lua calls
+//
+// also, the wrapper manages communication with the lua remote console by
+// receiving lua requests and executing them via the wrapped LuaAPI object
+// the multithreaded ZMQ networking logic is implemented in LuaHostService.h in the core
 class Lua_Service_Wrapper final : public AbstractFrontendService {
 public:
     struct Config {
+        std::string host_address;
         megamol::core::LuaAPI* lua_api_ptr = nullptr; // lua api object that will be used/called by the service wrapper only one level deep
     };
 
@@ -163,6 +168,9 @@ private:
     Config m_config;
 
     int m_service_recursion_depth = 0;
+
+    // auto-deleted opaque ZMQ networking object from LuaHostService.h
+    std::unique_ptr<void, std::function<void(void*)>> m_network_host_pimpl;
 
     // this can hold references to the resources (i.e. structs) we provide to others, e.g. you may fill this and return
     // it in getProvidedResources() provided resources will be queried by the system only once, there is no requirement

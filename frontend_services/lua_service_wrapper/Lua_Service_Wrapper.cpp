@@ -5,7 +5,12 @@
  * Alle Rechte vorbehalten.
  */
 
+// TODO: we need this #define because inclusion of LuaHostService.h leads to windows header inclusion errors.
+// this stems from linking ZMQ via CMake now being PUBLIC in the core lib. i dont know how to solve this "the right way". 
+#define _WINSOCKAPI_
 #include "Lua_Service_Wrapper.hpp"
+
+#include "mmcore/utility/LuaHostService.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
@@ -58,13 +63,27 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     this->m_requestedResourcesNames; //= {"ZMQ_Context"};
 
-    log("initialized successfully");
+    m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
+        new megamol::core::utility::LuaHostNetworkConnectionsBroker{},
+        [](void* ptr) { delete reinterpret_cast<megamol::core::utility::LuaHostNetworkConnectionsBroker*>(ptr); }
+    );
 
-    return true;
+    m_network_host->broker_address = m_config.host_address;
+    bool host_ok = m_network_host->spawn_connection_broker();
+
+    if (host_ok) {
+        log("initialized successfully");
+    } else {
+        log("failed to start lua host");
+    }
+
+    return host_ok;
 }
 
 void Lua_Service_Wrapper::close() {
     m_config = {}; // default to nullptr
+
+    m_network_host->close();
 }
 
 std::vector<ModuleResource>& Lua_Service_Wrapper::getProvidedResources() {
@@ -93,9 +112,25 @@ void Lua_Service_Wrapper::updateProvidedResources() {
 
     bool need_to_shutdown = false; // e.g. mmQuit should set this to true
 
+    // fetch Lua requests from ZMQ queue, execute, and give back result
+    if (!m_network_host->request_queue.empty()) {
+        auto lua_requests = std::move(m_network_host->get_request_queue());
+        std::string result;
+        while (!lua_requests.empty()) {
+            auto& request = lua_requests.front();
+
+            luaAPI.RunString(request.request, result);
+            request.answer_promise.get().set_value(result);
+
+            lua_requests.pop();
+            result.clear();
+        }
+    }
+
     need_to_shutdown |= luaAPI.getShutdown();
 
-    if (need_to_shutdown) this->setShutdown();
+    if (need_to_shutdown)
+        this->setShutdown();
 }
 
 void Lua_Service_Wrapper::digestChangedRequestedResources() { recursion_guard; }
