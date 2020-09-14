@@ -14,47 +14,42 @@ namespace megamol {
 namespace core {
 namespace utility {
 
-    class LuaHostService : public core::AbstractService {
-    public:
+class LuaHostService : public core::AbstractService {
+public:
+    static unsigned int ID;
 
-        static unsigned int ID;
+    virtual const char* Name() const { return "LuaRemote"; }
 
-        virtual const char* Name() const {
-            return "LuaRemote";
-        }
+    LuaHostService(core::CoreInstance& core);
+    virtual ~LuaHostService();
 
-        LuaHostService(core::CoreInstance& core);
-        virtual ~LuaHostService();
+    virtual bool Initalize(bool& autoEnable);
+    virtual bool Deinitialize();
 
-        virtual bool Initalize(bool& autoEnable);
-        virtual bool Deinitialize();
+    inline const std::string& GetAddress(void) const { return address; }
+    void SetAddress(const std::string& ad);
 
-        inline const std::string& GetAddress(void) const {
-            return address;
-        }
-        void SetAddress(const std::string& ad);
+protected:
+    virtual bool enableImpl();
+    virtual bool disableImpl();
 
-    protected:
-        virtual bool enableImpl();
-        virtual bool disableImpl();
+private:
+    void serve();
+    void servePair();
+    std::string makeAnswer(const std::string& req);
+    std::string makePairAnswer(const std::string& req) const;
+    std::atomic<int> lastPairPort;
 
-    private:
+    // ModuleGraphAccess mgAccess;
+    ZMQContextUser::ptr context;
 
-        void serve();
-        void servePair();
-        std::string makeAnswer(const std::string& req);
-        std::string makePairAnswer(const std::string& req) const;
-        std::atomic<int> lastPairPort;
+    std::thread serverThread;
+    std::vector<std::thread> pairThreads;
+    bool serverRunning;
 
-        //ModuleGraphAccess mgAccess;
-        ZMQContextUser::ptr context;
+    std::string address;
+};
 
-        std::thread serverThread;
-        std::vector<std::thread> pairThreads;
-        bool serverRunning;
-
-        std::string address;
-    };
 
 } /* namespace utility */
 } /* namespace core */
