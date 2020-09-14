@@ -51,7 +51,7 @@ public:
         megamol::core::CoreInstance* core_instance = nullptr;
     };
 
-	std::string serviceName() override { return "GUI_Service"; }
+	std::string serviceName() const override { return "GUI_Service"; }
 
     GUI_Service() = default;
     ~GUI_Service() override;

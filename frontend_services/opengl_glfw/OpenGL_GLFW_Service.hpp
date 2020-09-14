@@ -49,7 +49,7 @@ public:
         bool glContextCoreProfile = false;
     };
 
-	std::string serviceName() override { return "OpenGL_GLFW_Service"; }
+	std::string serviceName() const override { return "OpenGL_GLFW_Service"; }
 
     OpenGL_GLFW_Service() = default;
     ~OpenGL_GLFW_Service() override;

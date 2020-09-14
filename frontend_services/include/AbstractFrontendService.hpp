@@ -36,7 +36,7 @@ public:
     void setShutdown(const bool s = true) { m_shouldShutdown = s; }
 
 public:
-    virtual std::string serviceName() = 0;
+    virtual std::string serviceName() const = 0;
     virtual ~AbstractFrontendService() = default;
 
     virtual bool init(void* configPtr) = 0; // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
