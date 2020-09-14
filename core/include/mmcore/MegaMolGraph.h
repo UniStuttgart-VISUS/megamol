@@ -25,11 +25,12 @@
 #include "mmcore/serializable.h"
 
 #include "mmcore/MegaMolGraph_Convenience.h"
+
 #include "AbstractFrontendService.hpp"
 #include "mmcore/RootModuleNamespace.h"
 
-#include "mmcore/view/AbstractView.h"
 #include "ModuleResource.h"
+#include "mmcore/view/AbstractView.h"
 
 namespace megamol {
 namespace core {
@@ -67,13 +68,13 @@ public:
 
     using CallInstantiationRequest_t = CallInstantiationRequest;
 
-	struct ModuleInstance_t {
+    struct ModuleInstance_t {
         Module::ptr_type modulePtr = nullptr;
         ModuleInstantiationRequest request;
         bool isGraphEntryPoint = false;
         std::vector<std::string> lifetime_resource_requests;
         std::vector<megamol::frontend::ModuleResource> lifetime_resources;
-	};
+    };
 
     using ModuleList_t = std::list<ModuleInstance_t>;
 
@@ -123,12 +124,12 @@ public:
     //////////////////////////// Satisfy some abstract requirements ///////////////////////////////
 
 
-	// TODO: the 'serializable' and 'deferrable construction' concepts result in basically the same implementation?
-	// serializable
+    // TODO: the 'serializable' and 'deferrable construction' concepts result in basically the same implementation?
+    // serializable
     std::string Serialize() const override { return ""; };
     void Deserialize(std::string const& descr) override{};
 
-	// deferrable_construction 
+    // deferrable_construction
     bool create() override { return false; };
     void release() override{};
 
@@ -178,24 +179,25 @@ public:
 
     std::vector<megamol::core::param::ParamSlot*> ListParameterSlots() const;
 
-	using EntryPointExecutionCallback =
+    using EntryPointExecutionCallback =
         std::function<void(Module::ptr_type, std::vector<megamol::frontend::ModuleResource> const&)>;
 
-	bool SetGraphEntryPoint(std::string moduleName, std::vector<std::string> execution_resources, EntryPointExecutionCallback callback);
+    bool SetGraphEntryPoint(
+        std::string moduleName, std::vector<std::string> execution_resources, EntryPointExecutionCallback callback);
 
-	bool RemoveGraphEntryPoint(std::string moduleName);
+    bool RemoveGraphEntryPoint(std::string moduleName);
 
     void RenderNextFrame();
 
-	void AddModuleDependencies(std::vector<megamol::frontend::ModuleResource> const& resources);
+    void AddModuleDependencies(std::vector<megamol::frontend::ModuleResource> const& resources);
 
     MegaMolGraph_Convenience& Convenience();
 
-	// Create View ?
+    // Create View ?
 
-	// Create Chain Call ?
+    // Create Chain Call ?
 
-    //int ListInstatiations(lua_State* L);
+    // int ListInstatiations(lua_State* L);
 
 private:
     // get invalidated and the user is helpless
@@ -218,8 +220,8 @@ private:
     std::vector<megamol::frontend::ModuleResource> get_requested_resources(std::vector<std::string> resource_requests);
 
 
-    // the dummy_namespace must be above the call_list_ and module_list_ because it needs to be destroyed AFTER all calls and modules during
-    // ~MegaMolGraph()
+    // the dummy_namespace must be above the call_list_ and module_list_ because it needs to be destroyed AFTER all
+    // calls and modules during ~MegaMolGraph()
     std::shared_ptr<RootModuleNamespace> dummy_namespace; // serves as parent object for stupid fat modules
 
     /** List of modules that this graph owns */
@@ -228,19 +230,20 @@ private:
     /** List of call that this graph owns */
     CallList_t call_list_;
 
-	std::vector<megamol::frontend::ModuleResource> provided_resources;
+    std::vector<megamol::frontend::ModuleResource> provided_resources;
 
-	// for each View in the MegaMol graph we create a GraphEntryPoint with corresponding callback for resource/input consumption
-	// the graph makes sure that the (lifetime and rendering) resources/dependencies requested by the module are satisfied,
-	// which means that the execute() callback for the entry point is provided the requested dependencies/resources for rendering
-	// and the Create() and Release() mehods of all modules receive the dependencies/resources they request for their lifetime
-	struct GraphEntryPoint {
+    // for each View in the MegaMol graph we create a GraphEntryPoint with corresponding callback for resource/input
+    // consumption the graph makes sure that the (lifetime and rendering) resources/dependencies requested by the module
+    // are satisfied, which means that the execute() callback for the entry point is provided the requested
+    // dependencies/resources for rendering and the Create() and Release() mehods of all modules receive the
+    // dependencies/resources they request for their lifetime
+    struct GraphEntryPoint {
         std::string moduleName;
         Module::ptr_type modulePtr = nullptr;
         std::vector<megamol::frontend::ModuleResource> entry_point_resources;
-		
-		EntryPointExecutionCallback execute;
-	};
+
+        EntryPointExecutionCallback execute;
+    };
     std::list<GraphEntryPoint> graph_entry_points;
 
     MegaMolGraph_Convenience convenience_functions;
@@ -321,4 +324,3 @@ public:
 
 } /* namespace core */
 } // namespace megamol
-
