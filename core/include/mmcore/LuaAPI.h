@@ -15,7 +15,6 @@
 #include <string>
 #include "LuaInterpreter.h"
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore/MegaMolGraph_Convenience.h"
 
 struct lua_State; // lua includes should stay in the core
 
@@ -242,7 +241,6 @@ private:
 
     /** the respective MegaMol graph */
     megamol::core::MegaMolGraph& graph_;
-    megamol::core::MegaMolGraph_Convenience graph_convenience_;
 
     /** no two threads must interfere with the reentrant L */
     std::mutex stateLock;

@@ -49,7 +49,9 @@ megamol::core::MegaMolGraph::MegaMolGraph(megamol::core::CoreInstance& core,
     factories::ModuleDescriptionManager const& moduleProvider, factories::CallDescriptionManager const& callProvider)
     : moduleProvider_ptr{&moduleProvider}
     , callProvider_ptr{&callProvider}
-    , dummy_namespace{std::make_shared<RootModuleNamespace>()} {
+    , dummy_namespace{std::make_shared<RootModuleNamespace>()} 
+    , convenience_functions{const_cast<MegaMolGraph*>(this)}
+{
     // the Core Instance is a parasite that needs to be passed to all modules
     // TODO: make it so there is no more core instance
     dummy_namespace->SetCoreInstance(core);
@@ -569,6 +571,10 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string moduleName) 
 
 void megamol::core::MegaMolGraph::AddModuleDependencies(std::vector<megamol::frontend::ModuleResource> const& resources) {
     this->provided_resources.insert(provided_resources.end(), resources.begin(), resources.end());
+}
+
+megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenience() {
+    return this->convenience_functions;
 }
 
 std::vector<megamol::frontend::ModuleResource> megamol::core::MegaMolGraph::get_requested_resources(std::vector<std::string> resource_requests) {

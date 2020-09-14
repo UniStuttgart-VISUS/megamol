@@ -1,17 +1,20 @@
 ﻿#include "mmcore/MegaMolGraph_Convenience.h"
+#include "mmcore/MegaMolGraph.h"
 
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
+
+static MegaMolGraph& get(void* ptr) {
+    return *reinterpret_cast<MegaMolGraph*>(ptr);
+}
 
 static void log(std::string text) { 
 	const std::string msg = "MegaMolGraph_Convenience: " + text + "\n"; 
 	megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
 
-MegaMolGraph_Convenience::MegaMolGraph_Convenience(MegaMolGraph& graph)
-    : m_graph_ptr{&graph}
-{}
+MegaMolGraph_Convenience::MegaMolGraph_Convenience(void* graph_ptr) : m_graph_ptr{graph_ptr} {}
 
 MegaMolGraph_Convenience::ParameterGroup& MegaMolGraph_Convenience::CreateParameterGroup(const std::string& group_name) {
     m_parameter_groups[group_name] = {group_name, {}, this->m_graph_ptr};
@@ -41,7 +44,7 @@ std::vector<std::reference_wrapper<MegaMolGraph_Convenience::ParameterGroup>> Me
 }
 
 bool MegaMolGraph_Convenience::ParameterGroup::QueueParameterValue(const std::string& id, const std::string& value) {
-    auto parameterPtr = this->graph->FindParameter(id);
+    auto parameterPtr = get(graph).FindParameter(id);
 
     if (parameterPtr) {
         this->parameter_values[id] = value;
@@ -55,7 +58,7 @@ bool MegaMolGraph_Convenience::ParameterGroup::QueueParameterValue(const std::st
 bool MegaMolGraph_Convenience::ParameterGroup::ApplyQueuedParameterValues() {
     bool result = true;
     for (auto& pv: parameter_values) {
-        result &= this->graph->FindParameter(pv.first)->ParseValue(pv.second.c_str());
+        result &= get(graph).FindParameter(pv.first)->ParseValue(pv.second.c_str());
     }
 
     parameter_values.clear();
@@ -91,7 +94,7 @@ bool MegaMolGraph_Convenience::CreateChainCall(const std::string callName, const
         auto moduleName = std::get<0>(names_tuple);
         auto slotName = std::get<1>(names_tuple);
 
-        auto modulePtr = m_graph_ptr->FindModule(moduleName);
+        auto modulePtr = get(m_graph_ptr).FindModule(moduleName);
         if (!modulePtr) {
             throwError("no module named " + moduleName);
             return nullptr; 
@@ -151,7 +154,7 @@ bool MegaMolGraph_Convenience::CreateChainCall(const std::string callName, const
         std::string calleeSlotName{calleeSlot->FullName().PeekBuffer()};
         auto pos_it = calleeSlotName.find_last_of("::");
         std::string calleeModuleName = calleeSlotName.substr(0, pos_it-1);
-        auto callee_module = m_graph_ptr->FindModule(calleeModuleName);
+        auto callee_module = get(m_graph_ptr).FindModule(calleeModuleName);
 
         if (!callee_module) {
             throwError("module " + calleeModuleName + " not found via callee slot " + calleeSlotName);
@@ -189,7 +192,7 @@ bool MegaMolGraph_Convenience::CreateChainCall(const std::string callName, const
     }
 
     std::string from = from_caller_slot->FullName().PeekBuffer();
-    bool call_ok = m_graph_ptr->CreateCall(className, from, to);
+    bool call_ok = get(m_graph_ptr).CreateCall(className, from, to);
 
     if (!call_ok) {
         throwError("from " + from + " to " + to);

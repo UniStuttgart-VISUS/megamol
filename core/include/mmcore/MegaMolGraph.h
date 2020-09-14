@@ -24,6 +24,7 @@
 #include "mmcore/deferrable_construction.h"
 #include "mmcore/serializable.h"
 
+#include "mmcore/MegaMolGraph_Convenience.h"
 #include "AbstractFrontendService.hpp"
 #include "mmcore/RootModuleNamespace.h"
 
@@ -188,6 +189,8 @@ public:
 
 	void AddModuleDependencies(std::vector<megamol::frontend::ModuleResource> const& resources);
 
+    MegaMolGraph_Convenience& Convenience();
+
 	// Create View ?
 
 	// Create Chain Call ?
@@ -239,6 +242,8 @@ private:
 		EntryPointExecutionCallback execute;
 	};
     std::list<GraphEntryPoint> graph_entry_points;
+
+    MegaMolGraph_Convenience convenience_functions;
 
     ////////////////////////// old interface stuff //////////////////////////////////////////////
 public:
