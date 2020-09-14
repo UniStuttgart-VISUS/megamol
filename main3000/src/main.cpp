@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
             std::cout, megamol::core::utility::log::Log::LEVEL_ALL));
 
     megamol::core::CoreInstance core;
-    core.Initialise();
+    core.Initialise(false); // false makes core not start his own lua service (else we collide on default port)
 
     const megamol::core::factories::ModuleDescriptionManager& moduleProvider = core.GetModuleDescriptionManager();
     const megamol::core::factories::CallDescriptionManager& callProvider = core.GetCallDescriptionManager();
