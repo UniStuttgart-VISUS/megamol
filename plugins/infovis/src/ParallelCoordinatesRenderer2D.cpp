@@ -224,47 +224,96 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     //      "WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED ");
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
-    glGenFramebuffers(1, &nuFBb);
-    glGenFramebuffers(1, &nuFBb2);
-    glGenTextures(1, &imStoreI);
-    glGenTextures(1, &imStoreI2);
+    glGenFramebuffers(1, &amortizedFboA);
+    glGenFramebuffers(1, &amortizedFboB);
+    glGenFramebuffers(1, &amortizedFboC);
+    glGenFramebuffers(1, &amortizedFboD);
+    glGenFramebuffers(1, &amortizedMsaaFboA);
+    glGenFramebuffers(1, &amortizedMsaaFboB);
+    glGenTextures(1, &imageStorageA);
+    glGenTextures(1, &msImageStorageA);
+    glGenTextures(1, &imageStorageB);
+    glGenTextures(1, &msImageStorageB);
+    glGenTextures(1, &imageStorageC);
+    glGenTextures(1, &msImageStorageC);
+    glGenTextures(1, &imageStorageD);
+    glGenTextures(1, &msImageStorageD);
     glGenTextures(1, &depthStore);
     glGenTextures(1, &stenStore);
     glGenTextures(1, &depthStore2);
     glGenRenderbuffers(1, &nuDRB);
     glGenRenderbuffers(1, &nuSRB);
-    glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
     //glBindTexture(GL_TEXTURE_2D, imStoreI);
     glEnable(GL_MULTISAMPLE);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, imStoreI);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msImageStorageA);
     //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 1, GL_RGB, 1, 1, GL_TRUE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, imStoreI, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msImageStorageA, 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    
 
-
-    glBindFramebuffer(GL_TEXTURE_2D, nuFBb2);
+    glBindFramebuffer(GL_TEXTURE_2D, amortizedMsaaFboB);
     glEnable(GL_MULTISAMPLE);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, imStoreI2);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msImageStorageB);
     //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 1, GL_RGB, 1, 1, GL_TRUE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, imStoreI2, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msImageStorageB, 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
 
-    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag", fragment_shader_src);
-    m_render_to_framebuffer_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    m_render_to_framebuffer_shdr->Compile(
+    glBindFramebuffer(GL_TEXTURE_2D, amortizedFboA);
+    glBindTexture(GL_TEXTURE_2D, imageStorageA);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageA, 0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+    glBindFramebuffer(GL_TEXTURE_2D, amortizedFboB);
+    glBindTexture(GL_TEXTURE_2D, imageStorageB);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageB, 0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+    glBindFramebuffer(GL_TEXTURE_2D, amortizedFboC);
+    glBindTexture(GL_TEXTURE_2D, imageStorageC);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageC, 0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+    glBindFramebuffer(GL_TEXTURE_2D, amortizedFboD);
+    glBindTexture(GL_TEXTURE_2D, imageStorageD);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageD, 0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert0", vertex_shader_src);
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag0", fragment_shader_src);
+    pc_reconstruction0_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
+    pc_reconstruction0_shdr->Compile(
         vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    m_render_to_framebuffer_shdr->Link();
+    pc_reconstruction0_shdr->Link();
+
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert1", vertex_shader_src);
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag1", fragment_shader_src);
+    pc_reconstruction1_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
+    pc_reconstruction1_shdr->Compile(
+        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
+    pc_reconstruction1_shdr->Link();
 
 #ifndef REMOVE_TEXT
     if (!font.Initialise(this->GetCoreInstance())) return false;
@@ -1024,6 +1073,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     int approach = this->approachSlot.Param<core::param::IntParam>()->Value();
     int framesNeeded = 1;
+
+    // Intel MSAA 2 frame restoration
     if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         framesNeeded = 2;
         w = w / 2;
@@ -1048,30 +1099,101 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
 
         if (frametype == 0) {
-            glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
             glEnable(GL_MULTISAMPLE);
 
             glActiveTexture(GL_TEXTURE10);
-            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, imStoreI);
+            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msImageStorageA);
             glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 2, GL_RGBA8, w, h, GL_TRUE);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, imStoreI, 0);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msImageStorageA, 0);
 
             //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
             glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
         }
         if (frametype == 1) {
-            glBindFramebuffer(GL_FRAMEBUFFER, nuFBb2);
-            glEnable(GL_MULTISAMPLE);
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboB);
             glActiveTexture(GL_TEXTURE11);
-            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, imStoreI2);
+            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msImageStorageB);
             //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
             glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 2, GL_RGB8, w, h, GL_TRUE);
             //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, imStoreI2, 0);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msImageStorageB, 0);
             glClearColor(0.2, 0, 0, 1);
         }
         glClear(GL_COLOR_BUFFER_BIT);
 
+
+        glViewport(0, 0, w, h);
+    }
+
+    // non cbr quarter res 4 frame restoration
+    if (approach == 1 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        framesNeeded = 4;
+        w = w / 2;
+        h = h / 2;
+        glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+
+        glm::mat4 pm;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                pm[j][i] = projMatrix_column[i + j * 4];
+            }
+        }
+
+        auto jit = glm::mat4(1.0);
+        if (frametype == 0) {
+            jit = glm::translate(
+                glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(), 1.0 / call.GetViewport().Height(), 0));
+        }
+        if (frametype == 1) {
+            jit = glm::translate(
+                glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), 1.0 / call.GetViewport().Height(), 0));
+        }
+        if (frametype == 2) {
+            jit = glm::translate(
+                glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
+        }
+        if (frametype == 3) {
+            jit = glm::translate(
+                glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
+        }
+        pm = jit * pm;
+        //upload jitter back to proj Mat
+        for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
+
+        if (frametype == 0) {
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
+            glActiveTexture(GL_TEXTURE10);
+            glBindTexture(GL_TEXTURE_2D, imageStorageA);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageA, 0);
+            // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
+            glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+        }
+        if (frametype == 1) {
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboB);
+            glActiveTexture(GL_TEXTURE11);
+            glBindTexture(GL_TEXTURE_2D, imageStorageB);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageB, 0);
+            glClearColor(0.2, 0, 0, 1);
+        }
+        if (frametype == 2) {
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboC);
+            glActiveTexture(GL_TEXTURE12);
+            glBindTexture(GL_TEXTURE_2D, imageStorageC);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageC, 0);
+            glClearColor(0, 0.2, 0, 1);
+        }if (frametype == 3) {
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboD);
+            glActiveTexture(GL_TEXTURE13);
+            glBindTexture(GL_TEXTURE_2D, imageStorageD);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageD, 0);
+            glClearColor(0.15, 0.15, 0, 1);
+        }
+        glClear(GL_COLOR_BUFFER_BIT);
 
         glViewport(0, 0, w, h);
     }
@@ -1102,13 +1224,13 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                     }
                 }
             }
-            glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
             if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
 
             glActiveTexture(GL_TEXTURE10);
             if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
 
-            glBindTexture(GL_TEXTURE_2D, imStoreI);
+            glBindTexture(GL_TEXTURE_2D, imageStorageA);
             if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
             
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -1121,7 +1243,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
             if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
             
-            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageA, 0);
             if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
             
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -1151,7 +1273,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX);
             if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR3");
             
-            glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
             if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR6");            
             
 
@@ -1174,12 +1296,12 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glDepthMask(GL_FALSE);
             //glClear(GL_STENCIL_BUFFER_BIT);
             
-            glBindFramebuffer(GL_FRAMEBUFFER, nuFBb);
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
             
             glActiveTexture(GL_TEXTURE10);
-            glBindTexture(GL_TEXTURE_2D, imStoreI);
+            glBindTexture(GL_TEXTURE_2D, imageStorageA);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
-            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageA, 0);
             glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
             glClear(GL_COLOR_BUFFER_BIT);
             glBindTexture(GL_TEXTURE_2D, 0);
@@ -1195,15 +1317,15 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
             //glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
-            glBindTexture(GL_TEXTURE_2D, imStoreI);
+            glBindTexture(GL_TEXTURE_2D, imageStorageA);
 
 
         }
         if (call.frametype == 2) {
-            glBindFramebuffer(GL_FRAMEBUFFER, nuFBb2);
-            glBindTexture(GL_TEXTURE_2D, imStoreI2);
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboB);
+            glBindTexture(GL_TEXTURE_2D, imageStorageB);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
-            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageB, 0);
             glClearColor(0.2, 0, 0, 1);
             glClear(GL_COLOR_BUFFER_BIT);
         }
@@ -1317,91 +1439,109 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     if (this->drawAxesSlot.Param<core::param::BoolParam>()->Value()) {
         drawAxes();
     }
-    // glEnable(GL_DEPTH_TEST);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    // glDepthMask(GL_TRUE);
 
-    if (false) {
-        m_render_to_framebuffer_shdr->Enable();
+    if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
 
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("frametype"), 3);
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("h"), call.GetViewport().Height());
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("w"), call.GetViewport().Width());
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        m_render_to_framebuffer_shdr->Disable();
-    }
-
-    if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
-        glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
-
-        m_render_to_framebuffer_shdr->Enable();
+        pc_reconstruction0_shdr->Enable();
 
         if (frametype == 0) {
             glActiveTexture(GL_TEXTURE10);
-            //nuFB->getColorAttachment(0)->bindTexture();
-            glBindTexture(GL_TEXTURE_2D, imStoreI);  
-            glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 10);
-
+            glBindTexture(GL_TEXTURE_2D, msImageStorageA);  
+            glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tx2Da"), 10);
         }
         if (frametype == 1) {
             glActiveTexture(GL_TEXTURE11);
-            //nuFB->getColorAttachment(0)->bindTexture();
-            glBindTexture(GL_TEXTURE_2D, imStoreI2);
-            glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2Db"), 11);
+            glBindTexture(GL_TEXTURE_2D, msImageStorageB);
+            glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tx2Db"), 11);
         }
 
-        // vislib::sys::Log::DefaultLog.WriteInfo("%i", nuFB->getColorAttachment(0)->getName());
-
-
         glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("h"), call.GetViewport().Height());
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("w"), call.GetViewport().Width());
-
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("frametype"), frametype);
+        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("h"), call.GetViewport().Height());
+        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("w"), call.GetViewport().Width());
+        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("approach"), approach);
+        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("frametype"), frametype);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        m_render_to_framebuffer_shdr->Disable();
+        pc_reconstruction0_shdr->Disable();
         frametype = (frametype + 1) % 2;
+    }
+
+    if (approach == 1 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
+
+        pc_reconstruction1_shdr->Enable();
+
+        if (frametype == 0) {
+            glActiveTexture(GL_TEXTURE10);
+            glBindTexture(GL_TEXTURE_2D, imageStorageA);
+            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Da"), 10);
+        }
+        if (frametype == 1) {
+            glActiveTexture(GL_TEXTURE11);
+            glBindTexture(GL_TEXTURE_2D, imageStorageB);
+            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Db"), 11);
+        }
+        if (frametype == 2) {
+            glActiveTexture(GL_TEXTURE12);
+            glBindTexture(GL_TEXTURE_2D, imageStorageC);
+            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Dc"), 12);
+        }
+        if (frametype == 3) {
+            glActiveTexture(GL_TEXTURE13);
+            glBindTexture(GL_TEXTURE_2D, imageStorageD);
+            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Dd"), 13);
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
+        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("h"), call.GetViewport().Height());
+        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("w"), call.GetViewport().Width());
+        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("approach"), approach);
+        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("frametype"), frametype);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        pc_reconstruction1_shdr->Disable();
+        frametype = (frametype + 1) % framesNeeded;
     }
 
     //  Method for DepthTest
     if (false && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
 
-        m_render_to_framebuffer_shdr->Enable();
+        pc_reconstruction0_shdr->Enable();
 
         if (call.frametype == 0 || call.frametype == 1) {
             glActiveTexture(GL_TEXTURE10);
-            glBindTexture(GL_TEXTURE_2D, imStoreI);
+            glBindTexture(GL_TEXTURE_2D, imageStorageA);
             // glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w,h,0, GL_RGB, GL_FLOAT, 0);
             //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_GREEN, GL_UNSIGNED_BYTE, &tex2[0]);
-            glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2D"), 10);
+            glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tx2D"), 10);
         }
         if (call.frametype == 2) {
             glActiveTexture(GL_TEXTURE11);
-            glBindTexture(GL_TEXTURE_2D, imStoreI2);
+            glBindTexture(GL_TEXTURE_2D, imageStorageB);
             // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, &tex2);
-            glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("src_tx2Db"), 11);
+            glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tx2Db"), 11);
         }
 
 
         glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("h"), call.GetViewport().Width());
+        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("h"), call.GetViewport().Width());
 
-        glUniform1i(m_render_to_framebuffer_shdr->ParameterLocation("frametype"), call.frametype);
+        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("frametype"), call.frametype);
 
       
         //glStencilMask(0x00);
-        glBindTexture(GL_TEXTURE_2D, imStoreI);
+        glBindTexture(GL_TEXTURE_2D, imageStorageA);
         glDepthFunc(GL_ALWAYS);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glDisable(GL_STENCIL_TEST);
         // vislib::sys::Log::DefaultLog.WriteInfo("h %i", glIsEnabled(GL_DEPTH_TEST));
-        m_render_to_framebuffer_shdr->Disable();
+        pc_reconstruction0_shdr->Disable();
         // glDeleteTextures(1, &imStoreI);
         // glDeleteTextures(1, &imStoreI2);
         // glDeleteFramebuffers(1, &nuFB);

@@ -1,14 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <btf type="MegaMolGLSLShader" version="1.0" namespace="pc_reconstruction">
 
-	<shader name="vert">
+	<shader name="vert0">
 		<snippet type="version">430</snippet>
-		<snippet name="body" type="file">pc_reconstruction_v.glsl</snippet>
+		<snippet name="body" type="file">pc_reconstruction0_v.glsl</snippet>
 	</shader>
 
-	<shader name="frag">
+	<shader name="frag0">
 		<snippet type="version">430</snippet>
-		<snippet name="body" type="file">pc_reconstruction_f.glsl</snippet>
+		<snippet name="body" type="file">pc_reconstruction0_f.glsl</snippet>
+	</shader>
+
+	<shader name="vert1">
+		<snippet type="version">430</snippet>
+		<snippet name="body" type="file">pc_reconstruction1_v.glsl</snippet>
+	</shader>
+
+	<shader name="frag1">
+		<snippet type="version">430</snippet>
+		<snippet name="body" type="file">pc_reconstruction1_f.glsl</snippet>
 	</shader>
 
 </btf>

@@ -296,22 +296,31 @@ private:
     GLboolean why = GL_FALSE;
     GLint origFBO = 0;
     GLint origFBOr = 0;
-    GLuint imStoreI;
-    GLuint interColStore;
-    GLuint interColStore2;
-    GLuint imStoreI2;
+    GLuint imageStorageA;
+    GLuint imageStorageB;
+    GLuint imageStorageC;
+    GLuint imageStorageD;
+    GLuint msImageStorageA;
+    GLuint msImageStorageB;
+    GLuint msImageStorageC;
+    GLuint msImageStorageD;
     GLuint depthStore;
     GLuint stenStore;
     GLuint depthStore2;
     std::shared_ptr<glowl::FramebufferObject> nuFB;
-    GLuint nuFBb;
-    GLuint nuFBb2;
+    GLuint amortizedFboA;
+    GLuint amortizedFboB;
+    GLuint amortizedFboC;
+    GLuint amortizedFboD;
+    GLuint amortizedMsaaFboA;
+    GLuint amortizedMsaaFboB;
     //glowl::FramebufferObject nuFB2 = glowl::FramebufferObject(1, 1, false, false);
     GLuint nuDRB;
     GLuint nuSRB;
     //res should be a parameter
     GLfloat res[2];
-    std::unique_ptr<vislib::graphics::gl::GLSLShader> m_render_to_framebuffer_shdr;
+    std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction0_shdr;
+    std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction1_shdr;
 
     int frametype = 0;
 
