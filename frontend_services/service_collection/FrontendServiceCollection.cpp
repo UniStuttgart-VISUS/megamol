@@ -10,6 +10,13 @@
 #include <algorithm>
 #include <iostream>
 
+#include "mmcore/utility/log/Log.h"
+static void log(const char* text) {
+    const std::string msg = "FrontendServiceCollection: " + std::string(text) + "\n";
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
+}
+static void log(std::string text) { log(text.c_str()); }
+
 namespace megamol {
 namespace frontend {
 
@@ -27,13 +34,12 @@ namespace frontend {
 	#define for_each_service for (auto& service : m_services)
 
 	bool FrontendServiceCollection::init() {
-        bool some_failed = false;
-
-		for_each_service{
-			some_failed |= service.service->init(service.service_config);
+		for_each_service {
+            if (!service.service->init(service.service_config))
+                return false;
 		}
 
-		return some_failed;
+		return true;
 	}
 
 	void FrontendServiceCollection::close() {
@@ -130,7 +136,12 @@ namespace frontend {
         bool shutdown = false;
 
         for (auto const& service: m_services){
-			shutdown |= service.get().shouldShutdown();
+            bool shut_this = service.get().shouldShutdown();
+            shutdown |= shut_this;
+
+            if (shut_this) {
+                log(service.get().serviceName() + " requests shutdown");
+            }
 		}
 
 		return shutdown;

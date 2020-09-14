@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
     const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
 
     if (!init_ok) {
-        std::cout << "ERROR: some service could not be initialized successfully. abort. " << std::endl;
+        std::cout << "ERROR: some frontend service could not be initialized successfully. abort. " << std::endl;
         services.close();
         return 1;
     }
