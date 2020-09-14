@@ -532,7 +532,7 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName, std
     if (resources.size() != execution_resource_requests.size() ||
         !std::equal<>(resources.begin(), resources.end(), 
             execution_resource_requests.begin(), execution_resource_requests.end(), 
-            [](megamol::frontend::ModuleResource& l, std::string& r) { return l.getIdentifier == r; })) 
+            [](megamol::frontend::ModuleResource& l, std::string& r) { return l.getIdentifier() == r; })) 
     {
         return false;
     }
