@@ -30,6 +30,8 @@ static void log(std::string text) {
 }
 
 static megamol::core::param::AbstractParam* getParameterFromParamSlot(megamol::core::param::ParamSlot* param_slot) {
+    if (!param_slot)
+        return nullptr;
 
     if (param_slot->GetStatus() == megamol::core::AbstractSlot::STATUS_UNAVAILABLE) {
         log("error. cannot find parameter: " + std::string(param_slot->Name().PeekBuffer()) +
