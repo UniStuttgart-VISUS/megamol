@@ -810,6 +810,16 @@ int megamol::core::LuaAPI::ListCalls(lua_State* L) {
 
     const int n = lua_gettop(L);
     std::ostringstream answer;
+    auto& calls_list = graph_.ListCalls();
+    for (auto& call: calls_list) {
+        answer << call.first->ClassName() << ";" << call.first->PeekCallerSlot()->Parent()->Name() << ","
+               << call.first->PeekCalleeSlot()->Parent()->Name() << ";" << call.first->PeekCallerSlot()->Name() << ","
+               << call.first->PeekCalleeSlot()->Name() << std::endl;
+    }
+
+    if (calls_list.empty()) {
+        answer << "(none)" << std::endl;
+    }
 
     // TODO
 
@@ -849,6 +859,14 @@ int megamol::core::LuaAPI::ListModules(lua_State* L) {
     const int n = lua_gettop(L);
 
     std::ostringstream answer;
+    auto& modules_list = graph_.ListModules();
+    for (auto& module: modules_list) {
+        answer << module.modulePtr->ClassName() << ";" << module.modulePtr->Name() << std::endl;
+    }
+
+    if (modules_list.empty()) {
+        answer << "(none)" << std::endl;
+    }
 
     // TODO
 
