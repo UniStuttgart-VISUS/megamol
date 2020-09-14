@@ -83,9 +83,9 @@ int main(int argc, char* argv[]) {
     lua_service_wrapper.setPriority(0);
 
     // the main loop is organized around services that can 'do something' in different parts of the main loop
-    // a service is something that implements the AbstractFrontendService interface from 'megamol\render_api\include'
+    // a service is something that implements the AbstractFrontendService interface from 'megamol\frontend_services\include'
     // a central mechanism that allows services to communicate with each other and with graph modules are _resources_
-    // (see ModuleResource in 'megamol\render_api\include') services may provide resources to the system and they may
+    // (see ModuleResource in 'megamol\module_resources\include') services may provide resources to the system and they may
     // request resources they need themselves for functioning. think of a resource as a struct (or some type of your
     // choice) that gets wrapped by a helper structure and gets a name attached to it. the fronend makes sure (at least
     // attempts to) to hand each service the resources it requested, or else fail execution of megamol with an error
