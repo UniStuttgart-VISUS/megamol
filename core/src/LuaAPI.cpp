@@ -936,8 +936,7 @@ int megamol::core::LuaAPI::ListParameters(lua_State* L) {
 }
 
 int megamol::core::LuaAPI::Quit(lua_State* L) {
-    // TODO
-    // this->coreInst->Shutdown();
+    this->shutdown_ = true;
     return 0;
 }
 
@@ -987,12 +986,14 @@ int megamol::core::LuaAPI::ReadTextFile(lua_State* L) {
     return 0;
 }
 
+void megamol::core::LuaAPI::setFlushCallback(std::function<bool()> const& callback) {
+    mmFlush_callback_ = callback;
+}
+
 int megamol::core::LuaAPI::Flush(lua_State* L) {
-    // graph changes now happen instantly, no flush needed
+    bool result = mmFlush_callback_();
 
-    //this->coreInst->FlushGraphUpdates();
-
-    return 0;
+    return result ? 0 : 1;
 }
 
 int megamol::core::LuaAPI::CurrentScriptPath(struct lua_State* L) {

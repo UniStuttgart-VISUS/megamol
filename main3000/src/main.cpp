@@ -118,23 +118,7 @@ int main(int argc, char* argv[]) {
     auto module_resources = services.getProvidedResources();
     graph.AddModuleDependencies(module_resources);
 
-	if (config.project_files.empty()) {
-		const bool graph_ok = set_up_graph(graph); // fill graph with modules and calls
-		if (!graph_ok) {
-		    std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
-		    run_megamol = false;
-		}
-    } else {
-		for (const auto& p : config.project_files) {
-		    std::string result;
-		    if (!lua_api.RunFile(p, result)) {
-		        std::cout << "Project file \"" << p << "\" did not execute correctly: " << result << std::endl;
-				run_megamol = false;
-		    }
-		}
-    }
-
-    while (run_megamol) {
+    const auto render_next_frame = [&]() -> bool {
         // services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua)
         services.updateProvidedResources();
 
@@ -146,7 +130,8 @@ int main(int argc, char* argv[]) {
         // services tell us wheter we should shut down megamol
         // TODO: service needs to mark intself as shutdown by calling this->setShutdown() during
         // digestChangedRequestedResources()
-        if (services.shouldShutdown()) break;
+        if (services.shouldShutdown())
+            return false;
 
         {                              // put this in render function so LUA can call it
             services.preGraphRender(); // e.g. start frame timer, clear render buffers
@@ -158,6 +143,32 @@ int main(int argc, char* argv[]) {
         }
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
+
+        return true;
+    };
+
+    // lua can issue rendering of frames
+    lua_api.setFlushCallback(render_next_frame);
+
+	if (config.project_files.empty()) {
+		const bool graph_ok = set_up_graph(graph); // fill graph with modules and calls
+		if (!graph_ok) {
+		    std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
+		    run_megamol = false;
+		}
+    } else {
+        // load project files via lua
+        for (auto& file : config.project_files) {
+		    std::string result;
+            if (!lua_api.RunFile(file, result)) {
+                std::cout << "Project file \"" << file << "\" did not execute correctly: " << result << std::endl;
+		        run_megamol = false;
+            }
+        }
+    }
+
+    while (run_megamol) {
+        run_megamol = render_next_frame();
     }
 
     // close glfw context, network connections, other system resources

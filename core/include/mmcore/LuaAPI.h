@@ -85,6 +85,16 @@ public:
      */
     std::string GetScriptPath(void);
 
+    /**
+     * Sets the function callback used to trigger rendering of a frame due to mmFlush.
+     */
+    void setFlushCallback(std::function<bool()> const& callback);
+
+    /**
+     * Communicates mmQuit request to rest of MegaMol main loop.
+     */
+    bool getShutdown() { return shutdown_; }
+
     // ************************************************************
     // Lua interface routines, published to Lua as mm<name>
     // ************************************************************
@@ -241,6 +251,10 @@ private:
 
     /** the respective MegaMol graph */
     megamol::core::MegaMolGraph& graph_;
+
+    std::function<bool()> mmFlush_callback_; // renders one next frame via main loop
+
+    bool shutdown_ = false;
 
     /** no two threads must interfere with the reentrant L */
     std::mutex stateLock;
