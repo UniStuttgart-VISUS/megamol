@@ -8,6 +8,7 @@
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
 #include "OpenGL_GLFW_Service.hpp"
+#include "Lua_Service_Wrapper.hpp"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
@@ -74,7 +75,12 @@ int main(int argc, char* argv[]) {
 
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
-    megamol::core::LuaAPI lua_api(graph, true);
+    bool lua_imperative_only = false; // allow mmFlush, mmList* and mmGetParam*
+    megamol::core::LuaAPI lua_api(graph, lua_imperative_only);
+    megamol::frontend::Lua_Service_Wrapper lua_service_wrapper;
+    megamol::frontend::Lua_Service_Wrapper::Config luaConfig;
+    luaConfig.lua_api_ptr = &lua_api;
+    lua_service_wrapper.setPriority(0);
 
     // the main loop is organized around services that can 'do something' in different parts of the main loop
     // a service is something that implements the AbstractFrontendService interface from 'megamol\render_api\include'
