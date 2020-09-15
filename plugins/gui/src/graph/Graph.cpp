@@ -808,6 +808,24 @@ bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_name) {
 }
 
 
+const std::string megamol::gui::Graph::GenerateUniqueMainViewName(void) {
+
+    int new_name_id = 0;
+    std::string new_name_prefix("Instance_");
+    for (auto& module_ptr : this->modules) {
+        if (module_ptr->main_view_name.find(new_name_prefix) == 0) {
+            std::string int_postfix = module_ptr->main_view_name.substr(new_name_prefix.length());
+            try {
+                int last_id = std::stoi(int_postfix);
+                new_name_id = std::max(new_name_id, last_id);
+            } catch (...) {
+            }
+        }
+    }
+    return std::string(new_name_prefix + std::to_string(new_name_id + 1));
+}
+
+
 bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string) {
 
     try {
@@ -1321,24 +1339,6 @@ const std::string megamol::gui::Graph::generate_unique_module_name(const std::st
     for (auto& mod : this->modules) {
         if (mod->name.find(new_name_prefix) == 0) {
             std::string int_postfix = mod->name.substr(new_name_prefix.length());
-            try {
-                int last_id = std::stoi(int_postfix);
-                new_name_id = std::max(new_name_id, last_id);
-            } catch (...) {
-            }
-        }
-    }
-    return std::string(new_name_prefix + std::to_string(new_name_id + 1));
-}
-
-
-const std::string megamol::gui::Graph::generate_unique_main_view_name(void) {
-
-    int new_name_id = 0;
-    std::string new_name_prefix("Instance_");
-    for (auto& module_ptr : this->modules) {
-        if (module_ptr->main_view_name.find(new_name_prefix) == 0) {
-            std::string int_postfix = module_ptr->main_view_name.substr(new_name_prefix.length());
             try {
                 int last_id = std::stoi(int_postfix);
                 new_name_id = std::max(new_name_id, last_id);

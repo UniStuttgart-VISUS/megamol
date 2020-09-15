@@ -622,7 +622,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         bool is_main_view = selected_mod_ptr->IsMainView();
         if (ImGui::Checkbox("Main View", &is_main_view)) {
             if (is_main_view) {
-                selected_mod_ptr->main_view_name = inout_graph.generate_unique_main_view_name();
+                selected_mod_ptr->main_view_name = inout_graph.GenerateUniqueMainViewName();
             } else {
                 selected_mod_ptr->main_view_name.clear();
             }

@@ -99,6 +99,8 @@ public:
     inline bool IsRunning(void) const { return this->running_state; }
     inline void SetRunning(bool r) { this->running_state = r; }
 
+    const std::string GenerateUniqueMainViewName(void);
+
     // Presentation ----------------------------------------------------
 
     inline void PresentGUI(GraphState_t& state) { this->present.Present(*this, state); }
@@ -120,7 +122,6 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     const std::string generate_unique_group_name(void);
-    const std::string generate_unique_main_view_name(void);
     const std::string generate_unique_module_name(const std::string& name);
 
     void add_rename_module_sync_event(const std::string& current_name, const std::string& new_name);

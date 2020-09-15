@@ -341,9 +341,8 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 std::string module_fullname = std::string(module_inst.modulePtr->FullName().PeekBuffer());
                 if (!graph_ptr->ModuleExists(module_fullname)) {
                     module_ptr_list.emplace_back(module_inst.modulePtr.get());
-                    /// XXX Not considered when project is loaded?!
                     if (module_inst.isGraphEntryPoint) {
-                        view_instances[module_fullname] = this->generate_unique_graph_name();
+                        view_instances[module_fullname] = graph_ptr->GenerateUniqueMainViewName();
                     }
                 }
             }
@@ -549,7 +548,8 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                             "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                             __LINE__);
                     }
-                    if ((class_name == call.request.className) && (from == call.request.from) && (to == call.request.to)) {
+                    if ((class_name == call.request.className) && (from == call.request.from) &&
+                        (to == call.request.to)) {
                         add_new = false;
                     }
                 }

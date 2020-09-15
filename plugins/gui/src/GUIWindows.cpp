@@ -739,7 +739,9 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 
                     // Create/Add new graph entry
                     if (graph_sync_success && data.graph_entry) {
-                        megamol_graph->SetGraphEntryPoint(data.id, megamol::core::view::get_gl_view_runtime_resources_requests(), megamol::core::view::view_rendering_execution);
+                        megamol_graph->SetGraphEntryPoint(data.id,
+                            megamol::core::view::get_gl_view_runtime_resources_requests(),
+                            megamol::core::view::view_rendering_execution);
                     }
                 } else if (this->core_instance != nullptr) {
                     if (data.graph_entry) {
