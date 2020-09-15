@@ -71,11 +71,8 @@ public:
 
     std::queue<Item> pop_queue() {
         guard;
-        std::queue<Item> q;
-        while (!m_queue.empty()) {
-            q.emplace(m_queue.front());
-            m_queue.pop();
-        }
+        std::queue<Item> q = std::move(m_queue);
+        m_queue = {};
         return std::move(q);
     }
 
