@@ -101,6 +101,11 @@ int main(int argc, char* argv[]) {
     services.add(gui_service, &guiConfig);
     services.add(lua_service_wrapper, &luaConfig);
 
+    // TODO: cinematic
+    // => explicit FBOs!
+    // TODO: screenshooter
+    // => do or dont screenshot GUI, depending on ...
+
     const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
 
     if (!init_ok) {
