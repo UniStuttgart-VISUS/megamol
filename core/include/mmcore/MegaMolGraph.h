@@ -78,7 +78,10 @@ public:
 
     using ModuleList_t = std::list<ModuleInstance_t>;
 
-    using CallInstance_t = std::pair<Call::ptr_type, CallInstantiationRequest>;
+    struct CallInstance_t {
+        Call::ptr_type callPtr = nullptr;
+        CallInstantiationRequest request;
+    };
 
     using CallList_t = std::list<CallInstance_t>;
 

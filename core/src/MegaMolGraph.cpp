@@ -128,7 +128,7 @@ megamol::core::MegaMolGraph::CallList_t::iterator megamol::core::MegaMolGraph::f
     std::string const& from, std::string const& to) {
     auto it = std::find_if(
         this->call_list_.begin(), this->call_list_.end(), [&](megamol::core::MegaMolGraph::CallInstance_t const& el) {
-            return el.second.from == from && el.second.to == to;
+            return el.request.from == from && el.request.to == to;
         });
 
     return it;
@@ -139,7 +139,7 @@ megamol::core::MegaMolGraph::CallList_t::const_iterator megamol::core::MegaMolGr
 
     auto it = std::find_if(
         this->call_list_.cbegin(), this->call_list_.cend(), [&](megamol::core::MegaMolGraph::CallInstance_t const& el) {
-            return el.second.from == from && el.second.to == to;
+            return el.request.from == from && el.request.to == to;
         });
 
     return it;
@@ -296,7 +296,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
     }
 
     log("create call: " + request.from + " -> " + request.to + " (" + std::string(call_description->ClassName()) + ")");
-    this->call_list_.emplace_front(call, request);
+    this->call_list_.emplace_front(CallInstance_t{call, request});
 
     return true;
 }
@@ -331,10 +331,10 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
 
     // delete all outgoing/incoming calls
     auto discard_calls = find_all_of(call_list_,
-        [&](auto const& call_info) { return (call_info.second.from == request || call_info.second.to == request); });
+        [&](auto const& call_info) { return (call_info.request.from == request || call_info.request.to == request); });
 
     std::for_each(discard_calls.begin(), discard_calls.end(), [&](auto const& call_it) {
-        delete_call(CallDeletionRequest_t{call_it->second.from, call_it->second.to});
+        delete_call(CallDeletionRequest_t{call_it->request.from, call_it->request.to});
     });
 
 	if (module_it->isGraphEntryPoint)
@@ -365,12 +365,12 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
         return false;
     }
 
-    auto target = call_it->first->PeekCalleeSlotNoConst();
-    auto source = call_it->first->PeekCallerSlotNoConst();
+    auto target = call_it->callPtr->PeekCalleeSlotNoConst();
+    auto source = call_it->callPtr->PeekCallerSlotNoConst();
 
     if (!target || !source) {
         log("error. could not get callee or caller slot for call deletion of call: " +
-            std::string(call_it->first->ClassName()) + "\n(" + request.from + " -> " + request.to + ")");
+            std::string(call_it->callPtr->ClassName()) + "\n(" + request.from + " -> " + request.to + ")");
         return false;
     }
 
@@ -411,8 +411,7 @@ megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
         return nullptr;
     }
 
-    auto call_ptr = call_it->first;
-    return call_ptr;
+    return call_it->callPtr;
 }
 
 megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& paramName) const {

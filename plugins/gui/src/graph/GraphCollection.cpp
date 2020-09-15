@@ -516,7 +516,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         // Add/Create call connection data from core graph
         if (use_megamol_graph) {
             for (auto& call : megamol_graph->ListCalls()) {
-                auto call_ptr = call.first;
+                auto call_ptr = call.callPtr;
                 if (call_ptr == nullptr) continue;
 
                 bool add_new = true;
@@ -549,27 +549,27 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                             "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                             __LINE__);
                     }
-                    if ((class_name == call.second.className) && (from == call.second.from) && (to == call.second.to)) {
+                    if ((class_name == call.request.className) && (from == call.request.from) && (to == call.request.to)) {
                         add_new = false;
                     }
                 }
                 if (!add_new) continue;
 
-                auto call_class_name = call.second.className;
+                auto call_class_name = call.request.className;
                 std::string call_caller_name;
                 std::string call_caller_parent_name;
                 if (!this->project_separate_name_and_namespace(
-                        call.second.from, call_caller_parent_name, call_caller_name)) {
+                        call.request.from, call_caller_parent_name, call_caller_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n",
-                        call.second.from.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        call.request.from.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 }
                 std::string call_callee_name;
                 std::string call_callee_parent_name;
                 if (!this->project_separate_name_and_namespace(
-                        call.second.to, call_callee_parent_name, call_callee_name)) {
+                        call.request.to, call_callee_parent_name, call_callee_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n", call.second.to.c_str(),
+                        "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n", call.request.to.c_str(),
                         __FILE__, __FUNCTION__, __LINE__);
                 }
                 // Full module name required

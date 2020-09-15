@@ -812,9 +812,9 @@ int megamol::core::LuaAPI::ListCalls(lua_State* L) {
     std::ostringstream answer;
     auto& calls_list = graph_.ListCalls();
     for (auto& call: calls_list) {
-        answer << call.first->ClassName() << ";" << call.first->PeekCallerSlot()->Parent()->Name() << ","
-               << call.first->PeekCalleeSlot()->Parent()->Name() << ";" << call.first->PeekCallerSlot()->Name() << ","
-               << call.first->PeekCalleeSlot()->Name() << std::endl;
+        answer << call.callPtr->ClassName() << ";" << call.callPtr->PeekCallerSlot()->Parent()->Name() << ","
+               << call.callPtr->PeekCalleeSlot()->Parent()->Name() << ";" << call.callPtr->PeekCallerSlot()->Name() << ","
+               << call.callPtr->PeekCalleeSlot()->Name() << std::endl;
     }
 
     if (calls_list.empty()) {
