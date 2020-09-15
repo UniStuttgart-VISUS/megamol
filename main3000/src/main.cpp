@@ -34,11 +34,12 @@ namespace stdfs = std::experimental::filesystem;
 struct CLIConfig {
     std::vector<std::string> project_files;
     std::string lua_host_address = "tcp://127.0.0.1:33333";
+    bool load_example_project = true;
 };
 
 CLIConfig handle_cli_inputs(int argc, char* argv[]);
 
-bool set_up_graph(megamol::core::MegaMolGraph& graph);
+bool set_up_example_graph(megamol::core::MegaMolGraph& graph);
 
 int main(int argc, char* argv[]) {
 
@@ -159,21 +160,20 @@ int main(int argc, char* argv[]) {
     // lua can issue rendering of frames
     lua_api.setFlushCallback(render_next_frame);
 
-	if (config.project_files.empty()) {
-		const bool graph_ok = set_up_graph(graph); // fill graph with modules and calls
+    // load project files via lua
+    for (auto& file : config.project_files) {
+	    std::string result;
+        if (!lua_api.RunFile(file, result)) {
+            std::cout << "Project file \"" << file << "\" did not execute correctly: " << result << std::endl;
+	        run_megamol = false;
+        }
+    }
+	if (config.load_example_project && config.project_files.empty()) {
+		const bool graph_ok = set_up_example_graph(graph); // fill graph with modules and calls
 		if (!graph_ok) {
 		    std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
 		    run_megamol = false;
 		}
-    } else {
-        // load project files via lua
-        for (auto& file : config.project_files) {
-		    std::string result;
-            if (!lua_api.RunFile(file, result)) {
-                std::cout << "Project file \"" << file << "\" did not execute correctly: " << result << std::endl;
-		        run_megamol = false;
-            }
-        }
     }
 
     while (run_megamol) {
@@ -199,6 +199,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
     options.add_options()
         ("project-files", "projects to load", cxxopts::value<std::vector<std::string>>())
         ("host", "address of lua host server, default: "+config.lua_host_address, cxxopts::value<std::string>())
+        ("noexample", "dont load minimal spheres example project", cxxopts::value<bool>())
         ;
     options.parse_positional({"project-files"});
 
@@ -222,10 +223,14 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         config.lua_host_address = parsed_options["host"].as<std::string>();
     }
 
+    if (parsed_options.count("noexample")) {
+        config.load_example_project = !parsed_options["noexample"].as<bool>();
+    }
+
     return config;
 }
 
-bool set_up_graph(megamol::core::MegaMolGraph& graph) {
+bool set_up_example_graph(megamol::core::MegaMolGraph& graph) {
 #define check(X) \
     if (!X) return false;
 
