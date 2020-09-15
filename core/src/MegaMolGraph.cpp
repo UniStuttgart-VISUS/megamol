@@ -24,6 +24,13 @@ static std::vector<std::string> splitPathName(std::string const& path) {
     return result;
 }
 
+static std::string clean(std::string const& path) {
+    auto begin = path.find_first_not_of(':');
+    auto end   = path.find_last_not_of(':');
+
+    return path.substr(begin, end+1 - begin);
+}
+
 static void log(std::string text) { 
 	const std::string msg = "MegaMolGraph: " + text + "\n"; 
 	megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
@@ -110,7 +117,7 @@ bool megamol::core::MegaMolGraph::CreateCall(
 
 megamol::core::MegaMolGraph::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module(std::string const& name) {
     auto it = std::find_if(this->module_list_.begin(), this->module_list_.end(),
-        [&name](megamol::core::MegaMolGraph::ModuleInstance_t const& el) { return el.request.id == name; });
+        [&name](megamol::core::MegaMolGraph::ModuleInstance_t const& el) { return clean(el.request.id) == clean(name); });
 
     return it;
 }
@@ -119,7 +126,7 @@ megamol::core::MegaMolGraph::ModuleList_t::const_iterator megamol::core::MegaMol
     std::string const& name) const {
 
     auto it = std::find_if(this->module_list_.cbegin(), this->module_list_.cend(),
-        [&name](megamol::core::MegaMolGraph::ModuleInstance_t const& el) { return el.request.id == name; });
+        [&name](megamol::core::MegaMolGraph::ModuleInstance_t const& el) { return clean(el.request.id) == clean(name); });
 
     return it;
 }
@@ -128,7 +135,7 @@ megamol::core::MegaMolGraph::CallList_t::iterator megamol::core::MegaMolGraph::f
     std::string const& from, std::string const& to) {
     auto it = std::find_if(
         this->call_list_.begin(), this->call_list_.end(), [&](megamol::core::MegaMolGraph::CallInstance_t const& el) {
-            return el.request.from == from && el.request.to == to;
+            return clean(el.request.from) == clean(from) && clean(el.request.to) == clean(to);
         });
 
     return it;
@@ -139,7 +146,7 @@ megamol::core::MegaMolGraph::CallList_t::const_iterator megamol::core::MegaMolGr
 
     auto it = std::find_if(
         this->call_list_.cbegin(), this->call_list_.cend(), [&](megamol::core::MegaMolGraph::CallInstance_t const& el) {
-            return el.request.from == from && el.request.to == to;
+            return clean(el.request.from) == clean(from) && clean(el.request.to) == clean(to);
         });
 
     return it;
@@ -422,7 +429,7 @@ megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(
         return nullptr;
     }
 
-    auto module_name = paramName.substr(0, paramName.size() - (names.back().size() + 2));
+    auto module_name = names[0];//paramName.substr(0, paramName.size() - (names.back().size() + 2));
     auto module_it = find_module(module_name);
 
     if (module_it == module_list_.end()) {
@@ -432,7 +439,11 @@ megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(
     }
 
     auto& module = *module_it->modulePtr;
-    std::string slot_name = names.back();
+    std::string slot_name;
+    for (int i = 1; i < names.size(); i++) {
+        slot_name.append("::" + names[i]);
+    }
+    slot_name = clean(slot_name);
     AbstractSlot* slot_ptr = module.FindSlot(slot_name.c_str());
     param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(slot_ptr);
 
