@@ -331,7 +331,7 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
 
     // delete all outgoing/incoming calls
     auto discard_calls = find_all_of(call_list_,
-        [&](auto const& call_info) { return (call_info.request.from == request || call_info.request.to == request); });
+        [&](CallInstance_t const& call_info) { return (call_info.request.from.find(request) != std::string::npos || call_info.request.to.find(request) != std::string::npos); });
 
     std::for_each(discard_calls.begin(), discard_calls.end(), [&](auto const& call_it) {
         delete_call(CallDeletionRequest_t{call_it->request.from, call_it->request.to});
