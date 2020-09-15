@@ -129,11 +129,6 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     this->MakeSlotAvailable(&this->psSeedPlaneNormal_);
     this->psSeedPlaneNormal_.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Rotation3D_Direction);
-	// this is needed, since the setting rotation3d_direction alters
-	// the paramValue (in this case to (-1, 0, 0)) and sets the dirty flag
-	// re-setting the paramValue fixes the issue
-    this->psSeedPlaneNormal_.Param<core::param::Vector3fParam>() \
-        ->SetValue(core::param::Vector3fParam({1.f, 0.f, 0.f}), false);
 
     this->psSeedPlanePoint_.SetParameter(new core::param::Vector3fParam({0.f, 0.f, 0.f}));
     this->MakeSlotAvailable(&this->psSeedPlanePoint_);

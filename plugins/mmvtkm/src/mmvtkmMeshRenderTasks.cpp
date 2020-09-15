@@ -14,7 +14,7 @@
 using namespace megamol;
 using namespace megamol::mmvtkm;
 
-mmvtkmMeshRenderTasks ::mmvtkmMeshRenderTasks() : m_version(0), m_batch_states{} {}
+mmvtkmMeshRenderTasks ::mmvtkmMeshRenderTasks() : m_version(0) {}
 
 mmvtkmMeshRenderTasks ::~mmvtkmMeshRenderTasks () {}
 
@@ -52,7 +52,7 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
         std::vector<std::vector<glowl::DrawElementsCommand>> draw_commands;
         std::vector<std::vector<std::array<float, 16>>> object_transforms;
         std::vector<std::shared_ptr<glowl::Mesh>> batch_meshes;
-        this->m_batch_states.clear();
+        //std::vector<std::vector<mesh::GPURenderTaskCollection::GLState>> batch_states;
 
         std::shared_ptr<glowl::Mesh> prev_mesh(nullptr);
 
@@ -63,12 +63,6 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
                 draw_commands.emplace_back(std::vector<glowl::DrawElementsCommand>());
                 object_transforms.emplace_back(std::vector<std::array<float, 16>>());
                 batch_meshes.push_back(gpu_batch_mesh);
-
-				if (sub_mesh.batch_index == gpu_mesh_storage->getMeshes().size() - 1) {
-                    this->m_batch_states.push_back(core::GLStates(true));
-                } else {
-                    this->m_batch_states.push_back(core::GLStates());
-				}
 
                 prev_mesh = gpu_batch_mesh;
             }
@@ -84,13 +78,20 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
         for (int i = 0; i < batch_meshes.size(); ++i) {
             auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
             bool blending_and_depth = i == 0;
-            rt_collection->addRenderTasks(shader, batch_meshes[i], draw_commands[i], object_transforms[i]);
+
+			if (i == batch_meshes.size() - 1) {
+                rt_collection->addRenderTasks(shader, batch_meshes[i], draw_commands[i], object_transforms[i],
+                    {std::pair<std::vector<GLuint>, bool>({GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA}, true),
+                        std::pair<std::vector<GLuint>, bool>({GL_DEPTH_TEST}, true),
+                        std::pair<std::vector<GLuint>, bool>({GL_CULL_FACE}, false)});
+            } else {
+                rt_collection->addRenderTasks(
+                    shader, batch_meshes[i], draw_commands[i], object_transforms[i]);
+			}
 
             // TODO add index to index map for removal
 
         }
-
-		lhs_rtc->setGlStates(this->m_batch_states);
     }
 
 

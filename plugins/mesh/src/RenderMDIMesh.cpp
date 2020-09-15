@@ -177,16 +177,11 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 		return false;
 	
 	//megamol::core::utility::log::Log::DefaultLog.WriteError("Hey listen!");
-	
-	// Set GL state (otherwise bounding box or view cube rendering state is used)
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
-    glDisable(GL_CULL_FACE);
-	//glCullFace(GL_BACK);
+
+
 
 	auto gpu_render_tasks = task_call->getData();
-
+	
     // TODO yet another nullptr check for gpu render tasks
 
 	auto const& per_frame_buffers = gpu_render_tasks->getPerFrameBuffers();
@@ -195,11 +190,39 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	{
         std::get<0>(buffer)->bind(std::get<1>(buffer));
 	}
-	
+    
 	// loop through "registered" render batches
 	for (auto const& render_task : gpu_render_tasks->getRenderTasks())
 	{
-        render_task.shader_program->use();
+        // Set GL state (otherwise bounding box or view cube rendering state is used)
+		for (auto const& state : render_task.states) {
+			if (state.capability.second) {
+                glEnable(state.capability.first.at(0));
+
+                if (state.capability.first.size() > 1) {
+                    switch (state.capability.first.at(0)) {
+                    case GL_BLEND:
+                        glBlendFunc(state.capability.first.at(1), state.capability.first.at(2));
+                        break;
+                    case GL_CULL_FACE:
+                        glCullFace(state.capability.first.at(1));
+                        break;
+                    default:
+                        break;
+					}
+				}
+			} else {
+                glDisable(state.capability.first.at(0));
+			}
+		}
+
+		//glDisable(GL_BLEND);
+  //      glEnable(GL_DEPTH_TEST);
+  //      // glEnable(GL_CULL_FACE);
+  //      glDisable(GL_CULL_FACE);
+  //      // glCullFace(GL_BACK);
+
+		render_task.shader_program->use();
 		
 		// TODO introduce per frame "global" data buffer to store information like camera matrices?
         render_task.shader_program->setUniform("view_mx", view_mx);

@@ -27,6 +27,12 @@ public:
     // template<typename T>
     // using IteratorPair = std::pair< T, T>;
 
+    struct GLState {
+        std::pair<std::vector<GLuint>, bool> capability;
+
+        GLState(const std::pair<std::vector<GLuint>, bool>& c) : capability(c) {}
+    };
+
     struct RenderTasks {
         /**
          * Compare RenderTasks by shader program and mesh pointer addresses.
@@ -38,12 +44,13 @@ public:
                                                              : lhs.shader_program < rhs.shader_program);
         }
 
-        std::shared_ptr<Shader>              shader_program;
-        std::shared_ptr<glowl::Mesh>         mesh;
+        std::shared_ptr<Shader> shader_program;
+        std::shared_ptr<glowl::Mesh> mesh;
         std::shared_ptr<glowl::BufferObject> draw_commands;
         std::shared_ptr<glowl::BufferObject> per_draw_data;
+        std::vector<GLState> states;
 
-        size_t                               draw_cnt;
+        size_t draw_cnt;
     };
 
     /**
@@ -67,12 +74,18 @@ public:
     template <typename PerDrawDataType>
     size_t addSingleRenderTask(std::shared_ptr<Shader> const& shader_prgm, std::shared_ptr<glowl::Mesh> const& mesh,
         glowl::DrawElementsCommand const& draw_command,
-        PerDrawDataType const& per_draw_data); // single struct of per draw data assumed?
+        PerDrawDataType const& per_draw_data, // single struct of per draw data assumed?
+        std::vector<GLState> const& states = {std::pair<std::vector<GLuint>, bool>({GL_BLEND}, false),
+            std::pair<std::vector<GLuint>, bool>({GL_DEPTH_TEST}, true),
+            std::pair<std::vector<GLuint>, bool>({GL_CULL_FACE}, false)});
 
     template <typename DrawCommandContainer, typename PerDrawDataContainer>
     size_t addRenderTasks(std::shared_ptr<Shader> const& shader_prgm, std::shared_ptr<glowl::Mesh> const& mesh,
         DrawCommandContainer const& draw_commands,
-        PerDrawDataContainer const& per_draw_data); // list of per draw data assumed?
+        PerDrawDataContainer const& per_draw_data, // list of per draw data assumed?
+        std::vector<GLState> const& states = {std::pair<std::vector<GLuint>, bool>({GL_BLEND}, false),
+            std::pair<std::vector<GLuint>, bool>({GL_DEPTH_TEST}, true),
+            std::pair<std::vector<GLuint>, bool>({GL_CULL_FACE}, false)});
 
     void deleteSingleRenderTask(size_t rt_idx);
 
@@ -114,14 +127,12 @@ private:
      * e.g. scene meta data, lights or (dynamic) simulation data
      */
     std::vector<std::pair<std::shared_ptr<glowl::BufferObject>, uint32_t>> m_per_frame_data_buffers;
-};
+}; // namespace megamol
 
 template <typename PerDrawDataType>
-inline size_t GPURenderTaskCollection::addSingleRenderTask(
-    std::shared_ptr<Shader> const& shader_prgm,
-    std::shared_ptr<glowl::Mesh> const& mesh,
-    glowl::DrawElementsCommand const& draw_command,
-    PerDrawDataType const& per_draw_data) {
+inline size_t GPURenderTaskCollection::addSingleRenderTask(std::shared_ptr<Shader> const& shader_prgm,
+    std::shared_ptr<glowl::Mesh> const& mesh, glowl::DrawElementsCommand const& draw_command,
+    PerDrawDataType const& per_draw_data, std::vector<GLState> const& states) {
     bool task_added = false;
 
     size_t rts_idx = 0;
@@ -184,6 +195,7 @@ inline size_t GPURenderTaskCollection::addSingleRenderTask(
         new_task.per_draw_data = std::make_shared<glowl::BufferObject>(
             GL_SHADER_STORAGE_BUFFER, &per_draw_data, new_pdd_byte_size, GL_DYNAMIC_DRAW);
         new_task.draw_cnt = 1;
+        new_task.states = states;
 
         // Add render task meta data entry
         RenderTaskMetaData rt_meta;
@@ -200,11 +212,9 @@ inline size_t GPURenderTaskCollection::addSingleRenderTask(
 }
 
 template <typename DrawCommandContainer, typename PerDrawDataContainer>
-inline size_t GPURenderTaskCollection::addRenderTasks(
-    std::shared_ptr<Shader> const& shader_prgm,
-    std::shared_ptr<glowl::Mesh> const& mesh,
-    DrawCommandContainer const& draw_commands,
-    PerDrawDataContainer const& per_draw_data) {
+inline size_t GPURenderTaskCollection::addRenderTasks(std::shared_ptr<Shader> const& shader_prgm,
+    std::shared_ptr<glowl::Mesh> const& mesh, DrawCommandContainer const& draw_commands,
+    PerDrawDataContainer const& per_draw_data, std::vector<GLState> const& states) {
     typedef typename PerDrawDataContainer::value_type PerDrawDataType;
     typedef typename DrawCommandContainer::value_type DrawCommandType;
 
@@ -275,6 +285,7 @@ inline size_t GPURenderTaskCollection::addRenderTasks(
         new_task.per_draw_data = std::make_shared<glowl::BufferObject>(
             GL_SHADER_STORAGE_BUFFER, per_draw_data.data(), new_pdd_byte_size, GL_DYNAMIC_DRAW);
         new_task.draw_cnt = draw_commands.size();
+        new_task.states = states;
 
         retval = m_render_task_meta_data.size();
 
@@ -293,9 +304,7 @@ inline size_t GPURenderTaskCollection::addRenderTasks(
 }
 
 template <typename PerDrawDataContainer>
-inline void GPURenderTaskCollection::updatePerDrawData(
-    size_t rt_base_idx,
-    PerDrawDataContainer const& per_draw_data) {
+inline void GPURenderTaskCollection::updatePerDrawData(size_t rt_base_idx, PerDrawDataContainer const& per_draw_data) {
     if (rt_base_idx > m_render_task_meta_data.size()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("RenderTask update error: Index out of bounds.");
         return;
@@ -310,8 +319,7 @@ inline void GPURenderTaskCollection::updatePerDrawData(
 
 template <typename PerFrameDataContainer>
 inline void GPURenderTaskCollection::addPerFrameDataBuffer(
-    PerFrameDataContainer const& per_frame_data,
-    uint32_t buffer_binding_point) {
+    PerFrameDataContainer const& per_frame_data, uint32_t buffer_binding_point) {
     if (buffer_binding_point == 0) {
         // TODO Error, 0 already in use for per draw data
     } else {
@@ -327,8 +335,7 @@ inline void GPURenderTaskCollection::addPerFrameDataBuffer(
 
 template <typename PerFrameDataContainer>
 inline void GPURenderTaskCollection::updatePerFrameDataBuffer(
-    PerFrameDataContainer const& per_frame_data,
-    uint32_t buffer_binding_point) {
+    PerFrameDataContainer const& per_frame_data, uint32_t buffer_binding_point) {
     typedef typename PerFrameDataContainer::value_type PerFrameDataType;
 
     for (auto& buffer : m_per_frame_data_buffers) {

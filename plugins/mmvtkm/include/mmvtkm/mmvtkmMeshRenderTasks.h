@@ -47,7 +47,6 @@ protected:
 
 private:
     uint32_t m_version;
-    std::vector<core::GLStates> m_batch_states;
 };
 
 } // namespace mmvtkm
