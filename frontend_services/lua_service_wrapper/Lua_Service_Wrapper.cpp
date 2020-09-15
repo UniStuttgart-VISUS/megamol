@@ -61,7 +61,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     this->m_providedResourceReferences = {};
 
-    this->m_requestedResourcesNames; //= {"ZMQ_Context"};
+    this->m_requestedResourcesNames = {"FrontendResourcesList"}; //= {"ZMQ_Context"};
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
         new megamol::core::utility::LuaHostNetworkConnectionsBroker{},
@@ -97,6 +97,11 @@ const std::vector<std::string> Lua_Service_Wrapper::getRequestedResourceNames() 
 void Lua_Service_Wrapper::setRequestedResources(std::vector<ModuleResource> resources) {
     // TODO: do something with ZMQ resource we get here
     m_requestedResourceReferences = resources;
+
+    auto& callback = resources[0].getResource< 
+        std::function< std::vector<std::string> (void)> 
+    >();
+    luaAPI.setListResourcesCallback(callback);
 }
 
 // -------- main loop callbacks ---------

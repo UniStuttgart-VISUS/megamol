@@ -114,6 +114,17 @@ int main(int argc, char* argv[]) {
     // TODO: graph manipulation during execution of graph modules is problematic, undefined?
     services.getProvidedResources().push_back({"MegaMolGraph", graph});
 
+    // proof of concept: a resource that returns a list of names of available resources
+    // used by Lua Wrapper and LuaAPI to return list of available resources via remoteconsole
+    const std::function<std::vector<std::string>()> resource_lister = [&]() -> std::vector<std::string> {
+        std::vector<std::string> resources;
+        for (auto& resource : services.getProvidedResources()) {
+            resources.push_back(resource.getIdentifier());
+        }
+        return resources;
+    };
+    services.getProvidedResources().push_back({"FrontendResourcesList", resource_lister});
+
     // distribute registered resources among registered services.
     const bool resources_ok = services.assignRequestedResources();
     // for each service we call their resource callbacks here:

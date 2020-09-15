@@ -75,6 +75,7 @@
 #define MMC_LUA_MMQUERYMODULEGRAPH "mmQueryModuleGraph"
 #define MMC_LUA_MMLISTMODULES "mmListModules"
 #define MMC_LUA_MMLISTCALLS "mmListCalls"
+#define MMC_LUA_MMLISTRESOURCES "mmListResources"
 #define MMC_LUA_MMLISTINSTANTIATIONS "mmListInstantiations"
 #define MMC_LUA_MMGETENVVALUE "mmGetEnvValue"
 #define MMC_LUA_MMQUIT "mmQuit"
@@ -133,7 +134,8 @@ void megamol::core::LuaAPI::commonInit() {
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetParamDescription>(MMC_LUA_MMGETPARAMDESCRIPTION, "(string name)\n\tReturn the description of a parameter slot.");
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetParamValue>(MMC_LUA_MMGETPARAMVALUE, "(string name)\n\tReturn the value of a parameter slot.");
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::QueryModuleGraph>(MMC_LUA_MMQUERYMODULEGRAPH, "()\n\tShow the instantiated modules and their children.");
-        luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ListCalls>(MMC_LUA_MMLISTCALLS, "()\n\tReturn a list of instantiated calls (class id, instance id, from, to).");
+        luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ListCalls>(MMC_LUA_MMLISTCALLS, "()\n\tReturn a list of instantiated calls.");
+        luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ListResources>(MMC_LUA_MMLISTRESOURCES, "()\n\tReturn a list of available resources in the frontend.");
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ListModules>(MMC_LUA_MMLISTMODULES, "(string basemodule_or_namespace)"
             "\n\tReturn a list of instantiated modules (class id, instance id), starting from a certain module downstream or inside a namespace."
             "\n\tWill use the graph root if an empty string is passed.");
@@ -854,6 +856,23 @@ int megamol::core::LuaAPI::ListCalls(lua_State* L) {
     return 1;
 }
 
+int megamol::core::LuaAPI::ListResources(lua_State* L) {
+
+    const int n = lua_gettop(L);
+    std::ostringstream answer;
+    auto resources_list = this->mmListResources_callback_();
+
+    for (auto& resource_name: resources_list) {
+        answer << resource_name << std::endl;
+    }
+
+    if (resources_list.empty()) {
+        answer << "(none)" << std::endl;
+    }
+
+    lua_pushstring(L, answer.str().c_str());
+    return 1;
+}
 
 int megamol::core::LuaAPI::ListModules(lua_State* L) {
     const int n = lua_gettop(L);
@@ -1006,6 +1025,10 @@ int megamol::core::LuaAPI::ReadTextFile(lua_State* L) {
 
 void megamol::core::LuaAPI::setFlushCallback(std::function<bool()> const& callback) {
     mmFlush_callback_ = callback;
+}
+
+void megamol::core::LuaAPI::setListResourcesCallback(std::function<std::vector<std::string>()> const& callback) {
+    mmListResources_callback_ = callback;
 }
 
 int megamol::core::LuaAPI::Flush(lua_State* L) {
