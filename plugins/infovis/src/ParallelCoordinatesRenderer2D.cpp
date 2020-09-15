@@ -1073,6 +1073,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     int approach = this->approachSlot.Param<core::param::IntParam>()->Value();
     int framesNeeded = 1;
+    glm::mat4 moveMatrix;
 
     // Intel MSAA 2 frame restoration
     if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
@@ -1158,6 +1159,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                 glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
         }
         pm = jit * pm;
+        moveMatrix = jit;
         //upload jitter back to proj Mat
         for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
 
@@ -1478,21 +1480,25 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glActiveTexture(GL_TEXTURE10);
             glBindTexture(GL_TEXTURE_2D, imageStorageA);
             glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Da"), 10);
+            glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMa"), 1, GL_FALSE, &moveMatrix[0][0]);
         }
         if (frametype == 1) {
             glActiveTexture(GL_TEXTURE11);
             glBindTexture(GL_TEXTURE_2D, imageStorageB);
             glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Db"), 11);
+            glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMb"), 1, GL_FALSE, &moveMatrix[0][0]);     
         }
         if (frametype == 2) {
             glActiveTexture(GL_TEXTURE12);
             glBindTexture(GL_TEXTURE_2D, imageStorageC);
             glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Dc"), 12);
+            glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMc"), 1, GL_FALSE, &moveMatrix[0][0]);
         }
         if (frametype == 3) {
             glActiveTexture(GL_TEXTURE13);
             glBindTexture(GL_TEXTURE_2D, imageStorageD);
             glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Dd"), 13);
+            glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMd"), 1, GL_FALSE, &moveMatrix[0][0]); 
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, origFBO);

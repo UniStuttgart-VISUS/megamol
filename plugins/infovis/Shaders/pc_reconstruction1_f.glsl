@@ -8,6 +8,11 @@ uniform int h;
 uniform int w;
 uniform int approach;
 
+uniform mat4 mMa;
+uniform mat4 mMb;
+uniform mat4 mMc;
+uniform mat4 mMd;
+
 in vec2 uv_coord;
 //layout(early_fragment_tests) in;
 out vec4 frag_out;
