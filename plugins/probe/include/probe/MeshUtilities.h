@@ -202,6 +202,19 @@ public:
         return neighboring_triangles;
     }
 
+    float getLongestEdgeLength(uint32_t idx) {
+        glm::vec3 v0 = {_vertices(_faces(idx, 0), 0), _vertices(_faces(idx, 0), 1), _vertices(_faces(idx, 0), 2)};
+        glm::vec3 v1 = {_vertices(_faces(idx, 1), 0), _vertices(_faces(idx, 1), 1), _vertices(_faces(idx, 1), 2)};
+        glm::vec3 v2 = {_vertices(_faces(idx, 2), 0), _vertices(_faces(idx, 2), 1), _vertices(_faces(idx, 2), 2)};
+
+        auto e0 = v0 - v1;
+        auto e1 = v0 - v2;
+        auto e2 = v1 - v2;
+
+        return std::max(std::max(glm::length(e0),glm::length(e1)),glm::length(e2));
+
+    }
+
     void UVMapping(const Eigen::MatrixXi& faces, const Eigen::MatrixXd& vertices, Eigen::MatrixXd& vertices_uv) {
 
         // Fix two points on the boundary
@@ -325,6 +338,18 @@ public:
         auto v1_idx = this->_faces(idx, 1);
         auto v2_idx = this->_faces(idx, 2);
 
+        auto v0_0 = this->_vertices(v0_idx,0);
+        auto v0_1 = this->_vertices(v0_idx, 1);
+        auto v0_2 = this->_vertices(v0_idx, 2);
+
+        auto v1_0 = this->_vertices(v1_idx,0);
+        auto v1_1 = this->_vertices(v1_idx, 1);
+        auto v1_2 = this->_vertices(v1_idx, 2);
+
+        auto v2_0 = this->_vertices(v2_idx,0);
+        auto v2_1 = this->_vertices(v2_idx, 1);
+        auto v2_2 = this->_vertices(v2_idx, 2);
+
         result.resize(num_pts, 3);
 
         for (int i = 0; i < num_pts; ++i) {
@@ -332,11 +357,15 @@ public:
             auto rnd_u = fltdist(rnd);
             auto rnd_v = fltdist(rnd);
 
+            glm::vec3 result_vec;
             for (int j = 0; j < result.cols(); ++j) {
-
+                //result(i, j) = this->_vertices(v0_idx, j) +
+                //               rnd_u * (this->_vertices(v1_idx, j) - this->_vertices(v0_idx, j)) + rnd_v *
+                //               (this->_vertices(v2_idx, j) - this->_vertices(v0_idx, j));
                 result(i, j) = (1 - std::sqrt(rnd_u)) * this->_vertices(v0_idx, j) +
-                               (std::sqrt(rnd_u) * (1 - rnd_v)) * this->_vertices(v1_idx, j) +
-                               (rnd_v * std::sqrt(rnd_u)) * this->_vertices(v2_idx, j);
+                                   (std::sqrt(rnd_u) * (1 - rnd_v)) * this->_vertices(v1_idx, j) +
+                                   (rnd_v * std::sqrt(rnd_u)) * this->_vertices(v2_idx, j);
+                result_vec[j] = result(i,j);
             }
         }
         return true;

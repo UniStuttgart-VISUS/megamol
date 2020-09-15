@@ -81,6 +81,7 @@ private:
     core::param::ParamSlot flexXSlot;
     core::param::ParamSlot flexYSlot;
     core::param::ParamSlot flexZSlot;
+    core::param::ParamSlot flexAlignedPosSlot;
 
 
     std::vector<float> mix;
