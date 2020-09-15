@@ -16,6 +16,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/graphics/gl/GLSLComputeShader.h"
 
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/Texture2D.hpp"
 
 namespace megamol {
@@ -28,9 +29,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName() {
-        return "TextureCombine";
-    }
+    static const char* ClassName() { return "TextureCombine"; }
 
     /**
      * Answer a human readable description of this module.
@@ -46,9 +45,7 @@ public:
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable() { 
-        return true;
-    }
+    static bool IsAvailable() { return true; }
 
     TextureCombine();
     ~TextureCombine();
@@ -66,7 +63,7 @@ protected:
      */
     void release();
 
-    /** 
+    /**
      * TODO
      */
     bool getDataCallback(core::Call& caller);
@@ -88,19 +85,19 @@ private:
     std::unique_ptr<GLSLComputeShader> m_mult_prgm;
 
     /** Texture that the combination result will be written to */
-    std::shared_ptr<glowl::Texture2D>  m_output_texture;
+    std::shared_ptr<glowl::Texture2D> m_output_texture;
 
     /** Parameter for selecting the texture combination mode, e.g. add, multiply */
-    megamol::core::param::ParamSlot    m_mode;
+    megamol::core::param::ParamSlot m_mode;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
-    megamol::core::CalleeSlot          m_output_tex_slot;
+    megamol::core::CalleeSlot m_output_tex_slot;
 
     /** Slot for querying primary input texture, i.e. a rhs connection */
-    megamol::core::CallerSlot          m_input_tex_0_slot;
+    megamol::core::CallerSlot m_input_tex_0_slot;
 
     /** Slot for querying secondary input texture, i.e. a rhs connection */
-    megamol::core::CallerSlot          m_input_tex_1_slot;
+    megamol::core::CallerSlot m_input_tex_1_slot;
 };
 
 } // namespace compositing

@@ -13,6 +13,7 @@
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/FramebufferObject.hpp"
 
 namespace megamol {
@@ -134,7 +135,6 @@ protected:
     uint32_t m_version;
 
 private:
-
     /** Local copy of last used camera*/
     core::view::Camera_2 m_last_used_camera;
 
