@@ -342,9 +342,9 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 if (!graph_ptr->ModuleExists(module_fullname)) {
                     module_ptr_list.emplace_back(module_inst.modulePtr.get());
                     /// XXX Not considered when project is loaded?!
-                    //if (module_inst.isGraphEntryPoint) {
-                    //    view_instances[module_fullname] = this->generate_unique_graph_name();
-                    //}
+                    if (module_inst.isGraphEntryPoint) {
+                        view_instances[module_fullname] = this->generate_unique_graph_name();
+                    }
                 }
             }
         } else if (use_core_instance) {
