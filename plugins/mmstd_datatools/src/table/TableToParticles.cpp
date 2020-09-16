@@ -58,6 +58,7 @@ TableToParticles::TableToParticles(void)
           {"tensor::magnitude3", "the magnitude of the third vector (row)"}}}
     , inputHash(0)
     , myHash(0)
+    , lastTimeStep(0)
     , columnIndex() {
 
     /* Register parameters. */
@@ -227,8 +228,8 @@ bool TableToParticles::pushColumnIndex(std::vector<uint32_t>& cols, const vislib
     }
 }
 
-bool TableToParticles::assertData(table::TableDataCall* ft) {
-    if (this->inputHash == ft->DataHash() && this->myTime == ft->GetFrameID() && !anythingDirty()) return true;
+bool TableToParticles::assertData(table::TableDataCall* ft, unsigned int frameID) {
+    if (this->inputHash == ft->DataHash() && this->myTime == ft->GetFrameID() && !anythingDirty() && this->lastTimeStep == frameID) return true;
 
     if (this->inputHash != ft->DataHash()) {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("TableToParticles: Dataset changed -> Updating EnumParams\n");
@@ -513,7 +514,10 @@ bool TableToParticles::assertData(table::TableDataCall* ft) {
         this->bboxMax[i] = ft->GetColumnsInfos()[indicesToCollect[i]].MaximumValue() + radius;
     }
 
-    this->myHash++;
+    this->lastTimeStep = frameID;
+    if (anythingDirty() || this->inputHash != ft->DataHash()) {
+        this->myHash++;
+    }
     this->resetAllDirty();
     this->inputHash = ft->DataHash();
     this->myTime = ft->GetFrameID();
@@ -529,16 +533,19 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
         auto* e = dynamic_cast<core::moldyn::EllipsoidalParticleDataCall*>(&call);
         auto* ft = this->slotCallTable.CallAs<table::TableDataCall>();
         if (ft == nullptr) return false;
-        (*ft)();
-
-        if (!assertData(ft)) return false;
 
         if (c != nullptr) {
-            c->SetFrameCount(1);
-            c->SetFrameID(0);
+            ft->SetFrameID(c->FrameID());
+            (*ft)(1);
+            (*ft)(0);
+
+            if (!assertData(ft, c->FrameID())) return false;
+
+            c->SetFrameCount(ft->GetFrameCount());
+            c->SetFrameID(ft->GetFrameID());
             c->SetDataHash(this->myHash);
 
-            c->SetExtent(1, this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
+            c->SetExtent(ft->GetFrameCount(), this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
                 this->bboxMax[2]);
             c->SetParticleListCount(1);
             c->AccessParticles(0).SetCount(ft->GetRowsCount());
@@ -592,11 +599,17 @@ bool TableToParticles::getMultiParticleData(core::Call& call) {
             }
             c->SetUnlocker(nullptr);
         } else if (e != nullptr) {
-            e->SetFrameCount(1);
-            e->SetFrameID(0);
+            ft->SetFrameID(e->FrameID());
+            (*ft)(1);
+            (*ft)(0);
+
+            if (!assertData(ft, e->FrameID())) return false;
+
+            e->SetFrameCount(ft->GetFrameCount());
+            e->SetFrameID(ft->GetFrameID());
             e->SetDataHash(this->myHash);
 
-            e->SetExtent(1, this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
+            e->SetExtent(ft->GetFrameCount(), this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
                 this->bboxMax[2]);
             e->SetParticleListCount(1);
             e->AccessParticles(0).SetCount(ft->GetRowsCount());
@@ -684,26 +697,30 @@ bool TableToParticles::getMultiparticleExtent(core::Call& call) {
 
         if (c != nullptr) {
             ft->SetFrameID(c->FrameID());
-            (*ft)();
-            if (!assertData(ft)) return false;
+            (*ft)(1);
+            (*ft)(0); // the bounding box is calculated from the data, so we have to call getData here
+
+            if (!assertData(ft, c->FrameID())) return false;
 
             c->SetFrameCount(ft->GetFrameCount());
             c->SetFrameID(ft->GetFrameID());
             c->SetDataHash(this->myHash);
 
-            c->SetExtent(1, this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
+            c->SetExtent(ft->GetFrameCount(), this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
                 this->bboxMax[2]);
             c->SetUnlocker(NULL);
         } else if (e != nullptr) {
             ft->SetFrameID(e->FrameID());
-            (*ft)();
-            if (!assertData(ft)) return false;
+            (*ft)(1);
+            (*ft)(0); // the bounding box is calculated from the data, so we have to call getData here
+
+            if (!assertData(ft, e->FrameID())) return false;
 
             e->SetFrameCount(ft->GetFrameCount());
             e->SetFrameID(ft->GetFrameID());
             e->SetDataHash(this->myHash);
 
-            e->SetExtent(1, this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
+            e->SetExtent(ft->GetFrameCount(), this->bboxMin[0], this->bboxMin[1], this->bboxMin[2], this->bboxMax[0], this->bboxMax[1],
                 this->bboxMax[2]);
             e->SetUnlocker(NULL);
         }
