@@ -34,11 +34,12 @@ namespace stdfs = std::experimental::filesystem;
 struct CLIConfig {
     std::vector<std::string> project_files;
     std::string lua_host_address = "tcp://127.0.0.1:33333";
+    bool load_example_project = true;
 };
 
 CLIConfig handle_cli_inputs(int argc, char* argv[]);
 
-bool set_up_graph(megamol::core::MegaMolGraph& graph);
+bool set_up_example_graph(megamol::core::MegaMolGraph& graph);
 
 int main(int argc, char* argv[]) {
 
@@ -100,6 +101,11 @@ int main(int argc, char* argv[]) {
     services.add(gui_service, &guiConfig);
     services.add(lua_service_wrapper, &luaConfig);
 
+    // TODO: cinematic
+    // => explicit FBOs!
+    // TODO: screenshooter
+    // => do or dont screenshot GUI, depending on ...
+
     const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
 
     if (!init_ok) {
@@ -112,6 +118,17 @@ int main(int argc, char* argv[]) {
     // TODO: how to solve const and non-const resources?
     // TODO: graph manipulation during execution of graph modules is problematic, undefined?
     services.getProvidedResources().push_back({"MegaMolGraph", graph});
+
+    // proof of concept: a resource that returns a list of names of available resources
+    // used by Lua Wrapper and LuaAPI to return list of available resources via remoteconsole
+    const std::function<std::vector<std::string>()> resource_lister = [&]() -> std::vector<std::string> {
+        std::vector<std::string> resources;
+        for (auto& resource : services.getProvidedResources()) {
+            resources.push_back(resource.getIdentifier());
+        }
+        return resources;
+    };
+    services.getProvidedResources().push_back({"FrontendResourcesList", resource_lister});
 
     // distribute registered resources among registered services.
     const bool resources_ok = services.assignRequestedResources();
@@ -159,21 +176,20 @@ int main(int argc, char* argv[]) {
     // lua can issue rendering of frames
     lua_api.setFlushCallback(render_next_frame);
 
-	if (config.project_files.empty()) {
-		const bool graph_ok = set_up_graph(graph); // fill graph with modules and calls
+    // load project files via lua
+    for (auto& file : config.project_files) {
+	    std::string result;
+        if (!lua_api.RunFile(file, result)) {
+            std::cout << "Project file \"" << file << "\" did not execute correctly: " << result << std::endl;
+	        run_megamol = false;
+        }
+    }
+	if (config.load_example_project && config.project_files.empty()) {
+		const bool graph_ok = set_up_example_graph(graph); // fill graph with modules and calls
 		if (!graph_ok) {
 		    std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
 		    run_megamol = false;
 		}
-    } else {
-        // load project files via lua
-        for (auto& file : config.project_files) {
-		    std::string result;
-            if (!lua_api.RunFile(file, result)) {
-                std::cout << "Project file \"" << file << "\" did not execute correctly: " << result << std::endl;
-		        run_megamol = false;
-            }
-        }
     }
 
     while (run_megamol) {
@@ -199,6 +215,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
     options.add_options()
         ("project-files", "projects to load", cxxopts::value<std::vector<std::string>>())
         ("host", "address of lua host server, default: "+config.lua_host_address, cxxopts::value<std::string>())
+        ("noexample", "dont load minimal spheres example project", cxxopts::value<bool>())
         ;
     options.parse_positional({"project-files"});
 
@@ -222,10 +239,14 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         config.lua_host_address = parsed_options["host"].as<std::string>();
     }
 
+    if (parsed_options.count("noexample")) {
+        config.load_example_project = !parsed_options["noexample"].as<bool>();
+    }
+
     return config;
 }
 
-bool set_up_graph(megamol::core::MegaMolGraph& graph) {
+bool set_up_example_graph(megamol::core::MegaMolGraph& graph) {
 #define check(X) \
     if (!X) return false;
 

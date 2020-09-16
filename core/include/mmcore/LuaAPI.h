@@ -91,6 +91,11 @@ public:
     void setFlushCallback(std::function<bool()> const& callback);
 
     /**
+     * Sets the function callback used to trigger rendering of a frame due to mmFlush.
+     */
+    void setListResourcesCallback(std::function<std::vector<std::string>()> const& callback);
+
+    /**
      * Communicates mmQuit request to rest of MegaMol main loop.
      */
     bool getShutdown() { return shutdown_; }
@@ -208,6 +213,7 @@ protected:
 
     int QueryModuleGraph(lua_State* L);
     int ListCalls(lua_State* L);
+    int ListResources(lua_State* L);
     int ListModules(lua_State* L);
     int ListInstatiations(lua_State* L);
     int ListParameters(lua_State* L);
@@ -253,6 +259,7 @@ private:
     megamol::core::MegaMolGraph& graph_;
 
     std::function<bool()> mmFlush_callback_; // renders one next frame via main loop
+    std::function<std::vector<std::string>()> mmListResources_callback_; // returns list of resources available in frontend
 
     bool shutdown_ = false;
 

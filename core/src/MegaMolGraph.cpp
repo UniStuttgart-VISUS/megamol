@@ -554,6 +554,7 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName, std
 	this->graph_entry_points.push_back({moduleName, module_ptr, resources, callback});
 
     module_it->isGraphEntryPoint = true;
+    log("set graph entry point: " + moduleName);
 
     return true;
 }
