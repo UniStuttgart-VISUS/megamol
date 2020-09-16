@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 
 #include "stdafx.h"
 #include "mmcore/MegaMolGraph.h"
@@ -115,37 +115,37 @@ bool megamol::core::MegaMolGraph::CreateCall(
     return add_call(CallInstantiationRequest{className, from, to});
 }
 
-megamol::core::MegaMolGraph::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module(std::string const& name) {
+megamol::core::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module(std::string const& name) {
     auto it = std::find_if(this->module_list_.begin(), this->module_list_.end(),
-        [&name](megamol::core::MegaMolGraph::ModuleInstance_t const& el) { return clean(el.request.id) == clean(name); });
+        [&name](megamol::core::ModuleInstance_t const& el) { return clean(el.request.id) == clean(name); });
 
     return it;
 }
 
-megamol::core::MegaMolGraph::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_module(
+megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_module(
     std::string const& name) const {
 
     auto it = std::find_if(this->module_list_.cbegin(), this->module_list_.cend(),
-        [&name](megamol::core::MegaMolGraph::ModuleInstance_t const& el) { return clean(el.request.id) == clean(name); });
+        [&name](megamol::core::ModuleInstance_t const& el) { return clean(el.request.id) == clean(name); });
 
     return it;
 }
 
-megamol::core::MegaMolGraph::CallList_t::iterator megamol::core::MegaMolGraph::find_call(
+megamol::core::CallList_t::iterator megamol::core::MegaMolGraph::find_call(
     std::string const& from, std::string const& to) {
     auto it = std::find_if(
-        this->call_list_.begin(), this->call_list_.end(), [&](megamol::core::MegaMolGraph::CallInstance_t const& el) {
+        this->call_list_.begin(), this->call_list_.end(), [&](megamol::core::CallInstance_t const& el) {
             return clean(el.request.from) == clean(from) && clean(el.request.to) == clean(to);
         });
 
     return it;
 }
 
-megamol::core::MegaMolGraph::CallList_t::const_iterator megamol::core::MegaMolGraph::find_call(
+megamol::core::CallList_t::const_iterator megamol::core::MegaMolGraph::find_call(
     std::string const& from, std::string const& to) const {
 
     auto it = std::find_if(
-        this->call_list_.cbegin(), this->call_list_.cend(), [&](megamol::core::MegaMolGraph::CallInstance_t const& el) {
+        this->call_list_.cbegin(), this->call_list_.cend(), [&](megamol::core::CallInstance_t const& el) {
             return clean(el.request.from) == clean(from) && clean(el.request.to) == clean(to);
         });
 
@@ -308,11 +308,11 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
     return true;
 }
 
-static std::list<megamol::core::MegaMolGraph::CallList_t::iterator> find_all_of(
-    megamol::core::MegaMolGraph::CallList_t list,
-    std::function<bool(megamol::core::MegaMolGraph::CallInstance_t const&)> const& func) {
+static std::list<megamol::core::CallList_t::iterator> find_all_of(
+    megamol::core::CallList_t list,
+    std::function<bool(megamol::core::CallInstance_t const&)> const& func) {
 
-    std::list<megamol::core::MegaMolGraph::CallList_t::iterator> result;
+    std::list<megamol::core::CallList_t::iterator> result;
 
     for (auto begin = list.begin(); begin != list.end(); begin++)
         if (func(*begin)) result.push_back(begin);
@@ -502,9 +502,9 @@ std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::E
     return params;
 }
 
-megamol::core::MegaMolGraph::CallList_t const& megamol::core::MegaMolGraph::ListCalls() const { return call_list_; }
+megamol::core::CallList_t const& megamol::core::MegaMolGraph::ListCalls() const { return call_list_; }
 
-megamol::core::MegaMolGraph::ModuleList_t const& megamol::core::MegaMolGraph::ListModules() const {
+megamol::core::ModuleList_t const& megamol::core::MegaMolGraph::ListModules() const {
     return module_list_;
 }
 

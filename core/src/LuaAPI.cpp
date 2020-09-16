@@ -878,7 +878,10 @@ int megamol::core::LuaAPI::ListModules(lua_State* L) {
     const int n = lua_gettop(L);
 
     std::ostringstream answer;
-    auto& modules_list = graph_.ListModules();
+    const auto *starting_point = (n == 1) ? luaL_checkstring(L, 1) : "";
+    // actually putting an empty string as an argument on purpose is OK too
+    ModuleList_t modules_list = std::string(starting_point).empty() ? graph_.ListModules() : graph_.Convenience().ListModules(starting_point);
+
     for (auto& module: modules_list) {
         answer << module.modulePtr->ClassName() << ";" << module.modulePtr->Name() << std::endl;
     }
@@ -886,22 +889,6 @@ int megamol::core::LuaAPI::ListModules(lua_State* L) {
     if (modules_list.empty()) {
         answer << "(none)" << std::endl;
     }
-
-    // TODO
-
-    //const auto fun = [&answer](Module* mod) { answer << mod->ClassName() << ";" << mod->Name() << std::endl; };
-
-    //if (n == 1) {
-    //    const auto starting_point = luaL_checkstring(L, 1);
-    //    if (!std::string(starting_point).empty()) {
-    //        this->coreInst->EnumModulesNoLock(starting_point, fun);
-    //    } else {
-    //        this->coreInst->EnumModulesNoLock(nullptr, fun);
-    //    }
-    //} else {
-    //    this->coreInst->EnumModulesNoLock(nullptr, fun);
-    //}
-    //this->coreInst->ModuleGraphRoot()->ModuleGraphLock().Unlock();
 
     lua_pushstring(L, answer.str().c_str());
     return 1;

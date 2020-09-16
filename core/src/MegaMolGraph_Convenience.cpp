@@ -1,22 +1,27 @@
-﻿#include "mmcore/MegaMolGraph_Convenience.h"
+﻿#include <sstream>
+#include "mmcore/MegaMolGraph_Convenience.h"
 #include "mmcore/MegaMolGraph.h"
 
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
 
-static MegaMolGraph& get(void* ptr) {
-    return *reinterpret_cast<MegaMolGraph*>(ptr);
+static MegaMolGraph& get(void* ptr) { return *reinterpret_cast<MegaMolGraph*>(ptr); }
+
+static void log(std::string text) {
+    const std::string msg = "MegaMolGraph_Convenience: " + text + "\n";
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
 
-static void log(std::string text) { 
-	const std::string msg = "MegaMolGraph_Convenience: " + text + "\n"; 
-	megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
+static void err(std::string text) {
+    const std::string msg = "MegaMolGraph_Convenience: " + text + "\n";
+    megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
 }
 
 MegaMolGraph_Convenience::MegaMolGraph_Convenience(void* graph_ptr) : m_graph_ptr{graph_ptr} {}
 
-MegaMolGraph_Convenience::ParameterGroup& MegaMolGraph_Convenience::CreateParameterGroup(const std::string& group_name) {
+MegaMolGraph_Convenience::ParameterGroup& MegaMolGraph_Convenience::CreateParameterGroup(
+    const std::string& group_name) {
     m_parameter_groups[group_name] = {group_name, {}, this->m_graph_ptr};
 
     return m_parameter_groups.at(group_name);
@@ -32,11 +37,12 @@ MegaMolGraph_Convenience::ParameterGroup* MegaMolGraph_Convenience::FindParamete
     return nullptr;
 }
 
-std::vector<std::reference_wrapper<MegaMolGraph_Convenience::ParameterGroup>> MegaMolGraph_Convenience::ListParameterGroups() {
+std::vector<std::reference_wrapper<MegaMolGraph_Convenience::ParameterGroup>>
+MegaMolGraph_Convenience::ListParameterGroups() {
     std::vector<std::reference_wrapper<ParameterGroup>> v;
     v.reserve(m_parameter_groups.size());
 
-    for (auto& pg: m_parameter_groups) {
+    for (auto& pg : m_parameter_groups) {
         v.push_back({pg.second});
     }
 
@@ -57,7 +63,7 @@ bool MegaMolGraph_Convenience::ParameterGroup::QueueParameterValue(const std::st
 
 bool MegaMolGraph_Convenience::ParameterGroup::ApplyQueuedParameterValues() {
     bool result = true;
-    for (auto& pv: parameter_values) {
+    for (auto& pv : parameter_values) {
         result &= get(graph).FindParameter(pv.first)->ParseValue(pv.second.c_str());
     }
 
@@ -65,7 +71,8 @@ bool MegaMolGraph_Convenience::ParameterGroup::ApplyQueuedParameterValues() {
     return result;
 }
 
-bool MegaMolGraph_Convenience::CreateChainCall(const std::string callName, const std::string from_slot_name, const std::string to_slot_name) {
+bool MegaMolGraph_Convenience::CreateChainCall(
+    const std::string callName, const std::string from_slot_name, const std::string to_slot_name) {
     auto className = callName;
     std::string chainStart = from_slot_name;
     std::string to = to_slot_name;
@@ -73,7 +80,7 @@ bool MegaMolGraph_Convenience::CreateChainCall(const std::string callName, const
     const auto split_name = [&](std::string name) -> std::optional<std::tuple<std::string, std::string>> {
         auto pos = name.find_last_of("::");
         if (pos < 4 || name.length() < pos + 2) {
-            log("chainStart module/slot name weird");
+            err("chainStart module/slot name weird");
             return std::nullopt;
         }
         auto moduleName = name.substr(0, pos - 1);
@@ -86,8 +93,8 @@ bool MegaMolGraph_Convenience::CreateChainCall(const std::string callName, const
         std::ostringstream out;
         out << "could not create \"";
         out << className;
-        out << "\" call ("<< detail <<")";
-        log(out.str());
+        out << "\" call (" << detail << ")";
+        err(out.str());
     };
 
     const auto get_module_slot = [&](std::tuple<std::string, std::string>& names_tuple) -> AbstractSlot* {
@@ -97,13 +104,13 @@ bool MegaMolGraph_Convenience::CreateChainCall(const std::string callName, const
         auto modulePtr = get(m_graph_ptr).FindModule(moduleName);
         if (!modulePtr) {
             throwError("no module named " + moduleName);
-            return nullptr; 
+            return nullptr;
         }
 
         auto slotPtr = modulePtr->FindSlot(slotName.c_str());
         if (!slotPtr) {
             throwError("module has no slot named " + slotName);
-            return nullptr; 
+            return nullptr;
         }
 
         return slotPtr;
@@ -111,7 +118,7 @@ bool MegaMolGraph_Convenience::CreateChainCall(const std::string callName, const
 
     auto to_names = split_name(to);
     if (!to_names.has_value()) {
-        return 0; 
+        return 0;
     }
     auto to_slot = get_module_slot(to_names.value());
     if (!to_slot) {
@@ -128,16 +135,26 @@ bool MegaMolGraph_Convenience::CreateChainCall(const std::string callName, const
         throwError("to slot " + to + " is not CalleeSlot");
         return 0;
     }
-    
+
     auto from_names = split_name(chainStart);
     if (!from_names.has_value()) {
-        return 0; 
+        return 0;
     }
+
+    // implementation with the new traversers
+    // TODO
+    const auto doStuff = [&](Module::ptr_type mod) {
+        // now enumerate the slots
+        // TODO
+    };
+    TraverseGraph(std::get<0>(from_names.value()), doStuff, callName);
+
     auto from_slot = get_module_slot(from_names.value());
     CallerSlot* from_caller_slot = dynamic_cast<CallerSlot*>(from_slot);
 
     // walk along chain calls until one is available and not connected
-    while (from_caller_slot && from_caller_slot->GetStatus() != AbstractSlot::SlotStatus::STATUS_UNAVAILABLE && from_caller_slot->GetStatus() == AbstractSlot::SlotStatus::STATUS_CONNECTED) {
+    while (from_caller_slot && from_caller_slot->GetStatus() != AbstractSlot::SlotStatus::STATUS_UNAVAILABLE &&
+           from_caller_slot->GetStatus() == AbstractSlot::SlotStatus::STATUS_CONNECTED) {
         Call* call = from_caller_slot->CallAs<Call>();
         if (!call) {
             throwError("call at " + std::string(from_caller_slot->FullName().PeekBuffer()) + " returned nullptr");
@@ -146,14 +163,15 @@ bool MegaMolGraph_Convenience::CreateChainCall(const std::string callName, const
 
         CalleeSlot* calleeSlot = call->PeekCalleeSlotNoConst();
         if (!calleeSlot) {
-            throwError("callee slot of call " + std::string(call->ClassName()) + " at " + std::string(from_caller_slot->FullName().PeekBuffer()) + " returned nullptr");
+            throwError("callee slot of call " + std::string(call->ClassName()) + " at " +
+                       std::string(from_caller_slot->FullName().PeekBuffer()) + " returned nullptr");
             return 0;
         }
 
         // get callee module
         std::string calleeSlotName{calleeSlot->FullName().PeekBuffer()};
         auto pos_it = calleeSlotName.find_last_of("::");
-        std::string calleeModuleName = calleeSlotName.substr(0, pos_it-1);
+        std::string calleeModuleName = calleeSlotName.substr(0, pos_it - 1);
         auto callee_module = get(m_graph_ptr).FindModule(calleeModuleName);
 
         if (!callee_module) {
@@ -192,6 +210,7 @@ bool MegaMolGraph_Convenience::CreateChainCall(const std::string callName, const
     }
 
     std::string from = from_caller_slot->FullName().PeekBuffer();
+
     bool call_ok = get(m_graph_ptr).CreateCall(className, from, to);
 
     if (!call_ok) {
@@ -201,3 +220,93 @@ bool MegaMolGraph_Convenience::CreateChainCall(const std::string callName, const
     return 0;
 }
 
+ModuleList_t MegaMolGraph_Convenience::ListModules(const std::string startModuleName) {
+    ModuleList_t ret;
+    auto modulePtr = get(m_graph_ptr).FindModule(startModuleName);
+    if (!modulePtr) {
+        err("Could not traverse graph from \"" + startModuleName + "\": module not found");
+    } else {
+        ret = ListModules(modulePtr);
+    }
+    return ret;
+}
+
+ModuleList_t MegaMolGraph_Convenience::ListModules(const Module::ptr_type startModule) {
+    ModuleList_t ret;
+    const auto fun = [&ret, this](Module::ptr_type mod) {
+        // TODO everything using moduleinstance or the module ptr ;_;
+        for (auto& mi : get(this->m_graph_ptr).ListModules()) {
+            if (mi.modulePtr == mod) {
+                ret.push_back(mi);
+            }
+        }
+    };
+    TraverseGraph(startModule, fun);
+    return ret;
+}
+
+void MegaMolGraph_Convenience::TraverseGraph(const std::string startModuleName,
+    std::function<void(Module::ptr_type)> cb, const std::string allowedCallType) {
+    auto modulePtr = get(m_graph_ptr).FindModule(startModuleName);
+    if (!modulePtr) {
+        err("Could not traverse graph from \"" + startModuleName + "\": module not found");
+    } else {
+        TraverseGraph(modulePtr, cb, allowedCallType);
+    }
+}
+
+void MegaMolGraph_Convenience::TraverseGraph(const Module::ptr_type startModule,
+    std::function<void(Module::ptr_type)> cb, const std::string allowedCallType) {
+
+    const auto throwError = [&](auto detail) {
+        std::ostringstream out;
+        out << "could not traverse graph from \"";
+        out << startModule->Name();
+        out << "\": " << detail << "";
+        err(out.str());
+    };
+
+    std::vector<Module::ptr_type> moduleStack;
+    std::map<Module::ptr_type, bool> visitedFlag;
+    for (auto& m : get(m_graph_ptr).ListModules()) {
+        visitedFlag[m.modulePtr] = false;
+    }
+    if (startModule != nullptr) {
+        moduleStack.push_back(startModule);
+    } else {
+        // add all entrypoints instead, i.e. search everywhere
+        for (auto& m : get(m_graph_ptr).ListModules()) {
+            if (m.isGraphEntryPoint) {
+                moduleStack.push_back(m.modulePtr);
+            }
+        }
+    }
+
+    while (!moduleStack.empty()) {
+        auto& mod = moduleStack.back();
+        moduleStack.pop_back();
+
+        // a module might be queued multiple times, so re-checking is required all the time
+        if (!visitedFlag[mod]) {
+            visitedFlag[mod] = true;
+            cb(mod);
+            const auto it_end = mod->ChildList_End();
+            for (auto it = mod->ChildList_Begin(); it != it_end; ++it) {
+                auto* cs = dynamic_cast<CallerSlot*>((*it).get());
+                if (cs) {
+                    auto* c = cs->CallAs<Call>();
+                    if (c) {
+                        bool ok = allowedCallType.empty() || allowedCallType == c->ClassName();
+                        if (ok) {
+                            auto mod2 =
+                                get(m_graph_ptr).FindModule(c->PeekCalleeSlot()->Parent()->FullName().PeekBuffer());
+                            if (mod2 && !visitedFlag[mod2]) {
+                                moduleStack.push_back(mod2);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
