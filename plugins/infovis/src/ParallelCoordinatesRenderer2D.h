@@ -289,6 +289,7 @@ private:
     core::param::ParamSlot halveRes;
 
     core::param::ParamSlot approachSlot;
+    core::param::ParamSlot testingFloat;
 
 
     std::vector<GLfloat> tex;
