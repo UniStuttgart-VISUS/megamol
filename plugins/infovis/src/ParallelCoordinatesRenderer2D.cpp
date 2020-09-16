@@ -180,7 +180,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     this->approachSlot << new core::param::IntParam(0);
     this->MakeSlotAvailable(&approachSlot);
 
-    this->testingFloat << new core::param::FloatParam(0.0);
+    this->testingFloat << new core::param::FloatParam(1.0);
     this->MakeSlotAvailable(&testingFloat);
 
     fragmentMinMax.resize(2);
@@ -1169,32 +1169,33 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             jit = glm::translate(
                 glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(), 1.0 / call.GetViewport().Height(), 0));
             moveMatrix = glm::translate(
-                glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
+                glm::mat4(1.0f), glm::vec3(-0.5/ call.GetViewport().Width(), 0.5/ call.GetViewport().Height(), 0));
+            invTexA = glm::inverse(glm::make_mat4(projMatrix_column));
         }
         if (frametype == 1) {
             jit = glm::translate(
                 glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), 1.0 / call.GetViewport().Height(), 0));
             moveMatrix = glm::translate(
-                glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
-
+                glm::mat4(1.0f), glm::vec3(0.5 / call.GetViewport().Width(), 0.5 / call.GetViewport().Height(), 0));
+            invTexB = glm::inverse(glm::make_mat4(projMatrix_column));
         }
         if (frametype == 2) {
             jit = glm::translate(
                 glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
             moveMatrix = glm::translate(
-                glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
-
+                glm::mat4(1.0f), glm::vec3(-0.5 / call.GetViewport().Width(), -0.5 / call.GetViewport().Height(), 0));
+            invTexC = glm::inverse(glm::make_mat4(projMatrix_column));
         }
         if (frametype == 3) {
             jit = glm::translate(
                 glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
             moveMatrix = glm::translate(
-                glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
-
+                glm::mat4(1.0f), glm::vec3(0.5 / call.GetViewport().Width(), -0.5/ call.GetViewport().Height(), 0));
+            invTexD = glm::inverse(glm::make_mat4(projMatrix_column));
         }
         pm = jit * pm;
-        moveMatrix = glm::translate(
-            glm::mat4(1.0f), glm::vec3(factor, 0, 0));
+        //moveMatrix = glm::translate(
+        //    glm::mat4(1.0f), glm::vec3(factor, 0, 0));
         //upload jitter back to proj Mat
         for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
 

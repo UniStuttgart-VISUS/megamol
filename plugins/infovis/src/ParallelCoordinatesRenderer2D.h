@@ -325,6 +325,11 @@ private:
 
     int frametype = 0;
 
+    glm::mat4 invTexA = glm::mat4(1.0);
+    glm::mat4 invTexB = glm::mat4(1.0);
+    glm::mat4 invTexC = glm::mat4(1.0);
+    glm::mat4 invTexD = glm::mat4(1.0);
+
     vislib::graphics::gl::ShaderSource vertex_shader_src;
     vislib::graphics::gl::ShaderSource fragment_shader_src;
 };
