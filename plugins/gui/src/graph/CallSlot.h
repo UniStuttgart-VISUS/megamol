@@ -9,8 +9,7 @@
 #define MEGAMOL_GUI_GRAPH_CALLSLOT_H_INCLUDED
 
 
-#include "GUIUtils.h"
-#include "widgets/HoverToolTip.h"
+#include "CallSlotPresentation.h"
 
 
 namespace megamol {
@@ -36,53 +35,6 @@ enum CallSlotType { CALLEE, CALLER };
 typedef std::shared_ptr<CallSlot> CallSlotPtr_t;
 typedef std::vector<CallSlotPtr_t> CallSlotPtrVector_t;
 typedef std::map<CallSlotType, CallSlotPtrVector_t> CallSlotPtrMap_t;
-
-
-/** ************************************************************************
- * Defines GUI call slot presentation.
- */
-class CallSlotPresentation {
-public:
-    friend class CallSlot;
-
-    struct GroupState {
-        InterfaceSlotPtr_t interfaceslot_ptr;
-    };
-
-    // VARIABLES --------------------------------------------------------------
-
-    GroupState group;
-    bool label_visible;
-    bool visible;
-
-
-    // FUNCTIONS --------------------------------------------------------------
-
-    CallSlotPresentation(void);
-    ~CallSlotPresentation(void);
-
-    ImVec2 GetPosition(void) { return this->position; }
-
-private:
-    // VARIABLES --------------------------------------------------------------
-
-    // Absolute position including canvas offset and zooming
-    ImVec2 position;
-    bool selected;
-    bool update_once;
-    bool show_modulestock;
-    ImGuiID last_compat_callslot_uid;
-    ImGuiID last_compat_interface_uid;
-    bool compatible;
-
-    // Widgets
-    HoverToolTip tooltip;
-
-    // FUNCTIONS --------------------------------------------------------------
-
-    void Present(megamol::gui::PresentPhase phase, CallSlot& inout_callslot, GraphItemsState_t& state);
-    void Update(CallSlot& inout_callslot, const GraphCanvas_t& in_canvas);
-};
 
 
 /** ************************************************************************
