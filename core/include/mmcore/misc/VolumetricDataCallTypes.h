@@ -27,7 +27,14 @@ enum ScalarType_t { UNKNOWN, SIGNED_INTEGER, UNSIGNED_INTEGER, FLOATING_POINT, B
 /** Possible (physical) memory locations */
 enum MemoryLocation { VRAM, RAM };
 
-/** Structure containing all required metadata about a data set. */
+/**
+ * Structure containing all required metadata about a data set, which are
+ * natively stored by the datRaw library (the structure allows for zero-copy
+ * transfer of the metadata).
+ *
+ * Use a VolumetricMetadataStore if you need to compute the metadata
+ * yourself instead of obtaining them from the datraw library.
+ */
 struct VolumetricMetadata_t {
 
     /** Initialise a new instance. */
@@ -39,7 +46,7 @@ struct VolumetricMetadata_t {
         ::memset(this->Extents, 0, sizeof(this->Extents));
         MinValues = nullptr;
         MaxValues = nullptr;
-		MemLoc = RAM;
+        MemLoc = RAM;
     }
 
     // creates a deep copy of the instance. beware that the owner of the copy
@@ -71,7 +78,7 @@ struct VolumetricMetadata_t {
         clone.MaxValues = new double[this->Components];
         memcpy(clone.MinValues, this->MinValues, sizeof(double) * this->Components);
         memcpy(clone.MaxValues, this->MaxValues, sizeof(double) * this->Components);
-		clone.MemLoc = this->MemLoc;
+        clone.MemLoc = this->MemLoc;
         return clone;
     }
 

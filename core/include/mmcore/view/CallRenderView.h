@@ -55,6 +55,9 @@ namespace view {
 		/** Function index of 'render' */
         static const unsigned int CALL_RENDER = AbstractCallRender::FnRender;
 
+        /** Function index of 'getExtents' */
+        static const unsigned int CALL_EXTENTS = AbstractCallRender::FnGetExtents;
+
         /** Function index of 'freeze' */
         static const unsigned int CALL_FREEZE = 7;
 

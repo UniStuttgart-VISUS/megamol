@@ -82,7 +82,7 @@ namespace datatools {
 
     private:
 
-		bool assertData(table::TableDataCall *ft);
+		bool assertData(table::TableDataCall *ft, unsigned int frameID = 0);
 
 		bool anythingDirty();
 
@@ -163,6 +163,9 @@ namespace datatools {
 
         /** if the tensor contains normalized vectors, you can also supply a magnitude */
         std::array<core::param::ParamSlot, 3> slotTensorMagnitudeColumn;
+
+        /** The lastly calculated time step */
+        unsigned int lastTimeStep;
 
 		std::vector<float> everything;
 
