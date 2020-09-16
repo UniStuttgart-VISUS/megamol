@@ -33,6 +33,10 @@ public:
     ModuleList_t ListModules(const Module::ptr_type startModule);
     void TraverseGraph(const std::string startModuleName, std::function<void(Module::ptr_type)> cb, const std::string allowedCallType = "");
     void TraverseGraph(const Module::ptr_type startModule, std::function<void(Module::ptr_type)> cb, const std::string allowedCallType = "");
+    // enumerate incoming/compatible calls on module
+    // enumerate outgoing/compatible calls on module
+    // enumerate empty/compatible callee slots on module
+    // enumerate empty/compatible caller slots on module
 
 private:
     void* m_graph_ptr = nullptr;

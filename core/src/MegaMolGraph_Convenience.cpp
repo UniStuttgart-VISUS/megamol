@@ -143,11 +143,11 @@ bool MegaMolGraph_Convenience::CreateChainCall(
 
     // implementation with the new traversers
     // TODO
-    const auto doStuff = [&](Module::ptr_type mod) {
-        // now enumerate the slots
-        // TODO
-    };
-    TraverseGraph(std::get<0>(from_names.value()), doStuff, callName);
+    //const auto doStuff = [&](Module::ptr_type mod) {
+    //    // now enumerate the slots
+    //    // TODO
+    //};
+    //TraverseGraph(std::get<0>(from_names.value()), doStuff, callName);
 
     auto from_slot = get_module_slot(from_names.value());
     CallerSlot* from_caller_slot = dynamic_cast<CallerSlot*>(from_slot);
