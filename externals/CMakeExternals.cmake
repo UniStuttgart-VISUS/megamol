@@ -244,25 +244,18 @@ function(require_external NAME)
     include(GNUInstallDirs)
 
     if(WIN32)
-      set(GLAD_LIB "bin/glad.dll")
-      set(GLAD_LIB_IMPORT "lib/glad.lib")
+      set(GLAD_LIB "bin/glad.lib")
     else()
-      #set(GLAD_LIB "lib/libglad.a")
-      set(GLAD_LIB "lib/libglad.so")
-      set(GLAD_LIB2 "lib/libglad.so.1")
+      set(GLAD_LIB "lib/libglad.a")
     endif()
 
-    add_external_project(glad SHARED
+    add_external_project(glad STATIC
       SOURCE_DIR glad
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}" "<INSTALL_DIR>/${GLAD_LIB2}" "<INSTALL_DIR>/${GLAD_LIB_IMPORT}")
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLAD_LIB}")
 
     add_external_library(glad
       PROJECT glad
-      IMPORT_LIBRARY ${GLAD_LIB_IMPORT}
       LIBRARY ${GLAD_LIB})
-
-    # glad needs to announce dll export also in header files used by megamol libraries	
-    target_compile_definitions(glad INTERFACE GLAD_GLAPI_EXPORT)
 
   # glfw3
   elseif(NAME STREQUAL "glfw3")
