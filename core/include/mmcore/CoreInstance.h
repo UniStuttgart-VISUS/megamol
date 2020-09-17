@@ -52,6 +52,8 @@
 #include "vislib/sys/Lockable.h"
 #include "mmcore/utility/log/Log.h"
 
+#include "msf/compiler_options.h"
+
 #include <functional>
 #include <memory>
 #include <unordered_map>
@@ -790,6 +792,11 @@ public:
      */
     inline void SetFrameID(uint32_t frameID) { this->frameID = frameID; }
 
+    /**
+    * Getter for ShaderFactory compiler options.
+    */
+    megamol::shaderfactory::compiler_options const& GetShaderCompilerOptions();
+
 private:
     /**
      * Nested class with pre initialisation values.
@@ -1120,6 +1127,13 @@ private:
      */
     void shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list);
 
+    /**
+    * Translates shader paths to include paths in the compiler options for the ShaderFactory.
+    * 
+    * @param config Configuration instance
+    */
+    void translateShaderPaths(megamol::core::utility::Configuration const& config);
+
 #ifdef _WIN32
 #    pragma warning(disable : 4251)
 #endif /* _WIN32 */
@@ -1131,6 +1145,9 @@ private:
 
     /** The shader source factory */
     utility::ShaderSourceFactory shaderSourceFactory;
+
+    /** Default options for ShaderFactory */
+    megamol::shaderfactory::compiler_options msfCompilerOptions;
 
     /** The Lua state */
     megamol::core::LuaState* lua;

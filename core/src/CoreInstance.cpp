@@ -159,6 +159,8 @@ megamol::core::CoreInstance::CoreInstance(void)
     megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ERROR);
 #endif
 
+    translateShaderPaths(config);
+
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
 #endif /* ULTRA_SOCKET_STARTUP */
@@ -3528,4 +3530,23 @@ bool megamol::core::CoreInstance::checkForFlushEvent(size_t const eventIdx, std:
 void megamol::core::CoreInstance::shortenFlushIdxList(size_t const eventCount, std::vector<size_t>& list) {
     list.erase(
         std::remove_if(list.begin(), list.end(), [eventCount](auto el) { return (eventCount - 1) <= el; }), list.end());
+}
+
+
+void megamol::core::CoreInstance::translateShaderPaths(megamol::core::utility::Configuration const& config) {
+    auto const v_paths = config.ShaderDirectories();
+
+    std::vector<std::filesystem::path> paths(v_paths.Count());
+
+    for (size_t idx = 0; idx < v_paths.Count(); ++idx) {
+        paths[idx] = std::filesystem::path(v_paths[idx].PeekBuffer());
+    }
+
+    msfCompilerOptions.set_include_paths(paths);
+}
+
+
+megamol::shaderfactory::compiler_options const& megamol::core::CoreInstance::GetShaderCompilerOptions() {
+    translateShaderPaths(config);
+    return msfCompilerOptions;
 }
