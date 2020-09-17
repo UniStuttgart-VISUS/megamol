@@ -9,8 +9,7 @@
 #define MEGAMOL_GUI_GRAPH_INTERFACESLOT_H_INCLUDED
 
 
-#include "GUIUtils.h"
-#include "widgets/HoverToolTip.h"
+#include "InterfaceSlotPresentation.h"
 
 
 namespace megamol {
@@ -24,61 +23,12 @@ class CallSlot;
 enum CallSlotType { CALLEE, CALLER };
 #    define _CALL_SLOT_TYPE_
 #endif
-typedef std::vector<CallSlotPtrType> CallSlotPtrVectorType;
+typedef std::vector<CallSlotPtr_t> CallSlotPtrVector_t;
 
 // Types
-typedef std::shared_ptr<InterfaceSlot> InterfaceSlotPtrType;
-typedef std::vector<InterfaceSlotPtrType> InterfaceSlotPtrVectorType;
-typedef std::map<CallSlotType, InterfaceSlotPtrVectorType> InterfaceSlotPtrMapType;
-
-
-/** ************************************************************************
- * Defines GUI call slot presentation.
- */
-class InterfaceSlotPresentation {
-public:
-    friend class InterfaceSlot;
-
-    struct GroupState {
-        ImGuiID uid;
-        bool collapsed_view;
-    };
-
-    // VARIABLES --------------------------------------------------------------
-
-    GroupState group;
-    bool label_visible;
-
-
-    // Widgets
-    HoverToolTip tooltip;
-
-    // FUNCTIONS --------------------------------------------------------------
-
-    InterfaceSlotPresentation(void);
-    ~InterfaceSlotPresentation(void);
-
-    std::string GetLabel(void) { return this->label; }
-    ImVec2 GetPosition(InterfaceSlot& inout_interfaceslot);
-    inline bool IsGroupViewCollapsed(void) { return this->group.collapsed_view; }
-
-    void SetPosition(ImVec2 pos) { this->position = pos; }
-
-private:
-    // VARIABLES --------------------------------------------------------------
-
-    bool selected;
-    std::string label;
-    ImGuiID last_compat_callslot_uid;
-    ImGuiID last_compat_interface_uid;
-    bool compatible;
-    // Absolute position including canvas offset and zooming
-    ImVec2 position;
-
-    // FUNCTIONS --------------------------------------------------------------
-
-    void Present(megamol::gui::PresentPhase phase, InterfaceSlot& inout_interfaceslot, GraphItemsStateType& state);
-};
+typedef std::shared_ptr<InterfaceSlot> InterfaceSlotPtr_t;
+typedef std::vector<InterfaceSlotPtr_t> InterfaceSlotPtrVector_t;
+typedef std::map<CallSlotType, InterfaceSlotPtrVector_t> InterfaceSlotPtrMap_t;
 
 
 /** ************************************************************************
@@ -91,19 +41,18 @@ public:
     const ImGuiID uid;
     InterfaceSlotPresentation present;
 
-
     // FUNCTIONS --------------------------------------------------------------
 
     InterfaceSlot(ImGuiID uid, bool auto_create);
     ~InterfaceSlot();
 
-    bool AddCallSlot(const CallSlotPtrType& callslot_ptr, const InterfaceSlotPtrType& parent_interfaceslot_ptr);
+    bool AddCallSlot(const CallSlotPtr_t& callslot_ptr, const InterfaceSlotPtr_t& parent_interfaceslot_ptr);
     bool RemoveCallSlot(ImGuiID callslot_uid);
     bool ContainsCallSlot(ImGuiID callslot_uid);
     bool IsConnectionValid(CallSlot& callslot);
     bool IsConnectionValid(InterfaceSlot& interfaceslot);
-    bool GetCompatibleCallSlot(CallSlotPtrType& out_callslot_ptr);
-    CallSlotPtrVectorType& GetCallSlots(void) { return this->callslots; }
+    bool GetCompatibleCallSlot(CallSlotPtr_t& out_callslot_ptr);
+    CallSlotPtrVector_t& GetCallSlots(void) { return this->callslots; }
     bool IsConnected(void);
     CallSlotType GetCallSlotType(void);
     bool IsEmpty(void);
@@ -111,7 +60,7 @@ public:
 
     // Presentation ----------------------------------------------------
 
-    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsStateType& state) {
+    inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsState_t& state) {
         this->present.Present(phase, *this, state);
     }
     inline ImVec2 GetGUIPosition(void) { return this->present.GetPosition(*this); }
@@ -120,7 +69,7 @@ private:
     // VARIABLES --------------------------------------------------------------
 
     bool auto_created;
-    CallSlotPtrVectorType callslots;
+    CallSlotPtrVector_t callslots;
 
     // FUNCTIONS --------------------------------------------------------------
 

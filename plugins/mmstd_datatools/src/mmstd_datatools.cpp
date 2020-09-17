@@ -62,6 +62,7 @@
 #include "ParticleVelocities.h"
 #include "ParticleVisibilityFromVolume.h"
 #include "ParticlesToDensity.h"
+#include "ParticleInstantiator.h"
 #include "RemapIColValues.h"
 #include "SphereDataUnifier.h"
 #include "StaticMMPLDProvider.h"
@@ -86,6 +87,9 @@
 #include "table/TableJoin.h"
 #include "table/TableObserverPlane.h"
 #include "table/TableSampler.h"
+#include "table/TableSelectionTx.h"
+#include "table/TableSort.h"
+#include "table/TableWhere.h"
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
 
@@ -163,6 +167,9 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableColumnFilter>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSampler>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableFlagFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSelectionTx>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSort>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableWhere>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermodyn>();
@@ -188,6 +195,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableManipulator>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::CPERAWDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::LocalBoundingBoxExtractor>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleInstantiator>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();

@@ -89,11 +89,15 @@ private:
     // TODO: maybe better in abstract container - no copy paste
     template <class R> std::vector<std::enable_if_t<std::is_same<float, R>::value, R>> getAs() { return dataVec; }
     
-    template <class R> std::vector<std::enable_if_t<std::is_same<char, R>::value, R>> getAs() {
+    template <class R>
+    std::vector<std::enable_if_t<(std::is_same<char, R>::value || std::is_same<unsigned char, R>::value), R>> getAs() {
         return reinterpret_cast<std::vector<R>&>(dataVec);
     }
 
-    template <class R> std::vector<std::enable_if_t<!(std::is_same<float, R>::value || std::is_same<char, R>::value), R>> getAs() {
+    template <class R>
+    std::vector<std::enable_if_t<
+        !(std::is_same<float, R>::value || std::is_same<char, R>::value || std::is_same<unsigned char, R>::value), R>>
+    getAs() {
         std::vector<R> new_vec(dataVec.begin(), dataVec.end());
         return new_vec;
     }
@@ -120,11 +124,15 @@ private:
     // TODO: maybe better in abstract container - no copy paste
     template <class R> std::vector<std::enable_if_t<std::is_same<int, R>::value, R>> getAs() { return dataVec; }
     
-    template <class R> std::vector<std::enable_if_t<std::is_same<char, R>::value, R>> getAs() {
+    template <class R>
+    std::vector<std::enable_if_t<(std::is_same<char, R>::value || std::is_same<unsigned char, R>::value), R>> getAs() {
         return reinterpret_cast<std::vector<R>&>(dataVec);
     }
 
-    template <class R> std::vector<std::enable_if_t<!(std::is_same<int, R>::value || std::is_same<char, R>::value), R>> getAs() {
+    template <class R>
+    std::vector<std::enable_if_t<
+        !(std::is_same<int, R>::value || std::is_same<char, R>::value || std::is_same<unsigned char, R>::value), R>>
+    getAs() {
         std::vector<R> new_vec(dataVec.begin(), dataVec.end());
         return new_vec;
     }
@@ -153,11 +161,16 @@ private:
         return dataVec;
     }
 
-    template <class R> std::vector<std::enable_if_t<std::is_same<char, R>::value, R>> getAs() {
+    template <class R>
+    std::vector<std::enable_if_t<(std::is_same<char, R>::value || std::is_same<unsigned char, R>::value), R>> getAs() {
         return reinterpret_cast<std::vector<R>&>(dataVec);
     }
 
-    template <class R> std::vector<std::enable_if_t<!(std::is_same<uint64_t, R>::value || std::is_same<char, R>::value), R>> getAs() {
+    template <class R>
+    std::vector<std::enable_if_t<!(std::is_same<uint64_t, R>::value || std::is_same<char, R>::value ||
+                                     std::is_same<unsigned char, R>::value),
+        R>>
+    getAs() {
         std::vector<R> new_vec(dataVec.begin(), dataVec.end());
         return new_vec;
     }
@@ -186,11 +199,16 @@ private:
         return dataVec;
     }
 
-    template <class R> std::vector<std::enable_if_t<std::is_same<char, R>::value, R>> getAs() {
+    template <class R>
+    std::vector<std::enable_if_t<(std::is_same<char, R>::value || std::is_same<unsigned char, R>::value), R>> getAs() {
         return reinterpret_cast<std::vector<R>&>(dataVec);
     }
 
-    template <class R> std::vector<std::enable_if_t<!(std::is_same<uint32_t, R>::value || std::is_same<char, R>::value), R>> getAs() {
+    template <class R>
+    std::vector<std::enable_if_t<!(std::is_same<uint32_t, R>::value || std::is_same<char, R>::value ||
+                                     std::is_same<unsigned char, R>::value),
+        R>>
+    getAs() {
         std::vector<R> new_vec(dataVec.begin(), dataVec.end());
         return new_vec;
     }
@@ -219,11 +237,12 @@ private:
         return dataVec;
     }
 
-    template <class R> std::vector<std::enable_if_t<std::is_same<char, R>::value, R>> getAs() {
+    template <class R> std::vector<std::enable_if_t<(std::is_same<char, R>::value), R>> getAs() {
         return reinterpret_cast<std::vector<R>&>(dataVec);
     }
 
-    template <class R> std::vector<std::enable_if_t<!(std::is_same<unsigned char, R>::value || std::is_same<char, R>::value), R>> getAs() {
+    template <class R>
+    std::vector<std::enable_if_t<!(std::is_same<unsigned char, R>::value || std::is_same<char, R>::value), R>> getAs() {
         std::vector<R> new_vec(dataVec.begin(), dataVec.end());
         return new_vec;
     }

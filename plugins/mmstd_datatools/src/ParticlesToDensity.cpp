@@ -6,21 +6,34 @@
  */
 #include "stdafx.h"
 #include "ParticlesToDensity.h"
-#include <algorithm>
-#include <cassert>
-#include <cstdint>
-#include <fstream>
+
+#define _USE_MATH_DEFINES
+
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
-#include "omp.h"
-#include "mmcore/utility/log/Log.h"
-#define _USE_MATH_DEFINES
-#include <chrono>
-#include <functional>
-#include <math.h>
 #include "mmcore/param/FloatParam.h"
+
+#include "mmstd_datatools/table/TableDataCall.h"
+
+#include "mmcore/utility/log/Log.h"
+
+#include "simultaneous_sort.h"
+
+#include "omp.h"
+
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <functional>
+#include <fstream>
+#include <iostream>
+#include <iterator>
+#include <limits>
+#include <numeric>
+#include <utility>
+#include <vector>
 
 using namespace megamol;
 using namespace megamol::stdplugin;
@@ -57,15 +70,18 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
     , normalizeSlot("normalize", "Normalize the output volume")
     , sigmaSlot("sigma", "Sigma for Gauss in multiple of rad")
     , surfaceSlot("forSurfaceReconstruction", "Set true if this volume is used for surface reconstruction")
-    //, datahash(std::numeric_limits<size_t>::max())
     , datahash(0)
     , time(std::numeric_limits<unsigned int>::max())
+    , has_data(false)
     , outDataSlot("outData", "Provides a density volume for the particles")
-    , inDataSlot("inData", "takes the particle data") {
+    , outParticlesSlot("outParticles", "Provides particles forming a regular grid with the sampled values")
+    , outInfoSlot("outInfo", "Provides information which can be used for visualization and filtering")
+    , inDataSlot("inData", "Takes the particle data") {
 
     auto* ep = new core::param::EnumParam(0);
     ep->SetTypePair(0, "PosToSingleCell_Volume");
     ep->SetTypePair(1, "IColToSingleCell_Volume");
+    ep->SetTypePair(2, "IVecToSingleCell_Volume");
     this->aggregatorSlot << ep;
     this->MakeSlotAvailable(&this->aggregatorSlot);
 
@@ -97,6 +113,18 @@ datatools::ParticlesToDensity::ParticlesToDensity(void)
         core::misc::VolumetricDataCall::FunctionName(core::misc::VolumetricDataCall::IDX_TRY_GET_DATA),
         &ParticlesToDensity::dummyCallback);
     this->MakeSlotAvailable(&this->outDataSlot);
+
+    this->outParticlesSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
+        core::moldyn::MultiParticleDataCall::FunctionName(0), &ParticlesToDensity::getDataCallback);
+    this->outParticlesSlot.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
+        core::moldyn::MultiParticleDataCall::FunctionName(1), &ParticlesToDensity::getExtentCallback);
+    this->MakeSlotAvailable(&this->outParticlesSlot);
+
+    this->outInfoSlot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
+        stdplugin::datatools::table::TableDataCall::FunctionName(0), &ParticlesToDensity::getDataCallback);
+    this->outInfoSlot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
+        stdplugin::datatools::table::TableDataCall::FunctionName(1), &ParticlesToDensity::getExtentCallback);
+    this->MakeSlotAvailable(&this->outInfoSlot);
 
     this->xResSlot << new core::param::IntParam(16);
     this->MakeSlotAvailable(&this->xResSlot);
@@ -137,21 +165,41 @@ bool datatools::ParticlesToDensity::getExtentCallback(megamol::core::Call& c) {
     using megamol::core::moldyn::MultiParticleDataCall;
 
     auto* out = dynamic_cast<core::misc::VolumetricDataCall*>(&c);
-    if (out == nullptr) return false;
+    auto* outGrid = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
+    auto* outInfo = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
 
     auto* inMpdc = this->inDataSlot.CallAs<MultiParticleDataCall>();
     if (inMpdc == nullptr) return false;
 
-    // if (!this->assertData(inMpdc, outDpdc)) return false;
-    inMpdc->SetFrameID(out->FrameID(), true);
+    auto frameID = out != nullptr ? out->FrameID() : (outGrid != nullptr ? outGrid->FrameID() : 0);
+    //vislib::sys::Log::DefaultLog.WriteInfo(L"ParticleToDensity requests frame %u.", frameID);
+    inMpdc->SetFrameID(frameID, true);
     if (!(*inMpdc)(1)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "ParticlesToDensity: could not get current frame extents (%u)", time - 1);
         return false;
     }
-    out->AccessBoundingBoxes().SetObjectSpaceBBox(inMpdc->GetBoundingBoxes().ObjectSpaceBBox());
-    out->AccessBoundingBoxes().SetObjectSpaceClipBox(inMpdc->GetBoundingBoxes().ObjectSpaceClipBox());
-    out->SetFrameCount(inMpdc->FrameCount());
+
+    if (out != nullptr) {
+        out->AccessBoundingBoxes().SetObjectSpaceBBox(inMpdc->GetBoundingBoxes().ObjectSpaceBBox());
+        out->AccessBoundingBoxes().SetObjectSpaceClipBox(inMpdc->GetBoundingBoxes().ObjectSpaceClipBox());
+        out->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+        out->SetFrameCount(inMpdc->FrameCount());
+    }
+
+    if (outGrid != nullptr) {
+        outGrid->AccessBoundingBoxes().SetObjectSpaceBBox(inMpdc->GetBoundingBoxes().ObjectSpaceBBox());
+        outGrid->AccessBoundingBoxes().SetObjectSpaceClipBox(inMpdc->GetBoundingBoxes().ObjectSpaceClipBox());
+        outGrid->AccessBoundingBoxes().MakeScaledWorld(1.0f);
+        outGrid->SetFrameCount(inMpdc->FrameCount());
+    }
+
+    if (outInfo != nullptr) {
+        outInfo->SetDataHash(this->datahash);
+        outInfo->SetUnlocker(nullptr);
+        outInfo->SetFrameCount(inMpdc->FrameCount());
+    }
+
     // TODO: what am I actually doing here
     // inMpdc->SetUnlocker(nullptr, false);
     // inMpdc->Unlock();
@@ -165,72 +213,163 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
     if (inMpdc == nullptr) return false;
 
     auto* outVol = dynamic_cast<core::misc::VolumetricDataCall*>(&c);
-    if (outVol == nullptr) return false;
+    auto* outGrid = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
+    auto* outInfo = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
 
-    inMpdc->SetFrameID(outVol->FrameID(), true);
-    if (!(*inMpdc)(1)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get extents.");
-        return false;
+    if (outVol != nullptr || outGrid != nullptr) {
+        auto frameID = outVol != nullptr ? outVol->FrameID() : (outGrid != nullptr ? outGrid->FrameID() : 0);
+        inMpdc->SetFrameID(frameID, true);
+        if (!(*inMpdc)(1)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get extents.");
+            return false;
+        }
+        if (!(*inMpdc)(0)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get data.");
+            return false;
+        }
+        if (this->time != inMpdc->FrameID() || this->in_datahash != inMpdc->DataHash() || this->anythingDirty()) {
+            if (this->surfaceSlot.Param<core::param::BoolParam>()->Value()) modifyBBox(inMpdc);
+            if (!this->createVolumeCPU(inMpdc)) return false;
+            this->time = inMpdc->FrameID();
+            this->in_datahash = inMpdc->DataHash();
+            ++this->datahash;
+            this->resetDirty();
+            this->has_data = true;
+        }
     }
-    if (!(*inMpdc)(0)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get data.");
-        return false;
-    }
-    if (this->time != inMpdc->FrameID() || this->in_datahash != inMpdc->DataHash() || this->anythingDirty()) {
-        if (this->surfaceSlot.Param<core::param::BoolParam>()->Value()) modifyBBox(inMpdc);
-        if (!this->createVolumeCPU(inMpdc)) return false;
-        this->time = inMpdc->FrameID();
-        this->in_datahash = inMpdc->DataHash();
-        ++this->datahash;
-        this->resetDirty();
-    }
+
+    const bool is_vector = this->aggregatorSlot.Param<core::param::EnumParam>()->Value() == 2;
 
     // TODO set data
-    outVol->SetData(this->vol[0].data());
-    metadata.Components = 1;
-    metadata.GridType = core::misc::GridType_t::CARTESIAN;
-    metadata.Resolution[0] = static_cast<size_t>(this->xResSlot.Param<core::param::IntParam>()->Value());
-    metadata.Resolution[1] = static_cast<size_t>(this->yResSlot.Param<core::param::IntParam>()->Value());
-    metadata.Resolution[2] = static_cast<size_t>(this->zResSlot.Param<core::param::IntParam>()->Value());
-    metadata.ScalarType = core::misc::ScalarType_t::FLOATING_POINT;
-    metadata.ScalarLength = sizeof(float);
-    metadata.MinValues = new double[1];
-    metadata.MinValues[0] = this->minDens;
-    metadata.MaxValues = new double[1];
-    metadata.MaxValues[0] = this->maxDens;
-    auto bbox = inMpdc->AccessBoundingBoxes().ObjectSpaceBBox();
-    metadata.Extents[0] = bbox.Width();
-    metadata.Extents[1] = bbox.Height();
-    metadata.Extents[2] = bbox.Depth();
-    metadata.NumberOfFrames = 1;
-    metadata.SliceDists[0] = new float[1];
-    metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0] - 1);
-    metadata.SliceDists[1] = new float[1];
-    metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1] - 1);
-    metadata.SliceDists[2] = new float[1];
-    metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2] - 1);
+    if (outVol != nullptr) {
+        outVol->SetFrameID(this->time);
+        outVol->SetData(this->vol[0].data());
+        metadata.Components = is_vector ? 3 : 1;
+        metadata.GridType = core::misc::GridType_t::CARTESIAN;
+        metadata.Resolution[0] = static_cast<size_t>(this->xResSlot.Param<core::param::IntParam>()->Value());
+        metadata.Resolution[1] = static_cast<size_t>(this->yResSlot.Param<core::param::IntParam>()->Value());
+        metadata.Resolution[2] = static_cast<size_t>(this->zResSlot.Param<core::param::IntParam>()->Value());
+        metadata.ScalarType = core::misc::ScalarType_t::FLOATING_POINT;
+        metadata.ScalarLength = sizeof(float);
+        metadata.MinValues = new double[is_vector ? 3 : 1];
+        metadata.MinValues[0] = this->minDens;
+        if (is_vector) metadata.MinValues[1] = this->minDens;
+        if (is_vector) metadata.MinValues[2] = this->minDens;
+        metadata.MaxValues = new double[is_vector ? 3 : 1];
+        metadata.MaxValues[0] = this->maxDens;
+        if (is_vector) metadata.MaxValues[1] = this->maxDens;
+        if (is_vector) metadata.MaxValues[2] = this->maxDens;
+        auto bbox = inMpdc->AccessBoundingBoxes().ObjectSpaceBBox();
+        metadata.Extents[0] = bbox.Width();
+        metadata.Extents[1] = bbox.Height();
+        metadata.Extents[2] = bbox.Depth();
+        metadata.NumberOfFrames = 1;
+        metadata.SliceDists[0] = new float[1];
+        metadata.SliceDists[0][0] = metadata.Extents[0] / static_cast<float>(metadata.Resolution[0] - 1);
+        metadata.SliceDists[1] = new float[1];
+        metadata.SliceDists[1][0] = metadata.Extents[1] / static_cast<float>(metadata.Resolution[1] - 1);
+        metadata.SliceDists[2] = new float[1];
+        metadata.SliceDists[2][0] = metadata.Extents[2] / static_cast<float>(metadata.Resolution[2] - 1);
 
-    metadata.Origin[0] = bbox.Left();
-    //-metadata.SliceDists[0][0] / 4.0f;
-    metadata.Origin[1] = bbox.Bottom();
-    //-metadata.SliceDists[1][0] / 4.0f;
-    metadata.Origin[2] = bbox.Back();
-    //-metadata.SliceDists[2][0] / 4.0f;
+        metadata.Origin[0] = bbox.Left();
+        //-metadata.SliceDists[0][0] / 4.0f;
+        metadata.Origin[1] = bbox.Bottom();
+        //-metadata.SliceDists[1][0] / 4.0f;
+        metadata.Origin[2] = bbox.Back();
+        //-metadata.SliceDists[2][0] / 4.0f;
 
-    metadata.IsUniform[0] = true;
-    metadata.IsUniform[1] = true;
-    metadata.IsUniform[2] = true;
-    outVol->SetMetadata(&metadata);
+        metadata.IsUniform[0] = true;
+        metadata.IsUniform[1] = true;
+        metadata.IsUniform[2] = true;
+        outVol->SetMetadata(&metadata);
 
-    outVol->SetDataHash(this->datahash);
+        outVol->SetDataHash(this->datahash);
 
-    /*outVol->SetVolumeDimension(this->xResSlot.Param<core::param::IntParam>()->Value(),
-        this->yResSlot.Param<core::param::IntParam>()->Value(), this->zResSlot.Param<core::param::IntParam>()->Value());
-    outVol->SetComponents(1);
-    outVol->SetMinimumDensity(0.0f);
-    outVol->SetMaximumDensity(this->maxDens);
-    outVol->SetVoxelMapPointer(this->vol[0].data());*/
-    // inMpdc->Unlock();
+        /*outVol->SetVolumeDimension(this->xResSlot.Param<core::param::IntParam>()->Value(),
+            this->yResSlot.Param<core::param::IntParam>()->Value(),
+        this->zResSlot.Param<core::param::IntParam>()->Value()); outVol->SetComponents(1);
+        outVol->SetMinimumDensity(0.0f);
+        outVol->SetMaximumDensity(this->maxDens);
+        outVol->SetVoxelMapPointer(this->vol[0].data());*/
+        // inMpdc->Unlock();
+    }
+
+    if (outGrid != nullptr && is_vector) {
+        outGrid->SetFrameID(this->time);
+        outGrid->SetDataHash(this->datahash);
+        outGrid->SetParticleListCount(1);
+
+        core::moldyn::MultiParticleDataCall::Particles& p = outGrid->AccessParticles(0);
+
+        p.SetCount(this->colors.size());
+
+        if (p.GetCount() > 0) {
+            p.SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ, this->grid.data());
+            p.SetDirData(
+                core::moldyn::SimpleSphericalParticles::DirDataType::DIRDATA_FLOAT_XYZ, this->directions.data());
+            p.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, this->colors.data());
+
+            p.SetGlobalRadius(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Width() /
+                              static_cast<float>(this->xResSlot.Param<core::param::IntParam>()->Value()) / 5.0f);
+        }
+    }
+
+    if (outInfo != nullptr && is_vector) {
+
+        this->info[0].SetName("PositionX");
+        this->info[0].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+
+        this->info[1].SetName("PositionY");
+        this->info[1].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+
+        this->info[2].SetName("PositionZ");
+        this->info[2].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+
+        this->info[3].SetName("VelocityX");
+        this->info[3].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+
+        this->info[4].SetName("VelocityY");
+        this->info[4].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+
+        this->info[5].SetName("VelocityZ");
+        this->info[5].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+
+        this->info[6].SetName("VelocityMag");
+        this->info[6].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+
+        if (!this->has_data) {
+            this->infoData.reserve(1);
+            this->infoData.resize(0);
+
+            outInfo->SetDataHash(0);
+        } else {
+            this->info[0].SetMinimumValue(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Left());
+            this->info[0].SetMaximumValue(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Right());
+
+            this->info[1].SetMinimumValue(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Bottom());
+            this->info[1].SetMaximumValue(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Top());
+
+            this->info[2].SetMinimumValue(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Back());
+            this->info[2].SetMaximumValue(inMpdc->AccessBoundingBoxes().ObjectSpaceBBox().Front());
+
+            this->info[3].SetMinimumValue(-1.0f);
+            this->info[3].SetMaximumValue(1.0f);
+
+            this->info[4].SetMinimumValue(-1.0f);
+            this->info[4].SetMaximumValue(1.0f);
+
+            this->info[5].SetMinimumValue(-1.0f);
+            this->info[5].SetMaximumValue(1.0f);
+
+            this->info[6].SetMinimumValue(this->minDens);
+            this->info[6].SetMaximumValue(this->maxDens);
+
+            outInfo->SetDataHash(this->datahash);
+        }
+
+        outInfo->Set(
+            this->info.size(), this->infoData.size() / this->info.size(), this->info.data(), this->infoData.data());
+    }
 
     return true;
 }
@@ -249,11 +388,17 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     auto const sy = this->yResSlot.Param<core::param::IntParam>()->Value();
     auto const sz = this->zResSlot.Param<core::param::IntParam>()->Value();
 
+    bool const is_vector = this->aggregatorSlot.Param<core::param::EnumParam>()->Value() == 2;
+
     vol.resize(omp_get_max_threads());
+    std::vector<std::vector<float>> weights(omp_get_max_threads());
 #pragma omp parallel for
     for (int init = 0; init < omp_get_max_threads(); ++init) {
-        vol[init].resize(sx * sy * sz);
+        vol[init].resize(sx * sy * sz * (is_vector ? 3 : 1));
         std::fill(vol[init].begin(), vol[init].end(), 0.0f);
+
+        weights[init].resize(sx * sy * sz);
+        std::fill(weights[init].begin(), weights[init].end(), 0.0f);
     }
 
     // TODO: the whole code is wrong since we might not have the bounding box for the actual cyclic boundary conditions.
@@ -274,12 +419,33 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
     auto const halfRangeOSy = c2->AccessBoundingBoxes().ObjectSpaceBBox().Height() * 0.5;
     auto const halfRangeOSz = c2->AccessBoundingBoxes().ObjectSpaceBBox().Depth() * 0.5;
 
-
     float const sliceDistX = rangeOSx / static_cast<float>(sx - 1);
     float const sliceDistY = rangeOSy / static_cast<float>(sy - 1);
     float const sliceDistZ = rangeOSz / static_cast<float>(sz - 1);
 
     float const maxCellSize = std::max(sliceDistX, std::max(sliceDistY, sliceDistZ));
+
+    this->grid.resize(sx * sy * sz * 3);
+    this->infoData.resize(this->info.size() * sx * sy * sz);
+    for (std::size_t z = 0; z < sz; ++z) {
+        for (std::size_t y = 0; y < sy; ++y) {
+            for (std::size_t x = 0; x < sx; ++x) {
+                const float pos_x = minOSx + sliceDistX * x;
+                const float pos_y = minOSy + sliceDistY * y;
+                const float pos_z = minOSz + sliceDistZ * z;
+
+                const auto i = x + (y + z * sy) * sx;
+
+                this->grid[i * 3 + 0] = pos_x;
+                this->grid[i * 3 + 1] = pos_y;
+                this->grid[i * 3 + 2] = pos_z;
+
+                this->infoData[i * this->info.size() + 0] = pos_x;
+                this->infoData[i * this->info.size() + 1] = pos_y;
+                this->infoData[i * this->info.size() + 2] = pos_z;
+            }
+        }
+    }
 
     for (unsigned int i = 0; i < c2->GetParticleListCount(); ++i) {
         megamol::core::moldyn::MultiParticleDataCall::Particles& parts = c2->AccessParticles(i);
@@ -294,8 +460,9 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
         totalParticles += parts.GetCount();
 
-        // https : // en.wikipedia.org/wiki/Radial_basis_function
-        auto gauss = [](float const dist, float const epsilon) -> float {
+        // Implements the Bump Function from
+        // https://en.wikipedia.org/wiki/Radial_basis_function
+        auto rbf = [](float const dist, float const epsilon) -> float {
             if (dist >= epsilon) return 0.0f;
             return std::exp(-1.0f / (1.0f - std::pow((1.0f / epsilon) * dist, 2.0f)));
         };
@@ -306,25 +473,46 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
         auto const& zAcc = parStore.GetZAcc();
         auto const& rAcc = parStore.GetRAcc();
         auto const& iAcc = parStore.GetCRAcc();
+        auto const& dxAcc = parStore.GetDXAcc();
+        auto const& dyAcc = parStore.GetDYAcc();
+        auto const& dzAcc = parStore.GetDZAcc();
 
         auto const sigma = this->sigmaSlot.Param<core::param::FloatParam>()->Value();
 
         std::function<void(int, int, int, int, float, float)> volOp;
         switch (this->aggregatorSlot.Param<core::param::EnumParam>()->Value()) {
+        case 2: {
+            volOp = [this, &rbf, &weights, dxAcc, dyAcc, dzAcc, sx, sy, sigma](int const pidx, int const x,
+                        int const y, int const z, float const dis, float const rad) -> void {
+                if (rad == 0.0f) return;
+
+                auto const val_x = dxAcc->Get_f(pidx);
+                auto const val_y = dyAcc->Get_f(pidx);
+                auto const val_z = dzAcc->Get_f(pidx);
+
+                vol[omp_get_thread_num()][(x + (y + z * sy) * sx) * 3 + 0] += rbf(dis, sigma * rad) * val_x;
+                vol[omp_get_thread_num()][(x + (y + z * sy) * sx) * 3 + 1] += rbf(dis, sigma * rad) * val_y;
+                vol[omp_get_thread_num()][(x + (y + z * sy) * sx) * 3 + 2] += rbf(dis, sigma * rad) * val_z;
+
+                weights[omp_get_thread_num()][x + (y + z * sy) * sx] += rbf(dis, sigma * rad);
+            };
+        } break;
         case 1: {
-            volOp = [this, &gauss, iAcc, sx, sy, sigma](int const pidx, int const x, int const y, int const z,
+            volOp = [this, &rbf, iAcc, sx, sy, sigma](int const pidx, int const x, int const y, int const z,
                         float const dis, float const rad) -> void {
+                if (rad == 0.0f) return;
+
                 auto const val = iAcc->Get_f(pidx);
-                vol[omp_get_thread_num()][x + (y + z * sy) * sx] +=
-                    gauss(dis, sigma * rad) * val;
+                vol[omp_get_thread_num()][x + (y + z * sy) * sx] += rbf(dis, sigma * rad) * val;
             };
         } break;
         default:
         case 0: {
-            volOp = [this, &gauss, sx, sy, sigma](int const pidx, int const x, int const y, int const z, float const dis,
-                        float const rad) -> void {
-                vol[omp_get_thread_num()][x + (y + z * sy) * sx] +=
-                    gauss(dis, sigma * rad);
+            volOp = [this, &rbf, sx, sy, sigma](int const pidx, int const x, int const y, int const z,
+                        float const dis, float const rad) -> void {
+                if (rad == 0.0f) return;
+
+                vol[omp_get_thread_num()][x + (y + z * sy) * sx] += rbf(dis, sigma * rad);
             };
         }
         }
@@ -422,18 +610,107 @@ bool datatools::ParticlesToDensity::createVolumeCPU(class megamol::core::moldyn:
 
     for (int i = 1; i < omp_get_max_threads(); ++i) {
         std::transform(vol[i].begin(), vol[i].end(), vol[0].begin(), vol[0].begin(), std::plus<>());
+        std::transform(weights[i].begin(), weights[i].end(), weights[0].begin(), weights[0].begin(), std::plus<>());
     }
 
-    maxDens = *std::max_element(vol[0].begin(), vol[0].end());
-    minDens = *std::min_element(vol[0].begin(), vol[0].end());
+    if (is_vector) {
+        this->directions.resize(vol[0].size());
+        this->colors.resize(vol[0].size() / 3);
+        this->densities.resize(vol[0].size() / 3);
+        maxDens = 0.0f;
+        minDens = std::numeric_limits<float>::max();
+        for (std::size_t i = 0; i < vol[0].size() / 3; ++i) {
+            vol[0][i * 3 + 0] /= weights[0][i] == 0.0f ? 1.0f : weights[0][i];
+            vol[0][i * 3 + 1] /= weights[0][i] == 0.0f ? 1.0f : weights[0][i];
+            vol[0][i * 3 + 2] /= weights[0][i] == 0.0f ? 1.0f : weights[0][i];
+
+            const float density =
+                std::sqrt(vol[0][i * 3 + 0] * vol[0][i * 3 + 0] + vol[0][i * 3 + 1] * vol[0][i * 3 + 1] +
+                          vol[0][i * 3 + 2] * vol[0][i * 3 + 2]);
+
+            this->directions[i * 3 + 0] = density == 0.0f ? 0.0f : vol[0][i * 3 + 0] / density;
+            this->directions[i * 3 + 1] = density == 0.0f ? 0.0f : vol[0][i * 3 + 1] / density;
+            this->directions[i * 3 + 2] = density == 0.0f ? 0.0f : vol[0][i * 3 + 2] / density;
+
+            this->infoData[i * this->info.size() + 3] = this->directions[i * 3 + 0];
+            this->infoData[i * this->info.size() + 4] = this->directions[i * 3 + 1];
+            this->infoData[i * this->info.size() + 5] = this->directions[i * 3 + 2];
+
+            maxDens = std::max(maxDens, density);
+            minDens = std::min(minDens, density);
+        }
+        for (std::size_t i = 0; i < vol[0].size() / 3; ++i) {
+            const float density =
+                std::sqrt(vol[0][i * 3 + 0] * vol[0][i * 3 + 0] + vol[0][i * 3 + 1] * vol[0][i * 3 + 1] +
+                          vol[0][i * 3 + 2] * vol[0][i * 3 + 2]);
+
+            this->colors[i] = (density - minDens) / (maxDens - minDens);
+            this->densities[i] = density;
+
+            if (this->normalizeSlot.Param<core::param::BoolParam>()->Value()) {
+                this->infoData[i * this->info.size() + 6] = (density - minDens) / (maxDens - minDens);
+            } else {
+                this->infoData[i * this->info.size() + 6] = density;
+            }
+        }
+    } else {
+        maxDens = *std::max_element(vol[0].begin(), vol[0].end());
+        minDens = *std::min_element(vol[0].begin(), vol[0].end());
+    }
+
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticlesToDensity: Captured density %f -> %f", minDens, maxDens);
 
     if (this->normalizeSlot.Param<core::param::BoolParam>()->Value()) {
         auto const rcpValRange = 1.0f / (maxDens - minDens);
-        std::transform(
-            vol[0].begin(), vol[0].end(), vol[0].begin(), [this, rcpValRange](float const& a) { return (a - minDens) * rcpValRange; });
+        std::transform(vol[0].begin(), vol[0].end(), vol[0].begin(),
+            [this, rcpValRange](float const& a) { return (a - minDens) * rcpValRange; });
         minDens = 0.0f;
         maxDens = 1.0f;
+    }
+
+    // Remove elements which represent zero-sized vectors
+    if (is_vector) {
+        std::vector<std::size_t> indices(this->densities.size());
+        std::iota(indices.begin(), indices.end(), 0);
+
+        sort_with(std::greater<float>(), this->densities, indices);
+
+        const auto cut_pos = std::find(this->densities.begin(), this->densities.end(), 0.0f);
+        const auto new_size = std::distance(this->densities.begin(), cut_pos);
+
+        std::vector<float> new_colors(this->colors.size());
+        std::vector<float> new_directions(this->directions.size());
+        std::vector<float> new_grid(this->grid.size());
+        std::vector<float> new_infoData(this->infoData.size());
+
+        for (std::size_t new_index = 0; new_index < indices.size(); ++new_index) {
+            const std::size_t old_index = indices[new_index];
+
+            std::swap(this->colors[old_index], new_colors[new_index]);
+
+            std::swap(this->directions[old_index * 3 + 0], new_directions[new_index * 3 + 0]);
+            std::swap(this->directions[old_index * 3 + 1], new_directions[new_index * 3 + 1]);
+            std::swap(this->directions[old_index * 3 + 2], new_directions[new_index * 3 + 2]);
+
+            std::swap(this->grid[old_index * 3 + 0], new_grid[new_index * 3 + 0]);
+            std::swap(this->grid[old_index * 3 + 1], new_grid[new_index * 3 + 1]);
+            std::swap(this->grid[old_index * 3 + 2], new_grid[new_index * 3 + 2]);
+
+            for (std::size_t comp = 0; comp < this->info.size(); ++comp) {
+                std::swap(this->infoData[old_index * this->info.size() + comp],
+                    new_infoData[new_index * this->info.size() + comp]);
+            }
+        }
+
+        new_colors.resize(new_size);
+        new_directions.resize(3 * new_size);
+        new_grid.resize(3 * new_size);
+        new_infoData.resize(this->info.size() * new_size);
+
+        this->colors = std::move(new_colors);
+        this->directions = std::move(new_directions);
+        this->grid = std::move(new_grid);
+        this->infoData = std::move(new_infoData);
     }
 
 //#define PTD_DEBUG_OUTPUT

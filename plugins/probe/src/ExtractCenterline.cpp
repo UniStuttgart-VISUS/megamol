@@ -13,6 +13,7 @@
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "normal_3d_omp.h"
+#include "mmcore/utility/log/Log.h"
 #include <atomic>
 
 
@@ -174,7 +175,7 @@ bool ExtractCenterline::getData(core::Call& call) {
         auto data = cm->getData();
 
         if (data->accessMesh().size() > 1 || data->accessMesh().empty()) {
-            vislib::sys::Log::DefaultLog.WriteError("[ExtractCenterline] Cannot handle mesh");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[ExtractCenterline] Cannot handle mesh");
             return false;
         }
 
@@ -184,7 +185,8 @@ bool ExtractCenterline::getData(core::Call& call) {
         for (auto& attrib : data->accessMesh()[0].attributes) {
             if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
                 if (attrib.component_type != mesh::MeshDataAccessCollection::FLOAT) {
-                    vislib::sys::Log::DefaultLog.WriteError("[ExtractCenterline] Cannot handle data type");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[ExtractCenterline] Cannot handle data type");
                     return false;
                 }
                 vertices = reinterpret_cast<float*>(attrib.data);

@@ -53,258 +53,273 @@ bool ADIOStoMultiParticle::getDataCallback(core::Call& call) {
 
         cad->setFrameIDtoLoad(mpdc->FrameID());
 
-
-        auto availVars = cad->getAvailableVars();
-        if (cad->isInVars("xyz")) {
-            cad->inquire("xyz");
-        } else if (cad->isInVars("x") && cad->isInVars("y") && cad->isInVars("z")) {
-            cad->inquire("x");
-            cad->inquire("y");
-            cad->inquire("z");
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("ADIOStoMultiParticle: No particle positions found");
-            return false;
-        }
-
-        cad->inquire("global_box");
-        cad->inquire("count");
-        // Radius
-        if (cad->isInVars("radius")) {
-            cad->inquire("radius");
-        } else if (cad->isInVars("global_radius")) {
-            cad->inquire("global_radius");
-        }
-        // Colors
-        if (cad->isInVars("r")) {
-            cad->inquire("r");
-            cad->inquire("g");
-            cad->inquire("b");
-            cad->inquire("a");
-        } else if (cad->isInVars("global_r")) {
-            cad->inquire("global_r");
-            cad->inquire("global_g");
-            cad->inquire("global_b");
-            cad->inquire("global_a");
-        }
-        // Intensity
-        else if (cad->isInVars("i")) {
-            cad->inquire("i");
-        }
-        // ID
-        if (cad->isInVars("id")) {
-            cad->inquire("id");
-        }
-        // list_offset
-        if (cad->isInVars("list_offset")) {
-            cad->inquire("list_offset");
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Expected list_offset variable to be set");
-            return false;
-        }
-        // list_box
-        if (cad->isInVars("list_box")) {
-            cad->inquire("list_box");
-        }
-
-
-        if (!(*cad)(0)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("ADIOStoMultiParticle: Error during GetData");
-            return false;
-        }
-
-        std::vector<char> X;
-        std::vector<char> Y;
-        std::vector<char> Z;
-
-        stride = 0;
-        if (cad->isInVars("xyz")) {
-            X = cad->getData("xyz")->GetAsChar();
-            stride += 3 * cad->getData("xyz")->getTypeSize();
-            if (cad->getData("xyz")->getTypeSize() == 4) {
-                vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
+        try {
+            auto availVars = cad->getAvailableVars();
+            if (cad->isInVars("xyz")) {
+                cad->inquire("xyz");
+            } else if (cad->isInVars("x") && cad->isInVars("y") && cad->isInVars("z")) {
+                cad->inquire("x");
+                cad->inquire("y");
+                cad->inquire("z");
             } else {
-                vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
-            }
-        } else if (cad->isInVars("x") && cad->isInVars("y") && cad->isInVars("z")) {
-            X = cad->getData("x")->GetAsChar();
-            Y = cad->getData("y")->GetAsChar();
-            Z = cad->getData("z")->GetAsChar();
-            stride += 3 * cad->getData("x")->getTypeSize();
-            if (cad->getData("x")->getTypeSize() == 4) {
-                vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
-            } else {
-                vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
-            }
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("ADIOStoMultiParticle: No particle positions found");
-            return false;
-        }
-        std::vector<float> box = cad->getData("global_box")->GetAsFloat();
-
-        auto p_count = cad->getData("count")->GetAsUInt64();
-        std::vector<char> radius;
-        std::vector<char> r;
-        std::vector<char> g;
-        std::vector<char> b;
-        std::vector<char> a;
-        std::vector<char> id;
-        std::vector<char> intensity;
-
-        // list_box
-        if (cad->isInVars("list_box")) {
-            list_box = cad->getData("list_box")->GetAsFloat();
-        }
-        // Radius
-        if (cad->isInVars("radius")) {
-            radius = cad->getData("radius")->GetAsChar();
-            stride += 3 * cad->getData("radius")->getTypeSize();
-        }
-        // Colors
-        if (cad->isInVars("r")) {
-            r = cad->getData("r")->GetAsChar();
-            g = cad->getData("g")->GetAsChar();
-            b = cad->getData("b")->GetAsChar();
-            a = cad->getData("a")->GetAsChar();
-            stride += 4 * cad->getData("r")->getTypeSize();
-        } else if (cad->isInVars("global_r")) {
-            r = cad->getData("global_r")->GetAsChar();
-            g = cad->getData("global_g")->GetAsChar();
-            b = cad->getData("global_b")->GetAsChar();
-            a = cad->getData("global_a")->GetAsChar();
-        } else if (cad->isInVars("i")) {
-            intensity = cad->getData("i")->GetAsChar();
-            stride += cad->getData("i")->getTypeSize();
-            // normalizing intentsity to [0,1]
-            // std::vector<float>::iterator minIt = std::min_element(std::begin(intensity), std::end(intensity));
-            // std::vector<float>::iterator maxIt = std::max_element(std::begin(intensity), std::end(intensity));
-            // float minIntensity = intensity[std::distance(std::begin(intensity), minIt)];
-            // float maxIntensity = intensity[std::distance(std::begin(intensity), maxIt)];
-            // for (auto i = 0; i < intensity.size(); i++) {
-            //	intensity[i] = (intensity[i] - minIntensity)/(maxIntensity - minIntensity);
-            //}
-        }
-        // ID
-        if (cad->isInVars("id")) {
-            id = cad->getData("id")->GetAsChar();
-            stride += cad->getData("id")->getTypeSize();
-        }
-
-        // Set bounding box
-        const vislib::math::Cuboid<float> cubo(box[0], box[1], box[2], box[3], box[4], box[5]);
-        mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(cubo);
-        mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(cubo);
-
-        // ParticeList offset
-        plist_offset = cad->getData("list_offset")->GetAsUInt64();
-
-        // merge node offsets
-        size_t count_index = 0;
-        for (auto k = 0; k < plist_offset.size(); k++) {
-
-            // Set particles
-            unsigned long long int particleCount;
-            if (plist_offset[k] == 0 && count_index != 0) {
-                ++count_index;
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "ADIOStoMultiParticle: No particle positions found");
+                return false;
             }
 
-            if (count_index > 0) {
-                plist_offset[k] += p_count[count_index - 1];
+            cad->inquire("global_box");
+            cad->inquire("count");
+            // Radius
+            if (cad->isInVars("radius")) {
+                cad->inquire("radius");
+            } else if (cad->isInVars("global_radius")) {
+                cad->inquire("global_radius");
             }
-        }
-
-        // Set particle list count
-        plist_count.reserve(plist_offset.size());
-        mpdc->SetParticleListCount(plist_offset.size());
-        mix.resize(plist_offset.size());
-        for (auto k = 0; k < plist_offset.size(); k++) {
-
-            unsigned long long int particleCount;
-
-            if (k == plist_offset.size()-1) {
-                auto const tot_count = std::accumulate(p_count.begin(), p_count.end(), uint64_t(0));
-                particleCount = tot_count - plist_offset[k];
-            } else {
-                particleCount = plist_offset[k + 1] - plist_offset[k];
+            // Colors
+            if (cad->isInVars("r")) {
+                cad->inquire("r");
+                cad->inquire("g");
+                cad->inquire("b");
+                cad->inquire("a");
+            } else if (cad->isInVars("global_r")) {
+                cad->inquire("global_r");
+                cad->inquire("global_g");
+                cad->inquire("global_b");
+                cad->inquire("global_a");
             }
-            plist_count.emplace_back(particleCount);
-
-            // Set types
-            colType = core::moldyn::SimpleSphericalParticles::COLDATA_NONE;
-            idType = core::moldyn::SimpleSphericalParticles::IDDATA_NONE;
-
-            if (cad->isInVars("global_radius")) {
-                auto flt_radius = cad->getData("global_radius")->GetAsFloat();
-                mpdc->AccessParticles(k).SetGlobalRadius(flt_radius[0]);
-            } else if (cad->isInVars("radius")) {
-                vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR;
-            } else {
-                mpdc->AccessParticles(k).SetGlobalRadius(1.0f);
+            // Intensity
+            else if (cad->isInVars("i")) {
+                cad->inquire("i");
             }
-            if (cad->isInVars("global_r")) {
-                auto flt_r = reinterpret_cast<std::vector<float>&>(r);
-                auto flt_g = reinterpret_cast<std::vector<float>&>(g);
-                auto flt_b = reinterpret_cast<std::vector<float>&>(b);
-                auto flt_a = reinterpret_cast<std::vector<float>&>(a);
-                mpdc->AccessParticles(k).SetGlobalColour(r[0] * 255, g[0] * 255, b[0] * 255, a[0] * 255);
-            } else if (cad->isInVars("r")) {
-                if (cad->getData("r")->getType() == "float") {
-                    colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA;
-                } else {
-                    colType = core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA;
-                }
-            } else if (cad->isInVars("i")) {
-                if (cad->getData("i")->getType() == "float") {
-                    colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I;
-                } else {
-                    colType = core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I;
-                }
-            } else {
-                mpdc->AccessParticles(k).SetGlobalColour(0.8 * 255, 0.8 * 255, 0.8 * 255, 1.0 * 255);
-            }
+            // ID
             if (cad->isInVars("id")) {
-                if (cad->getData("id")->getType() == "uint64_t") {
-                    idType = core::moldyn::SimpleSphericalParticles::IDDATA_UINT64;
-                } else if (cad->getData("id")->getType() == "uint32_t") {
-                    idType = core::moldyn::SimpleSphericalParticles::IDDATA_UINT32;
+                cad->inquire("id");
+            }
+            // list_offset
+            if (cad->isInVars("list_offset")) {
+                cad->inquire("list_offset");
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Expected list_offset variable to be set");
+                return false;
+            }
+            // list_box
+            if (cad->isInVars("list_box")) {
+                cad->inquire("list_box");
+            }
+
+
+            if (!(*cad)(0)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("ADIOStoMultiParticle: Error during GetData");
+                return false;
+            }
+
+            std::vector<unsigned char> X;
+            std::vector<unsigned char> Y;
+            std::vector<unsigned char> Z;
+
+            stride = 0;
+            if (cad->isInVars("xyz")) {
+                X = cad->getData("xyz")->GetAsUChar();
+                stride += 3 * cad->getData("xyz")->getTypeSize();
+                if (cad->getData("xyz")->getTypeSize() == 4) {
+                    vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
+                } else {
+                    vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
+                }
+            } else if (cad->isInVars("x") && cad->isInVars("y") && cad->isInVars("z")) {
+                X = cad->getData("x")->GetAsUChar();
+                Y = cad->getData("y")->GetAsUChar();
+                Z = cad->getData("z")->GetAsUChar();
+                stride += 3 * cad->getData("x")->getTypeSize();
+                if (cad->getData("x")->getTypeSize() == 4) {
+                    vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ;
+                } else {
+                    vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_DOUBLE_XYZ;
+                }
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "ADIOStoMultiParticle: No particle positions found");
+                return false;
+            }
+            std::vector<float> box = cad->getData("global_box")->GetAsFloat();
+
+            auto p_count = cad->getData("count")->GetAsUInt64();
+            std::vector<unsigned char> radius;
+            std::vector<unsigned char> r;
+            std::vector<unsigned char> g;
+            std::vector<unsigned char> b;
+            std::vector<unsigned char> a;
+            std::vector<unsigned char> id;
+            std::vector<unsigned char> intensity;
+
+            // list_box
+            if (cad->isInVars("list_box")) {
+                list_box = cad->getData("list_box")->GetAsFloat();
+            }
+            // Radius
+            if (cad->isInVars("radius")) {
+                radius = cad->getData("radius")->GetAsUChar();
+                stride += 3 * cad->getData("radius")->getTypeSize();
+            }
+            // Colors
+            if (cad->isInVars("r")) {
+                r = cad->getData("r")->GetAsUChar();
+                g = cad->getData("g")->GetAsUChar();
+                b = cad->getData("b")->GetAsUChar();
+                a = cad->getData("a")->GetAsUChar();
+                stride += 4 * cad->getData("r")->getTypeSize();
+            } else if (cad->isInVars("global_r")) {
+                r = cad->getData("global_r")->GetAsUChar();
+                g = cad->getData("global_g")->GetAsUChar();
+                b = cad->getData("global_b")->GetAsUChar();
+                a = cad->getData("global_a")->GetAsUChar();
+            } else if (cad->isInVars("i")) {
+                intensity = cad->getData("i")->GetAsUChar();
+                stride += cad->getData("i")->getTypeSize();
+                // normalizing intentsity to [0,1]
+                // std::vector<float>::iterator minIt = std::min_element(std::begin(intensity), std::end(intensity));
+                // std::vector<float>::iterator maxIt = std::max_element(std::begin(intensity), std::end(intensity));
+                // float minIntensity = intensity[std::distance(std::begin(intensity), minIt)];
+                // float maxIntensity = intensity[std::distance(std::begin(intensity), maxIt)];
+                // for (auto i = 0; i < intensity.size(); i++) {
+                //	intensity[i] = (intensity[i] - minIntensity)/(maxIntensity - minIntensity);
+                //}
+            }
+            // ID
+            if (cad->isInVars("id")) {
+                id = cad->getData("id")->GetAsUChar();
+                stride += cad->getData("id")->getTypeSize();
+            }
+
+            // Set bounding box
+            const vislib::math::Cuboid<float> cubo(box[0], box[1], box[2], box[3], box[4], box[5]);
+            mpdc->AccessBoundingBoxes().SetObjectSpaceBBox(cubo);
+            mpdc->AccessBoundingBoxes().SetObjectSpaceClipBox(cubo);
+
+            // ParticeList offset
+            plist_offset = cad->getData("list_offset")->GetAsUInt64();
+
+            // merge node offsets
+            size_t count_index = 0;
+            for (auto k = 0; k < plist_offset.size(); k++) {
+
+                // Set particles
+                unsigned long long int particleCount;
+                if (plist_offset[k] == 0 && count_index != 0) {
+                    ++count_index;
+                }
+
+                if (count_index > 0) {
+                    plist_offset[k] += p_count[count_index - 1];
                 }
             }
 
-            // Fill mmpld byte array
-            mix[k].clear();
-            mix[k].shrink_to_fit();
-            mix[k].reserve(stride * p_count[k]);
+            // Set particle list count
+            plist_count.reserve(plist_offset.size());
+            mpdc->SetParticleListCount(plist_offset.size());
+            mix.resize(plist_offset.size());
+            for (auto k = 0; k < plist_offset.size(); k++) {
 
-            for (size_t i = plist_offset[k]; i < (plist_offset[k] + particleCount); i++) {
+                unsigned long long int particleCount;
 
-                if (cad->isInVars("xyz")) {
-                    const size_t sot = cad->getData("xyz")->getTypeSize();
-                    mix[k].insert(mix[k].end(), X.begin() + 3 * sot * i, X.begin() + 3 * sot * i + 3 * sot);
+                if (k == plist_offset.size() - 1) {
+                    auto const tot_count = std::accumulate(p_count.begin(), p_count.end(), uint64_t(0));
+                    particleCount = tot_count - plist_offset[k];
                 } else {
-                    const size_t sot = cad->getData("x")->getTypeSize();
-                    mix[k].insert(mix[k].end(), X.begin() + sot * i, X.begin() + sot * (i + 1));
-                    mix[k].insert(mix[k].end(), Y.begin() + sot * i, Y.begin() + sot * (i + 1));
-                    mix[k].insert(mix[k].end(), Z.begin() + sot * i, Z.begin() + sot * (i + 1));
+                    particleCount = plist_offset[k + 1] - plist_offset[k];
                 }
-                if (cad->isInVars("radius")) {
-                    std::vector<char> tmp_radius = reinterpret_cast<std::vector<char>&>(radius);
-                    const size_t sot = cad->getData("radius")->getTypeSize();
-                    mix[k].insert(mix[k].end(), tmp_radius.begin() + sot * i, tmp_radius.begin() + sot * i + sot);
+                plist_count.emplace_back(particleCount);
+
+                // Set types
+                colType = core::moldyn::SimpleSphericalParticles::COLDATA_NONE;
+                idType = core::moldyn::SimpleSphericalParticles::IDDATA_NONE;
+
+                if (cad->isInVars("global_radius")) {
+                    auto flt_radius = cad->getData("global_radius")->GetAsFloat();
+                    mpdc->AccessParticles(k).SetGlobalRadius(flt_radius[0]);
+                } else if (cad->isInVars("radius")) {
+                    vertType = core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZR;
+                } else {
+                    mpdc->AccessParticles(k).SetGlobalRadius(1.0f);
                 }
-                if (cad->isInVars("r")) {
-                    const size_t sot = cad->getData("r")->getTypeSize();
-                    mix[k].insert(mix[k].end(), r.begin() + sot * i, r.begin() + sot * (i + 1));
-                    mix[k].insert(mix[k].end(), g.begin() + sot * i, g.begin() + sot * (i + 1));
-                    mix[k].insert(mix[k].end(), b.begin() + sot * i, b.begin() + sot * (i + 1));
-                    mix[k].insert(mix[k].end(), a.begin() + sot * i, a.begin() + sot * (i + 1));
+                if (cad->isInVars("global_r")) {
+                    auto flt_r = reinterpret_cast<std::vector<float>&>(r);
+                    auto flt_g = reinterpret_cast<std::vector<float>&>(g);
+                    auto flt_b = reinterpret_cast<std::vector<float>&>(b);
+                    auto flt_a = reinterpret_cast<std::vector<float>&>(a);
+                    mpdc->AccessParticles(k).SetGlobalColour(r[0] * 255, g[0] * 255, b[0] * 255, a[0] * 255);
+                } else if (cad->isInVars("r")) {
+                    if (cad->getData("r")->getType() == "float") {
+                        colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA;
+                    } else {
+                        colType = core::moldyn::SimpleSphericalParticles::COLDATA_UINT8_RGBA;
+                    }
                 } else if (cad->isInVars("i")) {
-                    const size_t sot = cad->getData("i")->getTypeSize();
-                    mix[k].insert(mix[k].end(), intensity.begin() + sot * i, intensity.begin() + sot * (i + 1));
+                    if (cad->getData("i")->getType() == "float") {
+                        colType = core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I;
+                    } else {
+                        colType = core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I;
+                    }
+                } else {
+                    mpdc->AccessParticles(k).SetGlobalColour(0.8 * 255, 0.8 * 255, 0.8 * 255, 1.0 * 255);
                 }
                 if (cad->isInVars("id")) {
-                    const size_t sot = cad->getData("id")->getTypeSize();
-                    mix[k].insert(mix[k].end(), id.begin() + sot * i, id.begin() + sot * (i + 1));
+                    if (cad->getData("id")->getType() == "uint64_t") {
+                        idType = core::moldyn::SimpleSphericalParticles::IDDATA_UINT64;
+                    } else if (cad->getData("id")->getType() == "uint32_t") {
+                        idType = core::moldyn::SimpleSphericalParticles::IDDATA_UINT32;
+                    }
+                }
+
+                // Fill mmpld byte array
+                mix[k].clear();
+                mix[k].shrink_to_fit();
+                mix[k].reserve(stride * p_count[k]);
+
+                const bool have_interleaved_pos = cad->isInVars("xyz");
+                const bool have_radius = cad->isInVars("radius");
+                const bool have_colors = cad->isInVars("r");
+                const bool have_intensity = cad->isInVars("i");
+                const bool have_ids = cad->isInVars("id");
+                const size_t interleaved_pos_size = have_interleaved_pos ? cad->getData("xyz")->getTypeSize() : 0;
+                const size_t pos_size = have_interleaved_pos ? 0 : cad->getData("x")->getTypeSize();
+                const size_t radius_size = have_radius ? cad->getData("radius")->getTypeSize() : 0;
+                const size_t col_size = have_colors ? cad->getData("r")->getTypeSize() : 0;
+                const size_t intensity_size = have_intensity ? cad->getData("i")->getTypeSize() : 0;
+                const size_t id_size = have_ids ? cad->getData("id")->getTypeSize() : 0;
+
+                for (size_t i = plist_offset[k]; i < (plist_offset[k] + particleCount); i++) {
+
+                    if (have_interleaved_pos) {
+                        mix[k].insert(mix[k].end(), X.begin() + 3 * interleaved_pos_size * i,
+                            X.begin() + 3 * interleaved_pos_size * (i + 1));
+                    } else {
+                        mix[k].insert(mix[k].end(), X.begin() + pos_size * i, X.begin() + pos_size * (i + 1));
+                        mix[k].insert(mix[k].end(), Y.begin() + pos_size * i, Y.begin() + pos_size * (i + 1));
+                        mix[k].insert(mix[k].end(), Z.begin() + pos_size * i, Z.begin() + pos_size * (i + 1));
+                    }
+                    if (have_radius) {
+                        std::vector<unsigned char> tmp_radius = reinterpret_cast<std::vector<unsigned char>&>(radius);
+                        mix[k].insert(mix[k].end(), tmp_radius.begin() + radius_size * i,
+                            tmp_radius.begin() + radius_size * (i + 1));
+                    }
+                    if (have_colors) {
+                        mix[k].insert(mix[k].end(), r.begin() + col_size * i, r.begin() + col_size * (i + 1));
+                        mix[k].insert(mix[k].end(), g.begin() + col_size * i, g.begin() + col_size * (i + 1));
+                        mix[k].insert(mix[k].end(), b.begin() + col_size * i, b.begin() + col_size * (i + 1));
+                        mix[k].insert(mix[k].end(), a.begin() + col_size * i, a.begin() + col_size * (i + 1));
+                    } else if (have_intensity) {
+                        mix[k].insert(mix[k].end(), intensity.begin() + intensity_size * i,
+                            intensity.begin() + intensity_size * (i + 1));
+                    }
+                    if (have_ids) {
+                        mix[k].insert(mix[k].end(), id.begin() + id_size * i, id.begin() + id_size * (i + 1));
+                    }
                 }
             }
+        } catch (std::exception ex) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "ADIOStoMultiParticle: exception while trying to use data: %s", ex.what());
         }
     }
 
