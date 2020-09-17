@@ -114,13 +114,13 @@ bool megamol::gui::PickingBuffer::ProcessMouseMove(double x, double y) {
                 this->interaction_collection->accessPendingManipulations().push(Manipulation{
                     InteractionType::MOVE_ALONG_AXIS, id,
                     interaction.axis_x, interaction.axis_y, interaction.axis_z, scale });
-                // TODO add manipulation task with scale * axis
+                /// TODO Add manipulation task with scale * axis
                 */
             }
         }
     }
 
-    // TODO compute manipulation based on mouse movement
+    /// TODO Compute manipulation based on mouse movement
 
     return false;
 }

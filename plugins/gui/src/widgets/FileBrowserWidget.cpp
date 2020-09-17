@@ -45,7 +45,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
         if (open_popup) {
 #ifdef GUI_USE_FILESYSTEM
             // Check given file name path
-            stdfs::path tmp_file_path = static_cast<stdfs::path>(inout_filename);
+            stdfs::path tmp_file_path = inout_filename.c_str();
             if (tmp_file_path.empty() || !stdfs::exists(tmp_file_path)) {
                 tmp_file_path = stdfs::current_path();
             }
@@ -273,6 +273,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                 stdfs::path tmp_file_path =
                     static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(this->file_name_str);
                 inout_filename = tmp_file_path.generic_u8string();
+                GUIUtils::Utf8Decode(inout_filename);
                 ImGui::CloseCurrentPopup();
                 retval = true;
             }
@@ -363,6 +364,8 @@ bool megamol::gui::FileBrowserWidget::splitPath(
             out_path = in_file_path.generic_u8string();
             out_file.clear();
         }
+        GUIUtils::Utf8Decode(out_path);
+        GUIUtils::Utf8Decode(out_file);
     } catch (stdfs::filesystem_error e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);

@@ -82,7 +82,6 @@ void GUIView::Render(const mmcRenderViewContext& context) {
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
-    this->gui.SynchronizeGraphs();
     if (crv) {
         crv->SetOutputBuffer(GL_BACK);
         crv->SetInstanceTime(context.InstanceTime);
@@ -114,6 +113,8 @@ void GUIView::Render(const mmcRenderViewContext& context) {
     if (this->doHookCode()) {
         this->doAfterRenderHook();
     }
+
+    this->gui.SynchronizeGraphs();
 }
 
 
@@ -257,7 +258,8 @@ bool GUIView::OnRenderView(megamol::core::Call& call) {
     ::ZeroMemory(&context, sizeof(context));
     context.Time = crv->Time();
     context.InstanceTime = crv->InstanceTime();
-    // XXX: Affinity
+    // XXX Affinity?
+
     this->Render(context);
 
     this->overrideCall = nullptr;

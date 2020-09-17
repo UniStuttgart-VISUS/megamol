@@ -1,5 +1,5 @@
 /*
- * InterfaceSlot.cpp
+ * InterfaceSlotPresentation.cpp
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.

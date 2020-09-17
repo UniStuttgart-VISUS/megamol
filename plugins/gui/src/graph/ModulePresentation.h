@@ -1,5 +1,5 @@
 /*
- * Module.h
+ * ModulePresentation.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -25,7 +25,7 @@ namespace gui {
 class Module;
 
 
-/** ************************************************************************
+/** ***************************************************************************
  * Defines GUI module presentation.
  */
 class ModulePresentation {

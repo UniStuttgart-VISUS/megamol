@@ -84,14 +84,11 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
         // Draw group widget (if defined) ...
         for (auto& group_widget_id : this->group_widget_ids) {
             // Check for same group name and count of different parameter types
-            /// TODO Is this check too expensive? (remove check for group_name)
             if ((group_widget_id.second.type == group.second.second) && (group_widget_id.first == group_name)) {
 
                 found_group_widget = true;
                 group_widget_id.second.active = true;
-
                 ImGui::PushID(group_widget_id.first.c_str());
-
                 if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
 
                     if (in_extended.IsTrue()) {

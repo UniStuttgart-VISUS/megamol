@@ -1,5 +1,5 @@
 /*
- * Graph.h
+ * GraphPresentation.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -53,7 +53,6 @@ public:
         this->graph_state.interact.interfaceslot_compat_ptr.reset();
     }
 
-    bool StateFromJsonString(Graph& inout_graph, const std::string& json_string);
 
     ImGuiID GetHoveredGroup(void) const { return this->graph_state.interact.group_hovered_uid; }
     ImGuiID GetSelectedGroup(void) const { return this->graph_state.interact.group_selected_uid; }
@@ -65,7 +64,7 @@ public:
     bool GetCallLabelVisibility(void) const { return this->show_call_names; }
     bool IsCanvasHoverd(void) const { return this->canvas_hovered; }
 
-    void SetLayoutGraph(void) { this->graph_layout = 1; }
+    void SetLayoutGraph(bool l = true) { this->graph_layout = ((l) ? (1) : (0)); }
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -81,6 +80,7 @@ private:
     float parameter_sidebar_width;
     bool reset_zooming;
     std::string param_name_space;
+    std::string main_view_name;
     ImVec2 multiselect_start_pos;
     ImVec2 multiselect_end_pos;
     bool multiselect_done;
@@ -98,7 +98,6 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     void Present(Graph& inout_graph, GraphState_t& state);
-    bool StateToJSON(Graph& inout_graph, nlohmann::json& out_json);
 
     void present_menu(Graph& inout_graph);
     void present_canvas(Graph& inout_graph, float child_width);

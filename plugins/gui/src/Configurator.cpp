@@ -119,14 +119,7 @@ bool megamol::gui::Configurator::Draw(
         // because initial gui graph is hidden. It should not be manipulated
         // since there is no synchronization for the core instance graph (yet)
         auto graph_count = this->graph_collection.GetGraphs().size();
-        if (graph_count == 1) {
-            auto graph_ptr = this->graph_collection.GetGraphs().front();
-            if (graph_ptr->RunningState().IsFalse()) {
-                // Load inital project
-                /// this->graph_collection.LoadProjectFromCore(core_instance, nullptr);
-                /// or: this->add_empty_project();
-            }
-        } else {
+        if (graph_count != 1) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Invalid expected number of graphs: %i (should be 1, for loaded running graph). [%s, %s, line "
                 "%d]\n",
@@ -154,14 +147,20 @@ bool megamol::gui::Configurator::Draw(
         // Hotkeys
         if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]) &&
             (this->graph_state.graph_selected_uid != GUI_INVALID_ID)) {
-            this->graph_state.graph_save = true;
+
+            bool running_graph = false;
+            GraphPtr_t graph_ptr;
+            if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
+                running_graph = graph_ptr->IsRunning();
+            }
+            this->graph_state.graph_save = !running_graph;
         }
 
         // Clear dropped file list (when configurator window is opened, after it was closed)
         if (ImGui::IsWindowAppearing()) {
             megamol::gui::Configurator::dropped_files.clear();
         }
-        // Process dropped files
+        // Process dropped files ...
         if (!megamol::gui::Configurator::dropped_files.empty()) {
             // ... only if configurator is focused.
             if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
@@ -173,15 +172,23 @@ bool megamol::gui::Configurator::Draw(
         }
 
         // Draw Windows -------------------------------------------------------
+
+        // Menu
         this->draw_window_menu(core_instance);
+
+        // Splitter
         this->graph_state.graph_width = 0.0f;
         if (this->show_module_list_sidebar) {
             this->splitter_widget.Widget(SplitterWidget::FixedSplitterSide::LEFT, this->module_list_sidebar_width,
                 this->graph_state.graph_width);
+
+            // Module List
             this->draw_window_module_list(this->module_list_sidebar_width);
             ImGui::SameLine();
         }
+        // Graphs
         this->graph_collection.PresentGUI(this->graph_state);
+
         // Process Pop-ups
         this->drawPopUps();
 
@@ -201,7 +208,19 @@ void megamol::gui::Configurator::UpdateStateParameter(void) {
     nlohmann::json configurator_json;
     if (this->configurator_state_to_json(configurator_json)) {
         std::string state;
-        state = configurator_json.dump(2);
+
+        try {
+            state = configurator_json.dump(2);
+        } catch (std::exception e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            return;
+        } catch (...) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return;
+        }
+
         this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
     }
 }
@@ -249,11 +268,20 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
             }
 
             // Save currently active project to LUA file
+            bool running_graph = false;
+            GraphPtr_t graph_ptr;
+            if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
+                running_graph = graph_ptr->IsRunning();
+            }
             if (ImGui::MenuItem("Save Editor Project",
                     std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]).ToString().c_str(),
-                    false, (this->graph_state.graph_selected_uid != GUI_INVALID_ID))) {
+                    false, ((this->graph_state.graph_selected_uid != GUI_INVALID_ID) && !running_graph))) {
                 this->graph_state.graph_save = true;
             }
+            if (running_graph) {
+                this->tooltip.ToolTip("Save Running Project using Global Menu.");
+            }
+
             ImGui::EndMenu();
         }
 
@@ -297,7 +325,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
 
     ImGui::BeginGroup();
 
-    const float search_child_height = ImGui::GetFrameHeightWithSpacing() * 2.25f;
+    const float search_child_height = ImGui::GetFrameHeightWithSpacing() * 2.5f;
     auto child_flags =
         ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
     ImGui::BeginChild("module_search_child_window", ImVec2(width, search_child_height), false, child_flags);
@@ -316,6 +344,8 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
     auto search_string = this->search_widget.GetSearchString();
 
     ImGui::EndChild();
+
+    // ------------------------------------------------------------------------
 
     child_flags = ImGuiWindowFlags_NavFlattened;
     ImGui::BeginChild("module_list_child_window", ImVec2(width, 0.0f), true, child_flags);
@@ -485,7 +515,7 @@ void megamol::gui::Configurator::add_empty_project(void) {
             ModulePtr_t module_ptr;
             if (graph_ptr->GetModule(module_uid, module_ptr)) {
                 auto graph_module = graph_ptr->GetModules().back();
-                graph_module->is_view_instance = true;
+                graph_module->main_view_name = "Instance_1";
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Unable to add initial gui view module: '%s'. [%s, %s, line %d]\n",
@@ -545,19 +575,25 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
                 }
 
             } else if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
+                // Check for configurator settings of previously loaded graphs
                 for (auto& config_item : header_item.value().items()) {
-                    std::string json_graph_id = config_item.key(); /// = graph filename
-                    // Load graph from file
-                    auto graph_uid = this->graph_collection.LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
-                    // Overwrite graph states with the one found in this project
-                    /// XXX Comment for ignoring graph state stored in this project
-                    // if (graph_uid != GUI_INVALID_ID) {
-                    //    GraphPtr_t graph_ptr;
-                    //    if (this->graph_collection.GetGraph(graph_uid, graph_ptr)) {
-                    //        // Let graph search for his configurator state in this project
-                    //        graph_ptr->GUIStateFromJsonString(in_json_string);
-                    //    }
-                    //}
+                    std::string json_graph_id = config_item.key();
+                    GUIUtils::Utf8Decode(json_graph_id);
+                    if (json_graph_id == GUI_JSON_TAG_PROJECT_GRAPH) {
+                        // Read configurator state for running graph
+                        for (auto& graph_ptr : this->graph_collection.GetGraphs()) {
+                            if (graph_ptr->IsRunning()) {
+                                if (graph_ptr->StateFromJsonString(in_json_string)) {
+                                    // Disable layouting if graph state was found
+                                    graph_ptr->present.SetLayoutGraph(false);
+                                }
+                                break;
+                            }
+                        }
+                    } else {
+                        // Otherwise load additonal graph from given file name
+                        auto graph_uid = this->graph_collection.LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
+                    }
                 }
             }
         }
@@ -604,14 +640,11 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
 bool megamol::gui::Configurator::configurator_state_to_json(nlohmann::json& out_json) {
 
     try {
-        /// Append to given json
-        // out_json.clear();
-
         out_json[GUI_JSON_TAG_CONFIGURATOR]["show_module_list_sidebar"] = this->show_module_list_sidebar;
         out_json[GUI_JSON_TAG_CONFIGURATOR]["module_list_sidebar_width"] = this->module_list_sidebar_width;
 
         for (auto& graph_ptr : this->graph_collection.GetGraphs()) {
-            graph_ptr->GUIStateToJSON(out_json);
+            graph_ptr->StateToJSON(out_json, graph_ptr->IsRunning());
         }
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote configurator state to JSON.");
@@ -677,20 +710,18 @@ void megamol::gui::Configurator::drawPopUps(void) {
         ImGuiID selected_callslot_uid = selected_graph_ptr->present.GetSelectedCallSlot();
         ImGuiID selected_group_uid = selected_graph_ptr->present.GetSelectedGroup();
 
-        bool valid_double_click =
-            (ImGui::IsMouseDoubleClicked(0) && !this->show_module_list_child &&
-                selected_graph_ptr->present.IsCanvasHoverd() && (selected_group_uid == GUI_INVALID_ID));
-        bool double_click_callslot =
+        bool valid_double_click = (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->present.IsCanvasHoverd() &&
+                                   (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_child));
+        bool valid_double_click_callslot =
             (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->present.IsCanvasHoverd() &&
                 (selected_callslot_uid != GUI_INVALID_ID) &&
                 ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)));
 
-        if (valid_double_click || double_click_callslot) {
+        if (valid_double_click || valid_double_click_callslot) {
             std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
             this->last_selected_callslot_uid = selected_callslot_uid;
             // Force consume double click!
             ImGui::GetIO().MouseDoubleClicked[0] = false;
-            /// ImGui::GetIO().MouseClicked[0] = false;
         }
     }
     if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
@@ -706,14 +737,16 @@ void megamol::gui::Configurator::drawPopUps(void) {
         ImGui::SetCursorScreenPos(this->module_list_popup_pos);
         const float child_width = 250.0f;
         const float child_height = 350.0f;
-        float diff_width = (ImGui::GetWindowSize().x - this->module_list_popup_pos.x);
-        float diff_height = (ImGui::GetWindowSize().y - this->module_list_popup_pos.y);
+        float diff_width = (ImGui::GetWindowPos().x + ImGui::GetWindowSize().x - this->module_list_popup_pos.x);
+        float diff_height = (ImGui::GetWindowPos().y + ImGui::GetWindowSize().y - this->module_list_popup_pos.y);
         if (diff_width < child_width) {
             this->module_list_popup_pos.x -= (child_width - diff_width);
         }
+        this->module_list_popup_pos.x = std::max(this->module_list_popup_pos.x, ImGui::GetWindowPos().x);
         if (diff_height < child_height) {
             this->module_list_popup_pos.y -= (child_height - diff_height);
         }
+        this->module_list_popup_pos.y = std::max(this->module_list_popup_pos.y, ImGui::GetWindowPos().y);
         ImGui::SetCursorScreenPos(this->module_list_popup_pos);
         auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NavFlattened;
         ImGui::BeginChild("module_list_child", ImVec2(child_width, child_height), true, child_flags);

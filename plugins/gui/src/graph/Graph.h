@@ -37,14 +37,19 @@ typedef std::vector<Call::StockCall> CallStockVector_t;
 
 class Graph {
 public:
-    enum QueueChange { ADD_MODULE, DELETE_MODULE, ADD_CALL, DELETE_CALL };
+    friend class GraphPresentation;
+
+    enum QueueChange { ADD_MODULE, DELETE_MODULE, RENAME_MODULE, ADD_CALL, DELETE_CALL };
+
     struct QueueData {
-        std::string classname = "";
-        std::string id = "";
-        std::string caller = "";
-        std::string callee = "";
-        bool graph_entry = false;
+        std::string id = "";        // Requierd for ALL queue cahnges
+        std::string classname = ""; // Requierd for ADD_MODULE, ADD_CALL
+        bool graph_entry = false;   // Requierd for ADD_MODULE
+        std::string rename_id = ""; // Requierd for RENAME_MODULE
+        std::string caller = "";    // Requierd for ADD_CALL, DELETE_CALL
+        std::string callee = "";    // Requierd for ADD_CALL, DELETE_CALL
     };
+
     typedef std::tuple<QueueChange, QueueData> SyncQueueData_t;
     typedef std::queue<SyncQueueData_t> SyncQueue_t;
     typedef std::shared_ptr<SyncQueue_t> SyncQueuePtr_t;
@@ -62,7 +67,7 @@ public:
 
     ImGuiID AddModule(const ModuleStockVector_t& stock_modules, const std::string& module_class_name);
     ImGuiID AddEmptyModule(void);
-    bool DeleteModule(ImGuiID module_uid);
+    bool DeleteModule(ImGuiID module_uid, bool force = false);
     inline const ModulePtrVector_t& GetModules(void) { return this->modules; }
     bool GetModule(ImGuiID module_uid, ModulePtr_t& out_module_ptr);
     bool ModuleExists(const std::string& module_fullname);
@@ -84,8 +89,6 @@ public:
     inline void ResetDirty(void) { this->dirty_flag = false; }
     inline void ForceSetDirty(void) { this->dirty_flag = true; }
 
-    bool IsMainViewSet(void);
-
     bool UniqueModuleRename(const std::string& module_name);
 
     const std::string GetFilename(void) const { return this->filename; }
@@ -93,33 +96,38 @@ public:
 
     const SyncQueuePtr_t& GetSyncQueue(void) { return this->sync_queue; }
 
-    inline vislib::math::Ternary RunningState(void) const { return this->running_state; }
-    inline void SetRunning(vislib::math::Ternary p) { this->running_state = p; }
+    inline bool IsRunning(void) const { return this->running_state; }
+    inline void SetRunning(bool r) { this->running_state = r; }
 
     // Presentation ----------------------------------------------------
 
     inline void PresentGUI(GraphState_t& state) { this->present.Present(*this, state); }
-    bool GUIStateFromJsonString(const std::string& json_string) {
-        return this->present.StateFromJsonString(*this, json_string);
-    }
-    bool GUIStateToJSON(nlohmann::json& out_json) { return this->present.StateToJSON(*this, out_json); }
+
+    bool StateFromJsonString(const std::string& json_string);
+    bool StateToJSON(nlohmann::json& out_json, bool save_as_project_graph);
 
 private:
     // VARIABLES --------------------------------------------------------------
 
-    unsigned int group_name_uid;
     ModulePtrVector_t modules;
     CallPtrVector_t calls;
     GroupPtrVector_t groups;
     bool dirty_flag;
     std::string filename;
     SyncQueuePtr_t sync_queue;
-    vislib::math::Ternary running_state;
+    bool running_state;
 
     // FUNCTIONS --------------------------------------------------------------
 
     const std::string generate_unique_group_name(void);
+    const std::string generate_unique_main_view_name(void);
     const std::string generate_unique_module_name(const std::string& name);
+
+    void add_rename_module_sync_event(const std::string& current_name, const std::string& new_name);
+
+    /// TEMP
+    // Returns true if current action is NOT supported for running graphs.
+    bool NOT_SUPPORTED_RUNNING_GRAPH_ACTION(const std::string& log_action);
 };
 
 

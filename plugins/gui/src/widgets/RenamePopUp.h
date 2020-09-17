@@ -10,6 +10,7 @@
 
 
 #include "GUIUtils.h"
+#include "widgets/HoverToolTip.h"
 
 
 namespace megamol {
@@ -29,6 +30,8 @@ public:
 
 private:
     std::string rename_string;
+
+    HoverToolTip tooltip;
 };
 
 

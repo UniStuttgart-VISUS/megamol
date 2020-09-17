@@ -1,5 +1,5 @@
 /*
- * GraphCollection.cpp
+ * GraphCollectionPresentation.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -108,12 +108,14 @@ void megamol::gui::GraphCollectionPresentation::SaveProjectToFile(
     bool popup_failed = false;
     std::string project_filename;
     GraphPtr_t graph_ptr;
-    if (inout_graph_collection.GetGraph(state.graph_selected_uid, graph_ptr)) {
-        project_filename = graph_ptr->GetFilename();
+    if (open_popup) {
+        if (inout_graph_collection.GetGraph(state.graph_selected_uid, graph_ptr)) {
+            project_filename = graph_ptr->GetFilename();
+        }
     }
     if (this->file_browser.PopUp(
             FileBrowserWidget::FileBrowserFlag::SAVE, "Save Editor Project", open_popup, project_filename)) {
-        popup_failed = !inout_graph_collection.SaveProjectToFile(state.graph_selected_uid, project_filename, false);
+        popup_failed = !inout_graph_collection.SaveProjectToFile(state.graph_selected_uid, project_filename);
     }
     MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);

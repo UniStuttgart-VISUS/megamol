@@ -13,7 +13,8 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-ParameterOrbitalWidget::ParameterOrbitalWidget(void) : m_rotation(1.0f, 0.0f, 0.0f, 0.0f) {}
+ParameterOrbitalWidget::ParameterOrbitalWidget(void)
+    : m_rotation(1.0f, 0.0f, 0.0f, 0.0f), m_direction(0.0f, 0.0f, -1.0f) {}
 
 
 bool megamol::gui::ParameterOrbitalWidget::gizmo3D_rotation_axes(glm::vec4& inout_rotation) {
@@ -37,10 +38,10 @@ bool megamol::gui::ParameterOrbitalWidget::gizmo3D_rotation_direction(glm::vec3&
     bool retval = false;
 
     if (ImGui::gizmo3D("##gizmo2", this->m_direction, ImGui::GetNextItemWidth(), imguiGizmo::modeDirection)) {
-        inout_direction = glm::vec3(this->m_direction.x, this->m_direction.y, this->m_direction.z) * (-1.0f);
+        inout_direction = glm::vec3(this->m_direction.x, this->m_direction.y, this->m_direction.z);
         retval = true;
     } else {
-        this->m_direction = ::vec3(inout_direction.x, inout_direction.y, inout_direction.z) * (-1.0f);
+        this->m_direction = ::vec3(inout_direction.x, inout_direction.y, inout_direction.z);
     }
 
     return retval;

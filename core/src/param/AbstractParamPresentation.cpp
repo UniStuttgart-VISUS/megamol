@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/param/AbstractParamPresentation.h"
 
+
 using namespace megamol::core::param;
 
 
@@ -154,7 +155,6 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
         if (in_json_string.empty()) {
             return false;
         }
-
         bool found_parameters = false;
         bool valid = true;
         nlohmann::json json;
@@ -167,7 +167,6 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
 
         for (auto& header_item : json.items()) {
             if (header_item.key() == GUI_JSON_TAG_GUISTATE_PARAMETERS) {
-
                 found_parameters = true;
                 for (auto& config_item : header_item.value().items()) {
                     std::string json_param_name = config_item.key();
@@ -218,21 +217,11 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
                             this->SetGUIReadOnly(gui_read_only);
                             this->SetGUIPresentation(gui_presentation_mode);
                             retval = true;
+                            break;
                         }
                     }
                 }
             }
-        }
-
-        if (retval) {
-#ifdef GUI_VERBOSE
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Read parameter state from JSON string.");
-#endif // GUI_VERBOSE
-        }
-        else {
-            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON for '%s' [%s, %s, line
-            /// %d]\n", param_fullname.c_str(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
         }
     }
     catch (nlohmann::json::type_error& e) {
@@ -269,18 +258,12 @@ bool AbstractParamPresentation::ParameterGUIStateToJSON(nlohmann::json& inout_js
 
     try {
         // Append to given json
-
         inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_visibility"] =
             this->IsGUIVisible();
         inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_read-only"] =
             this->IsGUIReadOnly();
         inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_presentation_mode"] =
             static_cast<int>(this->GetGUIPresentation());
-
-#ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Wrote parameter state to JSON.");
-#endif // GUI_VERBOSE
-
     }
     catch (nlohmann::json::type_error& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
