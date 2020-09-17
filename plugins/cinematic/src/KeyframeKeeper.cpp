@@ -767,7 +767,7 @@ void KeyframeKeeper::linearizeSimTangent(Keyframe stkf) {
 void KeyframeKeeper::snapKeyframe2AnimFrame(Keyframe& inout_kf) {
 
     if (this->fps == 0) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [snapKeyframe2AnimFrame] FPS is ZERO.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [snapKeyframe2AnimFrame] FPS is ZERO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 
@@ -806,7 +806,7 @@ void KeyframeKeeper::setSameSpeed() {
         // Get total values
         float totTime = this->keyframes.back().GetAnimTime() - this->keyframes.front().GetAnimTime();
         if (totTime == 0.0f) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [setSameSpeed] totTime is ZERO.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [setSameSpeed] totTime is ZERO. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return;
         }
         float totDist = 0.0f;
@@ -848,7 +848,7 @@ void KeyframeKeeper::setSameSpeed() {
 void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
 
     if (s == 0) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [refreshInterpolCamPos] Interpolation step count should be greater than zero.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] [refreshInterpolCamPos] Interpolation step count should be greater than zero. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 
@@ -874,7 +874,7 @@ void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
 }
 
 
-bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo) {
+bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool add_undo) {
 
     if (!this->keyframes.empty()) {
         // Both are equal ... nothing to do
@@ -897,7 +897,7 @@ bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo) 
                 }
                 this->addKeyframe(newkf, false);
             }
-            if (undo) {
+            if (add_undo) {
                 // ADD UNDO
                 this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_MODIFY, newkf, oldkf);
             }
@@ -912,7 +912,7 @@ bool KeyframeKeeper::replaceKeyframe(Keyframe oldkf, Keyframe newkf, bool undo) 
 }
 
 
-bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool undo) {
+bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool add_undo) {
 
     if (!this->keyframes.empty()) {
         // Get index of keyframe to delete
@@ -921,22 +921,16 @@ bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool undo) {
         if (selIndex >= 0) {
             // DELETE UNDO
             this->keyframes.erase(this->keyframes.begin() + selIndex);
-            if (undo) {
+            if (add_undo) {
                 // ADD UNDO
                 this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_DELETE, kf, kf);
-                // Adjust first/last control point position - ONLY if it is a "real" delete and no replace
+                // Reset first/last control point position - ONLY if it is a "real" delete and no replace
                 if (this->keyframes.size() > 1) {
                     if (selIndex == 0) {
-                        auto p0 = this->keyframes[0].GetCameraState().position;
-                        auto p1 = this->keyframes[1].GetCameraState().position;
-                        glm::vec3 tmpV = glm::normalize(glm::vec3(p0[0], p0[1], p0[2]) - glm::vec3(p1[0], p1[1], p1[2]));
-                        this->startCtrllPos = glm::vec3(p0[0], p0[1], p0[2]) + tmpV;
+                        this->startCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
                     }
                     if (selIndex == this->keyframes.size()) { // Element is already removed so the index is now: (this->keyframes.size() - 1) + 1
-                        auto p0 = this->keyframes.back().GetCameraState().position;
-                        auto p1 = this->keyframes[(int)this->keyframes.size() - 2].GetCameraState().position;
-                        glm::vec3 tmpV = glm::normalize(glm::vec3(p0[0], p0[1], p0[2]) - glm::vec3(p1[0], p1[1], p1[2]));
-                        this->endCtrllPos = glm::vec3(p0[0], p0[1], p0[2]) + tmpV;
+                        this->endCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
                     }
                 }
             }
@@ -959,7 +953,7 @@ bool KeyframeKeeper::deleteKeyframe(Keyframe kf, bool undo) {
 }
 
 
-bool KeyframeKeeper::addKeyframe(Keyframe kf, bool undo) {
+bool KeyframeKeeper::addKeyframe(Keyframe kf, bool add_undo) {
 
     float time = kf.GetAnimTime();
 
@@ -973,24 +967,25 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf, bool undo) {
 
     // Sort new keyframe to keyframe array
     if (this->keyframes.empty() || (this->keyframes.back().GetAnimTime() < time)) {
-        this->keyframes.emplace_back(kf);
-        // Adjust first/last control point position - ONLY if it is a "real" add and no replace
-        if (undo && this->keyframes.size() > 1) {
-            auto p0 = this->keyframes.back().GetCameraState().position;
-            auto p1 = this->keyframes[(int)this->keyframes.size() - 2].GetCameraState().position;
-            glm::vec3 tmpV = glm::normalize(glm::vec3(p0[0], p0[1], p0[2]) - glm::vec3(p1[0], p1[1], p1[2]));
-            this->endCtrllPos = glm::vec3(p0[0], p0[1], p0[2]) + tmpV;
+        // Reset first/last control point position - ONLY if it is a "real" add and no replace
+        if (add_undo) {
+            if (this->keyframes.empty()) {
+                this->startCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
+                this->endCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
+            }
+            this->endCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
         }
+        this->keyframes.emplace_back(kf);
     }
     else if (time < this->keyframes.front().GetAnimTime()) {
-        this->keyframes.insert(this->keyframes.begin(), kf);
-        // Adjust first/last control point position - ONLY if it is a "real" add and no replace
-        if (undo && this->keyframes.size() > 1) {
-            auto p0 = this->keyframes.back().GetCameraState().position;
-            auto p1 = this->keyframes[(int)this->keyframes.size() - 2].GetCameraState().position;
-            glm::vec3 tmpV = glm::normalize(glm::vec3(p0[0], p0[1], p0[2]) - glm::vec3(p1[0], p1[1], p1[2]));
-            this->endCtrllPos = glm::vec3(p0[0], p0[1], p0[2]) + tmpV;
+        // Reset first/last control point position - ONLY if it is a "real" add and no replace
+        if (add_undo) {
+             if (this->keyframes.empty()) {
+                this->startCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
+            }
+            this->endCtrllPos = glm::vec3(0.0f, 0.0f, 0.0f);
         }
+        this->keyframes.insert(this->keyframes.begin(), kf);
     }
     else { // Insert keyframe in-between existing keyframes
         unsigned int insertIdx = 0;
@@ -1004,7 +999,7 @@ bool KeyframeKeeper::addKeyframe(Keyframe kf, bool undo) {
     }
 
     // ADD UNDO 
-    if (undo) {
+    if (add_undo) {
         this->addKeyframeUndoAction(KeyframeKeeper::Undo::Action::UNDO_KEYFRAME_ADD, kf, kf);
     }
 
@@ -1234,36 +1229,36 @@ bool KeyframeKeeper::saveKeyframes() {
         }
         catch (nlohmann::json::type_error& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::exception& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::parse_error& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::invalid_iterator& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::out_of_range& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::other_error& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (...) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: Unknown Error (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -1302,7 +1297,7 @@ bool KeyframeKeeper::loadKeyframes() {
             // Check for valid JSON object
             if (!json.is_object()) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[KEYFRAME KEEPER] Given string is no valid JSON object.");
+                    "[KEYFRAME KEEPER] Given string is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
 
@@ -1311,49 +1306,49 @@ bool KeyframeKeeper::loadKeyframes() {
                 json.at("total_animation_time").get_to(this->totalAnimTime);
             }
             else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'total_animation_time': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'total_animation_time'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
             if (json.at("spline_tangent_length").is_number()) {
                 json.at("spline_tangent_length").get_to(this->splineTangentLength);
             }
             else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'spline_tangent_length': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'spline_tangent_length'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
             if (json.at("first_ctrl_point").at("x").is_number()) {
                 json.at("first_ctrl_point").at("x").get_to(this->startCtrllPos.x);
             }
             else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'x': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'x'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
             if (json.at("first_ctrl_point").at("y").is_number()) {
                 json.at("first_ctrl_point").at("y").get_to(this->startCtrllPos.y);
             }
             else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'y': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'y'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
             if (json.at("first_ctrl_point").at("z").is_number()) {
                 json.at("first_ctrl_point").at("z").get_to(this->startCtrllPos.z);
             }
             else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'z': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'z'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
             if (json.at("last_ctrl_point").at("x").is_number()) {
                 json.at("last_ctrl_point").at("x").get_to(this->endCtrllPos.x);
             }
             else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'x': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'x'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
             if (json.at("last_ctrl_point").at("y").is_number()) {
                 json.at("last_ctrl_point").at("y").get_to(this->endCtrllPos.y);
             }
             else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'y': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'y'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
             if (json.at("last_ctrl_point").at("z").is_number()) {
                 json.at("last_ctrl_point").at("z").get_to(this->endCtrllPos.z);
             }
             else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'z': %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'z'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
 
             // Get keyframe data
@@ -1370,41 +1365,41 @@ bool KeyframeKeeper::loadKeyframes() {
                 }
             }
             else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'keyframes' array: %s (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'keyframes' array. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             }
         }
         catch (nlohmann::json::type_error& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::exception& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::parse_error& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::invalid_iterator& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::out_of_range& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::other_error& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (...) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: Unknown Error (%s:%d)", __FUNCTION__, __FILE__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 

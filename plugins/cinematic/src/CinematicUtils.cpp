@@ -284,6 +284,7 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     this->buffers[Buffers::ATTRIBUTES]->rebuffer<std::vector<float>>(this->queues[primitive].attributes);
 
     // Set OpenGL state ----------------------------------------------------
+    // Blending
     GLboolean blendEnabled = glIsEnabled(GL_BLEND);
     if (!blendEnabled) {
         glEnable(GL_BLEND);
@@ -293,18 +294,25 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     glGetIntegerv(GL_BLEND_SRC, &blendSrc);
     glGetIntegerv(GL_BLEND_DST, &blendDst);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // Depth
     GLboolean depthEnabled = glIsEnabled(GL_DEPTH_TEST);
     if (!depthEnabled) {
         glEnable(GL_DEPTH_TEST);
     }
+    // Cullling
     GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
     if (cullEnabled) {
         glDisable(GL_CULL_FACE);
     }
+    // Smoothing
     if (this->smooth) {
         glHint(GL_FRAGMENT_SHADER_DERIVATIVE_HINT, GL_NICEST);
     }
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    // Vertex Point Size
+    bool vertexpointsizeEnabled = glIsEnabled(GL_VERTEX_PROGRAM_POINT_SIZE);
+    if (!vertexpointsizeEnabled) {
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    }
 
     // Draw ----------------------------------------------------------------
     GLenum mode = GL_TRIANGLES;
@@ -343,13 +351,21 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     glBindVertexArray(0);
 
     // Reset OpenGL state --------------------------------------------------
-    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    // Vertex Point Size
+    if (!vertexpointsizeEnabled) {
+        glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    }
+    // Smoothing
+    /// not reset ...
+    // Cullling
     if (cullEnabled) {
         glEnable(GL_CULL_FACE);
     }
+    // Depth
     if (!depthEnabled) {
         glDisable(GL_DEPTH_TEST);
     }
+    // Blending
     glBlendFunc(blendSrc, blendDst);
     if (!blendEnabled) {
         glDisable(GL_BLEND);

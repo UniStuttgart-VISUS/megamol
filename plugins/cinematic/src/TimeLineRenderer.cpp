@@ -82,7 +82,7 @@ bool TimeLineRenderer::create(void) {
 	
     // Initialise render utils
     if (!this->utils.Initialise(this->GetCoreInstance())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't initialize render utils.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't initialize render utils. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -90,7 +90,7 @@ bool TimeLineRenderer::create(void) {
     vislib::StringA shortfilename = "arrow.png";
     auto fullfilename = megamol::core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), shortfilename);
     if (!this->utils.LoadTextureFromFile(std::wstring(fullfilename.PeekBuffer()), this->texture)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't load marker texture.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -440,7 +440,7 @@ bool TimeLineRenderer::recalcAxesData(void) {
     for (size_t i = 0; i < Axis::COUNT; ++i) {
 
         if (this->axes[i].maxValue <= 0.0f) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [recalcAxesData] Invalid max value %f of axis %d", this->axes[i].maxValue, i);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [recalcAxesData] Invalid max value %f of axis %d. [%s, %s, line %d]", this->axes[i].maxValue, i, __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
