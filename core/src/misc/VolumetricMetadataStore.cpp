@@ -1,7 +1,7 @@
 /*
  * VolumetricMetadataStore.cpp
  *
- * Copyright (C) 2019 by Visualisierungsinstitut der Universit‰t Stuttgart.
+ * Copyright (C) 2019 by Visualisierungsinstitut der Universit√§t Stuttgart.
  * Alle rechte vorbehalten.
  */
 
@@ -9,6 +9,7 @@
 #include "mmcore/misc/VolumetricMetadataStore.h"
 
 #include <cassert>
+#include <iterator>
 
 
 /*
