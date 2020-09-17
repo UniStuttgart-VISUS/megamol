@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/utility/KHR.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol::core::utility;
@@ -16,8 +16,8 @@ using namespace megamol::core::utility;
 
 int KHR::startDebug() {
 #if (!defined(_WIN32) && !defined(HAS_LIBUNWIND))
-    vislib::sys::Log::DefaultLog.WriteError("LibUnwind is required to use KHR debug.");
-    vislib::sys::Log::DefaultLog.WriteError("You need to set the CMake compiler flag USE_LIBUNWIND=true.");
+    megamol::core::utility::log::Log::DefaultLog.WriteError("LibUnwind is required to use KHR debug.");
+    megamol::core::utility::log::Log::DefaultLog.WriteError("You need to set the CMake compiler flag USE_LIBUNWIND=true.");
     return 1;
 }
 #else
@@ -122,11 +122,11 @@ void KHR::DebugCallback(unsigned int source, unsigned int type, unsigned int id,
     sprintf(outputstring, "[%s %s] (%s %u) %s\nstack trace:\n%s\n", sourceText, severityText, typeText, id, message, stack.c_str());
 #endif
     if (type == GL_DEBUG_TYPE_ERROR) {
-        vislib::sys::Log::DefaultLog.WriteError("%s", outputstring);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("%s", outputstring);
     } else if (type == GL_DEBUG_TYPE_OTHER || type == GL_DEBUG_TYPE_MARKER) {
-        vislib::sys::Log::DefaultLog.WriteInfo("%s", outputstring);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("%s", outputstring);
     } else {
-        vislib::sys::Log::DefaultLog.WriteWarn("%s", outputstring);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("%s", outputstring);
     }
 }
 
@@ -184,7 +184,7 @@ int KHR::getFileAndLine(unw_word_t addr, char* file, size_t flen, int* line) {
     FILE* f = popen(buf, "r");
 
     if (f == NULL) {
-        vislib::sys::Log::DefaultLog.WriteError("%s", buf);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("%s", buf);
         return 0;
     }
 

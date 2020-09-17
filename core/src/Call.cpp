@@ -15,7 +15,7 @@
 #    include "mmcore/view/Renderer3DModule.h"
 #    include "vislib/graphics/gl/IncludeAllGL.h"
 #endif
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
 
@@ -59,14 +59,14 @@ bool Call::operator()(unsigned int func) {
             output += "::";
             output += f;
             glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
-            // vislib::sys::Log::DefaultLog.WriteInfo("called %s::%s", p3->ClassName(), f);
+            // megamol::core::utility::log::Log::DefaultLog.WriteInfo("called %s::%s", p3->ClassName(), f);
         }
         if (p2) {
             std::string output = p2->ClassName();
             output += "::";
             output += f;
             glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
-            // vislib::sys::Log::DefaultLog.WriteInfo("called %s::%s", p2->ClassName(), f);
+            // megamol::core::utility::log::Log::DefaultLog.WriteInfo("called %s::%s", p2->ClassName(), f);
         }
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);
@@ -74,7 +74,7 @@ bool Call::operator()(unsigned int func) {
         if (p2 || p3) glPopDebugGroup();
 #endif
     }
-    // vislib::sys::Log::DefaultLog.WriteInfo("calling %s, idx %i, result %s (%s)", this->ClassName(), func,
+    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("calling %s, idx %i, result %s (%s)", this->ClassName(), func,
     //    res ? "true" : "false", this->callee == nullptr ? "no callee" : "from callee");
     return res;
 }

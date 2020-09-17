@@ -92,7 +92,7 @@ extern void APIENTRY MyFunkyDebugCallback(GLenum source, GLenum type, GLuint id,
         severityText = "Unknown";
         break;
     }
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "[%s %s] (%s %u) %s\n", sourceText, severityText, typeText, id, message);
 }
 
 
@@ -138,28 +138,28 @@ bool BrickStatsRenderer::makeProgram(std::string name, vislib::graphics::gl::GLS
     vislib::graphics::gl::ShaderSource& vert, vislib::graphics::gl::ShaderSource& frag) {
     try {
         if (!program.Compile(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", name.c_str());
             return false;
         }
         if (!program.Link()) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to link %s: Unknown error\n", name.c_str());
             return false;
         }
 
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile %s (@%s): %s\n", name.c_str(),
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
             ce.FailedAction()), ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile %s: %s\n", name.c_str(), e.GetMsgA());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile %s: Unknown exception\n", name.c_str());
         return false;
     }

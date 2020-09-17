@@ -14,7 +14,7 @@
 #include "vislib/String.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/OutOfRangeException.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "inttypes.h"
 #include <iostream>
 #include <cstring>
@@ -51,7 +51,7 @@ bool EllipsoidRenderer::create(void){
 	glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-	using namespace vislib::sys;
+	using namespace megamol::core::utility::log;
 	using namespace vislib::graphics::gl;
 
 	ShaderSource vertSrc;
@@ -67,25 +67,25 @@ bool EllipsoidRenderer::create(void){
 	}
 	try{
 		if (!ellipsoidShader.Create(vertSrc.Code(), vertSrc.Count(), fragSrc.Code(), fragSrc.Count())){
-			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 				"unable to compile ellipsoid shader: unknown error\n");
 			return false;
 		}
 	}
 	catch (AbstractOpenGLShader::CompileException ce){
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 			"unable to compile ellipsoid shader (@%s): %s\n",
 			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
 			ce.FailedAction()), ce.GetMsgA());
 		return false;
 	}
 	catch (vislib::Exception e) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 			"unable to compile ellipsoid shader: %s\n", e.GetMsgA());
 		return false;
 	}
 	catch (...) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 			"unable to compile ellipsoid shader: unknown exception\n");
 		return false;
 	}

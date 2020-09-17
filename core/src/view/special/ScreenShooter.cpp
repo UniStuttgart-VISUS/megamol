@@ -7,9 +7,12 @@
 
 #include "stdafx.h"
 #include "mmcore/view/special/ScreenShooter.h"
+
 #include <climits>
+#include <limits>
 #include <map>
 #include <sstream>
+
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/CoreInstance.h"
@@ -30,8 +33,8 @@
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/File.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/Thread.h"
 
 
 namespace megamol {
@@ -56,7 +59,7 @@ static void PNGAPI myPngError(png_structp pngPtr, png_const_charp msg) {
  * @param msg The error message
  */
 static void PNGAPI myPngWarn(png_structp pngPtr, png_const_charp msg) {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Png-Warning: %s\n", msg);
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "Png-Warning: %s\n", msg);
 }
 
 /**
@@ -134,7 +137,7 @@ static DWORD myPngStoreData(void* d) {
     BYTE* buffer = new BYTE[data->imgWidth * data->bpp]; // 1 scanline at a time
 
     if (buffer == NULL) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to allocate scanline buffer");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to allocate scanline buffer");
         return -1;
     }
 
@@ -242,7 +245,7 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
     this->backgroundSlot << bkgnd;
     this->MakeSlotAvailable(&this->backgroundSlot);
 
-    this->triggerButtonSlot << new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::CTRL);
+    this->triggerButtonSlot << new param::ButtonParam(core::view::Key::KEY_S, core::view::Modifier::ALT);
     this->triggerButtonSlot.SetUpdateCallback(&ScreenShooter::triggerButtonClicked);
     if (!reducedParameters) this->MakeSlotAvailable(&this->triggerButtonSlot);
 
@@ -324,7 +327,7 @@ void view::special::ScreenShooter::release(void) {
  * view::special::ScreenShooter::BeforeRender
  */
 void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::graphics::gl::FramebufferObject fbo;
     ShooterData data;
     vislib::sys::Thread t2(&myPngStoreData);
@@ -868,7 +871,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
     delete[] buffer;
     fbo.Release();
 
-    vislib::sys::Log::DefaultLog.WriteInfo("Screen shot stored");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Screen shot stored");
 
     if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
         if (this->animLastFrameTime >= this->animToSlot.Param<param::IntParam>()->Value()) {
@@ -917,7 +920,7 @@ void view::special::ScreenShooter::createScreenshot(const std::string& filename)
  */
 bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) {
     // happy trigger finger hit button action happend
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     ASSERT(&slot == &this->triggerButtonSlot);
 
     vislib::StringA mvn(this->viewNameSlot.Param<param::StringParam>()->Value());
@@ -939,9 +942,10 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
             if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
                 param::ParamSlot* timeSlot = this->findTimeParam(vi->View());
                 if (timeSlot != nullptr) {
-                    timeSlot->Param<param::FloatParam>()->SetValue(
-                        static_cast<float>(this->animFromSlot.Param<param::IntParam>()->Value()));
-                    this->animLastFrameTime = (float)UINT_MAX;
+                    auto startTime = static_cast<float>(this->animFromSlot.Param<param::IntParam>()->Value());
+                    Log::DefaultLog.WriteInfo("Starting animation of screen shots at %f.", time);
+                    timeSlot->Param<param::FloatParam>()->SetValue(startTime);
+                    this->animLastFrameTime = std::numeric_limits<decltype(animLastFrameTime)>::lowest();
                 } else {
                     Log::DefaultLog.WriteError("Unable to find animation time parameter in given view. Unable to make animation screen shots.");
                     this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);

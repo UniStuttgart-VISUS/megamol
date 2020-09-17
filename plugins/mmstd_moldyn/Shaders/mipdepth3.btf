@@ -33,7 +33,15 @@ in float colourIndex[];
 uniform sampler1D colTab;
 
 uniform vec3 cellPos;
-
+// new camera
+uniform mat4 mv_inv;
+uniform mat4 mv_inv_transp;
+uniform mat4 mvp;
+uniform mat4 mvp_inv;
+uniform mat4 mvp_transp;
+uniform vec4 light_dir;
+uniform vec4 cam_pos;
+// end new camera
 #define MIN_COLV inConsts1.y
 #define MAX_COLV inConsts1.z
 #define COLTAB_SIZE inConsts1.w
@@ -64,12 +72,12 @@ void main(void) {
         col2 = texture1D(colTab, colVals.y);
     }
 
-    gl_Position = gl_ModelViewProjectionMatrix * inPos1;
+    gl_Position = mvp * inPos1;
     gl_FrontColor = col1;
     EmitVertex();
     EndPrimitive();
 
-    gl_Position = gl_ModelViewProjectionMatrix * inPos2;
+    gl_Position = mvp * inPos2;
     gl_FrontColor = col2;
     EmitVertex();
     EndPrimitive();
@@ -95,7 +103,15 @@ uniform vec4 inConsts1;
 in float colIdx;
 uniform sampler1D colTab;
 uniform vec3 cellPos;
-
+// new camera
+uniform mat4 mv_inv;
+uniform mat4 mv_inv_transp;
+uniform mat4 mvp;
+uniform mat4 mvp_inv;
+uniform mat4 mvp_transp;
+uniform vec4 light_dir;
+uniform vec4 cam_pos;
+// end new camera
 #define MIN_COLV inConsts1.y
 #define MAX_COLV inConsts1.z
 #define COLTAB_SIZE inConsts1.w
@@ -120,7 +136,7 @@ void main(void) {
     } else {
         inPos = vec4(cellPos + (cellPos - gl_Vertex.xyz), gl_Vertex.w);
     }
-    gl_Position = gl_ModelViewProjectionMatrix * inPos;
+    gl_Position = mvp * inPos;
 
 }
 ]]>

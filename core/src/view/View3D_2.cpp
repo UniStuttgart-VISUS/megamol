@@ -1,7 +1,7 @@
 /*
  * View3D_2.cpp
  *
- * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2018, 2020 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
@@ -13,6 +13,7 @@
 #endif /* _WIN32 */
 #include <chrono>
 #include <fstream>
+#include <glm/gtx/string_cast.hpp>
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/param/BoolParam.h"
@@ -20,6 +21,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
@@ -40,8 +42,9 @@
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/KeyCode.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/sysfunctions.h"
+#include <glm/gtx/string_cast.hpp>
 
 using namespace megamol::core;
 using namespace megamol::core::view;
@@ -78,6 +81,7 @@ View3D_2::View3D_2(void)
     , viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates")
     , viewKeyRunFactorSlot("viewKey::RunFactor", "The factor for step size multiplication when running (shift)")
     , viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees")
+    , viewKeyFixToWorldUpSlot("viewKey::FixToWorldUp","Fix rotation manipulator to world up vector")
     , mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode")
     , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be rotated")
     , enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
@@ -98,6 +102,8 @@ View3D_2::View3D_2(void)
     , cameraEyeParam("cam::eye", "")
     , cameraGateScalingParam("cam::gatescaling", "")
     , cameraFilmGateParam("cam::filmgate", "")
+    , cameraResolutionXParam("cam::resgate::x", "")
+    , cameraResolutionYParam("cam::resgate::y", "")
     , cameraCenterOffsetParam("cam::centeroffset", "")
     , cameraHalfApertureRadiansParam("cam::halfapertureradians", "")
     , cameraHalfDisparityParam("cam::halfdisparity", "")
@@ -171,6 +177,9 @@ View3D_2::View3D_2(void)
     this->viewKeyAngleStepSlot.SetParameter(new param::FloatParam(90.0f, 0.1f, 360.0f));
     this->MakeSlotAvailable(&this->viewKeyAngleStepSlot);
 
+    this->viewKeyFixToWorldUpSlot.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->viewKeyFixToWorldUpSlot);
+
     this->mouseSensitivitySlot.SetParameter(new param::FloatParam(3.0f, 0.001f, 10.0f));
     this->mouseSensitivitySlot.SetUpdateCallback(&View3D_2::mouseSensitivityChanged);
     this->MakeSlotAvailable(&this->mouseSensitivitySlot);
@@ -224,7 +233,7 @@ View3D_2::View3D_2(void)
     this->cameraProjectionTypeParam.SetParameter(projectionParam);
     this->MakeSlotAvailable(&this->cameraProjectionTypeParam);
 
-    auto camnearparam = new param::FloatParam(0.1f, 0.0f);
+    /*auto camnearparam = new param::FloatParam(0.1f, 0.0f);
     camnearparam->SetGUIVisible(camparamvisibility);
     this->cameraNearPlaneParam.SetParameter(camnearparam);
     this->MakeSlotAvailable(&this->cameraNearPlaneParam);
@@ -232,22 +241,22 @@ View3D_2::View3D_2(void)
     auto camfarparam = new param::FloatParam(0.1f, 0.0f);
     camfarparam->SetGUIVisible(camparamvisibility);
     this->cameraFarPlaneParam.SetParameter(camfarparam);
-    this->MakeSlotAvailable(&this->cameraFarPlaneParam);
+    this->MakeSlotAvailable(&this->cameraFarPlaneParam);*/
 
     auto camconvergenceparam = new param::FloatParam(0.1f, 0.0f);
     camconvergenceparam->SetGUIVisible(camparamvisibility);
     this->cameraConvergencePlaneParam.SetParameter(camconvergenceparam);
     this->MakeSlotAvailable(&this->cameraConvergencePlaneParam);
 
-    auto eyeparam = new param::EnumParam(static_cast<int>(core::thecam::Eye::mono));
+    /*auto eyeparam = new param::EnumParam(static_cast<int>(core::thecam::Eye::mono));
     eyeparam->SetTypePair(static_cast<int>(core::thecam::Eye::left), "Left");
     eyeparam->SetTypePair(static_cast<int>(core::thecam::Eye::mono), "Mono");
     eyeparam->SetTypePair(static_cast<int>(core::thecam::Eye::right), "Right");
     eyeparam->SetGUIVisible(camparamvisibility);
     this->cameraEyeParam.SetParameter(eyeparam);
-    this->MakeSlotAvailable(&this->cameraEyeParam);
+    this->MakeSlotAvailable(&this->cameraEyeParam);*/
 
-    auto gateparam = new param::EnumParam(static_cast<int>(core::thecam::Gate_scaling::none));
+    /*auto gateparam = new param::EnumParam(static_cast<int>(core::thecam::Gate_scaling::none));
     gateparam->SetTypePair(static_cast<int>(core::thecam::Gate_scaling::none), "None");
     gateparam->SetTypePair(static_cast<int>(core::thecam::Gate_scaling::fill), "Fill");
     gateparam->SetTypePair(static_cast<int>(core::thecam::Gate_scaling::overscan), "Overscan");
@@ -259,6 +268,16 @@ View3D_2::View3D_2(void)
     filmparam->SetGUIVisible(camparamvisibility);
     this->cameraFilmGateParam.SetParameter(filmparam);
     this->MakeSlotAvailable(&this->cameraFilmGateParam);
+
+    auto resxparam = new param::IntParam(100);
+    resxparam->SetGUIVisible(camparamvisibility);
+    this->cameraResolutionXParam.SetParameter(resxparam);
+    this->MakeSlotAvailable(&this->cameraResolutionXParam);
+
+    auto resyparam = new param::IntParam(100);
+    resyparam->SetGUIVisible(camparamvisibility);
+    this->cameraResolutionYParam.SetParameter(resyparam);
+    this->MakeSlotAvailable(&this->cameraResolutionYParam);*/
 
     auto centeroffsetparam = new param::Vector2fParam(vislib::math::Vector<float, 2>());
     centeroffsetparam->SetGUIVisible(camparamvisibility);
@@ -355,18 +374,19 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     // this->SyncCamParams(this->cam.Parameters());
 
     // clear viewport
-    if (this->overrideViewport != nullptr) {
-        if ((this->overrideViewport[0] >= 0) && (this->overrideViewport[1] >= 0) && (this->overrideViewport[2] >= 0) &&
-            (this->overrideViewport[3] >= 0)) {
-            currentViewport = glm::ivec4(this->overrideViewport[0], this->overrideViewport[1],
-                this->overrideViewport[2], this->overrideViewport[3]);
-        }
-    } else {
-        // this is correct in non-override mode,
-        //  because then the tile will be whole viewport
-        auto camRes = this->cam.resolution_gate();
-        currentViewport = glm::ivec4(0, 0, camRes.width(), camRes.height());
-    }
+    ///*if (this->overrideViewport != nullptr) {
+    //    if ((this->overrideViewport[0] >= 0) && (this->overrideViewport[1] >= 0) && (this->overrideViewport[2] >= 0)
+    //    &&
+    //        (this->overrideViewport[3] >= 0)) {
+    //        currentViewport = glm::ivec4(this->overrideViewport[0], this->overrideViewport[1],
+    //            this->overrideViewport[2], this->overrideViewport[3]);
+    //    }
+    //} else */{
+    //    // this is correct in non-override mode,
+    //    //  because then the tile will be whole viewport
+    //    //auto camRes = this->cam.resolution_gate();
+    //    //currentViewport = glm::ivec4(0, 0, camRes.width(), camRes.height());
+    //}
 
     if (this->overrideCall != nullptr) {
         if (cr3d != nullptr) {
@@ -483,6 +503,13 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     glm::mat4 proj = projCam;
     glm::mat4 mvp = projCam * viewCam;
 
+    /*glm::vec3 eyepos(cam.eye_position().x(), cam.eye_position().y(), cam.eye_position().z());
+    glm::vec3 snappos(camsnap.position.x(), camsnap.position.y(), camsnap.position.z());
+    printf("%u: %s %s\n", this->GetCoreInstance()->GetFrameID(), glm::to_string(view).c_str(),
+        glm::to_string(proj).c_str());
+    printf("%u: %s %s\n", this->GetCoreInstance()->GetFrameID(), glm::to_string(eyepos).c_str(),
+        glm::to_string(snappos).c_str());*/
+
     if (cr3d != nullptr) {
         cr3d->SetCameraState(this->cam);
         (*cr3d)(view::AbstractCallRender::FnRender);
@@ -560,18 +587,18 @@ void View3D_2::Resize(unsigned int width, unsigned int height) {
  */
 bool View3D_2::OnRenderView(Call& call) {
     std::array<float, 3> overBC;
-    std::array<int, 4> overVP = {0, 0, 0, 0};
+    // std::array<int, 4> overVP = {0, 0, 0, 0};
     view::CallRenderView* crv = dynamic_cast<view::CallRenderView*>(&call);
     if (crv == nullptr) return false;
 
-    this->overrideViewport = overVP.data();
-    if (crv->IsViewportSet()) {
-        overVP[2] = crv->ViewportWidth();
-        overVP[3] = crv->ViewportHeight();
-        if (!crv->IsTileSet()) {
-            // TODO
-        }
-    }
+    // this->overrideViewport = overVP.data();
+    // if (crv->IsViewportSet()) {
+    //    overVP[2] = crv->ViewportWidth();
+    //    overVP[3] = crv->ViewportHeight();
+    //    if (!crv->IsTileSet()) {
+    //        // TODO
+    //    }
+    //}
     if (crv->IsBackgroundSet()) {
         overBC[0] = static_cast<float>(crv->BackgroundRed()) / 255.0f;
         overBC[1] = static_cast<float>(crv->BackgroundGreen()) / 255.0f;
@@ -587,6 +614,12 @@ bool View3D_2::OnRenderView(Call& call) {
     ::ZeroMemory(&context, sizeof(context));
     context.Time = time;
     context.InstanceTime = crv->InstanceTime();
+
+    if (crv->IsTileSet()) {
+        this->cam.resolution_gate(cam_type::screen_size_type(crv->VirtualWidth(), crv->VirtualHeight()));
+        this->cam.image_tile(cam_type::screen_rectangle_type::from_bottom_left(
+            crv->TileX(), crv->TileY(), crv->TileWidth(), crv->TileHeight()));
+    }
 
     this->Render(context);
 
@@ -630,21 +663,23 @@ bool view::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifier
     }
 
     if (key == view::Key::KEY_LEFT_ALT || key == view::Key::KEY_RIGHT_ALT) {
-        if (action == view::KeyAction::PRESS) {
+        if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
             this->modkeys.set(view::Modifier::ALT);
+            cameraControlOverrideActive = true;
         } else if (action == view::KeyAction::RELEASE) {
             this->modkeys.reset(view::Modifier::ALT);
+            cameraControlOverrideActive = false;
         }
     }
     if (key == view::Key::KEY_LEFT_SHIFT || key == view::Key::KEY_RIGHT_SHIFT) {
-        if (action == view::KeyAction::PRESS) {
+        if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
             this->modkeys.set(view::Modifier::SHIFT);
         } else if (action == view::KeyAction::RELEASE) {
             this->modkeys.reset(view::Modifier::SHIFT);
         }
     }
     if (key == view::Key::KEY_LEFT_CONTROL || key == view::Key::KEY_RIGHT_CONTROL) {
-        if (action == view::KeyAction::PRESS) {
+        if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
             this->modkeys.set(view::Modifier::CTRL);
             cameraControlOverrideActive = true;
         } else if (action == view::KeyAction::RELEASE) {
@@ -700,7 +735,11 @@ bool view::View3D_2::OnChar(unsigned int codePoint) {
  */
 bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
 
-    if (!cameraControlOverrideActive) {
+    bool anyManipulatorActive = arcballManipulator.manipulating() || translateManipulator.manipulating() ||
+                                rotateManipulator.manipulating() || turntableManipulator.manipulating() ||
+                                orbitAltitudeManipulator.manipulating();
+
+    if (!cameraControlOverrideActive && !anyManipulatorActive) {
         auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
         if (cr != nullptr) {
             view::InputEvent evt;
@@ -721,12 +760,8 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
 
     // This mouse handling/mapping is so utterly weird and should die!
     auto down = action == view::MouseButtonAction::PRESS;
-    bool altPressed = this->modkeys.test(view::Modifier::ALT);
-    bool ctrlPressed = this->modkeys.test(view::Modifier::CTRL);
-
-    bool anyManipulatorActive = arcballManipulator.manipulating() || translateManipulator.manipulating() ||
-                                rotateManipulator.manipulating() || turntableManipulator.manipulating() ||
-                                orbitAltitudeManipulator.manipulating();
+    bool altPressed = mods.test(view::Modifier::ALT); // this->modkeys.test(view::Modifier::ALT);
+    bool ctrlPressed = mods.test(view::Modifier::CTRL); // this->modkeys.test(view::Modifier::CTRL);
 
     // get window resolution to help computing mouse coordinates
     auto wndSize = this->cam.resolution_gate();
@@ -738,7 +773,8 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
 
             if (!anyManipulatorActive) {
                 if (altPressed ^
-                    (this->arcballDefault && !ctrlPressed)) // Left mouse press + alt/arcDefault+noCtrl -> activate arcball manipluator
+                    (this->arcballDefault &&
+                        !ctrlPressed)) // Left mouse press + alt/arcDefault+noCtrl -> activate arcball manipluator
                 {
                     this->arcballManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
@@ -746,10 +782,6 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
                 {
                     this->turntableManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
-                }
-                else
-                {
-                    this->rotateManipulator.setActive();
                 }
             }
 
@@ -761,6 +793,10 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
                 if ((altPressed ^ this->arcballDefault) || ctrlPressed) {
                     this->orbitAltitudeManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+                } else {
+                    this->rotateManipulator.setActive();
+                    this->translateManipulator.setActive(
+                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
                 }
             }
 
@@ -769,10 +805,8 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
             this->cursor2d.SetButtonState(2, down);
 
             if (!anyManipulatorActive) {
-                if ((altPressed ^ this->arcballDefault) || ctrlPressed) {
-                    this->translateManipulator.setActive(
-                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
-                }
+                this->translateManipulator.setActive(
+                    wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
             }
 
             break;
@@ -804,14 +838,20 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
     this->mouseX = (float)static_cast<int>(x);
     this->mouseY = (float)static_cast<int>(y);
 
-    auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
-    if (cr != nullptr) {
-        view::InputEvent evt;
-        evt.tag = view::InputEvent::Tag::MouseMove;
-        evt.mouseMoveData.x = x;
-        evt.mouseMoveData.y = y;
-        cr->SetInputEvent(evt);
-        if ((*cr)(CallRender3D_2::FnOnMouseMove)) return true;
+    bool anyManipulatorActive = arcballManipulator.manipulating() || translateManipulator.manipulating() ||
+                                rotateManipulator.manipulating() || turntableManipulator.manipulating() ||
+                                orbitAltitudeManipulator.manipulating();
+
+    if (!anyManipulatorActive) {
+        auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
+        if (cr != nullptr) {
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::MouseMove;
+            evt.mouseMoveData.x = x;
+            evt.mouseMoveData.y = y;
+            cr->SetInputEvent(evt);
+            if ((*cr)(CallRender3D_2::FnOnMouseMove)) return true;
+        }
     }
 
     // This mouse handling/mapping is so utterly weird and should die!
@@ -837,7 +877,7 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
                 static_cast<int>(this->mouseY), glm::vec4(rotCenter, 1.0));
         }
 
-        if (this->translateManipulator.manipulating()) {
+        if (this->translateManipulator.manipulating() && !this->rotateManipulator.manipulating() ) {
 
             // compute proper step size by computing pixel world size at distance to rotCenter
             glm::vec3 currCamPos(static_cast<glm::vec4>(this->cam.position()));
@@ -870,19 +910,26 @@ bool view::View3D_2::OnMouseScroll(double dx, double dy) {
         if ((*cr)(view::CallRender3D_2::FnOnMouseScroll)) return true;
     }
 
-    // ToDo scrollwheel zooming..
-    if (abs(dy) > 0.0) {
 
-        auto cam_pos = this->cam.eye_position();
-        auto rot_cntr = thecam::math::point<glm::vec4>(glm::vec4(this->rotCenter,0.0f));
+    // This mouse handling/mapping is so utterly weird and should die!
+    if (!this->toggleMouseSelection && (abs(dy) > 0.0)) {
+        if (this->rotateManipulator.manipulating()) {
+            this->viewKeyMoveStepSlot.Param<param::FloatParam>()->SetValue(
+                this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value() + 
+                (dy * 0.1f * this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value())
+            ); 
+        } else {
+            auto cam_pos = this->cam.eye_position();
+            auto rot_cntr = thecam::math::point<glm::vec4>(glm::vec4(this->rotCenter, 0.0f));
 
-        cam_pos.w() = 0.0f;
+            cam_pos.w() = 0.0f;
 
-        auto v = thecam::math::normalise(rot_cntr - cam_pos);
+            auto v = thecam::math::normalise(rot_cntr - cam_pos);
 
-        auto altitude = thecam::math::length(rot_cntr - cam_pos);
+            auto altitude = thecam::math::length(rot_cntr - cam_pos);
 
-        this->cam.position(cam_pos + (v * dy * (altitude / 50.0f)));
+            this->cam.position(cam_pos + (v * dy * (altitude / 50.0f)));
+        }
     }
 
     return true;
@@ -966,7 +1013,7 @@ bool View3D_2::onStoreCamera(param::ParamSlot& p) {
 
     auto path = this->determineCameraFilePath();
     if (path.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The camera output file path could not be determined. This is probably due to the usage of .mmprj project "
             "files. Please use a .lua project file instead");
         return false;
@@ -977,7 +1024,7 @@ bool View3D_2::onStoreCamera(param::ParamSlot& p) {
         std::ifstream file(path);
         if (file.good()) {
             file.close();
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "The camera output file path already contains a camera file with the name '%s'. Override mode is "
                 "deactivated, so no camera is stored",
                 path.c_str());
@@ -994,12 +1041,12 @@ bool View3D_2::onStoreCamera(param::ParamSlot& p) {
         file << outString;
         file.close();
     } else {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The camera output file could not be written to '%s' because the file could not be opened.", path.c_str());
         return false;
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("Camera statistics successfully written to '%s'", path.c_str());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Camera statistics successfully written to '%s'", path.c_str());
     return true;
 }
 
@@ -1011,7 +1058,7 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
         std::string camstring(this->cameraSettingsSlot.Param<param::StringParam>()->Value());
         cam_type::minimal_state_type minstate;
         if (!this->serializer.deserialize(minstate, camstring)) {
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "The entered camera string was not valid. No change of the camera has been performed");
         } else {
             this->cam = minstate;
@@ -1021,7 +1068,7 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
 
     auto path = this->determineCameraFilePath();
     if (path.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The camera file path could not be determined. This is probably due to the usage of .mmprj project "
             "files. Please use a .lua project file instead");
         return false;
@@ -1032,13 +1079,13 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
     if (file.is_open()) {
         text.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     } else {
-        vislib::sys::Log::DefaultLog.WriteWarn("The camera output file at '%s' could not be opened.", path.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("The camera output file at '%s' could not be opened.", path.c_str());
         return false;
     }
     auto copy = this->savedCameras;
     bool success = this->serializer.deserialize(copy, text);
     if (!success) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The reading of the camera parameters did not work properly. No changes were made.");
         return false;
     }
@@ -1046,7 +1093,7 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
     if (this->savedCameras.back().second) {
         this->cam = this->savedCameras.back().first;
     } else {
-        vislib::sys::Log::DefaultLog.WriteWarn("The stored default cam was not valid. The old default cam is used");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("The stored default cam was not valid. The old default cam is used");
     }
     return true;
 }
@@ -1099,8 +1146,7 @@ void View3D_2::handleCameraMovement(void) {
     glm::vec3 currCamPos(static_cast<glm::vec4>(this->cam.eye_position()));
     float orbitalAltitude = glm::length(currCamPos - rotCenter);
 
-    if (!(this->arcballDefault ^ this->modkeys.test(view::Modifier::ALT)) &&
-        !(this->modkeys.test(view::Modifier::CTRL))) {
+    if (this->translateManipulator.manipulating()) {
 
         if (this->pressedKeyMap.count(view::Key::KEY_W) > 0 && this->pressedKeyMap[view::Key::KEY_W]) {
             this->translateManipulator.move_forward(step);
@@ -1148,7 +1194,10 @@ void View3D_2::handleCameraMovement(void) {
         mouseDirection /= midpoint;
 
         this->rotateManipulator.pitch(-mouseDirection.y * rotationStep);
-        this->rotateManipulator.yaw(mouseDirection.x * rotationStep);
+        this->rotateManipulator.yaw(
+            mouseDirection.x * rotationStep,
+            this->viewKeyFixToWorldUpSlot.Param<param::BoolParam>()->Value()
+        );
     }
 
     glm::vec3 newCamPos(static_cast<glm::vec4>(this->cam.eye_position()));
@@ -1161,23 +1210,40 @@ void View3D_2::handleCameraMovement(void) {
  */
 void View3D_2::setCameraValues(const view::Camera_2& cam) {
     glm::vec4 pos = cam.position();
+    const bool makeDirty = false;
     this->cameraPositionParam.Param<param::Vector3fParam>()->SetValue(
-        vislib::math::Vector<float, 3>(pos.x, pos.y, pos.z), true);
+        vislib::math::Vector<float, 3>(pos.x, pos.y, pos.z), makeDirty);
+    this->cameraPositionParam.QueueUpdateNotification();
+
     glm::quat orient = cam.orientation();
     this->cameraOrientationParam.Param<param::Vector4fParam>()->SetValue(
-        vislib::math::Vector<float, 4>(orient.x, orient.y, orient.z, orient.w), true);
-    this->cameraProjectionTypeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.projection_type()), true);
-    this->cameraNearPlaneParam.Param<param::FloatParam>()->SetValue(cam.near_clipping_plane(), true);
-    this->cameraFarPlaneParam.Param<param::FloatParam>()->SetValue(cam.far_clipping_plane(), true);
-    this->cameraConvergencePlaneParam.Param<param::FloatParam>()->SetValue(cam.convergence_plane(), true);
-    this->cameraEyeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.eye()), true);
-    this->cameraGateScalingParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.gate_scaling()), true);
+        vislib::math::Vector<float, 4>(orient.x, orient.y, orient.z, orient.w), makeDirty);
+    this->cameraOrientationParam.QueueUpdateNotification();
+
+    this->cameraProjectionTypeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.projection_type()), makeDirty);
+    this->cameraProjectionTypeParam.QueueUpdateNotification();
+
+    this->cameraConvergencePlaneParam.Param<param::FloatParam>()->SetValue(cam.convergence_plane(), makeDirty);
+    this->cameraConvergencePlaneParam.QueueUpdateNotification();
+
+    /*this->cameraNearPlaneParam.Param<param::FloatParam>()->SetValue(cam.near_clipping_plane(), makeDirty);
+    this->cameraFarPlaneParam.Param<param::FloatParam>()->SetValue(cam.far_clipping_plane(), makeDirty);*/
+    /*this->cameraEyeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.eye()), makeDirty);
+    this->cameraGateScalingParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.gate_scaling()), makeDirty);
     this->cameraFilmGateParam.Param<param::Vector2fParam>()->SetValue(
-        vislib::math::Vector<float, 2>(cam.film_gate().width(), cam.film_gate().height()), true);
+        vislib::math::Vector<float, 2>(cam.film_gate().width(), cam.film_gate().height()), makeDirty);*/
+    /*this->cameraResolutionXParam.Param<param::IntParam>()->SetValue(cam.resolution_gate().width());
+    this->cameraResolutionYParam.Param<param::IntParam>()->SetValue(cam.resolution_gate().height());*/
+
     this->cameraCenterOffsetParam.Param<param::Vector2fParam>()->SetValue(
-        vislib::math::Vector<float, 2>(cam.centre_offset().x(), cam.centre_offset().y()), true);
-    this->cameraHalfApertureRadiansParam.Param<param::FloatParam>()->SetValue(cam.half_aperture_angle_radians(), true);
-    this->cameraHalfDisparityParam.Param<param::FloatParam>()->SetValue(cam.half_disparity(), true);
+        vislib::math::Vector<float, 2>(cam.centre_offset().x(), cam.centre_offset().y()), makeDirty);
+    this->cameraCenterOffsetParam.QueueUpdateNotification();
+
+    this->cameraHalfApertureRadiansParam.Param<param::FloatParam>()->SetValue(cam.half_aperture_angle_radians(), makeDirty);
+    this->cameraHalfApertureRadiansParam.QueueUpdateNotification();
+
+    this->cameraHalfDisparityParam.Param<param::FloatParam>()->SetValue(cam.half_disparity(), makeDirty);
+    this->cameraHalfDisparityParam.QueueUpdateNotification();
 }
 
 /*
@@ -1204,37 +1270,55 @@ bool View3D_2::adaptCameraValues(view::Camera_2& cam) {
         this->cameraProjectionTypeParam.ResetDirty();
         result = true;
     }
-    // setting of near plane and far plane might make no sense as we are setting them new each frame anyway
-    if (this->cameraNearPlaneParam.IsDirty()) {
-        auto val = this->cameraNearPlaneParam.Param<param::FloatParam>()->Value();
-        this->cam.near_clipping_plane(val);
-        this->cameraNearPlaneParam.ResetDirty();
-        result = true;
-    }
-    if (this->cameraFarPlaneParam.IsDirty()) {
-        auto val = this->cameraFarPlaneParam.Param<param::FloatParam>()->Value();
-        this->cam.far_clipping_plane(val);
-        this->cameraFarPlaneParam.ResetDirty();
-        result = true;
-    }
+    //// setting of near plane and far plane might make no sense as we are setting them new each frame anyway
+    // if (this->cameraNearPlaneParam.IsDirty()) {
+    //    auto val = this->cameraNearPlaneParam.Param<param::FloatParam>()->Value();
+    //    this->cam.near_clipping_plane(val);
+    //    this->cameraNearPlaneParam.ResetDirty();
+    //    result = true;
+    //}
+    // if (this->cameraFarPlaneParam.IsDirty()) {
+    //    auto val = this->cameraFarPlaneParam.Param<param::FloatParam>()->Value();
+    //    this->cam.far_clipping_plane(val);
+    //    this->cameraFarPlaneParam.ResetDirty();
+    //    result = true;
+    //}
     if (this->cameraConvergencePlaneParam.IsDirty()) {
         auto val = this->cameraConvergencePlaneParam.Param<param::FloatParam>()->Value();
         this->cam.convergence_plane(val);
         this->cameraConvergencePlaneParam.ResetDirty();
         result = true;
     }
-    if (this->cameraEyeParam.IsDirty()) {
+    /*if (this->cameraEyeParam.IsDirty()) {
         auto val = static_cast<thecam::Eye>(this->cameraEyeParam.Param<param::EnumParam>()->Value());
         this->cam.eye(val);
         this->cameraEyeParam.ResetDirty();
         result = true;
-    }
-    if (this->cameraGateScalingParam.IsDirty()) {
+    }*/
+    /*if (this->cameraGateScalingParam.IsDirty()) {
         auto val = static_cast<thecam::Gate_scaling>(this->cameraGateScalingParam.Param<param::EnumParam>()->Value());
         this->cam.gate_scaling(val);
         this->cameraGateScalingParam.ResetDirty();
         result = true;
     }
+    if (this->cameraFilmGateParam.IsDirty()) {
+        auto val = this->cameraFilmGateParam.Param<param::Vector2fParam>()->Value();
+        this->cam.film_gate(thecam::math::size<float, 2>(val.GetX(), val.GetY()));
+        this->cameraFilmGateParam.ResetDirty();
+        result = true;
+    }*/
+    /*if (this->cameraResolutionXParam.IsDirty()) {
+        auto val = this->cameraResolutionXParam.Param<param::IntParam>()->Value();
+        this->cam.resolution_gate({val, this->cam.resolution_gate().height()});
+        this->cameraResolutionXParam.ResetDirty();
+        result = true;
+    }
+    if (this->cameraResolutionYParam.IsDirty()) {
+        auto val = this->cameraResolutionYParam.Param<param::IntParam>()->Value();
+        this->cam.resolution_gate({this->cam.resolution_gate().width(), val});
+        this->cameraResolutionYParam.ResetDirty();
+        result = true;
+    }*/
     if (this->cameraCenterOffsetParam.IsDirty()) {
         auto val = this->cameraCenterOffsetParam.Param<param::Vector2fParam>()->Value();
         this->cam.centre_offset(thecam::math::vector<float, 2>(val.GetX(), val.GetY()));

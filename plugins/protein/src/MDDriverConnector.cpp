@@ -8,11 +8,12 @@
 
 #include "stdafx.h"
 #include "MDDriverConnector.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/net/SocketException.h"
 #include "vislib/net/IPEndPoint.h"
 #include "vislib/net/DNS.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
+#include "vislib/StringConverter.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -37,7 +38,7 @@ MDDriverConnector::MDDriverConnector(void) : socketValidity(false),
         // create socket
         this->socket.Create(vislib::net::Socket::FAMILY_INET, vislib::net::Socket::TYPE_STREAM, vislib::net::Socket::PROTOCOL_TCP);
     } catch( vislib::net::SocketException e) {
-        vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR, "Socket Exception during startup/create: %s", e.GetMsgA() );
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR, "Socket Exception during startup/create: %s", e.GetMsgA() );
     }
 }
 
@@ -64,7 +65,7 @@ void MDDriverConnector::OnThreadStarting(void *config) {
  * MDDriverConnector::Run
  */
 DWORD MDDriverConnector::Run(void *config) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     while (this->socketValidity == true) {
 
@@ -137,7 +138,7 @@ DWORD MDDriverConnector::Run(void *config) {
  * MDDriverConnector::Terminate
  */
 bool MDDriverConnector::Terminate(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     // clear all the requests
     this->pauseRequested = false;
@@ -212,7 +213,7 @@ void MDDriverConnector::RequestForces(int count, const unsigned int *atomIDs, co
  * MDDriverConnector::GetCoordinates
  */
 void MDDriverConnector::GetCoordinates(int count, float* atomPos) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     if (this->atomCount == count) {
         if (this->atomCoordinates.TryLock()) {
@@ -231,7 +232,7 @@ void MDDriverConnector::GetCoordinates(int count, float* atomPos) {
  * MDDriverConnector::startSocket
  */
 bool MDDriverConnector::startSocket( const vislib::TString& host, int port) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     // set default values 
     header.type = 0;
     header.length = 0;
@@ -280,7 +281,7 @@ void MDDriverConnector::release(void) {
     try {
         vislib::net::Socket::Cleanup();
     } catch( vislib::net::SocketException e ) {
-        vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR, "Socket Exception during cleanup: %s", e.GetMsgA() );
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR, "Socket Exception during cleanup: %s", e.GetMsgA() );
     }
 }
 
@@ -288,7 +289,7 @@ void MDDriverConnector::release(void) {
  * MDDriverConnector::getData
  */
 bool MDDriverConnector::getData(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     bool retval = true;
 
@@ -362,7 +363,7 @@ bool MDDriverConnector::getData(void) {
  * MDDriverConnector::sendForces
  */
 bool MDDriverConnector::sendForces(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     bool retval = true;
     this->header.type = MDD_MDCOMM;
@@ -432,7 +433,7 @@ bool MDDriverConnector::sendTransferRate(void) {
  * MDDriverConnector::getHeader
  */
 bool MDDriverConnector::getHeader (void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     try { 
         int errorlevel;
         errorlevel = static_cast<int>(this->socket.Receive( &this->header, sizeof(MDDHeader), TIMEOUT, 0, true));
@@ -465,7 +466,7 @@ bool MDDriverConnector::getHeader (void) {
  * MDDriverConnector::sendHeader
  */
 bool MDDriverConnector::sendHeader (void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     try {
         this->header.type = this->byteSwap(this->header.type); // for reasons unknown, MDDriver wants all headers byteswapped before being sent to it
         this->header.length = this->byteSwap(this->header.length);

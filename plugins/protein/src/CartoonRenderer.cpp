@@ -25,7 +25,7 @@
 #include "vislib/Trace.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/StringConverter.h"
 #include "vislib/math/Matrix.h"
 #include <GL/glu.h>
@@ -37,6 +37,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
+using namespace megamol::core::utility::log;
 
 /*
  * protein::CartoonRenderer::CartoonRenderer (CTOR)
@@ -85,7 +86,6 @@ bool CartoonRenderer::create(void) {
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     ShaderSource vertSrc;

@@ -57,8 +57,8 @@ void VoronoiChannelCalculator::checkVertexAndGateValidity(MolecularDataCall* mdc
 		}
 		i++;
 	}
-	//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Filtered %d voronoi vertices, because their radius was lower than %f", filtered_radius_vertices, this->probeRadius);
-	//vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Filtered %d voronoi infinity vertices", filtered_inf_vertices);
+	//megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Filtered %d voronoi vertices, because their radius was lower than %f", filtered_radius_vertices, this->probeRadius);
+	//megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Filtered %d voronoi infinity vertices", filtered_inf_vertices);
 
 	// Initialise the threads to test if the vertices are inside or outside of the convex hull.
 	size_t core_num = Concurrency::details::_CurrentScheduler::_GetNumberOfVirtualProcessors();
@@ -213,7 +213,7 @@ bool VoronoiChannelCalculator::constructVoronoiDiagram(MolecularDataCall* mdc) {
 	// Check if there is at least one sphere and if so take the one with the smallest radius,
 	// i.e. the first sphere.
 	if (sphere_results != 1) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, 
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
 			"The initial voronoi sphere could not be computed or is ambigous!"
 			"\nPlease contact the developer to fix this.\n");
 		return false;
@@ -294,7 +294,7 @@ bool VoronoiChannelCalculator::constructVoronoiDiagram(MolecularDataCall* mdc) {
 	}
 
 	if (!this->initVertexFound) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 			"No initial Voronoi vertex could be found!"
 			"\nPlease contact the developer to fix this.\n");
 		return false;

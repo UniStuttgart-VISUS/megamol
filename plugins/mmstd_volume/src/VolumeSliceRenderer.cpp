@@ -20,7 +20,7 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Plane.h"
 #include "vislib/math/Point.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "glowl/Texture.hpp"
 #include "glowl/Texture2D.hpp"
@@ -83,19 +83,19 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::create(void) {
 		if (!this->render_shader.Link()) return false;
 	}
 	catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-		vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader (@%s): %s\n",
 			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
 			ce.GetMsgA());
 		return false;
 	}
 	catch (vislib::Exception e) {
-		vislib::sys::Log::DefaultLog.WriteMsg(
-			vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+			megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
 		return false;
 	}
 	catch (...) {
-		vislib::sys::Log::DefaultLog.WriteMsg(
-			vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+			megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
 		return false;
 	}
 
@@ -152,7 +152,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
 			type = GL_FLOAT;
 		}
 		else {
-			vislib::sys::Log::DefaultLog.WriteError("Floating point values with a length != 4 byte are invalid.");
+			megamol::core::utility::log::Log::DefaultLog.WriteError("Floating point values with a length != 4 byte are invalid.");
 			return false;
 		}
 		break;
@@ -168,7 +168,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
 			type = GL_UNSIGNED_SHORT;
 		}
 		else {
-			vislib::sys::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
+			megamol::core::utility::log::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
 			return false;
 		}
 		break;
@@ -179,12 +179,12 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
 			type = GL_SHORT;
 		}
 		else {
-			vislib::sys::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
+			megamol::core::utility::log::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
 			return false;
 		}
 		break;
 	case core::misc::BITS:
-		vislib::sys::Log::DefaultLog.WriteError("Invalid datatype.");
+		megamol::core::utility::log::Log::DefaultLog.WriteError("Invalid datatype.");
 		return false;
 		break;
 	}

@@ -62,7 +62,7 @@ void trisoup::WavefrontObjWriter::release(void) {
  * trisoup::WavefrontObjWriter::run
  */
 bool trisoup::WavefrontObjWriter::run(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
@@ -97,7 +97,7 @@ bool trisoup::WavefrontObjWriter::getCapabilities(DataWriterCtrlCall& call) {
 
 
 bool trisoup::WavefrontObjWriter::writeLines(megamol::geocalls::LinesDataCall* ldc) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
     vislib::math::Cuboid<float> bbox;
     vislib::math::Cuboid<float> cbox;

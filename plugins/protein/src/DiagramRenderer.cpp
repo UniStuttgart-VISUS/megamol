@@ -25,7 +25,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 using namespace vislib::graphics::gl;
-using vislib::sys::Log;
+using megamol::core::utility::log::Log;
 
 /*
  * DiagramRenderer::DiagramRenderer (CTOR)

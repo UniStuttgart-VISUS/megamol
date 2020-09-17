@@ -89,9 +89,11 @@ private:
     core::CallerSlot tableDataCallerSlot;
     core::CallerSlot transferFunctionCallerSlot;
     core::CallerSlot flagStorageReadCallerSlot;
+    core::CallerSlot flagStorageWriteCallerSlot;
 
     core::param::ParamSlot numberOfBinsParam;
     core::param::ParamSlot logPlotParam;
+    core::param::ParamSlot selectionColorParam;
 
     size_t currentTableDataHash;
     unsigned int currentTableFrameId;
@@ -105,6 +107,7 @@ private:
     GLint maxBinValue;
 
     vislib::graphics::gl::GLSLComputeShader calcHistogramProgram;
+    vislib::graphics::gl::GLSLComputeShader selectionProgram;
     vislib::graphics::gl::GLSLShader histogramProgram;
     vislib::graphics::gl::GLSLShader axesProgram;
 
@@ -116,6 +119,17 @@ private:
     GLuint maxBinValueBuffer = 0;
 
     megamol::core::utility::SDFFont font;
+
+    float mouseX;
+    float mouseY;
+
+    bool needSelectionUpdate;
+    int selectionMode;
+    int selectedCol;
+    int selectedBin;
+
+    GLint selectionWorkgroupSize[3];
+    GLint maxWorkgroupCount[3];
 };
 
 } // namespace megamol::infovis

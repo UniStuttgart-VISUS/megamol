@@ -6,7 +6,7 @@
  */
 #include "stdafx.h"
 #include "NullParticleWriter.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <thread>
 #include <cstdint>
 #include "mmcore/moldyn/MultiParticleDataCall.h"
@@ -33,7 +33,7 @@ void NullParticleWriter::release(void) {
 }
 
 bool NullParticleWriter::run(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using core::moldyn::MultiParticleDataCall;
 
     MultiParticleDataCall *mpdc = this->dataSlot.CallAs<MultiParticleDataCall>();

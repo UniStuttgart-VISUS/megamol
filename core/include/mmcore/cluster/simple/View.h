@@ -15,7 +15,7 @@
 #include "mmcore/cluster/simple/HeartbeatClient.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/net/AbstractSimpleMessage.h"
+#include "mmcore/utility/net/AbstractSimpleMessage.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/Serialiser.h"
 #include "vislib/String.h"

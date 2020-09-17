@@ -9,7 +9,7 @@
 #include "imageviewer2/ImageRenderer.h"
 #include "imageviewer2/JpegBitmapCodec.h"
 #include "mmcore/misc/PngBitmapCodec.h"
-#include "vislib/graphics/BitmapCodecCollection.h"
+#include "mmcore/utility/graphics/BitmapCodecCollection.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 //#define _USE_MATH_DEFINES
@@ -23,8 +23,8 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/CallRender3D_2.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 //#include <cmath>
 
 using namespace megamol::core;
@@ -139,29 +139,29 @@ bool imageviewer2::ImageRenderer::create(void) {
             return false;
         }
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "[ImageRenderer] Unable to make shader source: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "[ImageRenderer] Unable to make shader source: %s\n", e.GetMsgA());
     }
 
     try {
         if (!this->theShader.Create(vertShader.Code(), vertShader.Count(), fragShader.Code(), fragShader.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile sphere shader\n");
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile sphere shader\n");
             return false;
         }
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "[SphereRenderer] Unable to compile sphere shader (@%s): %s\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         return false;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile shader: %s\n", e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile shader: %s\n", e.GetMsgA());
         return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile shader: Unknown exception\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "[ImageRenderer] Unable to compile shader: Unknown exception\n");
         return false;
     }
 
@@ -240,7 +240,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
         MPI_Comm_split(this->comm, myRole, 0, &roleComm);
         MPI_Comm_rank(roleComm, &roleRank);
         MPI_Comm_size(roleComm, &roleSize);
-        vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: role %s (rank %i of %i)",
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: role %s (rank %i of %i)",
             myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
         registered = true;
     }
@@ -271,7 +271,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
 #ifdef WITH_MPI
             if (useMpi && !handIsShaken) {
                 handIsShaken = true;
-                vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: IMGC Handshake\n");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: IMGC Handshake\n");
                 // handshake who has imgc
                 int* imgcRes = nullptr;
                 if (roleRank == 0) {
@@ -297,7 +297,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                 } else {
                     roleImgcRank = 0;
                 }
-                vislib::sys::Log::DefaultLog.WriteInfo(
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "ImageRenderer: IMGC Handshake result remoteness = %d imgcRank = %d\n", remoteness, roleImgcRank);
             }
 #endif /* WITH_MPI */
@@ -309,11 +309,11 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
 #ifdef WITH_MPI
                 // single node or role boss loads the image
                 if (!useMpi || roleRank == roleImgcRank) {
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: role %s (rank %i of %i) loads an image",
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: role %s (rank %i of %i) loads an image",
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
 #endif /* WITH_MPI */
                     if (!remoteness) {
-                        vislib::sys::Log::DefaultLog.WriteInfo(
+                        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                             "ImageRenderer: Loading file '%s' from disk\n", filename.PeekBuffer());
                         vislib::sys::FastFile in;
                         if (in.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
@@ -327,7 +327,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                             fileSize = 0;
                         }
                     } else if (roleRank == roleImgcRank) {
-                        vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Retrieving image from call\n");
+                        megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: Retrieving image from call\n");
                         // retrieve data from call
                         if (!(*imgc)(0)) return false;
                         this->width = imgc->GetWidth();
@@ -340,14 +340,14 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                 // cluster nodes broadcast file size
                 if (useMpi) {
                     int bcastRoot = roleImgcRank;
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Broadcast root = %d\n", bcastRoot);
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: Broadcast root = %d\n", bcastRoot);
                     MPI_Bcast(&fileSize, 1, MPI_INT, bcastRoot, roleComm);
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: rank %i of %i (role %s) knows fileSize = %i",
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: rank %i of %i (role %s) knows fileSize = %i",
                         roleRank, roleSize, myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"),
                         fileSize);
                     if (roleRank != 0) {
                         allFile = new BYTE[fileSize];
-                        vislib::sys::Log::DefaultLog.WriteInfo(
+                        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                             "ImageRenderer: rank %i of %i (role %s) late allocated file storage", roleRank, roleSize,
                             myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                     }
@@ -362,7 +362,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
 #endif /* WITH_MPI */
                 BYTE* image_ptr = nullptr;
                 if (!remoteness) {
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Decoding Image\n");
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: Decoding Image\n");
                     if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
                             img, allFile, fileSize)) {
                         img.Convert(vislib::graphics::BitmapImage::TemplateByteRGB);
@@ -375,7 +375,7 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
                         this->width = this->height = 0;
                     }
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Decoding IMGC at rank %d\n", roleRank);
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: Decoding IMGC at rank %d\n", roleRank);
                     switch (imgc_enc) {
                     case image_calls::Image2DCall::BMP: {
                         if (vislib::graphics::BitmapCodecCollection::DefaultCollection().LoadBitmapImage(
@@ -437,11 +437,11 @@ bool imageviewer2::ImageRenderer::assertImage(bool rightEye) {
 #ifdef WITH_MPI
                 // we finish this together
                 if (useMpi) {
-                    vislib::sys::Log::DefaultLog.WriteInfo(
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                         "ImageRenderer: rank %i of %i (role %s) entering sync barrier", roleRank, roleSize,
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                     MPI_Barrier(roleComm);
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: rank %i of %i (role %s) leaving sync barrier",
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: rank %i of %i (role %s) leaving sync barrier",
                         roleRank, roleSize, myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                 }
 #endif
@@ -467,21 +467,21 @@ bool imageviewer2::ImageRenderer::initMPI() {
         if (c != nullptr) {
             /* New method: let MpiProvider do all the stuff. */
             if ((*c)(cluster::mpi::MpiCall::IDX_PROVIDE_MPI)) {
-                vislib::sys::Log::DefaultLog.WriteInfo("Got MPI communicator.");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("Got MPI communicator.");
                 this->comm = c->GetComm();
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(_T("Could not ")
+                megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Could not ")
                                                         _T("retrieve MPI communicator for the MPI-based view ")
                                                         _T("from the registered provider module."));
             }
         }
 
         if (this->comm != MPI_COMM_NULL) {
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
                                                    _T("retrieving communicator properties ..."));
             ::MPI_Comm_rank(this->comm, &this->mpiRank);
             ::MPI_Comm_size(this->comm, &this->mpiSize);
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
                                                    _T("of %d."),
                 vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
         } /* end if (this->comm != MPI_COMM_NULL) */

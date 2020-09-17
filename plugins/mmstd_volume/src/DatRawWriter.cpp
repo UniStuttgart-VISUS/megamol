@@ -8,7 +8,7 @@
 
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <string>
 #include <iomanip>
 #include <sstream>
@@ -56,7 +56,7 @@ void DatRawWriter::release(void) {}
  * DatRawWriter::run
  */
 bool DatRawWriter::run(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     std::string filepath(this->filenameSlot.Param<param::FilePathParam>()->Value().PeekBuffer());
     if (filepath.empty()) {
         Log::DefaultLog.WriteError("No file path specified. Abort.");
@@ -112,7 +112,7 @@ bool DatRawWriter::getCapabilities(DataWriterCtrlCall& call) {
  * DatRawWriter::writeFrame
  */
 bool DatRawWriter::writeFrame(std::string datpath, std::string rawpath, core::misc::VolumetricDataCall& data) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     auto lastPos = rawpath.find_last_of("/\\");
     std::string writestring = rawpath.substr(lastPos + 1);
 

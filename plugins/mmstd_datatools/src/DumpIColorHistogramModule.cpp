@@ -2,7 +2,7 @@
 #include "DumpIColorHistogramModule.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <vector>
 #include <fstream>
 #include <algorithm>
@@ -92,13 +92,13 @@ void writeSVG(const std::vector<int>& buckets, float rangeMin, float rangeMax) {
 bool stdplugin::datatools::DumpIColorHistogramModule::dump(::megamol::core::param::ParamSlot& param) {
     core::moldyn::MultiParticleDataCall *dat = this->inDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
     if (dat == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("No data connected");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("No data connected");
         return true;
     }
 
     dat->SetFrameID(static_cast<unsigned int>(this->timeSlot.Param<core::param::FloatParam>()->Value()), true);
     if (!(*dat)(0)) {
-        vislib::sys::Log::DefaultLog.WriteError("No data received");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("No data received");
         return true;
     }
 

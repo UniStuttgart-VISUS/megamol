@@ -19,7 +19,7 @@
 
 #include "vislib/assert.h"
 #include "vislib/sys/CmdLineProvider.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 /*
@@ -115,7 +115,7 @@ bool megamol::core::cluster::mpi::MpiProvider::OnCallProvideMpi(Call& call) {
  * megamol::core::cluster::mpi::MpiProvider::release
  */
 void megamol::core::cluster::mpi::MpiProvider::release(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     ASSERT(MpiProvider::activeInstances.load() > 0);
 
@@ -159,7 +159,7 @@ vislib::StringA megamol::core::cluster::mpi::MpiProvider::getCommandLine(void) {
     }
 #endif /* _WIN32 */
 
-    vislib::sys::Log::DefaultLog.WriteInfo("Command line used for MPI "
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Command line used for MPI "
         "initialisation is \"%s\".", retval.PeekBuffer());
     return retval;
 }
@@ -169,7 +169,7 @@ vislib::StringA megamol::core::cluster::mpi::MpiProvider::getCommandLine(void) {
  * megamol::core::cluster::mpi::MpiProvider::initialiseMpi
  */
 bool megamol::core::cluster::mpi::MpiProvider::initialiseMpi(const int colour) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
 #ifdef WITH_MPI
     int expectedColour = MPI_UNDEFINED;
