@@ -244,7 +244,7 @@ function(require_external NAME)
     include(GNUInstallDirs)
 
     if(WIN32)
-      set(GLAD_LIB "bin/glad.lib")
+      set(GLAD_LIB "lib/glad.lib")
     else()
       set(GLAD_LIB "lib/libglad.a")
     endif()
