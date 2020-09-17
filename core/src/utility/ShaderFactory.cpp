@@ -12,9 +12,9 @@ GLuint megamol::core::utility::make_shader(
     GLint const shader_size = shader_string.size();
     glShaderSource(shader, 1, &shader_cstr, &shader_size);
     glCompileShader(shader);
-    auto success = check_and_log_shader_compile(shader);
-    if (!success) {
+    if (!check_and_log_shader_compile(shader)) {
         glDeleteShader(shader);
+        return 0;
     }
 
     return shader;
