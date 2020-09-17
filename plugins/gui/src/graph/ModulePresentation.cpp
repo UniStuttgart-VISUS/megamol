@@ -407,9 +407,11 @@ void megamol::gui::ModulePresentation::Present(
 
                                     ImGui::SetCursorScreenPos(param_child_pos);
 
-                                    auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove |
-                                                       ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                                                       ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NavFlattened;
+                                    auto child_flags = ImGuiWindowFlags_HorizontalScrollbar |
+                                                       ImGuiWindowFlags_AlwaysVerticalScrollbar |
+                                                       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar |
+                                                       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
+                                                       ImGuiWindowFlags_NavFlattened;
                                     ImGui::BeginChild("module_parameter_child",
                                         ImVec2(param_child_width, this->param_child_height), true, child_flags);
 

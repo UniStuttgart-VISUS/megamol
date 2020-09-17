@@ -582,6 +582,8 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     GraphPtr_t graph_ptr;
     if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
+            // Break loop after first occurrence of parameter hotkey
+            if (hotkeyPressed) break;
             if (check_all_modules || this->considerModule(module_ptr->FullName(), modules_list)) {
                 for (auto& param : module_ptr->parameters) {
                     if (param.type == Param_t::BUTTON) {
@@ -589,8 +591,6 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
                         if (this->isHotkeyPressed(keyCode)) {
                             param.ForceSetValueDirty();
                             hotkeyPressed = true;
-                            // Break loop after first occurrence of parameter hotkey
-                            break;
                         }
                     }
                 }

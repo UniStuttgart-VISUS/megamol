@@ -252,6 +252,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glEnable(GL_DEPTH_TEST);
 
     this->fbo_shader->use();
@@ -269,6 +270,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
 
     glUseProgram(0);
     glDisable(GL_BLEND);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     return true;
