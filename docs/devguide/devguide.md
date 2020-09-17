@@ -7,13 +7,53 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 ## Contents
 
 - [MegaMol Developer Guide](#megamol-developer-guide)
-    - [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
-    - [Synchronized Selection across Modules](#synchronized-selection-across-modules)
-    - [Graph Manipulation](#graph-manipulation)
-    - [Build System](#build-system)
+  - [Contents](#contents)
+  - [Create GLSL Shader with utility classes](#create-glsl-shader-with-utility-classes)
+  - [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
+    - [Recipe](#recipe)
+      - [Usage: ```DATACallRead```](#usage-datacallread)
+      - [Usage: ```DataCallWrite```](#usage-datacallwrite)
+  - [Synchronized Selection across Modules](#synchronized-selection-across-modules)
+    - [FlagStorage](#flagstorage)
+    - [FlagStorage_GL](#flagstorage_gl)
+  - [Graph Manipulation](#graph-manipulation)
+    - [Graph Manipulation Queues](#graph-manipulation-queues)
+  - [Build System](#build-system)
+    - [External dependencies](#external-dependencies)
+      - [Using external dependencies](#using-external-dependencies)
+      - [Adding new external dependencies](#adding-new-external-dependencies)
+        - [Header-only libraries](#header-only-libraries)
+        - [Built libraries](#built-libraries)
 - [License](#license)
 
 <!-- /TOC -->
+
+## Create GLSL Shader with utility classes
+
+Required headers:
+- ```mmcore/utility/graphics/GLSLShader.h```
+- ```mmcore/CoreInstance.h```
+  
+Before creating a shader program with this wrapper, ```compiler_options``` need to be retrieved from ```CoreInstance```.
+This ```compiler_options``` instance contains default shader paths and default options.
+Additional include paths and definitions can be added prior to program creation.
+The constructor of the wrapper requires paths to source files of all shader stages in the form: ```<path>/<name>.<type>.glsl```.
+
+Allowed types are:   
+| Type | Shader Stage            |
+| ---- | ----------------------- |
+| vert | Vertex                  |
+| geom | Geometry                |
+| tesc | Tessellation Control    |
+| tese | Tessellation Evaluation |
+| frag | Fragment                |
+| comp | Compute                 |
+
+Uniform locations are retrieved at construction of GLSLShader instance.
+
+Within source files, includes can be defined in standard C style: ```#include "common.h"```
+
+Shader program can be created manually by calling ```megamol::core::utility::make_program``` from ```mmcore/utility/ShaderFactory.h``` (same parameter set as GLSLShader ctor).
 
 ## Bi-Directional Communication across Modules
 
@@ -96,17 +136,17 @@ There are different queues for different types of requests:
 For each of this queues, there is a list with indices into the respective queue pointing to the last queued event before a flush.
 It causes the graph updater to stop at the indicated event and delay further graph updates to the next frame.
 
-|Name|
-|---|
-|viewInstRequestsFlushIndices|
-|jobInstRequestsFlushIndices|
-|callInstRequestsFlushIndices|
-|chainCallInstRequestsFlushIndices|
-|moduleInstRequestsFlushIndices|
-|callDelRequestsFlushIndices|
-|moduleDelRequestsFlushIndices|
-|paramSetRequestsFlushIndices|
-|groupParamSetRequestsFlushIndices|
+| Name                              |
+| --------------------------------- |
+| viewInstRequestsFlushIndices      |
+| jobInstRequestsFlushIndices       |
+| callInstRequestsFlushIndices      |
+| chainCallInstRequestsFlushIndices |
+| moduleInstRequestsFlushIndices    |
+| callDelRequestsFlushIndices       |
+| moduleDelRequestsFlushIndices     |
+| paramSetRequestsFlushIndices      |
+| groupParamSetRequestsFlushIndices |
 
 ## Build System
 
@@ -140,13 +180,13 @@ add_external_headeronly_project(<NAME>
   [DEPENDS <DEPENDS>...])
 ```
 
-| Parameter              | Description  |
-| ---------------------- | ------------ |
-| ```<NAME>```           | Target name, usually the official name of the library or its abbreviation. |
-| ```<GIT_REPOSITORY>``` | URL of the git repository. |
+| Parameter              | Description                                                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| ```<NAME>```           | Target name, usually the official name of the library or its abbreviation.                                                |
+| ```<GIT_REPOSITORY>``` | URL of the git repository.                                                                                                |
 | ```<GIT_TAG>```        | Tag or commit hash for getting a specific version, ensuring compatibility. Default behavior is to get the latest version. |
-| ```<INCLUDE_DIR>```    | Relative directory where the include files can be found, usually ```include```. Defaults to the main source directory. |
-| ```<DEPENDS>```        | Targets this library depends on, if any. |
+| ```<INCLUDE_DIR>```    | Relative directory where the include files can be found, usually ```include```. Defaults to the main source directory.    |
+| ```<DEPENDS>```        | Targets this library depends on, if any.                                                                                  |
 
 In the following example, the library Delaunator is downloaded from ```https://github.com/delfrrr/delaunator-cpp.git``` in its version ```v0.4.0```. The header files can be found in the folder ```include```.
 
@@ -161,11 +201,11 @@ For more examples on how to include header-only libraries, see the ```CMakeExter
 
 Additionally, information about the header-only libraries can be queried with the command ```external_get_property(<NAME> <VARIABLE>)```, where variable has to be one of the provided variables in the following table, and at the same time is used as local variable name for storing the queried results.
 
-| Variable       | Description |
-| -------------- | ----------- |
-| GIT_REPOSITORY | The URL of the git repository. |
+| Variable       | Description                                           |
+| -------------- | ----------------------------------------------------- |
+| GIT_REPOSITORY | The URL of the git repository.                        |
 | GIT_TAG        | The git tag or commit hash of the downloaded library. |
-| SOURCE_DIR     | Source directory, where the downloaded files reside. |
+| SOURCE_DIR     | Source directory, where the downloaded files reside.  |
 
 ##### Built libraries
 
@@ -185,18 +225,18 @@ add_external_project(<NAME> SHARED|STATIC
   [DEPENDS <DEPENDS>...])
 ```
 
-| Parameter                     | Description |
-| ----------------------------- | ----------- |
-| ```<NAME>```                  | Project name, usually the official name of the library or its abbreviation. |
-| ```SHARED \| STATIC```        | Indicate to build a shared (```.so```/```.dll```) or static (```.a```/```.lib```) library. Shared libraries are always built as Release, static libraries according to user selection. |
-| ```<GIT_REPOSITORY>```        | URL of the git repository. |
-| ```<GIT_TAG>```               | Tag or commit hash for getting a specific version, ensuring compatibility. Default behavior is to get the latest version. |
-| ```<PATCH_COMMAND>```         | Command that is run before the configuration step and is mostly used to apply patches or providing a modified ```CMakeLists.txt``` file. |
-| ```<CMAKE_ARGS>```            | Arguments that are passed to CMake for the configuration of the external library. |
-| ```<BUILD_BYPRODUCTS>```      | Specifies the output libraries, which are automatically installed if it is a dynamic library. This must include the import library on Windows systems. |
-| ```<COMMANDS>```              | Commands that are executed after the build process finished, allowing for custom install commands. |
-| ```<DEBUG_SUFFIX>```          | Specify a suffix for the debug version of the library. The position of this suffix has to be specified by providing ```<SUFFIX>``` in the library name. |
-| ```<DEPENDS>```               | Targets this library depends on, if any. |
+| Parameter                | Description                                                                                                                                                                            |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ```<NAME>```             | Project name, usually the official name of the library or its abbreviation.                                                                                                            |
+| ```SHARED \| STATIC```   | Indicate to build a shared (```.so```/```.dll```) or static (```.a```/```.lib```) library. Shared libraries are always built as Release, static libraries according to user selection. |
+| ```<GIT_REPOSITORY>```   | URL of the git repository.                                                                                                                                                             |
+| ```<GIT_TAG>```          | Tag or commit hash for getting a specific version, ensuring compatibility. Default behavior is to get the latest version.                                                              |
+| ```<PATCH_COMMAND>```    | Command that is run before the configuration step and is mostly used to apply patches or providing a modified ```CMakeLists.txt``` file.                                               |
+| ```<CMAKE_ARGS>```       | Arguments that are passed to CMake for the configuration of the external library.                                                                                                      |
+| ```<BUILD_BYPRODUCTS>``` | Specifies the output libraries, which are automatically installed if it is a dynamic library. This must include the import library on Windows systems.                                 |
+| ```<COMMANDS>```         | Commands that are executed after the build process finished, allowing for custom install commands.                                                                                     |
+| ```<DEBUG_SUFFIX>```     | Specify a suffix for the debug version of the library. The position of this suffix has to be specified by providing ```<SUFFIX>``` in the library name.                                |
+| ```<DEPENDS>```          | Targets this library depends on, if any.                                                                                                                                               |
 
 The second command creates the actual interface targets. Note that for some libraries, multiple targets have to be created.
 
@@ -208,14 +248,14 @@ add_external_library(<NAME> [PROJECT <PROJECT>]
   [DEBUG_SUFFIX <DEBUG_SUFFIX>])
 ```
 
-| Parameter                     | Description |
-| ----------------------------- | ----------- |
-| ```<NAME>```                  | Target name, for the main target this is usually the official name of the library or its abbreviation. |
-| ```<PROJECT>```               | If the target name does not match the name provided in the ```add_external_project``` command, the project has to be set accordingly. |
-| ```<LIBRARY>```               | The created library file, in case of a shared library a ```.so``` or ```.dll``` file, or ```.a``` or ```.lib``` for a static library. |
-| ```<IMPORT_LIBRARY>```        | If the library is a shared library, this defines the import library (```.lib```) on Windows systems. This has to be set for shared libraries. |
-| ```<INTERFACE_LIBRARIES>```   | Additional libraries the external library depends on. |
-| ```<DEBUG_SUFFIX>```          | Specify a suffix for the debug version of the library. The position of this suffix has to be specified by providing ```<SUFFIX>``` in the library name and has to match the debug suffix provided to the ```add_external_project``` command. |
+| Parameter                   | Description                                                                                                                                                                                                                                  |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ```<NAME>```                | Target name, for the main target this is usually the official name of the library or its abbreviation.                                                                                                                                       |
+| ```<PROJECT>```             | If the target name does not match the name provided in the ```add_external_project``` command, the project has to be set accordingly.                                                                                                        |
+| ```<LIBRARY>```             | The created library file, in case of a shared library a ```.so``` or ```.dll``` file, or ```.a``` or ```.lib``` for a static library.                                                                                                        |
+| ```<IMPORT_LIBRARY>```      | If the library is a shared library, this defines the import library (```.lib```) on Windows systems. This has to be set for shared libraries.                                                                                                |
+| ```<INTERFACE_LIBRARIES>``` | Additional libraries the external library depends on.                                                                                                                                                                                        |
+| ```<DEBUG_SUFFIX>```        | Specify a suffix for the debug version of the library. The position of this suffix has to be specified by providing ```<SUFFIX>``` in the library name and has to match the debug suffix provided to the ```add_external_project``` command. |
 
 An example for a dynamic library is as follows, where the ```tracking``` library ```v2.0``` is defined as a dynamic library and downloaded from the VISUS github repository at ```https://github.com/UniStuttgart-VISUS/mm-tracking```. It builds two libraries, ```tracking``` and ```NatNetLib```, and uses the CMake flag ```-DCREATE_TRACKING_TEST_PROGRAM=OFF``` to prevent the building of a test program. Both libraries are created providing the paths to the respective dynamic and import libraries. Note that only the ```NatNetLib``` has to specify the project as its name does not match the external library.
 
@@ -249,15 +289,15 @@ Further examples on how to include dynamic and static libraries can be found in 
 
 Additionally, information about the libraries can be queried with the command ```external_get_property(<NAME> <VARIABLE>)```, where variable has to be one of the provided variables in the following table, and at the same time is used as local variable name for storing the queried results.
 
-| Variable       | Description |
-| -------------- | ----------- |
-| GIT_REPOSITORY | The URL of the git repository. |
-| GIT_TAG        | The git tag or commit hash of the downloaded library. |
-| SOURCE_DIR     | Source directory, where the downloaded files reside. |
-| BINARY_DIR     | Directory of the CMake configuration files. |
+| Variable       | Description                                                                                                                                                                 |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GIT_REPOSITORY | The URL of the git repository.                                                                                                                                              |
+| GIT_TAG        | The git tag or commit hash of the downloaded library.                                                                                                                       |
+| SOURCE_DIR     | Source directory, where the downloaded files reside.                                                                                                                        |
+| BINARY_DIR     | Directory of the CMake configuration files.                                                                                                                                 |
 | INSTALL_DIR    | Target directory for the local installation. Note that for multi-configuration systems, the built static libraries are in a subdirectory corresponding to their build type. |
-| SHARED         | Indicates that the library was built as a dynamic library if ```TRUE```, or a static library otherwise. |
-| BUILD_TYPE     | Build type of the output library on single-configuration systems. |
+| SHARED         | Indicates that the library was built as a dynamic library if ```TRUE```, or a static library otherwise.                                                                     |
+| BUILD_TYPE     | Build type of the output library on single-configuration systems.                                                                                                           |
 
 # License
 
