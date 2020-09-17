@@ -54,10 +54,10 @@ CinematicView::CinematicView(void) : View3D_2()
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
     // init parameters
-    this->renderParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_R, core::view::Modifier::CTRL));
+    this->renderParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_R, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->renderParam);
 
-    this->toggleAnimPlayParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_SPACE, core::view::Modifier::CTRL));
+    this->toggleAnimPlayParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_SPACE, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->toggleAnimPlayParam);
 
     param::EnumParam* sbs = new param::EnumParam(this->sbSide);

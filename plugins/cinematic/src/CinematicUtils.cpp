@@ -742,26 +742,26 @@ void CinematicUtils::PushHotkeyList(float viewport_width, float viewport_height)
 
     std::string hotkey_str = "";
     hotkey_str += "-----[ GLOBAL ]-----\n";
-    hotkey_str += "[Ctrl+a] Apply current settings to selected/new keyframe. \n";
-    hotkey_str += "[Ctrl+d] Delete selected keyframe. \n";
-    hotkey_str += "[Ctrl+s] Save keyframes to file. \n";
-    hotkey_str += "[Ctrl+l] Load keyframes from file. \n";
-    hotkey_str += "[Ctrl+z] Undo keyframe changes. \n";
-    hotkey_str += "[Ctrl+y] Redo keyframe changes. \n";
+    hotkey_str += "[Shift+a] Apply current settings to selected/new keyframe. \n";
+    hotkey_str += "[Shift+d] Delete selected keyframe. \n";
+    hotkey_str += "[Shift+s] Save keyframes to file. \n";
+    hotkey_str += "[Shift+l] Load keyframes from file. \n";
+    hotkey_str += "[Shift+z] Undo keyframe changes. \n";
+    hotkey_str += "[Shift+y] Redo keyframe changes. \n";
     hotkey_str += "-----[ TRACKING SHOT ]----- \n";
-    hotkey_str += "[Ctrl+q] Toggle different manipulators for the selected keyframe. \n";
-    hotkey_str += "[Ctrl+w] Show manipulators inside/outside of model bounding box. \n";
-    hotkey_str += "[Ctrl+u] Reset look-at vector of selected keyframe. \n";
+    hotkey_str += "[Shift+q] Toggle different manipulators for the selected keyframe. \n";
+    hotkey_str += "[Shift+w] Show manipulators inside/outside of model bounding box. \n";
+    hotkey_str += "[Shift+u] Reset look-at vector of selected keyframe. \n";
     hotkey_str += "-----[ CINEMATIC ]----- \n";
-    hotkey_str += "[Ctrl+r] Start/Stop rendering complete animation. \n";
-    hotkey_str += "[Ctrl+Space] Start/Stop animation preview. \n";
+    hotkey_str += "[Shift+r] Start/Stop rendering complete animation. \n";
+    hotkey_str += "[Shift+Space] Start/Stop animation preview. \n";
     hotkey_str += "-----[ TIMELINE ]----- \n";
-    hotkey_str += "[Ctrl+Right/Left Arrow] Move selected keyframe on animation time axis. \n";
-    hotkey_str += "[Ctrl+f] Snap all keyframes to animation frames. \n";
-    hotkey_str += "[Ctrl+g] Snap all keyframes to simulation frames. \n";
-    hotkey_str += "[Ctrl+t] Linearize simulation time between two keyframes. \n";
-    //hotkey_str += "[Ctrl+v] Set same velocity between all keyframes (Experimental).\n"; ///XXX Calcualation is not correct yet ...
-    hotkey_str += "[Ctrl+x] Reset shifted and scaled time axes. \n";
+    hotkey_str += "[Shift+Right/Left Arrow] Move selected keyframe on animation time axis. \n";
+    hotkey_str += "[Shift+f] Snap all keyframes to animation frames. \n";
+    hotkey_str += "[Shift+g] Snap all keyframes to simulation frames. \n";
+    hotkey_str += "[Shift+t] Linearize simulation time between two keyframes. \n";
+    //hotkey_str += "[Shift+v] Set same velocity between all keyframes (Experimental).\n"; ///XXX Calcualation is not correct yet ...
+    hotkey_str += "[Shift+p] Reset shifted and scaled time axes. \n";
     hotkey_str += "[Left Mouse Button] Select keyframe. \n";
     hotkey_str += "[Middle Mouse Button] Axes scaling in mouse direction. \n";
     hotkey_str += "[Right Mouse Button] Drag & drop keyframe / pan axes. \n";
@@ -809,7 +809,11 @@ void CinematicUtils::DrawAll(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
     glPushMatrix();
     glLoadIdentity();
 
+    glDisable(GL_DEPTH_TEST);
+
     this->font.BatchDrawString();
+
+    glEnable(GL_DEPTH_TEST);
 
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
