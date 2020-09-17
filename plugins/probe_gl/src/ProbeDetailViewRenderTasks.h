@@ -96,8 +96,6 @@ private:
         float tf_max;
     };
 
-    bool m_show_glyphs;
-
     std::vector<VectorProbeData> m_vector_probe_data;
 
     std::vector<glowl::DrawElementsCommand> m_vector_probe_draw_commands;
