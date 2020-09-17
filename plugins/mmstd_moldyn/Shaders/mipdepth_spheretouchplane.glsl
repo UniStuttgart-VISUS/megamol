@@ -8,9 +8,9 @@
     vec4 tmp;
 #ifdef CALC_CAM_SYS
     // camera coordinate system in object space
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[2];
+    tmp = mv_inv[3] + mv_inv[2];
     vec3 camIn = normalize(tmp.xyz);
-    tmp = gl_ModelViewMatrixInverse[3] + gl_ModelViewMatrixInverse[1];
+    tmp = mv_inv[3] + mv_inv[1];
     vec3 camUp = tmp.xyz;
     vec3 camRight = normalize(cross(camIn, camUp));
     camUp = cross(camIn, camRight);
@@ -45,25 +45,25 @@
 
     // TODO: rewrite only using four projections, additions in homogenous coordinates and delayed perspective divisions.
     testPos = objPos.xyz + cpj1 + cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = projPos.xy;
     maxs = projPos.xy;
 
     testPos -= 2.0 * cpm1;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos = objPos.xyz + cpj2 + cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);
 
     testPos -= 2.0 * cpm2;
-    projPos = gl_ModelViewProjectionMatrix * vec4(testPos, 1.0);
+    projPos = mvp * vec4(testPos, 1.0);
     projPos /= projPos.w;
     mins = min(mins, projPos.xy);
     maxs = max(maxs, projPos.xy);

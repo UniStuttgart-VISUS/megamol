@@ -92,14 +92,14 @@ pcl::Feature<PointInT, PointOutT>::initCompute ()
 {
   if (!PCLBase<PointInT>::initCompute ())
   {
-    vislib::sys::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] Init failed.\n", getClassName ().c_str ());
+    megamol::core::utility::log::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] Init failed.\n", getClassName ().c_str ());
     return (false);
   }
 
   // If the dataset is empty, just return
   if (input_->points.empty ())
   {
-    vislib::sys::Log::DefaultLog.WriteError ("[pcl::%s::compute] input_ is empty!\n", getClassName ().c_str ());
+    megamol::core::utility::log::Log::DefaultLog.WriteError ("[pcl::%s::compute] input_ is empty!\n", getClassName ().c_str ());
     // Cleanup
     deinitCompute ();
     return (false);
@@ -130,9 +130,9 @@ pcl::Feature<PointInT, PointOutT>::initCompute ()
   {
     if (k_ != 0)
     {
-      vislib::sys::Log::DefaultLog.WriteError ("[pcl::%s::compute] ", getClassName ().c_str ());
-      vislib::sys::Log::DefaultLog.WriteError ("Both radius (%f) and K (%d) defined! ", search_radius_, k_);
-      vislib::sys::Log::DefaultLog.WriteError ("Set one of them to zero first and then re-run compute ().\n");
+      megamol::core::utility::log::Log::DefaultLog.WriteError ("[pcl::%s::compute] ", getClassName ().c_str ());
+      megamol::core::utility::log::Log::DefaultLog.WriteError ("Both radius (%f) and K (%d) defined! ", search_radius_, k_);
+      megamol::core::utility::log::Log::DefaultLog.WriteError ("Set one of them to zero first and then re-run compute ().\n");
       // Cleanup
       deinitCompute ();
       return (false);
@@ -162,8 +162,8 @@ pcl::Feature<PointInT, PointOutT>::initCompute ()
     }
     else
     {
-      vislib::sys::Log::DefaultLog.WriteError ("[pcl::%s::compute] Neither radius nor K defined! ", getClassName ().c_str ());
-      vislib::sys::Log::DefaultLog.WriteError ("Set one of them to a positive number first and then re-run compute ().\n");
+      megamol::core::utility::log::Log::DefaultLog.WriteError ("[pcl::%s::compute] Neither radius nor K defined! ", getClassName ().c_str ());
+      megamol::core::utility::log::Log::DefaultLog.WriteError ("Set one of them to a positive number first and then re-run compute ().\n");
       // Cleanup
       deinitCompute ();
       return (false);
@@ -231,14 +231,14 @@ pcl::FeatureFromNormals<PointInT, PointNT, PointOutT>::initCompute ()
 {
   if (!Feature<PointInT, PointOutT>::initCompute ())
   {
-    vislib::sys::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] Init failed.\n", getClassName ().c_str ());
+    megamol::core::utility::log::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] Init failed.\n", getClassName ().c_str ());
     return (false);
   }
 
   // Check if input normals are set
   if (!normals_)
   {
-    vislib::sys::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] No input dataset containing normals was given!\n", getClassName ().c_str ());
+    megamol::core::utility::log::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] No input dataset containing normals was given!\n", getClassName ().c_str ());
     Feature<PointInT, PointOutT>::deinitCompute ();
     return (false);
   }
@@ -246,9 +246,9 @@ pcl::FeatureFromNormals<PointInT, PointNT, PointOutT>::initCompute ()
   // Check if the size of normals is the same as the size of the surface
   if (normals_->points.size () != surface_->points.size ())
   {
-    vislib::sys::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] ", getClassName ().c_str ());
-    vislib::sys::Log::DefaultLog.WriteError ("The number of points in the input dataset (%u) differs from ", surface_->points.size ());
-    vislib::sys::Log::DefaultLog.WriteError ("the number of points in the dataset containing the normals (%u)!\n", normals_->points.size ());
+    megamol::core::utility::log::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] ", getClassName ().c_str ());
+    megamol::core::utility::log::Log::DefaultLog.WriteError ("The number of points in the input dataset (%u) differs from ", surface_->points.size ());
+    megamol::core::utility::log::Log::DefaultLog.WriteError ("the number of points in the dataset containing the normals (%u)!\n", normals_->points.size ());
     Feature<PointInT, PointOutT>::deinitCompute ();
     return (false);
   }
@@ -264,14 +264,14 @@ pcl::FeatureFromLabels<PointInT, PointLT, PointOutT>::initCompute ()
 {
   if (!Feature<PointInT, PointOutT>::initCompute ())
   {
-    vislib::sys::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] Init failed.\n", getClassName ().c_str ());
+    megamol::core::utility::log::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] Init failed.\n", getClassName ().c_str ());
     return (false);
   }
 
   // Check if input normals are set
   if (!labels_)
   {
-    vislib::sys::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] No input dataset containing labels was given!\n", getClassName ().c_str ());
+    megamol::core::utility::log::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] No input dataset containing labels was given!\n", getClassName ().c_str ());
     Feature<PointInT, PointOutT>::deinitCompute ();
     return (false);
   }
@@ -279,7 +279,7 @@ pcl::FeatureFromLabels<PointInT, PointLT, PointOutT>::initCompute ()
   // Check if the size of normals is the same as the size of the surface
   if (labels_->points.size () != surface_->points.size ())
   {
-    vislib::sys::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] The number of points in the input dataset differs from the number of points in the dataset containing the labels!\n", getClassName ().c_str ());
+    megamol::core::utility::log::Log::DefaultLog.WriteError ("[pcl::%s::initCompute] The number of points in the input dataset differs from the number of points in the dataset containing the labels!\n", getClassName ().c_str ());
     Feature<PointInT, PointOutT>::deinitCompute ();
     return (false);
   }
@@ -302,7 +302,7 @@ pcl::FeatureWithLocalReferenceFrames<PointInT, PointRFT>::initLocalReferenceFram
   {
     if (!lrf_estimation)
     {
-      vislib::sys::Log::DefaultLog.WriteError ("[initLocalReferenceFrames] No input dataset containing reference frames was given!\n");
+      megamol::core::utility::log::Log::DefaultLog.WriteError ("[initLocalReferenceFrames] No input dataset containing reference frames was given!\n");
       return (false);
     } else
     {
@@ -318,7 +318,7 @@ pcl::FeatureWithLocalReferenceFrames<PointInT, PointRFT>::initLocalReferenceFram
   {
     if (!lrf_estimation)
     {
-      vislib::sys::Log::DefaultLog.WriteError ("[initLocalReferenceFrames] The number of points in the input dataset differs from the number of points in the dataset containing the reference frames!\n");
+      megamol::core::utility::log::Log::DefaultLog.WriteError ("[initLocalReferenceFrames] The number of points in the input dataset differs from the number of points in the dataset containing the reference frames!\n");
       return (false);
     } else
     {
