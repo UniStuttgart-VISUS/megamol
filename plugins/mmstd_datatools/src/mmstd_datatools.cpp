@@ -90,6 +90,7 @@
 #include "table/TableSelectionTx.h"
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
+#include "table/TableItemSelector.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -247,6 +248,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::CPERAWDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::LocalBoundingBoxExtractor>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleInstantiator>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableItemSelector>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
