@@ -75,6 +75,7 @@
 #include "mmcore/FlagStorage.h"
 #include "mmcore/FlagStorage_GL.h"
 #include "mmcore/DeferredShading.h"
+#include "mmcore/EventStorage.h"
 
 using namespace megamol::core;
 
@@ -154,4 +155,5 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<FlagStorage>();
     instance.RegisterAutoDescription<FlagStorage_GL>();
     instance.RegisterAutoDescription<DeferredShading>();
+    instance.RegisterAutoDescription<EventStorage>();
 }
