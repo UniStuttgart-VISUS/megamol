@@ -18,6 +18,7 @@
 #include "ProbeRenderTasks.h"
 #include "ProbeGlCalls.h"
 #include "FilterByProbe.h"
+#include "ProbeHullRenderTasks.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -57,6 +58,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeInteraction>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::FilterByProbe>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeHullRenderTasks>();
 
         // register calls here:
 

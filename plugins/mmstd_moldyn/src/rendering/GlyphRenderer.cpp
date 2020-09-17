@@ -14,6 +14,7 @@
 #include "inttypes.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/FlagCall_GL.h"
+#include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
@@ -31,7 +32,7 @@ using namespace megamol::stdplugin;
 using namespace megamol::stdplugin::moldyn;
 using namespace megamol::stdplugin::moldyn::rendering;
 
-//const uint32_t max_ssbo_size = 2 * 1024 * 1024 * 1024;
+// const uint32_t max_ssbo_size = 2 * 1024 * 1024 * 1024;
 
 GlyphRenderer::GlyphRenderer(void)
     : Renderer3DModule_2()
@@ -41,10 +42,9 @@ GlyphRenderer::GlyphRenderer(void)
     , readFlagsSlot("readFlags", "the slot for reading the selection flags")
     , glyphParam("glyph", "which glyph to render")
     , scaleParam("scaling", "scales the glyph radii")
-    , colorInterpolationParam(
-          "colorInterpolation", "interpolate between directional coloring (0) and glyph color (1)") 
-    , colorModeParam("colorMode","switch between global glyph and per axis color")
-{
+    , colorInterpolationParam("colorInterpolation", "interpolate between directional coloring (0) and glyph color (1)")
+    , colorModeParam("colorMode", "switch between global glyph and per axis color")
+    , unitRadiusParam("unitRadius", "ignore all radii and assume 1 instead") {
 
     this->getDataSlot.SetCompatibleCall<core::moldyn::EllipsoidalParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -78,6 +78,9 @@ GlyphRenderer::GlyphRenderer(void)
     gcm->SetTypePair(1, "PerAxis");
     this->colorModeParam << gcm;
     this->MakeSlotAvailable(&this->colorModeParam);
+
+    unitRadiusParam << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->unitRadiusParam);
 }
 
 
@@ -185,8 +188,8 @@ bool megamol::stdplugin::moldyn::rendering::GlyphRenderer::validateData(
             this->direction_buffers.emplace_back(utility::SSBOBufferArray("direction_buffer" + std::to_string(x)));
             this->color_buffers.emplace_back(utility::SSBOBufferArray("color_buffer" + std::to_string(x)));
 
-            this->direction_buffers[x].SetData(l.GetQuatData(), l.GetQuatDataStride(), 4 * sizeof(float),
-                l.GetCount(), [](void* dst, const void* src) { memcpy(dst, src, sizeof(float) * 4); });
+            this->direction_buffers[x].SetData(l.GetQuatData(), l.GetQuatDataStride(), 4 * sizeof(float), l.GetCount(),
+                [](void* dst, const void* src) { memcpy(dst, src, sizeof(float) * 4); });
             const auto num_items_per_chunk = this->direction_buffers[x].GetMaxNumItemsPerChunk();
 
             switch (l.GetVertexDataType()) {
@@ -334,7 +337,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     bool rightEye = (Eye == core::thecam::Eye::right);
 
     // todo...
-    //glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
+    // glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -380,10 +383,10 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
     glUniformMatrix4fv(shader->ParameterLocation("MVP"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
     glUniformMatrix4fv(shader->ParameterLocation("MVP_T"), 1, GL_TRUE, glm::value_ptr(mvp_matrix));
     glUniformMatrix4fv(shader->ParameterLocation("MVP_I"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_i));
-    //glUniform4fv(shader->ParameterLocation("light"), 1, glm::value_ptr(light));
+    // glUniform4fv(shader->ParameterLocation("light"), 1, glm::value_ptr(light));
     glUniform4fv(shader->ParameterLocation("cam"), 1, glm::value_ptr(CamPos));
     glUniform1f(shader->ParameterLocation("scaling"), this->scaleParam.Param<param::FloatParam>()->Value());
-    //glUniform2f(shader->ParameterLocation("far_near"), cam.far_clipping_plane(), cam.near_clipping_plane());
+    // glUniform2f(shader->ParameterLocation("far_near"), cam.far_clipping_plane(), cam.near_clipping_plane());
 
     glUniform1f(shader->ParameterLocation("colorInterpolation"),
         this->colorInterpolationParam.Param<param::FloatParam>()->Value());
@@ -410,7 +413,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
         // TODO HAZARD BUG this is not in sync with the buffer arrays for all other attributes and a design flaw of the
         // flag storage!!!!
         flags->flags->bind(4);
-        //glBindBufferRange(
+        // glBindBufferRange(
         //    GL_SHADER_STORAGE_BUFFER, 4, this->flags_buffer.GetHandle(0), 0, num_total_glyphs * sizeof(GLuint));
     }
     glUniform4f(shader->ParameterLocation("flag_selected_col"), 1.f, 0.f, 0.f, 1.f);
@@ -474,7 +477,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
             } else if ((*tfc)(0)) {
                 glBindTexture(GL_TEXTURE_1D, tfc->OpenGLTexture());
                 glUniform2fv(shader->ParameterLocation("tf_range"), 1, tfc->Range().data());
-                //glUniform2f(shader->ParameterLocation("tf_range"), elParts.GetMinColourIndexValue(),
+                // glUniform2f(shader->ParameterLocation("tf_range"), elParts.GetMinColourIndexValue(),
                 //    elParts.GetMaxColourIndexValue());
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("GlyphRenderer: could not retrieve transfer function!");
@@ -495,6 +498,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
         if (use_flags) options = options | glyph_options::USE_FLAGS;
         if (use_clip) options = options | glyph_options::USE_CLIP;
         if (use_per_axis_color) options = options | glyph_options::USE_PER_AXIS;
+        if (unitRadiusParam.Param<param::BoolParam>()->Value()) options = options | glyph_options::IGNORE_RADII;
         glUniform1ui(shader->ParameterLocation("options"), options);
 
         switch (elParts.GetVertexDataType()) {
@@ -543,7 +547,7 @@ bool GlyphRenderer::Render(core::view::CallRender3D_2& call) {
             switch (this->glyphParam.Param<core::param::EnumParam>()->Value()) {
             case Glyph::BOX:
                 // https://stackoverflow.com/questions/28375338/cube-using-single-gl-triangle-strip
-                //glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, static_cast<GLsizei>(actualItems));
+                // glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 14, static_cast<GLsizei>(actualItems));
                 // but just drawing the front-facing triangles, that's better
                 glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, static_cast<GLsizei>(actualItems) * 3);
                 break;

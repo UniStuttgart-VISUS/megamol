@@ -215,6 +215,20 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                     if (m_show_probes) {
                         rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
                     }
+                } else if (itr->type == CLEAR_SELECTION) {
+                    // TODO remove from list and apply hightlight to render task
+                    auto manipulation = *itr;
+                    // itr = pending_manips.erase(itr);
+                    for (auto& draw_data : m_probe_draw_data) {
+                        draw_data.highlighted = 0; 
+                    }
+                    if (m_show_probes) {
+                        // TODO this breaks chaining...
+                        rt_collection->clear();
+                        auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
+                        auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+                        rt_collection->addRenderTasks(shader, gpu_batch_mesh, m_draw_commands, m_probe_draw_data);
+                    }
                 } else if (itr->type == TOGGLE_SHOW_PROBES) {
                     m_show_probes = !m_show_probes;
 

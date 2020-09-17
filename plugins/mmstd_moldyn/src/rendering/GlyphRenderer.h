@@ -104,7 +104,14 @@ private:
         SUPERQUADRIC = 3,
     };
 
-    enum glyph_options { USE_GLOBAL = 1 << 0, USE_TRANSFER_FUNCTION = 1 << 1, USE_FLAGS = 1 << 2, USE_CLIP = 1 << 3, USE_PER_AXIS = 1 << 4 };
+    enum glyph_options {
+        USE_GLOBAL = 1 << 0,
+        USE_TRANSFER_FUNCTION = 1 << 1,
+        USE_FLAGS = 1 << 2,
+        USE_CLIP = 1 << 3,
+        USE_PER_AXIS = 1 << 4,
+        IGNORE_RADII = 1 << 5
+    };
 
     /**The ellipsoid shader*/
     vislib::graphics::gl::GLSLShader ellipsoidShader;
@@ -125,6 +132,7 @@ private:
     megamol::core::param::ParamSlot scaleParam;
     megamol::core::param::ParamSlot colorInterpolationParam;
     megamol::core::param::ParamSlot colorModeParam;
+    megamol::core::param::ParamSlot unitRadiusParam;
 
     SIZE_T lastHash = -1;
     uint32_t lastFrameID = -1;

@@ -97,11 +97,16 @@ private:
 
     uint32_t m_version;
 
+    bool no_active_selection;
+
     /** Shader program for setting flags based on incoming user manipulations */
     std::unique_ptr<GLSLComputeShader> m_setFlags_prgm;
 
     /** Shader program for filtering all data within a flag storage */
     std::unique_ptr<GLSLComputeShader> m_filterAll_prgm;
+
+    /** Shader program for clearing filters on all data within a flag storage */
+    std::unique_ptr<GLSLComputeShader> m_filterNone_prgm;
 
     core::CallerSlot m_probes_slot;
 

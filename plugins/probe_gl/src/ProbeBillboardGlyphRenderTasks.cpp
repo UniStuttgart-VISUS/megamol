@@ -343,7 +343,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     std::array<GlyphVectorProbeData, 1> per_probe_data = {
                         m_vector_probe_glyph_data[manipulation.obj_id]};
                     per_probe_data[0].state = 1;
-                    
+
                     rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
 
                     bool my_tool_active = true;
@@ -383,13 +383,12 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         ImGui::EndChild();
                         ImGui::End();
                     }
-                }
-                else if (itr->type == DEHIGHLIGHT) {
+                } else if (itr->type == DEHIGHLIGHT) {
                     auto manipulation = *itr;
 
                     std::array<GlyphVectorProbeData, 1> per_probe_data = {
-                       m_vector_probe_glyph_data[manipulation.obj_id]};
-                    
+                        m_vector_probe_glyph_data[manipulation.obj_id]};
+
                     rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
                 } else if (itr->type == SELECT) {
                     auto manipulation = *itr;
@@ -407,6 +406,32 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         m_vector_probe_glyph_data[manipulation.obj_id]};
 
                     rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+                } else if ((itr->type == CLEAR_SELECTION)) {
+
+                    for (auto& draw_data : m_vector_probe_glyph_data) {
+                        draw_data.state = 0;
+                    }
+
+                    // TODO this breaks chaining...
+                    rt_collection->clear();
+
+                    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
+                    if (mtlc == NULL) return false;
+
+                    auto gpu_mtl_storage = mtlc->getData();
+
+                    auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
+                    rt_collection->addRenderTasks(
+                        textured_shader, m_billboard_dummy_mesh, m_textured_gylph_draw_commands, m_textured_glyph_data);
+
+                    auto const& scalar_shader = gpu_mtl_storage->getMaterials()[1].shader_program;
+                    rt_collection->addRenderTasks(scalar_shader, m_billboard_dummy_mesh,
+                        m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
+
+                    auto const& vector_shader = gpu_mtl_storage->getMaterials()[2].shader_program;
+                    rt_collection->addRenderTasks(vector_shader, m_billboard_dummy_mesh,
+                        m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
+
                 } else if (itr->type == TOGGLE_SHOW_GLYPHS) {
 
                     m_show_glyphs = !m_show_glyphs;

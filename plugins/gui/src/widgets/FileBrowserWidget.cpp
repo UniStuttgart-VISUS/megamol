@@ -29,7 +29,7 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget(void)
 #else
 {
     megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        "[GUI] Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
 #endif // GUI_USE_FILESYSTEM
 }
 
@@ -45,9 +45,9 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
         if (open_popup) {
 #ifdef GUI_USE_FILESYSTEM
             // Check given file name path
-            fsns::path tmp_file_path = static_cast<fsns::path>(inout_filename);
-            if (tmp_file_path.empty() || !fsns::exists(tmp_file_path)) {
-                tmp_file_path = fsns::current_path();
+            stdfs::path tmp_file_path = static_cast<stdfs::path>(inout_filename);
+            if (tmp_file_path.empty() || !stdfs::exists(tmp_file_path)) {
+                tmp_file_path = stdfs::current_path();
             }
             this->splitPath(tmp_file_path, this->file_path_str, this->file_name_str);
             this->validateDirectory(this->file_path_str);
@@ -59,7 +59,8 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
             ImGui::SetNextWindowSize(ImVec2(400.0f, 500.0f));
 #else
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
 #endif // GUI_USE_FILESYSTEM
         }
 
@@ -72,7 +73,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
             // Path ---------------------------------------------------
             auto last_file_path_str = this->file_path_str;
             if (ImGui::ArrowButton("###arrow_up_directory", ImGuiDir_Up)) {
-                fsns::path tmp_file_path = static_cast<fsns::path>(this->file_path_str);
+                stdfs::path tmp_file_path = static_cast<stdfs::path>(this->file_path_str);
                 if (tmp_file_path.has_parent_path()) {
                     // Assuming that parent is still valid directory
                     this->file_path_str = tmp_file_path.parent_path().generic_u8string();
@@ -109,7 +110,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                 // Parent directory selectable
                 std::string tag_parent("..");
                 if (ImGui::Selectable(tag_parent.c_str(), false, select_flags)) {
-                    fsns::path tmp_file_path = static_cast<fsns::path>(this->file_path_str);
+                    stdfs::path tmp_file_path = static_cast<stdfs::path>(this->file_path_str);
                     if (tmp_file_path.has_parent_path()) {
                         // Assuming that parent is still valid directory
                         this->file_path_str = tmp_file_path.parent_path().generic_u8string();
@@ -124,7 +125,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
 
                     // Convert realtive path to absolute path
                     if (this->file_path_str == "..") {
-                        auto absolute_path = fsns::absolute(static_cast<fsns::path>(this->file_path_str));
+                        auto absolute_path = stdfs::absolute(static_cast<stdfs::path>(this->file_path_str));
                         if (absolute_path.has_parent_path()) {
                             if (absolute_path.has_parent_path()) {
                                 this->file_path_str = absolute_path.parent_path().parent_path().generic_u8string();
@@ -138,10 +139,10 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                     std::vector<ChildData_t> paths;
                     std::vector<ChildData_t> files;
                     try {
-                        fsns::path tmp_file_path = static_cast<fsns::path>(this->file_path_str);
-                        for (const auto& entry : fsns::directory_iterator(tmp_file_path)) {
-                            if (fsns::status_known(fsns::status(entry.path()))) {
-                                bool is_directory = fsns::is_directory(entry.path());
+                        stdfs::path tmp_file_path = static_cast<stdfs::path>(this->file_path_str);
+                        for (const auto& entry : stdfs::directory_iterator(tmp_file_path)) {
+                            if (stdfs::status_known(stdfs::status(entry.path()))) {
+                                bool is_directory = stdfs::is_directory(entry.path());
                                 if (is_directory) {
                                     paths.emplace_back(ChildData_t(entry.path(), is_directory));
                                 } else {
@@ -269,8 +270,8 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                 if (!this->valid_ending) {
                     this->file_name_str.append(".lua");
                 }
-                fsns::path tmp_file_path =
-                    static_cast<fsns::path>(this->file_path_str) / static_cast<fsns::path>(this->file_name_str);
+                stdfs::path tmp_file_path =
+                    static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(this->file_name_str);
                 inout_filename = tmp_file_path.generic_u8string();
                 ImGui::CloseCurrentPopup();
                 retval = true;
@@ -287,11 +288,11 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
 
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -347,11 +348,11 @@ bool megamol::gui::FileBrowserWidget::Button(std::string& inout_filename) {
 #ifdef GUI_USE_FILESYSTEM
 
 bool megamol::gui::FileBrowserWidget::splitPath(
-    const fsns::path& in_file_path, std::string& out_path, std::string& out_file) {
+    const stdfs::path& in_file_path, std::string& out_path, std::string& out_file) {
 
     // Splitting path into path string and file string
     try {
-        if (fsns::is_regular_file(in_file_path)) {
+        if (stdfs::is_regular_file(in_file_path)) {
             if (in_file_path.has_parent_path()) {
                 out_path = in_file_path.parent_path().generic_u8string();
             }
@@ -362,9 +363,9 @@ bool megamol::gui::FileBrowserWidget::splitPath(
             out_path = in_file_path.generic_u8string();
             out_file.clear();
         }
-    } catch (fsns::filesystem_error e) {
+    } catch (stdfs::filesystem_error e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     return true;
@@ -375,11 +376,11 @@ void megamol::gui::FileBrowserWidget::validateDirectory(const std::string& path_
 
     // Validating directory
     try {
-        fsns::path tmp_path = static_cast<fsns::path>(path_str);
-        this->valid_directory = (fsns::status_known(fsns::status(tmp_path)) && fsns::is_directory(tmp_path));
-    } catch (fsns::filesystem_error e) {
+        stdfs::path tmp_path = static_cast<stdfs::path>(path_str);
+        this->valid_directory = (stdfs::status_known(stdfs::status(tmp_path)) && stdfs::is_directory(tmp_path));
+    } catch (stdfs::filesystem_error e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 }
@@ -397,7 +398,7 @@ void megamol::gui::FileBrowserWidget::validateFile(
         this->valid_file = true;
         this->valid_ending = true;
 
-        fsns::path tmp_file_path = static_cast<fsns::path>(this->file_path_str) / static_cast<fsns::path>(file_str);
+        stdfs::path tmp_file_path = static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(file_str);
 
         if (flag == FileBrowserFlag::SAVE) {
             // Warn when no file name is given
@@ -416,10 +417,11 @@ void megamol::gui::FileBrowserWidget::validateFile(
                 if (!this->valid_ending) {
                     actual_filename.append(ext);
                 }
-                tmp_file_path = static_cast<fsns::path>(this->file_path_str) / static_cast<fsns::path>(actual_filename);
+                tmp_file_path =
+                    static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(actual_filename);
 
                 // Warn when file already exists
-                if (fsns::exists(tmp_file_path) && fsns::is_regular_file(tmp_file_path)) {
+                if (stdfs::exists(tmp_file_path) && stdfs::is_regular_file(tmp_file_path)) {
                     this->file_warning += "Overwriting existing file.\n";
                     this->additional_lines++;
                 }
@@ -437,15 +439,15 @@ void megamol::gui::FileBrowserWidget::validateFile(
         }
 
         // Error when file is directory
-        if (fsns::is_directory(tmp_file_path)) {
+        if (stdfs::is_directory(tmp_file_path)) {
             this->file_error += "File is directory.\n";
             this->additional_lines++;
             this->valid_file = false;
         }
 
-    } catch (fsns::filesystem_error e) {
+    } catch (stdfs::filesystem_error e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 }

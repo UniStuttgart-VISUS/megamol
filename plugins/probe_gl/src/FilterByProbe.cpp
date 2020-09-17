@@ -13,6 +13,7 @@ namespace probe_gl {
 
 FilterByProbe::FilterByProbe()
     : m_version(0)
+    , no_active_selection(true)
     , m_probes_slot("getProbes", "")
     , m_kd_tree_slot("getKDTree", "")
     , m_probe_manipulation_slot("getProbeInteraction", "")
@@ -42,9 +43,11 @@ bool FilterByProbe::create() {
         // create shader program
         m_setFlags_prgm = std::make_unique<GLSLComputeShader>();
         m_filterAll_prgm = std::make_unique<GLSLComputeShader>();
+        m_filterNone_prgm = std::make_unique<GLSLComputeShader>();
 
         vislib::graphics::gl::ShaderSource setFlags_src;
         vislib::graphics::gl::ShaderSource filterAll_src;
+        vislib::graphics::gl::ShaderSource filterNone_src;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("FilterByProbe::setFlags", setFlags_src)) return false;
         if (!m_setFlags_prgm->Compile(setFlags_src.Code(), setFlags_src.Count())) return false;
@@ -54,6 +57,11 @@ bool FilterByProbe::create() {
             return false;
         if (!m_filterAll_prgm->Compile(filterAll_src.Code(), filterAll_src.Count())) return false;
         if (!m_filterAll_prgm->Link()) return false;
+
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("FilterByProbe::filterNone", filterNone_src))
+            return false;
+        if (!m_filterNone_prgm->Compile(filterNone_src.Code(), filterNone_src.Count())) return false;
+        if (!m_filterNone_prgm->Link()) return false;
 
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
@@ -175,7 +183,7 @@ bool FilterByProbe::Render(core::view::CallRender3D_2& call) {
                         auto kdtree_ids =
                             std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, indices, GL_DYNAMIC_DRAW);
 
-                        {
+                        if (no_active_selection) {
                             m_filterAll_prgm->Enable();
 
                             auto flag_cnt = static_cast<GLuint>(flag_data->flags->getByteSize() / sizeof(GLuint));
@@ -211,6 +219,45 @@ bool FilterByProbe::Render(core::view::CallRender3D_2& call) {
                         (*writeFlags)(core::FlagCallWrite_GL::CallGetData);
                     }
 
+                    no_active_selection = false;
+
+                } else if (itr->type == CLEAR_SELECTION) {
+
+                    auto readFlags = m_readFlagsSlot.CallAs<core::FlagCallRead_GL>();
+                    auto writeFlags = m_writeFlagsSlot.CallAs<core::FlagCallWrite_GL>();
+
+                    if (readFlags != nullptr && writeFlags != nullptr) {
+                        (*readFlags)(core::FlagCallWrite_GL::CallGetData);
+
+                        if (readFlags->hasUpdate()) {
+                            this->m_version = readFlags->version();
+                        }
+
+                        ++m_version;
+
+                        auto flag_data = readFlags->getData();
+
+                        {
+                            m_filterNone_prgm->Enable();
+
+                            auto flag_cnt = static_cast<GLuint>(flag_data->flags->getByteSize() / sizeof(GLuint));
+
+                            glUniform1ui(m_filterNone_prgm->ParameterLocation("flag_cnt"), flag_cnt);
+
+                            flag_data->flags->bind(1);
+
+                            m_filterNone_prgm->Dispatch(static_cast<int>(std::ceil(flag_cnt / 64.0f)), 1, 1);
+
+                            ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+                            m_filterNone_prgm->Disable();
+                        }
+
+                        writeFlags->setData(readFlags->getData(), m_version);
+                        (*writeFlags)(core::FlagCallWrite_GL::CallGetData);
+                    }
+
+                    no_active_selection = true;
 
                 } else {
                     //

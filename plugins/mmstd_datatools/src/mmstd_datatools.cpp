@@ -62,6 +62,7 @@
 #include "ParticleVelocities.h"
 #include "ParticleVisibilityFromVolume.h"
 #include "ParticlesToDensity.h"
+#include "ParticleInstantiator.h"
 #include "RemapIColValues.h"
 #include "SphereDataUnifier.h"
 #include "StaticMMPLDProvider.h"
@@ -245,6 +246,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableManipulator>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::CPERAWDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::LocalBoundingBoxExtractor>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleInstantiator>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
