@@ -4,6 +4,7 @@
 #include "ProbeGlCalls.h"
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore/EventCall.h"
 
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -31,6 +32,7 @@ megamol::probe_gl::ProbeInteraction::ProbeInteraction()
     , m_hull_fbo_slot("getHullFBO", "")
     , m_glyph_fbo_slot("getGlyphFBO", "")
     , m_interaction_collection_slot("deployInteractions","")
+    , m_event_write_slot("deployInteractionEvents","")
 {
     this->m_probe_fbo_slot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
     this->MakeSlotAvailable(&this->m_probe_fbo_slot);
@@ -46,6 +48,9 @@ megamol::probe_gl::ProbeInteraction::ProbeInteraction()
     this->m_interaction_collection_slot.SetCallback(
         CallProbeInteraction::ClassName(), "GetMetaData", &ProbeInteraction::getInteractionMetaData);
     this->MakeSlotAvailable(&this->m_interaction_collection_slot);
+
+    this->m_event_write_slot.SetCompatibleCall<megamol::core::EventCallWriteDescription>();
+    this->MakeSlotAvailable(&this->m_event_write_slot);
 }
 
 megamol::probe_gl::ProbeInteraction::~ProbeInteraction() { this->Release(); }
@@ -273,6 +278,18 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
     }
 
     //std::cout << "Object ID at " << m_cursor_x << "," << m_cursor_y << " : " << objId << std::endl;
+
+    auto call_event_storage = this->m_event_write_slot.CallAs<core::EventCallWrite>();
+    if (call_event_storage == NULL) return false;
+    if ((!(*call_event_storage)(0))) return false;
+
+    auto event_collection = call_event_storage->getData();
+
+    class ProbeHighlight : public core::EventCollection::AbstractEvent {};
+
+    auto evt = std::make_unique<ProbeHighlight>();
+
+    event_collection->add<ProbeHighlight>(std::move(evt));
 
     // Clear interactions from last frame
     m_interactions->accessPendingManipulations().clear();
