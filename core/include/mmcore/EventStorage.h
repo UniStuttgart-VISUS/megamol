@@ -99,15 +99,15 @@ private:
     bool writeMetaDataCallback(core::Call& caller);
 
     /** The slot for reading the data */
-    core::CalleeSlot readEventsSlot;
+    core::CalleeSlot m_readEventsSlot;
 
     /** The slot for writing the data */
-    core::CalleeSlot writeEventsSlot;
+    core::CalleeSlot m_writeEventsSlot;
 
     std::array<std::shared_ptr<EventCollection>,2> m_events;
     int m_read_idx;
 
-    uint32_t version = 0;
+    uint32_t m_version = 0;
 };
 
 }

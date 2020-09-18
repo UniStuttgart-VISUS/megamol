@@ -145,6 +145,8 @@ private:
 
     megamol::core::CalleeSlot m_interaction_collection_slot;
 
+    megamol::core::CallerSlot m_event_write_slot;
+
     // local storage of projection and view matrix (for 3D space interaction computations)
     glm::mat4 m_view_mx_cpy;
     glm::mat4 m_proj_mx_cpy;

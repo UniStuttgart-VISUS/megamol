@@ -36,6 +36,10 @@ public:
     static const char* Description(void) { return "Call that transports an EventCollection with write access"; }
 };
 
+/** Description class typedef */
+typedef megamol::core::factories::CallAutoDescription<EventCallRead> EventCallReadDescription;
+typedef megamol::core::factories::CallAutoDescription<EventCallWrite> EventCallWriteDescription;
+
 }
 }
 
