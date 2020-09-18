@@ -1,9 +1,9 @@
 #include "ProbeBillboardGlyphRenderTasks.h"
 
-#include "mmcore/view/CallGetTransferFunction.h"
 #include "ProbeCalls.h"
 #include "ProbeGlCalls.h"
 #include "mesh/MeshCalls.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -35,7 +35,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
     tex_layout.int_parameters = {
         {GL_TEXTURE_MIN_FILTER, GL_NEAREST}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}, {GL_TEXTURE_WRAP_S, GL_CLAMP}};
     this->m_transfer_function = std::make_shared<glowl::Texture2D>("ProbeTransferFunction", tex_layout, nullptr);
-    //TODO intialize with value indicating that no transfer function is connected
+    // TODO intialize with value indicating that no transfer function is connected
 
     return true;
 }
@@ -54,8 +54,7 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
     , m_use_interpolation_slot("UseInterpolation", "Interpolate between samples")
     , m_tf_min(0.0f)
     , m_tf_max(1.0f)
-    , m_show_glyphs(true)
-{
+    , m_show_glyphs(true) {
 
     this->m_transfer_function_Slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->m_transfer_function_Slot);
@@ -125,7 +124,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     }
 
     bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() || this->m_billboard_size_slot.IsDirty() ||
-                                     this->m_rendering_mode_slot.IsDirty() || ((tfc != NULL) ? tfc->IsDirty() : false);
+                                 this->m_rendering_mode_slot.IsDirty() || ((tfc != NULL) ? tfc->IsDirty() : false);
 
     if (something_has_changed) {
         ++m_version;
@@ -170,15 +169,15 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         if (m_rendering_mode_slot.Param<core::param::EnumParam>()->Value() == 0) {
             // use precomputed textures if available
 
-            if (gpu_mtl_storage->getMaterials()[0].textures.size() > 0)
-            {
+            if (gpu_mtl_storage->getMaterials()[0].textures.size() > 0) {
                 for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
 
-                    assert(probe_cnt <= (gpu_mtl_storage->getMaterials()[0].textures.size() * 2048) );
+                    assert(probe_cnt <= (gpu_mtl_storage->getMaterials()[0].textures.size() * 2048));
 
                     auto generic_probe = probes->getGenericProbe(probe_idx);
 
-                    GLuint64 texture_handle = gpu_mtl_storage->getMaterials()[0].textures[probe_idx / 2048]->getTextureHandle();
+                    GLuint64 texture_handle =
+                        gpu_mtl_storage->getMaterials()[0].textures[probe_idx / 2048]->getTextureHandle();
                     float slice_idx = probe_idx % 2048;
                     gpu_mtl_storage->getMaterials()[0].textures[probe_idx / 2048]->makeResident();
 
@@ -194,9 +193,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 }
             }
 
-        }
-        else
-        {
+        } else {
             // Update transfer texture only if it available and has changed
             if (tfc != NULL) {
                 if (tfc->IsDirty()) {
@@ -233,7 +230,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 }
             }
 
-            //TODO get transfer function texture from material
+            // TODO get transfer function texture from material
             GLuint64 texture_handle = this->m_transfer_function->getTextureHandle();
             this->m_transfer_function->makeResident();
 
@@ -241,7 +238,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
                 auto generic_probe = probes->getGenericProbe(probe_idx);
 
-                auto visitor = [draw_command,scale, probe_idx, texture_handle, this](auto&& arg) {
+                auto visitor = [draw_command, scale, probe_idx, texture_handle, this](auto&& arg) {
                     using T = std::decay_t<decltype(arg)>;
                     if constexpr (std::is_same_v<T, probe::FloatProbe>) {
 
@@ -281,7 +278,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 data.max_value = max;
             }
         }
-        
+
         auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
         rt_collection->addRenderTasks(
             textured_shader, m_billboard_dummy_mesh, m_textured_gylph_draw_commands, m_textured_glyph_data);
@@ -303,20 +300,16 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         }
     }
 
-    if (this->m_use_interpolation_slot.IsDirty())
-    {
+    if (this->m_use_interpolation_slot.IsDirty()) {
         this->m_use_interpolation_slot.ResetDirty();
 
 
-        std::array<PerFrameData,1> data;
+        std::array<PerFrameData, 1> data;
         data[0].use_interpolation = m_use_interpolation_slot.Param<core::param::BoolParam>()->Value();
 
-        if (!rt_collection->getPerFrameBuffers().empty())
-        {
+        if (!rt_collection->getPerFrameBuffers().empty()) {
             rt_collection->addPerFrameDataBuffer(data, 1);
-        }
-        else
-        {
+        } else {
             rt_collection->updatePerFrameDataBuffer(data, 1);
         }
     }
@@ -415,22 +408,24 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     // TODO this breaks chaining...
                     rt_collection->clear();
 
-                    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
-                    if (mtlc == NULL) return false;
+                    if (m_show_glyphs) {
+                        mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
+                        if (mtlc == NULL) return false;
 
-                    auto gpu_mtl_storage = mtlc->getData();
+                        auto gpu_mtl_storage = mtlc->getData();
 
-                    auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
-                    rt_collection->addRenderTasks(
-                        textured_shader, m_billboard_dummy_mesh, m_textured_gylph_draw_commands, m_textured_glyph_data);
+                        auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
+                        rt_collection->addRenderTasks(textured_shader, m_billboard_dummy_mesh,
+                            m_textured_gylph_draw_commands, m_textured_glyph_data);
 
-                    auto const& scalar_shader = gpu_mtl_storage->getMaterials()[1].shader_program;
-                    rt_collection->addRenderTasks(scalar_shader, m_billboard_dummy_mesh,
-                        m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
+                        auto const& scalar_shader = gpu_mtl_storage->getMaterials()[1].shader_program;
+                        rt_collection->addRenderTasks(scalar_shader, m_billboard_dummy_mesh,
+                            m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
 
-                    auto const& vector_shader = gpu_mtl_storage->getMaterials()[2].shader_program;
-                    rt_collection->addRenderTasks(vector_shader, m_billboard_dummy_mesh,
-                        m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
+                        auto const& vector_shader = gpu_mtl_storage->getMaterials()[2].shader_program;
+                        rt_collection->addRenderTasks(vector_shader, m_billboard_dummy_mesh,
+                            m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
+                    }
 
                 } else if (itr->type == TOGGLE_SHOW_GLYPHS) {
 
