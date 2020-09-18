@@ -1174,40 +1174,33 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         //mvm = glm::transpose(mvm);
 
         float factor = this->testingFloat.Param<core::param::FloatParam>()->Value();
-        auto jit = glm::mat4(1.0);
+        glm::mat4 jit;
+        glm::mat4 pmvm = pm * mvm;
         if (frametype == 0) {
             jit = glm::translate(
                 glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(), 1.0 / call.GetViewport().Height(), 0));
-            jitA = glm::translate(
-                glm::mat4(1.0f), glm::vec3(-0.5 / call.GetViewport().Width(), 0.5 / call.GetViewport().Height(), 0));
-            invTexA = (pm * mvm);
+            invTexA = jit * pmvm;
         }
         if (frametype == 1) {
             jit = glm::translate(
                 glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), 1.0 / call.GetViewport().Height(), 0));
-            jitB = glm::translate(
-                glm::mat4(1.0f), glm::vec3(0.5 / call.GetViewport().Width(), 0.5 / call.GetViewport().Height(), 0));
-            invTexB = (pm * mvm);
+            invTexB = jit * pmvm;
         }
         if (frametype == 2) {
             jit = glm::translate(
                 glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
-            jitC = glm::translate(
-                glm::mat4(1.0f), glm::vec3(-0.5 / call.GetViewport().Width(), -0.5 / call.GetViewport().Height(), 0));
-            invTexC = (pm * mvm);
+            invTexC = jit * pmvm;
         }
         if (frametype == 3) {
             jit = glm::translate(
                 glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
-            jitD = glm::translate(
-                glm::mat4(1.0f), glm::vec3(0.5 / call.GetViewport().Width(), -0.5 / call.GetViewport().Height(), 0));
-            invTexD = pm * mvm;
+            invTexD = jit * pmvm;
         }
         // new Vectors 
-        moveMatrixA = jitA * invTexA * glm::inverse(pm * mvm);
-        moveMatrixB = jitB * invTexB * glm::inverse(pm * mvm);
-        moveMatrixC = jitC * invTexC * glm::inverse(pm * mvm);
-        moveMatrixD = jitD * invTexD * glm::inverse(pm * mvm);
+        moveMatrixA = invTexA * glm::inverse(pmvm);
+        moveMatrixB = invTexB * glm::inverse(pmvm);
+        moveMatrixC = invTexC * glm::inverse(pmvm);
+        moveMatrixD = invTexD * glm::inverse(pmvm);
         
         pm = jit * pm;
         for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];

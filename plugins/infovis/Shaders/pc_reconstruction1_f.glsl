@@ -23,7 +23,7 @@ void main()
     int col = int(uv_coord.x * w);
     vec4 p = vec4(2*uv_coord-vec2(1.0), 0.0, 1.0);
     if(line % 2 == 1){
-        if(col % 2 == 1){
+        if(col % 2 == 0){
             frag_out = texture(src_tx2Dd, 0.5 * (mMd * p).xy + vec2(0.5));
             //frag_out = vec4(1.0, 0.0, 0.0, 1.0);
         }else{
@@ -31,7 +31,7 @@ void main()
             //frag_out = vec4(0.0, 1.0, 0.0, 1.0);
         }
     } else {
-        if(col % 2 == 0){
+        if(col % 2 == 1){
             frag_out = texture(src_tx2Da,  0.5 * (mMa * p).xy + vec2(0.5));
             //frag_out = vec4(0.0, 0.0, 1.0, 1.0);
         }else{
