@@ -1180,104 +1180,35 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                 glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(), 1.0 / call.GetViewport().Height(), 0));
             jitA = glm::translate(
                 glm::mat4(1.0f), glm::vec3(-0.5 / call.GetViewport().Width(), 0.5 / call.GetViewport().Height(), 0));
-            invTexA = mvm;
-            sA = invTexA * glm::vec4(1.0, 1.0, 1.0, 1.0);
-            tA = invTexA * glm::vec4(.0, .0, 1.0, 1.0);
-            sA -= tA;
-            tA = glm::vec4(tA.x / sA.x, tA.y / sA.y, 0, 0);
-            //vislib::sys::Log::DefaultLog.WriteInfo("s: %f, %f, %f", sA.x, sA.y, sA.z);
-            //vislib::sys::Log::DefaultLog.WriteInfo("t: %f, %f, %f", tA.x, tA.y, tA.z);
-            //vislib::sys::Log::DefaultLog.WriteInfo("mvm");
-            //vislib::sys::Log::DefaultLog.WriteInfo("%f, %f, %f, %f", mvm[0][0], mvm[0][1], mvm[0][2], mvm[0][3]);
-            //vislib::sys::Log::DefaultLog.WriteInfo("%f, %f, %f, %f", mvm[1][0], mvm[1][1], mvm[1][2], mvm[1][3]);
-            //vislib::sys::Log::DefaultLog.WriteInfo("%f, %f, %f, %f", mvm[2][0], mvm[2][1], mvm[2][2], mvm[2][3]);
-            //vislib::sys::Log::DefaultLog.WriteInfo("%f, %f, %f, %f", mvm[3][0], mvm[3][1], mvm[3][2], mvm[3][3]);
+            invTexA = (pm * mvm);
         }
         if (frametype == 1) {
             jit = glm::translate(
                 glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), 1.0 / call.GetViewport().Height(), 0));
             jitB = glm::translate(
                 glm::mat4(1.0f), glm::vec3(0.5 / call.GetViewport().Width(), 0.5 / call.GetViewport().Height(), 0));
-            invTexB = mvm;
-            sB = invTexB * glm::vec4(1.0, 1.0, 1.0, 1.0);
-            tB = invTexB * glm::vec4(.0, .0, 1.0, 1.0);
-            sB -= tB;
-            tB = glm::vec4(tB.x / sB.x, tB.y / sB.y, 0, 0);
+            invTexB = (pm * mvm);
         }
         if (frametype == 2) {
             jit = glm::translate(
                 glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
             jitC = glm::translate(
                 glm::mat4(1.0f), glm::vec3(-0.5 / call.GetViewport().Width(), -0.5 / call.GetViewport().Height(), 0));
-            invTexC = mvm;
-            sC = invTexC * glm::vec4(1.0, 1.0, 1.0, 1.0);
-            tC = invTexC * glm::vec4(.0, .0, 1.0, 1.0);
-            sC -= tC;
-            tC = glm::vec4(tC.x / sC.x, tC.y / sC.y, 0, 0);
+            invTexC = (pm * mvm);
         }
         if (frametype == 3) {
             jit = glm::translate(
                 glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
             jitD = glm::translate(
                 glm::mat4(1.0f), glm::vec3(0.5 / call.GetViewport().Width(), -0.5 / call.GetViewport().Height(), 0));
-            invTexD = mvm;
-            sD = invTexD * glm::vec4(1.0, 1.0, 1.0, 1.0);
-            tD = invTexD * glm::vec4(.0, .0, 1.0, 1.0);
-            sD -= tD;
-            tD = glm::vec4(tD.x / sD.x, tD.y / sD.y, 0, 0);
+            invTexD = pm * mvm;
         }
         // new Vectors 
-        glm::vec4 t = mvm * glm::vec4(0, 0, 0, 1);
-        glm::vec4 s = mvm * glm::vec4(1, 1, 1, 1);
-        s = mvm * glm::vec4(1.0, 1.0, 1.0, 1.0);
-        t = mvm * glm::vec4(.0, .0, 1.0, 1.0);
-        s -= t;
-        t = glm::vec4(t.x / s.x, t.y / s.y, 0, 0);
-        moveMatrixA =  jitA * glm::scale(glm::mat4(1.0), glm::vec3(s.x / sA.x, s.y / sA.y, 1)) * pm * glm::translate(glm::mat4(1.0), glm::vec3(t.x - tA.x, t.y - tA.y, 0));
-        //vislib::sys::Log::DefaultLog.WriteInfo("moveA");
-        //vislib::sys::Log::DefaultLog.WriteInfo(
-        //    "%f, %f, %f, %f", moveMatrixA[0][0], moveMatrixA[0][1], moveMatrixA[0][2], moveMatrixA[0][3]);
-        //vislib::sys::Log::DefaultLog.WriteInfo(
-        //    "%f, %f, %f, %f", moveMatrixA[1][0], moveMatrixA[1][1], moveMatrixA[1][2], moveMatrixA[1][3]);
-        //vislib::sys::Log::DefaultLog.WriteInfo(
-        //    "%f, %f, %f, %f", moveMatrixA[2][0], moveMatrixA[2][1], moveMatrixA[2][2], moveMatrixA[2][3]);
-        //vislib::sys::Log::DefaultLog.WriteInfo(
-        //    "%f, %f, %f, %f", moveMatrixA[3][0], moveMatrixA[3][1], moveMatrixA[3][2], moveMatrixA[3][3]);
-        // TEX B
-        s = mvm * glm::vec4(1.0, 1.0, 1.0, 1.0);
-        t = mvm * glm::vec4(.0, .0, 1.0, 1.0);
-        s -= t;
-        t = glm::vec4(t.x / s.x, t.y / s.y, 0, 0);
-        moveMatrixB = jitB * glm::scale(glm::mat4(1.0), glm::vec3(s.x / sB.x, s.y / sB.y, 1)) * pm *
-                      glm::translate(glm::mat4(1.0), glm::vec3(t.x - tB.x, t.y - tB.y, 0));
-        // TEX C
-        s = mvm * glm::vec4(1.0, 1.0, 1.0, 1.0);
-        t = mvm * glm::vec4(.0, .0, 1.0, 1.0);
-        s -= t;
-        t = glm::vec4(t.x / s.x, t.y / s.y, 0, 0);
-        moveMatrixC = jitC * glm::scale(glm::mat4(1.0), glm::vec3(s.x / sC.x, s.y / sC.y, 1)) * pm *
-                      glm::translate(glm::mat4(1.0), glm::vec3(t.x - tC.x, t.y - tC.y, 0));
-        // TEX D
-        s = mvm * glm::vec4(1.0, 1.0, 1.0, 1.0);
-        t = mvm * glm::vec4(.0, .0, 1.0, 1.0);
-        s -= t;
-        t = glm::vec4(t.x / s.x, t.y / s.y, 0, 0);
-        moveMatrixD = jitD * glm::scale(glm::mat4(1.0), glm::vec3(s.x / sD.x, s.y / sD.y, 1)) * pm *
-                      glm::translate(glm::mat4(1.0), glm::vec3(t.x - tD.x, t.y - tD.y, 0));
-
-        /*vislib::sys::Log::DefaultLog.WriteInfo("pm");
-        vislib::sys::Log::DefaultLog.WriteInfo("%f, %f, %f, %f", pm[0][0], pm[0][1], pm[0][2], pm[0][3]);
-        vislib::sys::Log::DefaultLog.WriteInfo("%f, %f, %f, %f", pm[1][0], pm[1][1], pm[1][2], pm[1][3]);
-        vislib::sys::Log::DefaultLog.WriteInfo("%f, %f, %f, %f", pm[2][0], pm[2][1], pm[2][2], pm[2][3]);
-        vislib::sys::Log::DefaultLog.WriteInfo("%f, %f, %f, %f", pm[3][0], pm[3][1], pm[3][2], pm[3][3]);
-        vislib::sys::Log::DefaultLog.WriteInfo("nvm");
-        vislib::sys::Log::DefaultLog.WriteInfo("%f, %f, %f, %f", mvm[0][0], mvm[0][1], mvm[0][2], mvm[0][3]);
-        vislib::sys::Log::DefaultLog.WriteInfo("%f, %f, %f, %f", mvm[1][0], mvm[1][1], mvm[1][2], mvm[1][3]);
-        vislib::sys::Log::DefaultLog.WriteInfo("%f, %f, %f, %f", mvm[2][0], mvm[2][1], mvm[2][2], mvm[2][3]);
-        vislib::sys::Log::DefaultLog.WriteInfo("%f, %f, %f, %f", mvm[3][0], mvm[3][1], mvm[3][2], mvm[3][3]);*/
-        //moveMatrix = glm::translate(
-        //    glm::mat4(1.0f), glm::vec3(factor, 0, 0));
-        //upload jitter back to proj Mat
+        moveMatrixA = jitA * invTexA * glm::inverse(pm * mvm);
+        moveMatrixB = jitB * invTexB * glm::inverse(pm * mvm);
+        moveMatrixC = jitC * invTexC * glm::inverse(pm * mvm);
+        moveMatrixD = jitD * invTexD * glm::inverse(pm * mvm);
+        
         pm = jit * pm;
         for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
 
