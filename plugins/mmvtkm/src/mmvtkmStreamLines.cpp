@@ -126,6 +126,7 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     this->psPlaneConnectionPoint2_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
 
     this->psSeedPlaneNormal_.SetParameter(new core::param::Vector3fParam({1.f, 0.f, 0.f}));
+    this->psSeedPlaneNormal_.SetUpdateCallback(&mmvtkmStreamLines::planeNormalCheck);
     this->MakeSlotAvailable(&this->psSeedPlaneNormal_);
     this->psSeedPlaneNormal_.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Rotation3D_Direction);
@@ -170,33 +171,6 @@ void mmvtkmStreamLines::release() {}
  */
 bool mmvtkmStreamLines::create() {
     this->meshDataAccess_ = std::make_shared<mesh::MeshDataAccessCollection>();
-    return true;
-}
-
-
-/*
- * mmvtkmStreamLines::planeModeChanged
- */
-bool mmvtkmStreamLines::planeModeChanged(core::param::ParamSlot& slot) {
-    if (slot.Param<core::param::EnumParam>()->Value() == NORMAL) {
-        planeMode_ = 0;
-        this->psPlaneOrigin_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
-        this->psPlaneConnectionPoint1_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
-        this->psPlaneConnectionPoint2_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
-        this->psSeedPlaneNormal_.Param<core::param::Vector3fParam>()->SetGUIVisible(true);
-        this->psSeedPlanePoint_.Param<core::param::Vector3fParam>()->SetGUIVisible(true);
-        // this->psSeedPlaneDistance_.Param<core::param::FloatParam>()->SetGUIVisible(true);
-    } else if (slot.Param<core::param::EnumParam>()->Value() == PARAMETER) {
-        planeMode_ = 1;
-        this->psPlaneOrigin_.Param<core::param::Vector3fParam>()->SetGUIVisible(true);
-        this->psPlaneConnectionPoint1_.Param<core::param::Vector3fParam>()->SetGUIVisible(true);
-        this->psPlaneConnectionPoint2_.Param<core::param::Vector3fParam>()->SetGUIVisible(true);
-        this->psSeedPlaneNormal_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
-        this->psSeedPlanePoint_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
-        // this->psSeedPlaneDistance_.Param<core::param::FloatParam>()->SetGUIVisible(false);
-    }
-
-
     return true;
 }
 
@@ -256,6 +230,46 @@ bool mmvtkmStreamLines::applyChanges(core::param::ParamSlot& slot) {
 
 
     return true;
+}
+
+
+/*
+ * mmvtkmStreamLines::planeModeChanged
+ */
+bool mmvtkmStreamLines::planeModeChanged(core::param::ParamSlot& slot) {
+    if (slot.Param<core::param::EnumParam>()->Value() == NORMAL) {
+        planeMode_ = 0;
+        this->psPlaneOrigin_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
+        this->psPlaneConnectionPoint1_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
+        this->psPlaneConnectionPoint2_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
+        this->psSeedPlaneNormal_.Param<core::param::Vector3fParam>()->SetGUIVisible(true);
+        this->psSeedPlanePoint_.Param<core::param::Vector3fParam>()->SetGUIVisible(true);
+        // this->psSeedPlaneDistance_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+    } else if (slot.Param<core::param::EnumParam>()->Value() == PARAMETER) {
+        planeMode_ = 1;
+        this->psPlaneOrigin_.Param<core::param::Vector3fParam>()->SetGUIVisible(true);
+        this->psPlaneConnectionPoint1_.Param<core::param::Vector3fParam>()->SetGUIVisible(true);
+        this->psPlaneConnectionPoint2_.Param<core::param::Vector3fParam>()->SetGUIVisible(true);
+        this->psSeedPlaneNormal_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
+        this->psSeedPlanePoint_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
+        // this->psSeedPlaneDistance_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+    }
+
+
+    return true;
+}
+
+
+/**
+* mmvtkmStreamLines::planeNormalCheck
+*/
+bool mmvtkmStreamLines::planeNormalCheck(core::param::ParamSlot& slot) {
+    visVec3f n = slot.Param<core::param::Vector3fParam>()->Value();
+    if (isNullVector(n)) {
+        //slot.Param<core::param::Vector3fParam>()->SetValue()
+	}
+
+	return true; 
 }
 
 
@@ -455,7 +469,7 @@ void mmvtkmStreamLines::orderPolygonVertices(std::vector<glm::vec3>& vertices) {
 
     // construct vector for calculating angle between x- and y-axis
     glm::vec3 projectedXYDir;
-    if (floatIsZero(nPlane.x) && floatIsZero(nPlane.y)) {
+    if (isZerof(nPlane.x) && isZerof(nPlane.y)) {
         projectedXYDir = glm::normalize(glm::vec3(nPlane.x, nPlane.y, 1.f));
     } else {
         projectedXYDir = glm::normalize(glm::vec3(nPlane.x, nPlane.y, 0.f));

@@ -146,18 +146,21 @@ private:
     /** Callback functions to update the version after changing data */
     bool applyChanges(core::param::ParamSlot& slot);
 
-	/** Sets visibility of paramslots of corresponding plane mode */
+	/** Callback function to set visibility of paramslots of corresponding plane mode */
     bool planeModeChanged(core::param::ParamSlot& slot);
+
+	/** Callback function to check whether plane normal is valid */
+    bool planeNormalCheck(core::param::ParamSlot& slot);
 
     /**
      * Indirect Callback function if 'apply' is pressed.
 	 * May be called if corresponding parameter slots are dirty.
      * Sets values of paramslots to all cooresponding param member variables.
 	 * The corresponding parameter slots are:
-	 * fieldName
-	 * numSeeds
-	 * stepSize
-	 * numSteps
+	 * psStreamlineFieldName_
+	 * psNumStreamlineSeeds_
+	 * psStreamlineStepSize_
+	 * psNumStreamlineSteps_
 	 *
 	 * Results in re-calculating the seeds and streamlines.
      */
@@ -180,10 +183,11 @@ private:
      * May be called if corresponding parameter slots are dirty.
      * Sets values of paramslots to all cooresponding param member variables.
      * The corresponding parameter slots are:
-     * fieldName
-     * numSeeds
-     * stepSize
-     * numSteps
+     * psPlaneOrigin_
+     * psPlaneConnectionPoint1_
+     * psPlaneConnectionPoint2_
+     * psSeedPlaneNormal_
+	 * psSeedPlanePoint_
      *
      * Results in re-calculating the plane, seeds, and streamlines.
      */
@@ -216,7 +220,10 @@ private:
         const mesh::MeshDataAccessCollection::IndexData& id, mesh::MeshDataAccessCollection::PrimitiveType pt);
 
 	/** Checks if a float is equal or really close to 0 */
-    inline bool floatIsZero(float x) { return fabs(x) < 1e-6f; }
+    inline bool isZerof(float x) { return fabs(x) < 1e-6f; }
+    inline bool isNullVector(visVec3f v) {
+		return isZerof(v.GetX()) && isZerof(v.GetY()) && isZerof(v.GetZ());
+    }
 
 
     /** Gets converted vtk streamline data as megamol mesh */

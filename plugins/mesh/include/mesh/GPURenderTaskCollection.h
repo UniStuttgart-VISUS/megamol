@@ -141,7 +141,7 @@ inline size_t GPURenderTaskCollection::addSingleRenderTask(std::shared_ptr<Shade
 
     // find matching RenderTasks set
     for (auto& rts : m_render_tasks) {
-        if (rts.shader_program == shader_prgm && rts.mesh == mesh) {
+        if (rts.shader_program == shader_prgm && rts.mesh == mesh) {  // states check
             size_t old_dcs_byte_size = rts.draw_commands->getByteSize();
             size_t old_pdd_byte_size = rts.per_draw_data->getByteSize();
             size_t new_dcs_byte_size = old_dcs_byte_size + sizeof(glowl::DrawElementsCommand);
@@ -226,7 +226,7 @@ inline size_t GPURenderTaskCollection::addRenderTasks(std::shared_ptr<Shader> co
 
     // find matching RenderTasks set
     for (auto& rts : m_render_tasks) {
-        if (rts.shader_program == shader_prgm && rts.mesh == mesh) {
+        if (rts.shader_program == shader_prgm && rts.mesh == mesh) {	// state check
             size_t old_dcs_byte_size = rts.draw_commands->getByteSize();
             size_t old_pdd_byte_size = rts.per_draw_data->getByteSize();
             size_t new_dcs_byte_size = old_dcs_byte_size + sizeof(DrawCommandType) * draw_commands.size();
