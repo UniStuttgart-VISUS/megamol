@@ -272,26 +272,27 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
 
     // std::cout << "Object ID at " << m_cursor_x << "," << m_cursor_y << " : " << objId << std::endl;
 
-    auto call_event_storage = this->m_event_write_slot.CallAs<core::EventCallWrite>();
-    if (call_event_storage == NULL) return false;
-    if ((!(*call_event_storage)(0))) return false;
-
-    auto event_collection = call_event_storage->getData();
-
-    auto evt = std::make_unique<ProbeHighlight>(this->GetCoreInstance()->GetFrameID(), static_cast<uint32_t>(objId));
-
-    event_collection->add<ProbeHighlight>(std::move(evt));
-
     // Clear interactions from last frame
     m_interactions->accessPendingManipulations().clear();
 
+    auto call_event_storage = this->m_event_write_slot.CallAs<core::EventCallWrite>();
+    if (call_event_storage == NULL) return false;
+    if ((!(*call_event_storage)(0))) return false;
+    auto event_collection = call_event_storage->getData();
+
     if (objId > -1) {
-        m_interactions->accessPendingManipulations().push_back(
-            ProbeManipulation{InteractionType::HIGHLIGHT, static_cast<uint32_t>(objId), 0, 0, 0});
+        //m_interactions->accessPendingManipulations().push_back(
+        //    ProbeManipulation{InteractionType::HIGHLIGHT, static_cast<uint32_t>(objId), 0, 0, 0});
+        auto evt =
+            std::make_unique<ProbeHighlight>(this->GetCoreInstance()->GetFrameID(), static_cast<uint32_t>(objId));
+        event_collection->add<ProbeHighlight>(std::move(evt));
     }
     if (last_active_probe_id > 0 && last_active_probe_id != objId) {
-        m_interactions->accessPendingManipulations().push_back(
-            ProbeManipulation{InteractionType::DEHIGHLIGHT, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
+        //m_interactions->accessPendingManipulations().push_back(
+        //    ProbeManipulation{InteractionType::DEHIGHLIGHT, static_cast<uint32_t>(last_active_probe_id), 0, 0, 0});
+        auto evt = std::make_unique<ProbeDehighlight>(
+            this->GetCoreInstance()->GetFrameID(), static_cast<uint32_t>(last_active_probe_id));
+        event_collection->add<ProbeDehighlight>(std::move(evt));
     }
 
     last_active_probe_id = objId;

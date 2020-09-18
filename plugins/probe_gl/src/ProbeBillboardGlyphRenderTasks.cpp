@@ -337,58 +337,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
             for (auto itr = pending_manips.begin(); itr != pending_manips.end(); ++itr) {
                 if (itr->type == HIGHLIGHT) {
-                    auto manipulation = *itr;
-
-                    std::array<GlyphVectorProbeData, 1> per_probe_data = {
-                        m_vector_probe_glyph_data[manipulation.obj_id]};
-                    per_probe_data[0].state = 1;
-
-                    rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
-
-                    bool my_tool_active = true;
-                    float my_color[4] = {0.0, 0.0, 0.0, 0.0};
-
-                    // ImGui::NewFrame();
-                    // Create a window called "My First Tool", with a menu bar.
-                    auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
-                    if (ctx != nullptr) {
-                        ImGui::SetCurrentContext(ctx);
-                        ImGui::Begin("My First Tool", &my_tool_active, ImGuiWindowFlags_MenuBar);
-                        if (ImGui::BeginMenuBar()) {
-                            if (ImGui::BeginMenu("File")) {
-                                if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */
-                                }
-                                if (ImGui::MenuItem("Save", "Ctrl+S")) { /* Do stuff */
-                                }
-                                if (ImGui::MenuItem("Close", "Ctrl+W")) {
-                                    my_tool_active = false;
-                                }
-                                ImGui::EndMenu();
-                            }
-                            ImGui::EndMenuBar();
-                        }
-
-                        // Edit a color (stored as ~4 floats)
-                        ImGui::ColorEdit4("Color", my_color);
-
-                        // Plot some values
-                        const float my_values[] = {0.2f, 0.1f, 1.0f, 0.5f, 0.9f, 2.2f};
-                        ImGui::PlotLines("Frame Times", my_values, IM_ARRAYSIZE(my_values));
-
-                        // Display contents in a scrolling region
-                        ImGui::TextColored(ImVec4(1, 1, 0, 1), "Important Stuff");
-                        ImGui::BeginChild("Scrolling");
-                        for (int n = 0; n < 50; n++) ImGui::Text("%04d: Some text", n);
-                        ImGui::EndChild();
-                        ImGui::End();
-                    }
+                    
                 } else if (itr->type == DEHIGHLIGHT) {
-                    auto manipulation = *itr;
-
-                    std::array<GlyphVectorProbeData, 1> per_probe_data = {
-                        m_vector_probe_glyph_data[manipulation.obj_id]};
-
-                    rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+                    
                 } else if (itr->type == SELECT) {
                     auto manipulation = *itr;
 
@@ -473,7 +424,63 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
         auto event_collection = call_event_storage->getData();
 
-        auto pending_highlight_events = event_collection->get<ProbeHighlight>();
+        // process probe highlight events
+        {
+            auto pending_highlight_events = event_collection->get<ProbeHighlight>();
+            for (auto& evt : pending_highlight_events) {
+                std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[evt.obj_id]};
+                per_probe_data[0].state = 1;
+            
+                rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
+            
+                bool my_tool_active = true;
+                float my_color[4] = {0.0, 0.0, 0.0, 0.0};
+            
+                // ImGui::NewFrame();
+                // Create a window called "My First Tool", with a menu bar.
+                auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
+                if (ctx != nullptr) {
+                    ImGui::SetCurrentContext(ctx);
+                    ImGui::Begin("My First Tool", &my_tool_active, ImGuiWindowFlags_MenuBar);
+                    if (ImGui::BeginMenuBar()) {
+                        if (ImGui::BeginMenu("File")) {
+                            if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */
+                            }
+                            if (ImGui::MenuItem("Save", "Ctrl+S")) { /* Do stuff */
+                            }
+                            if (ImGui::MenuItem("Close", "Ctrl+W")) {
+                                my_tool_active = false;
+                            }
+                            ImGui::EndMenu();
+                        }
+                        ImGui::EndMenuBar();
+                    }
+            
+                    // Edit a color (stored as ~4 floats)
+                    ImGui::ColorEdit4("Color", my_color);
+            
+                    // Plot some values
+                    const float my_values[] = {0.2f, 0.1f, 1.0f, 0.5f, 0.9f, 2.2f};
+                    ImGui::PlotLines("Frame Times", my_values, IM_ARRAYSIZE(my_values));
+            
+                    // Display contents in a scrolling region
+                    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Important Stuff");
+                    ImGui::BeginChild("Scrolling");
+                    for (int n = 0; n < 50; n++) ImGui::Text("%04d: Some text", n);
+                    ImGui::EndChild();
+                    ImGui::End();
+                }
+            }
+        }
+        
+        // process probe dehighlight events
+        {
+            auto pending_dehighlight_events = event_collection->get<ProbeDehighlight>();
+            for (auto& evt : pending_dehighlight_events) {
+                std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[evt.obj_id]};
+                rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
+            }
+        }
     }
 
 

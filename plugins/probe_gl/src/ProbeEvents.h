@@ -18,6 +18,11 @@ struct ProbeHighlight : public core::EventCollection::AbstractEvent {
     uint32_t obj_id;
 };
 
+struct ProbeDehighlight : public core::EventCollection::AbstractEvent {
+    ProbeDehighlight(size_t frame_id, uint32_t obj_id) : AbstractEvent(frame_id), obj_id(obj_id) {}
+    uint32_t obj_id;
+};
+
 } // namespace probe_gl
 } // namespace megamol
 
