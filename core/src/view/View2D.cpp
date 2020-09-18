@@ -219,6 +219,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     m.SetAt(1, 1, vz);
     m.SetAt(0, 3, vx * vz);
     m.SetAt(1, 3, vy * vz);
+    //vislib::sys::Log::DefaultLog.WriteInfo("vx: %f, vy: %f, vz: %f", vx, vy, vz);
     //::glScalef(vz, vz, 1.0f);
     //::glTranslatef(vx, vy, 0.0f);
     //glGetFloatv(GL_MODELVIEW_MATRIX, aMatrix);
@@ -285,27 +286,6 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
         ::glVertex2f(this->mouseX, this->mouseY);
         ::glEnd();
     }
-
-    // setup of camera & resolution
-    cr2d->frametype = 0;
-    if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
-        cr2d->SetTgtRes(cr2d->GetViewport().Width(), cr2d->GetViewport().Height() / 2);
-        float viewOffsetY = bbox.Height() / cr2d->tgtResY;
-
-        if (frameIsEven) {
-            // viewY += viewOffsetY;
-            cr2d->SetFrametype(2);
-            cr2d->setIntOffset(0, 0);
-            cr2d->frametype = 2;
-        } else {
-            // viewY -= viewOffsetY;
-            cr2d->SetFrametype(1);
-            cr2d->setIntOffset(1, 0);
-            cr2d->frametype = 1;
-        }
-        frameIsEven = !frameIsEven;
-    }
-
     AbstractRenderingView::endFrame();
 
 }

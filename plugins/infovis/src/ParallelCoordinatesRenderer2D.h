@@ -330,6 +330,20 @@ private:
     glm::mat4 invTexC = glm::mat4(1.0);
     glm::mat4 invTexD = glm::mat4(1.0);
 
+    glm::vec4 sA;
+    glm::vec4 sB;
+    glm::vec4 sC;
+    glm::vec4 sD;
+    glm::vec4 tA;
+    glm::vec4 tB;
+    glm::vec4 tC;
+    glm::vec4 tD;
+
+    glm::mat4 jitA;
+    glm::mat4 jitB;
+    glm::mat4 jitC;
+    glm::mat4 jitD;
+
     vislib::graphics::gl::ShaderSource vertex_shader_src;
     vislib::graphics::gl::ShaderSource fragment_shader_src;
 };
