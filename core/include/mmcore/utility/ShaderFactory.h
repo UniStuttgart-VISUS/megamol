@@ -5,6 +5,7 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <filesystem>
 #include <string>
 
@@ -33,6 +34,7 @@ inline GLint check_and_log_shader_compile(GLuint shader) {
 
     return success;
 }
+
 
 inline GLint check_and_log_program_link(GLuint program) {
     GLint success = 0;
