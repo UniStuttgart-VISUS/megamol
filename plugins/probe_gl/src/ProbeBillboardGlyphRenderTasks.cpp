@@ -1,8 +1,10 @@
 #include "ProbeBillboardGlyphRenderTasks.h"
 
 #include "ProbeCalls.h"
+#include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "mesh/MeshCalls.h"
+#include "mmcore/EventCall.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 
 #include "glm/glm.hpp"
@@ -48,6 +50,7 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
     , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
     , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
     , m_probe_manipulation_slot("GetProbeManipulation", "")
+    , m_event_read_slot("GetProbeEvents", "")
     , m_billboard_dummy_mesh(nullptr)
     , m_billboard_size_slot("BillBoardSize", "Sets the scaling factor of the texture billboards")
     , m_rendering_mode_slot("RenderingMode", "Glyph rendering mode")
@@ -64,6 +67,9 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
 
     this->m_probe_manipulation_slot.SetCompatibleCall<probe_gl::CallProbeInteractionDescription>();
     this->MakeSlotAvailable(&this->m_probe_manipulation_slot);
+
+    this->m_event_read_slot.SetCompatibleCall<megamol::core::EventCallReadDescription>();
+    this->MakeSlotAvailable(&this->m_event_read_slot);
 
     this->m_billboard_size_slot << new core::param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->m_billboard_size_slot);
@@ -459,6 +465,17 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
             }
         }
     }
+
+    // check for pending events
+    auto call_event_storage = this->m_event_read_slot.CallAs<core::EventCallRead>();
+    if (call_event_storage != NULL) {
+        if ((!(*call_event_storage)(0))) return false;
+
+        auto event_collection = call_event_storage->getData();
+
+        auto pending_highlight_events = event_collection->get<ProbeHighlight>();
+    }
+
 
     if (lhs_rtc->version() < m_version) {
         lhs_rtc->setData(rt_collection, m_version);
