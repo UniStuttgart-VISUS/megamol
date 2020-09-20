@@ -25,20 +25,14 @@ void main()
     if(line % 2 == 1){
         if(col % 2 == 0){
             frag_out = texture(src_tx2Dd, 0.5 * (mMd * p).xy + vec2(0.5));
-            //frag_out = vec4(1.0, 0.0, 0.0, 1.0);
         }else{
             frag_out = texture(src_tx2Dc, 0.5 * (mMc * p).xy + vec2(0.5));
-            //frag_out = vec4(0.0, 1.0, 0.0, 1.0);
         }
     } else {
         if(col % 2 == 1){
             frag_out = texture(src_tx2Da,  0.5 * (mMa * p).xy + vec2(0.5));
-            //frag_out = vec4(0.0, 0.0, 1.0, 1.0);
         }else{
             frag_out = texture(src_tx2Db, 0.5 * (mMb * p).xy + vec2(0.5));
-            //frag_out = vec4(1.0, 1.0, 1.0, 1.0);
         }  
     }
-    //frag_out = mMa * vec4(uv_coord, 0.0 , 1.0);
-    //frag_out = vec4(gl_FragCoord.x / w, gl_FragCoord.y / h, 0.0 , 1.0);  
 }

@@ -1094,7 +1094,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     // end suck
 
     int approach = this->approachSlot.Param<core::param::IntParam>()->Value();
-    int framesNeeded = 1;
+    int framesNeeded = 2;
     glm::mat4 moveMatrixA;
     glm::mat4 moveMatrixB;
     glm::mat4 moveMatrixC;
@@ -1106,21 +1106,33 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         w = w / 2;
         h = h / 2;
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+        float factor = this->testingFloat.Param<core::param::FloatParam>()->Value();
 
         glm::mat4 pm;
+        glm::mat4 jit;
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                 pm[j][i] = projMatrix_column[i + j * 4];
             }
         }
+        glm::mat4 mvm;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                mvm[j][i] = modelViewMatrix_column[i + j * 4];
+            }
+        }
+        auto pmvm = pm * mvm;
         if (frametype == 0) {
-            auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.0, 0));
-            pm = jit * pm;
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.0, 0));
+            invTexA = pmvm;
         }
         if (frametype == 1) {
-            auto jit = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0 / call.GetViewport().Width(), 0, 0));
-            pm = jit * pm;
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0 / call.GetViewport().Width(), 0, 0));
+            invTexB = pmvm;
         }
+        moveMatrixA = invTexA * glm::inverse(pmvm);
+        moveMatrixB = invTexB * glm::inverse(pmvm);
+        pm = jit * pm;
 
         for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
 
@@ -1508,9 +1520,12 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("frametype"), frametype);
 
+        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMa"), 1, GL_FALSE, &moveMatrixA[0][0]);
+        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMb"), 1, GL_FALSE, &moveMatrixB[0][0]);
+
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction0_shdr->Disable();
-        frametype = (frametype + 1) % 2;
+        frametype = (frametype + 1) % framesNeeded;
     }
 
     if (approach == 1 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
