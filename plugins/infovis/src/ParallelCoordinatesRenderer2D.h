@@ -290,6 +290,7 @@ private:
 
     core::param::ParamSlot approachSlot;
     core::param::ParamSlot testingFloat;
+    core::param::ParamSlot thicknessFloatP;
 
 
     std::vector<GLfloat> tex;

@@ -67,6 +67,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , halveRes("halve Resolution", "halve Resolution for FPS test")
     , approachSlot("Approach", "Numerical Value assigned to each temporal reconstruction approach")
     , testingFloat("testingFloat", "Float for passing Test Values")
+    , thicknessFloatP("thickness", "Float value to incease line thickness")
 
     , numTicks(5)
     , columnCount(0)
@@ -182,6 +183,9 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
 
     this->testingFloat << new core::param::FloatParam(1.0);
     this->MakeSlotAvailable(&testingFloat);
+
+    this->thicknessFloatP << new core::param::FloatParam(1.5);
+    this->MakeSlotAvailable(&thicknessFloatP);
 
     fragmentMinMax.resize(2);
 }
@@ -829,6 +833,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     }
     glUniform1ui(prog.ParameterLocation("fragmentTestMask"), testMask);
     glUniform1ui(prog.ParameterLocation("fragmentPassMask"), passMask);
+    
+    glUniform1f(prog.ParameterLocation("thicknessP"), thicknessFloatP.Param<core::param::FloatParam>()->Value());
 
     glEnable(GL_CLIP_DISTANCE0);
 #ifdef FUCK_THE_PIPELINE
