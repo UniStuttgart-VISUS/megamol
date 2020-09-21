@@ -144,7 +144,11 @@ int main(int argc, char* argv[]) {
     auto module_resources = services.getProvidedResources();
     graph.AddModuleDependencies(module_resources);
 
+    uint32_t frameID = 0;
     const auto render_next_frame = [&]() -> bool {
+        // set global Frame Counter
+        guiConfig.core_instance->SetFrameID(frameID++);
+
         // services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua)
         services.updateProvidedResources();
 
