@@ -37,7 +37,7 @@ bool megamol::adios::DFT::getDataCallback(core::Call& c) {
     if (in_data == nullptr) return false;
 
     if (!(*in_data)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("DFT: Error during GetHash");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("DFT: Error during GetHash");
         return false;
     }
 
@@ -48,7 +48,7 @@ bool megamol::adios::DFT::getDataCallback(core::Call& c) {
         infos_.clear();
 
         if (!(*in_data)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("DFT: Error during GetData");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("DFT: Error during GetData");
             return false;
         }
 
@@ -99,7 +99,7 @@ bool megamol::adios::DFT::getHeaderCallback(core::Call& c) {
 
     in_data->SetFrameID(out_data->GetFrameID());
     if (!(*in_data)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("Clustering: Error during GetHash");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Clustering: Error during GetHash");
         return false;
     }
 

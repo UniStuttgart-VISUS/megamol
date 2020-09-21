@@ -20,6 +20,10 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     require_external(adios2)
   endif()
 
+  # http://www.fftw.org/fftw-3.3.8.tar.gz
+  # https://github.com/FFTW/fftw3/pull/161
+  # ENABLE_FLOAT=ON
+  # CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON
   find_package(fftw3f CONFIG REQUIRED)
   if (WIN32)
     set(FFTW_LIB "${FFTW3f_LIBRARY_DIRS}/${FFTW3f_LIBRARIES}.lib")

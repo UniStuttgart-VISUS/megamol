@@ -66,7 +66,8 @@ bool GenerateGlyphs::doScalarGlyphGeneration(FloatProbe& probe) {
 
     std::array<float, 3> axis0 = {0.0f, 0.0f, 0.0f};
     // if (smallest_normal_index == 1) smallest_normal_index = second_smallest_normal_index;
-    axis0[smallest_normal_index] = 1.0f;
+    //axis0[smallest_normal_index] = 1.0f;
+    axis0[1] = 1.0f;
     std::array<float, 3> plane_vec_1;
     plane_vec_1[0] = probe.m_direction[1] * axis0[2] - probe.m_direction[2] * axis0[1];
     plane_vec_1[1] = probe.m_direction[2] * axis0[0] - probe.m_direction[0] * axis0[2];

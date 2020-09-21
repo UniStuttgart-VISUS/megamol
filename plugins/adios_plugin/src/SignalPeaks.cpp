@@ -55,7 +55,7 @@ bool megamol::adios::SignalPeaks::getDataCallback(core::Call& c) {
     if (in_data == nullptr) return false;
 
     if (!(*in_data)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("SignalPeaks: Error during GetHeader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("SignalPeaks: Error during GetHeader");
         return false;
     }
 
@@ -69,7 +69,7 @@ bool megamol::adios::SignalPeaks::getDataCallback(core::Call& c) {
         auto const numPeaks = num_peaks_slot_.Param<core::param::IntParam>()->Value();
 
         if (!(*in_data)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("SignalPeaks: Error during GetData");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("SignalPeaks: Error during GetData");
             return false;
         }
 
@@ -131,7 +131,7 @@ bool megamol::adios::SignalPeaks::getHeaderCallback(core::Call& c) {
 
     in_data->SetFrameID(out_data->GetFrameID());
     if (!(*in_data)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("Clustering: Error during GetHash");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Clustering: Error during GetHash");
         return false;
     }
 

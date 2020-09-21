@@ -62,7 +62,7 @@ bool megamol::adios::Clustering::getDataCallback(core::Call& c) {
     if (in_data == nullptr) return false;
 
     if (!(*in_data)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("Clustering: Error during GetHash");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Clustering: Error during GetHash");
         return false;
     }
 
@@ -71,7 +71,7 @@ bool megamol::adios::Clustering::getDataCallback(core::Call& c) {
         resetDirty();
 
         if (!(*in_data)(0)) {
-            vislib::sys::Log::DefaultLog.WriteError("Clustering: Error during GetData");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Clustering: Error during GetData");
             return false;
         }
 
@@ -129,7 +129,7 @@ bool megamol::adios::Clustering::getHeaderCallback(core::Call& c) {
 
     in_data->SetFrameID(out_data->GetFrameID());
     if (!(*in_data)(1)) {
-        vislib::sys::Log::DefaultLog.WriteError("Clustering: Error during GetHash");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Clustering: Error during GetHash");
         return false;
     }
 

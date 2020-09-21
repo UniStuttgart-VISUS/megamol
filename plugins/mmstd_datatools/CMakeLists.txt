@@ -21,6 +21,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   require_external(libzmq)
   require_external(libcppzmq)
 
+  # http://www.cs.umd.edu/~mount/ANN/Files/1.1.2/ann_1.1.2.zip
   find_package(ANN)
 
   # Collect source files

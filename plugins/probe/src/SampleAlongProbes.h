@@ -134,7 +134,7 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
         auto generic_probe = _probes->getGenericProbe(i);
         std::visit(visitor, generic_probe);
 
-        auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
+        auto sample_step = 0.5 * probe.m_end / static_cast<float>(samples_per_probe);
         auto radius = sample_step * sample_radius_factor;
 
         std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
