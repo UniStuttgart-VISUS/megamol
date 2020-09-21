@@ -96,8 +96,6 @@ protected:
      */
     bool Render(core::view::CallRender3D_2& call);
 
-    bool getInteractionCollection(core::Call& call);
-
     bool getInteractionMetaData(core::Call& call);
 
 private:
@@ -133,8 +131,6 @@ private:
         {core::view::MouseButton::BUTTON_RIGHT, false}
     };
 
-    std::shared_ptr<ProbeInteractionCollection> m_interactions;
-
     int64_t last_active_probe_id;
 
     std::vector<int64_t> m_selected_probes;
@@ -143,7 +139,7 @@ private:
     megamol::core::CallerSlot m_hull_fbo_slot;
     megamol::core::CallerSlot m_glyph_fbo_slot;
 
-    megamol::core::CalleeSlot m_interaction_collection_slot;
+    megamol::core::CallerSlot m_event_write_slot;
 
     // local storage of projection and view matrix (for 3D space interaction computations)
     glm::mat4 m_view_mx_cpy;

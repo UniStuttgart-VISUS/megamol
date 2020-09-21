@@ -59,7 +59,7 @@ private:
 
     core::CallerSlot m_probes_slot;
 
-    core::CallerSlot m_probe_manipulation_slot;
+    core::CallerSlot m_event_read_slot;
 
     core::param::ParamSlot m_billboard_size_slot;
 
@@ -131,7 +131,7 @@ private:
 
     bool m_show_glyphs;
 
-    std::vector<TexturedGlyphData>    m_textured_glyph_data;
+    std::vector<TexturedGlyphData> m_textured_glyph_data;
     std::vector<GlyphVectorProbeData> m_vector_probe_glyph_data;
     std::vector<GlyphScalarProbeData> m_scalar_probe_glyph_data;
 
@@ -141,37 +141,25 @@ private:
 
     template <typename ProbeType>
     TexturedGlyphData createTexturedGlyphData(
-        ProbeType const& probe, 
-        int probe_id,
-        GLuint64 texture_handle,
-        float slice_idx,
-        float scale);
+        ProbeType const& probe, int probe_id, GLuint64 texture_handle, float slice_idx, float scale);
 
-     GlyphScalarProbeData createScalarProbeGlyphData(
-        probe::FloatProbe const& probe,
-        int probe_id,
-        float scale);
+    GlyphScalarProbeData createScalarProbeGlyphData(probe::FloatProbe const& probe, int probe_id, float scale);
 
-    GlyphVectorProbeData createVectorProbeGlyphData(
-        probe::Vec4Probe const& probe,
-        int probe_id,
-        float scale);
+    GlyphVectorProbeData createVectorProbeGlyphData(probe::Vec4Probe const& probe, int probe_id, float scale);
 };
 
 template <typename ProbeType>
 inline ProbeBillboardGlyphRenderTasks::TexturedGlyphData ProbeBillboardGlyphRenderTasks::createTexturedGlyphData(
     ProbeType const& probe, int probe_id, GLuint64 texture_handle, float slice_idx, float scale) {
     TexturedGlyphData glyph_data;
-    glyph_data.position = glm::vec4(
-        probe.m_position[0] + probe.m_direction[0] * (probe.m_begin * 1.1f),
+    glyph_data.position = glm::vec4(probe.m_position[0] + probe.m_direction[0] * (probe.m_begin * 1.1f),
         probe.m_position[1] + probe.m_direction[1] * (probe.m_begin * 1.1f),
-        probe.m_position[2] + probe.m_direction[2] * (probe.m_begin * 1.1f),
-        1.0f);
+        probe.m_position[2] + probe.m_direction[2] * (probe.m_begin * 1.1f), 1.0f);
     glyph_data.texture_handle = texture_handle;
     glyph_data.slice_idx = slice_idx;
     glyph_data.scale = scale;
 
-    //glyph_data.probe_id = probe_id;
+    // glyph_data.probe_id = probe_id;
 
     return glyph_data;
 }
