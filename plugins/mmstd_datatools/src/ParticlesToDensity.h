@@ -9,16 +9,20 @@
 #define MMSTD_DATATOOLS_PARTICLESTODENSITY_H_INCLUDED
 #pragma once
 
-#include <map>
-#include <vector>
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
+
+#include "mmstd_datatools/table/TableDataCall.h"
+
 #include "vislib/math/Vector.h"
 
+#include <array>
+#include <limits>
+#include <vector>
 
 namespace megamol {
 namespace stdplugin {
@@ -113,6 +117,11 @@ private:
     core::param::ParamSlot surfaceSlot;
 
     std::vector<std::vector<float>> vol;
+    std::vector<float> directions, colors, densities;
+    std::vector<float> grid;
+
+    std::array<stdplugin::datatools::table::TableDataCall::ColumnInfo, 7> info;
+    std::vector<float> infoData;
 
     size_t in_datahash = std::numeric_limits<size_t>::max();
     size_t datahash = 0;
@@ -120,8 +129,12 @@ private:
     float maxDens = 0.0f;
     float minDens = std::numeric_limits<float>::max();
 
+    bool has_data;
+
     /** The slot providing access to the manipulated data */
     megamol::core::CalleeSlot outDataSlot;
+    megamol::core::CalleeSlot outParticlesSlot;
+    megamol::core::CalleeSlot outInfoSlot;
 
     /** The slot accessing the original data */
     megamol::core::CallerSlot inDataSlot;

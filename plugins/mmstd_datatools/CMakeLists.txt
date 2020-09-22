@@ -18,6 +18,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   require_external(mmpld_io)
   require_external(Eigen)
   require_external(nanoflann)
+  require_external(sim_sort)
   require_external(libzmq)
   require_external(libcppzmq)
 
@@ -48,11 +49,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Target definition
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
+  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg" CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src"
     "3rd/min_sphere_of_spheres")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls tinyply Eigen nanoflann mmpld_io libzmq libcppzmq)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls tinyply Eigen nanoflann sim_sort mmpld_io libzmq libcppzmq)
   if(MPI_C_FOUND)
     target_link_libraries(${PROJECT_NAME} PRIVATE MPI::MPI_C)
   endif()

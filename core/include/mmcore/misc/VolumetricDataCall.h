@@ -1,7 +1,7 @@
 /*
  * VolumetricDataCall.h
  *
- * Copyright (C) 2014 by Visualisierungsinstitut der Universit‰t Stuttgart.
+ * Copyright (C) 2014 by Visualisierungsinstitut der Universit√§t Stuttgart.
  * Alle rechte vorbehalten.
  */
 
@@ -73,6 +73,19 @@ namespace misc {
          * @return The name of the requested function.
          */
         static const char *FunctionName(unsigned int idx);
+
+        /**
+         * Invoke the metadata call and possibly the data call if the metadata
+         * call does not provide meaningful data.
+         *
+         * Consider using this convenience method if your sink is connected to
+         * a live source that cannot implement the metadata call.
+         *
+         * @param call Teh call to be invoked.
+         *
+         * @return true if the call succeeded, false otherwise.
+         */
+        static bool GetMetadata(core::misc::VolumetricDataCall& call);
 
         /** Index of the function retrieving the data. */
         static const unsigned int IDX_GET_DATA;
