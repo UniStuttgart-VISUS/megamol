@@ -134,13 +134,15 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
         auto generic_probe = _probes->getGenericProbe(i);
         std::visit(visitor, generic_probe);
 
-        auto sample_step = 0.5 * probe.m_end / static_cast<float>(samples_per_probe);
-        auto radius = sample_step * sample_radius_factor;
+        auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
+        auto radius = 0.5 * sample_step * sample_radius_factor;
 
         std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
 
         float min_value = std::numeric_limits<float>::max();
-        float max_value = -std::numeric_limits<float>::max();
+        float max_value = -std::numeric_limits<float>::min();
+        float min_data = std::numeric_limits<float>::max();
+        float max_data = -std::numeric_limits<float>::min();
         float avg_value = 0.0f;
         samples->samples.resize(samples_per_probe);
 
@@ -163,7 +165,10 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
             // accumulate values
             float value = 0;
             for (int n = 0; n < num_neighbors; n++) {
-                value += data[k_indices[n]];
+                auto distance_weight = k_distances[n] / radius;
+                value += data[k_indices[n]] * distance_weight;
+                min_data = std::min(min_data, static_cast<float>(data[k_indices[n]]));
+                max_data = std::max(max_data, static_cast<float>(data[k_indices[n]]));
             } // end num_neighbors
             value /= num_neighbors;
             samples->samples[j] = value;
