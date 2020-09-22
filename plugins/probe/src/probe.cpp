@@ -26,6 +26,7 @@
 #ifdef PROBE_HAS_OSPRAY
 #include "OSPRayGlyphGeometry.h"
 #endif
+#include "MeshSelector.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -64,6 +65,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ConstructKDTree>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ManipulateMesh>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ProbeToTable>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::MeshSelector>();
 #ifdef PROBE_HAS_OSPRAY
             this->module_descriptions.RegisterAutoDescription<megamol::probe::OSPRayGlyphGeometry>();
 #endif

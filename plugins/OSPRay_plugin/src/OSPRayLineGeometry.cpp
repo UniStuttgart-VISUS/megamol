@@ -65,7 +65,8 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
         if (!(*cm)(0)) return false;
         meta_data = cm->getMetaData();
 
-        if (cm->hasUpdate() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+        auto interface_dirtyness = this->InterfaceIsDirty();
+        if (cm->hasUpdate() || this->time != os->getTime() || interface_dirtyness) {
             this->time = os->getTime();
             this->structureContainer.dataChanged = true;
             this->extendContainer.boundingBox = std::make_shared<core::BoundingBoxes_2>(meta_data.m_bboxs);

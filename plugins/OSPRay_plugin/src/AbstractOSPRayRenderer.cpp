@@ -624,14 +624,14 @@ void AbstractOSPRayRenderer::changeMaterial() {
         auto const& element = entry.second;
 
         // custom material settings
-        if (this->materials[entry.first] != nullptr) {
-            ospRelease(this->materials[entry.first]);
-            this->materials.erase(entry.first);
-        }
+        //if (this->materials[entry.first] != nullptr) {
+        //    ospRelease(this->materials[entry.first]);
+        //    this->materials.erase(entry.first);
+        //}
         if (element.materialContainer != NULL) {
             switch (element.materialContainer->materialType) {
             case OBJMATERIAL:
-                this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "OBJMaterial");
+                //this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "OBJMaterial");
                 ospSet3fv(this->materials[entry.first], "Kd", element.materialContainer->Kd.data());
                 ospSet3fv(this->materials[entry.first], "Ks", element.materialContainer->Ks.data());
                 ospSet1f(this->materials[entry.first], "Ns", element.materialContainer->Ns);
@@ -708,13 +708,14 @@ void AbstractOSPRayRenderer::changeMaterial() {
             ospCommit(this->materials[entry.first]);
         }
 
-        if (this->materials[entry.first] != NULL) {
-            if (element.type == structureTypeEnum::GEOMETRY) {
+        //if (this->materials[entry.first] != NULL) {
+        //    if (element.type == structureTypeEnum::GEOMETRY) {
+        // 
                 ospSetMaterial(
                     std::get<OSPGeometry>(this->baseStructures[entry.first].back()), this->materials[entry.first]);
-                ospCommit(std::get<OSPGeometry>(this->baseStructures[entry.first].back()));
-            }
-        }
+        ospCommit(std::get<OSPGeometry>(this->baseStructures[entry.first].back()));
+        //    }
+        //}
     }
 }
 
@@ -1466,7 +1467,7 @@ bool AbstractOSPRayRenderer::fillWorld() {
 
             break;
         }
-
+        entry.second.dataChanged = false;
     } // for element loop
 
     if (this->rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST && ghostRegions.size() > 0 &&
