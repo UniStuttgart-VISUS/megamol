@@ -54,9 +54,6 @@ bool megamol::compositing::TextureDepthCompositing::create() {
 
     try {
         // create shader program
-        m_depthComp_prgm = std::make_unique<glowl::GLSLProgram>();
-        m_depthComp_prgm->setDebugLabel("Compositing::textureDepthCompositing");
-
         vislib::graphics::gl::ShaderSource compute_src;
 
         if (!instance()->ShaderSourceFactory().MakeShaderSource("Compositing::textureDepthCompositing", compute_src)) {
@@ -65,19 +62,17 @@ bool megamol::compositing::TextureDepthCompositing::create() {
 
 		std::string compute_shader_src(compute_src.WholeCode(), (compute_src.WholeCode()).Length());
 
-		auto prgm_err = !m_depthComp_prgm->compileShaderFromString(&compute_shader_src, glowl::GLSLProgram::ComputeShader);
-        prgm_err |= !m_depthComp_prgm->link();
+        std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
+        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Compute, compute_shader_src});
 
-		if (prgm_err) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
-				megamol::core::utility::log::Log::LEVEL_ERROR,
-                "Error during shader program creation of %s\n %s\n", 
-				m_depthComp_prgm->getDebugLabel().c_str(),
-                m_depthComp_prgm->getLog().c_str()
-			);
-            return false;
-        }
+        m_depthComp_prgm = std::make_unique<glowl::GLSLProgram>(shader_srcs);
+        m_depthComp_prgm->setDebugLabel("Compositing::textureDepthCompositing"); //TODO debug label not set in time for catch...
 
+    } catch (glowl::GLSLProgramException const& exc) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n",
+            m_depthComp_prgm->getDebugLabel().c_str(), exc.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
     } catch (vislib::Exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
             megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
