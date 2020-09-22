@@ -43,7 +43,7 @@ public:
     /**
      *
      */
-    template <typename EventType> void try_remove();
+    template <typename EventType> void remove();
 
     /** 
      *
@@ -88,7 +88,7 @@ template <typename EventType> inline void EventCollection::add(std::unique_ptr<E
     m_events.emplace(std::type_index(typeid(EventType)), std::forward<std::unique_ptr<EventType>>(event));
 }
 
-template <typename EventType> inline void EventCollection::try_remove() {
+template <typename EventType> inline void EventCollection::remove() {
 
     m_events.erase(std::type_index(typeid(EventType)));
 }

@@ -65,7 +65,10 @@ template <typename EventType> inline void DoubleBufferedEventCollection::add(std
 template <typename EventType> inline std::vector<EventType> DoubleBufferedEventCollection::consume() {
     static_assert(EventType::is_consumable_t::value);
 
-    return std::vector<EventType>();
+    auto retval = m_event_collections[m_read_idx].get<EventType>();
+    ctions[m_read_idx].remove<EventType>();
+
+    return retval;
 }
 
 } // namespace core
