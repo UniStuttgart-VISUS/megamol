@@ -1512,12 +1512,12 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         if (frametype == 0) {
             glActiveTexture(GL_TEXTURE10);
             glBindTexture(GL_TEXTURE_2D, msImageStorageA);  
-            glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tx2Da"), 10);
+            glUniform1i(pc_reconstruction0_shdr->ParameterLocation("samplers"), 10);
         }
         if (frametype == 1) {
             glActiveTexture(GL_TEXTURE11);
             glBindTexture(GL_TEXTURE_2D, msImageStorageB);
-            glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tx2Db"), 11);
+            glUniform1i(pc_reconstruction0_shdr->ParameterLocation("samplers")+1, 11);
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
@@ -1542,22 +1542,22 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         if (frametype == 0) {
             glActiveTexture(GL_TEXTURE10);
             glBindTexture(GL_TEXTURE_2D, imageStorageA);
-            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Da"), 10);
+            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("samplers"), 10);
         }
         if (frametype == 1) {
             glActiveTexture(GL_TEXTURE11);
             glBindTexture(GL_TEXTURE_2D, imageStorageB);
-            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Db"), 11);
+            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("samplers") + 1, 11);
         }
         if (frametype == 2) {
             glActiveTexture(GL_TEXTURE12);
             glBindTexture(GL_TEXTURE_2D, imageStorageC);
-            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Dc"), 12);
+            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("samplers") + 2, 12);
         }
         if (frametype == 3) {
             glActiveTexture(GL_TEXTURE13);
             glBindTexture(GL_TEXTURE_2D, imageStorageD);
-            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Dd"), 13); 
+            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("samplers") + 3, 13); 
         }
         glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
         glUniform1i(pc_reconstruction1_shdr->ParameterLocation("h"), call.GetViewport().Height());
@@ -1570,8 +1570,9 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         //glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMc"), 1, GL_FALSE, &moveMatrixC[0][0]);
         //glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMd"), 1, GL_FALSE, &moveMatrixD[0][0]);
 
-        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices"), 1, GL_FALSE, &moveMatrixA[0][0]);
-        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices")+1, 1, GL_FALSE, &moveMatrixB[0][0]);
+        // 0 and 1 swapped because order in array easier corresponds to pixel position
+        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices")+1, 1, GL_FALSE, &moveMatrixA[0][0]);
+        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices"), 1, GL_FALSE, &moveMatrixB[0][0]);
         glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices")+2, 1, GL_FALSE, &moveMatrixC[0][0]);
         glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices")+3, 1, GL_FALSE, &moveMatrixD[0][0]);
 
