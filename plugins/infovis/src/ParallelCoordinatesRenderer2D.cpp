@@ -1526,8 +1526,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("frametype"), frametype);
 
-        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMa"), 1, GL_FALSE, &moveMatrixA[0][0]);
-        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMb"), 1, GL_FALSE, &moveMatrixB[0][0]);
+        glUniformMatrix4fv(pc_reconstruction0_shdr->ParameterLocation("mMatrices"), 1, GL_FALSE, &moveMatrixA[0][0]);
+        glUniformMatrix4fv(pc_reconstruction0_shdr->ParameterLocation("mMatrices")+1, 1, GL_FALSE, &moveMatrixB[0][0]);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction0_shdr->Disable();
@@ -1565,10 +1565,15 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(pc_reconstruction1_shdr->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction1_shdr->ParameterLocation("frametype"), frametype);
 
-        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMa"), 1, GL_FALSE, &moveMatrixA[0][0]);
-        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMb"), 1, GL_FALSE, &moveMatrixB[0][0]);
-        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMc"), 1, GL_FALSE, &moveMatrixC[0][0]);
-        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMd"), 1, GL_FALSE, &moveMatrixD[0][0]);
+        //glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMa"), 1, GL_FALSE, &moveMatrixA[0][0]);
+        //glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMb"), 1, GL_FALSE, &moveMatrixB[0][0]);
+        //glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMc"), 1, GL_FALSE, &moveMatrixC[0][0]);
+        //glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMd"), 1, GL_FALSE, &moveMatrixD[0][0]);
+
+        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices"), 1, GL_FALSE, &moveMatrixA[0][0]);
+        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices")+1, 1, GL_FALSE, &moveMatrixB[0][0]);
+        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices")+2, 1, GL_FALSE, &moveMatrixC[0][0]);
+        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices")+3, 1, GL_FALSE, &moveMatrixD[0][0]);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction1_shdr->Disable();
