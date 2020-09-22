@@ -10,35 +10,25 @@
 
 #include <memory>
 
-#include "EventCollection.h"
+#include "DoubleBufferedEventCollection.h"
 #include "mmcore/CallGeneric.h"
 
 namespace megamol {
 namespace core {
 
-class MEGAMOLCORE_API EventCallRead : public core::GenericVersionedCall<std::shared_ptr<EventCollection const>, core::EmptyMetaData> {
+class MEGAMOLCORE_API EventCall : public core::GenericVersionedCall<std::shared_ptr<DoubleBufferedEventCollection>, core::EmptyMetaData> {
 public:
-    EventCallRead() = default;
-    ~EventCallRead() = default;
+    EventCall() = default;
+    ~EventCall() = default;
 
-    static const char* ClassName(void) { return "EventCallRead"; }
+    static const char* ClassName(void) { return "EventCall"; }
     static const char* Description(void) {
-        return "Call that transports an EventCollection for read-only access";
+        return "Call that transports a DoubleBufferedEventCollection for read-write access";
     }
 };
 
-class MEGAMOLCORE_API EventCallWrite : public core::GenericVersionedCall<std::shared_ptr<EventCollection>, core::EmptyMetaData> {
-public:
-    EventCallWrite() = default;
-    ~EventCallWrite() = default;
-
-    static const char* ClassName(void) { return "EventCallWrite"; }
-    static const char* Description(void) { return "Call that transports an EventCollection with write access"; }
-};
-
 /** Description class typedef */
-typedef megamol::core::factories::CallAutoDescription<EventCallRead> EventCallReadDescription;
-typedef megamol::core::factories::CallAutoDescription<EventCallWrite> EventCallWriteDescription;
+typedef megamol::core::factories::CallAutoDescription<EventCall> EventCallDescription;
 
 }
 }

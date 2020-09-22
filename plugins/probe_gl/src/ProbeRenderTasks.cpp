@@ -12,12 +12,12 @@ megamol::probe_gl::ProbeRenderTasks::ProbeRenderTasks()
     : m_version(0)
     , m_show_probes(true)
     , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
-    , m_probe_manipulation_slot("GetProbeManipulation", "") {
+    , m_event_slot("GetEvents", "") {
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->m_probes_slot);
 
-    this->m_probe_manipulation_slot.SetCompatibleCall<probe_gl::CallProbeInteractionDescription>();
-    this->MakeSlotAvailable(&this->m_probe_manipulation_slot);
+    //this->m_event_slot.SetCompatibleCall<>();
+    //this->MakeSlotAvailable(&this->m_event_slot);
 }
 
 megamol::probe_gl::ProbeRenderTasks::~ProbeRenderTasks() {}
@@ -156,95 +156,95 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
     lhs_rtc->setData(rt_collection, m_version);
 
-    // check for pending probe manipulations
-    CallProbeInteraction* pic = this->m_probe_manipulation_slot.CallAs<CallProbeInteraction>();
-    if (pic != NULL) {
-        if (!(*pic)(0)) return false;
-
-        if (pic->hasUpdate()) {
-            auto interaction_collection = pic->getData();
-
-            auto& pending_manips = interaction_collection->accessPendingManipulations();
-
-            if (pc->hasUpdate()) {
-                if (!(*pc)(0)) return false;
-            }
-            auto probes = pc->getData();
-
-            for (auto itr = pending_manips.begin(); itr != pending_manips.end(); ++itr) {
-                if (itr->type == HIGHLIGHT) {
-                    // TODO remove from list and apply hightlight to render task
-                    auto manipulation = *itr;
-                    // itr = pending_manips.erase(itr);
-
-                    std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
-                    per_probe_data[0].highlighted = 1;
-
-                    if (m_show_probes) {
-                        rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
-                    }
-                } else if (itr->type == DEHIGHLIGHT) {
-                    // TODO remove from list and apply hightlight to render task
-                    auto manipulation = *itr;
-                    // itr = pending_manips.erase(itr);
-
-                    std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
-
-                    if (m_show_probes) {
-                        rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
-                    }
-                } else if (itr->type == SELECT) {
-                    // TODO remove from list and apply hightlight to render task
-                    auto manipulation = *itr;
-                    // itr = pending_manips.erase(itr);
-
-                    m_probe_draw_data[manipulation.obj_id].highlighted = 2;
-                    std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
-
-                    if (m_show_probes) {
-                        rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
-                    }
-                } else if (itr->type == DESELECT) {
-                    // TODO remove from list and apply hightlight to render task
-                    auto manipulation = *itr;
-                    // itr = pending_manips.erase(itr);
-
-                    m_probe_draw_data[manipulation.obj_id].highlighted = 0;
-                    std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
-
-                    if (m_show_probes) {
-                        rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
-                    }
-                } else if (itr->type == CLEAR_SELECTION) {
-                    // TODO remove from list and apply hightlight to render task
-                    auto manipulation = *itr;
-                    // itr = pending_manips.erase(itr);
-                    for (auto& draw_data : m_probe_draw_data) {
-                        draw_data.highlighted = 0; 
-                    }
-                    if (m_show_probes) {
-                        // TODO this breaks chaining...
-                        rt_collection->clear();
-                        auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
-                        auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-                        rt_collection->addRenderTasks(shader, gpu_batch_mesh, m_draw_commands, m_probe_draw_data);
-                    }
-                } else if (itr->type == TOGGLE_SHOW_PROBES) {
-                    m_show_probes = !m_show_probes;
-
-                    if (m_show_probes) {
-                        auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
-                        auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-                        rt_collection->addRenderTasks(shader, gpu_batch_mesh, m_draw_commands, m_probe_draw_data);
-                    } else {
-                        // TODO this breaks chaining...
-                        rt_collection->clear();
-                    }
-                } else {
-                }
-            }
-        }
-    }
+    //  // check for pending probe manipulations
+    //  CallProbeInteraction* pic = this->m_probe_manipulation_slot.CallAs<CallProbeInteraction>();
+    //  if (pic != NULL) {
+    //      if (!(*pic)(0)) return false;
+    //  
+    //      if (pic->hasUpdate()) {
+    //          auto interaction_collection = pic->getData();
+    //  
+    //          auto& pending_manips = interaction_collection->accessPendingManipulations();
+    //  
+    //          if (pc->hasUpdate()) {
+    //              if (!(*pc)(0)) return false;
+    //          }
+    //          auto probes = pc->getData();
+    //  
+    //          for (auto itr = pending_manips.begin(); itr != pending_manips.end(); ++itr) {
+    //              if (itr->type == HIGHLIGHT) {
+    //                  // TODO remove from list and apply hightlight to render task
+    //                  auto manipulation = *itr;
+    //                  // itr = pending_manips.erase(itr);
+    //  
+    //                  std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
+    //                  per_probe_data[0].highlighted = 1;
+    //  
+    //                  if (m_show_probes) {
+    //                      rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+    //                  }
+    //              } else if (itr->type == DEHIGHLIGHT) {
+    //                  // TODO remove from list and apply hightlight to render task
+    //                  auto manipulation = *itr;
+    //                  // itr = pending_manips.erase(itr);
+    //  
+    //                  std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
+    //  
+    //                  if (m_show_probes) {
+    //                      rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+    //                  }
+    //              } else if (itr->type == SELECT) {
+    //                  // TODO remove from list and apply hightlight to render task
+    //                  auto manipulation = *itr;
+    //                  // itr = pending_manips.erase(itr);
+    //  
+    //                  m_probe_draw_data[manipulation.obj_id].highlighted = 2;
+    //                  std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
+    //  
+    //                  if (m_show_probes) {
+    //                      rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+    //                  }
+    //              } else if (itr->type == DESELECT) {
+    //                  // TODO remove from list and apply hightlight to render task
+    //                  auto manipulation = *itr;
+    //                  // itr = pending_manips.erase(itr);
+    //  
+    //                  m_probe_draw_data[manipulation.obj_id].highlighted = 0;
+    //                  std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[manipulation.obj_id]};
+    //  
+    //                  if (m_show_probes) {
+    //                      rt_collection->updatePerDrawData(manipulation.obj_id, per_probe_data);
+    //                  }
+    //              } else if (itr->type == CLEAR_SELECTION) {
+    //                  // TODO remove from list and apply hightlight to render task
+    //                  auto manipulation = *itr;
+    //                  // itr = pending_manips.erase(itr);
+    //                  for (auto& draw_data : m_probe_draw_data) {
+    //                      draw_data.highlighted = 0; 
+    //                  }
+    //                  if (m_show_probes) {
+    //                      // TODO this breaks chaining...
+    //                      rt_collection->clear();
+    //                      auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
+    //                      auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+    //                      rt_collection->addRenderTasks(shader, gpu_batch_mesh, m_draw_commands, m_probe_draw_data);
+    //                  }
+    //              } else if (itr->type == TOGGLE_SHOW_PROBES) {
+    //                  m_show_probes = !m_show_probes;
+    //  
+    //                  if (m_show_probes) {
+    //                      auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
+    //                      auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+    //                      rt_collection->addRenderTasks(shader, gpu_batch_mesh, m_draw_commands, m_probe_draw_data);
+    //                  } else {
+    //                      // TODO this breaks chaining...
+    //                      rt_collection->clear();
+    //                  }
+    //              } else {
+    //              }
+    //          }
+    //      }
+    //  }
 
     return true;
 }

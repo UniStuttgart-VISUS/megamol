@@ -9,7 +9,7 @@
 #define MEGAMOL_EVENT_STORAGE_H_INCLUDED
 
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/EventCollection.h"
+#include "mmcore/DoubleBufferedEventCollection.h"
 #include "mmcore/Module.h"
 
 namespace megamol {
@@ -69,16 +69,7 @@ private:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool readDataCallback(core::Call& caller);
-
-    /**
-     * Write/update the flags provided by the EventStorage
-     *
-     * @param caller The calling call.
-     *
-     * @return 'true' on success, 'false' on failure.
-     */
-    bool writeDataCallback(core::Call& caller);
+    bool dataCallback(core::Call& caller);
 
     /**
      * Access the metadata provided by the EventStorage
@@ -87,25 +78,13 @@ private:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool readMetaDataCallback(core::Call& caller);
+    bool metaDataCallback(core::Call& caller);
 
-    /**
-     * Write/update the metadata provided by the EventStorage
-     *
-     * @param caller The calling call.
-     *
-     * @return 'true' on success, 'false' on failure.
-     */
-    bool writeMetaDataCallback(core::Call& caller);
 
-    /** The slot for reading the data */
-    core::CalleeSlot m_readEventsSlot;
+    /** The slot for accessomg the event data */
+    core::CalleeSlot m_events_slot;
 
-    /** The slot for writing the data */
-    core::CalleeSlot m_writeEventsSlot;
-
-    std::array<std::shared_ptr<EventCollection>,2> m_events;
-    int m_read_idx;
+    std::shared_ptr<DoubleBufferedEventCollection> m_events;
 
     uint32_t m_version = 0;
 };

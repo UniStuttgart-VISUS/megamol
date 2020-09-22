@@ -65,7 +65,8 @@ private:
 
     core::CallerSlot m_probes_slot;
 
-    core::CallerSlot m_probe_manipulation_slot;
+    core::CallerSlot m_event_slot;
+
 };
 
 } // namespace mesh

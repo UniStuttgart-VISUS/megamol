@@ -4,23 +4,15 @@
 #include "mmcore/EventCall.h"
 
 megamol::core::EventStorage::EventStorage()
-    : m_readEventsSlot("readEvents", "Provides read-only access to pending events to clients.")
-    , m_writeEventsSlot("writeEvents", "Provides write access to event collection to clients.") 
-    , m_events({std::make_shared<EventCollection>(), std::make_shared<EventCollection>()})
-    , m_read_idx(0)
+    : m_events_slot("deployEventCollection", "Provides read-only access to pending events to clients.")
+    , m_events(std::make_shared < DoubleBufferedEventCollection>())
     , m_version(0) {
 
-    this->m_readEventsSlot.SetCallback(EventCallRead::ClassName(),
-        EventCallRead::FunctionName(EventCallRead::CallGetData), &EventStorage::readDataCallback);
-    this->m_readEventsSlot.SetCallback(EventCallRead::ClassName(),
-        EventCallRead::FunctionName(EventCallRead::CallGetMetaData), &EventStorage::readMetaDataCallback);
-    this->MakeSlotAvailable(&this->m_readEventsSlot);
-
-    this->m_writeEventsSlot.SetCallback(EventCallWrite::ClassName(),
-        EventCallWrite::FunctionName(EventCallWrite::CallGetData), &EventStorage::writeDataCallback);
-    this->m_writeEventsSlot.SetCallback(EventCallWrite::ClassName(),
-        EventCallWrite::FunctionName(EventCallWrite::CallGetMetaData), &EventStorage::writeMetaDataCallback);
-    this->MakeSlotAvailable(&this->m_writeEventsSlot);
+    this->m_events_slot.SetCallback(EventCall::ClassName(),
+        EventCall::FunctionName(EventCall::CallGetData), &EventStorage::dataCallback);
+    this->m_events_slot.SetCallback(EventCall::ClassName(),
+        EventCall::FunctionName(EventCall::CallGetMetaData), &EventStorage::metaDataCallback);
+    this->MakeSlotAvailable(&this->m_events_slot);
 }
 
 megamol::core::EventStorage::~EventStorage() { this->Release(); }
@@ -29,8 +21,8 @@ bool megamol::core::EventStorage::create(void) { return true; }
 
 void megamol::core::EventStorage::release(void) {}
 
-bool megamol::core::EventStorage::readDataCallback(core::Call& caller) { 
-    auto ec = dynamic_cast<EventCallRead*>(&caller);
+bool megamol::core::EventStorage::dataCallback(core::Call& caller) { 
+    auto ec = dynamic_cast<EventCall*>(&caller);
     if (ec == nullptr) return false;
 
     auto current_frame_id = this->GetCoreInstance()->GetFrameID();
@@ -38,34 +30,12 @@ bool megamol::core::EventStorage::readDataCallback(core::Call& caller) {
     // the first call in a frame to either readData or writeData needs to swap the double buffer
     if (current_frame_id > this->m_version) {
         this->m_version = current_frame_id;
-        m_events[m_read_idx]->clear();
-        m_read_idx = m_read_idx == 0 ? 1 : 0;
+        m_events->swap();
     }
 
-    ec->setData(m_events[m_read_idx], this->GetCoreInstance()->GetFrameID());
+    ec->setData(m_events, this->GetCoreInstance()->GetFrameID());
     
     return true;
 }
 
-bool megamol::core::EventStorage::writeDataCallback(core::Call& caller) { 
-    auto ec = dynamic_cast<EventCallWrite*>(&caller);
-    if (ec == nullptr) return false;
-
-    auto current_frame_id = this->GetCoreInstance()->GetFrameID();
-
-    // the first call in a frame to either readData or writeData needs to swap the double buffer
-    if (current_frame_id > this->m_version) {
-        this->m_version = current_frame_id;
-        m_events[m_read_idx]->clear();    
-        m_read_idx = m_read_idx == 0 ? 1 : 0;
-    }
-
-    auto write_idx = m_read_idx == 0 ? 1 : 0;
-    ec->setData(m_events[write_idx], current_frame_id);
-
-    return true;
-}
-
-bool megamol::core::EventStorage::readMetaDataCallback(core::Call& caller) { return true; }
-
-bool megamol::core::EventStorage::writeMetaDataCallback(core::Call& caller) { return true; }
+bool megamol::core::EventStorage::metaDataCallback(core::Call& caller) { return true; }
