@@ -90,6 +90,7 @@ public:
 
     void clear() {
         m_render_tasks.clear();
+        m_render_task_meta_data.clear();
         m_per_frame_data_buffers.clear();
     }
 
@@ -267,10 +268,16 @@ inline size_t GPURenderTaskCollection::addRenderTasks(std::shared_ptr<Shader> co
 
         new_task.shader_program = shader_prgm;
         new_task.mesh = mesh;
-        new_task.draw_commands = std::make_shared<glowl::BufferObject>(
-            GL_DRAW_INDIRECT_BUFFER, draw_commands.data(), new_dcs_byte_size, GL_DYNAMIC_DRAW);
-        new_task.per_draw_data = std::make_shared<glowl::BufferObject>(
-            GL_SHADER_STORAGE_BUFFER, per_draw_data.data(), new_pdd_byte_size, GL_DYNAMIC_DRAW);
+        try {
+            new_task.draw_commands = std::make_shared<glowl::BufferObject>(
+                GL_DRAW_INDIRECT_BUFFER, draw_commands.data(), new_dcs_byte_size, GL_DYNAMIC_DRAW);
+            new_task.per_draw_data = std::make_shared<glowl::BufferObject>(
+                GL_SHADER_STORAGE_BUFFER, per_draw_data.data(), new_pdd_byte_size, GL_DYNAMIC_DRAW);
+        } catch (const glowl::BufferObjectException& exc) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Error during glowl::BufferObject creation: %s. [%s, %s, line %d]\n",
+                exc.what(), __FILE__, __FUNCTION__, __LINE__);
+        }
         new_task.draw_cnt = draw_commands.size();
 
         retval = m_render_task_meta_data.size();
