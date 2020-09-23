@@ -92,6 +92,5 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<FlagCall>();
     instance.RegisterAutoDescription<FlagCallRead_GL>();
     instance.RegisterAutoDescription<FlagCallWrite_GL>();
-    instance.RegisterAutoDescription<EventCallRead>();
-    instance.RegisterAutoDescription<EventCallWrite>();
+    instance.RegisterAutoDescription<EventCall>();
 }

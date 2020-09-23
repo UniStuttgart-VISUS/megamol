@@ -112,7 +112,7 @@ private:
 
     core::CallerSlot m_kd_tree_slot;
 
-    core::CallerSlot m_probe_manipulation_slot;
+    core::CallerSlot m_event_slot;
 
     core::CallerSlot m_readFlagsSlot;
 

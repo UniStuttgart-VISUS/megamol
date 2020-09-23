@@ -59,7 +59,7 @@ private:
 
     core::CallerSlot m_probes_slot;
 
-    core::CallerSlot m_event_read_slot;
+    core::CallerSlot m_event_slot;
 
     core::param::ParamSlot m_billboard_size_slot;
 
