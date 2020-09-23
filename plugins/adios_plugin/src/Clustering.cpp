@@ -135,8 +135,6 @@ bool megamol::adios::Clustering::getHeaderCallback(core::Call& c) {
 
     out_data->SetFrameCount(in_data->GetFrameCount());
 
-    out_data->SetFrameID(in_data->GetFrameID());
-
     return true;
 }
 

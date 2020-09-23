@@ -37,7 +37,6 @@ GenerateGlyphs::GenerateGlyphs()
 
 GenerateGlyphs::~GenerateGlyphs() { this->Release(); }
 
-
 bool GenerateGlyphs::doScalarGlyphGeneration(FloatProbe& probe) {
 
     // get probe
@@ -442,7 +441,6 @@ bool GenerateGlyphs::doVectorRadarGlyphGeneration(Vec4Probe& probe) {
     return true; 
 }
 
-
 bool GenerateGlyphs::getMesh(core::Call& call) {
 
     auto cprobes = this->_get_probes.CallAs<CallProbes>();
@@ -593,7 +591,8 @@ bool GenerateGlyphs::getTexture(core::Call& call) {
 
         } // end for probe count
     }
-
+    auto num_probes = this->_probe_data->getProbeCount();
+    auto num_textures = this->_tex_data->accessImages().size();
     ctex->setData(this->_tex_data, _version);
 
     return true;

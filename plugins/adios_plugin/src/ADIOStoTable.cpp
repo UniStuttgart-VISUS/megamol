@@ -122,6 +122,7 @@ bool ADIOStoTable::getMetaData(core::Call& call) {
 
     // put metadata in table call
     ctd->SetFrameCount(cad->getFrameCount());
+    ctd->SetDataHash(cad->getDataHash());
 
     return true;
 }

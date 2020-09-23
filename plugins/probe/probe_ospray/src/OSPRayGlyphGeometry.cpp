@@ -63,8 +63,8 @@ bool OSPRayGlyphGeometry::readData(core::Call& call) {
     if (!(*ctex)(0)) return false;
 
     meta_data = cm->getMetaData();
-
-    if (cm->hasUpdate() || ctex->hasUpdate() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+    auto interface_dirtyness = this->InterfaceIsDirty();
+    if (cm->hasUpdate() || ctex->hasUpdate() || this->time != os->getTime() || interface_dirtyness) {
         this->time = os->getTime();
         this->structureContainer.dataChanged = true;
 

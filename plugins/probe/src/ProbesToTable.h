@@ -53,12 +53,13 @@ private:
     bool getData(core::Call& call);
 
     bool InterfaceIsDirty();
-    size_t _currentFrame;
+    uint32_t _currentFrame;
     std::vector<float> _floatBlob;
     std::vector<stdplugin::datatools::table::TableDataCall::ColumnInfo> _colinfo;
-    size_t _cols = 0;
-    size_t _rows = 0;
-    size_t _datahash = 0;
+    uint32_t _fixed_cols = 0;
+    uint32_t _total_cols = 0;
+    uint32_t _rows = 0;
+    uint32_t _datahash = 0;
 
     };
 } // namespace probe
