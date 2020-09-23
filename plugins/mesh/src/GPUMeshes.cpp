@@ -4,9 +4,7 @@
 #include "mesh/MeshCalls.h"
 
 megamol::mesh::GPUMeshes::GPUMeshes()
-    : m_version(0)
-    , m_mesh_slot("CallMeshes", "Connects mesh data to be uploaded to the GPU")
-{
+    : m_version(0), m_mesh_slot("CallMeshes", "Connects mesh data to be uploaded to the GPU") {
     this->m_mesh_slot.SetCompatibleCall<CallMeshDescription>();
     this->MakeSlotAvailable(&this->m_mesh_slot);
 }
@@ -56,7 +54,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                 primtive_type = GL_PATCHES;
             }
 
-            std::vector<glowl::VertexLayout::Attribute> attribs;
+            std::vector<glowl::VertexLayout> vb_layouts;
             std::vector<std::pair<uint8_t*, uint8_t*>> vb_iterators;
             std::pair<uint8_t*, uint8_t*> ib_iterators;
 
@@ -64,16 +62,17 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
             for (auto attrib : mesh.attributes) {
 
-                attribs.push_back(glowl::VertexLayout::Attribute(attrib.component_cnt,
-                    MeshDataAccessCollection::convertToGLType(attrib.component_type), GL_FALSE /*ToDO*/,
-                    attrib.offset));
+                vb_layouts.push_back(glowl::VertexLayout(
+                    attrib.component_cnt * MeshDataAccessCollection::getByteSize(attrib.component_type),
+                    {glowl::VertexLayout::Attribute(attrib.component_cnt,
+                        MeshDataAccessCollection::convertToGLType(attrib.component_type), GL_FALSE /*ToDO*/,
+                        attrib.offset)}));
 
                 // TODO vb_iterators
                 vb_iterators.push_back({attrib.data, attrib.data + attrib.byte_size});
             }
 
-            glowl::VertexLayout vertex_descriptor(0, attribs);
-            mesh_collection->addMesh(vertex_descriptor, vb_iterators, ib_iterators,
+            mesh_collection->addMesh(vb_layouts, vb_iterators, ib_iterators,
                 MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, primtive_type);
         }
     }
@@ -86,11 +85,11 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     // if there is a mesh connection to the right, pass on the mesh collection
     CallGPUMeshData* rhs_mesh_call = this->m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
     if (rhs_mesh_call != NULL) {
-        rhs_mesh_call->setData(mesh_collection,0);
+        rhs_mesh_call->setData(mesh_collection, 0);
 
         if (!(*rhs_mesh_call)(0)) return false;
 
-        if (rhs_mesh_call->hasUpdate()){
+        if (rhs_mesh_call->hasUpdate()) {
             ++m_version;
             rhs_mesh_call->getData();
         }
@@ -111,16 +110,14 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
     lhs_mesh_call->setMetaData(lhs_meta_data);
 
-    if (lhs_mesh_call->version() < m_version)
-    {
+    if (lhs_mesh_call->version() < m_version) {
         lhs_mesh_call->setData(mesh_collection, m_version);
     }
 
     return true;
 }
 
-bool megamol::mesh::GPUMeshes::getMetaDataCallback(core::Call& caller)
-{
+bool megamol::mesh::GPUMeshes::getMetaDataCallback(core::Call& caller) {
     CallGPUMeshData* lhs_mesh_call = dynamic_cast<CallGPUMeshData*>(&caller);
     CallGPUMeshData* rhs_mesh_call = m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
     CallMesh* src_mesh_call = m_mesh_slot.CallAs<CallMesh>();
@@ -137,16 +134,13 @@ bool megamol::mesh::GPUMeshes::getMetaDataCallback(core::Call& caller)
     if (!(*src_mesh_call)(1)) return false;
     src_meta_data = src_mesh_call->getMetaData();
 
-    if (rhs_mesh_call != NULL)
-    {
+    if (rhs_mesh_call != NULL) {
         rhs_meta_data = rhs_mesh_call->getMetaData();
         rhs_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
         rhs_mesh_call->setMetaData(rhs_meta_data);
         if (!(*rhs_mesh_call)(1)) return false;
         rhs_meta_data = rhs_mesh_call->getMetaData();
-    }
-    else
-    {
+    } else {
         rhs_meta_data.m_frame_cnt = 1;
     }
 
