@@ -21,7 +21,7 @@ megamol::probe_gl::ProbeBillboardGlyphMaterial::~ProbeBillboardGlyphMaterial() {
 bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
 
 
-    auto create_progam = [this](vislib::StringA shader_base_name, std::shared_ptr<ShaderProgram> shader_prgm)
+    auto create_progam = [this](vislib::StringA shader_base_name) -> std::shared_ptr<ShaderProgram>
     {
         vislib::graphics::gl::ShaderSource vert_shader_src;
         vislib::graphics::gl::ShaderSource frag_shader_src;
@@ -29,38 +29,78 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
         vislib::StringA vertShaderName = shader_base_name + "::vertex";
         vislib::StringA fragShaderName = shader_base_name + "::fragment";
 
-        this->instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src);
-        this->instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src);
+        if (!this->instance()->ShaderSourceFactory().MakeShaderSource(vertShaderName.PeekBuffer(), vert_shader_src)) {
+            throw;
+        }
+        if (!this->instance()->ShaderSourceFactory().MakeShaderSource(fragShaderName.PeekBuffer(), frag_shader_src)) {
+            throw;
+        }
 
         std::string vertex_src(vert_shader_src.WholeCode(), (vert_shader_src.WholeCode()).Length());
         std::string fragment_src(frag_shader_src.WholeCode(), (frag_shader_src.WholeCode()).Length());
 
-        bool prgm_error = false;
+        std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
+        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Vertex, vertex_src});
+        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Fragment, fragment_src});
 
-        if (!vertex_src.empty()) 
-            prgm_error |= !shader_prgm->compileShaderFromString(&vertex_src, ShaderProgram::VertexShader);
-        if (!fragment_src.empty())
-            prgm_error |=
-                !shader_prgm->compileShaderFromString(&fragment_src, ShaderProgram::FragmentShader);
-
-        prgm_error |= !shader_prgm->link();
-
-        if (prgm_error) {
-            std::cerr << "Error during shader program creation of \"" << shader_prgm->getDebugLabel()
-                      << "\"" << std::endl;
-            std::cerr << shader_prgm->getLog();
-        }
+        auto shader_prgm = std::make_unique<glowl::GLSLProgram>(shader_srcs);
+        shader_prgm->setDebugLabel(
+            "Compositing::textureDepthCompositing"); // TODO debug label not set in time for catch...
+        
+        return shader_prgm;
     };
 
+    
+    try {
+        this->m_textured_glyph_prgm = create_progam("TexturedProbeGlyph");
+    } catch (glowl::GLSLProgramException const& exc) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n",
+            m_textured_glyph_prgm->getDebugLabel().c_str(), exc.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (vislib::Exception e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+        return false;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+        return false;
+    }
 
-    this->m_textured_glyph_prgm = std::make_shared<ShaderProgram>();
-    create_progam("TexturedProbeGlyph", m_textured_glyph_prgm);
+    try {
+        this->m_scalar_probe_glyph_prgm = create_progam("ScalarProbeGlyph");
+    } catch (glowl::GLSLProgramException const& exc) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n",
+            m_scalar_probe_glyph_prgm->getDebugLabel().c_str(), exc.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (vislib::Exception e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+        return false;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+        return false;
+    }
 
-    this->m_scalar_probe_glyph_prgm = std::make_shared<ShaderProgram>();
-    create_progam("ScalarProbeGlyph", m_scalar_probe_glyph_prgm);
-
-    this->m_vector_probe_glyph_prgm = std::make_shared<ShaderProgram>();
-    create_progam("VectorProbeGlyph", m_vector_probe_glyph_prgm);
+    try {
+        this->m_vector_probe_glyph_prgm = create_progam("VectorProbeGlyph");
+    } catch (glowl::GLSLProgramException const& exc) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n",
+            m_vector_probe_glyph_prgm->getDebugLabel().c_str(), exc.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (vislib::Exception e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+        return false;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+        return false;
+    }
 
     // Set intial state of module
     ++m_version;
