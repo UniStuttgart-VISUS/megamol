@@ -61,7 +61,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(glowl
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "v0.3"
+      GIT_TAG "v0.4c"
       INCLUDE_DIR "include")
 
   # json
@@ -116,6 +116,15 @@ function(require_external NAME)
     add_external_headeronly_project(tinygltf
       GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
       GIT_TAG "v2.2.0")
+
+  elseif(NAME STREQUAL "sim_sort")
+    if(TARGET sim_sort)
+      return()
+    endif()
+
+    add_external_headeronly_project(sim_sort
+      GIT_REPOSITORY https://github.com/alexstraub1990/simultaneous-sort.git
+      INCLUDE_DIR "include")
 
   # Built libraries #####################################################
 
@@ -655,7 +664,7 @@ function(require_external NAME)
     set(TRACKING_NATNET_IMPORT_LIB "lib/NatNetLib.lib")
 
     add_external_project(tracking SHARED
-      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
+      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking.git
       GIT_TAG "v2.0"
       BUILD_BYPRODUCTS
         "<INSTALL_DIR>/${TRACKING_LIB}"

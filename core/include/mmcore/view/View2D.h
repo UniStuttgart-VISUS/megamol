@@ -129,6 +129,8 @@ namespace view {
          */
         virtual bool OnRenderView(Call& call);
 
+        virtual bool GetExtents(Call& call) override;
+
         /**
          * Freezes, updates, or unfreezes the view onto the scene (not the
          * rendering, but camera settings, timing, etc).

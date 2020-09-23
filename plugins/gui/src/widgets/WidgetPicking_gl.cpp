@@ -164,7 +164,8 @@ bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
     this->available_interactions.clear();
 
     if (this->fbo == nullptr) {
-        this->fbo = std::make_unique<glowl::FramebufferObject>(this->viewport_dim.x, this->viewport_dim.y, false);
+        this->fbo = std::make_unique<glowl::FramebufferObject>(
+            this->viewport_dim.x, this->viewport_dim.y, glowl::FramebufferObject::DepthStencilType::NONE);
         this->fbo->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT); // 0 Output Image
         this->fbo->createColorAttachment(GL_RG32F, GL_RG, GL_FLOAT);     // 1 Object ID(red) and Depth (green)
         GUI_GL_CHECK_ERROR
@@ -278,22 +279,18 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
 bool megamol::gui::PickingBuffer::CreatShader(
     ShaderPtr& shader_ptr, const std::string& vertex_src, const std::string& fragment_src) {
 
-    if (shader_ptr != nullptr) shader_ptr.reset();
-    shader_ptr = std::make_shared<glowl::GLSLProgram>();
+    std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
 
-    bool prgm_error = false;
-    if (!vertex_src.empty()) {
-        prgm_error |= !shader_ptr->compileShaderFromString(&vertex_src, glowl::GLSLProgram::VertexShader);
-    }
-    if (!fragment_src.empty()) {
-        prgm_error |= !shader_ptr->compileShaderFromString(&fragment_src, glowl::GLSLProgram::FragmentShader);
-    }
-    prgm_error |= !shader_ptr->link();
+    if (!vertex_src.empty()) shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Vertex, vertex_src});
+    if (!fragment_src.empty()) shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Fragment, fragment_src});
 
-    if (prgm_error) {
+    try {
+        if (shader_ptr != nullptr) shader_ptr.reset();
+        shader_ptr = std::make_shared<glowl::GLSLProgram>(shader_srcs);
+    } catch (glowl::GLSLProgramException const& exc) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n",
-            shader_ptr->getDebugLabel().c_str(), shader_ptr->getLog().c_str(), __FILE__, __FUNCTION__, __LINE__);
+            shader_ptr->getDebugLabel().c_str(), exc.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

@@ -150,7 +150,7 @@ void megamol::core::DeferredShading::PreRender(core::view::CallRender3D_2& call)
     glGetFloatv(GL_VIEWPORT, viewport);
 
     if (m_GBuffer == nullptr) {
-        m_GBuffer = std::make_unique<glowl::FramebufferObject>(viewport[2], viewport[3], true);
+        m_GBuffer = std::make_unique<glowl::FramebufferObject>(viewport[2], viewport[3]);
         m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT); // surface albedo
         m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT); // normals
         m_GBuffer->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT); // clip space depth
