@@ -7,15 +7,18 @@
 
 #include "stdafx.h"
 
+#include "mmcore/EventCall.h"
+
 #include "ProbeHUllRenderTasks.h"
+#include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 
 #include "mesh/MeshCalls.h"
 
 megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks() : 
-    m_version(0), m_show_hull(true), m_probe_manipulation_slot("GetProbeManipulation", "") {
-    this->m_probe_manipulation_slot.SetCompatibleCall<probe_gl::CallProbeInteractionDescription>();
-    this->MakeSlotAvailable(&this->m_probe_manipulation_slot);
+    m_version(0), m_show_hull(true), m_event_slot("GetEvents", "") {
+    this->m_event_slot.SetCompatibleCall<core::EventCallDescription>();
+    this->MakeSlotAvailable(&this->m_event_slot);
 }
 
 megamol::probe_gl::ProbeHullRenderTasks::~ProbeHullRenderTasks() {}
@@ -102,53 +105,45 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
         }
     }
 
-
-    mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
-    if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection,0);
-        (*rhs_rtc)(0);
-    }
-
-    //TODO merge meta data stuff, i.e. bounding box
-    auto mesh_meta_data = mc->getMetaData();
-
-    //TODO set data if necessary
-    lhs_rtc->setData(rt_collection, m_version);
-
-
+    // check for pending events
+    auto call_event_storage = this->m_event_slot.CallAs<core::CallEvent>();
+    if (call_event_storage != NULL) {
+        if ((!(*call_event_storage)(0))) return false;
     
-    // check for pending probe manipulations
-    CallProbeInteraction* pic = this->m_probe_manipulation_slot.CallAs<CallProbeInteraction>();
-    if (pic != NULL) {
-        if (!(*pic)(0)) return false;
-
+        auto event_collection = call_event_storage->getData();
         auto gpu_mtl_storage = mtlc->getData();
-
-        if (pic->hasUpdate()) {
-            auto interaction_collection = pic->getData();
-
-            auto& pending_manips = interaction_collection->accessPendingManipulations();
-
-            for (auto itr = pending_manips.begin(); itr != pending_manips.end(); ++itr) {
-                if (itr->type == TOGGLE_SHOW_HULL) {
-                    m_show_hull = !m_show_hull;
-
-                    if (m_show_hull) {
-                        for (int i = 0; i < m_batch_meshes.size(); ++i) {
-                            auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-                            rt_collection->addRenderTasks(
-                                shader, m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
-                        }
-                    } else {
-                        // TODO this breaks chaining...
-                        rt_collection->clear();
+    
+        // process toggle show glyph events
+        {
+            auto pending_deselect_events = event_collection->get<ToggleShowHull>();
+            for (auto& evt : pending_deselect_events) {
+                m_show_hull = !m_show_hull;
+    
+                if (m_show_hull) {
+                    for (int i = 0; i < m_batch_meshes.size(); ++i) {
+                        auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+                        rt_collection->addRenderTasks(
+                            shader, m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
                     }
-
                 } else {
+                    // TODO this breaks chaining...
+                    rt_collection->clear();
                 }
             }
         }
     }
+
+    mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
+    if (rhs_rtc != NULL) {
+        rhs_rtc->setData(rt_collection, 0);
+        (*rhs_rtc)(0);
+    }
+
+    // TODO merge meta data stuff, i.e. bounding box
+    auto mesh_meta_data = mc->getMetaData();
+
+    // TODO set data if necessary
+    lhs_rtc->setData(rt_collection, m_version);
 
 
     return true;

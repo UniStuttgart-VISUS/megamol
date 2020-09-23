@@ -33,10 +33,10 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
     //TODO ui mesh
 
     // create an empty dummy mesh, probe mesh
-    std::vector<void*> data_ptrs = {nullptr};
-    std::vector<size_t> byte_sizes = {0};
+    std::vector<void*> data_ptrs = {};
+    std::vector<size_t> byte_sizes = {};
     std::vector<uint32_t> indices = {0, 1, 2, 3, 4, 5};
-    std::vector<glowl::VertexLayout> vertex_layout;
+    std::vector<glowl::VertexLayout> vertex_layout = {};
 
     m_probes_mesh = std::make_shared<glowl::Mesh>(
         data_ptrs, byte_sizes, indices.data(), 6 * 4, vertex_layout, GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);

@@ -104,7 +104,7 @@ bool FilterByProbe::Render(core::view::CallRender3D_2& call) {
     if (!(*ct)(0)) return false;
 
     // check for pending events
-    auto call_event_storage = this->m_event_slot.CallAs<core::EventCall>();
+    auto call_event_storage = this->m_event_slot.CallAs<core::CallEvent>();
     if (call_event_storage != NULL) {
         if ((!(*call_event_storage)(0))) return false;
 

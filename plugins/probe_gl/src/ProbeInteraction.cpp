@@ -52,7 +52,7 @@ bool megamol::probe_gl::ProbeInteraction::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
 
     // Get event storage to queue new events
-    auto call_event_storage = this->m_event_write_slot.CallAs<core::EventCall>();
+    auto call_event_storage = this->m_event_write_slot.CallAs<core::CallEvent>();
     if (call_event_storage == NULL) return false;
     if ((!(*call_event_storage)(0))) return false;
     auto event_collection = call_event_storage->getData();
@@ -232,6 +232,8 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
         // std::cerr << err << std::endl;
     }
 
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
     // std::cout << "Object ID at " << m_cursor_x << "," << m_cursor_y << " : " << glyph_objId_pixel_data << std::endl;
 
     GLint objId = -1;
@@ -261,7 +263,7 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
     // std::cout << "Object ID at " << m_cursor_x << "," << m_cursor_y << " : " << objId << std::endl;
 
     // Get event storage to queue new events
-    auto call_event_storage = this->m_event_write_slot.CallAs<core::EventCall>();
+    auto call_event_storage = this->m_event_write_slot.CallAs<core::CallEvent>();
     if (call_event_storage == NULL) return false;
     if ((!(*call_event_storage)(0))) return false;
     auto event_collection = call_event_storage->getData();

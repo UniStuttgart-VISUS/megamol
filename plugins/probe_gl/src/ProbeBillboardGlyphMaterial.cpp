@@ -44,8 +44,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
         shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Fragment, fragment_src});
 
         auto shader_prgm = std::make_unique<glowl::GLSLProgram>(shader_srcs);
-        shader_prgm->setDebugLabel(
-            "Compositing::textureDepthCompositing"); // TODO debug label not set in time for catch...
+        shader_prgm->setDebugLabel(std::string(shader_base_name)); // TODO debug label not set in time for catch...
         
         return shader_prgm;
     };
