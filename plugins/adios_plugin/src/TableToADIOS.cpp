@@ -103,7 +103,7 @@ bool TableToADIOS::getHeaderCallback(core::Call& call) {
     // set available vars
     cad->setAvailableVars(availVars);
 
-    // get total frame cound from data source
+    // get total frame count from data source
     cad->setFrameCount(cftd->GetFrameCount());
 
     return true;

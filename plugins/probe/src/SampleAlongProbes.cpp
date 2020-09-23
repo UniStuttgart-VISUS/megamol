@@ -27,6 +27,7 @@ SampleAlongPobes::SampleAlongPobes()
     , _num_samples_per_probe_slot("NumSamplesPerProbe", "Note: Tighter sample placement leads to reduced sampling radius.")
     , _sample_radius_factor_slot("SampleRadiusFactor", "Multiplier for base sampling distance.")
     , _sampling_mode("SamplingMode", "")
+    , _weighting("weighting", "")
     , _vec_param_to_samplex_x("ParameterToSampleX", "")
     , _vec_param_to_samplex_y("ParameterToSampleY", "")
     , _vec_param_to_samplex_z("ParameterToSampleZ", "")
@@ -64,6 +65,12 @@ SampleAlongPobes::SampleAlongPobes()
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Vector");
     this->_sampling_mode.SetUpdateCallback(&SampleAlongPobes::paramChanged);
     this->MakeSlotAvailable(&this->_sampling_mode);
+
+    this->_weighting << new megamol::core::param::EnumParam(0);
+    this->_weighting.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "distance_based");
+    this->_weighting.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "max_value");
+    this->_weighting.SetUpdateCallback(&SampleAlongPobes::paramChanged);
+    this->MakeSlotAvailable(&this->_weighting);
 	
 	core::param::FlexEnumParam* paramEnum_1 = new core::param::FlexEnumParam("undef");
     this->_vec_param_to_samplex_x << paramEnum_1;
@@ -230,8 +237,8 @@ bool SampleAlongPobes::getMetaData(core::Call& call) {
     if (cplaceprobes == nullptr) return false;
 
     auto meta_data = cp->getMetaData();
-    if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() && !_trigger_recalc)
-        return true;
+    //if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() && !_trigger_recalc)
+    //    return true;
 
     cd->setFrameIDtoLoad(meta_data.m_frame_ID);
     if (!(*cd)(1)) return false;

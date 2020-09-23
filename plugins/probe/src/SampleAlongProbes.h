@@ -69,6 +69,7 @@ protected:
     core::param::ParamSlot _sample_radius_factor_slot;
 
 	core::param::ParamSlot _sampling_mode;
+    core::param::ParamSlot _weighting;
     core::param::ParamSlot _vec_param_to_samplex_x;
     core::param::ParamSlot _vec_param_to_samplex_y;
     core::param::ParamSlot _vec_param_to_samplex_z;
@@ -171,15 +172,26 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
                 max_data = std::max(max_data, static_cast<float>(data[k_indices[n]]));
             } // end num_neighbors
             value /= num_neighbors;
-            samples->samples[j] = value;
+            if (this->_weighting.Param<megamol::core::param::EnumParam>()->Value() == 0) {
+                samples->samples[j] = value;
+            } else {
+                samples->samples[j] = max_data;
+            }
             min_value = std::min(min_value, value);
             max_value = std::max(max_value, value);
             avg_value += value;
         } // end num samples per probe
         avg_value /= samples_per_probe;
-        samples->average_value = avg_value;
-        samples->max_value = max_value;
-        samples->min_value = min_value;
+        if (this->_weighting.Param<megamol::core::param::EnumParam>()->Value() == 0) {
+            samples->average_value = avg_value;
+            samples->max_value = max_value;
+            samples->min_value = min_value;
+        } else {
+            samples->average_value = max_data;
+            samples->max_value = max_data;
+            samples->min_value = max_data;
+        }
+        
     } // end for probes
 }
 
