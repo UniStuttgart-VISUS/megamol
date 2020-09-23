@@ -8,10 +8,10 @@ megamol::core::EventStorage::EventStorage()
     , m_events(std::make_shared < DoubleBufferedEventCollection>())
     , m_version(0) {
 
-    this->m_events_slot.SetCallback(EventCall::ClassName(),
-        EventCall::FunctionName(EventCall::CallGetData), &EventStorage::dataCallback);
-    this->m_events_slot.SetCallback(EventCall::ClassName(),
-        EventCall::FunctionName(EventCall::CallGetMetaData), &EventStorage::metaDataCallback);
+    this->m_events_slot.SetCallback(CallEvent::ClassName(),
+        CallEvent::FunctionName(CallEvent::CallGetData), &EventStorage::dataCallback);
+    this->m_events_slot.SetCallback(CallEvent::ClassName(),
+        CallEvent::FunctionName(CallEvent::CallGetMetaData), &EventStorage::metaDataCallback);
     this->MakeSlotAvailable(&this->m_events_slot);
 }
 
@@ -22,7 +22,7 @@ bool megamol::core::EventStorage::create(void) { return true; }
 void megamol::core::EventStorage::release(void) {}
 
 bool megamol::core::EventStorage::dataCallback(core::Call& caller) { 
-    auto ec = dynamic_cast<EventCall*>(&caller);
+    auto ec = dynamic_cast<CallEvent*>(&caller);
     if (ec == nullptr) return false;
 
     auto current_frame_id = this->GetCoreInstance()->GetFrameID();

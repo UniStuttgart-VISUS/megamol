@@ -16,10 +16,10 @@
 namespace megamol {
 namespace core {
 
-class MEGAMOLCORE_API EventCall : public core::GenericVersionedCall<std::shared_ptr<DoubleBufferedEventCollection>, core::EmptyMetaData> {
+class MEGAMOLCORE_API CallEvent : public core::GenericVersionedCall<std::shared_ptr<DoubleBufferedEventCollection>, core::EmptyMetaData> {
 public:
-    EventCall() = default;
-    ~EventCall() = default;
+    CallEvent() = default;
+    ~CallEvent() = default;
 
     static const char* ClassName(void) { return "EventCall"; }
     static const char* Description(void) {
@@ -28,7 +28,7 @@ public:
 };
 
 /** Description class typedef */
-typedef megamol::core::factories::CallAutoDescription<EventCall> EventCallDescription;
+typedef megamol::core::factories::CallAutoDescription<CallEvent> EventCallDescription;
 
 }
 }

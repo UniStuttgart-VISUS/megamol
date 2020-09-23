@@ -8,6 +8,7 @@
 #ifndef DOUBLE_BUFFERED_EVENT_COLLECTION_H_INCLUDED
 #define DOUBLE_BUFFERED_EVENT_COLLECTION_H_INCLUDED
 
+#include <array>
 #include <memory>
 
 #include "EventCollection.h"
