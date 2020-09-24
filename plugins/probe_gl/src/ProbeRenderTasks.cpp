@@ -180,7 +180,7 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
         // process pobe clear selection events
         {
-            auto pending_clearselection_events = event_collection->get<ClearSelection>();
+            auto pending_clearselection_events = event_collection->get<ProbeClearSelection>();
             for (auto& evt : pending_clearselection_events) {
                 for (auto& draw_data : m_probe_draw_data) {
                     draw_data.highlighted = 0;
@@ -222,7 +222,7 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
         // process probe selection events
         {
-            auto pending_select_events = event_collection->get<Select>();
+            auto pending_select_events = event_collection->get<ProbeSelect>();
             for (auto& evt : pending_select_events) {
                 m_probe_draw_data[evt.obj_id].highlighted = 2;
                 std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
@@ -235,7 +235,7 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
         // process probe deselection events
         {
-            auto pending_deselect_events = event_collection->get<Deselect>();
+            auto pending_deselect_events = event_collection->get<ProbeDeselect>();
             for (auto& evt : pending_deselect_events) {
                 m_probe_draw_data[evt.obj_id].highlighted = 0;
                 std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};

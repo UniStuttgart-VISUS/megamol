@@ -330,7 +330,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
         // process pobe clear selection events
         {
-            auto pending_clearselection_events = event_collection->get<ClearSelection>();
+            auto pending_clearselection_events = event_collection->get<ProbeClearSelection>();
             for (auto& evt : pending_clearselection_events) {
                 for (auto& draw_data : m_vector_probe_glyph_data) {
                     draw_data.state = 0;
@@ -426,7 +426,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
         // process probe selection events
         {
-            auto pending_select_events = event_collection->get<Select>();
+            auto pending_select_events = event_collection->get<ProbeSelect>();
             for (auto& evt : pending_select_events) {
                 m_vector_probe_glyph_data[evt.obj_id].state = 2;
                 std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[evt.obj_id]};
@@ -437,9 +437,60 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
         // process probe deselection events
         {
-            auto pending_deselect_events = event_collection->get<Deselect>();
+            auto pending_deselect_events = event_collection->get<ProbeDeselect>();
             for (auto& evt : pending_deselect_events) {
                 m_vector_probe_glyph_data[evt.obj_id].state = 0;
+                std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[evt.obj_id]};
+
+                rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
+            }
+        }
+
+        // process probe exclusive selection events
+        {
+            auto pending_selectExclusive_events = event_collection->get<ProbeSelectExclusive>();
+            if (!pending_selectExclusive_events.empty()) {
+                for (auto& draw_data : m_vector_probe_glyph_data) {
+                    draw_data.state = 0;
+                }
+                // multiple exclusive selections make no sense, just applay the last one
+                m_vector_probe_glyph_data[pending_selectExclusive_events.back().obj_id].state = 2;
+
+                // TODO this breaks chaining...
+                rt_collection->clear();
+
+                if (m_show_glyphs) {
+                    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
+                    if (mtlc == NULL) return false;
+
+                    auto gpu_mtl_storage = mtlc->getData();
+
+                    if (!m_textured_gylph_draw_commands.empty()) {
+                        auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
+                        rt_collection->addRenderTasks(textured_shader, m_billboard_dummy_mesh,
+                            m_textured_gylph_draw_commands, m_textured_glyph_data);
+                    }
+
+                    if (!m_scalar_probe_glyph_data.empty()) {
+                        auto const& scalar_shader = gpu_mtl_storage->getMaterials()[1].shader_program;
+                        rt_collection->addRenderTasks(scalar_shader, m_billboard_dummy_mesh,
+                            m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
+                    }
+
+                    if (!m_vector_probe_glyph_data.empty()) {
+                        auto const& vector_shader = gpu_mtl_storage->getMaterials()[2].shader_program;
+                        rt_collection->addRenderTasks(vector_shader, m_billboard_dummy_mesh,
+                            m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
+                    }
+                }
+            }
+        }
+
+        // process probe selection toggle events
+        {
+            auto pending_select_events = event_collection->get<ProbeSelectToggle>();
+            for (auto& evt : pending_select_events) {
+                m_vector_probe_glyph_data[evt.obj_id].state = m_vector_probe_glyph_data[evt.obj_id].state == 2 ? 0 : 2;
                 std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[evt.obj_id]};
 
                 rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);

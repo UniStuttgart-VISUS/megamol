@@ -60,17 +60,18 @@ bool megamol::probe_gl::ProbeInteraction::OnMouseButton(
     if (button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS &&
         mods.none()) {
         m_selected_probes.clear();
-        auto evt = std::make_unique<ClearSelection>(this->GetCoreInstance()->GetFrameID());
-        event_collection->add<ClearSelection>(std::move(evt));
 
         if (last_active_probe_id > 0) {
             // create new selection
-            auto evt = std::make_unique<Select>(
+            auto evt = std::make_unique<ProbeSelectExclusive>(
                 this->GetCoreInstance()->GetFrameID(), static_cast<uint32_t>(last_active_probe_id));
-            event_collection->add<Select>(std::move(evt));
-
-            return true;
+            event_collection->add<ProbeSelectExclusive>(std::move(evt));
+        } else {
+            auto evt = std::make_unique<ProbeClearSelection>(this->GetCoreInstance()->GetFrameID());
+            event_collection->add<ProbeClearSelection>(std::move(evt));
         }
+
+        return true;
 
         m_open_context_menu = false;
     } else if (button == core::view::MouseButton::BUTTON_LEFT && action == core::view::MouseButtonAction::PRESS &&
@@ -78,9 +79,9 @@ bool megamol::probe_gl::ProbeInteraction::OnMouseButton(
         if (last_active_probe_id > 0) {
             // add to current selection
             m_selected_probes.push_back(last_active_probe_id);
-            auto evt = std::make_unique<Select>(
+            auto evt = std::make_unique<ProbeSelectToggle>(
                 this->GetCoreInstance()->GetFrameID(), static_cast<uint32_t>(last_active_probe_id));
-            event_collection->add<Select>(std::move(evt));
+            event_collection->add<ProbeSelectToggle>(std::move(evt));
 
             return true;
         }
@@ -429,6 +430,32 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
                 ImGui::Separator();
 
                 ImGui::End();
+            }
+
+            if (m_open_dataMenu_dropdown) {
+                ImGui::SetNextWindowPos(ImVec2(510, 50));
+
+                ImGui::Begin("DataDropdown", &my_tool_active,
+                    ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
+
+                if (ImGui::Button("Filter By Probe", ImVec2(75, 20))) {
+                    m_open_dataMenu_dropdown = false;
+
+                    auto evt = std::make_unique<DataFilterByProbeSelection>(this->GetCoreInstance()->GetFrameID());
+                    event_collection->add<DataFilterByProbeSelection>(std::move(evt));
+                }
+
+                if (ImGui::Button("Clear Filter", ImVec2(75, 20))) {
+                    m_open_dataMenu_dropdown = false;
+
+                    auto evt = std::make_unique<DataClearFilter>(this->GetCoreInstance()->GetFrameID());
+                    event_collection->add<DataClearFilter>(std::move(evt));
+                }
+
+                ImGui::Separator();
+
+                ImGui::End();
+            
             }
         }
     }
