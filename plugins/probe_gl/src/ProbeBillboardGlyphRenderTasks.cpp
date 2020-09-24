@@ -64,7 +64,7 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->m_probes_slot);
 
-    this->m_event_slot.SetCompatibleCall<megamol::core::EventCallDescription>();
+    this->m_event_slot.SetCompatibleCall<megamol::core::CallEventDescription>();
     this->MakeSlotAvailable(&this->m_event_slot);
 
     this->m_billboard_size_slot << new core::param::FloatParam(1.0f);
@@ -286,7 +286,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
             rt_collection->addRenderTasks(
                 textured_shader, m_billboard_dummy_mesh, m_textured_gylph_draw_commands, m_textured_glyph_data);
         }
-        
+
         if (!m_scalar_probe_gylph_draw_commands.empty()) {
             auto const& scalar_shader = gpu_mtl_storage->getMaterials()[1].shader_program;
             rt_collection->addRenderTasks(
@@ -325,9 +325,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     auto call_event_storage = this->m_event_slot.CallAs<core::CallEvent>();
     if (call_event_storage != NULL) {
         if ((!(*call_event_storage)(0))) return false;
-    
+
         auto event_collection = call_event_storage->getData();
-    
+
         // process pobe clear selection events
         {
             auto pending_clearselection_events = event_collection->get<ClearSelection>();
@@ -335,28 +335,28 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 for (auto& draw_data : m_vector_probe_glyph_data) {
                     draw_data.state = 0;
                 }
-    
+
                 // TODO this breaks chaining...
                 rt_collection->clear();
-    
+
                 if (m_show_glyphs) {
                     mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
                     if (mtlc == NULL) return false;
-    
+
                     auto gpu_mtl_storage = mtlc->getData();
-    
+
                     if (!m_textured_gylph_draw_commands.empty()) {
                         auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
                         rt_collection->addRenderTasks(textured_shader, m_billboard_dummy_mesh,
                             m_textured_gylph_draw_commands, m_textured_glyph_data);
                     }
-    
+
                     if (!m_scalar_probe_glyph_data.empty()) {
                         auto const& scalar_shader = gpu_mtl_storage->getMaterials()[1].shader_program;
                         rt_collection->addRenderTasks(scalar_shader, m_billboard_dummy_mesh,
                             m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
                     }
-    
+
                     if (!m_vector_probe_glyph_data.empty()) {
                         auto const& vector_shader = gpu_mtl_storage->getMaterials()[2].shader_program;
                         rt_collection->addRenderTasks(vector_shader, m_billboard_dummy_mesh,
@@ -365,19 +365,19 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 }
             }
         }
-    
+
         // process probe highlight events
         {
             auto pending_highlight_events = event_collection->get<ProbeHighlight>();
             for (auto& evt : pending_highlight_events) {
                 std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[evt.obj_id]};
                 per_probe_data[0].state = 1;
-    
+
                 rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
-    
+
                 bool my_tool_active = true;
                 float my_color[4] = {0.0, 0.0, 0.0, 0.0};
-    
+
                 // ImGui::NewFrame();
                 // Create a window called "My First Tool", with a menu bar.
                 auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
@@ -397,14 +397,14 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         }
                         ImGui::EndMenuBar();
                     }
-    
+
                     // Edit a color (stored as ~4 floats)
                     ImGui::ColorEdit4("Color", my_color);
-    
+
                     // Plot some values
                     const float my_values[] = {0.2f, 0.1f, 1.0f, 0.5f, 0.9f, 2.2f};
                     ImGui::PlotLines("Frame Times", my_values, IM_ARRAYSIZE(my_values));
-    
+
                     // Display contents in a scrolling region
                     ImGui::TextColored(ImVec4(1, 1, 0, 1), "Important Stuff");
                     ImGui::BeginChild("Scrolling");
@@ -414,7 +414,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 }
             }
         }
-    
+
         // process probe dehighlight events
         {
             auto pending_dehighlight_events = event_collection->get<ProbeDehighlight>();
@@ -423,41 +423,41 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
             }
         }
-    
+
         // process probe selection events
         {
             auto pending_select_events = event_collection->get<Select>();
             for (auto& evt : pending_select_events) {
                 m_vector_probe_glyph_data[evt.obj_id].state = 2;
                 std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[evt.obj_id]};
-    
+
                 rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
             }
         }
-    
+
         // process probe deselection events
         {
             auto pending_deselect_events = event_collection->get<Deselect>();
             for (auto& evt : pending_deselect_events) {
                 m_vector_probe_glyph_data[evt.obj_id].state = 0;
                 std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[evt.obj_id]};
-    
+
                 rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
             }
         }
-    
+
         // process toggle show glyph events
         {
             auto pending_deselect_events = event_collection->get<ToggleShowGlyphs>();
             for (auto& evt : pending_deselect_events) {
                 m_show_glyphs = !m_show_glyphs;
-    
+
                 if (m_show_glyphs) {
                     mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
                     if (mtlc == NULL) return false;
-    
+
                     auto gpu_mtl_storage = mtlc->getData();
-    
+
                     if (!m_textured_gylph_draw_commands.empty()) {
                         auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
                         rt_collection->addRenderTasks(textured_shader, m_billboard_dummy_mesh,

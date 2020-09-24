@@ -42,7 +42,7 @@ megamol::probe_gl::ProbeInteraction::ProbeInteraction()
     this->m_glyph_fbo_slot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
     this->MakeSlotAvailable(&this->m_glyph_fbo_slot);
 
-    this->m_event_write_slot.SetCompatibleCall<megamol::core::EventCallDescription>();
+    this->m_event_write_slot.SetCompatibleCall<megamol::core::CallEventDescription>();
     this->MakeSlotAvailable(&this->m_event_write_slot);
 }
 

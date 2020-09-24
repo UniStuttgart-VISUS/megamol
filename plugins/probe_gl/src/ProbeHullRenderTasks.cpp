@@ -9,15 +9,15 @@
 
 #include "mmcore/EventCall.h"
 
-#include "ProbeHUllRenderTasks.h"
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
+#include "ProbeHUllRenderTasks.h"
 
 #include "mesh/MeshCalls.h"
 
-megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks() : 
-    m_version(0), m_show_hull(true), m_event_slot("GetEvents", "") {
-    this->m_event_slot.SetCompatibleCall<core::EventCallDescription>();
+megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks()
+    : m_version(0), m_show_hull(true), m_event_slot("GetEvents", "") {
+    this->m_event_slot.SetCompatibleCall<core::CallEventDescription>();
     this->MakeSlotAvailable(&this->m_event_slot);
 }
 
@@ -46,8 +46,7 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
 
     bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate();
 
-    if (something_has_changed)
-    {
+    if (something_has_changed) {
         ++m_version;
 
         auto gpu_mtl_storage = mtlc->getData();
@@ -62,8 +61,7 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
         for (auto& sub_mesh : gpu_mesh_storage->getSubMeshData()) {
             auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
 
-            if (gpu_batch_mesh != prev_mesh)
-            {
+            if (gpu_batch_mesh != prev_mesh) {
                 m_draw_commands.emplace_back(std::vector<glowl::DrawElementsCommand>());
                 m_object_transforms.emplace_back(std::vector<std::array<float, 16>>());
                 m_batch_meshes.push_back(gpu_batch_mesh);
@@ -73,23 +71,7 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
 
             float scale = 1.0f;
             std::array<float, 16> obj_xform = {
-                scale,
-                0.0f,
-                0.0f,
-                0.0f,
-                0.0f, 
-                scale,
-                0.0f,
-                0.0f,
-                0.0f,
-                0.0f, 
-                scale,
-                0.0f,
-                0.0f,
-                0.0f,
-                0.0f,
-                1.0f
-            };
+                scale, 0.0f, 0.0f, 0.0f, 0.0f, scale, 0.0f, 0.0f, 0.0f, 0.0f, scale, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
             m_draw_commands.back().push_back(sub_mesh.sub_mesh_draw_command);
             m_object_transforms.back().push_back(obj_xform);
@@ -109,16 +91,16 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
     auto call_event_storage = this->m_event_slot.CallAs<core::CallEvent>();
     if (call_event_storage != NULL) {
         if ((!(*call_event_storage)(0))) return false;
-    
+
         auto event_collection = call_event_storage->getData();
         auto gpu_mtl_storage = mtlc->getData();
-    
+
         // process toggle show glyph events
         {
             auto pending_deselect_events = event_collection->get<ToggleShowHull>();
             for (auto& evt : pending_deselect_events) {
                 m_show_hull = !m_show_hull;
-    
+
                 if (m_show_hull) {
                     for (int i = 0; i < m_batch_meshes.size(); ++i) {
                         auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
@@ -155,7 +137,7 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getMetaDataCallback(core::Call& ca
 
     mesh::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     mesh::CallGPUMeshData* mesh_call = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
-    
+
     auto lhs_meta_data = lhs_rt_call->getMetaData();
 
     if (mesh_call != NULL) {
@@ -171,7 +153,7 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getMetaDataCallback(core::Call& ca
         auto mesh_bbox = mesh_meta_data.m_bboxs.BoundingBox();
         auto mesh_cbbox = mesh_meta_data.m_bboxs.ClipBox();
 
-        //mesh_bbox.SetSize(vislib::math::Dimension<float, 3>(
+        // mesh_bbox.SetSize(vislib::math::Dimension<float, 3>(
         //    2.1f * mesh_bbox.GetSize()[0], 2.1f * mesh_bbox.GetSize()[1], 2.1f * mesh_bbox.GetSize()[2]));
 
         mesh_cbbox.SetSize(vislib::math::Dimension<float, 3>(

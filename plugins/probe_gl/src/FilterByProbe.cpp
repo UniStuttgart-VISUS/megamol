@@ -28,7 +28,7 @@ FilterByProbe::FilterByProbe()
     this->m_kd_tree_slot.SetCompatibleCall<probe::CallKDTreeDescription>();
     this->MakeSlotAvailable(&this->m_kd_tree_slot);
 
-    this->m_event_slot.SetCompatibleCall<megamol::core::EventCallDescription>();
+    this->m_event_slot.SetCompatibleCall<megamol::core::CallEventDescription>();
     this->MakeSlotAvailable(&this->m_event_slot);
 
     this->m_readFlagsSlot.SetCompatibleCall<core::FlagCallRead_GLDescription>();
@@ -88,7 +88,6 @@ void FilterByProbe::release() {
 
     m_setFlags_prgm.reset();
     m_filterAll_prgm.reset();
-
 }
 
 bool FilterByProbe::GetExtents(core::view::CallRender3D_2& call) { return true; }
