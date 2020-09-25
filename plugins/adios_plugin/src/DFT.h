@@ -97,12 +97,14 @@ private:
     bool getDataCallback(core::Call& c);
     bool getHeaderCallback(core::Call& c);
 
-    void fillInfoVector(stdplugin::datatools::table::TableDataCall::ColumnInfo const* infos, size_t num_columns) {
+    void fillInfoVector(
+        stdplugin::datatools::table::TableDataCall::ColumnInfo const* infos, std::vector<float> const& data, size_t num_columns, size_t num_rows) {
         for (size_t col = 0; col < num_columns; ++col) {
-            infos_[col * 2 + 0] = infos[col];
-            infos_[col * 2 + 0].SetName(infos_[col * 2 + 0].Name() + "_re");
-            infos_[col * 2 + 1] = infos[col];
-            infos_[col * 2 + 1].SetName(infos_[col * 2 + 1].Name() + "_im");
+            infos_[col].SetName(std::string("sv_") + std::to_string(col));
+            infos_[col].SetType(megamol::stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
+            auto minmax = std::minmax_element(data.cbegin() + col * num_rows, data.cbegin() + (col + 1) * num_rows);
+            infos_[col].SetMinimumValue(*minmax.first);
+            infos_[col].SetMaximumValue(*minmax.second);
         }
     }
 

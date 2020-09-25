@@ -1,7 +1,7 @@
 #pragma once
 
-#include <numeric>
 #include <memory>
+#include <numeric>
 
 #include "mmcore/Call.h"
 #include "mmcore/CalleeSlot.h"
@@ -54,59 +54,77 @@ private:
         column_grouping_factor_slot_.ResetDirty();
     }
 
-    std::vector<size_t> equidistant(
+    std::vector<size_t> equidistant(stdplugin::datatools::table::TableDataCall::ColumnInfo const* infos,
         float const* data, size_t num_cols, size_t num_rows, size_t num_peaks) {
         return std::vector<size_t>();
     }
-    std::vector<size_t> maxvariance(float const* data, size_t num_cols, size_t num_rows, size_t num_peaks) {
-        std::vector<std::pair<size_t, float>> row_variance;
-        row_variance.reserve(num_rows);
+    std::vector<size_t> maxvariance(stdplugin::datatools::table::TableDataCall::ColumnInfo const* infos,
+        float const* data, size_t num_cols, size_t num_rows, size_t num_peaks) {
+        std::vector<std::pair<size_t, float>> col_variance;
+        col_variance.reserve(num_cols);
 
-        for (size_t row = 0; row < num_rows; ++row) {
-            auto const minmax = std::minmax_element(data + (row * num_cols), data + ((row + 1) * num_cols));
-            row_variance.push_back(std::make_pair(row, *minmax.second - *minmax.first));
+        for (size_t col = 0; col < num_cols; ++col) {
+            /*auto const minmax = std::minmax_element(data + (row * num_cols), data + ((row + 1) * num_cols));
+            row_variance.push_back(std::make_pair(row, *minmax.second - *minmax.first));*/
+            col_variance.push_back(std::make_pair(col, infos[col].MaximumValue() - infos[col].MinimumValue()));
         }
 
-        std::sort(row_variance.begin(), row_variance.end(),
+        std::sort(col_variance.begin(), col_variance.end(),
             [](auto const& lhs, auto const& rhs) { return lhs.second > rhs.second; });
 
         std::vector<size_t> ret(num_peaks);
         for (size_t i = 0; i < num_peaks; ++i) {
-            ret[i] = row_variance[i].first;
+            ret[i] = col_variance[i].first;
         }
 
         return ret;
     }
-    std::vector<size_t> nthhighest(float const* data, size_t num_cols, size_t num_rows, size_t num_peaks) {
-        std::vector<std::pair<size_t, float>> row_max;
-        row_max.reserve(num_rows);
+    std::vector<size_t> nthhighest(stdplugin::datatools::table::TableDataCall::ColumnInfo const* infos,
+        float const* data, size_t num_cols, size_t num_rows, size_t num_peaks) {
+        std::vector<std::pair<size_t, float>> col_max;
+        col_max.reserve(num_cols);
 
-        for (size_t row = 0; row < num_rows; ++row) {
-            auto const max =
+        for (size_t col = 0; col < num_cols; ++col) {
+            /*auto const max =
                 std::max_element(data + (row * num_cols), data + ((row + 1) * num_cols));
-            row_max.push_back(std::make_pair(row, *max));
+            row_max.push_back(std::make_pair(row, *max));*/
+            col_max.push_back(std::make_pair(col, infos->MaximumValue()));
         }
 
-        std::sort(row_max.begin(), row_max.end(),
-            [](auto const& lhs, auto const& rhs) { return lhs.second > rhs.second; });
+        std::sort(
+            col_max.begin(), col_max.end(), [](auto const& lhs, auto const& rhs) { return lhs.second > rhs.second; });
 
         std::vector<size_t> ret(num_peaks);
         for (size_t i = 0; i < num_peaks; ++i) {
-            ret[i] = row_max[i].first;
+            ret[i] = col_max[i].first;
         }
 
         return ret;
     }
 
-    std::vector<float> extract_peaks(
-        float const* data, size_t num_cols, size_t num_rows, std::vector<size_t> indices) {
+    std::vector<float> extract_peaks(float const* data, size_t num_cols, size_t num_rows, std::vector<size_t> indices) {
         auto const num_peaks = indices.size();
-        std::vector<float> ret(num_cols * num_peaks);
+        std::vector<float> ret(num_rows * num_peaks);
+
+        for (size_t row = 0; row < num_rows; ++row) {
+            for (size_t i = 0; i < num_peaks; ++i) {
+                auto const idx = indices[i];
+                ret[row + i * num_peaks] = data[row + idx * num_cols];
+            }
+        }
+
+        return ret;
+    }
+
+    std::vector<stdplugin::datatools::table::TableDataCall::ColumnInfo> extract_peaks(
+        stdplugin::datatools::table::TableDataCall::ColumnInfo const* infos,
+        size_t num_cols, size_t num_rows, std::vector<size_t> indices) {
+        auto const num_peaks = indices.size();
+        std::vector<stdplugin::datatools::table::TableDataCall::ColumnInfo> ret(num_peaks);
 
         for (size_t i = 0; i < num_peaks; ++i) {
             auto const idx = indices[i];
-            std::copy(
-                data + (idx * num_cols), data + ((idx + 1) * num_cols), ret.begin() + (i * num_cols));
+            ret[i] = infos[idx];
         }
 
         return ret;

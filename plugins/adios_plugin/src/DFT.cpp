@@ -57,29 +57,29 @@ bool megamol::adios::DFT::getDataCallback(core::Call& c) {
 
         auto const in_data_ptr = in_data->GetData();
 
-        out_num_columns_ = num_columns * 2;
-        out_num_rows_ = num_rows / 2 + 1;
+        out_num_columns_ = 2 * (num_columns / 2 + 1);
+        out_num_rows_ = num_rows;
 
         data_.resize(out_num_columns_ * out_num_rows_);
         infos_.resize(out_num_columns_);
 
-        for (size_t col = 0; col < num_columns; ++col) {
+        for (size_t row = 0; row < num_rows; ++row) {
 
-            auto tmp = FFTWArrayR(num_rows);
-            for (size_t row = 0; row < num_rows; ++row) {
-                tmp[row] = in_data->GetData(col, row);
+            auto tmp = FFTWArrayR(num_columns);
+            for (size_t col = 0; col < num_columns; ++col) {
+                tmp[col] = in_data->GetData(col, row);
             }
 
-            auto out = FFTWArrayC(out_num_rows_);
-            FFTWPlan1D(num_rows, tmp, out, FFTW_ESTIMATE).Execute();
+            auto out = FFTWArrayC(num_columns / 2 + 1);
+            FFTWPlan1D(num_columns, tmp, out, FFTW_ESTIMATE).Execute();
 
-            for (size_t row = 0; row < out_num_rows_; ++row) {
-                data_[(col * 2 + 0) + row * out_num_columns_] = out[row][0];
-                data_[(col * 2 + 1) + row * out_num_columns_] = out[row][1];
+            for (size_t col = 0; col < (num_columns / 2 + 1); ++col) {
+                data_[(col * 2 + 0) + row * out_num_columns_] = out[col][0];
+                data_[(col * 2 + 1) + row * out_num_columns_] = out[col][1];
             }
         }
 
-        fillInfoVector(in_data->GetColumnsInfos(), num_columns);
+        fillInfoVector(in_data->GetColumnsInfos(), data_, out_num_columns_, out_num_rows_);
     }
 
     out_data->Set(out_num_columns_, out_num_rows_, infos_.data(), data_.data());

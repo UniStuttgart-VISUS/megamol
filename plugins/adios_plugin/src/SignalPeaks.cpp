@@ -77,39 +77,38 @@ bool megamol::adios::SignalPeaks::getDataCallback(core::Call& c) {
         auto const num_rows = in_data->GetRowsCount();
 
         auto const in_data_ptr = in_data->GetData();
+        auto const in_infos_ptr = in_data->GetColumnsInfos();
 
-        out_num_columns_ = num_columns;
+        out_num_rows_ = num_rows;
 
         auto const method = peak_selector_slot_.Param<core::param::EnumParam>()->Value();
 
-        std::function<std::vector<size_t>(
+        std::function<std::vector<size_t>(stdplugin::datatools::table::TableDataCall::ColumnInfo const* infos,
             float const* data, size_t num_cols, size_t num_rows, size_t num_peaks)> selector;
 
         switch (method) {
         case static_cast<int>(PeakSelector::EQUIDISTANT):
             selector = std::bind(&SignalPeaks::equidistant, this, std::placeholders::_1, std::placeholders::_2,
-                std::placeholders::_3, std::placeholders::_4);
+                std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
             break;
         case static_cast<int>(PeakSelector::NTHHIGHEST):
             selector = std::bind(&SignalPeaks::nthhighest, this, std::placeholders::_1, std::placeholders::_2,
-                std::placeholders::_3, std::placeholders::_4);
+                std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
         case static_cast<int>(PeakSelector::MAXVARIANCE):
         default:
             selector = std::bind(&SignalPeaks::maxvariance, this, std::placeholders::_1, std::placeholders::_2,
-                std::placeholders::_3, std::placeholders::_4);
+                std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
         }
 
-        auto const peaks = selector(in_data_ptr, num_columns, num_rows, numPeaks);
+        auto peaks = selector(in_infos_ptr, in_data_ptr, num_columns, num_rows, numPeaks);
+        std::sort(peaks.begin(), peaks.end(), std::less());
 
-        out_num_rows_ = peaks.size();
+        out_num_columns_ = peaks.size();
         data_ = extract_peaks(in_data_ptr, num_columns, num_rows, peaks);
-        
-        auto const in_infos_ptr = in_data->GetColumnsInfos();
 
         auto const new_ranges = reevaluate_colums(data_, out_num_columns_, out_num_rows_);
 
-        infos_.resize(num_columns);
-        std::copy(in_infos_ptr, in_infos_ptr + num_columns, infos_.data());
+        infos_ = extract_peaks(in_infos_ptr, num_columns, num_rows, peaks);
 
         populate_ranges(infos_, new_ranges);
     }
