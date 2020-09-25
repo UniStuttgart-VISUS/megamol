@@ -127,10 +127,10 @@ private:
     std::vector<size_t> get_compatible_callee_idxs(const megamol::core::CalleeSlot* callee_slot);
     std::vector<size_t> get_compatible_caller_idxs(const megamol::core::CallerSlot* caller_slot);
 
-    bool case_insensitive_str_comp(std::string& str1, std::string& str2) {
+    bool case_insensitive_str_comp(std::string const& str1, std::string const& str2) {
         return ((str1.size() == str2.size()) &&
                 std::equal(str1.begin(), str1.end(), str2.begin(),
-                    [](char& c1, char& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); }));
+                    [](char const& c1, char const& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); }));
     }
 };
 
