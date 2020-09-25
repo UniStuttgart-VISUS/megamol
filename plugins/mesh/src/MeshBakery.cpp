@@ -163,7 +163,7 @@ void megamol::mesh::MeshBakery::createConeGeometry() {
     m_indices.clear();
 
     int segments = 8;
-    float radius = 0.05f;
+    float radius = 0.0025f;
     float height = 1.0f;
     float alpha = std::atan(radius / height);
 

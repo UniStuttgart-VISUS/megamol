@@ -10,6 +10,7 @@
 #include "DrawTextureUtility.h"
 #include "ProbeCalls.h"
 #include "mesh/MeshCalls.h"
+#include "mmcore/param/Vector2fParam.h"
 
 namespace megamol {
 namespace probe {
@@ -17,7 +18,11 @@ namespace probe {
 template <typename T> static bool approxEq(T a, T b) { return std::abs(a - b) < std::numeric_limits<T>::epsilon(); }
 
 GenerateGlyphs::GenerateGlyphs()
-    : Module(), _deploy_texture("deployTexture", ""), _deploy_mesh("deployMesh", ""), _get_probes("getProbes", "") {
+    : Module()
+    ,_deploy_texture("deployTexture", "")
+    , _deploy_mesh("deployMesh", "")
+    , _get_probes("getProbes", "")
+    , _resolutionSlot("glyphResolution", "") {
 
     this->_deploy_mesh.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &GenerateGlyphs::getMesh);
@@ -33,6 +38,9 @@ GenerateGlyphs::GenerateGlyphs()
 
     this->_get_probes.SetCompatibleCall<CallProbesDescription>();
     this->MakeSlotAvailable(&this->_get_probes);
+
+    this->_resolutionSlot << new megamol::core::param::Vector2fParam({200,200});
+    this->MakeSlotAvailable(&this->_resolutionSlot);
 }
 
 GenerateGlyphs::~GenerateGlyphs() { this->Release(); }
@@ -146,17 +154,19 @@ bool GenerateGlyphs::doScalarGlyphGeneration(FloatProbe& probe) {
     index_data.byte_size = sizeof(this->_generated_billboard_mesh_indices);
     index_data.type = mesh::MeshDataAccessCollection::UNSIGNED_INT;
 
-    if (!skip) {
-        this->_mesh_data->addMesh(vertex_attributes, index_data);
+    this->_mesh_data->addMesh(vertex_attributes, index_data);
 
-        _dtu.push_back(DrawTextureUtility());
-        _dtu.back().setResolution(300, 300);                 // should be changeable
-        _dtu.back().setGraphType(DrawTextureUtility::GLYPH); // should be changeable
+    _dtu.push_back(DrawTextureUtility());
+    std::array<int, 2> resolution = {
+        _resolutionSlot.Param<core::param::Vector2fParam>()->Value()[0],
+        _resolutionSlot.Param<core::param::Vector2fParam>()->Value()[1]};
+    _dtu.back().setResolution(resolution[0], resolution[1]);
+    _dtu.back().setGraphType(DrawTextureUtility::GLYPH); // should be changeable
 
-        auto tex_ptr = _dtu.back().draw(samples->samples, samples->min_value, samples->max_value);
-        this->_tex_data->addImage(mesh::ImageDataAccessCollection::RGBA8, _dtu.back().getPixelWidth(),
-            _dtu.back().getPixelHeight(), tex_ptr, 4 * _dtu.back().getPixelWidth() * _dtu.back().getPixelHeight());
-    }
+    auto tex_ptr = _dtu.back().draw(samples->samples, samples->min_value, samples->max_value);
+    this->_tex_data->addImage(mesh::ImageDataAccessCollection::RGBA8, _dtu.back().getPixelWidth(),
+    _dtu.back().getPixelHeight(), tex_ptr, 4 * _dtu.back().getPixelWidth() * _dtu.back().getPixelHeight());
+
     return true;
 }
 

@@ -58,7 +58,7 @@ protected:
 
     core::CallerSlot _table_slot;
 
-    core::param::ParamSlot _clustered_slot;
+    core::param::ParamSlot _accumulate_clustered_slot;
 
 private:
     bool getData(core::Call& call);

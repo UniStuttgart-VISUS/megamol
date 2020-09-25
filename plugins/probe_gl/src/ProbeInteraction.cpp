@@ -25,6 +25,7 @@ megamol::probe_gl::ProbeInteraction::ProbeInteraction()
     , m_open_showMenu_dropdown(false)
     , m_open_probeMenu_dropdown(false)
     , m_open_dataMenu_dropdown(false)
+    , m_open_dataFilterByDepth_popup(false)
     , m_show_probes(true)
     , m_show_hull(true)
     , m_show_glyphs(true)
@@ -284,33 +285,33 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
 
 
     if (m_open_context_menu) {
-        bool my_tool_active = true;
-
-        auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
-        if (ctx != nullptr) {
-            ImGui::SetCurrentContext(ctx);
-
-            ImGuiIO& io = ImGui::GetIO();
-            ImVec2 viewport = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
-
-            ImGui::SetNextWindowPos(ImVec2(m_cursor_x_lastRightClick, m_cursor_y_lastRightClick));
-
-            ImGui::Begin(
-                "ProbeInteractionTools", &my_tool_active, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
-
-            if (ImGui::Button("AddProbe")) {
-                // TODO add interaction to stack
-                m_open_context_menu = false;
-            }
-
-            if (ImGui::Button("MoveProbe")) {
-                // TODO add interaction to stack
-
-                m_open_context_menu = false;
-            }
-
-            ImGui::End();
-        }
+    //    bool my_tool_active = true;
+    //
+    //    auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
+    //    if (ctx != nullptr) {
+    //        ImGui::SetCurrentContext(ctx);
+    //
+    //        ImGuiIO& io = ImGui::GetIO();
+    //        ImVec2 viewport = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
+    //
+    //        ImGui::SetNextWindowPos(ImVec2(m_cursor_x_lastRightClick, m_cursor_y_lastRightClick));
+    //
+    //        ImGui::Begin(
+    //            "ProbeInteractionTools", &my_tool_active, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+    //
+    //        if (ImGui::Button("AddProbe")) {
+    //            // TODO add interaction to stack
+    //            m_open_context_menu = false;
+    //        }
+    //
+    //        if (ImGui::Button("MoveProbe")) {
+    //            // TODO add interaction to stack
+    //
+    //            m_open_context_menu = false;
+    //        }
+    //
+    //        ImGui::End();
+    //    }
     }
 
     // Add toolbar in Blender style
@@ -329,22 +330,31 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
             if (ImGui::Button("Show", ImVec2(75, 20))) {
                 m_open_showMenu_dropdown = !m_open_showMenu_dropdown;
+
+                m_open_probeMenu_dropdown = false;
+                m_open_dataMenu_dropdown = false;
             }
             ImGui::End();
 
-            ImGui::SetNextWindowPos(ImVec2(400, 20));
+            ImGui::SetNextWindowPos(ImVec2(450, 20));
             ImGui::Begin("ProbeMenuButton", &my_tool_active,
                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
             if (ImGui::Button("Probe", ImVec2(75, 20))) {
                 m_open_probeMenu_dropdown = !m_open_probeMenu_dropdown;
+
+                m_open_showMenu_dropdown = false;
+                m_open_dataMenu_dropdown = false;
             }
             ImGui::End();
 
-            ImGui::SetNextWindowPos(ImVec2(500, 20));
+            ImGui::SetNextWindowPos(ImVec2(600, 20));
             ImGui::Begin("DataMenuButton", &my_tool_active,
                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
             if (ImGui::Button("Data", ImVec2(75, 20))) {
                 m_open_dataMenu_dropdown = !m_open_dataMenu_dropdown;
+
+                m_open_showMenu_dropdown = false;
+                m_open_probeMenu_dropdown = false;
             }
             ImGui::End();
 
@@ -406,7 +416,7 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
 
             if (m_open_probeMenu_dropdown) {
 
-                ImGui::SetNextWindowPos(ImVec2(410, 50));
+                ImGui::SetNextWindowPos(ImVec2(460, 50));
 
                 ImGui::Begin("ProbeDropdown", &my_tool_active,
                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
@@ -433,7 +443,7 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
             }
 
             if (m_open_dataMenu_dropdown) {
-                ImGui::SetNextWindowPos(ImVec2(510, 50));
+                ImGui::SetNextWindowPos(ImVec2(610, 50));
 
                 ImGui::Begin("DataDropdown", &my_tool_active,
                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground);
@@ -443,6 +453,11 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
 
                     auto evt = std::make_unique<DataFilterByProbeSelection>(this->GetCoreInstance()->GetFrameID());
                     event_collection->add<DataFilterByProbeSelection>(std::move(evt));
+                }
+
+                if (ImGui::Button("Filter By Probing Depth", ImVec2(75, 20))) {
+                    m_open_dataMenu_dropdown = false;
+                    m_open_dataFilterByDepth_popup = true;
                 }
 
                 if (ImGui::Button("Clear Filter", ImVec2(75, 20))) {
@@ -457,6 +472,38 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& cal
                 ImGui::End();
             
             }
+
+            if (m_open_dataFilterByDepth_popup) {
+
+                auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
+                if (ctx != nullptr) {
+                    ImGui::SetCurrentContext(ctx);
+
+                    ImGuiIO& io = ImGui::GetIO();
+                    ImVec2 viewport = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
+
+                    ImGui::SetNextWindowPos(ImVec2(750, 150));
+
+                    ImGui::Begin("Filter By Probing Depth", &m_open_dataFilterByDepth_popup,
+                        ImGuiWindowFlags_NoResize);
+
+                    static float probing_depth = 5.0f;
+                    if (ImGui::SliderFloat("DataFilter::robingDepth", &probing_depth, 0.0f, 100.0f)) {
+                        auto evt = std::make_unique<DataFilterByProbingDepth>(
+                            this->GetCoreInstance()->GetFrameID(), probing_depth);
+                        event_collection->add<DataFilterByProbingDepth>(std::move(evt));
+                    }
+
+                    //if (ImGui::Button("Close")) {
+
+                    //    m_open_dataFilterByDepth_popup = false;
+                    //}
+
+                    ImGui::End();
+                }
+            }
+
+
         }
     }
 

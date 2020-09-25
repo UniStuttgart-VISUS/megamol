@@ -34,6 +34,8 @@ struct BaseProbe {
     // std::vector<size_t>m_sample_idxs; ///< indices of samples relevant to this
     /** sample radius used by this probe */
     float m_sample_radius;
+    /** for clustered samples */
+    uint32_t m_cluster_id;
 
     // virtual void probe() = 0;
 };
