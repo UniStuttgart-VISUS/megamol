@@ -21,4 +21,24 @@
 		<snippet name="body" type="file">pc_reconstruction1_f.glsl</snippet>
 	</shader>
 
+	<shader name="vert2">
+		<snippet type="version">430</snippet>
+		<snippet name="body" type="file">pc_reconstruction2_v.glsl</snippet>
+	</shader>
+
+	<shader name="frag2">
+		<snippet type="version">430</snippet>
+		<snippet name="body" type="file">pc_reconstruction2_f.glsl</snippet>
+	</shader>
+
+	<shader name="vert3">
+		<snippet type="version">430</snippet>
+		<snippet name="body" type="file">pc_reconstruction3_v.glsl</snippet>
+	</shader>
+
+	<shader name="frag3">
+		<snippet type="version">430</snippet>
+		<snippet name="body" type="file">pc_reconstruction3_f.glsl</snippet>
+	</shader>
+	
 </btf>

@@ -302,6 +302,7 @@ private:
     GLuint imageStorageB;
     GLuint imageStorageC;
     GLuint imageStorageD;
+    GLuint imageArrayTest;
     GLuint msImageStorageA;
     GLuint msImageStorageB;
     GLuint msImageStorageC;
@@ -316,6 +317,7 @@ private:
     GLuint amortizedFboD;
     GLuint amortizedMsaaFboA;
     GLuint amortizedMsaaFboB;
+    GLuint arrayTestFBO;
     //glowl::FramebufferObject nuFB2 = glowl::FramebufferObject(1, 1, false, false);
     GLuint nuDRB;
     GLuint nuSRB;
@@ -323,6 +325,8 @@ private:
     GLfloat res[2];
     std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction0_shdr;
     std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction1_shdr;
+    std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction2_shdr;
+    std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction3_shdr;
 
     int frametype = 0;
 

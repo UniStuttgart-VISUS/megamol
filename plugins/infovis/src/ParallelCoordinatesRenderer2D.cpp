@@ -238,6 +238,7 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGenFramebuffers(1, &amortizedFboD);
     glGenFramebuffers(1, &amortizedMsaaFboA);
     glGenFramebuffers(1, &amortizedMsaaFboB);
+    glGenFramebuffers(1, &arrayTestFBO);
     glGenTextures(1, &imageStorageA);
     glGenTextures(1, &msImageStorageA);
     glGenTextures(1, &imageStorageB);
@@ -326,6 +327,13 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageD, 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
+    glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayTest);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, 1, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
 
     instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert0", vertex_shader_src);
     instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag0", fragment_shader_src);
@@ -340,6 +348,21 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     pc_reconstruction1_shdr->Compile(
         vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
     pc_reconstruction1_shdr->Link();
+
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert2", vertex_shader_src);
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag2", fragment_shader_src);
+    pc_reconstruction2_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
+    pc_reconstruction2_shdr->Compile(
+        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
+    pc_reconstruction2_shdr->Link();
+
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert3", vertex_shader_src);
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag3", fragment_shader_src);
+    pc_reconstruction3_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
+    pc_reconstruction3_shdr->Compile(
+        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
+    pc_reconstruction3_shdr->Link();
+    
 
 #ifndef REMOVE_TEXT
     if (!font.Initialise(this->GetCoreInstance())) return false;
@@ -1260,6 +1283,131 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glViewport(0, 0, w, h);
     }
 
+    if (approach == 2 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        framesNeeded = 4;
+        w = w / 2;
+        h = h / 2;
+        glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+
+        glm::mat4 pm;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                pm[j][i] = projMatrix_column[i + j * 4];
+            }
+        }
+        glm::mat4 mvm;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                mvm[j][i] = modelViewMatrix_column[i + j * 4];
+            }
+        }
+        // mvm = glm::transpose(mvm);
+
+        float factor = this->testingFloat.Param<core::param::FloatParam>()->Value();
+        glm::mat4 jit;
+        glm::mat4 pmvm = pm * mvm;
+        if (frametype == 0) {
+            jit = glm::translate(
+                glm::mat4(1.0f), glm::vec3(-2.0 / call.GetViewport().Width(), 2.0 / call.GetViewport().Height(), 0));
+            invTexA = jit * pmvm;
+        }
+        if (frametype == 1) {
+            jit = glm::translate(
+                glm::mat4(1.0f), glm::vec3(0 / call.GetViewport().Width(), 2.0 / call.GetViewport().Height(), 0));
+            invTexB = jit * pmvm;
+        }
+        if (frametype == 2) {
+            jit = glm::translate(
+                glm::mat4(1.0f), glm::vec3(-2.0 / call.GetViewport().Width(), 0 / call.GetViewport().Height(), 0));
+            invTexC = jit * pmvm;
+        }
+        if (frametype == 3) {
+            jit = glm::translate(
+                glm::mat4(1.0f), glm::vec3(0.0 / call.GetViewport().Width(), 0 / call.GetViewport().Height(), 0));
+            invTexD = jit * pmvm;
+        }
+        // new Vectors
+        moveMatrixA = invTexA * glm::inverse(pmvm);
+        moveMatrixB = invTexB * glm::inverse(pmvm);
+        moveMatrixC = invTexC * glm::inverse(pmvm);
+        moveMatrixD = invTexD * glm::inverse(pmvm);
+
+        pm = jit * pm;
+        for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
+
+        if (frametype == 0) {
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
+            glActiveTexture(GL_TEXTURE10);
+            glBindTexture(GL_TEXTURE_2D, imageStorageA);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageA, 0);
+            // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
+            glClearColor(0, 0, 0, backgroundColor[3]);
+        }
+        if (frametype == 1) {
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboB);
+            glActiveTexture(GL_TEXTURE11);
+            glBindTexture(GL_TEXTURE_2D, imageStorageB);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageB, 0);
+            glClearColor(0, 0, 0, backgroundColor[3]);
+        }
+        if (frametype == 2) {
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboC);
+            glActiveTexture(GL_TEXTURE12);
+            glBindTexture(GL_TEXTURE_2D, imageStorageC);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageC, 0);
+            glClearColor(0, 0, 0, backgroundColor[3]);
+        }
+        if (frametype == 3) {
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboD);
+            glActiveTexture(GL_TEXTURE13);
+            glBindTexture(GL_TEXTURE_2D, imageStorageD);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageD, 0);
+            glClearColor(0, 0, 0, backgroundColor[3]);
+        }
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glViewport(0, 0, w, h);
+    }
+
+    if (approach == 3 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        framesNeeded = 1;
+        w = w / 2;
+        h = h / 2;
+        glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+
+        glm::mat4 pm;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                pm[j][i] = projMatrix_column[i + j * 4];
+            }
+        }
+        glm::mat4 mvm;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                mvm[j][i] = modelViewMatrix_column[i + j * 4];
+            }
+        }
+        // mvm = glm::transpose(mvm);
+
+        float factor = this->testingFloat.Param<core::param::FloatParam>()->Value();
+
+        for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
+
+            glBindFramebuffer(GL_FRAMEBUFFER, arrayTestFBO);
+            glActiveTexture(GL_TEXTURE15);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayTest);
+            glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 1, 0, GL_RGB, GL_FLOAT, 0);
+            glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayTest, 0, 0);
+            glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glViewport(0, 0, w, h);
+    }
+
     if (false && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -1512,12 +1660,12 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         if (frametype == 0) {
             glActiveTexture(GL_TEXTURE10);
             glBindTexture(GL_TEXTURE_2D, msImageStorageA);  
-            glUniform1i(pc_reconstruction0_shdr->ParameterLocation("samplers"), 10);
+            glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tx2Da"), 10);
         }
         if (frametype == 1) {
             glActiveTexture(GL_TEXTURE11);
             glBindTexture(GL_TEXTURE_2D, msImageStorageB);
-            glUniform1i(pc_reconstruction0_shdr->ParameterLocation("samplers")+1, 11);
+            glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tx2Db"), 11);
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
@@ -1526,8 +1674,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("frametype"), frametype);
 
-        glUniformMatrix4fv(pc_reconstruction0_shdr->ParameterLocation("mMatrices"), 1, GL_FALSE, &moveMatrixA[0][0]);
-        glUniformMatrix4fv(pc_reconstruction0_shdr->ParameterLocation("mMatrices")+1, 1, GL_FALSE, &moveMatrixB[0][0]);
+        glUniformMatrix4fv(pc_reconstruction0_shdr->ParameterLocation("mMa"), 1, GL_FALSE, &moveMatrixA[0][0]);
+        glUniformMatrix4fv(pc_reconstruction0_shdr->ParameterLocation("mMb"), 1, GL_FALSE, &moveMatrixB[0][0]);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction0_shdr->Disable();
@@ -1542,22 +1690,22 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         if (frametype == 0) {
             glActiveTexture(GL_TEXTURE10);
             glBindTexture(GL_TEXTURE_2D, imageStorageA);
-            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("samplers"), 10);
+            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Da"), 10);
         }
         if (frametype == 1) {
             glActiveTexture(GL_TEXTURE11);
             glBindTexture(GL_TEXTURE_2D, imageStorageB);
-            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("samplers") + 1, 11);
+            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Db"), 11);
         }
         if (frametype == 2) {
             glActiveTexture(GL_TEXTURE12);
             glBindTexture(GL_TEXTURE_2D, imageStorageC);
-            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("samplers") + 2, 12);
+            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Dc"), 12);
         }
         if (frametype == 3) {
             glActiveTexture(GL_TEXTURE13);
             glBindTexture(GL_TEXTURE_2D, imageStorageD);
-            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("samplers") + 3, 13); 
+            glUniform1i(pc_reconstruction1_shdr->ParameterLocation("src_tx2Dd"), 13); 
         }
         glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
         glUniform1i(pc_reconstruction1_shdr->ParameterLocation("h"), call.GetViewport().Height());
@@ -1565,19 +1713,75 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(pc_reconstruction1_shdr->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction1_shdr->ParameterLocation("frametype"), frametype);
 
-        //glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMa"), 1, GL_FALSE, &moveMatrixA[0][0]);
-        //glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMb"), 1, GL_FALSE, &moveMatrixB[0][0]);
-        //glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMc"), 1, GL_FALSE, &moveMatrixC[0][0]);
-        //glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMd"), 1, GL_FALSE, &moveMatrixD[0][0]);
-
-        // 0 and 1 swapped because order in array easier corresponds to pixel position
-        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices")+1, 1, GL_FALSE, &moveMatrixA[0][0]);
-        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices"), 1, GL_FALSE, &moveMatrixB[0][0]);
-        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices")+2, 1, GL_FALSE, &moveMatrixC[0][0]);
-        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices")+3, 1, GL_FALSE, &moveMatrixD[0][0]);
+        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMa"), 1, GL_FALSE, &moveMatrixA[0][0]);
+        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMb"), 1, GL_FALSE, &moveMatrixB[0][0]);
+        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMc"), 1, GL_FALSE, &moveMatrixC[0][0]);
+        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMd"), 1, GL_FALSE, &moveMatrixD[0][0]);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction1_shdr->Disable();
+        frametype = (frametype + 1) % framesNeeded;
+    }
+
+    if (approach == 2 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
+
+        pc_reconstruction2_shdr->Enable();
+
+        if (frametype == 0) {
+            glActiveTexture(GL_TEXTURE10);
+            glBindTexture(GL_TEXTURE_2D, imageStorageA);
+            glUniform1i(pc_reconstruction2_shdr->ParameterLocation("src_tx2Da"), 10);
+        }
+        if (frametype == 1) {
+            glActiveTexture(GL_TEXTURE11);
+            glBindTexture(GL_TEXTURE_2D, imageStorageB);
+            glUniform1i(pc_reconstruction2_shdr->ParameterLocation("src_tx2Db"), 11);
+        }
+        if (frametype == 2) {
+            glActiveTexture(GL_TEXTURE12);
+            glBindTexture(GL_TEXTURE_2D, imageStorageC);
+            glUniform1i(pc_reconstruction2_shdr->ParameterLocation("src_tx2Dc"), 12);
+        }
+        if (frametype == 3) {
+            glActiveTexture(GL_TEXTURE13);
+            glBindTexture(GL_TEXTURE_2D, imageStorageD);
+            glUniform1i(pc_reconstruction2_shdr->ParameterLocation("src_tx2Dd"), 13);
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
+        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("h"), call.GetViewport().Height());
+        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("w"), call.GetViewport().Width());
+        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("approach"), approach);
+        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("frametype"), frametype);
+
+        glUniformMatrix4fv(pc_reconstruction2_shdr->ParameterLocation("mMa"), 1, GL_FALSE, &moveMatrixA[0][0]);
+        glUniformMatrix4fv(pc_reconstruction2_shdr->ParameterLocation("mMb"), 1, GL_FALSE, &moveMatrixB[0][0]);
+        glUniformMatrix4fv(pc_reconstruction2_shdr->ParameterLocation("mMc"), 1, GL_FALSE, &moveMatrixC[0][0]);
+        glUniformMatrix4fv(pc_reconstruction2_shdr->ParameterLocation("mMd"), 1, GL_FALSE, &moveMatrixD[0][0]);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        pc_reconstruction2_shdr->Disable();
+        frametype = (frametype + 1) % framesNeeded;
+    }
+
+    if (approach == 3 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
+
+        pc_reconstruction3_shdr->Enable();
+
+            glActiveTexture(GL_TEXTURE15);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayTest);
+            glUniform1i(pc_reconstruction3_shdr->ParameterLocation("src_tx2Da"), 15);
+        
+        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
+        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("h"), call.GetViewport().Height());
+        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("w"), call.GetViewport().Width());
+        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("approach"), approach);
+        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("frametype"), frametype);
+
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        pc_reconstruction3_shdr->Disable();
         frametype = (frametype + 1) % framesNeeded;
     }
 
