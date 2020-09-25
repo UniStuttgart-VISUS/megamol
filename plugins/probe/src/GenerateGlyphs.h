@@ -15,6 +15,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
 
 namespace megamol {
 namespace probe {
@@ -51,6 +52,8 @@ public:
     core::CalleeSlot _deploy_texture;
     core::CalleeSlot _deploy_mesh;
     core::CallerSlot _get_probes;
+
+    core::param::ParamSlot _resolutionSlot;
 
 protected:
     bool create() override { return true; };

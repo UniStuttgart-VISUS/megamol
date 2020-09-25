@@ -18,7 +18,7 @@ megamol::probe::TableToProbes::TableToProbes()
     , _version(0)
     , _table_slot("getTable", "")
     , _probe_slot("deployProbes", "")
-    , _clustered_slot("clustered", "") {
+    , _accumulate_clustered_slot("accumulate_clustered", "") {
 
     this->_probe_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(0), &TableToProbes::getData);
     this->_probe_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(1), &TableToProbes::getMetaData);
@@ -29,8 +29,8 @@ megamol::probe::TableToProbes::TableToProbes()
     this->MakeSlotAvailable(&this->_table_slot);
 
 
-    this->_clustered_slot << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->_clustered_slot);
+    this->_accumulate_clustered_slot << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->_accumulate_clustered_slot);
 
     /* Feasibility test */
     _probes = std::make_shared<ProbeCollection>();
@@ -125,6 +125,23 @@ bool megamol::probe::TableToProbes::generateProbes() {
             samples_per_probe += 1;
         }
     }
+
+
+    
+    assert(col_to_id_map.find("cluster_id") != col_to_id_map.end());
+    std::vector<uint32_t> cluster_ids(_num_rows);
+    std::map<uint32_t, uint32_t> cluster_id_count;
+
+    for (uint32_t i = 0; i < _num_rows; ++i) {
+        cluster_ids[i] = static_cast<uint32_t>(_table[_num_cols * i + col_to_id_map["cluster_id"]]);
+        auto it = cluster_id_count.find(cluster_ids[i]);
+        if (it == cluster_id_count.end()) {
+            cluster_id_count[cluster_ids[i]] = 1;
+        } else {
+            cluster_id_count[cluster_ids[i]] += 1;
+        }
+    }
+
     float min_x = std::numeric_limits<float>::max();
     float max_x = -std::numeric_limits<float>::min();
     float min_y = std::numeric_limits<float>::max();
@@ -132,22 +149,8 @@ bool megamol::probe::TableToProbes::generateProbes() {
     float min_z = std::numeric_limits<float>::max();
     float max_z = -std::numeric_limits<float>::min();
 
-    if (this->_clustered_slot.Param<core::param::BoolParam>()->Value()) {
+    if (this->_accumulate_clustered_slot.Param<core::param::BoolParam>()->Value()) {
 
-        assert(col_to_id_map.find("cluster_id") != col_to_id_map.end());
-
-        std::vector<uint32_t> cluster_ids(_num_rows);
-        std::map<uint32_t, uint32_t> cluster_id_count;
-
-        for (uint32_t i = 0; i < _num_rows; ++i) {
-            cluster_ids[i] = static_cast<uint32_t>(_table[_num_cols * i + col_to_id_map["cluster_id"]]);
-            auto it = cluster_id_count.find(cluster_ids[i]);
-            if (it == cluster_id_count.end()) {
-                cluster_id_count[cluster_ids[i]] = 1;
-            } else {
-                cluster_id_count[cluster_ids[i]] += 1;
-            }
-        }
         _accum_probes.resize(cluster_id_count.size());
         std::vector<std::array<float, 3>> accum_pos(cluster_id_count.size(), {0, 0, 0});
         std::vector<std::array<float, 3>> accum_dir(cluster_id_count.size(), {0, 0, 0});
@@ -184,7 +187,6 @@ bool megamol::probe::TableToProbes::generateProbes() {
 
             time_stamp = _table[_num_cols * i + col_to_id_map["timestamp"]];
 
-
             for (int j = 0; j < samples_per_probe; j++) {
                 std::string sv = "sample_value_" + std::to_string(j);
                 auto value = _table[_num_cols * i + col_to_id_map[sv]];
@@ -203,6 +205,7 @@ bool megamol::probe::TableToProbes::generateProbes() {
             probe.m_end = accum_end[i] / cluster_id_count[i];
             probe.m_sample_radius = sample_radius;
             probe.m_timestamp = time_stamp;
+            probe.m_cluster_id = cluster_ids[i];
 
             std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
             samples->samples.resize(samples_per_probe);
@@ -249,8 +252,9 @@ bool megamol::probe::TableToProbes::generateProbes() {
             probe.m_end = _table[_num_cols * i + col_to_id_map["end"]];
             probe.m_sample_radius = _table[_num_cols * i + col_to_id_map["sample_radius"]];
             probe.m_timestamp = _table[_num_cols * i + col_to_id_map["timestamp"]];
-            std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
+            probe.m_cluster_id = _table[_num_cols * i + col_to_id_map["cluster_id"]];
 
+            std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
 
             samples->samples.resize(samples_per_probe);
             float min_value = std::numeric_limits<float>::max();

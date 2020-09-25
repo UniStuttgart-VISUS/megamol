@@ -61,7 +61,7 @@ bool ProbeToTable::getData(core::Call& call) {
         _rows = num_probes;
 
         std::vector<std::string> var_names = {"id", "position_x", "position_y", "position_z", "direction_x",
-            "direction_y", "direction_z", "begin", "end", "timestamp", "sample_radius"};
+            "direction_y", "direction_z", "begin", "end", "timestamp", "sample_radius", "cluster_id"};
         auto fixed_var_names_index = var_names.size();
         _fixed_cols = var_names.size();
 
@@ -117,6 +117,11 @@ bool ProbeToTable::getData(core::Call& call) {
             raw_data[i][current_col] = probe.m_sample_radius;
             mins[current_col] = std::min(mins[current_col], probe.m_sample_radius);
             maxes[current_col] = std::max(maxes[current_col], probe.m_sample_radius);
+            current_col += 1;
+
+            raw_data[i][current_col] = probe.m_cluster_id;
+            mins[current_col] = std::min(mins[current_col], static_cast<float>(probe.m_cluster_id));
+            maxes[current_col] = std::max(maxes[current_col], static_cast<float>(probe.m_cluster_id));
             current_col += 1;
 
             auto result = probe.getSamplingResult()->samples;
