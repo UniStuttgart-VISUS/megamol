@@ -18,6 +18,7 @@
 
 #include "vislib/graphics/BitmapImage.h"
 
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/Texture2D.hpp"
 
 
