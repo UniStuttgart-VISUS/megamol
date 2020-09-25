@@ -97,7 +97,7 @@ private:
 
     uint32_t m_version;
 
-    bool no_active_selection;
+    std::vector<bool> m_probe_selection;
 
     /** Shader program for setting flags based on incoming user manipulations */
     std::unique_ptr<GLSLComputeShader> m_setFlags_prgm;

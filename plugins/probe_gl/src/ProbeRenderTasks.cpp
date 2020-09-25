@@ -19,7 +19,7 @@ megamol::probe_gl::ProbeRenderTasks::ProbeRenderTasks()
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->m_probes_slot);
 
-    this->m_event_slot.SetCompatibleCall<megamol::core::EventCallDescription>();
+    this->m_event_slot.SetCompatibleCall<megamol::core::CallEventDescription>();
     this->MakeSlotAvailable(&this->m_event_slot);
 }
 
@@ -175,12 +175,12 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
     auto call_event_storage = this->m_event_slot.CallAs<core::CallEvent>();
     if (call_event_storage != NULL) {
         if ((!(*call_event_storage)(0))) return false;
-    
+
         auto event_collection = call_event_storage->getData();
-    
+
         // process pobe clear selection events
         {
-            auto pending_clearselection_events = event_collection->get<ClearSelection>();
+            auto pending_clearselection_events = event_collection->get<ProbeClearSelection>();
             for (auto& evt : pending_clearselection_events) {
                 for (auto& draw_data : m_probe_draw_data) {
                     draw_data.highlighted = 0;
@@ -194,64 +194,64 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 }
             }
         }
-    
+
         // process probe highlight events
         {
             auto pending_highlight_events = event_collection->get<ProbeHighlight>();
             for (auto& evt : pending_highlight_events) {
                 std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
                 per_probe_data[0].highlighted = 1;
-    
+
                 if (m_show_probes) {
                     rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
                 }
             }
         }
-    
+
         // process probe dehighlight events
         {
             auto pending_dehighlight_events = event_collection->get<ProbeDehighlight>();
             for (auto& evt : pending_dehighlight_events) {
                 std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
-    
+
                 if (m_show_probes) {
                     rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
                 }
             }
         }
-    
+
         // process probe selection events
         {
-            auto pending_select_events = event_collection->get<Select>();
+            auto pending_select_events = event_collection->get<ProbeSelect>();
             for (auto& evt : pending_select_events) {
                 m_probe_draw_data[evt.obj_id].highlighted = 2;
                 std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
-    
+
                 if (m_show_probes) {
                     rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
                 }
             }
         }
-    
+
         // process probe deselection events
         {
-            auto pending_deselect_events = event_collection->get<Deselect>();
+            auto pending_deselect_events = event_collection->get<ProbeDeselect>();
             for (auto& evt : pending_deselect_events) {
                 m_probe_draw_data[evt.obj_id].highlighted = 0;
                 std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
-    
+
                 if (m_show_probes) {
                     rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
                 }
             }
         }
-    
+
         // process toggle show glyph events
         {
             auto pending_deselect_events = event_collection->get<ToggleShowProbes>();
             for (auto& evt : pending_deselect_events) {
                 m_show_probes = !m_show_probes;
-    
+
                 if (m_show_probes) {
                     auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
                     auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;

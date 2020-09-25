@@ -15,7 +15,7 @@ namespace probe_gl {
 
 FilterByProbe::FilterByProbe()
     : m_version(0)
-    , no_active_selection(true)
+    , m_probe_selection()
     , m_probes_slot("getProbes", "")
     , m_kd_tree_slot("getKDTree", "")
     , m_event_slot("getEvents", "")
@@ -28,7 +28,7 @@ FilterByProbe::FilterByProbe()
     this->m_kd_tree_slot.SetCompatibleCall<probe::CallKDTreeDescription>();
     this->MakeSlotAvailable(&this->m_kd_tree_slot);
 
-    this->m_event_slot.SetCompatibleCall<megamol::core::EventCallDescription>();
+    this->m_event_slot.SetCompatibleCall<megamol::core::CallEventDescription>();
     this->MakeSlotAvailable(&this->m_event_slot);
 
     this->m_readFlagsSlot.SetCompatibleCall<core::FlagCallRead_GLDescription>();
@@ -88,7 +88,6 @@ void FilterByProbe::release() {
 
     m_setFlags_prgm.reset();
     m_filterAll_prgm.reset();
-
 }
 
 bool FilterByProbe::GetExtents(core::view::CallRender3D_2& call) { return true; }
@@ -97,6 +96,12 @@ bool FilterByProbe::Render(core::view::CallRender3D_2& call) {
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
     if (pc == NULL) return false;
     if (!(*pc)(0)) return false;
+
+    if (pc->hasUpdate()) {
+        auto probes = pc->getData();
+
+        m_probe_selection.resize(probes->getProbeCount());
+    }
 
     // query kd tree data
     auto ct = this->m_kd_tree_slot.CallAs<probe::CallKDTree>();
@@ -113,146 +118,189 @@ bool FilterByProbe::Render(core::view::CallRender3D_2& call) {
 
         // process pobe clear selection events
         {
-            auto pending_clearselection_events = event_collection->get<ClearSelection>();
-
-            for (auto& evt : pending_clearselection_events) {
-                auto readFlags = m_readFlagsSlot.CallAs<core::FlagCallRead_GL>();
-                auto writeFlags = m_writeFlagsSlot.CallAs<core::FlagCallWrite_GL>();
-
-                if (readFlags != nullptr && writeFlags != nullptr) {
-                    (*readFlags)(core::FlagCallWrite_GL::CallGetData);
-
-                    if (readFlags->hasUpdate()) {
-                        this->m_version = readFlags->version();
-                    }
-
-                    ++m_version;
-
-                    auto flag_data = readFlags->getData();
-
-                    {
-                        m_filterNone_prgm->Enable();
-
-                        auto flag_cnt = static_cast<GLuint>(flag_data->flags->getByteSize() / sizeof(GLuint));
-
-                        glUniform1ui(m_filterNone_prgm->ParameterLocation("flag_cnt"), flag_cnt);
-
-                        flag_data->flags->bind(1);
-
-                        m_filterNone_prgm->Dispatch(static_cast<int>(std::ceil(flag_cnt / 64.0f)), 1, 1);
-
-                        ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
-                        m_filterNone_prgm->Disable();
-                    }
-
-                    writeFlags->setData(readFlags->getData(), m_version);
-                    (*writeFlags)(core::FlagCallWrite_GL::CallGetData);
-                }
-
-                no_active_selection = true;
+            auto pending_clearselection_events = event_collection->get<ProbeClearSelection>();
+            if (!pending_clearselection_events.empty()) {
+                std::fill(m_probe_selection.begin(), m_probe_selection.end(), false);
             }
         }
 
         // process probe selection events
         {
-            auto pending_select_events = event_collection->get<Select>();
+            auto pending_select_events = event_collection->get<ProbeSelect>();
             for (auto& evt : pending_select_events) {
-                // TODO get probe
-                auto generic_probe = probes->getGenericProbe(evt.obj_id);
+                m_probe_selection[evt.obj_id] = true;
+            }
+        }
+
+        // process probe deselection events
+        {
+            auto pending_deselect_events = event_collection->get<ProbeDeselect>();
+            for (auto& evt : pending_deselect_events) {
+                m_probe_selection[evt.obj_id] = false;
+            }
+        }
+
+        // process probe exclusive selection events
+        {
+            auto pending_selectExclusive_events = event_collection->get<ProbeSelectExclusive>();
+            if (!pending_selectExclusive_events.empty()) {
+                std::fill(m_probe_selection.begin(), m_probe_selection.end(), false);
+                m_probe_selection[pending_selectExclusive_events.back().obj_id] = true;
+            }
+        }
+
+        // process probe selection toggle events
+        {
+            auto pending_select_events = event_collection->get<ProbeSelectToggle>();
+            for (auto& evt : pending_select_events) {
+                m_probe_selection[evt.obj_id] = m_probe_selection[evt.obj_id] == true ? false : true;
+            }
+        }
+
+        // process clear filter events
+        {
+            auto pending_clearselection_events = event_collection->get<DataClearFilter>();
+        
+            for (auto& evt : pending_clearselection_events) {
+                auto readFlags = m_readFlagsSlot.CallAs<core::FlagCallRead_GL>();
+                auto writeFlags = m_writeFlagsSlot.CallAs<core::FlagCallWrite_GL>();
+        
+                if (readFlags != nullptr && writeFlags != nullptr) {
+                    (*readFlags)(core::FlagCallWrite_GL::CallGetData);
+        
+                    if (readFlags->hasUpdate()) {
+                        this->m_version = readFlags->version();
+                    }
+        
+                    ++m_version;
+        
+                    auto flag_data = readFlags->getData();
+        
+                    {
+                        m_filterNone_prgm->Enable();
+        
+                        auto flag_cnt = static_cast<GLuint>(flag_data->flags->getByteSize() / sizeof(GLuint));
+        
+                        glUniform1ui(m_filterNone_prgm->ParameterLocation("flag_cnt"), flag_cnt);
+        
+                        flag_data->flags->bind(1);
+        
+                        m_filterNone_prgm->Dispatch(static_cast<int>(std::ceil(flag_cnt / 64.0f)), 1, 1);
+        
+                        ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        
+                        m_filterNone_prgm->Disable();
+                    }
+        
+                    writeFlags->setData(readFlags->getData(), m_version);
+                    (*writeFlags)(core::FlagCallWrite_GL::CallGetData);
+                }
+            }
+        }
+        
+        // process probe selection events
+        {
+            auto pending_filter_event = event_collection->get<DataFilterByProbeSelection>();
+
+            if(!pending_filter_event.empty()) {
 
                 // TODO get corresponding data points from kd-tree
                 auto tree = ct->getData();
                 std::vector<uint32_t> indices;
 
-                auto visitor = [&tree, &indices](auto&& arg) {
-                    using T = std::decay_t<decltype(arg)>;
-                    if constexpr (std::is_same_v<T, probe::Vec4Probe> || std::is_same_v<T, probe::FloatProbe>) {
-                        auto position = arg.m_position;
-                        auto direction = arg.m_direction;
-                        auto begin = arg.m_begin;
-                        auto end = arg.m_end;
-                        auto samples_per_probe = arg.getSamplingResult()->samples.size();
+                for (size_t probe_idx=0; probe_idx < m_probe_selection.size(); ++probe_idx) {
 
-                        auto sample_step = end / static_cast<float>(samples_per_probe);
-                        auto radius = sample_step * 2.0; // sample_radius_factor;
+                    if (m_probe_selection[probe_idx] == true) {
+                        // TODO get probe
+                        auto generic_probe = probes->getGenericProbe(probe_idx);
 
-                        for (int j = 0; j < samples_per_probe; j++) {
+                        auto visitor = [&tree, &indices](auto&& arg) {
+                            using T = std::decay_t<decltype(arg)>;
+                            if constexpr (std::is_same_v<T, probe::Vec4Probe> || std::is_same_v<T, probe::FloatProbe>) {
+                                auto position = arg.m_position;
+                                auto direction = arg.m_direction;
+                                auto begin = arg.m_begin;
+                                auto end = arg.m_end;
+                                auto samples_per_probe = arg.getSamplingResult()->samples.size();
 
-                            pcl::PointXYZ sample_point;
-                            sample_point.x = position[0] + j * sample_step * direction[0];
-                            sample_point.y = position[1] + j * sample_step * direction[1];
-                            sample_point.z = position[2] + j * sample_step * direction[2];
+                                auto sample_step = end / static_cast<float>(samples_per_probe);
+                                auto radius = sample_step * 2.0; // sample_radius_factor;
 
-                            std::vector<float> k_distances;
-                            std::vector<uint32_t> k_indices;
+                                for (int j = 0; j < samples_per_probe; j++) {
 
-                            auto num_neighbors =
-                                tree->radiusSearch(sample_point, arg.m_sample_radius, k_indices, k_distances);
-                            if (num_neighbors == 0) {
-                                num_neighbors = tree->nearestKSearch(sample_point, 1, k_indices, k_distances);
+                                    pcl::PointXYZ sample_point;
+                                    sample_point.x = position[0] + j * sample_step * direction[0];
+                                    sample_point.y = position[1] + j * sample_step * direction[1];
+                                    sample_point.z = position[2] + j * sample_step * direction[2];
+
+                                    std::vector<float> k_distances;
+                                    std::vector<uint32_t> k_indices;
+
+                                    auto num_neighbors =
+                                        tree->radiusSearch(sample_point, arg.m_sample_radius, k_indices, k_distances);
+                                    if (num_neighbors == 0) {
+                                        num_neighbors = tree->nearestKSearch(sample_point, 1, k_indices, k_distances);
+                                    }
+
+                                    indices.insert(indices.end(), k_indices.begin(), k_indices.end());
+                                } // end num samples per probe
                             }
+                        };
 
-                            indices.insert(indices.end(), k_indices.begin(), k_indices.end());
-                        } // end num samples per probe
+                        std::visit(visitor, generic_probe);
                     }
-                };
-
-                std::visit(visitor, generic_probe);
+                
+                }
 
                 // TODO set flags
                 auto readFlags = m_readFlagsSlot.CallAs<core::FlagCallRead_GL>();
                 auto writeFlags = m_writeFlagsSlot.CallAs<core::FlagCallWrite_GL>();
-
+            
                 if (readFlags != nullptr && writeFlags != nullptr) {
                     (*readFlags)(core::FlagCallWrite_GL::CallGetData);
-
+            
                     if (readFlags->hasUpdate()) {
                         this->m_version = readFlags->version();
                     }
-
+            
                     ++m_version;
-
+            
                     auto flag_data = readFlags->getData();
                     auto kdtree_ids =
                         std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, indices, GL_DYNAMIC_DRAW);
-
-                    if (no_active_selection) {
+            
+                    if (!indices.empty()) {
                         m_filterAll_prgm->Enable();
-
+                        
                         auto flag_cnt = static_cast<GLuint>(flag_data->flags->getByteSize() / sizeof(GLuint));
-
+                        
                         glUniform1ui(m_filterAll_prgm->ParameterLocation("flag_cnt"), flag_cnt);
-
+                        
                         flag_data->flags->bind(1);
-
+                        
                         m_filterAll_prgm->Dispatch(static_cast<int>(std::ceil(flag_cnt / 64.0f)), 1, 1);
-
+                        
                         ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
+                        
                         m_filterAll_prgm->Disable();
-                    }
-
-                    {
+                        
                         m_setFlags_prgm->Enable();
-
+                        
                         glUniform1ui(m_setFlags_prgm->ParameterLocation("id_cnt"), static_cast<GLuint>(indices.size()));
-
+                        
                         kdtree_ids->bind(0);
                         flag_data->flags->bind(1);
-
+                        
                         m_setFlags_prgm->Dispatch(static_cast<int>(std::ceil(indices.size() / 64.0f)), 1, 1);
-
+                        
                         ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
+                        
                         m_setFlags_prgm->Disable();
                     }
-
+            
                     writeFlags->setData(readFlags->getData(), m_version);
                     (*writeFlags)(core::FlagCallWrite_GL::CallGetData);
                 }
-
-                no_active_selection = false;
             }
         }
     }
