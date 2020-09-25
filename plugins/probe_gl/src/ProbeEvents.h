@@ -51,6 +51,11 @@ struct DataFilterByProbeSelection : public core::EventCollection::Event<false> {
     DataFilterByProbeSelection(size_t frame_id) : Event<false>(frame_id) {}
 };
 
+struct DataFilterByProbingDepth : public core::EventCollection::Event<false> {
+    DataFilterByProbingDepth(size_t frame_id, float depth) : Event<false>(frame_id), depth(depth) {}
+    float depth;
+};
+
 struct DataClearFilter : public core::EventCollection::Event<false> {
     DataClearFilter(size_t frame_id) : Event<false>(frame_id) {}
 };

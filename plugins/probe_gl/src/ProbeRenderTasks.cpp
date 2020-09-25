@@ -142,7 +142,7 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 float angle = -acos(glm::dot(to, from) / (glm::length(to) * glm::length(from)));
                 m_probe_draw_data[probe_idx].object_transform = glm::rotate(angle, v);
 
-                auto scaling = glm::scale(glm::vec3(2.0f, 2.0f, end - begin));
+                auto scaling = glm::scale(glm::vec3(end - begin));
 
                 auto probe_start_point = glm::vec3(position[0] + direction[0] * begin,
                     position[1] + direction[1] * begin, position[2] + direction[2] * begin);
