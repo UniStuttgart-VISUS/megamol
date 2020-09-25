@@ -24,11 +24,16 @@ static std::vector<std::string> splitPathName(std::string const& path) {
     return result;
 }
 
+static std::string tolower(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(), std::tolower);
+    return s;
+}
+
 static std::string clean(std::string const& path) {
     auto begin = path.find_first_not_of(':');
     auto end   = path.find_last_not_of(':');
 
-    return path.substr(begin, end+1 - begin);
+    return tolower(path.substr(begin, end+1 - begin));
 }
 
 static void log(std::string text) { 
