@@ -112,6 +112,8 @@ private:
     bool m_open_probeMenu_dropdown;
     bool m_open_dataMenu_dropdown;
 
+    bool m_open_dataFilterByDepth_popup;
+
     bool m_show_probes;
     bool m_show_hull;
     bool m_show_glyphs;
