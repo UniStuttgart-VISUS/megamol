@@ -5,8 +5,7 @@
  */
 
 
-#ifndef SAMPLE_ALONG_PROBES_H_INCLUDED
-#define SAMPLE_ALONG_PROBES_H_INCLUDED
+#pragma once
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -64,6 +63,9 @@ protected:
     core::CallerSlot _full_tree_rhs_slot;
     size_t _full_tree_cached_hash;
 
+    core::CallerSlot _volume_rhs_slot;
+    size_t _volume_cached_hash;
+
     core::param::ParamSlot _parameter_to_sample_slot;
     core::param::ParamSlot _num_samples_per_probe_slot;
     core::param::ParamSlot _sample_radius_factor_slot;
@@ -117,6 +119,7 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
                 probe.m_direction = arg.m_direction;
                 probe.m_begin = arg.m_begin;
                 probe.m_end = arg.m_end;
+                probe.m_cluster_id = arg.m_cluster_id;
 
                 auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
                 auto radius = sample_step * sample_radius_factor;
@@ -221,6 +224,7 @@ inline void SampleAlongPobes::doVectorSamling(
                 probe.m_direction = arg.m_direction;
                 probe.m_begin = arg.m_begin;
                 probe.m_end = arg.m_end;
+                probe.m_cluster_id = arg.m_cluster_id;
 
                 auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
                 auto radius = sample_step * sample_radius_factor;
@@ -298,6 +302,3 @@ inline void SampleAlongPobes::doVectorSamling(
 
 } // namespace probe
 } // namespace megamol
-
-
-#endif // !SAMPLE_ALONG_PROBES_H_INCLUDED

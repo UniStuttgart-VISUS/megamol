@@ -77,7 +77,7 @@ bool ProbeToTable::getData(core::Call& call) {
         std::vector<float> maxes(var_names.size(), std::numeric_limits<float>::min());
         for (int i = 0; i < num_probes; ++i) {
             raw_data[i].resize(_total_cols);
-#
+
             int current_col = 0;
             auto probe = probe_data->getProbe<FloatProbe>(i);
             raw_data[i][current_col] = i;

@@ -678,6 +678,7 @@ bool megamol::probe::PlaceProbes::placeByCenterline(
         probe.m_direction = normal;
         probe.m_begin = -0.1 * final_dist;
         probe.m_end = final_dist;
+        probe.m_cluster_id = i;
 
         this->_probes->addProbe(std::move(probe));
     }
