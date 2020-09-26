@@ -1,9 +1,4 @@
-﻿uniform sampler2D src_tx2Da;
-uniform sampler2D src_tx2Db;
-uniform sampler2D src_tx2Dc;
-uniform sampler2D src_tx2Dd;
-
-uniform sampler2DArray tx2D_array;
+﻿uniform sampler2DArray tx2D_array;
 
 uniform int frametype;
 uniform int h;
@@ -28,15 +23,15 @@ void main()
     vec4 p = vec4(2*uv_coord-vec2(1.0), 0.0, 1.0);
     if(line % 2 == 1){
         if(col % 2 == 0){
-            frag_out = texture(src_tx2Dd, 0.5 * (mMd * p).xy + vec2(0.5));
+            frag_out = texture(tx2D_array, vec3(0.5 * (mMd * p).xy + vec2(0.5), 3));
         }else{
-            frag_out = texture(src_tx2Dc, 0.5 * (mMc * p).xy + vec2(0.5));
+            frag_out = texture(tx2D_array, vec3(0.5 * (mMc * p).xy + vec2(0.5), 2));
         }
     } else {
         if(col % 2 == 1){
-            frag_out = texture(src_tx2Da,  0.5 * (mMa * p).xy + vec2(0.5));
+            frag_out = texture(tx2D_array,  vec3(0.5 * (mMa * p).xy + vec2(0.5), 0));
         }else{
-            frag_out = texture(src_tx2Db, 0.5 * (mMb * p).xy + vec2(0.5));
+            frag_out = texture(tx2D_array, vec3(0.5 * (mMb * p).xy + vec2(0.5), 1));
         }  
     }
 }

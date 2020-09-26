@@ -302,6 +302,8 @@ private:
     GLuint imageStorageB;
     GLuint imageStorageC;
     GLuint imageStorageD;
+    GLuint imageArrayA;
+    GLuint imageArrayB;
     GLuint imageArrayTest;
     GLuint msImageStorageA;
     GLuint msImageStorageB;
