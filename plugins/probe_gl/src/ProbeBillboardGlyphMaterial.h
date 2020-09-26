@@ -60,9 +60,13 @@ private:
     /** Shader program for realtime GPU rendered glyph for scalar probes */
     std::shared_ptr<ShaderProgram> m_scalar_probe_glyph_prgm;
 
+    /** Shader program for displaying cluster IDs of probes */
+    std::shared_ptr<ShaderProgram> m_clusterID_glyph_prgm;
+
     size_t m_textured_glyph_mtl_idx;
     size_t m_vector_glpyh_mtl_idx;
     size_t m_scalar_glyph_mtl_idx;
+    size_t m_clusterID_glyph_mtl_idx;
 
     core::CallerSlot m_glyph_images_slot;
 };
