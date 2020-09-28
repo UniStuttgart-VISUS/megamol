@@ -283,7 +283,7 @@ const megamol::core::factories::ModuleDescriptionManager& megamol::core::CoreIns
 /*
  * megamol::core::CoreInstance::Initialise
  */
-void megamol::core::CoreInstance::Initialise(bool start_luahostservice) {
+void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible) {
     if (this->preInit == NULL) {
         throw vislib::IllegalStateException("Cannot initialise a core instance twice.", __FILE__, __LINE__);
     }
@@ -356,7 +356,7 @@ void megamol::core::CoreInstance::Initialise(bool start_luahostservice) {
     }
 
     // register services? TODO: right place?
-    if (start_luahostservice)
+    if (mmconsole_frontend_compatible)
         megamol::core::utility::LuaHostService::ID = this->InstallService<megamol::core::utility::LuaHostService>();
 
     // loading plugins

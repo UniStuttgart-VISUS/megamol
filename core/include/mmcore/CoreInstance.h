@@ -147,7 +147,7 @@ public:
      * @throws vislib::IllegalStateException if the instance already is
      *         initialised.
      */
-    void Initialise(bool start_luahostservice = true);
+    void Initialise(bool mmconsole_frontend_compatible = true);
 
     /**
      * Sets an initialisation value.
