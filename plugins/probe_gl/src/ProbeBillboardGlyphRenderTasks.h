@@ -8,6 +8,8 @@
 #ifndef PROBE_BILLBOARD_GLYPH_RENDER_TASK_H_INCLUDED
 #define PROBE_BILLBOARD_GLYPH_RENDER_TASK_H_INCLUDED
 
+#include <typeindex>
+
 #include "mesh/AbstractGPURenderTaskDataSource.h"
 
 #include "ProbeCollection.h"
@@ -147,6 +149,13 @@ private:
 
     bool m_show_glyphs;
 
+    size_t m_textured_glyphs_rendertasks_index_offset;
+    size_t m_vector_glyphs_rendertasks_index_offset;
+    size_t m_scalar_glyphs_rendertasks_index_offset;
+    size_t m_clusterID_glyphs_rendertasks_index_offset;
+
+    std::vector<std::pair<std::type_index, size_t>> m_type_index_map;
+
     std::vector<TexturedGlyphData> m_textured_glyph_data;
     std::vector<GlyphVectorProbeData> m_vector_probe_glyph_data;
     std::vector<GlyphScalarProbeData> m_scalar_probe_glyph_data;
@@ -156,11 +165,6 @@ private:
     std::vector<glowl::DrawElementsCommand> m_vector_probe_gylph_draw_commands;
     std::vector<glowl::DrawElementsCommand> m_scalar_probe_gylph_draw_commands;
     std::vector<glowl::DrawElementsCommand> m_clusterID_gylph_draw_commands;
-
-    size_t m_textured_glyphs_rendertasks_index_offset;
-    size_t m_vector_glyphs_rendertasks_index_offset;
-    size_t m_scalar_glyphs_rendertasks_index_offset;
-    size_t m_clusterID_glyphs_rendertasks_index_offset;
 
     bool addAllRenderTasks(std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection);
 
