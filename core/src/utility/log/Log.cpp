@@ -394,8 +394,9 @@ void megamol::core::utility::log::Log::WriteMessage(UINT level,
         megamol::core::utility::log::Log::TimeStamp time, megamol::core::utility::log::Log::SourceID sid,
         const std::string& msg) {
     if (msg.empty()) return;
-    if (msg.back() != '\n') {
-        this->WriteMessage(level, time, sid, msg + "\n");
+    // remove newline at end because spdlog and other log targets already add newlines
+    if (msg.back() == '\n') {
+        this->WriteMessage(level, time, sid, msg.substr(0, msg.size()-1));
         return;
     }
     if (this->mainTarget != nullptr) {
