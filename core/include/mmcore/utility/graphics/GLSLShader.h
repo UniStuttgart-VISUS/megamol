@@ -18,6 +18,7 @@ public:
     struct glsl_uniform {
         GLint location;
         GLsizei count;
+        GLenum type;
     };
     using glsl_uniform_t = glsl_uniform;
 
@@ -44,7 +45,7 @@ public:
                 glGetActiveUniform(_program, idx, max_name_len, &length, &count, &type, name.get());
 
                 _uniform_map.emplace(std::make_pair(std::string(name.get(), length),
-                    glsl_uniform_t{glGetUniformLocation(_program, name.get()), count}));
+                    glsl_uniform_t{glGetUniformLocation(_program, name.get()), count, type}));
             }
         }
     }
@@ -53,11 +54,13 @@ public:
 
     GLsizei get_uniform_size(std::string const& name) { return _uniform_map[name].count; }
 
+    GLenum get_uniform_type(std::string const& name) { return _uniform_map[name].type; }
+
     void enable() const { glUseProgram(_program); }
 
     void disable() const { glUseProgram(0); }
 
-    ~GLSLShader() { glDeleteShader(_program); }
+    ~GLSLShader() { glDeleteProgram(_program); }
 
     operator GLuint() { return _program; }
 
