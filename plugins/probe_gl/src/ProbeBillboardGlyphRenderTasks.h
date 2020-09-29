@@ -8,6 +8,8 @@
 #ifndef PROBE_BILLBOARD_GLYPH_RENDER_TASK_H_INCLUDED
 #define PROBE_BILLBOARD_GLYPH_RENDER_TASK_H_INCLUDED
 
+#include <typeindex>
+
 #include "mesh/AbstractGPURenderTaskDataSource.h"
 
 #include "ProbeCollection.h"
@@ -129,15 +131,42 @@ private:
         GLuint64 tf_texture_handle;
     };
 
+    struct GlyphClusterIDData {
+        glm::vec4 position;
+        glm::vec4 probe_direction;
+        float scale;
+
+        int probe_id;
+        int state;
+
+        float sample_cnt;
+
+        int cluster_id;
+        int padding0;
+        int padding1;
+        int padding2;
+    };
+
     bool m_show_glyphs;
+
+    size_t m_textured_glyphs_rendertasks_index_offset;
+    size_t m_vector_glyphs_rendertasks_index_offset;
+    size_t m_scalar_glyphs_rendertasks_index_offset;
+    size_t m_clusterID_glyphs_rendertasks_index_offset;
+
+    std::vector<std::pair<std::type_index, size_t>> m_type_index_map;
 
     std::vector<TexturedGlyphData> m_textured_glyph_data;
     std::vector<GlyphVectorProbeData> m_vector_probe_glyph_data;
     std::vector<GlyphScalarProbeData> m_scalar_probe_glyph_data;
+    std::vector<GlyphClusterIDData> m_clusterID_glyph_data;
 
     std::vector<glowl::DrawElementsCommand> m_textured_gylph_draw_commands;
     std::vector<glowl::DrawElementsCommand> m_vector_probe_gylph_draw_commands;
     std::vector<glowl::DrawElementsCommand> m_scalar_probe_gylph_draw_commands;
+    std::vector<glowl::DrawElementsCommand> m_clusterID_gylph_draw_commands;
+
+    bool addAllRenderTasks(std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection);
 
     template <typename ProbeType>
     TexturedGlyphData createTexturedGlyphData(
@@ -146,6 +175,8 @@ private:
     GlyphScalarProbeData createScalarProbeGlyphData(probe::FloatProbe const& probe, int probe_id, float scale);
 
     GlyphVectorProbeData createVectorProbeGlyphData(probe::Vec4Probe const& probe, int probe_id, float scale);
+
+    GlyphClusterIDData createClusterIDGlyphData(probe::BaseProbe const& probe, int probe_id, float scale);
 };
 
 template <typename ProbeType>

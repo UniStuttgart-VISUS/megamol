@@ -8,6 +8,7 @@ megamol::probe_gl::ProbeBillboardGlyphMaterial::ProbeBillboardGlyphMaterial()
     , m_textured_glyph_mtl_idx(0)
     , m_vector_glpyh_mtl_idx(0)
     , m_scalar_glyph_mtl_idx(0)
+    , m_clusterID_glyph_mtl_idx(0)
     , m_glyph_images_slot("GetProbes", "Slot for accessing a probe collection") 
 {
 
@@ -49,13 +50,12 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
         return shader_prgm;
     };
 
-    
     try {
         this->m_textured_glyph_prgm = create_progam("TexturedProbeGlyph");
     } catch (glowl::GLSLProgramException const& exc) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n",
-            m_textured_glyph_prgm->getDebugLabel().c_str(), exc.what(), __FILE__, __FUNCTION__, __LINE__);
+            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n", "TexturedProbeGlyph", exc.what(),
+            __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (vislib::Exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
@@ -71,8 +71,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
         this->m_scalar_probe_glyph_prgm = create_progam("ScalarProbeGlyph");
     } catch (glowl::GLSLProgramException const& exc) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n",
-            m_scalar_probe_glyph_prgm->getDebugLabel().c_str(), exc.what(), __FILE__, __FUNCTION__, __LINE__);
+            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n", "ScalarProbeGlyph", exc.what(),
+            __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (vislib::Exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
@@ -88,8 +88,25 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
         this->m_vector_probe_glyph_prgm = create_progam("VectorProbeGlyph");
     } catch (glowl::GLSLProgramException const& exc) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n",
-            m_vector_probe_glyph_prgm->getDebugLabel().c_str(), exc.what(), __FILE__, __FUNCTION__, __LINE__);
+            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n", "VectorProbeGlyph", exc.what(),
+            __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } catch (vislib::Exception e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: %s\n", e.GetMsgA());
+        return false;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader: Unknown exception\n");
+        return false;
+    }
+
+    try {
+        this->m_clusterID_glyph_prgm = create_progam("ClusterIDGlyph");
+    } catch (glowl::GLSLProgramException const& exc) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n", "ClusterIDGlyph", exc.what(),
+            __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (vislib::Exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(
@@ -106,6 +123,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
     m_textured_glyph_mtl_idx = m_gpu_materials->addMaterial(m_textured_glyph_prgm);
     m_scalar_glyph_mtl_idx = m_gpu_materials->addMaterial(m_scalar_probe_glyph_prgm);
     m_vector_glpyh_mtl_idx = m_gpu_materials->addMaterial(m_vector_probe_glyph_prgm);
+    m_clusterID_glyph_mtl_idx = m_gpu_materials->addMaterial(m_clusterID_glyph_prgm);
 
     return true;
 }
@@ -193,6 +211,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call&
             mtl_collection->addMaterial(this->m_textured_glyph_prgm, textures);
             m_gpu_materials->addMaterial(this->m_scalar_probe_glyph_prgm);
             m_gpu_materials->addMaterial(this->m_vector_probe_glyph_prgm);
+            m_gpu_materials->addMaterial(this->m_clusterID_glyph_prgm);
+
         }
 
     }

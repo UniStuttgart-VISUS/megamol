@@ -31,7 +31,8 @@ SampleAlongPobes::SampleAlongPobes()
     , _vec_param_to_samplex_x("ParameterToSampleX", "")
     , _vec_param_to_samplex_y("ParameterToSampleY", "")
     , _vec_param_to_samplex_z("ParameterToSampleZ", "")
-    , _vec_param_to_samplex_w("ParameterToSampleW", "") {
+    , _vec_param_to_samplex_w("ParameterToSampleW", "")
+    , _volume_rhs_slot("getVolumeData", "") {
 
     this->_probe_lhs_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(0), &SampleAlongPobes::getData);
     this->_probe_lhs_slot.SetCallback(

@@ -36,8 +36,15 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
     tex_layout.internal_format = GL_RGBA32F;
     tex_layout.int_parameters = {
         {GL_TEXTURE_MIN_FILTER, GL_NEAREST}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}, {GL_TEXTURE_WRAP_S, GL_CLAMP}};
-    this->m_transfer_function = std::make_shared<glowl::Texture2D>("ProbeTransferFunction", tex_layout, nullptr);
+    try {
+        this->m_transfer_function = std::make_shared<glowl::Texture2D>("ProbeTransferFunction", tex_layout, nullptr);
+    } catch (glowl::TextureException const& exc) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Error on transfer texture view pre-creation: %s. [%s, %s, line %d]\n", exc.what(), __FILE__, __FUNCTION__,
+            __LINE__);
+    }
     // TODO intialize with value indicating that no transfer function is connected
+    this->m_transfer_function->makeResident();
 
     return true;
 }
@@ -56,7 +63,11 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
     , m_use_interpolation_slot("UseInterpolation", "Interpolate between samples")
     , m_tf_min(0.0f)
     , m_tf_max(1.0f)
-    , m_show_glyphs(true) {
+    , m_show_glyphs(true)
+    , m_textured_glyphs_rendertasks_index_offset(0)
+    , m_vector_glyphs_rendertasks_index_offset(0)
+    , m_scalar_glyphs_rendertasks_index_offset(0)
+    , m_clusterID_glyphs_rendertasks_index_offset(0) {
 
     this->m_transfer_function_Slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->m_transfer_function_Slot);
@@ -73,6 +84,7 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
     this->m_rendering_mode_slot << new megamol::core::param::EnumParam(0);
     this->m_rendering_mode_slot.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Precomputed");
     this->m_rendering_mode_slot.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Realtime");
+    this->m_rendering_mode_slot.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "ClusterID");
     this->MakeSlotAvailable(&this->m_rendering_mode_slot);
 
     this->m_use_interpolation_slot << new core::param::BoolParam(true);
@@ -82,6 +94,13 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
 megamol::probe_gl::ProbeBillboardGlyphRenderTasks::~ProbeBillboardGlyphRenderTasks() {}
 
 bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Call& caller) {
+
+    auto err = glGetError();
+    if (err != GL_NO_ERROR) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unexpeced OpenGL error: %i. [%s, %s, line %d]\n", err, __FILE__, __FUNCTION__, __LINE__);
+        ;
+    }
 
     mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL) return false;
@@ -140,13 +159,18 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
         auto probe_cnt = probes->getProbeCount();
 
+        m_type_index_map.clear();
+        m_type_index_map.reserve(probe_cnt);
+
         m_textured_glyph_data.clear();
         m_vector_probe_glyph_data.clear();
         m_scalar_probe_glyph_data.clear();
+        m_clusterID_glyph_data.clear();
 
         m_textured_gylph_draw_commands.clear();
         m_vector_probe_gylph_draw_commands.clear();
         m_scalar_probe_gylph_draw_commands.clear();
+        m_clusterID_gylph_draw_commands.clear();
 
         m_textured_gylph_draw_commands.reserve(probe_cnt);
         m_textured_glyph_data.reserve(probe_cnt);
@@ -156,6 +180,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
         m_scalar_probe_gylph_draw_commands.reserve(probe_cnt);
         m_scalar_probe_glyph_data.reserve(probe_cnt);
+
+        m_clusterID_gylph_draw_commands.reserve(probe_cnt);
+        m_clusterID_glyph_data.reserve(probe_cnt);
 
         // draw command looks the same for all billboards because geometry is reused
         glowl::DrawElementsCommand draw_command;
@@ -189,27 +216,30 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         auto glyph_data = createTexturedGlyphData(arg, probe_idx, texture_handle, slice_idx, scale);
                         m_textured_gylph_draw_commands.push_back(draw_command);
                         this->m_textured_glyph_data.push_back(glyph_data);
+
+                        this->m_type_index_map.push_back({std::type_index(typeid(TexturedGlyphData)), probe_idx});
                     };
 
                     std::visit(visitor, generic_probe);
                 }
             }
 
-        } else {
+        } else if (m_rendering_mode_slot.Param<core::param::EnumParam>()->Value() == 1) {
             // Update transfer texture only if it available and has changed
             if (tfc != NULL) {
                 if (tfc->IsDirty()) {
                     //++m_version;
-
                     tfc->ResetDirty();
 
                     this->m_transfer_function->makeNonResident();
                     this->m_transfer_function.reset();
 
-                    GLenum err = glGetError();
-                    if (err != GL_NO_ERROR) {
-                        // "Do something cop!"
-                        std::cerr << "GL error during transfer function update" << err << std::endl;
+                    {
+                        GLenum err = glGetError();
+                        if (err != GL_NO_ERROR) {
+                            // "Do something cop!"
+                            std::cerr << "GL error during transfer function update" << err << std::endl;
+                        }
                     }
 
                     glowl::TextureLayout tex_layout;
@@ -224,17 +254,31 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     tex_layout.internal_format = GL_RGBA32F;
                     tex_layout.int_parameters = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST},
                         {GL_TEXTURE_MAG_FILTER, GL_LINEAR}, {GL_TEXTURE_WRAP_S, GL_CLAMP}};
-                    this->m_transfer_function = std::make_shared<glowl::Texture2D>(
-                        "ProbeTransferFunction", tex_layout, (GLvoid*)tfc->GetTextureData());
+                    try {
+                        this->m_transfer_function = std::make_shared<glowl::Texture2D>(
+                            "ProbeTransferFunction", tex_layout, (GLvoid*)tfc->GetTextureData());
+                    } catch (glowl::TextureException const& exc) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "Error on transfer texture view creation: %s. [%s, %s, line %d]\n", exc.what(), __FILE__,
+                            __FUNCTION__, __LINE__);
+                    }
+
+                    this->m_transfer_function->makeResident();
+                    {
+                        auto err = glGetError();
+                        if (err != GL_NO_ERROR) {
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                "Error on making transfer texture view resident: %i. [%s, %s, line %d]\n", err, __FILE__, __FUNCTION__,
+                                __LINE__);
+                        }
+                    }
 
                     m_tf_min = std::get<0>(tfc->Range());
                     m_tf_max = std::get<1>(tfc->Range());
                 }
             }
 
-            // TODO get transfer function texture from material
             GLuint64 texture_handle = this->m_transfer_function->getTextureHandle();
-            this->m_transfer_function->makeResident();
 
             for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
 
@@ -244,14 +288,20 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     using T = std::decay_t<decltype(arg)>;
                     if constexpr (std::is_same_v<T, probe::FloatProbe>) {
 
+                        auto sp_idx = m_scalar_probe_glyph_data.size();
+
                         auto glyph_data = createScalarProbeGlyphData(arg, probe_idx, scale);
                         glyph_data.tf_texture_handle = texture_handle;
                         m_scalar_probe_gylph_draw_commands.push_back(draw_command);
                         this->m_scalar_probe_glyph_data.push_back(glyph_data);
 
+                        this->m_type_index_map.push_back({std::type_index(typeid(GlyphScalarProbeData)), sp_idx});
+
                     } else if constexpr (std::is_same_v<T, probe::IntProbe>) {
                         // TODO
                     } else if constexpr (std::is_same_v<T, probe::Vec4Probe>) {
+
+                        auto vp_idx = m_vector_probe_glyph_data.size();
 
                         auto glyph_data = createVectorProbeGlyphData(arg, probe_idx, scale);
                         glyph_data.tf_texture_handle = texture_handle;
@@ -259,6 +309,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         glyph_data.tf_max = m_tf_max;
                         m_vector_probe_gylph_draw_commands.push_back(draw_command);
                         this->m_vector_probe_glyph_data.push_back(glyph_data);
+
+                        this->m_type_index_map.push_back({std::type_index(typeid(GlyphVectorProbeData)), vp_idx});
 
                     } else {
                         // unknown probe type, throw error? do nothing?
@@ -279,25 +331,26 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 data.min_value = min;
                 data.max_value = max;
             }
+        } else {
+            for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
+
+                auto generic_probe = probes->getGenericProbe(probe_idx);
+
+                auto visitor = [draw_command, scale, probe_idx, this](auto&& arg) {
+                    using T = std::decay_t<decltype(arg)>;
+
+                    auto glyph_data = createClusterIDGlyphData(arg, probe_idx, scale);
+                    m_clusterID_gylph_draw_commands.push_back(draw_command);
+                    this->m_clusterID_glyph_data.push_back(glyph_data);
+
+                    this->m_type_index_map.push_back({std::type_index(typeid(GlyphClusterIDData)), probe_idx});
+                };
+
+                std::visit(visitor, generic_probe);
+            }
         }
 
-        if (!m_textured_gylph_draw_commands.empty()) {
-            auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
-            rt_collection->addRenderTasks(
-                textured_shader, m_billboard_dummy_mesh, m_textured_gylph_draw_commands, m_textured_glyph_data);
-        }
-
-        if (!m_scalar_probe_gylph_draw_commands.empty()) {
-            auto const& scalar_shader = gpu_mtl_storage->getMaterials()[1].shader_program;
-            rt_collection->addRenderTasks(
-                scalar_shader, m_billboard_dummy_mesh, m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
-        }
-
-        if (!m_vector_probe_gylph_draw_commands.empty()) {
-            auto const& vector_shader = gpu_mtl_storage->getMaterials()[2].shader_program;
-            rt_collection->addRenderTasks(
-                vector_shader, m_billboard_dummy_mesh, m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
-        }
+        addAllRenderTasks(rt_collection);
 
         std::array<PerFrameData, 1> data;
         data[0].use_interpolation = m_use_interpolation_slot.Param<core::param::BoolParam>()->Value();
@@ -340,28 +393,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 rt_collection->clear();
 
                 if (m_show_glyphs) {
-                    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
-                    if (mtlc == NULL) return false;
-
-                    auto gpu_mtl_storage = mtlc->getData();
-
-                    if (!m_textured_gylph_draw_commands.empty()) {
-                        auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
-                        rt_collection->addRenderTasks(textured_shader, m_billboard_dummy_mesh,
-                            m_textured_gylph_draw_commands, m_textured_glyph_data);
-                    }
-
-                    if (!m_scalar_probe_glyph_data.empty()) {
-                        auto const& scalar_shader = gpu_mtl_storage->getMaterials()[1].shader_program;
-                        rt_collection->addRenderTasks(scalar_shader, m_billboard_dummy_mesh,
-                            m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
-                    }
-
-                    if (!m_vector_probe_glyph_data.empty()) {
-                        auto const& vector_shader = gpu_mtl_storage->getMaterials()[2].shader_program;
-                        rt_collection->addRenderTasks(vector_shader, m_billboard_dummy_mesh,
-                            m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
-                    }
+                    addAllRenderTasks(rt_collection);
                 }
             }
         }
@@ -370,48 +402,64 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         {
             auto pending_highlight_events = event_collection->get<ProbeHighlight>();
             for (auto& evt : pending_highlight_events) {
-                std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[evt.obj_id]};
-                per_probe_data[0].state = 1;
+                auto probe_type = m_type_index_map[evt.obj_id].first;
+                auto probe_idx = m_type_index_map[evt.obj_id].second;
 
-                rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
-
-                bool my_tool_active = true;
-                float my_color[4] = {0.0, 0.0, 0.0, 0.0};
-
-                // ImGui::NewFrame();
-                // Create a window called "My First Tool", with a menu bar.
-                auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
-                if (ctx != nullptr) {
-                    ImGui::SetCurrentContext(ctx);
-                    ImGui::Begin("My First Tool", &my_tool_active, ImGuiWindowFlags_MenuBar);
-                    if (ImGui::BeginMenuBar()) {
-                        if (ImGui::BeginMenu("File")) {
-                            if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */
-                            }
-                            if (ImGui::MenuItem("Save", "Ctrl+S")) { /* Do stuff */
-                            }
-                            if (ImGui::MenuItem("Close", "Ctrl+W")) {
-                                my_tool_active = false;
-                            }
-                            ImGui::EndMenu();
-                        }
-                        ImGui::EndMenuBar();
-                    }
-
-                    // Edit a color (stored as ~4 floats)
-                    ImGui::ColorEdit4("Color", my_color);
-
-                    // Plot some values
-                    const float my_values[] = {0.2f, 0.1f, 1.0f, 0.5f, 0.9f, 2.2f};
-                    ImGui::PlotLines("Frame Times", my_values, IM_ARRAYSIZE(my_values));
-
-                    // Display contents in a scrolling region
-                    ImGui::TextColored(ImVec4(1, 1, 0, 1), "Important Stuff");
-                    ImGui::BeginChild("Scrolling");
-                    for (int n = 0; n < 50; n++) ImGui::Text("%04d: Some text", n);
-                    ImGui::EndChild();
-                    ImGui::End();
+                if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
+                    std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
+                    per_probe_data[0].state = 1;
+                    rt_collection->updatePerDrawData(
+                        m_scalar_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
+                    std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
+                    per_probe_data[0].state = 1;
+                    rt_collection->updatePerDrawData(
+                        m_vector_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
+                    std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
+                    per_probe_data[0].state = 1;
+                    rt_collection->updatePerDrawData(
+                        m_clusterID_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
                 }
+
+
+                //  bool my_tool_active = true;
+                //  float my_color[4] = {0.0, 0.0, 0.0, 0.0};
+                //
+                //  // ImGui::NewFrame();
+                //  // Create a window called "My First Tool", with a menu bar.
+                //  auto ctx = reinterpret_cast<ImGuiContext*>(this->GetCoreInstance()->GetCurrentImGuiContext());
+                //  if (ctx != nullptr) {
+                //      ImGui::SetCurrentContext(ctx);
+                //      ImGui::Begin("My First Tool", &my_tool_active, ImGuiWindowFlags_MenuBar);
+                //      if (ImGui::BeginMenuBar()) {
+                //          if (ImGui::BeginMenu("File")) {
+                //              if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */
+                //              }
+                //              if (ImGui::MenuItem("Save", "Ctrl+S")) { /* Do stuff */
+                //              }
+                //              if (ImGui::MenuItem("Close", "Ctrl+W")) {
+                //                  my_tool_active = false;
+                //              }
+                //              ImGui::EndMenu();
+                //          }
+                //          ImGui::EndMenuBar();
+                //      }
+                //
+                //      // Edit a color (stored as ~4 floats)
+                //      ImGui::ColorEdit4("Color", my_color);
+                //
+                //      // Plot some values
+                //      const float my_values[] = {0.2f, 0.1f, 1.0f, 0.5f, 0.9f, 2.2f};
+                //      ImGui::PlotLines("Frame Times", my_values, IM_ARRAYSIZE(my_values));
+                //
+                //      // Display contents in a scrolling region
+                //      ImGui::TextColored(ImVec4(1, 1, 0, 1), "Important Stuff");
+                //      ImGui::BeginChild("Scrolling");
+                //      for (int n = 0; n < 50; n++) ImGui::Text("%04d: Some text", n);
+                //      ImGui::EndChild();
+                //      ImGui::End();
+                //  }
             }
         }
 
@@ -419,8 +467,22 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         {
             auto pending_dehighlight_events = event_collection->get<ProbeDehighlight>();
             for (auto& evt : pending_dehighlight_events) {
-                std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[evt.obj_id]};
-                rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
+                auto probe_type = m_type_index_map[evt.obj_id].first;
+                auto probe_idx = m_type_index_map[evt.obj_id].second;
+
+                if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
+                    std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
+                    rt_collection->updatePerDrawData(
+                        m_scalar_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
+                    std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
+                    rt_collection->updatePerDrawData(
+                        m_vector_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
+                    std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
+                    rt_collection->updatePerDrawData(
+                        m_clusterID_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                }
             }
         }
 
@@ -428,10 +490,25 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         {
             auto pending_select_events = event_collection->get<ProbeSelect>();
             for (auto& evt : pending_select_events) {
-                m_vector_probe_glyph_data[evt.obj_id].state = 2;
-                std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[evt.obj_id]};
+                auto probe_type = m_type_index_map[evt.obj_id].first;
+                auto probe_idx = m_type_index_map[evt.obj_id].second;
 
-                rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
+                if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
+                    m_scalar_probe_glyph_data[probe_idx].state = 2;
+                    std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
+                    rt_collection->updatePerDrawData(
+                        m_scalar_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
+                    m_vector_probe_glyph_data[probe_idx].state = 2;
+                    std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
+                    rt_collection->updatePerDrawData(
+                        m_vector_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
+                    m_clusterID_glyph_data[probe_idx].state = 2;
+                    std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
+                    rt_collection->updatePerDrawData(
+                        m_clusterID_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                }
             }
         }
 
@@ -439,49 +516,60 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         {
             auto pending_deselect_events = event_collection->get<ProbeDeselect>();
             for (auto& evt : pending_deselect_events) {
-                m_vector_probe_glyph_data[evt.obj_id].state = 0;
-                std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[evt.obj_id]};
+                auto probe_type = m_type_index_map[evt.obj_id].first;
+                auto probe_idx = m_type_index_map[evt.obj_id].second;
 
-                rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
+                if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
+                    m_scalar_probe_glyph_data[probe_idx].state = 0;
+                    std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
+                    rt_collection->updatePerDrawData(
+                        m_scalar_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
+                    m_vector_probe_glyph_data[probe_idx].state = 0;
+                    std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
+                    rt_collection->updatePerDrawData(
+                        m_vector_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
+                    m_clusterID_glyph_data[probe_idx].state = 0;
+                    std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
+                    rt_collection->updatePerDrawData(
+                        m_clusterID_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                }
             }
         }
 
         // process probe exclusive selection events
         {
-            auto pending_selectExclusive_events = event_collection->get<ProbeSelectExclusive>();
-            if (!pending_selectExclusive_events.empty()) {
+            auto pending_events = event_collection->get<ProbeSelectExclusive>();
+            if (!pending_events.empty()) {
+
+                for (auto& draw_data : m_scalar_probe_glyph_data) {
+                    draw_data.state = 0;
+                }
                 for (auto& draw_data : m_vector_probe_glyph_data) {
                     draw_data.state = 0;
                 }
+                for (auto& draw_data : m_clusterID_glyph_data) {
+                    draw_data.state = 0;
+                }
+
+                auto probe_type = m_type_index_map[pending_events.back().obj_id].first;
+                auto probe_idx = m_type_index_map[pending_events.back().obj_id].second;
+
                 // multiple exclusive selections make no sense, just applay the last one
-                m_vector_probe_glyph_data[pending_selectExclusive_events.back().obj_id].state = 2;
+                if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
+                    m_scalar_probe_glyph_data[probe_idx].state = 2;
+                } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
+                    m_vector_probe_glyph_data[probe_idx].state = 2;
+                } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
+                    m_clusterID_glyph_data[probe_idx].state = 2;
+                }
 
                 // TODO this breaks chaining...
                 rt_collection->clear();
 
                 if (m_show_glyphs) {
-                    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
-                    if (mtlc == NULL) return false;
-
-                    auto gpu_mtl_storage = mtlc->getData();
-
-                    if (!m_textured_gylph_draw_commands.empty()) {
-                        auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
-                        rt_collection->addRenderTasks(textured_shader, m_billboard_dummy_mesh,
-                            m_textured_gylph_draw_commands, m_textured_glyph_data);
-                    }
-
-                    if (!m_scalar_probe_glyph_data.empty()) {
-                        auto const& scalar_shader = gpu_mtl_storage->getMaterials()[1].shader_program;
-                        rt_collection->addRenderTasks(scalar_shader, m_billboard_dummy_mesh,
-                            m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
-                    }
-
-                    if (!m_vector_probe_glyph_data.empty()) {
-                        auto const& vector_shader = gpu_mtl_storage->getMaterials()[2].shader_program;
-                        rt_collection->addRenderTasks(vector_shader, m_billboard_dummy_mesh,
-                            m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
-                    }
+                    addAllRenderTasks(rt_collection);
                 }
             }
         }
@@ -490,10 +578,27 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         {
             auto pending_select_events = event_collection->get<ProbeSelectToggle>();
             for (auto& evt : pending_select_events) {
-                m_vector_probe_glyph_data[evt.obj_id].state = m_vector_probe_glyph_data[evt.obj_id].state == 2 ? 0 : 2;
-                std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[evt.obj_id]};
+                auto probe_type = m_type_index_map[evt.obj_id].first;
+                auto probe_idx = m_type_index_map[evt.obj_id].second;
 
-                rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
+                if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
+                    m_scalar_probe_glyph_data[probe_idx].state =
+                        m_scalar_probe_glyph_data[probe_idx].state == 2 ? 0 : 2;
+                    std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
+                    rt_collection->updatePerDrawData(
+                        m_scalar_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
+                    m_vector_probe_glyph_data[probe_idx].state =
+                        m_vector_probe_glyph_data[probe_idx].state == 2 ? 0 : 2;
+                    std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
+                    rt_collection->updatePerDrawData(
+                        m_vector_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
+                    m_clusterID_glyph_data[probe_idx].state = m_clusterID_glyph_data[probe_idx].state == 2 ? 0 : 2;
+                    std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
+                    rt_collection->updatePerDrawData(
+                        m_clusterID_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                }
             }
         }
 
@@ -504,28 +609,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 m_show_glyphs = !m_show_glyphs;
 
                 if (m_show_glyphs) {
-                    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
-                    if (mtlc == NULL) return false;
-
-                    auto gpu_mtl_storage = mtlc->getData();
-
-                    if (!m_textured_gylph_draw_commands.empty()) {
-                        auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
-                        rt_collection->addRenderTasks(textured_shader, m_billboard_dummy_mesh,
-                            m_textured_gylph_draw_commands, m_textured_glyph_data);
-                    }
-
-                    if (!m_scalar_probe_glyph_data.empty()) {
-                        auto const& scalar_shader = gpu_mtl_storage->getMaterials()[1].shader_program;
-                        rt_collection->addRenderTasks(scalar_shader, m_billboard_dummy_mesh,
-                            m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
-                    }
-
-                    if (!m_vector_probe_glyph_data.empty()) {
-                        auto const& vector_shader = gpu_mtl_storage->getMaterials()[2].shader_program;
-                        rt_collection->addRenderTasks(vector_shader, m_billboard_dummy_mesh,
-                            m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
-                    }
+                    addAllRenderTasks(rt_collection);
                 } else {
                     // TODO this breaks chaining...
                     rt_collection->clear();
@@ -571,6 +655,39 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getMetaDataCallback(core
     lhs_rt_call->setMetaData(lhs_meta_data);
 
     return true;
+}
+
+bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks(
+    std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection) {
+    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
+    if (mtlc == NULL) return false;
+    if (!(*mtlc)(0)) return false;
+
+    auto gpu_mtl_storage = mtlc->getData();
+
+    if (!m_textured_gylph_draw_commands.empty()) {
+        auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
+        m_textured_glyphs_rendertasks_index_offset = rt_collection->addRenderTasks(
+            textured_shader, m_billboard_dummy_mesh, m_textured_gylph_draw_commands, m_textured_glyph_data);
+    }
+
+    if (!m_scalar_probe_glyph_data.empty()) {
+        auto const& scalar_shader = gpu_mtl_storage->getMaterials()[1].shader_program;
+        m_scalar_glyphs_rendertasks_index_offset = rt_collection->addRenderTasks(
+            scalar_shader, m_billboard_dummy_mesh, m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
+    }
+
+    if (!m_vector_probe_glyph_data.empty()) {
+        auto const& vector_shader = gpu_mtl_storage->getMaterials()[2].shader_program;
+        m_vector_glyphs_rendertasks_index_offset = rt_collection->addRenderTasks(
+            vector_shader, m_billboard_dummy_mesh, m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
+    }
+
+    if (!m_clusterID_gylph_draw_commands.empty()) {
+        auto const& vector_shader = gpu_mtl_storage->getMaterials()[3].shader_program;
+        m_clusterID_glyphs_rendertasks_index_offset = rt_collection->addRenderTasks(
+            vector_shader, m_billboard_dummy_mesh, m_clusterID_gylph_draw_commands, m_clusterID_glyph_data);
+    }
 }
 
 megamol::probe_gl::ProbeBillboardGlyphRenderTasks::GlyphScalarProbeData
@@ -627,6 +744,26 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::createVectorProbeGlyphData(
     }
 
     glyph_data.probe_id = probe_id;
+
+    return glyph_data;
+}
+
+megamol::probe_gl::ProbeBillboardGlyphRenderTasks::GlyphClusterIDData
+megamol::probe_gl::ProbeBillboardGlyphRenderTasks::createClusterIDGlyphData(
+    probe::BaseProbe const& probe, int probe_id, float scale) {
+
+    GlyphClusterIDData glyph_data;
+    glyph_data.position = glm::vec4(probe.m_position[0] + probe.m_direction[0] * (probe.m_begin * 1.25f),
+        probe.m_position[1] + probe.m_direction[1] * (probe.m_begin * 1.25f),
+        probe.m_position[2] + probe.m_direction[2] * (probe.m_begin * 1.25f), 1.0f);
+
+    glyph_data.probe_direction = glm::vec4(probe.m_direction[0], probe.m_direction[1], probe.m_direction[2], 1.0f);
+
+    glyph_data.scale = scale;
+
+    glyph_data.probe_id = probe_id;
+
+    glyph_data.cluster_id = probe.m_cluster_id;
 
     return glyph_data;
 }

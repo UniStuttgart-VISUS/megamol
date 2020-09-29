@@ -55,6 +55,7 @@ bool ADIOStoTable::getData(core::Call& call) {
 
     if ((cad->getFrameIDtoLoad() != _currentFrame) || dathashChanged) {
 
+        ctd->SetDataHash(cad->getDataHash());
         
         for (auto var : availVars) {
             if (!cad->inquire(var)) {
@@ -122,7 +123,7 @@ bool ADIOStoTable::getMetaData(core::Call& call) {
 
     // put metadata in table call
     ctd->SetFrameCount(cad->getFrameCount());
-    ctd->SetDataHash(cad->getDataHash());
+    //ctd->SetDataHash(cad->getDataHash());
 
     return true;
 }
