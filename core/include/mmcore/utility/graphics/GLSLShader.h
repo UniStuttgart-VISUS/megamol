@@ -50,11 +50,11 @@ public:
         }
     }
 
-    GLint get_uniform_location(std::string const& name) { return _uniform_map[name].location; }
+    GLint get_uniform_location(std::string const& name) { return _uniform_map.at(name).location; }
 
-    GLsizei get_uniform_size(std::string const& name) { return _uniform_map[name].count; }
+    GLsizei get_uniform_size(std::string const& name) { return _uniform_map.at(name).count; }
 
-    GLenum get_uniform_type(std::string const& name) { return _uniform_map[name].type; }
+    GLenum get_uniform_type(std::string const& name) { return _uniform_map.at(name).type; }
 
     void enable() const { glUseProgram(_program); }
 
