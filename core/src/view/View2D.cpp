@@ -553,9 +553,11 @@ bool view::View2D::onRestoreCamera(param::ParamSlot &p) {
     if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
         nlohmann::json obj = nlohmann::json::parse(this->cameraSettingsSlot.Param<param::StringParam>()->Value().PeekBuffer(), nullptr, false);
         if (!obj.is_object()) {
-            return false;
+            megamol::core::utility::log::Log::DefaultLog.WriteError("View2D: Camera state invalid. Cannot deserialize.");
+            return true;
         } else {
-            if (obj.count("viewX") == 1 && obj.count("viewY") == 1 && obj.count("viewZoom") == 1) {
+            if (obj.count("viewX") == 1 && obj.count("viewY") == 1 && obj.count("viewZoom") == 1
+                && obj["viewX"].is_number() && obj["viewY"].is_number() && obj["viewZoom"].is_number()) {
                 this->viewX = obj["viewX"];
                 this->viewY = obj["viewY"];
                 this->viewZoom = obj["viewZoom"];
