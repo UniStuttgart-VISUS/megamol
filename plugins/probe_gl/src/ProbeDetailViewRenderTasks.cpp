@@ -1,6 +1,9 @@
 #include "ProbeDetailViewRenderTasks.h"
 
+#include "mmcore/EventCall.h"
+
 #include "ProbeCalls.h"
+#include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/view/CallGetTransferFunction.h"
@@ -9,7 +12,7 @@ megamol::probe_gl::ProbeDetailViewRenderTasks::ProbeDetailViewRenderTasks()
     : m_version(0)
     , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
     , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
-    , m_probe_manipulation_slot("GetProbeManipulation", "")
+    , m_event_slot("GetProbeManipulation", "")
     , m_ui_mesh(nullptr)
     , m_probes_mesh(nullptr)
     , m_tf_min(0.0f)
@@ -20,8 +23,8 @@ megamol::probe_gl::ProbeDetailViewRenderTasks::ProbeDetailViewRenderTasks()
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->m_probes_slot);
 
-    this->m_probe_manipulation_slot.SetCompatibleCall<probe_gl::CallProbeInteractionDescription>();
-    this->MakeSlotAvailable(&this->m_probe_manipulation_slot);
+    this->m_event_slot.SetCompatibleCall<core::CallEventDescription>();
+    this->MakeSlotAvailable(&this->m_event_slot);
 }
 
 megamol::probe_gl::ProbeDetailViewRenderTasks::~ProbeDetailViewRenderTasks() {}
@@ -99,6 +102,11 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
     if (mtlc == NULL) return false;
     if (!(*mtlc)(0)) return false;
 
+    // check/get mesh data 
+    mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
+    if (mc == NULL) return false;
+    if (!(*mc)(0)) return false;
+
     // check/get probe data
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
     if (pc == NULL) return false;
@@ -110,7 +118,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         ((*tfc)(0));
     }
 
-    bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() || ((tfc != NULL) ? tfc->IsDirty() : false);
+    bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() || mc->hasUpdate() || ((tfc != NULL) ? tfc->IsDirty() : false);
 
     if (something_has_changed) {
         ++m_version;
@@ -123,45 +131,69 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
     //TODO set data/metadata
 
     // check for pending probe manipulations
-    CallProbeInteraction* pic = this->m_probe_manipulation_slot.CallAs<CallProbeInteraction>();
-    if (pic != NULL) {
-        if (!(*pic)(0)) return false;
+    // check for pending events
+    auto call_event_storage = this->m_event_slot.CallAs<core::CallEvent>();
+    if (call_event_storage != NULL) {
+        if ((!(*call_event_storage)(0))) return false;
 
-        if (pic->hasUpdate()) {
-            auto interaction_collection = pic->getData();
+        auto event_collection = call_event_storage->getData();
 
-            auto& pending_manips = interaction_collection->accessPendingManipulations();
-
-            if (pc->hasUpdate()) {
-                if (!(*pc)(0)) return false;
-            }
-            auto probes = pc->getData();
-
-            for (auto itr = pending_manips.begin(); itr != pending_manips.end(); ++itr) {
-                if (itr->type == HIGHLIGHT) {
-                    auto manipulation = *itr;
-
-
-                } else if (itr->type == DEHIGHLIGHT) {
-                    auto manipulation = *itr;
-
-
-                } else if (itr->type == SELECT) {
-                    auto manipulation = *itr;
-
-                    //TODO add render tasks
-                } else if (itr->type == DESELECT) {
-                    auto manipulation = *itr;
-
-                    //TODO remove render tasks
-                } else if (itr->type == CLEAR_SELECTION) {
-                    auto manipulation = *itr;
-
-                    //TODO clear render tasks
-                } else {
-                }
+        // process pobe clear selection events
+        {
+            auto pending_clearselection_events = event_collection->get<ProbeClearSelection>();
+            for (auto& evt : pending_clearselection_events) {
+               
             }
         }
+
+        // process probe highlight events
+        {
+            auto pending_highlight_events = event_collection->get<ProbeHighlight>();
+            for (auto& evt : pending_highlight_events) {
+
+            }
+        }
+
+        // process probe dehighlight events
+        {
+            auto pending_dehighlight_events = event_collection->get<ProbeDehighlight>();
+            for (auto& evt : pending_dehighlight_events) {
+                
+            }
+        }
+
+        // process probe selection events
+        {
+            auto pending_select_events = event_collection->get<ProbeSelect>();
+            for (auto& evt : pending_select_events) {
+                
+            }
+        }
+
+        // process probe deselection events
+        {
+            auto pending_deselect_events = event_collection->get<ProbeDeselect>();
+            for (auto& evt : pending_deselect_events) {
+                
+            }
+        }
+
+        // process probe exclusive selection events
+        {
+            auto pending_events = event_collection->get<ProbeSelectExclusive>();
+            if (!pending_events.empty()) {
+
+            }
+        }
+
+        // process probe selection toggle events
+        {
+            auto pending_select_events = event_collection->get<ProbeSelectToggle>();
+            for (auto& evt : pending_select_events) {
+                
+            }
+        }
+
     }
 
     return false;

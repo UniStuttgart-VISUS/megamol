@@ -57,7 +57,7 @@ private:
 
     core::CallerSlot m_probes_slot;
 
-    core::CallerSlot m_probe_manipulation_slot;
+    core::CallerSlot m_event_slot;
 
     std::shared_ptr<glowl::Mesh> m_ui_mesh; // for depth scale (parallel to probe, offset by cam right vector)
 
