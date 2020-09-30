@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER archvis EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build archvis" ON)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build archvis" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(archvis)

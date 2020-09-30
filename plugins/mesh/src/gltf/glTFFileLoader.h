@@ -72,12 +72,14 @@ protected:
 
     bool getMeshMetaDataCallback(core::Call& caller);
 
-    void checkAndLoadGltfModel();
+    bool checkAndLoadGltfModel();
 
 private:
     std::shared_ptr<tinygltf::Model> m_gltf_model;
 
     std::shared_ptr<MeshDataAccessCollection> m_mesh_collection;
+
+    uint32_t m_version;
 
     /** The gltf file name */
     core::param::ParamSlot m_glTFFilename_slot;

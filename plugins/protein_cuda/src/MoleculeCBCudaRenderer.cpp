@@ -19,7 +19,7 @@
 #include "vislib/sys/File.h"
 #include "vislib/sys/Path.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/String.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/Trace.h"
@@ -47,6 +47,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_cuda;
+using namespace megamol::core::utility::log;
 
 /*
  * MoleculeCBCudaRenderer::MoleculeCBCudaRenderer
@@ -136,7 +137,6 @@ void protein_cuda::MoleculeCBCudaRenderer::release( void ) {
  * MoleculeCBCudaRenderer::create
  */
 bool MoleculeCBCudaRenderer::create( void ) {
-	using namespace vislib::sys;
 	using namespace vislib::graphics::gl;
 	// try to initialize the necessary extensions for GLSL shader support
 	if ( !GLSLShader::InitialiseExtensions() )
@@ -291,7 +291,7 @@ bool MoleculeCBCudaRenderer::Render( Call& call ) {
 	// try to initialize CUDA
 	if( !this->cudaInitalized ) {
 		cudaInitalized = this->initCuda( mol, 16, cr3d);
-		vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_INFO, 
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_INFO, 
 			"%s: CUDA initialization: %i", this->ClassName(), cudaInitalized );
 	}
 
@@ -1683,7 +1683,7 @@ bool MoleculeCBCudaRenderer::initCuda( MolecularDataCall *mol, uint gridDim, cor
 	//cuMemGetInfo 
 	//uint free, total;
 	//cuMemGetInfo( &free, &total);
-	//vislib::sys::Log::DefaultLog.WriteMsg( vislib::sys::Log::LEVEL_ERROR, 
+	//megamol::core::utility::log::Log::DefaultLog.WriteMsg( megamol::core::utility::log::Log::LEVEL_ERROR, 
 	//	"Free GPU Memory: %i / %i (MB)", free / ( 1024 * 1024), total / ( 1024 * 1024));
 	// array for sorted atom positions
     allocateArray((void**)&m_dSortedPos, memSize);

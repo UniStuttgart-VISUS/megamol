@@ -12,7 +12,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/Call.h"
 
 #include "mmcore/view/CallGetTransferFunction.h"
@@ -44,6 +44,9 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
 
     // fill material container
     this->processMaterial();
+
+    // get transformation parameter
+    this->processTransformation();
 
     // read Data, calculate  shape parameters, fill data vectors
     CallOSPRayStructure *os = dynamic_cast<CallOSPRayStructure*>(&call);
@@ -104,7 +107,7 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
 
     if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE &&
         parts.GetColourDataType() != core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
-        vislib::sys::Log::DefaultLog.WriteError("Only color data is not allowed.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Only color data is not allowed.");
     }
 
     // Write stuff into the structureContainer
@@ -158,7 +161,8 @@ bool OSPRayNHSphereGeometry::getExtends(megamol::core::Call &call) {
     cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
     // if (!(*cd)(1)) return false; // table returns flase at first attempt and breaks everything
     (*cd)(1);
-    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());
+    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>();
+    this->extendContainer.boundingBox->SetBoundingBox(cd->AccessBoundingBoxes().ObjectSpaceBBox());
     this->extendContainer.timeFramesCount = cd->FrameCount();
     this->extendContainer.isValid = true;
 

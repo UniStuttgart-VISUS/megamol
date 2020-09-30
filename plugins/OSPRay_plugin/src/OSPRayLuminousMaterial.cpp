@@ -35,8 +35,8 @@ OSPRayLuminousMaterial::~OSPRayLuminousMaterial(void) {
 void OSPRayLuminousMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::LUMINOUS;
 
-    auto lumcolor = this->lumColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.lumColor.assign(lumcolor, lumcolor + 3);
+    auto lumcolor = this->lumColor.Param<core::param::Vector3fParam>();
+    materialContainer.lumColor = lumcolor->getArray();
 
     materialContainer.lumIntensity = this->lumIntensity.Param<core::param::FloatParam>()->Value();
 

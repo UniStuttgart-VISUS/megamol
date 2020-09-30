@@ -141,8 +141,8 @@ bool RenderMDIMesh::GetExtents(core::view::CallRender3D_2& call) {
 		return false;
 
     auto meta_data = rtc->getMetaData();
-    //meta_data.m_frame_ID = static_cast<int>(cr->LastFrameTime());
-    //rtc->setMetaData(meta_data);
+    meta_data.m_frame_ID = static_cast<int>(cr->Time());
+    rtc->setMetaData(meta_data);
 
 	if (!(*rtc)(1))
 		return false;
@@ -176,7 +176,7 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	if ((!(*task_call)(0)) )
 		return false;
 	
-	//vislib::sys::Log::DefaultLog.WriteError("Hey listen!");
+	//megamol::core::utility::log::Log::DefaultLog.WriteError("Hey listen!");
 	
 	// Set GL state (otherwise bounding box or view cube rendering state is used)
 	glDisable(GL_BLEND);
@@ -209,6 +209,11 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 		
 		render_task.draw_commands->bind();
 		render_task.mesh->bindVertexArray();
+
+        if(render_task.mesh->getPrimitiveType() == GL_PATCHES){
+            glPatchParameteri(GL_PATCH_VERTICES, 4);
+            //TODO add generic patch vertex count to render tasks....
+        }
 		
 		glMultiDrawElementsIndirect(render_task.mesh->getPrimitiveType(),
 			render_task.mesh->getIndexType(),

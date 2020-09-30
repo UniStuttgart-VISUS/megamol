@@ -26,7 +26,7 @@
 #include "vislib/Trace.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/graphics/gl/AbstractOpenGLShader.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/StringConverter.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
@@ -236,7 +236,7 @@ void MoleculeCartoonRenderer::release (void) {
  * MoleculeCartoonRenderer::create
  */
 bool MoleculeCartoonRenderer::create(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     ASSERT(areExtsAvailable("GL_ARB_vertex_shader GL_ARB_vertex_program GL_ARB_shader_objects"));
 
     if( this->geomShaderSupported )
@@ -1066,7 +1066,7 @@ void MoleculeCartoonRenderer::UpdateParameters( MolecularDataCall *mol,
                 this->midGradColorParam.Param<param::StringParam>()->Value(),
                 this->maxGradColorParam.Param<param::StringParam>()->Value(),
                 true, bs);
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                     "Recomputing atom color table WITHOUT color module!");
         } else if (col != nullptr) {
             col->SetColoringTarget(mol);
@@ -1082,7 +1082,7 @@ void MoleculeCartoonRenderer::UpdateParameters( MolecularDataCall *mol,
         
             (*col)(0); //getColor
             //this->atomColorTable =  *col->GetAtomColorTable();
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                     "Recomputing atom color table using color module!");
         }
 

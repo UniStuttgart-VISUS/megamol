@@ -1,7 +1,7 @@
 /*
  * CoreInstance.h
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2008, 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -50,11 +50,12 @@
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/sys/DynamicLinkLibrary.h"
 #include "vislib/sys/Lockable.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <functional>
 #include <memory>
 #include <unordered_map>
+#include <string>
 
 namespace megamol {
 namespace core {
@@ -127,13 +128,6 @@ public:
     inline bool IsLuaProject() const { return this->loadedLuaProjects.Count() > 0; }
 
     vislib::StringA GetMergedLuaProject() const;
-
-    /**
-     * Answers the log object of the instance.
-     *
-     * @return The log object of the instance.
-     */
-    inline vislib::sys::Log& Log(void) { return this->log; }
 
     /**
      * Answer whether this instance is initialised or not.
@@ -454,7 +448,7 @@ public:
             }
         }
         if (!success) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "EnumModulesNoLock: Unable to find module nor namespace \"%s\" as entry point", entry_point.c_str());
         }
     }
@@ -489,8 +483,8 @@ public:
             cb(vi);
             return true;
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
             return false;
         }
     }
@@ -519,12 +513,12 @@ public:
                 }
             }
             if (!found) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to find a ParamSlot in module \"%s\" for processing", module_name.c_str());
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
         }
         return found;
     }
@@ -558,12 +552,12 @@ public:
                 }
             }
             if (!found) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to find a CallerSlot in module \"%s\" for processing", module_name.c_str());
             }
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
         }
         return found;
     }
@@ -681,6 +675,11 @@ public:
     void ParameterValueUpdate(param::ParamSlot& slot);
 
     /**
+     * Fired to notify all listeners with a batch of updates.
+     */
+    void NotifyParamUpdateListener();
+
+    /**
      * Adds a ParamUpdateListener to the list of registered listeners
      *
      * @param pul The ParamUpdateListener to add
@@ -699,30 +698,6 @@ public:
     inline void UnregisterParamUpdateListener(param::ParamUpdateListener* pul) {
         this->paramUpdateListeners.RemoveAll(pul);
     }
-
-    /**
-     * Tries to perform a quickstart with the given data file
-     *
-     * @param filename The file to quickstart
-     */
-    void Quickstart(const vislib::TString& filename);
-
-    /**
-     * Registers a file type for quickstart if supported by the OS
-     *
-     * @param frontend Path to the front end to be called
-     * @param feparams The parameter string to be used when calling the frontend.
-     *                 use '$(FILENAME)' to specify the position of the data file name.
-     * @param filetype Semicolor separated list of file type extensions to register
-     *                 or "*" if all known file type extensions should be used
-     * @param unreg If true, the file types will be removed from the quickstart registry instead of added
-     * @param overwrite If true, any previous registration will be overwritten.
-     *                  If false, previous registrations will be placed as alternative start commands.
-     *                  When unregistering and true, all registrations will be removed,
-     *                  if false only registrations to this binary will be removed.
-     */
-    void QuickstartRegistry(const vislib::TString& frontend, const vislib::TString& feparams,
-        const vislib::TString& filetype, bool unreg, bool overwrite);
 
     /**
      * Answer the root object of the module graph.
@@ -794,6 +769,27 @@ public:
      */
     AbstractService* GetInstalledService(unsigned int id);
 
+    /**
+     * sets the current ImGui context, i.e. the one that was last touched when traversing the graph
+     */
+    inline void SetCurrentImGuiContext(void* ctx) { this->lastImGuiContext = ctx; }
+
+    /**
+     * gets the current ImGui context, i.e. the one that was last touched when traversing the graph
+     */
+    inline void* GetCurrentImGuiContext() const { return this->lastImGuiContext; }
+
+    /**
+     * get the number of the currently rendered frame
+     */
+    inline uint32_t GetFrameID(void) { return this->frameID; }
+
+    /**
+     * Set the number of the currently rendered frame. Whatever you think you are doing, don't: it's wrong.
+     * This method is for use by the frontend only.
+     */
+    inline void SetFrameID(uint32_t frameID) { this->frameID = frameID; }
+
 private:
     /**
      * Nested class with pre initialisation values.
@@ -822,7 +818,7 @@ private:
          *
          * @return The log file to use.
          */
-        inline const vislib::StringW& GetLogFile(void) const { return this->logFile; }
+        inline const std::string& GetLogFile(void) const { return this->logFile; }
 
         /**
          * Answer the log level to use.
@@ -899,7 +895,7 @@ private:
          *
          * @param logFile The log file to use.
          */
-        inline void SetLogFile(const vislib::StringW& logFile) {
+        inline void SetLogFile(const std::string& logFile) {
             this->logFile = logFile;
             this->logFileSet = true;
         }
@@ -944,7 +940,7 @@ private:
         vislib::StringW cfgFile;
 
         /** The log file name. */
-        vislib::StringW logFile;
+        std::string logFile;
 
         /** A serialized list of config key-value overrides */
         vislib::StringW cfgOverrides;
@@ -1097,29 +1093,6 @@ private:
      */
     void quickConnectUpStepInfo(factories::ModuleDescription::ptr from, vislib::Array<quickStepInfo>& step);
 
-    /**
-     * Registers a single file type for quickstarting
-     *
-     * @param frontend The full path to the frontend to call
-     * @param feparams The frontend command line parameter string
-     * @param fnext The data file name extension
-     * @param fnname The data file type name
-     * @param keepothers If true, other open options will not be overwritten.
-     */
-    void registerQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
-        const vislib::TString& fnext, const vislib::TString& fnname, bool keepothers);
-
-    /**
-     * Removes the registration for a single file type for quickstarting
-     *
-     * @param frontend The full path to the frontend to call
-     * @param feparams The frontend command line parameter string
-     * @param fnext The data file name extension
-     * @param fnname The data file type name
-     * @param keepothers If true, other open options will not be deleted.
-     */
-    void unregisterQuickstart(const vislib::TString& frontend, const vislib::TString& feparams,
-        const vislib::TString& fnext, const vislib::TString& fnname, bool keepothers);
 
     /**
      * Updates flush index list after flush has been performed
@@ -1159,11 +1132,11 @@ private:
     /** The shader source factory */
     utility::ShaderSourceFactory shaderSourceFactory;
 
-    /** The log object */
-    vislib::sys::Log log;
-
     /** The Lua state */
     megamol::core::LuaState* lua;
+
+    /** illegal hack: the last ImGui context */
+    void* lastImGuiContext = nullptr;
 
     /**
      * All of the verbatim loaded project files. We need to keep them to send them
@@ -1259,8 +1232,14 @@ private:
     /** the time offset */
     double timeOffset;
 
+    /** the count of rendered frames */
+    uint32_t frameID;
+
     /** List of registered param update listeners */
     vislib::SingleLinkedList<param::ParamUpdateListener*> paramUpdateListeners;
+
+    /** Vector storing param updates per frame */
+    param::ParamUpdateListener::param_updates_vec_t paramUpdates;
 
     /** The manager of loaded plugins */
     utility::plugins::PluginManager* plugins;

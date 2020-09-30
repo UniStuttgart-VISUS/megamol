@@ -3,7 +3,7 @@
     <include file="common"/>
 
     <shader name="vertex">
-        <snippet type="version">430</snippet>
+        <snippet type="version">450</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="Main"             type="file">mesh/gltf_example_vertex.glsl</snippet>
     </shader>
@@ -17,7 +17,7 @@
 -->
 
     <shader name="fragment">
-        <snippet type="version">430</snippet>
+        <snippet type="version">450</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
         <snippet name="Main"             type="file">mesh/dfr_gltf_example_fragment.glsl</snippet>
     </shader>

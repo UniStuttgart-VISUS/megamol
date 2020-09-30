@@ -66,17 +66,17 @@ bool megamol::core::DeferredShading::Render(core::view::CallRender3D_2& call) {
             m_deferred_shading_prgm->Create(
                 vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
         } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
                 shader_base_name.PeekBuffer(),
                 vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
                 ce.GetMsgA());
             // return false;
         } catch (vislib::Exception e) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n",
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n",
                 shader_base_name.PeekBuffer(), e.GetMsgA());
             // return false;
         } catch (...) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown exception\n", shader_base_name.PeekBuffer());
             // return false;
         }
@@ -150,7 +150,7 @@ void megamol::core::DeferredShading::PreRender(core::view::CallRender3D_2& call)
     glGetFloatv(GL_VIEWPORT, viewport);
 
     if (m_GBuffer == nullptr) {
-        m_GBuffer = std::make_unique<glowl::FramebufferObject>(viewport[2], viewport[3], true);
+        m_GBuffer = std::make_unique<glowl::FramebufferObject>(viewport[2], viewport[3]);
         m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT); // surface albedo
         m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT); // normals
         m_GBuffer->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT); // clip space depth

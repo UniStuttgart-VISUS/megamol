@@ -9,7 +9,6 @@
 
 megamol::mesh::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
 	: m_glTF_callerSlot("CallGlTFData", "Connects the data source with a loaded glTF file")
-    , m_glTF_cached_hash(0)
 {
 	this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
 	this->MakeSlotAvailable(&this->m_glTF_callerSlot);
@@ -29,7 +28,6 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
     
     if (lhs_rtc->getData() == nullptr){
         rt_collection = this->m_gpu_render_tasks;
-        lhs_rtc->setData(rt_collection);
     } else {
         rt_collection = lhs_rtc->getData();
     }
@@ -60,9 +58,9 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
 
 	//TODO nullptr check
 
-	if (gltf_call->getMetaData().m_data_hash > m_glTF_cached_hash)
+	if (gltf_call->hasUpdate())
     {
-        m_glTF_cached_hash = gltf_call->getMetaData().m_data_hash;
+        ++m_version;
 
 		//rt_collection->clear();
         if (!m_rt_collection_indices.empty())
@@ -163,12 +161,16 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
 		lights.push_back({-5000.0,5000.0,-5000.0,1000.0f});
 
 		rt_collection->addPerFrameDataBuffer(lights,1);
-	}
+    }
+
+    if (lhs_rtc->version() < m_version) {
+        lhs_rtc->setData(rt_collection, m_version);
+    }
 
 
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection);
+        rhs_rtc->setData(rt_collection,0);
 
         (*rhs_rtc)(0);
     }

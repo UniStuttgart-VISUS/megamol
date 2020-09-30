@@ -16,8 +16,6 @@ OSPRayStructureContainer::OSPRayStructureContainer() :
     isValid(false),
  vertexData(NULL),
  colorData(NULL),
- normalData(NULL),
- texData(NULL),
  indexData(NULL),
  voxels(NULL),
  gridOrigin(NULL),

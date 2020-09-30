@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/job/JobThread.h"
 #include "mmcore/CoreInstance.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
 
@@ -50,9 +50,9 @@ void job::JobThread::release(void) {
  */
 DWORD job::JobThread::Run(void *userData) {
 
-    // this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    // this->GetCoreInstance()->Log().WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
     //     "JobThread started (CoreLog)");
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
         "JobThread started (DefaultLog)");
 
     // TODO: Implement
@@ -64,9 +64,9 @@ DWORD job::JobThread::Run(void *userData) {
         vislib::sys::Thread::Sleep(sleepTime);
     }
 
-    // this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    // this->GetCoreInstance()->Log().WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
     //     "JobThread finished (CoreLog)");
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
         "JobThread finished (DefaultLog)");
 
     this->signalEnd(this->shouldTerminate());

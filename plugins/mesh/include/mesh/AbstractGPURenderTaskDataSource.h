@@ -85,15 +85,12 @@ protected:
 
     /** The slot for querying chained render tasks, i.e. a rhs connection */
     megamol::core::CallerSlot m_renderTask_rhs_slot;
-    size_t m_renderTask_rhs_cached_hash;
 
     /** The slot for querying material data, i.e. a rhs connection */
     megamol::core::CallerSlot m_material_slot;
-    size_t m_material_cached_hash;
 
     /** The slot for querying mesh data, i.e. a rhs connection */
     megamol::core::CallerSlot m_mesh_slot;
-    size_t m_mesh_cached_hash;
 
     /** Slot to retrieve the light information */
     megamol::core::CallerSlot m_light_slot;

@@ -14,7 +14,7 @@
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/assert.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/memutils.h"
 #include "vislib/math/Quaternion.h"
@@ -23,7 +23,7 @@
 #include "vislib/String.h"
 #ifdef WITH_VRPN
 #include "vislib/StringConverter.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #endif /* WITH_VRPN */
 #include "vislib/math/Vector.h"
 #include <GL/gl.h>
@@ -176,7 +176,7 @@ bool TrackerRendererTransform::Render(core::Call& call) {
             this->vrpnConn = vrpn_get_connection_by_name(
                 T2A(this->vrpnServerSlot.Param<core::param::StringParam>()->Value()));
             if (this->vrpnConn == NULL) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     _T("Unable to open VRPN connection to \"%s\""),
                     this->vrpnServerSlot.Param<core::param::StringParam>()->Value().PeekBuffer());
             }
@@ -194,7 +194,7 @@ bool TrackerRendererTransform::Render(core::Call& call) {
                 this->vrpnTracker->register_change_handler(
                     static_cast<void *>(this), &TrackerRendererTransform::vrpnTrackerCallback);
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     _T("Unable to connect to tracker service of \"%s\""),
                     this->vrpnTrackerSlot.Param<core::param::StringParam>()->Value().PeekBuffer());
             }
@@ -208,17 +208,17 @@ bool TrackerRendererTransform::Render(core::Call& call) {
         if (this->vrpnIsConnected != isConn) {
             this->vrpnIsConnected = isConn;
             if (isConn) {
-                vislib::sys::Log::DefaultLog.WriteInfo("VRPN connected");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("VRPN connected");
             } else {
-                vislib::sys::Log::DefaultLog.WriteInfo("VRPN disconnected");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("VRPN disconnected");
             }
         }
         if (this->vrpnIsHealthy != isOk) {
             this->vrpnIsHealthy = isOk;
             if (isOk) {
-                vislib::sys::Log::DefaultLog.WriteInfo("VRPN connection healthy");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("VRPN connection healthy");
             } else {
-                vislib::sys::Log::DefaultLog.WriteInfo("VRPN connection broken");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("VRPN connection broken");
             }
         }
     }

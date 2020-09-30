@@ -10,7 +10,7 @@
 #ifndef MMPROTEINPLUGIN_OGL_ERROR_CHECK_H_INCLUDED
 #define MMPROTEINPLUGIN_OGL_ERROR_CHECK_H_INCLUDED
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include <GL/glu.h>
 
 #define OGL_ERROR_CHECK // Toggle OpenGL error checking
@@ -29,7 +29,7 @@ inline bool checkForGLError(const char *file, const int line) {
 #ifdef OGL_ERROR_CHECK
     GLenum err; err = glGetError();
     if(err != GL_NO_ERROR) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "%s(%d) glError: %s", file, line, gluErrorString(err));
         return false;
     }
@@ -49,7 +49,7 @@ inline bool checkForGLError(const char *file, const int line) {
 inline bool glSafeCall(GLenum err, const char *file, const int line ) {
 #ifdef OGL_ERROR_CHECK
     if(err != GL_NO_ERROR) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "%s(%d) glError: %s", file, line, gluErrorString(err));
         return true;
     }

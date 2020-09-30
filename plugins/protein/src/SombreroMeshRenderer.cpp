@@ -23,8 +23,8 @@
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/KeyCode.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 
 #include <array>
 #include <climits>
@@ -183,7 +183,7 @@ void SombreroMeshRenderer::release(void) {
 bool SombreroMeshRenderer::MouseEvent(float x, float y, megamol::core::view::MouseFlags flags) {
     bool consume = false;
 
-    // vislib::sys::Log::DefaultLog.WriteInfo("%s %f %f", this->Name(), x, y);
+    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("%s %f %f", this->Name(), x, y);
 
     auto flagsc = this->getFlagDataSlot.CallAs<core::FlagCall>();
     if (flagsc == nullptr) {

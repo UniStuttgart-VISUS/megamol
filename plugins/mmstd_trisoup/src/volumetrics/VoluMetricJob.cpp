@@ -10,18 +10,18 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/ShallowShallowTriangle.h"
 #include "vislib/math/Vector.h"
 #include "vislib/graphics/NamedColours.h"
-#include "vislib/sys/Thread.h"
-#include "vislib/sys/ThreadPool.h"
+#include "mmcore/utility/sys/Thread.h"
+#include "mmcore/utility/sys/ThreadPool.h"
 #include "MarchingCubeTables.h"
 #include "TetraVoxelizer.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/sys/ConsoleProgressBar.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/ConsoleProgressBar.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include <climits>
 #include <cfloat>
 
@@ -130,7 +130,7 @@ void VoluMetricJob::release(void) {
  * VoluMetricJob::Run
  */
 DWORD VoluMetricJob::Run(void *userData) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     core::moldyn::MultiParticleDataCall *datacall = this->getDataSlot.CallAs<core::moldyn::MultiParticleDataCall>();
     if (datacall == NULL) {
@@ -282,7 +282,7 @@ DWORD VoluMetricJob::Run(void *userData) {
         vislib::sys::ConsoleProgressBar pb;
         pb.Start("Computing Frame", divX * divY * divZ);
 
-        vislib::sys::Log::DefaultLog.WriteInfo("Grid: %ux%ux%u", divX, divY, divZ);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Grid: %ux%ux%u", divX, divY, divZ);
         for (int x = 0; x < divX; x++) {
             for (int y = 0; y < divY; y++) {
             //for (int y = 0; y < 1; y++) {
@@ -497,7 +497,7 @@ bool VoluMetricJob::areSurfacesJoinable(int sjdIdx1, int surfIdx1, int sjdIdx2, 
             } else {
                 //ASSERT(false);
 #ifdef ULTRADEBUG
-                vislib::sys::Log::DefaultLog.WriteInfo("tried to compare (%u,%u,%u)[%u,%u][%u]%s with (%u,%u,%u)[%u,%u][%u]%s",
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("tried to compare (%u,%u,%u)[%u,%u][%u]%s with (%u,%u,%u)[%u,%u][%u]%s",
                     SubJobDataList[sjdIdx1]->gridX, SubJobDataList[sjdIdx1]->gridY, SubJobDataList[sjdIdx1]->gridZ,
                     sjdIdx1, surfIdx1, SubJobDataList[sjdIdx1]->Result.surfaces[surfIdx1].globalID,
                     (SubJobDataList[sjdIdx1]->Result.surfaces[surfIdx1].border == NULL ? " (NULL)" : ""),
@@ -558,7 +558,7 @@ bool VoluMetricJob::doBordersTouch(BorderVoxelArray &border1, BorderVoxelArray &
 
 //VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(vislib::Array<vislib::Array<unsigned int> > &globalSurfaceIDs,
 //                                 int i, int j, int k, int l) {
-//    vislib::sys::Log::DefaultLog.WriteInfo("joined global IDs %u and %u", globalSurfaceIDs[i][j], globalSurfaceIDs[k][l]);
+//    megamol::core::utility::log::Log::DefaultLog.WriteInfo("joined global IDs %u and %u", globalSurfaceIDs[i][j], globalSurfaceIDs[k][l]);
 //    if (globalSurfaceIDs[k][l] < globalSurfaceIDs[i][j]) {
 //        globalSurfaceIDs[i][j] = globalSurfaceIDs[k][l];
 //    } else {
@@ -571,7 +571,7 @@ VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(int sjdIdx1, int surfIdx1, i
     RewriteGlobalID.Lock();
 
 #ifdef ULTRADEBUG
-    vislib::sys::Log::DefaultLog.WriteInfo("joining global IDs (%u,%u,%u)[%u,%u][%u] and (%u,%u,%u)[%u,%u][%u]",
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("joining global IDs (%u,%u,%u)[%u,%u][%u] and (%u,%u,%u)[%u,%u][%u]",
         SubJobDataList[sjdIdx1]->gridX, SubJobDataList[sjdIdx1]->gridY, SubJobDataList[sjdIdx1]->gridZ,
         sjdIdx1, surfIdx1, SubJobDataList[sjdIdx1]->Result.surfaces[surfIdx1].globalID,
         SubJobDataList[sjdIdx2]->gridX, SubJobDataList[sjdIdx2]->gridY, SubJobDataList[sjdIdx2]->gridZ,
@@ -610,7 +610,7 @@ VISLIB_FORCEINLINE void VoluMetricJob::joinSurfaces(int sjdIdx1, int surfIdx1, i
         //}
     }
 #ifdef ULTRADEBUG
-    vislib::sys::Log::DefaultLog.WriteInfo("joined global IDs (%u,%u,%u)[%u,%u][%u] and (%u,%u,%u)[%u,%u][%u]",
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("joined global IDs (%u,%u,%u)[%u,%u][%u] and (%u,%u,%u)[%u,%u][%u]",
         SubJobDataList[sjdIdx1]->gridX, SubJobDataList[sjdIdx1]->gridY, SubJobDataList[sjdIdx1]->gridZ,
         sjdIdx1, surfIdx1, SubJobDataList[sjdIdx1]->Result.surfaces[surfIdx1].globalID,
         SubJobDataList[sjdIdx2]->gridX, SubJobDataList[sjdIdx2]->gridY, SubJobDataList[sjdIdx2]->gridZ,
@@ -733,7 +733,7 @@ restart:
                 if (numProcessed == 6) {
                     surf.border = NULL;//->Clear();
 #ifdef ULTRADEBUG
-                    vislib::sys::Log::DefaultLog.WriteInfo("deleted border of (%u,%u,%u)[%u,%u][%u]",
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("deleted border of (%u,%u,%u)[%u,%u][%u]",
                         sjdTodo->gridX, sjdTodo->gridY, sjdTodo->gridZ,
                         todo, surfIdx, surf.globalID);
 #endif /* ULTRADEBUG */
@@ -993,7 +993,7 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
 #endif
 
 #ifdef _DEBUG
-        vislib::sys::Log::DefaultLog.WriteInfo("surface %d enclosed by %d:\n\tenclosed-volume: %f, enclosed-voidVol: %f, enclosed-sum: %f\n\tenclosing-volume: %f, enclosing-voidVol: %f",
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("surface %d enclosed by %d:\n\tenclosed-volume: %f, enclosed-voidVol: %f, enclosed-sum: %f\n\tenclosing-volume: %f, enclosing-voidVol: %f",
             gid2, gid, volPerID[enclosedIdx], voidVolPerID[enclosedIdx], volPerID[enclosedIdx] + voidVolPerID[enclosedIdx], volPerID[enclosingIdx], voidVolPerID[enclosingIdx]);
 #endif
 
@@ -1009,7 +1009,7 @@ void VoluMetricJob::outputStatistics(unsigned int frameNumber,
     //SIZE_T numTriangles = 0;
     for (unsigned int i = 0; i < uniqueIDs.Count(); i++) {
         //numTriangles += countPerID[i];
-        vislib::sys::Log::DefaultLog.WriteInfo("surface %u: %u triangles, surface %f, volume %f, voidVol %f, entire volume %f", uniqueIDs[i],
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("surface %u: %u triangles, surface %f, volume %f, voidVol %f, entire volume %f", uniqueIDs[i],
             countPerID[i], surfPerID[i], volPerID[i], voidVolPerID[i], volPerID[i] + voidVolPerID[i]);
         if (!metricsFilenameSlot.Param<core::param::FilePathParam>()->Value().IsEmpty()) {
             vislib::sys::WriteFormattedLineToFile(this->statisticsFile, "%u\t%u\t%u\t%f\t%f\n",

@@ -21,7 +21,7 @@ using namespace megamol::core::param;
  */
 FlexEnumParam::FlexEnumParam(const std::string& initVal)
         : AbstractParam(), val(initVal), values() {
-    // intentionally empty
+    this->InitPresentation(AbstractParamPresentation::ParamType::FLEXENUM);
 }
 
 
@@ -106,6 +106,7 @@ FlexEnumParam* FlexEnumParam::AddValue(const std::string& name) {
 void FlexEnumParam::SetValue(const std::string& v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
+        this->indicateChange();
         if (setDirty) this->setDirty();
     }
 }

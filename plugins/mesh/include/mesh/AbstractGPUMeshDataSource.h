@@ -72,11 +72,9 @@ protected:
 
     /** The slot for querying additional mesh data, i.e. a rhs chaining connection */
     megamol::core::CallerSlot m_mesh_rhs_slot;
-    size_t m_mesh_rhs_cached_hash;
 
     /** The slot for requesting data */
     megamol::core::CalleeSlot m_mesh_lhs_slot;
-    size_t m_mesh_lhs_cached_hash;
 };
 
 } // namespace mesh

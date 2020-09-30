@@ -14,6 +14,7 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
 #include "vislib/math/Vector.h"
+#include <array>
 
 
 namespace megamol {
@@ -58,6 +59,10 @@ namespace param {
          * Dtor.
          */
         virtual ~Vector3fParam(void);
+
+        std::array<float, 3> getArray() const { 
+            return std::array<float, 3>({this->Value().GetX(), this->Value().GetY(), this->Value().GetZ()});
+        }
 
         /**
          * Returns a machine-readable definition of the parameter.

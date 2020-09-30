@@ -8,8 +8,8 @@
 #include "stdafx.h"
 #include "mmcore/view/AnimDataModule.h"
 #include "vislib/assert.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/Thread.h"
 #include <chrono>
 
 using namespace megamol::core;
@@ -92,7 +92,7 @@ void view::AnimDataModule::initFrameCache(unsigned int cacheSize) {
         this->loader.Start(this);
         vislib::sys::Thread::Sleep(250);
     } else {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to create frame data cache ('constructFrame' returned 'NULL').");
     }
 }
@@ -143,7 +143,7 @@ view::AnimDataModule::Frame * view::AnimDataModule::requestLockedFrame(unsigned 
         //printf("======== %u frames locked\n", clcf);
 
         if ((clcf == this->cacheSize) && (this->cacheSize > 2)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Possible data frame cache deadlock detected!");
             deadlockwarning = false;
         }
@@ -267,7 +267,7 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
         if (j >= This->cacheSize) {
             if (j >= This->frameCnt) {
                 ASSERT(This->frameCnt == This->cacheSize);
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                     "All frames of the dataset loaded into cache. Terminating loading Thread.");
                 break;
             }
@@ -338,7 +338,7 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
             if ((reportTime - lastReportTime) > lastReportDistance) {
                 lastReportTime = reportTime;
                 if (accumCount > 0) {
-                    vislib::sys::Log::DefaultLog.WriteInfo(100, "[%s] Loading speed: %f ms/f (%u)",
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(100, "[%s] Loading speed: %f ms/f (%u)",
                         fullName.PeekBuffer(),
                         1000.0 * std::chrono::duration_cast<std::chrono::duration<double>>(accumDuration).count() / static_cast<double>(accumCount),
                         static_cast<unsigned int>(accumCount)
@@ -354,14 +354,14 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
     }
 
     if (accumCount > 0) {
-        vislib::sys::Log::DefaultLog.WriteInfo(100, "[%s] Loading speed: %f ms/f (%u)",
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(100, "[%s] Loading speed: %f ms/f (%u)",
             fullName.PeekBuffer(),
             1000.0 * std::chrono::duration_cast<std::chrono::duration<double>>(accumDuration).count() / static_cast<double>(accumCount),
             static_cast<unsigned int>(accumCount)
             );
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("The loader thread is exiting.");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("The loader thread is exiting.");
     return 0;
 }
 

@@ -60,11 +60,10 @@ protected:
 
     bool InterfaceIsDirty();
 
-    core::param::ParamSlot objectID;
-
-    /** The call for data */
-    core::CallerSlot getDataSlot;
-
+     /** The call for data */
+    core::CallerSlot getTrimeshDataSlot;
+    core::CallerSlot getMeshDataSlot;
+    std::vector<float> _color;
 
 };
 

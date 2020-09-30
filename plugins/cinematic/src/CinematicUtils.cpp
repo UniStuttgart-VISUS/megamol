@@ -34,42 +34,42 @@ RenderUtils::~RenderUtils() {
 bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFactory& factory) {
 
     if (this->init_once) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Primitive rendering has already been initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Primitive rendering has already been initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     // Create shaders
     std::string vertShaderCode = this->getShaderCode(factory, "primitives::points::vertex");
     std::string fragShaderCode = this->getShaderCode(factory, "primitives::points::fragment");
     if (!this->createShader(this->shaders[Primitives::POINTS], &vertShaderCode, &fragShaderCode)) {
-        vislib::sys::Log::DefaultLog.WriteError("Failed to create point shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to create point shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     vertShaderCode = this->getShaderCode(factory, "primitives::lines::vertex");
     fragShaderCode = this->getShaderCode(factory, "primitives::lines::fragment");
     if (!this->createShader(this->shaders[Primitives::LINES], &vertShaderCode, &fragShaderCode)) {
-        vislib::sys::Log::DefaultLog.WriteError("Failed to create line shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to create line shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     vertShaderCode = this->getShaderCode(factory, "primitives::quads::vertex");
     fragShaderCode = this->getShaderCode(factory, "primitives::quads::fragment");
     if (!this->createShader(this->shaders[Primitives::QUADS], &vertShaderCode, &fragShaderCode)) {
-        vislib::sys::Log::DefaultLog.WriteError("Failed to create quad shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to create quad shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     vertShaderCode = this->getShaderCode(factory, "primitives::color_texture::vertex");
     fragShaderCode = this->getShaderCode(factory, "primitives::color_texture::fragment");
     if (!this->createShader(this->shaders[Primitives::COLOR_TEXTURE], &vertShaderCode, &fragShaderCode)) {
-        vislib::sys::Log::DefaultLog.WriteError("Failed to create color texture shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to create color texture shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     vertShaderCode = this->getShaderCode(factory, "primitives::depth_texture::vertex");
     fragShaderCode = this->getShaderCode(factory, "primitives::depth_texture::fragment");
     if (!this->createShader(this->shaders[Primitives::DEPTH_TEXTURE], &vertShaderCode, &fragShaderCode)) {
-        vislib::sys::Log::DefaultLog.WriteError("Failed to create depth texture shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to create depth texture shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -127,7 +127,7 @@ bool RenderUtils::LoadTextureFromFile(std::wstring filename, GLuint& out_texture
 
     ///megamol::core::utility::ResourceWrapper::LoadResource(this->GetCoreInstance()->Configuration(), filename, (void**)(&buf)))
     if ((size = this->loadRawFile(filename, &buf)) <= 0) {
-        vislib::sys::Log::DefaultLog.WriteError("Could not find texture \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Could not find texture \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
         ARY_SAFE_DELETE(buf);
         return false;
     }
@@ -137,7 +137,7 @@ bool RenderUtils::LoadTextureFromFile(std::wstring filename, GLuint& out_texture
         img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
 
         if (texture->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
-            vislib::sys::Log::DefaultLog.WriteError("Could not load texture \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Could not load texture \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
             ARY_SAFE_DELETE(buf);
             return false;
         }
@@ -154,7 +154,7 @@ bool RenderUtils::LoadTextureFromFile(std::wstring filename, GLuint& out_texture
         out_texture_id = texture->GetId();
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteError("Could not read texture \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Could not read texture \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
         ARY_SAFE_DELETE(buf);
         return false;
     }
@@ -269,7 +269,7 @@ void RenderUtils::Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bot
 void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& mat_mvp, glm::vec2 dim_vp) {
 
     if (!this->init_once) {
-        vislib::sys::Log::DefaultLog.WriteError("Primitive rendering must be initialized before drawing. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Primitive rendering must be initialized before drawing. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
     GLsizei count = static_cast<GLsizei>(this->queues[primitive].position.size() / 3);
@@ -377,7 +377,7 @@ void RenderUtils::sortPrimitiveQueue(Primitives primitive) {
         auto size_atr = this->queues[primitive].attributes.size() / dim_atr;
 
         if (!((size_pos == size_col) && (size_col == size_txc) && (size_txc == size_atr))) {
-            vislib::sys::Log::DefaultLog.WriteError("Primitive sorting fails due to inconsitent data list count - BUG. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Primitive sorting fails due to inconsitent data list count - BUG. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return; 
         }
 
@@ -410,8 +410,8 @@ bool RenderUtils::createShader(vislib::graphics::gl::GLSLShader& shader, const s
     try {
         shader.Release();
         if (!shader.Compile(vertex_code->c_str(), fragment_code->c_str())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to compile shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         shader.BindAttribute(Buffers::POSITION, "inPosition");
@@ -419,13 +419,13 @@ bool RenderUtils::createShader(vislib::graphics::gl::GLSLShader& shader, const s
         shader.BindAttribute(Buffers::TEXTURE_COORD, "inTexture");
         shader.BindAttribute(Buffers::ATTRIBUTES, "inAttributes");
         if (!shader.Link()) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to link shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to link shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
     }
     catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to create shader. Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to create shader. Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -438,7 +438,7 @@ const std::string RenderUtils::getShaderCode(megamol::core::utility::ShaderSourc
 
     vislib::graphics::gl::ShaderSource source;
     if (!factory.MakeShaderSource(snippet_name.c_str(), source)) {
-        vislib::sys::Log::DefaultLog.WriteError("Failed to make vertex shader source. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to make vertex shader source. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return std::string("");
     }
     return std::string(source.WholeCode().PeekBuffer());
@@ -452,30 +452,30 @@ size_t RenderUtils::loadRawFile(std::wstring filename, BYTE **outData) {
 
     vislib::StringW name = static_cast<vislib::StringW>(filename.c_str());
     if (name.IsEmpty()) {
-        vislib::sys::Log::DefaultLog.WriteError(" Unable to load texture file. No name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(" Unable to load texture file. No name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return 0;
     }
     if (!vislib::sys::File::Exists(name)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load not existing file \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load not existing file \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
         return 0;
     }
 
     size_t size = static_cast<size_t>(vislib::sys::File::GetSize(name));
     if (size < 1) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to load empty file \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to load empty file \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
         return 0;
     }
 
     vislib::sys::FastFile f;
     if (!f.Open(name, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to open file \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open file \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
         return 0;
     }
 
     *outData = new BYTE[size];
     size_t num = static_cast<size_t>(f.Read(*outData, size));
     if (num != size) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to read whole file \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to read whole file \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
         ARY_SAFE_DELETE(*outData);
         return 0;
     }
@@ -595,19 +595,19 @@ CinematicUtils::~CinematicUtils(void) {
 bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
 
     if (this->init_once) {
-        vislib::sys::Log::DefaultLog.WriteWarn("Primitive rendering has already been initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Primitive rendering has already been initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     // Initialise font
     if (!this->font.Initialise(core_instance)) {
-        vislib::sys::Log::DefaultLog.WriteError("Couldn't initialize the font. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Couldn't initialize the font. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     this->font.SetBatchDrawMode(true);
 
     // Initialise rendering
     if (!this->InitPrimitiveRendering(core_instance->ShaderSourceFactory())) {
-        vislib::sys::Log::DefaultLog.WriteError("Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -778,7 +778,7 @@ void CinematicUtils::PushText(const std::string& text, float x, float y, float z
 void CinematicUtils::DrawAll(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
 
     if (!this->init_once) {
-        vislib::sys::Log::DefaultLog.WriteError("Cinematic utilities must be initialized before drawing. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Cinematic utilities must be initialized before drawing. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
 

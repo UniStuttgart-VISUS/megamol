@@ -1,7 +1,7 @@
 /*
  * VolumetricDataCall.cpp
  *
- * Copyright (C) 2014 by Visualisierungsinstitut der Universit‰t Stuttgart.
+ * Copyright (C) 2014 by Visualisierungsinstitut der Universit√§t Stuttgart.
  * Alle rechte vorbehalten.
  */
 
@@ -11,6 +11,8 @@
 #include <utility>
 
 #include "vislib/OutOfRangeException.h"
+
+#include "mmcore/utility/log/Log.h"
 
 
 #define STATIC_ARRAY_COUNT(ary) (sizeof(ary) / sizeof(*(ary)))
@@ -34,6 +36,47 @@ const char *megamol::core::misc::VolumetricDataCall::FunctionName(
     } else {
         return "";
     }
+}
+
+
+/*
+ * megamol::core::misc::VolumetricDataCall::GetMetadata
+ */
+bool megamol::core::misc::VolumetricDataCall::GetMetadata(
+        core::misc::VolumetricDataCall& call) {
+    using core::misc::VolumetricDataCall;
+    using megamol::core::utility::log::Log;
+
+    if (!call(VolumetricDataCall::IDX_GET_METADATA)) {
+        Log::DefaultLog.WriteError("%hs::%hs failed.",
+            VolumetricDataCall::ClassName(),
+            VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_METADATA));
+        return false;
+    }
+
+    if (call.GetMetadata() == nullptr) {
+        /* Second chance ... */
+        if (!call(VolumetricDataCall::IDX_GET_DATA)) {
+            Log::DefaultLog.WriteError("%hs::%hs failed.",
+                VolumetricDataCall::ClassName(),
+                VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_DATA));
+            return false;
+        }
+    }
+
+    auto retval = (call.GetMetadata() != nullptr);
+
+    if (!retval) {
+        Log::DefaultLog.WriteError("Call to %hs::%hs or %hs::%hs succeeded, "
+            "but none of them did provide any metadata. The call will be "
+            "considered to have failed.",
+            VolumetricDataCall::ClassName(),
+            VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_METADATA),
+            VolumetricDataCall::ClassName(),
+            VolumetricDataCall::FunctionName(VolumetricDataCall::IDX_GET_DATA));
+    }
+
+    return retval;
 }
 
 
@@ -78,7 +121,7 @@ const unsigned int megamol::core::misc::VolumetricDataCall::IDX_TRY_GET_DATA
  * megamol::core::misc::VolumetricDataCall::VolumetricDataCall
  */
 megamol::core::misc::VolumetricDataCall::VolumetricDataCall(void)
-        : cntFrames(0), data(nullptr), metadata(nullptr), vram_volume_name(0) {
+        : data(nullptr), metadata(nullptr), vram_volume_name(0) {
 }
 
 
@@ -194,7 +237,7 @@ const float megamol::core::misc::VolumetricDataCall::GetRelativeVoxelValue(const
 
     if (!this->metadata->IsUniform || !this->metadata->GridType == GridType::CARTESIAN ||
         !this->metadata->GridType == GridType::RECTILINEAR) {
-        vislib::sys::Log::DefaultLog.WriteError("GetRelativeVoxelValue: unsupported grid!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("GetRelativeVoxelValue: unsupported grid!");
 
     } else {
         uint64_t idx =
@@ -203,7 +246,7 @@ const float megamol::core::misc::VolumetricDataCall::GetRelativeVoxelValue(const
         switch (this->metadata->ScalarType) {
         case UNKNOWN:
         case BITS:
-            vislib::sys::Log::DefaultLog.WriteError("GetRelativeVoxelValue: unsupported scalar type!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("GetRelativeVoxelValue: unsupported scalar type!");
             break;
 
         case SIGNED_INTEGER: 
@@ -245,7 +288,7 @@ const float megamol::core::misc::VolumetricDataCall::GetAbsoluteVoxelValue(
 
     if (!this->metadata->IsUniform || !this->metadata->GridType == GridType::CARTESIAN ||
         !this->metadata->GridType == GridType::RECTILINEAR) {
-        vislib::sys::Log::DefaultLog.WriteError("GetAbsoluteVoxelValue: unsupported grid!");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("GetAbsoluteVoxelValue: unsupported grid!");
 
     } else {
         uint64_t idx =
@@ -254,7 +297,7 @@ const float megamol::core::misc::VolumetricDataCall::GetAbsoluteVoxelValue(
         switch (this->metadata->ScalarType) {
         case UNKNOWN:
         case BITS:
-            vislib::sys::Log::DefaultLog.WriteError("GetAbsoluteVoxelValue: unsupported scalar type!");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("GetAbsoluteVoxelValue: unsupported scalar type!");
             break;
 
         case SIGNED_INTEGER: {
@@ -304,7 +347,6 @@ megamol::core::misc::VolumetricDataCall&
 megamol::core::misc::VolumetricDataCall::operator =(const VolumetricDataCall& rhs) {
     if (this != &rhs) {
         Base::operator =(rhs);
-        this->cntFrames = rhs.cntFrames;
         this->data = rhs.data;
         this->metadata = rhs.metadata;
     }

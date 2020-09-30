@@ -26,6 +26,7 @@
 #include "mesh/MeshCalls.h"
 #include "mesh/SimpleGPUMtlDataSource.h"
 #include "MeshViewerRenderTasks.h"
+#include "MeshBakery.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -60,6 +61,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::SimpleGPUMtlDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::WavefrontObjLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshViewerRenderTasks>();
+        this->module_descriptions.RegisterAutoDescription<megamol::mesh::MeshBakery>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::Render3DUI>();
         this->module_descriptions.RegisterAutoDescription<megamol::mesh::ThreeDimensionalUIRenderTaskDataSource>();
@@ -80,6 +82,7 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPUMaterialData>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallGPURenderTaskData>();
         this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallMesh>();
+        this->call_descriptions.RegisterAutoDescription<megamol::mesh::CallImage>();
 
         //
         // TODO: Register your plugin's calls here

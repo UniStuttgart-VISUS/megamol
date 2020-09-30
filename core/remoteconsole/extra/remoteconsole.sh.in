@@ -1,8 +1,11 @@
 #!/bin/bash
 #
 # MegaMol remoteconsole startup script
-# Copyright 2018, https://megamol.org/
+# Copyright 2020, https://megamol.org/
 #
 
-LD_LIBRARY_PATH=$LD_LIBRARY_PATH:@cfg_LIB_PATH@:@cfg_EXTERNAL_LIB_PATH@ @cfg_REMOTE@ "$@"
+BIN_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+cd "$BIN_DIR"
+
+LD_LIBRARY_PATH=@cfg_LIB_PATH@:$LD_LIBRARY_PATH ./@PROJECT_NAME@ "$@"
 

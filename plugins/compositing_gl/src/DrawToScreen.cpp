@@ -36,18 +36,18 @@ bool megamol::compositing::DrawToScreen::create() {
         m_drawToScreen_prgm->Create(
             vert_shader_src.Code(), vert_shader_src.Count(), frag_shader_src.Code(), frag_shader_src.Count());
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s (@%s):\n%s\n",
             shader_base_name.PeekBuffer(),
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA());
         // return false;
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n", shader_base_name.PeekBuffer(), e.GetMsgA());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s:\n%s\n", shader_base_name.PeekBuffer(), e.GetMsgA());
         // return false;
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", shader_base_name.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile %s: Unknown exception\n", shader_base_name.PeekBuffer());
         // return false;
     }
 
@@ -69,6 +69,9 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
     megamol::core::view::CallRender3D_2* cr = &call;
     if (cr == NULL) return false;
 
+    // Restore framebuffer that was bound on the way in
+    glBindFramebuffer(GL_FRAMEBUFFER, m_screenRestoreFBO);
+
     // get rhs texture call
     CallTexture2D* ct = this->m_input_texture_call.CallAs<CallTexture2D>();
     if (ct == NULL) return false;
@@ -82,17 +85,9 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
     //  glm::mat4 view_mx = view_tmp;
     //  glm::mat4 proj_mx = proj_tmp;
 
-
-
     // get input texture from call
     auto input_texture = ct->getData();
     if (input_texture == nullptr) return false;
-
-    if (call.FrameBufferObject() != nullptr) {
-        glBindFramebuffer(GL_FRAMEBUFFER, call.FrameBufferObject()->GetID());
-    } else {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    }
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -115,4 +110,7 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
 }
 
 void megamol::compositing::DrawToScreen::PreRender(core::view::CallRender3D_2& call) {
+
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_screenRestoreFBO);
+
 }

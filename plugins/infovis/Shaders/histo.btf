@@ -9,6 +9,13 @@
       <snippet type="file">histo_calc_comp.glsl</snippet>
     </shader>
   </namespace>
+  <namespace name="select">
+    <shader name="comp">
+      <snippet type="version">430</snippet>
+      <snippet name="::bitflags::main" />
+      <snippet type="file">histo_select_comp.glsl</snippet>
+    </shader>
+  </namespace>
   <namespace name="draw">
     <shader name="vert">
       <snippet type="version">430</snippet>

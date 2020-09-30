@@ -8,6 +8,7 @@
 #ifndef MEGAMOL_GUI_OVERLAYRENDERER_H_INCLUDED
 #define MEGAMOL_GUI_OVERLAYRENDERER_H_INCLUDED
 
+
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/misc/PngBitmapCodec.h"
@@ -24,6 +25,7 @@
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/utility/SDFFont.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/RendererModule.h"
@@ -32,7 +34,6 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
 #include "vislib/sys/File.h"
-#include "vislib/sys/Log.h"
 
 #include <chrono>
 #include <glm/gtc/matrix_transform.hpp>
@@ -127,7 +128,7 @@ private:
     // Explicit numbering required as indices in transpctrl_icons array.
     enum TranspCtrlIcon : size_t {
         PLAY = 0,
-        STOP = 1, /// unused
+        STOP = 1, /// so far unused
         PAUSE = 2,
         FAST_REWIND = 3,
         FAST_FORWARD = 4,
@@ -142,6 +143,35 @@ private:
         float start_anim_time;
         std::chrono::system_clock::time_point start_real_time;
     };
+
+    /**********************************************************************
+     * parameters
+     **********************************************************************/
+
+    core::param::ParamSlot paramMode;
+    core::param::ParamSlot paramAnchor;
+    // Custom position
+    core::param::ParamSlot paramCustomPosition;
+    // Texture Mode
+    core::param::ParamSlot paramFileName;
+    core::param::ParamSlot paramRelativeWidth;
+    // TranspCtrl Icons Mode
+    core::param::ParamSlot paramIconColor;
+    core::param::ParamSlot paramDuration;
+    core::param::ParamSlot paramFastSpeed;
+    core::param::ParamSlot paramUltraFastSpeed;
+    core::param::ParamSlot paramSpeedParameter;
+    core::param::ParamSlot paramTimeParameter;
+    // Parameter Mode
+    core::param::ParamSlot paramPrefix;
+    core::param::ParamSlot paramSufix;
+    core::param::ParamSlot paramParameterName;
+    // Label Mode
+    core::param::ParamSlot paramText;
+    // Font Settings
+    core::param::ParamSlot paramFontName;
+    core::param::ParamSlot paramFontSize;
+    core::param::ParamSlot paramFontColor;
 
     /**********************************************************************
      * variables
@@ -189,35 +219,6 @@ private:
     bool onFontName(core::param::ParamSlot& slot);
     bool onParameterName(core::param::ParamSlot& slot);
     bool onTriggerRecalcRectangle(core::param::ParamSlot& slot);
-
-    /**********************************************************************
-     * parameters
-     **********************************************************************/
-
-    core::param::ParamSlot paramMode;
-    core::param::ParamSlot paramAnchor;
-    // Custom position
-    core::param::ParamSlot paramCustomPosition;
-    // Texture Mode
-    core::param::ParamSlot paramFileName;
-    core::param::ParamSlot paramRelativeWidth;
-    // TranspCtrl Icons Mode
-    core::param::ParamSlot paramIconColor;
-    core::param::ParamSlot paramDuration;
-    core::param::ParamSlot paramFastSpeed;
-    core::param::ParamSlot paramUltraFastSpeed;
-    core::param::ParamSlot paramSpeedParameter;
-    core::param::ParamSlot paramTimeParameter;
-    // Parameter Mode
-    core::param::ParamSlot paramPrefix;
-    core::param::ParamSlot paramSufix;
-    core::param::ParamSlot paramParameterName;
-    // Label Mode
-    core::param::ParamSlot paramText;
-    // Font Settings
-    core::param::ParamSlot paramFontName;
-    core::param::ParamSlot paramFontSize;
-    core::param::ParamSlot paramFontColor;
 };
 
 } /* end namespace gui */

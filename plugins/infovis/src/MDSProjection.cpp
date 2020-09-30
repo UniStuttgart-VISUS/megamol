@@ -73,7 +73,8 @@ bool MDSProjection::getDataCallback(core::Call& c) {
         }
 
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(_T("Failed to execute %hs::processData\n"), ClassName());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            _T("Failed to execute %hs::processData\n"), ClassName());
         return false;
     }
 
@@ -96,7 +97,8 @@ bool MDSProjection::getHashCallback(core::Call& c) {
         outCall->SetFrameCount(inCall->GetFrameCount());
         outCall->SetDataHash(this->datahash);
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(_T("Failed to execute %hs::getHashCallback\n"), ClassName());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            _T("Failed to execute %hs::getHashCallback\n"), ClassName());
         return false;
     }
 
@@ -118,7 +120,8 @@ bool megamol::infovis::MDSProjection::dataProjection(megamol::stdplugin::datatoo
 
     int outputDimCount = this->reduceToNSlot.Param<core::param::IntParam>()->Value();
     if (outputDimCount <= 0 || outputDimCount > columnCount) {
-        vislib::sys::Log::DefaultLog.WriteError(_T("%hs: No valid Dimension Count has been given\n"), ClassName());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            _T("%hs: No valid Dimension Count has been given\n"), ClassName());
         return false;
     }
 
@@ -319,7 +322,7 @@ Eigen::MatrixXd megamol::infovis::MDSProjection::smacofMds(Eigen::MatrixXd dissi
         }
     }
 
-    // vislib::sys::Log::DefaultLog.WriteInfo("MDS Computation:\n"
+    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("MDS Computation:\n"
     //                                       " Min/Max Weight: %f / %f\n"
     //                                       " Steps: %i\n"
     //                                       " Stress (Delta): %f ( %f )\n",

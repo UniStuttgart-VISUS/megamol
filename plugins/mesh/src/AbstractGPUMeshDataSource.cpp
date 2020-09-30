@@ -13,9 +13,7 @@
 megamol::mesh::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()
     : core::Module()
     , m_mesh_lhs_slot("getData", "The slot publishing the loaded data")
-    , m_mesh_lhs_cached_hash(0)
     , m_mesh_rhs_slot("getMesh", "The slot for chaining material data sources") 
-    , m_mesh_rhs_cached_hash(0) 
 {
     this->m_mesh_lhs_slot.SetCallback(
         CallGPUMeshData::ClassName(), "GetData", &AbstractGPUMeshDataSource::getDataCallback);

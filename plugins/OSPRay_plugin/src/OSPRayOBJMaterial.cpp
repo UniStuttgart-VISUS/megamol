@@ -42,14 +42,14 @@ OSPRayOBJMaterial::~OSPRayOBJMaterial(void) {
 void OSPRayOBJMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::OBJMATERIAL;
 
-    auto kd = this->Kd.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.Kd.assign(kd, kd + 3);
+    auto kd = this->Kd.Param<core::param::Vector3fParam>();
+    materialContainer.Kd = kd->getArray();
 
-    auto ks = this->Ks.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.Ks.assign(ks, ks + 3);
+    auto ks = this->Ks.Param<core::param::Vector3fParam>();
+    materialContainer.Ks = ks->getArray();
 
-    auto tf = this->Tf.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.Tf.assign(tf, tf + 3);
+    auto tf = this->Tf.Param<core::param::Vector3fParam>();
+    materialContainer.Tf = tf->getArray();
 
     materialContainer.Ns = this->Ns.Param<core::param::FloatParam>()->Value();
 

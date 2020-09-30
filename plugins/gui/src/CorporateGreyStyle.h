@@ -80,15 +80,15 @@ inline void CorporateGreyStyle(int is3D = 0) {
     style.WindowBorderSize = 1;
     style.ChildBorderSize = 1;
     style.PopupBorderSize = 1;
-    style.FrameBorderSize = is3D;
+    style.FrameBorderSize = static_cast<float>(is3D);
 
-    style.WindowRounding = 3;
+    style.WindowRounding = 0; // 3;
     style.ChildRounding = 3;
     style.FrameRounding = 3;
     style.ScrollbarRounding = 2;
     style.GrabRounding = 3;
 
-    style.TabBorderSize = is3D;
+    style.TabBorderSize = static_cast<float>(is3D);
     style.TabRounding = 3;
 
 #ifdef IMGUI_HAS_DOCK

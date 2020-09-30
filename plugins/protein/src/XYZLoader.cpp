@@ -13,15 +13,15 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "vislib/ArrayAllocator.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/types.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/math/Quaternion.h"
 #include <ctime>
 #include <cstdlib>
@@ -74,7 +74,7 @@ bool XYZLoader::create(void) {
  * XYZLoader::getData
  */
 bool XYZLoader::getData( core::Call& call) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using namespace megamol::core::moldyn;
 
     ParticleDataCall *dc = dynamic_cast<ParticleDataCall*>( &call);
@@ -157,7 +157,7 @@ void XYZLoader::release(void) {
  * XYZLoader::loadFile
  */
 void XYZLoader::loadFile( const vislib::TString& filename, bool doElectrostatics) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     this->bbox.Set( 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 

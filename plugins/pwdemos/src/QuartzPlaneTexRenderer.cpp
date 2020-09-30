@@ -13,7 +13,7 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/Vector.h"
 
 namespace megamol {
@@ -53,11 +53,11 @@ QuartzPlaneTexRenderer::~QuartzPlaneTexRenderer(void) {
  */
 bool QuartzPlaneTexRenderer::create(void) {
     using vislib::graphics::gl::GLSLShader;
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     using vislib::graphics::gl::ShaderSource;
 
     if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
-        vislib::sys::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to initialise OpenGL GLSL Shader");
         return false;
     }
     if (!ogl_IsVersionGEQ(2, 0) || !isExtAvailable("GL_ARB_multitexture")) {

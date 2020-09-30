@@ -12,29 +12,34 @@ vec4 DirectLight(vec3 normal, vec4 col) {
   float nDotVP;
   float nDotHV;
   float pf;
+  vec4 tempColor = vec4(0.f);
 
   // OLD normal = (gl_ModelViewMatrixInverseTranspose * vec4(normal, 1.0)).xyz;
   normal = (ModelViewMatrixInverseTranspose * vec4(normal, 1.0)).xyz;
   normal = normalize(normal);
 
-  // OLD nDotVP = max(0.0, dot(normal, normalize(gl_LightSource[0].position.xyz)));
-  nDotVP = max(0.0, dot(normal, normalize(lightPos.xyz)));
-  //nDotHV = max(0.0, dot(normal, gl_LightSource[0].halfVector.xyz));
+  for(int i = 0; i < numLights; ++i) {
+    // OLD nDotVP = max(0.0, dot(normal, normalize(gl_LightSource[0].position.xyz)));
+    nDotVP = max(0.0, dot(normal, normalize(vec3(light[i].px, light[i].py, light[i].pz))));
+    //nDotHV = max(0.0, dot(normal, gl_LightSource[0].halfVector.xyz));
 
-  //if (nDotVP == 0.0) {
-  //  pf = 0.0;
-  //} else {
-  //  pf = pow(nDotHV, gl_FrontMaterial.shininess);
-  //}
+    //if (nDotVP == 0.0) {
+    //  pf = 0.0;
+    //} else {
+    //  pf = pow(nDotHV, gl_FrontMaterial.shininess);
+    //}
 
-  // OLD vec4 ambient = gl_LightSource[0].ambient;
-  // OLD vec4 diffuse = gl_LightSource[0].diffuse * nDotVP;
-  // OLD //vec4 specular = gl_LightSource[0].specular * pf;
-  vec4 ambient = lightIntensity * ambientCol;
-  vec4 diffuse = lightIntensity * diffuseCol * nDotVP;
-  //vec4 specular = specularCol * pf;
+    // OLD vec4 ambient = gl_LightSource[0].ambient;
+    // OLD vec4 diffuse = gl_LightSource[0].diffuse * nDotVP;
+    // OLD //vec4 specular = gl_LightSource[0].specular * pf;
+    vec4 ambient = light[i].lightIntensity * ambientCol;
+    vec4 diffuse = light[i].lightIntensity * diffuseCol * nDotVP;
+    //vec4 specular = specularCol * pf;
 
-  return vec4(col.rgb * ambient.rgb + col.rgb * diffuse.rgb /*+ specular.rgb*/, 1.0);
+    tempColor += vec4(col.rgb * ambient.rgb + col.rgb * diffuse.rgb /*+ specular.rgb*/, 1.0);
+  }
+
+  return tempColor;
 }
 ]]>
     </snippet>
@@ -53,7 +58,7 @@ void main() {
   <namespace name="geo">
 
     <shader name="vert">
-      <snippet type="version">120</snippet>
+      <snippet type="version">430</snippet>
       <snippet type="string">
         <!--#extension GL_EXT_gpu_shader4:enable
 -->
@@ -88,7 +93,7 @@ void main() {
     </shader>
 
     <shader name="geom">
-      <snippet type="version">120</snippet>
+      <snippet type="version">430</snippet>
       <snippet type="string">
         <!--#extension GL_EXT_gpu_shader4:enable
 #extension GL_EXT_geometry_shader4:enable
@@ -191,7 +196,7 @@ void main() {
     </shader>
 
     <shader name="frag">
-      <snippet type="version">120</snippet>
+      <snippet type="version">430</snippet>
       <snippet type="string">
         <!--#extension GL_EXT_gpu_shader4:enable
 -->
@@ -204,7 +209,7 @@ void main() {
   <namespace name="simple">
 
     <shader name="vert">
-      <snippet type="version">110</snippet>
+      <snippet type="version">430</snippet>
       <snippet name="common::directLight"/>
       <snippet type="string">
         <![CDATA[
@@ -224,7 +229,7 @@ void main() {
     </shader>
 
     <shader name="instvert">
-      <snippet type="version">120</snippet>
+      <snippet type="version">430</snippet>
       <snippet type="string">
         <![CDATA[#extension GL_EXT_gpu_shader4:enable
 ]]>
@@ -264,20 +269,21 @@ void main() {
     </shader>
 
     <shader name="frag">
-      <snippet type="version">110</snippet>
+      <snippet type="version">430</snippet>
       <snippet name="common::simpleFragment" />
     </shader>
 
     <shader name="errVert">
-      <snippet type="version">110</snippet>
+      <snippet type="version">430</snippet>
       <snippet type="string">
     <![CDATA[
-
 uniform vec4 clipplane; // a,b,c,d
 uniform mat4 ModelViewProjectionMatrix;
+layout(location = 0) in vec4 vertex;
 
 void main() {
-  vec4 pos = vec4(gl_Vertex.xyz, 1.0);
+  // OLD vec4 pos = vec4(gl_Vertex.xyz, 1.0);
+  vec4 pos = vec4(vertex.xyz, 1.0);
   gl_FrontColor = vec4(1.0, 0.0, 0.0, 1.0);
   if (clipplane != vec4(0.0)) {
     float d = dot(pos.xyz, clipplane.xyz);
@@ -299,7 +305,7 @@ void main() {
   <namespace name="ray">
 
     <shader name="vert">
-      <snippet type="version">110</snippet>
+      <snippet type="version">430</snippet>
       <snippet type="string" name="replaceMeParams">
         <![CDATA[
 #define OUTERRAD 1.0
@@ -413,7 +419,7 @@ void main() {
     </shader>
 
     <shader name="frag">
-      <snippet type="version">110</snippet>
+      <snippet type="version">430</snippet>
       <snippet type="string">
         <![CDATA[
 uniform vec4 viewAttr;
@@ -500,7 +506,7 @@ void main() {
     </shader>
 
     <shader name="vertclipped">
-      <snippet type="version">110</snippet>
+      <snippet type="version">430</snippet>
       <snippet type="string" name="replaceMeParams">
         <![CDATA[
 #define OUTERRAD 1.0
@@ -508,6 +514,8 @@ void main() {
       </snippet>
       <snippet type="string">
         <![CDATA[
+layout(location = 0) in vec4 vertex;
+layout(location = 1) in vec4 texCoord;
 
 uniform vec4 viewAttr;
 uniform vec3 camIn;
@@ -532,8 +540,10 @@ varying float rad;
 varying vec4 clipping;
 
 void main() {
-    quat = gl_MultiTexCoord0 * vec4(-1.0, -1.0, -1.0, 1.0); // inverted/conjugated quaternion
-    vec4 inPos = gl_Vertex;
+    // OLD quat = gl_MultiTexCoord0 * vec4(-1.0, -1.0, -1.0, 1.0); // inverted/conjugated quaternion
+    quat = texCoord * vec4(-1.0, -1.0, -1.0, 1.0); // inverted/conjugated quaternion
+    // OLD vec4 inPos = gl_Vertex;
+    vec4 inPos = vertex;
     rad = inPos.w;
     float squarRad = rad * rad * OUTERRAD * OUTERRAD;
     inPos.w = 1.0;
@@ -645,9 +655,19 @@ void main() {
     </shader>
 
     <shader name="fragclipped">
-      <snippet type="version">110</snippet>
+      <snippet type="version">430</snippet>
       <snippet type="string">
         <![CDATA[
+struct LightParams {
+  float px, py, pz, pw;
+  float cr, cg, cb, ca;
+  float lightIntensity;
+};
+
+layout( std430, binding = 2 ) readonly buffer lightBuffer {
+  LightParams light[]; 
+};
+
 uniform vec4 viewAttr;
 uniform vec3 bboxmin;
 uniform vec3 bboxmax;
@@ -657,13 +677,14 @@ uniform vec4 color;
 uniform vec4 ambientCol;
 uniform vec4 diffuseCol;
 uniform vec4 specularCol;
-uniform float lightIntensity;
+//uniform float lightIntensity;
+uniform int numLights;
 
 varying vec4 quat;
 uniform vec4 camPosInit;
 varying vec4 camPos;
 varying vec4 objPos;
-uniform vec4 lightPos;
+//uniform vec4 lightPos;
 varying float rad;
 
 uniform mat4 ModelViewMatrixInverseTranspose;
@@ -854,7 +875,8 @@ void main() {
     if (!wsNormalSet) {
       normal.xyz = ((2.0 * ((dot(iquat.xyz, normal.xyz) * iquat.xyz) + (iquat.w * cross(iquat.xyz, normal.xyz)))) + (((iquat.w * iquat.w) - dot(iquat.xyz, iquat.xyz)) * normal.xyz));
     }
-    gl_FragColor = DirectLight(normal, col);
+
+    gl_FragColor += DirectLight(normal, col);
 
     // fragment position
     // ... glyph-space
@@ -881,7 +903,7 @@ void main() {
     <namespace name="plane">
 
       <shader name="vertErr">
-        <snippet type="version">110</snippet>
+        <snippet type="version">430</snippet>
         <snippet type="string">
     <![CDATA[
 uniform vec3 camX;
@@ -901,12 +923,12 @@ void main() {
       </shader>
 
       <shader name="fragErr">
-        <snippet type="version">110</snippet>
+        <snippet type="version">430</snippet>
         <snippet name="common::simpleFragment" />
       </shader>
 
       <shader name="vert">
-        <snippet type="version">110</snippet>
+        <snippet type="version">430</snippet>
         <snippet type="string">
           <![CDATA[
 #define OUTERRAD 1.0
@@ -948,7 +970,7 @@ void main() {
       </shader>
 
       <shader name="frag">
-        <snippet type="version">110</snippet>
+        <snippet type="version">430</snippet>
         <snippet type="string">
           <![CDATA[
 uniform vec4 viewAttr;
@@ -998,7 +1020,7 @@ void main() {
       <namespace name="tex">
 
         <shader name="vert">
-          <snippet type="version">120</snippet>
+          <snippet type="version">430</snippet>
           <snippet type="string">
             <![CDATA[#extension GL_EXT_gpu_shader4:enable
 ]]>
@@ -1047,7 +1069,7 @@ void main() {
         </shader>
 
         <shader name="frag">
-          <snippet type="version">120</snippet>
+          <snippet type="version">430</snippet>
           <snippet type="string">
             <![CDATA[#extension GL_EXT_gpu_shader4:enable
 ]]>
@@ -1112,7 +1134,7 @@ void main() {
         </shader>
 
         <shader name="fragfaced">
-          <snippet type="version">120</snippet>
+          <snippet type="version">430</snippet>
           <snippet type="string">
             <![CDATA[#extension GL_EXT_gpu_shader4:enable
 ]]>
@@ -1194,7 +1216,7 @@ void main() {
     <namespace name="tex">
 
       <shader name="vertclipped">
-        <snippet type="version">120</snippet>
+        <snippet type="version">430</snippet>
         <snippet type="string">
           <![CDATA[#extension GL_EXT_gpu_shader4:enable
 ]]>
@@ -1206,6 +1228,8 @@ void main() {
         </snippet>
         <snippet type="string">
           <![CDATA[
+layout(location = 0) in vec4 vertex;
+layout(location = 1) in vec4 texCoord;
 
 uniform vec4 viewAttr;
 uniform vec3 camIn;
@@ -1232,8 +1256,10 @@ varying float rad;
 varying vec4 clipping;
 
 void main() {
-    quat = gl_MultiTexCoord0 * vec4(-1.0, -1.0, -1.0, 1.0); // inverted/conjugated quaternion
-    vec4 inPos = gl_Vertex;
+    // OLD quat = gl_MultiTexCoord0 * vec4(-1.0, -1.0, -1.0, 1.0); // inverted/conjugated quaternion
+    quat = texCoord * vec4(-1.0, -1.0, -1.0, 1.0); // inverted/conjugated quaternion
+    // OLD vec4 inPos = gl_Vertex;
+    vec4 inPos = vertex;
     rad = inPos.w;
     float squarRad = rad * rad * OUTERRAD * OUTERRAD;
     inPos.w = 1.0;
@@ -1344,13 +1370,23 @@ void main() {
       </shader>
 
       <shader name="fragclipped">
-        <snippet type="version">120</snippet>
+        <snippet type="version">430</snippet>
         <snippet type="string">
           <![CDATA[#extension GL_EXT_gpu_shader4:enable
 ]]>
         </snippet>
         <snippet type="string">
           <![CDATA[
+struct LightParams {
+  float px, py, pz, pw;
+  float cr, cg, cb, ca;
+  float lightIntensity;
+};
+
+layout( std430, binding = 2 ) readonly buffer lightBuffer {
+  LightParams light[]; 
+};
+
 uniform vec4 viewAttr;
 uniform vec3 bboxmin;
 uniform vec3 bboxmax;
@@ -1362,13 +1398,14 @@ uniform vec4 color;
 uniform vec4 ambientCol;
 uniform vec4 diffuseCol;
 uniform vec4 specularCol;
-uniform float lightIntensity;
+//uniform float lightIntensity;
+uniform int numLights;
 
 varying vec4 quat;
 uniform vec4 camPosInit;
 varying vec4 camPos;
 varying vec4 objPos;
-uniform vec4 lightPos;
+//uniform vec4 lightPos;
 varying float rad;
 
 uniform mat4 ModelViewMatrixInverseTranspose;

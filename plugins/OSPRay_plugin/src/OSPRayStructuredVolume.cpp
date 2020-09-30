@@ -13,7 +13,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol::ospray;
@@ -92,6 +92,9 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     // fill material container
     this->processMaterial();
 
+    // get transformation parameter
+    //this->processTransformation();
+
     // read Data, calculate  shape parameters, fill data vectors
     auto os = dynamic_cast<CallOSPRayStructure*>(&call);
     auto cd = this->getDataSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
@@ -100,7 +103,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     this->structureContainer.dataChanged = false;
     if (cd == nullptr) return false;
     if (cgtf == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume: no transferfunction connected.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[OSPRayStructuredVolume] No transferfunction connected.");
         return false;
     }
 
@@ -113,7 +116,12 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     } else {
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
     }
-    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty() || cgtf->IsDirty()) {
+    
+    // do the callback to set the dirty flag
+    if (!(*cgtf)(0)) return false;
+    
+    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty() ||
+        cgtf->IsDirty()) {
         this->datahash = cd->DataHash();
         this->time = os->getTime();
         this->structureContainer.dataChanged = true;
@@ -124,7 +132,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
     auto const metadata = cd->GetMetadata();
 
     if (!metadata->GridType == core::misc::CARTESIAN) {
-        vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume only works with cartesian grids (for now)");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRayStructuredVolume only works with cartesian grids (for now)");
         return false;
     }
 
@@ -166,7 +174,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
         } else if (metadata->ScalarLength == 2) {
             voxelType = voxelDataType::USHORT;
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Unsigned integers with a length greater than 2 are invalid.");
             return false;
         }
         break;
@@ -174,12 +182,12 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
         if (metadata->ScalarLength == 2) {
             voxelType = voxelDataType::SHORT;
         } else {
-            vislib::sys::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("Integers with a length != 2 are invalid.");
             return false;
         }
         break;
     case core::misc::BITS:
-        vislib::sys::Log::DefaultLog.WriteError("Invalid datatype.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Invalid datatype.");
         return false;
         break;
     }
@@ -214,11 +222,11 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
                 rgb[i * 3 + 2] = texture[i * 4 + 2];
                 a[i] = i / (numColors - 1.0f);
             }
-            vislib::sys::Log::DefaultLog.WriteWarn("OSPRayStructuredVolume: No alpha channel in transfer function "
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("OSPRayStructuredVolume: No alpha channel in transfer function "
                                                    "connected to module. Adding alpha ramp to RGB colors.\n");
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("OSPRayStructuredVolume: No transfer function connected to module");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRayStructuredVolume: No transfer function connected to module");
         return false;
     }
     cgtf->ResetDirty();
@@ -313,7 +321,8 @@ bool OSPRayStructuredVolume::getExtends(megamol::core::Call& call) {
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
     if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
 
-    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes>(cd->AccessBoundingBoxes());
+    this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>();
+    this->extendContainer.boundingBox->SetBoundingBox(cd->AccessBoundingBoxes().ObjectSpaceBBox());
     this->extendContainer.timeFramesCount = cd->FrameCount();
     this->extendContainer.isValid = true;
 

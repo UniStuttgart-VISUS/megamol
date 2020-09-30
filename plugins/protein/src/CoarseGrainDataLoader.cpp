@@ -10,15 +10,15 @@
 #include "CoarseGrainDataLoader.h"
 #include "mmcore/param/FilePathParam.h"
 #include "vislib/ArrayAllocator.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/sys/MemmappedFile.h"
+#include "mmcore/utility/sys/MemmappedFile.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/types.h"
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/StringConverter.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include <ctime>
 #include <iostream>
 
@@ -129,7 +129,7 @@ void CoarseGrainDataLoader::release(void) {
  * CoarseGrainDataLoader::loadFile
  */
 void CoarseGrainDataLoader::loadFile( const vislib::TString& filename) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     this->bbox.Set( 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
     this->sphereCount = 0;

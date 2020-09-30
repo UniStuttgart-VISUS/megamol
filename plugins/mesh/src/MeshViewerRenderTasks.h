@@ -13,8 +13,7 @@
 namespace megamol {
 namespace mesh {
 
-class MeshViewerRenderTasks : public AbstractGPURenderTaskDataSource
-{
+class MeshViewerRenderTasks : public AbstractGPURenderTaskDataSource {
 public:
     /**
      * Answer the name of this module.
@@ -28,7 +27,9 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Simple mesh viewer: Creates a single render task for each available GPU mesh."; }
+    static const char* Description(void) {
+        return "Simple mesh viewer: Creates a single render task for each available GPU mesh.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
@@ -41,12 +42,14 @@ public:
     ~MeshViewerRenderTasks();
 
 protected:
-
     virtual bool getDataCallback(core::Call& caller);
+
+private:
+    uint32_t m_version;
 };
 
-}
-}
+} // namespace mesh
+} // namespace megamol
 
 
 #endif // !SIMPLE_MESH_VIEWER_RENDER_TASK_H_INCLUDED

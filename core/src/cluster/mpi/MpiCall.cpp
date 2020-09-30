@@ -9,7 +9,7 @@
 #include "mmcore/cluster/mpi/MpiCall.h"
 
 #include "vislib/sys/CmdLineProvider.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 /*

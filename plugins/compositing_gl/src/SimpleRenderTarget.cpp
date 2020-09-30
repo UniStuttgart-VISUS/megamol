@@ -6,6 +6,7 @@
 
 megamol::compositing::SimpleRenderTarget::SimpleRenderTarget() 
     : Renderer3DModule_2()
+    , m_version(0)
     , m_GBuffer(nullptr)
     , m_color_render_target("Color", "Access the color render target texture")
     , m_normal_render_target("Normals", "Access the normals render target texture")
@@ -51,10 +52,10 @@ megamol::compositing::SimpleRenderTarget::~SimpleRenderTarget() {
 
 bool megamol::compositing::SimpleRenderTarget::create() { 
 
-    m_GBuffer = std::make_shared<glowl::FramebufferObject>(1, 1, true);
+    m_GBuffer = std::make_shared<glowl::FramebufferObject>(1, 1);
     m_GBuffer->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT); // surface albedo
-    m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT); // normals
-    m_GBuffer->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);        // clip space depth
+    m_GBuffer->createColorAttachment(GL_RGB16F, GL_RGB, GL_HALF_FLOAT);   // normals
+    m_GBuffer->createColorAttachment(GL_R32F, GL_RED, GL_FLOAT);          // clip space depth
 
     return true; 
 }
@@ -67,6 +68,8 @@ bool megamol::compositing::SimpleRenderTarget::GetExtents(core::view::CallRender
 }
 
 bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3D_2& call) { 
+
+    ++m_version;
 
     m_last_used_camera = call.GetCamera();
 
@@ -97,7 +100,7 @@ bool megamol::compositing::SimpleRenderTarget::getColorRenderTarget(core::Call& 
 
     if (ct == NULL) return false;
 
-    ct->setData(m_GBuffer->getColorAttachment(0));
+    ct->setData(m_GBuffer->getColorAttachment(0), m_version);
 
     return true;
 }
@@ -107,7 +110,7 @@ bool megamol::compositing::SimpleRenderTarget::getNormalsRenderTarget(core::Call
 
     if (ct == NULL) return false;
 
-    ct->setData(m_GBuffer->getColorAttachment(1));
+    ct->setData(m_GBuffer->getColorAttachment(1), m_version);
 
     return true;
 }
@@ -117,7 +120,7 @@ bool megamol::compositing::SimpleRenderTarget::getDepthRenderTarget(core::Call& 
 
     if (ct == NULL) return false;
 
-    ct->setData(m_GBuffer->getColorAttachment(2));
+    ct->setData(m_GBuffer->getColorAttachment(2), m_version);
 
     return true;
 }
@@ -127,7 +130,7 @@ bool megamol::compositing::SimpleRenderTarget::getCameraSnapshot(core::Call& cal
 
     if (cc == NULL) return false;
 
-    cc->setData(m_last_used_camera);
+    cc->setData(m_last_used_camera, m_version);
 
     return true; 
 }
@@ -137,7 +140,7 @@ bool megamol::compositing::SimpleRenderTarget::getFramebufferObject(core::Call& 
 
     if (cf == NULL) return false;
 
-    cf->setData(m_GBuffer);
+    cf->setData(m_GBuffer,m_version);
 
     return true;
 }

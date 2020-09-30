@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="TexturedProbeGlyph">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">450</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">glyphs/textured_probe_glyph_vertex.glsl</snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">450</snippet>
+        <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="Main"             type="file">glyphs/textured_probe_glyph_fragment.glsl</snippet>
+    </shader>
+
+</btf>

@@ -38,14 +38,14 @@ OSPRayMetalMaterial::~OSPRayMetalMaterial(void) {
 void OSPRayMetalMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::METAL;
 
-    auto reflect = this->metalReflectance.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.metalReflectance.assign(reflect, reflect + 3);
+    auto reflect = this->metalReflectance.Param<core::param::Vector3fParam>();
+    materialContainer.metalReflectance = reflect->getArray();
 
-    auto eta = this->metalEta.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.metalEta.assign(eta, eta + 3);
+    auto eta = this->metalEta.Param<core::param::Vector3fParam>();
+    materialContainer.metalEta = eta->getArray();
 
-    auto k = this->metalK.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.metalK.assign(k, k + 3);
+    auto k = this->metalK.Param<core::param::Vector3fParam>();
+    materialContainer.metalK = k->getArray();
 
     materialContainer.metalRoughness = this->metalRoughness.Param<core::param::FloatParam>()->Value();
 }
