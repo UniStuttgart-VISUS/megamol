@@ -31,6 +31,35 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
     AbstractGPURenderTaskDataSource::create();
 
     //TODO ui mesh
+    {
+        // clang-format off
+        std::vector<std::vector<float>> vertices = {{
+                -1.0, -0.05, 0.0,
+                1.0, 0.05, 0.0,
+                -1.0, 0.05, 0.0,
+                1.0, 0.05, 0.0,
+                -1.0, -0.05, 0.0,
+                1.0, -0.05, 0.0,
+
+                0.0, -0.05, -1.0,
+                0.0, 0.05, 1.0,
+                0.0, 0.05, -1.0,
+                0.0, 0.05, 1.0,
+                0.0, -0.05, -1.0,
+                0.0, -0.05, 1.0
+            }};
+        std::vector<size_t> byte_sizes = {};
+        std::vector<uint32_t> indices = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+        std::vector<glowl::VertexLayout> vertex_layout = {
+            glowl::VertexLayout(12,{glowl::VertexLayout::Attribute(3,GL_FLOAT,GL_FALSE,0)})
+        };
+        try {
+            m_probes_mesh = std::make_shared<glowl::Mesh>(vertices, indices, vertex_layout,
+                GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
+        } catch (const std::exception&) {
+        }
+    }
+    
 
     // create an empty dummy mesh, probe mesh
     std::vector<void*> data_ptrs = {};
