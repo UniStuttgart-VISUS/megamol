@@ -127,7 +127,7 @@ public:
         if ((dimension == 2) || (dimension == 3))
             dim_ = dimension;
         else
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[pcl::%s::setDimension] Invalid input dimension specified!\n", getClassName().c_str());
     }
 
@@ -206,7 +206,7 @@ template <typename PointInT>
 void pcl::ConcaveHull<PointInT>::reconstruct(PointCloud& output, std::vector<pcl::Vertices>& polygons) {
     // output.header = this->input_->header;
     if (alpha_ <= 0) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[pcl::%s::reconstruct] Alpha parameter must be set to a positive number!\n", getClassName().c_str());
         output.points.clear();
         return;
@@ -310,7 +310,7 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
         dim_, static_cast<int>(cloud_transformed.points.size()), points, ismalloc, flags, outfile, errfile);
 
     if (exitcode != 0) {
-        vislib::sys::Log::DefaultLog.WriteError("[pcl::%s::performReconstrution] ERROR: qhull was unable to compute a "
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[pcl::%s::performReconstrution] ERROR: qhull was unable to compute a "
                                                 "concave hull for the given point cloud(%lu)!\n",
             getClassName().c_str(), cloud_transformed.points.size());
 
@@ -326,7 +326,7 @@ void pcl::ConcaveHull<PointInT>::performReconstruction(PointCloud& alpha_shape, 
             }
 
             if (NaNvalues)
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[pcl::%s::performReconstruction] ERROR: point cloud contains NaN values, consider running "
                     "pcl::PassThrough filter first to remove NaNs!\n",
                     getClassName().c_str());

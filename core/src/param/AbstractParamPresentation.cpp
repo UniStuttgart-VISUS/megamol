@@ -13,21 +13,21 @@ using namespace megamol::core::param;
 
 const std::string AbstractParamPresentation::GetTypeName(ParamType type) {
     switch (type) {
-    case(BOOL): return "BoolParam";
-    case(BUTTON): return "ButtonParam";
-    case(COLOR): return "ColorParam";
-    case(ENUM): return "EnumParam";
-    case(FILEPATH): return "FilePathParam";
-    case(FLEXENUM): return "FlexEnumParam";
-    case(FLOAT): return "FloatParam";
-    case(INT): return "IntParam";
-    case(STRING): return "StringParam";
-    case(TERNARY): return "TernaryParam";
-    case(TRANSFERFUNCTION): return "TransferFunctionParam";
-    case(VECTOR2F): return "Vector2fParam";
-    case(VECTOR3F): return "Vector3fParam";
-    case(VECTOR4F): return "Vector4fParam";
-    case(GROUP_ANIMATION): return "AnimationGroup";
+    case(ParamType::BOOL): return "BoolParam";
+    case(ParamType::BUTTON): return "ButtonParam";
+    case(ParamType::COLOR): return "ColorParam";
+    case(ParamType::ENUM): return "EnumParam";
+    case(ParamType::FILEPATH): return "FilePathParam";
+    case(ParamType::FLEXENUM): return "FlexEnumParam";
+    case(ParamType::FLOAT): return "FloatParam";
+    case(ParamType::INT): return "IntParam";
+    case(ParamType::STRING): return "StringParam";
+    case(ParamType::TERNARY): return "TernaryParam";
+    case(ParamType::TRANSFERFUNCTION): return "TransferFunctionParam";
+    case(ParamType::VECTOR2F): return "Vector2fParam";
+    case(ParamType::VECTOR3F): return "Vector3fParam";
+    case(ParamType::VECTOR4F): return "Vector4fParam";
+    case(ParamType::GROUP_ANIMATION): return "AnimationGroup";
     default: return "UNKNOWN";
     }
 }
@@ -49,6 +49,8 @@ AbstractParamPresentation::AbstractParamPresentation(void)
     this->presentation_name_map.emplace(Presentation::TransferFunction, "Transfer Function");
     this->presentation_name_map.emplace(Presentation::Knob, "Knob");
     this->presentation_name_map.emplace(Presentation::PinValueToMouse, "Pin Value To Mouse");
+    this->presentation_name_map.emplace(Presentation::Rotation3D_Direction, "3D Rotation - Direction");
+    this->presentation_name_map.emplace(Presentation::Rotation3D_Axes, "3D Rotation - Axes");
     this->presentation_name_map.emplace(Presentation::Group_Animation, "Animation");
 }
 
@@ -111,11 +113,11 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::VECTOR3F): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse | Presentation::Rotation3D_Direction;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::VECTOR4F): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse | Presentation::Color;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse | Presentation::Color | Presentation::Rotation3D_Axes;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::GROUP_ANIMATION): {

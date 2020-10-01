@@ -47,8 +47,6 @@ namespace misc {
         vislib::graphics::gl::GLSLComputeShader mipmapShader;
         megamol::core::utility::ShaderSourceFactory *factory;
         unsigned int dataVersion;
-        GLint viewport[4];
-        GLint prevFBO;
         bool computeAvailable, clearAvailable;
 
         unsigned char* clearBuffer;
@@ -57,6 +55,10 @@ namespace misc {
         glm::vec3 boundsMin;
         vislib::math::Dimension<float, 3> boundsSizeInverse;
         vislib::math::Dimension<float, 3> volumeRes;
+
+        // Previous OpenGL State
+        GLint viewport[4];
+        GLint prevFBO;
     };
 
 } /* end namespace misc */

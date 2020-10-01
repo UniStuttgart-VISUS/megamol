@@ -15,7 +15,7 @@ endif()
 project(megamol)
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}
+  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install"
     CACHE PATH "default install path" FORCE)
 endif()
 

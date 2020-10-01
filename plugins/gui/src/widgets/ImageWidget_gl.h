@@ -9,16 +9,17 @@
 #define MEGAMOL_GUI_IMAGEWIDGET_GL_INCLUDED
 
 
-#include "glowl/Texture2D.hpp"
-
 #include "FileUtils.h"
 #include "GUIUtils.h"
 #include "widgets/HoverToolTip.h"
 
 #include "mmcore/misc/PngBitmapCodec.h"
-
 #include "mmcore/utility/log/Log.h"
+
 #include "vislib/graphics/BitmapImage.h"
+
+#define GLOWL_OPENGL_INCLUDE_GLAD
+#include "glowl/Texture2D.hpp"
 
 
 namespace megamol {

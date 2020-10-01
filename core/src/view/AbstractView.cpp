@@ -43,7 +43,7 @@ view::AbstractView::AbstractView(void) : Module(),
     this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
     this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
-        AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtentsCallback);
+        AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
     // CallRenderView
     this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_FREEZE), &AbstractView::OnFreezeView);
@@ -254,9 +254,9 @@ bool view::AbstractView::onResetView(Call& call) {
 }
 
 
-bool view::AbstractView::GetExtentsCallback(Call& call) {
-	// NOP, because thats the way it was before.
-	return false; 
+bool view::AbstractView::GetExtents(Call& call) {
+    throw vislib::UnsupportedOperationException("AbstractView::GetExtents", __FILE__, __LINE__);
+    return false;
 }
 
 bool view::AbstractView::OnKeyCallback(Call& call) {

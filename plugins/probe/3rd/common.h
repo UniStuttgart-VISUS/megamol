@@ -48,7 +48,7 @@
 #include "mmcore/utility/log/Log.h"
 
 #ifdef _DEBUG
-#    define PCL_DEBUG vislib::sys::Log::DefaultLog.WriteWarn
+#    define PCL_DEBUG megamol::core::utility::log::Log::DefaultLog.WriteWarn
 #else
 // most hacky solution just to make michael more happy :,(
 namespace {
@@ -586,25 +586,26 @@ template <typename PointT> void pcl::PCLBase<PointT>::setIndices(const PointIndi
 template <typename PointT>
 void pcl::PCLBase<PointT>::setIndices(size_t row_start, size_t col_start, size_t nb_rows, size_t nb_cols) {
     if ((nb_rows > input_->height) || (row_start > input_->height)) {
-        vislib::sys::Log::DefaultLog.WriteError("[PCLBase::setIndices] cloud is only %d height", input_->height);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[PCLBase::setIndices] cloud is only %d height", input_->height);
         return;
     }
 
     if ((nb_cols > input_->width) || (col_start > input_->width)) {
-        vislib::sys::Log::DefaultLog.WriteError("[PCLBase::setIndices] cloud is only %d width", input_->width);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[PCLBase::setIndices] cloud is only %d width", input_->width);
         return;
     }
 
     size_t row_end = row_start + nb_rows;
     if (row_end > input_->height) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[PCLBase::setIndices] %d is out of rows range %d", row_end, input_->height);
         return;
     }
 
     size_t col_end = col_start + nb_cols;
     if (col_end > input_->width) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[PCLBase::setIndices] %d is out of columns range %d", col_end, input_->width);
         return;
     }
@@ -634,7 +635,7 @@ template <typename PointT> bool pcl::PCLBase<PointT>::initCompute() {
         try {
             indices_->resize(input_->points.size());
         } catch (const std::bad_alloc&) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[initCompute] Failed to allocate %lu indices.\n", input_->points.size());
         }
         for (size_t i = indices_size; i < indices_->size(); ++i) {

@@ -9,10 +9,7 @@
 #define MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
 
 
-#include "Call.h"
-#include "InterfaceSlot.h"
-#include "Module.h"
-#include "widgets/RenamePopUp.h"
+#include "GroupPresentation.h"
 
 
 namespace megamol {
@@ -25,50 +22,6 @@ class Group;
 // Types
 typedef std::shared_ptr<Group> GroupPtr_t;
 typedef std::vector<GroupPtr_t> GroupPtrVector_t;
-
-
-/** ************************************************************************
- * Defines GUI group presentation.
- */
-class GroupPresentation {
-public:
-    friend class Group;
-
-    // VARIABLES --------------------------------------------------------------
-
-    // Relative position without considering canvas offset and zooming
-    ImVec2 position;
-    // Relative size without considering zooming
-    ImVec2 size;
-
-    // FUNCTIONS --------------------------------------------------------------
-
-    GroupPresentation(void);
-    ~GroupPresentation(void);
-
-    inline ImVec2 GetSize(void) { return this->size; }
-    inline bool IsViewCollapsed(void) { return this->collapsed_view; }
-    inline bool ModulesVisible(void) { return !this->collapsed_view; }
-    inline void ForceUpdate(void) { this->update = true; }
-
-private:
-    // VARIABLES --------------------------------------------------------------
-
-    bool collapsed_view;
-    bool allow_selection;
-    bool allow_context;
-    bool selected;
-    bool update;
-
-    // Widgets
-    RenamePopUp rename_popup;
-
-    // FUNCTIONS --------------------------------------------------------------
-
-    void Present(megamol::gui::PresentPhase phase, Group& inout_group, GraphItemsState_t& state);
-    void UpdatePositionSize(Group& inout_group, const GraphCanvas_t& in_canvas);
-    void SetPosition(Group& inout_group, const GraphCanvas_t& in_canvas, ImVec2 pos);
-};
 
 
 /** ************************************************************************

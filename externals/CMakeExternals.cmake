@@ -61,7 +61,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(glowl
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "v0.3"
+      GIT_TAG "v0.4c"
       INCLUDE_DIR "include")
 
   # json
@@ -117,6 +117,15 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
       GIT_TAG "v2.2.0")
 
+  elseif(NAME STREQUAL "sim_sort")
+    if(TARGET sim_sort)
+      return()
+    endif()
+
+    add_external_headeronly_project(sim_sort
+      GIT_REPOSITORY https://github.com/alexstraub1990/simultaneous-sort.git
+      INCLUDE_DIR "include")
+
   # Built libraries #####################################################
 
   # adios2
@@ -143,6 +152,7 @@ function(require_external NAME)
         -DADIOS2_USE_BZip2=OFF
         -DADIOS2_USE_Fortran=OFF
         -DADIOS2_USE_HDF5=OFF
+        -DADIOS2_USE_PNG=OFF
         -DADIOS2_USE_Python=OFF
         -DADIOS2_USE_SST=OFF
         -DADIOS2_USE_SZ=OFF
@@ -196,6 +206,34 @@ function(require_external NAME)
 
     add_external_library(bhtsne
       LIBRARY ${BHTSNE_LIB})
+
+  # fmt
+  elseif(NAME STREQUAL "fmt")
+    if(TARGET fmt)
+      return()
+    endif()
+
+    if(WIN32)
+      set(FMT_LIB "lib/fmt<SUFFIX>.lib")
+    else()
+      include(GNUInstallDirs)
+      set(FMT_LIB "${CMAKE_INSTALL_LIBDIR}/libfmt<SUFFIX>.a")
+    endif()
+
+    add_external_project(fmt STATIC
+      GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+      GIT_TAG "6.2.1"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${FMT_LIB}"
+      DEBUG_SUFFIX "d"
+      CMAKE_ARGS
+        -DFMT_DOC=OFF
+        -DFMT_TEST=OFF
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC)
+
+    add_external_library(fmt
+      LIBRARY ${FMT_LIB}
+      DEBUG_SUFFIX "d")
 
   #glad 
   elseif(NAME STREQUAL "glad")
@@ -307,7 +345,6 @@ function(require_external NAME)
   # imgui
   elseif(NAME STREQUAL "imgui")
     if(NOT TARGET imgui)
-      
       if(WIN32)
         set(IMGUI_LIB "lib/imgui.lib")
       else()
@@ -324,7 +361,6 @@ function(require_external NAME)
 
       add_external_library(imgui
         LIBRARY ${IMGUI_LIB})
-
     endif()
 
     external_get_property(imgui SOURCE_DIR)
@@ -337,6 +373,48 @@ function(require_external NAME)
       "${SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
       "${SOURCE_DIR}/misc/cpp/imgui_stdlib.h"
       PARENT_SCOPE)
+
+  # imguizmoquat
+  elseif(NAME STREQUAL "imguizmoquat")
+    if(TARGET imguizmoquat)
+      return()
+    endif()
+
+    require_external(imgui)
+
+    if(WIN32)
+      set(IMGUIZMOQUAT_LIB "lib/imguizmoquat.lib")
+    else()
+      set(IMGUIZMOQUAT_LIB "lib/libimguizmoquat.a")
+    endif()
+
+    if(WIN32)
+      set(IMGUI_LIB "lib/imgui.lib")
+    else()
+      set(IMGUI_LIB "lib/libimgui.a")
+    endif()
+
+    external_get_property(imgui INSTALL_DIR)
+
+    add_external_project(imguizmoquat STATIC
+      GIT_REPOSITORY https://github.com/BrutPitt/imGuIZMO.quat.git
+      GIT_TAG "v3.0"
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUIZMOQUAT_LIB}"
+      DEPENDS imgui
+      CMAKE_ARGS
+        -DIMGUI_LIBRARY:PATH=${INSTALL_DIR}/${IMGUI_LIB}
+        -DIMGUI_INCLUDE_DIR:PATH=${INSTALL_DIR}/include
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+          "${CMAKE_SOURCE_DIR}/externals/imguizmoquat/CMakeLists.txt"
+          "<SOURCE_DIR>/CMakeLists.txt")
+
+    add_external_library(imguizmoquat
+        LIBRARY ${IMGUIZMOQUAT_LIB})
+
+    external_get_property(imguizmoquat SOURCE_DIR)
+    target_include_directories(imguizmoquat INTERFACE "${SOURCE_DIR}/imGuIZMO.quat")
 
   # libpng
   elseif(NAME STREQUAL "libpng")
@@ -484,6 +562,44 @@ function(require_external NAME)
       IMPORT_LIBRARY ${SNAPPY_IMPORT_LIB}
       LIBRARY ${SNAPPY_LIB})
 
+  # spdlog
+  elseif(NAME STREQUAL "spdlog")
+    if(TARGET spdlog)
+      return()
+    endif()
+
+    require_external(fmt)
+
+    if(WIN32)
+      set(SPDLOG_LIB "lib/spdlog<SUFFIX>.lib")
+    else()
+      include(GNUInstallDirs)
+      set(SPDLOG_LIB "${CMAKE_INSTALL_LIBDIR}/libspdlog<SUFFIX>.a")
+    endif()
+
+    external_get_property(fmt BINARY_DIR)
+
+    add_external_project(spdlog STATIC
+      GIT_REPOSITORY https://github.com/gabime/spdlog.git
+      GIT_TAG "v1.7.0"
+      DEPENDS fmt
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SPDLOG_LIB}"
+      DEBUG_SUFFIX "d"
+      CMAKE_ARGS
+        -DSPDLOG_BUILD_EXAMPLE=OFF
+        -DSPDLOG_BUILD_TESTS=OFF
+        -DSPDLOG_FMT_EXTERNAL=ON
+        -Dfmt_DIR=${BINARY_DIR}
+        -DCMAKE_C_FLAGS=-fPIC
+        -DCMAKE_CXX_FLAGS=-fPIC)
+
+    add_external_library(spdlog
+      LIBRARY ${SPDLOG_LIB}
+      DEBUG_SUFFIX "d"
+      DEPENDS fmt)
+
+    target_compile_definitions(spdlog INTERFACE SPDLOG_FMT_EXTERNAL;SPDLOG_COMPILED_LIB)
+
   # tinyobjloader
   elseif(NAME STREQUAL "tinyobjloader")
     if(TARGET tinyobjloader)
@@ -548,7 +664,7 @@ function(require_external NAME)
     set(TRACKING_NATNET_IMPORT_LIB "lib/NatNetLib.lib")
 
     add_external_project(tracking SHARED
-      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
+      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking.git
       GIT_TAG "v2.0"
       BUILD_BYPRODUCTS
         "<INSTALL_DIR>/${TRACKING_LIB}"
@@ -688,65 +804,6 @@ function(require_external NAME)
       PROJECT vtkm
       LIBRARY_RELEASE "${VTKM_LIB_WORKLET}"
       LIBRARY_DEBUG "${VTKM_LIB_DEBUG_WORKLET}")
-
-  elseif(NAME STREQUAL "fmt")
-    if(TARGET fmt)
-      return()
-    endif()
-  
-    if(WIN32)
-      set(FMT_LIB "lib/fmt<SUFFIX>.lib")
-    else()
-      include(GNUInstallDirs)
-      set(FMT_LIB "${CMAKE_INSTALL_LIBDIR}/libfmt.a")
-    endif()
-  
-    add_external_project(fmt STATIC
-      GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-      GIT_TAG "6.2.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${FMT_LIB}"
-      DEBUG_SUFFIX "d"
-      CMAKE_ARGS
-        -DFMT_DOC=OFF
-        -DFMT_TEST=OFF
-        -DCMAKE_C_FLAGS=-fPIC
-        -DCMAKE_CXX_FLAGS=-fPIC)
-  
-    add_external_library(fmt
-      LIBRARY ${FMT_LIB}
-      DEBUG_SUFFIX "d")
-  elseif(NAME STREQUAL "spdlog")
-    if(TARGET spdlog)
-      return()
-    endif()
-
-    require_external(fmt)
-  
-    if(WIN32)
-      set(SPDLOG_LIB "lib/spdlog<SUFFIX>.lib")
-    else()
-      include(GNUInstallDirs)
-      set(SPDLOG_LIB "${CMAKE_INSTALL_LIBDIR}/libspdlog.a")
-    endif()
-  
-    external_get_property(fmt BINARY_DIR)
-
-    add_external_project(spdlog STATIC
-      GIT_REPOSITORY https://github.com/gabime/spdlog.git
-      GIT_TAG "v1.5.0"
-      DEPENDS fmt
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${SPDLOG_LIB}"
-      DEBUG_SUFFIX "d"
-      CMAKE_ARGS
-        -DSPDLOG_BUILD_EXAMPLE=OFF
-        -DSPDLOG_BUILD_TESTS=OFF
-        -DSPDLOG_FMT_EXTERNAL=ON
-        -Dfmt_DIR=${BINARY_DIR})
-  
-    add_external_library(spdlog
-      LIBRARY ${SPDLOG_LIB}
-      DEBUG_SUFFIX "d"
-      DEPENDS fmt)
   else()
     message(FATAL_ERROR "Unknown external required \"${NAME}\"")
   endif()

@@ -226,6 +226,235 @@ In order to add a new custom widget for a group of parameters sharing the same n
 * Add a new group widget data set of the type `GroupWidgetData` in the ctor and register above function as callback. 
 * (WIP: Identification of parameter widget groups. Currently by name of namespace and number of parameter types of group.)
 
-### Plugin Class Dependencies
+#### Default gui state 
+
+```lua
+mmSetParamValue("::gui::state",[=[{
+  "GUI": {
+    "menu_visible": true,
+    "project_file": ""
+  },
+  "Parameters": {
+    "::gui::autostart_configurator": {
+      "gui_presentation_mode": 2,
+      "gui_read-only": false,
+      "gui_visibility": true
+    },
+    "::gui::configurator::state": {
+      "gui_presentation_mode": 2,
+      "gui_read-only": true,
+      "gui_visibility": false
+    },
+    "::gui::state": {
+      "gui_presentation_mode": 2,
+      "gui_read-only": true,
+      "gui_visibility": false
+    },
+    "::gui::style": {
+      "gui_presentation_mode": 2,
+      "gui_read-only": false,
+      "gui_visibility": true
+    }
+  },
+  "WindowConfigurations": {
+    "All Parameters": {
+      "font_name": "",
+      "ms_max_history_count": 20,
+      "ms_mode": 0,
+      "ms_refresh_rate": 2.0,
+      "ms_show_options": false,
+      "param_extended_mode": false,
+      "param_module_filter": 0,
+      "param_modules_list": [],
+      "param_show_hotkeys": false,
+      "tfe_active_param": "",
+      "tfe_view_minimized": false,
+      "tfe_view_vertical": false,
+      "win_callback": 1,
+      "win_flags": 40,
+      "win_hotkey": [
+        300,
+        0
+      ],
+      "win_position": [
+        0.0,
+        18.0
+      ],
+      "win_reset_position": [
+        0.0,
+        0.0
+      ],
+      "win_reset_size": [
+        400.0,
+        600.0
+      ],
+      "win_show": true,
+      "win_size": [
+        400.0,
+        600.0
+      ],
+      "win_soft_reset": false
+    },
+    "Configurator": {
+      "font_name": "",
+      "ms_max_history_count": 20,
+      "ms_mode": 0,
+      "ms_refresh_rate": 2.0,
+      "ms_show_options": false,
+      "param_extended_mode": false,
+      "param_module_filter": 0,
+      "param_modules_list": [],
+      "param_show_hotkeys": false,
+      "tfe_active_param": "",
+      "tfe_view_minimized": false,
+      "tfe_view_vertical": false,
+      "win_callback": 6,
+      "win_flags": 1064,
+      "win_hotkey": [
+        296,
+        0
+      ],
+      "win_position": [
+        0.0,
+        0.0
+      ],
+      "win_reset_position": [
+        0.0,
+        0.0
+      ],
+      "win_reset_size": [
+        800.0,
+        600.0
+      ],
+      "win_show": false,
+      "win_size": [
+        800.0,
+        600.0
+      ],
+      "win_soft_reset": true
+    },
+    "Font Settings": {
+      "font_name": "",
+      "ms_max_history_count": 20,
+      "ms_mode": 0,
+      "ms_refresh_rate": 2.0,
+      "ms_show_options": false,
+      "param_extended_mode": false,
+      "param_module_filter": 0,
+      "param_modules_list": [],
+      "param_show_hotkeys": false,
+      "tfe_active_param": "",
+      "tfe_view_minimized": false,
+      "tfe_view_vertical": false,
+      "win_callback": 4,
+      "win_flags": 96,
+      "win_hotkey": [
+        298,
+        0
+      ],
+      "win_position": [
+        0.0,
+        0.0
+      ],
+      "win_reset_position": [
+        0.0,
+        0.0
+      ],
+      "win_reset_size": [
+        400.0,
+        600.0
+      ],
+      "win_show": false,
+      "win_size": [
+        400.0,
+        600.0
+      ],
+      "win_soft_reset": true
+    },
+    "Performance Metrics": {
+      "font_name": "",
+      "ms_max_history_count": 20,
+      "ms_mode": 0,
+      "ms_refresh_rate": 2.0,
+      "ms_show_options": false,
+      "param_extended_mode": false,
+      "param_module_filter": 0,
+      "param_modules_list": [],
+      "param_show_hotkeys": false,
+      "tfe_active_param": "",
+      "tfe_view_minimized": false,
+      "tfe_view_vertical": false,
+      "win_callback": 3,
+      "win_flags": 97,
+      "win_hotkey": [
+        299,
+        0
+      ],
+      "win_position": [
+        0.0,
+        0.0
+      ],
+      "win_reset_position": [
+        0.0,
+        0.0
+      ],
+      "win_reset_size": [
+        400.0,
+        600.0
+      ],
+      "win_show": false,
+      "win_size": [
+        400.0,
+        600.0
+      ],
+      "win_soft_reset": true
+    },
+    "Transfer Function Editor": {
+      "font_name": "",
+      "ms_max_history_count": 20,
+      "ms_mode": 0,
+      "ms_refresh_rate": 2.0,
+      "ms_show_options": false,
+      "param_extended_mode": false,
+      "param_module_filter": 0,
+      "param_modules_list": [],
+      "param_show_hotkeys": false,
+      "tfe_active_param": "",
+      "tfe_view_minimized": false,
+      "tfe_view_vertical": false,
+      "win_callback": 5,
+      "win_flags": 96,
+      "win_hotkey": [
+        297,
+        0
+      ],
+      "win_position": [
+        0.0,
+        0.0
+      ],
+      "win_reset_position": [
+        0.0,
+        0.0
+      ],
+      "win_reset_size": [
+        400.0,
+        600.0
+      ],
+      "win_show": false,
+      "win_size": [
+        400.0,
+        600.0
+      ],
+      "win_soft_reset": true
+    }
+  }
+}]=])
+```
+
+#### GUI Graph Structure
+
+![gui graph structure](graph_structure.png)
+
+#### Plugin Class Dependencies
 
 ![gui plugin class dependencies](class_dependencies.png)
