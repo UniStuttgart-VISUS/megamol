@@ -9,6 +9,8 @@
 #include "mmcore/utility/log/Log.h"
 
 #include <algorithm>
+#include <cctype>
+#include <string>
 
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
 static std::vector<std::string> splitPathName(std::string const& path) {
@@ -25,7 +27,7 @@ static std::vector<std::string> splitPathName(std::string const& path) {
 }
 
 static std::string tolower(std::string s) {
-    std::transform(s.begin(), s.end(), s.begin(), std::tolower);
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
     return s;
 }
 

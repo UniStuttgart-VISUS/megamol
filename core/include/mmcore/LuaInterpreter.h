@@ -446,7 +446,7 @@ template <class T> int megamol::core::LuaInterpreter<T>::log(lua_State* L) {
             break;
         }
     }
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(static_cast<UINT>(level), "%s", out.str().c_str());
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(static_cast<unsigned int>(level), "%s", out.str().c_str());
     return 0;
 }
 
