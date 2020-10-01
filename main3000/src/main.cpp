@@ -103,10 +103,21 @@ int main(int argc, char* argv[]) {
     services.add(gui_service, &guiConfig);
     services.add(lua_service_wrapper, &luaConfig);
 
-    // TODO: cinematic
+    // TODO: gui view and frontend service gui can not coexist => how to kill GUI View in loaded projects?
+    //  - FBO size (and others) for newly created views/modules/entrypoints (FBO size event missing). see AbstractView_EventConsumption::view_consume_framebuffer_events
+    //  - graph manipulation via GUI still buggy (adding/removing main views, renaming modules/calls, stuff like that)
+    // TODO: port cinematic as frontend service
     // => explicit FBOs!
-    // TODO: screenshooter
-    // => do or dont screenshot GUI, depending on ...
+    // TODO: port screenshooter
+    // TODO: ZMQ context as frontend resource
+    // TODO: port CLI commands from mmconsole
+    // => do or dont show GUI in screenshots, depending on ...
+    // TODO: eliminate the core instance: 
+    //  => extract module/call description manager into new factories; remove from core
+    //  => key/value store for CLI configuration as frontend resource (emulate config params)
+    // TODO: main3000 compilation on linux (cmake name conflict, GUI_Windows <-> GUI_ Service dll/lib boundary)
+    // TODO: overall new frontend-related CI compilation issues (mostly on linux)
+    // TODO: main3000 raw hot loop performance vs. mmconsole performance
 
     const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
 
@@ -253,6 +264,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
     if (parsed_options.count("nokhrdebug")) {
         config.opengl_khr_debug = !parsed_options["nokhrdebug"].as<bool>();
     }
+
     return config;
 }
 
