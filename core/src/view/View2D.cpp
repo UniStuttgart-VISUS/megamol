@@ -177,6 +177,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     if (this->firstImg) {
         this->firstImg = false;
         this->ResetView();
+        tryRestoringCamera(this->viewX, this->viewY, this->viewZoom);
     }
 
     if ((*cr2d)(AbstractCallRender::FnGetExtents)) {
@@ -548,24 +549,33 @@ bool view::View2D::onStoreCamera(param::ParamSlot &p) {
     return true;
 }
 
-bool view::View2D::onRestoreCamera(param::ParamSlot &p) {
-    // TODO: multiple saved views, like View3D_2
+bool view::View2D::tryRestoringCamera(float &outViewX, float &outViewY, float &outViewZoom) {
     if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
-        nlohmann::json obj = nlohmann::json::parse(this->cameraSettingsSlot.Param<param::StringParam>()->Value().PeekBuffer(), nullptr, false);
+        nlohmann::json obj = nlohmann::json::parse(
+            this->cameraSettingsSlot.Param<param::StringParam>()->Value().PeekBuffer(), nullptr, false);
         if (!obj.is_object()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("View2D: Camera state invalid. Cannot deserialize.");
-            return true;
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "View2D: Camera state invalid. Cannot deserialize.");
+            return false;
         } else {
-            if (obj.count("viewX") == 1 && obj.count("viewY") == 1 && obj.count("viewZoom") == 1
-                && obj["viewX"].is_number() && obj["viewY"].is_number() && obj["viewZoom"].is_number()) {
-                this->viewX = obj["viewX"];
-                this->viewY = obj["viewY"];
-                this->viewZoom = obj["viewZoom"];
+            if (obj.count("viewX") == 1 && obj.count("viewY") == 1 && obj.count("viewZoom") == 1 &&
+                obj["viewX"].is_number() && obj["viewY"].is_number() && obj["viewZoom"].is_number()) {
+                outViewX = obj["viewX"];
+                outViewY = obj["viewY"];
+                outViewZoom = obj["viewZoom"];
             } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("View2D: Camera state invalid. Cannot deserialize.");
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "View2D: Camera state invalid. Cannot deserialize.");
+                return false;
             }
         }
     }
+    return true;
+}
+
+bool view::View2D::onRestoreCamera(param::ParamSlot &p) {
+    // TODO: multiple saved views, like View3D_2
+    tryRestoringCamera(this->viewX, this->viewY, this->viewZoom);
     return true;
 }
 
