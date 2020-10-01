@@ -36,6 +36,7 @@ Keyframe::~Keyframe() {
 
 bool Keyframe::Serialise(nlohmann::json& inout_json, size_t index) {
 
+    // Append to given json
     inout_json["keyframes"][index]["animation_time"]                              = this->anim_time;
     inout_json["keyframes"][index]["simulation_time"]                             = this->sim_time;
     inout_json["keyframes"][index]["camera_state"]["centre_offset"]               = this->camera_state.centre_offset;
