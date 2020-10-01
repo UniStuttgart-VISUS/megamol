@@ -35,6 +35,7 @@ struct CLIConfig {
     std::vector<std::string> project_files;
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool load_example_project = true;
+    bool opengl_khr_debug = true;
 };
 
 CLIConfig handle_cli_inputs(int argc, char* argv[]);
@@ -64,6 +65,7 @@ int main(int argc, char* argv[]) {
     openglConfig.windowTitlePrefix = openglConfig.windowTitlePrefix + " ~ Main3000";
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 5;
+    openglConfig.enableKHRDebug = config.opengl_khr_debug;
     gl_service.setPriority(1);
 
     megamol::frontend::GUI_Service gui_service;
@@ -220,6 +222,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         ("project-files", "projects to load", cxxopts::value<std::vector<std::string>>())
         ("host", "address of lua host server, default: "+config.lua_host_address, cxxopts::value<std::string>())
         ("noexample", "dont load minimal spheres example project", cxxopts::value<bool>())
+        ("nokhrdebug", "disable OpenGL KHR debug messages", cxxopts::value<bool>())
         ;
     options.parse_positional({"project-files"});
 
@@ -247,6 +250,9 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         config.load_example_project = !parsed_options["noexample"].as<bool>();
     }
 
+    if (parsed_options.count("nokhrdebug")) {
+        config.opengl_khr_debug = !parsed_options["nokhrdebug"].as<bool>();
+    }
     return config;
 }
 
