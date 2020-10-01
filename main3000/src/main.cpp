@@ -35,6 +35,7 @@ struct CLIConfig {
     std::vector<std::string> project_files;
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool load_example_project = true;
+    bool opengl_khr_debug = true;
 };
 
 CLIConfig handle_cli_inputs(int argc, char* argv[]);
@@ -64,6 +65,7 @@ int main(int argc, char* argv[]) {
     openglConfig.windowTitlePrefix = openglConfig.windowTitlePrefix + " ~ Main3000";
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 5;
+    openglConfig.enableKHRDebug = config.opengl_khr_debug;
     gl_service.setPriority(1);
 
     megamol::frontend::GUI_Service gui_service;
@@ -101,10 +103,21 @@ int main(int argc, char* argv[]) {
     services.add(gui_service, &guiConfig);
     services.add(lua_service_wrapper, &luaConfig);
 
-    // TODO: cinematic
+    // TODO: gui view and frontend service gui can not coexist => how to kill GUI View in loaded projects?
+    //  - FBO size (and others) for newly created views/modules/entrypoints (FBO size event missing). see AbstractView_EventConsumption::view_consume_framebuffer_events
+    //  - graph manipulation via GUI still buggy (adding/removing main views, renaming modules/calls, stuff like that)
+    // TODO: port cinematic as frontend service
     // => explicit FBOs!
-    // TODO: screenshooter
-    // => do or dont screenshot GUI, depending on ...
+    // TODO: port screenshooter
+    // TODO: ZMQ context as frontend resource
+    // TODO: port CLI commands from mmconsole
+    // => do or dont show GUI in screenshots, depending on ...
+    // TODO: eliminate the core instance: 
+    //  => extract module/call description manager into new factories; remove from core
+    //  => key/value store for CLI configuration as frontend resource (emulate config params)
+    // TODO: main3000 compilation on linux (cmake name conflict, GUI_Windows <-> GUI_ Service dll/lib boundary)
+    // TODO: overall new frontend-related CI compilation issues (mostly on linux)
+    // TODO: main3000 raw hot loop performance vs. mmconsole performance
 
     const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
 
@@ -144,7 +157,11 @@ int main(int argc, char* argv[]) {
     auto module_resources = services.getProvidedResources();
     graph.AddModuleDependencies(module_resources);
 
+    uint32_t frameID = 0;
     const auto render_next_frame = [&]() -> bool {
+        // set global Frame Counter
+        guiConfig.core_instance->SetFrameID(frameID++);
+
         // services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua)
         services.updateProvidedResources();
 
@@ -216,6 +233,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         ("project-files", "projects to load", cxxopts::value<std::vector<std::string>>())
         ("host", "address of lua host server, default: "+config.lua_host_address, cxxopts::value<std::string>())
         ("noexample", "dont load minimal spheres example project", cxxopts::value<bool>())
+        ("nokhrdebug", "disable OpenGL KHR debug messages", cxxopts::value<bool>())
         ;
     options.parse_positional({"project-files"});
 
@@ -241,6 +259,10 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
 
     if (parsed_options.count("noexample")) {
         config.load_example_project = !parsed_options["noexample"].as<bool>();
+    }
+
+    if (parsed_options.count("nokhrdebug")) {
+        config.opengl_khr_debug = !parsed_options["nokhrdebug"].as<bool>();
     }
 
     return config;

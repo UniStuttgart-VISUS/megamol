@@ -1,36 +1,25 @@
 #pragma once
 
 #include <functional>
-#include <future>
 #include <list>
-#include <mutex>
-#include <shared_mutex>
 #include <string>
 #include <vector>
-#include "mmcore/Call.h"
-#include "mmcore/Module.h"
-#include "mmcore/api/MegaMolCore.h"
-#include "mmcore/factories/CallDescription.h"
+
 #include "mmcore/factories/CallDescriptionManager.h"
 #include "mmcore/factories/ModuleDescription.h"
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/param/ParamUpdateListener.h"
-#include "mmcore/utility/log/Log.h"
 
-#include "mmcore/CalleeSlot.h"
-#include "mmcore/CallerSlot.h"
 #include "mmcore/deferrable_construction.h"
 #include "mmcore/serializable.h"
 
+#include "mmcore/MegaMolGraphTypes.h"
 #include "mmcore/MegaMolGraph_Convenience.h"
 
-#include "AbstractFrontendService.hpp"
 #include "mmcore/RootModuleNamespace.h"
 
 #include "ModuleResource.h"
-#include "mmcore/view/AbstractView.h"
 
 namespace megamol {
 namespace core {
@@ -44,46 +33,8 @@ public:
     // todo: probably get rid of RootModuleNamespace altogether
 
     ///////////////////////////// types ////////////////////////////////////////
-    using ModuleDeletionRequest_t = std::string;
 
-    struct ModuleInstantiationRequest {
-        std::string className;
-        std::string id;
-    };
 
-    using ModuleInstantiationRequest_t = ModuleInstantiationRequest;
-
-    struct CallDeletionRequest {
-        std::string from;
-        std::string to;
-    };
-
-    using CallDeletionRequest_t = CallDeletionRequest;
-
-    struct CallInstantiationRequest {
-        std::string className;
-        std::string from;
-        std::string to;
-    };
-
-    using CallInstantiationRequest_t = CallInstantiationRequest;
-
-    struct ModuleInstance_t {
-        Module::ptr_type modulePtr = nullptr;
-        ModuleInstantiationRequest request;
-        bool isGraphEntryPoint = false;
-        std::vector<std::string> lifetime_resource_requests;
-        std::vector<megamol::frontend::ModuleResource> lifetime_resources;
-    };
-
-    using ModuleList_t = std::list<ModuleInstance_t>;
-
-    struct CallInstance_t {
-        Call::ptr_type callPtr = nullptr;
-        CallInstantiationRequest request;
-    };
-
-    using CallList_t = std::list<CallInstance_t>;
 
     //////////////////////////// ctor / dtor ///////////////////////////////
 
