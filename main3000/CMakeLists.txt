@@ -5,11 +5,8 @@
 #
 option(BUILD_MAIN3000 "build main3000" ON)
 
-# Use different binary name when comiling with linux, e.g. mmmain3000
-set(MAIN3000_NAME main3000)
-
 if(BUILD_MAIN3000)
-  project(${MAIN3000_NAME})
+  project(main3000)
 
   require_external(libcxxopts)
 
@@ -25,9 +22,6 @@ if(BUILD_MAIN3000)
 
   # Add target
   add_executable(${PROJECT_NAME} ${header_files} ${source_files})
-  set_target_properties(${PROJECT_NAME}
-    PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-    OUTPUT_NAME ${PROJECT_NAME})
   target_include_directories(${PROJECT_NAME} PRIVATE "src" "include")
   target_link_libraries(${PROJECT_NAME} PRIVATE core frontend_services libcxxopts)
   target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_DL_LIBS})
