@@ -161,6 +161,23 @@ namespace view {
          */
         virtual void unpackMouseCoordinates(float &x, float &y);
 
+        /**
+         * Stores the current camera settings
+         *
+         * @param p Must be storeCameraSettingsSlot
+         * @return true
+         */
+        bool onStoreCamera(param::ParamSlot& p);
+
+        /**
+         * Restores the camera settings
+         *
+         * @param p Must be restoreCameraSettingsSlot
+         *
+         * @return true
+         */
+        bool onRestoreCamera(param::ParamSlot& p);
+
     private:
 
 		enum MouseMode : uint8_t { Propagate, Pan, Zoom };
@@ -206,6 +223,15 @@ namespace view {
 
         /** Slot to call the renderer to render */
         CallerSlot rendererSlot;
+
+        /** Slot containing the settings of the currently stored camera */
+        param::ParamSlot cameraSettingsSlot;
+
+        /** Triggers the storage of the camera settings */
+        param::ParamSlot storeCameraSettingsSlot;
+
+        /** Triggers the restore of the camera settings */
+        param::ParamSlot restoreCameraSettingsSlot;
 
         /** Triggers the reset of the view */
         param::ParamSlot resetViewSlot;

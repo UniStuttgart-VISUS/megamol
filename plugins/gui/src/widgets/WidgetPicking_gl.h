@@ -16,6 +16,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <queue>
+
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
 

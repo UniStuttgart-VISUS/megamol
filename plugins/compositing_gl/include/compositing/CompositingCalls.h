@@ -13,6 +13,7 @@
 #include "mmcore/CallGeneric.h"
 #include "mmcore/view/Camera_2.h"
 
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/Texture2D.hpp"
 
@@ -50,8 +51,8 @@ public:
 };
 
 /** Description class typedef */
-typedef megamol::core::factories::CallAutoDescription<CallTexture2D>     CallTexture2DDescription;
-typedef megamol::core::factories::CallAutoDescription<CallCamera>        CallCameraDescription;
+typedef megamol::core::factories::CallAutoDescription<CallTexture2D> CallTexture2DDescription;
+typedef megamol::core::factories::CallAutoDescription<CallCamera> CallCameraDescription;
 typedef megamol::core::factories::CallAutoDescription<CallFramebufferGL> CallFramebufferGLDescription;
 
 } // namespace compositing
