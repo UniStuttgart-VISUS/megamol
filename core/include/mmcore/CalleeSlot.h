@@ -11,6 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <functional>
+
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/Call.h"
@@ -65,6 +67,18 @@ namespace core {
          * @return The return value of the function.
          */
         bool InCall(unsigned int func, Call& call);
+
+        template <class O, class I>
+        O InCall(unsigned int func, I data) {
+            if (func >= this->callbacks.Count()) return 0;
+            auto function = dynamic_cast<CallbackFunctionalImpl<O, I>*>(this->callbacks[func]);
+            if (function != nullptr) {
+                return function->Invoke(data);
+            } else {
+                return this->callbacks[func]->CallMe(
+                    const_cast<Module*>(reinterpret_cast<const Module*>(this->Owner())), data);
+            }
+        }
 
         /**
          * Clears the cleanup mark for this and all dependent objects.
@@ -164,6 +178,38 @@ namespace core {
                 }
             }
             Callback *cb = new CallbackParentImpl<C>(callName, funcName, obj, func);
+            this->callbacks.Add(cb);
+        }
+
+        /**
+         * Registers the member 'func' as callback function for call 'callName'
+         * function 'funcName'.
+         *
+         * @param callName The class name of the call.
+         * @param funcName The name of the function of the call to register
+         *                 this callback for.
+         * @param obj The object of 'func'
+         * @param func The member function pointer of the method to be used as
+         *             callback. Use the class of the method as template
+         *             parameter 'C'.
+         */
+        template <class O, class I>
+        void SetCallback(const char* callName, const char* funcName, std::function<O(I)> const& func) {
+            if (this->GetStatus() != AbstractSlot::STATUS_UNAVAILABLE) {
+                throw vislib::IllegalStateException("You may not register "
+                                                    "callbacks after the slot has been enabled.",
+                    __FILE__, __LINE__);
+            }
+
+            vislib::StringA cn(callName);
+            vislib::StringA fn(funcName);
+            for (unsigned int i = 0; i < this->callbacks.Count(); i++) {
+                if (cn.Equals(this->callbacks[i]->CallName(), false) &&
+                    fn.Equals(this->callbacks[i]->FuncName(), false)) {
+                    throw vislib::IllegalParamException("callName funcName", __FILE__, __LINE__);
+                }
+            }
+            Callback* cb = new CallbackFunctionalImpl<O,I>(callName, funcName, func);
             this->callbacks.Add(cb);
         }
 
@@ -385,6 +431,43 @@ namespace core {
 
             C* parent;
 
+        };
+
+        /**
+         * Nested class for callback storage
+         */
+        template <class O, class I> class CallbackFunctionalImpl : public Callback {
+        public:
+            /**
+             * Ctor
+             *
+             * @param func The callback member of 'C'
+             */
+            CallbackFunctionalImpl(const char* callName, const char* funcName, std::function<O(I)> const& func)
+                : Callback(callName, funcName), func(func) {
+                // intentionally empty
+            }
+
+            /** Dtor. */
+            virtual ~CallbackFunctionalImpl(void) {
+                // intentionally empty
+            }
+
+            /**
+             * Call this callback.
+             *
+             * @param owner The owning object.
+             * @param call The calling call.
+             *
+             * @return The return value of the function.
+             */
+            virtual bool CallMe(Module* owner, Call& call) { return func(call); }
+
+            O Invoke(I data) { return func(data); }
+
+        private:
+            /** The callback method */
+            std::function<O(I)> func;
         };
 
         /**
