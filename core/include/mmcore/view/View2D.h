@@ -129,6 +129,8 @@ namespace view {
          */
         virtual bool OnRenderView(Call& call);
 
+        virtual bool GetExtents(Call& call) override;
+
         /**
          * Freezes, updates, or unfreezes the view onto the scene (not the
          * rendering, but camera settings, timing, etc).
@@ -158,6 +160,23 @@ namespace view {
          * @param y The y coordinate of the mouse position
          */
         virtual void unpackMouseCoordinates(float &x, float &y);
+
+        /**
+         * Stores the current camera settings
+         *
+         * @param p Must be storeCameraSettingsSlot
+         * @return true
+         */
+        bool onStoreCamera(param::ParamSlot& p);
+
+        /**
+         * Restores the camera settings
+         *
+         * @param p Must be restoreCameraSettingsSlot
+         *
+         * @return true
+         */
+        bool onRestoreCamera(param::ParamSlot& p);
 
     private:
 
@@ -204,6 +223,15 @@ namespace view {
 
         /** Slot to call the renderer to render */
         CallerSlot rendererSlot;
+
+        /** Slot containing the settings of the currently stored camera */
+        param::ParamSlot cameraSettingsSlot;
+
+        /** Triggers the storage of the camera settings */
+        param::ParamSlot storeCameraSettingsSlot;
+
+        /** Triggers the restore of the camera settings */
+        param::ParamSlot restoreCameraSettingsSlot;
 
         /** Triggers the reset of the view */
         param::ParamSlot resetViewSlot;

@@ -188,6 +188,16 @@ public:
      */
     virtual bool OnRenderView(Call& call);
 
+
+    /**
+     * Callback requesting the extents of this view
+     *
+     * @param call The calling call
+     *
+     * @return The return value
+     */
+    virtual bool GetExtents(Call& call);
+
     /**
      * Callback requesting a rendering of this view
      *
@@ -294,8 +304,6 @@ private:
      * @return The return value
      */
     bool onResetView(Call& call);
-
-    bool GetExtentsCallback(Call& call);
 
     bool OnKeyCallback(Call& call);
 
