@@ -19,6 +19,8 @@
 namespace megamol {
 namespace cinematic {
 
+    template <typename T>
+    bool get_json_value(const nlohmann::json& in_json, const std::vector<std::string>& in_nodes, T* out_value, size_t array_size = 0);
 
     /**
     * Keyframe Keeper.
@@ -27,12 +29,12 @@ namespace cinematic {
 	public:
 
 		/** CTOR */
-        Keyframe();
+        Keyframe(void);
 
         Keyframe(float at, float st, camera_state_type cam);
 
 		/** DTOR */
-		~Keyframe();
+		~Keyframe(void);
 
         inline bool operator ==(Keyframe const& rhs){
 			return ((this->camera_state ==  rhs.camera_state) && (this->anim_time == rhs.anim_time) && (this->sim_time == rhs.sim_time));
