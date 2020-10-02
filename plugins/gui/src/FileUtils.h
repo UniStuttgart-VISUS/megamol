@@ -8,23 +8,20 @@
 #ifndef MEGAMOL_GUI_FILEUTILS_INCLUDED
 #define MEGAMOL_GUI_FILEUTILS_INCLUDED
 
-/// There is a CMake exeption for the cluster "stampede2" running CentOS, which undefines GUI_USE_FILESYSTEM.
-#ifdef GUI_USE_FILESYSTEM
-#    if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
-#        include <filesystem>
+#if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
+#    include <filesystem>
 namespace stdfs = std::filesystem;
-#    else
+#else
 // WINDOWS
-#        ifdef _WIN32
-#            include <filesystem>
+#    ifdef _WIN32
+#        include <filesystem>
 namespace stdfs = std::experimental::filesystem;
-#        else
+#    else
 // LINUX
-#            include <experimental/filesystem>
+#        include <experimental/filesystem>
 namespace stdfs = std::experimental::filesystem;
-#        endif
 #    endif
-#endif // GUI_USE_FILESYSTEM
+#endif
 
 #include "GUIUtils.h"
 
@@ -101,31 +98,22 @@ private:
 
 
 template <typename T> bool megamol::gui::FileUtils::FilesExistingExtension(const T& path_str, const std::string& ext) {
-#ifdef GUI_USE_FILESYSTEM
     auto path = static_cast<stdfs::path>(path_str);
     if (!stdfs::exists(path) || !stdfs::is_regular_file(path)) {
         return false;
     }
     return (path.extension().generic_u8string() == ext);
-#else
-    return false;
-#endif // GUI_USE_FILESYSTEM
 }
 
 
 template <typename T> bool megamol::gui::FileUtils::FileExtension(const T& path_str, const std::string& ext) {
-#ifdef GUI_USE_FILESYSTEM
     auto path = static_cast<stdfs::path>(path_str);
     return (path.extension().generic_u8string() == ext);
-#else
-    return false;
-#endif // GUI_USE_FILESYSTEM
 }
 
 
 template <typename T, typename S>
 std::string megamol::gui::FileUtils::SearchFileRecursive(const T& search_path_str, const S& search_file_str) {
-#ifdef GUI_USE_FILESYSTEM
     auto search_path = static_cast<stdfs::path>(search_path_str);
     auto file_path = static_cast<stdfs::path>(search_file_str);
     std::string found_path;
@@ -136,9 +124,6 @@ std::string megamol::gui::FileUtils::SearchFileRecursive(const T& search_path_st
         }
     }
     return found_path;
-#else
-    return std::string();
-#endif // GUI_USE_FILESYSTEM
 }
 
 
