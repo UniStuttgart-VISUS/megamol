@@ -272,12 +272,15 @@ bool set_up_example_graph(megamol::core::MegaMolGraph& graph) {
 #define check(X) \
     if (!X) return false;
 
+    ///check(graph.CreateModule("GUIView", "::gui"));
     check(graph.CreateModule("View3D_2", "::view"));
     check(graph.CreateModule("SphereRenderer", "::spheres"));
     check(graph.CreateModule("TestSpheresDataSource", "::datasource"));
+    ///check(graph.CreateCall("CallRenderView", "::gui::renderview", "::view::render"));
     check(graph.CreateCall("CallRender3D_2", "::view::rendering", "::spheres::rendering"));
     check(graph.CreateCall("MultiParticleDataCall", "::spheres::getdata", "::datasource::getData"));
 
+    ///check(graph.SetGraphEntryPoint("::gui", megamol::core::view::get_gl_view_runtime_resources_requests(), megamol::core::view::view_rendering_execution));
     check(graph.SetGraphEntryPoint("::view", megamol::core::view::get_gl_view_runtime_resources_requests(), megamol::core::view::view_rendering_execution));
 
     std::string parameter_name("::datasource::numSpheres");
