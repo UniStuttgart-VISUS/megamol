@@ -36,10 +36,10 @@ namespace cinematic {
     public:
 
         /** CTOR */
-        KeyframeManipulators();
+        KeyframeManipulators(void);
 
         /** DTOR */
-        ~KeyframeManipulators();
+        ~KeyframeManipulators(void);
 
         void UpdateExtents(vislib::math::Cuboid<float>& inout_bbox);
 
@@ -54,23 +54,23 @@ namespace cinematic {
 
         bool ProcessHitManipulator(float mouse_x, float mouse_y);
 
-        inline Keyframe GetManipulatedSelectedKeyframe() const  {
+        inline Keyframe GetManipulatedSelectedKeyframe(void) const  {
             return this->state.selected_keyframe;
         }
 
-        inline glm::vec3 GetFirstControlPointPosition() const {
+        inline glm::vec3 GetFirstControlPointPosition(void) const {
             return this->state.first_ctrl_point;
         }
 
-        inline glm::vec3 GetLastControlPointPosition() const {
+        inline glm::vec3 GetLastControlPointPosition(void) const {
             return this->state.last_ctrl_point;
         }
 
-        inline std::vector<megamol::core::param::ParamSlot*>& GetParams() {
+        inline std::vector<megamol::core::param::ParamSlot*>& GetParams(void) {
             return this->paramSlots;
         }
 
-        inline void ResetHitManipulator() {
+        inline void ResetHitManipulator(void) {
             this->state.hit = nullptr;
         }
 

@@ -97,7 +97,7 @@
             <snippet name="main" type="string">
             <![CDATA[            
                 
-            void main() {
+            void main(void) {
 
                 vec4 inPos = mvp * vec4(inPosition, 1.0);
                 inPos /= inPos.w;
@@ -158,7 +158,7 @@
             <snippet name="main" type="string">
             <![CDATA[            
                 
-            void main() {
+            void main(void) {
 
                 vec4 inPos = mvp * vec4(inPosition, 1.0);
                 inPos /= inPos.w;
@@ -201,7 +201,7 @@
             <snippet name="main" type="string">
             <![CDATA[            
                 
-            void main() {
+            void main(void) {
 
                 vec4 inPos = mvp * vec4(inPosition, 1.0);
                 inPos /= inPos.w;
@@ -243,7 +243,7 @@
             <snippet name="main" type="string">
             <![CDATA[            
                 
-            void main() {
+            void main(void) {
 
                 vec4 inPos = mvp * vec4(inPosition, 1.0);
                 inPos /= inPos.w;
@@ -294,7 +294,7 @@
             <snippet name="main" type="string">
             <![CDATA[            
                 
-            void main() {
+            void main(void) {
 
                 vec4 inPos = mvp * vec4(inPosition, 1.0);
                 inPos /= inPos.w;

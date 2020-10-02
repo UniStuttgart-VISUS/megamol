@@ -235,9 +235,9 @@ private:
 class CinematicUtils : public RenderUtils {
 
 public:
-    CinematicUtils();
+    CinematicUtils(void);
 
-    ~CinematicUtils();
+    ~CinematicUtils(void);
 
     enum Colors {
         BACKGROUND,
@@ -274,13 +274,13 @@ public:
 
     void DrawAll(glm::mat4& mat_mvp, glm::vec2 dim_vp);
 
-    float GetTextLineHeight();
+    float GetTextLineHeight(void);
 
     float GetTextLineWidth(const std::string& text_line);
 
     void SetTextRotation(float a, float x, float y, float z);
 
-    bool Initialized() { return this->init_once; }
+    bool Initialized(void) { return this->init_once; }
 
 private:
     // VARIABLES ------------------------------------------------------- //

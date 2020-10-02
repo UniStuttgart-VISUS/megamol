@@ -55,21 +55,21 @@ namespace cinematic {
          *
          * @return The name of this module.
          */
-        static const char* ClassName() { return "CinematicView"; }
+        static const char* ClassName(void) { return "CinematicView"; }
 
         /**
          * Answer a human readable description of this module.
          *
          * @return A human readable description of this module.
          */
-        static const char* Description() { return "Screenshot View Module"; }
+        static const char* Description(void) { return "Screenshot View Module"; }
 
         /**
          * Answers whether this module is available on the current system.
          *
          * @return 'true' if the module is available, 'false' otherwise.
          */
-        static bool IsAvailable() {
+        static bool IsAvailable(void) {
             if (!vislib::graphics::gl::FramebufferObject::AreExtensionsAvailable()) return false;
             return true;
         }
@@ -79,13 +79,13 @@ namespace cinematic {
          *
          * @return false
          */
-        static bool SupportQuickstart() { return false; }
+        static bool SupportQuickstart(void) { return false; }
 
         /** Ctor. */
-        CinematicView();
+        CinematicView(void);
 
         /** Dtor. */
-        virtual ~CinematicView();
+        virtual ~CinematicView(void);
 
     protected:
 

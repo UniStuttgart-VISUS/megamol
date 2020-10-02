@@ -594,7 +594,7 @@ glm::vec3 RenderUtils::arbitraryPerpendicular(glm::vec3 in) {
 // ##### CinematicUtils ######################################################## //
 
 
-CinematicUtils::CinematicUtils() : megamol::cinematic::RenderUtils()
+CinematicUtils::CinematicUtils(void) : megamol::cinematic::RenderUtils()
     , font(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
     , font_size(20.0f)
     , init_once(false)
@@ -603,7 +603,7 @@ CinematicUtils::CinematicUtils() : megamol::cinematic::RenderUtils()
 }
 
 
-CinematicUtils::~CinematicUtils() {
+CinematicUtils::~CinematicUtils(void) {
 
 }
 
@@ -824,7 +824,7 @@ void CinematicUtils::DrawAll(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
 }
 
 
-float CinematicUtils::GetTextLineHeight() {
+float CinematicUtils::GetTextLineHeight(void) {
 
     return this->font.LineHeight(this->font_size);
 }

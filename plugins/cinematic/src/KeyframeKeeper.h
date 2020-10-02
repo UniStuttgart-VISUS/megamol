@@ -53,7 +53,7 @@ namespace cinematic {
 		*
 		* @return The name of the objects of this description.
 		*/
-		static const char *ClassName() {
+		static const char *ClassName(void) {
 			return "KeyframeKeeper";
 		}
 
@@ -62,30 +62,30 @@ namespace cinematic {
 		*
 		* @return A human readable description of the module.
 		*/
-		static const char *Description() {
+		static const char *Description(void) {
 			return "Manages keyframes";
 		}
 
 		/** Ctor */
-		KeyframeKeeper();
+		KeyframeKeeper(void);
 
 		/** Dtor */
-		virtual ~KeyframeKeeper();
+		virtual ~KeyframeKeeper(void);
 
         /**
         *
         */
-		static bool IsAvailable() {
+		static bool IsAvailable(void) {
 			return true;
 		}
 			
 	protected:
 
         /** create */
-		virtual bool create();
+		virtual bool create(void);
 
         /** release */
-		virtual void release();
+		virtual void release(void);
 
 	private:
 
@@ -181,15 +181,15 @@ namespace cinematic {
 
         bool deleteKeyframe(Keyframe kf, bool add_undo);
 
-        bool loadKeyframes();
+        bool loadKeyframes(void);
 
-        bool saveKeyframes();
+        bool saveKeyframes(void);
 
         void refreshInterpolCamPos(unsigned int s);
 
         void updateEditParameters(Keyframe kf);
 
-        void setSameSpeed();
+        void setSameSpeed(void);
 
         void linearizeSimTangent(Keyframe kf);
 
@@ -197,9 +197,9 @@ namespace cinematic {
 
         void snapKeyframe2SimFrame(Keyframe& inout_kf);
 
-        bool undoAction();
+        bool undoAction(void);
 
-        bool redoAction();
+        bool redoAction(void);
 
         bool addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf, Keyframe prev_kf, glm::vec3 first_controlpoint, glm::vec3 last_controlpoint, glm::vec3 previous_first_controlpoint, glm::vec3 previous_last_controlpoint);
 

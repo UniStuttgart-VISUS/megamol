@@ -28,7 +28,7 @@ namespace {
     public:
 
         /** ctor */
-        plugin_instance()
+        plugin_instance(void)
             : ::megamol::core::utility::plugins::Plugin200Instance(
 
                 /* machine-readable plugin assembly name */
@@ -41,11 +41,11 @@ namespace {
             // here we could perform addition initialization
         };
         /** Dtor */
-        virtual ~plugin_instance() {
+        virtual ~plugin_instance(void) {
             // here we could perform addition de-initialization
         }
         /** Registers modules and calls */
-        virtual void registerClasses() {
+        virtual void registerClasses(void) {
 			
             // register modules here:
 			this->module_descriptions.RegisterAutoDescription<megamol::cinematic::TrackingShotRenderer>();
@@ -66,7 +66,7 @@ namespace {
 /*
  * mmplgPluginAPIVersion
  */
-CINEMATIC_API int mmplgPluginAPIVersion() {
+CINEMATIC_API int mmplgPluginAPIVersion(void) {
     MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion
 }
 

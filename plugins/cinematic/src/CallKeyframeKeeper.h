@@ -42,7 +42,7 @@ namespace cinematic {
 		*
 		* @return The name of the objects of this description.
 		*/
-		static const char *ClassName() {
+		static const char *ClassName(void) {
 			return "CallKeyframeKeeper";
 		}
 
@@ -51,7 +51,7 @@ namespace cinematic {
 		*
 		* @return A human readable description of the module.
 		*/
-		static const char *Description() {
+		static const char *Description(void) {
 			return "Call keyframes and keyframe data";
 		}
 
@@ -60,7 +60,7 @@ namespace cinematic {
 		*
 		* @return The number of functions used for this call.
 		*/
-		static unsigned int FunctionCount() {
+		static unsigned int FunctionCount(void) {
 			return 9;
 		}
 
@@ -87,10 +87,10 @@ namespace cinematic {
 		}
 
 		/** Ctor */
-		CallKeyframeKeeper();
+		CallKeyframeKeeper(void);
 
 		/** Dtor */
-		virtual ~CallKeyframeKeeper();
+		virtual ~CallKeyframeKeeper(void);
 
 
         /**********************************************************************

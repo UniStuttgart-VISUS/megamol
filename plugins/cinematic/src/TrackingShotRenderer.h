@@ -56,7 +56,7 @@ namespace cinematic {
 		*
 		* @return The name of this module.
 		*/
-		static const char *ClassName() {
+		static const char *ClassName(void) {
 			return "TrackingShotRenderer";
 		}
 
@@ -65,7 +65,7 @@ namespace cinematic {
 		*
 		* @return A human readable description of the module.
 		*/
-		static const char *Description() {
+		static const char *Description(void) {
 			return "Renders the tracking shot and passes the render call to another renderer.";
 		}
 
@@ -74,7 +74,7 @@ namespace cinematic {
 		*
 		* @return 'true' if the module is available, 'false' otherwise.
 		*/
-		static bool IsAvailable() {
+		static bool IsAvailable(void) {
 			return true;
 		}
 
@@ -83,15 +83,15 @@ namespace cinematic {
 		*
 		* @return false
 		*/
-		static bool SupportQuickstart() {
+		static bool SupportQuickstart(void) {
 			return false;
 		}
 
 		/** Ctor. */
-		TrackingShotRenderer();
+		TrackingShotRenderer(void);
 
 		/** Dtor. */
-		virtual ~TrackingShotRenderer();
+		virtual ~TrackingShotRenderer(void);
 
 	protected:
 
@@ -100,12 +100,12 @@ namespace cinematic {
         *
         * @return 'true' on success, 'false' otherwise.
         */
-        virtual bool create();
+        virtual bool create(void);
 
         /**
         * Implementation of 'Release'.
         */
-        virtual void release();
+        virtual void release(void);
 
 		/**
 		* The get extents callback. The module should set the members of
