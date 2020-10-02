@@ -60,35 +60,35 @@ bool Keyframe::Serialise(nlohmann::json& inout_json, size_t index) {
 bool Keyframe::Deserialise(const nlohmann::json& in_json) {
 
     bool valid = true;
-    valid &= get_json_value<float>(in_json, { "animation_time" }, &this->anim_time);
-    valid &= get_json_value<float>(in_json, { "simulation_time" }, &this->sim_time);
-    valid &= get_json_value<float>(in_json, { "camera_state", "centre_offset" }, this->camera_state.centre_offset.data(), this->camera_state.centre_offset.size());
-    valid &= get_json_value<float>(in_json, { "camera_state", "convergence_plane" }, &this->camera_state.convergence_plane);
+    valid &= get_json_number<float>(in_json, { "animation_time" }, &this->anim_time);
+    valid &= get_json_number<float>(in_json, { "simulation_time" }, &this->sim_time);
+    valid &= get_json_number<float>(in_json, { "camera_state", "centre_offset" }, this->camera_state.centre_offset.data(), this->camera_state.centre_offset.size());
+    valid &= get_json_number<float>(in_json, { "camera_state", "convergence_plane" }, &this->camera_state.convergence_plane);
     int eye = 0;
-    valid &= get_json_value<int>(in_json, { "camera_state", "eye" }, &eye);
+    valid &= get_json_number<int>(in_json, { "camera_state", "eye" }, &eye);
     this->camera_state.eye = static_cast<megamol::core::thecam::Eye>(eye);
-    valid &= get_json_value<float>(in_json, { "camera_state", "far_clipping_plane" }, &this->camera_state.far_clipping_plane);
-    valid &= get_json_value<float>(in_json, { "camera_state", "film_gate" }, this->camera_state.film_gate.data(), this->camera_state.film_gate.size());
+    valid &= get_json_number<float>(in_json, { "camera_state", "far_clipping_plane" }, &this->camera_state.far_clipping_plane);
+    valid &= get_json_number<float>(in_json, { "camera_state", "film_gate" }, this->camera_state.film_gate.data(), this->camera_state.film_gate.size());
     int gate_scaling = 0;
-    valid &= get_json_value<int>(in_json, { "camera_state", "gate_scaling" }, &gate_scaling);
+    valid &= get_json_number<int>(in_json, { "camera_state", "gate_scaling" }, &gate_scaling);
     this->camera_state.gate_scaling = static_cast<megamol::core::thecam::Gate_scaling>(gate_scaling);
-    valid &= get_json_value<float>(in_json, { "camera_state", "half_aperture_angle_radians" }, &this->camera_state.half_aperture_angle_radians);
-    valid &= get_json_value<float>(in_json, { "camera_state", "half_disparity" }, &this->camera_state.half_disparity);
-    valid &= get_json_value<int>(in_json, { "camera_state", "image_tile" }, this->camera_state.image_tile.data(), this->camera_state.image_tile.size());
-    valid &= get_json_value<float>(in_json, { "camera_state", "near_clipping_plane" }, &this->camera_state.near_clipping_plane);
-    valid &= get_json_value<float>(in_json, { "camera_state", "orientation" }, this->camera_state.orientation.data(), this->camera_state.orientation.size());
-    valid &= get_json_value<float>(in_json, { "camera_state", "position" }, this->camera_state.position.data(), this->camera_state.position.size());
+    valid &= get_json_number<float>(in_json, { "camera_state", "half_aperture_angle_radians" }, &this->camera_state.half_aperture_angle_radians);
+    valid &= get_json_number<float>(in_json, { "camera_state", "half_disparity" }, &this->camera_state.half_disparity);
+    valid &= get_json_number<int>(in_json, { "camera_state", "image_tile" }, this->camera_state.image_tile.data(), this->camera_state.image_tile.size());
+    valid &= get_json_number<float>(in_json, { "camera_state", "near_clipping_plane" }, &this->camera_state.near_clipping_plane);
+    valid &= get_json_number<float>(in_json, { "camera_state", "orientation" }, this->camera_state.orientation.data(), this->camera_state.orientation.size());
+    valid &= get_json_number<float>(in_json, { "camera_state", "position" }, this->camera_state.position.data(), this->camera_state.position.size());
     int projection_type = 0;
-    valid &= get_json_value<int>(in_json, { "camera_state", "projection_type" }, &projection_type);
+    valid &= get_json_number<int>(in_json, { "camera_state", "projection_type" }, &projection_type);
     this->camera_state.projection_type = static_cast<megamol::core::thecam::Projection_type>(projection_type);
-    valid &= get_json_value<int>(in_json, { "camera_state", "resolution_gate" }, this->camera_state.resolution_gate.data(), this->camera_state.resolution_gate.size());
+    valid &= get_json_number<int>(in_json, { "camera_state", "resolution_gate" }, this->camera_state.resolution_gate.data(), this->camera_state.resolution_gate.size());
 
     return valid;
 }
 
 
 template <typename T>
-bool megamol::cinematic::get_json_value(const nlohmann::json& in_json, const std::vector<std::string>& in_nodes, T* out_value, size_t array_size) {
+bool megamol::cinematic::get_json_number(const nlohmann::json& in_json, const std::vector<std::string>& in_nodes, T* out_value, size_t array_size) {
 
     try {
         auto node_count = in_nodes.size();
