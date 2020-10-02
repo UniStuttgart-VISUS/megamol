@@ -549,7 +549,9 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                             "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                             __LINE__);
                     }
-                    if ((class_name == call.request.className) && this->case_insensitive_str_comp(from, call.request.from) && this->case_insensitive_str_comp(to, call.request.to)) {
+                    if ((class_name == call.request.className) &&
+                        this->case_insensitive_str_comp(from, call.request.from) &&
+                        this->case_insensitive_str_comp(to, call.request.to)) {
                         add_new = false;
                     }
                 }
