@@ -23,9 +23,9 @@ namespace gui {
  */
 class FileBrowserWidget {
 public:
-    FileBrowserWidget(void);
+    FileBrowserWidget();
 
-    ~FileBrowserWidget(void) = default;
+    ~FileBrowserWidget() = default;
 
     enum FileBrowserFlag { SAVE, LOAD, SELECT };
 
@@ -51,7 +51,6 @@ public:
     bool Button(std::string& inout_filename);
 
 private:
-#ifdef GUI_USE_FILESYSTEM
 
     typedef std::pair<stdfs::path, bool> ChildData_t;
 
@@ -75,8 +74,6 @@ private:
     bool splitPath(const stdfs::path& in_file_path, std::string& out_path, std::string& out_file);
     void validateDirectory(const std::string& path_str);
     void validateFile(const std::string& file_str, FileBrowserFlag flag);
-
-#endif // GUI_USE_FILESYSTEM
 };
 
 

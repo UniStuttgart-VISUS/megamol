@@ -62,7 +62,6 @@ size_t megamol::gui::FileUtils::LoadRawFile(std::string name, void** outData) {
 
 
 bool megamol::gui::FileUtils::WriteFile(const std::string& filename, const std::string& in_content) {
-#ifdef GUI_USE_FILESYSTEM
     try {
         std::ofstream file;
         file.open(filename, std::ios_base::out);
@@ -87,14 +86,10 @@ bool megamol::gui::FileUtils::WriteFile(const std::string& filename, const std::
     }
 
     return true;
-#else
-    return false;
-#endif // GUI_USE_FILESYSTEM
 }
 
 
 bool megamol::gui::FileUtils::ReadFile(const std::string& filename, std::string& out_content) {
-#ifdef GUI_USE_FILESYSTEM
     try {
         std::ifstream file;
         file.open(filename, std::ios_base::in);
@@ -119,7 +114,4 @@ bool megamol::gui::FileUtils::ReadFile(const std::string& filename, std::string&
     }
 
     return true;
-#else
-    return false;
-#endif // GUI_USE_FILESYSTEM
 }
