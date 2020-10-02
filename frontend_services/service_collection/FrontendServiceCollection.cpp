@@ -35,9 +35,11 @@ namespace frontend {
 
 	bool FrontendServiceCollection::init() {
 		for_each_service {
-            if (!service.service->init(service.service_config))
+            if (!service.service->init(service.service_config)) {
+                log(service.service->serviceName() + " failed init");
                 return false;
-		}
+            }
+        }
 
 		return true;
 	}
