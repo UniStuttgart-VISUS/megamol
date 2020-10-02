@@ -42,7 +42,7 @@ namespace cinematic {
          *
          * @return The name of this module.
          */
-        static const char *ClassName(void)
+        static const char *ClassName()
         {
             return "ReplacementRenderer";
         }
@@ -52,7 +52,7 @@ namespace cinematic {
          *
          * @return A human readable description of this module.
          */
-        static const char *Description(void)
+        static const char *Description()
         {
             return "Offers replacement rendering.";
         }
@@ -62,16 +62,16 @@ namespace cinematic {
          *
          * @return 'true' if the module is available, 'false' otherwise.
          */
-        static bool IsAvailable(void)
+        static bool IsAvailable()
         {
             return true;
         }
 
         /** Ctor. */
-        ReplacementRenderer(void);
+        ReplacementRenderer();
 
         /** Dtor. */
-        virtual ~ReplacementRenderer(void);
+        virtual ~ReplacementRenderer();
 
     protected:
 
@@ -80,12 +80,12 @@ namespace cinematic {
          *
          * @return 'true' on success, 'false' otherwise.
          */
-        virtual bool create(void);
+        virtual bool create();
 
         /**
          * Implementation of 'release'.
          */
-        virtual void release(void);
+        virtual void release();
 
         /**
          * The get extents callback. The module should set the members of

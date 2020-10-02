@@ -18,7 +18,7 @@ using namespace megamol::cinematic;
 using namespace vislib;
 
 
-TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule_2()
+TrackingShotRenderer::TrackingShotRenderer() : Renderer3DModule_2()
     , keyframeKeeperSlot("keyframeData", "Connects to the Keyframe Keeper.")
     , stepsParam("splineSubdivision", "Amount of interpolation steps between keyframes.")
     , toggleHelpTextParam("helpText", "Show/hide help text for key assignments.")
@@ -53,13 +53,13 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule_2()
 }
 
 
-TrackingShotRenderer::~TrackingShotRenderer(void) {
+TrackingShotRenderer::~TrackingShotRenderer() {
 
 	this->Release();
 }
 
 
-bool TrackingShotRenderer::create(void) {
+bool TrackingShotRenderer::create() {
 
     // Initialise render utils
     if (!this->utils.Initialise(this->GetCoreInstance())) {
@@ -71,7 +71,7 @@ bool TrackingShotRenderer::create(void) {
 }
 
 
-void TrackingShotRenderer::release(void) {
+void TrackingShotRenderer::release() {
 
 }
 

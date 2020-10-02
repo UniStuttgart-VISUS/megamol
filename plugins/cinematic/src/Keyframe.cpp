@@ -60,199 +60,107 @@ bool Keyframe::Serialise(nlohmann::json& inout_json, size_t index) {
 
 bool Keyframe::Deserialise(const nlohmann::json& in_json) {
 
-    if (in_json.at("animation_time").is_number()) {
-        in_json.at("animation_time").get_to(this->anim_time);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'animation_time'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
+    bool valid = true;
+    valid &= get_json_value<float>(in_json, { "animation_time" }, &this->anim_time);
+    valid &= get_json_value<float>(in_json, { "simulation_time" }, &this->sim_time);
+    valid &= get_json_value<float>(in_json, { "camera_state", "centre_offset" }, this->camera_state.centre_offset.data(), this->camera_state.centre_offset.size());
+    valid &= get_json_value<float>(in_json, { "camera_state", "convergence_plane" }, &this->camera_state.convergence_plane);
+    int eye = 0;
+    valid &= get_json_value<int>(in_json, { "camera_state", "eye" }, &eye);
+    this->camera_state.eye = static_cast<megamol::core::thecam::Eye>(eye);
+    valid &= get_json_value<float>(in_json, { "camera_state", "far_clipping_plane" }, &this->camera_state.far_clipping_plane);
+    valid &= get_json_value<float>(in_json, { "camera_state", "film_gate" }, this->camera_state.film_gate.data(), this->camera_state.film_gate.size());
+    int gate_scaling = 0;
+    valid &= get_json_value<int>(in_json, { "camera_state", "gate_scaling" }, &gate_scaling);
+    this->camera_state.gate_scaling = static_cast<megamol::core::thecam::Gate_scaling>(gate_scaling);
+    valid &= get_json_value<float>(in_json, { "camera_state", "half_aperture_angle_radians" }, &this->camera_state.half_aperture_angle_radians);
+    valid &= get_json_value<float>(in_json, { "camera_state", "half_disparity" }, &this->camera_state.half_disparity);
+    valid &= get_json_value<int>(in_json, { "camera_state", "image_tile" }, this->camera_state.image_tile.data(), this->camera_state.image_tile.size());
+    valid &= get_json_value<float>(in_json, { "camera_state", "near_clipping_plane" }, &this->camera_state.near_clipping_plane);
+    valid &= get_json_value<float>(in_json, { "camera_state", "orientation" }, this->camera_state.orientation.data(), this->camera_state.orientation.size());
+    valid &= get_json_value<float>(in_json, { "camera_state", "position" }, this->camera_state.position.data(), this->camera_state.position.size());
+    int projection_type = 0;
+    valid &= get_json_value<int>(in_json, { "camera_state", "projection_type" }, &projection_type);
+    this->camera_state.projection_type = static_cast<megamol::core::thecam::Projection_type>(projection_type);
+    valid &= get_json_value<int>(in_json, { "camera_state", "resolution_gate" }, this->camera_state.resolution_gate.data(), this->camera_state.resolution_gate.size());
 
-    if (in_json.at("simulation_time").is_number()) {
-        in_json.at("simulation_time").get_to(this->sim_time);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'simulation_time'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
+    return valid;
+}
 
-    if (in_json.at("camera_state").at("centre_offset").is_array()) {
-        if (in_json.at("camera_state").at("centre_offset").size() != 2) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'centre_offset' should have size 2. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+
+template <typename T>
+bool megamol::cinematic::get_json_value<float>(const nlohmann::json& in_json, const std::vector<std::string>& in_nodes, T* out_value, size_t array_size) {
+
+    try {
+        auto node_count = in_nodes.size();
+        if (node_count == 0) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - No in_nodes for reading value given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-        for (size_t i = 0; i < in_json.at("camera_state").at("centre_offset").size(); i++) {
-            if (!in_json.at("camera_state").at("centre_offset")[i].is_number()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'centre_offset' should be numbers. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        std::string node_name = in_nodes.front();
+        auto json_value = in_json.at(in_nodes.front());
+        for (size_t i = 1; i < node_count; i++) {
+            node_name = node_name + "/" + in_nodes[i];
+            json_value = json_value.at(in_nodes[i]);
+        }
+        if (array_size > 0) {
+            if (!json_value.is_array()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s is no JSON array. [%s, %s, line %d]\n", node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
-        }
-        in_json.at("camera_state").at("centre_offset").get_to(this->camera_state.centre_offset);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'centre_offset'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    if (in_json.at("camera_state").at("convergence_plane").is_number()) {
-        in_json.at("camera_state").at("convergence_plane").get_to(this->camera_state.convergence_plane);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'convergence_plane'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    if (in_json.at("camera_state").at("eye").is_number()) {
-        int eye;
-        in_json.at("camera_state").at("eye").get_to(eye);
-        this->camera_state.eye = static_cast<megamol::core::thecam::Eye>(eye);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'eye'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    if (in_json.at("camera_state").at("far_clipping_plane").is_number()) {
-        in_json.at("camera_state").at("far_clipping_plane").get_to(this->camera_state.far_clipping_plane);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'far_clipping_plane'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    if (in_json.at("camera_state").at("film_gate").is_array()) {
-        if (in_json.at("camera_state").at("film_gate").size() != 2) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'film_gate' should have size 2. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        for (size_t i = 0; i < in_json.at("camera_state").at("film_gate").size(); i++) {
-            if (!in_json.at("camera_state").at("film_gate")[i].is_number()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'film_gate' should be numbers. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            if (json_value.size() != array_size) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s is no JSON array of size %i. [%s, %s, line %d]\n", node_name.c_str(), array_size, __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
-        }
-        in_json.at("camera_state").at("film_gate").get_to(this->camera_state.film_gate);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'film_gate'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    if (in_json.at("camera_state").at("gate_scaling").is_number()) {
-        int gate_scaling;
-        in_json.at("camera_state").at("gate_scaling").get_to(gate_scaling);
-        this->camera_state.gate_scaling = static_cast<megamol::core::thecam::Gate_scaling>(gate_scaling);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'gate_scaling'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    if (in_json.at("camera_state").at("half_aperture_angle_radians").is_number()) {
-        in_json.at("camera_state").at("half_aperture_angle_radians").get_to(this->camera_state.half_aperture_angle_radians);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'half_aperture_angle_radians'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    if (in_json.at("camera_state").at("half_disparity").is_number()) {
-        in_json.at("camera_state").at("half_disparity").get_to(this->camera_state.half_disparity);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'half_disparity'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    if (in_json.at("camera_state").at("image_tile").is_array()) {
-        if (in_json.at("camera_state").at("image_tile").size() != 4) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'image_tile' should have size 2. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        for (size_t i = 0; i < in_json.at("camera_state").at("image_tile").size(); i++) {
-            if (!in_json.at("camera_state").at("image_tile")[i].is_number()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'image_tile' should be numbers. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                return false;
+            for (size_t i = 0; i < array_size; i++) {
+                if (!json_value[i].is_number()) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read float value from json node '%s' at position %i. [%s, %s, line %d]\n", node_name.c_str(), i, __FILE__, __FUNCTION__, __LINE__);
+                    return false;
+                }
+                out_value[i] = json_value[i];
             }
         }
-        in_json.at("camera_state").at("image_tile").get_to(this->camera_state.image_tile);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'image_tile'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    if (in_json.at("camera_state").at("near_clipping_plane").is_number()) {
-        in_json.at("camera_state").at("near_clipping_plane").get_to(this->camera_state.near_clipping_plane);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'near_clipping_plane'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    if (in_json.at("camera_state").at("orientation").is_array()) {
-        if (in_json.at("camera_state").at("orientation").size() != 4) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'orientation' should have size 2. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        for (size_t i = 0; i < in_json.at("camera_state").at("orientation").size(); i++) {
-            if (!in_json.at("camera_state").at("orientation")[i].is_number()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'orientation' should be numbers. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        else {
+            if (!json_value.is_number()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read float value from json node '%s'. [%s, %s, line %d]\n", node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
+            json_value.get_to((*out_value));
         }
-        in_json.at("camera_state").at("orientation").get_to(this->camera_state.orientation);
+        return true;
     }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'orientation'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    catch (nlohmann::json::type_error& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-
-    if (in_json.at("camera_state").at("position").is_array()) {
-        if (in_json.at("camera_state").at("position").size() != 3) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'position' should have size 2. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        for (size_t i = 0; i < in_json.at("camera_state").at("position").size(); i++) {
-            if (!in_json.at("camera_state").at("position")[i].is_number()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'position' should be numbers. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                return false;
-            }
-        }
-        in_json.at("camera_state").at("position").get_to(this->camera_state.position);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'position'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    catch (nlohmann::json::exception& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-
-    if (in_json.at("camera_state").at("projection_type").is_number()) {
-        int projection_type;
-        in_json.at("camera_state").at("projection_type").get_to(projection_type);
-        this->camera_state.projection_type = static_cast<megamol::core::thecam::Projection_type>(projection_type);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'projection_type'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    catch (nlohmann::json::parse_error& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-
-    if (in_json.at("camera_state").at("resolution_gate").is_array()) {
-        if (in_json.at("camera_state").at("resolution_gate").size() != 2) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Array of 'camera_state' - 'resolution_gate' should have size 2. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        for (size_t i = 0; i < in_json.at("camera_state").at("resolution_gate").size(); i++) {
-            if (!in_json.at("camera_state").at("resolution_gate")[i].is_number()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Elements of array 'camera_state' - 'resolution_gate' should be numbers. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                return false;
-            }
-        }
-        in_json.at("camera_state").at("resolution_gate").get_to(this->camera_state.resolution_gate);
-    }
-    else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'camera_state' - 'resolution_gate'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    catch (nlohmann::json::invalid_iterator& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-
-    return true;
+    catch (nlohmann::json::out_of_range& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    catch (nlohmann::json::other_error& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
 }

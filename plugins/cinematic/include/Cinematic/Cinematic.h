@@ -40,7 +40,7 @@ extern "C" {
  *
  * @return 200 -- (ver.: 2.00)
  */
-CINEMATIC_API int mmplgPluginAPIVersion(void);
+CINEMATIC_API int mmplgPluginAPIVersion();
 
 /**
  * Provides compatibility information

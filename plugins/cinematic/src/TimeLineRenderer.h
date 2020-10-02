@@ -52,7 +52,7 @@ namespace cinematic {
 		*
 		* @return The name of this module.
 		*/
-		static const char *ClassName(void) {
+		static const char *ClassName() {
 			return "TimeLineRenderer";
 		}
 
@@ -61,7 +61,7 @@ namespace cinematic {
 		*
 		* @return A human readable description of this module.
 		*/
-		static const char *Description(void) {
+		static const char *Description() {
 			return "Renders the timeline of keyframes";
 		}
 
@@ -70,15 +70,15 @@ namespace cinematic {
 		*
 		* @return 'true' if the module is available, 'false' otherwise.
 		*/
-		static bool IsAvailable(void) {
+		static bool IsAvailable() {
 			return true;
 		}
 
 		/** Ctor. */
-		TimeLineRenderer(void);
+		TimeLineRenderer();
 
 		/** Dtor. */
-		virtual ~TimeLineRenderer(void);
+		virtual ~TimeLineRenderer();
 
 	protected:
 
@@ -87,12 +87,12 @@ namespace cinematic {
 		*
 		* @return 'true' on success, 'false' otherwise.
 		*/
-		virtual bool create(void);
+		virtual bool create();
 
 		/**
 		* Implementation of 'Release'.
 		*/
-		virtual void release(void);
+		virtual void release();
 			
         /**
         * The get extents callback. The module should set the members of
@@ -178,7 +178,7 @@ namespace cinematic {
         * functions
         **********************************************************************/
 
-        bool recalcAxesData(void);
+        bool recalcAxesData();
 
         void pushMarkerTexture(float pos_x, float pos_y, float size, glm::vec4 color);
 

@@ -19,6 +19,8 @@
 namespace megamol {
 namespace cinematic {
 
+    template <typename T>
+    bool get_json_value(const nlohmann::json& in_json, const std::vector<std::string>& in_nodes, T* out_value, size_t array_size = 0);
 
     /**
     * Keyframe Keeper.

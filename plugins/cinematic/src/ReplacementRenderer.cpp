@@ -16,7 +16,7 @@ using namespace megamol::cinematic;
 using namespace vislib;
 
 
-ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererModule<megamol::core::view::CallRender3D_2>(),
+ReplacementRenderer::ReplacementRenderer() : megamol::core::view::RendererModule<megamol::core::view::CallRender3D_2>(),
     alphaParam("alpha", "The alpha value of the replacement rendering."),
     replacementRenderingParam("replacement", "Show/hide replacement rendering for chained renderer."),
     replacementKeyParam("hotkeyAssignment", "Choose hotkey for replacement rendering button."),
@@ -57,18 +57,18 @@ ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererMo
 }
 
 
-ReplacementRenderer::~ReplacementRenderer(void) {
+ReplacementRenderer::~ReplacementRenderer() {
 
     this->Release();
 }
 
 
-void ReplacementRenderer::release(void) {
+void ReplacementRenderer::release() {
 
 }
 
 
-bool ReplacementRenderer::create(void) {
+bool ReplacementRenderer::create() {
 
     // Initialise render utils
     if (!this->utils.Initialise(this->GetCoreInstance())) {

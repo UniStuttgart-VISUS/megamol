@@ -17,7 +17,7 @@ using namespace vislib;
 using namespace vislib::math;
 
 
-KeyframeKeeper::KeyframeKeeper(void) : core::Module()
+KeyframeKeeper::KeyframeKeeper() : core::Module()
     , keyframeCallSlot("keyframeData", "holds keyframe data")
     , applyKeyframeParam("applyKeyframe", "Apply current settings to selected/new keyframe.")
     , undoChangesParam("undoChanges", "Undo changes.")
@@ -151,19 +151,19 @@ KeyframeKeeper::KeyframeKeeper(void) : core::Module()
 }
 
 
-KeyframeKeeper::~KeyframeKeeper(void) {
+KeyframeKeeper::~KeyframeKeeper() {
 
     this->Release();
 }
 
 
-bool KeyframeKeeper::create(void) {
+bool KeyframeKeeper::create() {
 
     return true;
 }
 
 
-void KeyframeKeeper::release(void) {
+void KeyframeKeeper::release() {
 
 }
 
@@ -613,7 +613,7 @@ bool KeyframeKeeper::addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf
 }
 
 
-bool KeyframeKeeper::undoAction(void) {
+bool KeyframeKeeper::undoAction() {
 
     bool retVal  = false;
 
@@ -665,7 +665,7 @@ bool KeyframeKeeper::undoAction(void) {
 }
 
 
-bool KeyframeKeeper::redoAction(void) {
+bool KeyframeKeeper::redoAction() {
 
     bool retVal = false;
 
@@ -1207,68 +1207,35 @@ bool KeyframeKeeper::saveKeyframes() {
             return false;
         }
 
-        try {
-            nlohmann::json json;
-            // Set general data
-            json["total_animation_time"] = this->totalAnimTime;
-            json["spline_tangent_length"] = this->splineTangentLength;
-            json["first_ctrl_point"]["x"] = this->startCtrllPos.x;
-            json["first_ctrl_point"]["y"] = this->startCtrllPos.y;
-            json["first_ctrl_point"]["z"] = this->startCtrllPos.z;
-            json["last_ctrl_point"]["x"] = this->endCtrllPos.x;
-            json["last_ctrl_point"]["y"] = this->endCtrllPos.y;
-            json["last_ctrl_point"]["z"] = this->endCtrllPos.z;
-            // Set keyframe data
-            auto count = this->keyframes.size();
-            std::string kf_str;
-            for (size_t i = 0; i < count; i++) {
-                this->keyframes[i].Serialise(json, i);
-            }
-            // Dump with indent of 2 spaces and new lines.
-            outfile << json.dump(2); 
-        }
-        catch (nlohmann::json::type_error& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::exception& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::parse_error& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::invalid_iterator& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::out_of_range& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::other_error& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        catch (...) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
+        nlohmann::json json;
+
+        // Set general data
+        json["total_animation_time"] = this->totalAnimTime;
+        json["spline_tangent_length"] = this->splineTangentLength;
+        json["first_ctrl_point"]["x"] = this->startCtrllPos.x;
+        json["first_ctrl_point"]["y"] = this->startCtrllPos.y;
+        json["first_ctrl_point"]["z"] = this->startCtrllPos.z;
+        json["last_ctrl_point"]["x"] = this->endCtrllPos.x;
+        json["last_ctrl_point"]["y"] = this->endCtrllPos.y;
+        json["last_ctrl_point"]["z"] = this->endCtrllPos.z;
+        // Set keyframe data
+        auto count = this->keyframes.size();
+        std::string kf_str;
+        for (size_t i = 0; i < count; i++) {
+            this->keyframes[i].Serialise(json, i);
         }
 
+        // Dump with indent of 2 spaces and new lines.
+        outfile << json.dump(2); 
         outfile.close();
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully stored keyframes to file: %s", this->filename.c_str());
-        return true;
     } 
     catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] Unknown Exception - Failed to store keyframes to file: %s", this->filename.c_str());
+        return false;
     }
-    return false;
+
+    return true;
 }
 
 
@@ -1279,22 +1246,24 @@ bool KeyframeKeeper::loadKeyframes() {
         return false;
     }
     else {
-        std::ifstream infile;
-        infile.open(this->filename.c_str());
-        if (!infile.good()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to open keyframe file.");
-            return false;
-        }
-
         try {
+            this->keyframes.clear();
+
+            std::ifstream infile;
+            infile.open(this->filename.c_str());
+            if (!infile.good()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("[KEYFRAME KEEPER] Failed to open keyframe file.");
+                return false;
+            }
+
             nlohmann::json json;
             std::string content;
             std::string line;
             while (std::getline(infile, line)) {
                 content += line;
             }
+            infile.close();
             json = nlohmann::json::parse(content);
-            // Check for valid JSON object
             if (!json.is_object()) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[KEYFRAME KEEPER] Given string is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -1302,117 +1271,48 @@ bool KeyframeKeeper::loadKeyframes() {
             }
 
             // Get general data
-            if (json.at("total_animation_time").is_number()) {
-                json.at("total_animation_time").get_to(this->totalAnimTime);
-            }
-            else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'total_animation_time'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            }
-            if (json.at("spline_tangent_length").is_number()) {
-                json.at("spline_tangent_length").get_to(this->splineTangentLength);
-            }
-            else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'spline_tangent_length'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            }
-            if (json.at("first_ctrl_point").at("x").is_number()) {
-                json.at("first_ctrl_point").at("x").get_to(this->startCtrllPos.x);
-            }
-            else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'x'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            }
-            if (json.at("first_ctrl_point").at("y").is_number()) {
-                json.at("first_ctrl_point").at("y").get_to(this->startCtrllPos.y);
-            }
-            else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'y'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            }
-            if (json.at("first_ctrl_point").at("z").is_number()) {
-                json.at("first_ctrl_point").at("z").get_to(this->startCtrllPos.z);
-            }
-            else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'first_ctrl_point'-'z'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            }
-            if (json.at("last_ctrl_point").at("x").is_number()) {
-                json.at("last_ctrl_point").at("x").get_to(this->endCtrllPos.x);
-            }
-            else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'x'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            }
-            if (json.at("last_ctrl_point").at("y").is_number()) {
-                json.at("last_ctrl_point").at("y").get_to(this->endCtrllPos.y);
-            }
-            else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'y'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            }
-            if (json.at("last_ctrl_point").at("z").is_number()) {
-                json.at("last_ctrl_point").at("z").get_to(this->endCtrllPos.z);
-            }
-            else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'last_ctrl_point'-'z'. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            }
-
+            bool valid = true;
+            valid &= get_json_value<float>(json, { "total_animation_time" }, &this->totalAnimTime);
+            valid &= get_json_value<float>(json, { "spline_tangent_length" }, &this->splineTangentLength);
+            valid &= get_json_value<float>(json, { "first_ctrl_point", "x" }, &this->startCtrllPos.x);
+            valid &= get_json_value<float>(json, { "first_ctrl_point", "y" }, &this->startCtrllPos.y);
+            valid &= get_json_value<float>(json, { "first_ctrl_point", "z" }, &this->startCtrllPos.z);
+            valid &= get_json_value<float>(json, { "last_ctrl_point", "x" }, &this->startCtrllPos.x);
+            valid &= get_json_value<float>(json, { "last_ctrl_point", "y" }, &this->startCtrllPos.y);
+            valid &= get_json_value<float>(json, { "last_ctrl_point", "z" }, &this->startCtrllPos.z);
             // Get keyframe data
-            this->keyframes.clear();
             if (json.at("keyframes").is_array()) {
-                bool valid = true;
                 size_t keyframe_count = json.at("keyframes").size();
                 this->keyframes.resize(keyframe_count);
                 for (size_t i = 0; i < keyframe_count; ++i) {
-                    valid = valid && this->keyframes[i].Deserialise(json.at("keyframes").at(i));
-                }
-                if (!valid) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn("JSON ERROR - Could not deserialise keyframes.");
+                    valid &= this->keyframes[i].Deserialise(json.at("keyframes").at(i));
                 }
             }
             else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read 'keyframes' array. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                valid = false;
+            }
+
+            if (valid) {
+                if (!this->keyframes.empty()) {
+                    this->selectedKeyframe = this->interpolateKeyframe(0.0f);
+                    this->updateEditParameters(this->selectedKeyframe);
+                    this->refreshInterpolCamPos(this->interpolSteps);
+                }
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully loaded keyframes from file: %s", this->filename.c_str());
+                return true;
+            }
+            else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] Failed to load keyframes from file: %s", this->filename.c_str());
             }
         }
-        catch (nlohmann::json::type_error& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::exception& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::parse_error& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::invalid_iterator& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::out_of_range& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::other_error& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
         catch (...) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[KEYFRAME KEEPER] Unknown Exception - Failed to load keyframes to file: %s", this->filename.c_str());
             return false;
         }
-
-        if (!this->keyframes.empty()) {
-            this->selectedKeyframe = this->interpolateKeyframe(0.0f);
-            this->updateEditParameters(this->selectedKeyframe);
-            this->refreshInterpolCamPos(this->interpolSteps);
-        }
-
-        infile.close();
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[KEYFRAME KEEPER] Successfully loaded keyframes from file: %s", this->filename.c_str());
     }
-    return true;
+
+    return false;
 }
 
 

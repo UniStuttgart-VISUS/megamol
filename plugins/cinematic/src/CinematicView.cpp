@@ -20,7 +20,7 @@ using namespace megamol::cinematic;
 using namespace vislib;
 
 
-CinematicView::CinematicView(void) : View3D_2()
+CinematicView::CinematicView() : View3D_2()
     , keyframeKeeperSlot("keyframeData", "Connects to the Keyframe Keeper.")
     , renderParam("cinematic::renderAnim", "Toggle rendering of complete animation to PNG files.")
     , toggleAnimPlayParam("cinematic::playPreview", "Toggle playing animation as preview")
@@ -121,7 +121,7 @@ CinematicView::CinematicView(void) : View3D_2()
 }
 
 
-CinematicView::~CinematicView(void) {
+CinematicView::~CinematicView() {
 
     this->render_to_file_cleanup();
     this->fbo.Release();

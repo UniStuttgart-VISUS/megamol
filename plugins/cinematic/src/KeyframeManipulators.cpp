@@ -14,7 +14,7 @@ using namespace megamol::core;
 using namespace megamol::cinematic;
 
 
-KeyframeManipulators::KeyframeManipulators(void)
+KeyframeManipulators::KeyframeManipulators()
     : toggleVisibleGroupParam("manipulators::toggleVisibleGroup", "Toggle visibility of different manipulator groups.")
     , visibleGroupParam("manipulators::visibleGroup", "Select visible manipulator group.")
     , toggleOusideBboxParam("manipulators::showOutsideBBox", "Show manipulators always outside of model bounding box.")
@@ -88,7 +88,7 @@ KeyframeManipulators::KeyframeManipulators(void)
 }
 
 
-KeyframeManipulators::~KeyframeManipulators(void) {
+KeyframeManipulators::~KeyframeManipulators() {
 
 }
 

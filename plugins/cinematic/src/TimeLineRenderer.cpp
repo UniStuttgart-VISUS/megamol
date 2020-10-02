@@ -18,7 +18,7 @@ using namespace megamol::cinematic;
 using namespace vislib;
 
 
-TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule()
+TimeLineRenderer::TimeLineRenderer() : view::Renderer2DModule()
 	, keyframeKeeperSlot("keyframeData", "Connects to the KeyframeKeeper")
     , moveRightFrameParam("gotoRightFrame", "Move to right animation time frame.")
     , moveLeftFrameParam("gotoLeftFrame", "Move to left animation time frame.")
@@ -72,13 +72,13 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule()
 }
 
 
-TimeLineRenderer::~TimeLineRenderer(void) {
+TimeLineRenderer::~TimeLineRenderer() {
 
 	this->Release();
 }
 
 
-bool TimeLineRenderer::create(void) {
+bool TimeLineRenderer::create() {
 	
     // Initialise render utils
     if (!this->utils.Initialise(this->GetCoreInstance())) {
@@ -98,7 +98,7 @@ bool TimeLineRenderer::create(void) {
 }
 
 
-void TimeLineRenderer::release(void) {
+void TimeLineRenderer::release() {
 
 }
 
@@ -426,7 +426,7 @@ void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, g
 }
 
 
-bool TimeLineRenderer::recalcAxesData(void) {
+bool TimeLineRenderer::recalcAxesData() {
 
     vislib::StringA tmpStr;
 
