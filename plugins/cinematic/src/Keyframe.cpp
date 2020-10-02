@@ -88,7 +88,7 @@ bool Keyframe::Deserialise(const nlohmann::json& in_json) {
 
 
 template <typename T>
-bool megamol::cinematic::get_json_value<float>(const nlohmann::json& in_json, const std::vector<std::string>& in_nodes, T* out_value, size_t array_size) {
+bool megamol::cinematic::get_json_value(const nlohmann::json& in_json, const std::vector<std::string>& in_nodes, T* out_value, size_t array_size) {
 
     try {
         auto node_count = in_nodes.size();
