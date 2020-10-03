@@ -797,7 +797,25 @@ void ScatterplotMatrixRenderer2D::drawLines() {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, PlotSSBOBindingPoint, this->plotSSBO.GetHandle(0));
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, ValueSSBOBindingPoint, this->valueSSBO.GetHandle(0));
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    glDrawArraysInstanced(GL_LINE_STRIP, 0, static_cast<GLsizei>(dataItems), this->plots.size());
+    // glDrawArraysInstanced(GL_LINE_STRIP, 0, static_cast<GLsizei>(dataItems), this->plots.size());
+
+    // Connect dataItems with the same value in the first column.
+    const float dataFirst = this->floatTable->GetData(0, 0);
+    const float dataLast = this->floatTable->GetData(0, dataItems-1);
+    GLuint currentDataItems = 0;
+    GLuint startingIndex = 0;
+
+    for (size_t currTraceID = dataFirst; currTraceID <= dataLast; currTraceID++) {
+        for (size_t i = 0; i < dataItems; i++) {
+            if (this->floatTable->GetData(0, i) == currTraceID) {
+                currentDataItems++;
+            }
+        }
+        glDrawArraysInstanced(GL_LINE_STRIP, startingIndex, static_cast<GLsizei>(currentDataItems), this->plots.size());
+        startingIndex += currentDataItems;
+        currentDataItems = 0;
+    }
+    
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glBindTexture(GL_TEXTURE_1D, 0);
