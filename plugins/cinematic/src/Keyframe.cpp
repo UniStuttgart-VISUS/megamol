@@ -113,7 +113,7 @@ bool megamol::cinematic::get_json_number(const nlohmann::json& in_json, const st
             }
             for (size_t i = 0; i < array_size; i++) {
                 if (!json_value[i].is_number()) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read float value from json node '%s' at position %i. [%s, %s, line %d]\n", node_name.c_str(), i, __FILE__, __FUNCTION__, __LINE__);
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read number from json node '%s' at position %i. [%s, %s, line %d]\n", node_name.c_str(), i, __FILE__, __FUNCTION__, __LINE__);
                     return false;
                 }
                 out_value[i] = json_value[i];
@@ -121,7 +121,7 @@ bool megamol::cinematic::get_json_number(const nlohmann::json& in_json, const st
         }
         else {
             if (!json_value.is_number()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read float value from json node '%s'. [%s, %s, line %d]\n", node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - Couldn't read number from json node '%s'. [%s, %s, line %d]\n", node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
             json_value.get_to((*out_value));
