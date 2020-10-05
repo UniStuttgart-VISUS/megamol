@@ -249,6 +249,7 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGenTextures(1, &msImageStorageD);
     glGenTextures(1, &imageArrayA);
     glGenTextures(1, &imageArrayB);
+    glGenTextures(1, &historyBuffer);
     glGenTextures(1, &depthStore);
     glGenTextures(1, &stenStore);
     glGenTextures(1, &depthStore2);
@@ -298,8 +299,8 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
 
-    glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayTest);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, 1, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, historyBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -336,6 +337,13 @@ bool ParallelCoordinatesRenderer2D::create(void) {
         vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
     pc_reconstruction3_shdr->Link();
     
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert3", vertex_shader_src);
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag3h", fragment_shader_src);
+    pc_reconstruction3h_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
+    pc_reconstruction3h_shdr->Compile(
+        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
+    pc_reconstruction3h_shdr->Link();
+
 
 #ifndef REMOVE_TEXT
     if (!font.Initialise(this->GetCoreInstance())) return false;
@@ -1225,20 +1233,19 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         if (frametype == 0) {
             glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, 0);
-            glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
         }
         if (frametype == 1) {
             glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, 1);
-            glClearColor(0.2, 0, 0, 1);
         }
         if (frametype == 2) {
             glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, 2);
-            glClearColor(0, 0.2, 0, 1);
         }
         if (frametype == 3) {
             glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, 3);
-            glClearColor(0.15, 0.15, 0, 1);
         }
+        glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+
+
         glClear(GL_COLOR_BUFFER_BIT);
 
         glViewport(0, 0, w, h);
@@ -1303,30 +1310,32 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         if (frametype == 0) {
             glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayB, 0, 0);
-            glClearColor(0, 0, 0, backgroundColor[3]);
         }
         if (frametype == 1) {
             glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayB, 0, 1);
-            glClearColor(0, 0, 0, backgroundColor[3]);
         }
         if (frametype == 2) {
             glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayB, 0, 2);
-            glClearColor(0, 0, 0, backgroundColor[3]);
         }
         if (frametype == 3) {
             glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayB, 0, 3);
-            glClearColor(0, 0, 0, backgroundColor[3]);
         }
+        glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glViewport(0, 0, w, h);
     }
 
     if (approach == 3 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
-        framesNeeded = 1;
+        framesNeeded = 100;
         w = w / 2;
         h = h / 2;
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
+        glActiveTexture(GL_TEXTURE10);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
+        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4 * 25, 0, GL_RGB, GL_FLOAT, 0);
 
         glm::mat4 pm;
         for (int i = 0; i < 4; i++) {
@@ -1340,18 +1349,45 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                 mvm[j][i] = modelViewMatrix_column[i + j * 4];
             }
         }
-        // mvm = glm::transpose(mvm);
 
         float factor = this->testingFloat.Param<core::param::FloatParam>()->Value();
+        glm::mat4 jit;
+        glm::mat4 pmvm = pm * mvm;
+        int f = floor(frametype / 4);
+        if (frametype % 4 == 0) {
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2)/5 - 1.0) / call.GetViewport().Width(), 
+                                                     ((floor(f / 5) - 2)/5 + 1.0) / call.GetViewport().Height(), 0));
+            invTexA = glm::translate(glm::mat4(1.0f), glm::vec3(- 1.0 / call.GetViewport().Width(),
+                                                          1.0 / call.GetViewport().Height(), 0)) * pmvm;
+        }
+        if (frametype % 4 == 1) {
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2) / 5 + 1.0) / call.GetViewport().Width(),
+                                                      ((floor(f / 5) - 2) / 5 + 1.0) / call.GetViewport().Height(), 0));
+            invTexB = glm::translate(glm::mat4(1.0f),
+                          glm::vec3(1.0 / call.GetViewport().Width(), 1.0 / call.GetViewport().Height(), 0)) * pmvm;
+        }
+        if (frametype % 4 == 2) {
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2) / 5 - 1.0) / call.GetViewport().Width(),
+                                                      ((floor(f / 5) - 2) / 5 - 1.0) / call.GetViewport().Height(), 0));
+            invTexC = glm::translate(glm::mat4(1.0f),
+                          glm::vec3(-1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0)) * pmvm;
+        }
+        if (frametype % 4 == 3) {
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2) / 5 + 1.0) / call.GetViewport().Width(),
+                                                      ((floor(f / 5) - 2) / 5 - 1.0) / call.GetViewport().Height(), 0));
+            invTexD = glm::translate(glm::mat4(1.0f),
+                          glm::vec3(1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0)) * pmvm;
+        }
+        // new Vectors
+        moveMatrixA = invTexA * glm::inverse(pmvm);
+        moveMatrixB = invTexB * glm::inverse(pmvm);
+        moveMatrixC = invTexC * glm::inverse(pmvm);
+        moveMatrixD = invTexD * glm::inverse(pmvm);
 
+        pm = jit * pm;
         for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
 
-            glBindFramebuffer(GL_FRAMEBUFFER, arrayTestFBO);
-            glActiveTexture(GL_TEXTURE15);
-            glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayTest);
-            glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 1, 0, GL_RGB, GL_FLOAT, 0);
-            glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayTest, 0, 0);
-            glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, frametype);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glViewport(0, 0, w, h);
@@ -1686,19 +1722,25 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         pc_reconstruction3_shdr->Enable();
 
-            glActiveTexture(GL_TEXTURE15);
-            glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayTest);
-            glUniform1i(pc_reconstruction3_shdr->ParameterLocation("src_tx2Da"), 15);
-        
+        glActiveTexture(GL_TEXTURE10);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
+        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("tx2D_array"), 10);
+
         glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
+
         glUniform1i(pc_reconstruction3_shdr->ParameterLocation("h"), call.GetViewport().Height());
         glUniform1i(pc_reconstruction3_shdr->ParameterLocation("w"), call.GetViewport().Width());
         glUniform1i(pc_reconstruction3_shdr->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction3_shdr->ParameterLocation("frametype"), frametype);
 
+        glUniformMatrix4fv(pc_reconstruction3_shdr->ParameterLocation("mMa"), 1, GL_FALSE, &moveMatrixA[0][0]);
+        glUniformMatrix4fv(pc_reconstruction3_shdr->ParameterLocation("mMb"), 1, GL_FALSE, &moveMatrixB[0][0]);
+        glUniformMatrix4fv(pc_reconstruction3_shdr->ParameterLocation("mMc"), 1, GL_FALSE, &moveMatrixC[0][0]);
+        glUniformMatrix4fv(pc_reconstruction3_shdr->ParameterLocation("mMd"), 1, GL_FALSE, &moveMatrixD[0][0]);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction3_shdr->Disable();
+
         frametype = (frametype + 1) % framesNeeded;
     }
 

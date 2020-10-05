@@ -29,7 +29,7 @@ void main()
         }
     } else {
         if(col % 2 == 1){
-            frag_out = texture(tx2D_array,  vec3(0.5 * (mMa * p).xy + vec2(0.5), 0));
+            frag_out = texture(tx2D_array, vec3(0.5 * (mMa * p).xy + vec2(0.5), 0));
         }else{
             frag_out = texture(tx2D_array, vec3(0.5 * (mMb * p).xy + vec2(0.5), 1));
         }  

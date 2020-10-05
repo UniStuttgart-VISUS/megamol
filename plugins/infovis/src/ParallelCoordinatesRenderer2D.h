@@ -304,6 +304,8 @@ private:
     GLuint imageStorageD;
     GLuint imageArrayA;
     GLuint imageArrayB;
+    GLuint resultBuffer;
+    GLuint historyBuffer;
     GLuint imageArrayTest;
     GLuint msImageStorageA;
     GLuint msImageStorageB;
@@ -329,6 +331,7 @@ private:
     std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction1_shdr;
     std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction2_shdr;
     std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction3_shdr;
+    std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction3h_shdr;
 
     int frametype = 0;
 
