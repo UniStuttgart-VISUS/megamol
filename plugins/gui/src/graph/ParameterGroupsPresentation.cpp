@@ -202,7 +202,6 @@ bool megamol::gui::ParameterGroupsPresentation::ParameterGroupGUIStateToJSON(
     for (auto& group_widget_id : group_widget_ids) {
         if (group_widget_id.second.active) {
             std::string param_fullname = module_fullname + "::parametergroup::" + group_widget_id.first;
-
             group_widget_id.second.ParameterGUIStateToJSON(inout_json, param_fullname);
         }
     }

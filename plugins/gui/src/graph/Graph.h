@@ -62,7 +62,7 @@ public:
 
     // FUNCTIONS --------------------------------------------------------------
 
-    Graph(const std::string& graph_name);
+    Graph(const std::string& graph_name, GraphCoreInterface core_interface);
     ~Graph(void);
 
     ImGuiID AddModule(const ModuleStockVector_t& stock_modules, const std::string& module_class_name);
@@ -96,8 +96,8 @@ public:
 
     const SyncQueuePtr_t& GetSyncQueue(void) { return this->sync_queue; }
 
-    inline bool IsRunning(void) const { return this->running_state; }
-    inline void SetRunning(bool r) { this->running_state = r; }
+    inline GraphCoreInterface GetCoreInterface(void) { return this->graph_core_interface; }
+    inline bool HasCoreInterface(void) { return (this->graph_core_interface != GraphCoreInterface::NO_INTERFACE); }
 
     const std::string GenerateUniqueMainViewName(void);
 
@@ -106,7 +106,7 @@ public:
     inline void PresentGUI(GraphState_t& state) { this->present.Present(*this, state); }
 
     bool StateFromJsonString(const std::string& json_string);
-    bool StateToJSON(nlohmann::json& out_json, bool save_as_project_graph);
+    bool StateToJSON(nlohmann::json& out_json);
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -117,7 +117,7 @@ private:
     bool dirty_flag;
     std::string filename;
     SyncQueuePtr_t sync_queue;
-    bool running_state;
+    GraphCoreInterface graph_core_interface;
 
     // FUNCTIONS --------------------------------------------------------------
 
@@ -125,10 +125,6 @@ private:
     const std::string generate_unique_module_name(const std::string& name);
 
     void add_rename_module_sync_event(const std::string& current_name, const std::string& new_name);
-
-    /// TEMP
-    // Returns true if current action is NOT supported for running graphs.
-    bool NOT_SUPPORTED_RUNNING_GRAPH_ACTION(const std::string& log_action);
 };
 
 

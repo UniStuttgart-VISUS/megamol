@@ -51,7 +51,9 @@ public:
     GraphCollection(void);
     ~GraphCollection(void);
 
-    ImGuiID AddGraph(void);
+    bool AddEmptyProject(void);
+
+    ImGuiID AddGraph(GraphCoreInterface graph_core_interface);
     bool DeleteGraph(ImGuiID in_graph_uid);
     bool GetGraph(ImGuiID in_graph_uid, GraphPtr_t& out_graph_ptr);
     const GraphPtrVector_t& GetGraphs(void) { return this->graphs; }
@@ -68,14 +70,11 @@ public:
      * @param core_instance    The pointer to the core instance. If pointer is not null, the core graph is considered.
      * @param megamol_graph    The pointer to the megamol graph. If pointer is not null, the megamol graph is
      * considered.
-     * @param running_graph    - Ternary::TRI_TRUE:  Show running megamol graph in configurator
-     *                         - Ternary::TRI_FALSE: Hide running graph of core instance in cofigurator,
-     *                                               because this graph has no synchronization and should not be edited
      *
      * @return                 True on success, false otherwise.
      */
     bool LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance,
-        megamol::core::MegaMolGraph* megamol_graph, bool running_graph = false);
+        megamol::core::MegaMolGraph* megamol_graph);
 
     ImGuiID LoadProjectFromCore(
         megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph) {

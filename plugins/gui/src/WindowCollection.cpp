@@ -108,20 +108,17 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
         if (in_json_string.empty()) {
             return false;
         }
-
-        bool found = false;
-        bool valid = true;
-        std::vector<WindowConfiguration> tmp_windows;
-
         nlohmann::json json;
         json = nlohmann::json::parse(in_json_string);
-
         if (!json.is_object()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
+        bool found = false;
+        bool valid = true;
+        std::vector<WindowConfiguration> tmp_windows;
         for (auto& header_item : json.items()) {
             if (header_item.key() == (GUI_JSON_TAG_WINDOW_CONFIGURATIONS)) {
                 found = true;
@@ -131,212 +128,63 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                     tmp_config.win_reset = true;
                     tmp_config.buf_font_reset = false;
                     tmp_config.buf_tfe_reset = false;
-
-                    // Getting all configuration values for current window.
                     auto config_values = config_item.value();
 
-                    // WindowConfiguration ------------------------------------
-                    // show
-                    if (config_values.at("win_show").is_boolean()) {
-                        config_values.at("win_show").get_to(tmp_config.win_show);
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'win_show' as boolean. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // flags
-                    if (config_values.at("win_flags").is_number_integer()) {
-                        tmp_config.win_flags = static_cast<ImGuiWindowFlags>(config_values.at("win_flags").get<int>());
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'win_flags' as integer. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // callback
-                    if (config_values.at("win_callback").is_number_integer()) {
-                        tmp_config.win_callback =
-                            static_cast<DrawCallbacks>(config_values.at("win_callback").get<int>());
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'win_callback' as integer. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // hotkey
-                    if (config_values.at("win_hotkey").is_array() && (config_values.at("win_hotkey").size() == 2)) {
-                        if (config_values.at("win_hotkey")[0].is_number_integer() &&
-                            config_values.at("win_hotkey")[1].is_number_integer()) {
-                            int key = config_values.at("win_hotkey")[0].get<int>();
-                            int mods = config_values.at("win_hotkey")[1].get<int>();
-                            tmp_config.win_hotkey = core::view::KeyCode(
-                                static_cast<core::view::Key>(key), static_cast<core::view::Modifiers>(mods));
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'win_hotkey' values as integers. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                            valid = false;
-                        }
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'win_hotkey' as array of size two. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // position
-                    if (config_values.at("win_position").is_array() && (config_values.at("win_position").size() == 2)) {
-                        if (config_values.at("win_position")[0].is_number_float()) {
-                            config_values.at("win_position")[0].get_to(tmp_config.win_position.x);
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read first value of "
-                                "'win_position' as float. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                            valid = false;
-                        }
-                        if (config_values.at("win_position")[1].is_number_float()) {
-                            config_values.at("win_position")[1].get_to(tmp_config.win_position.y);
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read second value of "
-                                "'win_position' as float. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                            valid = false;
-                        }
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'win_position' as array of size two. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // size
-                    if (config_values.at("win_size").is_array() && (config_values.at("win_size").size() == 2)) {
-                        if (config_values.at("win_size")[0].is_number_float()) {
-                            config_values.at("win_size")[0].get_to(tmp_config.win_size.x);
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read first value of 'win_size' as float. [%s, %s, line "
-                                "%d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                            valid = false;
-                        }
-                        if (config_values.at("win_size")[1].is_number_float()) {
-                            config_values.at("win_size")[1].get_to(tmp_config.win_size.y);
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read second value of 'win_size' as float. [%s, %s, line "
-                                "%d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                            valid = false;
-                        }
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'win_size' as array of size two. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // soft_reset
-                    if (config_values.at("win_soft_reset").is_boolean()) {
-                        config_values.at("win_soft_reset").get_to(tmp_config.win_soft_reset);
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'win_soft_reset' as boolean. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // reset_size
-                    if (config_values.at("win_reset_size").is_array() &&
-                        (config_values.at("win_reset_size").size() == 2)) {
-                        if (config_values.at("win_reset_size")[0].is_number_float()) {
-                            config_values.at("win_reset_size")[0].get_to(tmp_config.win_reset_size.x);
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read first value of "
-                                "'win_reset_size' as float. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                            valid = false;
-                        }
-                        if (config_values.at("win_reset_size")[1].is_number_float()) {
-                            config_values.at("win_reset_size")[1].get_to(tmp_config.win_reset_size.y);
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read second value  of "
-                                "'win_reset_size' as float. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                            valid = false;
-                        }
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'win_reset_size' as array of size two. [%s, %s, line "
-                            "%d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // reset_position
-                    if (config_values.at("win_reset_position").is_array() &&
-                        (config_values.at("win_reset_position").size() == 2)) {
-                        if (config_values.at("win_reset_position")[0].is_number_float()) {
-                            config_values.at("win_reset_position")[0].get_to(tmp_config.win_reset_position.x);
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read first value of "
-                                "'win_reset_position' as float. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                            valid = false;
-                        }
-                        if (config_values.at("win_reset_position")[1].is_number_float()) {
-                            config_values.at("win_reset_position")[1].get_to(tmp_config.win_reset_position.y);
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read second value  of "
-                                "'win_reset_position' as float. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                            valid = false;
-                        }
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'win_reset_position' as array of size two. [%s, %s, line "
-                            "%d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // collapsed
-                    if (config_values.at("win_collapsed").is_boolean()) {
-                        config_values.at("win_collapsed").get_to(tmp_config.win_collapsed);
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'win_collapsed' as boolean. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
+                    // WindowConfiguration -----------------------------------
+                    megamol::core::utility::get_json_value<bool>(config_values, {"win_show"}, &tmp_config.win_show);
+
+                    int win_flags = 0;
+                    megamol::core::utility::get_json_value<int>(config_values, {"win_flags"}, &win_flags);
+                    tmp_config.win_flags = static_cast<ImGuiWindowFlags>(win_flags);
+
+                    int win_callback = 0;
+                    megamol::core::utility::get_json_value<int>(config_values, {"win_callback"}, &win_callback);
+                    tmp_config.win_callback = static_cast<DrawCallbacks>(win_callback);
+
+                    std::array<int, 2> hotkey = {0, 0};
+                    megamol::core::utility::get_json_value<int>(
+                        config_values, {"win_hotkey"}, hotkey.data(), hotkey.size());
+                    tmp_config.win_hotkey = core::view::KeyCode(
+                        static_cast<core::view::Key>(hotkey[0]), static_cast<core::view::Modifiers>(hotkey[1]));
+
+                    std::array<float, 2> position;
+                    megamol::core::utility::get_json_value<float>(
+                        config_values, {"win_position"}, position.data(), position.size());
+                    tmp_config.win_position = ImVec2(position[0], position[1]);
+
+                    std::array<float, 2> size;
+                    megamol::core::utility::get_json_value<float>(
+                        config_values, {"win_size"}, size.data(), size.size());
+                    tmp_config.win_size = ImVec2(size[0], size[1]);
+
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"win_soft_reset"}, &tmp_config.win_soft_reset);
+
+                    std::array<float, 2> reset_size;
+                    megamol::core::utility::get_json_value<float>(
+                        config_values, {"win_reset_size"}, reset_size.data(), reset_size.size());
+                    tmp_config.win_reset_size = ImVec2(reset_size[0], reset_size[1]);
+
+                    std::array<float, 2> reset_position;
+                    megamol::core::utility::get_json_value<float>(
+                        config_values, {"win_reset_position"}, reset_position.data(), reset_position.size());
+                    tmp_config.win_reset_position = ImVec2(reset_position[0], reset_position[1]);
+
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"win_collapsed"}, &tmp_config.win_collapsed);
+
                     // ParamConfig --------------------------------------------
-                    // show_hotkeys
-                    if (config_values.at("param_show_hotkeys").is_boolean()) {
-                        config_values.at("param_show_hotkeys").get_to(tmp_config.param_show_hotkeys);
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'param_show_hotkeys' as boolean. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // modules_list (supports UTF-8)
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"param_show_hotkeys"}, &tmp_config.param_show_hotkeys);
+
                     tmp_config.param_modules_list.clear();
                     if (config_values.at("param_modules_list").is_array()) {
                         size_t buf_size = config_values.at("param_modules_list").size();
                         for (size_t i = 0; i < buf_size; ++i) {
-                            if (config_values.at("param_modules_list")[i].is_string()) {
-                                std::string param_module = config_values.at("param_modules_list")[i].get<std::string>();
-                                GUIUtils::Utf8Decode(param_module);
-                                tmp_config.param_modules_list.emplace_back(param_module);
-                            } else {
-                                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "[GUI] JSON state: Failed to read element of 'param_modules_list' as string. [%s, "
-                                    "%s, "
-                                    "line %d]\n",
-                                    __FILE__, __FUNCTION__, __LINE__);
-                                valid = false;
-                            }
+                            std::string value;
+                            megamol::core::utility::get_json_value<std::string>(
+                                config_values.at("param_modules_list")[i], {}, &value);
+                            tmp_config.param_modules_list.emplace_back(value);
                         }
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -344,122 +192,48 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                             __FILE__, __FUNCTION__, __LINE__);
                         valid = false;
                     }
-                    // module_filter
-                    if (config_values.at("param_module_filter").is_number_integer()) {
-                        tmp_config.param_module_filter =
-                            static_cast<FilterModes>(config_values.at("param_module_filter").get<int>());
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'param_module_filter' as integer. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // extended_mode
-                    if (config_values.at("param_extended_mode").is_boolean()) {
-                        config_values.at("param_extended_mode").get_to(tmp_config.param_extended_mode);
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'param_extended_mode' as boolean. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
+
+                    int module_filter = 0;
+                    megamol::core::utility::get_json_value<int>(config_values, {"param_module_filter"}, &module_filter);
+                    tmp_config.param_module_filter = static_cast<FilterModes>(module_filter);
+
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"param_extended_mode"}, &tmp_config.param_extended_mode);
 
                     // FpsMsConfig --------------------------------------------
-                    // show_options
-                    if (config_values.at("ms_show_options").is_boolean()) {
-                        config_values.at("ms_show_options").get_to(tmp_config.ms_show_options);
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'ms_show_options' as boolean. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // max_value_count
-                    if (config_values.at("ms_max_history_count").is_number_integer()) {
-                        config_values.at("ms_max_history_count").get_to(tmp_config.ms_max_history_count);
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'ms_max_history_count' as integer. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // max_delay
-                    if (config_values.at("ms_refresh_rate").is_number_float()) {
-                        config_values.at("ms_refresh_rate").get_to(tmp_config.ms_refresh_rate);
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'ms_refresh_rate' as float. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // mode
-                    if (config_values.at("ms_mode").is_number_integer()) {
-                        tmp_config.ms_mode = static_cast<TimingModes>(config_values.at("ms_mode").get<int>());
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'ms_mode' as integer. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"ms_show_options"}, &tmp_config.ms_show_options);
+
+                    megamol::core::utility::get_json_value<int>(
+                        config_values, {"ms_max_history_count"}, &tmp_config.ms_max_history_count);
+
+                    megamol::core::utility::get_json_value<float>(
+                        config_values, {"ms_refresh_rate"}, &tmp_config.ms_refresh_rate);
+
+                    int mode = 0;
+                    megamol::core::utility::get_json_value<int>(config_values, {"ms_mode"}, &mode);
+                    tmp_config.ms_mode = static_cast<TimingModes>(mode);
+
                     // FontConfig ---------------------------------------------
-                    // font_name (supports UTF-8)
-                    if (config_values.at("font_name").is_string()) {
-                        config_values.at("font_name").get_to(tmp_config.font_name);
-                        GUIUtils::Utf8Decode(tmp_config.font_name);
+                    megamol::core::utility::get_json_value<std::string>(
+                        config_values, {"font_name"}, &tmp_config.font_name);
 
-                        if (!tmp_config.font_name.empty()) {
-                            tmp_config.buf_font_reset = true;
-                        }
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'font_name' as string. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
                     // FTFEConfig ---------------------------------------------
-                    // tfe_view_minimized
-                    if (config_values.at("tfe_view_minimized").is_boolean()) {
-                        config_values.at("tfe_view_minimized").get_to(tmp_config.tfe_view_minimized);
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"tfe_view_minimized"}, &tmp_config.tfe_view_minimized);
 
-                        tmp_config.buf_tfe_reset = true;
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'tfe_view_minimized' as boolean. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // tfe_view_vertical
-                    if (config_values.at("tfe_view_vertical").is_boolean()) {
-                        config_values.at("tfe_view_vertical").get_to(tmp_config.tfe_view_vertical);
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"tfe_view_vertical"}, &tmp_config.tfe_view_vertical);
 
-                        tmp_config.buf_tfe_reset = true;
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'tfe_view_vertical' as boolean. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-                    // tfe_active_param (supports UTF-8)
-                    if (config_values.at("tfe_active_param").is_string()) {
-                        config_values.at("tfe_active_param").get_to(tmp_config.tfe_active_param);
-                        GUIUtils::Utf8Decode(tmp_config.tfe_active_param);
+                    megamol::core::utility::get_json_value<std::string>(
+                        config_values, {"tfe_active_param"}, &tmp_config.tfe_active_param);
 
-                        if (!tmp_config.font_name.empty()) {
-                            tmp_config.buf_tfe_reset = true;
-                        }
-                    } else {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Failed to read 'tfe_active_param' as string. [%s, %s, line %d]\n",
-                            __FILE__, __FUNCTION__, __LINE__);
-                        valid = false;
-                    }
-
+                    // --------------------------------------------------------
                     // add current window config to tmp window config list
                     tmp_windows.emplace_back(tmp_config);
                 }
             }
         }
-
         if (found) {
             if (valid) {
 #ifdef GUI_VERBOSE
@@ -472,9 +246,7 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                     __FUNCTION__, __LINE__);
                 return false;
             }
-        } else { // !found
-            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Could not find window configuration state
-            /// in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        } else {
             return false;
         }
 
@@ -494,23 +266,6 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
                 this->windows.emplace_back(new_win);
             }
         }
-
-    } catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -594,22 +349,6 @@ bool WindowCollection::StateToJSON(nlohmann::json& out_json) {
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote window configurations to JSON.");
 #endif // GUI_VERBOSE
 
-    } catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,

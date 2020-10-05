@@ -24,8 +24,7 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget()
     , file_error()
     , file_warning()
     , child_paths()
-    , additional_lines(0) {
-}
+    , additional_lines(0) {}
 
 
 bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::FileBrowserFlag flag,

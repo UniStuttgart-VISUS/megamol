@@ -31,7 +31,7 @@ GUIWindows::GUIWindows(void)
     , state_param(GUI_GUI_STATE_PARAM_NAME, "Current state of all windows.")
     , autostart_configurator("autostart_configurator", "Start the configurator at start up automatically. ")
     , context(nullptr)
-    , api(GUIImGuiAPI::NONE)
+    , api(GUIImGuiAPI::NO_API)
     , window_collection()
     , configurator()
     , state()
@@ -96,7 +96,7 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
         // Init OpenGL for ImGui
         const char* glsl_version = "#version 130"; /// "#version 150" or nullptr
         if (ImGui_ImplOpenGL3_Init(glsl_version)) {
-            this->api = GUIImGuiAPI::OpenGL;
+            this->api = GUIImGuiAPI::OPEN_GL;
             return true;
         }
     }
@@ -108,7 +108,7 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time) {
 
     // Check for initialized imgui api
-    if (this->api == GUIImGuiAPI::NONE) {
+    if (this->api == GUIImGuiAPI::NO_API) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
@@ -226,7 +226,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 bool GUIWindows::PostDraw(void) {
 
     // Check for initialized imgui api
-    if (this->api == GUIImGuiAPI::NONE) {
+    if (this->api == GUIImGuiAPI::NO_API) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
@@ -830,9 +830,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 
     // 2b) ... or synchronize Core Graph -> GUI Graph -------------------------
     if (!synced) {
-        sync_success &= this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(this->graph_uid,
-            ((megamol_graph == nullptr) ? (this->core_instance) : (nullptr)), megamol_graph,
-            vislib::math::Ternary::TRI_TRUE);
+        sync_success &= this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(
+            this->graph_uid, ((megamol_graph == nullptr) ? (this->core_instance) : (nullptr)), megamol_graph);
         if (!sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
@@ -1158,10 +1157,10 @@ bool GUIWindows::destroyContext(void) {
 
     this->core_instance = nullptr;
 
-    if (this->api != GUIImGuiAPI::NONE) {
+    if (this->api != GUIImGuiAPI::NO_API) {
         if (this->context != nullptr) {
             switch (this->api) {
-            case (GUIImGuiAPI::OpenGL):
+            case (GUIImGuiAPI::OPEN_GL):
                 ImGui_ImplOpenGL3_Shutdown();
                 break;
             default:
@@ -1170,7 +1169,7 @@ bool GUIWindows::destroyContext(void) {
             ImGui::DestroyContext(this->context);
         }
     }
-    this->api = GUIImGuiAPI::NONE;
+    this->api = GUIImGuiAPI::NO_API;
 
     return true;
 }
@@ -1928,30 +1927,17 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
             return false;
         }
 
+        // Read GUI state
         for (auto& header_item : json.items()) {
             if (header_item.key() == GUI_JSON_TAG_GUISTATE) {
-                found_gui = true;
                 auto gui_state = header_item.value();
 
-                // menu_visible
-                if (gui_state.at("menu_visible").is_boolean()) {
-                    gui_state.at("menu_visible").get_to(this->state.menu_visible);
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] JSON state: Failed to read 'menu_visible' as boolean. [%s, %s, line %d]\n", __FILE__,
-                        __FUNCTION__, __LINE__);
-                }
-            }
-        }
+                megamol::core::utility::get_json_value<bool>(gui_state, {"menu_visible"}, &this->state.menu_visible);
 
-        if (found_gui) {
 #ifdef GUI_VERBOSE
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read gui state from JSON string.");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read gui state from JSON string.");
 #endif // GUI_VERBOSE
-        } else {
-            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Could not find gui state in JSON. [%s, %s,
-            /// line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
+            }
         }
 
         // Reading gui state for parameters
@@ -1966,30 +1952,14 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
                     param.present.ForceSetGUIStateDirty();
                 }
             }
-        }
 #ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read parameter gui state from JSON string.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read parameter gui state from JSON string.");
 #endif // GUI_VERBOSE
+        }
 
-    } catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unknown Error - Unable to parse JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -2001,6 +1971,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
 
     try {
         inout_json[GUI_JSON_TAG_GUISTATE]["menu_visible"] = this->state.menu_visible;
+
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote GUI state to JSON.");
 #endif // GUI_VERBOSE
@@ -2020,22 +1991,6 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote parameter state to JSON.");
 #endif // GUI_VERBOSE
 
-    } catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,

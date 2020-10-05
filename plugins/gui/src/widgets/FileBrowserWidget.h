@@ -51,7 +51,6 @@ public:
     bool Button(std::string& inout_filename);
 
 private:
-
     typedef std::pair<stdfs::path, bool> ChildData_t;
 
     // VARIABLES --------------------------------------------------------------

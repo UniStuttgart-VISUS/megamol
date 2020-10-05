@@ -20,8 +20,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "json.hpp"
-
 #include <algorithm> // search
 #include <array>
 #include <cctype> // toupper
@@ -35,6 +33,7 @@
 #include <vector>
 
 #include "mmcore/param/AbstractParamPresentation.h"
+#include "mmcore/utility/JSONHelper.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
 
@@ -86,7 +85,7 @@ typedef std::shared_ptr<megamol::gui::CallSlot> CallSlotPtr_t;
 typedef std::shared_ptr<megamol::gui::InterfaceSlot> InterfaceSlotPtr_t;
 
 /** Available ImGui APIs */
-enum GUIImGuiAPI { NONE, OpenGL };
+enum GUIImGuiAPI { NO_API, OPEN_GL };
 
 /** Hotkey Data Types (exclusively for configurator) */
 enum HotkeyIndex : size_t {
@@ -125,6 +124,12 @@ typedef struct _canvas_ {
     ImVec2 offset;    // in
 } GraphCanvas_t;
 
+enum GraphCoreInterface {
+    NO_INTERFACE,
+    CORE_INSTANCE_GRAPH,
+    MEGAMOL_GRAPH,
+};
+
 /* Data type holding information on graph item interaction. */
 typedef struct _interact_state_ {
     ImGuiID button_active_uid;  // in out
@@ -158,8 +163,7 @@ typedef struct _interact_state_ {
     ImGuiID interfaceslot_hovered_uid;           // in out
     InterfaceSlotPtr_t interfaceslot_compat_ptr; // in
 
-    /// TEMP only used for indicating unsupported actions for running graph
-    bool graph_running; // in
+    GraphCoreInterface graph_core_interface; // in
 
 } GraphItemsInteract_t;
 
@@ -237,7 +241,6 @@ private:
 
     ~GUIUtils(void) = default;
 };
-
 
 } // namespace gui
 } // namespace megamol
