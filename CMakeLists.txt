@@ -60,8 +60,8 @@ add_subdirectory(${MEGAMOL_CORE_DIR})
 set(CONSOLE_NAME mmconsole)
 add_subdirectory(${MEGAMOL_CONSOLE_DIR})
 
-# Main3000
-add_subdirectory(${MEGAMOL_DIR}/main3000)
+# MegaMol.exe, new frontend, Main3000
+add_subdirectory(${MEGAMOL_DIR}/frontend)
 
 # Add directory structure for visual studio
 if(WIN32)

@@ -3,10 +3,11 @@
 # Copyright 2019, by MegaMol TEAM
 # Alle Rechte vorbehalten. All rights reserved.
 #
-option(BUILD_MAIN3000 "build main3000" ON)
+option(BUILD_FRONTEND "build (new) frontend" ON)
 
-if(BUILD_MAIN3000)
-  project(main3000)
+if(BUILD_FRONTEND)
+  project(frontend)
+  set(BINANRY_NAME megamol)
 
   require_external(libcxxopts)
 
@@ -21,30 +22,30 @@ if(BUILD_MAIN3000)
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
 
   # Add target
-  add_executable(${PROJECT_NAME} ${header_files} ${source_files})
-  target_include_directories(${PROJECT_NAME} PRIVATE "src" "include")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core frontend_services libcxxopts)
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${CMAKE_DL_LIBS})
+  add_executable(${BINANRY_NAME} ${header_files} ${source_files})
+  target_include_directories(${BINANRY_NAME} PRIVATE "src" "include")
+  target_link_libraries(${BINANRY_NAME} PRIVATE core frontend_services libcxxopts)
+  target_link_libraries(${BINANRY_NAME} PRIVATE ${CMAKE_DL_LIBS})
 
   # Grouping in Visual Studio
-  set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER base)
+  set_target_properties(${BINANRY_NAME} PROPERTIES FOLDER base)
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
 
    # Installation rules for generated files
-  install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
+  install(TARGETS ${BINANRY_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
   if (WIN32)
     if(MSVC)
-      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
+      install(FILES $<TARGET_PDB_FILE:${BINANRY_NAME}> DESTINATION bin OPTIONAL)
     endif()
   endif ()
   
   if(UNIX)
     include(GNUInstallDirs)
     set(cfg_LIB_PATH "../lib") # relative path from bin to lib dir
-    set(MAIN3000_SHELL_START_SCRIPT "mmmain3000.sh")
-    configure_file(extra/mmmain3000.sh.in ${CMAKE_BINARY_DIR}/${MAIN3000_SHELL_START_SCRIPT} @ONLY)
-    install(PROGRAMS ${CMAKE_BINARY_DIR}/${MAIN3000_SHELL_START_SCRIPT} DESTINATION "bin")
+    set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
+    configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
+    install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
   endif()  
 
 endif()
