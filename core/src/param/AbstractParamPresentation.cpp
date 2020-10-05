@@ -176,8 +176,10 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
                         valid = true;
                         bool gui_visibility = true;
                         valid &= megamol::core::utility::get_json_value<bool>(gui_state, { "gui_visibility" }, &gui_visibility);
+
                         bool gui_read_only = false;
                         valid &= megamol::core::utility::get_json_value<bool>(gui_state, { "gui_read-only" }, &gui_read_only);
+
                         int presentation_mode = 0;
                         valid &= megamol::core::utility::get_json_value<int>(gui_state, { "gui_presentation_mode" }, &presentation_mode);
                         auto gui_presentation_mode = static_cast<Presentation>(presentation_mode);

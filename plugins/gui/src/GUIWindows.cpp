@@ -1938,7 +1938,9 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_from_json_string(const s
         for (auto& header_item : json.items()) {
             if (header_item.key() == GUI_JSON_TAG_GUISTATE) {
                 auto gui_state = header_item.value();
+
                 megamol::core::utility::get_json_value<bool>(gui_state, {"menu_visible"}, &this->state.menu_visible);
+
 #ifdef GUI_VERBOSE
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read gui state from JSON string.");
 #endif // GUI_VERBOSE
@@ -1976,6 +1978,7 @@ bool megamol::gui::GUIWindows::gui_and_parameters_state_to_json(nlohmann::json& 
 
     try {
         inout_json[GUI_JSON_TAG_GUISTATE]["menu_visible"] = this->state.menu_visible;
+
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote GUI state to JSON.");
 #endif // GUI_VERBOSE

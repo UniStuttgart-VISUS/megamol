@@ -843,6 +843,7 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
                             config_state, {"project_name"}, &this->name);
 
                         bool tmp_show_parameter_sidebar = false;
+                        this->present.change_show_parameter_sidebar = false;
                         if (megamol::core::utility::get_json_value<bool>(
                                 config_state, {"show_parameter_sidebar"}, &tmp_show_parameter_sidebar)) {
                             this->present.change_show_parameter_sidebar = true;
@@ -906,9 +907,10 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
                             config_state, {"canvas_scrolling"}, canvas_scrolling.data(), canvas_scrolling.size());
                         this->present.graph_state.canvas.scrolling = ImVec2(canvas_scrolling[0], canvas_scrolling[1]);
 
-                        megamol::core::utility::get_json_value<float>(
-                            config_state, {"canvas_zooming"}, &this->present.graph_state.canvas.zooming);
-
+                        if (megamol::core::utility::get_json_value<float>(
+                                config_state, {"canvas_zooming"}, &this->present.graph_state.canvas.zooming)) {
+                            this->present.reset_zooming = false;
+                        }
 
                         // modules
                         for (auto& module_item : content_item.value().items()) {
@@ -919,8 +921,8 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
                                     valid = true;
 
                                     std::array<float, 2> graph_position;
-                                    megamol::core::utility::get_json_value<float>(
-                                        config_state, {"graph_position"}, graph_position.data(), graph_position.size());
+                                    megamol::core::utility::get_json_value<float>(module_state.value(),
+                                        {"graph_position"}, graph_position.data(), graph_position.size());
                                     auto module_position = ImVec2(graph_position[0], graph_position[1]);
 
                                     // Apply graph position to module
@@ -1048,23 +1050,6 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
 #endif // GUI_VERBOSE
             return false;
         }
-
-    } catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -1140,23 +1125,6 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& out_json, bool save_as_pro
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote graph state to JSON.");
 #endif // GUI_VERBOSE
         }
-
-    } catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,

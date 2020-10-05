@@ -550,11 +550,12 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
         bool found = false;
         for (auto& header_item : json.items()) {
             if (header_item.key() == GUI_JSON_TAG_CONFIGURATOR) {
-
-                found = true;
                 auto config_state = header_item.value();
+                found = true;
+
                 megamol::core::utility::get_json_value<bool>(
                     config_state, {"show_module_list_sidebar"}, &this->show_module_list_sidebar);
+
                 megamol::core::utility::get_json_value<float>(
                     config_state, {"module_list_sidebar_width"}, &this->module_list_sidebar_width);
 
