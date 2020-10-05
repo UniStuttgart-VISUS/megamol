@@ -8,12 +8,13 @@
 #ifndef MEGAMOLCORE_ABSTRACTPARAMPRESENTATION_H_INCLUDED
 #define MEGAMOLCORE_ABSTRACTPARAMPRESENTATION_H_INCLUDED
 
-#include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/utility/JSONHelper.h"
-#include "mmcore/utility/log/Log.h"
 
 #include <string>
 #include <map>
+
+#include "mmcore/utility/JSONHelper.h"
+#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/utility/log/Log.h"
 
 
 #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("Parameters")

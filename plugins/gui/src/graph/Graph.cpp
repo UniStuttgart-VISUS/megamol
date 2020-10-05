@@ -13,7 +13,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::Graph::Graph(const std::string& graph_name)
+megamol::gui::Graph::Graph(const std::string& graph_name, GraphCoreInterface core_interface)
     : uid(megamol::gui::GenerateUniqueID())
     , name(graph_name)
     , present()
@@ -22,7 +22,7 @@ megamol::gui::Graph::Graph(const std::string& graph_name)
     , groups()
     , dirty_flag(true)
     , sync_queue(nullptr)
-    , running_state(vislib::math::Ternary::TRI_UNKNOWN) {
+    , graph_core_interface(core_interface) {
 
     this->sync_queue = std::make_shared<SyncQueue_t>();
     ASSERT(this->sync_queue != nullptr);
@@ -177,8 +177,14 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
             if ((*iter)->uid == module_uid) {
 
-                if (!force && (*iter)->IsMainView() &&
-                    this->NOT_SUPPORTED_RUNNING_GRAPH_ACTION("Delete entry point/ view instance")) {
+                if (!force && (*iter)->IsMainView() && this->HasCoreInterface()) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] The action [Delete entry point/ view instance] is not yet supported for the graph of "
+                        "the 'Core Instance "
+                        "Graph' interface. "
+                        "Open project from file to make desired changes."
+                        "[%s, %s, line %d]\n",
+                        __FILE__, __FUNCTION__, __LINE__);
                     return false;
                 }
 
@@ -1060,14 +1066,14 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
 }
 
 
-bool megamol::gui::Graph::StateToJSON(nlohmann::json& out_json, bool save_as_project_graph) {
+bool megamol::gui::Graph::StateToJSON(nlohmann::json& out_json) {
 
     try {
         std::string filename = this->GetFilename();
         GUIUtils::Utf8Encode(filename);
 
-        // For not running graphs save only file name of loaded project
-        if (!save_as_project_graph) {
+        // For graphs with no interface to core save only file name of loaded project
+        if (!this->HasCoreInterface()) {
             out_json[GUI_JSON_TAG_GRAPHS][filename] = "";
         } else {
 
@@ -1205,18 +1211,4 @@ void megamol::gui::Graph::add_rename_module_sync_event(const std::string& curren
     }
     this->GetSyncQueue()->push(
         megamol::gui::Graph::SyncQueueData_t(megamol::gui::Graph::QueueChange::RENAME_MODULE, queue_data));
-}
-
-
-bool megamol::gui::Graph::NOT_SUPPORTED_RUNNING_GRAPH_ACTION(const std::string& log_action) {
-
-    if (this->IsRunning()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] The action [%s] is not yet supported for the graph of the running project. Open project from file "
-            "to make desired changes."
-            "[%s, %s, line %d]\n",
-            log_action.c_str(), __FILE__, __FUNCTION__, __LINE__);
-        return true;
-    }
-    return false;
 }

@@ -89,7 +89,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     this->graph_state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;
     this->graph_state.interact.interfaceslot_compat_ptr.reset();
 
-    this->graph_state.interact.graph_running = false;
+    this->graph_state.interact.graph_core_interface = GraphCoreInterface::NO_INTERFACE;
 
     this->graph_state.groups.clear();
     // this->graph_state.hotkeys are already initialzed
@@ -126,7 +126,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             this->graph_state.groups.emplace_back(group_pair);
         }
         this->graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
-        this->graph_state.interact.graph_running = inout_graph.IsRunning();
+        this->graph_state.interact.graph_core_interface = inout_graph.GetCoreInterface();
 
         // Compatible slot pointers
         this->graph_state.interact.callslot_compat_ptr.reset();
@@ -178,7 +178,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
         }
         std::string graph_label = "    " + inout_graph.name + "  ###graph" + std::to_string(graph_uid);
-        if (inout_graph.IsRunning()) {
+        if (inout_graph.HasCoreInterface()) {
             graph_label = "    [RUNNING]  " + graph_label;
         }
         // Checking for closed tab below
@@ -190,12 +190,12 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 ImGui::TextDisabled("Project");
                 ImGui::Separator();
 
-                bool running_graph = inout_graph.IsRunning();
-                if (ImGui::MenuItem("Save", nullptr, false, !running_graph)) {
+                bool enable_save_graph = !inout_graph.HasCoreInterface();
+                if (ImGui::MenuItem("Save", nullptr, false, enable_save_graph)) {
                     state.graph_save = true;
                 }
-                if (running_graph) {
-                    this->tooltip.ToolTip("Save Running Project using global Project Menu.");
+                if (!enable_save_graph) {
+                    this->tooltip.ToolTip("Save running project using global project menu.");
                 }
 
                 if (ImGui::MenuItem("Rename")) {
@@ -283,7 +283,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         }
         // Add module to group ------------------------------------------------
         if (!this->graph_state.interact.modules_add_group_uids.empty()) {
-            if (!inout_graph.NOT_SUPPORTED_RUNNING_GRAPH_ACTION("Add Module to Group")) {
+            if (!inout_graph.HasCoreInterface()) {
                 ModulePtr_t module_ptr;
                 ImGuiID new_group_uid = GUI_INVALID_ID;
                 for (auto& uid_pair : this->graph_state.interact.modules_add_group_uids) {
@@ -333,12 +333,19 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                         }
                     }
                 }
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] The action [Add Module to Group] is not yet supported for the graph of the 'Core Instance "
+                    "Graph' interface. "
+                    "Open project from file to make desired changes."
+                    "[%s, %s, line %d]\n",
+                    __FILE__, __FUNCTION__, __LINE__);
             }
             reset_state = true;
         }
         // Remove module from group -------------------------------------------
         if (!this->graph_state.interact.modules_remove_group_uids.empty()) {
-            if (!inout_graph.NOT_SUPPORTED_RUNNING_GRAPH_ACTION("Remove Module from Group")) {
+            if (!inout_graph.HasCoreInterface()) {
                 for (auto& module_uid : this->graph_state.interact.modules_remove_group_uids) {
                     ModulePtr_t module_ptr;
                     for (auto& mod : inout_graph.GetModules()) {
@@ -357,6 +364,14 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                         }
                     }
                 }
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] The action [Remove Module from Group] is not yet supported for the graph of the 'Core "
+                    "Instance "
+                    "Graph' interface. "
+                    "Open project from file to make desired changes."
+                    "[%s, %s, line %d]\n",
+                    __FILE__, __FUNCTION__, __LINE__);
             }
             reset_state = true;
         }
@@ -439,9 +454,17 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             if (this->graph_state.interact.call_selected_uid != GUI_INVALID_ID) {
                 inout_graph.DeleteCall(this->graph_state.interact.call_selected_uid);
             }
-            if (!inout_graph.NOT_SUPPORTED_RUNNING_GRAPH_ACTION("Delete Group") &&
-                (this->graph_state.interact.group_selected_uid != GUI_INVALID_ID)) {
-                inout_graph.DeleteGroup(this->graph_state.interact.group_selected_uid);
+            if (this->graph_state.interact.group_selected_uid != GUI_INVALID_ID) {
+                if (!inout_graph.HasCoreInterface()) {
+                    inout_graph.DeleteGroup(this->graph_state.interact.group_selected_uid);
+                } else {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] The action [Delete Group] is not yet supported for the graph of the 'Core Instance "
+                        "Graph' interface. "
+                        "Open project from file to make desired changes."
+                        "[%s, %s, line %d]\n",
+                        __FILE__, __FUNCTION__, __LINE__);
+                }
             }
             if (this->graph_state.interact.interfaceslot_selected_uid != GUI_INVALID_ID) {
                 for (auto& group_ptr : inout_graph.GetGroups()) {
@@ -554,7 +577,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         // Set delete flag if tab was closed ----------------------------------
         bool popup_prevent_close_permanent = false;
         if (!open) {
-            if (inout_graph.IsRunning()) {
+            if (inout_graph.HasCoreInterface()) {
                 popup_prevent_close_permanent = true;
             } else {
                 state.graph_delete = true;
@@ -568,7 +591,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         // Prevent closing tab of running project pop-up ----------------------
         bool tmp;
         MinimalPopUp::PopUp(
-            "Close Project", popup_prevent_close_permanent, "Running Project can not be closed!", "OK", tmp, "", tmp);
+            "Close Project", popup_prevent_close_permanent, "Running project can not be closed!", "OK", tmp, "", tmp);
 
         // Rename pop-up ------------------------------------------------------
         if (this->rename_popup.PopUp("Rename Project", popup_rename, inout_graph.name)) {

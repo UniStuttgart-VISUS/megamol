@@ -19,12 +19,46 @@ megamol::gui::GraphCollection::GraphCollection(void) : graphs(), modules_stock()
 megamol::gui::GraphCollection::~GraphCollection(void) {}
 
 
-ImGuiID megamol::gui::GraphCollection::AddGraph(void) {
+bool megamol::gui::GraphCollection::AddEmptyProject(void) {
+
+    ImGuiID graph_uid = this->AddGraph(GraphCoreInterface::NO_INTERFACE);
+    if (graph_uid != GUI_INVALID_ID) {
+
+        // Add initial GUIView and set as view instance
+        GraphPtr_t graph_ptr;
+        if (this->GetGraph(graph_uid, graph_ptr)) {
+            std::string guiview_class_name("GUIView");
+            ImGuiID module_uid = graph_ptr->AddModule(this->GetModulesStock(), guiview_class_name);
+            ModulePtr_t module_ptr;
+            if (graph_ptr->GetModule(module_uid, module_ptr)) {
+                auto graph_module = graph_ptr->GetModules().back();
+                graph_module->main_view_name = "Instance_1";
+
+                return true;
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] Unable to add initial gui view module: '%s'. [%s, %s, line %d]\n",
+                    guiview_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            }
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to get last added graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unable to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    return false;
+}
+
+
+ImGuiID megamol::gui::GraphCollection::AddGraph(GraphCoreInterface graph_core_interface) {
 
     ImGuiID retval = GUI_INVALID_ID;
 
     try {
-        GraphPtr_t graph_ptr = std::make_shared<Graph>(this->generate_unique_graph_name());
+        GraphPtr_t graph_ptr = std::make_shared<Graph>(this->generate_unique_graph_name(), graph_core_interface);
         if (graph_ptr != nullptr) {
             this->graphs.emplace_back(graph_ptr);
             retval = graph_ptr->uid;
@@ -256,14 +290,17 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 }
 
 
-bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid,
-    megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph, bool running_graph) {
+bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(
+    ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph) {
 
     bool created_new_graph = false;
     ImGuiID valid_graph_id = inout_graph_uid;
     if (valid_graph_id == GUI_INVALID_ID) {
         // Create new graph
-        valid_graph_id = this->AddGraph();
+        GraphCoreInterface graph_core_interface = (megamol_graph != nullptr)
+                                                      ? (GraphCoreInterface::MEGAMOL_GRAPH)
+                                                      : (GraphCoreInterface::CORE_INSTANCE_GRAPH);
+        valid_graph_id = this->AddGraph(graph_core_interface);
         if (valid_graph_id == GUI_INVALID_ID) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -280,7 +317,6 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
     }
 
     if (this->AddUpdateProjectFromCore(valid_graph_id, core_instance, megamol_graph, false)) {
-        graph_ptr->SetRunning(running_graph);
         inout_graph_uid = valid_graph_id;
         if (created_new_graph) {
             graph_ptr->present.SetLayoutGraph();
@@ -713,7 +749,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
 
                 // Create new graph
                 if (graph_ptr == nullptr) {
-                    ImGuiID new_graph_uid = this->AddGraph();
+                    ImGuiID new_graph_uid = this->AddGraph(GraphCoreInterface::NO_INTERFACE);
                     if (new_graph_uid == GUI_INVALID_ID) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[GUI] Project File '%s' line %i: Unable to create new graph '%s'. [%s, %s, line %d]\n",
@@ -1155,7 +1191,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                         // Write all parameters for running graph (default value is not available)
                         // For other graphs only write parameters with other values than the default
                         // Ignore button parameters
-                        if ((graph_ptr->IsRunning() || parameter.DefaultValueMismatch()) &&
+                        if ((graph_ptr->HasCoreInterface() || parameter.DefaultValueMismatch()) &&
                             (parameter.type != Param_t::BUTTON)) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
@@ -1487,7 +1523,7 @@ bool megamol::gui::GraphCollection::replace_graph_state(
             } catch (...) {
             }
         }
-        if (graph_ptr->StateToJSON(json, true)) {
+        if (graph_ptr->StateToJSON(json)) {
             out_json_string = json.dump(2);
         } else {
             return false;
