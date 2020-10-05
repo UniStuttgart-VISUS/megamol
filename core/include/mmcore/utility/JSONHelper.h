@@ -107,6 +107,12 @@ namespace megamol {
                                 if (vislib::UTF8Encoder::Decode(decoded_str, vislib::StringA(value.c_str()))) {
                                     (*out_value) = std::string(decoded_str.PeekBuffer());
                                 }
+                                else {
+                                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                        "JSON ERROR - Unable to decode string of '%s'. [%s, %s, line %d]\n",
+                                        node_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                                    return false;
+                                }
                             }
                             else {
                                 megamol::core::utility::log::Log::DefaultLog.WriteError(
