@@ -1,4 +1,4 @@
-﻿uniform sampler2DArray src_tx2Da;
+uniform sampler2DArray src_tx2Da;
 
 uniform int frametype;
 uniform int h;

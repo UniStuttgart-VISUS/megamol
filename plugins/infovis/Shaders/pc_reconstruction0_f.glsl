@@ -1,4 +1,4 @@
-﻿uniform sampler2DMS src_tx2Da;
+uniform sampler2DMS src_tx2Da;
 uniform sampler2DMS src_tx2Db;
 
 uniform int frametype;

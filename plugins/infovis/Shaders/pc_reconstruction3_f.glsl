@@ -1,4 +1,4 @@
-﻿uniform sampler2DArray tx2D_array;
+uniform sampler2DArray tx2D_array;
 
 uniform int frametype;
 uniform int h;

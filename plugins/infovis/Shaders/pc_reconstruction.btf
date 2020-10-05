@@ -40,5 +40,10 @@
 		<snippet type="version">430</snippet>
 		<snippet name="body" type="file">pc_reconstruction3_f.glsl</snippet>
 	</shader>
+
+	<shader name="frag3h">
+		<snippet type="version">430</snippet>
+		<snippet name="body" type="file">pc_reconstruction3h_f.glsl</snippet>
+	</shader>
 	
 </btf>

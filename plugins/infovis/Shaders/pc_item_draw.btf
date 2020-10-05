@@ -511,13 +511,12 @@ void main()
     <snippet name="uniforms" type="string">
       <![CDATA[
 layout(binding = 1) uniform sampler2D fragCount;
-layout(early_fragment_tests) in;
 uniform vec4 clearColor = vec4(0.0);
       ]]>
     </snippet>
 
     <shader name="vert">
-      <snippet type="version">430</snippet>
+      <snippet type="version">440</snippet>
       <snippet name="::pc::extensions" />
       <snippet name="::pc::uniforms" />
       <snippet name="::pc_item_draw::histogram::uniforms" />
