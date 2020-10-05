@@ -8,19 +8,17 @@
 #ifndef MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
 #define MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
 
-#include "Cinematic/Cinematic.h"
 
-#include "json.hpp"
 #include <glm/glm.hpp>
 
 #include "CinematicUtils.h"
+
+#include "mmcore/utility/JSONHelper.h"
 
 
 namespace megamol {
 namespace cinematic {
 
-    template <typename T>
-    bool get_json_number(const nlohmann::json& in_json, const std::vector<std::string>& in_nodes, T* out_value, size_t array_size = 0);
 
     /**
     * Keyframe Keeper.

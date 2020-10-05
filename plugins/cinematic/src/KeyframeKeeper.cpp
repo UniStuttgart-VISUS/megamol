@@ -1272,14 +1272,14 @@ bool KeyframeKeeper::loadKeyframes() {
 
             // Get general data
             bool valid = true;
-            valid &= get_json_number<float>(json, { "total_animation_time" }, &this->totalAnimTime);
-            valid &= get_json_number<float>(json, { "spline_tangent_length" }, &this->splineTangentLength);
-            valid &= get_json_number<float>(json, { "first_ctrl_point", "x" }, &this->startCtrllPos.x);
-            valid &= get_json_number<float>(json, { "first_ctrl_point", "y" }, &this->startCtrllPos.y);
-            valid &= get_json_number<float>(json, { "first_ctrl_point", "z" }, &this->startCtrllPos.z);
-            valid &= get_json_number<float>(json, { "last_ctrl_point", "x" }, &this->startCtrllPos.x);
-            valid &= get_json_number<float>(json, { "last_ctrl_point", "y" }, &this->startCtrllPos.y);
-            valid &= get_json_number<float>(json, { "last_ctrl_point", "z" }, &this->startCtrllPos.z);
+            valid &= megamol::core::utility::get_json_value<float>(json, { "total_animation_time" }, &this->totalAnimTime);
+            valid &= megamol::core::utility::get_json_value<float>(json, { "spline_tangent_length" }, &this->splineTangentLength);
+            valid &= megamol::core::utility::get_json_value<float>(json, { "first_ctrl_point", "x" }, &this->startCtrllPos.x);
+            valid &= megamol::core::utility::get_json_value<float>(json, { "first_ctrl_point", "y" }, &this->startCtrllPos.y);
+            valid &= megamol::core::utility::get_json_value<float>(json, { "first_ctrl_point", "z" }, &this->startCtrllPos.z);
+            valid &= megamol::core::utility::get_json_value<float>(json, { "last_ctrl_point", "x" }, &this->startCtrllPos.x);
+            valid &= megamol::core::utility::get_json_value<float>(json, { "last_ctrl_point", "y" }, &this->startCtrllPos.y);
+            valid &= megamol::core::utility::get_json_value<float>(json, { "last_ctrl_point", "z" }, &this->startCtrllPos.z);
             // Get keyframe data
             if (json.at("keyframes").is_array()) {
                 size_t keyframe_count = json.at("keyframes").size();
