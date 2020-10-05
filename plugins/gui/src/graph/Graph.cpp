@@ -814,8 +814,6 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
         if (in_json_string.empty()) {
             return false;
         }
-        bool found = false;
-        bool valid = true;
         nlohmann::json json;
         json = nlohmann::json::parse(in_json_string);
         if (!json.is_object()) {
@@ -826,6 +824,8 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
             return false;
         }
 
+        bool found = false;
+        bool valid = true;
         for (auto& header_item : json.items()) {
             if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
                 for (auto& content_item : header_item.value().items()) {
@@ -835,71 +835,41 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
                         auto config_state = content_item.value();
                         found = true;
 
-                        // project_file (supports UTF-8)
-                        if (config_state.at("project_file").is_string()) {
-                            std::string filename = config_state.at("project_file").get<std::string>();
-                            GUIUtils::Utf8Decode(filename);
-                            this->SetFilename(filename);
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'project_file' as string. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // project_name (supports UTF-8)
-                        if (config_state.at("project_name").is_string()) {
-                            std::string projectname = config_state.at("project_name").get<std::string>();
-                            GUIUtils::Utf8Decode(projectname);
-                            this->name = projectname;
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'project_name' as string. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // show_parameter_sidebar
-                        bool tmp_show_parameter_sidebar;
-                        this->present.change_show_parameter_sidebar = false;
-                        if (config_state.at("show_parameter_sidebar").is_boolean()) {
-                            config_state.at("show_parameter_sidebar").get_to(tmp_show_parameter_sidebar);
+                        std::string filename;
+                        megamol::core::utility::get_json_value<std::string>(config_state, {"project_file"}, &filename);
+                        this->SetFilename(filename);
+
+                        megamol::core::utility::get_json_value<std::string>(
+                            config_state, {"project_name"}, &this->name);
+
+                        bool tmp_show_parameter_sidebar = false;
+                        if (megamol::core::utility::get_json_value<bool>(
+                                config_state, {"show_parameter_sidebar"}, &tmp_show_parameter_sidebar)) {
                             this->present.change_show_parameter_sidebar = true;
                             this->present.show_parameter_sidebar = tmp_show_parameter_sidebar;
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'show_parameter_sidebar' as boolean. [%s, %s, line "
-                                "%d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // parameter_sidebar_width
-                        if (config_state.at("parameter_sidebar_width").is_number_float()) {
-                            config_state.at("parameter_sidebar_width").get_to(this->present.parameter_sidebar_width);
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read first value of "
-                                "'parameter_sidebar_width' as float. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // show_grid
-                        if (config_state.at("show_grid").is_boolean()) {
-                            config_state.at("show_grid").get_to(this->present.show_grid);
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'show_grid' as boolean. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
                         }
 
-                        // show_call_names
-                        if (config_state.at("show_call_names").is_boolean()) {
-                            config_state.at("show_call_names").get_to(this->present.show_call_names);
+                        megamol::core::utility::get_json_value<float>(
+                            config_state, {"parameter_sidebar_width"}, &this->present.parameter_sidebar_width);
+
+                        megamol::core::utility::get_json_value<bool>(
+                            config_state, {"show_grid"}, &this->present.show_grid);
+
+                        if (megamol::core::utility::get_json_value<bool>(
+                                config_state, {"show_call_names"}, &this->present.show_call_names)) {
                             for (auto& call : this->GetCalls()) {
                                 call->present.label_visible = this->present.show_call_names;
                             }
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'show_call_names' as boolean. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
                         }
-                        // show_slot_names
-                        if (config_state.at("show_slot_names").is_boolean()) {
-                            config_state.at("show_slot_names").get_to(this->present.show_slot_names);
+                        if (megamol::core::utility::get_json_value<bool>(
+                                config_state, {"show_module_names"}, &this->present.show_module_names)) {
+                            for (auto& mod : this->GetModules()) {
+                                mod->present.label_visible = this->present.show_module_names;
+                            }
+                        }
+
+                        if (megamol::core::utility::get_json_value<bool>(
+                                config_state, {"show_slot_names"}, &this->present.show_slot_names)) {
                             for (auto& mod : this->GetModules()) {
                                 for (auto& callslot_types : mod->GetCallSlots()) {
                                     for (auto& callslots : callslot_types.second) {
@@ -914,93 +884,31 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
                                     }
                                 }
                             }
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'show_slot_names' as boolean. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
                         }
-                        // show_module_names
-                        if (config_state.at("show_module_names").is_boolean()) {
-                            config_state.at("show_module_names").get_to(this->present.show_module_names);
-                            for (auto& mod : this->GetModules()) {
-                                mod->present.label_visible = this->present.show_module_names;
-                            }
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'show_module_names' as boolean. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // params_visible
-                        if (config_state.at("params_visible").is_boolean()) {
-                            config_state.at("params_visible").get_to(this->present.params_visible);
-                            /// Do not apply. Already refelcted in parameter gui state.
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'params_visible' as boolean. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // params_readonly
-                        if (config_state.at("params_readonly").is_boolean()) {
-                            config_state.at("params_readonly").get_to(this->present.params_readonly);
-                            /// Do not apply. Already refelcted in parameter gui state.
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'params_readonly' as boolean. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // param_extended_mode
-                        if (config_state.at("param_extended_mode").is_boolean()) {
-                            config_state.at("param_extended_mode").get_to(this->present.param_extended_mode);
+
+                        megamol::core::utility::get_json_value<bool>(
+                            config_state, {"params_visible"}, &this->present.params_visible);
+
+                        megamol::core::utility::get_json_value<bool>(
+                            config_state, {"params_readonly"}, &this->present.params_readonly);
+
+                        if (megamol::core::utility::get_json_value<bool>(
+                                config_state, {"param_extended_mode"}, &this->present.param_extended_mode)) {
                             for (auto& module_ptr : this->GetModules()) {
                                 for (auto& parameter : module_ptr->parameters) {
                                     parameter.present.extended = this->present.param_extended_mode;
                                 }
                             }
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'param_extended_mode' as boolean. [%s, %s, line "
-                                "%d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
                         }
-                        // canvas_scrolling
-                        if (config_state.at("canvas_scrolling").is_array() &&
-                            (config_state.at("canvas_scrolling").size() == 2)) {
-                            if (config_state.at("canvas_scrolling")[0].is_number_float()) {
-                                config_state.at("canvas_scrolling")[0].get_to(
-                                    this->present.graph_state.canvas.scrolling.x);
-                            } else {
-                                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "[GUI] JSON state: Failed to read first value of 'canvas_scrolling' as float. [%s, "
-                                    "%s, "
-                                    "line %d]\n",
-                                    __FILE__, __FUNCTION__, __LINE__);
-                            }
-                            if (config_state.at("canvas_scrolling")[1].is_number_float()) {
-                                config_state.at("canvas_scrolling")[1].get_to(
-                                    this->present.graph_state.canvas.scrolling.y);
-                            } else {
-                                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "[GUI] JSON state: Failed to read second value of 'canvas_scrolling' as float. "
-                                    "[%s, %s, "
-                                    "line %d]\n",
-                                    __FILE__, __FUNCTION__, __LINE__);
-                            }
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read 'canvas_scrolling' as "
-                                "array of size two. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                        // canvas_zooming
-                        if (config_state.at("canvas_zooming").is_number_float()) {
-                            config_state.at("canvas_zooming").get_to(this->present.graph_state.canvas.zooming);
-                            this->present.reset_zooming = false;
-                        } else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] JSON state: Failed to read first value of "
-                                "'canvas_zooming' as float. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
+
+                        std::array<float, 2> canvas_scrolling;
+                        megamol::core::utility::get_json_value<float>(
+                            config_state, {"canvas_scrolling"}, canvas_scrolling.data(), canvas_scrolling.size());
+                        this->present.graph_state.canvas.scrolling = ImVec2(canvas_scrolling[0], canvas_scrolling[1]);
+
+                        megamol::core::utility::get_json_value<float>(
+                            config_state, {"canvas_zooming"}, &this->present.graph_state.canvas.zooming);
+
 
                         // modules
                         for (auto& module_item : content_item.value().items()) {
@@ -1010,38 +918,10 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
                                     auto position_item = module_state.value();
                                     valid = true;
 
-                                    // graph_position
-                                    ImVec2 module_position;
-                                    if (position_item.at("graph_position").is_array() &&
-                                        (position_item.at("graph_position").size() == 2)) {
-                                        if (position_item.at("graph_position")[0].is_number_float()) {
-                                            position_item.at("graph_position")[0].get_to(module_position.x);
-                                        } else {
-                                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                                "[GUI] JSON state: Failed to read first value of 'graph_position' as "
-                                                "float. "
-                                                "[%s, %s, line %d]\n",
-                                                __FILE__, __FUNCTION__, __LINE__);
-                                            valid = false;
-                                        }
-                                        if (position_item.at("graph_position")[1].is_number_float()) {
-                                            position_item.at("graph_position")[1].get_to(module_position.y);
-                                        } else {
-                                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                                "[GUI] JSON state: Failed to read second value of 'graph_position' as "
-                                                "float. "
-                                                "[%s, %s, line %d]\n",
-                                                __FILE__, __FUNCTION__, __LINE__);
-                                            valid = false;
-                                        }
-                                    } else {
-                                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                            "[GUI] JSON state: Failed to read 'graph_position' as array of size two. "
-                                            "[%s, "
-                                            "%s, line %d]\n",
-                                            __FILE__, __FUNCTION__, __LINE__);
-                                        valid = false;
-                                    }
+                                    std::array<float, 2> graph_position;
+                                    megamol::core::utility::get_json_value<float>(
+                                        config_state, {"graph_position"}, graph_position.data(), graph_position.size());
+                                    auto module_position = ImVec2(graph_position[0], graph_position[1]);
 
                                     // Apply graph position to module
                                     if (valid) {
@@ -1076,18 +956,10 @@ bool megamol::gui::Graph::StateFromJsonString(const std::string& in_json_string)
                                         valid = true;
                                         std::vector<std::string> calleslot_fullnames;
                                         for (auto& callslot_item : interfaceslot_item.value().items()) {
-                                            if (callslot_item.value().is_string()) {
-                                                std::string callslot_name = callslot_item.value().get<std::string>();
-                                                GUIUtils::Utf8Decode(callslot_name);
-                                                calleslot_fullnames.emplace_back(callslot_name);
-                                            } else {
-                                                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                                    "[GUI] JSON state: Failed to read value of call slot as string. "
-                                                    "[%s, %s, "
-                                                    "line %d]\n",
-                                                    __FILE__, __FUNCTION__, __LINE__);
-                                                valid = false;
-                                            }
+                                            std::string callslot_name;
+                                            megamol::core::utility::get_json_value<std::string>(
+                                                callslot_item.value(), {}, &callslot_name);
+                                            calleslot_fullnames.emplace_back(callslot_name);
                                         }
 
                                         // Add interface slot containing found calls slots to group

@@ -13,8 +13,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::FileBrowserWidget::FileBrowserWidget(void)
-#ifdef GUI_USE_FILESYSTEM
+megamol::gui::FileBrowserWidget::FileBrowserWidget()
     : search_widget()
     , file_name_str()
     , file_path_str()
@@ -25,13 +24,7 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget(void)
     , file_error()
     , file_warning()
     , child_paths()
-    , additional_lines(0) {
-#else
-{
-    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "[GUI] Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-#endif // GUI_USE_FILESYSTEM
-}
+    , additional_lines(0) {}
 
 
 bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::FileBrowserFlag flag,
@@ -43,7 +36,6 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
         ImGui::PushID(label_id.c_str());
 
         if (open_popup) {
-#ifdef GUI_USE_FILESYSTEM
             // Check given file name path
             stdfs::path tmp_file_path = inout_filename.c_str();
             if (tmp_file_path.empty() || !stdfs::exists(tmp_file_path)) {
@@ -57,14 +49,8 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
             ImGui::OpenPopup(label_id.c_str());
             // Set initial window size of pop up
             ImGui::SetNextWindowSize(ImVec2(400.0f, 500.0f));
-#else
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] Filesystem functionality is not available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
-#endif // GUI_USE_FILESYSTEM
         }
 
-#ifdef GUI_USE_FILESYSTEM
         bool open = true;
         if (ImGui::BeginPopupModal(label_id.c_str(), &open, ImGuiWindowFlags_None)) {
 
@@ -283,7 +269,6 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
 
             ImGui::EndPopup();
         }
-#endif // GUI_USE_FILESYSTEM
 
         ImGui::PopID();
 
@@ -345,8 +330,6 @@ bool megamol::gui::FileBrowserWidget::Button(std::string& inout_filename) {
     return retval;
 }
 
-
-#ifdef GUI_USE_FILESYSTEM
 
 bool megamol::gui::FileBrowserWidget::splitPath(
     const stdfs::path& in_file_path, std::string& out_path, std::string& out_file) {
@@ -454,5 +437,3 @@ void megamol::gui::FileBrowserWidget::validateFile(
         return;
     }
 }
-
-#endif // GUI_USE_FILESYSTEM

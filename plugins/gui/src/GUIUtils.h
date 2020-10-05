@@ -20,8 +20,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "json.hpp"
-
 #include <algorithm> // search
 #include <array>
 #include <cctype> // toupper
@@ -35,6 +33,7 @@
 #include <vector>
 
 #include "mmcore/param/AbstractParamPresentation.h"
+#include "mmcore/utility/JSONHelper.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
 
@@ -47,7 +46,7 @@ namespace gui {
 
 /********** Defines **********/
 
-#define GUI_VERBOSE
+///#define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f)
@@ -237,7 +236,6 @@ private:
 
     ~GUIUtils(void) = default;
 };
-
 
 } // namespace gui
 } // namespace megamol

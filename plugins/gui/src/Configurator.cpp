@@ -217,7 +217,8 @@ void megamol::gui::Configurator::UpdateStateParameter(void) {
             return;
         } catch (...) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Unknown Error - Unable to dump JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
             return;
         }
 
@@ -538,41 +539,24 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
         if (in_json_string.empty()) {
             return false;
         }
-
-        bool found = false;
-
         nlohmann::json json;
         json = nlohmann::json::parse(in_json_string);
-
         if (!json.is_object()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
+        bool found = false;
         for (auto& header_item : json.items()) {
             if (header_item.key() == GUI_JSON_TAG_CONFIGURATOR) {
+
                 found = true;
                 auto config_state = header_item.value();
-
-                // show_module_list_sidebar
-                if (config_state.at("show_module_list_sidebar").is_boolean()) {
-                    config_state.at("show_module_list_sidebar").get_to(this->show_module_list_sidebar);
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] JSON state: Failed to read 'show_module_list_sidebar' as boolean. [%s, %s, line %d]\n",
-                        __FILE__, __FUNCTION__, __LINE__);
-                }
-
-                // module_list_sidebar_width
-                if (config_state.at("module_list_sidebar_width").is_number_float()) {
-                    config_state.at("module_list_sidebar_width").get_to(this->module_list_sidebar_width);
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] JSON state: Failed to read first value of "
-                        "'module_list_sidebar_width' as float. [%s, %s, line %d]\n",
-                        __FILE__, __FUNCTION__, __LINE__);
-                }
+                megamol::core::utility::get_json_value<bool>(
+                    config_state, {"show_module_list_sidebar"}, &this->show_module_list_sidebar);
+                megamol::core::utility::get_json_value<float>(
+                    config_state, {"module_list_sidebar_width"}, &this->module_list_sidebar_width);
 
             } else if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
                 // Check for configurator settings of previously loaded graphs
@@ -603,30 +587,8 @@ bool megamol::gui::Configurator::configurator_state_from_json_string(const std::
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read configurator state from JSON string.");
 #endif // GUI_VERBOSE
         } else {
-#ifdef GUI_VERBOSE
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] Could not find configurator state in JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
-#endif // GUI_VERBOSE
             return false;
         }
-
-    } catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -650,22 +612,6 @@ bool megamol::gui::Configurator::configurator_state_to_json(nlohmann::json& out_
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote configurator state to JSON.");
 #endif // GUI_VERBOSE
 
-    } catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
@@ -771,8 +717,7 @@ void megamol::gui::Configurator::drawPopUps(void) {
 #ifdef GUI_USE_GLFW
 void megamol::gui::Configurator::file_drop_callback(::GLFWwindow* window, int count, const char* paths[]) {
 
-    int i;
-    for (i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
         megamol::gui::Configurator::dropped_files.emplace_back(std::string(paths[i]));
     }
 }
