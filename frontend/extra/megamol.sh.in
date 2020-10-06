@@ -7,6 +7,4 @@
 BIN_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
 cd "$BIN_DIR"
 
-LD_LIBRARY_PATH=@cfg_LIB_PATH@:$LD_LIBRARY_PATH ./@PROJECT_NAME@ "$@"
-
-
+LD_LIBRARY_PATH=@cfg_LIB_PATH@:$LD_LIBRARY_PATH ./megamol "$@"
