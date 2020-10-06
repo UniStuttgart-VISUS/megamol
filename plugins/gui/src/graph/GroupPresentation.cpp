@@ -140,7 +140,7 @@ void megamol::gui::GroupPresentation::Present(
                         __FILE__, __FUNCTION__, __LINE__);
                 } else if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] The action [Rename Group] is not yet supported for the graph of the 'Core Instance "
+                        "[GUI] The action [Rename Group] is not yet supported for the graph using the 'Core Instance "
                         "Graph' interface. "
                         "Open project from file to make desired changes."
                         "[%s, %s, line %d]\n",

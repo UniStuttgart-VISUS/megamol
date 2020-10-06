@@ -32,7 +32,7 @@ bool megamol::gui::GraphCollection::AddEmptyProject(void) {
             ModulePtr_t module_ptr;
             if (graph_ptr->GetModule(module_uid, module_ptr)) {
                 auto graph_module = graph_ptr->GetModules().back();
-                graph_module->main_view_name = "Instance_1";
+                graph_module->main_view_name = graph_ptr->GenerateUniqueMainViewName();
 
                 Graph::QueueData queue_data;
                 queue_data.name_id = graph_module->FullName();
@@ -382,7 +382,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 if (!graph_ptr->ModuleExists(module_fullname)) {
                     module_ptr_list.emplace_back(module_inst.modulePtr.get());
                     if (module_inst.isGraphEntryPoint) {
-                        view_instances[module_fullname] = graph_ptr->Generate_Unique_Main_View_Name();
+                        view_instances[module_fullname] = graph_ptr->GenerateUniqueMainViewName();
                     }
                 }
             }

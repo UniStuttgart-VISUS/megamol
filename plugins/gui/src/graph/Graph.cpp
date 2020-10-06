@@ -181,7 +181,7 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
                     } else if (this->GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[GUI] The action [Delete entry point/ view instance] is not yet supported for the graph "
-                            "of the 'Core Instance "
+                            "using the 'Core Instance "
                             "Graph' interface. "
                             "Open project from file to make desired changes."
                             "[%s, %s, line %d]\n",
@@ -1290,10 +1290,10 @@ const std::string megamol::gui::Graph::generate_unique_module_name(const std::st
 }
 
 
-const std::string megamol::gui::Graph::Generate_Unique_Main_View_Name(void) {
+const std::string megamol::gui::Graph::GenerateUniqueMainViewName(void) {
 
     int new_name_id = 0;
-    std::string new_name_prefix("Instance_");
+    std::string new_name_prefix("MainView_");
     for (auto& module_ptr : this->modules) {
         if (module_ptr->main_view_name.find(new_name_prefix) == 0) {
             std::string int_postfix = module_ptr->main_view_name.substr(new_name_prefix.length());

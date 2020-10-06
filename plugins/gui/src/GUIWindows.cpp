@@ -782,6 +782,13 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                         graph_sync_success &= false;
                     }
                     */
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] The action [Create main view] is not yet supported for the graph "
+                        "using the 'Core Instance "
+                        "Graph' interface. "
+                        "Open project from file to make desired changes."
+                        "[%s, %s, line %d]\n",
+                        __FILE__, __FUNCTION__, __LINE__);
                 }
             } break;
             case (Graph::QueueAction::REMOVE_MAIN_VIEW): {
@@ -790,6 +797,13 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                 } else if (this->core_instance != nullptr) {
                     /* XXX Currently not supported by core graph
                      */
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] The action [Remove main view] is not yet supported for the graph "
+                        "using the 'Core Instance "
+                        "Graph' interface. "
+                        "Open project from file to make desired changes."
+                        "[%s, %s, line %d]\n",
+                        __FILE__, __FUNCTION__, __LINE__);
                 }
             } break;
             default:
