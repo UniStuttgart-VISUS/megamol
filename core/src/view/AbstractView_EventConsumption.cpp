@@ -84,13 +84,14 @@ void view_poke_rendering(AbstractView& view, megamol::frontend::ModuleResource c
 	}
 
 	const auto render = [&]() {
-		_mmcRenderViewContext dummyRenderViewContext; // doesn't do anything, really
+		_mmcRenderViewContext dummyRenderViewContext = {}; // zero initialization. the struct is currently only used for time propagation.
 
         const double time = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now() - render_view_context_timer_start)
             .count() / static_cast<double>(1000);
 
         dummyRenderViewContext.InstanceTime = time;
+        dummyRenderViewContext.Time = time;
 
 		view.Render(dummyRenderViewContext);
 	};
