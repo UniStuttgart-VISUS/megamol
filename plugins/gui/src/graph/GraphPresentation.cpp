@@ -282,7 +282,8 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             queue_data.rename_id = this->graph_state.interact.module_rename.second;
             inout_graph.PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
 
-            reset_state = true;
+            this->graph_state.interact.module_rename.first.clear();
+            this->graph_state.interact.module_rename.second.clear();
         }
         // Add module main view change event to graph synchronization queue ---
         if (this->graph_state.interact.module_mainview_changed != vislib::math::Ternary::TRI_UNKNOWN) {
@@ -298,7 +299,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             if (selected_mod_ptr != nullptr) {
                 Graph::QueueData queue_data;
                 queue_data.name_id = selected_mod_ptr->FullName();
-                if (this->graph_state.interact.module_mainview_changed = vislib::math::Ternary::TRI_TRUE) {
+                if (this->graph_state.interact.module_mainview_changed == vislib::math::Ternary::TRI_TRUE) {
                     selected_mod_ptr->main_view_name = inout_graph.Generate_Unique_Main_View_Name();
                     inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
                 } else {
@@ -306,7 +307,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                     inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
                 }
             }
-            reset_state = true;
+            this->graph_state.interact.module_mainview_changed = vislib::math::Ternary::TRI_UNKNOWN;
         }
         // Add module to group ------------------------------------------------
         if (!this->graph_state.interact.modules_add_group_uids.empty()) {
@@ -547,9 +548,6 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             this->graph_state.interact.module_hovered_uid = GUI_INVALID_ID;
             this->graph_state.interact.modules_add_group_uids.clear();
             this->graph_state.interact.modules_remove_group_uids.clear();
-            this->graph_state.interact.module_rename.first.clear();
-            this->graph_state.interact.module_rename.second.clear();
-            this->graph_state.interact.module_mainview_changed = vislib::math::Ternary::TRI_UNKNOWN;
             this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;
             this->graph_state.interact.call_hovered_uid = GUI_INVALID_ID;
             this->graph_state.interact.callslot_selected_uid = GUI_INVALID_ID;
