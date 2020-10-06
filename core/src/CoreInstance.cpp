@@ -1940,6 +1940,7 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
 
 
 std::string megamol::core::CoreInstance::GetProjectFromPNG(std::string filename) {
+    std::string content;
     png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     if (!png) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("getProjectFromPNG: Unable to create png struct");
@@ -1956,14 +1957,29 @@ std::string megamol::core::CoreInstance::GetProjectFromPNG(std::string filename)
                 setjmp(png_jmpbuf(png));
                 png_init_io(png, fp);
                 png_read_info(png, info);
-                png_uint_32 exif_size = 0;
-                png_bytep exif_data = nullptr;
-                png_get_eXIf_1(png, info, &exif_size, &exif_data);
-                if (exif_size > 0) {
-                    std::string content(reinterpret_cast<char*>(exif_data));
-                    return content;
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError("LoadProject: Unable to extract png exif data");
+
+                png_textp texts;
+                int num_text = 0;
+                png_get_text(png, info, &texts, &num_text);
+                bool found = false;
+                for (int i = 0; i < num_text; ++i) {
+                    if (strcmp(texts[i].key, "MegaMol project") == 0) {
+                        found = true;
+                        content = std::string(texts[i].text);
+                    }
+                }
+
+                if (!found) {
+                    png_uint_32 exif_size = 0;
+                    png_bytep exif_data = nullptr;
+                    png_get_eXIf_1(png, info, &exif_size, &exif_data);
+                    if (exif_size > 0) {
+                        found = true;
+                        content = reinterpret_cast<char*>(exif_data);
+                    }
+                }
+                if (!found) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("LoadProject: Unable to extract png text or exif data");
                 }
                 png_destroy_info_struct(png, &info);
             }
@@ -1972,7 +1988,7 @@ std::string megamol::core::CoreInstance::GetProjectFromPNG(std::string filename)
         png_destroy_read_struct(&png, nullptr, nullptr);
         // exif_data buffer seems to live inside exif_info and is disposed automatically
     }
-    return "";
+    return content;
 }
 
 /*
