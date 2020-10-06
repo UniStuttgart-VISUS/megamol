@@ -100,7 +100,7 @@ private:
 
     std::vector<glowl::DrawElementsCommand> m_vector_probe_draw_commands;
 
-    VectorProbeData createVectorProbeData(probe::Vec4Probe const& probe, int probe_id, float scale);
+    size_t m_draw_commands_collection_idx;
 };
 
 

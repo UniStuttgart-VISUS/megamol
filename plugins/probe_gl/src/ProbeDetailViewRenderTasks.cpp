@@ -29,11 +29,11 @@ megamol::probe_gl::ProbeDetailViewRenderTasks::ProbeDetailViewRenderTasks()
 
 megamol::probe_gl::ProbeDetailViewRenderTasks::~ProbeDetailViewRenderTasks() {}
 
-bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() { 
+bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
 
     AbstractGPURenderTaskDataSource::create();
 
-    //TODO ui mesh
+    // TODO ui mesh
     {
         // clang-format off
         std::vector<std::vector<float>> vertices = {{
@@ -104,8 +104,9 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
 
     // check/get mesh data 
     mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
-    if (mc == NULL) return false;
-    if (!(*mc)(0)) return false;
+    if (mc != NULL){
+        if (!(*mc)(0)) return false;
+    }
 
     // check/get probe data
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
@@ -115,7 +116,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
     // check/get transfer function
     auto* tfc = this->m_transfer_function_Slot.CallAs<core::view::CallGetTransferFunction>();
     if (tfc != NULL) {
-        ((*tfc)(0));
+        if (!(*tfc)(0)) return false;
     }
 
     bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() || mc->hasUpdate() || ((tfc != NULL) ? tfc->IsDirty() : false);
@@ -123,8 +124,123 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
     if (something_has_changed) {
         ++m_version;
 
+        auto probes = pc->getData();
+        auto probe_cnt = probes->getProbeCount();
 
-        //TODO everything
+        m_vector_probe_draw_commands.clear;
+        m_vector_probe_draw_commands.reserve(probe_cnt);
+
+        m_vector_probe_data.clear;
+        m_vector_probe_data.reserve(probe_cnt);
+
+        std::vector<std::vector<float>> vertex_data;
+        vertex_data.push_back(std::vector<float>());
+        vertex_data.back().reserve(3 * 2 * probe_cnt * 32); //TODO generic sample count per probe...
+
+        std::vector<uint32_t> index_data;
+        index_data.reserve(4 * (probe_cnt-1));
+
+        for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
+
+            auto generic_probe = probes->getGenericProbe(probe_idx);
+
+            auto visitor = [&vertex_data, &index_data, probe_idx, this](auto&& arg) {
+                using T = std::decay_t<decltype(arg)>;
+                if constexpr (std::is_same_v<T, probe::FloatProbe>) {
+                    // TODO
+                } else if constexpr (std::is_same_v<T, probe::IntProbe>) {
+                    // TODO
+                } else if constexpr (std::is_same_v<T, probe::Vec4Probe>) {
+
+                    auto probe_length = arg.m_end - arg.m_begin;
+                    glm::vec3 center_point = glm::vec3(0.0f,-arg.m_begin,0.0f);
+
+                    auto base_vertex_idx = vertex_data.back().size() / 3u;
+
+                    auto sample_data = arg.getSamplingResult();
+                    size_t sample_cnt = sample_data->samples.size();
+
+
+                    VectorProbeData probe_data;
+                    probe_data.position = glm::vec4(arg.m_position[0] + arg.m_direction[0] * (arg.m_begin * 1.25f),
+                        arg.m_position[1] + arg.m_direction[1] * (arg.m_begin * 1.25f),
+                        arg.m_position[2] + arg.m_direction[2] * (arg.m_begin * 1.25f), 1.0f);
+                    probe_data.probe_direction = glm::vec4(arg.m_direction[0], arg.m_direction[1], arg.m_direction[2], 1.0f);
+                    probe_data.scale = 1.0f; //TODO scale?
+                    if (arg.getSamplingResult()->samples.size() > 32) {
+                        // TODO print warning/error message
+                    }
+                    probe_data.sample_cnt = std::min(static_cast<size_t>(32), sample_cnt);
+                    for (int i = 0; i < probe_data.sample_cnt; ++i) {
+                        probe_data.samples[i] = sample_data->samples[i];
+                    }
+                    probe_data.probe_id = probe_idx;
+
+                    m_vector_probe_data.push_back(probe_data);
+                    
+
+                    // generate vertices
+                    for (auto& sample : sample_data->samples )
+                    {
+                        vertex_data.back().push_back(center_point.x - 0.5f * std::get<0>(sample));
+                        vertex_data.back().push_back(center_point.x - 0.5f * std::get<1>(sample));
+                        vertex_data.back().push_back(center_point.x - 0.5f * std::get<2>(sample));
+
+                        vertex_data.back().push_back(center_point.x + 0.5f * std::get<0>(sample));
+                        vertex_data.back().push_back(center_point.x + 0.5f * std::get<1>(sample));
+                        vertex_data.back().push_back(center_point.x + 0.5f * std::get<2>(sample));
+
+                        center_point += glm::vec3(
+                            0.0f,
+                            probe_length / static_cast<float>(sample_cnt),
+                            0.0f);
+                    }
+
+                    auto first_index_idx = index_data.size();
+                    // generate indices
+                    auto patch_cnt = std::max(0,(static_cast<int>(sample_cnt) - 1));
+                    for (int i = 0; i < patch_cnt; ++i)
+                    {
+                       index_data.push_back((i*2) + 0);
+                       index_data.push_back((i*2) + 1);
+                       index_data.push_back((i*2) + 2);
+                       index_data.push_back((i*2) + 3);
+                    }
+
+                    //TODO set correct values...
+                    glowl::DrawElementsCommand draw_command;
+                    draw_command.base_instance = 0;
+                    draw_command.base_vertex = base_vertex_idx;
+                    draw_command.cnt = patch_cnt * 4;
+                    draw_command.first_idx = first_index_idx;
+                    draw_command.instance_cnt = 1;
+
+                    m_vector_probe_draw_commands.push_back(draw_command);
+
+                } else {
+                    // unknown probe type, throw error? do nothing?
+                }
+            };
+
+            std::visit(visitor, generic_probe);
+        }
+
+        std::vector<glowl::VertexLayout> vertex_layout = {
+            glowl::VertexLayout(12,{glowl::VertexLayout::Attribute(3,GL_FLOAT,GL_FALSE,0)})
+        };
+        try {
+            m_probes_mesh = std::make_shared<glowl::Mesh>(vertex_data, index_data, vertex_layout,
+                GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_PATCHES);
+        } catch (const std::exception&) {
+        }
+
+        auto gpu_mtl_storage = mtlc->getData();
+
+        if (!m_vector_probe_draw_commands.empty()) {
+            auto const& probe_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
+            m_draw_commands_collection_idx = rt_collection->addRenderTasks(
+            probe_shader, m_probes_mesh, m_vector_probe_draw_commands, m_vector_probe_data);
+        }
 
     }
 
@@ -196,13 +312,8 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
 
     }
 
-    return false;
+    return true;
 }
 
-bool megamol::probe_gl::ProbeDetailViewRenderTasks::getMetaDataCallback(core::Call& caller) { return false; }
+bool megamol::probe_gl::ProbeDetailViewRenderTasks::getMetaDataCallback(core::Call& caller) { return true; }
 
-megamol::probe_gl::ProbeDetailViewRenderTasks::VectorProbeData
-megamol::probe_gl::ProbeDetailViewRenderTasks::createVectorProbeData(
-    probe::Vec4Probe const& probe, int probe_id, float scale) {
-    return VectorProbeData();
-}
