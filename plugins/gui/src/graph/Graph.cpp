@@ -136,7 +136,7 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                 }
 
                 QueueData queue_data;
-                queue_data.classname = mod_ptr->class_name;
+                queue_data.class_name = mod_ptr->class_name;
                 queue_data.name_id = mod_ptr->FullName();
                 this->PushSyncQueue(QueueAction::ADD_MODULE, queue_data);
 
@@ -232,7 +232,6 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
 #endif // GUI_VERBOSE
 
                 QueueData queue_data;
-                queue_data.classname = (*iter)->class_name;
                 queue_data.name_id = (*iter)->FullName();
                 this->PushSyncQueue(QueueAction::DELETE_MODULE, queue_data);
 
@@ -480,7 +479,7 @@ bool megamol::gui::Graph::AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1,
         callslot_2->ConnectCall(call_ptr)) {
 
         QueueData queue_data;
-        queue_data.classname = call_ptr->class_name;
+        queue_data.class_name = call_ptr->class_name;
         bool valid_ptr = false;
         auto caller_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLER);
         if (caller_ptr != nullptr) {
@@ -608,7 +607,6 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                 if ((*iter)->uid == delete_call_uid) {
 
                     QueueData queue_data;
-                    queue_data.classname = (*iter)->class_name;
                     bool valid_ptr = false;
                     auto caller_ptr = (*iter)->GetCallSlot(megamol::gui::CallSlotType::CALLER);
                     if (caller_ptr != nullptr) {
@@ -820,19 +818,44 @@ bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_name) {
 
 bool megamol::gui::Graph::PushSyncQueue(QueueAction action, const QueueData& in_data) {
 
-    bool valid = false;
+    // Validate and process given data
     megamol::gui::Graph::QueueData queue_data = in_data;
     switch (action) {
     case (QueueAction::ADD_MODULE): {
-
-
+        if (queue_data.name_id.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action ADD_MODULE is missing data for 'name_id'. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
+        if (queue_data.class_name.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action ADD_MODULE is missing data for 'class_name'. [%s, %s, line %d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
     } break;
     case (QueueAction::DELETE_MODULE): {
-
-
+        if (queue_data.name_id.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action ADD_MODULE is missing data for 'name_id'. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
     } break;
     case (QueueAction::RENAME_MODULE): {
-
+        if (queue_data.name_id.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action ADD_MODULE is missing data for 'name_id'. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
+        if (queue_data.rename_id.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action RENAME_MODULE is missing data for 'rename_id'. [%s, %s, line %d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
         // Remove leading "::"
         if (queue_data.name_id.find_first_of("::") == 0) {
             queue_data.name_id = queue_data.name_id.substr(2);
@@ -842,30 +865,52 @@ bool megamol::gui::Graph::PushSyncQueue(QueueAction action, const QueueData& in_
         }
     } break;
     case (QueueAction::ADD_CALL): {
-
-
+        if (queue_data.class_name.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action ADD_CALL is missing data for 'class_name'. [%s, %s, line %d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        if (queue_data.caller.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action ADD_CALL is missing data for 'caller'. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
+        if (queue_data.callee.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action ADD_CALL is missing data for 'callee'. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
     } break;
     case (QueueAction::DELETE_CALL): {
-
-
+        if (queue_data.caller.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action DELETE_CALL is missing data for 'caller'. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
+        if (queue_data.callee.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action DELETE_CALL is missing data for 'callee'. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
     } break;
     case (QueueAction::CREATE_MAIN_VIEW): {
-
-
     } break;
     case (QueueAction::REMOVE_MAIN_VIEW): {
-
-
     } break;
-    default:
-        break;
+    default: {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unknown graph sync queue action. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } break;
     }
 
-    if (valid) {
-        this->sync_queue->push(SyncQueueData_t(QueueAction::RENAME_MODULE, queue_data));
-        return true;
-    }
-    return false;
+    this->sync_queue->push(SyncQueueData_t(action, queue_data));
+    return true;
 }
 
 

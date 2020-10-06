@@ -366,10 +366,14 @@ void megamol::gui::ModulePresentation::Present(
 
                             if (main_view_button) {
                                 bool is_main_view = inout_module.IsMainView();
-                                ImGui::RadioButton("###main_view_switch", is_main_view);
-                                if (this->selected) {
-                                    state.interact.module_mainview_uid = inout_module.uid;
+                                if (ImGui::RadioButton("###main_view_switch", is_main_view)) {
+                                    if (is_main_view) {
+                                        state.interact.module_mainview_changed = vislib::math::Ternary::TRI_TRUE;
+                                    } else {
+                                        state.interact.module_mainview_changed = vislib::math::Ternary::TRI_FALSE;
+                                    }
                                 }
+
                                 ImGui::SetItemAllowOverlap();
                                 if (hovered) {
                                     std::string tooltip_label;

@@ -710,7 +710,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     */
                 } else if (this->core_instance != nullptr) {
                     graph_sync_success &= this->core_instance->RequestModuleInstantiation(
-                        vislib::StringA(data.classname.c_str()), vislib::StringA(data.name_id.c_str()));
+                        vislib::StringA(data.class_name.c_str()), vislib::StringA(data.name_id.c_str()));
                 }
             } break;
             case (Graph::QueueAction::RENAME_MODULE): {
@@ -751,7 +751,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     */
                 } else if (this->core_instance != nullptr) {
                     graph_sync_success &=
-                        this->core_instance->RequestCallInstantiation(vislib::StringA(data.classname.c_str()),
+                        this->core_instance->RequestCallInstantiation(vislib::StringA(data.class_name.c_str()),
                             vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
                 }
             } break;

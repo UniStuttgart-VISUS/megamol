@@ -50,11 +50,11 @@ public:
     };
 
     struct QueueData {
-        std::string name_id = "";   // Requierd for ALL queue changes
-        std::string classname = ""; // Requierd for ADD_MODULE, ADD_CALL
-        std::string rename_id = ""; // Requierd for RENAME_MODULE
-        std::string caller = "";    // Requierd for ADD_CALL, DELETE_CALL
-        std::string callee = "";    // Requierd for ADD_CALL, DELETE_CALL
+        std::string name_id = "";    // Requierd for ADD_MODULE, DELETE_MODUL, RENAME_MODULE
+        std::string class_name = ""; // Requierd for ADD_MODULE, ADD_CALL
+        std::string rename_id = "";  // Requierd for RENAME_MODULE
+        std::string caller = "";     // Requierd for ADD_CALL, DELETE_CALL
+        std::string callee = "";     // Requierd for ADD_CALL, DELETE_CALL
     };
 
     // VARIABLES --------------------------------------------------------------
