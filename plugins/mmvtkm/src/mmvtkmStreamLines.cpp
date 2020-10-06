@@ -448,11 +448,6 @@ void mmvtkmStreamLines::orderPolygonVertices(std::vector<glm::vec3>& vertices) {
         return;
     }
 
-	// TODO: iterate through vertex vector and delete duplicates
-	// --> only unique vertices allowed, otherwise problems with triangle creation:
-	// if for instance a vertex is 3 times in the vector, then a triangle is built with
-	// 3 times the same vertex --> only a dot --> no seeds can be calculated --> problem
-
 
     float numVertices = (float)vertices.size();
     std::vector<std::pair<float, glm::vec3>> angles;
