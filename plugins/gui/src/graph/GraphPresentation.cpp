@@ -300,7 +300,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 Graph::QueueData queue_data;
                 queue_data.name_id = selected_mod_ptr->FullName();
                 if (this->graph_state.interact.module_mainview_changed == vislib::math::Ternary::TRI_TRUE) {
-                    selected_mod_ptr->main_view_name = inout_graph.Generate_Unique_Main_View_Name();
+                    selected_mod_ptr->main_view_name = inout_graph.GenerateUniqueMainViewName();
                     inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
                 } else {
                     selected_mod_ptr->main_view_name.clear();
@@ -363,7 +363,8 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 }
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] The action [Add Module to Group] is not yet supported for the graph of the 'Core Instance "
+                    "[GUI] The action [Add Module to Group] is not yet supported for the graph using the 'Core "
+                    "Instance "
                     "Graph' interface. "
                     "Open project from file to make desired changes."
                     "[%s, %s, line %d]\n",
@@ -394,7 +395,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 }
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] The action [Remove Module from Group] is not yet supported for the graph of the 'Core "
+                    "[GUI] The action [Remove Module from Group] is not yet supported for the graph using the 'Core "
                     "Instance "
                     "Graph' interface. "
                     "Open project from file to make desired changes."
@@ -486,7 +487,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                     inout_graph.DeleteGroup(this->graph_state.interact.group_selected_uid);
                 } else {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] The action [Delete Group] is not yet supported for the graph of the 'Core Instance "
+                        "[GUI] The action [Delete Group] is not yet supported for the graph using the 'Core Instance "
                         "Graph' interface. "
                         "Open project from file to make desired changes."
                         "[%s, %s, line %d]\n",
@@ -669,7 +670,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
             Graph::QueueData queue_data;
             queue_data.name_id = selected_mod_ptr->FullName();
             if (is_main_view) {
-                selected_mod_ptr->main_view_name = inout_graph.Generate_Unique_Main_View_Name();
+                selected_mod_ptr->main_view_name = inout_graph.GenerateUniqueMainViewName();
                 inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
             } else {
                 selected_mod_ptr->main_view_name.clear();

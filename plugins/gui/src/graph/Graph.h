@@ -108,7 +108,7 @@ public:
     inline GraphCoreInterface GetCoreInterface(void) { return this->graph_core_interface; }
     inline bool HasCoreInterface(void) { return (this->graph_core_interface != GraphCoreInterface::NO_INTERFACE); }
 
-    const std::string Generate_Unique_Main_View_Name(void);
+    const std::string GenerateUniqueMainViewName(void);
 
     // Presentation ----------------------------------------------------
 
