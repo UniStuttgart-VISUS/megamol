@@ -68,14 +68,14 @@ GUIWindows::GUIWindows(void)
         this->param_slots.push_back(configurator_param);
     }
 
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = megamol::gui::HotkeyData_t(
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] = megamol::gui::HotkeyData_t(
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false);
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyData_t(
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false);
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU] = megamol::gui::HotkeyData_t(
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false);
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false};
 
     this->tf_editor_ptr = std::make_shared<TransferFunctionEditor>();
 }
@@ -155,14 +155,14 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
 
     // Check hotkey, parameters and hotkey assignment
-    if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM])) {
+    if (this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM].is_pressed) {
         this->triggerCoreInstanceShutdown();
         this->shutdown = true;
         return true;
     }
-    if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU])) {
+    if (this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].is_pressed) {
         this->state.menu_visible = !this->state.menu_visible;
-        std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU]) = false;
+        this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].is_pressed = false;
     }
     this->validateParameters();
     this->checkMultipleHotkeyAssignement();
@@ -453,7 +453,7 @@ bool GUIWindows::PostDraw(void) {
 
     // Reset hotkeys
     for (auto& h : this->hotkeys) {
-        std::get<1>(h) = false;
+        h.is_pressed = false;
     }
 
     return true;
@@ -496,15 +496,15 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
 
     // GUI
     for (auto& h : this->hotkeys) {
-        if (this->isHotkeyPressed(std::get<0>(h))) {
-            std::get<1>(h) = true;
+        if (this->isHotkeyPressed(h.keycode)) {
+            h.is_pressed = true;
             hotkeyPressed = true;
         }
     }
     // Configurator
     for (auto& h : this->configurator.GetHotkeys()) {
-        if (this->isHotkeyPressed(std::get<0>(h))) {
-            std::get<1>(h) = true;
+        if (this->isHotkeyPressed(h.keycode)) {
+            h.is_pressed = true;
             hotkeyPressed = true;
         }
     }
@@ -698,84 +698,23 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
     // 2a) Either synchronize GUI Graph -> Core Graph ... ----------------------
     if (!synced && found_graph) {
         bool graph_sync_success = true;
-        auto queue = graph_ptr->GetSyncQueue();
-        synced = !queue->empty();
 
-        while (!queue->empty()) {
-            auto change = std::get<0>(queue->front());
-            auto data = std::get<1>(queue->front());
-            switch (change) {
-            case (Graph::QueueChange::ADD_MODULE): {
+        Graph::QueueAction action;
+        Graph::QueueData data;
+        while (graph_ptr->PopSyncQueue(action, data)) {
+            switch (action) {
+            case (Graph::QueueAction::ADD_MODULE): {
                 if (megamol_graph != nullptr) {
-                    graph_sync_success &= megamol_graph->CreateModule(data.classname, data.id);
-
-                    // Connect pointer of new parameters of core module to paramters in gui
-                    ModulePtr_t gui_module;
-                    for (auto& mod_ptr : graph_ptr->GetModules()) {
-                        if (mod_ptr->FullName() == data.id) {
-                            gui_module = mod_ptr;
-                        }
-                    }
-                    megamol::core::Module::ptr_type core_module = megamol_graph->FindModule(data.id);
-                    if ((gui_module != nullptr) && (core_module != nullptr)) {
-
-                        megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator se =
-                            core_module->ChildList_End();
-                        for (megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator si =
-                                 core_module->ChildList_Begin();
-                             si != se; ++si) {
-                            auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
-                            if (param_slot != nullptr) {
-                                std::string param_full_name(param_slot->Name().PeekBuffer());
-                                for (auto& parameter : gui_module->parameters) {
-                                    if (parameter.full_name == param_full_name) {
-                                        megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
-                                            (*param_slot), parameter, true, false, true);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Create/Add new graph entry
-                    if (graph_sync_success && data.graph_entry) {
-                        megamol_graph->SetGraphEntryPoint(data.id,
-                            megamol::core::view::get_gl_view_runtime_resources_requests(),
-                            megamol::core::view::view_rendering_execution);
-                    }
+                    graph_sync_success &= megamol_graph->CreateModule(data.class_name, data.name_id);
                 } else if (this->core_instance != nullptr) {
-                    if (data.graph_entry) {
-                        // Create new module as view instance (= entry point of graph)
-                        /* XXX Currently not supported by core graph
-                        auto view_name = vislib::StringA(graph_ptr->name.c_str());
-                        auto module_name = vislib::StringA(data.id.c_str());
-                        auto vd = std::make_shared<megamol::core::ViewDescription>(view_name.PeekBuffer());
-                        vd->AddModule(
-                            this->core_instance->GetModuleDescriptionManager().Find(data.classname.c_str()),
-                            module_name);
-                        vd->SetViewModuleID(module_name);
-                        try {
-                            /// this->core_instance->projViewDescs.Register(vd);
-                            /// XXX Requires "friend class megamol::gui::GuiWindows;" in CoreInstance.h ...
-                            this->core_instance->RequestViewInstantiation(vd.get(), view_name);
-                            graph_sync_success &= true;
-                        } catch (vislib::AlreadyExistsException) {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] View '%s' already exists. [%s, %s, line %d]\n", view_name.PeekBuffer(),
-                                __FILE__, __FUNCTION__, __LINE__);
-                            graph_sync_success &= false;
-                        }
-                        */
-                    } else {
-                        graph_sync_success &= this->core_instance->RequestModuleInstantiation(
-                            vislib::StringA(data.classname.c_str()), vislib::StringA(data.id.c_str()));
-                    }
+                    graph_sync_success &= this->core_instance->RequestModuleInstantiation(
+                        vislib::StringA(data.class_name.c_str()), vislib::StringA(data.name_id.c_str()));
                 }
             } break;
-            case (Graph::QueueChange::RENAME_MODULE): {
+            case (Graph::QueueAction::RENAME_MODULE): {
                 if (megamol_graph != nullptr) {
                     bool rename_success = false;
-                    megamol::core::Module::ptr_type core_module = megamol_graph->FindModule(data.id);
+                    megamol::core::Module::ptr_type core_module = megamol_graph->FindModule(data.name_id);
                     if (core_module != nullptr) {
                         core_module->setName(vislib::StringA(data.rename_id.c_str()));
                         rename_success = true;
@@ -787,27 +726,28 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                         mod->setName(vislib::StringA(data.rename_id.c_str()));
                         rename_success = true;
                     };
-                    this->core_instance->FindModuleNoLock(data.id, fun);
+                    this->core_instance->FindModuleNoLock(data.name_id, fun);
                     graph_sync_success &= rename_success;
                 }
             } break;
-            case (Graph::QueueChange::DELETE_MODULE): {
+            case (Graph::QueueAction::DELETE_MODULE): {
                 if (megamol_graph != nullptr) {
-                    graph_sync_success &= megamol_graph->DeleteModule(data.id);
-                } else if (this->core_instance != nullptr) {
-                    graph_sync_success &= this->core_instance->RequestModuleDeletion(vislib::StringA(data.id.c_str()));
-                }
-            } break;
-            case (Graph::QueueChange::ADD_CALL): {
-                if (megamol_graph != nullptr) {
-                    graph_sync_success &= megamol_graph->CreateCall(data.classname, data.caller, data.callee);
+                    graph_sync_success &= megamol_graph->DeleteModule(data.name_id);
                 } else if (this->core_instance != nullptr) {
                     graph_sync_success &=
-                        this->core_instance->RequestCallInstantiation(vislib::StringA(data.classname.c_str()),
+                        this->core_instance->RequestModuleDeletion(vislib::StringA(data.name_id.c_str()));
+                }
+            } break;
+            case (Graph::QueueAction::ADD_CALL): {
+                if (megamol_graph != nullptr) {
+                    graph_sync_success &= megamol_graph->CreateCall(data.class_name, data.caller, data.callee);
+                } else if (this->core_instance != nullptr) {
+                    graph_sync_success &=
+                        this->core_instance->RequestCallInstantiation(vislib::StringA(data.class_name.c_str()),
                             vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
                 }
             } break;
-            case (Graph::QueueChange::DELETE_CALL): {
+            case (Graph::QueueAction::DELETE_CALL): {
                 if (megamol_graph != nullptr) {
                     graph_sync_success &= megamol_graph->DeleteCall(data.caller, data.callee);
                 } else if (this->core_instance != nullptr) {
@@ -815,10 +755,68 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                         vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
                 }
             } break;
+            case (Graph::QueueAction::CREATE_MAIN_VIEW): {
+                if (megamol_graph != nullptr) {
+                    /// This code is copied from main3000.cpp ------------
+                    static std::vector<std::string> view_resource_requests = {
+                        "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
+                    auto view_rendering_execution = [&](megamol::core::Module::ptr_type module_ptr,
+                                                        std::vector<megamol::frontend::ModuleResource> const&
+                                                            resources) {
+                        megamol::core::view::AbstractView* view_ptr =
+                            dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
+                        assert(view_resource_requests.size() == resources.size());
+                        if (!view_ptr) {
+                            std::cout
+                                << "error. module is not a view module. could not set as graph rendering entry point."
+                                << std::endl;
+                            return false;
+                        }
+                        megamol::core::view::AbstractView& view = *view_ptr;
+                        int i = 0;
+                        // resources are in order of initial requests
+                        megamol::core::view::view_consume_keyboard_events(view, resources[i++]);
+                        megamol::core::view::view_consume_mouse_events(view, resources[i++]);
+                        megamol::core::view::view_consume_window_events(view, resources[i++]);
+                        megamol::core::view::view_consume_framebuffer_events(view, resources[i++]);
+                        megamol::core::view::view_poke_rendering(view, resources[i++]);
+                    };
+                    megamol_graph->SetGraphEntryPoint(data.name_id, view_resource_requests, view_rendering_execution);
+                    /// ---------------------------------------------------
+                } else if (this->core_instance != nullptr) {
+                    /* XXX Currently not supported by core graph
+                    auto view_name = vislib::StringA(graph_ptr->name.c_str());
+                    auto module_name = vislib::StringA(data.name_id.c_str());
+                    auto vd = std::make_shared<megamol::core::ViewDescription>(view_name.PeekBuffer());
+                    vd->AddModule(
+                        this->core_instance->GetModuleDescriptionManager().Find(data.classname.c_str()),
+                        module_name);
+                    vd->SetViewModuleID(module_name);
+                    try {
+                        /// this->core_instance->projViewDescs.Register(vd);
+                        /// XXX Requires "friend class megamol::gui::GuiWindows;" in CoreInstance.h ...
+                        this->core_instance->RequestViewInstantiation(vd.get(), view_name);
+                        graph_sync_success &= true;
+                    } catch (vislib::AlreadyExistsException) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] View '%s' already exists. [%s, %s, line %d]\n", view_name.PeekBuffer(),
+                            __FILE__, __FUNCTION__, __LINE__);
+                        graph_sync_success &= false;
+                    }
+                    */
+                }
+            } break;
+            case (Graph::QueueAction::REMOVE_MAIN_VIEW): {
+                if (megamol_graph != nullptr) {
+                    megamol_graph->RemoveGraphEntryPoint(data.name_id);
+                } else if (this->core_instance != nullptr) {
+                    /* XXX Currently not supported by core graph
+                     */
+                }
+            } break;
             default:
                 break;
             }
-            queue->pop(); // pop even when sync fails!
         }
         if (!graph_sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1275,12 +1273,12 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
 
     // Paramter substring name filtering (only for main parameter view)
     if (wc.win_callback == WindowCollection::DrawCallbacks::MAIN_PARAMETERS) {
-        if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH])) {
+        if (this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].is_pressed) {
             this->search_widget.SetSearchFocus(true);
-            std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH]) = false;
+            this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].is_pressed = false;
         }
         std::string help_test =
-            "[" + std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH]).ToString() +
+            "[" + this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].keycode.ToString() +
             "] Set keyboard focus to search input field.\n"
             "Case insensitive substring search in\nparameter names.\nGlobally in all parameter views.\n";
         this->search_widget.Widget("guiwindow_parameter_earch", help_test);
@@ -1597,7 +1595,7 @@ void GUIWindows::drawMenu(void) {
     if (ImGui::BeginMenu("File")) {
         // Load/save parameter values to LUA file
         if (ImGui::MenuItem("Save Running Project",
-                std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]).ToString().c_str())) {
+                this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].keycode.ToString().c_str())) {
             this->state.open_popup_save = true;
         }
 
@@ -1616,7 +1614,7 @@ void GUIWindows::drawMenu(void) {
         if (this->state.menu_visible) menu_label = "Hide";
         if (ImGui::BeginMenu("Menu")) {
             if (ImGui::MenuItem(menu_label.c_str(),
-                    std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU]).ToString().c_str(), nullptr)) {
+                    this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].keycode.ToString().c_str(), nullptr)) {
                 this->state.menu_visible = !this->state.menu_visible;
             }
             ImGui::EndMenu();
@@ -1744,7 +1742,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     }
 
     // Save project pop-up
-    this->state.open_popup_save |= std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]);
+    this->state.open_popup_save |= this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].is_pressed;
 
     bool confirmed, aborted;
     bool popup_failed = false;
@@ -1765,7 +1763,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     }
     if (this->state.open_popup_save) {
         this->state.open_popup_save = false;
-        std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
+        this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].is_pressed = false;
     }
 }
 
@@ -1816,12 +1814,12 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
 
         // Add hotkeys of gui
         for (auto& h : this->hotkeys) {
-            hotkeylist.emplace_back(std::get<0>(h));
+            hotkeylist.emplace_back(h.keycode);
         }
 
         // Add hotkeys of configurator
         for (auto& h : this->configurator.GetHotkeys()) {
-            hotkeylist.emplace_back(std::get<0>(h));
+            hotkeylist.emplace_back(h.keycode);
         }
 
         GraphPtr_t graph_ptr;

@@ -38,6 +38,7 @@
 #include "mmcore/view/Input.h"
 
 #include "vislib/UTF8Encoder.h"
+#include "vislib/math/Ternary.h"
 
 
 namespace megamol {
@@ -95,7 +96,12 @@ enum HotkeyIndex : size_t {
     SAVE_PROJECT = 3,
     INDEX_COUNT = 4
 };
-typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData_t;
+
+struct HotkeyData_t {
+    megamol::core::view::KeyCode keycode;
+    bool is_pressed = false;
+};
+
 typedef std::array<megamol::gui::HotkeyData_t, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArray_t;
 
 typedef megamol::core::param::AbstractParamPresentation::Presentation Present_t;
@@ -142,11 +148,11 @@ typedef struct _interact_state_ {
 
     UIDVector_t modules_selected_uids;                 // in out
     ImGuiID module_hovered_uid;                        // in out
-    ImGuiID module_mainview_uid;                       // out
     UIDPairVector_t modules_add_group_uids;            // out
     UIDVector_t modules_remove_group_uids;             // out
     bool modules_layout;                               // out
     std::pair<std::string, std::string> module_rename; // out
+    vislib::math::Ternary module_mainview_changed;     // out
 
     ImGuiID call_selected_uid; // in out
     ImGuiID call_hovered_uid;  // in out

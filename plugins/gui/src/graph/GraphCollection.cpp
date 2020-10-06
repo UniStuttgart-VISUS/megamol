@@ -34,6 +34,10 @@ bool megamol::gui::GraphCollection::AddEmptyProject(void) {
                 auto graph_module = graph_ptr->GetModules().back();
                 graph_module->main_view_name = "Instance_1";
 
+                Graph::QueueData queue_data;
+                queue_data.name_id = graph_module->FullName();
+                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+
                 return true;
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -378,7 +382,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 if (!graph_ptr->ModuleExists(module_fullname)) {
                     module_ptr_list.emplace_back(module_inst.modulePtr.get());
                     if (module_inst.isGraphEntryPoint) {
-                        view_instances[module_fullname] = graph_ptr->GenerateUniqueMainViewName();
+                        view_instances[module_fullname] = graph_ptr->Generate_Unique_Main_View_Name();
                     }
                 }
             }
@@ -465,6 +469,10 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 auto view_inst_iter = view_instances.find(full_name);
                 if (view_inst_iter != view_instances.end()) {
                     new_module_ptr->main_view_name = view_inst_iter->second;
+
+                    Graph::QueueData queue_data;
+                    queue_data.name_id = new_module_ptr->FullName();
+                    graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
                 }
                 // Add module to group
                 graph_ptr->AddGroupModule(module_namespace, new_module_ptr);
@@ -649,11 +657,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             }
         }
         if (gui_graph_changed) {
-            // Clear queue, since changes do not have to be propagates back to core graph
-            auto queue = graph_ptr->GetSyncQueue();
-            while (!queue->empty()) {
-                queue->pop();
-            }
+            graph_ptr->ClearSyncQueue();
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[GUI] Successfully loaded/updated project '%s' from running MegaMol.\n", graph_ptr->name.c_str());
         }
@@ -783,6 +787,11 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 auto graph_module = graph_ptr->GetModules().back();
                 graph_module->name = view_name;
                 graph_module->main_view_name = view_instance;
+
+                Graph::QueueData queue_data;
+                queue_data.name_id = graph_module->FullName();
+                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+
                 graph_ptr->AddGroupModule(view_namespace, graph_module);
 
                 found_main_view = true;

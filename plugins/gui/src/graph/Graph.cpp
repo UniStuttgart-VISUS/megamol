@@ -135,12 +135,10 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                     }
                 }
 
-                // Add data to queue for synchronization with core graph
                 QueueData queue_data;
-                queue_data.classname = mod_ptr->class_name;
-                queue_data.id = mod_ptr->FullName();
-                queue_data.graph_entry = mod_ptr->IsMainView();
-                this->sync_queue->push(SyncQueueData_t(QueueChange::ADD_MODULE, queue_data));
+                queue_data.class_name = mod_ptr->class_name;
+                queue_data.name_id = mod_ptr->FullName();
+                this->PushSyncQueue(QueueAction::ADD_MODULE, queue_data);
 
                 this->modules.emplace_back(mod_ptr);
                 this->ForceSetDirty();
@@ -177,15 +175,19 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
             if ((*iter)->uid == module_uid) {
 
-                if (!force && (*iter)->IsMainView() && this->HasCoreInterface()) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] The action [Delete entry point/ view instance] is not yet supported for the graph of "
-                        "the 'Core Instance "
-                        "Graph' interface. "
-                        "Open project from file to make desired changes."
-                        "[%s, %s, line %d]\n",
-                        __FILE__, __FUNCTION__, __LINE__);
-                    return false;
+                if (!force && (*iter)->IsMainView()) {
+                    if (this->GetCoreInterface() == GraphCoreInterface::NO_INTERFACE) {
+                    } else if (this->GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
+                    } else if (this->GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] The action [Delete entry point/ view instance] is not yet supported for the graph "
+                            "of the 'Core Instance "
+                            "Graph' interface. "
+                            "Open project from file to make desired changes."
+                            "[%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
+                        return false;
+                    }
                 }
 
                 this->present.ResetStatePointers();
@@ -229,11 +231,9 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
                     (*iter)->uid, this->name.c_str());
 #endif // GUI_VERBOSE
 
-                // Add data to queue for synchronization with core graph
                 QueueData queue_data;
-                queue_data.classname = (*iter)->class_name;
-                queue_data.id = (*iter)->FullName();
-                this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_MODULE, queue_data));
+                queue_data.name_id = (*iter)->FullName();
+                this->PushSyncQueue(QueueAction::DELETE_MODULE, queue_data);
 
                 // 5) Delete module
                 if ((*iter).use_count() > 1) {
@@ -478,9 +478,8 @@ bool megamol::gui::Graph::AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1,
     if (call_ptr->ConnectCallSlots(callslot_1, callslot_2) && callslot_1->ConnectCall(call_ptr) &&
         callslot_2->ConnectCall(call_ptr)) {
 
-        // Add data to queue for synchronization with core graph
         QueueData queue_data;
-        queue_data.classname = call_ptr->class_name;
+        queue_data.class_name = call_ptr->class_name;
         bool valid_ptr = false;
         auto caller_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLER);
         if (caller_ptr != nullptr) {
@@ -505,7 +504,7 @@ bool megamol::gui::Graph::AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1,
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
-        this->sync_queue->push(SyncQueueData_t(QueueChange::ADD_CALL, queue_data));
+        this->PushSyncQueue(QueueAction::ADD_CALL, queue_data);
 
         this->calls.emplace_back(call_ptr);
         this->ForceSetDirty();
@@ -607,9 +606,7 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
             for (auto iter = this->calls.begin(); iter != this->calls.end(); iter++) {
                 if ((*iter)->uid == delete_call_uid) {
 
-                    // Add data to queue for synchronization with core graph
                     QueueData queue_data;
-                    queue_data.classname = (*iter)->class_name;
                     bool valid_ptr = false;
                     auto caller_ptr = (*iter)->GetCallSlot(megamol::gui::CallSlotType::CALLER);
                     if (caller_ptr != nullptr) {
@@ -636,7 +633,7 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                             "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                             __LINE__);
                     }
-                    this->sync_queue->push(SyncQueueData_t(QueueChange::DELETE_CALL, queue_data));
+                    this->PushSyncQueue(QueueAction::DELETE_CALL, queue_data);
 
                     this->present.ResetStatePointers();
 
@@ -805,7 +802,12 @@ bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_name) {
     for (auto& mod : this->modules) {
         if (module_name == mod->name) {
             mod->name = this->generate_unique_module_name(module_name);
-            this->add_rename_module_sync_event(module_name, mod->name);
+
+            QueueData queue_data;
+            queue_data.name_id = module_name;
+            queue_data.rename_id = mod->name;
+            this->PushSyncQueue(QueueAction::RENAME_MODULE, queue_data);
+
             this->present.ForceUpdate();
             return true;
         }
@@ -814,21 +816,113 @@ bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_name) {
 }
 
 
-const std::string megamol::gui::Graph::GenerateUniqueMainViewName(void) {
+bool megamol::gui::Graph::PushSyncQueue(QueueAction action, const QueueData& in_data) {
 
-    int new_name_id = 0;
-    std::string new_name_prefix("Instance_");
-    for (auto& module_ptr : this->modules) {
-        if (module_ptr->main_view_name.find(new_name_prefix) == 0) {
-            std::string int_postfix = module_ptr->main_view_name.substr(new_name_prefix.length());
-            try {
-                int last_id = std::stoi(int_postfix);
-                new_name_id = std::max(new_name_id, last_id);
-            } catch (...) {
-            }
+    // Validate and process given data
+    megamol::gui::Graph::QueueData queue_data = in_data;
+    switch (action) {
+    case (QueueAction::ADD_MODULE): {
+        if (queue_data.name_id.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action ADD_MODULE is missing data for 'name_id'. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
         }
+        if (queue_data.class_name.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action ADD_MODULE is missing data for 'class_name'. [%s, %s, line %d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+    } break;
+    case (QueueAction::DELETE_MODULE): {
+        if (queue_data.name_id.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action ADD_MODULE is missing data for 'name_id'. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
+    } break;
+    case (QueueAction::RENAME_MODULE): {
+        if (queue_data.name_id.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action ADD_MODULE is missing data for 'name_id'. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
+        if (queue_data.rename_id.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action RENAME_MODULE is missing data for 'rename_id'. [%s, %s, line %d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        // Remove leading "::"
+        if (queue_data.name_id.find_first_of("::") == 0) {
+            queue_data.name_id = queue_data.name_id.substr(2);
+        }
+        if (queue_data.rename_id.find_first_of("::") == 0) {
+            queue_data.rename_id = queue_data.rename_id.substr(2);
+        }
+    } break;
+    case (QueueAction::ADD_CALL): {
+        if (queue_data.class_name.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action ADD_CALL is missing data for 'class_name'. [%s, %s, line %d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        if (queue_data.caller.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action ADD_CALL is missing data for 'caller'. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
+        if (queue_data.callee.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action ADD_CALL is missing data for 'callee'. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
+    } break;
+    case (QueueAction::DELETE_CALL): {
+        if (queue_data.caller.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action DELETE_CALL is missing data for 'caller'. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
+        if (queue_data.callee.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Graph sync queue action DELETE_CALL is missing data for 'callee'. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
+    } break;
+    case (QueueAction::CREATE_MAIN_VIEW): {
+    } break;
+    case (QueueAction::REMOVE_MAIN_VIEW): {
+    } break;
+    default: {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unknown graph sync queue action. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } break;
     }
-    return std::string(new_name_prefix + std::to_string(new_name_id + 1));
+
+    this->sync_queue->push(SyncQueueData_t(action, queue_data));
+    return true;
+}
+
+
+bool megamol::gui::Graph::PopSyncQueue(QueueAction& out_action, QueueData& out_data) {
+
+    if (!this->sync_queue->empty()) {
+        out_action = std::get<0>(this->sync_queue->front());
+        out_data = std::get<1>(this->sync_queue->front());
+        this->sync_queue->pop();
+        return true;
+    }
+    return false;
 }
 
 
@@ -1196,19 +1290,19 @@ const std::string megamol::gui::Graph::generate_unique_module_name(const std::st
 }
 
 
-void megamol::gui::Graph::add_rename_module_sync_event(const std::string& current_name, const std::string& new_name) {
+const std::string megamol::gui::Graph::Generate_Unique_Main_View_Name(void) {
 
-    auto queue = this->GetSyncQueue();
-    megamol::gui::Graph::QueueData queue_data;
-    queue_data.id = current_name;
-    queue_data.rename_id = new_name;
-    // Remove leading "::"
-    if (queue_data.id.find_first_of("::") == 0) {
-        queue_data.id = queue_data.id.substr(2);
+    int new_name_id = 0;
+    std::string new_name_prefix("Instance_");
+    for (auto& module_ptr : this->modules) {
+        if (module_ptr->main_view_name.find(new_name_prefix) == 0) {
+            std::string int_postfix = module_ptr->main_view_name.substr(new_name_prefix.length());
+            try {
+                int last_id = std::stoi(int_postfix);
+                new_name_id = std::max(new_name_id, last_id);
+            } catch (...) {
+            }
+        }
     }
-    if (queue_data.rename_id.find_first_of("::") == 0) {
-        queue_data.rename_id = queue_data.rename_id.substr(2);
-    }
-    this->GetSyncQueue()->push(
-        megamol::gui::Graph::SyncQueueData_t(megamol::gui::Graph::QueueChange::RENAME_MODULE, queue_data));
+    return std::string(new_name_prefix + std::to_string(new_name_id + 1));
 }

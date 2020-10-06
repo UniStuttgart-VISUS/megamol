@@ -176,10 +176,9 @@ void megamol::gui::ModulePresentation::Present(
                         ImGui::TextDisabled("Module");
                         ImGui::Separator();
 
-                        if (ImGui::MenuItem(
-                                "Delete", std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])
-                                              .ToString()
-                                              .c_str())) {
+                        if (ImGui::MenuItem("Delete", state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]
+                                                          .keycode.ToString()
+                                                          .c_str())) {
                             state.interact.process_deletion = true;
                         }
                         if (ImGui::MenuItem("Layout", nullptr, false, !singleselect)) {
@@ -367,10 +366,14 @@ void megamol::gui::ModulePresentation::Present(
 
                             if (main_view_button) {
                                 bool is_main_view = inout_module.IsMainView();
-                                ImGui::RadioButton("###main_view_switch", is_main_view);
-                                if (this->selected) {
-                                    state.interact.module_mainview_uid = inout_module.uid;
+                                if (ImGui::RadioButton("###main_view_switch", is_main_view)) {
+                                    if (is_main_view) {
+                                        state.interact.module_mainview_changed = vislib::math::Ternary::TRI_TRUE;
+                                    } else {
+                                        state.interact.module_mainview_changed = vislib::math::Ternary::TRI_FALSE;
+                                    }
                                 }
+
                                 ImGui::SetItemAllowOverlap();
                                 if (hovered) {
                                     std::string tooltip_label;
