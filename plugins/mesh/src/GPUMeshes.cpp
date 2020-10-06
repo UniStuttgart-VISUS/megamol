@@ -72,7 +72,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                 return false;
             }
 
-            std::vector<glowl::VertexLayout::Attribute> attribs;
+            std::vector<glowl::VertexLayout> vb_layouts;
             std::vector<std::pair<uint8_t*, uint8_t*>> vb_iterators;
             std::pair<uint8_t*, uint8_t*> ib_iterators;
 
@@ -80,17 +80,18 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
             for (auto attrib : mesh.attributes) {
 
-                attribs.push_back(glowl::VertexLayout::Attribute(attrib.component_cnt,
-                    MeshDataAccessCollection::convertToGLType(attrib.component_type), GL_FALSE /*ToDO*/,
-                    attrib.offset));
+                vb_layouts.push_back(glowl::VertexLayout(
+                    attrib.component_cnt * MeshDataAccessCollection::getByteSize(attrib.component_type),
+                    {glowl::VertexLayout::Attribute(attrib.component_cnt,
+                        MeshDataAccessCollection::convertToGLType(attrib.component_type), GL_FALSE /*ToDO*/,
+                        attrib.offset)}));
 
                 // TODO vb_iterators
                 vb_iterators.push_back({attrib.data, attrib.data + attrib.byte_size});
             }
 
-            glowl::VertexLayout vertex_descriptor(0, attribs);
-            mesh_collection->addMesh(vertex_descriptor, vb_iterators, ib_iterators,
-                MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, primitive_type);
+            mesh_collection->addMesh(vb_layouts, vb_iterators, ib_iterators,
+                MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, primtive_type);
         }
     }
 

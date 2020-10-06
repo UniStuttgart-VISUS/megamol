@@ -22,6 +22,7 @@
 
 #include "mesh/GPUMaterialCollection.h"
 
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/Mesh.hpp"
@@ -69,7 +70,7 @@ public:
         ASSERT(dc != NULL);
         ASSERT(rc != NULL);
 #    endif // DEBUG || _DEBUG
-#endif     // _WIN32
+#endif // _WIN32
         return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable() &&
                isExtAvailable("GL_ARB_shader_draw_parameters") && ogl_IsVersionGEQ(4, 3);
     }
