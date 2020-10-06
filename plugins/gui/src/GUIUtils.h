@@ -95,7 +95,12 @@ enum HotkeyIndex : size_t {
     SAVE_PROJECT = 3,
     INDEX_COUNT = 4
 };
-typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyData_t;
+
+struct HotkeyData_t {
+    megamol::core::view::KeyCode keycode;
+    bool is_pressed = false;
+};
+
 typedef std::array<megamol::gui::HotkeyData_t, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArray_t;
 
 typedef megamol::core::param::AbstractParamPresentation::Presentation Present_t;

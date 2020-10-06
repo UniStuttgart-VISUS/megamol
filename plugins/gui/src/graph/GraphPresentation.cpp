@@ -39,7 +39,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     , parameter_sidebar_width(300.0f)
     , reset_zooming(true)
     , param_name_space()
-    , main_view_name()
+    , current_main_view_name()
     , multiselect_start_pos()
     , multiselect_end_pos()
     , multiselect_done(false)
@@ -277,8 +277,12 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         bool reset_state = false;
         // Add module renaming event to graph synchronization queue -----------
         if (!this->graph_state.interact.module_rename.first.empty()) {
-            inout_graph.add_rename_module_sync_event(
-                this->graph_state.interact.module_rename.first, this->graph_state.interact.module_rename.second);
+
+            Graph::QueueData queue_data;
+            queue_data.name_id = this->graph_state.interact.module_rename.first;
+            queue_data.rename_id = this->graph_state.interact.module_rename.second;
+            inout_graph.PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+
             reset_state = true;
         }
         // Add module to group ------------------------------------------------
@@ -444,8 +448,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         }
         // Process module/call/group deletion ---------------------------------
         if ((this->graph_state.interact.process_deletion) ||
-            (!io.WantTextInput &&
-                std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]))) {
+            (!io.WantTextInput && this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM].is_pressed)) {
             if (!this->graph_state.interact.modules_selected_uids.empty()) {
                 for (auto& module_uid : this->graph_state.interact.modules_selected_uids) {
                     inout_graph.DeleteModule(module_uid);
@@ -637,7 +640,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     if (selected_mod_ptr == nullptr) {
         GUIUtils::ReadOnlyWigetStyle(true);
         bool is_main_view = false;
-        this->main_view_name.clear();
+        this->current_main_view_name.clear();
         ImGui::Checkbox("Main View", &is_main_view);
         ImGui::SameLine(0.0f, min_text_width + 2.0f * style.ItemSpacing.x);
         GUIUtils::ReadOnlyWigetStyle(false);
@@ -645,18 +648,18 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         bool is_main_view = selected_mod_ptr->IsMainView();
         if (ImGui::Checkbox("Main View", &is_main_view)) {
             if (is_main_view) {
-                selected_mod_ptr->main_view_name = inout_graph.generate_unique_main_view_name();
+                selected_mod_ptr->main_view_name = inout_graph.Generate_Unique_Main_View_Name();
             } else {
                 selected_mod_ptr->main_view_name.clear();
             }
         }
         ImGui::SameLine();
-        this->main_view_name = selected_mod_ptr->main_view_name;
+        this->current_main_view_name = selected_mod_ptr->main_view_name;
         float input_text_width = std::max(
-            min_text_width, (ImGui::CalcTextSize(this->main_view_name.c_str()).x + 2.0f * style.ItemSpacing.x));
+            min_text_width, (ImGui::CalcTextSize(this->current_main_view_name.c_str()).x + 2.0f * style.ItemSpacing.x));
         ImGui::PushItemWidth(input_text_width);
-        ImGui::InputText("###main_view_name", &this->main_view_name);
-        selected_mod_ptr->main_view_name = this->main_view_name;
+        ImGui::InputText("###current_main_view_name", &this->current_main_view_name);
+        selected_mod_ptr->main_view_name = this->current_main_view_name;
         ImGui::PopItemWidth();
         ImGui::SameLine();
     }
@@ -1016,13 +1019,13 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
     }
 
     // Parameter Search
-    if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH])) {
+    if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH].is_pressed) {
         this->search_widget.SetSearchFocus(true);
     }
-    std::string help_text =
-        "[" + std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH]).ToString() +
-        "] Set keyboard focus to search input field.\n"
-        "Case insensitive substring search in parameter names.";
+    std::string help_text = "[" +
+                            this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH].keycode.ToString() +
+                            "] Set keyboard focus to search input field.\n"
+                            "Case insensitive substring search in parameter names.";
     this->search_widget.Widget("graph_parameter_search", help_text);
     auto search_string = this->search_widget.GetSearchString();
 

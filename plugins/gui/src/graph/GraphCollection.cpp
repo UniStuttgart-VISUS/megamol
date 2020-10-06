@@ -652,11 +652,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             }
         }
         if (gui_graph_changed) {
-            // Clear queue, since changes do not have to be propagates back to core graph
-            auto queue = graph_ptr->GetSyncQueue();
-            while (!queue->empty()) {
-                queue->pop();
-            }
+            graph_ptr->ClearSyncQueue();
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[GUI] Successfully loaded/updated project '%s' from running MegaMol.\n", graph_ptr->name.c_str());
         }

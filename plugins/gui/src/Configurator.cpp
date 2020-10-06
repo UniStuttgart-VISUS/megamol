@@ -53,15 +53,15 @@ megamol::gui::Configurator::Configurator()
     this->param_slots.clear();
     this->param_slots.push_back(&this->state_param);
 
-    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH] = megamol::gui::HotkeyData_t(
-        core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false);
-    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH] = megamol::gui::HotkeyData_t(
-        core::view::KeyCode(core::view::Key::KEY_P, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false);
-    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM] =
-        megamol::gui::HotkeyData_t(core::view::KeyCode(core::view::Key::KEY_DELETE), false);
-    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT] = megamol::gui::HotkeyData_t(
+    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH] = {
+        core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
+    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH] = {
+        core::view::KeyCode(core::view::Key::KEY_P, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
+    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM] = {
+        core::view::KeyCode(core::view::Key::KEY_DELETE), false};
+    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT] = {
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
-        false);
+        false};
     this->graph_state.font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
     this->graph_state.graph_width = 0.0f;
     this->graph_state.show_parameter_sidebar = false;
@@ -145,7 +145,7 @@ bool megamol::gui::Configurator::Draw(
             this->state_param.ResetDirty();
         }
         // Hotkeys
-        if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]) &&
+        if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT].is_pressed &&
             (this->graph_state.graph_selected_uid != GUI_INVALID_ID)) {
 
             bool graph_has_core_interface = false;
@@ -194,7 +194,7 @@ bool megamol::gui::Configurator::Draw(
 
         // Reset state -------------------------------------------------------
         for (auto& h : this->graph_state.hotkeys) {
-            std::get<1>(h) = false;
+            h.is_pressed = false;
         }
     }
 
@@ -276,7 +276,7 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
             }
             bool enable_save_graph = !graph_has_core_interface;
             if (ImGui::MenuItem("Save Editor Project",
-                    std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT]).ToString().c_str(),
+                    this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT].keycode.ToString().c_str(),
                     false, ((this->graph_state.graph_selected_uid != GUI_INVALID_ID) && enable_save_graph))) {
                 this->graph_state.graph_save = true;
             }
@@ -335,13 +335,13 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
     ImGui::TextUnformatted("Available Modules");
     ImGui::Separator();
 
-    if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
+    if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
         this->search_widget.SetSearchFocus(true);
     }
-    std::string help_text =
-        "[" + std::get<0>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]).ToString() +
-        "] Set keyboard focus to search input field.\n"
-        "Case insensitive substring search in module names.";
+    std::string help_text = "[" +
+                            this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].keycode.ToString() +
+                            "] Set keyboard focus to search input field.\n"
+                            "Case insensitive substring search in module names.";
     this->search_widget.Widget("configurator_module_search", help_text);
     auto search_string = this->search_widget.GetSearchString();
 
@@ -636,13 +636,13 @@ void megamol::gui::Configurator::drawPopUps(void) {
                 ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)));
 
         if (valid_double_click || valid_double_click_callslot) {
-            std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH]) = true;
+            this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed = true;
             this->last_selected_callslot_uid = selected_callslot_uid;
             // Force consume double click!
             ImGui::GetIO().MouseDoubleClicked[0] = false;
         }
     }
-    if (std::get<1>(this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH])) {
+    if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
         this->show_module_list_child = true;
         this->module_list_popup_pos = ImGui::GetMousePos();
         this->module_list_popup_hovered_group_uid = selected_graph_ptr->present.GetHoveredGroup();

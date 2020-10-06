@@ -80,7 +80,7 @@ private:
     float parameter_sidebar_width;
     bool reset_zooming;
     std::string param_name_space;
-    std::string main_view_name;
+    std::string current_main_view_name;
     ImVec2 multiselect_start_pos;
     ImVec2 multiselect_end_pos;
     bool multiselect_done;

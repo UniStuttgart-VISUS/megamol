@@ -37,22 +37,25 @@ typedef std::vector<Call::StockCall> CallStockVector_t;
 
 class Graph {
 public:
-    friend class GraphPresentation;
+    // friend class GraphPresentation;
 
-    enum QueueChange { ADD_MODULE, DELETE_MODULE, RENAME_MODULE, ADD_CALL, DELETE_CALL };
+    enum QueueAction {
+        ADD_MODULE,
+        DELETE_MODULE,
+        RENAME_MODULE,
+        ADD_CALL,
+        DELETE_CALL,
+        CREATE_MAIN_VIEW,
+        REMOVE_MAIN_VIEW
+    };
 
     struct QueueData {
-        std::string id = "";        // Requierd for ALL queue cahnges
+        std::string name_id = "";   // Requierd for ALL queue changes
         std::string classname = ""; // Requierd for ADD_MODULE, ADD_CALL
-        bool graph_entry = false;   // Requierd for ADD_MODULE
         std::string rename_id = ""; // Requierd for RENAME_MODULE
         std::string caller = "";    // Requierd for ADD_CALL, DELETE_CALL
         std::string callee = "";    // Requierd for ADD_CALL, DELETE_CALL
     };
-
-    typedef std::tuple<QueueChange, QueueData> SyncQueueData_t;
-    typedef std::queue<SyncQueueData_t> SyncQueue_t;
-    typedef std::shared_ptr<SyncQueue_t> SyncQueuePtr_t;
 
     // VARIABLES --------------------------------------------------------------
 
@@ -94,10 +97,18 @@ public:
     const std::string GetFilename(void) const { return this->filename; }
     void SetFilename(const std::string& filename) { this->filename = filename; }
 
-    const SyncQueuePtr_t& GetSyncQueue(void) { return this->sync_queue; }
+    bool PushSyncQueue(QueueAction in_action, const QueueData& in_data);
+    bool PopSyncQueue(QueueAction& out_action, QueueData& out_data);
+    inline void ClearSyncQueue(void) {
+        while (!this->sync_queue->empty()) {
+            this->sync_queue->pop();
+        }
+    }
 
     inline GraphCoreInterface GetCoreInterface(void) { return this->graph_core_interface; }
     inline bool HasCoreInterface(void) { return (this->graph_core_interface != GraphCoreInterface::NO_INTERFACE); }
+
+    const std::string Generate_Unique_Main_View_Name(void);
 
     // Presentation ----------------------------------------------------
 
@@ -107,6 +118,10 @@ public:
     bool StateToJSON(nlohmann::json& out_json);
 
 private:
+    typedef std::tuple<QueueAction, QueueData> SyncQueueData_t;
+    typedef std::queue<SyncQueueData_t> SyncQueue_t;
+    typedef std::shared_ptr<SyncQueue_t> SyncQueuePtr_t;
+
     // VARIABLES --------------------------------------------------------------
 
     ModulePtrVector_t modules;
@@ -120,10 +135,7 @@ private:
     // FUNCTIONS --------------------------------------------------------------
 
     const std::string generate_unique_group_name(void);
-    const std::string generate_unique_main_view_name(void);
     const std::string generate_unique_module_name(const std::string& name);
-
-    void add_rename_module_sync_event(const std::string& current_name, const std::string& new_name);
 };
 
 
