@@ -706,7 +706,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             case (Graph::QueueAction::ADD_MODULE): {
                 if (megamol_graph != nullptr) {
                     /* XXX MEGAMOL GRAPH
-                    graph_sync_success &= megamol_graph->CreateModule(data.classname, data.name_id);
+                    graph_sync_success &= megamol_graph->CreateModule(data.class_name, data.name_id);
                     */
                 } else if (this->core_instance != nullptr) {
                     graph_sync_success &= this->core_instance->RequestModuleInstantiation(
@@ -747,7 +747,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             case (Graph::QueueAction::ADD_CALL): {
                 if (megamol_graph != nullptr) {
                     /* XXX MEGAMOL GRAPH
-                    graph_sync_success &= megamol_graph->CreateCall(data.classname, data.caller, data.callee);
+                    graph_sync_success &= megamol_graph->CreateCall(data.class_name, data.caller, data.callee);
                     */
                 } else if (this->core_instance != nullptr) {
                     graph_sync_success &=
@@ -768,43 +768,39 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             case (Graph::QueueAction::CREATE_MAIN_VIEW): {
                 if (megamol_graph != nullptr) {
                     /* XXX MEGAMOL GRAPH
-                    // Create/Add new graph entry
-                    if (graph_sync_success && data.graph_entry) {
-                        /// This code is copied from main3000.cpp ------------
-                        static std::vector<std::string> view_resource_requests = {
-                            "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
-                            auto view_rendering_execution =
-                            [&](megamol::core::Module::ptr_type module_ptr,
-                                std::vector<megamol::frontend::ModuleResource> const& resources) {
-                                megamol::core::view::AbstractView* view_ptr =
-                                    dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
-                                assert(view_resource_requests.size() == resources.size());
-                                if (!view_ptr) {
-                                    std::cout << "error. module is not a view module. could not set as graph rendering
-                    entry point." << std::endl; return false;
-                                }
-                                megamol::core::view::AbstractView& view = *view_ptr;
-                                int i = 0;
-                                // resources are in order of initial requests
-                                megamol::core::view::view_consume_keyboard_events(view, resources[i++]);
-                                megamol::core::view::view_consume_mouse_events(view, resources[i++]);
-                                megamol::core::view::view_consume_window_events(view, resources[i++]);
-                                megamol::core::view::view_consume_framebuffer_events(view, resources[i++]);
-                                megamol::core::view::view_poke_rendering(view, resources[i++]);
-                            };
-                        megamol_graph->SetGraphEntryPoint(data.name_id, view_resource_requests,
-                    view_rendering_execution);
-                        /// ---------------------------------------------------
-                    }
+                    /// This code is copied from main3000.cpp ------------
+                    static std::vector<std::string> view_resource_requests = {
+                        "KeyboardEvents", "MouseEvents", "WindowEvents", "FramebufferEvents", "IOpenGL_Context"};
+                        auto view_rendering_execution =
+                        [&](megamol::core::Module::ptr_type module_ptr,
+                            std::vector<megamol::frontend::ModuleResource> const& resources) {
+                            megamol::core::view::AbstractView* view_ptr =
+                                dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
+                            assert(view_resource_requests.size() == resources.size());
+                            if (!view_ptr) {
+                                std::cout << "error. module is not a view module. could not set as graph rendering entry
+                point." << std::endl; return false;
+                            }
+                            megamol::core::view::AbstractView& view = *view_ptr;
+                            int i = 0;
+                            // resources are in order of initial requests
+                            megamol::core::view::view_consume_keyboard_events(view, resources[i++]);
+                            megamol::core::view::view_consume_mouse_events(view, resources[i++]);
+                            megamol::core::view::view_consume_window_events(view, resources[i++]);
+                            megamol::core::view::view_consume_framebuffer_events(view, resources[i++]);
+                            megamol::core::view::view_poke_rendering(view, resources[i++]);
+                        };
+                    megamol_graph->SetGraphEntryPoint(data.name_id, view_resource_requests,
+                view_rendering_execution);
+                    /// ---------------------------------------------------
                     */
                 } else if (this->core_instance != nullptr) {
-                    // Create new module as view instance (= main view = entry point of graph)
                     /* XXX Currently not supported by core graph
                     auto view_name = vislib::StringA(graph_ptr->name.c_str());
                     auto module_name = vislib::StringA(data.name_id.c_str());
                     auto vd = std::make_shared<megamol::core::ViewDescription>(view_name.PeekBuffer());
                     vd->AddModule(
-                        this->core_instance->GetModuleDescriptionManager().Find(data.classname.c_str()),
+                        this->core_instance->GetModuleDescriptionManager().Find(data.class_name.c_str()),
                         module_name);
                     vd->SetViewModuleID(module_name);
                     try {
@@ -824,9 +820,11 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             case (Graph::QueueAction::REMOVE_MAIN_VIEW): {
                 if (megamol_graph != nullptr) {
                     /* XXX MEGAMOL GRAPH
-
+                    megamol_graph->RemoveGraphEntryPoint(data.name_id);
                     */
                 } else if (this->core_instance != nullptr) {
+                    /* XXX Currently not supported by core graph
+                     */
                 }
             } break;
             default:
