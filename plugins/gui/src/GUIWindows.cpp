@@ -789,7 +789,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     auto module_name = vislib::StringA(data.name_id.c_str());
                     auto vd = std::make_shared<megamol::core::ViewDescription>(view_name.PeekBuffer());
                     vd->AddModule(
-                        this->core_instance->GetModuleDescriptionManager().Find(data.classname.c_str()),
+                        this->core_instance->GetModuleDescriptionManager().Find(data.class_name.c_str()),
                         module_name);
                     vd->SetViewModuleID(module_name);
                     try {
