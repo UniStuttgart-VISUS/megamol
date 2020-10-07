@@ -147,25 +147,18 @@ void AbstractParamPresentation::SetGUIPresentation(AbstractParamPresentation::Pr
 }
 
 
-bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::string& in_json_string, const std::string& param_fullname) {
-
-    bool retval = false;
+bool AbstractParamPresentation::StateFromJSON(const nlohmann::json& in_json, const std::string& param_fullname) {
 
     try {
-        if (in_json_string.empty()) {
-            return false;
-        }
-        nlohmann::json json;
-        json = nlohmann::json::parse(in_json_string);
-        if (!json.is_object()) {
+        if (!in_json.is_object()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
         bool found_parameters = false;
         bool valid = true;
-        for (auto& header_item : json.items()) {
+        for (auto& header_item : in_json.items()) {
             if (header_item.key() == GUI_JSON_TAG_GUISTATE_PARAMETERS) {
                 found_parameters = true;
                 for (auto& config_item : header_item.value().items()) {
@@ -188,8 +181,7 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
                             this->SetGUIVisible(gui_visibility);
                             this->SetGUIReadOnly(gui_read_only);
                             this->SetGUIPresentation(gui_presentation_mode);
-                            retval = true;
-                            break;
+                            return true;
                         }
                     }
                 }
@@ -198,15 +190,15 @@ bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::strin
     }
     catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "JSON Error - Unable to read state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
-    return retval;
+    return false;
 }
 
 
-bool AbstractParamPresentation::ParameterGUIStateToJSON(nlohmann::json& inout_json, const std::string& param_fullname) {
+bool AbstractParamPresentation::StateToJSON(nlohmann::json& inout_json, const std::string& param_fullname) {
 
     try {
         // Append to given json
@@ -219,7 +211,7 @@ bool AbstractParamPresentation::ParameterGUIStateToJSON(nlohmann::json& inout_js
     }
     catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "JSON Error - Unable to write state to JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

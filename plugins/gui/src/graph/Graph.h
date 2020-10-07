@@ -114,8 +114,8 @@ public:
 
     inline void PresentGUI(GraphState_t& state) { this->present.Present(*this, state); }
 
-    bool StateFromJsonString(const std::string& json_string);
-    bool StateToJSON(nlohmann::json& out_json);
+    bool StateFromJSON(const nlohmann::json& in_json);
+    bool StateToJSON(nlohmann::json& inout_json);
 
 private:
     typedef std::tuple<QueueAction, QueueData> SyncQueueData_t;

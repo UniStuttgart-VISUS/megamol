@@ -26,7 +26,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return GUI_MODULE_NAME; }
+    static const char* ClassName(void) { return "GUIView"; }
 
     /**
      * Answer a human readable description of this module.

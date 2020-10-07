@@ -159,8 +159,8 @@ public:
     static const std::string GetTypeName(AbstractParamPresentation::ParamType type);
 
     /** De-/Serialization of parameters GUi state. */
-    bool ParameterGUIStateFromJSONString(const std::string& in_json_string, const std::string& param_fullname);
-    bool ParameterGUIStateToJSON(nlohmann::json& inout_json, const std::string& param_fullname);
+    bool StateFromJSON(const nlohmann::json& in_json, const std::string& param_fullname);
+    bool StateToJSON(nlohmann::json& inout_json, const std::string& param_fullname);
 
 protected:
 

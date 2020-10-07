@@ -60,30 +60,19 @@ public:
     inline const FontScalingArray_t& GetGraphFontScalings(void) const { return this->graph_state.font_scalings; }
 
     /**
-     * Return list of parameter slots provided by this class. Make available in module which uses this class.
-     */
-    inline const std::vector<megamol::core::param::ParamSlot*> GetParams(void) const { return this->param_slots; }
-
-    /**
-     * Save current configurator state to state parameter.
-     */
-    void UpdateStateParameter(void);
-
-    /**
      * Return graph collection.
      */
     GraphCollection& GetGraphCollection(void) { return this->graph_collection; }
+
+    /** State to/from JSON. */
+    bool StateFromJSON(const nlohmann::json& in_json);
+    bool StateToJSON(nlohmann::json& inout_json);
 
 private:
     // VARIABLES --------------------------------------------------------------
 
     GraphCollection graph_collection;
-
-    std::vector<megamol::core::param::ParamSlot*> param_slots;
-    megamol::core::param::ParamSlot state_param;
-
     static std::vector<std::string> dropped_files;
-
     int init_state;
     float module_list_sidebar_width;
     ImGuiID selected_list_module_uid;
@@ -107,9 +96,6 @@ private:
 
     void draw_window_menu(megamol::core::CoreInstance* core_instance);
     void draw_window_module_list(float width);
-
-    bool configurator_state_from_json_string(const std::string& json_string);
-    bool configurator_state_to_json(nlohmann::json& out_json);
 
     void drawPopUps(void);
 

@@ -58,15 +58,14 @@ namespace gui {
 #define GUI_GRAPH_BORDER (GUI_SLOT_RADIUS * 4.0f)
 #define GUI_MULTISELECT_MODIFIER (ImGui::GetIO().KeyShift)
 
-#define GUI_MODULE_NAME ("GUIView")
-#define GUI_GUI_STATE_PARAM_NAME ("state")
-#define GUI_CONFIGURATOR_STATE_PARAM_NAME ("configurator::state")
-
-#define GUI_JSON_TAG_WINDOW_CONFIGURATIONS ("WindowConfigurations")
-#define GUI_JSON_TAG_GUISTATE ("GUI")
+#define GUI_JSON_TAG_GUI ("GUI")
+#define GUI_JSON_TAG_WINDOW_CONFIGS ("WindowConfigurations")
 #define GUI_JSON_TAG_CONFIGURATOR ("Configurator")
 #define GUI_JSON_TAG_GRAPHS ("Graphs")
-#define GUI_JSON_TAG_PROJECT_GRAPH ("ProjectGraph")
+#define GUI_JSON_TAG_THIS_GRAPH ("This")
+#define GUI_JSON_TAG_MODULES ("Modules")
+#define GUI_JSON_TAG_INTERFACES ("Interfaces")
+/// GUI_JSON_TAG_GUISTATE_PARAMETERS is defined in AbstractParamPresentation.h
 
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))

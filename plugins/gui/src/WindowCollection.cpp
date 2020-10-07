@@ -102,25 +102,20 @@ bool WindowCollection::DeleteWindowConfiguration(const std::string& window_name)
 }
 
 
-bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
+bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
 
     try {
-        if (in_json_string.empty()) {
-            return false;
-        }
-        nlohmann::json json;
-        json = nlohmann::json::parse(in_json_string);
-        if (!json.is_object()) {
+        if (!in_json.is_object()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
         bool found = false;
         bool valid = true;
         std::vector<WindowConfiguration> tmp_windows;
-        for (auto& header_item : json.items()) {
-            if (header_item.key() == (GUI_JSON_TAG_WINDOW_CONFIGURATIONS)) {
+        for (auto& header_item : in_json.items()) {
+            if (header_item.key() == GUI_JSON_TAG_WINDOW_CONFIGS) {
                 found = true;
                 for (auto& config_item : header_item.value().items()) {
                     WindowConfiguration tmp_config;
@@ -268,7 +263,7 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
         }
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] JSON Error - Unable to read state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -276,71 +271,68 @@ bool WindowCollection::StateFromJsonString(const std::string& in_json_string) {
 }
 
 
-bool WindowCollection::StateToJSON(nlohmann::json& out_json) {
+bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
 
     try {
+        // Append to given json
         for (auto& window : this->windows) {
             if (window.win_store_config) {
                 std::string window_name = window.win_name;
                 WindowConfiguration window_config = window;
 
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_show"] = window_config.win_show;
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_flags"] =
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_show"] = window_config.win_show;
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_flags"] =
                     static_cast<int>(window_config.win_flags);
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_callback"] =
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_callback"] =
                     static_cast<int>(window_config.win_callback);
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_hotkey"] = {
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_hotkey"] = {
                     static_cast<int>(window_config.win_hotkey.key), window_config.win_hotkey.mods.toInt()};
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_position"] = {
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_position"] = {
                     window_config.win_position.x, window_config.win_position.y};
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_size"] = {
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_size"] = {
                     window_config.win_size.x, window_config.win_size.y};
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_soft_reset"] =
-                    window_config.win_soft_reset;
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_reset_size"] = {
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_soft_reset"] = window_config.win_soft_reset;
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_reset_size"] = {
                     window_config.win_reset_size.x, window_config.win_reset_size.y};
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_reset_position"] = {
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_reset_position"] = {
                     window_config.win_reset_position.x, window_config.win_reset_position.y};
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["win_collapsed"] =
-                    window_config.win_collapsed;
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_collapsed"] = window_config.win_collapsed;
 
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_show_hotkeys"] =
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["param_show_hotkeys"] =
                     window_config.param_show_hotkeys;
 
                 for (auto& pm : window_config.param_modules_list) {
                     GUIUtils::Utf8Encode(pm);
                 }
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_modules_list"] =
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["param_modules_list"] =
                     window_config.param_modules_list;
                 for (auto& pm : window_config.param_modules_list) {
                     GUIUtils::Utf8Decode(pm);
                 }
 
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_module_filter"] =
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["param_module_filter"] =
                     static_cast<int>(window_config.param_module_filter);
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["param_extended_mode"] =
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["param_extended_mode"] =
                     window_config.param_extended_mode;
 
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["ms_show_options"] =
-                    window_config.ms_show_options;
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["ms_max_history_count"] =
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_show_options"] = window_config.ms_show_options;
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_max_history_count"] =
                     window_config.ms_max_history_count;
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["ms_refresh_rate"] =
-                    window_config.ms_refresh_rate;
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["ms_mode"] =
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_refresh_rate"] = window_config.ms_refresh_rate;
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_mode"] =
                     static_cast<int>(window_config.ms_mode);
 
                 GUIUtils::Utf8Encode(window_config.font_name);
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["font_name"] = window_config.font_name;
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["font_name"] = window_config.font_name;
                 GUIUtils::Utf8Decode(window_config.font_name);
 
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["tfe_view_minimized"] =
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["tfe_view_minimized"] =
                     window_config.tfe_view_minimized;
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["tfe_view_vertical"] =
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["tfe_view_vertical"] =
                     window_config.tfe_view_vertical;
 
                 GUIUtils::Utf8Encode(window_config.tfe_active_param);
-                out_json[GUI_JSON_TAG_WINDOW_CONFIGURATIONS][window_name]["tfe_active_param"] =
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["tfe_active_param"] =
                     window_config.tfe_active_param;
                 GUIUtils::Utf8Decode(window_config.tfe_active_param);
             }
@@ -351,8 +343,7 @@ bool WindowCollection::StateToJSON(nlohmann::json& out_json) {
 
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
+            "[GUI] JSON Error - Unable to write state to JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

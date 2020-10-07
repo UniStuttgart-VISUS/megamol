@@ -1053,7 +1053,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 /// DEBUG
                 /// megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] >>>> '%s'\n", value_str.c_str());
 
-                std::string parameter_gui_states_json;
+                std::string parameter_gui_state_json_str;
 
                 // Searching for parameter
                 if (graph_ptr != nullptr) {
@@ -1068,35 +1068,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                             for (auto& parameter : module_ptr->parameters) {
                                 if (parameter.full_name == param_full_name) {
                                     parameter.SetValueString(value_str);
-
-                                    // Reading state parameters
-                                    if (module_ptr->class_name == GUI_MODULE_NAME) {
-                                        if (parameter.full_name == GUI_GUI_STATE_PARAM_NAME) {
-                                            parameter_gui_states_json = value_str;
-                                        }
-                                        if (parameter.full_name == GUI_CONFIGURATOR_STATE_PARAM_NAME) {
-                                            // Reading configurator state param containing a graph state
-                                            if (graph_ptr->StateFromJsonString(value_str)) {
-                                                found_configurator_positions = true;
-                                            }
-                                        }
-                                    }
                                 }
                             }
-                        }
-                    }
-                }
-
-                // Let all parameters read their gui state
-                if (!parameter_gui_states_json.empty()) {
-                    for (auto& module_ptr : graph_ptr->GetModules()) {
-                        std::string module_full_name = module_ptr->FullName();
-                        module_ptr->present.param_groups.ParameterGroupGUIStateFromJSONString(
-                            parameter_gui_states_json, module_full_name);
-                        for (auto& param : module_ptr->parameters) {
-                            std::string full_param_name = module_full_name + "::" + param.full_name;
-                            param.present.ParameterGUIStateFromJSONString(parameter_gui_states_json, full_param_name);
-                            param.present.ForceSetGUIStateDirty();
                         }
                     }
                 }
@@ -1159,9 +1132,6 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                 }
                 if (found_error) return false;
 
-                // Save filename for graph (before saving states)
-                graph_ptr->SetFilename(project_filename);
-
                 // Serialze graph to string
                 std::string projectstr;
                 std::stringstream confInstances, confModules, confCalls, confParams;
@@ -1176,26 +1146,26 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
 
                     for (auto& parameter : module_ptr->parameters) {
                         // Store graph state to state parameter of configurator (once)
-                        if (module_ptr->class_name == GUI_MODULE_NAME) {
-                            if (!wrote_graph_state && (parameter.full_name == GUI_CONFIGURATOR_STATE_PARAM_NAME)) {
-                                // Replacing exisiting graph state with new one and leaving rest untouched
-                                std::string new_configurator_graph_state;
-                                this->replace_graph_state(
-                                    graph_ptr, parameter.GetValueString(), new_configurator_graph_state);
-                                parameter.SetValue(new_configurator_graph_state);
-                                wrote_graph_state = true;
-                            }
-                        }
+                        // if (module_ptr->class_name == GUI_MODULE_NAME) {
+                        //    if (!wrote_graph_state && (parameter.full_name == GUI_CONFIGURATOR_STATE_PARAM_NAME)) {
+                        //        // Replacing exisiting graph state with new one and leaving rest untouched
+                        //        std::string new_configurator_graph_state;
+                        //        this->replace_graph_state(
+                        //            graph_ptr, parameter.GetValueString(), new_configurator_graph_state);
+                        //        parameter.SetValue(new_configurator_graph_state);
+                        //        wrote_graph_state = true;
+                        //    }
+                        //}
 
                         // Store parameter gui states to state parameter of gui (once)
-                        if (!wrote_parameter_gui_state && (parameter.full_name == GUI_GUI_STATE_PARAM_NAME)) {
-                            // Replacing exisiting parameter gui state with new one and leaving rest untouched
-                            std::string new_parameter_gui_state;
-                            this->replace_parameter_gui_state(
-                                graph_ptr, parameter.GetValueString(), new_parameter_gui_state);
-                            parameter.SetValue(new_parameter_gui_state);
-                            wrote_parameter_gui_state = true;
-                        }
+                        // if (!wrote_parameter_gui_state && (parameter.full_name == GUI_GUI_STATE_PARAM_NAME)) {
+                        //    // Replacing exisiting parameter gui state with new one and leaving rest untouched
+                        //    std::string new_parameter_gui_state;
+                        //    this->replace_parameter_gui_state(
+                        //        graph_ptr, parameter.GetValueString(), new_parameter_gui_state);
+                        //    parameter.SetValue(new_parameter_gui_state);
+                        //    wrote_parameter_gui_state = true;
+                        //}
 
                         // Write all parameters for running graph (default value is not available)
                         // For other graphs only write parameters with other values than the default
@@ -1528,7 +1498,7 @@ bool megamol::gui::GraphCollection::replace_graph_state(
                 return false;
             }
             try {
-                json[GUI_JSON_TAG_GRAPHS].erase(GUI_JSON_TAG_PROJECT_GRAPH);
+                json[GUI_JSON_TAG_GRAPHS].erase(GUI_JSON_TAG_THIS_GRAPH);
             } catch (...) {
             }
         }
@@ -1564,10 +1534,10 @@ bool megamol::gui::GraphCollection::replace_parameter_gui_state(
 
         for (auto& module_ptr : graph_ptr->GetModules()) {
             std::string module_full_name = module_ptr->FullName();
-            module_ptr->present.param_groups.ParameterGroupGUIStateToJSON(json, module_full_name);
+            module_ptr->present.param_groups.StateToJSON(json, module_full_name);
             for (auto& param : module_ptr->parameters) {
                 std::string full_param_name = module_full_name + "::" + param.full_name;
-                param.present.ParameterGUIStateToJSON(json, full_param_name);
+                param.present.StateToJSON(json, full_param_name);
             }
         }
         out_json_string = json.dump(2);
