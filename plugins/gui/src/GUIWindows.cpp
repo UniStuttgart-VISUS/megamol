@@ -63,7 +63,8 @@ GUIWindows::GUIWindows(void)
 
     this->param_slots.clear();
     this->param_slots.push_back(&this->style_param);
-    /// this->param_slots.push_back(&this->state_param);
+    /// this->param_slots.push_back(&this->state_param); /// Completely hidden because unused, only internal state
+    /// backup
     this->param_slots.push_back(&this->autosave_state_param);
     this->param_slots.push_back(&this->autostart_configurator_param);
 
@@ -1875,11 +1876,8 @@ bool megamol::gui::GUIWindows::save_state_to_file(const std::string& filename) {
         std::string state_str = state_json.dump(2);
         this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
 
-        if (filename.empty()) return false;
-        const std::string suffix = "_gui-state.json";
-        auto dotpos = filename.find_last_of('.');
-        std::string file = filename.substr(0, dotpos);
-        file.append(suffix);
+        std::string file = filename;
+        if (!GUIUtils::GetGUIStateFileName(file)) return false;
         return FileUtils::WriteFile(file, state_str);
     }
     return false;
@@ -1888,71 +1886,64 @@ bool megamol::gui::GUIWindows::save_state_to_file(const std::string& filename) {
 
 bool megamol::gui::GUIWindows::load_state_from_file(const std::string& filename) {
 
-    nlohmann::json state_json;
-    if (this->state_to_json(state_json)) {
-        if (filename.empty()) return false;
-        const std::string suffix = "_gui-state.json";
-        auto dotpos = filename.find_last_of('.');
-        std::string file = filename.substr(0, dotpos);
-        file.append(suffix);
-        std::string state_str;
-        if (FileUtils::ReadFile(file, state_str)) {
+    std::string file = filename;
+    if (!GUIUtils::GetGUIStateFileName(file)) return false;
 
-            this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
-            return this->state_from_json_string(state_str);
+    std::string state_str;
+    if (FileUtils::ReadFile(file, state_str, true)) {
+
+        this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
+
+        if (state_str.empty()) {
+            return false;
         }
+        nlohmann::json in_json = nlohmann::json::parse(state_str);
+        return this->state_from_json(in_json);
     }
+
     return false;
 }
 
 
-bool megamol::gui::GUIWindows::state_from_json_string(const std::string& in_json_string) {
+bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
 
     try {
-        if (in_json_string.empty()) {
-            return false;
-        }
-        bool found_gui = false;
-        nlohmann::json json;
-        json = nlohmann::json::parse(in_json_string);
-        if (!json.is_object()) {
+        if (!in_json.is_object()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
-        for (auto& header_item : json.items()) {
+        // Read GUI state
+        for (auto& header_item : in_json.items()) {
             if (header_item.key() == GUI_JSON_TAG_GUI) {
                 auto gui_state = header_item.value();
-
-                // Read GUI state
                 megamol::core::utility::get_json_value<bool>(gui_state, {"menu_visible"}, &this->state.menu_visible);
-
-                // Read window configurations
-                this->window_collection.StateFromJSON(gui_state);
-
-                // Read GUI state of parameters (groups)
-                GraphPtr_t graph_ptr;
-                if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
-                    for (auto& module_ptr : graph_ptr->GetModules()) {
-                        std::string module_full_name = module_ptr->FullName();
-                        module_ptr->present.param_groups.StateFromJSON(gui_state, module_full_name);
-                        for (auto& param : module_ptr->parameters) {
-                            std::string param_full_name = module_full_name + "::" + param.full_name;
-                            param.present.StateFromJSON(gui_state, param_full_name);
-                            param.present.ForceSetGUIStateDirty();
-                        }
-                    }
-                }
-
-                // Read the configurator state
-                this->configurator.StateFromJSON(gui_state);
-
-#ifdef GUI_VERBOSE
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read GUI state from JSON.");
-#endif // GUI_VERBOSE
             }
         }
+
+        // Read window configurations
+        this->window_collection.StateFromJSON(in_json);
+
+        // Read GUI state of parameters (groups)
+        GraphPtr_t graph_ptr;
+        if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
+            for (auto& module_ptr : graph_ptr->GetModules()) {
+                std::string module_full_name = module_ptr->FullName();
+                // Parameter Groups
+                module_ptr->present.param_groups.StateFromJSON(in_json, module_full_name);
+                // Parameters
+                for (auto& param : module_ptr->parameters) {
+                    std::string param_full_name = module_full_name + "::" + param.full_name;
+                    param.present.StateFromJSON(in_json, param_full_name);
+                    param.present.ForceSetGUIStateDirty();
+                }
+            }
+        }
+
+#ifdef GUI_VERBOSE
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read GUI state from JSON.");
+#endif // GUI_VERBOSE
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] JSON Error - Unable to read state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -1966,32 +1957,29 @@ bool megamol::gui::GUIWindows::state_from_json_string(const std::string& in_json
 bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
 
     try {
-        nlohmann::json gui_state;
-
         // Write GUI state
-        gui_state["menu_visible"] = this->state.menu_visible;
+        inout_json[GUI_JSON_TAG_GUI]["menu_visible"] = this->state.menu_visible;
 
         // Write window configuration
-        this->window_collection.StateToJSON(gui_state);
+        this->window_collection.StateToJSON(inout_json);
 
         // Write GUI state of parameters (groups)
         GraphPtr_t graph_ptr;
         if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 std::string module_full_name = module_ptr->FullName();
-                module_ptr->present.param_groups.StateToJSON(gui_state, module_full_name);
+                // Parameter Groups
+                module_ptr->present.param_groups.StateToJSON(inout_json, module_full_name);
+                // Parameters
                 for (auto& param : module_ptr->parameters) {
                     std::string param_full_name = module_full_name + "::" + param.full_name;
-                    param.present.StateToJSON(gui_state, param_full_name);
+                    param.present.StateToJSON(inout_json, param_full_name);
                 }
             }
         }
 
         // Write the configurator state
-        this->configurator.StateToJSON(gui_state);
-
-        // Create JSON GUI entry tag and append to given JSON
-        inout_json[GUI_JSON_TAG_GUI] = gui_state;
+        this->configurator.StateToJSON(inout_json);
 
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote GUI state to JSON.");

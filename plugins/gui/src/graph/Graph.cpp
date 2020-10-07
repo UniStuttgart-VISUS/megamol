@@ -22,12 +22,8 @@ megamol::gui::Graph::Graph(const std::string& graph_name, GraphCoreInterface cor
     , groups()
     , dirty_flag(true)
     , filename()
-    , sync_queue(nullptr)
-    , graph_core_interface(core_interface) {
-
-    this->sync_queue = std::make_shared<SyncQueue_t>();
-    ASSERT(this->sync_queue != nullptr);
-}
+    , sync_queue()
+    , graph_core_interface(core_interface) {}
 
 
 megamol::gui::Graph::~Graph(void) {
@@ -911,17 +907,17 @@ bool megamol::gui::Graph::PushSyncQueue(QueueAction action, const QueueData& in_
     } break;
     }
 
-    this->sync_queue->push(SyncQueueData_t(action, queue_data));
+    this->sync_queue.push(SyncQueueData_t(action, queue_data));
     return true;
 }
 
 
 bool megamol::gui::Graph::PopSyncQueue(QueueAction& out_action, QueueData& out_data) {
 
-    if (!this->sync_queue->empty()) {
-        out_action = std::get<0>(this->sync_queue->front());
-        out_data = std::get<1>(this->sync_queue->front());
-        this->sync_queue->pop();
+    if (!this->sync_queue.empty()) {
+        out_action = std::get<0>(this->sync_queue.front());
+        out_data = std::get<1>(this->sync_queue.front());
+        this->sync_queue.pop();
         return true;
     }
     return false;
@@ -937,175 +933,194 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
             return false;
         }
 
-        megamol::core::utility::get_json_value<std::string>(in_json, {"project_name"}, &this->name);
+        for (auto& header_item : in_json.items()) {
+            if (header_item.key() == GUI_JSON_TAG_GRAPHS) {
+                for (auto& content_item : header_item.value().items()) {
+                    std::string json_graph_id = content_item.key();
+                    GUIUtils::Utf8Decode(json_graph_id);
+                    if (json_graph_id == GUI_JSON_TAG_PROJECT) {
+                        auto graph_state = content_item.value();
 
-        bool tmp_show_parameter_sidebar = false;
-        this->present.change_show_parameter_sidebar = false;
-        if (megamol::core::utility::get_json_value<bool>(
-                in_json, {"show_parameter_sidebar"}, &tmp_show_parameter_sidebar)) {
-            this->present.change_show_parameter_sidebar = true;
-            this->present.show_parameter_sidebar = tmp_show_parameter_sidebar;
-        }
+                        megamol::core::utility::get_json_value<std::string>(graph_state, {"project_name"}, &this->name);
 
-        megamol::core::utility::get_json_value<float>(
-            in_json, {"parameter_sidebar_width"}, &this->present.parameter_sidebar_width);
-
-        megamol::core::utility::get_json_value<bool>(in_json, {"show_grid"}, &this->present.show_grid);
-
-        if (megamol::core::utility::get_json_value<bool>(
-                in_json, {"show_call_names"}, &this->present.show_call_names)) {
-            for (auto& call : this->GetCalls()) {
-                call->present.label_visible = this->present.show_call_names;
-            }
-        }
-        if (megamol::core::utility::get_json_value<bool>(
-                in_json, {"show_module_names"}, &this->present.show_module_names)) {
-            for (auto& mod : this->GetModules()) {
-                mod->present.label_visible = this->present.show_module_names;
-            }
-        }
-
-        if (megamol::core::utility::get_json_value<bool>(
-                in_json, {"show_slot_names"}, &this->present.show_slot_names)) {
-            for (auto& mod : this->GetModules()) {
-                for (auto& callslot_types : mod->GetCallSlots()) {
-                    for (auto& callslots : callslot_types.second) {
-                        callslots->present.label_visible = this->present.show_slot_names;
-                    }
-                }
-            }
-            for (auto& group_ptr : this->GetGroups()) {
-                for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
-                    for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-                        interfaceslot_ptr->present.label_visible = this->present.show_slot_names;
-                    }
-                }
-            }
-        }
-
-        megamol::core::utility::get_json_value<bool>(in_json, {"params_visible"}, &this->present.params_visible);
-
-        megamol::core::utility::get_json_value<bool>(in_json, {"params_readonly"}, &this->present.params_readonly);
-
-        if (megamol::core::utility::get_json_value<bool>(
-                in_json, {"param_extended_mode"}, &this->present.param_extended_mode)) {
-            for (auto& module_ptr : this->GetModules()) {
-                for (auto& parameter : module_ptr->parameters) {
-                    parameter.present.extended = this->present.param_extended_mode;
-                }
-            }
-        }
-
-        std::array<float, 2> canvas_scrolling;
-        megamol::core::utility::get_json_value<float>(
-            in_json, {"canvas_scrolling"}, canvas_scrolling.data(), canvas_scrolling.size());
-        this->present.graph_state.canvas.scrolling = ImVec2(canvas_scrolling[0], canvas_scrolling[1]);
-
-        if (megamol::core::utility::get_json_value<float>(
-                in_json, {"canvas_zooming"}, &this->present.graph_state.canvas.zooming)) {
-            this->present.reset_zooming = false;
-        }
-
-        // modules
-        for (auto& module_item : in_json.items()) {
-            if (module_item.key() == GUI_JSON_TAG_MODULES) {
-                for (auto& module_state : module_item.value().items()) {
-                    std::string module_fullname = module_state.key();
-                    auto position_item = module_state.value();
-                    std::array<float, 2> graph_position;
-                    megamol::core::utility::get_json_value<float>(
-                        module_state.value(), {"graph_position"}, graph_position.data(), graph_position.size());
-                    auto module_position = ImVec2(graph_position[0], graph_position[1]);
-
-                    // Apply graph position to module
-                    bool module_found = false;
-                    for (auto& module_ptr : this->GetModules()) {
-                        if (module_ptr->FullName() == module_fullname) {
-                            module_ptr->present.position = module_position;
-                            module_found = true;
-                        }
-                    }
-                    if (!module_found) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] JSON state: Unable to find module '%s' to apply graph position "
-                            "in "
-                            "configurator. [%s, %s, line %d]\n",
-                            module_fullname.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                    }
-                }
-            }
-        }
-
-        // interfaces
-        for (auto& interfaces_item : in_json.items()) {
-            if (interfaces_item.key() == GUI_JSON_TAG_INTERFACES) {
-                for (auto& interface_state : interfaces_item.value().items()) {
-                    std::string group_name = interface_state.key();
-                    auto interfaceslot_items = interface_state.value();
-
-                    // interfaces
-                    for (auto& interfaceslot_item : interfaceslot_items.items()) {
-                        std::vector<std::string> calleslot_fullnames;
-                        for (auto& callslot_item : interfaceslot_item.value().items()) {
-                            std::string callslot_name;
-                            megamol::core::utility::get_json_value<std::string>(
-                                callslot_item.value(), {}, &callslot_name);
-                            calleslot_fullnames.emplace_back(callslot_name);
+                        bool tmp_show_parameter_sidebar = false;
+                        this->present.change_show_parameter_sidebar = false;
+                        if (megamol::core::utility::get_json_value<bool>(
+                                graph_state, {"show_parameter_sidebar"}, &tmp_show_parameter_sidebar)) {
+                            this->present.change_show_parameter_sidebar = true;
+                            this->present.show_parameter_sidebar = tmp_show_parameter_sidebar;
                         }
 
-                        // Add interface slot containing found calls slots to group
-                        // Find pointers to call slots by name
-                        CallSlotPtrVector_t callslot_ptr_vector;
-                        for (auto& callsslot_fullname : calleslot_fullnames) {
-                            auto split_pos = callsslot_fullname.rfind("::");
-                            if (split_pos != std::string::npos) {
-                                std::string callslot_name = callsslot_fullname.substr(split_pos + 2);
-                                std::string module_fullname = callsslot_fullname.substr(0, (split_pos));
-                                for (auto& module_ptr : this->GetModules()) {
-                                    if (module_ptr->FullName() == module_fullname) {
-                                        for (auto& callslot_map : module_ptr->GetCallSlots()) {
-                                            for (auto& callslot_ptr : callslot_map.second) {
-                                                if (callslot_ptr->name == callslot_name) {
-                                                    callslot_ptr_vector.emplace_back(callslot_ptr);
+                        megamol::core::utility::get_json_value<float>(
+                            graph_state, {"parameter_sidebar_width"}, &this->present.parameter_sidebar_width);
+
+                        megamol::core::utility::get_json_value<bool>(
+                            graph_state, {"show_grid"}, &this->present.show_grid);
+
+                        if (megamol::core::utility::get_json_value<bool>(
+                                graph_state, {"show_call_names"}, &this->present.show_call_names)) {
+                            for (auto& call : this->GetCalls()) {
+                                call->present.label_visible = this->present.show_call_names;
+                            }
+                        }
+                        if (megamol::core::utility::get_json_value<bool>(
+                                graph_state, {"show_module_names"}, &this->present.show_module_names)) {
+                            for (auto& mod : this->GetModules()) {
+                                mod->present.label_visible = this->present.show_module_names;
+                            }
+                        }
+
+                        if (megamol::core::utility::get_json_value<bool>(
+                                graph_state, {"show_slot_names"}, &this->present.show_slot_names)) {
+                            for (auto& mod : this->GetModules()) {
+                                for (auto& callslot_types : mod->GetCallSlots()) {
+                                    for (auto& callslots : callslot_types.second) {
+                                        callslots->present.label_visible = this->present.show_slot_names;
+                                    }
+                                }
+                            }
+                            for (auto& group_ptr : this->GetGroups()) {
+                                for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
+                                    for (auto& interfaceslot_ptr : interfaceslots_map.second) {
+                                        interfaceslot_ptr->present.label_visible = this->present.show_slot_names;
+                                    }
+                                }
+                            }
+                        }
+
+                        megamol::core::utility::get_json_value<bool>(
+                            graph_state, {"params_visible"}, &this->present.params_visible);
+
+                        megamol::core::utility::get_json_value<bool>(
+                            graph_state, {"params_readonly"}, &this->present.params_readonly);
+
+                        if (megamol::core::utility::get_json_value<bool>(
+                                graph_state, {"param_extended_mode"}, &this->present.param_extended_mode)) {
+                            for (auto& module_ptr : this->GetModules()) {
+                                for (auto& parameter : module_ptr->parameters) {
+                                    parameter.present.extended = this->present.param_extended_mode;
+                                }
+                            }
+                        }
+
+                        std::array<float, 2> canvas_scrolling;
+                        megamol::core::utility::get_json_value<float>(
+                            graph_state, {"canvas_scrolling"}, canvas_scrolling.data(), canvas_scrolling.size());
+                        this->present.graph_state.canvas.scrolling = ImVec2(canvas_scrolling[0], canvas_scrolling[1]);
+
+                        if (megamol::core::utility::get_json_value<float>(
+                                graph_state, {"canvas_zooming"}, &this->present.graph_state.canvas.zooming)) {
+                            this->present.reset_zooming = false;
+                        }
+
+                        // modules
+                        for (auto& module_item : graph_state.items()) {
+                            if (module_item.key() == GUI_JSON_TAG_MODULES) {
+                                for (auto& module_state : module_item.value().items()) {
+                                    std::string module_fullname = module_state.key();
+                                    auto position_item = module_state.value();
+                                    std::array<float, 2> graph_position;
+                                    megamol::core::utility::get_json_value<float>(module_state.value(),
+                                        {"graph_position"}, graph_position.data(), graph_position.size());
+                                    auto module_position = ImVec2(graph_position[0], graph_position[1]);
+
+                                    // Apply graph position to module
+                                    bool module_found = false;
+                                    for (auto& module_ptr : this->GetModules()) {
+                                        if (module_ptr->FullName() == module_fullname) {
+                                            module_ptr->present.position = module_position;
+                                            module_found = true;
+                                        }
+                                    }
+                                    if (!module_found) {
+                                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                            "[GUI] JSON state: Unable to find module '%s' to apply graph position "
+                                            "in "
+                                            "configurator. [%s, %s, line %d]\n",
+                                            module_fullname.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                                    }
+                                }
+                            }
+                        }
+
+                        // interfaces
+                        for (auto& interfaces_item : graph_state.items()) {
+                            if (interfaces_item.key() == GUI_JSON_TAG_INTERFACES) {
+                                for (auto& interface_state : interfaces_item.value().items()) {
+                                    std::string group_name = interface_state.key();
+                                    auto interfaceslot_items = interface_state.value();
+
+                                    // interfaces
+                                    for (auto& interfaceslot_item : interfaceslot_items.items()) {
+                                        std::vector<std::string> calleslot_fullnames;
+                                        for (auto& callslot_item : interfaceslot_item.value().items()) {
+                                            std::string callslot_name;
+                                            megamol::core::utility::get_json_value<std::string>(
+                                                callslot_item.value(), {}, &callslot_name);
+                                            calleslot_fullnames.emplace_back(callslot_name);
+                                        }
+
+                                        // Add interface slot containing found calls slots to group
+                                        // Find pointers to call slots by name
+                                        CallSlotPtrVector_t callslot_ptr_vector;
+                                        for (auto& callsslot_fullname : calleslot_fullnames) {
+                                            auto split_pos = callsslot_fullname.rfind("::");
+                                            if (split_pos != std::string::npos) {
+                                                std::string callslot_name = callsslot_fullname.substr(split_pos + 2);
+                                                std::string module_fullname = callsslot_fullname.substr(0, (split_pos));
+                                                for (auto& module_ptr : this->GetModules()) {
+                                                    if (module_ptr->FullName() == module_fullname) {
+                                                        for (auto& callslot_map : module_ptr->GetCallSlots()) {
+                                                            for (auto& callslot_ptr : callslot_map.second) {
+                                                                if (callslot_ptr->name == callslot_name) {
+                                                                    callslot_ptr_vector.emplace_back(callslot_ptr);
+                                                                }
+                                                            }
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
-                                    }
-                                }
-                            }
-                        }
-                        if (!callslot_ptr_vector.empty()) {
-                            bool group_found = false;
-                            for (auto& group_ptr : this->GetGroups()) {
-                                if (group_ptr->name == group_name) {
-                                    auto callslot_ptr = callslot_ptr_vector[0];
-                                    // First remove previously added interface slot which was
-                                    // automatically added during adding module to group
-                                    this->present.ResetStatePointers();
-                                    for (size_t i = 1; i < callslot_ptr_vector.size(); i++) {
-                                        if (group_ptr->InterfaceSlot_ContainsCallSlot(callslot_ptr_vector[i]->uid)) {
-                                            group_ptr->InterfaceSlot_RemoveCallSlot(callslot_ptr_vector[i]->uid, true);
-                                        }
-                                    }
-                                    ImGuiID interfaceslot_uid = group_ptr->AddInterfaceSlot(callslot_ptr);
-                                    if (interfaceslot_uid != GUI_INVALID_ID) {
-                                        InterfaceSlotPtr_t interfaceslot_ptr;
-                                        if (group_ptr->GetInterfaceSlot(interfaceslot_uid, interfaceslot_ptr)) {
-                                            for (size_t i = 1; i < callslot_ptr_vector.size(); i++) {
-                                                interfaceslot_ptr->AddCallSlot(
-                                                    callslot_ptr_vector[i], interfaceslot_ptr);
+                                        if (!callslot_ptr_vector.empty()) {
+                                            bool group_found = false;
+                                            for (auto& group_ptr : this->GetGroups()) {
+                                                if (group_ptr->name == group_name) {
+                                                    auto callslot_ptr = callslot_ptr_vector[0];
+                                                    // First remove previously added interface slot which was
+                                                    // automatically added during adding module to group
+                                                    this->present.ResetStatePointers();
+                                                    for (size_t i = 1; i < callslot_ptr_vector.size(); i++) {
+                                                        if (group_ptr->InterfaceSlot_ContainsCallSlot(
+                                                                callslot_ptr_vector[i]->uid)) {
+                                                            group_ptr->InterfaceSlot_RemoveCallSlot(
+                                                                callslot_ptr_vector[i]->uid, true);
+                                                        }
+                                                    }
+                                                    ImGuiID interfaceslot_uid =
+                                                        group_ptr->AddInterfaceSlot(callslot_ptr);
+                                                    if (interfaceslot_uid != GUI_INVALID_ID) {
+                                                        InterfaceSlotPtr_t interfaceslot_ptr;
+                                                        if (group_ptr->GetInterfaceSlot(
+                                                                interfaceslot_uid, interfaceslot_ptr)) {
+                                                            for (size_t i = 1; i < callslot_ptr_vector.size(); i++) {
+                                                                interfaceslot_ptr->AddCallSlot(
+                                                                    callslot_ptr_vector[i], interfaceslot_ptr);
+                                                            }
+                                                        }
+                                                    }
+                                                    group_found = true;
+                                                }
+                                            }
+                                            if (!group_found) {
+                                                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                                    "[GUI] JSON state: Unable to find group '%s' to add interface "
+                                                    "slot. "
+                                                    "[%s, %s, line %d]\n",
+                                                    group_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                                             }
                                         }
                                     }
-                                    group_found = true;
                                 }
-                            }
-                            if (!group_found) {
-                                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "[GUI] JSON state: Unable to find group '%s' to add interface "
-                                    "slot. "
-                                    "[%s, %s, line %d]\n",
-                                    group_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                             }
                         }
                     }
@@ -1131,29 +1146,31 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
 bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
 
     try {
-        nlohmann::json graph_state;
-
         // Write graph state
         GUIUtils::Utf8Encode(this->name);
-        graph_state["project_name"] = this->name;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["project_name"] = this->name;
         GUIUtils::Utf8Decode(this->name);
-        graph_state["show_parameter_sidebar"] = this->present.show_parameter_sidebar;
-        graph_state["parameter_sidebar_width"] = this->present.parameter_sidebar_width;
-        graph_state["show_grid"] = this->present.show_grid;
-        graph_state["show_call_names"] = this->present.show_call_names;
-        graph_state["show_slot_names"] = this->present.show_slot_names;
-        graph_state["show_module_names"] = this->present.show_module_names;
-        graph_state["params_visible"] = this->present.params_visible;
-        graph_state["params_readonly"] = this->present.params_readonly;
-        graph_state["param_extended_mode"] = this->present.param_extended_mode;
-        graph_state["canvas_scrolling"] = {
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_parameter_sidebar"] =
+            this->present.show_parameter_sidebar;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["parameter_sidebar_width"] =
+            this->present.parameter_sidebar_width;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_grid"] = this->present.show_grid;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_names"] = this->present.show_call_names;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_slot_names"] = this->present.show_slot_names;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_module_names"] = this->present.show_module_names;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["params_visible"] = this->present.params_visible;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["params_readonly"] = this->present.params_readonly;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["param_extended_mode"] =
+            this->present.param_extended_mode;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["canvas_scrolling"] = {
             this->present.graph_state.canvas.scrolling.x, this->present.graph_state.canvas.scrolling.y};
-        graph_state["canvas_zooming"] = this->present.graph_state.canvas.zooming;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["canvas_zooming"] =
+            this->present.graph_state.canvas.zooming;
 
         // Write module positions
         for (auto& module_ptr : this->GetModules()) {
-            graph_state[GUI_JSON_TAG_MODULES][module_ptr->FullName()]["graph_position"] = {
-                module_ptr->present.position.x, module_ptr->present.position.y};
+            inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT][GUI_JSON_TAG_MODULES][module_ptr->FullName()]
+                      ["graph_position"] = {module_ptr->present.position.x, module_ptr->present.position.y};
         }
 
         // Write group interface slots
@@ -1168,14 +1185,13 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
                             callslot_fullname = callslot_ptr->GetParentModule()->FullName() + "::" + callslot_ptr->name;
                         }
                         GUIUtils::Utf8Encode(callslot_fullname);
-                        graph_state[GUI_JSON_TAG_INTERFACES][group_ptr->name][interface_label] += callslot_fullname;
+                        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT][GUI_JSON_TAG_INTERFACES][group_ptr->name]
+                                  [interface_label] += callslot_fullname;
                     }
                     interface_number++;
                 }
             }
         }
-
-        inout_json[GUI_JSON_TAG_THIS_GRAPH] = graph_state;
 
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote graph state to JSON.");

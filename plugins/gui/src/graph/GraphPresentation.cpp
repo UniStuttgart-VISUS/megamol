@@ -711,7 +711,8 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         float input_text_width = std::max(
             min_text_width, (ImGui::CalcTextSize(this->current_main_view_name.c_str()).x + 2.0f * style.ItemSpacing.x));
         ImGui::PushItemWidth(input_text_width);
-        if (ImGui::InputText("###current_main_view_name", &this->current_main_view_name)) {
+        if (ImGui::InputText(
+                "###current_main_view_name", &this->current_main_view_name, ImGuiInputTextFlags_EnterReturnsTrue)) {
             if ((inout_graph.GetCoreInterface() == GraphCoreInterface::NO_INTERFACE) ||
                 (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH)) {
                 selected_mod_ptr->main_view_name = this->current_main_view_name;

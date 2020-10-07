@@ -122,11 +122,6 @@ private:
     ImVec2 project_read_confpos(const std::string& line);
     bool project_separate_name_and_namespace(const std::string& full_name, std::string& name_space, std::string& name);
 
-    bool replace_graph_state(
-        const GraphPtr_t& graph_ptr, const std::string& in_json_string, std::string& out_json_string);
-    bool replace_parameter_gui_state(
-        const GraphPtr_t& graph_ptr, const std::string& in_json_string, std::string& out_json_string);
-
     inline const std::string generate_unique_graph_name(void) {
         return ("Project_" + std::to_string(++graph_name_uid));
     }
@@ -139,6 +134,9 @@ private:
                 std::equal(str1.begin(), str1.end(), str2.begin(),
                     [](char& c1, char& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); }));
     }
+
+    bool replace_state_in_file(const std::string& filename, ImGuiID graph_id);
+    bool load_state_from_file(const std::string& filename, ImGuiID graph_id);
 };
 
 

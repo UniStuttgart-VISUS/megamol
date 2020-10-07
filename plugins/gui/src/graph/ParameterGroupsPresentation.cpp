@@ -201,7 +201,7 @@ bool megamol::gui::ParameterGroupsPresentation::StateToJSON(
 
     for (auto& group_widget_id : group_widget_ids) {
         if (group_widget_id.second.active) {
-            std::string param_fullname = module_fullname + "::parametergroup::" + group_widget_id.first;
+            std::string param_fullname = module_fullname + "::ParameterGroup::" + group_widget_id.first;
             group_widget_id.second.StateToJSON(inout_json, param_fullname);
         }
     }
@@ -214,7 +214,7 @@ bool megamol::gui::ParameterGroupsPresentation::StateFromJSON(
     const nlohmann::json& in_json, const std::string& module_fullname) {
 
     for (auto& group_widget_id : group_widget_ids) {
-        std::string param_fullname = module_fullname + "::parametergroup::" + group_widget_id.first;
+        std::string param_fullname = module_fullname + "::ParameterGroup::" + group_widget_id.first;
 
         if (group_widget_id.second.StateFromJSON(in_json, param_fullname)) {
             group_widget_id.second.active = true;

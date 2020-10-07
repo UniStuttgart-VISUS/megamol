@@ -100,8 +100,8 @@ public:
     bool PushSyncQueue(QueueAction in_action, const QueueData& in_data);
     bool PopSyncQueue(QueueAction& out_action, QueueData& out_data);
     inline void ClearSyncQueue(void) {
-        while (!this->sync_queue->empty()) {
-            this->sync_queue->pop();
+        while (!this->sync_queue.empty()) {
+            this->sync_queue.pop();
         }
     }
 
@@ -120,7 +120,6 @@ public:
 private:
     typedef std::tuple<QueueAction, QueueData> SyncQueueData_t;
     typedef std::queue<SyncQueueData_t> SyncQueue_t;
-    typedef std::shared_ptr<SyncQueue_t> SyncQueuePtr_t;
 
     // VARIABLES --------------------------------------------------------------
 
@@ -129,7 +128,7 @@ private:
     GroupPtrVector_t groups;
     bool dirty_flag;
     std::string filename;
-    SyncQueuePtr_t sync_queue;
+    SyncQueue_t sync_queue;
     GraphCoreInterface graph_core_interface;
 
     // FUNCTIONS --------------------------------------------------------------

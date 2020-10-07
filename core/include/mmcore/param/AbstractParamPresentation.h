@@ -17,7 +17,7 @@
 #include "mmcore/utility/log/Log.h"
 
 
-#define GUI_JSON_TAG_GUISTATE_PARAMETERS ("Parameters")
+#define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates")
 
 
 namespace megamol {

@@ -76,20 +76,22 @@ public:
      *
      * @param filename      The file name of the file.
      * @param in_content    The content to wirte to the file.
+     * @param silent        Disable log output.
      *
      * @return True on success, false otherwise.
      */
-    static bool WriteFile(const std::string& filename, const std::string& in_content);
+    static bool WriteFile(const std::string& filename, const std::string& in_content, bool silent = false);
 
     /**
      * Read content from file.
      *
      * @param filename      The file name of the file.
-     * @param in_content    The content to wirte to the file.
+     * @param out_content   The content to read from file.
+     * @param silent        Disable log output.
      *
      * @return True on success, false otherwise.
      */
-    static bool ReadFile(const std::string& filename, std::string& out_content);
+    static bool ReadFile(const std::string& filename, std::string& out_content, bool silent = false);
 
 private:
     FileUtils(void);
