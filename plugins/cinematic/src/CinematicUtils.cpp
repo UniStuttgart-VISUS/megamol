@@ -284,6 +284,7 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     this->buffers[Buffers::ATTRIBUTES]->rebuffer<std::vector<float>>(this->queues[primitive].attributes);
 
     // Set OpenGL state ----------------------------------------------------
+    // Blending
     GLboolean blendEnabled = glIsEnabled(GL_BLEND);
     if (!blendEnabled) {
         glEnable(GL_BLEND);
@@ -293,18 +294,25 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     glGetIntegerv(GL_BLEND_SRC, &blendSrc);
     glGetIntegerv(GL_BLEND_DST, &blendDst);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // Depth
     GLboolean depthEnabled = glIsEnabled(GL_DEPTH_TEST);
     if (!depthEnabled) {
         glEnable(GL_DEPTH_TEST);
     }
+    // Cullling
     GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
     if (cullEnabled) {
         glDisable(GL_CULL_FACE);
     }
+    // Smoothing
     if (this->smooth) {
         glHint(GL_FRAGMENT_SHADER_DERIVATIVE_HINT, GL_NICEST);
     }
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    // Vertex Point Size
+    bool vertexpointsizeEnabled = glIsEnabled(GL_VERTEX_PROGRAM_POINT_SIZE);
+    if (!vertexpointsizeEnabled) {
+        glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    }
 
     // Draw ----------------------------------------------------------------
     GLenum mode = GL_TRIANGLES;
@@ -343,13 +351,21 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     glBindVertexArray(0);
 
     // Reset OpenGL state --------------------------------------------------
-    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    // Vertex Point Size
+    if (!vertexpointsizeEnabled) {
+        glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    }
+    // Smoothing
+    /// not reset ...
+    // Cullling
     if (cullEnabled) {
         glEnable(GL_CULL_FACE);
     }
+    // Depth
     if (!depthEnabled) {
         glDisable(GL_DEPTH_TEST);
     }
+    // Blending
     glBlendFunc(blendSrc, blendDst);
     if (!blendEnabled) {
         glDisable(GL_BLEND);
@@ -726,26 +742,26 @@ void CinematicUtils::PushHotkeyList(float viewport_width, float viewport_height)
 
     std::string hotkey_str = "";
     hotkey_str += "-----[ GLOBAL ]-----\n";
-    hotkey_str += "[Ctrl+a] Apply current settings to selected/new keyframe. \n";
-    hotkey_str += "[Ctrl+d] Delete selected keyframe. \n";
-    hotkey_str += "[Ctrl+s] Save keyframes to file. \n";
-    hotkey_str += "[Ctrl+l] Load keyframes from file. \n";
-    hotkey_str += "[Ctrl+z] Undo keyframe changes. \n";
-    hotkey_str += "[Ctrl+y] Redo keyframe changes. \n";
+    hotkey_str += "[Shift+a] Apply current settings to selected/new keyframe. \n";
+    hotkey_str += "[Shift+d] Delete selected keyframe. \n";
+    hotkey_str += "[Shift+s] Save keyframes to file. \n";
+    hotkey_str += "[Shift+l] Load keyframes from file. \n";
+    hotkey_str += "[Shift+z] Undo keyframe changes. \n";
+    hotkey_str += "[Shift+y] Redo keyframe changes. \n";
     hotkey_str += "-----[ TRACKING SHOT ]----- \n";
-    hotkey_str += "[Ctrl+q] Toggle different manipulators for the selected keyframe. \n";
-    hotkey_str += "[Ctrl+w] Show manipulators inside/outside of model bounding box. \n";
-    hotkey_str += "[Ctrl+u] Reset look-at vector of selected keyframe. \n";
+    hotkey_str += "[Shift+q] Toggle different manipulators for the selected keyframe. \n";
+    hotkey_str += "[Shift+w] Show manipulators inside/outside of model bounding box. \n";
+    hotkey_str += "[Shift+u] Reset look-at vector of selected keyframe. \n";
     hotkey_str += "-----[ CINEMATIC ]----- \n";
-    hotkey_str += "[Ctrl+r] Start/Stop rendering complete animation. \n";
-    hotkey_str += "[Ctrl+Space] Start/Stop animation preview. \n";
+    hotkey_str += "[Shift+r] Start/Stop rendering complete animation. \n";
+    hotkey_str += "[Shift+Space] Start/Stop animation preview. \n";
     hotkey_str += "-----[ TIMELINE ]----- \n";
-    hotkey_str += "[Ctrl+Right/Left Arrow] Move selected keyframe on animation time axis. \n";
-    hotkey_str += "[Ctrl+f] Snap all keyframes to animation frames. \n";
-    hotkey_str += "[Ctrl+g] Snap all keyframes to simulation frames. \n";
-    hotkey_str += "[Ctrl+t] Linearize simulation time between two keyframes. \n";
-    //hotkey_str += "[Ctrl+v] Set same velocity between all keyframes (Experimental).\n"; ///XXX Calcualation is not correct yet ...
-    hotkey_str += "[Ctrl+x] Reset shifted and scaled time axes. \n";
+    hotkey_str += "[Shift+Right/Left Arrow] Move selected keyframe on animation time axis. \n";
+    hotkey_str += "[Shift+f] Snap all keyframes to animation frames. \n";
+    hotkey_str += "[Shift+g] Snap all keyframes to simulation frames. \n";
+    hotkey_str += "[Shift+t] Linearize simulation time between two keyframes. \n";
+    //hotkey_str += "[Shift+v] Set same velocity between all keyframes (Experimental).\n"; ///XXX Calcualation is not correct yet ...
+    hotkey_str += "[Shift+p] Reset shifted and scaled time axes. \n";
     hotkey_str += "[Left Mouse Button] Select keyframe. \n";
     hotkey_str += "[Middle Mouse Button] Axes scaling in mouse direction. \n";
     hotkey_str += "[Right Mouse Button] Drag & drop keyframe / pan axes. \n";
@@ -793,7 +809,11 @@ void CinematicUtils::DrawAll(glm::mat4& mat_mvp, glm::vec2 dim_vp) {
     glPushMatrix();
     glLoadIdentity();
 
+    glDisable(GL_DEPTH_TEST);
+
     this->font.BatchDrawString();
+
+    glEnable(GL_DEPTH_TEST);
 
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
