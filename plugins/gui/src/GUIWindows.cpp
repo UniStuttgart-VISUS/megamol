@@ -62,8 +62,8 @@ GUIWindows::GUIWindows(void)
     this->autostart_configurator_param << new core::param::BoolParam(false);
 
     this->param_slots.clear();
-    // this->param_slots.push_back(&this->state_param);
     this->param_slots.push_back(&this->style_param);
+    /// this->param_slots.push_back(&this->state_param);
     this->param_slots.push_back(&this->autosave_state_param);
     this->param_slots.push_back(&this->autostart_configurator_param);
 
@@ -800,30 +800,30 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 
     // 2b) ... or synchronize Core Graph -> GUI Graph -------------------------
     if (!synced) {
-
         auto last_graph_uid = this->graph_uid;
 
         // Creates new graph at first call
         sync_success &= this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(
             this->graph_uid, ((megamol_graph == nullptr) ? (this->core_instance) : (nullptr)), megamol_graph);
-
-        // Init after graph was created
-        if ((last_graph_uid == GUI_INVALID_ID) && (this->graph_uid != GUI_INVALID_ID)) {
-            GraphPtr_t graph_ptr;
-            if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr) &&
-                (this->core_instance != nullptr)) {
-                if (graph_ptr->GetFilename().empty()) {
-                    auto script_filename = this->core_instance->GetLuaState()->GetScriptPath();
-                    graph_ptr->SetFilename(script_filename);
-                }
-                this->load_state_from_file(graph_ptr->GetFilename());
-            }
-        }
-
         if (!sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);
+        }
+
+        // Init after graph was created
+        if (sync_success && (last_graph_uid == GUI_INVALID_ID) && (this->graph_uid != GUI_INVALID_ID)) {
+            GraphPtr_t graph_ptr;
+            if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr) &&
+                (this->core_instance != nullptr)) {
+                // Try setting initial project file name
+                if (graph_ptr->GetFilename().empty()) {
+                    auto script_filename = this->core_instance->GetLuaState()->GetScriptPath();
+                    graph_ptr->SetFilename(script_filename);
+                }
+                // Load initial gui state from file
+                this->load_state_from_file(graph_ptr->GetFilename());
+            }
         }
     }
 
@@ -1745,7 +1745,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 
             graph_ptr->SetFilename(filename);
             popup_failed |= !this->save_state_to_file(filename);
-            popup_failed |= !!this->configurator.GetGraphCollection().SaveProjectToFile(this->graph_uid, filename);
+            popup_failed |= !this->configurator.GetGraphCollection().SaveProjectToFile(this->graph_uid, filename);
         }
         MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
             confirmed, "Cancel", aborted);

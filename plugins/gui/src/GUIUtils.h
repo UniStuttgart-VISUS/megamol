@@ -62,10 +62,10 @@ namespace gui {
 #define GUI_JSON_TAG_WINDOW_CONFIGS ("WindowConfigurations")
 #define GUI_JSON_TAG_CONFIGURATOR ("Configurator")
 #define GUI_JSON_TAG_GRAPHS ("Graphs")
-#define GUI_JSON_TAG_THIS_GRAPH ("This")
+#define GUI_JSON_TAG_THIS_GRAPH ("Project")
 #define GUI_JSON_TAG_MODULES ("Modules")
 #define GUI_JSON_TAG_INTERFACES ("Interfaces")
-/// GUI_JSON_TAG_GUISTATE_PARAMETERS is defined in AbstractParamPresentation.h
+/// GUI_JSON_TAG_GUISTATE_PARAMETERS is defined in megamol::core::paramAbstractParamPresentation.h
 
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))

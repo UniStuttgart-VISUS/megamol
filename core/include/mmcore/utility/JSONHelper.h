@@ -21,7 +21,6 @@ namespace megamol {
 namespace core {
 namespace utility {
 
-
     /**
     * Read value from given JSON node
     */
