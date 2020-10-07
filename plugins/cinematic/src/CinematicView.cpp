@@ -44,8 +44,6 @@ CinematicView::CinematicView(void) : View3D_2()
     , playAnim(false)
     , cineWidth(1920)
     , cineHeight(1080)
-    , vp_lastw(0)
-    , vp_lasth(0)
     , sbSide(CinematicView::SkyboxSides::SKYBOX_NONE)
     , rendering(false)
     , fps(24)
@@ -56,10 +54,10 @@ CinematicView::CinematicView(void) : View3D_2()
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
     // init parameters
-    this->renderParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_R, core::view::Modifier::CTRL));
+    this->renderParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_R, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->renderParam);
 
-    this->toggleAnimPlayParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_SPACE, core::view::Modifier::CTRL));
+    this->toggleAnimPlayParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_SPACE, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->toggleAnimPlayParam);
 
     param::EnumParam* sbs = new param::EnumParam(this->sbSide);
@@ -72,6 +70,7 @@ CinematicView::CinematicView(void) : View3D_2()
     sbs->SetTypePair(CinematicView::SkyboxSides::SKYBOX_DOWN, "Down");
     this->selectedSkyboxSideParam << sbs;
     this->MakeSlotAvailable(&this->selectedSkyboxSideParam);
+    sbs = nullptr;
 
     this->skyboxCubeModeParam << new param::BoolParam(this->skyboxCubeMode);
     this->MakeSlotAvailable(&this->skyboxCubeModeParam);
@@ -107,6 +106,7 @@ CinematicView::CinematicView(void) : View3D_2()
     enp->SetTypePair(static_cast<int>(megamol::core::thecam::Eye::right), "Right");
     this->eyeParam << enp;
     this->MakeSlotAvailable(&this->eyeParam);
+    enp = nullptr;
 
     param::EnumParam* pep = new param::EnumParam(static_cast<int>(megamol::core::thecam::Projection_type::perspective));
     pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::perspective), "Mono Perspective");
@@ -117,6 +117,7 @@ CinematicView::CinematicView(void) : View3D_2()
     pep->SetTypePair(static_cast<int>(megamol::core::thecam::Projection_type::converged), "Converged");
     this->projectionParam << pep;
     this->MakeSlotAvailable(&this->projectionParam);
+    pep = nullptr;
 }
 
 
@@ -145,7 +146,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Initialise render utils once
     if (!this->utils.Initialized()) {
         if (!this->utils.Initialise(this->GetCoreInstance())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("[TRACKINGSHOT RENDERER] [create] Couldn't initialize render utils.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[TRACKINGSHOT RENDERER] [create] Couldn't initialize render utils. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return;
         }
     }
@@ -254,11 +255,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
 
     // Viewport ---------------------------------------------------------------
-    /// Viewport of camera will only be set when Base::Render(context) was called, so we have tot grab it from OpenGL (?)
+    /// Viewport of camera will only be set when Base::Render(context) was called, so we have tot grab it from OpenGL (!?)
     glm::ivec4 viewport;
     glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
     const int vp_iw = viewport[2];
-    const int vp_ih = viewport[3]; ;
+    const int vp_ih = viewport[3];
     const int vp_ih_reduced = vp_ih - static_cast<int>(this->utils.GetTextLineHeight());
     const float vp_fw = static_cast<float>(vp_iw);
     const float vp_fh = static_cast<float>(vp_ih);
@@ -272,11 +273,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         fboHeight = this->cineHeight;
     } else {
         float vpRatio = vp_fw / vp_fh_reduced;
-        // Check for viewport changes
-        if ((this->vp_lastw != vp_iw) || (this->vp_lasth != vp_ih_reduced)) {
-            this->vp_lastw = vp_iw;
-            this->vp_lasth = vp_ih_reduced;
-        }
         // Calculate reduced fbo width and height
         if ((this->cineWidth < vp_iw) && (this->cineHeight < vp_ih_reduced)) {
             fboWidth = this->cineWidth;
@@ -284,7 +280,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         } else {
             fboWidth = vp_iw;
             fboHeight = vp_ih_reduced;
-
             if (cineRatio > vpRatio) {
                 fboHeight = (static_cast<int>(vp_fw / cineRatio));
             } else if (cineRatio < vpRatio) {
@@ -445,21 +440,34 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glClearColor(bc[0], bc[1], bc[2], 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    /* Using FBO buffer in call. */
+    
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetOutputBuffer(&this->fbo);
-    Base::overrideCall = cr3d;
-
     // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
-    int fboVp[4] = {0, 0, fboWidth, fboHeight};
+    int fboVp[4] = { 0, 0, fboWidth, fboHeight };
     Base::overrideViewport = fboVp;
+    
+    //ALTERNATIVE
+    /// XXX Requires View3D_2 line 394 to be deleted/commented! 
+        //this->overrideCall->EnableOutputBuffer();
+    /// XXX Requires view::RenderOutputOpenGL::GetViewport() to get viewport always from:
+        /// GLint vp[4];
+        /// ::glGetIntegerv(GL_VIEWPORT, vp);
+        /// this->outputViewport.SetFromSize(vp[0], vp[1], vp[2], vp[3]);
+    /*
+    int fbovp[4] = { 0, 0, fboWidth, fboHeight };
+    glViewport(fbovp[0], fbovp[1], fbovp[2], fbovp[3]);
+    */
+
+    /// ! Set override call for using currrent fbo and current viewport
+    Base::overrideCall = cr3d;
 
     // Call Render-Function of parent View3D_2
     Base::Render(context);
 
     // Reset override render call
     Base::overrideCall = nullptr;
-    // Reset override viewport
-    Base::overrideViewport = nullptr;
 
     if (this->fbo.IsEnabled()) {
         this->fbo.Disable();
@@ -485,6 +493,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
     glClearColor(bc[0], bc[1], bc[2], 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // Restoring previous viewport
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
     // Push fbo texture -------------------------------------------------------
     float right = (vp_fw + static_cast<float>(texWidth)) / 2.0f;
@@ -772,13 +782,13 @@ bool CinematicView::render_to_file_cleanup() {
     ARY_SAFE_DELETE(this->png_data.buffer);
 
     if (this->png_data.buffer != nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.buffer is not nullptr.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.buffer is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     if (this->png_data.structptr != nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.structptr is not nullptr.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.structptr is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     if (this->png_data.infoptr != nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.infoptr is not nullptr.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[CINEMATIC VIEW] [render_to_file_cleanup] pngdata.infoptr is not nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC VIEW] STOPPED rendering.");
