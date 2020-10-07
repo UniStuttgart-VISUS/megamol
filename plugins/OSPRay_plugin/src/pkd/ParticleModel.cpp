@@ -1,3 +1,8 @@
+/*
+ * Modified by MegaMol Dev Team
+ * Based on project "ospray-module-pkd" files "ParticleModel.h" and "ParticleModel.cpp" (Apache License 2.0)
+ */
+
 #include "stdafx.h"
 #include "pkd/ParticleModel.h"
 
@@ -32,12 +37,12 @@ VISLIB_FORCEINLINE unsigned char byteColFromVoidArray(
 }
 
 
-typedef float(*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
-typedef unsigned char(*byteFromArrayFunc)(
+typedef float (*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
+typedef unsigned char (*byteFromArrayFunc)(
     const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 
-typedef float(*floatColFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
-typedef unsigned char(*byteColFromArrayFunc)(
+typedef float (*floatColFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
+typedef unsigned char (*byteColFromArrayFunc)(
     const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 
 
@@ -59,7 +64,7 @@ ospcommon::box3f ospray::ParticleModel::getBounds() const {
 
 
 void megamol::ospray::ParticleModel::fill(megamol::core::moldyn::SimpleSphericalParticles parts) {
-    //Attribute rgba("rgba");
+    // Attribute rgba("rgba");
 
     size_t vertexLength;
     size_t colorLength;
