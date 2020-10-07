@@ -16,8 +16,12 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <queue>
+
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/FramebufferObject.hpp"
 #include "glowl/GLSLProgram.hpp"
+
+#include <tuple>
 
 
 namespace megamol {
@@ -36,7 +40,7 @@ enum InteractionType {
 
 struct Interaction {
     InteractionType type;
-    uint32_t obj_id;
+    int obj_id;
     float axis_x;
     float axis_y;
     float axis_z;
@@ -47,7 +51,7 @@ struct Interaction {
 
 struct Manipulation {
     InteractionType type;
-    uint32_t obj_id;
+    int obj_id;
     float axis_x;
     float axis_y;
     float axis_Z;
@@ -78,7 +82,7 @@ public:
 
     bool DisableInteraction(void);
 
-    void AddInteractionObject(uint32_t obj_id, std::vector<Interaction> const& interactions) {
+    void AddInteractionObject(int obj_id, std::vector<Interaction> const& interactions) {
         this->available_interactions.insert({obj_id, interactions});
     }
 
@@ -96,40 +100,32 @@ private:
      * Set to true if cursor is on interactable object during current frame with respective obj id as second value
      * Set to fale if cursor is on "background" during current frame with -1 as second value
      */
-    std::pair<bool, int> cursor_on_interaction_obj;
+    std::tuple<bool, int, float> cursor_on_interaction_obj;
 
     /**
      * Set to true if cursor is on interactable object and mouse interaction (click, move) is ongoing with respective
      * obj id as second value Set to fale if cursor is on "background" during current frame with -1 as second value
      */
-    std::pair<bool, int> active_interaction_obj;
+    std::tuple<bool, int, float> active_interaction_obj;
 
-    std::map<uint32_t, std::vector<Interaction>> available_interactions;
+    std::map<int, std::vector<Interaction>> available_interactions;
     ManipVector pending_manipulations;
 
     std::unique_ptr<glowl::FramebufferObject> fbo;
 
     bool enabled;
 
-    std::shared_ptr<glowl::GLSLProgram> fbo_tex_shader;
+    std::shared_ptr<glowl::GLSLProgram> fbo_shader;
 
     // FUNCTIONS --------------------------------------------------------------
 
-    std::vector<Interaction> get_available_interactions(uint32_t obj_id) {
+    std::vector<Interaction> get_available_interactions(int obj_id) {
         std::vector<Interaction> retval;
         auto query = this->available_interactions.find(obj_id);
         if (query != this->available_interactions.end()) {
             retval = query->second;
         }
         return retval;
-    }
-
-    inline void check_opengl_errors(void) const {
-        auto err = glGetError();
-        if (err != 0) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "OpenGL Error: %i. [%s, %s, line %d]\n", err, __FILE__, __FUNCTION__, __LINE__);
-        }
     }
 };
 
@@ -143,16 +139,16 @@ public:
 
     InteractVector GetInteractions(unsigned int id) {
         InteractVector interactions;
-        interactions.emplace_back(Interaction(
-            {InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<uint32_t>(id), 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-        interactions.emplace_back(Interaction(
-            {InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<uint32_t>(id), 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}));
         interactions.emplace_back(
-            Interaction({InteractionType::SELECT, static_cast<uint32_t>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+            Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<int>(id), 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
         interactions.emplace_back(
-            Interaction({InteractionType::DESELECT, static_cast<uint32_t>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+            Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<int>(id), 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}));
         interactions.emplace_back(
-            Interaction({InteractionType::HIGHLIGHT, static_cast<uint32_t>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+            Interaction({InteractionType::SELECT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+        interactions.emplace_back(
+            Interaction({InteractionType::DESELECT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+        interactions.emplace_back(
+            Interaction({InteractionType::HIGHLIGHT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
         return interactions;
     }
 

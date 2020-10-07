@@ -83,6 +83,7 @@ View3D_2::View3D_2(void)
     , viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates")
     , viewKeyRunFactorSlot("viewKey::RunFactor", "The factor for step size multiplication when running (shift)")
     , viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees")
+    , viewKeyFixToWorldUpSlot("viewKey::FixToWorldUp","Fix rotation manipulator to world up vector")
     , mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode")
     , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be rotated")
     , enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
@@ -180,6 +181,9 @@ View3D_2::View3D_2(void)
 
     this->viewKeyAngleStepSlot.SetParameter(new param::FloatParam(90.0f, 0.1f, 360.0f));
     this->MakeSlotAvailable(&this->viewKeyAngleStepSlot);
+
+    this->viewKeyFixToWorldUpSlot.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->viewKeyFixToWorldUpSlot);
 
     this->mouseSensitivitySlot.SetParameter(new param::FloatParam(3.0f, 0.001f, 10.0f));
     this->mouseSensitivitySlot.SetUpdateCallback(&View3D_2::mouseSensitivityChanged);
@@ -793,10 +797,6 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
                 {
                     this->turntableManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
-                } else {
-                    this->rotateManipulator.setActive();
-                    this->translateManipulator.setActive(
-                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
                 }
             }
 
@@ -807,6 +807,10 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
             if (!anyManipulatorActive) {
                 if ((altPressed ^ this->arcballDefault) || ctrlPressed) {
                     this->orbitAltitudeManipulator.setActive(
+                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+                } else {
+                    this->rotateManipulator.setActive();
+                    this->translateManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
                 }
             }
@@ -921,19 +925,26 @@ bool view::View3D_2::OnMouseScroll(double dx, double dy) {
         if ((*cr)(view::CallRender3D_2::FnOnMouseScroll)) return true;
     }
 
-    // ToDo scrollwheel zooming..
-    if (abs(dy) > 0.0) {
 
-        auto cam_pos = this->cam.eye_position();
-        auto rot_cntr = thecam::math::point<glm::vec4>(glm::vec4(this->rotCenter, 0.0f));
+    // This mouse handling/mapping is so utterly weird and should die!
+    if (!this->toggleMouseSelection && (abs(dy) > 0.0)) {
+        if (this->rotateManipulator.manipulating()) {
+            this->viewKeyMoveStepSlot.Param<param::FloatParam>()->SetValue(
+                this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value() + 
+                (dy * 0.1f * this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value())
+            ); 
+        } else {
+            auto cam_pos = this->cam.eye_position();
+            auto rot_cntr = thecam::math::point<glm::vec4>(glm::vec4(this->rotCenter, 0.0f));
 
-        cam_pos.w() = 0.0f;
+            cam_pos.w() = 0.0f;
 
-        auto v = thecam::math::normalise(rot_cntr - cam_pos);
+            auto v = thecam::math::normalise(rot_cntr - cam_pos);
 
-        auto altitude = thecam::math::length(rot_cntr - cam_pos);
+            auto altitude = thecam::math::length(rot_cntr - cam_pos);
 
-        this->cam.position(cam_pos + (v * dy * (altitude / 50.0f)));
+            this->cam.position(cam_pos + (v * dy * (altitude / 50.0f)));
+        }
     }
 
     return true;
@@ -1198,7 +1209,10 @@ void View3D_2::handleCameraMovement(void) {
         mouseDirection /= midpoint;
 
         this->rotateManipulator.pitch(-mouseDirection.y * rotationStep);
-        this->rotateManipulator.yaw(mouseDirection.x * rotationStep);
+        this->rotateManipulator.yaw(
+            mouseDirection.x * rotationStep,
+            this->viewKeyFixToWorldUpSlot.Param<param::BoolParam>()->Value()
+        );
     }
 
     glm::vec3 newCamPos(static_cast<glm::vec4>(this->cam.eye_position()));

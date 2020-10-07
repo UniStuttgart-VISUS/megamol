@@ -216,7 +216,8 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 
                             reader->Get<uint64_t>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
-                        } else if (var.second["Type"] == "unsigned char") {
+                        } else if ((var.second["Type"] == "unsigned char")
+                            || (var.second["Type"] == "uint8_t")) {
                             auto fc = std::make_shared<UCharContainer>(UCharContainer());
                             fc->singleValue = singleValue;
                             std::vector<unsigned char>& tmp_vec = fc->getVec();

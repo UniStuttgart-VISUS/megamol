@@ -13,7 +13,10 @@
 
 #include <memory>
 #include <vector>
+
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/Mesh.hpp"
+
 #include "mesh.h"
 
 namespace megamol {
@@ -50,13 +53,9 @@ public:
     ~GPUMeshCollection() = default;
 
     template <typename VertexBufferIterator, typename IndexBufferIterator>
-    size_t addMesh(
-        glowl::VertexLayout vertex_descriptor,
+    size_t addMesh(std::vector<glowl::VertexLayout> const& vertex_descriptor,
         std::vector<IteratorPair<VertexBufferIterator>> const& vertex_buffers,
-        IteratorPair<IndexBufferIterator> index_buffer,
-        GLenum index_type,
-        GLenum usage,
-        GLenum primitive_type,
+        IteratorPair<IndexBufferIterator> index_buffer, GLenum index_type, GLenum usage, GLenum primitive_type,
         bool store_seperate = false);
 
     void deleteSubMesh(size_t submesh_idx);
@@ -76,29 +75,16 @@ private:
 };
 
 template <typename VertexBufferIterator, typename IndexBufferIterator>
-inline size_t GPUMeshCollection::addMesh(
-    glowl::VertexLayout vertex_descriptor,
+inline size_t GPUMeshCollection::addMesh(std::vector<glowl::VertexLayout> const& vertex_descriptor,
     std::vector<IteratorPair<VertexBufferIterator>> const& vertex_buffers,
-    IteratorPair<IndexBufferIterator> index_buffer,
-    GLenum index_type,
-    GLenum usage,
-    GLenum primitive_type,
+    IteratorPair<IndexBufferIterator> index_buffer, GLenum index_type, GLenum usage, GLenum primitive_type,
     bool store_seperate) {
     typedef typename std::iterator_traits<IndexBufferIterator>::value_type IndexBufferType;
     typedef typename std::iterator_traits<VertexBufferIterator>::value_type VertexBufferType;
 
-    // compute byte size of per vertex data in first vertex buffer
     std::vector<size_t> vb_attrib_byte_sizes;
-    // single vertex buffer signals possible interleaved vertex layout, sum up all attribute byte sizes
-    if (vertex_buffers.size() == 1) {
-        vb_attrib_byte_sizes.push_back(0);
-        for (auto& attr : vertex_descriptor.attributes) {
-            vb_attrib_byte_sizes.back() += computeAttributeByteSize(attr);
-        }
-    } else {
-        for (auto& attr : vertex_descriptor.attributes) {
-            vb_attrib_byte_sizes.push_back(computeAttributeByteSize(attr));
-        }
+    for (auto& vertex_layout : vertex_descriptor) {
+        vb_attrib_byte_sizes.push_back(vertex_layout.stride);
     }
 
     // get vertex buffer data pointers and byte sizes
@@ -120,8 +106,12 @@ inline size_t GPUMeshCollection::addMesh(
     if (!store_seperate) {
         // check for existing mesh batch with matching vertex layout and index type and enough available space
         for (; it != m_batched_meshes.end(); ++it) {
-            bool layout_check = (vertex_descriptor == it->mesh->getVertexLayout());
-            // TODO check interleaved vs non-interleaved
+            bool layout_check = true;
+
+            for (int i = 0; i < vertex_descriptor.size(); ++i) {
+                vertex_descriptor[i] == it->mesh->getVertexLayouts()[i];
+            }
+
             bool idx_type_check = (index_type == it->mesh->getIndexType());
 
             if (layout_check && idx_type_check) {
@@ -188,10 +178,7 @@ inline size_t GPUMeshCollection::addMesh(
     return sub_mesh_idx;
 }
 
-inline void GPUMeshCollection::deleteSubMesh(size_t submesh_idx) 
-{
-
-}
+inline void GPUMeshCollection::deleteSubMesh(size_t submesh_idx) {}
 
 inline std::vector<GPUMeshCollection::BatchedMeshes> const& GPUMeshCollection::getMeshes() { return m_batched_meshes; }
 

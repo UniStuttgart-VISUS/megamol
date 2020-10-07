@@ -47,7 +47,7 @@ public:
      *
      * @return Hotkeys of configurator.
      */
-    megamol::gui::HotkeyArray_t& GetHotkeys(void) { return this->graph_state.hotkeys; }
+    inline megamol::gui::HotkeyArray_t& GetHotkeys(void) { return this->graph_state.hotkeys; }
 
     /**
      * Draw configurator window.
@@ -69,6 +69,11 @@ public:
      */
     void UpdateStateParameter(void);
 
+    /**
+     * Return graph collection.
+     */
+    GraphCollection& GetGraphCollection(void) { return this->graph_collection; }
+
 private:
     // VARIABLES --------------------------------------------------------------
 
@@ -87,6 +92,7 @@ private:
     bool show_module_list_sidebar;
     bool show_module_list_child;
     ImVec2 module_list_popup_pos;
+    bool module_list_popup_hovered;
     ImGuiID last_selected_callslot_uid;
     megamol::gui::GraphState_t graph_state;
     bool open_popup_load;

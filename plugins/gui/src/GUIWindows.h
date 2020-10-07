@@ -25,7 +25,6 @@
 #include "CorporateWhiteStyle.h"
 #include "FileUtils.h"
 #include "WindowCollection.h"
-#include "graph/GraphCollection.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/MinimalPopUp.h"
@@ -34,12 +33,14 @@
 #include "widgets/WidgetPicking_gl.h"
 
 #include "mmcore/CoreInstance.h"
-
+///#include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/versioninfo.h"
+///#include "mmcore/view/AbstractView_EventConsumption.h"
 
 #include "vislib/math/Rectangle.h"
 
+#include <ctime>
 #include <iomanip>
 #include <sstream>
 
@@ -47,6 +48,14 @@
 #ifdef GUI_USE_GLFW
 #    include "GLFW/glfw3.h"
 #endif
+
+/// TEMP
+namespace megamol {
+namespace core {
+class MegaMolGraph;
+}
+} // namespace megamol
+///
 
 
 namespace megamol {
@@ -74,14 +83,14 @@ public:
     /**
      * Setup and enable ImGui context for subsequent use.
      *
-     * @param module_fullname   The full name of the parent module incorporating this GUI (needed for module filtering).
-     * @param viewport_size     The currently available size of the viewport.
-     * @param instanceTime      The current instance time.
+     * @param framebuffer_size   The currently available size of the framebuffer.
+     * @param window_size        The currently available size of the window.
+     * @param instance_time      The current instance time.
      */
-    bool PreDraw(glm::vec2 viewport_size, double instanceTime);
+    bool PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time);
 
     /**
-     * Actual Gui windows drawing and final rednering of pushed ImGui draw commands.
+     * Actual drawing of Gui windows and final rendering of pushed ImGui draw commands.
      */
     bool PostDraw(void);
 
@@ -115,6 +124,18 @@ public:
      * Return list of parameter slots provided by this class. Make available in module which uses this class.
      */
     inline const std::vector<megamol::core::param::ParamSlot*> GetParams(void) const { return this->param_slots; }
+
+    /**
+     * Return true if user triggered shutdown via gui.
+     */
+    inline bool ShouldShutdown(void) const { return this->shutdown; }
+
+    /**
+     * Synchronise changes between core graph and gui graph.
+     *
+     * @param megamol_graph    If no megamol_graph is given, try to synchronise 'old' graph via core_instance.
+     */
+    bool SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph = nullptr);
 
 private:
     /** Available GUI styles. */
@@ -156,7 +177,7 @@ private:
 
     // VARIABLES --------------------------------------------------------------
 
-    /** Pointer to core isntance. */
+    /** Pointer to core instance. */
     megamol::core::CoreInstance* core_instance;
 
     /** List of pointers to all paramters. */
@@ -187,14 +208,14 @@ private:
     /** The current local state of the gui. */
     StateBuffer state;
 
+    /** Flag indicating user triggered shutdown. */
+    bool shutdown = false;
+
     /** Numer of fonts reserved for the configurator graph canvas. */
     unsigned int graph_fonts_reserved;
 
-    /** UID of graph */
+    /** UID of currently running graph */
     ImGuiID graph_uid;
-
-    /** The graph collection holding only the graph of the currently running project. */
-    GraphCollection graph_collection;
 
     // Widgets
     FileBrowserWidget file_browser;
@@ -224,7 +245,7 @@ private:
     bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
     void checkMultipleHotkeyAssignement(void);
     bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
-    void shutdown(void);
+    void triggerCoreInstanceShutdown(void);
 
     void save_state_to_parameter(void);
     bool gui_and_parameters_state_from_json_string(const std::string& in_json_string);

@@ -46,7 +46,7 @@ bool GenerateGlyphs::doScalarGlyphGeneration(FloatProbe& probe) {
     auto samples = probe.getSamplingResult();
 
     if (samples->samples.empty()) {
-        vislib::sys::Log::DefaultLog.WriteError("[GenerateGlyphs] Probes have not been sampled.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[GenerateGlyphs] Probes have not been sampled.");
         return false;
     }
 
@@ -168,7 +168,7 @@ bool GenerateGlyphs::doVectorRibbonGlyphGeneration(Vec4Probe& probe) {
     auto samples = probe.getSamplingResult();
 
     if (samples->samples.empty()) {
-        vislib::sys::Log::DefaultLog.WriteError("[GenerateGlyphs] Probes have not been sampled.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[GenerateGlyphs] Probes have not been sampled.");
         return false;
     }
 
@@ -332,7 +332,7 @@ bool GenerateGlyphs::doVectorRadarGlyphGeneration(Vec4Probe& probe) {
     auto samples = probe.getSamplingResult();
 
     if (samples->samples.empty()) {
-        vislib::sys::Log::DefaultLog.WriteError("[GenerateGlyphs] Probes have not been sampled.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[GenerateGlyphs] Probes have not been sampled.");
         return false;
     }
 

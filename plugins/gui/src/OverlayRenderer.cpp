@@ -269,8 +269,8 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
     }
     auto parameter_ptr = this->GetCoreInstance()->FindParameter(parameter_name, false, false);
     if (parameter_ptr.IsNull()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to find parameter by name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unable to find parameter by name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     bool found_valid_param_type = false;
@@ -283,8 +283,8 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
         if (found_valid_param_type) {
             this->m_time_parameter_ptr = parameter_ptr;
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     } else if (&slot == &this->paramSpeedParameter) {
         if (parameter_ptr.DynamicCast<param::FloatParam>() != nullptr) {
@@ -294,8 +294,8 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
         if (found_valid_param_type) {
             this->m_speed_parameter_ptr = parameter_ptr;
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     } else if (&slot == &this->paramParameterName) {
         if (parameter_ptr.DynamicCast<param::FloatParam>() != nullptr) {
@@ -313,8 +313,8 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
         if (found_valid_param_type) {
             this->m_parameter_ptr = parameter_ptr;
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     }
 
@@ -529,8 +529,8 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
             text = prefix + stream.str() + sufix;
         }
         if (text.empty()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "Unable to read parmeter value [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to read parmeter value [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
@@ -546,8 +546,8 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         std::string text = std::string(param_text.PeekBuffer());
 
         if (this->m_font == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "Unable to read texture: %s [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to read texture: %s [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         this->drawScreenSpaceText(ortho, (*this->m_font), text, color, font_size, anchor, this->m_current_rectangle);
@@ -745,8 +745,8 @@ bool OverlayRenderer::loadTexture(const std::string& filename, TextureData& text
         if (pbc.Load(buf, size)) {
             img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
             if (texture.tex.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
-                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                    "Unable to create texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] Unable to create texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
                     __LINE__);
                 ARY_SAFE_DELETE(buf);
                 return false;
@@ -762,8 +762,9 @@ bool OverlayRenderer::loadTexture(const std::string& filename, TextureData& text
 
             ARY_SAFE_DELETE(buf);
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
+                __LINE__);
             ARY_SAFE_DELETE(buf);
             return false;
         }
@@ -791,23 +792,23 @@ bool OverlayRenderer::loadShader(
             return false;
         }
         if (!io_shader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "Unable to compile: Unknown error [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to compile: Unknown error [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
     } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile shader (@%s): %s [%s, %s, line %d]\n",
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unable to compile shader (@%s): %s [%s, %s, line %d]\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (vislib::Exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile shader: %s [%s, %s, line %d]\n", e.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unable to compile shader: %s [%s, %s, line %d]\n", e.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-            "Unable to compile shader: Unknown exception [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unable to compile shader: Unknown exception [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -822,13 +823,13 @@ size_t OverlayRenderer::loadRawFile(std::string name, void** outData) const {
     vislib::StringW filename = static_cast<vislib::StringW>(name.c_str());
     if (filename.IsEmpty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to load file: No file name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unable to load file: No file name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return 0;
     }
 
     if (!vislib::sys::File::Exists(filename)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to load file \"%s\": Not existing. [%s, %s, line %d]\n", name.c_str(), __FILE__, __FUNCTION__,
+            "[GUI] Unable to load file \"%s\": Not existing. [%s, %s, line %d]\n", name.c_str(), __FILE__, __FUNCTION__,
             __LINE__);
         return 0;
     }
@@ -836,15 +837,15 @@ size_t OverlayRenderer::loadRawFile(std::string name, void** outData) const {
     size_t size = static_cast<size_t>(vislib::sys::File::GetSize(filename));
     if (size < 1) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to load file \"%s\": File is empty. [%s, %s, line %d]\n", name.c_str(), __FILE__, __FUNCTION__,
-            __LINE__);
+            "[GUI] Unable to load file \"%s\": File is empty. [%s, %s, line %d]\n", name.c_str(), __FILE__,
+            __FUNCTION__, __LINE__);
         return 0;
     }
 
     vislib::sys::FastFile f;
     if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to load file \"%s\": Unable to open file. [%s, %s, line %d]\n", name.c_str(), __FILE__,
+            "[GUI] Unable to load file \"%s\": Unable to open file. [%s, %s, line %d]\n", name.c_str(), __FILE__,
             __FUNCTION__, __LINE__);
         return 0;
     }
@@ -853,7 +854,7 @@ size_t OverlayRenderer::loadRawFile(std::string name, void** outData) const {
     size_t num = static_cast<size_t>(f.Read(*outData, size));
     if (num != size) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to load file \"%s\": Unable to read whole file. [%s, %s, line %d]\n", name.c_str(), __FILE__,
+            "[GUI] Unable to load file \"%s\": Unable to read whole file. [%s, %s, line %d]\n", name.c_str(), __FILE__,
             __FUNCTION__, __LINE__);
         ARY_SAFE_DELETE(*outData);
         return 0;

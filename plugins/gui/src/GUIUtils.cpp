@@ -8,8 +8,4 @@
 #include "stdafx.h"
 #include "GUIUtils.h"
 
-
-using namespace megamol;
-using namespace megamol::gui;
-
 ImGuiID megamol::gui::gui_generated_uid = 0;

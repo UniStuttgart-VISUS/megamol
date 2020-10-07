@@ -42,6 +42,7 @@
 #    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
+#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/thecam/utility/config.h"
 
 #if defined(THE_WINDOWS)
@@ -79,13 +80,13 @@ typedef int do_not_initialise_t;
  * A constant that can be passed to some methods (eg megamol::core::thecam::ring_buffer::pop)
  * for omitting return values.
  */
-extern const discard_return_t discard_return;
+extern const discard_return_t MEGAMOLCORE_API discard_return;
 
 /**
  * A constant that can be passed to some constructors (eg of
  * megamol::core::thecam::math::vector) for omitting initialisation.
  */
-extern const do_not_initialise_t do_not_initialise;
+extern const do_not_initialise_t MEGAMOLCORE_API do_not_initialise;
 
 } /* end namespace utility */
 } /* end namespace thecam */
