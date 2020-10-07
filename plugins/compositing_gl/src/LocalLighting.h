@@ -16,6 +16,7 @@
 
 #include "vislib/graphics/gl/GLSLComputeShader.h"
 
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
 #include "glowl/Texture2D.hpp"
 
@@ -40,9 +41,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description() {
-        return "Compositing module that computes local lighting";
-    }
+    static const char* Description() { return "Compositing module that computes local lighting"; }
 
     /**
      * Answers whether this module is available on the current system.
@@ -108,7 +107,7 @@ private:
     std::vector<LightParams> m_point_lights, m_distant_lights;
 
 
-    //TODO mode slot for LAMBERT, PHONG, etc.
+    // TODO mode slot for LAMBERT, PHONG, etc.
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;
@@ -130,7 +129,6 @@ private:
 
     /** Slot for querying camera, i.e. a rhs connection */
     megamol::core::CallerSlot m_camera_slot;
-
 };
 
 } // namespace compositing
