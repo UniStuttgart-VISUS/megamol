@@ -63,7 +63,7 @@ When running the project, it first takes a bit of time to load all necessary dat
 
 
 ## Changelog
-####
+#### 07.10.2020
 * restructured plugin into 4 modules
     * vtkmDataSource: used for building tetrahedron vector fields from a node and a label file
     * vtkmStreamLines: calculates streamlines in the vector field coming from the vtkmDataSource
