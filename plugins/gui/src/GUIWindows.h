@@ -185,8 +185,10 @@ private:
     megamol::core::param::ParamSlot style_param;
     /** A parameter to store the profile */
     megamol::core::param::ParamSlot state_param;
+    /** A parameter for automatically saving gui state to file */
+    megamol::core::param::ParamSlot autosave_state_param;
     /** A parameter for automatically start the configurator at start up */
-    megamol::core::param::ParamSlot autostart_configurator;
+    megamol::core::param::ParamSlot autostart_configurator_param;
 
     /** Hotkeys */
     std::array<megamol::gui::HotkeyData_t, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
@@ -245,9 +247,10 @@ private:
     bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
     void triggerCoreInstanceShutdown(void);
 
-    void save_state_to_parameter(void);
-    bool gui_and_parameters_state_from_json_string(const std::string& in_json_string);
-    bool gui_and_parameters_state_to_json(nlohmann::json& inout_json);
+    bool save_state_to_file(const std::string& filename);
+    bool load_state_from_file(const std::string& filename);
+    bool state_from_json(const nlohmann::json& in_json);
+    bool state_to_json(nlohmann::json& inout_json);
 };
 
 } // namespace gui

@@ -804,8 +804,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
         }
 
         // Save filename for graph
-        std::string filename = project_filename;
-        graph_ptr->SetFilename(filename);
+        graph_ptr->SetFilename(project_filename);
 
         // Find and create modules
         for (unsigned int i = 0; i < lines_count; i++) {
@@ -1050,7 +1049,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 /// DEBUG
                 /// megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] >>>> '%s'\n", value_str.c_str());
 
-                std::string parameter_gui_states_json;
+                std::string parameter_gui_state_json_str;
 
                 // Searching for parameter
                 if (graph_ptr != nullptr) {
@@ -1065,43 +1064,17 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                             for (auto& parameter : module_ptr->parameters) {
                                 if (this->case_insensitive_str_comp(parameter.full_name, param_full_name)) {
                                     parameter.SetValueString(value_str);
-
-                                    // Reading state parameters
-                                    if (module_ptr->class_name == GUI_MODULE_NAME) {
-                                        if (parameter.full_name == GUI_GUI_STATE_PARAM_NAME) {
-                                            parameter_gui_states_json = value_str;
-                                        }
-                                        if (parameter.full_name == GUI_CONFIGURATOR_STATE_PARAM_NAME) {
-                                            // Reading configurator state param containing a graph state
-                                            if (graph_ptr->StateFromJsonString(value_str)) {
-                                                found_configurator_positions = true;
-                                            }
-                                        }
-                                    }
                                 }
                             }
-                        }
-                    }
-                }
-
-                // Let all parameters read their gui state
-                if (!parameter_gui_states_json.empty()) {
-                    for (auto& module_ptr : graph_ptr->GetModules()) {
-                        std::string module_full_name = module_ptr->FullName();
-                        module_ptr->present.param_groups.ParameterGroupGUIStateFromJSONString(
-                            parameter_gui_states_json, module_full_name);
-                        for (auto& param : module_ptr->parameters) {
-                            std::string full_param_name = module_full_name + "::" + param.full_name;
-                            param.present.ParameterGUIStateFromJSONString(parameter_gui_states_json, full_param_name);
-                            param.present.ForceSetGUIStateDirty();
                         }
                     }
                 }
             }
         }
 
-        // Layout graph if no positions for modules could be found in state.
-        if (!found_configurator_positions) {
+        // Load gui state from file
+        if (!this->load_state_from_file(project_filename, graph_ptr->uid)) {
+            // Layout graph if no positions for modules could be found in state.
             graph_ptr->present.SetLayoutGraph();
         }
         graph_ptr->ResetDirty();
@@ -1132,7 +1105,12 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                 bool wrote_graph_state = false;
                 bool wrote_parameter_gui_state = false;
 
-                // Some pre-checks
+                // Saved gui state to file ------------------------------------
+                if (!this->replace_state_in_file(project_filename, graph_ptr->uid)) {
+                    return false;
+                }
+
+                // Some pre-checks --------------------------------------------
                 bool found_error = false;
                 bool found_instance = false;
                 for (auto& mod_1 : graph_ptr->GetModules()) {
@@ -1156,10 +1134,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                 }
                 if (found_error) return false;
 
-                // Save filename for graph (before saving states)
-                graph_ptr->SetFilename(project_filename);
-
-                // Serialze graph to string
+                // Serialze graph to string -----------------------------------
                 std::string projectstr;
                 std::stringstream confInstances, confModules, confCalls, confParams;
                 for (auto& module_ptr : graph_ptr->GetModules()) {
@@ -1172,31 +1147,9 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                     }
 
                     for (auto& parameter : module_ptr->parameters) {
-                        // Store graph state to state parameter of configurator (once)
-                        if (module_ptr->class_name == GUI_MODULE_NAME) {
-                            if (!wrote_graph_state && (parameter.full_name == GUI_CONFIGURATOR_STATE_PARAM_NAME)) {
-                                // Replacing exisiting graph state with new one and leaving rest untouched
-                                std::string new_configurator_graph_state;
-                                this->replace_graph_state(
-                                    graph_ptr, parameter.GetValueString(), new_configurator_graph_state);
-                                parameter.SetValue(new_configurator_graph_state);
-                                wrote_graph_state = true;
-                            }
-                        }
-
-                        // Store parameter gui states to state parameter of gui (once)
-                        if (!wrote_parameter_gui_state && (parameter.full_name == GUI_GUI_STATE_PARAM_NAME)) {
-                            // Replacing exisiting parameter gui state with new one and leaving rest untouched
-                            std::string new_parameter_gui_state;
-                            this->replace_parameter_gui_state(
-                                graph_ptr, parameter.GetValueString(), new_parameter_gui_state);
-                            parameter.SetValue(new_parameter_gui_state);
-                            wrote_parameter_gui_state = true;
-                        }
-
-                        // Write all parameters for running graph (default value is not available)
-                        // For other graphs only write parameters with other values than the default
-                        // Ignore button parameters
+                        // - Write all parameters for running graph (default value is not available)
+                        // - For other graphs only write parameters with other values than the default
+                        // - Ignore button parameters
                         if ((graph_ptr->HasCoreInterface() || parameter.DefaultValueMismatch()) &&
                             (parameter.type != Param_t::BUTTON)) {
                             // Encode to UTF-8 string
@@ -1228,6 +1181,10 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                         "[GUI] Successfully saved project '%s' to file '%s'.\n", graph_ptr->name.c_str(),
                         project_filename.c_str());
+
+                    // Save filename for graph
+                    graph_ptr->SetFilename(project_filename);
+
                     return true;
                 }
             }
@@ -1512,72 +1469,6 @@ bool megamol::gui::GraphCollection::project_separate_name_and_namespace(
 }
 
 
-bool megamol::gui::GraphCollection::replace_graph_state(
-    const GraphPtr_t& graph_ptr, const std::string& in_json_string, std::string& out_json_string) {
-
-    try {
-        nlohmann::json json;
-        if (!in_json_string.empty()) {
-            json = nlohmann::json::parse(in_json_string);
-            if (!json.is_object()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                return false;
-            }
-            try {
-                json[GUI_JSON_TAG_GRAPHS].erase(GUI_JSON_TAG_PROJECT_GRAPH);
-            } catch (...) {
-            }
-        }
-        if (graph_ptr->StateToJSON(json)) {
-            out_json_string = json.dump(2);
-        } else {
-            return false;
-        }
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown Error - Unable to dump JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    return true;
-}
-
-
-bool megamol::gui::GraphCollection::replace_parameter_gui_state(
-    const GraphPtr_t& graph_ptr, const std::string& in_json_string, std::string& out_json_string) {
-
-    try {
-        nlohmann::json json;
-        if (!in_json_string.empty()) {
-            json = nlohmann::json::parse(in_json_string);
-            if (!json.is_object()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                return false;
-            }
-            json.erase(GUI_JSON_TAG_GUISTATE_PARAMETERS);
-        }
-
-        for (auto& module_ptr : graph_ptr->GetModules()) {
-            std::string module_full_name = module_ptr->FullName();
-            module_ptr->present.param_groups.ParameterGroupGUIStateToJSON(json, module_full_name);
-            for (auto& param : module_ptr->parameters) {
-                std::string full_param_name = module_full_name + "::" + param.full_name;
-                param.present.ParameterGUIStateToJSON(json, full_param_name);
-            }
-        }
-        out_json_string = json.dump(2);
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown Error - Unable to dump JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    return true;
-}
-
-
 std::vector<size_t> megamol::gui::GraphCollection::get_compatible_callee_idxs(
     const megamol::core::CalleeSlot* callee_slot) {
 
@@ -1661,4 +1552,105 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_caller_idxs(
     }
 
     return retval;
+}
+
+
+bool megamol::gui::GraphCollection::replace_state_in_file(const std::string& filename, ImGuiID graph_id) {
+
+    nlohmann::json state_json;
+    std::string file = filename;
+    if (!GUIUtils::GetGUIStateFileName(file)) return false;
+
+    // Try to load existing gui state from file
+    std::string state_str;
+    if (FileUtils::ReadFile(file, state_str, true)) {
+        if (state_str.empty()) {
+            return false;
+        }
+        bool found_gui = false;
+        state_json = nlohmann::json::parse(state_str);
+        if (!state_json.is_object()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+    }
+
+    GraphPtr_t graph_ptr;
+    if (this->GetGraph(graph_id, graph_ptr)) {
+        // Write/replace GUI_JSON_TAG_PROJECT graph state
+        try {
+            state_json[GUI_JSON_TAG_GRAPHS].erase(GUI_JSON_TAG_PROJECT);
+        } catch (...) {
+        }
+        graph_ptr->StateToJSON(state_json);
+
+        // Write/replace GUI state of parameters (groups)
+        try {
+            state_json.erase(GUI_JSON_TAG_GUISTATE_PARAMETERS);
+        } catch (...) {
+        }
+        for (auto& module_ptr : graph_ptr->GetModules()) {
+            std::string module_full_name = module_ptr->FullName();
+            // Parameter Groups
+            module_ptr->present.param_groups.StateToJSON(state_json, module_full_name);
+            // Parameters
+            for (auto& param : module_ptr->parameters) {
+                std::string param_full_name = module_full_name + "::" + param.full_name;
+                param.present.StateToJSON(state_json, param_full_name);
+            }
+        }
+        state_str = state_json.dump(2);
+        return FileUtils::WriteFile(file, state_str);
+    }
+    return false;
+}
+
+
+bool megamol::gui::GraphCollection::load_state_from_file(const std::string& filename, ImGuiID graph_id) {
+
+    std::string file = filename;
+    if (!GUIUtils::GetGUIStateFileName(file)) return false;
+
+    std::string state_str;
+    if (FileUtils::ReadFile(file, state_str, true)) {
+
+        if (state_str.empty()) {
+            return false;
+        }
+        bool found_gui = false;
+        nlohmann::json json;
+        json = nlohmann::json::parse(state_str);
+        if (!json.is_object()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+
+        GraphPtr_t graph_ptr;
+        if (this->GetGraph(graph_id, graph_ptr)) {
+
+            // Read GUI state of parameters (groups)
+            for (auto& module_ptr : graph_ptr->GetModules()) {
+                std::string module_full_name = module_ptr->FullName();
+                // Parameter Groups
+                module_ptr->present.param_groups.StateFromJSON(json, module_full_name);
+                // Parameters
+                for (auto& param : module_ptr->parameters) {
+                    std::string param_full_name = module_full_name + "::" + param.full_name;
+                    param.present.StateFromJSON(json, param_full_name);
+                    param.present.ForceSetGUIStateDirty();
+                }
+            }
+
+            // Read GUI_JSON_TAG_PROJECT graph state
+            if (graph_ptr->StateFromJSON(json)) {
+                // Disable layouting if graph state was found
+                graph_ptr->present.SetLayoutGraph(false);
+            }
+
+            return true;
+        }
+    }
+    return false;
 }

@@ -205,21 +205,21 @@ public:
      * Deserializes a window configuration state.
      * Should be called before(!) ImGui::Begin() because existing window configurations are overwritten.
      *
-     * @param json  The string to deserialize from.
+     * @param json  The JSON to deserialize from.
      *
      * @return True on success, false otherwise.
      */
-    bool StateFromJsonString(const std::string& in_json_string);
+    bool StateFromJSON(const nlohmann::json& in_json);
 
 
     /**
      * Serializes the current window configurations.
      *
-     * @param json  The json to serialize to.
+     * @param json  The JSON to serialize to.
      *
      * @return True on success, false otherwise.
      */
-    bool StateToJSON(nlohmann::json& out_json);
+    bool StateToJSON(nlohmann::json& inout_json);
 
 private:
     /**

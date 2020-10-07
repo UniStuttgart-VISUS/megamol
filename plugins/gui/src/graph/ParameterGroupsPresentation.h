@@ -38,8 +38,8 @@ public:
         megamol::gui::ParameterPresentation::WidgetScope in_scope,
         const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor);
 
-    bool ParameterGroupGUIStateFromJSONString(const std::string& in_json_string, const std::string& module_fullname);
-    bool ParameterGroupGUIStateToJSON(nlohmann::json& inout_json, const std::string& module_fullname);
+    bool StateFromJSON(const nlohmann::json& in_json, const std::string& module_fullname);
+    bool StateToJSON(nlohmann::json& inout_json, const std::string& module_fullname);
 
 
 private:

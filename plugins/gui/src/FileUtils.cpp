@@ -61,7 +61,7 @@ size_t megamol::gui::FileUtils::LoadRawFile(std::string name, void** outData) {
 }
 
 
-bool megamol::gui::FileUtils::WriteFile(const std::string& filename, const std::string& in_content) {
+bool megamol::gui::FileUtils::WriteFile(const std::string& filename, const std::string& in_content, bool silent) {
     try {
         std::ofstream file;
         file.open(filename, std::ios_base::out);
@@ -69,19 +69,23 @@ bool megamol::gui::FileUtils::WriteFile(const std::string& filename, const std::
             file << in_content.c_str();
             file.close();
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unable to create file '%s'. [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
-                __LINE__);
+            if (!silent)
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] Unable to create file '%s'. [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
+                    __LINE__);
             file.close();
+
             return false;
         }
     } catch (std::exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        if (!silent)
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        if (!silent)
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -89,7 +93,7 @@ bool megamol::gui::FileUtils::WriteFile(const std::string& filename, const std::
 }
 
 
-bool megamol::gui::FileUtils::ReadFile(const std::string& filename, std::string& out_content) {
+bool megamol::gui::FileUtils::ReadFile(const std::string& filename, std::string& out_content, bool silent) {
     try {
         std::ifstream file;
         file.open(filename, std::ios_base::in);
@@ -97,19 +101,22 @@ bool megamol::gui::FileUtils::ReadFile(const std::string& filename, std::string&
             out_content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
             file.close();
         } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unable to open file '%s'. [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
-                __LINE__);
+            if (!silent)
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] Unable to open file '%s'. [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
+                    __LINE__);
             file.close();
             return false;
         }
     } catch (std::exception e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        if (!silent)
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        if (!silent)
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
