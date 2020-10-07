@@ -1,3 +1,8 @@
+/*
+ * Modified by MegaMol Dev Team
+ * Based on project "ospray-module-pkd" files "ParticleModel.h" and "ParticleModel.cpp" (Apache License 2.0)
+ */
+
 #pragma once
 
 #include <limits>
@@ -26,10 +31,10 @@ struct ParticleModel {
     ospcommon::box3f getBounds() const;
 
     float encodeColorToFloat(ospcommon::vec4f const& col) {
-        unsigned int r = static_cast<unsigned int>(col.x*255.f);
-        unsigned int g = static_cast<unsigned int>(col.y*255.f);
-        unsigned int b = static_cast<unsigned int>(col.z*255.f);
-        unsigned int a = static_cast<unsigned int>(col.w*255.f);
+        unsigned int r = static_cast<unsigned int>(col.x * 255.f);
+        unsigned int g = static_cast<unsigned int>(col.y * 255.f);
+        unsigned int b = static_cast<unsigned int>(col.z * 255.f);
+        unsigned int a = static_cast<unsigned int>(col.w * 255.f);
 
         unsigned int color = (r << 24) + (g << 16) + (b << 8) + a;
 
@@ -54,9 +59,9 @@ struct ParticleModel {
     }
 
     float encodeColorToFloat(ospcommon::vec3f const& col) {
-        unsigned int r = static_cast<unsigned int>(col.x*255.f);
-        unsigned int g = static_cast<unsigned int>(col.y*255.f);
-        unsigned int b = static_cast<unsigned int>(col.z*255.f);
+        unsigned int r = static_cast<unsigned int>(col.x * 255.f);
+        unsigned int g = static_cast<unsigned int>(col.y * 255.f);
+        unsigned int b = static_cast<unsigned int>(col.z * 255.f);
 
         unsigned int color = (r << 24) + (g << 16) + (b << 8);
 

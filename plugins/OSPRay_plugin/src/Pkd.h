@@ -1,3 +1,8 @@
+/*
+ * Modified by MegaMol Dev Team
+ * Based on project "ospray-module-pkd" files "PartiKD.h" and "PartiKD.cpp" (Apache License 2.0)
+ */
+
 #pragma once
 
 #include <map>
