@@ -18,6 +18,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
 
+#include "glm/gtx/transform.hpp"
 
 using namespace megamol;
 using namespace megamol::mmvtkm;
@@ -38,8 +39,10 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     , psUpperStreamlineSeedBound_("upperSeedBound", "Specifies the upper streamline seed bound")
     , psSeedPlaneMode_("planeMode", "Specifies the representation of the seed plane")
     , psPlaneOrigin_("origin", "Specifies the origin of the seed plane")
-    , psPlaneConnectionPoint1_("Connection1", "Specifies the first point with which the origin of the seed plane is connected")
-    , psPlaneConnectionPoint2_("Connection2", "Specifies the second point with which the origin of the seed plane is connected")
+    , psPlaneConnectionPoint1_(
+          "Connection1", "Specifies the first point with which the origin of the seed plane is connected")
+    , psPlaneConnectionPoint2_(
+          "Connection2", "Specifies the second point with which the origin of the seed plane is connected")
     , psSeedPlaneNormal_("planeNormal", "Specifies the normal of the seed plane")
     , psSeedPlanePoint_("planePoint", "Specifies a point on the seed plane")
     //, seedPlaneDistance_("planeDistance", "Specifies the distance of the seed plane to the origin")
@@ -113,7 +116,7 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     this->psSeedPlaneMode_.SetUpdateCallback(&mmvtkmStreamLines::planeModeChanged);
     this->MakeSlotAvailable(&this->psSeedPlaneMode_);
 
-	this->psPlaneOrigin_.SetParameter(new core::param::Vector3fParam({0.f, 0.f, 0.f}));
+    this->psPlaneOrigin_.SetParameter(new core::param::Vector3fParam({0.f, 0.f, 0.f}));
     this->MakeSlotAvailable(&this->psPlaneOrigin_);
     this->psPlaneOrigin_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
 
@@ -126,7 +129,6 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     this->psPlaneConnectionPoint2_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
 
     this->psSeedPlaneNormal_.SetParameter(new core::param::Vector3fParam({1.f, 0.f, 0.f}));
-    this->psSeedPlaneNormal_.SetUpdateCallback(&mmvtkmStreamLines::planeNormalCheck);
     this->MakeSlotAvailable(&this->psSeedPlaneNormal_);
     this->psSeedPlaneNormal_.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Rotation3D_Direction);
@@ -199,11 +201,11 @@ bool mmvtkmStreamLines::applyChanges(core::param::ParamSlot& slot) {
     bool appearance = planeColor || planeAlpha;
 
 
-	if (appearance) {
+    if (appearance) {
         if (!setPlaneAndAppearanceUpdate()) return false;
     }
 
-	if (plane) {
+    if (plane) {
         if (!setPlaneUpdate()) return false;
     }
 
@@ -257,19 +259,6 @@ bool mmvtkmStreamLines::planeModeChanged(core::param::ParamSlot& slot) {
 
 
     return true;
-}
-
-
-/**
-* mmvtkmStreamLines::planeNormalCheck
-*/
-bool mmvtkmStreamLines::planeNormalCheck(core::param::ParamSlot& slot) {
-    visVec3f n = slot.Param<core::param::Vector3fParam>()->Value();
-    if (isNullVector(n)) {
-        //slot.Param<core::param::Vector3fParam>()->SetValue()
-	}
-
-	return true; 
 }
 
 
@@ -329,9 +318,10 @@ bool mmvtkmStreamLines::setPlaneAndAppearanceUpdate() {
 
 
     // this assumes plane is fixed in last batch in mesh
-	// here it's the second: one batch for the streamlines and one for the plane
-	// TODO: add function in MeshDataAccessCollection to do this
-    this->meshDataAccess_->accessMesh().back().attributes[1].data = reinterpret_cast<uint8_t*>(seedPlaneColorVec_.data());
+    // here it's the second: one batch for the streamlines and one for the plane
+    // TODO: add function in MeshDataAccessCollection to do this
+    this->meshDataAccess_->accessMesh().back().attributes[1].data =
+        reinterpret_cast<uint8_t*>(seedPlaneColorVec_.data());
 
 
     planeAppearanceUpdate_ = true;
@@ -347,7 +337,7 @@ bool mmvtkmStreamLines::setPlaneAndAppearanceUpdate() {
 bool mmvtkmStreamLines::setPlaneUpdate() {
     visVec3f origin = this->psPlaneOrigin_.Param<core::param::Vector3fParam>()->Value();
     planeOrigin_ = {origin.GetX(), origin.GetY(), origin.GetZ()};
-	visVec3f ll = this->psPlaneConnectionPoint1_.Param<core::param::Vector3fParam>()->Value();
+    visVec3f ll = this->psPlaneConnectionPoint1_.Param<core::param::Vector3fParam>()->Value();
     planeConnectionPoint1_ = {ll.GetX(), ll.GetY(), ll.GetZ()};
     visVec3f ur = this->psPlaneConnectionPoint2_.Param<core::param::Vector3fParam>()->Value();
     planeConnectionPoint2_ = {ur.GetX(), ur.GetY(), ur.GetZ()};
@@ -356,6 +346,14 @@ bool mmvtkmStreamLines::setPlaneUpdate() {
     visVec3f point = this->psSeedPlanePoint_.Param<core::param::Vector3fParam>()->Value();
     seedPlanePoint_ = {point.GetX(), point.GetY(), point.GetZ()};
     // psSeedPlaneDistance_ = this->seedPlaneDistance_.Param<core::param::FloatParam>()->Value();
+
+
+    if (isNullVector(normal)) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            "Plane normal is null: (0, 0, 0).");
+
+        return false;
+    }
 
 
     planeUpdate_ = true;
@@ -443,8 +441,8 @@ void mmvtkmStreamLines::orderPolygonVertices(std::vector<glm::vec3>& vertices) {
 
     if (vertices.size() < 2) {
         core::utility::log::Log::DefaultLog.WriteError(
-            "In %s at line %d.\nNumber of vertices is too low: %i. Needs to be at least 2.", __FILE__,
-            __LINE__, vertices.size());
+            "In %s at line %d.\nNumber of vertices is too low: %i. Needs to be at least 2.", __FILE__, __LINE__,
+            vertices.size());
         return;
     }
 
@@ -515,11 +513,11 @@ void mmvtkmStreamLines::orderPolygonVertices(std::vector<glm::vec3>& vertices) {
     for (int i = 0; i < (int)numVertices; ++i) {
         vertices[i] = angles[i].second;
     }
-	
 
-	// need to ensure that there are no duplicates in the list
-	// other wrong triangles are created
-	// this happens e. g. when the plane intersects the corners of the bbox
+
+    // need to ensure that there are no duplicates in the list
+    // other wrong triangles are created
+    // this happens e. g. when the plane intersects the corners of the bbox
     std::vector<glm::vec3>::iterator it;
     it = std::unique_copy(vertices.begin(), vertices.end(), vertices.begin());
     ptrdiff_t d = std::distance(vertices.begin(), it);
@@ -599,11 +597,12 @@ bool mmvtkmStreamLines::isInsideTriangle(const glm::vec3& p, const Triangle& tri
 bool mmvtkmStreamLines::createAndAddMeshDataToCall(std::vector<glm::vec3>& data, std::vector<glm::vec4>& color,
     std::vector<unsigned int>& idcs, int numPoints, int numIndices, mesh::MeshDataAccessCollection::PrimitiveType pt) {
 
-	if (data.size() != color.size() && data.size() != idcs.size()) {
-        core::utility::log::Log::DefaultLog.WriteError("In %s at line %d.\nNumber of vertices, colors, " \
-			"and indices are not equal.", __FILE__, __LINE__);
+    if (data.size() != color.size() && data.size() != idcs.size()) {
+        core::utility::log::Log::DefaultLog.WriteError("In %s at line %d.\nNumber of vertices, colors, "
+                                                       "and indices are not equal.",
+            __FILE__, __LINE__);
         return false;
-	}
+    }
 
     if (data.size() < 2 || color.size() == 0 || idcs.size() == 0) {
         //core::utility::log::Log::DefaultLog.WriteError("In %s at line %d.\nLineData, color, " \
@@ -700,14 +699,14 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             if (!(*rhsVtkmDc)(1)) {
                 return false;
             }
-		
-			dataSetBounds_ = rhsVtkmDc->GetBounds();
+
+            dataSetBounds_ = rhsVtkmDc->GetBounds();
             visVec3f low = {(float)dataSetBounds_.X.Min, (float)dataSetBounds_.Y.Min, (float)dataSetBounds_.Z.Min};
             visVec3f up = {(float)dataSetBounds_.X.Max, (float)dataSetBounds_.Y.Max, (float)dataSetBounds_.Z.Max};
             this->psLowerStreamlineSeedBound_.Param<core::param::Vector3fParam>()->SetValue(low);
             this->psUpperStreamlineSeedBound_.Param<core::param::Vector3fParam>()->SetValue(up);
-		}
-        
+        }
+
 
         if (planeMode_ == 0) {
             glm::vec3 n = glm::normalize(seedPlaneNormal_);
@@ -716,16 +715,16 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
             visPlanef samplePlane(visPoint3f(o.x, o.y, o.z), visVec3f(n.x, n.y, n.z));
 
-			seedPlane_ = calcPlaneBboxIntersectionPoints(samplePlane, dataSetBounds_);
+            seedPlane_ = calcPlaneBboxIntersectionPoints(samplePlane, dataSetBounds_);
 
         } else if (planeMode_ == 1) {
             glm::vec3 dir1 = planeConnectionPoint1_ - planeOrigin_;
             glm::vec3 dir2 = planeConnectionPoint2_ - planeOrigin_;
             glm::vec3 newPoint = planeOrigin_ + dir1 + dir2;
 
-			// TODO: check if any point is out of bounds
+            // TODO: check if any point is out of bounds
 
-			seedPlane_.clear();
+            seedPlane_.clear();
             seedPlane_ = {planeOrigin_, planeConnectionPoint1_, newPoint, planeConnectionPoint2_};
         }
 
@@ -735,7 +734,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         seedPlaneTriangles_ = decomposePolygon(seedPlane_);
 
 
-		planeUpdate_ = false;
+        planeUpdate_ = false;
     }
 
 
@@ -744,7 +743,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
         this->meshDataAccess_->accessMesh().clear();
 
-        
+
         // sample points in triangles and combine each triangles' samples
         for (const auto& tri : seedPlaneTriangles_) {
             unsigned int numTriSeeds = (unsigned int)floor(numSeeds_ * tri.weight);
@@ -878,7 +877,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
                 numIndices, mesh::MeshDataAccessCollection::PrimitiveType::LINE_STRIP);
         }
 
-		// adds the mdac for the seed plane
+        // adds the mdac for the seed plane
         createAndAddMeshDataToCall(seedPlane_, seedPlaneColorVec_, seedPlaneIdcs_, seedPlane_.size(),
             seedPlaneIdcs_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 

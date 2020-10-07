@@ -91,7 +91,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
             }
 
             mesh_collection->addMesh(vb_layouts, vb_iterators, ib_iterators,
-                MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, primtive_type);
+                MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, primitive_type);
         }
     }
 

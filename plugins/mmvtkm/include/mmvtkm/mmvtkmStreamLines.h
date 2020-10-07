@@ -149,9 +149,6 @@ private:
 	/** Callback function to set visibility of paramslots of corresponding plane mode */
     bool planeModeChanged(core::param::ParamSlot& slot);
 
-	/** Callback function to check whether plane normal is valid */
-    bool planeNormalCheck(core::param::ParamSlot& slot);
-
     /**
      * Indirect Callback function if 'apply' is pressed.
 	 * May be called if corresponding parameter slots are dirty.
