@@ -47,7 +47,7 @@ namespace gui {
 
 /********** Defines **********/
 
-#define GUI_VERBOSE
+/// #define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f)
