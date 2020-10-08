@@ -13,7 +13,7 @@
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
 static void log(const char* text) {
-    const std::string msg = "Template_Service: " + std::string(text) + "\n"; 
+    const std::string msg = "Template_Service: " + std::string(text); 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
 static void log(std::string text) {
