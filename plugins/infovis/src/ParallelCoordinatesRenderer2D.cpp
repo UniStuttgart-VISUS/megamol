@@ -1343,6 +1343,10 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     if (approach == 3 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         framesNeeded = 100;
+        if (moveMatrices.size() != framesNeeded) {
+            moveMatrices.resize(framesNeeded);
+            invMatrices.resize(framesNeeded);
+        }
         w = w / 2;
         h = h / 2;
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
@@ -1372,32 +1376,29 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         if (frametype % 4 == 0) {
             jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2)/5 - 1.0) / call.GetViewport().Width(), 
                                                      ((floor(f / 5) - 2)/5 + 1.0) / call.GetViewport().Height(), 0));
-            invTexA = glm::translate(glm::mat4(1.0f), glm::vec3(- 1.0 / call.GetViewport().Width(),
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(- 1.0 / call.GetViewport().Width(),
                                                           1.0 / call.GetViewport().Height(), 0)) * pmvm;
         }
         if (frametype % 4 == 1) {
             jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2) / 5 + 1.0) / call.GetViewport().Width(),
                                                       ((floor(f / 5) - 2) / 5 + 1.0) / call.GetViewport().Height(), 0));
-            invTexB = glm::translate(glm::mat4(1.0f),
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f),
                           glm::vec3(1.0 / call.GetViewport().Width(), 1.0 / call.GetViewport().Height(), 0)) * pmvm;
         }
         if (frametype % 4 == 2) {
             jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2) / 5 - 1.0) / call.GetViewport().Width(),
                                                       ((floor(f / 5) - 2) / 5 - 1.0) / call.GetViewport().Height(), 0));
-            invTexC = glm::translate(glm::mat4(1.0f),
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f),
                           glm::vec3(-1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0)) * pmvm;
         }
         if (frametype % 4 == 3) {
             jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2) / 5 + 1.0) / call.GetViewport().Width(),
                                                       ((floor(f / 5) - 2) / 5 - 1.0) / call.GetViewport().Height(), 0));
-            invTexD = glm::translate(glm::mat4(1.0f),
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f),
                           glm::vec3(1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0)) * pmvm;
         }
-        // new Vectors
-        moveMatrixA = invTexA * glm::inverse(pmvm);
-        moveMatrixB = invTexB * glm::inverse(pmvm);
-        moveMatrixC = invTexC * glm::inverse(pmvm);
-        moveMatrixD = invTexD * glm::inverse(pmvm);
+        glm::mat4 invM = glm::inverse(pmvm);
+        for (int i = 0; i < framesNeeded; i++) moveMatrices[i] = invMatrices[i] * invM;
 
         pm = jit * pm;
         for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
@@ -1743,6 +1744,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniformMatrix4fv(pc_reconstruction3_shdr->ParameterLocation("mMb"), 1, GL_FALSE, &moveMatrixB[0][0]);
         glUniformMatrix4fv(pc_reconstruction3_shdr->ParameterLocation("mMc"), 1, GL_FALSE, &moveMatrixC[0][0]);
         glUniformMatrix4fv(pc_reconstruction3_shdr->ParameterLocation("mMd"), 1, GL_FALSE, &moveMatrixD[0][0]);
+
+        glUniformMatrix4fv(pc_reconstruction3_shdr->ParameterLocation("mMatrices"), 100, GL_FALSE, &moveMatrices[0][0][0]);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction3_shdr->Disable();

@@ -10,7 +10,7 @@ uniform mat4 mMb;
 uniform mat4 mMc;
 uniform mat4 mMd;
 
-uniform mat4 mMatrices[4];
+uniform mat4 mMatrices[100];
 
 in vec2 uv_coord;
 //layout(early_fragment_tests) in;
@@ -25,21 +25,19 @@ void main()
     if(line % 2 == 1){
         if(col % 2 == 0){
             t = 3;
-            p = mMd * p;
         }else{
             t = 2;
-            p = mMc * p;
         }
     } else {
         if(col % 2 == 1){
             t = 0;
-            p = mMa * p;
         }else{
             t = 1;
-            p = mMb * p;
         }  
     }
+    vec4 r;
     for (int i = 0; i < 25; i++){
-        frag_out += texture(tx2D_array, vec3(0.5 *  p.xy + vec2(0.5), t + (i*4))) / 25;
+        r = mMatrices[t + (i * 4)] * p;
+        frag_out += texture(tx2D_array, vec3(0.5 *  r.xy + vec2(0.5), t + (i*4))) / 25;
     }
 }
