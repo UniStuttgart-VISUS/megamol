@@ -291,6 +291,7 @@ private:
     core::param::ParamSlot approachSlot;
     core::param::ParamSlot testingFloat;
     core::param::ParamSlot thicknessFloatP;
+    core::param::ParamSlot legacyMode;
 
 
     std::vector<GLfloat> tex;

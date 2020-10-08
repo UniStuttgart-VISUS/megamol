@@ -68,6 +68,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     , approachSlot("Approach", "Numerical Value assigned to each temporal reconstruction approach")
     , testingFloat("testingFloat", "Float for passing Test Values")
     , thicknessFloatP("thickness", "Float value to incease line thickness")
+    , legacyMode("LegacyMode", "Enables old Line Rendering mode with Bresenham Algorithm")
 
     , numTicks(5)
     , columnCount(0)
@@ -186,6 +187,9 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
 
     this->thicknessFloatP << new core::param::FloatParam(1.5);
     this->MakeSlotAvailable(&thicknessFloatP);
+
+    this->legacyMode << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&legacyMode);
 
     fragmentMinMax.resize(2);
 }
@@ -823,7 +827,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteTessProgram;
 #    else
     //vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
-    vislib::graphics::gl::GLSLShader& prog = this->drawItemsTriangleProgram;
+    vislib::graphics::gl::GLSLShader& prog = this->legacyMode.Param<core::param::BoolParam>()->Value() ? this->drawItemsDiscreteProgram
+        : this->drawItemsTriangleProgram;
 #    endif
 #endif
 
@@ -859,8 +864,13 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #    else
     // glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
     // glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, this->columnCount * 2, this->itemCount);
-     //glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
-     glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
+    //glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
+    if (this->legacyMode.Param<core::param::BoolParam>()->Value()) {
+        glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
+    } else {
+        glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
+    }
+
 #    endif
 #endif
     prog.Disable();
