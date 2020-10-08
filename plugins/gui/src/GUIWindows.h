@@ -257,6 +257,7 @@ private:
 
     bool save_state_to_file(const std::string& filename);
     bool load_state_from_file(const std::string& filename);
+
     bool state_from_json(const nlohmann::json& in_json);
     bool state_to_json(nlohmann::json& inout_json);
 };
