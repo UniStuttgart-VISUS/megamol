@@ -602,9 +602,7 @@ bool megamol::gui::Configurator::load_state_from_file(const std::string& filenam
 
     std::string state_str;
     if (FileUtils::ReadFile(file, state_str, true)) {
-        if (state_str.empty()) {
-            return false;
-        }
+        if (state_str.empty()) return false;
         nlohmann::json in_json = nlohmann::json::parse(state_str);
         return this->state_from_json(in_json);
     }

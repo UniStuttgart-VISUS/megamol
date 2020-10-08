@@ -815,13 +815,17 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         // Init after graph was created
         if (sync_success && (last_graph_uid == GUI_INVALID_ID) && (this->graph_uid != GUI_INVALID_ID)) {
             GraphPtr_t graph_ptr;
-            if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr) &&
-                (this->core_instance != nullptr)) {
-                // Try setting initial project file name
+            if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
+                std::string script_filename;
+                // Try setting initial project file name from lua state of core instance
                 if (graph_ptr->GetFilename().empty()) {
-                    auto script_filename = this->core_instance->GetLuaState()->GetScriptPath();
-                    graph_ptr->SetFilename(script_filename);
+                    if (this->core_instance != nullptr) {
+                        script_filename = this->core_instance->GetLuaState()->GetScriptPath();
+                        graph_ptr->SetFilename(script_filename);
+                    }
                 }
+                /// TODO XXX Add project file source for MegaMolGraph
+
                 // Load initial gui state from file
                 this->load_state_from_file(graph_ptr->GetFilename());
             }
@@ -1875,7 +1879,6 @@ bool megamol::gui::GUIWindows::save_state_to_file(const std::string& filename) {
     if (this->state_to_json(state_json)) {
         std::string state_str = state_json.dump(2);
         this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
-
         std::string file = filename;
         if (!GUIUtils::GetGUIStateFileName(file)) return false;
         return FileUtils::WriteFile(file, state_str);
@@ -1891,12 +1894,8 @@ bool megamol::gui::GUIWindows::load_state_from_file(const std::string& filename)
 
     std::string state_str;
     if (FileUtils::ReadFile(file, state_str, true)) {
-
         this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
-
-        if (state_str.empty()) {
-            return false;
-        }
+        if (state_str.empty()) return false;
         nlohmann::json in_json = nlohmann::json::parse(state_str);
         return this->state_from_json(in_json);
     }
