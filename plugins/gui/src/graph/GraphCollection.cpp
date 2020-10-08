@@ -1564,9 +1564,7 @@ bool megamol::gui::GraphCollection::replace_state_in_file(const std::string& fil
     // Try to load existing gui state from file
     std::string state_str;
     if (FileUtils::ReadFile(file, state_str, true)) {
-        if (state_str.empty()) {
-            return false;
-        }
+        if (state_str.empty()) return false;
         bool found_gui = false;
         state_json = nlohmann::json::parse(state_str);
         if (!state_json.is_object()) {
@@ -1614,10 +1612,7 @@ bool megamol::gui::GraphCollection::load_state_from_file(const std::string& file
 
     std::string state_str;
     if (FileUtils::ReadFile(file, state_str, true)) {
-
-        if (state_str.empty()) {
-            return false;
-        }
+        if (state_str.empty()) return false;
         bool found_gui = false;
         nlohmann::json json;
         json = nlohmann::json::parse(state_str);

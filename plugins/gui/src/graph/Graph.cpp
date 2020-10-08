@@ -941,6 +941,10 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                     if (json_graph_id == GUI_JSON_TAG_PROJECT) {
                         auto graph_state = content_item.value();
 
+                        /// std::string filename;
+                        /// megamol::core::utility::get_json_value<std::string>(graph_state, {"project_file"},
+                        /// &filename); this->SetFilename(filename);
+
                         megamol::core::utility::get_json_value<std::string>(graph_state, {"project_name"}, &this->name);
 
                         bool tmp_show_parameter_sidebar = false;
@@ -1147,6 +1151,9 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
 
     try {
         // Write graph state
+        /// std::string filename = this->GetFilename();
+        /// GUIUtils::Utf8Encode(filename);
+        /// inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["project_file"] = filename;
         GUIUtils::Utf8Encode(this->name);
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["project_name"] = this->name;
         GUIUtils::Utf8Decode(this->name);
