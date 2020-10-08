@@ -31,8 +31,10 @@ namespace stdfs = std::experimental::filesystem;
 #    endif
 #endif
 
+// make sure that all configuration parameters have sane and useful and EXPLICIT initialization values!
 struct CLIConfig {
-    std::vector<std::string> project_files;
+    std::string program_invocation_string = "";
+    std::vector<std::string> project_files = {};
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool load_example_project = true;
     bool opengl_khr_debug = true;
@@ -171,18 +173,15 @@ int main(int argc, char* argv[]) {
         services.digestChangedRequestedResources();
 
         // services tell us wheter we should shut down megamol
-        // TODO: service needs to mark intself as shutdown by calling this->setShutdown() during
-        // digestChangedRequestedResources()
         if (services.shouldShutdown())
             return false;
 
-        {                              // put this in render function so LUA can call it
+        { // actual rendering
             services.preGraphRender(); // e.g. start frame timer, clear render buffers
 
             graph.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
 
             services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
-            // problem: guarantee correct order of pre- and post-render jobs, i.e. render gui before swapping buffers
         }
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
@@ -226,6 +225,8 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
     CLIConfig config;
 
     cxxopts::Options options(argv[0], "MegaMol Frontend 3000");
+
+    config.program_invocation_string = std::string{argv[0]};
 
     // parse input project files
     options.positional_help("<additional project files>");
