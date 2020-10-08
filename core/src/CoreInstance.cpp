@@ -920,70 +920,6 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
     // counts processed graph update events for flush mechanism
     size_t counter = 0;
 
-    this->shortenFlushIdxList(this->pendingCallDelRequests.Count(), this->callDelRequestsFlushIndices);
-
-    // delete calls
-    while (this->pendingCallDelRequests.Count() > 0) {
-        // flush mechanism
-        if (this->checkForFlushEvent(counter, this->callDelRequestsFlushIndices)) {
-            this->updateFlushIdxList(counter, this->callDelRequestsFlushIndices);
-            break;
-        }
-
-        auto cdr = this->pendingCallDelRequests.First();
-        this->pendingCallDelRequests.RemoveFirst();
-
-        ++counter;
-
-        bool found = false;
-        // find the call
-        std::vector<AbstractNamedObjectContainer::ptr_type> anoStack;
-        anoStack.push_back(root);
-        while (anoStack.size() > 0) {
-            AbstractNamedObjectContainer::ptr_type anoc = anoStack.back();
-            anoStack.pop_back();
-
-            if (anoc) {
-                auto it_end = anoc->ChildList_End();
-                for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
-                    AbstractNamedObject::ptr_type ano = *it;
-                    AbstractNamedObjectContainer::ptr_type anoc =
-                        std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
-                    if (anoc) {
-                        anoStack.push_back(anoc);
-                    }
-                    else {
-                        core::CallerSlot* callerSlot = dynamic_cast<core::CallerSlot*>((*it).get());
-                        if (callerSlot != nullptr) {
-                            core::Call* call = callerSlot->CallAs<Call>();
-                            if (call != nullptr) {
-                                auto target = call->PeekCalleeSlot();
-                                auto source = call->PeekCallerSlot();
-                                if (source->FullName().Equals(cdr.First()) && target->FullName().Equals(cdr.Second())) {
-                                    // this should be the right call
-                                    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("found call from %s to %s",
-                                    // call->PeekCallerSlot()->FullName(),
-                                    //    call->PeekCalleeSlot()->FullName());
-                                    callerSlot->SetCleanupMark(true);
-                                    callerSlot->DisconnectCalls();
-                                    callerSlot->PerformCleanup();
-                                    found = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (!found) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "cannot delete call from \"%s\" to \"%s\"", cdr.First().PeekBuffer(), cdr.Second().PeekBuffer());
-        }
-    }
-
-    counter = 0;
-
     this->shortenFlushIdxList(this->pendingModuleDelRequests.Count(), this->moduleDelRequestsFlushIndices);
 
     // delete modules
@@ -1105,6 +1041,69 @@ void megamol::core::CoreInstance::PerformGraphUpdates() {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "PerformGraphUpdates:module \"%s\" has no parent. Deletion makes no sense.", mdr.PeekBuffer());
             continue;
+        }
+    }
+
+    counter = 0;
+
+    this->shortenFlushIdxList(this->pendingCallDelRequests.Count(), this->callDelRequestsFlushIndices);
+
+    // delete calls
+    while (this->pendingCallDelRequests.Count() > 0) {
+        // flush mechanism
+        if (this->checkForFlushEvent(counter, this->callDelRequestsFlushIndices)) {
+            this->updateFlushIdxList(counter, this->callDelRequestsFlushIndices);
+            break;
+        }
+
+        auto cdr = this->pendingCallDelRequests.First();
+        this->pendingCallDelRequests.RemoveFirst();
+
+        ++counter;
+
+        bool found = false;
+        // find the call
+        std::vector<AbstractNamedObjectContainer::ptr_type> anoStack;
+        anoStack.push_back(root);
+        while (anoStack.size() > 0) {
+            AbstractNamedObjectContainer::ptr_type anoc = anoStack.back();
+            anoStack.pop_back();
+
+            if (anoc) {
+                auto it_end = anoc->ChildList_End();
+                for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+                    AbstractNamedObject::ptr_type ano = *it;
+                    AbstractNamedObjectContainer::ptr_type anoc =
+                        std::dynamic_pointer_cast<AbstractNamedObjectContainer>(ano);
+                    if (anoc) {
+                        anoStack.push_back(anoc);
+                    } else {
+                        core::CallerSlot* callerSlot = dynamic_cast<core::CallerSlot*>((*it).get());
+                        if (callerSlot != nullptr) {
+                            core::Call* call = callerSlot->CallAs<Call>();
+                            if (call != nullptr) {
+                                auto target = call->PeekCalleeSlot();
+                                auto source = call->PeekCallerSlot();
+                                if (source->FullName().Equals(cdr.First()) && target->FullName().Equals(cdr.Second())) {
+                                    // this should be the right call
+                                    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("found call from %s to %s",
+                                    // call->PeekCallerSlot()->FullName(),
+                                    //    call->PeekCalleeSlot()->FullName());
+                                    callerSlot->SetCleanupMark(true);
+                                    callerSlot->DisconnectCalls();
+                                    callerSlot->PerformCleanup();
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (!found) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "cannot delete call from \"%s\" to \"%s\"", cdr.First().PeekBuffer(), cdr.Second().PeekBuffer());
         }
     }
 
