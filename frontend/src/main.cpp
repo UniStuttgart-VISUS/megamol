@@ -7,8 +7,8 @@
 #include "AbstractFrontendService.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
-#include "OpenGL_GLFW_Service.hpp"
 #include "Lua_Service_Wrapper.hpp"
+#include "OpenGL_GLFW_Service.hpp"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
@@ -194,18 +194,18 @@ int main(int argc, char* argv[]) {
 
     // load project files via lua
     for (auto& file : config.project_files) {
-	    std::string result;
+        std::string result;
         if (!lua_api.RunFile(file, result)) {
             std::cout << "Project file \"" << file << "\" did not execute correctly: " << result << std::endl;
-	        run_megamol = false;
+            run_megamol = false;
         }
     }
-	if (config.load_example_project && config.project_files.empty()) {
-		const bool graph_ok = set_up_example_graph(graph); // fill graph with modules and calls
-		if (!graph_ok) {
-		    std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
-		    run_megamol = false;
-		}
+    if (config.load_example_project && config.project_files.empty()) {
+        const bool graph_ok = set_up_example_graph(graph); // fill graph with modules and calls
+        if (!graph_ok) {
+            std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
+            run_megamol = false;
+        }
     }
 
     while (run_megamol) {
@@ -241,7 +241,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
     auto parsed_options = options.parse(argc, argv);
     std::string res;
 
-	// verify project files exist in file system
+    // verify project files exist in file system
     if (parsed_options.count("project-files")) {
         const auto& v = parsed_options["project-files"].as<std::vector<std::string>>();
         for (const auto& p : v) {
