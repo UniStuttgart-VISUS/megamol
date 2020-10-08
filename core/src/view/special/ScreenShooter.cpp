@@ -37,6 +37,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/Thread.h"
 #include "mmcore/utility/DateTime.h"
+#include "mmcore/utility/graphics/ScreenShotComments.h"
 
 namespace megamol {
 namespace core {
@@ -449,42 +450,9 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         // to have a legal exif structure (lol)
 
         // todo: camera settings are not stored without magic knowledge about the view
+        megamol::core::utility::graphics::ScreenShotComments ssc(this->GetCoreInstance());
 
-        std::string serInstances, serModules, serCalls, serParams;
-        this->GetCoreInstance()->SerializeGraph(serInstances, serModules, serCalls, serParams);
-        auto confstr = serInstances + "\n" + serModules + "\n" + serCalls + "\n" + serParams;
-        std::vector<png_byte> tempvec(confstr.begin(), confstr.end());
-        tempvec.push_back('\0');
-        // auto info = new png_byte[confstr.size()];
-        // memcpy(info, confstr.c_str(), confstr.size());
-        // png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, sizeof(info), info);
-        //png_set_eXIf_1(data.pngPtr, data.pngInfoPtr, tempvec.size(), tempvec.data());
-
-
-        std::vector<png_text> comments;
-        std::vector<std::pair<std::string, std::string>> storage;
-
-        storage.push_back({"Title", "MegaMol Screenshot " + utility::DateTime::CurrentDateTimeFormatted()});
-        //storage.push_back({"Author", ""});
-        //storage.push_back({"Description", confstr});
-        storage.push_back({"MegaMol project", confstr});
-        //storage.push_back({"Copyright", ""});
-        storage.push_back({"Creation Time", utility::DateTime::CurrentDateTimeFormatted()});
-        storage.push_back({"Software", "MegaMol " + std::to_string(megamol::core::MEGAMOL_VERSION_MAJOR) + "." + std::to_string(MEGAMOL_CORE_MINOR_VER) + "." + MEGAMOL_CORE_COMP_REV});
-        //storage.push_back({"Disclaimer", ""});
-        //storage.push_back({"Warning", ""});
-        //storage.push_back({"Source", ""});
-        //storage.push_back({"Comment", ""});
-
-        for (auto &s : storage) {
-            comments.emplace_back();
-            comments.back().compression = PNG_TEXT_COMPRESSION_NONE;
-            comments.back().key = static_cast<png_charp>(s.first.data());
-            comments.back().text = static_cast<png_charp>(s.second.data());
-            comments.back().text_length = s.second.size();
-        }
-
-        png_set_text(data.pngPtr, data.pngInfoPtr, comments.data(), comments.size());
+        png_set_text(data.pngPtr, data.pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
 
         png_set_IHDR(data.pngPtr, data.pngInfoPtr, data.imgWidth, data.imgHeight, 8,
             (bkgndMode == 1) ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
