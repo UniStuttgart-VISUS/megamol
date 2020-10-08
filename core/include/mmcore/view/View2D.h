@@ -170,6 +170,12 @@ namespace view {
         bool onStoreCamera(param::ParamSlot& p);
 
         /**
+         * Tries to parse the cameraSettingsSlot and, if successful, returns the
+         * view parameters in outViewX, outViewY, and outViewZoom.
+         */
+        bool tryRestoringCamera(float &outViewX, float &outViewY, float &outViewZoom);
+
+        /**
          * Restores the camera settings
          *
          * @param p Must be restoreCameraSettingsSlot
