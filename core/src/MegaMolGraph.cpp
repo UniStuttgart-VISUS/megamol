@@ -38,6 +38,10 @@ static std::string clean(std::string const& path) {
     return tolower(path.substr(begin, end+1 - begin));
 }
 
+static std::string cut_off_prefix(std::string const& name, std::string const& prefix) {
+    return name.substr(prefix.size());
+}
+
 static void log(std::string text) { 
 	const std::string msg = "MegaMolGraph: " + text + "\n"; 
 	megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
@@ -426,6 +430,28 @@ megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
     }
 
     return call_it->callPtr;
+}
+
+megamol::core::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module_by_prefix(std::string const& name) {
+    auto module_it = std::find_if(module_list_.begin(), module_list_.end(),
+        [&](auto const& module) 
+    {
+        const auto found = name.find(module.request.id);
+        return (found != std::string::npos) && found == 0; // substing found && substring starts at beginning
+    });
+
+    return module_it;
+}
+
+megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_module_by_prefix(std::string const& name) const {
+    auto module_it = std::find_if(module_list_.begin(), module_list_.end(),
+        [&](auto const& module) 
+    {
+        const auto found = name.find(module.request.id);
+        return (found != std::string::npos) && found == 0; // substing found && substring starts at beginning
+    });
+
+    return module_it;
 }
 
 megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& paramName) const {
