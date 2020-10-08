@@ -5,11 +5,6 @@ uniform int h;
 uniform int w;
 uniform int approach;
 
-uniform mat4 mMa;
-uniform mat4 mMb;
-uniform mat4 mMc;
-uniform mat4 mMd;
-
 uniform mat4 mMatrices[100];
 
 in vec2 uv_coord;
