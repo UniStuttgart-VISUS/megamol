@@ -176,10 +176,8 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
                     if (this->GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[GUI] The action [Delete main view/ view instance] is not yet supported for the graph "
-                            "using the 'Core Instance "
-                            "Graph' interface. "
-                            "Open project from file to make desired changes."
-                            "[%s, %s, line %d]\n",
+                            "using the 'Core Instance Graph' interface. Open project from file to make desired "
+                            "changes. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
                         return false;
                     }
@@ -792,18 +790,25 @@ ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const
 }
 
 
-bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_name) {
+bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_full_name) {
 
     for (auto& mod : this->modules) {
-        if (module_name == mod->name) {
-            mod->name = this->generate_unique_module_name(module_name);
+        if (module_full_name == mod->FullName()) {
+            mod->name = this->generate_unique_module_name(mod->name);
 
             QueueData queue_data;
-            queue_data.name_id = module_name;
-            queue_data.rename_id = mod->name;
+            queue_data.name_id = module_full_name;
+            queue_data.rename_id = mod->FullName();
             this->PushSyncQueue(QueueAction::RENAME_MODULE, queue_data);
 
             this->present.ForceUpdate();
+
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] Renamed existing module '%s' while adding module with same name. "
+                "This is required for successful unambiguous parameter addressing which uses the module "
+                "name. [%s, "
+                "%s, line %d]\n",
+                module_full_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
             return true;
         }
     }
@@ -853,13 +858,6 @@ bool megamol::gui::Graph::PushSyncQueue(QueueAction action, const QueueData& in_
                 "[GUI] Graph sync queue action RENAME_MODULE is missing data for 'rename_id'. [%s, %s, line %d]\n",
                 __FILE__, __FUNCTION__, __LINE__);
             return false;
-        }
-        // Remove leading "::"
-        if (queue_data.name_id.find_first_of("::") == 0) {
-            queue_data.name_id = queue_data.name_id.substr(2);
-        }
-        if (queue_data.rename_id.find_first_of("::") == 0) {
-            queue_data.rename_id = queue_data.rename_id.substr(2);
         }
     } break;
     case (QueueAction::ADD_CALL): {

@@ -248,29 +248,27 @@ void megamol::gui::ModulePresentation::Present(
                     }
 
                     // Rename pop-up
-                    if (popup_rename) {
-                        if (state.interact.graph_core_interface != GraphCoreInterface::NO_INTERFACE) {
-                            std::string current_module_name = inout_module.name; // do not include group name!
-                            if (this->rename_popup.PopUp("Rename Project", popup_rename, inout_module.name)) {
-                                this->Update(inout_module, state.canvas);
-                                state.interact.module_rename.first = current_module_name;
-                                state.interact.module_rename.second = inout_module.name;
+                    if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
+                        if (popup_rename) {
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                "[GUI] The action [Rename Module] is not yet supported for the graph "
+                                "using the 'Core Instance Graph' interface. Open project from file to make desired "
+                                "changes. [%s, %s, line %d]\n",
+                                __FILE__, __FUNCTION__, __LINE__);
+                        }
+                    } else if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] The action [Rename Group] is not yet supported for the 'MegaMol Graph' "
+                            "interface. Open project from file to make desired changes. [%s, %s, line %d]\n",
+                            __FILE__, __FUNCTION__, __LINE__);
+                    } else {
+                        std::string last_module_name = inout_module.FullName();
+                        if (this->rename_popup.PopUp("Rename Project", popup_rename, inout_module.name)) {
+                            this->Update(inout_module, state.canvas);
+                            if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
+                                state.interact.module_rename.push_back(
+                                    StrPair_t(last_module_name, inout_module.FullName()));
                             }
-                        } else if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] The action [Rename Module] is not yet supported for the 'MegaMol Graph' "
-                                "interface. "
-                                "Open project from file to make desired changes."
-                                "[%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        } else if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] The action [Rename Module] is not yet supported for the graph using the 'Core "
-                                "Instance "
-                                "Graph' interface. "
-                                "Open project from file to make desired changes."
-                                "[%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
                         }
                     }
                 } else if (phase == megamol::gui::PresentPhase::RENDERING) {
@@ -386,25 +384,20 @@ void megamol::gui::ModulePresentation::Present(
                             if (main_view_button) {
                                 bool is_main_view = inout_module.IsMainView();
                                 if (ImGui::RadioButton("###main_view_switch", is_main_view)) {
-                                    if ((state.interact.graph_core_interface == GraphCoreInterface::NO_INTERFACE) ||
-                                        (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH)) {
-
+                                    if (state.interact.graph_core_interface ==
+                                        GraphCoreInterface::CORE_INSTANCE_GRAPH) {
+                                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                            "[GUI] The action [Change Main View] is not yet supported for the graph "
+                                            "using the 'Core Instance Graph' interface. Open project from file to make "
+                                            "desired "
+                                            "changes. [%s, %s, line %d]\n",
+                                            __FILE__, __FUNCTION__, __LINE__);
+                                    } else {
                                         if (!is_main_view) {
                                             state.interact.module_mainview_changed = vislib::math::Ternary::TRI_TRUE;
                                         } else {
                                             state.interact.module_mainview_changed = vislib::math::Ternary::TRI_FALSE;
                                         }
-                                    } else if (state.interact.graph_core_interface ==
-                                               GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                            "[GUI] The action [Change Main View] is not yet supported for the graph "
-                                            "using "
-                                            "the 'Core "
-                                            "Instance "
-                                            "Graph' interface. "
-                                            "Open project from file to make desired changes."
-                                            "[%s, %s, line %d]\n",
-                                            __FILE__, __FUNCTION__, __LINE__);
                                     }
                                 }
                                 ImGui::SetItemAllowOverlap();

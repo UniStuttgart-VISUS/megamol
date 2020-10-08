@@ -114,6 +114,9 @@ typedef std::vector<ImGuiID> UIDVector_t;
 typedef std::pair<ImGuiID, ImGuiID> UIDPair_t;
 typedef std::vector<UIDPair_t> UIDPairVector_t;
 
+typedef std::pair<std::string, std::string> StrPair_t;
+typedef std::vector<StrPair_t> StrPairVector_t;
+
 /* Data type holding current group uid and group name pairs. */
 typedef std::pair<ImGuiID, std::string> GraphGroupPair_t;
 typedef std::vector<megamol::gui::GraphGroupPair_t> GraphGroupPairVector_t;
@@ -145,13 +148,13 @@ typedef struct _interact_state_ {
     ImGuiID group_hovered_uid;  // in out
     bool group_layout;          // out
 
-    UIDVector_t modules_selected_uids;                 // in out
-    ImGuiID module_hovered_uid;                        // in out
-    UIDPairVector_t modules_add_group_uids;            // out
-    UIDVector_t modules_remove_group_uids;             // out
-    bool modules_layout;                               // out
-    std::pair<std::string, std::string> module_rename; // out
-    vislib::math::Ternary module_mainview_changed;     // out
+    UIDVector_t modules_selected_uids;             // in out
+    ImGuiID module_hovered_uid;                    // in out
+    UIDPairVector_t modules_add_group_uids;        // out
+    UIDVector_t modules_remove_group_uids;         // out
+    bool modules_layout;                           // out
+    StrPairVector_t module_rename;                 // out
+    vislib::math::Ternary module_mainview_changed; // out
 
     ImGuiID call_selected_uid; // in out
     ImGuiID call_hovered_uid;  // in out
@@ -209,7 +212,7 @@ public:
     static bool GetGUIStateFileName(std::string& filename) {
 
         if (filename.empty()) return false;
-        const std::string suffix = "_gui-state.json";
+        const std::string suffix = "_gui-settings.json";
         auto dotpos = filename.find_last_of('.');
         filename = filename.substr(0, dotpos);
         filename.append(suffix);

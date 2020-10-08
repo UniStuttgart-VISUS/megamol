@@ -378,7 +378,8 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         std::map<std::string, std::string> view_instances;
         if (use_megamol_graph) {
             for (auto& module_inst : megamol_graph->ListModules()) {
-                std::string module_fullname = std::string(module_inst.modulePtr->FullName().PeekBuffer());
+                std::string module_fullname =
+                    std::string(module_inst.modulePtr->Name().PeekBuffer()); /// Check only 'Name()'!
                 if (!graph_ptr->ModuleExists(module_fullname)) {
                     module_ptr_list.emplace_back(module_inst.modulePtr.get());
                     if (module_inst.isGraphEntryPoint) {
@@ -413,7 +414,12 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
 
         // Add/Create new modules to gui graph
         for (auto& module_ptr : module_ptr_list) {
-            std::string full_name(module_ptr->FullName().PeekBuffer());
+            std::string full_name;
+            if (use_megamol_graph) {
+                full_name = (module_ptr->Name().PeekBuffer()); /// Check only 'Name()'!
+            } else if (use_core_instance) {
+                full_name = (module_ptr->FullName().PeekBuffer());
+            }
             std::string class_name(module_ptr->ClassName());
             std::string module_name;
             std::string module_namespace;
@@ -427,14 +433,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             /// '%s'.\n", mod->ClassName(), module_namespace.c_str(), module_name.c_str());
 
             // Ensure unique module name is not yet assigned
-            if (graph_ptr->UniqueModuleRename(module_name)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] Renamed existing module '%s' while adding module with same name. "
-                    "This is required for successful unambiguous parameter addressing which uses the module "
-                    "name. [%s, "
-                    "%s, line %d]\n",
-                    module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-            }
+            graph_ptr->UniqueModuleRename(module_name);
 
             // Create new module
             ImGuiID moduel_uid = GUI_INVALID_ID;
@@ -767,15 +766,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 }
 
                 // Ensure unique module name is not yet assigned
-                if (graph_ptr->UniqueModuleRename(view_name)) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                        "[GUI] Project File '%s' line %i: Renamed existing module '%s' while adding module with same "
-                        "name. "
-                        "This is required for successful unambiguous parameter addressing which uses the "
-                        "module name. "
-                        "[%s, %s, line %d]\n",
-                        project_filename.c_str(), (i + 1), view_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                }
+                graph_ptr->UniqueModuleRename(view_name);
 
                 // Add module and set as view instance
                 if (graph_ptr->AddModule(this->modules_stock, view_class_name) == GUI_INVALID_ID) {
@@ -843,16 +834,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 if (graph_ptr != nullptr) {
 
                     // Ensure unique module name is not yet assigned
-                    if (graph_ptr->UniqueModuleRename(module_name)) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                            "[GUI] Project File '%s' line %i: Renamed existing module '%s' while adding module with "
-                            "same "
-                            "name. "
-                            "This is required for successful unambiguous parameter addressing which uses the "
-                            "module "
-                            "name. [%s, %s, line %d]\n",
-                            project_filename.c_str(), (i + 1), module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                    }
+                    graph_ptr->UniqueModuleRename(module_name);
 
                     if (graph_ptr->AddModule(this->modules_stock, module_class_name) == GUI_INVALID_ID) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(

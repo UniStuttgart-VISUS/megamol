@@ -760,7 +760,6 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     megamol_graph->SetGraphEntryPoint(data.name_id,
                         megamol::core::view::get_gl_view_runtime_resources_requests(),
                         megamol::core::view::view_rendering_execution);
-
                 } else if (this->core_instance != nullptr) {
                     /* XXX Currently not supported by core graph
                      */
