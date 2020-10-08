@@ -311,6 +311,7 @@ private:
     GLuint msImageStorageB;
     GLuint msImageStorageC;
     GLuint msImageStorageD;
+    GLuint msImageArray;
     GLuint depthStore;
     GLuint stenStore;
     GLuint depthStore2;
@@ -339,6 +340,8 @@ private:
     glm::mat4 invTexB = glm::mat4(1.0);
     glm::mat4 invTexC = glm::mat4(1.0);
     glm::mat4 invTexD = glm::mat4(1.0);
+
+    std::vector<glm::mat4> invMatrices;
 
     glm::vec4 sA;
     glm::vec4 sB;

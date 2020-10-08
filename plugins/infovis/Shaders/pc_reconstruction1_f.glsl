@@ -5,11 +5,6 @@ uniform int h;
 uniform int w;
 uniform int approach;
 
-uniform mat4 mMa;
-uniform mat4 mMb;
-uniform mat4 mMc;
-uniform mat4 mMd;
-
 uniform mat4 mMatrices[4];
 
 in vec2 uv_coord;
@@ -23,15 +18,15 @@ void main()
     vec4 p = vec4(2*uv_coord-vec2(1.0), 0.0, 1.0);
     if(line % 2 == 1){
         if(col % 2 == 0){
-            frag_out = texture(tx2D_array, vec3(0.5 * (mMd * p).xy + vec2(0.5), 3));
+            frag_out = texture(tx2D_array, vec3(0.5 * (mMatrices[3] * p).xy + vec2(0.5), 3));
         }else{
-            frag_out = texture(tx2D_array, vec3(0.5 * (mMc * p).xy + vec2(0.5), 2));
+            frag_out = texture(tx2D_array, vec3(0.5 * (mMatrices[2] * p).xy + vec2(0.5), 2));
         }
     } else {
         if(col % 2 == 1){
-            frag_out = texture(tx2D_array, vec3(0.5 * (mMa * p).xy + vec2(0.5), 0));
+            frag_out = texture(tx2D_array, vec3(0.5 * (mMatrices[0] * p).xy + vec2(0.5), 0));
         }else{
-            frag_out = texture(tx2D_array, vec3(0.5 * (mMb * p).xy + vec2(0.5), 1));
+            frag_out = texture(tx2D_array, vec3(0.5 * (mMatrices[1] * p).xy + vec2(0.5), 1));
         }  
     }
 }
