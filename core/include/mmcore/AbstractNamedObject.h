@@ -263,14 +263,6 @@ namespace core {
             return p ? p->GetCoreInstance() : nullptr;
         }
 
-        /// Make this public for enabling renaming of modules from GUI
-        /**
-         * Sets the name for the object.
-         *
-         * @param name The new name for the object.
-         */
-        void setName(const vislib::StringA& name);
-
     protected:
 
         /**
@@ -288,6 +280,13 @@ namespace core {
          * Ctor.
          */
         AbstractNamedObject(void);
+
+        /**
+         * Sets the name for the object.
+         *
+         * @param name The new name for the object.
+         */
+        void setName(const vislib::StringA& name);
 
         /**
          * Sets the parent for the object.
