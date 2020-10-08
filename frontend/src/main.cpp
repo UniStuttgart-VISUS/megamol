@@ -7,8 +7,8 @@
 #include "AbstractFrontendService.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
-#include "OpenGL_GLFW_Service.hpp"
 #include "Lua_Service_Wrapper.hpp"
+#include "OpenGL_GLFW_Service.hpp"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
@@ -31,8 +31,10 @@ namespace stdfs = std::experimental::filesystem;
 #    endif
 #endif
 
+// make sure that all configuration parameters have sane and useful and EXPLICIT initialization values!
 struct CLIConfig {
-    std::vector<std::string> project_files;
+    std::string program_invocation_string = "";
+    std::vector<std::string> project_files = {};
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool load_example_project = true;
     bool opengl_khr_debug = true;
@@ -171,18 +173,15 @@ int main(int argc, char* argv[]) {
         services.digestChangedRequestedResources();
 
         // services tell us wheter we should shut down megamol
-        // TODO: service needs to mark intself as shutdown by calling this->setShutdown() during
-        // digestChangedRequestedResources()
         if (services.shouldShutdown())
             return false;
 
-        {                              // put this in render function so LUA can call it
+        { // actual rendering
             services.preGraphRender(); // e.g. start frame timer, clear render buffers
 
             graph.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
 
             services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
-            // problem: guarantee correct order of pre- and post-render jobs, i.e. render gui before swapping buffers
         }
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
@@ -195,18 +194,18 @@ int main(int argc, char* argv[]) {
 
     // load project files via lua
     for (auto& file : config.project_files) {
-	    std::string result;
+        std::string result;
         if (!lua_api.RunFile(file, result)) {
             std::cout << "Project file \"" << file << "\" did not execute correctly: " << result << std::endl;
-	        run_megamol = false;
+            run_megamol = false;
         }
     }
-	if (config.load_example_project && config.project_files.empty()) {
-		const bool graph_ok = set_up_example_graph(graph); // fill graph with modules and calls
-		if (!graph_ok) {
-		    std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
-		    run_megamol = false;
-		}
+    if (config.load_example_project && config.project_files.empty()) {
+        const bool graph_ok = set_up_example_graph(graph); // fill graph with modules and calls
+        if (!graph_ok) {
+            std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
+            run_megamol = false;
+        }
     }
 
     while (run_megamol) {
@@ -227,6 +226,8 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
 
     cxxopts::Options options(argv[0], "MegaMol Frontend 3000");
 
+    config.program_invocation_string = std::string{argv[0]};
+
     // parse input project files
     options.positional_help("<additional project files>");
     options.add_options()
@@ -240,7 +241,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
     auto parsed_options = options.parse(argc, argv);
     std::string res;
 
-	// verify project files exist in file system
+    // verify project files exist in file system
     if (parsed_options.count("project-files")) {
         const auto& v = parsed_options["project-files"].as<std::vector<std::string>>();
         for (const auto& p : v) {

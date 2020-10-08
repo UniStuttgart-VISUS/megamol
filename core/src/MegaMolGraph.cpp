@@ -38,8 +38,12 @@ static std::string clean(std::string const& path) {
     return tolower(path.substr(begin, end+1 - begin));
 }
 
-static void log(std::string text) { 
-	const std::string msg = "MegaMolGraph: " + text + "\n"; 
+static std::string cut_off_prefix(std::string const& name, std::string const& prefix) {
+    return name.substr(prefix.size());
+}
+
+static void log(std::string text) {
+	const std::string msg = "MegaMolGraph: " + text; 
 	megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
 
@@ -167,14 +171,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         return false;
     }
 
-    const auto path_parts = splitPathName(request.id);
-    if (path_parts.empty()) {
-        log("error. requested module name does not seem to have valid namespace format: " + request.id +
-            "\n. valid format is: [::]aa::bb::cc[::]");
-        return false;
-    }
-
-    const auto module_name = vislib::StringA(path_parts.back().c_str());
+    const auto module_name = vislib::StringA(request.id.c_str());
 
     Module::ptr_type module_ptr = Module::ptr_type(module_description->CreateModule(module_name));
     if (!module_ptr) {
@@ -229,37 +226,30 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 
     const auto getCallSlotOfModule = [this, &call_description](
                                          std::string const& name) -> std::pair<AbstractSlot*, Module::ptr_type> {
-        const auto path = splitPathName(name);
-        if (path.empty()) {
-            log("error. encountered invalid namespace format: " + name + "\n. valid format is: [::]aa::bb::cc[::]");
-            return {nullptr, nullptr};
-        }
-
-        auto module_name = name.substr(0, name.size() - (path.back().size() + 2));
-        auto module_it = this->find_module(module_name);
+        auto module_it = find_module_by_prefix(name);
         if (module_it == this->module_list_.end()) {
-            log("error. could not find module named: " + module_name +
-                " to connect requested call: " + call_description->ClassName());
+            log("error. could not find module for requested call: " + name + "(" + call_description->ClassName() + ")");
             return {nullptr, nullptr};
         }
+        const auto module_name = module_it->request.id;
+        const auto slot_name = cut_off_prefix(name, module_name + "::");
 
         Module::ptr_type module_ptr = module_it->modulePtr;
-        const auto slot_name = vislib::StringA(path.back().c_str());
-        AbstractSlot* slot_ptr = module_ptr->FindSlot(slot_name);
+        AbstractSlot* slot_ptr = module_ptr->FindSlot(slot_name.c_str());
         if (!slot_ptr) {
-            log("error. could not find slot named: " + std::string(slot_name.PeekBuffer()) +
+            log("error. could not find slot named: " + slot_name +
                 " to connect requested call: " + std::string(call_description->ClassName()));
             return {nullptr, nullptr};
         }
 
         if (!slot_ptr->IsCallCompatible(call_description)) {
             log("error. call: " + std::string(call_description->ClassName()) +
-                " is not compatible with slot: " + std::string(slot_name.PeekBuffer()));
+                " is not compatible with slot: " + slot_name);
             return {nullptr, nullptr};
         }
 
         if (!slot_ptr->GetStatus() == AbstractSlot::STATUS_ENABLED) {
-            log("error. slot: " + std::string(slot_name.PeekBuffer()) +
+            log("error. slot: " + slot_name +
                 " is not enabled. can not connect call: " + std::string(call_description->ClassName()));
             return {nullptr, nullptr};
         }
@@ -428,6 +418,28 @@ megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
     return call_it->callPtr;
 }
 
+megamol::core::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module_by_prefix(std::string const& name) {
+    auto module_it = std::find_if(module_list_.begin(), module_list_.end(),
+        [&](auto const& module) 
+    {
+        const auto found = name.find(module.request.id);
+        return (found != std::string::npos) && found == 0; // substing found && substring starts at beginning
+    });
+
+    return module_it;
+}
+
+megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_module_by_prefix(std::string const& name) const {
+    auto module_it = std::find_if(module_list_.begin(), module_list_.end(),
+        [&](auto const& module) 
+    {
+        const auto found = name.find(module.request.id);
+        return (found != std::string::npos) && found == 0; // substing found && substring starts at beginning
+    });
+
+    return module_it;
+}
+
 megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& paramName) const {
     auto names = splitPathName(paramName);
     if (names.size() < 2) {
@@ -436,22 +448,18 @@ megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(
         return nullptr;
     }
 
-    auto module_name = names[0];//paramName.substr(0, paramName.size() - (names.back().size() + 2));
-    auto module_it = find_module(module_name);
+    // match module where module name is prefix of parameter slot name
+    auto module_it = find_module_by_prefix(paramName);
 
     if (module_it == module_list_.end()) {
-        log("error. could not find parameter, module name not found: " + module_name +
-            " (parameter name: " + paramName + ")");
+        log("error. could not find parameter, module name not found, parameter name: " + paramName + ")");
         return nullptr;
     }
 
-    auto& module = *module_it->modulePtr;
-    std::string slot_name;
-    for (int i = 1; i < names.size(); i++) {
-        slot_name.append("::" + names[i]);
-    }
-    slot_name = clean(slot_name);
-    AbstractSlot* slot_ptr = module.FindSlot(slot_name.c_str());
+    std::string module_name = module_it->request.id;
+    std::string slot_name = cut_off_prefix(paramName, module_name + "::");
+
+    AbstractSlot* slot_ptr = module_it->modulePtr->FindSlot(slot_name.c_str());
     param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(slot_ptr);
 
     if (slot_ptr == nullptr || param_slot_ptr == nullptr) {

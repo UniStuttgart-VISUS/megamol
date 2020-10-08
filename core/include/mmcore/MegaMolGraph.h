@@ -156,8 +156,10 @@ public:
 private:
     // get invalidated and the user is helpless
     [[nodiscard]] ModuleList_t::iterator find_module(std::string const& name);
+    [[nodiscard]] ModuleList_t::iterator find_module_by_prefix(std::string const& name);
 
     [[nodiscard]] ModuleList_t::const_iterator find_module(std::string const& name) const;
+    [[nodiscard]] ModuleList_t::const_iterator find_module_by_prefix(std::string const& name) const;
 
     [[nodiscard]] CallList_t::iterator find_call(std::string const& from, std::string const& to);
 
