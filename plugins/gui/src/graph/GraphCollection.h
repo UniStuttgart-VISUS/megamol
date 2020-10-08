@@ -127,7 +127,7 @@ private:
                     [](char const& c1, char const& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); }));
     }
 
-    bool replace_state_in_file(const std::string& filename, ImGuiID graph_id);
+    bool save_state_to_file(const std::string& filename, ImGuiID graph_id);
     bool load_state_from_file(const std::string& filename, ImGuiID graph_id);
 };
 

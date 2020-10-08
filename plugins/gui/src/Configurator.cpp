@@ -119,7 +119,7 @@ bool megamol::gui::Configurator::Draw(
 
         // Load configurator state once after available modules and call are loaded
         auto graph_ptr = this->graph_collection.GetGraphs().front();
-        this->load_state_from_file(graph_ptr->GetFilename());
+        this->load_graph_state_from_file(graph_ptr->GetFilename());
 
         // Enable drag and drop of files for configurator (if glfw is available here)
 #ifdef GUI_USE_GLFW
@@ -476,16 +476,19 @@ bool megamol::gui::Configurator::StateToJSON(nlohmann::json& inout_json) {
         inout_json[GUI_JSON_TAG_CONFIGURATOR]["show_module_list_sidebar"] = this->show_module_list_sidebar;
         inout_json[GUI_JSON_TAG_CONFIGURATOR]["module_list_sidebar_width"] = this->module_list_sidebar_width;
 
-        // Write graph states
-        for (auto& graph_ptr : this->GetGraphCollection().GetGraphs()) {
-            // For graphs with no interface to core save only file name of loaded project
-            if (graph_ptr->HasCoreInterface()) {
-                graph_ptr->StateToJSON(inout_json);
-            } else {
-                std::string filename = graph_ptr->GetFilename();
-                GUIUtils::Utf8Encode(filename);
-                if (!filename.empty()) {
-                    inout_json[GUI_JSON_TAG_GRAPHS][filename] = nlohmann::json::object();
+        /// Make sure configurator processed loading of modules and calls
+        if (this->init_state > 1) {
+            // Write graph states
+            for (auto& graph_ptr : this->GetGraphCollection().GetGraphs()) {
+                // For graphs with no interface to core save only file name of loaded project
+                if (graph_ptr->HasCoreInterface()) {
+                    graph_ptr->StateToJSON(inout_json);
+                } else {
+                    std::string filename = graph_ptr->GetFilename();
+                    GUIUtils::Utf8Encode(filename);
+                    if (!filename.empty()) {
+                        inout_json[GUI_JSON_TAG_GRAPHS][filename] = nlohmann::json::object();
+                    }
                 }
             }
         }
@@ -497,6 +500,66 @@ bool megamol::gui::Configurator::StateToJSON(nlohmann::json& inout_json) {
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] JSON Error - Unable to write state to JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}
+
+
+bool megamol::gui::Configurator::StateFromJSON(const nlohmann::json& in_json) {
+
+    try {
+        if (!in_json.is_object()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+
+        // Read configurator state
+        for (auto& header_item : in_json.items()) {
+            if (header_item.key() == GUI_JSON_TAG_CONFIGURATOR) {
+                auto config_state = header_item.value();
+
+                megamol::core::utility::get_json_value<bool>(
+                    config_state, {"show_module_list_sidebar"}, &this->show_module_list_sidebar);
+
+                megamol::core::utility::get_json_value<float>(
+                    config_state, {"module_list_sidebar_width"}, &this->module_list_sidebar_width);
+            }
+        }
+
+        /// Make sure configurator processed loading of modules and calls
+        if (this->init_state > 1) {
+            // Read graph states
+            for (auto& graph_ptr : this->GetGraphCollection().GetGraphs()) {
+                if (graph_ptr->HasCoreInterface()) {
+                    if (graph_ptr->StateFromJSON(in_json)) {
+                        // Disable layouting if graph state was found
+                        graph_ptr->present.SetLayoutGraph(false);
+                    }
+                }
+            }
+            for (auto& graph_header_item : in_json.items()) {
+                if (graph_header_item.key() == GUI_JSON_TAG_GRAPHS) {
+                    for (auto& graph_item : graph_header_item.value().items()) {
+                        std::string json_graph_id = graph_item.key();
+                        GUIUtils::Utf8Decode(json_graph_id);
+                        if (json_graph_id != GUI_JSON_TAG_PROJECT) {
+                            // Otherwise load additonal graph from given file name
+                            this->GetGraphCollection().LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
+                        }
+                    }
+                }
+            }
+        }
+#ifdef GUI_VERBOSE
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read configurator state from JSON.");
+#endif // GUI_VERBOSE
+
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] JSON Error - Unable to read state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -595,7 +658,7 @@ void megamol::gui::Configurator::drawPopUps(void) {
 }
 
 
-bool megamol::gui::Configurator::load_state_from_file(const std::string& filename) {
+bool megamol::gui::Configurator::load_graph_state_from_file(const std::string& filename) {
 
     std::string file = filename;
     if (!GUIUtils::GetGUIStateFileName(file)) return false;
@@ -604,68 +667,10 @@ bool megamol::gui::Configurator::load_state_from_file(const std::string& filenam
     if (FileUtils::ReadFile(file, state_str, true)) {
         if (state_str.empty()) return false;
         nlohmann::json in_json = nlohmann::json::parse(state_str);
-        return this->state_from_json(in_json);
+        return this->StateFromJSON(in_json);
     }
 
     return false;
-}
-
-
-bool megamol::gui::Configurator::state_from_json(const nlohmann::json& in_json) {
-
-    try {
-        if (!in_json.is_object()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-
-        // Read configurator state
-        for (auto& header_item : in_json.items()) {
-            if (header_item.key() == GUI_JSON_TAG_CONFIGURATOR) {
-                auto config_state = header_item.value();
-
-                megamol::core::utility::get_json_value<bool>(
-                    config_state, {"show_module_list_sidebar"}, &this->show_module_list_sidebar);
-
-                megamol::core::utility::get_json_value<float>(
-                    config_state, {"module_list_sidebar_width"}, &this->module_list_sidebar_width);
-            }
-        }
-
-        // Read graph states
-        for (auto& graph_ptr : this->GetGraphCollection().GetGraphs()) {
-            if (graph_ptr->HasCoreInterface()) {
-                if (graph_ptr->StateFromJSON(in_json)) {
-                    // Disable layouting if graph state was found
-                    graph_ptr->present.SetLayoutGraph(false);
-                }
-            }
-        }
-        for (auto& graph_header_item : in_json.items()) {
-            if (graph_header_item.key() == GUI_JSON_TAG_GRAPHS) {
-                for (auto& graph_item : graph_header_item.value().items()) {
-                    std::string json_graph_id = graph_item.key();
-                    GUIUtils::Utf8Decode(json_graph_id);
-                    if (json_graph_id != GUI_JSON_TAG_PROJECT) {
-                        // Otherwise load additonal graph from given file name
-                        this->GetGraphCollection().LoadAddProjectFromFile(GUI_INVALID_ID, json_graph_id);
-                    }
-                }
-            }
-        }
-
-#ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read configurator state from JSON.");
-#endif // GUI_VERBOSE
-
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON Error - Unable to read state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    return true;
 }
 
 

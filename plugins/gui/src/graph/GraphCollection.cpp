@@ -1088,7 +1088,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                 bool wrote_parameter_gui_state = false;
 
                 // Saved gui state to file ------------------------------------
-                if (!this->replace_state_in_file(project_filename, graph_ptr->uid)) {
+                if (!this->save_state_to_file(project_filename, graph_ptr->uid)) {
                     return false;
                 }
 
@@ -1537,7 +1537,7 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_caller_idxs(
 }
 
 
-bool megamol::gui::GraphCollection::replace_state_in_file(const std::string& filename, ImGuiID graph_id) {
+bool megamol::gui::GraphCollection::save_state_to_file(const std::string& filename, ImGuiID graph_id) {
 
     nlohmann::json state_json;
     std::string file = filename;

@@ -63,10 +63,10 @@ GUIWindows::GUIWindows(void)
 
     this->param_slots.clear();
     this->param_slots.push_back(&this->style_param);
-    /// this->param_slots.push_back(&this->state_param); /// Completely hidden because unused, only internal state
-    /// backup
-    this->param_slots.push_back(&this->autosave_state_param);
     this->param_slots.push_back(&this->autostart_configurator_param);
+    /// Completely hidden because unused, only internal state backup
+    /// this->param_slots.push_back(&this->state_param);
+    /// this->param_slots.push_back(&this->autosave_state_param);
 
     this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false};
@@ -137,7 +137,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         return false;
     }
 
-    // Create new gui graph once if core graph is used (otherwise graph should already exist)
+    // Create new gui graph once if core instance graph is used (otherwise graph should already exist)
     // GUI graph of running project should be available before loading states from parameters in validateParameters().
     if (this->graph_uid == GUI_INVALID_ID) this->SynchronizeGraphs();
 
@@ -1860,6 +1860,22 @@ void megamol::gui::GUIWindows::triggerCoreInstanceShutdown(void) {
 bool megamol::gui::GUIWindows::save_state_to_file(const std::string& filename) {
 
     nlohmann::json state_json;
+    std::string file = filename;
+    if (!GUIUtils::GetGUIStateFileName(file)) return false;
+
+    // Load existing gui state from file
+    std::string state_str;
+    if (FileUtils::ReadFile(file, state_str, true)) {
+        if (state_str.empty()) return false;
+        bool found_gui = false;
+        state_json = nlohmann::json::parse(state_str);
+        if (!state_json.is_object()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+    }
+
     if (this->state_to_json(state_json)) {
         std::string state_str = state_json.dump(2);
         this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
@@ -1908,6 +1924,9 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
         // Read window configurations
         this->window_collection.StateFromJSON(in_json);
 
+        // Read configurator state
+        this->configurator.StateFromJSON(in_json);
+
         // Read GUI state of parameters (groups)
         GraphPtr_t graph_ptr;
         if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
@@ -1945,6 +1964,9 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
 
         // Write window configuration
         this->window_collection.StateToJSON(inout_json);
+
+        // Read configurator state
+        this->configurator.StateToJSON(inout_json);
 
         // Write GUI state of parameters (groups)
         GraphPtr_t graph_ptr;

@@ -64,8 +64,8 @@ public:
      */
     GraphCollection& GetGraphCollection(void) { return this->graph_collection; }
 
-    /** State to JSON. */
     bool StateToJSON(nlohmann::json& inout_json);
+    bool StateFromJSON(const nlohmann::json& in_json);
 
 private:
     // VARIABLES --------------------------------------------------------------
@@ -98,8 +98,7 @@ private:
 
     void drawPopUps(void);
 
-    bool load_state_from_file(const std::string& filename);
-    bool state_from_json(const nlohmann::json& in_json);
+    bool load_graph_state_from_file(const std::string& filename);
 
 #ifdef GUI_USE_GLFW
     /**

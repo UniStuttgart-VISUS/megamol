@@ -110,12 +110,12 @@ public:
 
     const std::string GenerateUniqueMainViewName(void);
 
+    bool StateFromJSON(const nlohmann::json& in_json);
+    bool StateToJSON(nlohmann::json& inout_json);
+
     // Presentation ----------------------------------------------------
 
     inline void PresentGUI(GraphState_t& state) { this->present.Present(*this, state); }
-
-    bool StateFromJSON(const nlohmann::json& in_json);
-    bool StateToJSON(nlohmann::json& inout_json);
 
 private:
     typedef std::tuple<QueueAction, QueueData> SyncQueueData_t;
