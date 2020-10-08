@@ -42,8 +42,8 @@ static std::string cut_off_prefix(std::string const& name, std::string const& pr
     return name.substr(prefix.size());
 }
 
-static void log(std::string text) { 
-	const std::string msg = "MegaMolGraph: " + text + "\n"; 
+static void log(std::string text) {
+	const std::string msg = "MegaMolGraph: " + text; 
 	megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
 
