@@ -379,13 +379,13 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         if (use_megamol_graph) {
             /* XXX MEGAMOL GRAPH
             for (auto& module_inst : megamol_graph->ListModules()) {
-                std::string module_fullname = std::string(module_inst.modulePtr->FullName().PeekBuffer());
+                std::string module_fullname =
+                    std::string(module_inst.modulePtr->Name().PeekBuffer()); /// Check only 'Name()'!
                 if (!graph_ptr->ModuleExists(module_fullname)) {
                     module_ptr_list.emplace_back(module_inst.modulePtr.get());
-                    /// XXX Not considered when project is loaded?!
-                    //if (module_inst.isGraphEntryPoint) {
-                    //    view_instances[module_fullname] = this->GenerateUniqueMainViewName();
-                    //}
+                    if (module_inst.isGraphEntryPoint) {
+                        view_instances[module_fullname] = graph_ptr->GenerateUniqueMainViewName();
+                    }
                 }
             }
             */
@@ -416,7 +416,12 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
 
         // Add/Create new modules to gui graph
         for (auto& module_ptr : module_ptr_list) {
-            std::string full_name(module_ptr->FullName().PeekBuffer());
+            std::string full_name;
+            if (use_megamol_graph) {
+                full_name = (module_ptr->Name().PeekBuffer()); /// Check only 'Name()'!
+            } else if (use_core_instance) {
+                full_name = (module_ptr->FullName().PeekBuffer());
+            }
             std::string class_name(module_ptr->ClassName());
             std::string module_name;
             std::string module_namespace;
@@ -430,14 +435,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             /// '%s'.\n", mod->ClassName(), module_namespace.c_str(), module_name.c_str());
 
             // Ensure unique module name is not yet assigned
-            if (graph_ptr->UniqueModuleRename(module_name)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] Renamed existing module '%s' while adding module with same name. "
-                    "This is required for successful unambiguous parameter addressing which uses the module "
-                    "name. [%s, "
-                    "%s, line %d]\n",
-                    module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-            }
+            graph_ptr->UniqueModuleRename(module_name);
 
             // Create new module
             ImGuiID moduel_uid = GUI_INVALID_ID;
@@ -501,7 +499,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
 
                     if (use_stock) {
                         for (auto& parameter : new_module_ptr->parameters) {
-                            if (parameter.full_name == param_full_name) {
+                            if (this->case_insensitive_str_comp(parameter.full_name, param_full_name)) {
                                 megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                     (*param_slot), parameter, true, false, false);
                             }
@@ -563,7 +561,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         if (use_megamol_graph) {
             /* XXX MEGAMOL GRAPH
             for (auto& call : megamol_graph->ListCalls()) {
-                auto call_ptr = call.first;
+                auto call_ptr = call.callPtr;
                 if (call_ptr == nullptr) continue;
 
                 bool add_new = true;
@@ -596,27 +594,29 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                             "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                             __LINE__);
                     }
-                    if ((class_name == call.second.className) && (from == call.second.from) && (to == call.second.to)) {
+                    if ((class_name == call.request.className) &&
+                        this->case_insensitive_str_comp(from, call.request.from) &&
+                        this->case_insensitive_str_comp(to, call.request.to)) {
                         add_new = false;
                     }
                 }
                 if (!add_new) continue;
 
-                auto call_class_name = call.second.className;
+                auto call_class_name = call.request.className;
                 std::string call_caller_name;
                 std::string call_caller_parent_name;
                 if (!this->project_separate_name_and_namespace(
-                        call.second.from, call_caller_parent_name, call_caller_name)) {
+                        call.request.from, call_caller_parent_name, call_caller_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n",
-                        call.second.from.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        call.request.from.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 }
                 std::string call_callee_name;
                 std::string call_callee_parent_name;
                 if (!this->project_separate_name_and_namespace(
-                        call.second.to, call_callee_parent_name, call_callee_name)) {
+                        call.request.to, call_callee_parent_name, call_callee_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n", call.second.to.c_str(),
+                        "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n", call.request.to.c_str(),
                         __FILE__, __FUNCTION__, __LINE__);
                 }
                 // Full module name required
@@ -637,9 +637,9 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         for (auto& cd : call_data) {
             CallSlotPtr_t callslot_1 = nullptr;
             for (auto& mod : graph_ptr->GetModules()) {
-                if (mod->FullName() == cd.caller_module_full_name) {
+                if (this->case_insensitive_str_comp(mod->FullName(), cd.caller_module_full_name)) {
                     for (auto& callslot : mod->GetCallSlots(CallSlotType::CALLER)) {
-                        if (callslot->name == cd.caller_module_callslot_name) {
+                        if (this->case_insensitive_str_comp(callslot->name, cd.caller_module_callslot_name)) {
                             callslot_1 = callslot;
                         }
                     }
@@ -647,9 +647,9 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             }
             CallSlotPtr_t callslot_2 = nullptr;
             for (auto& mod : graph_ptr->GetModules()) {
-                if (mod->FullName() == cd.callee_module_full_name) {
+                if (this->case_insensitive_str_comp(mod->FullName(), cd.callee_module_full_name)) {
                     for (auto& callslot : mod->GetCallSlots(CallSlotType::CALLEE)) {
-                        if (callslot->name == cd.callee_module_callslot_name) {
+                        if (this->case_insensitive_str_comp(callslot->name, cd.callee_module_callslot_name)) {
                             callslot_2 = callslot;
                         }
                     }
@@ -770,15 +770,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 }
 
                 // Ensure unique module name is not yet assigned
-                if (graph_ptr->UniqueModuleRename(view_name)) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                        "[GUI] Project File '%s' line %i: Renamed existing module '%s' while adding module with same "
-                        "name. "
-                        "This is required for successful unambiguous parameter addressing which uses the "
-                        "module name. "
-                        "[%s, %s, line %d]\n",
-                        project_filename.c_str(), (i + 1), view_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                }
+                graph_ptr->UniqueModuleRename(view_name);
 
                 // Add module and set as view instance
                 if (graph_ptr->AddModule(this->modules_stock, view_class_name) == GUI_INVALID_ID) {
@@ -846,16 +838,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 if (graph_ptr != nullptr) {
 
                     // Ensure unique module name is not yet assigned
-                    if (graph_ptr->UniqueModuleRename(module_name)) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                            "[GUI] Project File '%s' line %i: Renamed existing module '%s' while adding module with "
-                            "same "
-                            "name. "
-                            "This is required for successful unambiguous parameter addressing which uses the "
-                            "module "
-                            "name. [%s, %s, line %d]\n",
-                            project_filename.c_str(), (i + 1), module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                    }
+                    graph_ptr->UniqueModuleRename(module_name);
 
                     if (graph_ptr->AddModule(this->modules_stock, module_class_name) == GUI_INVALID_ID) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -931,7 +914,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         if (module_name_idx != std::string::npos) {
                             for (auto& callslot_map : mod->GetCallSlots()) {
                                 for (auto& callslot : callslot_map.second) {
-                                    if (caller_slot_name == callslot->name) {
+                                    if (this->case_insensitive_str_comp(caller_slot_name, callslot->name)) {
                                         caller_slot = callslot;
                                     }
                                 }
@@ -942,7 +925,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         if (module_name_idx != std::string::npos) {
                             for (auto& callslot_map : mod->GetCallSlots()) {
                                 for (auto& callslot : callslot_map.second) {
-                                    if (callee_slot_name == callslot->name) {
+                                    if (this->case_insensitive_str_comp(callee_slot_name, callslot->name)) {
                                         callee_slot = callslot;
                                     }
                                 }
@@ -1065,7 +1048,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                             std::string param_full_name =
                                 param_slot_full_name.substr(module_name_idx + module_full_name.size());
                             for (auto& parameter : module_ptr->parameters) {
-                                if (parameter.full_name == param_full_name) {
+                                if (this->case_insensitive_str_comp(parameter.full_name, param_full_name)) {
                                     parameter.SetValueString(value_str);
                                 }
                             }

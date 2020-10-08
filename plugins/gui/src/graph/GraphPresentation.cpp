@@ -70,8 +70,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     this->graph_state.interact.modules_add_group_uids.clear();
     this->graph_state.interact.modules_remove_group_uids.clear();
     this->graph_state.interact.modules_layout = false;
-    this->graph_state.interact.module_rename.first.clear();
-    this->graph_state.interact.module_rename.second.clear();
+    this->graph_state.interact.module_rename.clear();
     this->graph_state.interact.module_mainview_changed = vislib::math::Ternary::TRI_UNKNOWN;
 
     this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;
@@ -276,16 +275,16 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         this->ResetStatePointers();
         bool reset_state = false;
         // Add module renaming event to graph synchronization queue -----------
-        if (!this->graph_state.interact.module_rename.first.empty()) {
+        if (!this->graph_state.interact.module_rename.empty()) {
             Graph::QueueData queue_data;
-            queue_data.name_id = this->graph_state.interact.module_rename.first;
-            queue_data.rename_id = this->graph_state.interact.module_rename.second;
-            inout_graph.PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
-
-            this->graph_state.interact.module_rename.first.clear();
-            this->graph_state.interact.module_rename.second.clear();
+            for (auto& str_pair : this->graph_state.interact.module_rename) {
+                queue_data.name_id = str_pair.first;
+                queue_data.rename_id = str_pair.second;
+                inout_graph.PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+            }
+            this->graph_state.interact.module_rename.clear();
         }
-        // Add module main view change event to graph synchronization queue ---
+        // Add module main view event to graph synchronization queue ----------
         if (this->graph_state.interact.module_mainview_changed != vislib::math::Ternary::TRI_UNKNOWN) {
             // Choose single selected view module
             ModulePtr_t selected_mod_ptr;
@@ -311,7 +310,18 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
         }
         // Add module to group ------------------------------------------------
         if (!this->graph_state.interact.modules_add_group_uids.empty()) {
-            if (inout_graph.GetCoreInterface() == GraphCoreInterface::NO_INTERFACE) {
+            if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] The action [Add Module to Group] is not yet supported for the graph "
+                    "using the 'Core Instance Graph' interface. Open project from file to make desired "
+                    "changes. [%s, %s, line %d]\n",
+                    __FILE__, __FUNCTION__, __LINE__);
+            } else if (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] The action [Add Module to Group] is not yet supported for the 'MegaMol Graph' "
+                    "interface. Open project from file to make desired changes. [%s, %s, line %d]\n",
+                    __FILE__, __FUNCTION__, __LINE__);
+            } else {
                 ModulePtr_t module_ptr;
                 ImGuiID new_group_uid = GUI_INVALID_ID;
                 for (auto& uid_pair : this->graph_state.interact.modules_add_group_uids) {
@@ -338,6 +348,9 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 
                         GroupPtr_t add_group_ptr;
                         if (inout_graph.GetGroup(group_uid, add_group_ptr)) {
+                            Graph::QueueData queue_data;
+                            queue_data.name_id = module_ptr->FullName();
+
                             // Remove module from previous associated group
                             ImGuiID module_group_uid = module_ptr->present.group.uid;
                             GroupPtr_t remove_group_ptr;
@@ -348,11 +361,11 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                                     restore_interfaceslots = true;
                                 }
                             }
+
                             // Add module to group
                             add_group_ptr->AddModule(module_ptr);
-                            /// XXX Group Name is strictly internal to gui and will only be considered if project is
-                            /// saved inout_graph.add_rename_module_sync_event(current_module_fullname,
-                            /// module_ptr->FullName());
+                            queue_data.rename_id = module_ptr->FullName();
+                            inout_graph.PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
                             inout_graph.ForceSetDirty();
                             // Restore interface slots after adding module to new group
                             if (restore_interfaceslots) {
@@ -361,26 +374,23 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                         }
                     }
                 }
-            } else if (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] The action [Add Module from Group] is not yet supported for the 'MegaMol Graph' interface. "
-                    "Open project from file to make desired changes."
-                    "[%s, %s, line %d]\n",
-                    __FILE__, __FUNCTION__, __LINE__);
-            } else if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] The action [Add Module from Group] is not yet supported for the graph using the 'Core "
-                    "Instance "
-                    "Graph' interface. "
-                    "Open project from file to make desired changes."
-                    "[%s, %s, line %d]\n",
-                    __FILE__, __FUNCTION__, __LINE__);
             }
             reset_state = true;
         }
         // Remove module from group -------------------------------------------
         if (!this->graph_state.interact.modules_remove_group_uids.empty()) {
-            if (inout_graph.GetCoreInterface() == GraphCoreInterface::NO_INTERFACE) {
+            if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] The action [Remove Module from Group] is not yet supported for the graph "
+                    "using the 'Core Instance Graph' interface. Open project from file to make desired "
+                    "changes. [%s, %s, line %d]\n",
+                    __FILE__, __FUNCTION__, __LINE__);
+            } else if (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] The action [Remove Module to Group] is not yet supported for the 'MegaMol Graph' "
+                    "interface. Open project from file to make desired changes. [%s, %s, line %d]\n",
+                    __FILE__, __FUNCTION__, __LINE__);
+            } else {
                 for (auto& module_uid : this->graph_state.interact.modules_remove_group_uids) {
                     ModulePtr_t module_ptr;
                     for (auto& mod : inout_graph.GetModules()) {
@@ -388,32 +398,17 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                             module_ptr = mod;
                         }
                     }
-                    std::string current_module_fullname = module_ptr->FullName();
                     for (auto& remove_group_ptr : inout_graph.GetGroups()) {
                         if (remove_group_ptr->ContainsModule(module_uid)) {
-                            remove_group_ptr->RemoveModule(module_uid);
-                            /// XXX Group Name is strictly internal to gui and will only be considered if project is
-                            /// saved inout_graph.add_rename_module_sync_event(current_module_fullname,
-                            /// module_ptr->FullName());
+                            Graph::QueueData queue_data;
+                            queue_data.name_id = module_ptr->FullName();
+                            remove_group_ptr->RemoveModule(module_ptr->uid);
+                            queue_data.rename_id = module_ptr->FullName();
+                            inout_graph.PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
                             inout_graph.ForceSetDirty();
                         }
                     }
                 }
-            } else if (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] The action [Remove Module from Group] is not yet supported for the 'MegaMol Graph' "
-                    "interface. "
-                    "Open project from file to make desired changes."
-                    "[%s, %s, line %d]\n",
-                    __FILE__, __FUNCTION__, __LINE__);
-            } else if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] The action [Remove Module from Group] is not yet supported for the graph using the 'Core "
-                    "Instance "
-                    "Graph' interface. "
-                    "Open project from file to make desired changes."
-                    "[%s, %s, line %d]\n",
-                    __FILE__, __FUNCTION__, __LINE__);
             }
             reset_state = true;
         }
@@ -496,21 +491,40 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 inout_graph.DeleteCall(this->graph_state.interact.call_selected_uid);
             }
             if (this->graph_state.interact.group_selected_uid != GUI_INVALID_ID) {
-                if (inout_graph.GetCoreInterface() == GraphCoreInterface::NO_INTERFACE) {
-                    inout_graph.DeleteGroup(this->graph_state.interact.group_selected_uid);
+                if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] The action [Delete Group] is not yet supported for the graph "
+                        "using the 'Core Instance Graph' interface. Open project from file to make desired "
+                        "changes. [%s, %s, line %d]\n",
+                        __FILE__, __FUNCTION__, __LINE__);
                 } else if (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] The action [Delete Group] is not yet supported for the 'MegaMol Graph' interface. "
-                        "Open project from file to make desired changes."
-                        "[%s, %s, line %d]\n",
+                        "[GUI] The action [Delete Group] is not yet supported for the 'MegaMol Graph' "
+                        "interface. Open project from file to make desired changes. [%s, %s, line %d]\n",
                         __FILE__, __FUNCTION__, __LINE__);
-                } else if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] The action [Delete Group] is not yet supported for the graph using the 'Core Instance "
-                        "Graph' interface. "
-                        "Open project from file to make desired changes."
-                        "[%s, %s, line %d]\n",
-                        __FILE__, __FUNCTION__, __LINE__);
+                } else {
+                    // Save old name of modules
+                    std::vector<std::pair<ImGuiID, std::string>> module_uid_name_pair;
+                    GroupPtr_t group_ptr;
+                    if (inout_graph.GetGroup(this->graph_state.interact.group_selected_uid, group_ptr)) {
+                        for (auto& module_ptr : group_ptr->GetModules()) {
+                            module_uid_name_pair.push_back({module_ptr->uid, module_ptr->FullName()});
+                        }
+                    }
+                    group_ptr.reset();
+                    // Delete group
+                    inout_graph.DeleteGroup(this->graph_state.interact.group_selected_uid);
+                    // Push module renaming to sync queue
+                    for (auto& module_ptr : inout_graph.GetModules()) {
+                        for (auto& module_pair : module_uid_name_pair) {
+                            if (module_ptr->uid == module_pair.first) {
+                                Graph::QueueData queue_data;
+                                queue_data.name_id = module_pair.second;
+                                queue_data.rename_id = module_ptr->FullName();
+                                inout_graph.PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+                            }
+                        }
+                    }
                 }
             }
             if (this->graph_state.interact.interfaceslot_selected_uid != GUI_INVALID_ID) {
@@ -686,24 +700,28 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     } else {
         bool is_main_view = selected_mod_ptr->IsMainView();
         if (ImGui::Checkbox("Main View", &is_main_view)) {
-            if ((inout_graph.GetCoreInterface() == GraphCoreInterface::NO_INTERFACE) ||
-                (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH)) {
-                Graph::QueueData queue_data;
-                queue_data.name_id = selected_mod_ptr->FullName();
+            if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] The action [Change Main View] is not yet supported for the graph "
+                    "using the 'Core Instance Graph' interface. Open project from file to make desired "
+                    "changes. [%s, %s, line %d]\n",
+                    __FILE__, __FUNCTION__, __LINE__);
+            } else {
                 if (is_main_view) {
                     selected_mod_ptr->main_view_name = inout_graph.GenerateUniqueMainViewName();
-                    inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                    if (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
+                        Graph::QueueData queue_data;
+                        queue_data.name_id = selected_mod_ptr->FullName();
+                        inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                    }
                 } else {
                     selected_mod_ptr->main_view_name.clear();
-                    inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                    if (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
+                        Graph::QueueData queue_data;
+                        queue_data.name_id = selected_mod_ptr->FullName();
+                        inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                    }
                 }
-            } else if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] The action [Change Main View] is not yet supported for the graph using the 'Core Instance "
-                    "Graph' interface. "
-                    "Open project from file to make desired changes."
-                    "[%s, %s, line %d]\n",
-                    __FILE__, __FUNCTION__, __LINE__);
             }
         }
         ImGui::SameLine();
@@ -713,16 +731,14 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         ImGui::PushItemWidth(input_text_width);
         if (ImGui::InputText(
                 "###current_main_view_name", &this->current_main_view_name, ImGuiInputTextFlags_EnterReturnsTrue)) {
-            if ((inout_graph.GetCoreInterface() == GraphCoreInterface::NO_INTERFACE) ||
-                (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH)) {
-                selected_mod_ptr->main_view_name = this->current_main_view_name;
-            } else {
+            if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] The action [Change Main View] is not yet supported for the graph using the 'Core Instance "
-                    "Graph' interface. "
-                    "Open project from file to make desired changes."
-                    "[%s, %s, line %d]\n",
+                    "[GUI] The action [Change Main View] is not yet supported for the graph "
+                    "using the 'Core Instance Graph' interface. Open project from file to make desired "
+                    "changes. [%s, %s, line %d]\n",
                     __FILE__, __FUNCTION__, __LINE__);
+            } else {
+                selected_mod_ptr->main_view_name = this->current_main_view_name;
             }
         }
         ImGui::PopItemWidth();

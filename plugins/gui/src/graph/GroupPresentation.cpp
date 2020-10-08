@@ -123,28 +123,30 @@ void megamol::gui::GroupPresentation::Present(
             } /// else { this->allow_context = false; }
 
             // Rename pop-up
-            if (popup_rename) {
-                if (state.interact.graph_core_interface == GraphCoreInterface::NO_INTERFACE) {
-                    if (this->rename_popup.PopUp("Rename Group", popup_rename, inout_group.name)) {
-                        for (auto& module_ptr : inout_group.GetModules()) {
-                            module_ptr->present.group.name = inout_group.name;
-                            module_ptr->UpdateGUI(state.canvas);
+            if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
+                if (popup_rename) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] The action [Rename Group] is not yet supported for the graph "
+                        "using the 'Core Instance Graph' interface. Open project from file to make desired "
+                        "changes. [%s, %s, line %d]\n",
+                        __FILE__, __FUNCTION__, __LINE__);
+                }
+            } else if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] The action [Rename Group] is not yet supported for the 'MegaMol Graph' "
+                    "interface. Open project from file to make desired changes. [%s, %s, line %d]\n",
+                    __FILE__, __FUNCTION__, __LINE__);
+            } else {
+                if (this->rename_popup.PopUp("Rename Group", popup_rename, inout_group.name)) {
+                    for (auto& module_ptr : inout_group.GetModules()) {
+                        std::string last_module_name = module_ptr->FullName();
+                        module_ptr->present.group.name = inout_group.name;
+                        module_ptr->UpdateGUI(state.canvas);
+                        if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
+                            state.interact.module_rename.push_back(StrPair_t(last_module_name, module_ptr->FullName()));
                         }
-                        this->UpdatePositionSize(inout_group, state.canvas);
                     }
-                } else if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] The action [Rename Group] is not yet supported for the 'MegaMol Graph' interface. "
-                        "Open project from file to make desired changes."
-                        "[%s, %s, line %d]\n",
-                        __FILE__, __FUNCTION__, __LINE__);
-                } else if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] The action [Rename Group] is not yet supported for the graph using the 'Core Instance "
-                        "Graph' interface. "
-                        "Open project from file to make desired changes."
-                        "[%s, %s, line %d]\n",
-                        __FILE__, __FUNCTION__, __LINE__);
+                    this->UpdatePositionSize(inout_group, state.canvas);
                 }
             }
         } else if (phase == megamol::gui::PresentPhase::RENDERING) {

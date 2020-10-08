@@ -92,7 +92,7 @@ public:
     inline void ResetDirty(void) { this->dirty_flag = false; }
     inline void ForceSetDirty(void) { this->dirty_flag = true; }
 
-    bool UniqueModuleRename(const std::string& module_name);
+    bool UniqueModuleRename(const std::string& module_full_name);
 
     const std::string GetFilename(void) const { return this->filename; }
     void SetFilename(const std::string& filename) { this->filename = filename; }
