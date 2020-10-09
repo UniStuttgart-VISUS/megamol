@@ -109,6 +109,8 @@ public:
 
     bool CreateModule(std::string const& className, std::string const& id);
 
+    bool RenameModule(std::string const& oldId, std::string const& newId);
+
     bool DeleteCall(std::string const& from, std::string const& to);
 
     bool CreateCall(std::string const& className, std::string const& from, std::string const& to);

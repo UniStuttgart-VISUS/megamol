@@ -713,12 +713,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             } break;
             case (Graph::QueueAction::RENAME_MODULE): {
                 if (megamol_graph != nullptr) {
-                    bool rename_success = false;
-                    megamol::core::Module::ptr_type core_module = megamol_graph->FindModule(data.name_id);
-                    if (core_module != nullptr) {
-                        core_module->setName(vislib::StringA(data.rename_id.c_str()));
-                        rename_success = true;
-                    }
+                    bool rename_success = megamol_graph->RenameModule(data.name_id, data.rename_id);
                     graph_sync_success &= rename_success;
                 } else if (this->core_instance != nullptr) {
                     /* XXX Currently not supported by core graph

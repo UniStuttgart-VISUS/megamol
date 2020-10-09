@@ -116,6 +116,43 @@ bool megamol::core::MegaMolGraph::CreateModule(std::string const& className, std
     return add_module(ModuleInstantiationRequest{className, id});
 }
 
+bool megamol::core::MegaMolGraph::RenameModule(std::string const& oldId, std::string const& newId) {
+
+    auto module_it = find_module(oldId);
+    if (module_it == module_list_.end()) {
+        log("error. could not rename module. unable to find module named: " + oldId);
+        return false;
+    }
+    if (!module_it->modulePtr) {
+        log("error. could not rename module. module is nullptr: " + oldId);
+        return false;
+    }
+
+    module_it->request.id = newId;
+    module_it->modulePtr->setName(newId.c_str());
+
+    const auto clean_old = clean(oldId);
+    const auto matches_old_prefix = [&](std::string const& call_slot) {
+        auto res = clean(call_slot).find(clean_old);
+        return (res != std::string::npos) && res == 0;
+    };
+    
+    const auto put_new_prefix = [&](auto& name) {
+        name = newId + cut_off_prefix(name, oldId);
+    };
+
+    for (auto& call : call_list_) {
+        if (matches_old_prefix(call.request.from)) {
+            put_new_prefix(call.request.from);
+        }
+        if (matches_old_prefix(call.request.to)) {
+            put_new_prefix(call.request.to);
+        }
+    }
+
+    return true;
+}
+
 bool megamol::core::MegaMolGraph::DeleteCall(std::string const& from, std::string const& to) {
     return delete_call(CallDeletionRequest{from, to});
 }
