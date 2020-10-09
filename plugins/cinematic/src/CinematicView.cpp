@@ -739,8 +739,7 @@ bool CinematicView::render_to_file_write() {
 
         // Check condition for finishing rendering
         auto lastFrame = static_cast<unsigned int>(this->lastRenderFrameParam.Param<param::IntParam>()->Value());
-        if ((this->png_data.animTime >= ccc->GetTotalAnimTime()) ||
-            (this->png_data.cnt > lastFrame)) {
+        if ((this->png_data.animTime > ccc->GetTotalAnimTime()) || (this->png_data.cnt > lastFrame)) {
             this->render_to_file_cleanup();
             return false;
         }
