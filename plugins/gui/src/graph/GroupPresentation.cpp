@@ -131,11 +131,6 @@ void megamol::gui::GroupPresentation::Present(
                         "changes. [%s, %s, line %d]\n",
                         __FILE__, __FUNCTION__, __LINE__);
                 }
-            } else if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] The action [Rename Group] is not yet supported for the 'MegaMol Graph' "
-                    "interface. Open project from file to make desired changes. [%s, %s, line %d]\n",
-                    __FILE__, __FUNCTION__, __LINE__);
             } else {
                 if (this->rename_popup.PopUp("Rename Group", popup_rename, inout_group.name)) {
                     for (auto& module_ptr : inout_group.GetModules()) {
