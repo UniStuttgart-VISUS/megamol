@@ -128,6 +128,7 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& oldId, std::st
         return false;
     }
 
+    log("rename module " + module_it->request.id + " to " + newId);
     module_it->request.id = newId;
     module_it->modulePtr->setName(newId.c_str());
 
@@ -138,7 +139,9 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& oldId, std::st
     };
     
     const auto put_new_prefix = [&](auto& name) {
+        auto old = name;
         name = newId + cut_off_prefix(name, oldId);
+        log("rename call at slot " + old + " to " + name);
     };
 
     for (auto& call : call_list_) {
