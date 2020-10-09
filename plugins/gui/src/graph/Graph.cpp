@@ -174,7 +174,7 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
 
                 if (!force && (*iter)->IsMainView()) {
                     if (this->GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                             "[GUI] The action [Delete main view/ view instance] is not yet supported for the graph "
                             "using the 'Core Instance Graph' interface. Open project from file to make desired "
                             "changes. [%s, %s, line %d]\n",
@@ -608,11 +608,13 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                             valid_ptr = true;
                         }
                     }
+#ifdef GUI_VERBOSE
                     if (!valid_ptr) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[GUI] Pointer to caller slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                             __LINE__);
                     }
+#endif // GUI_VERBOSE
                     valid_ptr = false;
                     auto callee_ptr = (*iter)->GetCallSlot(megamol::gui::CallSlotType::CALLEE);
                     if (callee_ptr != nullptr) {
@@ -621,11 +623,13 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                             valid_ptr = true;
                         }
                     }
+#ifdef GUI_VERBOSE
                     if (!valid_ptr) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                             __LINE__);
                     }
+#endif // GUI_VERBOSE
                     this->PushSyncQueue(QueueAction::DELETE_CALL, queue_data);
 
                     this->present.ResetStatePointers();

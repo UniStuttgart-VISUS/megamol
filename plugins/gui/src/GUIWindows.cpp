@@ -721,6 +721,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     }
                     graph_sync_success &= rename_success;
                 } else if (this->core_instance != nullptr) {
+                    /* XXX Currently not supported by core graph
                     bool rename_success = false;
                     std::function<void(megamol::core::Module*)> fun = [&](megamol::core::Module* mod) {
                         mod->setName(vislib::StringA(data.rename_id.c_str()));
@@ -728,6 +729,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     };
                     this->core_instance->FindModuleNoLock(data.name_id, fun);
                     graph_sync_success &= rename_success;
+                    */
                 }
             } break;
             case (Graph::QueueAction::DELETE_MODULE): {
