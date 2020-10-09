@@ -316,11 +316,6 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                     "using the 'Core Instance Graph' interface. Open project from file to make desired "
                     "changes. [%s, %s, line %d]\n",
                     __FILE__, __FUNCTION__, __LINE__);
-            } else if (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] The action [Add Module to Group] is not yet supported for the 'MegaMol Graph' "
-                    "interface. Open project from file to make desired changes. [%s, %s, line %d]\n",
-                    __FILE__, __FUNCTION__, __LINE__);
             } else {
                 ModulePtr_t module_ptr;
                 ImGuiID new_group_uid = GUI_INVALID_ID;
@@ -384,11 +379,6 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                     "[GUI] The action [Remove Module from Group] is not yet supported for the graph "
                     "using the 'Core Instance Graph' interface. Open project from file to make desired "
                     "changes. [%s, %s, line %d]\n",
-                    __FILE__, __FUNCTION__, __LINE__);
-            } else if (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] The action [Remove Module to Group] is not yet supported for the 'MegaMol Graph' "
-                    "interface. Open project from file to make desired changes. [%s, %s, line %d]\n",
                     __FILE__, __FUNCTION__, __LINE__);
             } else {
                 for (auto& module_uid : this->graph_state.interact.modules_remove_group_uids) {
@@ -496,11 +486,6 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                         "[GUI] The action [Delete Group] is not yet supported for the graph "
                         "using the 'Core Instance Graph' interface. Open project from file to make desired "
                         "changes. [%s, %s, line %d]\n",
-                        __FILE__, __FUNCTION__, __LINE__);
-                } else if (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                        "[GUI] The action [Delete Group] is not yet supported for the 'MegaMol Graph' "
-                        "interface. Open project from file to make desired changes. [%s, %s, line %d]\n",
                         __FILE__, __FUNCTION__, __LINE__);
                 } else {
                     // Save old name of modules
