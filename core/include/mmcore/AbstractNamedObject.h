@@ -291,13 +291,6 @@ namespace core {
         AbstractNamedObject(void);
 
         /**
-         * Sets the name for the object.
-         *
-         * @param name The new name for the object.
-         */
-        void setName(const vislib::StringA& name);
-
-        /**
          * Sets the parent for the object.
          *
          * @param parent The new parent for the object.
