@@ -441,13 +441,6 @@ megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_mo
 }
 
 megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& paramName) const {
-    auto names = splitPathName(paramName);
-    if (names.size() < 2) {
-        log("error. could not find parameter, parameter name has invalid format: " + paramName +
-            "\n(expected format: [::]aa::bb::cc[::]");
-        return nullptr;
-    }
-
     // match module where module name is prefix of parameter slot name
     auto module_it = find_module_by_prefix(paramName);
 
