@@ -31,7 +31,7 @@ namespace mesh {
 
 typedef glowl::GLSLProgram Shader;
 
-class MESH_API GPUMaterialCollecton {
+class MESH_API GPUMaterialCollection {
 public:
     using TexturePtrType = std::variant<std::shared_ptr<glowl::Texture>, std::shared_ptr<glowl::Texture2D>,
         std::shared_ptr<glowl::Texture2DArray>, std::shared_ptr<glowl::Texture3D>,
@@ -48,17 +48,19 @@ public:
     size_t addMaterial(
         std::shared_ptr<Shader> const& shader, std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
 
+    size_t addMaterial(Material const& material);
+
     void updateMaterialTexture(size_t mtl_idx, size_t tex_idx, std::shared_ptr<glowl::Texture> const& texture);
 
-    void clearMaterials();
+    void deleteMaterial(size_t index);
+
+    void clear();
 
     inline std::vector<Material> const& getMaterials();
 
 private:
     std::vector<Material> m_materials;
 };
-
-inline std::vector<GPUMaterialCollecton::Material> const& GPUMaterialCollecton::getMaterials() { return m_materials; }
 
 } // namespace mesh
 } // namespace megamol

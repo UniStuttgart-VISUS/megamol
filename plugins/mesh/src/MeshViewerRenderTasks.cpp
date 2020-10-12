@@ -28,19 +28,17 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
     if (mc == NULL) return false;
     if (!(*mc)(0)) return false;
 
-    std::shared_ptr<GPURenderTaskCollection> rt_collection(nullptr);
-
-    if (lhs_rtc->getData() == nullptr) {
-        rt_collection = this->m_gpu_render_tasks;
-    } else {
-        rt_collection = lhs_rtc->getData();
-    }
+    syncRenderTaskCollection(lhs_rtc);
 
     bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate();
 
     if (something_has_changed)
     {
         ++m_version;
+
+        for (auto& idx : m_rendertask_collection.second) {
+            m_rendertask_collection.first->deleteRenderTask(idx);
+        }
 
         auto gpu_mtl_storage = mtlc->getData();
         auto gpu_mesh_storage = mc->getData();
@@ -90,16 +88,16 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
         for (int i = 0; i < batch_meshes.size(); ++i)
         {
             auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-            rt_collection->addRenderTasks(shader, batch_meshes[i], draw_commands[i], object_transforms[i]);
-
-            // TODO add index to index map for removal    
+            m_rendertask_collection.first->addRenderTasks(
+                std::string(this->FullName()),shader, batch_meshes[i], draw_commands[i], object_transforms[i]);
+            m_rendertask_collection.second.push_back(std::string(this->FullName()));
         }
     }
 
 
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection,0);
+        rhs_rtc->setData(m_rendertask_collection.first,0);
         (*rhs_rtc)(0);
     }
 
@@ -107,7 +105,7 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
     auto mesh_meta_data = mc->getMetaData();
 
     //TODO set data if necessary
-    lhs_rtc->setData(rt_collection, m_version);
+    lhs_rtc->setData(m_rendertask_collection.first, m_version);
 
     return true;
 }

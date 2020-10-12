@@ -58,12 +58,11 @@ public:
         IteratorPair<IndexBufferIterator> index_buffer, GLenum index_type, GLenum usage, GLenum primitive_type,
         bool store_seperate = false);
 
+    size_t addMesh(std::shared_ptr<glowl::Mesh> mesh, SubMeshData submesh);
+
     void deleteSubMesh(size_t submesh_idx);
 
-    void clear() {
-        m_batched_meshes.clear();
-        m_sub_mesh_data.clear();
-    }
+    void clear();
 
     std::vector<BatchedMeshes> const& getMeshes();
 
@@ -178,7 +177,22 @@ inline size_t GPUMeshCollection::addMesh(std::vector<glowl::VertexLayout> const&
     return sub_mesh_idx;
 }
 
-inline void GPUMeshCollection::deleteSubMesh(size_t submesh_idx) {}
+inline size_t GPUMeshCollection::addMesh(std::shared_ptr<glowl::Mesh> mesh, SubMeshData submesh) { 
+    //TODO!!!
+    return size_t();
+}
+
+inline void GPUMeshCollection::deleteSubMesh(size_t submesh_idx) {
+    if (submesh_idx < m_sub_mesh_data.size()) {
+        m_sub_mesh_data.erase(m_sub_mesh_data.begin() + submesh_idx);
+    }
+    //TODO erase batched mesh once completly empty ?
+}
+
+inline void GPUMeshCollection::clear() {
+    m_batched_meshes.clear();
+    m_sub_mesh_data.clear();
+}
 
 inline std::vector<GPUMeshCollection::BatchedMeshes> const& GPUMeshCollection::getMeshes() { return m_batched_meshes; }
 

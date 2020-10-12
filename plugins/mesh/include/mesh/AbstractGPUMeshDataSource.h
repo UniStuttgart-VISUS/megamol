@@ -16,6 +16,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mesh.h"
+#include "mesh/MeshCalls.h"
 
 #include "GPUMeshCollection.h"
 
@@ -57,18 +58,13 @@ protected:
      */
     virtual void release();
 
-    /**
-     * This module's storage class for GPU meshes.
-     * If connected within a chain of mesh datasource (but not the first module in the chain),
-     * this storage should remain unused and instead the collection provided by the left-hand-side module is used.
-     */
-    std::shared_ptr<GPUMeshCollection> m_gpu_meshes;
+    void syncMeshCollection(CallGPUMeshData* lhs_call);
 
     /**
-     * List of indices of all GPU submeshes that this module added to the used mesh collection.
+     * Mesh collection that is used with a list of indices of all GPU submeshes that this module added to the mesh collection.
      * Needed to delete/update submeshes if the collection is shared across a chain of data sources modules.
      */
-    std::vector<size_t> m_mesh_collection_indices;
+    std::pair<std::shared_ptr<GPUMeshCollection>, std::vector<size_t>> m_mesh_collection;
 
     /** The slot for querying additional mesh data, i.e. a rhs chaining connection */
     megamol::core::CallerSlot m_mesh_rhs_slot;

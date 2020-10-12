@@ -8,10 +8,10 @@
 #include "stdafx.h"
 
 #include "mesh/AbstractGPURenderTaskDataSource.h"
-#include "mesh/MeshCalls.h"
 
 megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource()
-    : core::Module()
+    : core::Module() 
+    , m_rendertask_collection({nullptr, {}})
     , m_renderTask_lhs_slot("getData", "The slot publishing the loaded data")
     , m_renderTask_rhs_slot("getRenderTasks", "The slot for chaining render task data sources.")
     , m_material_slot("getMaterialData", "Connects to a material data source")
@@ -41,9 +41,6 @@ megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource(
 megamol::mesh::AbstractGPURenderTaskDataSource::~AbstractGPURenderTaskDataSource() { this->Release(); }
 
 bool megamol::mesh::AbstractGPURenderTaskDataSource::create(void) {
-
-    m_gpu_render_tasks = std::make_shared<GPURenderTaskCollection>();
-
     return true;
 }
 
@@ -120,6 +117,29 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::GetLights(void) {
         }
     }
     return lightDirty;
+}
+
+void megamol::mesh::AbstractGPURenderTaskDataSource::syncRenderTaskCollection(CallGPURenderTaskData* lhs_call) {
+    if (lhs_call->getData() == nullptr) {
+        // no incoming material -> use your own material storage
+        if (m_rendertask_collection.first == nullptr) {
+            m_rendertask_collection.first = std::make_shared<GPURenderTaskCollection>();
+        }
+    } else {
+        // incoming material -> use it, copy material from last used collection if needed
+        if (lhs_call->getData() != m_rendertask_collection.first) {
+            std::pair<std::shared_ptr<GPURenderTaskCollection>, std::vector<std::string>> rt_collection = {
+                lhs_call->getData(), {}};
+            for (auto& identifier : m_rendertask_collection.second) {
+                
+                auto render_task_meta_data = m_rendertask_collection.first->getRenderTaskMetaData(identifier);
+                rt_collection.first->copyGPURenderTask(identifier, render_task_meta_data);
+                rt_collection.second.push_back(identifier);
+                m_rendertask_collection.first->deleteRenderTask(identifier);
+            }
+            m_rendertask_collection = rt_collection;
+        }
+    }
 }
 
 void megamol::mesh::AbstractGPURenderTaskDataSource::release() {

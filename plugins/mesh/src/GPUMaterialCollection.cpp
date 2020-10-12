@@ -15,12 +15,8 @@
 namespace megamol {
 namespace mesh {
 
-size_t GPUMaterialCollecton::addMaterial(
-    megamol::core::CoreInstance* mm_core_inst,
-    std::string  const& shader_btf_name,
-    std::vector<std::shared_ptr<glowl::Texture>> const& textures) 
-{
-    
+size_t GPUMaterialCollection::addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string const& shader_btf_name,
+    std::vector<std::shared_ptr<glowl::Texture>> const& textures) {
 
     vislib::graphics::gl::ShaderSource vert_shader_src;
     vislib::graphics::gl::ShaderSource frag_shader_src;
@@ -45,7 +41,7 @@ size_t GPUMaterialCollecton::addMaterial(
     auto tessEval_shdr_success =
         mm_core_inst->ShaderSourceFactory().MakeShaderSource(tessEvalShaderName.PeekBuffer(), tessEval_shader_src);
 
-    std::string vertex_src( vert_shader_src.WholeCode() , (vert_shader_src.WholeCode()).Length());
+    std::string vertex_src(vert_shader_src.WholeCode(), (vert_shader_src.WholeCode()).Length());
     std::string tessellationControl_src(tessCtrl_shader_src.WholeCode(), (tessCtrl_shader_src.WholeCode()).Length());
     std::string tessellationEvaluation_src(tessEval_shader_src.WholeCode(), (tessEval_shader_src.WholeCode()).Length());
     std::string geometry_src(geom_shader_src.WholeCode(), (geom_shader_src.WholeCode()).Length());
@@ -54,35 +50,39 @@ size_t GPUMaterialCollecton::addMaterial(
 
     std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
 
-    if (!vertex_src.empty()) 
+    if (!vertex_src.empty()) {
         shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Vertex, vertex_src});
-    if (!fragment_src.empty()) 
+    }
+    if (!fragment_src.empty()) {
         shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Fragment, fragment_src});
-    if (!geometry_src.empty()) 
+    }
+    if (!geometry_src.empty()) {
         shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Geometry, geometry_src});
-    if (!tessellationControl_src.empty())
+    }
+    if (!tessellationControl_src.empty()) {
         shader_srcs.push_back({glowl::GLSLProgram::ShaderType::TessControl, tessellationControl_src});
-    if (!tessellationEvaluation_src.empty())
+    }
+    if (!tessellationEvaluation_src.empty()) {
         shader_srcs.push_back({glowl::GLSLProgram::ShaderType::TessEvaluation, tessellationEvaluation_src});
-    if (!compute_src.empty()) 
+    }
+    if (!compute_src.empty()) {
         shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Compute, compute_src});
+    }
 
     std::shared_ptr<Shader> shader(nullptr);
     try {
         shader = std::make_shared<Shader>(shader_srcs);
     } catch (glowl::GLSLProgramException const& exc) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n", shader->getDebugLabel().c_str(),
+            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n", shader_btf_name.c_str(),
             exc.what(), __FILE__, __FUNCTION__, __LINE__);
     }
 
     return addMaterial(shader, textures);
 }
 
-size_t GPUMaterialCollecton::addMaterial(
-    std::shared_ptr<Shader> const& shader, 
-    std::vector<std::shared_ptr<glowl::Texture>> const& textures) 
-{
+size_t GPUMaterialCollection::addMaterial(
+    std::shared_ptr<Shader> const& shader, std::vector<std::shared_ptr<glowl::Texture>> const& textures) {
     size_t retval = m_materials.size();
 
     m_materials.push_back(Material());
@@ -92,12 +92,28 @@ size_t GPUMaterialCollecton::addMaterial(
     return retval;
 }
 
-void GPUMaterialCollecton::updateMaterialTexture(
+size_t GPUMaterialCollection::addMaterial(Material const& material) {
+    size_t retval = m_materials.size();
+
+    m_materials.push_back(material);
+
+    return retval;
+}
+
+void GPUMaterialCollection::updateMaterialTexture(
     size_t mtl_idx, size_t tex_idx, std::shared_ptr<glowl::Texture> const& texture) {
     m_materials[mtl_idx].textures[tex_idx] = texture;
 }
 
-void GPUMaterialCollecton::clearMaterials() { m_materials.clear(); }
+void GPUMaterialCollection::deleteMaterial(size_t index) {
+    if (index < m_materials.size()) {
+        m_materials.erase(m_materials.begin() + index);
+    }
+}
+
+void GPUMaterialCollection::clear() { m_materials.clear(); }
+
+inline std::vector<GPUMaterialCollection::Material> const& GPUMaterialCollection::getMaterials() { return m_materials; }
 
 } // namespace mesh
 } // namespace megamol

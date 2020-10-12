@@ -8,11 +8,10 @@
 #include "stdafx.h"
 
 #include "mesh/AbstractGPUMaterialDataSource.h"
-#include "mesh/MeshCalls.h"
 
 megamol::mesh::AbstractGPUMaterialDataSource::AbstractGPUMaterialDataSource()
     : core::Module()
-    , m_gpu_materials(std::make_shared<GPUMaterialCollecton>())
+    , m_material_collection({nullptr, {}})
     , m_getData_slot("getData", "The slot publishing the loaded data")
     , m_mtl_callerSlot("getMaterial", "The slot for chaining material data sources") {
     this->m_getData_slot.SetCallback(
@@ -34,4 +33,24 @@ bool megamol::mesh::AbstractGPUMaterialDataSource::create(void) {
 
 void megamol::mesh::AbstractGPUMaterialDataSource::release() {
     // intentionally empty ?
+}
+
+void megamol::mesh::AbstractGPUMaterialDataSource::syncMaterialCollection(megamol::mesh::CallGPUMaterialData* lhs_call) {
+    if (lhs_call->getData() == nullptr) {
+        // no incoming material -> use your own material storage
+        if (m_material_collection.first == nullptr) {
+            m_material_collection.first = std::make_shared<GPUMaterialCollection>();
+        }
+    } else {
+        // incoming material -> use it, copy material from last used collection if needed
+        if (lhs_call->getData() != m_material_collection.first) {
+            std::pair<std::shared_ptr<GPUMaterialCollection>, std::vector<size_t>> mtl_collection = {
+                lhs_call->getData(), {}};
+            for (auto& idx : m_material_collection.second) {
+                mtl_collection.second.push_back(mtl_collection.first->addMaterial(m_material_collection.first->getMaterials()[idx]));
+                m_material_collection.first->deleteMaterial(idx);
+            }
+            m_material_collection = mtl_collection;
+        }
+    }
 }

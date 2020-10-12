@@ -15,6 +15,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mesh.h"
+#include "mesh/MeshCalls.h"
 
 #include "mmcore/view/light/CallLight.h"
 
@@ -64,18 +65,13 @@ protected:
      */
     bool GetLights(void);
 
-    /**
-     * This modules storage class for Render Tasks.
-     * If connected within a chain of rts (but not the first rt module), the storage should remain unused
-     * and instead the collection provided by the left-hand-side rt is used.
-     */
-    std::shared_ptr<GPURenderTaskCollection> m_gpu_render_tasks;
+    void syncRenderTaskCollection(CallGPURenderTaskData* lhs_call);
 
     /**
-     * List of indices of all RenderTasks that this module added to the used rt collection.
+     * Render task collection that is used with a list of indices of all RenderTasks that this module added to the used rt collection.
      * Needed to delete/update RenderTasks if the rt collection is shared across a chain of rt data sources.
      */
-    std::vector<size_t> m_rt_collection_indices;
+    std::pair<std::shared_ptr<GPURenderTaskCollection>, std::vector<std::string>> m_rendertask_collection;
 
     /** map to store the called lights */
     core::view::light::LightMap lightMap;

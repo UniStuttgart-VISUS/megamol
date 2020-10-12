@@ -166,7 +166,7 @@ public:
     void addMesh(std::vector<VertexAttribute> const& attribs, IndexData const& indices, PrimitiveType primitive_type = TRIANGLES);
     void addMesh(std::vector<VertexAttribute>&& attribs, IndexData const& indices, PrimitiveType primitive_type = TRIANGLES);
 
-    // TODO delete functionality
+    //void deleteMeshAccess();
 
     std::vector<Mesh>& accessMesh();
 

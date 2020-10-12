@@ -44,9 +44,9 @@ public:
 };
 
 class MESH_API CallGPUMaterialData
-    : public core::GenericVersionedCall<std::shared_ptr<GPUMaterialCollecton>, core::EmptyMetaData> {
+    : public core::GenericVersionedCall<std::shared_ptr<GPUMaterialCollection>, core::EmptyMetaData> {
 public:
-    CallGPUMaterialData() : GenericVersionedCall<std::shared_ptr<GPUMaterialCollecton>, core::EmptyMetaData>() {}
+    CallGPUMaterialData() : GenericVersionedCall<std::shared_ptr<GPUMaterialCollection>, core::EmptyMetaData>() {}
     ~CallGPUMaterialData() = default;
 
     static const char* ClassName(void) { return "CallGPUMaterialData"; }

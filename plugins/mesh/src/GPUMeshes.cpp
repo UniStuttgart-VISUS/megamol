@@ -16,15 +16,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     CallGPUMeshData* lhs_mesh_call = dynamic_cast<CallGPUMeshData*>(&caller);
     if (lhs_mesh_call == NULL) return false;
 
-    std::shared_ptr<GPUMeshCollection> mesh_collection(nullptr);
-
-    if (lhs_mesh_call->getData() == nullptr) {
-        // no incoming mesh -> use your own mesh storage
-        mesh_collection = this->m_gpu_meshes;
-    } else {
-        // incoming mesh -> use it (delete local?)
-        mesh_collection = lhs_mesh_call->getData();
-    }
+    syncMeshCollection(lhs_mesh_call);
 
     CallMesh* mc = this->m_mesh_slot.CallAs<CallMesh>();
     if (mc == NULL) return false;
@@ -35,14 +27,10 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     if (something_has_changed) {
         ++m_version;
 
-        if (!m_mesh_collection_indices.empty()) {
-            // TODO delete all exisiting render task from this module
-            for (auto& submesh_idx : m_mesh_collection_indices) {
-                // mesh_collection->deleteSubMesh()
-            }
-
-            m_mesh_collection_indices.clear();
+        for (auto idx : m_mesh_collection.second) {
+            m_mesh_collection.first->deleteSubMesh(idx);
         }
+        m_mesh_collection.second.clear();
 
         auto meshes = mc->getData()->accessMesh();
 
@@ -72,8 +60,8 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                 vb_iterators.push_back({attrib.data, attrib.data + attrib.byte_size});
             }
 
-            mesh_collection->addMesh(vb_layouts, vb_iterators, ib_iterators,
-                MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, primtive_type);
+            m_mesh_collection.second.push_back(m_mesh_collection.first->addMesh(vb_layouts, vb_iterators, ib_iterators,
+                MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, primtive_type));
         }
     }
 
@@ -85,7 +73,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     // if there is a mesh connection to the right, pass on the mesh collection
     CallGPUMeshData* rhs_mesh_call = this->m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
     if (rhs_mesh_call != NULL) {
-        rhs_mesh_call->setData(mesh_collection, 0);
+        rhs_mesh_call->setData(m_mesh_collection.first, 0);
 
         if (!(*rhs_mesh_call)(0)) return false;
 
@@ -111,7 +99,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     lhs_mesh_call->setMetaData(lhs_meta_data);
 
     if (lhs_mesh_call->version() < m_version) {
-        lhs_mesh_call->setData(mesh_collection, m_version);
+        lhs_mesh_call->setData(m_mesh_collection.first, m_version);
     }
 
     return true;

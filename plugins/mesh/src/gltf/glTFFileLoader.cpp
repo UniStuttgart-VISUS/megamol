@@ -85,6 +85,9 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
     }
 
     if (cm->version() < m_version) {
+        //TODO proper deletion of data...
+        mesh_collection->accessMesh().clear();
+
         // set data and version to signal update
         cm->setData(mesh_collection, m_version);
     
