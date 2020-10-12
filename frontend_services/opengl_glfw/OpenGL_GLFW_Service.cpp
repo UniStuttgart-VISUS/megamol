@@ -543,8 +543,6 @@ void OpenGL_GLFW_Service::setRequestedResources(std::vector<ModuleResource> reso
 	// we dont depend on outside resources
 }
 
-const void* OpenGL_GLFW_Service::getSharedDataPtr() const { return &m_sharedData; }
-
 void OpenGL_GLFW_Service::glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {
 
     module_resources::Key key_ = static_cast<module_resources::Key>(key);

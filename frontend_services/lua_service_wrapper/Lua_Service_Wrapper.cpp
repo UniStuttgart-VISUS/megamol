@@ -162,9 +162,6 @@ void Lua_Service_Wrapper::postGraphRender() {
     // swap buffers, glClear
 }
 
-// this will be removed soon and is only here for compatibility reasons
-const void* Lua_Service_Wrapper::getSharedDataPtr() const { return nullptr; }
-
 
 } // namespace frontend
 } // namespace megamol
