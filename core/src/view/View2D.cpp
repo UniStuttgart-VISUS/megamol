@@ -88,15 +88,6 @@ view::View2D::View2D(void)
         this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
     }
 
-    this->halveRes << new param::BoolParam(false);
-    this->MakeSlotAvailable(&halveRes);
-
-    this->xCamOffset << new param::FloatParam(0.0);
-    this->MakeSlotAvailable(&xCamOffset);
-
-    this->yCamOffset << new param::FloatParam(0.0);
-    this->MakeSlotAvailable(&yCamOffset);
-
     this->ResetView();
 }
 

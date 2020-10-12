@@ -284,10 +284,6 @@ namespace view {
         /** cached bounding box */
         vislib::math::Rectangle<float> bbox;
 
-        param::ParamSlot halveRes;
-        param::ParamSlot xCamOffset;
-        param::ParamSlot yCamOffset;
-
         bool frameIsEven = false;
     };
 

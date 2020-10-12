@@ -229,10 +229,10 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGenBuffers(1, &filtersBuffer);
     glGenBuffers(1, &minmaxBuffer);
     glGenBuffers(1, &counterBuffer);
-    vislib::sys::Log::DefaultLog.WriteInfo("GENERATED");
-    nuFB = std::make_shared<glowl::FramebufferObject>(1, 1, true);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("GENERATED");
+    nuFB = std::make_shared<glowl::FramebufferObject>(1, 1);
     nuFB->createColorAttachment(GL_RGB32F, GL_RGB, GL_FLOAT);
-    //  vislib::sys::Log::DefaultLog.WriteInfo(
+    //  megamol::core::utility::log::Log::DefaultLog.WriteInfo(
     //      "WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED ");
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
@@ -1413,37 +1413,37 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                 for (int j = 0; j < call.GetViewport().Width(); j++) {
                     test = !test;
                     if (test) {
-                        // vislib::sys::Log::DefaultLog.WriteInfo("N");
+                        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("N");
                         tex[i * w + j] = 1.0;
                         tex2[i * w + j] = 0u;
                     } else {
-                        // vislib::sys::Log::DefaultLog.WriteInfo("J");
+                        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("J");
                         tex[i * w + j] = 0.0;
                         tex2[i * w + j] = 1u;
                     }
                 }
             }
             glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
-            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
 
             glActiveTexture(GL_TEXTURE10);
-            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
 
             glBindTexture(GL_TEXTURE_2D, imageStorageA);
-            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
             
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
-            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
             
             glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageA, 0);
-            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
             
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -1454,40 +1454,40 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glClear(GL_COLOR_BUFFER_BIT);
 
             glBindTexture(GL_TEXTURE_2D, depthStore);
-            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
-            if (glGetError() != GL_NO_ERROR) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() != GL_NO_ERROR) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
 
             //glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
-            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR2");
+            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR2");
 
             glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX);
-            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR3");
+            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR3");
             
             glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
-            if (glGetError() == GL_INVALID_OPERATION) vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR6");            
+            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR6");            
             
 
 
 
             glDrawPixels(w, h, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
             if (glGetError() == GL_INVALID_ENUM)
-                vislib::sys::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR3");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR3");
 
-            vislib::sys::Log::DefaultLog.WriteInfo("size of Array tex2: %i", tex2.size());
-            vislib::sys::Log::DefaultLog.WriteInfo("w: %i", w);
-            vislib::sys::Log::DefaultLog.WriteInfo("h: %i", h);
-            vislib::sys::Log::DefaultLog.WriteInfo("dsID: %i", depthStore);
-            vislib::sys::Log::DefaultLog.WriteInfo("tex2.0: %i", tex2[0]);
-            vislib::sys::Log::DefaultLog.WriteInfo("tex2.1; %i", tex2[1]);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("size of Array tex2: %i", tex2.size());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("w: %i", w);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("h: %i", h);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("dsID: %i", depthStore);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("tex2.0: %i", tex2[0]);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("tex2.1; %i", tex2[1]);
         }
         //glDisable(GL_STENCIL_TEST);
 
@@ -1766,13 +1766,13 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         glDisable(GL_STENCIL_TEST);
-        // vislib::sys::Log::DefaultLog.WriteInfo("h %i", glIsEnabled(GL_DEPTH_TEST));
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("h %i", glIsEnabled(GL_DEPTH_TEST));
         pc_reconstruction0_shdr->Disable();
         // glDeleteTextures(1, &imStoreI);
         // glDeleteTextures(1, &imStoreI2);
         // glDeleteFramebuffers(1, &nuFB);
         // glDeleteFramebuffers(1, &nuDRB);
-        // vislib::sys::Log::DefaultLog.WriteInfo("x: %d , y: %d , xM: %d , yM: %d ", call.GetBoundingBox().GetLeft(),
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("x: %d , y: %d , xM: %d , yM: %d ", call.GetBoundingBox().GetLeft(),
         //    call.GetBoundingBox().GetTop(), call.GetBoundingBox().GetRight(), call.GetBoundingBox().GetBottom());
     }
 
