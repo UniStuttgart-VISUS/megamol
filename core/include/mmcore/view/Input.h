@@ -215,7 +215,7 @@ public:
 
     inline Modifiers& reset(Modifier mod) {
         Modifiers mask(mod);
-        bits ^= mask.bits;
+        bits &= ~mask.bits;
         return *this;
     }
 

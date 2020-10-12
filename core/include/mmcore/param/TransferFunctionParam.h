@@ -14,7 +14,7 @@
 #include "AbstractParam.h"
 
 #include "vislib/String.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "json.hpp"
 
@@ -143,6 +143,18 @@ public:
     * @param in_nodes    The transfer function node data input.
     */
     static void GaussInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFNodeType &in_nodes);
+
+    /**
+     * Return texture data for given transfer function JSON string.
+     * 
+     * @param in_tfs          The transfer function JSON string as input.
+     * @param out_tex_data    The returned texture data.
+     * @param out_width       The returned texture width.
+     * @param out_height      The returned texture height.
+     *
+     * @return True on success, false otherwise.
+     */
+    static bool GetTextureData(const std::string& in_tfs, std::vector<float>& out_tex_data, int& out_width, int& out_height);
 
     /** Calculates gauss function value. 
     *

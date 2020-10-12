@@ -29,10 +29,10 @@ KeyframeManipulators::KeyframeManipulators(void)
     this->selectors.clear();
     this->manipulators.clear();
 
-    this->toggleOusideBboxParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_W, core::view::Modifier::CTRL));
+    this->toggleOusideBboxParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_W, core::view::Modifier::SHIFT));
     this->paramSlots.emplace_back(&this->toggleOusideBboxParam);
 
-    this->toggleVisibleGroupParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Q, core::view::Modifier::CTRL));
+    this->toggleVisibleGroupParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_Q, core::view::Modifier::SHIFT));
     this->paramSlots.emplace_back(&this->toggleVisibleGroupParam);
 
     param::EnumParam* vmg = new param::EnumParam(this->visibleGroup);
@@ -40,6 +40,7 @@ KeyframeManipulators::KeyframeManipulators(void)
     vmg->SetTypePair(VisibleGroup::SELECTED_KEYFRAME_LOOKAT_AND_UP_VECTOR, "LookAt Vector and Up Vector");
     this->visibleGroupParam << vmg;
     this->paramSlots.emplace_back(&this->visibleGroupParam);
+    vmg = nullptr;
 
     Manipulator m;
     m.show = false;

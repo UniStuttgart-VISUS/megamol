@@ -9,7 +9,7 @@
 #include "mmcore/cluster/mpi/MpiCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include <chrono>
 
 using namespace megamol;
@@ -63,27 +63,27 @@ bool datatools::MPIVolumeAggregator::manipulateData(
         return true;
     }
     if (!inData(VolumetricDataCall::IDX_GET_EXTENTS)) {
-      vislib::sys::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: No extents available.\n");
+      megamol::core::utility::log::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: No extents available.\n");
       return false;
     }
     if (!inData(VolumetricDataCall::IDX_GET_METADATA)) {
-      vislib::sys::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: No metadata available.\n");
+      megamol::core::utility::log::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: No metadata available.\n");
       return false;
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: starting volume aggregation");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: starting volume aggregation");
     const auto startAllTime = std::chrono::high_resolution_clock::now();
 
     metadata = inData.GetMetadata()->Clone();
     const auto comp = metadata.Components;
 
     if (metadata.GridType != core::misc::CARTESIAN && metadata.GridType != core::misc::RECTILINEAR) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "MPIVolumeAggregator cannot work with grid type %d", metadata.GridType);
         return false;
     }
     if (metadata.ScalarType != core::misc::FLOATING_POINT) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "MPIVolumeAggregator cannot work with scalar type %d", metadata.ScalarType);
         return false;
     }
@@ -99,7 +99,7 @@ bool datatools::MPIVolumeAggregator::manipulateData(
     MPI_Op op = MPI_SUM;
     const auto opVal = this->operatorSlot.Param<core::param::EnumParam>()->Value();
     if (comp > 1) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "MPIVolumeAggregator: multi-component volume detected! Computing min/max density on the first component "
             "only. Op %s is applied on all components.",
             this->operatorSlot.Param<core::param::EnumParam>()->getMap()[opVal].PeekBuffer());
@@ -118,11 +118,11 @@ bool datatools::MPIVolumeAggregator::manipulateData(
         op = MPI_PROD;
         break;
     default:
-        vislib::sys::Log::DefaultLog.WriteError("MPIVolumeAggregator: unknown operation %u. Aborting.", opVal);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("MPIVolumeAggregator: unknown operation %u. Aborting.", opVal);
         return false;
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: starting Allreduce");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: starting Allreduce");
     const auto startTime = std::chrono::high_resolution_clock::now();
 
     MPI_Allreduce(tmpVolume.data(), this->theVolume.data(), numFloats, MPI_FLOAT, op, this->comm);
@@ -152,9 +152,9 @@ bool datatools::MPIVolumeAggregator::manipulateData(
 
     const auto endAllTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float, std::milli> diffAllMillis = endAllTime - startAllTime;
-    vislib::sys::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: Allreduce of %u x %u x %u volume took %f ms.",
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: Allreduce of %u x %u x %u volume took %f ms.",
         metadata.Resolution[0], metadata.Resolution[1], metadata.Resolution[2], diffMillis.count());
-    vislib::sys::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: volume aggregation of %u x %u x %u volume took %f ms.",
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("MPIVolumeAggregator: volume aggregation of %u x %u x %u volume took %f ms.",
         metadata.Resolution[0], metadata.Resolution[1], metadata.Resolution[2], diffAllMillis.count());
 
     outData.SetData(this->theVolume.data());
@@ -174,21 +174,21 @@ bool datatools::MPIVolumeAggregator::initMPI() {
         if (c != nullptr) {
             /* New method: let MpiProvider do all the stuff. */
             if ((*c)(core::cluster::mpi::MpiCall::IDX_PROVIDE_MPI)) {
-                vislib::sys::Log::DefaultLog.WriteInfo("Got MPI communicator.");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("Got MPI communicator.");
                 this->comm = c->GetComm();
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(_T("Could not ")
+                megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Could not ")
                                                         _T("retrieve MPI communicator for the MPI-based view ")
                                                         _T("from the registered provider module."));
             }
         }
 
         if (this->comm != MPI_COMM_NULL) {
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
                                                    _T("retrieving communicator properties ..."));
             ::MPI_Comm_rank(this->comm, &this->mpiRank);
             ::MPI_Comm_size(this->comm, &this->mpiSize);
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("This MPIParticleCollector on %hs is %d ")
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("This MPIParticleCollector on %hs is %d ")
                                                    _T("of %d."),
                 vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
         } /* end if (this->comm != MPI_COMM_NULL) */

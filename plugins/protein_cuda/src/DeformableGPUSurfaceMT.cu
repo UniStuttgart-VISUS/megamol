@@ -2008,7 +2008,7 @@ bool DeformableGPUSurfaceMT::FlagCorruptTriangles(
         float3 volDelta,
         float isovalue) {
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
@@ -2298,7 +2298,7 @@ bool DeformableGPUSurfaceMT::InitVtxAttribVBO(size_t vertexCnt) {
  */
 bool DeformableGPUSurfaceMT::initExtForcesGradient(float *volTarget_D,
         int3 volDim, float3 volOrg, float3 volDelta) {
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     int volSize = volDim.x*volDim.y*volDim.z;
 
@@ -2364,7 +2364,7 @@ bool DeformableGPUSurfaceMT::initExtForcesDistfield(
         float distfieldDist,
         float isovalue) {
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     int volSize = volDim.x*volDim.y*volDim.z;
 
@@ -2449,7 +2449,7 @@ bool DeformableGPUSurfaceMT::initExtForcesGVF(
         float gvfScl,
         unsigned int gvfIt) {
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     /* Init grid parameters */
 
@@ -2518,7 +2518,7 @@ bool DeformableGPUSurfaceMT::initExtForcesTwoWayGVF(
         float gvfScl,
         unsigned int gvfIt) {
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     /* Init grid parameters */
 
@@ -2531,7 +2531,7 @@ bool DeformableGPUSurfaceMT::initExtForcesTwoWayGVF(
     }
 
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     //#ifdef USE_TIMER
         float dt_ms;
@@ -3413,7 +3413,7 @@ float DeformableGPUSurfaceMT::IntUncertaintyOverCorruptSurfArea(
         int maxDepth,
         int maxLevel,
         float initStepSize) {
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     size_t fieldSize = volDim.x*volDim.y*volDim.z;
     size_t cellCnt = (volDim.x-1)*(volDim.y-1)*(volDim.z-1);
@@ -3719,7 +3719,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGradient(
         float forceScl,
         float externalForcesWeight) {
 
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     /* Init grid parameters */
 
@@ -3875,7 +3875,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeDistfield(
         float externalForcesWeight,
         float distfieldDist) {
 
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     /* Init grid parameters */
 
@@ -4040,7 +4040,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
         float gvfScl,
         unsigned int gvfIt) {
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     /* Init grid parameters */
 
@@ -4053,7 +4053,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeGVF(float *volumeSource_D,
     }
 
 
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     cudaGraphicsResource* cudaTokens[2];
 
@@ -4212,7 +4212,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVFBM(
         float &t_gvf,
         float &t_map) {
 
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
 //    printf("MORPH\n");
 
@@ -4399,7 +4399,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVF(
         bool trackPath,
         bool recomputeGVF) {
 
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
 //    printf("MORPH\n");
 
@@ -4584,7 +4584,7 @@ bool DeformableGPUSurfaceMT::MorphToVolumeTwoWayGVFSubdiv(
         bool trackPath,
         bool recomputeGVF) {
 
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
 //    printf("MORPH\n");
 
@@ -6448,7 +6448,7 @@ int DeformableGPUSurfaceMT::RefineMesh(
         float isovalue,
         float maxEdgeLen) {
 
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     // Init grid parameters
 
@@ -7407,7 +7407,7 @@ bool DeformableGPUSurfaceMT::updateVtxPos(
         bool externalForcesOnly,
         bool useThinPlate) {
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
@@ -7691,7 +7691,7 @@ bool DeformableGPUSurfaceMT::updateVtxPosSubdiv(
         bool externalForcesOnly,
         bool useThinPlate) {
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
@@ -8114,7 +8114,7 @@ bool DeformableGPUSurfaceMT::ComputeVtxDiffValue(
         GLuint vtxDataVBO1,
         size_t vertexCnt) {
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     /* Get pointers to vertex data */
 
@@ -8260,7 +8260,7 @@ bool DeformableGPUSurfaceMT::ComputeVtxDiffValueFitted(
         return false;
     }
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     /* Get pointers to vertex data */
 
@@ -8403,7 +8403,7 @@ bool DeformableGPUSurfaceMT::ComputeVtxSignDiffValue(
         GLuint vtxDataVBO1,
         size_t vertexCnt) {
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     /* Get pointers to vertex data */
 
@@ -8550,7 +8550,7 @@ bool DeformableGPUSurfaceMT::ComputeVtxSignDiffValueFitted(
         return false;
     }
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     /* Get pointers to vertex data */
 
@@ -8929,7 +8929,7 @@ bool DeformableGPUSurfaceMT::TrackPathSubdivVertices(
         float isoval,
         uint maxIt) {
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
     // Init constant device params
     if (!initGridParams(volDim, volOrg, volDelta)) {
@@ -9244,7 +9244,7 @@ bool DeformableGPUSurfaceMT::ComputeSurfAttribSignDiff(
         float3 texOrg1,
         float3 texDelta1) {
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
 
     if (!this->InitVtxAttribVBO(this->vertexCnt)) {
@@ -9482,7 +9482,7 @@ bool DeformableGPUSurfaceMT::ComputeSurfAttribDiff(
         float3 texOrg1,
         float3 texDelta1) {
 
-    using namespace vislib::sys;
+    using namespace megamol::core::utility::log;
 
 
     if (!this->InitVtxAttribVBO(this->vertexCnt)) {

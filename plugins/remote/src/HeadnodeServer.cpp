@@ -84,7 +84,7 @@ void megamol::remote::HeadnodeServer::ParamUpdated(core::param::ParamSlot& slot)
     std::string mg = "mmSetParamValue(\"" + name + "\", \"" + value + "\")";
 
     // auto fid = this->GetCoreInstance()->GetFrameID();
-    ////vislib::sys::Log::DefaultLog.WriteInfo("Requesting %s = %s in Frame %d", name, value, fid);
+    ////megamol::core::utility::log::Log::DefaultLog.WriteInfo("Requesting %s = %s in Frame %d", name, value, fid);
     // printf("Requesting %s = %s in Frame %d\n", name.c_str(), value.c_str(), fid);
     // if (name == std::string("::Project_1::View3D_21::cam::orientation")) {
     //    auto const rel_val = slot.Param<core::param::Vector4fParam>()->Value();
@@ -182,9 +182,9 @@ bool megamol::remote::HeadnodeServer::init_threads() {
         run_threads_ = true;
         this->comm_thread_ = std::thread(&HeadnodeServer::do_communication, this);
         is_job_running_ = true;
-        vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Communication thread started.\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("HeadnodeServer: Communication thread started.\n");
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError("HeadnodeServer: Could not initialize threads\n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("HeadnodeServer: Could not initialize threads\n");
         return false;
     }
 
@@ -197,15 +197,15 @@ bool megamol::remote::HeadnodeServer::shutdown_threads() {
     run_threads_ = false;
     if (is_job_running_) {
         while (!comm_thread_.joinable()) {
-            // vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Trying to join thread.");
+            // megamol::core::utility::log::Log::DefaultLog.WriteInfo("HeadnodeServer: Trying to join thread.");
             std::this_thread::sleep_for(1s);
         }
-        // vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Joining thread.");
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("HeadnodeServer: Joining thread.");
         comm_thread_.join();
         is_job_running_ = false;
     }
     /*if (comm_thread_.joinable()) {
-        vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Joining thread.");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("HeadnodeServer: Joining thread.");
         comm_thread_.join();
     }*/
     return true;
@@ -247,7 +247,7 @@ void megamol::remote::HeadnodeServer::do_communication() {
                 std::lock_guard<std::mutex> lock(send_buffer_guard_);
 
                 if (!send_buffer_.empty()) {
-                    // vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Sending parameter update.\n");
+                    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("HeadnodeServer: Sending parameter update.\n");
                     comm_fabric_.Send(send_buffer_, send_type::SEND);
                     send_buffer_.clear();
                     buffer_has_changed_.store(false);
@@ -259,9 +259,9 @@ void megamol::remote::HeadnodeServer::do_communication() {
             // std::this_thread::sleep_for(1000ms / 120);
         }
     } catch (...) {
-        // vislib::sys::Log::DefaultLog.WriteError("HeadnodeServer: Error during communication;");
+        // megamol::core::utility::log::Log::DefaultLog.WriteError("HeadnodeServer: Error during communication;");
     }
-    // vislib::sys::Log::DefaultLog.WriteInfo("HeadnodeServer: Exiting sender loop.");
+    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("HeadnodeServer: Exiting sender loop.");
 }
 
 

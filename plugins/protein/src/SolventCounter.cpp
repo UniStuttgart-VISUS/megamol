@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "SolventCounter.h"
 #include "vislib/assert.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/param/FloatParam.h"
 #include "protein_calls/PerAtomFloatCall.h"
 #include <omp.h>
@@ -77,7 +77,7 @@ void SolventCounter::release(void) {
 * SolventCounter::getDataCallback
 */
 bool SolventCounter::getDataCallback(core::Call& call) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     PerAtomFloatCall *dc = dynamic_cast<PerAtomFloatCall*>(&call);
     if (dc == NULL) return false;
@@ -127,7 +127,7 @@ bool SolventCounter::getDataCallback(core::Call& call) {
         if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
         sol->SetFrameID(0);
         if (!(*sol)(MolecularDataCall::CallForGetData)) return false;
-        vislib::sys::Log::DefaultLog.WriteInfo("Start recomputing solvent neighborhood information per atom...");
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Start recomputing solvent neighborhood information per atom...");
         this->solvent.Clear();
         this->solvent.SetCount(mol->AtomCount());
         // set all values to zero
@@ -140,7 +140,7 @@ bool SolventCounter::getDataCallback(core::Call& call) {
         vislib::math::Vector<float, 3> molAtomPos, solAtomPos;
         for (unsigned int fID = 0; fID < frameCount; fID++) {
             if ( fID % 100 == 0 )
-                vislib::sys::Log::DefaultLog.WriteInfo("Computing Frame %i", fID);
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("Computing Frame %i", fID);
             mol->SetFrameID(fID);
             if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
             sol->SetFrameID(fID);
@@ -170,7 +170,7 @@ bool SolventCounter::getDataCallback(core::Call& call) {
             this->maxValue = vislib::math::Max(this->maxValue, this->solvent[i]);
         }
         this->midValue = (this->maxValue - this->minValue) * 0.8f + this->minValue;
-        vislib::sys::Log::DefaultLog.WriteInfo("Finished recomputing solvent neighborhood information per atom (%.3f, %.3f, %.3f).", this->minValue, this->midValue, this->maxValue);
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("Finished recomputing solvent neighborhood information per atom (%.3f, %.3f, %.3f).", this->minValue, this->midValue, this->maxValue);
     }
 #endif // GET_ONE_TIMESTEP
 

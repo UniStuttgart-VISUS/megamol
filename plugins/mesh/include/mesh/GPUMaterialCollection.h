@@ -18,6 +18,7 @@
 
 #include "mesh.h"
 
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/GLSLProgram.hpp"
 #include "glowl/Texture.hpp"
 #include "glowl/Texture2D.hpp"
@@ -32,27 +33,20 @@ typedef glowl::GLSLProgram Shader;
 
 class MESH_API GPUMaterialCollecton {
 public:
-    using TexturePtrType =
-        std::variant <
-            std::shared_ptr<glowl::Texture>,
-            std::shared_ptr<glowl::Texture2D>,
-            std::shared_ptr<glowl::Texture2DArray>,
-            std::shared_ptr<glowl::Texture3D>,
-            std::shared_ptr<glowl::TextureCubemapArray> >;
+    using TexturePtrType = std::variant<std::shared_ptr<glowl::Texture>, std::shared_ptr<glowl::Texture2D>,
+        std::shared_ptr<glowl::Texture2DArray>, std::shared_ptr<glowl::Texture3D>,
+        std::shared_ptr<glowl::TextureCubemapArray>>;
 
     struct Material {
         std::shared_ptr<Shader> shader_program;
         std::vector<std::shared_ptr<glowl::Texture>> textures;
     };
 
-    size_t addMaterial(
-        megamol::core::CoreInstance* mm_core_inst,
-        std::string const& shader_btf_name,
+    size_t addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string const& shader_btf_name,
         std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
 
     size_t addMaterial(
-        std::shared_ptr<Shader> const& shader, 
-        std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
+        std::shared_ptr<Shader> const& shader, std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
 
     void updateMaterialTexture(size_t mtl_idx, size_t tex_idx, std::shared_ptr<glowl::Texture> const& texture);
 

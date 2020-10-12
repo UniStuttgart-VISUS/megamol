@@ -42,7 +42,7 @@
 #include "vislib/math/Vector.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/KeyCode.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/sysfunctions.h"
 #include <glm/gtx/string_cast.hpp>
 
@@ -81,6 +81,7 @@ View3D_2::View3D_2(void)
     , viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates")
     , viewKeyRunFactorSlot("viewKey::RunFactor", "The factor for step size multiplication when running (shift)")
     , viewKeyAngleStepSlot("viewKey::AngleStep", "The angle rotate step in degrees")
+    , viewKeyFixToWorldUpSlot("viewKey::FixToWorldUp","Fix rotation manipulator to world up vector")
     , mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode")
     , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be rotated")
     , enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
@@ -175,6 +176,9 @@ View3D_2::View3D_2(void)
 
     this->viewKeyAngleStepSlot.SetParameter(new param::FloatParam(90.0f, 0.1f, 360.0f));
     this->MakeSlotAvailable(&this->viewKeyAngleStepSlot);
+
+    this->viewKeyFixToWorldUpSlot.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->viewKeyFixToWorldUpSlot);
 
     this->mouseSensitivitySlot.SetParameter(new param::FloatParam(3.0f, 0.001f, 10.0f));
     this->mouseSensitivitySlot.SetUpdateCallback(&View3D_2::mouseSensitivityChanged);
@@ -659,21 +663,23 @@ bool view::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifier
     }
 
     if (key == view::Key::KEY_LEFT_ALT || key == view::Key::KEY_RIGHT_ALT) {
-        if (action == view::KeyAction::PRESS) {
+        if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
             this->modkeys.set(view::Modifier::ALT);
+            cameraControlOverrideActive = true;
         } else if (action == view::KeyAction::RELEASE) {
             this->modkeys.reset(view::Modifier::ALT);
+            cameraControlOverrideActive = false;
         }
     }
     if (key == view::Key::KEY_LEFT_SHIFT || key == view::Key::KEY_RIGHT_SHIFT) {
-        if (action == view::KeyAction::PRESS) {
+        if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
             this->modkeys.set(view::Modifier::SHIFT);
         } else if (action == view::KeyAction::RELEASE) {
             this->modkeys.reset(view::Modifier::SHIFT);
         }
     }
     if (key == view::Key::KEY_LEFT_CONTROL || key == view::Key::KEY_RIGHT_CONTROL) {
-        if (action == view::KeyAction::PRESS) {
+        if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
             this->modkeys.set(view::Modifier::CTRL);
             cameraControlOverrideActive = true;
         } else if (action == view::KeyAction::RELEASE) {
@@ -729,7 +735,11 @@ bool view::View3D_2::OnChar(unsigned int codePoint) {
  */
 bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
 
-    if (!cameraControlOverrideActive) {
+    bool anyManipulatorActive = arcballManipulator.manipulating() || translateManipulator.manipulating() ||
+                                rotateManipulator.manipulating() || turntableManipulator.manipulating() ||
+                                orbitAltitudeManipulator.manipulating();
+
+    if (!cameraControlOverrideActive && !anyManipulatorActive) {
         auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
         if (cr != nullptr) {
             view::InputEvent evt;
@@ -750,12 +760,8 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
 
     // This mouse handling/mapping is so utterly weird and should die!
     auto down = action == view::MouseButtonAction::PRESS;
-    bool altPressed = this->modkeys.test(view::Modifier::ALT);
-    bool ctrlPressed = this->modkeys.test(view::Modifier::CTRL);
-
-    bool anyManipulatorActive = arcballManipulator.manipulating() || translateManipulator.manipulating() ||
-                                rotateManipulator.manipulating() || turntableManipulator.manipulating() ||
-                                orbitAltitudeManipulator.manipulating();
+    bool altPressed = mods.test(view::Modifier::ALT); // this->modkeys.test(view::Modifier::ALT);
+    bool ctrlPressed = mods.test(view::Modifier::CTRL); // this->modkeys.test(view::Modifier::CTRL);
 
     // get window resolution to help computing mouse coordinates
     auto wndSize = this->cam.resolution_gate();
@@ -776,8 +782,6 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
                 {
                     this->turntableManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
-                } else {
-                    this->rotateManipulator.setActive();
                 }
             }
 
@@ -789,6 +793,10 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
                 if ((altPressed ^ this->arcballDefault) || ctrlPressed) {
                     this->orbitAltitudeManipulator.setActive(
                         wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
+                } else {
+                    this->rotateManipulator.setActive();
+                    this->translateManipulator.setActive(
+                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
                 }
             }
 
@@ -797,10 +805,8 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
             this->cursor2d.SetButtonState(2, down);
 
             if (!anyManipulatorActive) {
-                if ((altPressed ^ this->arcballDefault) || ctrlPressed) {
-                    this->translateManipulator.setActive(
-                        wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
-                }
+                this->translateManipulator.setActive(
+                    wndSize.width() - static_cast<int>(this->mouseX), static_cast<int>(this->mouseY));
             }
 
             break;
@@ -832,14 +838,20 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
     this->mouseX = (float)static_cast<int>(x);
     this->mouseY = (float)static_cast<int>(y);
 
-    auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
-    if (cr != nullptr) {
-        view::InputEvent evt;
-        evt.tag = view::InputEvent::Tag::MouseMove;
-        evt.mouseMoveData.x = x;
-        evt.mouseMoveData.y = y;
-        cr->SetInputEvent(evt);
-        if ((*cr)(CallRender3D_2::FnOnMouseMove)) return true;
+    bool anyManipulatorActive = arcballManipulator.manipulating() || translateManipulator.manipulating() ||
+                                rotateManipulator.manipulating() || turntableManipulator.manipulating() ||
+                                orbitAltitudeManipulator.manipulating();
+
+    if (!anyManipulatorActive) {
+        auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
+        if (cr != nullptr) {
+            view::InputEvent evt;
+            evt.tag = view::InputEvent::Tag::MouseMove;
+            evt.mouseMoveData.x = x;
+            evt.mouseMoveData.y = y;
+            cr->SetInputEvent(evt);
+            if ((*cr)(CallRender3D_2::FnOnMouseMove)) return true;
+        }
     }
 
     // This mouse handling/mapping is so utterly weird and should die!
@@ -865,7 +877,7 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
                 static_cast<int>(this->mouseY), glm::vec4(rotCenter, 1.0));
         }
 
-        if (this->translateManipulator.manipulating()) {
+        if (this->translateManipulator.manipulating() && !this->rotateManipulator.manipulating() ) {
 
             // compute proper step size by computing pixel world size at distance to rotCenter
             glm::vec3 currCamPos(static_cast<glm::vec4>(this->cam.position()));
@@ -898,19 +910,26 @@ bool view::View3D_2::OnMouseScroll(double dx, double dy) {
         if ((*cr)(view::CallRender3D_2::FnOnMouseScroll)) return true;
     }
 
-    // ToDo scrollwheel zooming..
-    if (abs(dy) > 0.0) {
 
-        auto cam_pos = this->cam.eye_position();
-        auto rot_cntr = thecam::math::point<glm::vec4>(glm::vec4(this->rotCenter, 0.0f));
+    // This mouse handling/mapping is so utterly weird and should die!
+    if (!this->toggleMouseSelection && (abs(dy) > 0.0)) {
+        if (this->rotateManipulator.manipulating()) {
+            this->viewKeyMoveStepSlot.Param<param::FloatParam>()->SetValue(
+                this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value() + 
+                (dy * 0.1f * this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value())
+            ); 
+        } else {
+            auto cam_pos = this->cam.eye_position();
+            auto rot_cntr = thecam::math::point<glm::vec4>(glm::vec4(this->rotCenter, 0.0f));
 
-        cam_pos.w() = 0.0f;
+            cam_pos.w() = 0.0f;
 
-        auto v = thecam::math::normalise(rot_cntr - cam_pos);
+            auto v = thecam::math::normalise(rot_cntr - cam_pos);
 
-        auto altitude = thecam::math::length(rot_cntr - cam_pos);
+            auto altitude = thecam::math::length(rot_cntr - cam_pos);
 
-        this->cam.position(cam_pos + (v * dy * (altitude / 50.0f)));
+            this->cam.position(cam_pos + (v * dy * (altitude / 50.0f)));
+        }
     }
 
     return true;
@@ -994,7 +1013,7 @@ bool View3D_2::onStoreCamera(param::ParamSlot& p) {
 
     auto path = this->determineCameraFilePath();
     if (path.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The camera output file path could not be determined. This is probably due to the usage of .mmprj project "
             "files. Please use a .lua project file instead");
         return false;
@@ -1005,7 +1024,7 @@ bool View3D_2::onStoreCamera(param::ParamSlot& p) {
         std::ifstream file(path);
         if (file.good()) {
             file.close();
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "The camera output file path already contains a camera file with the name '%s'. Override mode is "
                 "deactivated, so no camera is stored",
                 path.c_str());
@@ -1022,12 +1041,12 @@ bool View3D_2::onStoreCamera(param::ParamSlot& p) {
         file << outString;
         file.close();
     } else {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The camera output file could not be written to '%s' because the file could not be opened.", path.c_str());
         return false;
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo("Camera statistics successfully written to '%s'", path.c_str());
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Camera statistics successfully written to '%s'", path.c_str());
     return true;
 }
 
@@ -1039,7 +1058,7 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
         std::string camstring(this->cameraSettingsSlot.Param<param::StringParam>()->Value());
         cam_type::minimal_state_type minstate;
         if (!this->serializer.deserialize(minstate, camstring)) {
-            vislib::sys::Log::DefaultLog.WriteWarn(
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "The entered camera string was not valid. No change of the camera has been performed");
         } else {
             this->cam = minstate;
@@ -1049,7 +1068,7 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
 
     auto path = this->determineCameraFilePath();
     if (path.empty()) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The camera file path could not be determined. This is probably due to the usage of .mmprj project "
             "files. Please use a .lua project file instead");
         return false;
@@ -1060,13 +1079,13 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
     if (file.is_open()) {
         text.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
     } else {
-        vislib::sys::Log::DefaultLog.WriteWarn("The camera output file at '%s' could not be opened.", path.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("The camera output file at '%s' could not be opened.", path.c_str());
         return false;
     }
     auto copy = this->savedCameras;
     bool success = this->serializer.deserialize(copy, text);
     if (!success) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The reading of the camera parameters did not work properly. No changes were made.");
         return false;
     }
@@ -1074,7 +1093,7 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
     if (this->savedCameras.back().second) {
         this->cam = this->savedCameras.back().first;
     } else {
-        vislib::sys::Log::DefaultLog.WriteWarn("The stored default cam was not valid. The old default cam is used");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("The stored default cam was not valid. The old default cam is used");
     }
     return true;
 }
@@ -1127,8 +1146,7 @@ void View3D_2::handleCameraMovement(void) {
     glm::vec3 currCamPos(static_cast<glm::vec4>(this->cam.eye_position()));
     float orbitalAltitude = glm::length(currCamPos - rotCenter);
 
-    if (!(this->arcballDefault ^ this->modkeys.test(view::Modifier::ALT)) &&
-        !(this->modkeys.test(view::Modifier::CTRL))) {
+    if (this->translateManipulator.manipulating()) {
 
         if (this->pressedKeyMap.count(view::Key::KEY_W) > 0 && this->pressedKeyMap[view::Key::KEY_W]) {
             this->translateManipulator.move_forward(step);
@@ -1176,7 +1194,10 @@ void View3D_2::handleCameraMovement(void) {
         mouseDirection /= midpoint;
 
         this->rotateManipulator.pitch(-mouseDirection.y * rotationStep);
-        this->rotateManipulator.yaw(mouseDirection.x * rotationStep);
+        this->rotateManipulator.yaw(
+            mouseDirection.x * rotationStep,
+            this->viewKeyFixToWorldUpSlot.Param<param::BoolParam>()->Value()
+        );
     }
 
     glm::vec3 newCamPos(static_cast<glm::vec4>(this->cam.eye_position()));

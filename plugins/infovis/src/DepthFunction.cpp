@@ -298,7 +298,8 @@ bool DepthFunction::getDataCallback(core::Call& c) {
         }
 
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(_T("Failed to execute %hs::processData\n"), ClassName());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            _T("Failed to execute %hs::processData\n"), ClassName());
         return false;
     }
 
@@ -321,7 +322,8 @@ bool DepthFunction::getHashCallback(core::Call& c) {
         outCall->SetFrameCount(inCall->GetFrameCount());
         outCall->SetDataHash(this->datahash);
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(_T("Failed to execute %hs::getHashCallback\n"), ClassName());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            _T("Failed to execute %hs::getHashCallback\n"), ClassName());
         return false;
     }
 

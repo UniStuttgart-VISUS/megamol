@@ -137,8 +137,6 @@ namespace cinematic {
         bool                                    playAnim;
         int                                     cineWidth;
         int                                     cineHeight;
-        float                                   vp_lastw;
-        float                                   vp_lasth;
         SkyboxSides                             sbSide;
         bool                                    rendering;
         unsigned int                            fps;
@@ -173,7 +171,7 @@ namespace cinematic {
          * @param msg The error message
          */
         static void PNGAPI pngWarn(png_structp pngPtr, png_const_charp msg) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "Png-Warning: %s\n", msg);
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "Png-Warning: %s\n", msg);
         }
 
         /**

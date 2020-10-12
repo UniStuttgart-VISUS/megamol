@@ -12,7 +12,7 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/ShallowPoint.h"
 #include "vislib/math/Vector.h"

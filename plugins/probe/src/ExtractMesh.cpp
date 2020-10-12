@@ -842,7 +842,7 @@ bool ExtractMesh::filterResult() {
         auto l3 = length_b > length_c ? length_b / length_c : length_c / length_b;
 
         if (l1 >= factor || l2 >= factor || l3 >= factor) {
-            vislib::sys::Log::DefaultLog.WriteInfo("[ExtractMesh] Found bad polygon.");
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[ExtractMesh] Found bad polygon.");
         } else {
             new_polygon.emplace_back(polygon);
         }

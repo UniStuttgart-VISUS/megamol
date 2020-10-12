@@ -28,7 +28,7 @@
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/mathfunctions.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/sysfunctions.h"
 #ifdef ENABLE_KEYBOARD_VIEW_CONTROL
 #    include "mmcore/view/Input.h"
@@ -133,7 +133,7 @@ view::View3D::View3D(void)
     this->restoreCameraSettingsSlot.SetUpdateCallback(&View3D::onRestoreCamera);
     this->MakeSlotAvailable(&this->restoreCameraSettingsSlot);
 
-    this->resetViewSlot << new param::ButtonParam(view::Key::KEY_HOME);
+    this->resetViewSlot << new param::ButtonParam();
     this->resetViewSlot.SetUpdateCallback(&View3D::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
 
@@ -455,7 +455,7 @@ void view::View3D::Render(const mmcRenderViewContext& context) {
 
     if (!(*this->lastFrameParams == *(this->camParams.DynamicCast<vislib::graphics::CameraParamsStore>())) ||
         !this->hookOnChangeOnlySlot.Param<param::BoolParam>()->Value()) {
-        // vislib::sys::Log::DefaultLog.WriteInfo("view %s: camera has changed, the frame has sensible information.",
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("view %s: camera has changed, the frame has sensible information.",
         // this->FullName().PeekBuffer());
         frameIsNew = true;
     } else {
@@ -708,6 +708,10 @@ void view::View3D::UpdateFreeze(bool freeze) {
 bool view::View3D::OnKey(Key key, KeyAction action, Modifiers mods) {
     auto* cr = this->rendererSlot.CallAs<view::CallRender3D>();
     if (cr == NULL) return false;
+
+    if (key == Key::KEY_HOME) {
+        onResetView(this->resetViewSlot);
+    }
 
     running = mods.test(Modifier::SHIFT);
     bool down = (action == KeyAction::PRESS || action == KeyAction::REPEAT) && (action != KeyAction::RELEASE);
@@ -1345,7 +1349,7 @@ bool view::View3D::onStoreCamera(param::ParamSlot& p) {
     str.Prepend(_T("{"));
     this->cameraSettingsSlot.Param<param::StringParam>()->SetValue(str);
 
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Camera parameters stored in \"%s\"",
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Camera parameters stored in \"%s\"",
         this->cameraSettingsSlot.FullName().PeekBuffer());
     return true;
 }
@@ -1376,14 +1380,14 @@ bool view::View3D::onRestoreCamera(param::ParamSlot& p) {
             this->bboxs.SetWorldSpaceBBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
         }
 
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Camera parameters restored from \"%s\"",
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Camera parameters restored from \"%s\"",
             this->cameraSettingsSlot.FullName().PeekBuffer());
     } catch (vislib::Exception ex) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Cannot restore camera parameters from \"%s\": %s (%s; %d)",
             this->cameraSettingsSlot.FullName().PeekBuffer(), ex.GetMsgA(), ex.GetFile(), ex.GetLine());
     } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Cannot restore camera parameters from \"%s\": unexpected exception",
             this->cameraSettingsSlot.FullName().PeekBuffer());
     }
@@ -1570,4 +1574,21 @@ void view::View3D::renderViewCube(void) {
     glDisable(GL_LINE_SMOOTH);
     glLineWidth(1.0f);
     glDisable(GL_CULL_FACE);
+}
+
+/*
+ * view::View3D::GetExtents
+ */
+bool view::View3D::GetExtents(Call& call) {
+    view::CallRenderView* crv = dynamic_cast<view::CallRenderView*>(&call);
+    if (crv == nullptr) return false;
+
+    CallRender3D* cr3d = this->rendererSlot.CallAs<CallRender3D>();
+    if (cr3d == nullptr) return false;
+
+    if (!(*cr3d)(CallRender3D::FnGetExtents)) return false;
+
+    crv->SetTimeFramesCount(cr3d->TimeFramesCount());
+    crv->SetIsInSituTime(cr3d->IsInSituTime());
+    return true;
 }

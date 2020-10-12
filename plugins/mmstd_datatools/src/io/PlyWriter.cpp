@@ -57,7 +57,7 @@ void io::PlyWriter::release(void) {
  * io::PlyWriter::run
  */
 bool io::PlyWriter::run(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
