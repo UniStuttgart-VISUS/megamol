@@ -1549,8 +1549,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         return false;
     }
 
-    // glDisable(GL_DEPTH_TEST);
-    // glDepthMask(GL_FALSE);
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
 
     if (this->filterStateSlot.IsDirty()) {
         load_filters();
@@ -1640,6 +1640,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     }
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    glDepthMask(GL_TRUE);
 
     if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
@@ -1655,8 +1656,6 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("frametype"), frametype);
 
-        //glUniformMatrix4fv(pc_reconstruction0_shdr->ParameterLocation("mMa"), 1, GL_FALSE, &moveMatrixA[0][0]);
-        //glUniformMatrix4fv(pc_reconstruction0_shdr->ParameterLocation("mMb"), 1, GL_FALSE, &moveMatrixB[0][0]);
         glUniformMatrix4fv(pc_reconstruction0_shdr->ParameterLocation("moveMatrices"), 2, GL_FALSE, &moveMatrices[0][0][0]);
         
         glDrawArrays(GL_TRIANGLES, 0, 6);
