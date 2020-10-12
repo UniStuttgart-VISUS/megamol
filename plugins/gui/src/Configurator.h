@@ -96,7 +96,7 @@ private:
     void draw_window_menu(megamol::core::CoreInstance* core_instance);
     void draw_window_module_list(float width);
 
-    void drawPopUps(void);
+    void drawPopUps(megamol::core::CoreInstance* core_instance);
 
     bool load_graph_state_from_file(const std::string& filename);
 

@@ -180,7 +180,7 @@ bool megamol::gui::Configurator::Draw(
         this->graph_collection.PresentGUI(this->graph_state);
 
         // Process Pop-ups
-        this->drawPopUps();
+        this->drawPopUps(core_instance);
 
         // Reset state -------------------------------------------------------
         for (auto& h : this->graph_state.hotkeys) {
@@ -240,7 +240,7 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
                 graph_has_core_interface = graph_ptr->HasCoreInterface();
             }
             bool enable_save_graph = !graph_has_core_interface;
-            if (ImGui::MenuItem("Save Editor Project",
+            if (ImGui::MenuItem("Save Project",
                     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT].keycode.ToString().c_str(),
                     false, ((this->graph_state.graph_selected_uid != GUI_INVALID_ID) && enable_save_graph))) {
                 this->graph_state.graph_save = true;
@@ -485,7 +485,7 @@ bool megamol::gui::Configurator::StateToJSON(nlohmann::json& inout_json) {
                     graph_ptr->StateToJSON(inout_json);
                 } else {
                     std::string filename = graph_ptr->GetFilename();
-                    GUIUtils::Utf8Encode(filename);
+                    // GUIUtils::Utf8Encode(filename);
                     if (!filename.empty()) {
                         inout_json[GUI_JSON_TAG_GRAPHS][filename] = nlohmann::json::object();
                     }
@@ -567,7 +567,7 @@ bool megamol::gui::Configurator::StateFromJSON(const nlohmann::json& in_json) {
 }
 
 
-void megamol::gui::Configurator::drawPopUps(void) {
+void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_instance) {
 
     bool confirmed, aborted;
 
@@ -576,8 +576,12 @@ void megamol::gui::Configurator::drawPopUps(void) {
     bool popup_failed = false;
     std::string project_filename;
     GraphPtr_t graph_ptr;
-    if (this->graph_collection.GetGraph(this->add_project_graph_uid, graph_ptr)) {
+    if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
         project_filename = graph_ptr->GetFilename();
+    }
+    // Try to get current project path from lua in core instance
+    if (project_filename.empty() && (core_instance != nullptr)) {
+        project_filename = core_instance->GetLuaState()->GetScriptPath();
     }
     if (this->file_browser.PopUp(
             FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->open_popup_load, project_filename)) {

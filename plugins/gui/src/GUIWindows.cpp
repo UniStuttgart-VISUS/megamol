@@ -807,7 +807,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 
         // Creates new graph at first call
         sync_success &= this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(
-            this->graph_uid, ((megamol_graph == nullptr) ? (this->core_instance) : (nullptr)), megamol_graph);
+            this->graph_uid, ((megamol_graph == nullptr) ? (this->core_instance) : (nullptr)), megamol_graph, true);
         if (!sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,

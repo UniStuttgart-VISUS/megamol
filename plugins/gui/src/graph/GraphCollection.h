@@ -82,12 +82,12 @@ public:
      * @return                 True on success, false otherwise.
      */
     bool LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance,
-        megamol::core::MegaMolGraph* megamol_graph);
+        megamol::core::MegaMolGraph* megamol_graph, bool sync);
 
     ImGuiID LoadProjectFromCore(
         megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph) {
         ImGuiID graph_id = GUI_INVALID_ID;
-        if (LoadUpdateProjectFromCore(graph_id, core_instance, megamol_graph)) {
+        if (LoadUpdateProjectFromCore(graph_id, core_instance, megamol_graph, false)) {
             return graph_id;
         }
         return GUI_INVALID_ID;
