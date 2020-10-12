@@ -485,7 +485,7 @@ bool megamol::gui::Configurator::StateToJSON(nlohmann::json& inout_json) {
                     graph_ptr->StateToJSON(inout_json);
                 } else {
                     std::string filename = graph_ptr->GetFilename();
-                    // GUIUtils::Utf8Encode(filename);
+                    GUIUtils::Utf8Encode(filename);
                     if (!filename.empty()) {
                         inout_json[GUI_JSON_TAG_GRAPHS][filename] = nlohmann::json::object();
                     }

@@ -1884,13 +1884,13 @@ bool megamol::gui::GUIWindows::save_state_to_file(const std::string& filename) {
     // Load existing gui state from file
     std::string state_str;
     if (FileUtils::ReadFile(file, state_str, true)) {
-        if (state_str.empty()) return false;
-        bool found_gui = false;
-        state_json = nlohmann::json::parse(state_str);
-        if (!state_json.is_object()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
+        if (!state_str.empty()) {
+            state_json = nlohmann::json::parse(state_str);
+            if (!state_json.is_object()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                return false;
+            }
         }
     }
 
