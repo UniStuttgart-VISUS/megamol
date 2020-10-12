@@ -106,7 +106,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
                     // auto const& sub_mesh = gpu_mesh_storage->getSubMeshData()[model->nodes[node_idx].mesh];
                     auto const& sub_mesh = gpu_mesh_storage->getSubMeshData()[submesh_offset + primitive_idx];
                     auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-                    auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+                    auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
                     sub_mesh_data = sub_mesh;
 
@@ -160,7 +160,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             
             auto const& sub_mesh = m_UI_template_elements[3].first;
             auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(
@@ -179,7 +179,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             auto const& sub_mesh = m_UI_template_elements[2].first;
             auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(
@@ -198,7 +198,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             auto const& sub_mesh = m_UI_template_elements[1].first;
             auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(
@@ -217,7 +217,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             auto const& sub_mesh = m_UI_template_elements[0].first;
             auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(

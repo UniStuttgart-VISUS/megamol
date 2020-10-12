@@ -15,8 +15,8 @@
 namespace megamol {
 namespace mesh {
 
-size_t GPUMaterialCollection::addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string const& shader_btf_name,
-    std::vector<std::shared_ptr<glowl::Texture>> const& textures) {
+void GPUMaterialCollection::addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string const& identifier,
+    std::string const& shader_btf_name, std::vector<std::shared_ptr<glowl::Texture>> const& textures) {
 
     vislib::graphics::gl::ShaderSource vert_shader_src;
     vislib::graphics::gl::ShaderSource frag_shader_src;
@@ -78,42 +78,70 @@ size_t GPUMaterialCollection::addMaterial(megamol::core::CoreInstance* mm_core_i
             exc.what(), __FILE__, __FUNCTION__, __LINE__);
     }
 
-    return addMaterial(shader, textures);
+    addMaterial(identifier, shader, textures);
 }
 
-size_t GPUMaterialCollection::addMaterial(
-    std::shared_ptr<Shader> const& shader, std::vector<std::shared_ptr<glowl::Texture>> const& textures) {
-    size_t retval = m_materials.size();
+void GPUMaterialCollection::addMaterial(std::string const& identifier, std::shared_ptr<Shader> const& shader,
+    std::vector<std::shared_ptr<glowl::Texture>> const& textures) {
+    auto new_mtl = m_materials.insert({identifier,Material()});
 
-    m_materials.push_back(Material());
-    m_materials.back().shader_program = shader;
-    m_materials.back().textures = textures;
-
-    return retval;
+    if (new_mtl.second == true) {
+        new_mtl.first->second.shader_program = shader;
+        new_mtl.first->second.textures = textures;
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Could not add material, identifier already exists. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
 }
 
-size_t GPUMaterialCollection::addMaterial(Material const& material) {
-    size_t retval = m_materials.size();
-
-    m_materials.push_back(material);
-
-    return retval;
+void GPUMaterialCollection::addMaterial(std::string const& identifier, Material const& material) {
+    m_materials.insert({identifier,material});
 }
 
 void GPUMaterialCollection::updateMaterialTexture(
-    size_t mtl_idx, size_t tex_idx, std::shared_ptr<glowl::Texture> const& texture) {
-    m_materials[mtl_idx].textures[tex_idx] = texture;
+    std::string const& identifier,
+    size_t tex_idx, std::shared_ptr<glowl::Texture> const& texture) {
+
+    auto query = m_materials.find(identifier);
+
+    if (query != m_materials.end()) {
+        query->second.textures[tex_idx] = texture;
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Could not update material texture, identifier not found. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
 }
 
-void GPUMaterialCollection::deleteMaterial(size_t index) {
-    if (index < m_materials.size()) {
-        m_materials.erase(m_materials.begin() + index);
+void GPUMaterialCollection::deleteMaterial(std::string const& identifier) {
+
+    auto erased_cnt = m_materials.erase(identifier);
+
+    if (erased_cnt == 0) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Could not delete material, identifier not found. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
     }
 }
 
 void GPUMaterialCollection::clear() { m_materials.clear(); }
 
-inline std::vector<GPUMaterialCollection::Material> const& GPUMaterialCollection::getMaterials() { return m_materials; }
+GPUMaterialCollection::Material const& GPUMaterialCollection::getMaterial(std::string const& identifier) {
+    auto query = m_materials.find(identifier);
+
+    if (query != m_materials.end()) {
+        return query->second;
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Could not get material, identifier not found. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
+    }
+
+    return Material();
+}
+
+inline std::unordered_map<std::string, GPUMaterialCollection::Material> const& GPUMaterialCollection::getMaterials() {
+    return m_materials;
+}
 
 } // namespace mesh
 } // namespace megamol

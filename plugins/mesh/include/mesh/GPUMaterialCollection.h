@@ -42,24 +42,26 @@ public:
         std::vector<std::shared_ptr<glowl::Texture>> textures;
     };
 
-    size_t addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string const& shader_btf_name,
+    void addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string const& identifier,
+        std::string const& shader_btf_name, std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
+
+    void addMaterial(std::string const& identifier, std::shared_ptr<Shader> const& shader,
         std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
 
-    size_t addMaterial(
-        std::shared_ptr<Shader> const& shader, std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
+    void addMaterial(std::string const& identifier, Material const& material);
 
-    size_t addMaterial(Material const& material);
+    void updateMaterialTexture(std::string const& identifier, size_t tex_idx, std::shared_ptr<glowl::Texture> const& texture);
 
-    void updateMaterialTexture(size_t mtl_idx, size_t tex_idx, std::shared_ptr<glowl::Texture> const& texture);
-
-    void deleteMaterial(size_t index);
+    void deleteMaterial(std::string const& identifier);
 
     void clear();
 
-    inline std::vector<Material> const& getMaterials();
+    Material const& getMaterial(std::string const& identifier);
+
+    inline std::unordered_map<std::string, Material> const& getMaterials();
 
 private:
-    std::vector<Material> m_materials;
+    std::unordered_map<std::string,Material> m_materials;
 };
 
 } // namespace mesh

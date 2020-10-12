@@ -53,7 +53,7 @@ protected:
     /**
      * Material collection that is used and indices of materials within the collection that were added by a module instance.
      */
-    std::pair<std::shared_ptr<GPUMaterialCollection>, std::vector<size_t>> m_material_collection;
+    std::pair<std::shared_ptr<GPUMaterialCollection>, std::vector<std::string>> m_material_collection;
 
     /** The slot for querying additional material data, i.e. a rhs chaining connection */
     megamol::core::CallerSlot m_mtl_callerSlot;

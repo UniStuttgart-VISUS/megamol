@@ -44,11 +44,12 @@ void megamol::mesh::AbstractGPUMaterialDataSource::syncMaterialCollection(megamo
     } else {
         // incoming material -> use it, copy material from last used collection if needed
         if (lhs_call->getData() != m_material_collection.first) {
-            std::pair<std::shared_ptr<GPUMaterialCollection>, std::vector<size_t>> mtl_collection = {
+            std::pair<std::shared_ptr<GPUMaterialCollection>, std::vector<std::string>> mtl_collection = {
                 lhs_call->getData(), {}};
-            for (auto& idx : m_material_collection.second) {
-                mtl_collection.second.push_back(mtl_collection.first->addMaterial(m_material_collection.first->getMaterials()[idx]));
-                m_material_collection.first->deleteMaterial(idx);
+            for (auto& identifier : m_material_collection.second) {
+                mtl_collection.first->addMaterial(identifier,m_material_collection.first->getMaterial(identifier));
+                mtl_collection.second.push_back(identifier);
+                m_material_collection.first->deleteMaterial(identifier);
             }
             m_material_collection = mtl_collection;
         }

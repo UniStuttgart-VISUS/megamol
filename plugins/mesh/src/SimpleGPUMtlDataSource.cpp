@@ -33,7 +33,8 @@ bool megamol::mesh::SimpleGPUMtlDataSource::getDataCallback(core::Call& caller) 
             m_material_collection.first->deleteMaterial(idx);
         }
 
-        m_material_collection.second.push_back(m_material_collection.first->addMaterial(this->instance(), filename));
+        m_material_collection.first->addMaterial(this->instance(), filename, filename);
+        m_material_collection.second.push_back(filename);
     }
 
     if (lhs_mtl_call->version() < m_version) {

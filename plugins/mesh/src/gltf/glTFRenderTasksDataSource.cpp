@@ -107,7 +107,7 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
 					//auto const& sub_mesh = gpu_mesh_storage->getSubMeshData()[model->nodes[node_idx].mesh];
 					auto const& sub_mesh = gpu_mesh_storage->getSubMeshData()[submesh_offset + primitive_idx];
 					auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-					auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+                    auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
 					std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(node_idx) + "_" + std::to_string(primitive_idx));
                     m_rendertask_collection.first->addRenderTask(rt_identifier, shader, gpu_batch_mesh,
