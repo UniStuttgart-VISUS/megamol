@@ -23,7 +23,7 @@ public:
     };
 
     // sometimes somebody wants to know the name of the service
-    std::string serviceName() override { return "Template_Service"; }
+    std::string serviceName() const override { return "Template_Service"; }
 
     // constructor should not take arguments, actual object initialization deferred until init()
     Template_Service();
@@ -118,7 +118,6 @@ public:
     void preGraphRender() override;  
     // clean up after rendering, e.g. render gui over graph rendering, stop and show frame-timers in GLFW window, swap buffers, glClear for next framebuffer
     void postGraphRender() override;
-
 
     // from AbstractFrontendService 
     // you inherit the following functions that manage priority of your service and shutdown requests to terminate the program

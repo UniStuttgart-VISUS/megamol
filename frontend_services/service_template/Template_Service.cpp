@@ -45,11 +45,11 @@ bool Template_Service::init(const Config& config) {
     // but maybe more instances of your service will get created? this may be relevant for central resources you manage (like libraries, network connections).
 
     if (init_failed) {
-        log("failed initialization because")
+        log("failed initialization because");
         return false;
     }
 
-    log("initialized successfully")
+    log("initialized successfully");
     return true;
 }
 
@@ -75,6 +75,8 @@ std::vector<ModuleResource>& Template_Service::getProvidedResources() {
 }
 
 const std::vector<std::string> Template_Service::getRequestedResourceNames() const {
+    // since this function should not change the state of the service
+    // you should assign your requested resource names in init()
     this->m_requestedResourcesNames =
     {
         "ExternalResource_1",
@@ -82,6 +84,13 @@ const std::vector<std::string> Template_Service::getRequestedResourceNames() con
     };
 
     return m_requestedResourcesNames;
+
+    // alternative
+    return 
+    {
+        "ExternalResource_1",
+        "ExternalResource_2"
+    };
 }
 
 void Template_Service::setRequestedResources(std::vector<ModuleResource> resources) {
