@@ -38,6 +38,8 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     , graph_layout(0)
     , parameter_sidebar_width(300.0f)
     , reset_zooming(true)
+    , increment_zooming(false)
+    , decrement_zooming(false)
     , param_name_space()
     , current_main_view_name()
     , multiselect_start_pos()
@@ -714,6 +716,8 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         float input_text_width = std::max(
             min_text_width, (ImGui::CalcTextSize(this->current_main_view_name.c_str()).x + 2.0f * style.ItemSpacing.x));
         ImGui::PushItemWidth(input_text_width);
+        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
+        GUIUtils::Utf8Encode(this->current_main_view_name);
         if (ImGui::InputText(
                 "###current_main_view_name", &this->current_main_view_name, ImGuiInputTextFlags_EnterReturnsTrue)) {
             if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
@@ -726,6 +730,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
                 selected_mod_ptr->main_view_name = this->current_main_view_name;
             }
         }
+        GUIUtils::Utf8Decode(this->current_main_view_name);
         ImGui::PopItemWidth();
         ImGui::SameLine();
     }
@@ -771,15 +776,14 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     ImGui::TextUnformatted(delimiter.c_str());
     ImGui::SameLine();
 
-    const float zoom_fac = 1.1f; // = 10%
     ImGui::Text("Zooming: %.2f", this->graph_state.canvas.zooming);
     ImGui::SameLine();
     if (ImGui::Button("+###incr_zooming", button_size)) {
-        this->graph_state.canvas.zooming *= zoom_fac;
+        this->increment_zooming = true;
     }
     ImGui::SameLine();
     if (ImGui::Button("-###decr_zooming", button_size)) {
-        this->graph_state.canvas.zooming /= zoom_fac;
+        this->decrement_zooming = true;
     }
     ImGui::SameLine();
     if (ImGui::Button("Reset###reset_zooming")) {
@@ -986,7 +990,8 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
     // Zooming and Scaling ----------------------
     // Must be checked inside this canvas child window!
     // Check at the end of drawing for being applied in next frame when font scaling matches zooming.
-    if ((ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) || this->reset_zooming) {
+    if ((ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) || this->reset_zooming || this->increment_zooming ||
+        this->decrement_zooming) {
 
         // Scrolling (2 = Middle Mouse Button)
         if (ImGui::IsMouseDragging(2)) { // io.KeyCtrl && ImGui::IsMouseDragging(0)) {
@@ -996,18 +1001,27 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
         }
 
         // Zooming (Mouse Wheel) + Reset
-        if ((io.MouseWheel != 0) || this->reset_zooming) {
+        if ((io.MouseWheel != 0) || this->reset_zooming || this->increment_zooming || this->decrement_zooming) {
             float last_zooming = this->graph_state.canvas.zooming;
-            ImVec2 current_mouse_pos;
+            // Center mouse position as init value
+            ImVec2 current_mouse_pos = this->graph_state.canvas.offset -
+                                       (this->graph_state.canvas.position + this->graph_state.canvas.size * 0.5f);
+            const float zoom_fac = 1.1f; // = 10%
             if (this->reset_zooming) {
                 this->graph_state.canvas.zooming = 1.0f;
-                current_mouse_pos = this->graph_state.canvas.offset -
-                                    (this->graph_state.canvas.position + this->graph_state.canvas.size * 0.5f);
                 this->reset_zooming = false;
             } else {
-                const float factor = this->graph_state.canvas.zooming / 10.0f;
-                this->graph_state.canvas.zooming = this->graph_state.canvas.zooming + (io.MouseWheel * factor);
-                current_mouse_pos = this->graph_state.canvas.offset - ImGui::GetMousePos();
+                if (io.MouseWheel != 0) {
+                    const float factor = this->graph_state.canvas.zooming / 10.0f;
+                    this->graph_state.canvas.zooming += (io.MouseWheel * factor);
+                    current_mouse_pos = this->graph_state.canvas.offset - ImGui::GetMousePos();
+                } else if (this->increment_zooming) {
+                    this->graph_state.canvas.zooming *= zoom_fac;
+                    this->increment_zooming = false;
+                } else if (this->decrement_zooming) {
+                    this->graph_state.canvas.zooming /= zoom_fac;
+                    this->decrement_zooming = false;
+                }
             }
             // Limit zooming
             this->graph_state.canvas.zooming =

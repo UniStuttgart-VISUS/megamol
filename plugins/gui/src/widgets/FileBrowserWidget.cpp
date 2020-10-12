@@ -41,9 +41,9 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
             if (tmp_file_path.empty() || !stdfs::exists(tmp_file_path)) {
                 tmp_file_path = stdfs::current_path();
             }
-            this->splitPath(tmp_file_path, this->file_path_str, this->file_name_str);
-            this->validateDirectory(this->file_path_str);
-            this->validateFile(this->file_name_str, flag);
+            this->split_path(tmp_file_path, this->file_path_str, this->file_name_str);
+            this->validate_directory(this->file_path_str);
+            this->validate_file(this->file_name_str, flag);
             this->path_changed = true;
 
             ImGui::OpenPopup(label_id.c_str());
@@ -72,7 +72,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
             GUIUtils::Utf8Decode(this->file_path_str);
             if (last_file_path_str != this->file_path_str) {
                 this->path_changed = true;
-                this->validateDirectory(this->file_path_str);
+                this->validate_directory(this->file_path_str);
             }
             // Error message when path is no valid directory
             if (!this->valid_directory) {
@@ -109,15 +109,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                     // Reset scrolling
                     ImGui::SetScrollY(0.0f);
 
-                    // Convert realtive path to absolute path
-                    if (this->file_path_str == "..") {
-                        auto absolute_path = stdfs::absolute(static_cast<stdfs::path>(this->file_path_str));
-                        if (absolute_path.has_parent_path()) {
-                            if (absolute_path.has_parent_path()) {
-                                this->file_path_str = absolute_path.parent_path().parent_path().generic_u8string();
-                            }
-                        }
-                    }
+                    this->file_path_str = this->get_absolute_path(this->file_path_str);
 
                     // Update child paths
                     this->child_paths.clear();
@@ -183,8 +175,8 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                         if (ImGui::Selectable(
                                 select_label.c_str(), (select_label == this->file_name_str), select_flags)) {
                             last_file_path_str = this->file_path_str;
-                            this->splitPath(path_pair.first, this->file_path_str, this->file_name_str);
-                            this->validateFile(this->file_name_str, flag);
+                            this->split_path(path_pair.first, this->file_path_str, this->file_name_str);
+                            this->validate_file(this->file_name_str, flag);
                             if (last_file_path_str != this->file_path_str) {
                                 this->path_changed = true;
                             }
@@ -220,7 +212,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                 ImGui::PopItemFlag();
             }
             if (last_file_name_str != this->file_name_str) {
-                this->validateFile(this->file_name_str, flag);
+                this->validate_file(this->file_name_str, flag);
             }
 
             // Buttons ------------------------------
@@ -331,7 +323,26 @@ bool megamol::gui::FileBrowserWidget::Button(std::string& inout_filename) {
 }
 
 
-bool megamol::gui::FileBrowserWidget::splitPath(
+std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string& in_path_str) const {
+
+    auto return_path_str = in_path_str;
+    if ((in_path_str == "..") || (in_path_str == ".")) {
+        stdfs::path return_path = static_cast<stdfs::path>(in_path_str);
+        return_path = stdfs::absolute(return_path);
+        if (return_path.has_parent_path()) {
+            return_path = return_path.parent_path();
+            if ((in_path_str == "..") && return_path.has_parent_path()) {
+                return_path = return_path.parent_path();
+            }
+        }
+        return_path_str = return_path.generic_u8string();
+        GUIUtils::Utf8Decode(return_path_str);
+    }
+    return return_path_str;
+}
+
+
+bool megamol::gui::FileBrowserWidget::split_path(
     const stdfs::path& in_file_path, std::string& out_path, std::string& out_file) {
 
     // Splitting path into path string and file string
@@ -358,7 +369,7 @@ bool megamol::gui::FileBrowserWidget::splitPath(
 }
 
 
-void megamol::gui::FileBrowserWidget::validateDirectory(const std::string& path_str) {
+void megamol::gui::FileBrowserWidget::validate_directory(const std::string& path_str) {
 
     // Validating directory
     try {
@@ -372,7 +383,7 @@ void megamol::gui::FileBrowserWidget::validateDirectory(const std::string& path_
 }
 
 
-void megamol::gui::FileBrowserWidget::validateFile(
+void megamol::gui::FileBrowserWidget::validate_file(
     const std::string& file_str, megamol::gui::FileBrowserWidget::FileBrowserFlag flag) {
 
     // Validating file
