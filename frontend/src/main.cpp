@@ -9,6 +9,7 @@
 #include "GUI_Service.hpp"
 #include "Lua_Service_Wrapper.hpp"
 #include "OpenGL_GLFW_Service.hpp"
+#include "Screenshot_Service.hpp"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
@@ -79,6 +80,9 @@ int main(int argc, char* argv[]) {
     // postGraphRender() and close() are called in reverse order of priorities.
     gui_service.setPriority(23);
 
+    megamol::frontend::Screenshot_Service screenshot_service;
+    megamol::frontend::Screenshot_Service::Config screenshotConfig;
+    screenshot_service.setPriority(30);
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
     bool lua_imperative_only = false; // allow mmFlush, mmList* and mmGetParam*
@@ -104,6 +108,7 @@ int main(int argc, char* argv[]) {
     services.add(gl_service, &openglConfig);
     services.add(gui_service, &guiConfig);
     services.add(lua_service_wrapper, &luaConfig);
+    services.add(screenshot_service, &screenshotConfig);
 
     // TODO: gui view and frontend service gui can not coexist => how to kill GUI View in loaded projects?
     //  - FBO size (and others) for newly created views/modules/entrypoints (FBO size event missing). see AbstractView_EventConsumption::view_consume_framebuffer_events
