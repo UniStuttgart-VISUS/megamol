@@ -72,9 +72,6 @@ public:
     const std::vector<std::string> getRequestedResourceNames() const override;
     void setRequestedResources(std::vector<ModuleResource> resources) override;
 
-    // TODO: this is obsolete with Module Resources mechanism, remove?
-    const void* getSharedDataPtr() const override; // ptr non-owning, share data should be only borrowed
-
     // from AbstractFrontendService:
     // int setPriority(const int p) // priority initially 0
     // int getPriority() const;

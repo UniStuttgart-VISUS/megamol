@@ -84,6 +84,7 @@
 #define MMC_LUA_MMCURRENTSCRIPTPATH "mmCurrentScriptPath"
 #define MMC_LUA_MMLISTPARAMETERS "mmListParameters"
 #define MMC_LUA_MMINVOKE "mmInvoke"
+#define MMC_LUA_MMSCREENSHOT "mmScreenshot"
 
 
 void megamol::core::LuaAPI::commonInit() {
@@ -127,6 +128,8 @@ void megamol::core::LuaAPI::commonInit() {
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::CurrentScriptPath>(MMC_LUA_MMCURRENTSCRIPTPATH, "()\n\tReturns the path of the currently running script, if possible. Empty string otherwise.");
     // TODO: imperative?
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::Invoke>(MMC_LUA_MMINVOKE, "(string command)\n\tInvoke an abstracted input command like 'move_left'.");
+
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::Screenshot>(MMC_LUA_MMSCREENSHOT, "(string filename)\n\tSave a screenshot of the GL front buffer under 'filename'.");
 
     if (!imperative_only_) {
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetModuleParams>(MMC_LUA_MMGETMODULEPARAMS, "(string name)\n\tReturns a 0x1-separated list of module name and all parameters."
@@ -1018,6 +1021,10 @@ void megamol::core::LuaAPI::setListResourcesCallback(std::function<std::vector<s
     mmListResources_callback_ = callback;
 }
 
+void megamol::core::LuaAPI::setScreenshotCallback(std::function<void(std::string const&)> callback) {
+    mmScreenshot_callback_ = callback;
+}
+
 int megamol::core::LuaAPI::Flush(lua_State* L) {
     bool result = mmFlush_callback_();
 
@@ -1033,5 +1040,13 @@ int megamol::core::LuaAPI::CurrentScriptPath(struct lua_State* L) {
 int megamol::core::LuaAPI::Invoke(lua_State *L) {
     // TODO
     return 0;
+}
+
+int megamol::core::LuaAPI::Screenshot(lua_State* L) {
+    const std::string filename (luaL_checkstring(L, 1));
+
+    mmScreenshot_callback_(filename);
+
+    return 1;
 }
 

@@ -139,13 +139,6 @@ public:
     // buffers, glClear for next framebuffer
     void postGraphRender() override;
 
-    // TODO: this is obsolete with Module Resources mechanism, remove?
-    // the idea of the shared data pointer is that several instances of the same service (like for network connections)
-    // may want to share data. but actually, instead of the service system solving managment of central dependencies for
-    // you, each service class should solve its 'singleton' requirements itself, using proven strategies like static
-    // class member variables
-    const void* getSharedDataPtr() const override; // ptr non-owning, share data should be only borrowed
-
     // from AbstractFrontendService
     // you inherit the following functions that manage priority of your service and shutdown requests to terminate the
     // program you and others may use those functions, but you will not override them priority indicates the order in
