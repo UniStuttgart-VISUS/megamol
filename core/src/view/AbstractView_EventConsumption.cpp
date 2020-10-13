@@ -90,8 +90,11 @@ void view_poke_rendering(AbstractView& view, megamol::frontend::ModuleResource c
             std::chrono::high_resolution_clock::now() - render_view_context_timer_start)
             .count() / static_cast<double>(1000);
 
-        dummyRenderViewContext.InstanceTime = time;
-        dummyRenderViewContext.Time = time;
+            // this is missing!
+            // auto core = view->View()->GetCoreInstance();
+            // core->SetFrameID(frameID);
+            dummyRenderViewContext.InstanceTime = time;
+            dummyRenderViewContext.Time = view.DefaultTime(time);
 
 		view.Render(dummyRenderViewContext);
 	};
