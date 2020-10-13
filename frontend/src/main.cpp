@@ -4,7 +4,6 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/log/StreamTarget.h"
 
-#include "AbstractFrontendService.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
 #include "Lua_Service_Wrapper.hpp"
@@ -83,6 +82,7 @@ int main(int argc, char* argv[]) {
     megamol::frontend::Screenshot_Service screenshot_service;
     megamol::frontend::Screenshot_Service::Config screenshotConfig;
     screenshot_service.setPriority(30);
+
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
     bool lua_imperative_only = false; // allow mmFlush, mmList* and mmGetParam*
@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) {
     uint32_t frameID = 0;
     const auto render_next_frame = [&]() -> bool {
         // set global Frame Counter
-        guiConfig.core_instance->SetFrameID(frameID++);
+        core.SetFrameID(frameID++);
 
         // services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua)
         services.updateProvidedResources();
