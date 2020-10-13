@@ -144,6 +144,9 @@ megamol::module_resources::ImageData megamol::module_resources::GLScreenshotSour
     glReadBuffer(m_read_buffer);
     glReadPixels(0, 0, fbWidth, fbHeight, GL_RGBA, GL_UNSIGNED_BYTE, result.image.data());
 
+    for (auto& pixel : result.image)
+        pixel.a = 255;
+
     if (gl_context)
         gl_context->close();
 
