@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
     uint32_t frameID = 0;
     const auto render_next_frame = [&]() -> bool {
         // set global Frame Counter
-        guiConfig.core_instance->SetFrameID(frameID++);
+        core.SetFrameID(frameID++);
 
         // services: receive inputs (GLFW poll events [keyboard, mouse, window], network, lua)
         services.updateProvidedResources();

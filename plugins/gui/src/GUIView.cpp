@@ -85,8 +85,8 @@ void GUIView::Render(const mmcRenderViewContext& context) {
     if (crv) {
         crv->SetOutputBuffer(GL_BACK);
         crv->SetInstanceTime(context.InstanceTime);
-        crv->SetTime(
-            -1.0f); // Should be negative to trigger animation! (see View3D.cpp line ~660 | View2D.cpp line ~350)
+        // Should be negative to trigger animation! (see View3D_2.cpp line ~612 | View2D.cpp line ~661):
+        crv->SetTime(-1.0f);
         auto viewport_rect = crv->GetViewport();
         auto viewport =
             glm::vec2(static_cast<float>(viewport_rect.Width()), static_cast<float>(viewport_rect.Height()));
