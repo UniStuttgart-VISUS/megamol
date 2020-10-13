@@ -164,8 +164,15 @@ bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
     this->available_interactions.clear();
 
     if (this->fbo == nullptr) {
-        this->fbo = std::make_unique<glowl::FramebufferObject>(
-            this->viewport_dim.x, this->viewport_dim.y, glowl::FramebufferObject::DepthStencilType::NONE);
+        try {
+            this->fbo = std::make_unique<glowl::FramebufferObject>(
+                this->viewport_dim.x, this->viewport_dim.y, glowl::FramebufferObject::DepthStencilType::NONE);
+        } catch (glowl::FramebufferObjectException e) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Error during framebuffer object creation: '%s'. [%s, %s, line %d]\n", e.what(), __FILE__,
+                __FUNCTION__, __LINE__);
+            return false;
+        }
         this->fbo->createColorAttachment(GL_RGBA32F, GL_RGBA, GL_FLOAT); // 0 Output Image
         this->fbo->createColorAttachment(GL_RG32F, GL_RG, GL_FLOAT);     // 1 Object ID(red) and Depth (green)
         GUI_GL_CHECK_ERROR

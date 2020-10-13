@@ -79,6 +79,8 @@ private:
     unsigned int graph_layout;
     float parameter_sidebar_width;
     bool reset_zooming;
+    bool increment_zooming;
+    bool decrement_zooming;
     std::string param_name_space;
     std::string current_main_view_name;
     ImVec2 multiselect_start_pos;

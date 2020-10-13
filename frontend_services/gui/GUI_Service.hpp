@@ -86,7 +86,8 @@ private:
         double time;
         glm::vec2 framebuffer_size;
         glm::vec2 window_size;
-        megamol::module_resources::IOpenGL_Context const * opengl_context_ptr;
+        megamol::core::MegaMolGraph* megamol_graph;
+        megamol::module_resources::IOpenGL_Context const* opengl_context_ptr;
     };
 
     std::vector<ModuleResource> m_providedResourceReferences;
