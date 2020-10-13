@@ -725,10 +725,12 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        this->DeleteGraph(in_graph_uid);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        this->DeleteGraph(in_graph_uid);
         return false;
     }
 
