@@ -21,6 +21,8 @@ BreakConstructorInitializers: BeforeComma
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 DerivePointerAlignment: false
 IncludeCategories:
+  - Regex:           '^"stdafx'
+    Priority:        -1
   - Regex:           '^<'
     Priority:        1
   - Regex:           '^"'
