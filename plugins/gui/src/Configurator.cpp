@@ -115,6 +115,7 @@ bool megamol::gui::Configurator::Draw(
                 "[GUI] Invalid expected number of graphs: %i (should be 1, for loaded running graph). [%s, %s, line "
                 "%d]\n",
                 graph_count, __FILE__, __FUNCTION__, __LINE__);
+            return false;
         }
 
         // Load configurator state once after available modules and call are loaded
