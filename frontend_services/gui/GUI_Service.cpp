@@ -80,12 +80,11 @@ void GUI_Service::digestChangedRequestedResources() {
     // Check for updates in requested resources --------------------------------
 
     /// MegaMolGraph = resource index 0
-    auto megamol_graph_ptr = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>(); 
+    auto graph_resource_ptr = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>(); 
 
     // Synchronise changes between core graph and gui graph
     /// WARNING: Changing a constant type will lead to an undefined behavior!
-    auto core_graph = const_cast<megamol::core::MegaMolGraph*>(megamol_graph_ptr);
-    gui->SynchronizeGraphs(core_graph);
+    this->m_resource_state.megamol_graph = const_cast<megamol::core::MegaMolGraph*>(graph_resource_ptr);
 
     /// WindowEvents = resource index 1
     auto window_events = &this->m_requestedResourceReferences[1].getResource<megamol::module_resources::WindowEvents>();
@@ -181,6 +180,12 @@ void GUI_Service::preGraphRender() {
 
     if (this->m_resource_state.opengl_context_ptr) {
         this->m_resource_state.opengl_context_ptr->activate();
+
+        if (this->m_resource_state.megamol_graph != nullptr) {
+            // Requires enabled OpenGL context
+            gui->SynchronizeGraphs(this->m_resource_state.megamol_graph);
+        }
+
         gui->PreDraw(this->m_resource_state.framebuffer_size, this->m_resource_state.window_size, this->m_resource_state.time);
         this->m_resource_state.opengl_context_ptr->close();
     }
