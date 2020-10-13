@@ -10,7 +10,10 @@
 #define _WINSOCKAPI_
 #include "Lua_Service_Wrapper.hpp"
 
+
 #include "mmcore/utility/LuaHostService.h"
+
+#include "Screenshots.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
@@ -61,7 +64,12 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     this->m_providedResourceReferences = {};
 
-    this->m_requestedResourcesNames = {"FrontendResourcesList"}; //= {"ZMQ_Context"};
+    this->m_requestedResourcesNames = 
+    {
+        "FrontendResourcesList",
+        "GLFrontbufferImageSource", // for screenshots
+        "ImageToPNGWriter"
+    }; //= {"ZMQ_Context"};
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
         new megamol::core::utility::LuaHostNetworkConnectionsBroker{},
@@ -98,10 +106,18 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<ModuleResource> reso
     // TODO: do something with ZMQ resource we get here
     m_requestedResourceReferences = resources;
 
-    auto& callback = resources[0].getResource< 
+    auto& list_callback = resources[0].getResource< 
         std::function< std::vector<std::string> (void)> 
     >();
-    luaAPI.setListResourcesCallback(callback);
+    luaAPI.setListResourcesCallback(list_callback);
+
+    auto screenshot_callback = [&](std::string const& filename) {
+        auto& frontbuffer_source = m_requestedResourceReferences[1].getResource< megamol::module_resources::GLScreenshotSource >();
+        auto& to_file_writer = m_requestedResourceReferences[2].getResource< megamol::module_resources::ScreenshotToFileTrigger >();
+
+        to_file_writer.write_screenshot(frontbuffer_source, filename);
+    };
+    luaAPI.setScreenshotCallback(screenshot_callback);
 }
 
 // -------- main loop callbacks ---------
@@ -161,9 +177,6 @@ void Lua_Service_Wrapper::postGraphRender() {
     // update window name
     // swap buffers, glClear
 }
-
-// this will be removed soon and is only here for compatibility reasons
-const void* Lua_Service_Wrapper::getSharedDataPtr() const { return nullptr; }
 
 
 } // namespace frontend

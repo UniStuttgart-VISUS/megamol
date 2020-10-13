@@ -41,10 +41,6 @@ public:
 
     virtual bool init(void* configPtr) = 0; // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
     virtual void close() = 0;
-
-    virtual const void* getSharedDataPtr() const {
-        return nullptr;
-    } // ptr non-owning, share data should be only borrowed
 	
     virtual void updateProvidedResources() = 0;
     virtual void digestChangedRequestedResources() = 0;
