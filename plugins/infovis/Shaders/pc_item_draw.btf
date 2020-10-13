@@ -181,10 +181,17 @@ void main()
 	//out_.color = vec4(pc_item_dataValue(pc_item_dataID(out_.itemID, pc_dimension(theID+1)), pc_dimension(theID+1)), 0.0, 1.0, 1.0);
   }
   if(out_.worldSpaceAxis == dimensionCount - 1){
-    tempL =  (projection * modelView * vertex - projection * modelView * vertexL).xy;
-    vec2 oL = vec2(-tempL.y, tempL.x);
-	tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oL, vec2(0.0, 1.0));
+    //tempL =  (projection * modelView * vertex - projection * modelView * vertexL).xy;
+    //vec2 oL = vec2(-tempL.y, tempL.x);
+	//tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oL, vec2(0.0, 1.0));
 	//out_.color = vec4(1.0, 0.0, 1.0, 1.0);
+    tempL = (projection * modelView * vertex - projection * modelView * vertexL).xy;
+	tempL = normalize(tempL);
+	tempL.x *= widthR;
+	tempL.y *= heightR;
+	vec2 oL = vec2(-tempL.y, tempL.x);
+	oL = thickness * normalize(oL);
+	tempL = vec2(0.0, 1.0) * thickness * thickness / dot(oL, vec2(0.0, 1.0));
   }
   vec2 offset = (-0.5 + (gl_VertexID % 2)) * tempL;
   //offset.y *= 2.3839096683;
