@@ -109,11 +109,98 @@ static void APIENTRY opengl_debug_message_callback(GLenum source, GLenum type, G
         GL_DEBUG_SEVERITY_NOTIFICATION   Anything that isn't an
                                          error or performance issue.
     */
-    if (source == GL_DEBUG_SOURCE_API || source == GL_DEBUG_SOURCE_SHADER_COMPILER)
-        if (type == GL_DEBUG_TYPE_ERROR || type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR ||
-            type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR)
-            if (severity == GL_DEBUG_SEVERITY_HIGH || severity == GL_DEBUG_SEVERITY_MEDIUM)
-                std::cout << "OpenGL Error: " << message << " (" << get_message_id_name(id) << ")" << std::endl;
+    //if (source == GL_DEBUG_SOURCE_API || source == GL_DEBUG_SOURCE_SHADER_COMPILER)
+    //    if (type == GL_DEBUG_TYPE_ERROR || type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR ||
+    //        type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR)
+    //        if (severity == GL_DEBUG_SEVERITY_HIGH || severity == GL_DEBUG_SEVERITY_MEDIUM)
+    //            std::cout << "OpenGL Error: " << message << " (" << get_message_id_name(id) << ")" << std::endl;
+
+    const char *sourceText, *typeText, *severityText;
+    switch (source) {
+    case GL_DEBUG_SOURCE_API:
+        sourceText = "API";
+        break;
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+        sourceText = "Window System";
+        break;
+    case GL_DEBUG_SOURCE_SHADER_COMPILER:
+        sourceText = "Shader Compiler";
+        break;
+    case GL_DEBUG_SOURCE_THIRD_PARTY:
+        sourceText = "Third Party";
+        break;
+    case GL_DEBUG_SOURCE_APPLICATION:
+        sourceText = "Application";
+        break;
+    case GL_DEBUG_SOURCE_OTHER:
+        sourceText = "Other";
+        break;
+    default:
+        sourceText = "Unknown";
+        break;
+    }
+    switch (type) {
+    case GL_DEBUG_TYPE_ERROR:
+        typeText = "Error";
+        break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+        typeText = "Deprecated Behavior";
+        break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+        typeText = "Undefined Behavior";
+        break;
+    case GL_DEBUG_TYPE_PORTABILITY:
+        typeText = "Portability";
+        break;
+    case GL_DEBUG_TYPE_PERFORMANCE:
+        typeText = "Performance";
+        break;
+    case GL_DEBUG_TYPE_OTHER:
+        typeText = "Other";
+        break;
+    case GL_DEBUG_TYPE_MARKER:
+        typeText = "Marker";
+        break;
+    default:
+        typeText = "Unknown";
+        break;
+    }
+    switch (severity) {
+    case GL_DEBUG_SEVERITY_HIGH:
+        severityText = "High";
+        break;
+    case GL_DEBUG_SEVERITY_MEDIUM:
+        severityText = "Medium";
+        break;
+    case GL_DEBUG_SEVERITY_LOW:
+        severityText = "Low";
+        break;
+    case GL_DEBUG_SEVERITY_NOTIFICATION:
+        severityText = "Notification";
+        break;
+    default:
+        severityText = "Unknown";
+        break;
+    }
+    const int outputlength = 8192;
+    static char outputstring[outputlength];
+//    std::string stack = getStack();
+//#ifdef _WIN32
+//    sprintf_s(outputstring, outputlength, "[%s %s] (%s %u) %s\nstack trace:\n%s\n", sourceText, severityText, typeText, id, message, stack.c_str());
+//    OutputDebugStringA(outputstring);
+//#else
+//    sprintf(outputstring, "[%s %s] (%s %u) %s\nstack trace:\n%s\n", sourceText, severityText, typeText, id, message, stack.c_str());
+//#endif
+    sprintf_s(outputstring, outputlength, "[%s %s] (%s %u) %s\nstack trace:\n%s\n", sourceText, severityText, typeText, id, message, "disabled");
+    OutputDebugStringA(outputstring);
+
+    if (type == GL_DEBUG_TYPE_ERROR) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("%s", outputstring);
+    } else if (type == GL_DEBUG_TYPE_OTHER || type == GL_DEBUG_TYPE_MARKER) {
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("%s", outputstring);
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("%s", outputstring);
+    }
 }
 
 namespace megamol {
