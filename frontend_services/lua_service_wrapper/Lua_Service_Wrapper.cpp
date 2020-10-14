@@ -150,6 +150,14 @@ void Lua_Service_Wrapper::updateProvidedResources() {
         }
     }
 
+    for (auto& file : m_queuedProjectFiles) {
+        std::string result;
+        log("running file " + file);
+        luaAPI.RunFile(file, result);
+        log("executed file " + file + ": " + result);
+    }
+    m_queuedProjectFiles.clear();
+
     need_to_shutdown |= luaAPI.getShutdown();
 
     if (need_to_shutdown)
@@ -164,10 +172,7 @@ void Lua_Service_Wrapper::digestChangedRequestedResources() {
     for(auto& event: window_events.dropped_path_events) {
         for (auto& file_path : event) {
             if(file_path.find(".lua") == file_path.size()-4) {
-                std::string result;
-                luaAPI.RunFile(file_path, result);
-
-                log("executed file " + file_path + ": " + result);
+                m_queuedProjectFiles.push_back(file_path);
             }
         }
     }

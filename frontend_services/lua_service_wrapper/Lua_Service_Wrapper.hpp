@@ -189,6 +189,8 @@ private:
     // exception that should terminate program execution. you do NOT catch or check for that exception or need to care
     // for it in any way!)
     std::vector<ModuleResource> m_requestedResourceReferences;
+
+    std::vector<std::string> m_queuedProjectFiles;
 };
 
 } // namespace frontend
