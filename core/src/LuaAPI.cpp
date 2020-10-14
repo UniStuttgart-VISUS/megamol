@@ -1043,10 +1043,14 @@ int megamol::core::LuaAPI::Invoke(lua_State *L) {
 }
 
 int megamol::core::LuaAPI::Screenshot(lua_State* L) {
-    const std::string filename (luaL_checkstring(L, 1));
+    int n = lua_gettop(L);
+    if (n == 1) {
+        const std::string filename (luaL_checkstring(L, 1));
+        mmScreenshot_callback_(filename);
+    } else {
+        luaApiInterpreter_.ThrowError(MMC_LUA_MMSCREENSHOT " requires one parameter: fileName");
+    }
 
-    mmScreenshot_callback_(filename);
-
-    return 1;
+    return 0;
 }
 

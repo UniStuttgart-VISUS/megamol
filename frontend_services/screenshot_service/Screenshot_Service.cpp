@@ -177,6 +177,11 @@ bool Screenshot_Service::init(const Config& config) {
         "IOpenGL_Context"
     };
 
+    this->m_frontbufferToPNG_trigger = [&](std::string const& filename) -> bool
+    {
+        return m_toFileWriter_resource.write_screenshot(m_frontbufferSource_resource, filename);
+    };
+
     log("initialized successfully");
     return true;
 }
@@ -190,8 +195,7 @@ void Screenshot_Service::close() {
 std::vector<ModuleResource>& Screenshot_Service::getProvidedResources() {
      this->m_providedResourceReferences =
     {
-        {"GLFrontbufferImageSource", m_frontbufferSource_resource},
-        {"ImageToPNGWriter", m_toFileWriter_resource}
+        {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger}
     };
 
     return m_providedResourceReferences;

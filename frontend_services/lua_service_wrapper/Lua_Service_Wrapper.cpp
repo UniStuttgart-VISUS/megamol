@@ -67,8 +67,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
     this->m_requestedResourcesNames = 
     {
         "FrontendResourcesList",
-        "GLFrontbufferImageSource", // for screenshots
-        "ImageToPNGWriter"
+        "GLFrontbufferToPNG_ScreenshotTrigger" // for screenshots
     }; //= {"ZMQ_Context"};
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
@@ -111,12 +110,7 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<ModuleResource> reso
     >();
     luaAPI.setListResourcesCallback(list_callback);
 
-    auto screenshot_callback = [&](std::string const& filename) {
-        auto& frontbuffer_source = m_requestedResourceReferences[1].getResource< megamol::module_resources::GLScreenshotSource >();
-        auto& to_file_writer = m_requestedResourceReferences[2].getResource< megamol::module_resources::ScreenshotToFileTrigger >();
-
-        to_file_writer.write_screenshot(frontbuffer_source, filename);
-    };
+    auto& screenshot_callback = m_requestedResourceReferences[1].getResource< std::function<bool(std::string const&)> >();
     luaAPI.setScreenshotCallback(screenshot_callback);
 }
 
