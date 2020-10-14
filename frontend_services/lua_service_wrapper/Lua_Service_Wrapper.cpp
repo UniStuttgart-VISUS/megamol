@@ -117,6 +117,7 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<ModuleResource> reso
 
     luaAPI.setLastFrameTimeCallback([this]() {
         auto window_events = &this->m_requestedResourceReferences[2].getResource<megamol::module_resources::WindowEvents>();
+        // BUG: this is NOT the duration of the last frame
         return static_cast<float>(window_events->previous_state.time);
     });
 }
