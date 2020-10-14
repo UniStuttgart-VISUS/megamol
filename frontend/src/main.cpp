@@ -238,13 +238,21 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
     options.add_options()
         ("project-files", "projects to load", cxxopts::value<std::vector<std::string>>())
         ("host", "address of lua host server, default: "+config.lua_host_address, cxxopts::value<std::string>())
-        ("noexample", "dont load minimal spheres example project", cxxopts::value<bool>())
-        ("nokhrdebug", "disable OpenGL KHR debug messages", cxxopts::value<bool>())
+        ("noexample", "don't load minimal spheres example project", cxxopts::value<bool>())
+        ("khrdebug", "enable OpenGL KHR debug messages", cxxopts::value<bool>()->default_value("false"))
+        ("help", "print help")
         ;
+
     options.parse_positional({"project-files"});
 
     auto parsed_options = options.parse(argc, argv);
     std::string res;
+
+    if (parsed_options.count("help")) {
+        std::cout << options.help({""}) << std::endl;
+        exit(0);
+    }
+
 
     // verify project files exist in file system
     if (parsed_options.count("project-files")) {
@@ -267,9 +275,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         config.load_example_project = !parsed_options["noexample"].as<bool>();
     }
 
-    if (parsed_options.count("nokhrdebug")) {
-        config.opengl_khr_debug = !parsed_options["nokhrdebug"].as<bool>();
-    }
+    config.opengl_khr_debug = parsed_options["khrdebug"].as<bool>();
 
     return config;
 }
