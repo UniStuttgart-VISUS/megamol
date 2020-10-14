@@ -583,7 +583,7 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName, std
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
-        log("error. could not find module: " + moduleName);
+        log("error adding graph entry point. could not find module: " + moduleName);
         return false;
     }
     
@@ -611,21 +611,14 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string moduleName) 
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
-        log("error. could not find module: " + moduleName);
-        return false;
-    }
-
-    auto module_ptr = module_it->modulePtr;
-    megamol::core::view::AbstractView* view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
-
-    if (!view_ptr) {
-        log("error. module: " + moduleName + " is not a view module. could not set as graph rendering entry point.");
+        log("error removing graph entry point. could not find module: " + moduleName);
         return false;
     }
 
 	this->graph_entry_points.remove_if([&](GraphEntryPoint& entry) { return entry.moduleName == moduleName; });
 
     module_it->isGraphEntryPoint = false;
+    log("remove graph entry point: " + moduleName);
 
     return true;
 }
