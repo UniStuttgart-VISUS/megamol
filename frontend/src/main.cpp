@@ -245,37 +245,43 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
 
     options.parse_positional({"project-files"});
 
-    auto parsed_options = options.parse(argc, argv);
-    std::string res;
+    try {
+        auto parsed_options = options.parse(argc, argv);
+        std::string res;
 
-    if (parsed_options.count("help")) {
-        std::cout << options.help({""}) << std::endl;
-        exit(0);
-    }
-
-
-    // verify project files exist in file system
-    if (parsed_options.count("project-files")) {
-        const auto& v = parsed_options["project-files"].as<std::vector<std::string>>();
-        for (const auto& p : v) {
-            if (!stdfs::exists(p)) {
-                std::cout << "Project file \"" << p << "\" does not exist!" << std::endl;
-                std::exit(1);
-            }
+        if (parsed_options.count("help")) {
+            std::cout << options.help({""}) << std::endl;
+            exit(0);
         }
 
-        config.project_files = v;
-    }
 
-    if (parsed_options.count("host")) {
-        config.lua_host_address = parsed_options["host"].as<std::string>();
-    }
+        // verify project files exist in file system
+        if (parsed_options.count("project-files")) {
+            const auto& v = parsed_options["project-files"].as<std::vector<std::string>>();
+            for (const auto& p : v) {
+                if (!stdfs::exists(p)) {
+                    std::cout << "Project file \"" << p << "\" does not exist!" << std::endl;
+                    std::exit(1);
+                }
+            }
 
-    if (parsed_options.count("noexample")) {
-        config.load_example_project = !parsed_options["noexample"].as<bool>();
-    }
+            config.project_files = v;
+        }
 
-    config.opengl_khr_debug = parsed_options["khrdebug"].as<bool>();
+        if (parsed_options.count("host")) {
+            config.lua_host_address = parsed_options["host"].as<std::string>();
+        }
+
+        if (parsed_options.count("noexample")) {
+            config.load_example_project = !parsed_options["noexample"].as<bool>();
+        }
+
+        config.opengl_khr_debug = parsed_options["khrdebug"].as<bool>();
+    } catch (cxxopts::option_not_exists_exception ex) {
+        std::cout << ex.what() << std::endl;
+        std::cout << options.help({""}) << std::endl;
+        std::exit(1);
+    }
 
     return config;
 }
