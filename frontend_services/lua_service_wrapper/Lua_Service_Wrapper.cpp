@@ -16,6 +16,7 @@
 #include "Screenshots.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
+#include "Window_Events.h"
 #include "mmcore/utility/log/Log.h"
 static void log(const char* text) {
     const std::string msg = "Lua_Service_Wrapper: " + std::string(text) + "\n";
@@ -67,7 +68,8 @@ bool Lua_Service_Wrapper::init(const Config& config) {
     this->m_requestedResourcesNames = 
     {
         "FrontendResourcesList",
-        "GLFrontbufferToPNG_ScreenshotTrigger" // for screenshots
+        "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
+        "WindowEvents" // for LastFrameTime
     }; //= {"ZMQ_Context"};
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
@@ -112,6 +114,11 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<ModuleResource> reso
 
     auto& screenshot_callback = m_requestedResourceReferences[1].getResource< std::function<bool(std::string const&)> >();
     luaAPI.setScreenshotCallback(screenshot_callback);
+
+    luaAPI.setLastFrameTimeCallback([this]() {
+        auto window_events = &this->m_requestedResourceReferences[2].getResource<megamol::module_resources::WindowEvents>();
+        return static_cast<float>(window_events->previous_state.time);
+    });
 }
 
 // -------- main loop callbacks ---------
