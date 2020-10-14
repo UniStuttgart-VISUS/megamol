@@ -16,6 +16,7 @@
 
 #include "mmcore/MegaMolGraphTypes.h"
 #include "mmcore/MegaMolGraph_Convenience.h"
+#include "mmcore/MegaMolGraph_Serialization.h"
 
 #include "mmcore/RootModuleNamespace.h"
 
@@ -24,7 +25,7 @@
 namespace megamol {
 namespace core {
 
-class MEGAMOLCORE_API MegaMolGraph : public serializable, public deferrable_construction {
+class MEGAMOLCORE_API MegaMolGraph { //: public serializable, public deferrable_construction {
 
     // todo: where do the descriptionmanagers go?
     // todo: what about the view / job descriptions?
@@ -80,12 +81,9 @@ public:
 
     // TODO: the 'serializable' and 'deferrable construction' concepts result in basically the same implementation?
     // serializable
-    std::string Serialize() const override { return ""; };
-    void Deserialize(std::string const& descr) override{};
+    MegaMolGraph_Serialization SerializeGraph() const;
 
     // deferrable_construction
-    bool create() override { return false; };
-    void release() override{};
 
     //////////////////////////// Modules and Calls loaded from DLLs ///////////////////////////////
 

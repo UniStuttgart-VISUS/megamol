@@ -5,10 +5,13 @@
 
 namespace mcu_graphics = megamol::core::utility::graphics;
 
-mcu_graphics::ScreenShotComments::ScreenShotComments(megamol::core::CoreInstance *core_instance, const std::optional<comments_storage_map> &additional_comments) {
+mcu_graphics::ScreenShotComments::ScreenShotComments(megamol::core::MegaMolGraph_Serialization const& serialization, const std::optional<comments_storage_map> &additional_comments) {
 
-    std::string serInstances, serModules, serCalls, serParams;
-    core_instance->SerializeGraph(serInstances, serModules, serCalls, serParams);
+    std::string const& serInstances = serialization.serInstances;
+    std::string const& serModules = serialization.serModules;
+    std::string const& serCalls = serialization.serCalls;
+    std::string const& serParams = serialization.serParams;
+
     const auto config_string = serInstances + "\n" + serModules + "\n" + serCalls + "\n" + serParams;
 
     the_comments["Title"] = "MegaMol Screen Shot " + utility::DateTime::CurrentDateTimeFormatted();
