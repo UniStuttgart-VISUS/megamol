@@ -117,7 +117,7 @@ bool view_rendering_execution(megamol::core::Module::ptr_type module_ptr, std::v
 		maybe_opengl->activate(); // makes GL context current
 	
 	if (!view_ptr) {
-		std::cout << "error. module is not a view module. could not set as graph rendering entry point." << std::endl;
+		std::cout << "error. module is not a view module. could not use as rendering entry point." << std::endl;
 		return false;
 	}
 	

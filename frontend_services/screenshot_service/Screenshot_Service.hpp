@@ -60,6 +60,8 @@ private:
     megamol::module_resources::GLScreenshotSource m_frontbufferSource_resource;
     megamol::module_resources::ScreenshotToFileTrigger m_toFileWriter_resource;
 
+    std::function<bool(std::string const&)> m_frontbufferToPNG_trigger;
+
     std::vector<ModuleResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<ModuleResource> m_requestedResourceReferences;
