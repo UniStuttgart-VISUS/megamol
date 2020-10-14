@@ -23,7 +23,7 @@ namespace view {
 	MEGAMOLCORE_API void view_consume_mouse_events(AbstractView& view, megamol::frontend::ModuleResource const& resource);
 	MEGAMOLCORE_API void view_consume_window_events(AbstractView& view, megamol::frontend::ModuleResource const& resource);
 	MEGAMOLCORE_API void view_consume_framebuffer_events(AbstractView & view, megamol::frontend::ModuleResource const& resource);
-	MEGAMOLCORE_API void view_poke_rendering(AbstractView & view, megamol::frontend::ModuleResource const& resource);
+	MEGAMOLCORE_API void view_poke_rendering(AbstractView& view);//, megamol::frontend::ModuleResource const& resource);
 
 	// to do this right we should be able to as a view object which runtime resources it expects (keyboard inputs, gl context)
 	// and just pass those resources to the view when rendering a frame
