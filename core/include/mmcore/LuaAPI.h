@@ -96,9 +96,11 @@ public:
     void setListResourcesCallback(std::function<std::vector<std::string>()> const& callback);
 
     /**
-     * Sets the function callback used to trigger screenshots fron frontbuffer into a png file.
+     * Sets the function callback used to trigger screenshots from frontbuffer into a png file.
      */
     void setScreenshotCallback(std::function<void(std::string const&)> callback);
+
+    void setLastFrameTimeCallback(std::function<float()> callback);
 
     /**
      * Communicates mmQuit request to rest of MegaMol main loop.
@@ -233,6 +235,7 @@ protected:
 
     int Invoke(lua_State* L);
     int Screenshot(lua_State* L);
+    int LastFrameTime(lua_State* L);
 
 private:
 
@@ -267,6 +270,7 @@ private:
     std::function<bool()> mmFlush_callback_; // renders one next frame via main loop
     std::function<std::vector<std::string>()> mmListResources_callback_; // returns list of resources available in frontend
     std::function<void(std::string const&)> mmScreenshot_callback_;
+    std::function<float()> mmLastFrameTime_callback_;
 
     bool shutdown_ = false;
 
