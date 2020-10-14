@@ -59,25 +59,27 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
     megamol::core::moldyn::MultiParticleDataCall* cd =
         this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
 
+    
+
+    //auto const minFrameCount = cd->FrameCount();
+
+    //if (minFrameCount == 0) return false;
+
+    //auto frameTime = 0;
+
+    //if (os->FrameID() >= minFrameCount) {
+    //    cd->SetFrameID(minFrameCount - 1, true); // isTimeForced flag set to true
+    //    frameTime = minFrameCount - 1;
+    //} else {
+    //    cd->SetFrameID(os->FrameID(), true); // isTimeForced flag set to true
+    //    frameTime = os->FrameID();
+    //}
+    cd->SetFrameID(os->FrameID(), true);
     if (!(*cd)(1)) return false;
 
-    auto const minFrameCount = cd->FrameCount();
-
-    if (minFrameCount == 0) return false;
-
-    auto frameTime = 0;
-
-    if (os->FrameID() >= minFrameCount) {
-        cd->SetFrameID(minFrameCount - 1, true); // isTimeForced flag set to true
-        frameTime = minFrameCount - 1;
-    } else {
-        cd->SetFrameID(os->FrameID(), true); // isTimeForced flag set to true
-        frameTime = os->FrameID();
-    }
-
-    if (this->datahash != cd->DataHash() || this->time != frameTime || this->InterfaceIsDirty()) {
+    if (this->datahash != cd->DataHash() || this->time != cd->FrameID() || this->InterfaceIsDirty()) {
         this->datahash = cd->DataHash();
-        this->time = frameTime;
+        this->time = cd->FrameID();
     } else {
         return true;
     }
@@ -102,7 +104,8 @@ bool OSPRayPKDGeometry::getDataCallback(megamol::core::Call& call) {
         ospCommit(bboxData);
 
         ospSet1f(geo.back(), "radius", parts.GetGlobalRadius());
-        ospSet1i(geo.back(), "colorType", colorType);
+        //ospSet1i(geo.back(), "colorType", colorType);
+        ospSet1i(geo.back(), "colorType", 2);
         ospSetData(geo.back(), "position", vertexData);
         // ospSetData(geo.back(), "bbox", bboxData);
         ospSetData(geo.back(), "bbox", nullptr);
