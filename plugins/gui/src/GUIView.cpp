@@ -27,9 +27,11 @@ GUIView::GUIView()
     }
 }
 
+
 GUIView::~GUIView() {
     this->Release();
 }
+
 
 bool GUIView::create() {
     return gui.CreateContext_GL(this->GetCoreInstance());

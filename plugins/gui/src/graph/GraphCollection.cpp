@@ -631,7 +631,8 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             /* XXX MEGAMOL GRAPH
             for (auto& call : megamol_graph->ListCalls()) {
                 auto call_ptr = call.callPtr;
-                if (call_ptr == nullptr) continue;
+                if (call_ptr == nullptr)
+                    continue;
                 bool add_new_call = true;
                 for (auto& call_info : gui_graph_call_info) {
                     if ((call_info.class_name == call.request.className) &&
@@ -640,7 +641,8 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                         add_new_call = false;
                     }
                 }
-                if (!add_new_call) continue;
+                if (!add_new_call)
+                    continue;
 
                 auto call_class_name = call.request.className;
                 std::string call_caller_name;

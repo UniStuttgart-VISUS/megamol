@@ -13,6 +13,7 @@
  * - Reset Windows:             Shift + F7-F11
  * - Search Parameter:          Ctrl  + p
  * - Save Running Project:      Ctrl  + s
+ * - Trigger Screenshot:        F3
  * - Quit Program:              Alt   + F4
  */
 
@@ -36,9 +37,11 @@ GUIWindows::GUIWindows(void)
         , window_collection()
         , configurator()
         , state()
-        , shutdown(false)
+        , shutdown_triggered(false)
         , graph_fonts_reserved(0)
         , graph_uid(GUI_INVALID_ID)
+        , screenshot_triggered(false)
+        , screenshot_filename()
         , file_browser()
         , search_widget()
         , tf_editor_ptr(nullptr)
@@ -76,6 +79,8 @@ GUIWindows::GUIWindows(void)
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F3, core::view::Modifier::NONE), false};
 
     this->tf_editor_ptr = std::make_shared<TransferFunctionEditor>();
 }
@@ -135,7 +140,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         /// XXX Because if 'main' (= first) created imgui context is destroyed, fonts can not be restored for other
         /// imgui contexts?!
         this->triggerCoreInstanceShutdown();
-        this->shutdown = true;
+        this->shutdown_triggered = true;
         return false;
     }
 
@@ -160,12 +165,16 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // Check hotkey, parameters and hotkey assignment
     if (this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM].is_pressed) {
         this->triggerCoreInstanceShutdown();
-        this->shutdown = true;
+        this->shutdown_triggered = true;
         return true;
     }
     if (this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].is_pressed) {
         this->state.menu_visible = !this->state.menu_visible;
         this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].is_pressed = false;
+    }
+    if (this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT].is_pressed) {
+        this->screenshot_triggered = true;
+        this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT].is_pressed = false;
     }
     this->validateParameters();
     this->checkMultipleHotkeyAssignement();
@@ -687,6 +696,26 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 }
 
 
+bool megamol::gui::GUIWindows::ConsumeTriggeredScreenshot(void) {
+
+    bool request_screenshot = this->screenshot_triggered;
+    this->screenshot_triggered = false;
+    if (request_screenshot && this->screenshot_filename.empty()) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Filename for screenshot should not be empty. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        request_screenshot = false;
+    }
+    return request_screenshot;
+}
+
+const std::string megamol::gui::GUIWindows::GetScreenshotFileName(void) {
+
+    std::string filename = this->screenshot_filename;
+    if (filename.empty()) {}
+    return filename;
+}
+
+
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
 
     // 1) Load all known calls from core instance ONCE ---------------------------
@@ -723,12 +752,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             case (Graph::QueueAction::RENAME_MODULE): {
                 if (megamol_graph != nullptr) {
                     /* XXX MEGAMOL GRAPH
-                    bool rename_success = false;
-                    megamol::core::Module::ptr_type core_module = megamol_graph->FindModule(data.name_id);
-                    if (core_module != nullptr) {
-                        core_module->setName(vislib::StringA(data.rename_id.c_str()));
-                        rename_success = true;
-                    }
+                    bool rename_success = megamol_graph->RenameModule(data.name_id, data.rename_id);
                     graph_sync_success &= rename_success;
                     */
                 } else if (this->core_instance != nullptr) {
@@ -826,7 +850,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             GraphPtr_t graph_ptr;
             if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
                 std::string script_filename;
-                // Try setting initial project file name from lua state of core instance
+                // Try setting initial project filename from lua state of core instance
                 if (graph_ptr->GetFilename().empty()) {
                     if (this->core_instance != nullptr) {
                         script_filename = this->core_instance->GetLuaState()->GetScriptPath();
@@ -1044,6 +1068,7 @@ bool GUIWindows::createContext(void) {
     this->state.last_instance_time = 0.0;
     this->state.open_popup_about = false;
     this->state.open_popup_save = false;
+    this->state.open_popup_screenshot = false;
     this->state.menu_visible = true;
     this->state.hotkeys_check_once = true;
     // Adding additional utf-8 glyph ranges
@@ -1578,7 +1603,7 @@ void GUIWindows::drawFontWindowCallback(WindowCollection::WindowConfiguration& w
         wc.buf_font_size = 5.0f; // minimum valid font size
     }
 
-    label = "Font File Name (.ttf)";
+    label = "Font Filename (.ttf)";
     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
     GUIUtils::Utf8Encode(wc.buf_font_file);
     ImGui::InputText(label.c_str(), &wc.buf_font_file, ImGuiInputTextFlags_AutoSelectAll);
@@ -1590,12 +1615,18 @@ void GUIWindows::drawFontWindowCallback(WindowCollection::WindowConfiguration& w
             this->state.font_size = wc.buf_font_size;
         }
     } else {
-        ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font file name.");
+        ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font filename.");
     }
 }
 
 
 void GUIWindows::drawMenu(void) {
+
+    bool megamolgraph_interface = false;
+    GraphPtr_t graph_ptr;
+    if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
+        megamolgraph_interface = (graph_ptr->GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH);
+    }
 
     if (ImGui::BeginMenu("File")) {
         // Load/save parameter values to LUA file
@@ -1607,7 +1638,7 @@ void GUIWindows::drawMenu(void) {
         if (ImGui::MenuItem("Exit", "ALT + 'F4'")) {
             // Exit program
             this->triggerCoreInstanceShutdown();
-            this->shutdown = true;
+            this->shutdown_triggered = true;
         }
         ImGui::EndMenu();
     }
@@ -1653,6 +1684,20 @@ void GUIWindows::drawMenu(void) {
         this->window_collection.EnumWindows(func);
 
         ImGui::EndMenu();
+    }
+
+    // Screenshot
+    if (megamolgraph_interface) {
+        if (ImGui::BeginMenu("Screenshot")) {
+            if (ImGui::MenuItem("Select Filename", this->screenshot_filename.c_str())) {
+                this->state.open_popup_screenshot = true;
+            }
+            if (ImGui::MenuItem("Trigger",
+                    this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT].keycode.ToString().c_str())) {
+                this->screenshot_triggered = true;
+            }
+            ImGui::EndMenu();
+        }
     }
 
     // Help
@@ -1770,6 +1815,11 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         this->state.open_popup_save = false;
         this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].is_pressed = false;
     }
+
+    // Filename for screenshot pop-up
+    this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Select Filename for Screenshot",
+        this->state.open_popup_screenshot, this->screenshot_filename, ".png");
+    this->state.open_popup_screenshot = false;
 }
 
 

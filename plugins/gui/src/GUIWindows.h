@@ -129,20 +129,29 @@ namespace gui {
         }
 
         /**
-         * Return true if user triggered shutdown via gui.
+         * Shutdown.
          */
-        inline bool ShouldShutdown(void) const {
-            return this->shutdown;
+        inline bool ConsumeTriggeredShutdown(void) {
+            bool request_shutdown = this->shutdown_triggered;
+            this->shutdown_triggered = false;
+            return request_shutdown;
         }
+
+        /**
+         * Screenshot.
+         */
+        bool ConsumeTriggeredScreenshot(void);
+        const std::string GetScreenshotFileName(void);
 
         /**
          * Synchronise changes between core graph <-> gui graph.
          *
-         * - 'Old' core graph:    Call this function after(!) rendering of current frame.
-         *                        This way, graph changes will be applied next frame (and not 2 frames later).
-         *                        In this case in PreDraw() a gui graph is created once.
-         * - 'New' megamol graph: Call this function in GUI_Service::digestChangedRequestedResources() as pre-rendering
-         * step. In this case a new gui graph is created before first call of PreDraw() and a gui graph already exists.
+         * - 'Old' core instance graph:    Call this function after(!) rendering of current frame.
+         *                                 This way, graph changes will be applied next frame (and not 2 frames later).
+         *                                 In this case in PreDraw() a gui graph is created once.
+         * - 'New' megamol graph:          Call this function in GUI_Service::digestChangedRequestedResources() as
+         * pre-rendering step. In this case a new gui graph is created before first call of PreDraw() and a gui graph
+         * already exists.
          *
          * @param megamol_graph    If no megamol_graph is given, 'old' graph is synchronised via core_instance.
          */
@@ -169,11 +178,12 @@ namespace gui {
             bool win_save_state;                   // Flag indicating that window state should be written to parameter.
             float win_save_delay;   // Flag indicating how long to wait for saving window state since last user action.
             std::string win_delete; // Name of the window to delete.
-            double last_instance_time; // Last instance time.
-            bool open_popup_about;     // Flag for opening about pop-up
-            bool open_popup_save;      // Flag for opening save pop-up
-            bool menu_visible;         // Flag indicating menu state
-            bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once
+            double last_instance_time;  // Last instance time.
+            bool open_popup_about;      // Flag for opening about pop-up
+            bool open_popup_save;       // Flag for opening save pop-up
+            bool open_popup_screenshot; // Flag for opening screenshot file pop-up
+            bool menu_visible;          // Flag indicating menu state
+            bool hotkeys_check_once;    // WORKAROUND: Check multiple hotkey assignments once
         };
 
         /** The GUI hotkey array index mapping. */
@@ -182,7 +192,8 @@ namespace gui {
             PARAMETER_SEARCH = 1,
             SAVE_PROJECT = 2,
             MENU = 3,
-            INDEX_COUNT = 4
+            TRIGGER_SCREENSHOT = 4,
+            INDEX_COUNT = 5
         };
 
         // VARIABLES --------------------------------------------------------------
@@ -221,13 +232,17 @@ namespace gui {
         StateBuffer state;
 
         /** Flag indicating user triggered shutdown. */
-        bool shutdown = false;
+        bool shutdown_triggered = false;
 
         /** Numer of fonts reserved for the configurator graph canvas. */
         unsigned int graph_fonts_reserved;
 
         /** UID of currently running graph */
         ImGuiID graph_uid;
+
+        /** Trigger and file name for screenshot. */
+        bool screenshot_triggered = false;
+        std::string screenshot_filename;
 
         // Widgets
         FileBrowserWidget file_browser;

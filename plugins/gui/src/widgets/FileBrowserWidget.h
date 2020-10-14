@@ -39,7 +39,8 @@ namespace gui {
          *
          * @return True on success, false otherwise.
          */
-        bool PopUp(FileBrowserFlag flag, const std::string& label_id, bool open_popup, std::string& inout_filename);
+        bool PopUp(FileBrowserFlag flag, const std::string& label_id, bool open_popup, std::string& inout_filename,
+            const std::string& extension = ".lua");
 
         /**
          * ImGui file browser button opening this file browser pop-up.
@@ -72,7 +73,7 @@ namespace gui {
 
         bool split_path(const stdfs::path& in_file_path, std::string& out_path, std::string& out_file);
         void validate_directory(const std::string& path_str);
-        void validate_file(const std::string& file_str, FileBrowserFlag flag);
+        void validate_file(const std::string& file_str, const std::string& extension, FileBrowserFlag flag);
         std::string get_absolute_path(const std::string& in_path_str) const;
     };
 
