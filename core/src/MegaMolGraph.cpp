@@ -656,6 +656,39 @@ std::vector<megamol::frontend::ModuleResource> megamol::core::MegaMolGraph::get_
 megamol::core::MegaMolGraph_Serialization megamol::core::MegaMolGraph::SerializeGraph() const {
     MegaMolGraph_Serialization serialization;
 
+    std::string& serViews = serialization.serInstances;
+    std::string& serModules = serialization.serModules;
+    std::string& serCalls = serialization.serCalls;
+    std::string& serParams = serialization.serParams;
+
+    for (auto& module : this->module_list_) {
+        if (module.isGraphEntryPoint) {
+            auto improvised_instance_name = "::"+splitPathName(module.request.id)[0];
+            serViews.append("mmCreateView(\"" + improvised_instance_name + "\",\"" + module.request.className + "\",\"" + module.request.id + "\")\n");
+        }
+    }
+
+    for (auto& module : this->module_list_) {
+        if (!module.isGraphEntryPoint) {
+            serModules.append("mmCreateModule(\"" + module.request.className + "\",\"" + module.request.id + "\")\n");
+        }
+    }
+
+    for (auto& module : this->module_list_) {
+        for (auto& paramSlot : this->EnumerateModuleParameterSlots(module.request.id)) {
+            auto name = std::string{paramSlot->FullName()};
+            auto value = std::string{paramSlot->Parameter()->ValueString().PeekBuffer()};
+            serParams.append("mmSetParamValue(\"" + name + "\",[=[" + value + "]=])\n");
+        }
+    }
+
+    for (auto& call : call_list_) {
+        serCalls.append("mmCreateCall(\""
+            + call.request.className + "\",\""
+            + call.request.from + "\",\""
+            + call.request.to + "\",\""
+            + "\")\n");
+    }
 
     return serialization;
 }
