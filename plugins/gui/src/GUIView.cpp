@@ -14,10 +14,10 @@ using namespace megamol::gui;
 
 
 GUIView::GUIView()
-    : core::view::AbstractView()
-    , overrideCall(nullptr)
-    , render_view_slot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
-    , gui() {
+        : core::view::AbstractView()
+        , overrideCall(nullptr)
+        , render_view_slot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
+        , gui() {
 
     this->render_view_slot.SetCompatibleCall<core::view::CallRenderViewDescription>();
     this->MakeSlotAvailable(&this->render_view_slot);
@@ -27,9 +27,13 @@ GUIView::GUIView()
     }
 }
 
-GUIView::~GUIView() { this->Release(); }
+GUIView::~GUIView() {
+    this->Release();
+}
 
-bool GUIView::create() { return gui.CreateContext_GL(this->GetCoreInstance()); }
+bool GUIView::create() {
+    return gui.CreateContext_GL(this->GetCoreInstance());
+}
 
 
 void GUIView::release() {}
@@ -154,7 +158,8 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
 
     if (!input_consumed) {
         auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
-        if (crv == nullptr) return false;
+        if (crv == nullptr)
+            return false;
 
         core::view::InputEvent evt;
         evt.tag = core::view::InputEvent::Tag::Key;
@@ -192,7 +197,8 @@ bool GUIView::OnMouseMove(double x, double y) {
 
     if (!input_consumed) {
         auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
-        if (crv == nullptr) return false;
+        if (crv == nullptr)
+            return false;
 
         core::view::InputEvent evt;
         evt.tag = core::view::InputEvent::Tag::MouseMove;
@@ -213,7 +219,8 @@ bool GUIView::OnMouseButton(
 
     if (!input_consumed) {
         auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
-        if (crv == nullptr) return false;
+        if (crv == nullptr)
+            return false;
 
         core::view::InputEvent evt;
         evt.tag = core::view::InputEvent::Tag::MouseButton;
@@ -234,7 +241,8 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
 
     if (!input_consumed) {
         auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
-        if (crv == nullptr) return false;
+        if (crv == nullptr)
+            return false;
 
         core::view::InputEvent evt;
         evt.tag = core::view::InputEvent::Tag::MouseScroll;
@@ -250,7 +258,8 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
 
 bool GUIView::OnRenderView(megamol::core::Call& call) {
     megamol::core::view::CallRenderView* crv = dynamic_cast<megamol::core::view::CallRenderView*>(&call);
-    if (crv == nullptr) return false;
+    if (crv == nullptr)
+        return false;
 
     this->overrideCall = crv;
 

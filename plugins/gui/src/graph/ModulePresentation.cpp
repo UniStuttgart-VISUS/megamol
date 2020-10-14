@@ -19,19 +19,19 @@ using namespace megamol::gui;
 
 
 megamol::gui::ModulePresentation::ModulePresentation(void)
-    : group()
-    , label_visible(true)
-    , position(ImVec2(FLT_MAX, FLT_MAX))
-    , param_groups()
-    , size(ImVec2(0.0f, 0.0f))
-    , selected(false)
-    , update(true)
-    , param_child_show(false)
-    , param_child_height(1.0f)
-    , set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
-    , set_selected_slot_position(false)
-    , tooltip()
-    , rename_popup() {
+        : group()
+        , label_visible(true)
+        , position(ImVec2(FLT_MAX, FLT_MAX))
+        , param_groups()
+        , size(ImVec2(0.0f, 0.0f))
+        , selected(false)
+        , update(true)
+        , param_child_show(false)
+        , param_child_height(1.0f)
+        , set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
+        , set_selected_slot_position(false)
+        , tooltip()
+        , rename_popup() {
 
     this->group.uid = GUI_INVALID_ID;
     this->group.visible = false;

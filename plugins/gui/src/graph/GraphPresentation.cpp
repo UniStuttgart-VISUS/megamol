@@ -25,33 +25,33 @@ using namespace megamol::gui;
 
 
 megamol::gui::GraphPresentation::GraphPresentation(void)
-    : params_visible(true)
-    , params_readonly(false)
-    , param_extended_mode(false)
-    , update(true)
-    , show_grid(false)
-    , show_call_names(true)
-    , show_slot_names(false)
-    , show_module_names(true)
-    , show_parameter_sidebar(true)
-    , change_show_parameter_sidebar(false)
-    , graph_layout(0)
-    , parameter_sidebar_width(300.0f)
-    , reset_zooming(true)
-    , increment_zooming(false)
-    , decrement_zooming(false)
-    , param_name_space()
-    , current_main_view_name()
-    , multiselect_start_pos()
-    , multiselect_end_pos()
-    , multiselect_done(false)
-    , canvas_hovered(false)
-    , current_font_scaling(1.0f)
-    , graph_state()
-    , search_widget()
-    , splitter_widget()
-    , rename_popup()
-    , tooltip() {
+        : params_visible(true)
+        , params_readonly(false)
+        , param_extended_mode(false)
+        , update(true)
+        , show_grid(false)
+        , show_call_names(true)
+        , show_slot_names(false)
+        , show_module_names(true)
+        , show_parameter_sidebar(true)
+        , change_show_parameter_sidebar(false)
+        , graph_layout(0)
+        , parameter_sidebar_width(300.0f)
+        , reset_zooming(true)
+        , increment_zooming(false)
+        , decrement_zooming(false)
+        , param_name_space()
+        , current_main_view_name()
+        , multiselect_start_pos()
+        , multiselect_end_pos()
+        , multiselect_done(false)
+        , canvas_hovered(false)
+        , current_font_scaling(1.0f)
+        , graph_state()
+        , search_widget()
+        , splitter_widget()
+        , rename_popup()
+        , tooltip() {
 
     this->graph_state.canvas.position = ImVec2(0.0f, 0.0f);
     this->graph_state.canvas.size = ImVec2(1.0f, 1.0f);
@@ -1178,7 +1178,7 @@ void megamol::gui::GraphPresentation::present_canvas_dragged_call(megamol::gui::
 
     if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
         if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE)) {
-            ImGuiID* selected_slot_uid_ptr = (ImGuiID*)payload->Data;
+            ImGuiID* selected_slot_uid_ptr = (ImGuiID*) payload->Data;
             if (selected_slot_uid_ptr == nullptr) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Pointer to drag and drop payload data is nullptr. [%s, %s, line %d]\n", __FILE__,

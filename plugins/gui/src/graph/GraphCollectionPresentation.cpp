@@ -16,7 +16,7 @@ using namespace megamol::gui;
 
 
 megamol::gui::GraphCollectionPresentation::GraphCollectionPresentation(void)
-    : file_browser(), graph_delete_uid(GUI_INVALID_ID) {}
+        : file_browser(), graph_delete_uid(GUI_INVALID_ID) {}
 
 
 megamol::gui::GraphCollectionPresentation::~GraphCollectionPresentation(void) {}
@@ -59,7 +59,7 @@ void megamol::gui::GraphCollectionPresentation::Present(
             // Catch call drop event and create new call(s) ...
             if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
                 if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE) && payload->IsDelivery()) {
-                    ImGuiID* dragged_slot_uid_ptr = (ImGuiID*)payload->Data;
+                    ImGuiID* dragged_slot_uid_ptr = (ImGuiID*) payload->Data;
                     auto drag_slot_uid = (*dragged_slot_uid_ptr);
                     auto drop_slot_uid = graph->present.GetDropSlot();
                     graph->AddCall(inout_graph_collection.GetCallsStock(), drag_slot_uid, drop_slot_uid);

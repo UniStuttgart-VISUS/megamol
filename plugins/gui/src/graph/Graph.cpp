@@ -14,16 +14,16 @@ using namespace megamol::gui;
 
 
 megamol::gui::Graph::Graph(const std::string& graph_name, GraphCoreInterface core_interface)
-    : uid(megamol::gui::GenerateUniqueID())
-    , name(graph_name)
-    , present()
-    , modules()
-    , calls()
-    , groups()
-    , dirty_flag(true)
-    , filename()
-    , sync_queue()
-    , graph_core_interface(core_interface) {}
+        : uid(megamol::gui::GenerateUniqueID())
+        , name(graph_name)
+        , present()
+        , modules()
+        , calls()
+        , groups()
+        , dirty_flag(true)
+        , filename()
+        , sync_queue()
+        , graph_core_interface(core_interface) {}
 
 
 megamol::gui::Graph::~Graph(void) {
@@ -823,7 +823,8 @@ bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_full_name
 bool megamol::gui::Graph::PushSyncQueue(QueueAction action, const QueueData& in_data) {
 
     // Use sync queue only when interface to core graph is available
-    if (!this->HasCoreInterface()) return false;
+    if (!this->HasCoreInterface())
+        return false;
 
     // Validate and process given data
     megamol::gui::Graph::QueueData queue_data = in_data;
@@ -1227,8 +1228,7 @@ const std::string megamol::gui::Graph::generate_unique_group_name(void) {
             try {
                 int last_id = std::stoi(int_postfix);
                 new_name_id = std::max(new_name_id, last_id);
-            } catch (...) {
-            }
+            } catch (...) {}
         }
     }
     return std::string(new_name_prefix + std::to_string(new_name_id + 1));
@@ -1245,8 +1245,7 @@ const std::string megamol::gui::Graph::generate_unique_module_name(const std::st
             try {
                 int last_id = std::stoi(int_postfix);
                 new_name_id = std::max(new_name_id, last_id);
-            } catch (...) {
-            }
+            } catch (...) {}
         }
     }
     return std::string(new_name_prefix + std::to_string(new_name_id + 1));
@@ -1263,8 +1262,7 @@ const std::string megamol::gui::Graph::GenerateUniqueMainViewName(void) {
             try {
                 int last_id = std::stoi(int_postfix);
                 new_name_id = std::max(new_name_id, last_id);
-            } catch (...) {
-            }
+            } catch (...) {}
         }
     }
     return std::string(new_name_prefix + std::to_string(new_name_id + 1));

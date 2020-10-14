@@ -14,17 +14,17 @@ using namespace megamol::gui;
 
 
 megamol::gui::FileBrowserWidget::FileBrowserWidget()
-    : search_widget()
-    , file_name_str()
-    , file_path_str()
-    , path_changed(false)
-    , valid_directory(false)
-    , valid_file(false)
-    , valid_ending(false)
-    , file_error()
-    , file_warning()
-    , child_paths()
-    , additional_lines(0) {}
+        : search_widget()
+        , file_name_str()
+        , file_path_str()
+        , path_changed(false)
+        , valid_directory(false)
+        , valid_file(false)
+        , valid_ending(false)
+        , file_error()
+        , file_warning()
+        , child_paths()
+        , additional_lines(0) {}
 
 
 bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::FileBrowserFlag flag,
@@ -128,22 +128,25 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                                 }
                             }
                         }
-                    } catch (...) {
-                    }
+                    } catch (...) {}
 
                     // Sort path case insensitive alphabetically ascending
                     std::sort(paths.begin(), paths.end(), [](ChildData_t const& a, ChildData_t const& b) {
                         std::string a_str = a.first.filename().generic_u8string();
-                        for (auto& c : a_str) c = std::toupper(c);
+                        for (auto& c : a_str)
+                            c = std::toupper(c);
                         std::string b_str = b.first.filename().generic_u8string();
-                        for (auto& c : b_str) c = std::toupper(c);
+                        for (auto& c : b_str)
+                            c = std::toupper(c);
                         return (a_str < b_str);
                     });
                     std::sort(files.begin(), files.end(), [](ChildData_t const& a, ChildData_t const& b) {
                         std::string a_str = a.first.filename().generic_u8string();
-                        for (auto& c : a_str) c = std::toupper(c);
+                        for (auto& c : a_str)
+                            c = std::toupper(c);
                         std::string b_str = b.first.filename().generic_u8string();
-                        for (auto& c : b_str) c = std::toupper(c);
+                        for (auto& c : b_str)
+                            c = std::toupper(c);
                         return (a_str < b_str);
                     });
 

@@ -16,24 +16,24 @@ using namespace megamol::gui;
 
 
 megamol::gui::ParameterPresentation::ParameterPresentation(Param_t type)
-    : megamol::core::param::AbstractParamPresentation()
-    , extended(false)
-    , float_format("%.7f")
-    , help()
-    , description()
-    , widget_store()
-    , set_focus(0)
-    , guistate_dirty(false)
-    , tf_editor_external_ptr(nullptr)
-    , tf_editor_internal()
-    , use_external_tf_editor(false)
-    , show_tf_editor(false)
-    , tf_editor_hash(0)
-    , file_browser()
-    , tooltip()
-    , image_widget()
-    , rotation_widget()
-    , show_minmax(false) {
+        : megamol::core::param::AbstractParamPresentation()
+        , extended(false)
+        , float_format("%.7f")
+        , help()
+        , description()
+        , widget_store()
+        , set_focus(0)
+        , guistate_dirty(false)
+        , tf_editor_external_ptr(nullptr)
+        , tf_editor_internal()
+        , use_external_tf_editor(false)
+        , show_tf_editor(false)
+        , tf_editor_hash(0)
+        , file_browser()
+        , tooltip()
+        , image_widget()
+        , rotation_widget()
+        , show_minmax(false) {
 
     this->InitPresentation(type);
 }
@@ -705,12 +705,14 @@ bool megamol::gui::ParameterPresentation::widget_button(megamol::gui::ParameterP
 
         // Add hotkey to hover tooltip
         if (hotkey_in_tooltip) {
-            if (!button_hotkey.empty()) hotkey = "\n Hotkey: " + button_hotkey;
+            if (!button_hotkey.empty())
+                hotkey = "\n Hotkey: " + button_hotkey;
             this->description += hotkey;
         }
         // Add hotkey to param label
         if (hotkey_in_label) {
-            if (!button_hotkey.empty()) hotkey = " [" + button_hotkey + "]";
+            if (!button_hotkey.empty())
+                hotkey = " [" + button_hotkey + "]";
             edit_label += hotkey;
         }
 

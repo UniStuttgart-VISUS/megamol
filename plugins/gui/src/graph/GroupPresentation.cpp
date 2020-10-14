@@ -16,14 +16,14 @@ using namespace megamol::gui;
 
 
 megamol::gui::GroupPresentation::GroupPresentation(void)
-    : position(ImVec2(FLT_MAX, FLT_MAX))
-    , size(ImVec2(0.0f, 0.0f))
-    , collapsed_view(false)
-    , allow_selection(false)
-    , allow_context(false)
-    , selected(false)
-    , update(true)
-    , rename_popup() {}
+        : position(ImVec2(FLT_MAX, FLT_MAX))
+        , size(ImVec2(0.0f, 0.0f))
+        , collapsed_view(false)
+        , allow_selection(false)
+        , allow_context(false)
+        , selected(false)
+        , update(true)
+        , rename_popup() {}
 
 
 megamol::gui::GroupPresentation::~GroupPresentation(void) {}
@@ -367,11 +367,11 @@ void megamol::gui::GroupPresentation::UpdatePositionSize(
         for (auto& interfaceslot_ptr : interfaceslots_map.second) {
             if (interfaceslots_map.first == CallSlotType::CALLER) {
                 callslot_group_position = ImVec2((group_pos.x + group_size.x),
-                    (group_pos.y + group_size.y * ((float)caller_idx + 1) / ((float)caller_count + 1)));
+                    (group_pos.y + group_size.y * ((float) caller_idx + 1) / ((float) caller_count + 1)));
                 caller_idx++;
             } else if (interfaceslots_map.first == CallSlotType::CALLEE) {
                 callslot_group_position = ImVec2(
-                    group_pos.x, (group_pos.y + group_size.y * ((float)callee_idx + 1) / ((float)callee_count + 1)));
+                    group_pos.x, (group_pos.y + group_size.y * ((float) callee_idx + 1) / ((float) callee_count + 1)));
                 callee_idx++;
             }
             interfaceslot_ptr->present.SetPosition(callslot_group_position);

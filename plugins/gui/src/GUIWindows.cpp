@@ -25,28 +25,28 @@ using namespace megamol::gui;
 
 
 GUIWindows::GUIWindows(void)
-    : core_instance(nullptr)
-    , param_slots()
-    , style_param("style", "Color style, theme")
-    , state_param("state", "Current state of all windows.")
-    , autosave_state_param("autosave_state", "Save state automatically to file on changes.")
-    , autostart_configurator_param("autostart_configurator", "Start the configurator at start up automatically. ")
-    , context(nullptr)
-    , api(GUIImGuiAPI::NO_API)
-    , window_collection()
-    , configurator()
-    , state()
-    , shutdown(false)
-    , graph_fonts_reserved(0)
-    , graph_uid(GUI_INVALID_ID)
-    , file_browser()
-    , search_widget()
-    , tf_editor_ptr(nullptr)
-    , tooltip()
-    , picking_buffer()
-    , triangle_widget() {
+        : core_instance(nullptr)
+        , param_slots()
+        , style_param("style", "Color style, theme")
+        , state_param("state", "Current state of all windows.")
+        , autosave_state_param("autosave_state", "Save state automatically to file on changes.")
+        , autostart_configurator_param("autostart_configurator", "Start the configurator at start up automatically. ")
+        , context(nullptr)
+        , api(GUIImGuiAPI::NO_API)
+        , window_collection()
+        , configurator()
+        , state()
+        , shutdown(false)
+        , graph_fonts_reserved(0)
+        , graph_uid(GUI_INVALID_ID)
+        , file_browser()
+        , search_widget()
+        , tf_editor_ptr(nullptr)
+        , tooltip()
+        , picking_buffer()
+        , triangle_widget() {
 
-    core::param::EnumParam* styles = new core::param::EnumParam((int)(Styles::DarkColors));
+    core::param::EnumParam* styles = new core::param::EnumParam((int) (Styles::DarkColors));
     styles->SetTypePair(Styles::CorporateGray, "Corporate Gray");
     styles->SetTypePair(Styles::CorporateWhite, "Corporate White");
     styles->SetTypePair(Styles::DarkColors, "Dark Colors");
@@ -81,7 +81,9 @@ GUIWindows::GUIWindows(void)
 }
 
 
-GUIWindows::~GUIWindows(void) { this->destroyContext(); }
+GUIWindows::~GUIWindows(void) {
+    this->destroyContext();
+}
 
 
 bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
@@ -139,7 +141,8 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     // Create new gui graph once if core instance graph is used (otherwise graph should already exist)
     // GUI graph of running project should be available before loading states from parameters in validateParameters().
-    if (this->graph_uid == GUI_INVALID_ID) this->SynchronizeGraphs();
+    if (this->graph_uid == GUI_INVALID_ID)
+        this->SynchronizeGraphs();
 
     // Check if gui graph is present
     if (this->graph_uid == GUI_INVALID_ID) {
@@ -402,7 +405,7 @@ bool GUIWindows::PostDraw(void) {
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Missing valid callback for WindowDrawCallback: '%d'. [%s, %s, line %d]\n",
-                    (int)wc.win_callback, __FILE__, __FUNCTION__, __LINE__);
+                    (int) wc.win_callback, __FILE__, __FUNCTION__, __LINE__);
             }
 
             // Saving some of the current window state.
@@ -508,7 +511,8 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
             hotkeyPressed = true;
         }
     }
-    if (hotkeyPressed) return true;
+    if (hotkeyPressed)
+        return true;
 
     // Check for additional text modification hotkeys
     if (action == core::view::KeyAction::RELEASE) {
@@ -559,7 +563,8 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
         hotkeyPressed |= windowHotkeyPressed;
     };
     this->window_collection.EnumWindows(windows_func);
-    if (hotkeyPressed) return true;
+    if (hotkeyPressed)
+        return true;
 
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).
     // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
@@ -574,7 +579,8 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
         for (auto& m : wc.param_modules_list) {
             modules_list.emplace_back(m);
         }
-        if (wc.param_modules_list.empty()) check_all_modules = true;
+        if (wc.param_modules_list.empty())
+            check_all_modules = true;
     };
     this->window_collection.EnumWindows(modfunc);
     // Check for parameter hotkeys
@@ -583,7 +589,8 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     if (this->configurator.GetGraphCollection().GetGraph(this->graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
             // Break loop after first occurrence of parameter hotkey
-            if (hotkeyPressed) break;
+            if (hotkeyPressed)
+                break;
             if (check_all_modules || this->considerModule(module_ptr->FullName(), modules_list)) {
                 for (auto& param : module_ptr->parameters) {
                     if (param.type == Param_t::BUTTON) {
@@ -608,7 +615,7 @@ bool GUIWindows::OnChar(unsigned int codePoint) {
     ImGuiIO& io = ImGui::GetIO();
     io.ClearInputCharacters();
     if (codePoint > 0 && codePoint < 0x10000) {
-        io.AddInputCharacter((unsigned short)codePoint);
+        io.AddInputCharacter((unsigned short) codePoint);
     }
 
     return false;
@@ -668,8 +675,8 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
     ImGui::SetCurrentContext(this->context);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.MouseWheelH += (float)dx;
-    io.MouseWheel += (float)dy;
+    io.MouseWheelH += (float) dx;
+    io.MouseWheel += (float) dy;
 
     auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
@@ -1390,7 +1397,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_COPY_MODULE_PARAMETERS")) {
 
             IM_ASSERT(payload->DataSize == (dnd_size * sizeof(char)));
-            std::string payload_id = (const char*)payload->Data;
+            std::string payload_id = (const char*) payload->Data;
 
             // Insert dragged module name only if not contained in list
             if (!this->considerModule(payload_id, wc.param_modules_list)) {
@@ -1609,7 +1616,8 @@ void GUIWindows::drawMenu(void) {
     if (ImGui::BeginMenu("Windows")) {
 
         std::string menu_label = "Show";
-        if (this->state.menu_visible) menu_label = "Hide";
+        if (this->state.menu_visible)
+            menu_label = "Hide";
         if (ImGui::BeginMenu("Menu")) {
             if (ImGui::MenuItem(menu_label.c_str(),
                     this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].keycode.ToString().c_str(), nullptr)) {
@@ -1622,7 +1630,8 @@ void GUIWindows::drawMenu(void) {
             if (ImGui::BeginMenu(wc.win_name.c_str())) {
                 std::string hotkey_label = wc.win_hotkey.ToString();
                 std::string menu_label = "Show";
-                if (wc.win_show) menu_label = "Hide";
+                if (wc.win_show)
+                    menu_label = "Hide";
                 if (ImGui::MenuItem(menu_label.c_str(), hotkey_label.c_str(), nullptr)) {
                     wc.win_show = !wc.win_show;
                 }
@@ -1879,7 +1888,8 @@ bool megamol::gui::GUIWindows::save_state_to_file(const std::string& filename) {
 
     nlohmann::json state_json;
     std::string file = filename;
-    if (!GUIUtils::GetGUIStateFileName(file)) return false;
+    if (!GUIUtils::GetGUIStateFileName(file))
+        return false;
 
     // Load existing gui state from file
     std::string state_str;
@@ -1898,7 +1908,8 @@ bool megamol::gui::GUIWindows::save_state_to_file(const std::string& filename) {
         std::string state_str = state_json.dump(2);
         this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
         std::string file = filename;
-        if (!GUIUtils::GetGUIStateFileName(file)) return false;
+        if (!GUIUtils::GetGUIStateFileName(file))
+            return false;
         return FileUtils::WriteFile(file, state_str);
     }
     return false;
@@ -1908,12 +1919,14 @@ bool megamol::gui::GUIWindows::save_state_to_file(const std::string& filename) {
 bool megamol::gui::GUIWindows::load_state_from_file(const std::string& filename) {
 
     std::string file = filename;
-    if (!GUIUtils::GetGUIStateFileName(file)) return false;
+    if (!GUIUtils::GetGUIStateFileName(file))
+        return false;
 
     std::string state_str;
     if (FileUtils::ReadFile(file, state_str, true)) {
         this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
-        if (state_str.empty()) return false;
+        if (state_str.empty())
+            return false;
         nlohmann::json in_json = nlohmann::json::parse(state_str);
         return this->state_from_json(in_json);
     }
