@@ -288,6 +288,8 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
         throw vislib::IllegalStateException("Cannot initialise a core instance twice.", __FILE__, __LINE__);
     }
 
+    this->mmconsoleFrontendCompatible = mmconsole_frontend_compatible;
+
     // logging mechanism
     if (this->preInit->IsLogEchoLevelSet()) {
         megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(this->preInit->GetLogEchoLevel());

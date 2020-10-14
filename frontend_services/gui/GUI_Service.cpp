@@ -38,6 +38,16 @@ bool GUI_Service::init(const Config& config) {
     this->m_resource_state.window_size = glm::vec2(1.0f, 1.0f);
     this->m_resource_state.opengl_context_ptr = nullptr;
 
+    this->m_requestedResourcesNames = {
+        {"MegaMolGraph"},                          // resource index 0
+        {"WindowEvents"},                          // resource index 1
+        {"KeyboardEvents"},                        // resource index 2
+        {"MouseEvents"},                           // resource index 3
+        {"IOpenGL_Context"},                       // resource index 4
+        {"FramebufferEvents"},                     // resource index 5
+        {"GLFrontbufferToPNG_ScreenshotTrigger"}   // resource index 6
+    };
+
     // init gui
     if (config.imgui_api == GUI_Service::ImGuiAPI::OPEN_GL) { 
         if (this->m_gui.ptr == nullptr) {
@@ -46,7 +56,7 @@ bool GUI_Service::init(const Config& config) {
             if (check_gui_not_nullptr) {
                 if (this->m_gui.ptr->Get()->CreateContext_GL(config.core_instance)) {  
                     this->m_providedResourceReferences = { {"GUIResource", this->m_gui} };
-                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Successfully initialized GUI service.");
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully.");
                     return true;
                 }
             }
@@ -75,7 +85,7 @@ void GUI_Service::digestChangedRequestedResources() {
     auto gui = this->m_gui.ptr->Get();
 
     // Trigger shutdown
-    this->setShutdown(gui->ShouldShutdown());
+    this->setShutdown(gui->ConsumeTriggeredShutdown());
 
     // Check for updates in requested resources --------------------------------
 
@@ -164,6 +174,12 @@ void GUI_Service::digestChangedRequestedResources() {
         m_resource_state.framebuffer_size.x = static_cast<float>(size_event.width);
         m_resource_state.framebuffer_size.y = static_cast<float>(size_event.height);
     }
+
+    /// Trigger Screenshot = resource index 6
+    if (gui->ConsumeTriggeredScreenshot()) {
+        auto& screenshot_to_file_trigger = this->m_requestedResourceReferences[6].getResource< std::function<bool(std::string const&)> >();
+        screenshot_to_file_trigger(gui->GetScreenshotFileName());
+    }
 }
 
 
@@ -214,14 +230,7 @@ std::vector<ModuleResource>& GUI_Service::getProvidedResources() {
 
 const std::vector<std::string> GUI_Service::getRequestedResourceNames() const {
 
-	return {
-        {"MegaMolGraph"},      // resource index 0
-        {"WindowEvents"},      // resource index 1
-        {"KeyboardEvents"},    // resource index 2
-        {"MouseEvents"},       // resource index 3
-        {"IOpenGL_Context"},   // resource index 4
-        {"FramebufferEvents"}  // resource index 5
-    };
+    return this->m_requestedResourcesNames;
 }
 
 

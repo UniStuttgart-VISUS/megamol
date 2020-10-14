@@ -15,6 +15,7 @@
 #include "Framebuffer_Events.h"
 #include "KeyboardMouse_Events.h"
 #include "IOpenGL_Context.h"
+#include "Screenshot_Service.hpp"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
@@ -92,6 +93,7 @@ private:
 
     std::vector<ModuleResource> m_providedResourceReferences;
     std::vector<ModuleResource> m_requestedResourceReferences;
+    std::vector<std::string> m_requestedResourcesNames;
 
     GUIResource m_gui;
     ResourceState m_resource_state;
