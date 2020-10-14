@@ -11,6 +11,8 @@
 #include <glad/glad.h>
 #include "IOpenGL_Context.h"
 
+#include "mmcore/MegaMolGraph.h"
+
 // to write png files
 #include "png.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
@@ -25,6 +27,9 @@ static void log(const char* text) {
 }
 static void log(std::string text) { log(text.c_str()); }
 
+// need this to pass GL context to screenshot source. this a hack and needs to be properly designed.
+static megamol::module_resources::IOpenGL_Context* gl_context_ptr = nullptr;
+static megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
 
 static void PNGAPI pngErrorFunc(png_structp pngPtr, png_const_charp msg) {
     log("PNG Error: " + std::string(msg));
@@ -75,14 +80,11 @@ static bool write_png_to_file(megamol::module_resources::ImageData const& image,
     png_set_compression_level(pngPtr, 0);
 
     // todo: camera settings are not stored without magic knowledge about the view
-    //megamol::core::utility::graphics::ScreenShotComments ssc(this->GetCoreInstance());
-    //png_set_text(pngPtr, pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
+    megamol::core::utility::graphics::ScreenShotComments ssc(megamolgraph_ptr->SerializeGraph());
+    png_set_text(pngPtr, pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
 
-    //png_set_IHDR(data.pngPtr, data.pngInfoPtr, data.imgWidth, data.imgHeight, 8,
-    //        (bkgndMode == 1) ? PNG_COLOR_TYPE_RGB_ALPHA : PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
-    //        PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
     png_set_IHDR(pngPtr, pngInfoPtr, image.width, image.height, 8,
-        PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
+        PNG_COLOR_TYPE_RGB_ALPHA /* PNG_COLOR_TYPE_RGB */, PNG_INTERLACE_NONE,
         PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
 
@@ -123,12 +125,9 @@ void megamol::module_resources::GLScreenshotSource::set_read_buffer(ReadBuffer b
     }
 }
 
-// need this to pass GL context to screenshot source. this a hack and needs to be properly designed.
-static megamol::module_resources::IOpenGL_Context* gl_context = nullptr;
-
 megamol::module_resources::ImageData megamol::module_resources::GLScreenshotSource::take_screenshot() const {
-    if (gl_context)
-        gl_context->activate();
+    if (gl_context_ptr)
+        gl_context_ptr->activate();
 
     // TODO: in FBO-based rendering the FBO object carries its size and we dont need to look it up
     // simpler and more correct approach would be to observe Framebuffer_Events resource
@@ -147,8 +146,8 @@ megamol::module_resources::ImageData megamol::module_resources::GLScreenshotSour
     for (auto& pixel : result.image)
         pixel.a = 255;
 
-    if (gl_context)
-        gl_context->close();
+    if (gl_context_ptr)
+        gl_context_ptr->close();
 
     return std::move(result);
 }
@@ -174,11 +173,13 @@ bool Screenshot_Service::init(const Config& config) {
 
     m_requestedResourcesNames =
     {
-        "IOpenGL_Context"
+        "IOpenGL_Context",
+        "MegaMolGraph"
     };
 
     this->m_frontbufferToPNG_trigger = [&](std::string const& filename) -> bool
     {
+        log("write screenshot to " + filename);
         return m_toFileWriter_resource.write_screenshot(m_frontbufferSource_resource, filename);
     };
 
@@ -195,6 +196,8 @@ void Screenshot_Service::close() {
 std::vector<ModuleResource>& Screenshot_Service::getProvidedResources() {
      this->m_providedResourceReferences =
     {
+        {"GLScreenshotSource", m_frontbufferSource_resource},
+        {"ScreenshotToFileTrigger", m_toFileWriter_resource},
         {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger}
     };
 
@@ -206,7 +209,8 @@ const std::vector<std::string> Screenshot_Service::getRequestedResourceNames() c
 }
 
 void Screenshot_Service::setRequestedResources(std::vector<ModuleResource> resources) {
-    gl_context = const_cast<megamol::module_resources::IOpenGL_Context*>(&resources[0].getResource<megamol::module_resources::IOpenGL_Context>());
+    gl_context_ptr = const_cast<megamol::module_resources::IOpenGL_Context*>(&resources[0].getResource<megamol::module_resources::IOpenGL_Context>());
+    megamolgraph_ptr = const_cast<megamol::core::MegaMolGraph*>(&resources[1].getResource<megamol::core::MegaMolGraph>());
 }
 
 void Screenshot_Service::updateProvidedResources() {
