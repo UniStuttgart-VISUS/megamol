@@ -19,6 +19,7 @@ AlwaysBreakTemplateDeclarations: Yes
 BreakBeforeBraces: Attach
 BreakConstructorInitializers: BeforeComma
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
+ConstructorInitializerIndentWidth: 8
 DerivePointerAlignment: false
 IncludeCategories:
   - Regex:           '^"stdafx'
@@ -27,7 +28,7 @@ IncludeCategories:
     Priority:        1
   - Regex:           '^"'
     Priority:        2
-MaxEmptyLinesToKeep: 1
+MaxEmptyLinesToKeep: 2
 NamespaceIndentation: Inner
 PointerAlignment: Left
 SpaceAfterCStyleCast: true
