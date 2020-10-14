@@ -648,4 +648,10 @@ std::vector<megamol::frontend::ModuleResource> megamol::core::MegaMolGraph::get_
 	return result;
 }
 
+megamol::core::MegaMolGraph_Serialization megamol::core::MegaMolGraph::SerializeGraph() const {
+    MegaMolGraph_Serialization serialization;
+
+
+    return serialization;
+}
 

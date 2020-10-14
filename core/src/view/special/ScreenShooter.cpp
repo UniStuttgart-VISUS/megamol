@@ -450,7 +450,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         // to have a legal exif structure (lol)
 
         // todo: camera settings are not stored without magic knowledge about the view
-        megamol::core::utility::graphics::ScreenShotComments ssc(this->GetCoreInstance());
+        megamol::core::utility::graphics::ScreenShotComments ssc(this->GetCoreInstance()->SerializeGraph());
 
         png_set_text(data.pngPtr, data.pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
 
