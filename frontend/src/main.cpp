@@ -9,6 +9,7 @@
 #include "Lua_Service_Wrapper.hpp"
 #include "OpenGL_GLFW_Service.hpp"
 #include "Screenshot_Service.hpp"
+#include "FrameStatistics_Service.hpp"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
@@ -69,7 +70,7 @@ int main(int argc, char* argv[]) {
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 5;
     openglConfig.enableKHRDebug = config.opengl_khr_debug;
-    gl_service.setPriority(1);
+    gl_service.setPriority(2);
 
     megamol::frontend::GUI_Service gui_service;
     megamol::frontend::GUI_Service::Config guiConfig;
@@ -83,6 +84,11 @@ int main(int argc, char* argv[]) {
     megamol::frontend::Screenshot_Service screenshot_service;
     megamol::frontend::Screenshot_Service::Config screenshotConfig;
     screenshot_service.setPriority(30);
+
+    megamol::frontend::FrameStatistics_Service framestatistics_service;
+    megamol::frontend::FrameStatistics_Service::Config framestatisticsConfig;
+    // needs to execute before gl_service at frame start, after gl service at frame end
+    framestatistics_service.setPriority(1);
 
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
@@ -110,6 +116,7 @@ int main(int argc, char* argv[]) {
     services.add(gui_service, &guiConfig);
     services.add(lua_service_wrapper, &luaConfig);
     services.add(screenshot_service, &screenshotConfig);
+    services.add(framestatistics_service, &framestatisticsConfig);
 
     // TODO: gui view and frontend service gui can not coexist => how to kill GUI View in loaded projects?
     //  - FBO size (and others) for newly created views/modules/entrypoints (FBO size event missing). see AbstractView_EventConsumption::view_consume_framebuffer_events

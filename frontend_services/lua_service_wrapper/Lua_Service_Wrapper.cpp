@@ -14,6 +14,7 @@
 #include "mmcore/utility/LuaHostService.h"
 
 #include "Screenshots.h"
+#include "FrameStatistics.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "Window_Events.h"
@@ -70,7 +71,8 @@ bool Lua_Service_Wrapper::init(const Config& config) {
     {
         "FrontendResourcesList",
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
-        "WindowEvents" // for LastFrameTime
+        "WindowEvents", // for file drag and drop events
+        "FrameStatistics" // for LastFrameTime
     }; //= {"ZMQ_Context"};
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
@@ -116,10 +118,9 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<ModuleResource> reso
     auto& screenshot_callback = m_requestedResourceReferences[1].getResource< std::function<bool(std::string const&)> >();
     luaAPI.setScreenshotCallback(screenshot_callback);
 
-    luaAPI.setLastFrameTimeCallback([this]() {
-        auto window_events = &this->m_requestedResourceReferences[2].getResource<megamol::module_resources::WindowEvents>();
-        // BUG: this is NOT the duration of the last frame
-        return static_cast<float>(window_events->previous_state.time);
+    luaAPI.setLastFrameTimeCallback([&]() {
+        auto& frame_statistics = m_requestedResourceReferences[3].getResource<megamol::module_resources::FrameStatistics>();
+        return static_cast<float>(frame_statistics.last_rendered_frame_time_milliseconds);
     });
 }
 

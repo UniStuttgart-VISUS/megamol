@@ -529,6 +529,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     if (m_data.initialConfig.enableVsync) ::glfwSwapInterval(0);
 
     ::glfwShowWindow(m_glfwWindowPtr);
+    //::glfwMakeContextCurrent(nullptr);
 
 	m_windowEvents._clipboard_user_data = m_glfwWindowPtr;
 	m_windowEvents._getClipboardString_Func = outer_glfw_getClipboardString;
