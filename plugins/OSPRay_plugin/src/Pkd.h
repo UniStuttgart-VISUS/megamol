@@ -1,3 +1,8 @@
+/*
+ * Modified by MegaMol Dev Team
+ * Based on project "ospray-module-pkd" files "PartiKD.h" and "PartiKD.cpp" (Apache License 2.0)
+ */
+
 #pragma once
 
 #include <map>
@@ -28,7 +33,7 @@ public:
     PkdBuilder();
     virtual ~PkdBuilder();
 
-    void buildRec(const size_t nodeID, const ospcommon::box3f& bounds, const size_t depth) const;
+    
 
 
 protected:
@@ -41,7 +46,14 @@ private:
     unsigned int frameID;
     unsigned int vertexLength;
 
-    std::shared_ptr<ParticleModel> model;
+    //std::shared_ptr<ParticleModel> model;
+    std::vector<ParticleModel> models;
+    
+};
+
+struct Pkd {
+    ParticleModel* model;
+
     size_t numParticles;
     size_t numInnerNodes;
     size_t numLevels;
@@ -66,6 +78,8 @@ private:
 
     //! build particle tree over given model. WILL REORDER THE MODEL'S ELEMENTS
     void build();
+
+    void buildRec(const size_t nodeID, const ospcommon::box3f& bounds, const size_t depth) const;
 };
 
 
@@ -97,11 +111,11 @@ struct SubtreeIterator {
 };
 
 struct PKDBuildJob {
-    const PkdBuilder* const pkd;
+    const Pkd* const pkd;
     const size_t nodeID;
     const ospcommon::box3f bounds;
     const size_t depth;
-    __forceinline PKDBuildJob(const PkdBuilder* pkd, size_t nodeID, ospcommon::box3f bounds, size_t depth)
+    __forceinline PKDBuildJob(const Pkd* pkd, size_t nodeID, ospcommon::box3f bounds, size_t depth)
         : pkd(pkd), nodeID(nodeID), bounds(bounds), depth(depth){};
 };
 

@@ -13,32 +13,34 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-#define GUI_INTERACTION_TUPLE_INIT                                                                                     \
+#define GUI_INTERACTION_TUPLE_INIT \
     { false, -1, FLT_MAX }
 
-#define GUI_GL_CHECK_ERROR                                                                                             \
-    {                                                                                                                  \
-        auto err = glGetError();                                                                                       \
-        if (err != 0)                                                                                                  \
-            megamol::core::utility::log::Log::DefaultLog.WriteError(                                                   \
-                "OpenGL Error: %i. [%s, %s, line %d]\n", err, __FILE__, __FUNCTION__, __LINE__);                       \
+#define GUI_GL_CHECK_ERROR                                                                       \
+    {                                                                                            \
+        auto err = glGetError();                                                                 \
+        if (err != 0)                                                                            \
+            megamol::core::utility::log::Log::DefaultLog.WriteError(                             \
+                "OpenGL Error: %i. [%s, %s, line %d]\n", err, __FILE__, __FUNCTION__, __LINE__); \
     }
 
 
 megamol::gui::PickingBuffer::PickingBuffer(void)
-    : cursor_x(0.0)
-    , cursor_y(0.0)
-    , viewport_dim{0.0f, 0.0f}
-    , cursor_on_interaction_obj(GUI_INTERACTION_TUPLE_INIT)
-    , active_interaction_obj(GUI_INTERACTION_TUPLE_INIT)
-    , available_interactions()
-    , pending_manipulations()
-    , fbo(nullptr)
-    , enabled(false)
-    , fbo_shader(nullptr) {}
+        : cursor_x(0.0)
+        , cursor_y(0.0)
+        , viewport_dim{0.0f, 0.0f}
+        , cursor_on_interaction_obj(GUI_INTERACTION_TUPLE_INIT)
+        , active_interaction_obj(GUI_INTERACTION_TUPLE_INIT)
+        , available_interactions()
+        , pending_manipulations()
+        , fbo(nullptr)
+        , enabled(false)
+        , fbo_shader(nullptr) {}
 
 
-megamol::gui::PickingBuffer::~PickingBuffer(void) { this->fbo.reset(); }
+megamol::gui::PickingBuffer::~PickingBuffer(void) {
+    this->fbo.reset();
+}
 
 
 bool megamol::gui::PickingBuffer::ProcessMouseMove(double x, double y) {
@@ -255,7 +257,8 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
                                    "    outFragColor = color; \n"
                                    "} ";
 
-        if (!PickingBuffer::CreatShader(this->fbo_shader, vertex_src, fragment_src)) return false;
+        if (!PickingBuffer::CreatShader(this->fbo_shader, vertex_src, fragment_src))
+            return false;
     }
 
     glEnable(GL_BLEND);
@@ -290,11 +293,14 @@ bool megamol::gui::PickingBuffer::CreatShader(
 
     std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
 
-    if (!vertex_src.empty()) shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Vertex, vertex_src});
-    if (!fragment_src.empty()) shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Fragment, fragment_src});
+    if (!vertex_src.empty())
+        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Vertex, vertex_src});
+    if (!fragment_src.empty())
+        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Fragment, fragment_src});
 
     try {
-        if (shader_ptr != nullptr) shader_ptr.reset();
+        if (shader_ptr != nullptr)
+            shader_ptr.reset();
         shader_ptr = std::make_shared<glowl::GLSLProgram>(shader_srcs);
     } catch (glowl::GLSLProgramException const& exc) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -310,7 +316,7 @@ bool megamol::gui::PickingBuffer::CreatShader(
 // Pickable Triangle ##########################################################
 
 megamol::gui::PickableTriangle::PickableTriangle(void)
-    : shader(nullptr), pixel_direction(100.0f, 200.0f), selected(false) {}
+        : shader(nullptr), pixel_direction(100.0f, 200.0f), selected(false) {}
 
 
 void megamol::gui::PickableTriangle::Draw(
@@ -379,7 +385,8 @@ void megamol::gui::PickableTriangle::Draw(
                                    "    outFragInfo  = vec2(float(id), depth); \n"
                                    "} ";
 
-        if (!PickingBuffer::CreatShader(this->shader, vertex_src, fragment_src)) return;
+        if (!PickingBuffer::CreatShader(this->shader, vertex_src, fragment_src))
+            return;
     }
     this->shader->use();
 

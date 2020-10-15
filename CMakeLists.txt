@@ -1,7 +1,6 @@
-#
-# MegaMol™ Core
-# Copyright 2017, by MegaMol Team
-# Alle Rechte vorbehalten. All rights reserved.
+# MegaMol
+# Copyright (c) 2020, MegaMol Dev Team
+# All rights reserved.
 #
 
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)

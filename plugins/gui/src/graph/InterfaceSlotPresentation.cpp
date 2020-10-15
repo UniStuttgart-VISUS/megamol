@@ -19,15 +19,15 @@ using namespace megamol::gui;
 
 
 megamol::gui::InterfaceSlotPresentation::InterfaceSlotPresentation(void)
-    : group()
-    , label_visible(false)
-    , tooltip()
-    , selected(false)
-    , label()
-    , last_compat_callslot_uid(GUI_INVALID_ID)
-    , last_compat_interface_uid(GUI_INVALID_ID)
-    , compatible(false)
-    , position(ImVec2(FLT_MAX, FLT_MAX)) {
+        : group()
+        , label_visible(false)
+        , tooltip()
+        , selected(false)
+        , label()
+        , last_compat_callslot_uid(GUI_INVALID_ID)
+        , last_compat_interface_uid(GUI_INVALID_ID)
+        , compatible(false)
+        , position(ImVec2(FLT_MAX, FLT_MAX)) {
 
     this->group.uid = GUI_INVALID_ID;
     this->group.collapsed_view = false;

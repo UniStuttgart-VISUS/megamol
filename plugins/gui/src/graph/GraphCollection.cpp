@@ -266,9 +266,11 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             std::sort(this->modules_stock.begin(), this->modules_stock.end(),
                 [](Module::StockModule mod1, Module::StockModule mod2) {
                     std::string a_str(mod1.class_name);
-                    for (auto& c : a_str) c = std::toupper(c);
+                    for (auto& c : a_str)
+                        c = std::toupper(c);
                     std::string b_str(mod2.class_name);
-                    for (auto& c : b_str) c = std::toupper(c);
+                    for (auto& c : b_str)
+                        c = std::toupper(c);
                     return (a_str < b_str);
                 });
         }
@@ -624,7 +626,8 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         if (use_megamol_graph) {
             for (auto& call : megamol_graph->ListCalls()) {
                 auto call_ptr = call.callPtr;
-                if (call_ptr == nullptr) continue;
+                if (call_ptr == nullptr)
+                    continue;
                 bool add_new_call = true;
                 for (auto& call_info : gui_graph_call_info) {
                     if ((call_info.class_name == call.request.className) &&
@@ -633,7 +636,8 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                         add_new_call = false;
                     }
                 }
-                if (!add_new_call) continue;
+                if (!add_new_call)
+                    continue;
 
                 auto call_class_name = call.request.className;
                 std::string call_caller_name;
@@ -735,7 +739,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
 
     std::string projectstr;
 
-    if (!FileUtils::ReadFile(project_filename, projectstr)) return false;
+    if (!FileUtils::ReadFile(project_filename, projectstr))
+        return false;
     GUIUtils::Utf8Decode(projectstr);
 
     const std::string luacmd_view("mmCreateView");
@@ -1169,7 +1174,8 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(ImGuiID in_graph_uid, cons
                         __FUNCTION__, __LINE__);
                     found_error = true;
                 }
-                if (found_error) return false;
+                if (found_error)
+                    return false;
 
                 // Serialze graph to string -----------------------------------
                 std::string projectstr;
@@ -1290,16 +1296,20 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         core::Module::child_list_type::iterator ano_end = new_mod->ChildList_End();
         for (core::Module::child_list_type::iterator ano_i = new_mod->ChildList_Begin(); ano_i != ano_end; ++ano_i) {
             std::shared_ptr<core::param::ParamSlot> p_ptr = std::dynamic_pointer_cast<core::param::ParamSlot>(*ano_i);
-            if (p_ptr != nullptr) paramSlots.push_back(p_ptr);
+            if (p_ptr != nullptr)
+                paramSlots.push_back(p_ptr);
             std::shared_ptr<core::CallerSlot> cr_ptr = std::dynamic_pointer_cast<core::CallerSlot>(*ano_i);
-            if (cr_ptr != nullptr) callerSlots.push_back(cr_ptr);
+            if (cr_ptr != nullptr)
+                callerSlots.push_back(cr_ptr);
             std::shared_ptr<core::CalleeSlot> ce_ptr = std::dynamic_pointer_cast<core::CalleeSlot>(*ano_i);
-            if (ce_ptr != nullptr) calleeSlots.push_back(ce_ptr);
+            if (ce_ptr != nullptr)
+                calleeSlots.push_back(ce_ptr);
         }
 
         // Param Slots
         for (std::shared_ptr<core::param::ParamSlot> param_slot : paramSlots) {
-            if (param_slot == nullptr) continue;
+            if (param_slot == nullptr)
+                continue;
             Parameter::StockParameter psd;
             if (megamol::gui::Parameter::ReadNewCoreParameterToStockParameter((*param_slot), psd)) {
                 mod.parameters.emplace_back(psd);
@@ -1509,7 +1519,8 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_callee_idxs(
 
     std::vector<size_t> retval;
     retval.clear();
-    if (callee_slot == nullptr) return retval;
+    if (callee_slot == nullptr)
+        return retval;
 
     SIZE_T callbackCount = callee_slot->GetCallbackCount();
     std::vector<std::string> callNames, funcNames;
@@ -1572,7 +1583,8 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_caller_idxs(
 
     std::vector<size_t> retval;
     retval.clear();
-    if (caller_slot == nullptr) return retval;
+    if (caller_slot == nullptr)
+        return retval;
 
     SIZE_T callCount = caller_slot->GetCompCallCount();
     for (SIZE_T i = 0; i < callCount; ++i) {
@@ -1594,7 +1606,8 @@ bool megamol::gui::GraphCollection::save_state_to_file(const std::string& filena
 
     nlohmann::json state_json;
     std::string file = filename;
-    if (!GUIUtils::GetGUIStateFileName(file)) return false;
+    if (!GUIUtils::GetGUIStateFileName(file))
+        return false;
 
     // Try to load existing gui state from file
     std::string state_str;
@@ -1614,15 +1627,13 @@ bool megamol::gui::GraphCollection::save_state_to_file(const std::string& filena
         // Write/replace GUI_JSON_TAG_PROJECT graph state
         try {
             state_json[GUI_JSON_TAG_GRAPHS].erase(GUI_JSON_TAG_PROJECT);
-        } catch (...) {
-        }
+        } catch (...) {}
         graph_ptr->StateToJSON(state_json);
 
         // Write/replace GUI state of parameters (groups)
         try {
             state_json.erase(GUI_JSON_TAG_GUISTATE_PARAMETERS);
-        } catch (...) {
-        }
+        } catch (...) {}
         for (auto& module_ptr : graph_ptr->GetModules()) {
             std::string module_full_name = module_ptr->FullName();
             // Parameter Groups
@@ -1643,11 +1654,13 @@ bool megamol::gui::GraphCollection::save_state_to_file(const std::string& filena
 bool megamol::gui::GraphCollection::load_state_from_file(const std::string& filename, ImGuiID graph_id) {
 
     std::string file = filename;
-    if (!GUIUtils::GetGUIStateFileName(file)) return false;
+    if (!GUIUtils::GetGUIStateFileName(file))
+        return false;
 
     std::string state_str;
     if (FileUtils::ReadFile(file, state_str, true)) {
-        if (state_str.empty()) return false;
+        if (state_str.empty())
+            return false;
         nlohmann::json json;
         json = nlohmann::json::parse(state_str);
         if (!json.is_object()) {

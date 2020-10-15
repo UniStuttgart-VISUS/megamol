@@ -47,17 +47,22 @@ static void log(std::string text) {
 	megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
 
+static void log_error(std::string text) {
+	const std::string msg = "MegaMolGraph: " + text; 
+	megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
+}
+
 static megamol::core::param::AbstractParam* getParameterFromParamSlot(megamol::core::param::ParamSlot* param_slot) {
     if (!param_slot)
         return nullptr;
 
     if (param_slot->GetStatus() == megamol::core::AbstractSlot::STATUS_UNAVAILABLE) {
-        log("error. cannot find parameter: " + std::string(param_slot->Name().PeekBuffer()) +
+        log_error("error. cannot find parameter: " + std::string(param_slot->Name().PeekBuffer()) +
             ", slot is not available");
         return nullptr;
     }
     if (param_slot->Parameter().IsNull()) {
-        log("error. cannot find parameter: " + std::string(param_slot->Name().PeekBuffer()) +
+        log_error("error. cannot find parameter: " + std::string(param_slot->Name().PeekBuffer()) +
             ", slot has no parameter");
         return nullptr;
     }
@@ -120,11 +125,11 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& oldId, std::st
 
     auto module_it = find_module(oldId);
     if (module_it == module_list_.end()) {
-        log("error. could not rename module. unable to find module named: " + oldId);
+        log_error("error. could not rename module. unable to find module named: " + oldId);
         return false;
     }
     if (!module_it->modulePtr) {
-        log("error. could not rename module. module is nullptr: " + oldId);
+        log_error("error. could not rename module. module is nullptr: " + oldId);
         return false;
     }
 
@@ -207,7 +212,7 @@ megamol::core::CallList_t::const_iterator megamol::core::MegaMolGraph::find_call
 bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const& request) {
     factories::ModuleDescription::ptr module_description = this->ModuleProvider().Find(request.className.c_str());
     if (!module_description) {
-        log("error. module factory could not find module class name: " + request.className);
+        log_error("error. module factory could not find module class name: " + request.className);
         return false;
     }
 
@@ -215,7 +220,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
 
     Module::ptr_type module_ptr = Module::ptr_type(module_description->CreateModule(module_name));
     if (!module_ptr) {
-        log("error. could not instantiate module from module description: " + request.className);
+        log_error("error. could not instantiate module from module description: " + request.className);
         return false;
     }
 
@@ -228,9 +233,9 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         std::string found_deps = "";
         for (auto& req : module_lifetime_resource_request) requested_deps += " " + req;
         for (auto& dep : module_lifetime_dependencies) found_deps += " " + dep.getIdentifier();
-        log("error. could not create module, not all requested resources available: ");
-        log("requested: " + requested_deps);
-        log("found: " + found_deps);
+        log_error("error. could not create module, not all requested resources available: ");
+        log_error("requested: " + requested_deps);
+        log_error("found: " + found_deps);
 
 		return false;
     }
@@ -243,7 +248,7 @@ bool megamol::core::MegaMolGraph::add_module(ModuleInstantiationRequest_t const&
         const bool init_ok = module_ptr->Create(module_lifetime_dependencies); // seems like Create() internally checks IsAvailable()
 
         if (!init_ok)
-            log("error. could not create module, IsAvailable() or Create() failed: " +
+            log_error("error. could not create module, IsAvailable() or Create() failed: " +
                 std::string((module_ptr->Name()).PeekBuffer()));
         else
             log("create module: " + std::string((module_ptr->Name()).PeekBuffer()));
@@ -268,7 +273,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
                                          std::string const& name) -> std::pair<AbstractSlot*, Module::ptr_type> {
         auto module_it = find_module_by_prefix(name);
         if (module_it == this->module_list_.end()) {
-            log("error. could not find module for requested call: " + name + "(" + call_description->ClassName() + ")");
+            log_error("error. could not find module for requested call: " + name + "(" + call_description->ClassName() + ")");
             return {nullptr, nullptr};
         }
         const auto module_name = module_it->request.id;
@@ -277,19 +282,19 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
         Module::ptr_type module_ptr = module_it->modulePtr;
         AbstractSlot* slot_ptr = module_ptr->FindSlot(slot_name.c_str());
         if (!slot_ptr) {
-            log("error. could not find slot named: " + slot_name +
+            log_error("error. could not find slot named: " + slot_name +
                 " to connect requested call: " + std::string(call_description->ClassName()));
             return {nullptr, nullptr};
         }
 
         if (!slot_ptr->IsCallCompatible(call_description)) {
-            log("error. call: " + std::string(call_description->ClassName()) +
+            log_error("error. call: " + std::string(call_description->ClassName()) +
                 " is not compatible with slot: " + slot_name);
             return {nullptr, nullptr};
         }
 
         if (!slot_ptr->GetStatus() == AbstractSlot::STATUS_ENABLED) {
-            log("error. slot: " + slot_name +
+            log_error("error. slot: " + slot_name +
                 " is not enabled. can not connect call: " + std::string(call_description->ClassName()));
             return {nullptr, nullptr};
         }
@@ -299,7 +304,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 
     auto from_slot = getCallSlotOfModule(request.from);
     if (!from_slot.first) {
-        log("error. could not find from-slot: " + request.from +
+        log_error("error. could not find from-slot: " + request.from +
             " for call: " + std::string(call_description->ClassName()));
         return false; // error when looking for from-slot
     }
@@ -307,7 +312,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 
     auto to_slot = getCallSlotOfModule(request.to);
     if (!to_slot.first) {
-        log("error. could not find to-slot: " + request.to +
+        log_error("error. could not find to-slot: " + request.to +
             " for call: " + std::string(call_description->ClassName()));
         return false; // error when looking for to-slot
     }
@@ -317,7 +322,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
         (callee->GetStatus() == AbstractSlot::STATUS_CONNECTED)) {
         Call* tstCall = caller->IsConnectedTo(callee);
         if (tstCall && call_description->IsDescribing(tstCall)) {
-            log("error. caller (" + request.from + ") and callee (" + request.to +
+            log_error("error. caller (" + request.from + ") and callee (" + request.to +
                 ") are already connected by call: " + std::string(call_description->ClassName()));
             return false; // call already exists
         }
@@ -329,11 +334,11 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 
     Call::ptr_type call = Call::ptr_type(call_description->CreateCall());
     if (!callee->ConnectCall(call.get(), call_description)) {
-        log("error. connecting call: " + std::string(call_description->ClassName()) + " failed at callee");
+        log_error("error. connecting call: " + std::string(call_description->ClassName()) + " failed at callee");
         return false;
     }
     if (!caller->ConnectCall(call.get())) {
-        log("error. connecting call: " + std::string(call_description->ClassName()) + " failed at caller");
+        log_error("error. connecting call: " + std::string(call_description->ClassName()) + " failed at caller");
         // FIXME: if connecting the callER fails, how to disconnect call from callEE?
         // callee->DisconnectCalls();
         return false;
@@ -362,14 +367,14 @@ bool megamol::core::MegaMolGraph::delete_module(ModuleDeletionRequest_t const& r
 
     auto module_it = find_module(request);
     if (module_it == this->module_list_.end()) {
-        log("error. could not find module for deletion: " + request);
+        log_error("error. could not find module for deletion: " + request);
         return false;
     }
 
     auto module_ptr = module_it->modulePtr;
 
     if (!module_ptr) {
-        log("error. no object behind pointer when deleting module: " + request);
+        log_error("error. no object behind pointer when deleting module: " + request);
         return false;
     }
 
@@ -405,7 +410,7 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
     auto call_it = find_call(request.from, request.to);
 
     if (call_it == this->call_list_.end()) {
-        log("error. could not find call for deletion: " + request.from + " -> " + request.to);
+        log_error("error. could not find call for deletion: " + request.from + " -> " + request.to);
         return false;
     }
 
@@ -413,7 +418,7 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
     auto source = call_it->callPtr->PeekCallerSlotNoConst();
 
     if (!target || !source) {
-        log("error. could not get callee or caller slot for call deletion of call: " +
+        log_error("error. could not get callee or caller slot for call deletion of call: " +
             std::string(call_it->callPtr->ClassName()) + "\n(" + request.from + " -> " + request.to + ")");
         return false;
     }
@@ -439,7 +444,7 @@ megamol::core::Module::ptr_type megamol::core::MegaMolGraph::FindModule(std::str
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
-        log("error. could not find module: " + moduleName);
+        log_error("error. could not find module: " + moduleName);
         return nullptr;
     }
 
@@ -451,7 +456,7 @@ megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
     auto call_it = find_call(from, to);
 
     if (call_it == call_list_.end()) {
-        log("error. could not find call: " + from + " -> " + to);
+        log_error("error. could not find call: " + from + " -> " + to);
         return nullptr;
     }
 
@@ -485,7 +490,7 @@ megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(
     auto module_it = find_module_by_prefix(paramName);
 
     if (module_it == module_list_.end()) {
-        log("error. could not find parameter, module name not found, parameter name: " + paramName + ")");
+        log_error("error. could not find parameter, module name not found, parameter name: " + paramName + ")");
         return nullptr;
     }
 
@@ -496,7 +501,7 @@ megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(
     param::ParamSlot* param_slot_ptr = dynamic_cast<param::ParamSlot*>(slot_ptr);
 
     if (slot_ptr == nullptr || param_slot_ptr == nullptr) {
-        log("error. could not find parameter, slot not found or of wrong type. parameter name: " + paramName +
+        log_error("error. could not find parameter, slot not found or of wrong type. parameter name: " + paramName +
             ", slot name: " + slot_name);
         return nullptr;
     }
@@ -516,7 +521,7 @@ std::vector<megamol::core::param::ParamSlot*> megamol::core::MegaMolGraph::Enume
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
-        log("error. could not find module: " + moduleName);
+        log_error("error. could not find module: " + moduleName);
         return parameters;
     }
 
@@ -583,7 +588,7 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName, std
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
-        log("error adding graph entry point. could not find module: " + moduleName);
+        log_error("error adding graph entry point. could not find module: " + moduleName);
         return false;
     }
     
@@ -611,7 +616,7 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string moduleName) 
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
-        log("error removing graph entry point. could not find module: " + moduleName);
+        log_error("error removing graph entry point. could not find module: " + moduleName);
         return false;
     }
 
@@ -648,4 +653,43 @@ std::vector<megamol::frontend::ModuleResource> megamol::core::MegaMolGraph::get_
 	return result;
 }
 
+megamol::core::MegaMolGraph_Serialization megamol::core::MegaMolGraph::SerializeGraph() const {
+    MegaMolGraph_Serialization serialization;
+
+    std::string& serViews = serialization.serInstances;
+    std::string& serModules = serialization.serModules;
+    std::string& serCalls = serialization.serCalls;
+    std::string& serParams = serialization.serParams;
+
+    for (auto& module : this->module_list_) {
+        if (module.isGraphEntryPoint) {
+            auto improvised_instance_name = "::"+splitPathName(module.request.id)[0];
+            serViews.append("mmCreateView(\"" + improvised_instance_name + "\",\"" + module.request.className + "\",\"" + module.request.id + "\")\n");
+        }
+    }
+
+    for (auto& module : this->module_list_) {
+        if (!module.isGraphEntryPoint) {
+            serModules.append("mmCreateModule(\"" + module.request.className + "\",\"" + module.request.id + "\")\n");
+        }
+    }
+
+    for (auto& module : this->module_list_) {
+        for (auto& paramSlot : this->EnumerateModuleParameterSlots(module.request.id)) {
+            auto name = std::string{paramSlot->FullName()};
+            auto value = std::string{paramSlot->Parameter()->ValueString().PeekBuffer()};
+            serParams.append("mmSetParamValue(\"" + name + "\",[=[" + value + "]=])\n");
+        }
+    }
+
+    for (auto& call : call_list_) {
+        serCalls.append("mmCreateCall(\""
+            + call.request.className + "\",\""
+            + call.request.from + "\",\""
+            + call.request.to + "\",\""
+            + "\")\n");
+    }
+
+    return serialization;
+}
 

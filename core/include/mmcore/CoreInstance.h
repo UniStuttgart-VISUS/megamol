@@ -37,6 +37,7 @@
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/utility/LogEchoTarget.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore/MegaMolGraph_Serialization.h"
 
 #include "vislib/Array.h"
 #include "vislib/IllegalStateException.h"
@@ -241,10 +242,10 @@ public:
     /**
      * Request deletion of the module with the given id.
      */
-    #ifdef REMOVE_GRAPH
+#ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestModuleDeletion(const vislib::StringA& id);
-    #endif
-    
+#endif
+
 
     /**
      * Request deletion of call connecting callerslot from
@@ -252,7 +253,7 @@ public:
      */
 #    ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestCallDeletion(const vislib::StringA& from, const vislib::StringA& to);
-    #endif
+#endif
 
     /**
      * Request instantiation of a module of class className
@@ -260,7 +261,7 @@ public:
      */
 #        ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestModuleInstantiation(const vislib::StringA& className, const vislib::StringA& id);
-    #endif
+#endif
 
     /**
      * Request instantiation of a call of class className, connecting
@@ -269,7 +270,7 @@ public:
 #            ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestCallInstantiation(
         const vislib::StringA& className, const vislib::StringA& from, const vislib::StringA& to);
-    #endif
+#endif
 
     /**
      * Request instantiation of a call at the end of a chain of calls of
@@ -278,7 +279,7 @@ public:
 #    ifdef REMOVE_GRAPH
     bool GOES_INTO_GRAPH RequestChainCallInstantiation(
         const vislib::StringA& className, const vislib::StringA& chainStart, const vislib::StringA& to);
-    #endif
+#endif
 
     /**
      * Request setting the parameter id to the value.
@@ -325,11 +326,11 @@ public:
     inline GOES_INTO_GRAPH bool HasPendingRequests(void) {
         vislib::sys::AutoLock l(this->graphUpdateLock);
         return !this->pendingViewInstRequests.IsEmpty() || !this->pendingJobInstRequests.IsEmpty() ||
-               !this->pendingCallDelRequests.IsEmpty() || !this->pendingCallInstRequests.IsEmpty() ||
-               !this->pendingChainCallInstRequests.IsEmpty() || !this->pendingModuleDelRequests.IsEmpty() ||
-               !this->pendingModuleInstRequests.IsEmpty() || !this->pendingParamSetRequests.IsEmpty();
+            !this->pendingCallDelRequests.IsEmpty() || !this->pendingCallInstRequests.IsEmpty() ||
+            !this->pendingChainCallInstRequests.IsEmpty() || !this->pendingModuleDelRequests.IsEmpty() ||
+            !this->pendingModuleInstRequests.IsEmpty() || !this->pendingParamSetRequests.IsEmpty();
     }
-    #endif
+#endif
 
     vislib::StringA GetPendingViewName(void);
 
@@ -355,7 +356,7 @@ public:
      */
     JobInstance::ptr_type InstantiatePendingJob(void);
 
-    #    ifdef REMOVE_GRAPH
+#    ifdef REMOVE_GRAPH
     /**
      * Returns a pointer to the parameter with the given name.
      *
@@ -399,7 +400,7 @@ public:
         // absolutly sufficient, since module namespaces use ANSI strings
         return this->FindParameter(vislib::StringA(name), quiet, create);
     }
-    #endif
+#endif
 
     /**
      * Loads a project into the core.
@@ -415,7 +416,7 @@ public:
      */
     void LoadProject(const vislib::StringW& filename);
 
-    #    ifdef REMOVE_GRAPH
+#    ifdef REMOVE_GRAPH
     /**
      * Serializes the current graph into lua commands.
      *
@@ -424,7 +425,7 @@ public:
      * @param serCalls     The serialized calls.
      * @param serParams    The serialized parameters.
      */
-    void SerializeGraph(std::string& serInstances, std::string& serModules, std::string& serCalls, std::string& serParams);
+    MegaMolGraph_Serialization SerializeGraph();
 
     /**
      * Enumerates all parameters. The callback function is called for each
@@ -440,10 +441,10 @@ public:
      * Enumerates all modules of the graph, calling cb for each encountered module.
      * If entry_point is specified, the graph is traversed starting from that module or namespace,
      * otherwise, it is traversed from the root.
-     * 
+     *
      * @param entry_point the name of the module/namespace for traversal start
      * @param cb the lambda
-     * 
+     *
      */
     inline void EnumModulesNoLock(const std::string& entry_point, std::function<void(Module*)> cb) {
         auto thingy = this->namespaceRoot->FindNamedObject(entry_point.c_str());
@@ -454,7 +455,8 @@ public:
             if (mod) {
                 success = true;
                 this->EnumModulesNoLock(mod, cb);
-            } else if (ns) {
+            }
+            else if (ns) {
                 success = true;
                 this->EnumModulesNoLock(ns, cb);
             }
@@ -469,10 +471,10 @@ public:
      * Enumerates all modules of the graph, calling cb for each encountered module.
      * If entry_point is specified, the graph is traversed starting from that module or namespace,
      * otherwise, it is traversed from the root.
-     * 
+     *
      * @param entry_point traversal start or nullptr
      * @param cb the lambda
-     * 
+     *
      */
     void EnumModulesNoLock(core::AbstractNamedObject* entry_point, std::function<void(Module*)> cb);
 
@@ -494,7 +496,8 @@ public:
         if (vi != nullptr) {
             cb(vi);
             return true;
-        } else {
+        }
+        else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                 megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
             return false;
@@ -528,7 +531,8 @@ public:
                 megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to find a ParamSlot in module \"%s\" for processing", module_name.c_str());
             }
-        } else {
+        }
+        else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                 megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
         }
@@ -547,7 +551,7 @@ public:
     template <class A, class C>
     typename std::enable_if<std::is_convertible<A*, Module*>::value && std::is_convertible<C*, Call*>::value,
         bool>::type GOES_INTO_GRAPH
-    EnumerateCallerSlotsNoLock(std::string module_name, std::function<void(C&)> cb) {
+        EnumerateCallerSlotsNoLock(std::string module_name, std::function<void(C&)> cb) {
         auto ano_container = AbstractNamedObjectContainer::dynamic_pointer_cast(this->namespaceRoot);
         auto ano = ano_container->FindNamedObject(module_name.c_str());
         auto vi = dynamic_cast<A*>(ano.get());
@@ -567,7 +571,8 @@ public:
                 megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Unable to find a CallerSlot in module \"%s\" for processing", module_name.c_str());
             }
-        } else {
+        }
+        else {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                 megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to find module \"%s\" for processing", module_name.c_str());
         }
@@ -612,7 +617,7 @@ public:
     inline vislib::StringA GOES_INTO_GRAPH FindParameterName(const vislib::SmartPtr<param::AbstractParam>& param) const {
         return this->findParameterName(this->namespaceRoot, param);
     }
-    #endif
+#endif
 
     /**
      * Answer the time of this instance in seconds.
@@ -631,12 +636,12 @@ public:
      */
     void OffsetInstanceTime(double offset);
 
-    #    ifdef REMOVE_GRAPH
+#    ifdef REMOVE_GRAPH
     /**
      * Removes all obsolete modules from the module graph
      */
     void GOES_INTO_GRAPH CleanupModuleGraph(void);
-    #endif
+#endif
 
     /**
      * Closes a view or job handle (the corresponding instance object will
@@ -651,7 +656,7 @@ public:
      */
     void Shutdown(void);
 
-    #    ifdef REMOVE_GRAPH
+#    ifdef REMOVE_GRAPH
     /**
      * Sets up the module graph based on the serialized graph description
      * from the head node of the network rendering cluster.
@@ -714,7 +719,7 @@ public:
     inline void GOES_INTO_GRAPH UnregisterParamUpdateListener(param::ParamUpdateListener* pul) {
         this->paramUpdateListeners.RemoveAll(pul);
     }
-    #endif
+#endif
 
 #ifdef REMOVE_GRAPH
     /**
@@ -732,7 +737,7 @@ public:
      * @param outFilename The output file name.
      * @return 'True' on success, 'false' otherwise.
      */
-    // TODO: in the future, this is either not needed or JSON please
+     // TODO: in the future, this is either not needed or JSON please
     bool WriteStateToXML(const char* outFilename);
 
     /**
@@ -747,7 +752,7 @@ public:
      *
      * @param The service to be deleted
      */
-    typedef void (*ServiceDeletor)(AbstractService*&);
+    typedef void(*ServiceDeletor)(AbstractService*&);
 
     /**
      * Installs a service object. The service object is initialized and potentially enabled
@@ -809,6 +814,11 @@ public:
      * This method is for use by the frontend only.
      */
     inline void SetFrameID(uint32_t frameID) { this->frameID = frameID; }
+
+    /**
+     * Return flag indicating if current usage of core instance is compatible with mmconsole fronted.
+     */
+    inline bool IsmmconsoleFrontendCompatible(void) const { return this->mmconsoleFrontendCompatible;  }
 
 private:
     /**
@@ -1286,6 +1296,9 @@ private:
     /** Global hash of all parameters (is increased if any parameter defintion changes) */
     size_t GOES_INTO_GRAPH parameterHash;
     #endif
+
+    /** Flag indicates if usage of core instance is compatible with mmconsole frontend. */
+    bool mmconsoleFrontendCompatible;
 
 #ifdef _WIN32
 #    pragma warning(default : 4251)

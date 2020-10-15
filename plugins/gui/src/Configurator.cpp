@@ -26,23 +26,23 @@ std::vector<std::string> megamol::gui::Configurator::dropped_files;
 
 
 megamol::gui::Configurator::Configurator()
-    : graph_collection()
-    , init_state(0)
-    , module_list_sidebar_width(250.0f)
-    , selected_list_module_uid(GUI_INVALID_ID)
-    , add_project_graph_uid(GUI_INVALID_ID)
-    , module_list_popup_hovered_group_uid(GUI_INVALID_ID)
-    , show_module_list_sidebar(false)
-    , show_module_list_child(false)
-    , module_list_popup_pos()
-    , module_list_popup_hovered(false)
-    , last_selected_callslot_uid(GUI_INVALID_ID)
-    , graph_state()
-    , open_popup_load(false)
-    , file_browser()
-    , search_widget()
-    , splitter_widget()
-    , tooltip() {
+        : graph_collection()
+        , init_state(0)
+        , module_list_sidebar_width(250.0f)
+        , selected_list_module_uid(GUI_INVALID_ID)
+        , add_project_graph_uid(GUI_INVALID_ID)
+        , module_list_popup_hovered_group_uid(GUI_INVALID_ID)
+        , show_module_list_sidebar(false)
+        , show_module_list_child(false)
+        , module_list_popup_pos()
+        , module_list_popup_hovered(false)
+        , last_selected_callslot_uid(GUI_INVALID_ID)
+        , graph_state()
+        , open_popup_load(false)
+        , file_browser()
+        , search_widget()
+        , splitter_widget()
+        , tooltip() {
 
     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH] = {
         core::view::KeyCode(core::view::Key::KEY_M, (core::view::Modifier::CTRL | core::view::Modifier::SHIFT)), false};
@@ -666,11 +666,13 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
 bool megamol::gui::Configurator::load_graph_state_from_file(const std::string& filename) {
 
     std::string file = filename;
-    if (!GUIUtils::GetGUIStateFileName(file)) return false;
+    if (!GUIUtils::GetGUIStateFileName(file))
+        return false;
 
     std::string state_str;
     if (FileUtils::ReadFile(file, state_str, true)) {
-        if (state_str.empty()) return false;
+        if (state_str.empty())
+            return false;
         nlohmann::json in_json = nlohmann::json::parse(state_str);
         return this->StateFromJSON(in_json);
     }

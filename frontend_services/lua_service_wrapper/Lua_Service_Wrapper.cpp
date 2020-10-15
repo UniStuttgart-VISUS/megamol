@@ -150,13 +150,33 @@ void Lua_Service_Wrapper::updateProvidedResources() {
         }
     }
 
+    for (auto& file : m_queuedProjectFiles) {
+        std::string result;
+        log("running file " + file);
+        luaAPI.RunFile(file, result);
+        log("executed file " + file + ": " + result);
+    }
+    m_queuedProjectFiles.clear();
+
     need_to_shutdown |= luaAPI.getShutdown();
 
     if (need_to_shutdown)
         this->setShutdown();
 }
 
-void Lua_Service_Wrapper::digestChangedRequestedResources() { recursion_guard; }
+void Lua_Service_Wrapper::digestChangedRequestedResources() {
+    recursion_guard;
+
+    // execute lua files dropped into megamol window
+    auto window_events = this->m_requestedResourceReferences[2].getResource<megamol::module_resources::WindowEvents>();
+    for(auto& event: window_events.dropped_path_events) {
+        for (auto& file_path : event) {
+            if(file_path.find(".lua") == file_path.size()-4) {
+                m_queuedProjectFiles.push_back(file_path);
+            }
+        }
+    }
+}
 
 void Lua_Service_Wrapper::resetProvidedResources() { recursion_guard; }
 

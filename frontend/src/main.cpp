@@ -37,7 +37,7 @@ struct CLIConfig {
     std::string program_invocation_string = "";
     std::vector<std::string> project_files = {};
     std::string lua_host_address = "tcp://127.0.0.1:33333";
-    bool load_example_project = true;
+    bool load_example_project = false;
     bool opengl_khr_debug = true;
 };
 
@@ -147,6 +147,7 @@ int main(int argc, char* argv[]) {
         for (auto& resource : services.getProvidedResources()) {
             resources.push_back(resource.getIdentifier());
         }
+        resources.push_back("FrontendResourcesList");
         return resources;
     };
     services.getProvidedResources().push_back({"FrontendResourcesList", resource_lister});
@@ -214,8 +215,8 @@ int main(int argc, char* argv[]) {
             }
         }
     }
-    if (config.load_example_project && config.project_files.empty()) {
-        const bool graph_ok = set_up_example_graph(graph); // fill graph with modules and calls
+    if (config.load_example_project) {
+        const bool graph_ok = set_up_example_graph(graph);
         if (!graph_ok) {
             std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
             run_megamol = false;
@@ -247,7 +248,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
     options.add_options()
         ("project-files", "projects to load", cxxopts::value<std::vector<std::string>>())
         ("host", "address of lua host server, default: "+config.lua_host_address, cxxopts::value<std::string>())
-        ("noexample", "don't load minimal spheres example project", cxxopts::value<bool>())
+        ("example", "load minimal test spheres example project", cxxopts::value<bool>())
         ("khrdebug", "enable OpenGL KHR debug messages", cxxopts::value<bool>()->default_value("false"))
         ("help", "print help")
         ;
@@ -281,8 +282,8 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
             config.lua_host_address = parsed_options["host"].as<std::string>();
         }
 
-        if (parsed_options.count("noexample")) {
-            config.load_example_project = !parsed_options["noexample"].as<bool>();
+        if (parsed_options.count("example")) {
+            config.load_example_project = parsed_options["example"].as<bool>();
         }
 
         config.opengl_khr_debug = parsed_options["khrdebug"].as<bool>();

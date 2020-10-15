@@ -289,6 +289,8 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
         throw vislib::IllegalStateException("Cannot initialise a core instance twice.", __FILE__, __LINE__);
     }
 
+    this->mmconsoleFrontendCompatible = mmconsole_frontend_compatible;
+
     // logging mechanism
     if (this->preInit->IsLogEchoLevelSet()) {
         megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(this->preInit->GetLogEchoLevel());
@@ -2031,8 +2033,13 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
 }
 
 
-void megamol::core::CoreInstance::SerializeGraph(
-    std::string& serInstances, std::string& serModules, std::string& serCalls, std::string& serParams) {
+megamol::core::MegaMolGraph_Serialization megamol::core::CoreInstance::SerializeGraph() {
+    MegaMolGraph_Serialization serialization;
+
+    std::string& serInstances = serialization.serInstances;
+    std::string& serModules = serialization.serModules;
+    std::string& serCalls = serialization.serCalls;
+    std::string& serParams = serialization.serParams;
 
     std::stringstream confInstances, confModules, confCalls, confParams;
 
@@ -2108,6 +2115,8 @@ void megamol::core::CoreInstance::SerializeGraph(
         serCalls = confCalls.str();
         serParams = confParams.str();
     }
+
+    return serialization;
 }
 
 

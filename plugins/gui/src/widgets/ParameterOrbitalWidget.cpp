@@ -14,7 +14,7 @@ using namespace megamol::gui;
 
 
 ParameterOrbitalWidget::ParameterOrbitalWidget(void)
-    : m_rotation(1.0f, 0.0f, 0.0f, 0.0f), m_direction(0.0f, 0.0f, -1.0f) {}
+        : m_rotation(1.0f, 0.0f, 0.0f, 0.0f), m_direction(0.0f, 0.0f, -1.0f) {}
 
 
 bool megamol::gui::ParameterOrbitalWidget::gizmo3D_rotation_axes(glm::vec4& inout_rotation) {
