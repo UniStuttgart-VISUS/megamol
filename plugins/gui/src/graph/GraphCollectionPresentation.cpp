@@ -115,7 +115,8 @@ void megamol::gui::GraphCollectionPresentation::SaveProjectToFile(
     }
     if (this->file_browser.PopUp(
             FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project", open_popup, project_filename)) {
-        popup_failed = !inout_graph_collection.SaveProjectToFile(state.graph_selected_uid, project_filename);
+        popup_failed = !inout_graph_collection.SaveProjectToFile(state.graph_selected_uid, project_filename,
+            inout_graph_collection.GetUpdatedGUIState(state.graph_selected_uid, project_filename));
     }
     MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);

@@ -264,7 +264,7 @@ namespace gui {
         bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
         void triggerCoreInstanceShutdown(void);
 
-        bool save_state_to_file(const std::string& filename);
+        std::string dump_state_to_file(const std::string& filename);
         bool load_state_from_file(const std::string& filename);
 
         bool state_from_json(const nlohmann::json& in_json);

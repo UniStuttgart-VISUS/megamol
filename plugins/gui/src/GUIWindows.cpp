@@ -1241,7 +1241,9 @@ void GUIWindows::validateParameters() {
         // Delayed saving after triggering saving state (in seconds).
         GraphPtr_t graph_ptr;
         if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-            this->save_state_to_file(graph_ptr->GetFilename());
+            std::string filename = graph_ptr->GetFilename();
+            this->configurator.GetGraphCollection().SaveProjectToFile(
+                this->state.graph_uid, filename, this->dump_state_to_file(filename));
         }
         this->state.win_save_state = false;
     }
@@ -1831,8 +1833,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
                 FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project", this->state.open_popup_save, filename)) {
 
             graph_ptr->SetFilename(filename);
-            popup_failed |= !this->save_state_to_file(filename);
-            popup_failed |= !this->configurator.GetGraphCollection().SaveProjectToFile(this->state.graph_uid, filename);
+            popup_failed |= !this->configurator.GetGraphCollection().SaveProjectToFile(
+                this->state.graph_uid, filename, this->dump_state_to_file(filename));
         }
         MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
             confirmed, "Cancel", aborted);
@@ -1844,7 +1846,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     this->state.open_popup_load |= this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed;
     if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->state.open_popup_load,
             this->state.load_project_filename)) {
-        /// TODO?
+        /// XXX TODO
     }
     MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
@@ -1971,16 +1973,14 @@ void megamol::gui::GUIWindows::triggerCoreInstanceShutdown(void) {
 }
 
 
-bool megamol::gui::GUIWindows::save_state_to_file(const std::string& filename) {
+std::string megamol::gui::GUIWindows::dump_state_to_file(const std::string& filename) {
 
     nlohmann::json state_json;
-    std::string file = filename;
-    if (!GUIUtils::GetGUIStateFileName(file))
-        return false;
 
     // Load existing gui state from file
     std::string state_str;
-    if (FileUtils::ReadFile(file, state_str, true)) {
+    if (FileUtils::ReadFile(filename, state_str, true)) {
+        state_str = GUIUtils::ExtractGUIState(state_str);
         if (!state_str.empty()) {
             state_json = nlohmann::json::parse(state_str);
             if (!state_json.is_object()) {
@@ -1992,12 +1992,9 @@ bool megamol::gui::GUIWindows::save_state_to_file(const std::string& filename) {
     }
 
     if (this->state_to_json(state_json)) {
-        std::string state_str = state_json.dump(2);
+        std::string state_str = state_json.dump(); // No line feed
         this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
-        std::string file = filename;
-        if (!GUIUtils::GetGUIStateFileName(file))
-            return false;
-        return FileUtils::WriteFile(file, state_str);
+        return state_str;
     }
     return false;
 }
@@ -2005,15 +2002,12 @@ bool megamol::gui::GUIWindows::save_state_to_file(const std::string& filename) {
 
 bool megamol::gui::GUIWindows::load_state_from_file(const std::string& filename) {
 
-    std::string file = filename;
-    if (!GUIUtils::GetGUIStateFileName(file))
-        return false;
-
     std::string state_str;
-    if (FileUtils::ReadFile(file, state_str, true)) {
-        this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
+    if (FileUtils::ReadFile(filename, state_str, true)) {
+        state_str = GUIUtils::ExtractGUIState(state_str);
         if (state_str.empty())
             return false;
+        this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
         nlohmann::json in_json = nlohmann::json::parse(state_str);
         return this->state_from_json(in_json);
     }

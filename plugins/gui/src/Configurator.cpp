@@ -647,12 +647,9 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
 
 bool megamol::gui::Configurator::load_graph_state_from_file(const std::string& filename) {
 
-    std::string file = filename;
-    if (!GUIUtils::GetGUIStateFileName(file))
-        return false;
-
     std::string state_str;
-    if (FileUtils::ReadFile(file, state_str, true)) {
+    if (FileUtils::ReadFile(filename, state_str, true)) {
+        state_str = GUIUtils::ExtractGUIState(state_str);
         if (state_str.empty())
             return false;
         nlohmann::json in_json = nlohmann::json::parse(state_str);
