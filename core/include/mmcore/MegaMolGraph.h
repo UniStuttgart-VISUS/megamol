@@ -16,7 +16,6 @@
 
 #include "mmcore/MegaMolGraphTypes.h"
 #include "mmcore/MegaMolGraph_Convenience.h"
-#include "mmcore/MegaMolGraph_Serialization.h"
 
 #include "mmcore/RootModuleNamespace.h"
 
@@ -81,7 +80,7 @@ public:
 
     // TODO: the 'serializable' and 'deferrable construction' concepts result in basically the same implementation?
     // serializable
-    MegaMolGraph_Serialization SerializeGraph() const;
+    std::string SerializeGraph() const;
 
     // deferrable_construction
 

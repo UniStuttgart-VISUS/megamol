@@ -37,7 +37,6 @@
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/utility/LogEchoTarget.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
-#include "mmcore/MegaMolGraph_Serialization.h"
 
 #include "vislib/Array.h"
 #include "vislib/IllegalStateException.h"
@@ -425,7 +424,7 @@ public:
      * @param serCalls     The serialized calls.
      * @param serParams    The serialized parameters.
      */
-    MegaMolGraph_Serialization SerializeGraph();
+    std::string SerializeGraph();
 
     /**
      * Enumerates all parameters. The callback function is called for each
