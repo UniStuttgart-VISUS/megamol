@@ -58,7 +58,7 @@ public:
 
 private:
     megamol::module_resources::GLScreenshotSource m_frontbufferSource_resource;
-    megamol::module_resources::ScreenshotToFileTrigger m_toFileWriter_resource;
+    megamol::module_resources::ImageDataToPNGWriter m_toFileWriter_resource;
 
     std::function<bool(std::string const&)> m_frontbufferToPNG_trigger;
 
