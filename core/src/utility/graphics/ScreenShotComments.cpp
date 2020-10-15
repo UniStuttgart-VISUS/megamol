@@ -5,19 +5,12 @@
 
 namespace mcu_graphics = megamol::core::utility::graphics;
 
-mcu_graphics::ScreenShotComments::ScreenShotComments(megamol::core::MegaMolGraph_Serialization const& serialization, const std::optional<comments_storage_map> &additional_comments) {
-
-    std::string const& serInstances = serialization.serInstances;
-    std::string const& serModules = serialization.serModules;
-    std::string const& serCalls = serialization.serCalls;
-    std::string const& serParams = serialization.serParams;
-
-    const auto config_string = serInstances + "\n" + serModules + "\n" + serCalls + "\n" + serParams;
+mcu_graphics::ScreenShotComments::ScreenShotComments(std::string const& project_configuration, const std::optional<comments_storage_map> &additional_comments) {
 
     the_comments["Title"] = "MegaMol Screen Shot " + utility::DateTime::CurrentDateTimeFormatted();
     //the_comments["Author"] = "";
     //the_comments["Description"] = "";
-    the_comments["MegaMol project"] = config_string;
+    the_comments["MegaMol project"] = project_configuration;
     //the_comments["Copyright"] = "";
     the_comments["Creation Time"] = utility::DateTime::CurrentDateTimeFormatted();
     the_comments["Software"] = "MegaMol " + std::to_string(megamol::core::MEGAMOL_VERSION_MAJOR) + "." + std::to_string(MEGAMOL_CORE_MINOR_VER) + "." + MEGAMOL_CORE_COMP_REV;

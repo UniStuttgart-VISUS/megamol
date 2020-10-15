@@ -54,7 +54,7 @@ public:
     ~IScreenshotSource() = default;
 };
 
-class IScreenshotTrigger {
+class IImageDataWriter {
 public:
     bool write_screenshot(IScreenshotSource const& image_source, std::string const& filename) const {
         return this->write_image(std::move(image_source.take_screenshot()), filename);
@@ -62,7 +62,7 @@ public:
 
     virtual bool write_image(ImageData image, std::string const& filename) const = 0;
 
-    ~IScreenshotTrigger() = default;
+    ~IImageDataWriter() = default;
 };
 
 class GLScreenshotSource : public IScreenshotSource {
@@ -77,7 +77,7 @@ private:
     ReadBuffer m_read_buffer = FRONT;
 };
 
-class ScreenshotToFileTrigger : public IScreenshotTrigger {
+class ImageDataToPNGWriter : public IImageDataWriter {
 public:
     bool write_image(ImageData image, std::string const& filename) const override;
 };

@@ -152,7 +152,7 @@ megamol::module_resources::ImageData megamol::module_resources::GLScreenshotSour
     return std::move(result);
 }
 
-bool megamol::module_resources::ScreenshotToFileTrigger::write_image(ImageData image, std::string const& filename) const {
+bool megamol::module_resources::ImageDataToPNGWriter::write_image(ImageData image, std::string const& filename) const {
     return write_png_to_file(std::move(image), filename);
 }
 
@@ -197,7 +197,7 @@ std::vector<ModuleResource>& Screenshot_Service::getProvidedResources() {
      this->m_providedResourceReferences =
     {
         {"GLScreenshotSource", m_frontbufferSource_resource},
-        {"ScreenshotToFileTrigger", m_toFileWriter_resource},
+        {"ImageDataToPNGWriter", m_toFileWriter_resource},
         {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger}
     };
 

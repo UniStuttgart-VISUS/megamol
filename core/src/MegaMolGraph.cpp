@@ -654,13 +654,12 @@ std::vector<megamol::frontend::ModuleResource> megamol::core::MegaMolGraph::get_
 	return result;
 }
 
-megamol::core::MegaMolGraph_Serialization megamol::core::MegaMolGraph::SerializeGraph() const {
-    MegaMolGraph_Serialization serialization;
+std::string megamol::core::MegaMolGraph::SerializeGraph() const {
 
-    std::string& serViews = serialization.serInstances;
-    std::string& serModules = serialization.serModules;
-    std::string& serCalls = serialization.serCalls;
-    std::string& serParams = serialization.serParams;
+    std::string serViews;
+    std::string serModules;
+    std::string serCalls;
+    std::string serParams;
 
     for (auto& module : this->module_list_) {
         if (module.isGraphEntryPoint) {
@@ -698,6 +697,6 @@ megamol::core::MegaMolGraph_Serialization megamol::core::MegaMolGraph::Serialize
             + "\")\n");
     }
 
-    return serialization;
+    return serViews + "\n" + serModules + "\n" + serCalls + "\n" + serParams;
 }
 
