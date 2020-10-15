@@ -61,7 +61,7 @@ protected:
     void syncMeshCollection(CallGPUMeshData* lhs_call);
 
     /**
-     * Mesh collection that is used with a list of indices of all GPU submeshes that this module added to the mesh collection.
+     * Mesh collection that is used with a list of identifier strings of all GPU submeshes that this module added to the mesh collection.
      * Needed to delete/update submeshes if the collection is shared across a chain of data sources modules.
      */
     std::pair<std::shared_ptr<GPUMeshCollection>, std::vector<std::string>> m_mesh_collection;

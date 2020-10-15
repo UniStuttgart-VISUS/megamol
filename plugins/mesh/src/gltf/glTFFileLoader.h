@@ -11,6 +11,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
+#include "mesh/AbstractMeshDataSource.h"
 #include "mesh/MeshCalls.h"
 #include "mesh/mesh.h"
 #include "mesh/MeshDataAccessCollection.h"
