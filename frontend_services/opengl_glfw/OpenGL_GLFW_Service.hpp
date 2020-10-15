@@ -108,6 +108,11 @@ private:
 	    void close() const override;
 	};
 
+    struct Fake_OpenGL_Context : public megamol::module_resources::IOpenGL_Context {
+        void activate() const override {}
+        void close() const override {}
+    };
+
     // abstract away GLFW library details behind pointer-to-implementation. only use GLFW header in .cpp
     struct PimplData;
     std::unique_ptr<PimplData, std::function<void(PimplData*)>> m_pimpl;
@@ -118,6 +123,7 @@ private:
     WindowEvents m_windowEvents;
     FramebufferEvents m_framebufferEvents;
 	OpenGL_Context m_opengl_context_impl;
+	Fake_OpenGL_Context m_fake_opengl_context;
 	module_resources::IOpenGL_Context* m_opengl_context;
 
     // this holds references to the event structs we fill. the events are passed to the renderers/views using
