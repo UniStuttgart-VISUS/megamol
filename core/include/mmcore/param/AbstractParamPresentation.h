@@ -8,17 +8,16 @@
 #ifndef MEGAMOLCORE_ABSTRACTPARAMPRESENTATION_H_INCLUDED
 #define MEGAMOLCORE_ABSTRACTPARAMPRESENTATION_H_INCLUDED
 
-#include "mmcore/api/MegaMolCore.std.h"
-
-#include "mmcore/utility/log/Log.h"
 
 #include <string>
 #include <map>
 
-#include "json.hpp"
+#include "mmcore/utility/JSONHelper.h"
+#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/utility/log/Log.h"
 
 
-#define GUI_JSON_TAG_GUISTATE_PARAMETERS ("Parameters")
+#define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates")
 
 
 namespace megamol {
@@ -160,8 +159,8 @@ public:
     static const std::string GetTypeName(AbstractParamPresentation::ParamType type);
 
     /** De-/Serialization of parameters GUi state. */
-    bool ParameterGUIStateFromJSONString(const std::string& in_json_string, const std::string& param_fullname);
-    bool ParameterGUIStateToJSON(nlohmann::json& inout_json, const std::string& param_fullname);
+    bool StateFromJSON(const nlohmann::json& in_json, const std::string& param_fullname);
+    bool StateToJSON(nlohmann::json& inout_json, const std::string& param_fullname);
 
 protected:
 

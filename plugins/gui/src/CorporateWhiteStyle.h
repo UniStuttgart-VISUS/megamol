@@ -14,7 +14,7 @@
 /**
  * A "CorporateWhite"-Style.
  *
- * TODO: complete with more colors
+ * TODO Complete with more colors
  */
 inline void CorporateWhiteStyle(int is3D = 0) {
     ImGuiStyle& style = ImGui::GetStyle();

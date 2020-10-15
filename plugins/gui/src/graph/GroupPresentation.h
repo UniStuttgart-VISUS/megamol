@@ -1,5 +1,5 @@
 /*
- * Group.h
+ * GroupPresentation.h
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
@@ -21,52 +21,60 @@ namespace megamol {
 namespace gui {
 
 
-// Forward declarations
-class Group;
+    // Forward declarations
+    class Group;
 
 
-/** ************************************************************************
- * Defines GUI group presentation.
- */
-class GroupPresentation {
-public:
-    friend class Group;
+    /** ************************************************************************
+     * Defines GUI group presentation.
+     */
+    class GroupPresentation {
+    public:
+        friend class Group;
 
-    // VARIABLES --------------------------------------------------------------
+        // VARIABLES --------------------------------------------------------------
 
-    // Relative position without considering canvas offset and zooming
-    ImVec2 position;
-    // Relative size without considering zooming
-    ImVec2 size;
+        // Relative position without considering canvas offset and zooming
+        ImVec2 position;
+        // Relative size without considering zooming
+        ImVec2 size;
 
-    // FUNCTIONS --------------------------------------------------------------
+        // FUNCTIONS --------------------------------------------------------------
 
-    GroupPresentation(void);
-    ~GroupPresentation(void);
+        GroupPresentation(void);
+        ~GroupPresentation(void);
 
-    inline ImVec2 GetSize(void) { return this->size; }
-    inline bool IsViewCollapsed(void) { return this->collapsed_view; }
-    inline bool ModulesVisible(void) { return !this->collapsed_view; }
-    inline void ForceUpdate(void) { this->update = true; }
+        inline ImVec2 GetSize(void) {
+            return this->size;
+        }
+        inline bool IsViewCollapsed(void) {
+            return this->collapsed_view;
+        }
+        inline bool ModulesVisible(void) {
+            return !this->collapsed_view;
+        }
+        inline void ForceUpdate(void) {
+            this->update = true;
+        }
 
-private:
-    // VARIABLES --------------------------------------------------------------
+    private:
+        // VARIABLES --------------------------------------------------------------
 
-    bool collapsed_view;
-    bool allow_selection;
-    bool allow_context;
-    bool selected;
-    bool update;
+        bool collapsed_view;
+        bool allow_selection;
+        bool allow_context;
+        bool selected;
+        bool update;
 
-    // Widgets
-    RenamePopUp rename_popup;
+        // Widgets
+        RenamePopUp rename_popup;
 
-    // FUNCTIONS --------------------------------------------------------------
+        // FUNCTIONS --------------------------------------------------------------
 
-    void Present(megamol::gui::PresentPhase phase, Group& inout_group, GraphItemsState_t& state);
-    void UpdatePositionSize(Group& inout_group, const GraphCanvas_t& in_canvas);
-    void SetPosition(Group& inout_group, const GraphCanvas_t& in_canvas, ImVec2 pos);
-};
+        void Present(megamol::gui::PresentPhase phase, Group& inout_group, GraphItemsState_t& state);
+        void UpdatePositionSize(Group& inout_group, const GraphCanvas_t& in_canvas);
+        void SetPosition(Group& inout_group, const GraphCanvas_t& in_canvas, ImVec2 pos);
+    };
 
 
 } // namespace gui

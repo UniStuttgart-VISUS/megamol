@@ -6,7 +6,7 @@
 #ifndef GUI_H_INCLUDED
 #define GUI_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
@@ -17,21 +17,21 @@
 // that uses this DLL. This way any other project whose source files include this file see
 // TRISOUPPLUGIN_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
-#    ifdef GUI_EXPORTS
-#        define GUI_API __declspec(dllexport)
-#    else
-#        define GUI_API __declspec(dllimport)
-#    endif
+#ifdef GUI_EXPORTS
+#define GUI_API __declspec(dllexport)
+#else
+#define GUI_API __declspec(dllimport)
+#endif
 #else /* _WIN32 */
-#    define GUI_API
+#define GUI_API
 #endif /* _WIN32 */
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
 #ifdef GUI_EXPORTS
-#    ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#    endif
+#endif
 
 /**
  * Returns the version of the MegaMol™ plugin api used by this plugin.
@@ -85,9 +85,9 @@ GUI_API
  */
 GUI_API void mmplgReleasePluginInstance(::megamol::core::utility::plugins::AbstractPluginInstance* pi);
 
-#    ifdef __cplusplus
+#ifdef __cplusplus
 } /* extern "C" */
-#    endif
+#endif
 #endif
 
 #endif /* GUI_H_INCLUDED */
