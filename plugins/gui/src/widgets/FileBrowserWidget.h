@@ -75,6 +75,8 @@ namespace gui {
         void validate_directory(const std::string& path_str);
         void validate_file(const std::string& file_str, const std::string& extension, FileBrowserFlag flag);
         std::string get_absolute_path(const std::string& in_path_str) const;
+
+        void string_to_lower_case(std::string& str);
     };
 
 

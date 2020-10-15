@@ -34,6 +34,7 @@ GUIView::~GUIView() {
 
 
 bool GUIView::create() {
+
     if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
         return gui.CreateContext_GL(this->GetCoreInstance());
     } else {
