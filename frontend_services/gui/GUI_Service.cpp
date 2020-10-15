@@ -7,14 +7,12 @@
 
 #include "GUI_Service.hpp"
 
-#include "GUI_Wrapper.h"
-
 
 namespace megamol {
 namespace frontend {
 
 
-#define check_gui_not_nullptr (static_cast<bool>((this->m_gui.ptr != nullptr) && (this->m_gui.ptr->Get() != nullptr)))
+#define check_gui_not_nullptr (static_cast<bool>((this->m_gui != nullptr) && (this->m_gui->Get() != nullptr)))
 
 
 GUI_Service::~GUI_Service() {
@@ -50,11 +48,11 @@ bool GUI_Service::init(const Config& config) {
 
     // init gui
     if (config.imgui_api == GUI_Service::ImGuiAPI::OPEN_GL) { 
-        if (this->m_gui.ptr == nullptr) {
-            this->m_gui.ptr = std::make_shared<megamol::gui::GUI_Wrapper>();
+        if (this->m_gui == nullptr) {
+            this->m_gui = std::make_shared<megamol::gui::GUIWrapper>();
 
             if (check_gui_not_nullptr) {
-                if (this->m_gui.ptr->Get()->CreateContext_GL(config.core_instance)) {  
+                if (this->m_gui->Get()->CreateContext_GL(config.core_instance)) {  
                     this->m_providedResourceReferences = { {"GUIResource", this->m_gui} };
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully.");
                     return true;
@@ -82,7 +80,7 @@ void GUI_Service::updateProvidedResources() {
 void GUI_Service::digestChangedRequestedResources() {
 
     if (!check_gui_not_nullptr) return;
-    auto gui = this->m_gui.ptr->Get();
+    auto gui = this->m_gui->Get();
 
     // Trigger shutdown
     this->setShutdown(gui->ConsumeTriggeredShutdown());
@@ -103,6 +101,19 @@ void GUI_Service::digestChangedRequestedResources() {
         m_resource_state.window_size.x = static_cast<float>(std::get<0>(size_event));
         m_resource_state.window_size.y = static_cast<float>(std::get<1>(size_event));
     }
+    /* So far unused
+    for (auto& event : window_events->dropped_path_events) {
+        for (auto& file_path : event) {
+            if (megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(file_path, ".lua")) {
+                m_queuedProjectFiles.push_back(file_path);
+            }
+        }
+    }
+    for (auto& file : m_queuedProjectFiles) {
+        /// Propagate dropped project file to gui if requested (e.g. if configurator is hovered)
+    }
+    m_queuedProjectFiles.clear();
+    */
 
     /// KeyboardEvents = resource index 2
     auto keyboard_events = &this->m_requestedResourceReferences[2].getResource<megamol::module_resources::KeyboardEvents>();
@@ -192,7 +203,7 @@ void GUI_Service::resetProvidedResources() {
 void GUI_Service::preGraphRender() {
 
     if (!check_gui_not_nullptr) return;
-    auto gui = this->m_gui.ptr->Get();
+    auto gui = this->m_gui->Get();
 
     if (this->m_resource_state.opengl_context_ptr) {
         this->m_resource_state.opengl_context_ptr->activate();
@@ -211,7 +222,7 @@ void GUI_Service::preGraphRender() {
 void GUI_Service::postGraphRender() {
 
     if (!check_gui_not_nullptr) return;
-    auto gui = this->m_gui.ptr->Get();
+    auto gui = this->m_gui->Get();
 
     if (this->m_resource_state.opengl_context_ptr) {
         this->m_resource_state.opengl_context_ptr->activate();

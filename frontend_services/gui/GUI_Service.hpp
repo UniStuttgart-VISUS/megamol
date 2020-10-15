@@ -20,16 +20,12 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/graphics/ScreenShotComments.h"
+
+#include "gui-wrapper.h"
 
 #include <glm/glm.hpp>
 
-
- // Forward declaration
-namespace megamol {
-namespace gui {
-class GUI_Wrapper;
-}
-}
 
 namespace megamol {
 namespace frontend {
@@ -38,10 +34,6 @@ namespace frontend {
 class GUI_Service final : public AbstractFrontendService {
 
 public:
-
-    struct GUIResource {
-        std::shared_ptr<megamol::gui::GUI_Wrapper> ptr;
-    };
 
     enum ImGuiAPI {
         OPEN_GL
@@ -95,8 +87,9 @@ private:
     std::vector<ModuleResource> m_requestedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
 
-    GUIResource m_gui;
+    std::shared_ptr<megamol::gui::GUIWrapper> m_gui = nullptr;
     ResourceState m_resource_state;
+    std::vector<std::string> m_queuedProjectFiles;
 };
 
 } // namespace frontend
