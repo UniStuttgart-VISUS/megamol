@@ -18,6 +18,7 @@
 
 megamol::mesh::GlTFFileLoader::GlTFFileLoader()
     : core::Module()
+    , m_mesh_access_collection({nullptr, {}})
     , m_version(0)
     , m_glTFFilename_slot("glTF filename", "The name of the gltf file to load")
     , m_gltf_slot("CallGlTFData", "The slot publishing the loaded data")
@@ -38,9 +39,6 @@ megamol::mesh::GlTFFileLoader::GlTFFileLoader()
 megamol::mesh::GlTFFileLoader::~GlTFFileLoader() { this->Release(); }
 
 bool megamol::mesh::GlTFFileLoader::create(void) {
-
-    this->m_mesh_collection = std::make_shared<MeshDataAccessCollection>();
-
     return true;
 }
 
@@ -54,7 +52,7 @@ bool megamol::mesh::GlTFFileLoader::getGltfDataCallback(core::Call& caller) {
     }
 
     if (gltf_call->version() < m_version) {
-        gltf_call->setData(m_gltf_model,m_version);
+        gltf_call->setData({std::string(m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value()),m_gltf_model}, m_version);
     }
 
     return true;
@@ -69,15 +67,7 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
     CallMesh* cm = dynamic_cast<CallMesh*>(&caller);
     if (cm == NULL) return false;
 
-    std::shared_ptr<MeshDataAccessCollection> mesh_collection(nullptr);
-
-    if (cm->getData() == nullptr) {
-        // no incoming mesh -> use your own mesh storage
-        mesh_collection = this->m_mesh_collection;
-    } else {
-        // incoming mesh -> use it (delete local?)
-        mesh_collection = cm->getData();
-    }
+    syncMeshAccessCollection(cm);
 
     auto has_update = checkAndLoadGltfModel();
     if (has_update) {
@@ -85,11 +75,13 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
     }
 
     if (cm->version() < m_version) {
-        //TODO proper deletion of data...
-        mesh_collection->accessMesh().clear();
+        for (auto const& identifier : m_mesh_access_collection.second) {
+            m_mesh_access_collection.first->deleteMesh(identifier);
+        }
+        m_mesh_access_collection.second.clear();
 
         // set data and version to signal update
-        cm->setData(mesh_collection, m_version);
+        cm->setData(m_mesh_access_collection.first, m_version);
     
         // compute mesh call specific update
         std::array<float, 6> bbox;
@@ -151,7 +143,9 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
                         attrib_semantic});
                 }
 
-                mesh_collection->addMesh(mesh_attributes, mesh_indices);
+                std::string identifier = std::string(m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value()) +
+                                         model->meshes[mesh_idx].name + "_" + std::to_string(primitive_idx);
+                m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices);
 
                 auto max_data =
                     model
@@ -222,6 +216,34 @@ bool megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
     }
 
     return false;
+}
+
+void megamol::mesh::GlTFFileLoader::syncMeshAccessCollection(CallMesh* lhs_call) {
+    if (lhs_call->getData() == nullptr) {
+        // no incoming mesh -> use your own mesh access collection
+        if (m_mesh_access_collection.first == nullptr) {
+            m_mesh_access_collection.first = std::make_shared<MeshDataAccessCollection>();
+        }
+    } else {
+        // incoming material -> use it, copy material from last used collection if needed
+        if (lhs_call->getData() != m_mesh_access_collection.first) {
+
+
+            std::pair<std::shared_ptr<MeshDataAccessCollection>, std::vector<std::string>> mesh_access_collection = {
+                lhs_call->getData(), {}};
+
+            for (auto const& identifier : m_mesh_access_collection.second) {
+                MeshDataAccessCollection::Mesh mesh = m_mesh_access_collection.first->accessMesh(identifier);
+                mesh_access_collection.first->addMesh(identifier, mesh.attributes,
+                    mesh.indices,
+                    mesh.primitive_type
+                );
+                m_mesh_access_collection.first->deleteMesh(identifier);
+            }
+
+            m_mesh_access_collection = mesh_access_collection;
+        }
+    }
 }
 
 void megamol::mesh::GlTFFileLoader::release() {

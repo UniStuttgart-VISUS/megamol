@@ -26,9 +26,6 @@ megamol::mesh::MeshBakery::MeshBakery()
 megamol::mesh::MeshBakery::~MeshBakery() { this->Release(); }
 
 bool megamol::mesh::MeshBakery::create(void) {
-
-    this->m_mesh_access_collection = std::make_shared<MeshDataAccessCollection>();
-
     return true;
 }
 
@@ -41,25 +38,28 @@ bool megamol::mesh::MeshBakery::getDataCallback(core::Call& caller) {
 
     if (lhs_mesh_call == NULL) return false;
 
-    std::shared_ptr<MeshDataAccessCollection> mesh_access_collection(nullptr);
-
-    if (lhs_mesh_call->getData() == nullptr) {
-        // no incoming mesh -> use your own mesh storage
-        mesh_access_collection = this->m_mesh_access_collection;
-    } else {
-        // incoming mesh -> use it (delete local?)
-        mesh_access_collection = lhs_mesh_call->getData();
-    }
-
-    //TODO check chain
+    syncMeshAccessCollection(lhs_mesh_call);
 
     if (m_geometry_type.IsDirty()) {
         m_geometry_type.ResetDirty();
 
         ++m_version;
 
+        //TODO delete old mesh access
+
+        auto geometry_type = m_geometry_type.Param<core::param::EnumParam>()->Value();
+        m_geometry_type_name = m_geometry_type.Param<core::param::EnumParam>()->ValueString();
+
         //TODO call geometry generating functions
-        createConeGeometry();
+        switch (geometry_type) {
+        case 0:
+            break;
+        case 1:
+            createConeGeometry();
+            break;
+        default:
+            break;
+        }
 
         std::array<float, 6> bbox;
 
@@ -100,9 +100,7 @@ bool megamol::mesh::MeshBakery::getDataCallback(core::Call& caller) {
             reinterpret_cast<uint8_t*>(m_vertex_uvs.data()), m_vertex_uvs.size() * sizeof(float), 2,
             MeshDataAccessCollection::FLOAT, 0, 0, MeshDataAccessCollection::TEXCOORD});
 
-
-        mesh_access_collection->addMesh(mesh_attributes, mesh_indices);
-
+        m_mesh_access_collection->addMesh(m_geometry_type_name, mesh_attributes, mesh_indices);
 
         auto meta_data = lhs_mesh_call->getMetaData();
         meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
@@ -110,7 +108,7 @@ bool megamol::mesh::MeshBakery::getDataCallback(core::Call& caller) {
         lhs_mesh_call->setMetaData(meta_data);
     }
 
-    lhs_mesh_call->setData(mesh_access_collection, m_version);
+    lhs_mesh_call->setData(m_mesh_access_collection, m_version);
 
     return true; 
 }
@@ -149,6 +147,28 @@ bool megamol::mesh::MeshBakery::getMetaDataCallback(core::Call& caller) {
     lhs_mesh_call->setMetaData(lhs_meta_data);
 
     return true; 
+}
+
+void megamol::mesh::MeshBakery::syncMeshAccessCollection(CallMesh* lhs_call) {
+    if (lhs_call->getData() == nullptr) {
+        // no incoming mesh -> use your own mesh access collection
+        if (m_mesh_access_collection == nullptr) {
+            m_mesh_access_collection = std::make_shared<MeshDataAccessCollection>();
+        }
+    } else {
+        // incoming material -> use it, copy material from last used collection if needed
+        if (lhs_call->getData() != m_mesh_access_collection) {
+
+            if (!m_geometry_type_name.empty()) {
+                lhs_call->getData()->addMesh(m_geometry_type_name,
+                    m_mesh_access_collection->accessMesh(m_geometry_type_name).attributes,
+                    m_mesh_access_collection->accessMesh(m_geometry_type_name).indices,
+                    m_mesh_access_collection->accessMesh(m_geometry_type_name).primitive_type);
+            }
+            
+            m_mesh_access_collection = lhs_call->getData();
+        }
+    }
 }
 
 void megamol::mesh::MeshBakery::createTriangleGeometry() {}

@@ -42,14 +42,13 @@ void megamol::mesh::AbstractGPUMeshDataSource::syncMeshCollection(CallGPUMeshDat
     } else {
         // incoming material -> use it, copy material from last used collection if needed
         if (lhs_call->getData() != m_mesh_collection.first) {
-            std::pair<std::shared_ptr<GPUMeshCollection>, std::vector<size_t>> mesh_collection = {
+            std::pair<std::shared_ptr<GPUMeshCollection>, std::vector<std::string>> mesh_collection = {
                 lhs_call->getData(), {}};
-            for (auto& idx : m_mesh_collection.second) {
+            for (auto const& identifier : m_mesh_collection.second) {
                 //mtl_collection.first->addMesh(m_mesh_collection.first->getMeshes()[idx]);
-                auto submesh = m_mesh_collection.first->getSubMeshData()[idx];
-                auto batched_mesh = m_mesh_collection.first->getMeshes()[submesh.batch_index];
-                mesh_collection.first->addMesh(batched_mesh.mesh, submesh);
-                m_mesh_collection.first->deleteSubMesh(idx);
+                auto const& submesh = m_mesh_collection.first->getSubMesh(identifier);
+                mesh_collection.first->addMesh(identifier, submesh.mesh->mesh, submesh);
+                m_mesh_collection.first->deleteSubMesh(identifier);
             }
             m_mesh_collection = mesh_collection;
         }

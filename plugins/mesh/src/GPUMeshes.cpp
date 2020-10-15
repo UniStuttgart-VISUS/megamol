@@ -32,13 +32,13 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
         }
         m_mesh_collection.second.clear();
 
-        auto meshes = mc->getData()->accessMesh();
+        auto meshes = mc->getData()->accessMeshes();
 
         for (auto& mesh : meshes) {
 
             // check if primtives type
             GLenum primtive_type = GL_TRIANGLES;
-            if (mesh.primitive_type == MeshDataAccessCollection::QUADS) {
+            if (mesh.second.primitive_type == MeshDataAccessCollection::QUADS) {
                 primtive_type = GL_PATCHES;
             }
 
@@ -46,9 +46,9 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
             std::vector<std::pair<uint8_t*, uint8_t*>> vb_iterators;
             std::pair<uint8_t*, uint8_t*> ib_iterators;
 
-            ib_iterators = {mesh.indices.data, mesh.indices.data + mesh.indices.byte_size};
+            ib_iterators = {mesh.second.indices.data, mesh.second.indices.data + mesh.second.indices.byte_size};
 
-            for (auto attrib : mesh.attributes) {
+            for (auto attrib : mesh.second.attributes) {
 
                 vb_layouts.push_back(glowl::VertexLayout(
                     attrib.component_cnt * MeshDataAccessCollection::getByteSize(attrib.component_type),
@@ -60,8 +60,9 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                 vb_iterators.push_back({attrib.data, attrib.data + attrib.byte_size});
             }
 
-            m_mesh_collection.second.push_back(m_mesh_collection.first->addMesh(vb_layouts, vb_iterators, ib_iterators,
-                MeshDataAccessCollection::convertToGLType(mesh.indices.type), GL_STATIC_DRAW, primtive_type));
+            m_mesh_collection.first->addMesh(mesh.first, vb_layouts, vb_iterators, ib_iterators,
+                MeshDataAccessCollection::convertToGLType(mesh.second.indices.type), GL_STATIC_DRAW, primtive_type);
+            m_mesh_collection.second.push_back(mesh.first);
         }
     }
 

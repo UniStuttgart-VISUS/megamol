@@ -173,7 +173,9 @@ bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) {
                 m_indices[s].size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::UNSIGNED_INT);
             mesh_indices.type = MeshDataAccessCollection::UNSIGNED_INT;
 
-            this->m_mesh_data_access->addMesh(mesh_attributes, mesh_indices);
+            //TODO add file name?
+            std::string identifier = m_obj_model->shapes[s].name;
+            this->m_mesh_data_access->addMesh(identifier, mesh_attributes, mesh_indices);
         }
 
         m_meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);

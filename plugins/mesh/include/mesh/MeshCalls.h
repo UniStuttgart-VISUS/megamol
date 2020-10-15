@@ -34,9 +34,10 @@ public:
     static const char* Description(void) { return "Call that transports..."; }
 };
 
-class MESH_API CallGlTFData : public core::GenericVersionedCall<std::shared_ptr<tinygltf::Model>, core::EmptyMetaData> {
+class MESH_API CallGlTFData : public core::GenericVersionedCall<std::pair<std::string,std::shared_ptr<tinygltf::Model>>, core::EmptyMetaData> {
 public:
-    inline CallGlTFData() : GenericVersionedCall<std::shared_ptr<tinygltf::Model>, core::EmptyMetaData>() {}
+    inline CallGlTFData()
+        : GenericVersionedCall<std::pair<std::string, std::shared_ptr<tinygltf::Model>>, core::EmptyMetaData>() {}
     ~CallGlTFData() = default;
 
     static const char* ClassName(void) { return "CallGlTFData"; }

@@ -62,6 +62,8 @@ protected:
 
     virtual bool getMetaDataCallback(core::Call& caller);
 
+    void syncMeshAccessCollection(CallMesh* lhs_call);
+
 private:
 
     void createTriangleGeometry();
@@ -71,6 +73,7 @@ private:
     uint32_t m_version;
 
     std::shared_ptr<MeshDataAccessCollection> m_mesh_access_collection;
+    std::string m_geometry_type_name;
 
     std::vector<float>   m_vertex_positions;
     std::vector<float>   m_vertex_normals;

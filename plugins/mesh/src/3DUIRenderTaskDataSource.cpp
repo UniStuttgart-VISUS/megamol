@@ -62,7 +62,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             m_rendertask_collection.first->deleteRenderTask(idx);
         }
 
-        auto model = gltf_call->getData();
+        auto model = gltf_call->getData().second;
         auto gpu_mtl_storage = mtlc->getData();
         auto gpu_mesh_storage = mc->getData();
 
@@ -92,58 +92,33 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
                     }
                 }
 
-                // compute submesh offset by iterating over all meshes before the given mesh and summing up their
-                // primitive counts
-                size_t submesh_offset = 0;
-                for (int mesh_idx = 0; mesh_idx < model->nodes[node_idx].mesh; ++mesh_idx) {
-                    submesh_offset += model->meshes[mesh_idx].primitives.size();
-                }
-
-                GPUMeshCollection::SubMeshData sub_mesh_data;
-
-                auto primitive_cnt = model->meshes[model->nodes[node_idx].mesh].primitives.size();
-                for (size_t primitive_idx = 0; primitive_idx < primitive_cnt; ++primitive_idx) {
-                    // auto const& sub_mesh = gpu_mesh_storage->getSubMeshData()[model->nodes[node_idx].mesh];
-                    auto const& sub_mesh = gpu_mesh_storage->getSubMeshData()[submesh_offset + primitive_idx];
-                    auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-                    auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
-
-                    sub_mesh_data = sub_mesh;
-
-                    //size_t rt_idx = rt_collection->addSingleRenderTask(
-                    //    shader, gpu_batch_mesh, sub_mesh.sub_mesh_draw_command, per_obj_data);
-                    //
-                    //m_rt_collection_indices.push_back(rt_idx);
-                }
-
-
                 // TODO check node name for UI element names
                 if (model->nodes[node_idx].name == "axisX_arrow") {
                     per_obj_data[0].color = {1.0f, 0.0f, 0.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[0].first = sub_mesh_data;
+                    m_UI_template_elements[0].first = gpu_mesh_storage->getSubMesh("axisX_arrow");
                     m_UI_template_elements[0].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "axisY_arrow") {
                     per_obj_data[0].color = {0.0f, 1.0f, 0.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[1].first = sub_mesh_data;
+                    m_UI_template_elements[1].first = gpu_mesh_storage->getSubMesh("axisY_arrow");
                     m_UI_template_elements[1].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "axisZ_arrow") {
                     per_obj_data[0].color = {0.0f, 0.0f, 1.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[2].first = sub_mesh_data;
+                    m_UI_template_elements[2].first = gpu_mesh_storage->getSubMesh("axisZ_arrow");
                     m_UI_template_elements[2].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "slider_arrow") {
                     per_obj_data[0].color = {1.0f, 0.0f, 1.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[3].first = sub_mesh_data;
+                    m_UI_template_elements[3].first = gpu_mesh_storage->getSubMesh("slider_arrow");
                     m_UI_template_elements[3].second = per_obj_data;
                 }
 
@@ -159,7 +134,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             m_scene.back().second[0].id = 1;
             
             auto const& sub_mesh = m_UI_template_elements[3].first;
-            auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
+            auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
             auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
@@ -178,7 +153,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             m_scene.back().second[0].id = 2;
 
             auto const& sub_mesh = m_UI_template_elements[2].first;
-            auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
+            auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
             auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
@@ -197,7 +172,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             m_scene.back().second[0].id = 3;
 
             auto const& sub_mesh = m_UI_template_elements[1].first;
-            auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
+            auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
             auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
@@ -216,7 +191,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             m_scene.back().second[0].id = 4;
 
             auto const& sub_mesh = m_UI_template_elements[0].first;
-            auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
+            auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
             auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));

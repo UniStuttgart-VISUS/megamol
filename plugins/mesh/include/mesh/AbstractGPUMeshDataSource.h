@@ -64,7 +64,7 @@ protected:
      * Mesh collection that is used with a list of indices of all GPU submeshes that this module added to the mesh collection.
      * Needed to delete/update submeshes if the collection is shared across a chain of data sources modules.
      */
-    std::pair<std::shared_ptr<GPUMeshCollection>, std::vector<size_t>> m_mesh_collection;
+    std::pair<std::shared_ptr<GPUMeshCollection>, std::vector<std::string>> m_mesh_collection;
 
     /** The slot for querying additional mesh data, i.e. a rhs chaining connection */
     megamol::core::CallerSlot m_mesh_rhs_slot;

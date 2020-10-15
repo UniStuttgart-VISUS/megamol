@@ -50,7 +50,7 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
         std::shared_ptr<glowl::Mesh> prev_mesh(nullptr);
 
         for (auto& sub_mesh : gpu_mesh_storage->getSubMeshData()) {
-            auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
+            auto const& gpu_batch_mesh = sub_mesh.second.mesh->mesh;
 
             if (gpu_batch_mesh != prev_mesh)
             {
@@ -81,7 +81,7 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
                 1.0f
             };
 
-            draw_commands.back().push_back(sub_mesh.sub_mesh_draw_command);
+            draw_commands.back().push_back(sub_mesh.second.sub_mesh_draw_command);
             object_transforms.back().push_back(obj_xform);
         }
 

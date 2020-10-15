@@ -74,10 +74,12 @@ protected:
 
     bool checkAndLoadGltfModel();
 
+    void syncMeshAccessCollection(CallMesh* lhs_call);
+
 private:
     std::shared_ptr<tinygltf::Model> m_gltf_model;
 
-    std::shared_ptr<MeshDataAccessCollection> m_mesh_collection;
+    std::pair<std::shared_ptr<MeshDataAccessCollection>,std::vector<std::string>> m_mesh_access_collection;
 
     uint32_t m_version;
 
