@@ -427,7 +427,6 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     m_glfwWindowPtr = ::glfwCreateWindow(m_data.currentWidth, m_data.currentHeight,
         m_data.initialConfig.windowTitlePrefix.c_str(), nullptr, m_sharedData.borrowed_glfwContextWindowPtr);
     m_opengl_context_impl.ptr = m_glfwWindowPtr;
-    m_opengl_context = &m_opengl_context_impl;
 
     if (!m_glfwWindowPtr) {
         log("Failed to create GLFW window. Maybe OpenGL is not vailable in your current setup. Ask the person responsible.");
@@ -435,7 +434,12 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     }
     log(("Create window with size w: " + std::to_string(m_data.currentWidth) + " h: " + std::to_string(m_data.currentHeight)).c_str());
 
+
+    // we publish a fake GL context to have a resource others can ask for
+    // however, we set the actual GL context active for the main thread and leave it active until further design requirements arise
+    m_opengl_context = &m_fake_opengl_context;
     ::glfwMakeContextCurrent(m_glfwWindowPtr);
+    //m_opengl_context_impl.activate();
 
     //if(gladLoadGLLoader((GLADloadproc) glfwGetProcAddress) == 0) {
     if(gladLoadGL() == 0) {
@@ -525,7 +529,6 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     if (m_data.initialConfig.enableVsync) ::glfwSwapInterval(0);
 
     ::glfwShowWindow(m_glfwWindowPtr);
-    ::glfwMakeContextCurrent(nullptr);
 
 	m_windowEvents._clipboard_user_data = m_glfwWindowPtr;
 	m_windowEvents._getClipboardString_Func = outer_glfw_getClipboardString;
@@ -616,9 +619,9 @@ void OpenGL_GLFW_Service::postGraphRender() {
 
     ::glfwSwapBuffers(m_glfwWindowPtr);
 
-    ::glfwMakeContextCurrent(m_glfwWindowPtr);
+    //::glfwMakeContextCurrent(m_glfwWindowPtr);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
-    ::glfwMakeContextCurrent(nullptr);
+    //::glfwMakeContextCurrent(nullptr);
 }
 
 std::vector<ModuleResource>& OpenGL_GLFW_Service::getProvidedResources() {
