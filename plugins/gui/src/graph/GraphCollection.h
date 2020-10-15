@@ -103,9 +103,12 @@ namespace gui {
 
         bool AddUpdateProjectFromCore(ImGuiID in_graph_uid, megamol::core::CoreInstance* core_instance,
             megamol::core::MegaMolGraph* megamol_graph, bool use_stock);
-
         ImGuiID LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
-        bool SaveProjectToFile(ImGuiID in_graph_uid, const std::string& project_filename);
+
+        bool SaveProjectToFile(
+            ImGuiID in_graph_uid, const std::string& project_filename, const std::string& state_json);
+
+        std::string GetUpdatedGUIState(ImGuiID graph_id, const std::string& filename);
 
         // Presentation ----------------------------------------------------
 
@@ -148,7 +151,6 @@ namespace gui {
                     }));
         }
 
-        bool save_state_to_file(const std::string& filename, ImGuiID graph_id);
         bool load_state_from_file(const std::string& filename, ImGuiID graph_id);
     };
 

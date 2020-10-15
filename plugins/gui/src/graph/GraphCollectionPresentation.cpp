@@ -68,7 +68,7 @@ void megamol::gui::GraphCollectionPresentation::Present(
         }
         ImGui::EndTabBar();
 
-        // Save selected graph
+        // Save selected graph in configurator
         this->SaveProjectToFile(state.graph_save, inout_graph_collection, state);
         state.graph_save = false;
 
@@ -114,8 +114,9 @@ void megamol::gui::GraphCollectionPresentation::SaveProjectToFile(
         }
     }
     if (this->file_browser.PopUp(
-            FileBrowserWidget::FileBrowserFlag::SAVE, "Save Editor Project", open_popup, project_filename)) {
-        popup_failed = !inout_graph_collection.SaveProjectToFile(state.graph_selected_uid, project_filename);
+            FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project", open_popup, project_filename)) {
+        popup_failed = !inout_graph_collection.SaveProjectToFile(state.graph_selected_uid, project_filename,
+            inout_graph_collection.GetUpdatedGUIState(state.graph_selected_uid, project_filename));
     }
     MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
