@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cctype>
 #include <string>
+#include <numeric> // std::accumulate
 
 // splits a string of the form "::one::two::three::" into an array of strings {"one", "two", "three"}
 static std::vector<std::string> splitPathName(std::string const& path) {
@@ -677,6 +678,13 @@ megamol::core::MegaMolGraph_Serialization megamol::core::MegaMolGraph::Serialize
     for (auto& module : this->module_list_) {
         for (auto& paramSlot : this->EnumerateModuleParameterSlots(module.request.id)) {
             auto name = std::string{paramSlot->FullName()};
+            auto split = splitPathName(name);
+            // as FullName() prepends :: to module names, normalize multiple leading :: in parameter name path
+            name = std::accumulate(split.begin(), split.end(), std::string{""},
+                [](std::string const& value, std::string const& element) -> std::string
+                {
+                    return std::string{value + "::" + element};
+                });
             auto value = std::string{paramSlot->Parameter()->ValueString().PeekBuffer()};
             serParams.append("mmSetParamValue(\"" + name + "\",[=[" + value + "]=])\n");
         }
