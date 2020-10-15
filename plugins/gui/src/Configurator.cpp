@@ -22,9 +22,6 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-std::vector<std::string> megamol::gui::Configurator::dropped_files;
-
-
 megamol::gui::Configurator::Configurator()
         : graph_collection()
         , init_state(0)
@@ -39,6 +36,7 @@ megamol::gui::Configurator::Configurator()
         , last_selected_callslot_uid(GUI_INVALID_ID)
         , graph_state()
         , open_popup_load(false)
+        , project_file_drop_valid(false)
         , file_browser()
         , search_widget()
         , splitter_widget()
@@ -122,12 +120,6 @@ bool megamol::gui::Configurator::Draw(
         auto graph_ptr = this->graph_collection.GetGraphs().front();
         this->load_graph_state_from_file(graph_ptr->GetFilename());
 
-        // Enable drag and drop of files for configurator (if glfw is available here)
-#ifdef GUI_USE_GLFW
-        auto glfw_win = ::glfwGetCurrentContext();
-        ::glfwSetDropCallback(glfw_win, this->file_drop_callback);
-#endif
-
         this->init_state++;
     } else {
         /// Step 3]
@@ -147,20 +139,7 @@ bool megamol::gui::Configurator::Draw(
             this->graph_state.graph_save = !graph_has_core_interface;
         }
 
-        // Clear dropped file list (when configurator window is opened, after it was closed)
-        if (ImGui::IsWindowAppearing()) {
-            megamol::gui::Configurator::dropped_files.clear();
-        }
-        // Process dropped files ...
-        if (!megamol::gui::Configurator::dropped_files.empty()) {
-            // ... only if configurator is focused.
-            if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
-                for (auto& dropped_file : megamol::gui::Configurator::dropped_files) {
-                    this->graph_collection.LoadAddProjectFromFile(this->graph_state.graph_selected_uid, dropped_file);
-                }
-            }
-            megamol::gui::Configurator::dropped_files.clear();
-        }
+        this->project_file_drop_valid = (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows));
 
         // Draw Windows -------------------------------------------------------
 
@@ -679,13 +658,3 @@ bool megamol::gui::Configurator::load_graph_state_from_file(const std::string& f
 
     return false;
 }
-
-
-#ifdef GUI_USE_GLFW
-void megamol::gui::Configurator::file_drop_callback(::GLFWwindow* window, int count, const char* paths[]) {
-
-    for (int i = 0; i < count; i++) {
-        megamol::gui::Configurator::dropped_files.emplace_back(std::string(paths[i]));
-    }
-}
-#endif

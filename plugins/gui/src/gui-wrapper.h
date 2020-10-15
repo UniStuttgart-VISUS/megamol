@@ -1,5 +1,5 @@
 /*
- * GUI_Wrapper.h
+ * GUIWrapper.h
  *
  * Copyright (C) 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -24,11 +24,11 @@ namespace megamol {
 namespace gui {
 
 
-    class GUI_API GUI_Wrapper {
+    class GUI_API GUIWrapper {
     public:
         typedef std::shared_ptr<megamol::gui::GUIWindows> GUIWindowsPtr_t;
-        GUI_Wrapper(void);
-        ~GUI_Wrapper(void);
+        GUIWrapper(void);
+        ~GUIWrapper(void);
         const GUIWindowsPtr_t& Get(void) {
             return this->m_gui;
         }

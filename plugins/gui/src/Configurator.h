@@ -69,15 +69,23 @@ namespace gui {
         GraphCollection& GetGraphCollection(void) {
             return this->graph_collection;
         }
-
+        /**
+         * State to and from JSON.
+         */
         bool StateToJSON(nlohmann::json& inout_json);
         bool StateFromJSON(const nlohmann::json& in_json);
+
+        /**
+         * Indicates whether project file drop for configurator is valid.
+         */
+        inline bool IsProjectFileDropValid(void) {
+            return this->project_file_drop_valid;
+        }
 
     private:
         // VARIABLES --------------------------------------------------------------
 
         GraphCollection graph_collection;
-        static std::vector<std::string> dropped_files;
         int init_state;
         float module_list_sidebar_width;
         ImGuiID selected_list_module_uid;
@@ -90,6 +98,7 @@ namespace gui {
         ImGuiID last_selected_callslot_uid;
         megamol::gui::GraphState_t graph_state;
         bool open_popup_load;
+        bool project_file_drop_valid;
 
         // Widgets
         FileBrowserWidget file_browser;
@@ -105,15 +114,6 @@ namespace gui {
         void drawPopUps(megamol::core::CoreInstance* core_instance);
 
         bool load_graph_state_from_file(const std::string& filename);
-
-#ifdef GUI_USE_GLFW
-        /**
-         * NB: Successfully testet using Windows10 and (X)Ubuntu with "Nautilus" file browser as drag source of the
-         * files. Failed using (X)Ubuntu with "Thunar" file browser. GLFW: File drop is currently unimplemented for
-         * "Wayland" (e.g. Fedora using GNOME)
-         */
-        static void file_drop_callback(::GLFWwindow* window, int count, const char* paths[]);
-#endif
     };
 
 

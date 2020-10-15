@@ -35,6 +35,16 @@ GUIView::~GUIView() {
 
 bool GUIView::create() {
     return gui.CreateContext_GL(this->GetCoreInstance());
+	/* NEW FORONTEND
+    if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+        return gui.CreateContext_GL(this->GetCoreInstance());
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[GUI] GUIView module can only be used with mmconsole frontend. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
+        return false;
+    }
+	*/
 }
 
 

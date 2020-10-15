@@ -1629,14 +1629,19 @@ void GUIWindows::drawMenu(void) {
     }
 
     if (ImGui::BeginMenu("File")) {
-        // Load/save parameter values to LUA file
-        if (ImGui::MenuItem("Save Running Project",
-                this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].keycode.ToString().c_str())) {
+        /*
+        if (megamolgraph_interface) {
+            // Load project from LUA file
+            if (ImGui::MenuItem("Load Project")) {
+                /// TODO
+            }
+        }
+        */
+        if (ImGui::MenuItem(
+                "Save Project", this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].keycode.ToString().c_str())) {
             this->state.open_popup_save = true;
         }
-
         if (ImGui::MenuItem("Exit", "ALT + 'F4'")) {
-            // Exit program
             this->triggerCoreInstanceShutdown();
             this->shutdown_triggered = true;
         }
@@ -1645,7 +1650,6 @@ void GUIWindows::drawMenu(void) {
 
     // Windows
     if (ImGui::BeginMenu("Windows")) {
-
         std::string menu_label = "Show";
         if (this->state.menu_visible)
             menu_label = "Hide";
@@ -1656,7 +1660,6 @@ void GUIWindows::drawMenu(void) {
             }
             ImGui::EndMenu();
         }
-
         const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
             if (ImGui::BeginMenu(wc.win_name.c_str())) {
                 std::string hotkey_label = wc.win_hotkey.ToString();
@@ -1686,7 +1689,6 @@ void GUIWindows::drawMenu(void) {
         ImGui::EndMenu();
     }
 
-    // Screenshot
     if (megamolgraph_interface) {
         if (ImGui::BeginMenu("Screenshot")) {
             if (ImGui::MenuItem("Select Filename", this->screenshot_filename.c_str())) {
@@ -1700,7 +1702,19 @@ void GUIWindows::drawMenu(void) {
         }
     }
 
-    // Help
+    /*
+    if (megamolgraph_interface) {
+        if (ImGui::BeginMenu("View")) {
+            /// for all main views add menu
+            if (ImGui::MenuItem("Toggle main view",
+                    this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT].keycode.ToString().c_str())) {
+                /// TODO
+            }
+            ImGui::EndMenu();
+        }
+    }
+    */
+
     if (ImGui::BeginMenu("Help")) {
         if (ImGui::MenuItem("About")) {
             this->state.open_popup_about = true;

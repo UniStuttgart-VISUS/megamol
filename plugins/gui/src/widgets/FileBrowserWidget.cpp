@@ -249,7 +249,9 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
             if (apply && this->valid_directory && this->valid_file) {
                 // Appending required extension
                 if (!this->valid_ending) {
-                    this->file_name_str.append(extension);
+                    std::string ext_lower = extension;
+                    this->string_to_lower_case(ext_lower);
+                    this->file_name_str.append(ext_lower);
                 }
                 stdfs::path tmp_file_path =
                     static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(this->file_name_str);
@@ -345,6 +347,14 @@ std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string
 }
 
 
+void megamol::gui::FileBrowserWidget::string_to_lower_case(std::string& str) {
+
+    for (auto& c : str) {
+        c = std::tolower(c);
+    }
+}
+
+
 bool megamol::gui::FileBrowserWidget::split_path(
     const stdfs::path& in_file_path, std::string& out_path, std::string& out_file) {
 
@@ -391,32 +401,39 @@ void megamol::gui::FileBrowserWidget::validate_file(
 
     // Validating file
     try {
+        std::string file_lower = file_str;
+        this->string_to_lower_case(file_lower);
+
+        std::string ext_lower = extension;
+        this->string_to_lower_case(ext_lower);
+
         this->file_error.clear();
         this->file_warning.clear();
         this->additional_lines = 0;
         this->valid_file = true;
         this->valid_ending = true;
 
-        stdfs::path tmp_file_path = static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(file_str);
+        stdfs::path tmp_file_path =
+            static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(file_lower);
 
         if (flag == FileBrowserFlag::SAVE) {
             // Warn when no file name is given
-            if (file_str.empty()) {
+            if (file_lower.empty()) {
                 this->file_warning += "Enter file name.\n";
                 this->additional_lines++;
                 this->valid_file = false;
             } else {
                 // Warn when file has not required extension
-                if (!extension.empty()) {
-                    if (!FileUtils::FileExtension<std::string>(file_str, extension)) {
-                        this->file_warning += "Appending required file extension '" + extension + "'\n";
+                if (!ext_lower.empty()) {
+                    if (!FileUtils::FileExtension<std::string>(file_lower, ext_lower)) {
+                        this->file_warning += "Appending required file extension '" + ext_lower + "'\n";
                         this->additional_lines++;
                         this->valid_ending = false;
                     }
                 }
-                std::string actual_filename = file_str;
+                std::string actual_filename = file_lower;
                 if (!this->valid_ending) {
-                    actual_filename.append(extension);
+                    actual_filename.append(ext_lower);
                 }
                 tmp_file_path =
                     static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(actual_filename);
@@ -429,9 +446,9 @@ void megamol::gui::FileBrowserWidget::validate_file(
             }
         } else if (flag == FileBrowserFlag::LOAD) {
             // Error when file has not required extension
-            if (!extension.empty()) {
-                if (!FileUtils::FileExtension<std::string>(file_str, extension)) {
-                    this->file_error += "File with extension '" + extension + "' required.\n";
+            if (!ext_lower.empty()) {
+                if (!FileUtils::FileExtension<std::string>(file_lower, ext_lower)) {
+                    this->file_error += "File with extension '" + ext_lower + "' required.\n";
                     this->additional_lines++;
                     this->valid_ending = false;
                     this->valid_file = false;
