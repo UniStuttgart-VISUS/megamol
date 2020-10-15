@@ -14,6 +14,7 @@
 
 #include <cxxopts.hpp>
 #include "mmcore/LuaAPI.h"
+#include "mmcore/utility/graphics/ScreenShotComments.h"
 
 // Filesystem
 #if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
@@ -200,9 +201,17 @@ int main(int argc, char* argv[]) {
     // load project files via lua
     for (auto& file : config.project_files) {
         std::string result;
-        if (!lua_api.RunFile(file, result)) {
-            std::cout << "Project file \"" << file << "\" did not execute correctly: " << result << std::endl;
-            run_megamol = false;
+        if (megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(file, ".png")) {
+            if (!lua_api.RunString(
+                    megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(file), result)) {
+                std::cout << "Project file \"" << file << "\" did not execute correctly: " << result << std::endl;
+                run_megamol = false;
+            }
+        } else {
+            if (!lua_api.RunFile(file, result)) {
+                std::cout << "Project file \"" << file << "\" did not execute correctly: " << result << std::endl;
+                run_megamol = false;
+            }
         }
     }
     if (config.load_example_project && config.project_files.empty()) {

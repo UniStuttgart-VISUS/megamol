@@ -40,6 +40,72 @@ mcu_graphics::ScreenShotComments::ScreenShotComments(megamol::core::CoreInstance
     }
 }
 
-mcu_graphics::ScreenShotComments::png_comments mcu_graphics::ScreenShotComments::GetComments() {
+mcu_graphics::ScreenShotComments::png_comments mcu_graphics::ScreenShotComments::GetComments() const {
     return the_vector;
+}
+
+
+std::string mcu_graphics::ScreenShotComments::GetProjectFromPNG(const std::string filename) {
+    std::string content;
+    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    if (!png) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("ScreenShotComments::GetProjectFromPNG: Unable to create png struct");
+    } else {
+        FILE* fp = fopen(filename.c_str(), "rb");
+        if (fp == nullptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "ScreenShotComments::GetProjectFromPNG: Unable to open png file \"%s\"", filename.c_str());
+        } else {
+            png_infop info = png_create_info_struct(png);
+            if (!info) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("ScreenShotComments::GetProjectFromPNG: Unable to create png info struct");
+            } else {
+                setjmp(png_jmpbuf(png));
+                png_init_io(png, fp);
+                png_read_info(png, info);
+
+                png_textp texts;
+                int num_text = 0;
+                png_get_text(png, info, &texts, &num_text);
+                bool found = false;
+                for (int i = 0; i < num_text; ++i) {
+                    if (strcmp(texts[i].key, "MegaMol project") == 0) {
+                        found = true;
+                        content = std::string(texts[i].text);
+                    }
+                }
+
+                if (!found) {
+                    png_uint_32 exif_size = 0;
+                    png_bytep exif_data = nullptr;
+                    png_get_eXIf_1(png, info, &exif_size, &exif_data);
+                    if (exif_size > 0) {
+                        found = true;
+                        content = reinterpret_cast<char*>(exif_data);
+                    }
+                }
+                if (!found) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("LoadProject: Unable to extract png text or exif data");
+                }
+                png_destroy_info_struct(png, &info);
+            }
+            fclose(fp);
+        }
+        png_destroy_read_struct(&png, nullptr, nullptr);
+        // exif_data buffer seems to live inside exif_info and is disposed automatically
+    }
+    return content;
+}
+
+bool megamol::core::utility::graphics::ScreenShotComments::EndsWith(
+    const std::string& filename, const std::string& suffix) {
+    if (suffix.size() > filename.size()) return false;
+    return std::equal(suffix.rbegin(), suffix.rend(), filename.rbegin());
+}
+
+bool megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(
+    const std::string& filename, const std::string& suffix) {
+    if (suffix.size() > filename.size()) return false;
+    return std::equal(suffix.rbegin(), suffix.rend(), filename.rbegin(),
+        [](const char a, const char b) { return tolower(a) == tolower(b); });
 }
