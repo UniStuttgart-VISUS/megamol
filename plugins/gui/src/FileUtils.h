@@ -45,22 +45,38 @@ namespace gui {
         static size_t LoadRawFile(std::string name, void** outData);
 
         /**
-         * Check if file exists and has specified file extension.
+         * Check if file exists.
          *
          * @param path  The file or directory path.
-         * @param ext   The extension the given file should have.
          */
         template<typename T>
-        static bool FilesExistingExtension(const T& path_str, const std::string& ext);
+        static bool FileExists(const T& path_str);
 
         /**
-         * Check if file has specified file extension.
+         * Check if any file exists and has specified file extension.
          *
          * @param path  The file or directory path.
          * @param ext   The extension the given file should have.
          */
         template<typename T>
-        static bool FileExtension(const T& path_str, const std::string& ext);
+        static bool FileWithExtensionExists(const T& path_str, const std::string& ext);
+
+        /**
+         * Check if any file exists and has specified file extension.
+         *
+         * @param path  The file or directory path.
+         * @param ext   The extension the given file should have.
+         */
+        template<typename T>
+        static bool FileHasExtension(const T& path_str, const std::string& ext);
+
+        /**
+         * Get stem of filename (filename without leading path and extension).
+         *
+         * @param path  The file or directory path.
+         */
+        template<typename T>
+        static std::string GetFilenameStem(const T& path_str);
 
         /**
          * Search recursively for file or path beginning at given directory.
@@ -102,19 +118,40 @@ namespace gui {
 
 
     template<typename T>
-    bool megamol::gui::FileUtils::FilesExistingExtension(const T& path_str, const std::string& ext) {
+    bool megamol::gui::FileUtils::FileExists(const T& path_str) {
         auto path = static_cast<stdfs::path>(path_str);
-        if (!stdfs::exists(path) || !stdfs::is_regular_file(path)) {
-            return false;
+        if (stdfs::exists(path) && stdfs::is_regular_file(path)) {
+            return true;
         }
+        return false;
+    }
+
+
+    template<typename T>
+    bool megamol::gui::FileUtils::FileWithExtensionExists(const T& path_str, const std::string& ext) {
+        if (FileUtils::FileExists<T>(path_str)) {
+            auto path = static_cast<stdfs::path>(path_str);
+            return (path.extension().generic_u8string() == ext);
+        }
+        return false;
+    }
+
+
+    template<typename T>
+    bool megamol::gui::FileUtils::FileHasExtension(const T& path_str, const std::string& ext) {
+        auto path = static_cast<stdfs::path>(path_str);
         return (path.extension().generic_u8string() == ext);
     }
 
 
     template<typename T>
-    bool megamol::gui::FileUtils::FileExtension(const T& path_str, const std::string& ext) {
+    std::string megamol::gui::FileUtils::GetFilenameStem(const T& path_str) {
         auto path = static_cast<stdfs::path>(path_str);
-        return (path.extension().generic_u8string() == ext);
+        std::string filename;
+        if (path.has_stem()) {
+            filename = path.stem().generic_u8string();
+        }
+        return filename;
     }
 
 

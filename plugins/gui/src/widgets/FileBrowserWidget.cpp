@@ -425,7 +425,7 @@ void megamol::gui::FileBrowserWidget::validate_file(
             } else {
                 // Warn when file has not required extension
                 if (!ext_lower.empty()) {
-                    if (!FileUtils::FileExtension<std::string>(file_lower, ext_lower)) {
+                    if (!FileUtils::FileHasExtension<std::string>(file_lower, ext_lower)) {
                         this->file_warning += "Appending required file extension '" + ext_lower + "'\n";
                         this->additional_lines++;
                         this->valid_ending = false;
@@ -447,7 +447,7 @@ void megamol::gui::FileBrowserWidget::validate_file(
         } else if (flag == FileBrowserFlag::LOAD) {
             // Error when file has not required extension
             if (!ext_lower.empty()) {
-                if (!FileUtils::FileExtension<std::string>(file_lower, ext_lower)) {
+                if (!FileUtils::FileHasExtension<std::string>(file_lower, ext_lower)) {
                     this->file_error += "File with extension '" + ext_lower + "' required.\n";
                     this->additional_lines++;
                     this->valid_ending = false;

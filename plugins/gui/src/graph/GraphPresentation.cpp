@@ -191,12 +191,12 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 ImGui::TextDisabled("Project");
                 ImGui::Separator();
 
-                bool enable_save_graph = !inout_graph.HasCoreInterface();
-                if (ImGui::MenuItem("Save", nullptr, false, enable_save_graph)) {
-                    state.graph_save = true;
-                }
-                if (!enable_save_graph) {
-                    this->tooltip.ToolTip("Save running project using global project menu.");
+                if (ImGui::MenuItem("Save")) {
+                    if (inout_graph.HasCoreInterface()) {
+                        /// XXX TODO
+                    } else {
+                        state.graph_save = true;
+                    }
                 }
 
                 if (ImGui::MenuItem("Rename")) {
