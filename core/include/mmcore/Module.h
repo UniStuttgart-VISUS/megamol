@@ -49,8 +49,8 @@ namespace core {
 class MEGAMOLCORE_API Module : public AbstractNamedObjectContainer {
 public:
     virtual std::vector<std::string> requested_lifetime_resources() { 
-		return {"IOpenGL_Context"}; 
-	}
+        return {"IOpenGL_Context"}; 
+    }
 
     friend class ::megamol::core::factories::ModuleDescription;
 
