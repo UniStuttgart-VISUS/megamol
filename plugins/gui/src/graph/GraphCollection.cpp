@@ -23,7 +23,7 @@ bool megamol::gui::GraphCollection::AddEmptyProject(void) {
 
     ImGuiID graph_uid = this->AddGraph(GraphCoreInterface::NO_INTERFACE);
     if (graph_uid != GUI_INVALID_ID) {
-
+        /*
         // Add initial GUIView and set as view instance
         GraphPtr_t graph_ptr;
         if (this->GetGraph(graph_uid, graph_ptr)) {
@@ -43,11 +43,14 @@ bool megamol::gui::GraphCollection::AddEmptyProject(void) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Unable to add initial gui view module: '%s'. [%s, %s, line %d]\n",
                     guiview_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                return false;
             }
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Unable to get last added graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
         }
+        */
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unable to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
