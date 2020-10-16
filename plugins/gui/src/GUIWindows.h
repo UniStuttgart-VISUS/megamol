@@ -139,12 +139,10 @@ namespace gui {
         }
 
         /**
-         * Triggered Project Loading.
+         * Set Project Script Paths.
          */
-        bool ConsumeTriggeredProjectLoading(void);
-        // Valid filename is only ensured after project loading was triggered.
-        inline const std::string GetProjectFileName(void) const {
-            return this->state.load_project_filepath;
+        void SetProjectScriptPaths(const std::vector<std::string>& script_paths) {
+            this->project_script_paths = script_paths;
         }
 
         /**
@@ -195,7 +193,6 @@ namespace gui {
             bool screenshot_triggered;         // Trigger and file name for screenshot
             std::string screenshot_filepath;   // Filename the screenshot should be saved to
             int screenshot_filepath_id;        // Last unique id for screenshot filename
-            bool projectload_triggered;        // Trigger and file name for screenshot
             std::string load_project_filepath; // Filename the project should be loaded from
             bool hotkeys_check_once;           // WORKAROUND: Check multiple hotkey assignments once
         };
@@ -246,6 +243,9 @@ namespace gui {
 
         /** The current local state of the gui. */
         StateBuffer state;
+
+        /** Project Script Path provided by Lua */
+        std::vector<std::string> project_script_paths;
 
         // Widgets
         FileBrowserWidget file_browser;

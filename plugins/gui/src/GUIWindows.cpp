@@ -39,6 +39,7 @@ GUIWindows::GUIWindows(void)
         , window_collection()
         , configurator()
         , state()
+        , project_script_paths()
         , file_browser()
         , search_widget()
         , tf_editor_ptr(nullptr)
@@ -726,14 +727,6 @@ bool megamol::gui::GUIWindows::ConsumeTriggeredScreenshot(void) {
 }
 
 
-bool megamol::gui::GUIWindows::ConsumeTriggeredProjectLoading(void) {
-
-    bool trigger_projectload = this->state.projectload_triggered;
-    this->state.projectload_triggered = false;
-    return trigger_projectload;
-}
-
-
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
 
     // 1) Load all known calls from core instance ONCE ---------------------------
@@ -844,7 +837,14 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         // Creates new graph at first call
         sync_success &= this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(this->state.graph_uid,
             ((megamol_graph == nullptr) ? (this->core_instance) : (nullptr)), megamol_graph, true);
-        if (!sync_success) {
+        if (sync_success) {
+            // Load project from file and add to existing running graph
+            if (!this->state.load_project_filepath.empty()) {
+                this->configurator.GetGraphCollection().LoadAddProjectFromFile(
+                    this->state.graph_uid, this->state.load_project_filepath);
+                this->state.load_project_filepath.clear();
+            }
+        } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);
@@ -862,8 +862,11 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                         graph_ptr->SetFilename(script_filename);
                     }
                 }
-                /// TODO XXX Add project file source for MegaMolGraph
-
+                if (graph_ptr->GetFilename().empty()) {
+                    if (this->project_script_paths.empty()) {
+                        graph_ptr->SetFilename(this->project_script_paths.front());
+                    }
+                }
                 // Load initial gui state from file
                 this->load_state_from_file(graph_ptr->GetFilename());
             }
@@ -1826,9 +1829,13 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     this->state.open_popup_save |= this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].is_pressed;
     bool confirmed, aborted;
     bool popup_failed = false;
+
+    std::string filename;
     GraphPtr_t graph_ptr;
     if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-        std::string filename = graph_ptr->GetFilename();
+        filename = graph_ptr->GetFilename();
+    }
+    if (graph_ptr != nullptr) {
         this->state.open_popup_save |= this->configurator.ConsumeTriggeredGlobalProjectSave();
         if (this->file_browser.PopUp(
                 FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project", this->state.open_popup_save, filename)) {
@@ -1844,14 +1851,21 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].is_pressed = false;
 
     // Load project pop-up
-    this->state.open_popup_load |= this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed;
-    if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->state.open_popup_load,
-            this->state.load_project_filepath)) {
-        this->state.projectload_triggered = true;
+    if (graph_ptr != nullptr) {
+        this->state.open_popup_load |= this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed;
+        if (this->file_browser.PopUp(
+                FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->state.open_popup_load, filename)) {
+            graph_ptr.reset();
+            // Delete curently running graph and trigger the creation of a new one on next synchronisation
+            this->configurator.GetGraphCollection().DeleteGraph(this->state.graph_uid);
+            this->state.graph_uid = GUI_INVALID_ID;
+            // Trigger project ot be loaded to running graph
+            this->state.load_project_filepath = filename;
+        }
+        MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
+            confirmed, "Cancel", aborted);
+        this->state.open_popup_save = false;
     }
-    MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
-        confirmed, "Cancel", aborted);
-    this->state.open_popup_save = false;
     this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].is_pressed = false;
 
     // Filename for screenshot pop-up
@@ -1997,7 +2011,7 @@ std::string megamol::gui::GUIWindows::dump_state_to_file(const std::string& file
         this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
         return state_str;
     }
-    return false;
+    return std::string("");
 }
 
 
@@ -2135,7 +2149,6 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.screenshot_triggered = false;
     this->state.screenshot_filepath = "megamol_screenshot.png";
     this->state.screenshot_filepath_id = 0;
-    this->state.projectload_triggered = false;
     this->state.load_project_filepath = "";
     this->state.hotkeys_check_once = true;
 
