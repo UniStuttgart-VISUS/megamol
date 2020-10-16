@@ -681,7 +681,12 @@ int megamol::core::LuaAPI::CreateView(lua_State* L) {
         return 0;
     }
 
-    if (!graph_.SetGraphEntryPoint(instanceName, megamol::core::view::get_gl_view_runtime_resources_requests(), megamol::core::view::view_rendering_execution)) {
+    if (!graph_.SetGraphEntryPoint(
+        instanceName,
+        megamol::core::view::get_gl_view_runtime_resources_requests(),
+        megamol::core::view::view_rendering_execution,
+        megamol::core::view::view_init_rendering_state))
+    {
         errorMsg("could not set graph entry point");
     }
 
