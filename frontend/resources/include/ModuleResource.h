@@ -19,9 +19,9 @@ namespace frontend {
 class ModuleResource {
 public:
     ModuleResource()
-		: identifier{""}
-		, resource{}
-	{}
+        : identifier{""}
+        , resource{}
+    {}
 
     template <typename T>
     ModuleResource(const char* identifier, const T& resource) : ModuleResource(std::string{identifier}, resource) {}

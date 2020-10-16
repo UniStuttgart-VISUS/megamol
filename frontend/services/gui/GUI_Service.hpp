@@ -44,7 +44,7 @@ public:
         megamol::core::CoreInstance* core_instance = nullptr;
     };
 
-	std::string serviceName() const override { return "GUI_Service"; }
+    std::string serviceName() const override { return "GUI_Service"; }
 
     GUI_Service() = default;
     ~GUI_Service() override;
@@ -54,7 +54,7 @@ public:
     bool init(const Config& config);
     bool init(void* configPtr) override;
     void close() override;
-	
+    
     void updateProvidedResources() override;
     void digestChangedRequestedResources() override;
     void resetProvidedResources() override;

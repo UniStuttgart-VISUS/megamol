@@ -31,7 +31,7 @@ public:
     void OnResize(int w, int h) override;
     void OnDraw() override;
     bool Enabled() override { return true; }
-	
+    
 private:
     std::vector<std::shared_ptr<AbstractUILayer> > m_uiLayers;
     std::shared_ptr<AbstractUILayer> m_lastCapture = nullptr;

@@ -69,7 +69,7 @@ void GUI_Service::close() {
 
     // nothing to do here so far ...
 }
-	
+    
 
 void GUI_Service::updateProvidedResources() {
 
@@ -235,7 +235,7 @@ void GUI_Service::postGraphRender() {
 std::vector<ModuleResource>& GUI_Service::getProvidedResources() {
 
     // unused - returning empty list
-	return this->m_providedResourceReferences;
+    return this->m_providedResourceReferences;
 }
 
 

@@ -21,14 +21,14 @@ public:
     FrontendServiceCollection() = default;
     ~FrontendServiceCollection() = default;
 
-	void add(AbstractFrontendService& service, void* service_config);
+    void add(AbstractFrontendService& service, void* service_config);
 
     bool init();
     void close();
 
-	bool assignRequestedResources();
+    bool assignRequestedResources();
     std::vector<ModuleResource>& getProvidedResources();
-	
+    
     void updateProvidedResources();
     void digestChangedRequestedResources();
     void resetProvidedResources();
@@ -40,16 +40,16 @@ public:
 
 private:
 
-	void sortServices();
-	ModuleResource* findResource(std::string const& name);
+    void sortServices();
+    ModuleResource* findResource(std::string const& name);
 
-	struct ServiceEntry {
+    struct ServiceEntry {
         AbstractFrontendService* service = nullptr;
         void* service_config = nullptr;
 
-		 AbstractFrontendService const& get() const { return *service; }
-		 AbstractFrontendService& get() { return *service; }
-	};
+         AbstractFrontendService const& get() const { return *service; }
+         AbstractFrontendService& get() { return *service; }
+    };
 
     std::vector<ServiceEntry> m_services;
     std::vector<ModuleResource> m_serviceResources;
