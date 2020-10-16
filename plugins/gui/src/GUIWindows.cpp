@@ -8,12 +8,13 @@
 /**
  * USED HOTKEYS:
  *
- * - Show/hide Menu:            F12
+ * - Trigger Screenshot:        F3
+ * - Toggle Main View:          F5
  * - Show/hide Windows:         F7-F11
  * - Reset Windows:             Shift + F7-F11
+ * - Show/hide Menu:            F12
  * - Search Parameter:          Ctrl  + p
  * - Save Running Project:      Ctrl  + s
- * - Trigger Screenshot:        F3
  * - Quit Program:              Alt   + F4
  */
 
@@ -78,7 +79,7 @@ GUIWindows::GUIWindows(void)
     this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS] = {
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F2, core::view::Modifier::NONE), false};
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F5, core::view::Modifier::NONE), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F3, core::view::Modifier::NONE), false};
 
@@ -180,10 +181,13 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT].is_pressed = false;
     }
     if (this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].is_pressed) {
-        this->state.togle_main_view = true;
+        this->state.toggle_main_view = true;
         this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].is_pressed = false;
     }
-
+    if (this->state.toggle_main_view) {
+        /// XXX TODO
+        this->state.toggle_main_view = false;
+    }
     this->validateParameters();
     this->checkMultipleHotkeyAssignement();
 
@@ -706,50 +710,27 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 
 bool megamol::gui::GUIWindows::ConsumeTriggeredScreenshot(void) {
 
-    bool request_screenshot = this->state.screenshot_triggered;
+    bool trigger_screenshot = this->state.screenshot_triggered;
     this->state.screenshot_triggered = false;
-    if (request_screenshot) {
-        // Check for existing file
-        while (FileUtils::FileExists<std::string>(this->state.screenshot_filepath)) {
-            // Create new filename with iterating suffix
-            std::string filename = FileUtils::GetFilenameStem<std::string>(this->state.screenshot_filepath);
-            std::string id_separator = "_";
-            bool new_separator = false;
-            auto separator_index = filename.find_last_of(id_separator);
-            if (separator_index != std::string::npos) {
-                auto last_id_str = filename.substr(separator_index + 1);
-                try {
-                    this->state.screenshot_file_id = std::stoi(last_id_str);
-                } catch (...) { new_separator = true; }
-                this->state.screenshot_file_id++;
-                if (new_separator) {
-                    this->state.screenshot_filepath =
-                        filename + id_separator + std::to_string(this->state.screenshot_file_id) + ".png";
-                } else {
-                    this->state.screenshot_filepath = filename.substr(0, separator_index + 1) +
-                                                      std::to_string(this->state.screenshot_file_id) + ".png";
-                }
-            } else {
-                this->state.screenshot_filepath =
-                    filename + id_separator + std::to_string(this->state.screenshot_file_id) + ".png";
-            }
-        }
+    if (trigger_screenshot) {
+        this->create_not_existing_png_filepath(this->state.screenshot_filepath);
         if (this->state.screenshot_filepath.empty()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Filename for screenshot should not be empty. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);
-            request_screenshot = false;
+            trigger_screenshot = false;
         }
     }
 
-    return request_screenshot;
+    return trigger_screenshot;
 }
 
-const std::string megamol::gui::GUIWindows::GetScreenshotFileName(void) {
 
-    std::string filename = this->state.screenshot_filepath;
-    if (filename.empty()) {}
-    return filename;
+bool megamol::gui::GUIWindows::ConsumeTriggeredProjectLoading(void) {
+
+    bool trigger_projectload = this->state.projectload_triggered;
+    this->state.projectload_triggered = false;
+    return trigger_projectload;
 }
 
 
@@ -1643,12 +1624,14 @@ void GUIWindows::drawMenu(void) {
     ImGui::PushID("GUI::Menu");
 
     if (ImGui::BeginMenu("File")) {
+        /*TODO: COMPLETE IMPLEMENTATION
         if (megamolgraph_interface) {
             if (ImGui::MenuItem("Load Project",
                     this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].keycode.ToString().c_str())) {
                 this->state.open_popup_load = true;
             }
         }
+        */
         if (ImGui::MenuItem(
                 "Save Project", this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].keycode.ToString().c_str())) {
             this->state.open_popup_save = true;
@@ -1700,6 +1683,7 @@ void GUIWindows::drawMenu(void) {
     }
     if (megamolgraph_interface) {
         if (ImGui::BeginMenu("Screenshot")) {
+            this->create_not_existing_png_filepath(this->state.screenshot_filepath);
             if (ImGui::MenuItem("Select Filename", this->state.screenshot_filepath.c_str())) {
                 this->state.open_popup_screenshot = true;
             }
@@ -1710,24 +1694,40 @@ void GUIWindows::drawMenu(void) {
             ImGui::EndMenu();
         }
     }
+    /*TODO: COMPLETE IMPLEMENTATION
     if (megamolgraph_interface) {
         if (graph_ptr != nullptr) {
             if (ImGui::BeginMenu("View")) {
                 for (auto& module_ptr : graph_ptr->GetModules()) {
                     if (module_ptr->is_view) {
                         if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsMainView())) {
-                            /// TODO
+                            if (!module_ptr->IsMainView()) {
+                                module_ptr->main_view_name = graph_ptr->GenerateUniqueMainViewName();
+                                if (graph_ptr->GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
+                                    Graph::QueueData queue_data;
+                                    queue_data.name_id = module_ptr->FullName();
+                                    graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                                }
+                            } else {
+                                module_ptr->main_view_name.clear();
+                                if (graph_ptr->GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
+                                    Graph::QueueData queue_data;
+                                    queue_data.name_id = module_ptr->FullName();
+                                    graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                                }
+                            }
                         }
                     }
                 }
                 if (ImGui::MenuItem("Toggle Main Views",
                         this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].keycode.ToString().c_str())) {
-                    this->state.togle_main_view = true;
+                    this->state.toggle_main_view = true;
                 }
                 ImGui::EndMenu();
             }
         }
     }
+    */
     if (ImGui::BeginMenu("Help")) {
         if (ImGui::MenuItem("About")) {
             this->state.open_popup_about = true;
@@ -1828,7 +1828,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     GraphPtr_t graph_ptr;
     if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
         std::string filename = graph_ptr->GetFilename();
-        /// XXX TODO this->state.open_popup_save |= graph_ptr->;
+        this->state.open_popup_save |= this->configurator.ConsumeTriggeredGlobalProjectSave();
         if (this->file_browser.PopUp(
                 FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project", this->state.open_popup_save, filename)) {
 
@@ -1845,8 +1845,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     // Load project pop-up
     this->state.open_popup_load |= this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed;
     if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->state.open_popup_load,
-            this->state.load_project_filename)) {
-        /// XXX TODO
+            this->state.load_project_filepath)) {
+        this->state.projectload_triggered = true;
     }
     MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
         confirmed, "Cancel", aborted);
@@ -1856,7 +1856,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     // Filename for screenshot pop-up
     if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Select Filename for Screenshot",
             this->state.open_popup_screenshot, this->state.screenshot_filepath, ".png")) {
-        this->state.screenshot_file_id = 0;
+        this->state.screenshot_filepath_id = 0;
     }
     this->state.open_popup_screenshot = false;
 }
@@ -2129,11 +2129,48 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.open_popup_screenshot = false;
     this->state.menu_visible = true;
     this->state.graph_fonts_reserved = 0;
-    this->state.togle_main_view = false;
+    this->state.toggle_main_view = false;
     this->state.shutdown_triggered = false;
     this->state.screenshot_triggered = false;
-    this->state.screenshot_filepath = ".\\megamol_screenshot.png";
-    this->state.screenshot_file_id = 0;
-    this->state.load_project_filename = "";
+    this->state.screenshot_filepath = "megamol_screenshot.png";
+    this->state.screenshot_filepath_id = 0;
+    this->state.projectload_triggered = false;
+    this->state.load_project_filepath = "";
     this->state.hotkeys_check_once = true;
+
+    this->create_not_existing_png_filepath(this->state.screenshot_filepath);
+}
+
+
+bool megamol::gui::GUIWindows::create_not_existing_png_filepath(std::string& inout_filepath) {
+
+    // Check for existing file
+    bool created_filepath = false;
+    if (!inout_filepath.empty()) {
+        while (FileUtils::FileExists<std::string>(inout_filepath)) {
+            // Create new filename with iterating suffix
+            std::string filename = FileUtils::GetFilenameStem<std::string>(inout_filepath);
+            std::string id_separator = "_";
+            bool new_separator = false;
+            auto separator_index = filename.find_last_of(id_separator);
+            if (separator_index != std::string::npos) {
+                auto last_id_str = filename.substr(separator_index + 1);
+                try {
+                    this->state.screenshot_filepath_id = std::stoi(last_id_str);
+                } catch (...) { new_separator = true; }
+                this->state.screenshot_filepath_id++;
+                if (new_separator) {
+                    this->state.screenshot_filepath =
+                        filename + id_separator + std::to_string(this->state.screenshot_filepath_id) + ".png";
+                } else {
+                    inout_filepath = filename.substr(0, separator_index + 1) +
+                                     std::to_string(this->state.screenshot_filepath_id) + ".png";
+                }
+            } else {
+                inout_filepath = filename + id_separator + std::to_string(this->state.screenshot_filepath_id) + ".png";
+            }
+        }
+        created_filepath = true;
+    }
+    return created_filepath;
 }

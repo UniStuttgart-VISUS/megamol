@@ -193,9 +193,9 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 
                 if (ImGui::MenuItem("Save")) {
                     if (inout_graph.HasCoreInterface()) {
-                        /// XXX TODO
+                        state.global_graph_save = true;
                     } else {
-                        state.graph_save = true;
+                        state.configurator_graph_save = true;
                     }
                 }
 

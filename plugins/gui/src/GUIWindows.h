@@ -121,7 +121,7 @@ namespace gui {
         }
 
         /**
-         * Shutdown.
+         * Triggered Shutdown.
          */
         inline bool ConsumeTriggeredShutdown(void) {
             bool request_shutdown = this->state.shutdown_triggered;
@@ -130,10 +130,22 @@ namespace gui {
         }
 
         /**
-         * Screenshot.
+         * Triggered Screenshot.
          */
         bool ConsumeTriggeredScreenshot(void);
-        const std::string GetScreenshotFileName(void);
+        // Valid filename is only ensured after screenshot was triggered.
+        inline const std::string ConsumeScreenshotFileName(void) const {
+            return this->state.screenshot_filepath;
+        }
+
+        /**
+         * Triggered Project Loading.
+         */
+        bool ConsumeTriggeredProjectLoading(void);
+        // Valid filename is only ensured after project loading was triggered.
+        inline const std::string GetProjectFileName(void) const {
+            return this->state.load_project_filepath;
+        }
 
         /**
          * Synchronise changes between core graph <-> gui graph.
@@ -178,12 +190,13 @@ namespace gui {
             bool open_popup_screenshot;        // Flag for opening screenshot file pop-up
             bool menu_visible;                 // Flag indicating menu state
             unsigned int graph_fonts_reserved; // Number of fonts reserved for the configurator graph canvas
-            bool togle_main_view;              // Flag indicating that the main view should be toggeled
-            bool shutdown_triggered = false;   // Flag indicating user triggered shutdown
-            bool screenshot_triggered = false; // Trigger and file name for screenshot
+            bool toggle_main_view;             // Flag indicating that the main view should be toggeled
+            bool shutdown_triggered;           // Flag indicating user triggered shutdown
+            bool screenshot_triggered;         // Trigger and file name for screenshot
             std::string screenshot_filepath;   // Filename the screenshot should be saved to
-            int screenshot_file_id;            // Last unique id for screenshot filename
-            std::string load_project_filename; // Filename the project should be loaded from
+            int screenshot_filepath_id;        // Last unique id for screenshot filename
+            bool projectload_triggered;        // Trigger and file name for screenshot
+            std::string load_project_filepath; // Filename the project should be loaded from
             bool hotkeys_check_once;           // WORKAROUND: Check multiple hotkey assignments once
         };
 
@@ -271,6 +284,8 @@ namespace gui {
         bool state_to_json(nlohmann::json& inout_json);
 
         void init_state(void);
+
+        bool create_not_existing_png_filepath(std::string& inout_filepath);
     };
 
 } // namespace gui
