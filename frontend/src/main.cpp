@@ -4,12 +4,12 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/log/StreamTarget.h"
 
+#include "FrameStatistics_Service.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
 #include "Lua_Service_Wrapper.hpp"
 #include "OpenGL_GLFW_Service.hpp"
 #include "Screenshot_Service.hpp"
-#include "FrameStatistics_Service.hpp"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
@@ -19,18 +19,18 @@
 
 // Filesystem
 #if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
-#    include <filesystem>
+#include <filesystem>
 namespace stdfs = std::filesystem;
 #else
 // WINDOWS
-#    ifdef _WIN32
-#        include <filesystem>
+#ifdef _WIN32
+#include <filesystem>
 namespace stdfs = std::experimental::filesystem;
-#    else
+#else
 // LINUX
-#        include <experimental/filesystem>
+#include <experimental/filesystem>
 namespace stdfs = std::experimental::filesystem;
-#    endif
+#endif
 #endif
 
 // make sure that all configuration parameters have sane and useful and EXPLICIT initialization values!
@@ -100,16 +100,19 @@ int main(int argc, char* argv[]) {
     luaConfig.host_address = config.lua_host_address;
     lua_service_wrapper.setPriority(0);
 
-    // the main loop is organized around services that can 'do something' in different parts of the main loop
-    // a service is something that implements the AbstractFrontendService interface from 'megamol\frontend_services\include'
-    // a central mechanism that allows services to communicate with each other and with graph modules are _resources_
-    // (see ModuleResource in 'megamol\frontend_resources\include') services may provide resources to the system and they may
-    // request resources they need themselves for functioning. think of a resource as a struct (or some type of your
-    // choice) that gets wrapped by a helper structure and gets a name attached to it. the fronend makes sure (at least
-    // attempts to) to hand each service the resources it requested, or else fail execution of megamol with an error
-    // message. resource assignment is done by the name of the resource, so this is a very loose interface based on
-    // trust. type safety of resources is ensured in the sense that extracting the wrong type from a ModuleResource will
+    // clang-format off
+    // the main loop is organized around services that can 'do something' in different parts of the main loop.
+    // a service is something that implements the AbstractFrontendService interface from 'megamol\frontend_services\include'.
+    // a central mechanism that allows services to communicate with each other and with graph modules are _resources_.
+    // (see ModuleResource in 'megamol\frontend_resources\include').
+    // services may provide resources to the system and they may request resources they need themselves for functioning.
+    // think of a resource as a struct (or some type of your choice) that gets wrapped
+    // by a helper structure and gets a name attached to it. the fronend makes sure (at least
+    // attempts to) to hand each service the resources it requested, or else fail execution of megamol with an error message.
+    // resource assignment is done by the name of the resource, so this is a very loose interface based on trust.
+    // type safety of resources is ensured in the sense that extracting the wrong type from a ModuleResource will
     // lead to an unhandled bad type cast exception, leading to the shutdown of megamol.
+    // clang-format on
     bool run_megamol = true;
     megamol::frontend::FrontendServiceCollection services;
     services.add(gl_service, &openglConfig);
@@ -118,6 +121,7 @@ int main(int argc, char* argv[]) {
     services.add(screenshot_service, &screenshotConfig);
     services.add(framestatistics_service, &framestatisticsConfig);
 
+    // clang-format off
     // TODO: port cinematic as frontend service
     // TODO: FBO-centered rendering (View redesign)
     // => explicit FBOs!
@@ -125,11 +129,13 @@ int main(int argc, char* argv[]) {
     // => do or dont show GUI in screenshots, depending on ...
     // TODO: ZMQ context as frontend resource
     // TODO: port CLI commands from mmconsole
-    // TODO: eliminate the core instance: 
+    // TODO: eliminate the core instance:
     //  => extract module/call description manager into new factories; remove from core
     //  => key/value store for CLI configuration as frontend resource (emulate config params)
     // TODO: main3000 raw hot loop performance vs. mmconsole performance
-    // TODO: centralize project loading/saving to/from .lua/.png. has to collect graph serialization from graph, gui state from gui.
+    // TODO: centralize project loading/saving to/from .lua/.png.
+    // => has to collect graph serialization from graph, gui state from gui.
+    // clang-format on
 
     const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
 
@@ -185,7 +191,8 @@ int main(int argc, char* argv[]) {
         if (services.shouldShutdown())
             return false;
 
-        { // actual rendering
+        // actual rendering
+        {
             services.preGraphRender(); // e.g. start frame timer, clear render buffers
 
             graph.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
@@ -245,6 +252,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
 
     config.program_invocation_string = std::string{argv[0]};
 
+    // clang-format off
     // parse input project files
     options.positional_help("<additional project files>");
     options.add_options()
@@ -254,6 +262,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         ("khrdebug", "enable OpenGL KHR debug messages", cxxopts::value<bool>()->default_value("false"))
         ("help", "print help")
         ;
+    // clang-format on
 
     options.parse_positional({"project-files"});
 
@@ -300,7 +309,8 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
 
 bool set_up_example_graph(megamol::core::MegaMolGraph& graph) {
 #define check(X) \
-    if (!X) return false;
+    if (!X)      \
+        return false;
 
     check(graph.CreateModule("View3D_2", "::view"));
     check(graph.CreateModule("SphereRenderer", "::spheres"));
@@ -308,11 +318,8 @@ bool set_up_example_graph(megamol::core::MegaMolGraph& graph) {
     check(graph.CreateCall("CallRender3D_2", "::view::rendering", "::spheres::rendering"));
     check(graph.CreateCall("MultiParticleDataCall", "::spheres::getdata", "::datasource::getData"));
 
-    check(graph.SetGraphEntryPoint(
-        "::view",
-        megamol::core::view::get_gl_view_runtime_resources_requests(),
-        megamol::core::view::view_rendering_execution,
-        megamol::core::view::view_init_rendering_state));
+    check(graph.SetGraphEntryPoint("::view", megamol::core::view::get_gl_view_runtime_resources_requests(),
+        megamol::core::view::view_rendering_execution, megamol::core::view::view_init_rendering_state));
 
     std::string parameter_name("::datasource::numSpheres");
     auto parameterPtr = graph.FindParameter(parameter_name);
