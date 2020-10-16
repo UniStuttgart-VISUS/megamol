@@ -38,7 +38,7 @@ namespace mesh {
          *
          * @return 'true' on success, 'false' on failure.
          */
-        virtual bool getDataCallback(core::Call& caller) = 0;
+        virtual bool getMeshDataCallback(core::Call& caller) = 0;
     
         /**
          * Gets the data from the source.
@@ -47,7 +47,7 @@ namespace mesh {
          *
          * @return 'true' on success, 'false' on failure.
          */
-        virtual bool getMetaDataCallback(core::Call& caller) = 0;
+        virtual bool getMeshMetaDataCallback(core::Call& caller) = 0;
     
         /**
          * Implementation of 'Release'.
@@ -60,7 +60,7 @@ namespace mesh {
          * Mesh collection that is used with a list of identifier strings of meshs accesses that this module added to the mesh collection.
          * Needed to delete/update submeshes if the collection is shared across a chain of data sources modules.
          */
-        std::pair<std::shared_ptr<MeshDataAccessCollection>, std::vector<std::string>> m_mesh_collection;
+        std::pair<std::shared_ptr<MeshDataAccessCollection>, std::vector<std::string>> m_mesh_access_collection;
     
         /** The slot for querying additional mesh data, i.e. a rhs chaining connection */
         megamol::core::CallerSlot m_mesh_rhs_slot;

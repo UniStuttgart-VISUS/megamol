@@ -14,12 +14,11 @@
 #include "mesh/AbstractMeshDataSource.h"
 #include "mesh/MeshCalls.h"
 #include "mesh/mesh.h"
-#include "mesh/MeshDataAccessCollection.h"
 
 namespace megamol {
 namespace mesh {
 
-class MESH_API GlTFFileLoader : public core::Module {
+class MESH_API GlTFFileLoader : public AbstractMeshDataSource {
 public:
     /**
      * Answer the name of this module.
@@ -75,12 +74,8 @@ protected:
 
     bool checkAndLoadGltfModel();
 
-    void syncMeshAccessCollection(CallMesh* lhs_call);
-
 private:
     std::shared_ptr<tinygltf::Model> m_gltf_model;
-
-    std::pair<std::shared_ptr<MeshDataAccessCollection>,std::vector<std::string>> m_mesh_access_collection;
 
     uint32_t m_version;
 
@@ -93,7 +88,6 @@ private:
 
     /** The slot for providing access to internal mesh data */
     megamol::core::CalleeSlot m_mesh_slot;
-    //size_t m_mesh_cached_hash;
 };
 
 } // namespace mesh

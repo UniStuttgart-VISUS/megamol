@@ -5,15 +5,11 @@
 #include "mmcore/param/FilePathParam.h"
 
 megamol::mesh::WavefrontObjLoader::WavefrontObjLoader()
-    : core::Module()
+    : AbstractMeshDataSource()
     , m_version(0)
     , m_meta_data()
     , m_filename_slot("Wavefront OBJ filename", "The name of the obj file to load")
-    , m_getData_slot("CallMesh", "The slot publishing the loaded data") {
-    this->m_getData_slot.SetCallback(CallMesh::ClassName(), "GetData", &WavefrontObjLoader::getDataCallback);
-    this->m_getData_slot.SetCallback(CallMesh::ClassName(), "GetMetaData", &WavefrontObjLoader::getDataCallback);
-    this->MakeSlotAvailable(&this->m_getData_slot);
-
+{
     this->m_filename_slot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->m_filename_slot);
 }
@@ -22,7 +18,7 @@ megamol::mesh::WavefrontObjLoader::~WavefrontObjLoader() {}
 
 bool megamol::mesh::WavefrontObjLoader::create(void) { return true; }
 
-bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) {
+bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) {
 
     auto cm = dynamic_cast<CallMesh*>(&caller);
 
@@ -175,7 +171,8 @@ bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) {
 
             //TODO add file name?
             std::string identifier = m_obj_model->shapes[s].name;
-            this->m_mesh_data_access->addMesh(identifier, mesh_attributes, mesh_indices);
+            m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices);
+            m_mesh_access_collection.second.push_back(identifier);
         }
 
         m_meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
@@ -185,13 +182,13 @@ bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) {
     if (cm->version() < m_version)
     {
         cm->setMetaData(m_meta_data);
-        cm->setData(m_mesh_data_access,m_version);
+        cm->setData(m_mesh_access_collection.first, m_version);
     }
     
     return true;
 }
 
-bool megamol::mesh::WavefrontObjLoader::getMetaDataCallback(core::Call& caller) { 
+bool megamol::mesh::WavefrontObjLoader::getMeshMetaDataCallback(core::Call& caller) { 
 
     auto cm = dynamic_cast<CallMesh*>(&caller);
 

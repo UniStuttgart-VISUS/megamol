@@ -17,13 +17,11 @@
 #include "tiny_gltf.h"
 
 megamol::mesh::GlTFFileLoader::GlTFFileLoader()
-    : core::Module()
-    , m_mesh_access_collection({nullptr, {}})
+    : AbstractMeshDataSource()
     , m_version(0)
     , m_glTFFilename_slot("glTF filename", "The name of the gltf file to load")
     , m_gltf_slot("CallGlTFData", "The slot publishing the loaded data")
-    , m_mesh_slot("CallMeshData", "The slot providing access to internal mesh data")
-{
+    , m_mesh_slot("CallMeshData", "The slot providing access to internal mesh data") {
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetData", &GlTFFileLoader::getGltfDataCallback);
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetMetaData", &GlTFFileLoader::getGltfMetaDataCallback);
     this->MakeSlotAvailable(&this->m_gltf_slot);
@@ -38,9 +36,7 @@ megamol::mesh::GlTFFileLoader::GlTFFileLoader()
 
 megamol::mesh::GlTFFileLoader::~GlTFFileLoader() { this->Release(); }
 
-bool megamol::mesh::GlTFFileLoader::create(void) {
-    return true;
-}
+bool megamol::mesh::GlTFFileLoader::create(void) { return true; }
 
 bool megamol::mesh::GlTFFileLoader::getGltfDataCallback(core::Call& caller) {
     CallGlTFData* gltf_call = dynamic_cast<CallGlTFData*>(&caller);
@@ -52,15 +48,14 @@ bool megamol::mesh::GlTFFileLoader::getGltfDataCallback(core::Call& caller) {
     }
 
     if (gltf_call->version() < m_version) {
-        gltf_call->setData({std::string(m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value()),m_gltf_model}, m_version);
+        gltf_call->setData(
+            {std::string(m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value()), m_gltf_model}, m_version);
     }
 
     return true;
 }
 
-bool megamol::mesh::GlTFFileLoader::getGltfMetaDataCallback(core::Call& caller) { 
-    return true; 
-}
+bool megamol::mesh::GlTFFileLoader::getGltfMetaDataCallback(core::Call& caller) { return true; }
 
 bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
 
@@ -82,7 +77,7 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
 
         // set data and version to signal update
         cm->setData(m_mesh_access_collection.first, m_version);
-    
+
         // compute mesh call specific update
         std::array<float, 6> bbox;
 
@@ -173,7 +168,7 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
         cm->setMetaData(meta_data);
     }
 
-    
+
     return true;
 }
 
@@ -216,34 +211,6 @@ bool megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
     }
 
     return false;
-}
-
-void megamol::mesh::GlTFFileLoader::syncMeshAccessCollection(CallMesh* lhs_call) {
-    if (lhs_call->getData() == nullptr) {
-        // no incoming mesh -> use your own mesh access collection
-        if (m_mesh_access_collection.first == nullptr) {
-            m_mesh_access_collection.first = std::make_shared<MeshDataAccessCollection>();
-        }
-    } else {
-        // incoming material -> use it, copy material from last used collection if needed
-        if (lhs_call->getData() != m_mesh_access_collection.first) {
-
-
-            std::pair<std::shared_ptr<MeshDataAccessCollection>, std::vector<std::string>> mesh_access_collection = {
-                lhs_call->getData(), {}};
-
-            for (auto const& identifier : m_mesh_access_collection.second) {
-                MeshDataAccessCollection::Mesh mesh = m_mesh_access_collection.first->accessMesh(identifier);
-                mesh_access_collection.first->addMesh(identifier, mesh.attributes,
-                    mesh.indices,
-                    mesh.primitive_type
-                );
-                m_mesh_access_collection.first->deleteMesh(identifier);
-            }
-
-            m_mesh_access_collection = mesh_access_collection;
-        }
-    }
 }
 
 void megamol::mesh::GlTFFileLoader::release() {

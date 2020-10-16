@@ -5,14 +5,14 @@
 
 megamol::mesh::AbstractMeshDataSource::AbstractMeshDataSource()
     : core::Module()
-    , m_mesh_collection({nullptr, {}})
+    , m_mesh_access_collection({nullptr, {}})
     , m_mesh_lhs_slot("getData", "The slot publishing the loaded data")
-    , m_mesh_rhs_slot("getMesh", "The slot for chaining material data sources") 
+    , m_mesh_rhs_slot("getMesh", "The slot for chaining mesh data sources") 
 {
     this->m_mesh_lhs_slot.SetCallback(
-        CallGPUMeshData::ClassName(), "GetData", &AbstractMeshDataSource::getDataCallback);
+        CallGPUMeshData::ClassName(), "GetData", &AbstractMeshDataSource::getMeshDataCallback);
     this->m_mesh_lhs_slot.SetCallback(
-        CallGPUMeshData::ClassName(), "GetMetaData", &AbstractMeshDataSource::getMetaDataCallback);
+        CallGPUMeshData::ClassName(), "GetMetaData", &AbstractMeshDataSource::getMeshMetaDataCallback);
     this->MakeSlotAvailable(&this->m_mesh_lhs_slot);
 
     this->m_mesh_rhs_slot.SetCompatibleCall<CallMeshDescription>();
@@ -28,23 +28,26 @@ bool megamol::mesh::AbstractMeshDataSource::create(void) {
 void megamol::mesh::AbstractMeshDataSource::release() {}
 
 void megamol::mesh::AbstractMeshDataSource::syncMeshAccessCollection(CallMesh* lhs_call) {
-    //if (lhs_call->getData() == nullptr) {
-    //    // no incoming material -> use your own material storage
-    //    if (m_mesh_collection.first == nullptr) {
-    //        m_mesh_collection.first = std::make_shared<GPUMeshCollection>();
-    //    }
-    //} else {
-    //    // incoming material -> use it, copy material from last used collection if needed
-    //    if (lhs_call->getData() != m_mesh_collection.first) {
-    //        std::pair<std::shared_ptr<GPUMeshCollection>, std::vector<std::string>> mesh_collection = {
-    //            lhs_call->getData(), {}};
-    //        for (auto const& identifier : m_mesh_collection.second) {
-    //            //mtl_collection.first->addMesh(m_mesh_collection.first->getMeshes()[idx]);
-    //            auto const& submesh = m_mesh_collection.first->getSubMesh(identifier);
-    //            mesh_collection.first->addMesh(identifier, submesh.mesh->mesh, submesh);
-    //            m_mesh_collection.first->deleteSubMesh(identifier);
-    //        }
-    //        m_mesh_collection = mesh_collection;
-    //    }
-    //}
+    if (lhs_call->getData() == nullptr) {
+        // no incoming mesh -> use your own mesh access collection
+        if (m_mesh_access_collection.first == nullptr) {
+            m_mesh_access_collection.first = std::make_shared<MeshDataAccessCollection>();
+        }
+    } else {
+        // incoming material -> use it, copy material from last used collection if needed
+        if (lhs_call->getData() != m_mesh_access_collection.first) {
+
+
+            std::pair<std::shared_ptr<MeshDataAccessCollection>, std::vector<std::string>> mesh_access_collection = {
+                lhs_call->getData(), {}};
+
+            for (auto const& identifier : m_mesh_access_collection.second) {
+                MeshDataAccessCollection::Mesh mesh = m_mesh_access_collection.first->accessMesh(identifier);
+                mesh_access_collection.first->addMesh(identifier, mesh.attributes, mesh.indices, mesh.primitive_type);
+                m_mesh_access_collection.first->deleteMesh(identifier);
+            }
+
+            m_mesh_access_collection = mesh_access_collection;
+        }
+    }
 }
