@@ -11,7 +11,7 @@
 namespace megamol {
 namespace console {
 
-	using namespace megamol::module_resources;
+	using namespace megamol::frontend_resources;
 
     /**
      * This UI layer propagates mouse events to the connected (core) view

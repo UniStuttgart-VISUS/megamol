@@ -5,7 +5,7 @@
 #
 #option(BUILD_MODULE_RESOURCES "build module resources" ON)
 
-project(module_resources)
+project(frontend_resources)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 #  # Check option dependencies: First list item is always the current build option,

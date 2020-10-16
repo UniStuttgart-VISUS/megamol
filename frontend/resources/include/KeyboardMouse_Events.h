@@ -13,7 +13,7 @@
 #include "KeyboardMouseInput.h"
 
 namespace megamol {
-namespace module_resources {
+namespace frontend_resources {
 
 struct KeyboardState {
     std::vector<std::tuple<Key, KeyAction, Modifiers>> keys;
@@ -80,7 +80,7 @@ struct MouseEvents {
 };
 
 
-namespace input = module_resources;
+namespace input = frontend_resources;
 
-} /* end namespace module_resources */
+} /* end namespace frontend_resources */
 } /* end namespace megamol */

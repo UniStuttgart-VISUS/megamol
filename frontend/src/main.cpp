@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
     // the main loop is organized around services that can 'do something' in different parts of the main loop
     // a service is something that implements the AbstractFrontendService interface from 'megamol\frontend_services\include'
     // a central mechanism that allows services to communicate with each other and with graph modules are _resources_
-    // (see ModuleResource in 'megamol\module_resources\include') services may provide resources to the system and they may
+    // (see ModuleResource in 'megamol\frontend_resources\include') services may provide resources to the system and they may
     // request resources they need themselves for functioning. think of a resource as a struct (or some type of your
     // choice) that gets wrapped by a helper structure and gets a name attached to it. the fronend makes sure (at least
     // attempts to) to hand each service the resources it requested, or else fail execution of megamol with an error
@@ -118,21 +118,18 @@ int main(int argc, char* argv[]) {
     services.add(screenshot_service, &screenshotConfig);
     services.add(framestatistics_service, &framestatisticsConfig);
 
-    // TODO: gui view and frontend service gui can not coexist => how to kill GUI View in loaded projects?
-    //  - FBO size (and others) for newly created views/modules/entrypoints (FBO size event missing). see AbstractView_EventConsumption::view_consume_framebuffer_events
-    //  - graph manipulation via GUI still buggy (adding/removing main views, renaming modules/calls, stuff like that)
     // TODO: port cinematic as frontend service
+    // TODO: FBO-centered rendering (View redesign)
     // => explicit FBOs!
-    // TODO: port screenshooter
+    // => explicit camera / animation time / FBO resources/modules in graph?
+    // => do or dont show GUI in screenshots, depending on ...
     // TODO: ZMQ context as frontend resource
     // TODO: port CLI commands from mmconsole
-    // => do or dont show GUI in screenshots, depending on ...
     // TODO: eliminate the core instance: 
     //  => extract module/call description manager into new factories; remove from core
     //  => key/value store for CLI configuration as frontend resource (emulate config params)
-    // TODO: main3000 compilation on linux (cmake name conflict, GUI_Windows <-> GUI_ Service dll/lib boundary)
-    // TODO: overall new frontend-related CI compilation issues (mostly on linux)
     // TODO: main3000 raw hot loop performance vs. mmconsole performance
+    // TODO: centralize project loading/saving to/from .lua/.png. has to collect graph serialization from graph, gui state from gui.
 
     const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
 
@@ -143,8 +140,6 @@ int main(int argc, char* argv[]) {
     }
 
     // graph is also a resource that may be accessed by services
-    // TODO: how to solve const and non-const resources?
-    // TODO: graph manipulation during execution of graph modules is problematic, undefined?
     services.getProvidedResources().push_back({"MegaMolGraph", graph});
 
     // proof of concept: a resource that returns a list of names of available resources
@@ -170,8 +165,8 @@ int main(int argc, char* argv[]) {
         run_megamol = false;
     }
 
-    auto module_resources = services.getProvidedResources();
-    graph.AddModuleDependencies(module_resources);
+    auto frontend_resources = services.getProvidedResources();
+    graph.AddModuleDependencies(frontend_resources);
 
     uint32_t frameID = 0;
     const auto render_next_frame = [&]() -> bool {
@@ -307,16 +302,17 @@ bool set_up_example_graph(megamol::core::MegaMolGraph& graph) {
 #define check(X) \
     if (!X) return false;
 
-    ///check(graph.CreateModule("GUIView", "::gui"));
     check(graph.CreateModule("View3D_2", "::view"));
     check(graph.CreateModule("SphereRenderer", "::spheres"));
     check(graph.CreateModule("TestSpheresDataSource", "::datasource"));
-    ///check(graph.CreateCall("CallRenderView", "::gui::renderview", "::view::render"));
     check(graph.CreateCall("CallRender3D_2", "::view::rendering", "::spheres::rendering"));
     check(graph.CreateCall("MultiParticleDataCall", "::spheres::getdata", "::datasource::getData"));
 
-    ///check(graph.SetGraphEntryPoint("::gui", megamol::core::view::get_gl_view_runtime_resources_requests(), megamol::core::view::view_rendering_execution));
-    check(graph.SetGraphEntryPoint("::view", megamol::core::view::get_gl_view_runtime_resources_requests(), megamol::core::view::view_rendering_execution));
+    check(graph.SetGraphEntryPoint(
+        "::view",
+        megamol::core::view::get_gl_view_runtime_resources_requests(),
+        megamol::core::view::view_rendering_execution,
+        megamol::core::view::view_init_rendering_state));
 
     std::string parameter_name("::datasource::numSpheres");
     auto parameterPtr = graph.FindParameter(parameter_name);

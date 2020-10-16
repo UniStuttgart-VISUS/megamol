@@ -136,7 +136,10 @@ public:
         std::function<void(Module::ptr_type, std::vector<megamol::frontend::ModuleResource> const&)>;
 
     bool SetGraphEntryPoint(
-        std::string moduleName, std::vector<std::string> execution_resources, EntryPointExecutionCallback callback);
+        std::string moduleName,
+        std::vector<std::string> execution_resources,
+        EntryPointExecutionCallback render_callback,
+        EntryPointExecutionCallback init_callback);
 
     bool RemoveGraphEntryPoint(std::string moduleName);
 

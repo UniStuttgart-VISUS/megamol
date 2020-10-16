@@ -14,7 +14,7 @@
 #define init bool ret = false; m_lastCapture = nullptr;
 #define abort {m_lastCapture = uil; break;}
 
-using namespace megamol::module_resources;
+using namespace megamol::frontend_resources;
 
 std::shared_ptr<AbstractUILayer> UILayersCollection::lastEventCaptureUILayer() {
 	return std::move(m_lastCapture);

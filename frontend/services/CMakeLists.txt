@@ -30,7 +30,7 @@ if(BUILD_FRONTEND_SERVICES)
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
     $<INSTALL_INTERFACE:include/>
   )
-  target_link_libraries(abstract_frontend_service INTERFACE module_resources)
+  target_link_libraries(abstract_frontend_service INTERFACE frontend_resources)
   
   #if(WIN32)
   #  set(VERSION_LIBRARY "Version.lib")

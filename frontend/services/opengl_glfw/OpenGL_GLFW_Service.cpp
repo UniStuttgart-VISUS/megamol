@@ -517,14 +517,29 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     this->m_windowEvents.previous_state.is_iconified =
         (GLFW_TRUE == glfwGetWindowAttrib(m_glfwWindowPtr, GLFW_ICONIFIED));
     this->m_windowEvents.previous_state.should_close = (GLFW_TRUE == glfwWindowShouldClose(m_glfwWindowPtr));
-    glfwGetWindowContentScale(m_glfwWindowPtr, &this->m_windowEvents.previous_state.x_contentscale,
+    glfwGetWindowContentScale(m_glfwWindowPtr,
+        &this->m_windowEvents.previous_state.x_contentscale,
         &this->m_windowEvents.previous_state.y_contentscale);
+
+    outer_glfw_onWindowSize_func(m_glfwWindowPtr,
+        this->m_windowEvents.previous_state.width,
+        this->m_windowEvents.previous_state.height);
+    outer_glfw_onWindowFocus_func(m_glfwWindowPtr, this->m_windowEvents.previous_state.is_focused);
+    outer_glfw_onWindowIconified_func(m_glfwWindowPtr, this->m_windowEvents.previous_state.is_iconified);
+    outer_glfw_onWindowContentScale_func(m_glfwWindowPtr,
+        this->m_windowEvents.previous_state.x_contentscale,
+        this->m_windowEvents.previous_state.y_contentscale);
 
     // set callbacks
     ::glfwSetFramebufferSizeCallback(m_glfwWindowPtr, &outer_glfw_onFramebufferSize_func);
     // set current framebuffer state
-    glfwGetFramebufferSize(m_glfwWindowPtr, &this->m_framebufferEvents.previous_state.width,
+    glfwGetFramebufferSize(m_glfwWindowPtr,
+        &this->m_framebufferEvents.previous_state.width,
         &this->m_framebufferEvents.previous_state.height);
+
+    outer_glfw_onFramebufferSize_func(m_glfwWindowPtr,
+        this->m_framebufferEvents.previous_state.width,
+        this->m_framebufferEvents.previous_state.height);
 
     if (m_data.initialConfig.enableVsync) ::glfwSwapInterval(0);
 
@@ -640,24 +655,24 @@ void OpenGL_GLFW_Service::setRequestedResources(std::vector<ModuleResource> reso
 
 void OpenGL_GLFW_Service::glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {
 
-    module_resources::Key key_ = static_cast<module_resources::Key>(key);
-    module_resources::KeyAction action_(module_resources::KeyAction::RELEASE);
+    frontend_resources::Key key_ = static_cast<frontend_resources::Key>(key);
+    frontend_resources::KeyAction action_(frontend_resources::KeyAction::RELEASE);
     switch (action) {
     case GLFW_PRESS:
-        action_ = module_resources::KeyAction::PRESS;
+        action_ = frontend_resources::KeyAction::PRESS;
         break;
     case GLFW_REPEAT:
-        action_ = module_resources::KeyAction::REPEAT;
+        action_ = frontend_resources::KeyAction::REPEAT;
         break;
     case GLFW_RELEASE:
-        action_ = module_resources::KeyAction::RELEASE;
+        action_ = frontend_resources::KeyAction::RELEASE;
         break;
     }
 
-    module_resources::Modifiers mods_;
-    if ((mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods_ |= module_resources::Modifier::SHIFT;
-    if ((mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods_ |= module_resources::Modifier::CTRL;
-    if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods_ |= module_resources::Modifier::ALT;
+    frontend_resources::Modifiers mods_;
+    if ((mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) mods_ |= frontend_resources::Modifier::SHIFT;
+    if ((mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) mods_ |= frontend_resources::Modifier::CTRL;
+    if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT) mods_ |= frontend_resources::Modifier::ALT;
 
     this->m_keyboardEvents.key_events.emplace_back(std::make_tuple(key_, action_, mods_));
 }
@@ -672,14 +687,14 @@ void OpenGL_GLFW_Service::glfw_onMouseCursorPosition_func(const double xpos, con
 }
 
 void OpenGL_GLFW_Service::glfw_onMouseButton_func(const int button, const int action, const int mods) {
-    module_resources::MouseButton btn = static_cast<module_resources::MouseButton>(button);
-    module_resources::MouseButtonAction btnaction =
-        (action == GLFW_PRESS) ? module_resources::MouseButtonAction::PRESS : module_resources::MouseButtonAction::RELEASE;
+    frontend_resources::MouseButton btn = static_cast<frontend_resources::MouseButton>(button);
+    frontend_resources::MouseButtonAction btnaction =
+        (action == GLFW_PRESS) ? frontend_resources::MouseButtonAction::PRESS : frontend_resources::MouseButtonAction::RELEASE;
 
-    module_resources::Modifiers btnmods;
-    if ((mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) btnmods |= module_resources::Modifier::SHIFT;
-    if ((mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) btnmods |= module_resources::Modifier::CTRL;
-    if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT) btnmods |= module_resources::Modifier::ALT;
+    frontend_resources::Modifiers btnmods;
+    if ((mods & GLFW_MOD_SHIFT) == GLFW_MOD_SHIFT) btnmods |= frontend_resources::Modifier::SHIFT;
+    if ((mods & GLFW_MOD_CONTROL) == GLFW_MOD_CONTROL) btnmods |= frontend_resources::Modifier::CTRL;
+    if ((mods & GLFW_MOD_ALT) == GLFW_MOD_ALT) btnmods |= frontend_resources::Modifier::ALT;
 
     this->m_mouseEvents.buttons_events.emplace_back(std::make_tuple(btn, btnaction, btnmods));
 }
@@ -694,7 +709,7 @@ void OpenGL_GLFW_Service::glfw_onMouseCursorEnter_func(const bool entered) {
 }
 
 void OpenGL_GLFW_Service::glfw_onFramebufferSize_func(const int widthpx, const int heightpx) {
-    this->m_framebufferEvents.size_events.emplace_back(module_resources::FramebufferState{widthpx, heightpx});
+    this->m_framebufferEvents.size_events.emplace_back(frontend_resources::FramebufferState{widthpx, heightpx});
 }
 
 void OpenGL_GLFW_Service::glfw_onWindowSize_func(const int width, const int height) { // in screen coordinates, of the window

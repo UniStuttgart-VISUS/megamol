@@ -119,7 +119,7 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<ModuleResource> reso
     luaAPI.setScreenshotCallback(screenshot_callback);
 
     luaAPI.setLastFrameTimeCallback([&]() {
-        auto& frame_statistics = m_requestedResourceReferences[3].getResource<megamol::module_resources::FrameStatistics>();
+        auto& frame_statistics = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::FrameStatistics>();
         return static_cast<float>(frame_statistics.last_rendered_frame_time_milliseconds);
     });
 }
@@ -174,7 +174,7 @@ void Lua_Service_Wrapper::digestChangedRequestedResources() {
     recursion_guard;
 
     // execute lua files dropped into megamol window
-    auto window_events = this->m_requestedResourceReferences[2].getResource<megamol::module_resources::WindowEvents>();
+    auto window_events = this->m_requestedResourceReferences[2].getResource<megamol::frontend_resources::WindowEvents>();
     for(auto& event: window_events.dropped_path_events) {
         for (auto& file_path : event) {
             if(megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(file_path, ".lua") ||

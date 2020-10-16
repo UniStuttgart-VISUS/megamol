@@ -585,7 +585,12 @@ std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::L
     return parameters;
 }
 
-bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName, std::vector<std::string> execution_resource_requests, EntryPointExecutionCallback callback) {
+bool megamol::core::MegaMolGraph::SetGraphEntryPoint(
+    std::string moduleName,
+    std::vector<std::string> execution_resource_requests,
+    EntryPointExecutionCallback render_callback,
+    EntryPointExecutionCallback init_callback)
+{
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
@@ -605,7 +610,8 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName, std
         return false;
     }
 
-	this->graph_entry_points.push_back({moduleName, module_ptr, resources, callback});
+	this->graph_entry_points.push_back({moduleName, module_ptr, resources, render_callback});
+	init_callback(module_ptr, resources);
 
     module_it->isGraphEntryPoint = true;
     log("set graph entry point: " + moduleName);
@@ -654,6 +660,7 @@ std::vector<megamol::frontend::ModuleResource> megamol::core::MegaMolGraph::get_
 	return result;
 }
 
+#include "mmcore/param/ButtonParam.h"
 std::string megamol::core::MegaMolGraph::SerializeGraph() const {
 
     std::string serViews;
@@ -676,6 +683,10 @@ std::string megamol::core::MegaMolGraph::SerializeGraph() const {
 
     for (auto& module : this->module_list_) {
         for (auto& paramSlot : this->EnumerateModuleParameterSlots(module.request.id)) {
+            // it seems serialiing button params is illegal
+            if (auto* p_ptr = paramSlot->template Param<core::param::ButtonParam>()) {
+                continue;
+            }
             auto name = std::string{paramSlot->FullName()};
             auto split = splitPathName(name);
             // as FullName() prepends :: to module names, normalize multiple leading :: in parameter name path
