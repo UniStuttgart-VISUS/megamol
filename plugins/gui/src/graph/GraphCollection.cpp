@@ -1649,7 +1649,7 @@ std::string megamol::gui::GraphCollection::GetUpdatedGUIState(ImGuiID graph_id, 
         state_str = state_json.dump(); // No line feed
         return state_str;
     }
-    return false;
+    return std::string("");
 }
 
 

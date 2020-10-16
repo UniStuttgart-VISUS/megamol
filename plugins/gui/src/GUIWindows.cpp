@@ -2012,7 +2012,7 @@ std::string megamol::gui::GUIWindows::dump_state_to_file(const std::string& file
         this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
         return state_str;
     }
-    return false;
+    return std::string("");
 }
 
 
