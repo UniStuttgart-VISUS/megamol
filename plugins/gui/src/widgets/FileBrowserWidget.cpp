@@ -42,6 +42,10 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                 tmp_file_path = stdfs::current_path();
             }
             this->split_path(tmp_file_path, this->file_path_str, this->file_name_str);
+            if (this->file_path_str.empty()) {
+                // Add initial valid root path
+                this->file_path_str = ".\\";
+            }
             this->validate_directory(this->file_path_str);
             this->validate_file(this->file_name_str, extension, flag);
             this->path_changed = true;

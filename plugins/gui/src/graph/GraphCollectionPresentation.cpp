@@ -69,8 +69,8 @@ void megamol::gui::GraphCollectionPresentation::Present(
         ImGui::EndTabBar();
 
         // Save selected graph in configurator
-        this->SaveProjectToFile(state.graph_save, inout_graph_collection, state);
-        state.graph_save = false;
+        this->SaveProjectToFile(state.configurator_graph_save, inout_graph_collection, state);
+        state.configurator_graph_save = false;
 
         // Delete selected graph when tab is closed and unsaved changes should be discarded.
         bool confirmed = false;

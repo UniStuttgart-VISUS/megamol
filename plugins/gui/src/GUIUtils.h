@@ -192,7 +192,8 @@ namespace gui {
         megamol::gui::HotkeyArray_t hotkeys; // in out
         ImGuiID graph_selected_uid;          // out
         bool graph_delete;                   // out
-        bool graph_save;                     // out
+        bool configurator_graph_save;        // out
+        bool global_graph_save;              // out
     } GraphState_t;
 
     /********** Global Unique ID **********/
