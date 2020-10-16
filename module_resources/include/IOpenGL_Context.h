@@ -8,7 +8,7 @@
 #pragma once
 
 namespace megamol {
-namespace module_resources {
+namespace frontend_resources {
 
 struct IOpenGL_Context {
 	virtual void activate() const = 0;
@@ -17,5 +17,5 @@ struct IOpenGL_Context {
 	virtual ~IOpenGL_Context() = default;
 };
 
-} /* end namespace module_resources */
+} /* end namespace frontend_resources */
 } /* end namespace megamol */

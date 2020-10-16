@@ -28,7 +28,7 @@ static void log(const char* text) {
 static void log(std::string text) { log(text.c_str()); }
 
 // need this to pass GL context to screenshot source. this a hack and needs to be properly designed.
-static megamol::module_resources::IOpenGL_Context* gl_context_ptr = nullptr;
+static megamol::frontend_resources::IOpenGL_Context* gl_context_ptr = nullptr;
 static megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
 
 static void PNGAPI pngErrorFunc(png_structp pngPtr, png_const_charp msg) {
@@ -49,7 +49,7 @@ static void PNGAPI pngFlushFileFunc(png_structp pngPtr) {
     f->Flush();
 }
 
-static bool write_png_to_file(megamol::module_resources::ImageData const& image, std::string const& filename) {
+static bool write_png_to_file(megamol::frontend_resources::ImageData const& image, std::string const& filename) {
     vislib::sys::FastFile file;
     try {
         // open final image file
@@ -97,7 +97,7 @@ static bool write_png_to_file(megamol::module_resources::ImageData const& image,
     return true;
 }
 
-void megamol::module_resources::GLScreenshotSource::set_read_buffer(ReadBuffer buffer) {
+void megamol::frontend_resources::GLScreenshotSource::set_read_buffer(ReadBuffer buffer) {
     m_read_buffer = buffer;
     GLenum read_buffer;
 
@@ -125,7 +125,7 @@ void megamol::module_resources::GLScreenshotSource::set_read_buffer(ReadBuffer b
     }
 }
 
-megamol::module_resources::ImageData megamol::module_resources::GLScreenshotSource::take_screenshot() const {
+megamol::frontend_resources::ImageData megamol::frontend_resources::GLScreenshotSource::take_screenshot() const {
     if (gl_context_ptr)
         gl_context_ptr->activate();
 
@@ -152,7 +152,7 @@ megamol::module_resources::ImageData megamol::module_resources::GLScreenshotSour
     return std::move(result);
 }
 
-bool megamol::module_resources::ImageDataToPNGWriter::write_image(ImageData image, std::string const& filename) const {
+bool megamol::frontend_resources::ImageDataToPNGWriter::write_image(ImageData image, std::string const& filename) const {
     return write_png_to_file(std::move(image), filename);
 }
 
@@ -209,7 +209,7 @@ const std::vector<std::string> Screenshot_Service::getRequestedResourceNames() c
 }
 
 void Screenshot_Service::setRequestedResources(std::vector<ModuleResource> resources) {
-    gl_context_ptr = const_cast<megamol::module_resources::IOpenGL_Context*>(&resources[0].getResource<megamol::module_resources::IOpenGL_Context>());
+    gl_context_ptr = const_cast<megamol::frontend_resources::IOpenGL_Context*>(&resources[0].getResource<megamol::frontend_resources::IOpenGL_Context>());
     megamolgraph_ptr = const_cast<megamol::core::MegaMolGraph*>(&resources[1].getResource<megamol::core::MegaMolGraph>());
 }
 

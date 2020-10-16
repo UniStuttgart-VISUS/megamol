@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace megamol {
-namespace module_resources {
+namespace frontend_resources {
 
 struct ImageData {
     struct Pixel {
@@ -83,5 +83,5 @@ public:
 };
 
 
-} /* end namespace module_resources */
+} /* end namespace frontend_resources */
 } /* end namespace megamol */

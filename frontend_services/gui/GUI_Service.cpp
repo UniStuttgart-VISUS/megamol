@@ -95,7 +95,7 @@ void GUI_Service::digestChangedRequestedResources() {
     this->m_resource_state.megamol_graph = const_cast<megamol::core::MegaMolGraph*>(graph_resource_ptr);
 
     /// WindowEvents = resource index 1
-    auto window_events = &this->m_requestedResourceReferences[1].getResource<megamol::module_resources::WindowEvents>();
+    auto window_events = &this->m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowEvents>();
     this->m_resource_state.time = window_events->time;
     for (auto& size_event : window_events->size_events) {
         m_resource_state.window_size.x = static_cast<float>(std::get<0>(size_event));
@@ -116,9 +116,9 @@ void GUI_Service::digestChangedRequestedResources() {
     */
 
     /// KeyboardEvents = resource index 2
-    auto keyboard_events = &this->m_requestedResourceReferences[2].getResource<megamol::module_resources::KeyboardEvents>();
+    auto keyboard_events = &this->m_requestedResourceReferences[2].getResource<megamol::frontend_resources::KeyboardEvents>();
 
-    std::vector<std::tuple<megamol::module_resources::Key, megamol::module_resources::KeyAction, megamol::module_resources::Modifiers>> pass_key_events;
+    std::vector<std::tuple<megamol::frontend_resources::Key, megamol::frontend_resources::KeyAction, megamol::frontend_resources::Modifiers>> pass_key_events;
     for (auto it = keyboard_events->key_events.begin(); it != keyboard_events->key_events.end(); it++) {
         auto key = std::get<0>((*it));
         auto action = std::get<1>((*it));
@@ -128,7 +128,7 @@ void GUI_Service::digestChangedRequestedResources() {
         }
     }
     /// WARNING: Changing a constant type will lead to an undefined behavior!
-    const_cast<megamol::module_resources::KeyboardEvents*>(keyboard_events)->key_events = pass_key_events;
+    const_cast<megamol::frontend_resources::KeyboardEvents*>(keyboard_events)->key_events = pass_key_events;
 
     std::vector<unsigned int> pass_codepoint_events;
     for (auto it = keyboard_events->codepoint_events.begin(); it != keyboard_events->codepoint_events.end(); it++) {
@@ -137,10 +137,10 @@ void GUI_Service::digestChangedRequestedResources() {
         }
     }
     /// WARNING: Changing a constant type will lead to an undefined behavior!
-    const_cast<megamol::module_resources::KeyboardEvents*>(keyboard_events)->codepoint_events = pass_codepoint_events;
+    const_cast<megamol::frontend_resources::KeyboardEvents*>(keyboard_events)->codepoint_events = pass_codepoint_events;
 
     /// MouseEvents = resource index 3
-    auto mouse_events = &this->m_requestedResourceReferences[3].getResource<megamol::module_resources::MouseEvents>();
+    auto mouse_events = &this->m_requestedResourceReferences[3].getResource<megamol::frontend_resources::MouseEvents>();
 
     std::vector<std::tuple<double, double>>  pass_mouse_pos_events;
     for (auto it = mouse_events->position_events.begin(); it != mouse_events->position_events.end(); it++) {
@@ -151,7 +151,7 @@ void GUI_Service::digestChangedRequestedResources() {
         }
     }
     /// WARNING: Changing a constant type will lead to an undefined behavior!
-    const_cast<megamol::module_resources::MouseEvents*>(mouse_events)->position_events = pass_mouse_pos_events;
+    const_cast<megamol::frontend_resources::MouseEvents*>(mouse_events)->position_events = pass_mouse_pos_events;
 
     std::vector<std::tuple<double, double>> pass_mouse_scroll_events;
     for (auto it = mouse_events->scroll_events.begin(); it != mouse_events->scroll_events.end(); it++) {
@@ -162,9 +162,9 @@ void GUI_Service::digestChangedRequestedResources() {
         }
     }
     /// WARNING: Changing a constant type will lead to an undefined behavior!
-    const_cast<megamol::module_resources::MouseEvents*>(mouse_events)->scroll_events = pass_mouse_scroll_events;
+    const_cast<megamol::frontend_resources::MouseEvents*>(mouse_events)->scroll_events = pass_mouse_scroll_events;
 
-    std::vector<std::tuple<megamol::module_resources::MouseButton, megamol::module_resources::MouseButtonAction, megamol::module_resources::Modifiers>>  pass_mouse_btn_events;
+    std::vector<std::tuple<megamol::frontend_resources::MouseButton, megamol::frontend_resources::MouseButtonAction, megamol::frontend_resources::Modifiers>>  pass_mouse_btn_events;
     for (auto it = mouse_events->buttons_events.begin(); it != mouse_events->buttons_events.end(); it++) {
         auto button = std::get<0>((*it));
         auto action = std::get<1>((*it));
@@ -174,13 +174,13 @@ void GUI_Service::digestChangedRequestedResources() {
         }
     }
     /// WARNING: Changing a constant type will lead to an undefined behavior!
-    const_cast<megamol::module_resources::MouseEvents*>(mouse_events)->buttons_events = pass_mouse_btn_events;
+    const_cast<megamol::frontend_resources::MouseEvents*>(mouse_events)->buttons_events = pass_mouse_btn_events;
 
     /// IOpenGL_Context = resource index 4
-    this->m_resource_state.opengl_context_ptr = &this->m_requestedResourceReferences[4].getResource<megamol::module_resources::IOpenGL_Context>();
+    this->m_resource_state.opengl_context_ptr = &this->m_requestedResourceReferences[4].getResource<megamol::frontend_resources::IOpenGL_Context>();
          
     /// FramebufferEvents = resource index 5
-    auto framebuffer_events = &this->m_requestedResourceReferences[5].getResource<megamol::module_resources::FramebufferEvents>();
+    auto framebuffer_events = &this->m_requestedResourceReferences[5].getResource<megamol::frontend_resources::FramebufferEvents>();
     for (auto& size_event : framebuffer_events->size_events) {
         m_resource_state.framebuffer_size.x = static_cast<float>(size_event.width);
         m_resource_state.framebuffer_size.y = static_cast<float>(size_event.height);

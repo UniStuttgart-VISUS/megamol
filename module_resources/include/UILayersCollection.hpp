@@ -12,7 +12,7 @@
 #include "AbstractUILayer.h"
 
 namespace megamol {
-namespace module_resources {
+namespace frontend_resources {
 
 class UILayersCollection : AbstractUILayer {
 public:
@@ -20,9 +20,9 @@ public:
     void RemoveUILayer(std::shared_ptr<AbstractUILayer>& uiLayer);
     void ClearUILayers();
 
-    bool OnKey(module_resources::Key key, module_resources::KeyAction action, module_resources::Modifiers mods) override;
+    bool OnKey(frontend_resources::Key key, frontend_resources::KeyAction action, frontend_resources::Modifiers mods) override;
     bool OnChar(unsigned int codePoint) override;
-    bool OnMouseButton(module_resources::MouseButton button, module_resources::MouseButtonAction action, module_resources::Modifiers mods) override;
+    bool OnMouseButton(frontend_resources::MouseButton button, frontend_resources::MouseButtonAction action, frontend_resources::Modifiers mods) override;
     bool OnMouseMove(double x, double y) override;
     bool OnMouseScroll(double dx, double dy) override;
 
@@ -37,5 +37,5 @@ private:
     std::shared_ptr<AbstractUILayer> m_lastCapture = nullptr;
 };
 
-} // namespace module_resources
+} // namespace frontend_resources
 } // namespace megamol

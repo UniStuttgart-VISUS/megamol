@@ -80,7 +80,7 @@ private:
         glm::vec2 framebuffer_size;
         glm::vec2 window_size;
         megamol::core::MegaMolGraph* megamol_graph;
-        megamol::module_resources::IOpenGL_Context const* opengl_context_ptr;
+        megamol::frontend_resources::IOpenGL_Context const* opengl_context_ptr;
     };
 
     std::vector<ModuleResource> m_providedResourceReferences;

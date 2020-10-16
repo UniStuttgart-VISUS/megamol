@@ -29,10 +29,10 @@ struct WindowPlacement {
 };
 
 class OpenGL_GLFW_Service final : public AbstractFrontendService {
-    using KeyboardEvents = megamol::module_resources::KeyboardEvents;
-    using MouseEvents = megamol::module_resources::MouseEvents;
-    using WindowEvents = megamol::module_resources::WindowEvents;
-    using FramebufferEvents = megamol::module_resources::FramebufferEvents;
+    using KeyboardEvents = megamol::frontend_resources::KeyboardEvents;
+    using MouseEvents = megamol::frontend_resources::MouseEvents;
+    using WindowEvents = megamol::frontend_resources::WindowEvents;
+    using FramebufferEvents = megamol::frontend_resources::FramebufferEvents;
 
 public:
 
@@ -101,14 +101,14 @@ public:
     void glfw_onFramebufferSize_func(const int widthpx, const int heightpx);
 
 private:
-	struct OpenGL_Context : public megamol::module_resources::IOpenGL_Context {
+	struct OpenGL_Context : public megamol::frontend_resources::IOpenGL_Context {
         void* ptr = nullptr;
 
 		void activate() const override;
 	    void close() const override;
 	};
 
-    struct Fake_OpenGL_Context : public megamol::module_resources::IOpenGL_Context {
+    struct Fake_OpenGL_Context : public megamol::frontend_resources::IOpenGL_Context {
         void activate() const override {}
         void close() const override {}
     };
@@ -124,7 +124,7 @@ private:
     FramebufferEvents m_framebufferEvents;
 	OpenGL_Context m_opengl_context_impl;
 	Fake_OpenGL_Context m_fake_opengl_context;
-	module_resources::IOpenGL_Context* m_opengl_context;
+	frontend_resources::IOpenGL_Context* m_opengl_context;
 
     // this holds references to the event structs we fill. the events are passed to the renderers/views using
     // const std::vector<ModuleResource>& getModuleResources() override
