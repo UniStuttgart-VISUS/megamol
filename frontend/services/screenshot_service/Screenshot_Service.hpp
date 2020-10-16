@@ -57,8 +57,8 @@ public:
     // void setShutdown(const bool s = true);
 
 private:
-    megamol::module_resources::GLScreenshotSource m_frontbufferSource_resource;
-    megamol::module_resources::ImageDataToPNGWriter m_toFileWriter_resource;
+    megamol::frontend_resources::GLScreenshotSource m_frontbufferSource_resource;
+    megamol::frontend_resources::ImageDataToPNGWriter m_toFileWriter_resource;
 
     std::function<bool(std::string const&)> m_frontbufferToPNG_trigger;
 

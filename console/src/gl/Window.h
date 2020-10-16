@@ -28,8 +28,8 @@ namespace megamol {
 namespace console {
 namespace gl {
 
-    using namespace megamol::module_resources;
-    using megamol::module_resources::AbstractUILayer;
+    using namespace megamol::frontend_resources;
+    using megamol::frontend_resources::AbstractUILayer;
 
     /**
      * Class of viewing windows.

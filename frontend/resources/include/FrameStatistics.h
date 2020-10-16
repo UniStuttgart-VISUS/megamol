@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace megamol {
-namespace module_resources {
+namespace frontend_resources {
 
 struct FrameStatistics {
     double elapsed_program_time_seconds = 0.0;
@@ -19,5 +19,5 @@ struct FrameStatistics {
     double last_rendered_frame_time_milliseconds = 0.0;
 };
 
-} /* end namespace module_resources */
+} /* end namespace frontend_resources */
 } /* end namespace megamol */

@@ -43,11 +43,11 @@ include(ClangFormat)
 # External
 include("externals/CMakeExternals.cmake")
 
-# Module Resources, Input Events interfaces 
-add_subdirectory(${MEGAMOL_DIR}/module_resources)
+# Frontend Resources, Input Events interfaces 
+add_subdirectory(${MEGAMOL_DIR}/frontend/resources)
 
 # Frontend Services (e.g. OpenGL_GLFW provider)
-add_subdirectory(${MEGAMOL_DIR}/frontend_services)
+add_subdirectory(${MEGAMOL_DIR}/frontend/services)
 
 # Vislib
 add_subdirectory(${MEGAMOL_VISLIB_DIR})

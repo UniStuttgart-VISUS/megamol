@@ -27,18 +27,18 @@ namespace megamol {
 namespace core {
 namespace view {
 
-using megamol::module_resources::Key;
-using megamol::module_resources::KeyAction;
-using megamol::module_resources::KeyCode;
-using megamol::module_resources::Modifier;
-using megamol::module_resources::Modifiers;
-using megamol::module_resources::MouseButton;
-using megamol::module_resources::MouseButtonAction;
+using megamol::frontend_resources::Key;
+using megamol::frontend_resources::KeyAction;
+using megamol::frontend_resources::KeyCode;
+using megamol::frontend_resources::Modifier;
+using megamol::frontend_resources::Modifiers;
+using megamol::frontend_resources::MouseButton;
+using megamol::frontend_resources::MouseButtonAction;
 
 /**
  * Abstract base class of rendering views
  */
-class MEGAMOLCORE_API AbstractView : public Module, public megamol::module_resources::AbstractInputScope {
+class MEGAMOLCORE_API AbstractView : public Module, public megamol::frontend_resources::AbstractInputScope {
 
 
 public:

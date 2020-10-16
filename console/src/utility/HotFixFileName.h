@@ -11,7 +11,7 @@ namespace megamol {
 namespace console {
 namespace utility {
 
-	using namespace megamol::module_resources;
+	using namespace megamol::frontend_resources;
 
     /** Utility class closing a window when ESC is pressed */
     class HotFixFileName : public AbstractUILayer {

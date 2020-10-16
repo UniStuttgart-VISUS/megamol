@@ -60,7 +60,7 @@ public:
     // void setShutdown(const bool s = true);
 
 private:
-    megamol::module_resources::FrameStatistics m_statistics;
+    megamol::frontend_resources::FrameStatistics m_statistics;
 
     std::chrono::high_resolution_clock::time_point m_program_start_time;
     std::chrono::high_resolution_clock::time_point m_frame_start_time;

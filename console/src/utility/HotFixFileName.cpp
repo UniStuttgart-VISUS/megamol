@@ -14,7 +14,7 @@
 
 using namespace megamol;
 using namespace megamol::console;
-using namespace megamol::module_resources;
+using namespace megamol::frontend_resources;
 
 extern "C" {
 

@@ -18,7 +18,7 @@ namespace megamol {
 namespace core {
 namespace view {
 
-using namespace megamol::module_resources;
+using namespace megamol::frontend_resources;
 
 // shorthand notation to unpack a ModuleResource to some type. 
 // if the type is present in the resource is made available as an 'events' variable in the if statemtnt.
@@ -103,13 +103,13 @@ bool view_rendering_execution(megamol::core::Module::ptr_type module_ptr, std::v
 	megamol::core::view::AbstractView* view_ptr =
 		dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
 
-    megamol::module_resources::IOpenGL_Context const * maybe_opengl = nullptr;
+    megamol::frontend_resources::IOpenGL_Context const * maybe_opengl = nullptr;
 
     // if available, we make the opengl context current for all following operations performed by the view/entry point
     // views and modules may use the GL context to issue GL calls not only during rendering, 
     // but also when consuming other events, like key presses or framebuffer resizes
     if (resources.size() >= 5 && resources[4].getIdentifier() == "IOpenGL_Context")
-		maybe_opengl = &resources[4].getResource<megamol::module_resources::IOpenGL_Context>();
+		maybe_opengl = &resources[4].getResource<megamol::frontend_resources::IOpenGL_Context>();
 
     if (maybe_opengl)
 		maybe_opengl->activate(); // makes GL context current
@@ -138,13 +138,13 @@ bool view_init_rendering_state(megamol::core::Module::ptr_type module_ptr, std::
 	megamol::core::view::AbstractView* view_ptr =
 		dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
 
-    megamol::module_resources::IOpenGL_Context const * maybe_opengl = nullptr;
+    megamol::frontend_resources::IOpenGL_Context const * maybe_opengl = nullptr;
 
     // if available, we make the opengl context current for all following operations performed by the view/entry point
     // views and modules may use the GL context to issue GL calls not only during rendering, 
     // but also when consuming other events, like key presses or framebuffer resizes
     if (resources.size() >= 5 && resources[4].getIdentifier() == "IOpenGL_Context")
-		maybe_opengl = &resources[4].getResource<megamol::module_resources::IOpenGL_Context>();
+		maybe_opengl = &resources[4].getResource<megamol::frontend_resources::IOpenGL_Context>();
 
     if (maybe_opengl)
 		maybe_opengl->activate(); // makes GL context current
@@ -157,11 +157,11 @@ bool view_init_rendering_state(megamol::core::Module::ptr_type module_ptr, std::
 	megamol::core::view::AbstractView& view = *view_ptr;
 
     // fake resize events for view to consume
-    auto& framebuffer_events = const_cast<megamol::module_resources::FramebufferEvents&>(resources[3].getResource<megamol::module_resources::FramebufferEvents>());
+    auto& framebuffer_events = const_cast<megamol::frontend_resources::FramebufferEvents&>(resources[3].getResource<megamol::frontend_resources::FramebufferEvents>());
     auto& framebuffer_size = framebuffer_events.previous_state;
     framebuffer_events.size_events.push_back(framebuffer_size);
 	
-    auto& window_events = const_cast<megamol::module_resources::WindowEvents&>(resources[2].getResource<megamol::module_resources::WindowEvents>());
+    auto& window_events = const_cast<megamol::frontend_resources::WindowEvents&>(resources[2].getResource<megamol::frontend_resources::WindowEvents>());
     auto& window_width = window_events.previous_state.width;
     auto& window_height = window_events.previous_state.height;
     if(window_width <= 1 || window_height <= 1) {
