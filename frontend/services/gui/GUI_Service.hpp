@@ -16,6 +16,7 @@
 #include "KeyboardMouse_Events.h"
 #include "IOpenGL_Context.h"
 #include "Screenshot_Service.hpp"
+#include "ScriptPaths.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"

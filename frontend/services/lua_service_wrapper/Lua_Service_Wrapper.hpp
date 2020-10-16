@@ -8,6 +8,9 @@
 #pragma once
 
 #include "AbstractFrontendService.hpp"
+
+#include "ScriptPaths.h"
+
 #include "mmcore/LuaAPI.h"
 
 namespace megamol {
@@ -191,6 +194,8 @@ private:
     std::vector<ModuleResource> m_requestedResourceReferences;
 
     std::vector<std::string> m_queuedProjectFiles;
+
+    megamol::frontend_resources::ScriptPaths m_scriptpath_resource;
 };
 
 } // namespace frontend
