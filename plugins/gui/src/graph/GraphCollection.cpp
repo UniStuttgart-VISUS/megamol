@@ -1619,7 +1619,7 @@ std::string megamol::gui::GraphCollection::GetUpdatedGUIState(ImGuiID graph_id, 
             if (!state_json.is_object()) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                return false;
+                return std::string("");
             }
         }
     }
