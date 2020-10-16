@@ -10,9 +10,9 @@ megamol::mesh::AbstractMeshDataSource::AbstractMeshDataSource()
     , m_mesh_rhs_slot("getMesh", "The slot for chaining mesh data sources") 
 {
     this->m_mesh_lhs_slot.SetCallback(
-        CallGPUMeshData::ClassName(), "GetData", &AbstractMeshDataSource::getMeshDataCallback);
+        CallMesh::ClassName(), "GetData", &AbstractMeshDataSource::getMeshDataCallback);
     this->m_mesh_lhs_slot.SetCallback(
-        CallGPUMeshData::ClassName(), "GetMetaData", &AbstractMeshDataSource::getMeshMetaDataCallback);
+        CallMesh::ClassName(), "GetMetaData", &AbstractMeshDataSource::getMeshMetaDataCallback);
     this->MakeSlotAvailable(&this->m_mesh_lhs_slot);
 
     this->m_mesh_rhs_slot.SetCompatibleCall<CallMeshDescription>();
@@ -27,7 +27,7 @@ bool megamol::mesh::AbstractMeshDataSource::create(void) {
 
 void megamol::mesh::AbstractMeshDataSource::release() {}
 
-void megamol::mesh::AbstractMeshDataSource::syncMeshAccessCollection(CallMesh* lhs_call) {
+void megamol::mesh::AbstractMeshDataSource::syncMeshAccessCollection(CallMesh* lhs_call, CallMesh* rhs_call) {
     if (lhs_call->getData() == nullptr) {
         // no incoming mesh -> use your own mesh access collection
         if (m_mesh_access_collection.first == nullptr) {
@@ -49,5 +49,9 @@ void megamol::mesh::AbstractMeshDataSource::syncMeshAccessCollection(CallMesh* l
 
             m_mesh_access_collection = mesh_access_collection;
         }
+    }
+
+    if (rhs_call != nullptr) {
+        rhs_call->setData(m_mesh_access_collection.first, 0);
     }
 }

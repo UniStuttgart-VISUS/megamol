@@ -54,7 +54,7 @@ namespace mesh {
          */
         virtual void release();
     
-        void syncMeshAccessCollection(CallMesh* lhs_call);
+        void syncMeshAccessCollection(CallMesh* lhs_call, CallMesh* rhs_call);
     
         /**
          * Mesh collection that is used with a list of identifier strings of meshs accesses that this module added to the mesh collection.

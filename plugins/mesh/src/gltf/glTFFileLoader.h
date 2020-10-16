@@ -84,10 +84,6 @@ private:
 
     /** The slot for providing the complete gltf model */
     megamol::core::CalleeSlot m_gltf_slot;
-    //size_t m_gltf_cached_hash;
-
-    /** The slot for providing access to internal mesh data */
-    megamol::core::CalleeSlot m_mesh_slot;
 };
 
 } // namespace mesh

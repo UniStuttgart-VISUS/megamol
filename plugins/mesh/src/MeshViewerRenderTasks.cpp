@@ -87,7 +87,7 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
 
         for (int i = 0; i < batch_meshes.size(); ++i)
         {
-            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
+            auto const& shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
             m_rendertask_collection.first->addRenderTasks(
                 std::string(this->FullName()),shader, batch_meshes[i], draw_commands[i], object_transforms[i]);
             m_rendertask_collection.second.push_back(std::string(this->FullName()));

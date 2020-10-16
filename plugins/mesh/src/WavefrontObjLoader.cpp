@@ -20,11 +20,25 @@ bool megamol::mesh::WavefrontObjLoader::create(void) { return true; }
 
 bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) {
 
-    auto cm = dynamic_cast<CallMesh*>(&caller);
+    CallMesh* lhs_mesh_call = dynamic_cast<CallMesh*>(&caller);
+    CallMesh* rhs_mesh_call = m_mesh_rhs_slot.CallAs<CallMesh>();
 
-    // TODO detect whether a mesh data collection is given by lhs caller (chaining)
+    if (lhs_mesh_call == NULL) {
+        return false;
+    }
 
-    if (cm == nullptr) return false;
+    syncMeshAccessCollection(lhs_mesh_call, rhs_mesh_call);
+
+    // if there is a mesh connection to the right, pass on the mesh collection
+    if (rhs_mesh_call != NULL) {
+        if (!(*rhs_mesh_call)(0)) {
+            return false;
+        }
+        if (rhs_mesh_call->hasUpdate()) {
+            ++m_version;
+            rhs_mesh_call->getData();
+        }
+    }
 
     if (this->m_filename_slot.IsDirty()) {
         m_filename_slot.ResetDirty();
@@ -179,10 +193,10 @@ bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) 
         m_meta_data.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
     }
 
-    if (cm->version() < m_version)
+    if (lhs_mesh_call->version() < m_version)
     {
-        cm->setMetaData(m_meta_data);
-        cm->setData(m_mesh_access_collection.first, m_version);
+        lhs_mesh_call->setMetaData(m_meta_data);
+        lhs_mesh_call->setData(m_mesh_access_collection.first, m_version);
     }
     
     return true;

@@ -101,6 +101,7 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
                                                       model->meshes[model->nodes[node_idx].mesh].name + "_" +
                                                       std::to_string(primitive_idx);
                     auto const& sub_mesh = gpu_mesh_storage->getSubMesh(sub_mesh_identifier);
+                    //TODO check if submesh existed...
                     auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
                     auto const& shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
 
