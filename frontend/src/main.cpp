@@ -120,19 +120,16 @@ int main(int argc, char* argv[]) {
 
     // TODO: gui view and frontend service gui can not coexist => how to kill GUI View in loaded projects?
     //  - FBO size (and others) for newly created views/modules/entrypoints (FBO size event missing). see AbstractView_EventConsumption::view_consume_framebuffer_events
-    //  - graph manipulation via GUI still buggy (adding/removing main views, renaming modules/calls, stuff like that)
     // TODO: port cinematic as frontend service
     // => explicit FBOs!
-    // TODO: port screenshooter
+    // => do or dont show GUI in screenshots, depending on ...
     // TODO: ZMQ context as frontend resource
     // TODO: port CLI commands from mmconsole
-    // => do or dont show GUI in screenshots, depending on ...
     // TODO: eliminate the core instance: 
     //  => extract module/call description manager into new factories; remove from core
     //  => key/value store for CLI configuration as frontend resource (emulate config params)
-    // TODO: main3000 compilation on linux (cmake name conflict, GUI_Windows <-> GUI_ Service dll/lib boundary)
-    // TODO: overall new frontend-related CI compilation issues (mostly on linux)
     // TODO: main3000 raw hot loop performance vs. mmconsole performance
+    // TODO: centralize project loading/saving to/from .lua/.png. has to collect graph serialization from graph, gui state from gui.
 
     const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
 
@@ -307,16 +304,17 @@ bool set_up_example_graph(megamol::core::MegaMolGraph& graph) {
 #define check(X) \
     if (!X) return false;
 
-    ///check(graph.CreateModule("GUIView", "::gui"));
     check(graph.CreateModule("View3D_2", "::view"));
     check(graph.CreateModule("SphereRenderer", "::spheres"));
     check(graph.CreateModule("TestSpheresDataSource", "::datasource"));
-    ///check(graph.CreateCall("CallRenderView", "::gui::renderview", "::view::render"));
     check(graph.CreateCall("CallRender3D_2", "::view::rendering", "::spheres::rendering"));
     check(graph.CreateCall("MultiParticleDataCall", "::spheres::getdata", "::datasource::getData"));
 
-    ///check(graph.SetGraphEntryPoint("::gui", megamol::core::view::get_gl_view_runtime_resources_requests(), megamol::core::view::view_rendering_execution));
-    check(graph.SetGraphEntryPoint("::view", megamol::core::view::get_gl_view_runtime_resources_requests(), megamol::core::view::view_rendering_execution));
+    check(graph.SetGraphEntryPoint(
+        "::view",
+        megamol::core::view::get_gl_view_runtime_resources_requests(),
+        megamol::core::view::view_rendering_execution,
+        megamol::core::view::view_init_rendering_state));
 
     std::string parameter_name("::datasource::numSpheres");
     auto parameterPtr = graph.FindParameter(parameter_name);

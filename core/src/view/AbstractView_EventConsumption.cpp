@@ -61,10 +61,8 @@ void view_consume_window_events(AbstractView& view, megamol::frontend::ModuleRes
 
 void view_consume_framebuffer_events(AbstractView& view, megamol::frontend::ModuleResource const& resource) {
     GET_RESOURCE(FramebufferEvents)//{
-        /// XXX Permanent resize might be required for new views getting right size without new framebuffer event
-        view.Resize(static_cast<unsigned int>(events.previous_state.width), static_cast<unsigned int>(events.previous_state.height));
-		//for (auto& e: events.size_events)
-		//	view.Resize(static_cast<unsigned int>(e.width), static_cast<unsigned int>(e.height));
+		for (auto& e: events.size_events)
+			view.Resize(static_cast<unsigned int>(e.width), static_cast<unsigned int>(e.height));
     }
 }
 
@@ -129,6 +127,52 @@ bool view_rendering_execution(megamol::core::Module::ptr_type module_ptr, std::v
 	megamol::core::view::view_consume_window_events(view, resources[2]);
 	megamol::core::view::view_consume_framebuffer_events(view, resources[3]);
     megamol::core::view::view_poke_rendering(view);//, resources[4]);
+
+    if (maybe_opengl)
+		maybe_opengl->close();
+	
+	return true;
+}
+
+bool view_init_rendering_state(megamol::core::Module::ptr_type module_ptr, std::vector<megamol::frontend::ModuleResource> const& resources) {
+	megamol::core::view::AbstractView* view_ptr =
+		dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
+
+    megamol::module_resources::IOpenGL_Context const * maybe_opengl = nullptr;
+
+    // if available, we make the opengl context current for all following operations performed by the view/entry point
+    // views and modules may use the GL context to issue GL calls not only during rendering, 
+    // but also when consuming other events, like key presses or framebuffer resizes
+    if (resources.size() >= 5 && resources[4].getIdentifier() == "IOpenGL_Context")
+		maybe_opengl = &resources[4].getResource<megamol::module_resources::IOpenGL_Context>();
+
+    if (maybe_opengl)
+		maybe_opengl->activate(); // makes GL context current
+	
+	if (!view_ptr) {
+		std::cout << "error. module is not a view module. could not use as rendering entry point." << std::endl;
+		return false;
+	}
+	
+	megamol::core::view::AbstractView& view = *view_ptr;
+
+    // fake resize events for view to consume
+    auto& framebuffer_events = const_cast<megamol::module_resources::FramebufferEvents&>(resources[3].getResource<megamol::module_resources::FramebufferEvents>());
+    auto& framebuffer_size = framebuffer_events.previous_state;
+    framebuffer_events.size_events.push_back(framebuffer_size);
+	
+    auto& window_events = const_cast<megamol::module_resources::WindowEvents&>(resources[2].getResource<megamol::module_resources::WindowEvents>());
+    auto& window_width = window_events.previous_state.width;
+    auto& window_height = window_events.previous_state.height;
+    if(window_width <= 1 || window_height <= 1) {
+        window_width = framebuffer_size.width;
+        window_height = framebuffer_size.height;
+    }
+    window_events.size_events.push_back({window_width, window_height});
+
+	// resources are in order of initial requests from get_gl_view_runtime_resources_requests()
+	megamol::core::view::view_consume_window_events(view, resources[2]);
+	megamol::core::view::view_consume_framebuffer_events(view, resources[3]);
 
     if (maybe_opengl)
 		maybe_opengl->close();

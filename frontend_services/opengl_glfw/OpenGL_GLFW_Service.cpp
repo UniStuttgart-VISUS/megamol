@@ -517,14 +517,29 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     this->m_windowEvents.previous_state.is_iconified =
         (GLFW_TRUE == glfwGetWindowAttrib(m_glfwWindowPtr, GLFW_ICONIFIED));
     this->m_windowEvents.previous_state.should_close = (GLFW_TRUE == glfwWindowShouldClose(m_glfwWindowPtr));
-    glfwGetWindowContentScale(m_glfwWindowPtr, &this->m_windowEvents.previous_state.x_contentscale,
+    glfwGetWindowContentScale(m_glfwWindowPtr,
+        &this->m_windowEvents.previous_state.x_contentscale,
         &this->m_windowEvents.previous_state.y_contentscale);
+
+    outer_glfw_onWindowSize_func(m_glfwWindowPtr,
+        this->m_windowEvents.previous_state.width,
+        this->m_windowEvents.previous_state.height);
+    outer_glfw_onWindowFocus_func(m_glfwWindowPtr, this->m_windowEvents.previous_state.is_focused);
+    outer_glfw_onWindowIconified_func(m_glfwWindowPtr, this->m_windowEvents.previous_state.is_iconified);
+    outer_glfw_onWindowContentScale_func(m_glfwWindowPtr,
+        this->m_windowEvents.previous_state.x_contentscale,
+        this->m_windowEvents.previous_state.y_contentscale);
 
     // set callbacks
     ::glfwSetFramebufferSizeCallback(m_glfwWindowPtr, &outer_glfw_onFramebufferSize_func);
     // set current framebuffer state
-    glfwGetFramebufferSize(m_glfwWindowPtr, &this->m_framebufferEvents.previous_state.width,
+    glfwGetFramebufferSize(m_glfwWindowPtr,
+        &this->m_framebufferEvents.previous_state.width,
         &this->m_framebufferEvents.previous_state.height);
+
+    outer_glfw_onFramebufferSize_func(m_glfwWindowPtr,
+        this->m_framebufferEvents.previous_state.width,
+        this->m_framebufferEvents.previous_state.height);
 
     if (m_data.initialConfig.enableVsync) ::glfwSwapInterval(0);
 
