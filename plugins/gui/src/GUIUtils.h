@@ -44,9 +44,6 @@
 namespace megamol {
 namespace gui {
 
-
-    /********** Defines **********/
-
     /// #define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
@@ -65,7 +62,11 @@ namespace gui {
 #define GUI_JSON_TAG_PROJECT ("Project")
 #define GUI_JSON_TAG_MODULES ("Modules")
 #define GUI_JSON_TAG_INTERFACES ("Interfaces")
-/// #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") see megamol::core::param::AbstractParamPresentation.h
+    /// #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") see
+    /// megamol::core::param::AbstractParamPresentation.h
+
+#define GUI_PROJECT_GUI_STATE_START_TAG ("-- <GUI_STATE_JSON>")
+#define GUI_PROJECT_GUI_STATE_END_TAG ("</GUI_STATE_JSON>")
 
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))
@@ -194,14 +195,12 @@ namespace gui {
         bool graph_save;                     // out
     } GraphState_t;
 
-
     /********** Global Unique ID **********/
 
     extern ImGuiID gui_generated_uid;
     inline ImGuiID GenerateUniqueID(void) {
         return (++megamol::gui::gui_generated_uid);
     }
-
 
     /********** Class **********/
 
@@ -210,16 +209,18 @@ namespace gui {
      */
     class GUIUtils {
     public:
-        /** Generate GUI state file path name. */
-        static bool GetGUIStateFileName(std::string& filename) {
-
-            if (filename.empty())
-                return false;
-            const std::string suffix = "_gui-settings.json";
-            auto dotpos = filename.find_last_of('.');
-            filename = filename.substr(0, dotpos);
-            filename.append(suffix);
-            return true;
+        /** Extract gui state enclosed in predefined tags. */
+        static std::string ExtractGUIState(std::string& str) {
+            std::string return_str;
+            auto start_idx = str.find(GUI_PROJECT_GUI_STATE_START_TAG);
+            if (start_idx != std::string::npos) {
+                auto end_idx = str.find(GUI_PROJECT_GUI_STATE_END_TAG);
+                if ((end_idx != std::string::npos) && (start_idx < end_idx)) {
+                    start_idx += std::string(GUI_PROJECT_GUI_STATE_START_TAG).length();
+                    return_str = str.substr(start_idx, (end_idx - start_idx));
+                }
+            }
+            return return_str;
         }
 
         /** Decode string from UTF-8. */
