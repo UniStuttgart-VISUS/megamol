@@ -1,5 +1,5 @@
 /*
- * Parameter.cpp
+ * ParameterPresentation.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -16,23 +16,24 @@ using namespace megamol::gui;
 
 
 megamol::gui::ParameterPresentation::ParameterPresentation(Param_t type)
-    : megamol::core::param::AbstractParamPresentation()
-    , extended(false)
-    , float_format("%.7f")
-    , help()
-    , description()
-    , widget_store()
-    , set_focus(0)
-    , guistate_dirty(false)
-    , tf_editor_external_ptr(nullptr)
-    , tf_editor_internal()
-    , use_external_tf_editor(false)
-    , show_tf_editor(false)
-    , tf_editor_hash(0)
-    , file_browser()
-    , tooltip()
-    , image_widget()
-    , rotation_widget() {
+        : megamol::core::param::AbstractParamPresentation()
+        , extended(false)
+        , float_format("%.7f")
+        , help()
+        , description()
+        , widget_store()
+        , set_focus(0)
+        , guistate_dirty(false)
+        , tf_editor_external_ptr(nullptr)
+        , tf_editor_internal()
+        , use_external_tf_editor(false)
+        , show_tf_editor(false)
+        , tf_editor_hash(0)
+        , file_browser()
+        , tooltip()
+        , image_widget()
+        , rotation_widget()
+        , show_minmax(false) {
 
     this->InitPresentation(type);
 }
@@ -349,7 +350,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
             if constexpr (std::is_same_v<T, bool>) {
                 auto value = arg;
                 if (this->widget_bool(scope, param_label, value)) {
-                    inout_parameter.SetValue(value, false, true);
+                    inout_parameter.SetValue(value);
                     retval = true;
                 }
                 error = false;
@@ -359,7 +360,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 auto value = arg;
                 if (this->widget_float(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                         inout_parameter.GetMaxValue<T>())) {
-                    inout_parameter.SetValue(value, false, true);
+                    inout_parameter.SetValue(value);
                     retval = true;
                 }
                 error = false;
@@ -370,7 +371,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     auto value = arg;
                     if (this->widget_int(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                             inout_parameter.GetMaxValue<T>())) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -379,7 +380,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::ENUM): {
                     auto value = arg;
                     if (this->widget_enum(scope, param_label, value, inout_parameter.GetStorage<EnumStorage_t>())) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -393,7 +394,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::STRING): {
                     auto value = arg;
                     if (this->widget_string(scope, param_label, value)) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -402,7 +403,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::TRANSFERFUNCTION): {
                     auto value = arg;
                     if (this->widget_string(scope, param_label, value)) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -411,7 +412,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::FILEPATH): {
                     auto value = arg;
                     if (this->widget_string(scope, param_label, value)) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -421,7 +422,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     auto value = arg;
                     if (this->widget_flexenum(scope, param_label, value,
                             inout_parameter.GetStorage<megamol::core::param::FlexEnumParam::Storage_t>())) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -434,7 +435,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
             else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
                 auto value = arg;
                 if (this->widget_ternary(scope, param_label, value)) {
-                    inout_parameter.SetValue(value, false, true);
+                    inout_parameter.SetValue(value);
                     retval = true;
                 }
                 error = false;
@@ -444,7 +445,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 auto value = arg;
                 if (this->widget_vector2f(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                         inout_parameter.GetMaxValue<T>())) {
-                    inout_parameter.SetValue(value, false, true);
+                    inout_parameter.SetValue(value);
                     retval = true;
                 }
                 error = false;
@@ -454,7 +455,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 auto value = arg;
                 if (this->widget_vector3f(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                         inout_parameter.GetMaxValue<T>())) {
-                    inout_parameter.SetValue(value, false, true);
+                    inout_parameter.SetValue(value);
                     retval = true;
                 }
                 error = false;
@@ -465,7 +466,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     auto value = arg;
                     if (this->widget_vector4f(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                             inout_parameter.GetMaxValue<T>())) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -474,7 +475,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::COLOR): {
                     auto value = arg;
                     if (this->widget_vector4f(scope, param_label, value, glm::vec4(0.0f), glm::vec4(1.0f))) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -515,7 +516,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::VECTOR4F): {
                     auto value = arg;
                     if (this->widget_color(scope, param_label, value)) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -524,7 +525,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::COLOR): {
                     auto value = arg;
                     if (this->widget_color(scope, param_label, value)) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -542,7 +543,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 case (Param_t::FILEPATH): {
                     auto value = arg;
                     if (this->widget_filepath(scope, param_label, value)) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -614,7 +615,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 auto value = arg;
                 if (this->widget_knob(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                         inout_parameter.GetMaxValue<T>())) {
-                    inout_parameter.SetValue(value, false, true);
+                    inout_parameter.SetValue(value);
                     retval = true;
                 }
                 error = false;
@@ -630,7 +631,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     auto value = arg;
                     if (this->widget_rotation_axes(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                             inout_parameter.GetMaxValue<T>())) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -650,7 +651,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     auto value = arg;
                     if (this->widget_rotation_direction(scope, param_label, value, inout_parameter.GetMinValue<T>(),
                             inout_parameter.GetMaxValue<T>())) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = true;
                     }
                     error = false;
@@ -704,12 +705,14 @@ bool megamol::gui::ParameterPresentation::widget_button(megamol::gui::ParameterP
 
         // Add hotkey to hover tooltip
         if (hotkey_in_tooltip) {
-            if (!button_hotkey.empty()) hotkey = "\n Hotkey: " + button_hotkey;
+            if (!button_hotkey.empty())
+                hotkey = "\n Hotkey: " + button_hotkey;
             this->description += hotkey;
         }
         // Add hotkey to param label
         if (hotkey_in_label) {
-            if (!button_hotkey.empty()) hotkey = " [" + button_hotkey + "]";
+            if (!button_hotkey.empty())
+                hotkey = " [" + button_hotkey + "]";
             edit_label += hotkey;
         }
 
@@ -961,7 +964,25 @@ bool megamol::gui::ParameterPresentation::widget_int(megamol::gui::ParameterPres
         if (!std::holds_alternative<int>(this->widget_store)) {
             this->widget_store = value;
         }
-        ImGui::InputInt(label.c_str(), &std::get<int>(this->widget_store), 1, 10, ImGuiInputTextFlags_None);
+        // Min Max Values
+        ImGui::BeginGroup();
+        if (ImGui::ArrowButton("###_min_max", ((this->show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+            this->show_minmax = !this->show_minmax;
+        }
+        this->tooltip.ToolTip("Min/Max Values");
+        ImGui::SameLine();
+
+        // Relative step size
+        int min_step_size = 1;
+        int max_step_size = 10;
+        if ((minval > INT_MIN) && (maxval < INT_MAX)) {
+            min_step_size = static_cast<int>(static_cast<float>(maxval - minval) * 0.003f); // 0.3%
+            max_step_size = static_cast<int>(static_cast<float>(maxval - minval) * 0.03f);  // 3%
+        }
+
+        // Value
+        ImGui::InputInt(
+            label.c_str(), &std::get<int>(this->widget_store), min_step_size, max_step_size, ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             this->widget_store = std::max(minval, std::min(std::get<int>(this->widget_store), maxval));
             value = std::get<int>(this->widget_store);
@@ -969,6 +990,15 @@ bool megamol::gui::ParameterPresentation::widget_int(megamol::gui::ParameterPres
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->widget_store = value;
         }
+        if (this->show_minmax) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+            auto min_value = minval;
+            ImGui::InputInt("Min Value", &min_value, min_step_size, max_step_size, ImGuiInputTextFlags_None);
+            auto max_value = maxval;
+            ImGui::InputInt("Max Value", &max_value, min_step_size, max_step_size, ImGuiInputTextFlags_None);
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+        ImGui::EndGroup();
     }
     return retval;
 }
@@ -983,8 +1013,25 @@ bool megamol::gui::ParameterPresentation::widget_float(megamol::gui::ParameterPr
         if (!std::holds_alternative<float>(this->widget_store)) {
             this->widget_store = value;
         }
-        ImGui::InputFloat(label.c_str(), &std::get<float>(this->widget_store), 1.0f, 10.0f, this->float_format.c_str(),
-            ImGuiInputTextFlags_None);
+        // Min Max Values
+        ImGui::BeginGroup();
+        if (ImGui::ArrowButton("###_min_max", ((this->show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+            this->show_minmax = !this->show_minmax;
+        }
+        this->tooltip.ToolTip("Min/Max Values");
+        ImGui::SameLine();
+
+        // Relative step size
+        float min_step_size = 1.0f;
+        float max_step_size = 10.0f;
+        if ((minval > -FLT_MAX) && (maxval < FLT_MAX)) {
+            min_step_size = (maxval - minval) * 0.003f; // 0.3%
+            max_step_size = (maxval - minval) * 0.03f;  // 3%
+        }
+
+        // Value
+        ImGui::InputFloat(label.c_str(), &std::get<float>(this->widget_store), min_step_size, max_step_size,
+            this->float_format.c_str(), ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             this->widget_store = std::max(minval, std::min(std::get<float>(this->widget_store), maxval));
             value = std::get<float>(this->widget_store);
@@ -992,6 +1039,17 @@ bool megamol::gui::ParameterPresentation::widget_float(megamol::gui::ParameterPr
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->widget_store = value;
         }
+        if (this->show_minmax) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+            auto min_value = minval;
+            ImGui::InputFloat("Min Value", &min_value, min_step_size, max_step_size, this->float_format.c_str(),
+                ImGuiInputTextFlags_None);
+            auto max_value = maxval;
+            ImGui::InputFloat("Max Value", &max_value, min_step_size, max_step_size, this->float_format.c_str(),
+                ImGuiInputTextFlags_None);
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+        ImGui::EndGroup();
     }
     return retval;
 }
@@ -1006,6 +1064,14 @@ bool megamol::gui::ParameterPresentation::widget_vector2f(megamol::gui::Paramete
         if (!std::holds_alternative<glm::vec2>(this->widget_store)) {
             this->widget_store = value;
         }
+        // Min Max Values
+        ImGui::BeginGroup();
+        if (ImGui::ArrowButton("###_min_max", ((this->show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+            this->show_minmax = !this->show_minmax;
+        }
+        this->tooltip.ToolTip("Min/Max Values");
+        ImGui::SameLine();
+        // Value
         ImGui::InputFloat2(label.c_str(), glm::value_ptr(std::get<glm::vec2>(this->widget_store)),
             this->float_format.c_str(), ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -1017,6 +1083,17 @@ bool megamol::gui::ParameterPresentation::widget_vector2f(megamol::gui::Paramete
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->widget_store = value;
         }
+        if (this->show_minmax) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+            auto min_value = minval;
+            ImGui::InputFloat2(
+                "Min Value", glm::value_ptr(min_value), this->float_format.c_str(), ImGuiInputTextFlags_None);
+            auto max_value = maxval;
+            ImGui::InputFloat2(
+                "Max Value", glm::value_ptr(max_value), this->float_format.c_str(), ImGuiInputTextFlags_None);
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+        ImGui::EndGroup();
     }
     return retval;
 }
@@ -1031,6 +1108,14 @@ bool megamol::gui::ParameterPresentation::widget_vector3f(megamol::gui::Paramete
         if (!std::holds_alternative<glm::vec3>(this->widget_store)) {
             this->widget_store = value;
         }
+        // Min Max Values
+        ImGui::BeginGroup();
+        if (ImGui::ArrowButton("###_min_max", ((this->show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+            this->show_minmax = !this->show_minmax;
+        }
+        this->tooltip.ToolTip("Min/Max Values");
+        ImGui::SameLine();
+        // Value
         ImGui::InputFloat3(label.c_str(), glm::value_ptr(std::get<glm::vec3>(this->widget_store)),
             this->float_format.c_str(), ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -1043,6 +1128,17 @@ bool megamol::gui::ParameterPresentation::widget_vector3f(megamol::gui::Paramete
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->widget_store = value;
         }
+        if (this->show_minmax) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+            auto min_value = minval;
+            ImGui::InputFloat3(
+                "Min Value", glm::value_ptr(min_value), this->float_format.c_str(), ImGuiInputTextFlags_None);
+            auto max_value = maxval;
+            ImGui::InputFloat3(
+                "Max Value", glm::value_ptr(max_value), this->float_format.c_str(), ImGuiInputTextFlags_None);
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+        ImGui::EndGroup();
     }
     return retval;
 }
@@ -1057,6 +1153,14 @@ bool megamol::gui::ParameterPresentation::widget_vector4f(megamol::gui::Paramete
         if (!std::holds_alternative<glm::vec4>(this->widget_store)) {
             this->widget_store = value;
         }
+        // Min Max Values
+        ImGui::BeginGroup();
+        if (ImGui::ArrowButton("###_min_max", ((this->show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+            this->show_minmax = !this->show_minmax;
+        }
+        this->tooltip.ToolTip("Min/Max Values");
+        ImGui::SameLine();
+        // Value
         ImGui::InputFloat4(label.c_str(), glm::value_ptr(std::get<glm::vec4>(this->widget_store)),
             this->float_format.c_str(), ImGuiInputTextFlags_None);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
@@ -1070,6 +1174,17 @@ bool megamol::gui::ParameterPresentation::widget_vector4f(megamol::gui::Paramete
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->widget_store = value;
         }
+        if (this->show_minmax) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+            auto min_value = minval;
+            ImGui::InputFloat4(
+                "Min Value", glm::value_ptr(min_value), this->float_format.c_str(), ImGuiInputTextFlags_None);
+            auto max_value = maxval;
+            ImGui::InputFloat4(
+                "Max Value", glm::value_ptr(max_value), this->float_format.c_str(), ImGuiInputTextFlags_None);
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+        ImGui::EndGroup();
     }
     return retval;
 }
@@ -1220,7 +1335,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
         if (ImGui::Button("Paste")) {
 #ifdef GUI_USE_GLFW
             auto glfw_win = ::glfwGetCurrentContext();
-            inout_parameter.SetValue(std::string(::glfwGetClipboardString(glfw_win)), false, true);
+            inout_parameter.SetValue(std::string(::glfwGetClipboardString(glfw_win)));
 #elif _WIN32
             inout_parameter.SetValue(std::string(ImGui::GetClipboardText()));
 #else // LINUX
@@ -1251,7 +1366,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
                 if (this->tf_editor_internal.Widget(false)) {
                     std::string value;
                     if (this->tf_editor_internal.GetTransferFunction(value)) {
-                        inout_parameter.SetValue(value, false, true);
+                        inout_parameter.SetValue(value);
                         retval = false; /// (Returning true opens external editor)
                     }
                 }

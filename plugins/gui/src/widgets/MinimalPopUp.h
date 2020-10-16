@@ -16,19 +16,19 @@ namespace megamol {
 namespace gui {
 
 
-/**
- * String search widget.
- */
-class MinimalPopUp {
-public:
-    static bool PopUp(const std::string& label_id, bool open_popup, const std::string& info_text,
-        const std::string& confirm_btn_text, bool& confirmed, const std::string& abort_btn_text, bool& aborted);
+    /**
+     * String search widget.
+     */
+    class MinimalPopUp {
+    public:
+        static bool PopUp(const std::string& label_id, bool open_popup, const std::string& info_text,
+            const std::string& confirm_btn_text, bool& confirmed, const std::string& abort_btn_text, bool& aborted);
 
-private:
-    MinimalPopUp(void) = default;
+    private:
+        MinimalPopUp(void) = default;
 
-    ~MinimalPopUp(void) = default;
-};
+        ~MinimalPopUp(void) = default;
+    };
 
 
 } // namespace gui

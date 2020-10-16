@@ -1,5 +1,5 @@
 /*
- * GraphCollection.h
+ * GraphCollectionPresentation.h
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -26,33 +26,33 @@ namespace megamol {
 namespace gui {
 
 
-// Forward declarations
-class GraphCollection;
+    // Forward declarations
+    class GraphCollection;
 
 
-/** ************************************************************************
- * Defines GUI graph collection presentation.
- */
-class GraphCollectionPresentation {
-public:
-    friend class GraphCollection;
-    // FUNCTIONS --------------------------------------------------------------
+    /** ************************************************************************
+     * Defines GUI graph collection presentation.
+     */
+    class GraphCollectionPresentation {
+    public:
+        friend class GraphCollection;
+        // FUNCTIONS --------------------------------------------------------------
 
-    GraphCollectionPresentation(void);
-    ~GraphCollectionPresentation(void);
+        GraphCollectionPresentation(void);
+        ~GraphCollectionPresentation(void);
 
-    void SaveProjectToFile(bool open_popup, GraphCollection& inout_graph_collection, GraphState_t& state);
+        void SaveProjectToFile(bool open_popup, GraphCollection& inout_graph_collection, GraphState_t& state);
 
-private:
-    // VARIABLES --------------------------------------------------------------
+    private:
+        // VARIABLES --------------------------------------------------------------
 
-    FileBrowserWidget file_browser;
-    ImGuiID graph_delete_uid;
+        FileBrowserWidget file_browser;
+        ImGuiID graph_delete_uid;
 
-    // FUNCTIONS --------------------------------------------------------------
+        // FUNCTIONS --------------------------------------------------------------
 
-    void Present(GraphCollection& inout_graph_collection, GraphState_t& state);
-};
+        void Present(GraphCollection& inout_graph_collection, GraphState_t& state);
+    };
 
 
 } // namespace gui
