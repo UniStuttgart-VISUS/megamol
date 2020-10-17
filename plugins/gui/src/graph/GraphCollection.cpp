@@ -827,10 +827,6 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                     }
                     retval = new_graph_uid;
                 }
-
-                // Ensure unique module name is not yet assigned
-                graph_ptr->UniqueModuleRename(view_name);
-
                 // Add module and set as view instance
                 if (graph_ptr->AddModule(this->modules_stock, view_class_name) == GUI_INVALID_ID) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -839,14 +835,18 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                     return GUI_INVALID_ID;
                 }
                 auto graph_module = graph_ptr->GetModules().back();
-                graph_module->name = view_name;
-                graph_module->main_view_name = view_instance;
 
                 Graph::QueueData queue_data;
                 queue_data.name_id = graph_module->FullName();
-                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
-
+                graph_ptr->UniqueModuleRename(view_name);
+                graph_module->name = view_name;
                 graph_ptr->AddGroupModule(view_namespace, graph_module);
+                queue_data.rename_id = graph_module->FullName();
+                graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+
+                graph_module->main_view_name = view_instance;
+                queue_data.name_id = graph_module->FullName();
+                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
 
                 found_main_view = true;
             }
@@ -895,10 +895,6 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
 
                 // Add module
                 if (graph_ptr != nullptr) {
-
-                    // Ensure unique module name is not yet assigned
-                    graph_ptr->UniqueModuleRename(module_name);
-
                     if (graph_ptr->AddModule(this->modules_stock, module_class_name) == GUI_INVALID_ID) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[GUI] Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line %d]\n",
@@ -907,8 +903,14 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         return GUI_INVALID_ID;
                     }
                     auto graph_module = graph_ptr->GetModules().back();
+
+                    Graph::QueueData queue_data;
+                    queue_data.name_id = graph_module->FullName();
+                    graph_ptr->UniqueModuleRename(module_name);
                     graph_module->name = module_name;
                     graph_ptr->AddGroupModule(module_namespace, graph_module);
+                    queue_data.rename_id = graph_module->FullName();
+                    graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
                 }
             }
         }

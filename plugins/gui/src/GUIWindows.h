@@ -193,7 +193,6 @@ namespace gui {
             bool screenshot_triggered;         // Trigger and file name for screenshot
             std::string screenshot_filepath;   // Filename the screenshot should be saved to
             int screenshot_filepath_id;        // Last unique id for screenshot filename
-            std::string load_project_filepath; // Filename the project should be loaded from
             bool hotkeys_check_once;           // WORKAROUND: Check multiple hotkey assignments once
         };
 
@@ -206,7 +205,8 @@ namespace gui {
             MENU = 4,
             TOGGLE_MAIN_VIEWS = 5,
             TRIGGER_SCREENSHOT = 6,
-            INDEX_COUNT = 7
+            RESET_WINDOWS_POS = 7,
+            INDEX_COUNT = 8
         };
 
         // VARIABLES --------------------------------------------------------------
