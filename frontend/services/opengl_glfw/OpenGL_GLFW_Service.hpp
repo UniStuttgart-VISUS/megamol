@@ -40,12 +40,9 @@ public:
         int versionMajor = 4;
         int versionMinor = 6;
         std::string windowTitlePrefix = "MegaMol";
-        void* sharedContextPtr = nullptr;
-        std::string viewInstanceName = "";
         WindowPlacement windowPlacement{}; // window position, glfw creation hints // TODO: sane defaults??
         bool enableKHRDebug = true;        // max error reporting
         bool enableVsync = false;          // max frame rate
-                                           // TODO: request OpenGL context version, extensions?
         bool glContextCoreProfile = false;
     };
 
@@ -101,6 +98,8 @@ public:
     void glfw_onFramebufferSize_func(const int widthpx, const int heightpx);
 
 private:
+    void register_glfw_callbacks();
+
     struct OpenGL_Context : public megamol::frontend_resources::IOpenGL_Context {
         void* ptr = nullptr;
 
