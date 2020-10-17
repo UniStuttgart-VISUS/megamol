@@ -640,7 +640,7 @@ void OpenGL_GLFW_Service::postGraphRender() {
     //::glfwMakeContextCurrent(nullptr);
 }
 
-std::vector<ModuleResource>& OpenGL_GLFW_Service::getProvidedResources() {
+std::vector<FrontendResource>& OpenGL_GLFW_Service::getProvidedResources() {
     return m_renderResourceReferences;
 }
 
@@ -649,7 +649,7 @@ const std::vector<std::string> OpenGL_GLFW_Service::getRequestedResourceNames() 
     return {};
 }
 
-void OpenGL_GLFW_Service::setRequestedResources(std::vector<ModuleResource> resources) {
+void OpenGL_GLFW_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     // we dont depend on outside resources
 }
 

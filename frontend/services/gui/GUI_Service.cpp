@@ -224,7 +224,7 @@ void GUI_Service::postGraphRender() {
 }
 
 
-std::vector<ModuleResource>& GUI_Service::getProvidedResources() {
+std::vector<FrontendResource>& GUI_Service::getProvidedResources() {
 
     // unused - returning empty list
     return this->m_providedResourceReferences;
@@ -237,7 +237,7 @@ const std::vector<std::string> GUI_Service::getRequestedResourceNames() const {
 }
 
 
-void GUI_Service::setRequestedResources(std::vector<ModuleResource> resources) {
+void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources) {
 
     this->m_requestedResourceReferences = resources;
 }

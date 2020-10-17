@@ -1,5 +1,5 @@
 /*
- * ModuleResource.h
+ * FrontendResource.h
  *
  * Copyright (C) 2020 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
@@ -16,18 +16,18 @@ namespace megamol {
 namespace frontend {
 
 
-class ModuleResource {
+class FrontendResource {
 public:
-    ModuleResource()
+    FrontendResource()
         : identifier{""}
         , resource{}
     {}
 
     template <typename T>
-    ModuleResource(const char* identifier, const T& resource) : ModuleResource(std::string{identifier}, resource) {}
+    FrontendResource(const char* identifier, const T& resource) : FrontendResource(std::string{identifier}, resource) {}
 
     template <typename T>
-    ModuleResource(const std::string& identifier, const T& resource)
+    FrontendResource(const std::string& identifier, const T& resource)
         : identifier{identifier}, resource{std::reference_wrapper<const T>(resource)} {}
 
     const std::string& getIdentifier() const { return identifier; }

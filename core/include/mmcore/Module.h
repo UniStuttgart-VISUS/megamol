@@ -16,7 +16,7 @@
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/api/MegaMolCore.std.h"
 
-#include "ModuleResource.h"
+#include "FrontendResource.h"
 
 
 namespace megamol {
@@ -112,7 +112,7 @@ public:
      *
      * @return 'true' on success, 'false' otherwise.
      */
-    bool Create(std::vector<megamol::frontend::ModuleResource> resources = {});
+    bool Create(std::vector<megamol::frontend::FrontendResource> resources = {});
 
     /**
      * Finds the slot with the given name.
@@ -139,7 +139,7 @@ public:
      * Releases the module and all resources. Do not overwrite this method!
      * Overwrite 'release'!
      */
-    void Release(std::vector<megamol::frontend::ModuleResource> resources = {});
+    void Release(std::vector<megamol::frontend::FrontendResource> resources = {});
 
     /**
      * Clears the cleanup mark for this and all dependent objects.

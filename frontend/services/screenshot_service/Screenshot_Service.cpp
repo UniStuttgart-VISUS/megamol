@@ -193,7 +193,7 @@ void Screenshot_Service::close() {
     // after this, at some point only the destructor of your service gets called
 }
 
-std::vector<ModuleResource>& Screenshot_Service::getProvidedResources() {
+std::vector<FrontendResource>& Screenshot_Service::getProvidedResources() {
      this->m_providedResourceReferences =
     {
         {"GLScreenshotSource", m_frontbufferSource_resource},
@@ -208,7 +208,7 @@ const std::vector<std::string> Screenshot_Service::getRequestedResourceNames() c
     return m_requestedResourcesNames;
 }
 
-void Screenshot_Service::setRequestedResources(std::vector<ModuleResource> resources) {
+void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     gl_context_ptr = const_cast<megamol::frontend_resources::IOpenGL_Context*>(&resources[0].getResource<megamol::frontend_resources::IOpenGL_Context>());
     megamolgraph_ptr = const_cast<megamol::core::MegaMolGraph*>(&resources[1].getResource<megamol::core::MegaMolGraph>());
 }

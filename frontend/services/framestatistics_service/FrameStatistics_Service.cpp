@@ -52,7 +52,7 @@ bool FrameStatistics_Service::init(const Config& config) {
 void FrameStatistics_Service::close() {
 }
 
-std::vector<ModuleResource>& FrameStatistics_Service::getProvidedResources() {
+std::vector<FrontendResource>& FrameStatistics_Service::getProvidedResources() {
     m_providedResourceReferences = {
         {"FrameStatistics", m_statistics}
     };
@@ -64,7 +64,7 @@ const std::vector<std::string> FrameStatistics_Service::getRequestedResourceName
     return m_requestedResourcesNames;
 }
 
-void FrameStatistics_Service::setRequestedResources(std::vector<ModuleResource> resources) {
+void FrameStatistics_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     this->m_requestedResourceReferences = resources;
 }
     
