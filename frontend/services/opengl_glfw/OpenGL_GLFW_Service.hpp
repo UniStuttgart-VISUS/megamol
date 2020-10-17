@@ -49,7 +49,7 @@ public:
         bool glContextCoreProfile = false;
     };
 
-	std::string serviceName() const override { return "OpenGL_GLFW_Service"; }
+    std::string serviceName() const override { return "OpenGL_GLFW_Service"; }
 
     OpenGL_GLFW_Service() = default;
     ~OpenGL_GLFW_Service() override;
@@ -59,7 +59,7 @@ public:
     bool init(const Config& config);
     bool init(void* configPtr) override;
     void close() override;
-	
+    
     void updateProvidedResources() override;
     void digestChangedRequestedResources() override;
     void resetProvidedResources() override;
@@ -101,12 +101,12 @@ public:
     void glfw_onFramebufferSize_func(const int widthpx, const int heightpx);
 
 private:
-	struct OpenGL_Context : public megamol::frontend_resources::IOpenGL_Context {
+    struct OpenGL_Context : public megamol::frontend_resources::IOpenGL_Context {
         void* ptr = nullptr;
 
-		void activate() const override;
-	    void close() const override;
-	};
+        void activate() const override;
+        void close() const override;
+    };
 
     struct Fake_OpenGL_Context : public megamol::frontend_resources::IOpenGL_Context {
         void activate() const override {}
@@ -122,9 +122,9 @@ private:
     MouseEvents m_mouseEvents;
     WindowEvents m_windowEvents;
     FramebufferEvents m_framebufferEvents;
-	OpenGL_Context m_opengl_context_impl;
-	Fake_OpenGL_Context m_fake_opengl_context;
-	frontend_resources::IOpenGL_Context* m_opengl_context;
+    OpenGL_Context m_opengl_context_impl;
+    Fake_OpenGL_Context m_fake_opengl_context;
+    frontend_resources::IOpenGL_Context* m_opengl_context;
 
     // this holds references to the event structs we fill. the events are passed to the renderers/views using
     // const std::vector<ModuleResource>& getModuleResources() override

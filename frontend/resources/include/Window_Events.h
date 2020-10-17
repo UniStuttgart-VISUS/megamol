@@ -23,9 +23,9 @@ struct WindowState {
     float x_contentscale = 1.0f;
     float y_contentscale = 1.0f;
     double time = 0.0;
-	// std::vector<std::string> dropped_paths;
-	// std::string get_clipboard_state;
-	// std::string set_clipboard_state;
+    // std::vector<std::string> dropped_paths;
+    // std::string get_clipboard_state;
+    // std::string set_clipboard_state;
 };
 struct WindowEvents {
     std::vector<std::tuple<int, int>> size_events;
@@ -38,42 +38,42 @@ struct WindowEvents {
 
     WindowState previous_state;
 
-	// persistent state, only set once, do not change
-	const char* getClipboardString() {
-		return _getClipboardString_Func(_clipboard_user_data);
-	}
+    // persistent state, only set once, do not change
+    const char* getClipboardString() {
+        return _getClipboardString_Func(_clipboard_user_data);
+    }
 
-	void setClipboardString(const char* string) {
-		_setClipboardString_Func(_clipboard_user_data, string);
-	}
+    void setClipboardString(const char* string) {
+        _setClipboardString_Func(_clipboard_user_data, string);
+    }
 
     const char* (*_getClipboardString_Func)(void* user_data) = nullptr;
     void (*_setClipboardString_Func)(void* user_data, const char* string) = nullptr;
     void* _clipboard_user_data = nullptr;
 
-	void apply_state() {
+    void apply_state() {
 
-		previous_state.time = time;
+        previous_state.time = time;
 
-		if (size_events.size()) {
-			this->previous_state.width = std::get<0>(size_events.back());
-			this->previous_state.height = std::get<1>(size_events.back());
-		}
+        if (size_events.size()) {
+            this->previous_state.width = std::get<0>(size_events.back());
+            this->previous_state.height = std::get<1>(size_events.back());
+        }
 
-		if (is_focused_events.size())
-			this->previous_state.is_focused = is_focused_events.back();
+        if (is_focused_events.size())
+            this->previous_state.is_focused = is_focused_events.back();
 
-		if (should_close_events.size())
-			this->previous_state.should_close = should_close_events.back();
+        if (should_close_events.size())
+            this->previous_state.should_close = should_close_events.back();
 
-		if (is_iconified_events.size())
-			this->previous_state.is_iconified = is_iconified_events.back();
+        if (is_iconified_events.size())
+            this->previous_state.is_iconified = is_iconified_events.back();
 
-		if (content_scale_events.size()) {
-			this->previous_state.x_contentscale = std::get<0>(content_scale_events.back());
-			this->previous_state.y_contentscale = std::get<1>(content_scale_events.back());
-		}
-	}
+        if (content_scale_events.size()) {
+            this->previous_state.x_contentscale = std::get<0>(content_scale_events.back());
+            this->previous_state.y_contentscale = std::get<1>(content_scale_events.back());
+        }
+    }
     void clear() {
         apply_state();
 

@@ -38,8 +38,8 @@
 #include <iostream>
 
 static void log(const char* text) {
-	const std::string msg = "OpenGL_GLFW_Service: " + std::string(text) + "\n"; 
-	megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
+    const std::string msg = "OpenGL_GLFW_Service: " + std::string(text) + "\n"; 
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
 
 static std::string get_message_id_name(GLuint id) {
@@ -71,7 +71,7 @@ static std::string get_message_id_name(GLuint id) {
         return "GL_TABLE_TOO_LARGE";
     }
 
-	return std::to_string(id);
+    return std::to_string(id);
 }
 
 
@@ -230,7 +230,7 @@ void outer_glfw_onMouseButton_func(GLFWwindow* wnd, int button, int action, int 
     that->glfw_onMouseButton_func(button, action, mods);
 }
 void outer_glfw_onMouseCursorPosition_func(GLFWwindow* wnd, double xpos, double ypos) {
-	// cursor (x,y) position in screen coordinates relative to upper-left corner
+    // cursor (x,y) position in screen coordinates relative to upper-left corner
     that->glfw_onMouseCursorPosition_func(xpos, ypos);
 }
 void outer_glfw_onMouseCursorEnter_func(GLFWwindow* wnd, int entered) {
@@ -241,10 +241,10 @@ void outer_glfw_onMouseScroll_func(GLFWwindow* wnd, double xoffset, double yoffs
 }
 
 const char* outer_glfw_getClipboardString(void* user_data) {
-	return glfwGetClipboardString(reinterpret_cast<GLFWwindow*>(user_data));
+    return glfwGetClipboardString(reinterpret_cast<GLFWwindow*>(user_data));
 }
 void outer_glfw_setClipboardString(void* user_data, const char* string) {
-	glfwSetClipboardString(reinterpret_cast<GLFWwindow*>(user_data), string);
+    glfwSetClipboardString(reinterpret_cast<GLFWwindow*>(user_data), string);
 }
 
 // window events
@@ -277,13 +277,13 @@ void outer_glfw_onFramebufferSize_func(GLFWwindow* wnd, int widthpx, int heightp
 void OpenGL_GLFW_Service::OpenGL_Context::activate() const {
     if (!ptr) return;
 
-	glfwMakeContextCurrent(static_cast<GLFWwindow*>(ptr));
+    glfwMakeContextCurrent(static_cast<GLFWwindow*>(ptr));
 }
 
 void OpenGL_GLFW_Service::OpenGL_Context::close() const {
     if (!ptr) return;
 
-	glfwMakeContextCurrent(nullptr);
+    glfwMakeContextCurrent(nullptr);
 }
 
 
@@ -329,7 +329,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
     // TODO: check config for sanity?
     // if(!sane(config))
-    //	return false
+    //    return false
 
     m_pimpl = std::unique_ptr<PimplData, std::function<void(PimplData*)>>(new PimplData, [](PimplData* ptr) { delete ptr; });
     m_data.initialConfig = config;
@@ -348,7 +348,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     } else {
         const bool success_glfw = glfwInit();
         if (!success_glfw) {
-			return false; // glfw had error on init; abort
+            return false; // glfw had error on init; abort
         }
     }
 
@@ -422,7 +422,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, m_data.initialConfig.versionMajor);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, m_data.initialConfig.versionMinor);
     glfwWindowHint(GLFW_OPENGL_PROFILE, m_data.initialConfig.glContextCoreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE);
-	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, m_data.initialConfig.enableKHRDebug ? GLFW_TRUE : GLFW_FALSE);
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, m_data.initialConfig.enableKHRDebug ? GLFW_TRUE : GLFW_FALSE);
 
     m_glfwWindowPtr = ::glfwCreateWindow(m_data.currentWidth, m_data.currentHeight,
         m_data.initialConfig.windowTitlePrefix.c_str(), nullptr, m_sharedData.borrowed_glfwContextWindowPtr);
@@ -457,9 +457,9 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     XCloseDisplay(display);
 #endif
 
-	if (m_data.initialConfig.enableKHRDebug) {
-		glEnable(GL_DEBUG_OUTPUT);
-		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    if (m_data.initialConfig.enableKHRDebug) {
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
                 GLuint ignorethis;
                 ignorethis = 131185;
                 glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &ignorethis, GL_FALSE);
@@ -467,7 +467,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
                 glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &ignorethis, GL_FALSE);
                 ignorethis = 131204;
                 glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &ignorethis, GL_FALSE);
-		glDebugMessageCallback(opengl_debug_message_callback, nullptr);
+        glDebugMessageCallback(opengl_debug_message_callback, nullptr);
         log("Enabled OpenGL debug context. Will print debug messages.");
     }
 
@@ -546,19 +546,19 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     ::glfwShowWindow(m_glfwWindowPtr);
     //::glfwMakeContextCurrent(nullptr);
 
-	m_windowEvents._clipboard_user_data = m_glfwWindowPtr;
-	m_windowEvents._getClipboardString_Func = outer_glfw_getClipboardString;
-	m_windowEvents._setClipboardString_Func = outer_glfw_setClipboardString;
-	m_windowEvents.previous_state.time = glfwGetTime();
+    m_windowEvents._clipboard_user_data = m_glfwWindowPtr;
+    m_windowEvents._getClipboardString_Func = outer_glfw_getClipboardString;
+    m_windowEvents._setClipboardString_Func = outer_glfw_setClipboardString;
+    m_windowEvents.previous_state.time = glfwGetTime();
 
-	// make the events and resources managed/provided by this service available to the outside world
-	m_renderResourceReferences = {
-		{"KeyboardEvents", m_keyboardEvents},
-		{"MouseEvents", m_mouseEvents},
-		{"WindowEvents", m_windowEvents},
-		{"FramebufferEvents", m_framebufferEvents},
-		{"IOpenGL_Context", *m_opengl_context}
-	};
+    // make the events and resources managed/provided by this service available to the outside world
+    m_renderResourceReferences = {
+        {"KeyboardEvents", m_keyboardEvents},
+        {"MouseEvents", m_mouseEvents},
+        {"WindowEvents", m_windowEvents},
+        {"FramebufferEvents", m_framebufferEvents},
+        {"IOpenGL_Context", *m_opengl_context}
+    };
 
     log("Successfully initialized OpenGL GLFW service");
     return true;
@@ -584,15 +584,15 @@ void OpenGL_GLFW_Service::close() {
         glfwTerminate();
     }
 }
-	
+    
 void OpenGL_GLFW_Service::updateProvidedResources() {
     if (m_glfwWindowPtr == nullptr) return;
 
     // poll events for all GLFW windows shared by this context. this also issues the callbacks.
     // note at this point there is no GL context active.
-	// event struct get filled via GLFW callbacks when new input events come in during glfwPollEvents()
+    // event struct get filled via GLFW callbacks when new input events come in during glfwPollEvents()
     if (m_data.sharedDataPtr == nullptr) // nobody shared context with us, so we must be primary context provider
-		::glfwPollEvents(); // may only be called from main thread
+        ::glfwPollEvents(); // may only be called from main thread
 
     m_windowEvents.time = glfwGetTime();
     // from GLFW Docs:
@@ -601,20 +601,20 @@ void OpenGL_GLFW_Service::updateProvidedResources() {
     // some window systems will send some events directly to the application,
     // which in turn causes callbacks to be called outside of regular event processing.
 
-	auto& should_close_events = this->m_windowEvents.should_close_events;
+    auto& should_close_events = this->m_windowEvents.should_close_events;
     if (should_close_events.size() && std::count(should_close_events.begin(), should_close_events.end(), true))
         this->setShutdown(true); // cleanup of this service and dependent GL stuff is triggered via this shutdown hint
 }
 
 void OpenGL_GLFW_Service::digestChangedRequestedResources() {
-	// we dont depend on outside resources
+    // we dont depend on outside resources
 }
 
 void OpenGL_GLFW_Service::resetProvidedResources() {
-	m_keyboardEvents.clear();
-	m_mouseEvents.clear();
-	m_windowEvents.clear();
-	m_framebufferEvents.clear();
+    m_keyboardEvents.clear();
+    m_mouseEvents.clear();
+    m_windowEvents.clear();
+    m_framebufferEvents.clear();
 }
 
 void OpenGL_GLFW_Service::preGraphRender() {
@@ -641,16 +641,16 @@ void OpenGL_GLFW_Service::postGraphRender() {
 }
 
 std::vector<ModuleResource>& OpenGL_GLFW_Service::getProvidedResources() {
-	return m_renderResourceReferences;
+    return m_renderResourceReferences;
 }
 
 const std::vector<std::string> OpenGL_GLFW_Service::getRequestedResourceNames() const {
-	// we dont depend on outside resources
-	return {};
+    // we dont depend on outside resources
+    return {};
 }
 
 void OpenGL_GLFW_Service::setRequestedResources(std::vector<ModuleResource> resources) {
-	// we dont depend on outside resources
+    // we dont depend on outside resources
 }
 
 void OpenGL_GLFW_Service::glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {
@@ -700,12 +700,11 @@ void OpenGL_GLFW_Service::glfw_onMouseButton_func(const int button, const int ac
 }
 
 void OpenGL_GLFW_Service::glfw_onMouseScroll_func(const double xoffset, const double yoffset) {
-
-	this->m_mouseEvents.scroll_events.emplace_back(std::make_tuple(xoffset, yoffset));
+    this->m_mouseEvents.scroll_events.emplace_back(std::make_tuple(xoffset, yoffset));
 }
 
 void OpenGL_GLFW_Service::glfw_onMouseCursorEnter_func(const bool entered) {
-	this->m_mouseEvents.enter_events.emplace_back(entered);
+    this->m_mouseEvents.enter_events.emplace_back(entered);
 }
 
 void OpenGL_GLFW_Service::glfw_onFramebufferSize_func(const int widthpx, const int heightpx) {
@@ -717,7 +716,7 @@ void OpenGL_GLFW_Service::glfw_onWindowSize_func(const int width, const int heig
 }
 
 void OpenGL_GLFW_Service::glfw_onWindowFocus_func(const bool focused) {
-	this->m_windowEvents.is_focused_events.emplace_back(focused);
+    this->m_windowEvents.is_focused_events.emplace_back(focused);
 }
 
 void OpenGL_GLFW_Service::glfw_onWindowShouldClose_func(const bool shouldclose) {
@@ -737,7 +736,7 @@ void OpenGL_GLFW_Service::glfw_onPathDrop_func(const int path_count, const char*
     paths_.reserve(path_count);
 
     for (int i = 0; i < path_count; i++)
-		paths_.emplace_back(std::string(paths[i]));
+        paths_.emplace_back(std::string(paths[i]));
 
     this->m_windowEvents.dropped_path_events.push_back(paths_);
 }
