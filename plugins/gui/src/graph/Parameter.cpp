@@ -476,6 +476,10 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
     out_param.present.SetGUIReadOnly(in_param_ptr->IsGUIReadOnly());
     out_param.present.SetGUIPresentation(in_param_ptr->GetGUIPresentation());
 
+    // Do not read param value from core param if gui param has already updated value
+    if (out_param.IsValueDirty())
+        return false;
+
     bool type_error = false;
 
     if (auto* p_ptr = in_param_ptr.DynamicCast<core::param::ButtonParam>()) {
