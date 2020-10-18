@@ -191,14 +191,39 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
 
 bool megamol::mesh::GlTFFileLoader::getMeshMetaDataCallback(core::Call& caller) {
 
-    CallMesh* cm = dynamic_cast<CallMesh*>(&caller);
-    if (cm == NULL)
+    CallMesh* lhs_mesh_call = dynamic_cast<CallMesh*>(&caller);
+    CallMesh* rhs_mesh_call = m_mesh_rhs_slot.CallAs<CallMesh>();
+
+    if (lhs_mesh_call == NULL) {
         return false;
+    }
 
-    auto meta_data = cm->getMetaData();
-    meta_data.m_frame_cnt = 1;
+    auto lhs_meta_data = lhs_mesh_call->getMetaData();
+    lhs_meta_data.m_frame_cnt = 1;
+    core::Spatial3DMetaData rhs_meta_data;
 
-    cm->setMetaData(meta_data);
+    if (rhs_mesh_call != NULL) {
+        rhs_meta_data = rhs_mesh_call->getMetaData();
+        rhs_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
+        rhs_mesh_call->setMetaData(rhs_meta_data);
+        if (!(*rhs_mesh_call)(1))
+            return false;
+        rhs_meta_data = rhs_mesh_call->getMetaData();
+    } else {
+        rhs_meta_data.m_frame_cnt = 1;
+    }
+
+    lhs_meta_data.m_frame_cnt = std::min(lhs_meta_data.m_frame_cnt, rhs_meta_data.m_frame_cnt);
+
+    auto bbox = lhs_meta_data.m_bboxs.BoundingBox();
+    bbox.Union(rhs_meta_data.m_bboxs.BoundingBox());
+    lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
+
+    auto cbbox = lhs_meta_data.m_bboxs.ClipBox();
+    cbbox.Union(rhs_meta_data.m_bboxs.ClipBox());
+    lhs_meta_data.m_bboxs.SetClipBox(cbbox);
+
+    lhs_mesh_call->setMetaData(lhs_meta_data);
 
     return true;
 }

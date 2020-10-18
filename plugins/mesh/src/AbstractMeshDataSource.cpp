@@ -52,6 +52,6 @@ void megamol::mesh::AbstractMeshDataSource::syncMeshAccessCollection(CallMesh* l
     }
 
     if (rhs_call != nullptr) {
-        rhs_call->setData(m_mesh_access_collection.first, 0);
+        rhs_call->setData(m_mesh_access_collection.first, rhs_call->version());
     }
 }

@@ -164,8 +164,14 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getMetaDataCallback(core::Call& c
     AbstractGPURenderTaskDataSource::getMetaDataCallback(caller);
 
     auto gltf_call = m_glTF_callerSlot.CallAs<CallGlTFData>();
-    if (!(*gltf_call)(1)) return false;
-    //auto gltf_meta_data = gltf_call->getMetaData();
+
+    if (gltf_call == nullptr) {
+        return false;
+    }
+
+    if (!(*gltf_call)(1)) {
+        return false;
+    }
 
     return true;
 }
