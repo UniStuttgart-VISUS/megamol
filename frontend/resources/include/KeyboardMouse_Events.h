@@ -53,22 +53,22 @@ struct MouseEvents {
 
     MouseState previous_state;
 
-	void apply_state() {
+    void apply_state() {
         this->previous_state.buttons = buttons_events;
 
-		if (position_events.size()) {
-			this->previous_state.x_cursor_position = std::get<0>(position_events.back());
-			this->previous_state.y_cursor_position = std::get<1>(position_events.back());
+        if (position_events.size()) {
+            this->previous_state.x_cursor_position = std::get<0>(position_events.back());
+            this->previous_state.y_cursor_position = std::get<1>(position_events.back());
         }
 
-		if (enter_events.size())
-			this->previous_state.entered = enter_events.back();
+        if (enter_events.size())
+            this->previous_state.entered = enter_events.back();
 
-		if (scroll_events.size()) {
-			this->previous_state.x_scroll = std::get<0>(scroll_events.back());
-			this->previous_state.y_scroll = std::get<1>(scroll_events.back());
-		}
-	}
+        if (scroll_events.size()) {
+            this->previous_state.x_scroll = std::get<0>(scroll_events.back());
+            this->previous_state.y_scroll = std::get<1>(scroll_events.back());
+        }
+    }
     void clear() {
         apply_state();
 

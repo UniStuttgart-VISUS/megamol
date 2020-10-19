@@ -37,7 +37,7 @@ struct ModuleInstance_t {
     ModuleInstantiationRequest request;
     bool isGraphEntryPoint = false;
     std::vector<std::string> lifetime_resource_requests;
-    std::vector<megamol::frontend::ModuleResource> lifetime_resources;
+    std::vector<megamol::frontend::FrontendResource> lifetime_resources;
 };
 
 using ModuleList_t = std::list<ModuleInstance_t>;

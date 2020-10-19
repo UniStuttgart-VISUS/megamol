@@ -40,15 +40,15 @@ public:
     void close() override;
 
     // expose the resources or input events this service provides via getProvidedResources(): e.g. Keyboard inputs, Controller inputs, GLFW Window events
-    // the ModuleResource is a named wrapper that wraps some type (struct) in an std::any and casts its content to a requested type
+    // the FrontendResource is a named wrapper that wraps some type (struct) in an std::any and casts its content to a requested type
     // each service may provide a set of resources for other services or graph modules to use
-    // usually resources shared among services and modules are read only, in the sense that the ModuleResource wrapper only returns const& to held resources
+    // usually resources shared among services and modules are read only, in the sense that the FrontendResource wrapper only returns const& to held resources
     // if you need to manipulate a resource that you do not own, make sure you know what you're doing before using const_cast<>
-    // keep in mind that the ModuleResource is just a wrapper that holds a void* to an object that you provided
+    // keep in mind that the FrontendResource is just a wrapper that holds a void* to an object that you provided
     // thus, keep objects that you broadcast as resources alive until your close() gets called! 
     // if lifetime of one of your resources ends before your close() gets called you produce dangling references in other services!
     // if you need to re-initialize or swap resource contents in a way that needs an objects lifetime to end, consider wrapping that behaviour in a way that is user friendly
-    std::vector<ModuleResource>& getProvidedResources() override;
+    std::vector<FrontendResource>& getProvidedResources() override;
 
     // a service may request a set of resources that are provided by other services or the system
     // this works in two steps: the service tells the system which services it requests using the service names (usually the type name of the structs)
@@ -68,7 +68,7 @@ public:
     // so if you really need access to some resource in your close() make sure 
     // the priority order of your service is _after_ the service that provides your critical resources (i.e. your set priority number should be higher)
     const std::vector<std::string> getRequestedResourceNames() const override;
-    void setRequestedResources(std::vector<ModuleResource> resources) override;
+    void setRequestedResources(std::vector<FrontendResource> resources) override;
 
     // the following resource update and graph render callbacks get called in each iteration of the main loop
     // this is probably where most work of your service is done
@@ -142,9 +142,9 @@ private:
     // provided resources will be queried by the system only once,
     // there is no requirement to store the resources in a vector the whole time, you just need to return such a vector in getProvidedResources()
     // but you need to store the actual resource objects you provide and manage
-    // note that ModuleResource wraps a void* to the objects you provide, thus your resource objects will not be copied, but they will be referenced
-    // (however the ModuleResource objects themselves will be copied)
-    std::vector<ModuleResource> m_providedResourceReferences;
+    // note that FrontendResource wraps a void* to the objects you provide, thus your resource objects will not be copied, but they will be referenced
+    // (however the FrontendResource objects themselves will be copied)
+    std::vector<FrontendResource> m_providedResourceReferences;
 
     // names of resources you request for your service can go here
     // requested resource names will be queried by the system only once,
@@ -155,10 +155,10 @@ private:
     // the resources provided to you by the system match the names you requested in getRequestedResourceNames() and are expected to reference actual existing objects
     // the sorting of resources matches the order of your requested resources names, you can use this to directly index into the vector provided by setRequestedResources()
     // if every service follows the rules the provided resources should be valid existing objects, thus you can use them directly without error or nullptr checking,
-    // but we in the end we must blindly rely on the std::any in ModuleResource to hold the struct or type you expect it to hold
+    // but we in the end we must blindly rely on the std::any in FrontendResource to hold the struct or type you expect it to hold
     // (or else std::any will throw a bad type cast exception that should terminate program execution. 
     // you do NOT catch or check for that exception or need to care for it in any way!)
-    std::vector<ModuleResource> m_requestedResourceReferences;
+    std::vector<FrontendResource> m_requestedResourceReferences;
 };
 
 } // namespace frontend

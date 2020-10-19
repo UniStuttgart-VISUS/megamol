@@ -94,6 +94,8 @@ namespace gui {
         bool GetGroup(ImGuiID group_uid, GroupPtr_t& out_group_ptr);
         ImGuiID AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr);
 
+        void Clear(void);
+
         inline bool IsDirty(void) const {
             return this->dirty_flag;
         }

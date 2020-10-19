@@ -16,6 +16,7 @@
 #include "KeyboardMouse_Events.h"
 #include "IOpenGL_Context.h"
 #include "Screenshot_Service.hpp"
+#include "ScriptPaths.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
@@ -44,7 +45,7 @@ public:
         megamol::core::CoreInstance* core_instance = nullptr;
     };
 
-	std::string serviceName() const override { return "GUI_Service"; }
+    std::string serviceName() const override { return "GUI_Service"; }
 
     GUI_Service() = default;
     ~GUI_Service() override;
@@ -54,7 +55,7 @@ public:
     bool init(const Config& config);
     bool init(void* configPtr) override;
     void close() override;
-	
+    
     void updateProvidedResources() override;
     void digestChangedRequestedResources() override;
     void resetProvidedResources() override;
@@ -63,9 +64,9 @@ public:
     void postGraphRender() override; // clean up after rendering, e.g. stop and show frame-timers in GLFW window
 
     // expose the resources and input events this RAPI provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
-    std::vector<ModuleResource>& getProvidedResources() override;
+    std::vector<FrontendResource>& getProvidedResources() override;
     const std::vector<std::string> getRequestedResourceNames() const override;
-    void setRequestedResources(std::vector<ModuleResource> resources) override;
+    void setRequestedResources(std::vector<FrontendResource> resources) override;
 
     // from AbstractFrontendService:
     // int setPriority(const int p) // priority initially 0
@@ -83,8 +84,8 @@ private:
         megamol::frontend_resources::IOpenGL_Context const* opengl_context_ptr;
     };
 
-    std::vector<ModuleResource> m_providedResourceReferences;
-    std::vector<ModuleResource> m_requestedResourceReferences;
+    std::vector<FrontendResource> m_providedResourceReferences;
+    std::vector<FrontendResource> m_requestedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
 
     std::shared_ptr<megamol::gui::GUIWrapper> m_gui = nullptr;

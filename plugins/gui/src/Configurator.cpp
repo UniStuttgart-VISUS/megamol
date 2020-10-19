@@ -56,7 +56,8 @@ megamol::gui::Configurator::Configurator()
     this->graph_state.show_parameter_sidebar = false;
     this->graph_state.graph_selected_uid = GUI_INVALID_ID;
     this->graph_state.graph_delete = false;
-    this->graph_state.graph_save = false;
+    this->graph_state.configurator_graph_save = false;
+    this->graph_state.global_graph_save = false;
 }
 
 
@@ -136,9 +137,9 @@ bool megamol::gui::Configurator::Draw(
                 graph_has_core_interface = graph_ptr->HasCoreInterface();
             }
             if (graph_has_core_interface) {
-                /// XXX TODO
+                this->graph_state.global_graph_save = true;
             } else {
-                this->graph_state.graph_save = true;
+                this->graph_state.configurator_graph_save = true;
             }
         }
 
@@ -226,9 +227,9 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
                     graph_has_core_interface = graph_ptr->HasCoreInterface();
                 }
                 if (graph_has_core_interface) {
-                    /// XXX TODO
+                    this->graph_state.global_graph_save = true;
                 } else {
-                    this->graph_state.graph_save = true;
+                    this->graph_state.configurator_graph_save = true;
                 }
             }
             ImGui::EndMenu();

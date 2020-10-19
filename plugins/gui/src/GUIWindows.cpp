@@ -8,12 +8,13 @@
 /**
  * USED HOTKEYS:
  *
- * - Show/hide Menu:            F12
+ * - Trigger Screenshot:        F3
+ * - Toggle Main View:          F5
+ * - Reset Windows Positions:   F6
  * - Show/hide Windows:         F7-F11
- * - Reset Windows:             Shift + F7-F11
+ * - Show/hide Menu:            F12
  * - Search Parameter:          Ctrl  + p
  * - Save Running Project:      Ctrl  + s
- * - Trigger Screenshot:        F3
  * - Quit Program:              Alt   + F4
  */
 
@@ -38,6 +39,7 @@ GUIWindows::GUIWindows(void)
         , window_collection()
         , configurator()
         , state()
+        , project_script_paths()
         , file_browser()
         , search_widget()
         , tf_editor_ptr(nullptr)
@@ -67,20 +69,22 @@ GUIWindows::GUIWindows(void)
     /// this->param_slots.push_back(&this->state_param);
     /// this->param_slots.push_back(&this->autosave_state_param);
 
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F3, core::view::Modifier::NONE), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F5, core::view::Modifier::NONE), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F6, core::view::Modifier::NONE), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_L, core::view::Modifier::CTRL), false};
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU] = {
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false};
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS] = {
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F2, core::view::Modifier::NONE), false};
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT] = {
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F3, core::view::Modifier::NONE), false};
 
     // Init State
     this->init_state();
@@ -165,7 +169,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->core_instance->SetCurrentImGuiContext(this->context);
     }
 
-    // Check hotkey, parameters and hotkey assignment
+    // Check hotkeys, parameters and hotkey assignment
     if (this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM].is_pressed) {
         this->triggerCoreInstanceShutdown();
         this->state.shutdown_triggered = true;
@@ -179,11 +183,43 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->state.screenshot_triggered = true;
         this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT].is_pressed = false;
     }
-    if (this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].is_pressed) {
-        this->state.togle_main_view = true;
+    if (this->state.toggle_main_view || this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].is_pressed) {
+        GraphPtr_t graph_ptr;
+        if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+            megamol::gui::ModulePtrVector_t::const_iterator module_mainview_iter = graph_ptr->GetModules().begin();
+            // Search for first main view and set next view to main view (= graph entry point)
+            for (auto module_iter = graph_ptr->GetModules().begin(); module_iter != graph_ptr->GetModules().end();
+                 module_iter++) {
+                if ((*module_iter)->is_view) {
+                    if ((*module_iter)->IsMainView()) {
+                        // Remove first found main view
+                        (*module_iter)->main_view_name.clear();
+                        Graph::QueueData queue_data;
+                        queue_data.name_id = (*module_iter)->FullName();
+                        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                        if (module_iter != graph_ptr->GetModules().end()) {
+                            module_mainview_iter = module_iter + 1;
+                        }
+                    }
+                }
+            }
+            if ((module_mainview_iter == graph_ptr->GetModules().begin()) ||
+                (module_mainview_iter != graph_ptr->GetModules().end())) {
+                for (auto module_iter = module_mainview_iter; module_iter != graph_ptr->GetModules().end();
+                     module_iter++) {
+                    if ((*module_iter)->is_view) {
+                        (*module_iter)->main_view_name = graph_ptr->GenerateUniqueMainViewName();
+                        Graph::QueueData queue_data;
+                        queue_data.name_id = (*module_iter)->FullName();
+                        graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                        break;
+                    }
+                }
+            }
+        }
+        this->state.toggle_main_view = false;
         this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].is_pressed = false;
     }
-
     this->validateParameters();
     this->checkMultipleHotkeyAssignement();
 
@@ -344,6 +380,8 @@ bool GUIWindows::PostDraw(void) {
 
             ImGui::SetNextWindowBgAlpha(1.0f);
             ImGui::SetNextWindowCollapsed(wc.win_collapsed, ImGuiCond_Always);
+
+            wc.win_soft_reset |= this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS].is_pressed;
 
             // Begin Window
             auto window_title = wc.win_name + "     " + wc.win_hotkey.ToString();
@@ -568,16 +606,6 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
             wc.win_show = !wc.win_show;
         }
         hotkeyPressed |= windowHotkeyPressed;
-
-        auto window_hotkey = wc.win_hotkey;
-        auto mods = window_hotkey.mods;
-        mods |= megamol::core::view::Modifier::SHIFT;
-        window_hotkey = megamol::core::view::KeyCode(window_hotkey.key, mods);
-        windowHotkeyPressed = this->isHotkeyPressed(window_hotkey);
-        if (windowHotkeyPressed) {
-            wc.win_soft_reset = true;
-        }
-        hotkeyPressed |= windowHotkeyPressed;
     };
     this->window_collection.EnumWindows(windows_func);
     if (hotkeyPressed)
@@ -706,50 +734,19 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 
 bool megamol::gui::GUIWindows::ConsumeTriggeredScreenshot(void) {
 
-    bool request_screenshot = this->state.screenshot_triggered;
+    bool trigger_screenshot = this->state.screenshot_triggered;
     this->state.screenshot_triggered = false;
-    if (request_screenshot) {
-        // Check for existing file
-        while (FileUtils::FileExists<std::string>(this->state.screenshot_filepath)) {
-            // Create new filename with iterating suffix
-            std::string filename = FileUtils::GetFilenameStem<std::string>(this->state.screenshot_filepath);
-            std::string id_separator = "_";
-            bool new_separator = false;
-            auto separator_index = filename.find_last_of(id_separator);
-            if (separator_index != std::string::npos) {
-                auto last_id_str = filename.substr(separator_index + 1);
-                try {
-                    this->state.screenshot_file_id = std::stoi(last_id_str);
-                } catch (...) { new_separator = true; }
-                this->state.screenshot_file_id++;
-                if (new_separator) {
-                    this->state.screenshot_filepath =
-                        filename + id_separator + std::to_string(this->state.screenshot_file_id) + ".png";
-                } else {
-                    this->state.screenshot_filepath = filename.substr(0, separator_index + 1) +
-                                                      std::to_string(this->state.screenshot_file_id) + ".png";
-                }
-            } else {
-                this->state.screenshot_filepath =
-                    filename + id_separator + std::to_string(this->state.screenshot_file_id) + ".png";
-            }
-        }
+    if (trigger_screenshot) {
+        this->create_not_existing_png_filepath(this->state.screenshot_filepath);
         if (this->state.screenshot_filepath.empty()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Filename for screenshot should not be empty. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);
-            request_screenshot = false;
+            trigger_screenshot = false;
         }
     }
 
-    return request_screenshot;
-}
-
-const std::string megamol::gui::GUIWindows::GetScreenshotFileName(void) {
-
-    std::string filename = this->state.screenshot_filepath;
-    if (filename.empty()) {}
-    return filename;
+    return trigger_screenshot;
 }
 
 
@@ -765,7 +762,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
     /// XXX Omitted since this task takes ~2 seconds and would always block megamol for this period at start up!
 
     bool synced = false;
-    bool sync_success = true;
+    bool sync_success = false;
     GraphPtr_t graph_ptr;
     bool found_graph = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr);
     // 2a) Either synchronize GUI Graph -> Core Graph ... ----------------------
@@ -775,6 +772,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         Graph::QueueAction action;
         Graph::QueueData data;
         while (graph_ptr->PopSyncQueue(action, data)) {
+            synced = true;
             switch (action) {
             case (Graph::QueueAction::ADD_MODULE): {
                 if (megamol_graph != nullptr) {
@@ -829,8 +827,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                 if (megamol_graph != nullptr) {
                     megamol_graph->SetGraphEntryPoint(data.name_id,
                         megamol::core::view::get_gl_view_runtime_resources_requests(),
-                        megamol::core::view::view_rendering_execution,
-                        megamol::core::view::view_init_rendering_state);
+                        megamol::core::view::view_rendering_execution, megamol::core::view::view_init_rendering_state);
                 } else if (this->core_instance != nullptr) {
                     /* XXX Currently not supported by core graph
                      */
@@ -861,16 +858,17 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         auto last_graph_uid = this->state.graph_uid;
 
         // Creates new graph at first call
-        sync_success &= this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(this->state.graph_uid,
-            ((megamol_graph == nullptr) ? (this->core_instance) : (nullptr)), megamol_graph, true);
-        if (!sync_success) {
+        bool graph_sync_success =
+            this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(this->state.graph_uid,
+                ((megamol_graph == nullptr) ? (this->core_instance) : (nullptr)), megamol_graph, true);
+        if (!graph_sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                 __LINE__);
         }
 
         // Init after graph was created
-        if (sync_success && (last_graph_uid == GUI_INVALID_ID) && (this->state.graph_uid != GUI_INVALID_ID)) {
+        if (graph_sync_success && (last_graph_uid == GUI_INVALID_ID) && (this->state.graph_uid != GUI_INVALID_ID)) {
             GraphPtr_t graph_ptr;
             if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
                 std::string script_filename;
@@ -881,12 +879,16 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                         graph_ptr->SetFilename(script_filename);
                     }
                 }
-                /// TODO XXX Add project file source for MegaMolGraph
-
+                if (graph_ptr->GetFilename().empty()) {
+                    if (!this->project_script_paths.empty()) {
+                        graph_ptr->SetFilename(this->project_script_paths.front());
+                    }
+                }
                 // Load initial gui state from file
                 this->load_state_from_file(graph_ptr->GetFilename());
             }
         }
+        sync_success &= graph_sync_success;
     }
 
     // 3) Synchronize parameter values -------------------------------------------
@@ -1661,46 +1663,40 @@ void GUIWindows::drawMenu(void) {
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Windows")) {
-        std::string menu_label = "Show";
-        if (this->state.menu_visible)
-            menu_label = "Hide";
-        if (ImGui::BeginMenu("Menu")) {
-            if (ImGui::MenuItem(menu_label.c_str(),
-                    this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].keycode.ToString().c_str(), nullptr)) {
-                this->state.menu_visible = !this->state.menu_visible;
-            }
-            ImGui::EndMenu();
-        }
+        ImGui::MenuItem("Menu", this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].keycode.ToString().c_str(),
+            &this->state.menu_visible);
         const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
-            if (ImGui::BeginMenu(wc.win_name.c_str())) {
-                std::string hotkey_label = wc.win_hotkey.ToString();
-                std::string menu_label = "Show";
-                if (wc.win_show)
-                    menu_label = "Hide";
-                if (ImGui::MenuItem(menu_label.c_str(), hotkey_label.c_str(), nullptr)) {
-                    wc.win_show = !wc.win_show;
+            bool registered_window = !(wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN);
+            if (registered_window) {
+                ;
+                ImGui::MenuItem(wc.win_name.c_str(), wc.win_hotkey.ToString().c_str(), &wc.win_show);
+            } else {
+                if (ImGui::BeginMenu(wc.win_name.c_str())) {
+                    std::string menu_label = "Show";
+                    if (wc.win_show)
+                        menu_label = "Hide";
+                    if (ImGui::MenuItem(menu_label.c_str(), wc.win_hotkey.ToString().c_str(), nullptr)) {
+                        wc.win_show = !wc.win_show;
+                    }
+                    // Enable option to delete window if it is a newly created custom parameter window
+                    if (ImGui::MenuItem("Delete Window")) {
+                        this->state.win_delete = wc.win_name;
+                    }
+                    ImGui::EndMenu();
                 }
-                std::string hotkey_reset_label;
-                if (!hotkey_label.empty()) {
-                    hotkey_reset_label = "SHIFT + " + hotkey_label;
-                }
-                if (ImGui::MenuItem("Reset Size and Position", hotkey_reset_label.c_str(), nullptr)) {
-                    wc.win_soft_reset = true;
-                }
-                // Enable option to delete window if it is a newly created custom parameter window
-                if (ImGui::MenuItem(
-                        "Delete Window", nullptr, false, (wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN))) {
-                    this->state.win_delete = wc.win_name;
-                }
-                ImGui::EndMenu();
             }
         };
         this->window_collection.EnumWindows(func);
-
+        ImGui::Separator();
+        if (ImGui::MenuItem("Reset Size and Position",
+                this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS].keycode.ToString().c_str(), nullptr)) {
+            this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS].is_pressed = true;
+        }
         ImGui::EndMenu();
     }
     if (megamolgraph_interface) {
         if (ImGui::BeginMenu("Screenshot")) {
+            this->create_not_existing_png_filepath(this->state.screenshot_filepath);
             if (ImGui::MenuItem("Select Filename", this->state.screenshot_filepath.c_str())) {
                 this->state.open_popup_screenshot = true;
             }
@@ -1717,13 +1713,23 @@ void GUIWindows::drawMenu(void) {
                 for (auto& module_ptr : graph_ptr->GetModules()) {
                     if (module_ptr->is_view) {
                         if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsMainView())) {
-                            /// TODO
+                            if (!module_ptr->IsMainView()) {
+                                module_ptr->main_view_name = graph_ptr->GenerateUniqueMainViewName();
+                                Graph::QueueData queue_data;
+                                queue_data.name_id = module_ptr->FullName();
+                                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                            } else {
+                                module_ptr->main_view_name.clear();
+                                Graph::QueueData queue_data;
+                                queue_data.name_id = module_ptr->FullName();
+                                graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                            }
                         }
                     }
                 }
                 if (ImGui::MenuItem("Toggle Main Views",
                         this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].keycode.ToString().c_str())) {
-                    this->state.togle_main_view = true;
+                    this->state.toggle_main_view = true;
                 }
                 ImGui::EndMenu();
             }
@@ -1826,10 +1832,13 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     this->state.open_popup_save |= this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].is_pressed;
     bool confirmed, aborted;
     bool popup_failed = false;
+    std::string filename;
     GraphPtr_t graph_ptr;
     if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-        std::string filename = graph_ptr->GetFilename();
-        /// XXX TODO this->state.open_popup_save |= graph_ptr->;
+        filename = graph_ptr->GetFilename();
+    }
+    if (graph_ptr != nullptr) {
+        this->state.open_popup_save |= this->configurator.ConsumeTriggeredGlobalProjectSave();
         if (this->file_browser.PopUp(
                 FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project", this->state.open_popup_save, filename)) {
 
@@ -1844,20 +1853,25 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].is_pressed = false;
 
     // Load project pop-up
-    this->state.open_popup_load |= this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed;
-    if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->state.open_popup_load,
-            this->state.load_project_filename)) {
-        /// XXX TODO
+    popup_failed = false;
+    if (graph_ptr != nullptr) {
+        this->state.open_popup_load |= this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed;
+        if (this->file_browser.PopUp(
+                FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->state.open_popup_load, filename)) {
+            graph_ptr->Clear();
+            popup_failed |=
+                !this->configurator.GetGraphCollection().LoadAddProjectFromFile(this->state.graph_uid, filename);
+        }
+        MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
+            confirmed, "Cancel", aborted);
     }
-    MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
-        confirmed, "Cancel", aborted);
-    this->state.open_popup_save = false;
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].is_pressed = false;
+    this->state.open_popup_load = false;
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed = false;
 
     // Filename for screenshot pop-up
     if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Select Filename for Screenshot",
             this->state.open_popup_screenshot, this->state.screenshot_filepath, ".png")) {
-        this->state.screenshot_file_id = 0;
+        this->state.screenshot_filepath_id = 0;
     }
     this->state.open_popup_screenshot = false;
 }
@@ -1987,7 +2001,7 @@ std::string megamol::gui::GUIWindows::dump_state_to_file(const std::string& file
             if (!state_json.is_object()) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                return false;
+                return std::string("");
             }
         }
     }
@@ -1997,7 +2011,7 @@ std::string megamol::gui::GUIWindows::dump_state_to_file(const std::string& file
         this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
         return state_str;
     }
-    return false;
+    return std::string("");
 }
 
 
@@ -2130,11 +2144,46 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.open_popup_screenshot = false;
     this->state.menu_visible = true;
     this->state.graph_fonts_reserved = 0;
-    this->state.togle_main_view = false;
+    this->state.toggle_main_view = false;
     this->state.shutdown_triggered = false;
     this->state.screenshot_triggered = false;
-    this->state.screenshot_filepath = ".\\megamol_screenshot.png";
-    this->state.screenshot_file_id = 0;
-    this->state.load_project_filename = "";
+    this->state.screenshot_filepath = "megamol_screenshot.png";
+    this->state.screenshot_filepath_id = 0;
     this->state.hotkeys_check_once = true;
+
+    this->create_not_existing_png_filepath(this->state.screenshot_filepath);
+}
+
+
+bool megamol::gui::GUIWindows::create_not_existing_png_filepath(std::string& inout_filepath) {
+
+    // Check for existing file
+    bool created_filepath = false;
+    if (!inout_filepath.empty()) {
+        while (FileUtils::FileExists<std::string>(inout_filepath)) {
+            // Create new filename with iterating suffix
+            std::string filename = FileUtils::GetFilenameStem<std::string>(inout_filepath);
+            std::string id_separator = "_";
+            bool new_separator = false;
+            auto separator_index = filename.find_last_of(id_separator);
+            if (separator_index != std::string::npos) {
+                auto last_id_str = filename.substr(separator_index + 1);
+                try {
+                    this->state.screenshot_filepath_id = std::stoi(last_id_str);
+                } catch (...) { new_separator = true; }
+                this->state.screenshot_filepath_id++;
+                if (new_separator) {
+                    this->state.screenshot_filepath =
+                        filename + id_separator + std::to_string(this->state.screenshot_filepath_id) + ".png";
+                } else {
+                    inout_filepath = filename.substr(0, separator_index + 1) +
+                                     std::to_string(this->state.screenshot_filepath_id) + ".png";
+                }
+            } else {
+                inout_filepath = filename + id_separator + std::to_string(this->state.screenshot_filepath_id) + ".png";
+            }
+        }
+        created_filepath = true;
+    }
+    return created_filepath;
 }

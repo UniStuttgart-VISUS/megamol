@@ -76,6 +76,15 @@ namespace gui {
         bool StateFromJSON(const nlohmann::json& in_json);
 
         /**
+         * Globally save currently selected graph in configurator.
+         */
+        inline bool ConsumeTriggeredGlobalProjectSave(void) {
+            bool trigger_global_graph_save = this->graph_state.global_graph_save;
+            this->graph_state.global_graph_save = false;
+            return trigger_global_graph_save;
+        }
+
+        /**
          * Indicates whether project file drop for configurator is valid.
          */
         inline bool IsProjectFileDropValid(void) {

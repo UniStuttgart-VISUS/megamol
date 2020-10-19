@@ -37,11 +37,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
 
         if (open_popup) {
             // Check given file name path
-            stdfs::path tmp_file_path = inout_filename.c_str();
-            if (tmp_file_path.empty() || !stdfs::exists(tmp_file_path)) {
-                tmp_file_path = stdfs::current_path();
-            }
-            this->split_path(tmp_file_path, this->file_path_str, this->file_name_str);
+            this->validate_split_path(inout_filename, this->file_path_str, this->file_name_str);
             this->validate_directory(this->file_path_str);
             this->validate_file(this->file_name_str, extension, flag);
             this->path_changed = true;
@@ -178,7 +174,8 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                         if (ImGui::Selectable(
                                 select_label.c_str(), (select_label == this->file_name_str), select_flags)) {
                             last_file_path_str = this->file_path_str;
-                            this->split_path(path_pair.first, this->file_path_str, this->file_name_str);
+                            this->validate_split_path(
+                                path_pair.first.generic_u8string(), this->file_path_str, this->file_name_str);
                             this->validate_file(this->file_name_str, extension, flag);
                             if (last_file_path_str != this->file_path_str) {
                                 this->path_changed = true;
@@ -355,27 +352,40 @@ void megamol::gui::FileBrowserWidget::string_to_lower_case(std::string& str) {
 }
 
 
-bool megamol::gui::FileBrowserWidget::split_path(
-    const stdfs::path& in_file_path, std::string& out_path, std::string& out_file) {
+bool megamol::gui::FileBrowserWidget::validate_split_path(
+    const std::string& in_path_file, std::string& out_path, std::string& out_file) {
 
-    // Splitting path into path string and file string
+    // Splitting file path into path string and file string
     try {
-        if (stdfs::is_regular_file(in_file_path)) {
-            if (in_file_path.has_parent_path()) {
-                out_path = in_file_path.parent_path().generic_u8string();
-            }
-            if (in_file_path.has_filename()) {
-                out_file = in_file_path.filename().generic_u8string();
+        out_path.clear();
+        out_file.clear();
+        stdfs::path out_path_file(in_path_file.c_str());
+        if (out_path_file.empty()) {
+            out_path_file = stdfs::current_path();
+            out_path = out_path_file.generic_u8string();
+        } else if ((stdfs::status_known(stdfs::status(out_path_file)) && stdfs::is_directory(out_path_file))) {
+            out_path = out_path_file.generic_u8string();
+        } else if (stdfs::status_known(stdfs::status(out_path_file)) && stdfs::is_regular_file(out_path_file)) {
+            out_path = out_path_file.parent_path().generic_u8string();
+            out_file = out_path_file.filename().generic_u8string();
+            if (out_path.empty()) {
+                out_path = ".";
             }
         } else {
-            out_path = in_file_path.generic_u8string();
-            out_file.clear();
+            out_path = out_path_file.parent_path().generic_u8string();
+            out_file = out_path_file.filename().generic_u8string();
+            if (out_path.empty()) {
+                out_path = ".";
+            }
         }
         GUIUtils::Utf8Decode(out_path);
         GUIUtils::Utf8Decode(out_file);
+
     } catch (stdfs::filesystem_error e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        out_path.clear();
+        out_file.clear();
         return false;
     }
     return true;

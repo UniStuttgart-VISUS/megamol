@@ -43,7 +43,8 @@ bool GUI_Service::init(const Config& config) {
         {"MouseEvents"},                           // resource index 3
         {"IOpenGL_Context"},                       // resource index 4
         {"FramebufferEvents"},                     // resource index 5
-        {"GLFrontbufferToPNG_ScreenshotTrigger"}   // resource index 6
+        {"GLFrontbufferToPNG_ScreenshotTrigger"},  // resource index 6
+        {"LuaScriptPaths"}  // resource index 7
     };
 
     // init gui
@@ -69,7 +70,7 @@ void GUI_Service::close() {
 
     // nothing to do here so far ...
 }
-	
+    
 
 void GUI_Service::updateProvidedResources() {
 
@@ -101,19 +102,6 @@ void GUI_Service::digestChangedRequestedResources() {
         m_resource_state.window_size.x = static_cast<float>(std::get<0>(size_event));
         m_resource_state.window_size.y = static_cast<float>(std::get<1>(size_event));
     }
-    /* So far unused
-    for (auto& event : window_events->dropped_path_events) {
-        for (auto& file_path : event) {
-            if (megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(file_path, ".lua")) {
-                m_queuedProjectFiles.push_back(file_path);
-            }
-        }
-    }
-    for (auto& file : m_queuedProjectFiles) {
-        /// Propagate dropped project file to gui if requested (e.g. if configurator is hovered)
-    }
-    m_queuedProjectFiles.clear();
-    */
 
     /// KeyboardEvents = resource index 2
     auto keyboard_events = &this->m_requestedResourceReferences[2].getResource<megamol::frontend_resources::KeyboardEvents>();
@@ -189,8 +177,12 @@ void GUI_Service::digestChangedRequestedResources() {
     /// Trigger Screenshot = resource index 6
     if (gui->ConsumeTriggeredScreenshot()) {
         auto& screenshot_to_file_trigger = this->m_requestedResourceReferences[6].getResource< std::function<bool(std::string const&)> >();
-        screenshot_to_file_trigger(gui->GetScreenshotFileName());
+        screenshot_to_file_trigger(gui->ConsumeScreenshotFileName());
     }
+
+    /// Pipe lua script paths to gui = resource index 7
+   auto& script_paths = this->m_requestedResourceReferences[7].getResource< megamol::frontend_resources::ScriptPaths>();
+   gui->SetProjectScriptPaths(script_paths.lua_script_paths);
 }
 
 
@@ -232,10 +224,10 @@ void GUI_Service::postGraphRender() {
 }
 
 
-std::vector<ModuleResource>& GUI_Service::getProvidedResources() {
+std::vector<FrontendResource>& GUI_Service::getProvidedResources() {
 
     // unused - returning empty list
-	return this->m_providedResourceReferences;
+    return this->m_providedResourceReferences;
 }
 
 
@@ -245,7 +237,7 @@ const std::vector<std::string> GUI_Service::getRequestedResourceNames() const {
 }
 
 
-void GUI_Service::setRequestedResources(std::vector<ModuleResource> resources) {
+void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources) {
 
     this->m_requestedResourceReferences = resources;
 }

@@ -98,15 +98,20 @@ void Lua_Service_Wrapper::close() {
     m_network_host->close();
 }
 
-std::vector<ModuleResource>& Lua_Service_Wrapper::getProvidedResources() {
-    return m_providedResourceReferences; // empty
+std::vector<FrontendResource>& Lua_Service_Wrapper::getProvidedResources() {
+    this->m_providedResourceReferences =
+    {
+        {"LuaScriptPaths", m_scriptpath_resource}
+    };
+
+    return m_providedResourceReferences;
 }
 
 const std::vector<std::string> Lua_Service_Wrapper::getRequestedResourceNames() const {
     return m_requestedResourcesNames;
 }
 
-void Lua_Service_Wrapper::setRequestedResources(std::vector<ModuleResource> resources) {
+void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> resources) {
     // TODO: do something with ZMQ resource we get here
     m_requestedResourceReferences = resources;
 
@@ -134,6 +139,9 @@ void Lua_Service_Wrapper::updateProvidedResources() {
     recursion_guard;
     // we want lua to be the first thing executed in main loop
     // so we do all the lua work here
+
+    m_scriptpath_resource.lua_script_paths.clear();
+    m_scriptpath_resource.lua_script_paths.push_back(luaAPI.GetScriptPath());
 
     bool need_to_shutdown = false; // e.g. mmQuit should set this to true
 

@@ -9,7 +9,7 @@
 #include <string>
 
 #include <vector>
-#include "ModuleResource.h"
+#include "FrontendResource.h"
 
 namespace megamol {
 namespace frontend {
@@ -41,7 +41,7 @@ public:
 
     virtual bool init(void* configPtr) = 0; // init API, e.g. init GLFW with OpenGL and open window with certain decorations/hints
     virtual void close() = 0;
-	
+    
     virtual void updateProvidedResources() = 0;
     virtual void digestChangedRequestedResources() = 0;
     virtual void resetProvidedResources() = 0;
@@ -55,10 +55,10 @@ public:
     // looked up via this function and given to the Views that request them. the matching of correct resource to the
     // Views that request them is done by the identifier of the resource (i.e. by a std::string) followed by a cast to
     // the expected type
-    virtual std::vector<ModuleResource>& getProvidedResources() = 0;
+    virtual std::vector<FrontendResource>& getProvidedResources() = 0;
 
     virtual const std::vector<std::string> getRequestedResourceNames() const = 0;
-    virtual void setRequestedResources(std::vector<ModuleResource> resources) = 0;
+    virtual void setRequestedResources(std::vector<FrontendResource> resources) = 0;
 };
 
 

@@ -41,7 +41,6 @@ namespace gui {
         GraphCollectionPresentation(void);
         ~GraphCollectionPresentation(void);
 
-        void SaveProjectToFile(bool open_popup, GraphCollection& inout_graph_collection, GraphState_t& state);
 
     private:
         // VARIABLES --------------------------------------------------------------

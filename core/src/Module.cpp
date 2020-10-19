@@ -51,12 +51,12 @@ Module::~Module(void) {
 /*
  * Module::Create
  */
-bool Module::Create(std::vector<megamol::frontend::ModuleResource> resources) {
+bool Module::Create(std::vector<megamol::frontend::FrontendResource> resources) {
     using megamol::core::utility::log::Log;
 
 	const megamol::frontend_resources::IOpenGL_Context* opengl_context = nullptr;
     auto opengl_context_it = std::find_if(resources.begin(), resources.end(),
-        [&](megamol::frontend::ModuleResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
+        [&](megamol::frontend::FrontendResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
 
     if (opengl_context_it != resources.end()) {
         opengl_context = &opengl_context_it->getResource<megamol::frontend_resources::IOpenGL_Context>();
@@ -129,11 +129,11 @@ vislib::StringA Module::GetDemiRootName() const {
 /*
  * Module::Release
  */
-void Module::Release(std::vector<megamol::frontend::ModuleResource> resources) {
+void Module::Release(std::vector<megamol::frontend::FrontendResource> resources) {
     using megamol::core::utility::log::Log;
 
     auto opengl_context_it = std::find_if(resources.begin(), resources.end(),
-        [&](megamol::frontend::ModuleResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
+        [&](megamol::frontend::FrontendResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
 
 	const megamol::frontend_resources::IOpenGL_Context* opengl_context = nullptr;
 

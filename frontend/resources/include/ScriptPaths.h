@@ -1,5 +1,5 @@
 /*
- * OpenGL_Context.h
+ * ScriptPaths.h
  *
  * Copyright (C) 2020 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
@@ -7,14 +7,16 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 namespace megamol {
 namespace frontend_resources {
 
-struct IOpenGL_Context {
-    virtual void activate() const = 0;
-    virtual void close() const = 0;
+struct ScriptPaths {
 
-    virtual ~IOpenGL_Context() = default;
+    std::vector<std::string> lua_script_paths;
+
 };
 
 } /* end namespace frontend_resources */

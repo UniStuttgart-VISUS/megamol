@@ -28,16 +28,16 @@ struct FramebufferEvents {
 
     bool is_resized() { return size_events.size() && previous_state != size_events.back(); }
 
-	void apply_state() {
+    void apply_state() {
         if (size_events.size()) {
-			this->previous_state.width = size_events.back().width;
-			this->previous_state.height = size_events.back().height;
+            this->previous_state.width = size_events.back().width;
+            this->previous_state.height = size_events.back().height;
         }
-	}
+    }
     void clear() {
         apply_state();
-		size_events.clear();
-	}
+        size_events.clear();
+    }
 };
 
 namespace input = frontend_resources;
