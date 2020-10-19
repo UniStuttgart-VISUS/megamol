@@ -31,8 +31,10 @@ bool Renderer2D::makeProgram(std::string prefix, vislib::graphics::gl::GLSLShade
     vislib::StringA fragname((prefix + "::frag").c_str());
     vislib::StringA pref(prefix.c_str());
 
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(vertname, vert)) return false;
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(fragname, frag)) return false;
+    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(vertname, vert))
+        return false;
+    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(fragname, frag))
+        return false;
 
     try {
         if (!program.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
@@ -68,9 +70,12 @@ bool Renderer2D::makeProgram(std::string prefix, vislib::graphics::gl::GLSLGeome
     vislib::StringA fragname((prefix + "::frag").c_str());
     vislib::StringA pref(prefix.c_str());
 
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(vertname, vert)) return false;
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(geomname, geom)) return false;
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(fragname, frag)) return false;
+    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(vertname, vert))
+        return false;
+    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(geomname, geom))
+        return false;
+    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(fragname, frag))
+        return false;
 
     try {
         if (!program.Compile(vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
@@ -113,12 +118,15 @@ bool Renderer2D::makeProgram(std::string prefix, vislib::graphics::gl::GLSLTesse
     vislib::StringA geomname((prefix + "::geom").c_str());
     vislib::StringA pref(prefix.c_str());
 
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(vertname, vert)) return false;
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(fragname, frag)) return false;
+    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(vertname, vert))
+        return false;
+    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(fragname, frag))
+        return false;
     // no complete tess?
     auto r1 = this->instance()->ShaderSourceFactory().MakeShaderSource(controlname, control);
     auto r2 = this->instance()->ShaderSourceFactory().MakeShaderSource(evalname, eval);
-    if (r1 != r2) return false;
+    if (r1 != r2)
+        return false;
     bool haveTess = r1;
     bool haveGeom = this->instance()->ShaderSourceFactory().MakeShaderSource(geomname, geom);
 
@@ -160,7 +168,8 @@ bool Renderer2D::makeProgram(std::string prefix, vislib::graphics::gl::GLSLCompu
     vislib::StringA compname((prefix + "::comp").c_str());
     vislib::StringA pref(prefix.c_str());
 
-    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(compname, comp)) return false;
+    if (!this->instance()->ShaderSourceFactory().MakeShaderSource(compname, comp))
+        return false;
 
     try {
         if (!program.Compile(comp.Code(), comp.Count())) {
