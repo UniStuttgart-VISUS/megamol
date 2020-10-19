@@ -393,7 +393,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     //::glfwMakeContextCurrent(nullptr);
 
     m_windowEvents._clipboard_user_data = window_ptr;
-    m_windowEvents._getClipboardString_Func = [](void* user_data) {
+    m_windowEvents._getClipboardString_Func = [](void* user_data) -> const char* {
         return glfwGetClipboardString(reinterpret_cast<GLFWwindow*>(user_data));
     };
     m_windowEvents._setClipboardString_Func = [](void* user_data, const char* string) {
