@@ -306,7 +306,7 @@ void setupCore(megamol::console::utility::CmdLineParser *& parser) {
         = writeLogEchoToConsole;
 #endif
 
-    MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, MMC_INITVAL_LOGECHOFUNC, MMC_TYPE_VOIDP, function_cast<void*>(echoFunc)));
+    /// DEPRECATED: MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, MMC_INITVAL_LOGECHOFUNC, MMC_TYPE_VOIDP, function_cast<void*>(echoFunc)));
     if (parser->IsLogFileSpecified()) {
         MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, MMC_INITVAL_LOGFILE, MMC_TYPE_TSTR, parser->LogFile()));
     }
