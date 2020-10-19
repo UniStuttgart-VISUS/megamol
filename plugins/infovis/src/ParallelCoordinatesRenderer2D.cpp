@@ -34,63 +34,63 @@ using namespace megamol::infovis;
 using namespace megamol::stdplugin::datatools;
 
 ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
-    : Renderer2D()
-    , getDataSlot("getdata", "Float table input")
-    , getTFSlot("getTF", "connects to the transfer function")
-    , readFlagsSlot("readFlags", "reads the flag storage")
-    , writeFlagsSlot("writeFlags", "writes the flag storage")
-    , currentHash(0xFFFFFFFF)
-    , currentFlagsVersion(0)
-    , densityFBO()
-    , drawModeSlot("drawMode", "Draw mode")
-    , drawSelectedItemsSlot("drawSelectedItems", "Draw selected items")
-    , selectedItemsColorSlot("selectedItemsColor", "Color for selected items")
-    , drawOtherItemsSlot("drawOtherItems", "Draw other (e.g., non-selected) items")
-    , otherItemsColorSlot("otherItemsColor", "Color for other items (e.g., non-selected)")
-    , otherItemsAttribSlot("otherItemsAttrib", "attribute to use for TF lookup and item coloring")
-    , drawAxesSlot("drawAxes", "Draw dimension axes")
-    , axesColorSlot("axesColor", "Color for dimension axes")
-    , filterIndicatorColorSlot("filterIndicatorCol", "Color for filter indicators")
-    , selectionModeSlot("selectionMode", "Selection mode")
-    , drawSelectionIndicatorSlot("drawSelectionIndicator", "Draw selection indicator")
-    , selectionIndicatorColorSlot("selectionIndicatorColor", "Color for selection indicator")
-    , pickRadiusSlot("pickRadius", "Picking radius in object-space")
-    , scaleToFitSlot("scaleToFit", "fit the diagram in the viewport")
-    , glDepthTestSlot("glEnableDepthTest", "Toggle GLDEPTHTEST")
-    , glLineSmoothSlot("glEnableLineSmooth", "Toggle GLLINESMOOTH")
-    , glLineWidthSlot("glLineWidth", "Value for glLineWidth")
-    , sqrtDensitySlot("sqrtDensity", "map root of density to transfer function (instead of linear mapping)")
-    //, resetFlagsSlot("resetFlags", "Reset item flags to initial state")
-    , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
-    , filterStateSlot("filterState", "stores filter state for serialization")
+        : Renderer2D()
+        , getDataSlot("getdata", "Float table input")
+        , getTFSlot("getTF", "connects to the transfer function")
+        , readFlagsSlot("readFlags", "reads the flag storage")
+        , writeFlagsSlot("writeFlags", "writes the flag storage")
+        , currentHash(0xFFFFFFFF)
+        , currentFlagsVersion(0)
+        , densityFBO()
+        , drawModeSlot("drawMode", "Draw mode")
+        , drawSelectedItemsSlot("drawSelectedItems", "Draw selected items")
+        , selectedItemsColorSlot("selectedItemsColor", "Color for selected items")
+        , drawOtherItemsSlot("drawOtherItems", "Draw other (e.g., non-selected) items")
+        , otherItemsColorSlot("otherItemsColor", "Color for other items (e.g., non-selected)")
+        , otherItemsAttribSlot("otherItemsAttrib", "attribute to use for TF lookup and item coloring")
+        , drawAxesSlot("drawAxes", "Draw dimension axes")
+        , axesColorSlot("axesColor", "Color for dimension axes")
+        , filterIndicatorColorSlot("filterIndicatorCol", "Color for filter indicators")
+        , selectionModeSlot("selectionMode", "Selection mode")
+        , drawSelectionIndicatorSlot("drawSelectionIndicator", "Draw selection indicator")
+        , selectionIndicatorColorSlot("selectionIndicatorColor", "Color for selection indicator")
+        , pickRadiusSlot("pickRadius", "Picking radius in object-space")
+        , scaleToFitSlot("scaleToFit", "fit the diagram in the viewport")
+        , glDepthTestSlot("glEnableDepthTest", "Toggle GLDEPTHTEST")
+        , glLineSmoothSlot("glEnableLineSmooth", "Toggle GLLINESMOOTH")
+        , glLineWidthSlot("glLineWidth", "Value for glLineWidth")
+        , sqrtDensitySlot("sqrtDensity", "map root of density to transfer function (instead of linear mapping)")
+        //, resetFlagsSlot("resetFlags", "Reset item flags to initial state")
+        , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
+        , filterStateSlot("filterState", "stores filter state for serialization")
 
-    , halveRes("halve Resolution", "halve Resolution for FPS test")
-    , approachSlot("Approach", "Numerical Value assigned to each temporal reconstruction approach")
-    , testingFloat("testingFloat", "Float for passing Test Values")
-    , thicknessFloatP("thickness", "Float value to incease line thickness")
-    , legacyMode("LegacyMode", "Enables old Line Rendering mode with Bresenham Algorithm")
+        , halveRes("halve Resolution", "halve Resolution for FPS test")
+        , approachSlot("Approach", "Numerical Value assigned to each temporal reconstruction approach")
+        , testingFloat("testingFloat", "Float for passing Test Values")
+        , thicknessFloatP("thickness", "Float value to incease line thickness")
+        , legacyMode("LegacyMode", "Enables old Line Rendering mode with Bresenham Algorithm")
 
-    , numTicks(5)
-    , columnCount(0)
-    , itemCount(0)
-    , dataBuffer(0)
-    , minimumsBuffer(0)
-    , maximumsBuffer(0)
-    , axisIndirectionBuffer(0)
-    , filtersBuffer(0)
-    , minmaxBuffer(0)
-    , interactionState(InteractionState::NONE)
-    , pickedAxis(-1)
-    , pickedIndicatorAxis(-1)
-    , pickedIndicatorIndex(-1)
-    , strokeStartX(0)
-    , strokeStartY(0)
-    , strokeEndX(0)
-    , strokeEndY(0)
-    , needSelectionUpdate(false)
-    , needFlagsUpdate(false)
-    , lastTimeStep(0)
-    , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
+        , numTicks(5)
+        , columnCount(0)
+        , itemCount(0)
+        , dataBuffer(0)
+        , minimumsBuffer(0)
+        , maximumsBuffer(0)
+        , axisIndirectionBuffer(0)
+        , filtersBuffer(0)
+        , minmaxBuffer(0)
+        , interactionState(InteractionState::NONE)
+        , pickedAxis(-1)
+        , pickedIndicatorAxis(-1)
+        , pickedIndicatorIndex(-1)
+        , strokeStartX(0)
+        , strokeStartY(0)
+        , strokeEndX(0)
+        , strokeEndY(0)
+        , needSelectionUpdate(false)
+        , needFlagsUpdate(false)
+        , lastTimeStep(0)
+        , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
 
     this->getDataSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -194,7 +194,9 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     fragmentMinMax.resize(2);
 }
 
-ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D(void) { this->Release(); }
+ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D(void) {
+    this->Release();
+}
 
 bool ParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::GLSLShader& program) {
     program.Enable();
@@ -262,29 +264,29 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGenRenderbuffers(1, &nuSRB);
 
     glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
-    //glBindTexture(GL_TEXTURE_2D, imStoreI);
+    // glBindTexture(GL_TEXTURE_2D, imStoreI);
     glEnable(GL_MULTISAMPLE);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msImageStorageA);
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 1, GL_RGB, 1, 1, GL_TRUE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-    //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
+    // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msImageStorageA, 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msImageStorageB);
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 1, GL_RGB, 1, 1, GL_TRUE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-    //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
+    // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
@@ -348,7 +350,7 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     pc_reconstruction3_shdr->Compile(
         vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
     pc_reconstruction3_shdr->Link();
-    
+
     instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert3", vertex_shader_src);
     instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag3h", fragment_shader_src);
     pc_reconstruction3h_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
@@ -358,33 +360,49 @@ bool ParallelCoordinatesRenderer2D::create(void) {
 
 
 #ifndef REMOVE_TEXT
-    if (!font.Initialise(this->GetCoreInstance())) return false;
+    if (!font.Initialise(this->GetCoreInstance()))
+        return false;
     font.SetBatchDrawMode(true);
 #endif
 
-    if (!makeProgram("::pc_axes_draw::axes", this->drawAxesProgram)) return false;
-    if (!makeProgram("::pc_axes_draw::scales", this->drawScalesProgram)) return false;
-    if (!makeProgram("::pc_axes_draw::filterindicators", this->drawFilterIndicatorsProgram)) return false;
+    if (!makeProgram("::pc_axes_draw::axes", this->drawAxesProgram))
+        return false;
+    if (!makeProgram("::pc_axes_draw::scales", this->drawScalesProgram))
+        return false;
+    if (!makeProgram("::pc_axes_draw::filterindicators", this->drawFilterIndicatorsProgram))
+        return false;
 
-    if (!makeProgram("::pc_item_stroke::indicator", this->drawStrokeIndicatorProgram)) return false;
-    if (!makeProgram("::pc_item_pick::indicator", this->drawPickIndicatorProgram)) return false;
+    if (!makeProgram("::pc_item_stroke::indicator", this->drawStrokeIndicatorProgram))
+        return false;
+    if (!makeProgram("::pc_item_pick::indicator", this->drawPickIndicatorProgram))
+        return false;
 
-    if (!makeProgram("::pc_item_draw::discrete", this->drawItemsDiscreteProgram)) return false;
-    if (!makeProgram("::pc_item_draw::discreteT", this->drawItemsTriangleProgram)) return false;
-    if (!makeProgram("::pc_item_draw::muhaha", this->traceItemsDiscreteProgram)) return false;
+    if (!makeProgram("::pc_item_draw::discrete", this->drawItemsDiscreteProgram))
+        return false;
+    if (!makeProgram("::pc_item_draw::discreteT", this->drawItemsTriangleProgram))
+        return false;
+    if (!makeProgram("::pc_item_draw::muhaha", this->traceItemsDiscreteProgram))
+        return false;
 
-    if (!makeProgram("::pc_item_draw::discTess", drawItemsDiscreteTessProgram)) return false;
+    if (!makeProgram("::pc_item_draw::discTess", drawItemsDiscreteTessProgram))
+        return false;
     glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &this->maxAxes); // TODO we should reject data with more axes!
     this->isoLinesPerInvocation = maxAxes; // warning: for tesslevel n there are JUST n lines!!! not n+1 !!
 
-    if (!makeProgram("::fragment_count", this->drawItemContinuousProgram)) return false;
-    if (!makeProgram("::fragment_count", this->minMaxProgram)) return false;
+    if (!makeProgram("::fragment_count", this->drawItemContinuousProgram))
+        return false;
+    if (!makeProgram("::fragment_count", this->minMaxProgram))
+        return false;
 
-    if (!makeProgram("::pc_item_draw::histogram", this->drawItemsHistogramProgram)) return false;
+    if (!makeProgram("::pc_item_draw::histogram", this->drawItemsHistogramProgram))
+        return false;
 
-    if (!makeProgram("::pc_item_filter", this->filterProgram)) return false;
-    if (!makeProgram("::pc_item_pick", this->pickProgram)) return false;
-    if (!makeProgram("::pc_item_stroke", this->strokeProgram)) return false;
+    if (!makeProgram("::pc_item_filter", this->filterProgram))
+        return false;
+    if (!makeProgram("::pc_item_pick", this->pickProgram))
+        return false;
+    if (!makeProgram("::pc_item_stroke", this->strokeProgram))
+        return false;
 
     glGetProgramiv(this->filterProgram, GL_COMPUTE_WORK_GROUP_SIZE, filterWorkgroupSize);
     glGetProgramiv(this->minMaxProgram, GL_COMPUTE_WORK_GROUP_SIZE, counterWorkgroupSize);
@@ -417,7 +435,8 @@ int ParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
     float f = (x - this->marginX) / this->axisDistance;
     float frac = f - static_cast<long>(f);
     int integral = static_cast<int>(std::round(f));
-    if (integral >= static_cast<int>(this->columnCount) || integral < 0) return -1;
+    if (integral >= static_cast<int>(this->columnCount) || integral < 0)
+        return -1;
     if (frac > 0.7 || frac < 0.3) {
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i",
         // axisIndirection[integral], integral);
@@ -474,7 +493,8 @@ bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamS
 
 void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
     auto floats = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-    if (floats == nullptr) return;
+    if (floats == nullptr)
+        return;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tc == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
@@ -575,7 +595,8 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
 
 void ParallelCoordinatesRenderer2D::computeScaling(void) {
     auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-    if (fc == nullptr) return;
+    if (fc == nullptr)
+        return;
 
     this->marginX = 20.f;
     this->marginY = 20.f;
@@ -776,10 +797,10 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
                 color = this->axesColorSlot.Param<core::param::ColorParam>()->Value().data();
             }
             float x = this->marginX + this->axisDistance * c;
-#    if 0
+#if 0
             this->font.DrawString(color, x, this->marginY * 0.5f                   , fontSize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
             this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-#    else
+#else
             float bottom = filters[realCol].lower;
             // bottom *= (maximums[realCol] - minimums[realCol]);
             // bottom += minimums[realCol];
@@ -790,7 +811,7 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
                 core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
             this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false,
                 std::to_string(top).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
-#    endif
+#endif
             this->font.DrawString(color, x,
                 this->marginY * (2.0f + static_cast<float>(c % 2) * 0.5f) + this->axisHeight, fontSize * 2.0f, false,
                 names[realCol].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
@@ -816,20 +837,22 @@ void ParallelCoordinatesRenderer2D::drawDiscrete(
 void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor) {
     auto tf = this->getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
-    if (tf == nullptr) return;
+    if (tf == nullptr)
+        return;
 
     debugPush(2, "drawItemsDiscrete");
 
 #ifdef FUCK_THE_PIPELINE
     vislib::graphics::gl::GLSLShader& prog = this->traceItemsDiscreteProgram;
 #else
-#    ifdef USE_TESSELLATION
+#ifdef USE_TESSELLATION
     vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteTessProgram;
-#    else
-    //vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
-    vislib::graphics::gl::GLSLShader& prog = this->legacyMode.Param<core::param::BoolParam>()->Value() ? this->drawItemsDiscreteProgram
-        : this->drawItemsTriangleProgram;
-#    endif
+#else
+    // vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
+    vislib::graphics::gl::GLSLShader& prog = this->legacyMode.Param<core::param::BoolParam>()->Value()
+                                                 ? this->drawItemsDiscreteProgram
+                                                 : this->drawItemsTriangleProgram;
+#endif
 #endif
 
     this->enableProgramAndBind(prog);
@@ -838,8 +861,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     tf->BindConvenience(prog, GL_TEXTURE5, 5);
     glUniform4fv(prog.ParameterLocation("color"), 1, color);
     glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);
-    glUniform1f(prog.ParameterLocation("widthR"),  res[0]);
-    glUniform1f(prog.ParameterLocation("heightR"),  res[1]);
+    glUniform1f(prog.ParameterLocation("widthR"), res[0]);
+    glUniform1f(prog.ParameterLocation("heightR"), res[1]);
     try {
         auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
         glUniform1i(prog.ParameterLocation("colorColumn"), colcol);
@@ -851,28 +874,28 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     }
     glUniform1ui(prog.ParameterLocation("fragmentTestMask"), testMask);
     glUniform1ui(prog.ParameterLocation("fragmentPassMask"), passMask);
-    
+
     glUniform1f(prog.ParameterLocation("thicknessP"), thicknessFloatP.Param<core::param::FloatParam>()->Value());
 
     glEnable(GL_CLIP_DISTANCE0);
 #ifdef FUCK_THE_PIPELINE
     glDrawArrays(GL_TRIANGLES, 0, 6 * ((this->itemCount / 128) + 1));
 #else
-#    ifdef USE_TESSELLATION
+#ifdef USE_TESSELLATION
     glUniform1i(prog.ParameterLocation("isoLinesPerInvocation"), isoLinesPerInvocation);
     glPatchParameteri(GL_PATCH_VERTICES, 1);
     glDrawArrays(GL_PATCHES, 0, (this->itemCount / isoLinesPerInvocation) + 1);
-#    else
+#else
     // glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
     // glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, this->columnCount * 2, this->itemCount);
-    //glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
+    // glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
     if (this->legacyMode.Param<core::param::BoolParam>()->Value()) {
         glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
     } else {
         glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
     }
 
-#    endif
+#endif
 #endif
     prog.Disable();
     glDisable(GL_CLIP_DISTANCE0);
@@ -904,8 +927,8 @@ void ParallelCoordinatesRenderer2D::drawStrokeIndicator(float x0, float y0, floa
 
     glUniform4fv(prog.ParameterLocation("indicatorColor"), 1, color);
     // glDisable(GL_DEPTH_TEST);
-    //glDrawArrays(GL_LINES, 0, 2);
-     glEnable(GL_DEPTH_TEST);
+    // glDrawArrays(GL_LINES, 0, 2);
+    glEnable(GL_DEPTH_TEST);
     prog.Disable();
 }
 
@@ -983,7 +1006,8 @@ void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
 
 void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     auto tf = this->getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
-    if (tf == nullptr) return;
+    if (tf == nullptr)
+        return;
     debugPush(6, "drawItemsContinuous");
     doFragmentCount();
     this->enableProgramAndBind(drawItemContinuousProgram);
@@ -1103,10 +1127,10 @@ void ParallelCoordinatesRenderer2D::load_filters() {
 
 
 bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
-    int w = call.GetViewport().Width() ;
+    int w = call.GetViewport().Width();
     int h = call.GetViewport().Height();
-    res[0] = 1.0*w;
-    res[1] = 1.0*h;
+    res[0] = 1.0 * w;
+    res[1] = 1.0 * h;
 
     windowWidth = call.GetViewport().Width();
     windowHeight = call.GetViewport().Height();
@@ -1156,14 +1180,16 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         }
         invMatrices[frametype] = pmvm;
 
-        //moveMatrixA = invTexA * glm::inverse(pmvm);
-        //moveMatrixB = invTexB * glm::inverse(pmvm);
+        // moveMatrixA = invTexA * glm::inverse(pmvm);
+        // moveMatrixB = invTexB * glm::inverse(pmvm);
         glm::mat4 inversePMVM = glm::inverse(pmvm);
-        for (int i = 0; i < framesNeeded; i++) moveMatrices[i] = invMatrices[i] * inversePMVM;
+        for (int i = 0; i < framesNeeded; i++)
+            moveMatrices[i] = invMatrices[i] * inversePMVM;
 
         pm = jit * pm;
 
-        for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
+        for (int i = 0; i < 16; i++)
+            projMatrix_column[i] = glm::value_ptr(pm)[i];
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
         glActiveTexture(GL_TEXTURE11);
         glEnable(GL_MULTISAMPLE);
@@ -1174,7 +1200,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 2, GL_RGBA8, w, h, 2, GL_TRUE);
             glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, msImageArray, 0, 0);
 
-            //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
+            // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
             glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
         }
         if (frametype == 1) {
@@ -1233,11 +1259,13 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             invMatrices[frametype] = jit * pmvm;
         }
 
-        for (int i = 0; i< framesNeeded; i++) moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
+        for (int i = 0; i < framesNeeded; i++)
+            moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
 
 
         pm = jit * pm;
-        for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
+        for (int i = 0; i < 16; i++)
+            projMatrix_column[i] = glm::value_ptr(pm)[i];
 
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
         glActiveTexture(GL_TEXTURE10);
@@ -1304,16 +1332,18 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                 glm::mat4(1.0f), glm::vec3(0.0 / call.GetViewport().Width(), 0 / call.GetViewport().Height(), 0));
         }
         invMatrices[frametype] = jit * pmvm;
-        for (int i = 0; i < framesNeeded; i++) moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
+        for (int i = 0; i < framesNeeded; i++)
+            moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
 
 
         pm = jit * pm;
-        for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
+        for (int i = 0; i < 16; i++)
+            projMatrix_column[i] = glm::value_ptr(pm)[i];
 
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboB);
         glActiveTexture(GL_TEXTURE11);
         glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayB);
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4, 0, GL_RGB, GL_FLOAT, 0);     
+        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4, 0, GL_RGB, GL_FLOAT, 0);
 
         if (frametype == 0) {
             glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayB, 0, 0);
@@ -1362,34 +1392,40 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glm::mat4 pmvm = pm * mvm;
         int f = floor(frametype / 4);
         if (frametype % 4 == 0) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2)/5 - 1.0) / call.GetViewport().Width(), 
-                                                     ((floor(f / 5) - 2)/5 + 1.0) / call.GetViewport().Height(), 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(- 1.0 / call.GetViewport().Width(),
-                                                          1.0 / call.GetViewport().Height(), 0)) * pmvm;
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2) / 5 - 1.0) / call.GetViewport().Width(),
+                                                      ((floor(f / 5) - 2) / 5 + 1.0) / call.GetViewport().Height(), 0));
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(),
+                                                                         1.0 / call.GetViewport().Height(), 0)) *
+                                     pmvm;
         }
         if (frametype % 4 == 1) {
             jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2) / 5 + 1.0) / call.GetViewport().Width(),
                                                       ((floor(f / 5) - 2) / 5 + 1.0) / call.GetViewport().Height(), 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f),
-                          glm::vec3(1.0 / call.GetViewport().Width(), 1.0 / call.GetViewport().Height(), 0)) * pmvm;
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(),
+                                                                         1.0 / call.GetViewport().Height(), 0)) *
+                                     pmvm;
         }
         if (frametype % 4 == 2) {
             jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2) / 5 - 1.0) / call.GetViewport().Width(),
                                                       ((floor(f / 5) - 2) / 5 - 1.0) / call.GetViewport().Height(), 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f),
-                          glm::vec3(-1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0)) * pmvm;
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(),
+                                                                         -1.0 / call.GetViewport().Height(), 0)) *
+                                     pmvm;
         }
         if (frametype % 4 == 3) {
             jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2) / 5 + 1.0) / call.GetViewport().Width(),
                                                       ((floor(f / 5) - 2) / 5 - 1.0) / call.GetViewport().Height(), 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f),
-                          glm::vec3(1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0)) * pmvm;
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(),
+                                                                         -1.0 / call.GetViewport().Height(), 0)) *
+                                     pmvm;
         }
         glm::mat4 invM = glm::inverse(pmvm);
-        for (int i = 0; i < framesNeeded; i++) moveMatrices[i] = invMatrices[i] * invM;
+        for (int i = 0; i < framesNeeded; i++)
+            moveMatrices[i] = invMatrices[i] * invM;
 
         pm = jit * pm;
-        for (int i = 0; i < 16; i++) projMatrix_column[i] = glm::value_ptr(pm)[i];
+        for (int i = 0; i < 16; i++)
+            projMatrix_column[i] = glm::value_ptr(pm)[i];
 
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, frametype);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -1401,7 +1437,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         if (tex.size() != w * h) {
-            //glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
+            // glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
 
             tex.clear();
             tex.resize(w * h);
@@ -1424,27 +1460,33 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                 }
             }
             glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
-            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() == GL_INVALID_OPERATION)
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
 
             glActiveTexture(GL_TEXTURE10);
-            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() == GL_INVALID_OPERATION)
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
 
             glBindTexture(GL_TEXTURE_2D, imageStorageA);
-            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
-            
+            if (glGetError() == GL_INVALID_OPERATION)
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() == GL_INVALID_OPERATION)
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
-            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
-            
+            if (glGetError() == GL_INVALID_OPERATION)
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+
             glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageA, 0);
-            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
-            
+            if (glGetError() == GL_INVALID_OPERATION)
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1454,28 +1496,33 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glClear(GL_COLOR_BUFFER_BIT);
 
             glBindTexture(GL_TEXTURE_2D, depthStore);
-            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() == GL_INVALID_OPERATION)
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() == GL_INVALID_OPERATION)
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
-            if (glGetError() != GL_NO_ERROR) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+            if (glGetError() != GL_NO_ERROR)
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
 
-            //glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
-            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR2");
+            // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE,
+            // &tex2[0]);
+            if (glGetError() == GL_INVALID_OPERATION)
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR2");
 
             glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX);
-            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR3");
-            
-            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
-            if (glGetError() == GL_INVALID_OPERATION) megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR6");            
-            
+            if (glGetError() == GL_INVALID_OPERATION)
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR3");
 
+            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
+            if (glGetError() == GL_INVALID_OPERATION)
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR6");
 
 
             glDrawPixels(w, h, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
@@ -1489,14 +1536,14 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("tex2.0: %i", tex2[0]);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("tex2.1; %i", tex2[1]);
         }
-        //glDisable(GL_STENCIL_TEST);
+        // glDisable(GL_STENCIL_TEST);
 
         if (call.frametype == 1 || call.frametype == 0) {
             glDepthMask(GL_FALSE);
-            //glClear(GL_STENCIL_BUFFER_BIT);
-            
+            // glClear(GL_STENCIL_BUFFER_BIT);
+
             glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
-            
+
             glActiveTexture(GL_TEXTURE10);
             glBindTexture(GL_TEXTURE_2D, imageStorageA);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
@@ -1515,10 +1562,9 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-            //glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
+            // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE,
+            // &tex2[0]);
             glBindTexture(GL_TEXTURE_2D, imageStorageA);
-
-
         }
         if (call.frametype == 2) {
             glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboB);
@@ -1528,12 +1574,12 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glClearColor(0.2, 0, 0, 1);
             glClear(GL_COLOR_BUFFER_BIT);
         }
-        
+
         //^^COLOR ATTACHMENT
-        
+
         glDisable(GL_DEPTH_TEST);
 
-        //glViewport(0, 0, w, h);
+        // glViewport(0, 0, w, h);
     }
     windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
 
@@ -1541,7 +1587,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     this->assertData(call);
 
     auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-    if (fc == nullptr) return false;
+    if (fc == nullptr)
+        return false;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tc == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -1656,8 +1703,9 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("frametype"), frametype);
 
-        glUniformMatrix4fv(pc_reconstruction0_shdr->ParameterLocation("moveMatrices"), 2, GL_FALSE, &moveMatrices[0][0][0]);
-        
+        glUniformMatrix4fv(
+            pc_reconstruction0_shdr->ParameterLocation("moveMatrices"), 2, GL_FALSE, &moveMatrices[0][0][0]);
+
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction0_shdr->Disable();
         frametype = (frametype + 1) % framesNeeded;
@@ -1678,7 +1726,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(pc_reconstruction1_shdr->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction1_shdr->ParameterLocation("frametype"), frametype);
 
-        glUniformMatrix4fv(pc_reconstruction1_shdr->ParameterLocation("mMatrices"), 4, GL_FALSE, &moveMatrices[0][0][0]);
+        glUniformMatrix4fv(
+            pc_reconstruction1_shdr->ParameterLocation("mMatrices"), 4, GL_FALSE, &moveMatrices[0][0][0]);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction1_shdr->Disable();
@@ -1700,7 +1749,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(pc_reconstruction2_shdr->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction2_shdr->ParameterLocation("frametype"), frametype);
 
-        glUniformMatrix4fv(pc_reconstruction2_shdr->ParameterLocation("mMatrices"), framesNeeded, GL_FALSE, &moveMatrices[0][0][0]);
+        glUniformMatrix4fv(
+            pc_reconstruction2_shdr->ParameterLocation("mMatrices"), framesNeeded, GL_FALSE, &moveMatrices[0][0][0]);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction2_shdr->Disable();
@@ -1723,7 +1773,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(pc_reconstruction3_shdr->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction3_shdr->ParameterLocation("frametype"), frametype);
 
-        glUniformMatrix4fv(pc_reconstruction3_shdr->ParameterLocation("mMatrices"), 100, GL_FALSE, &moveMatrices[0][0][0]);
+        glUniformMatrix4fv(
+            pc_reconstruction3_shdr->ParameterLocation("mMatrices"), 100, GL_FALSE, &moveMatrices[0][0][0]);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction3_shdr->Disable();
@@ -1742,7 +1793,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glBindTexture(GL_TEXTURE_2D, imageStorageA);
             // glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w,h,0, GL_RGB, GL_FLOAT, 0);
-            //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_GREEN, GL_UNSIGNED_BYTE, &tex2[0]);
+            // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_GREEN, GL_UNSIGNED_BYTE, &tex2[0]);
             glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tx2D"), 10);
         }
         if (call.frametype == 2) {
@@ -1758,8 +1809,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("frametype"), call.frametype);
 
-      
-        //glStencilMask(0x00);
+
+        // glStencilMask(0x00);
         glBindTexture(GL_TEXTURE_2D, imageStorageA);
         glDepthFunc(GL_ALWAYS);
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -1771,7 +1822,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         // glDeleteTextures(1, &imStoreI2);
         // glDeleteFramebuffers(1, &nuFB);
         // glDeleteFramebuffers(1, &nuDRB);
-        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("x: %d , y: %d , xM: %d , yM: %d ", call.GetBoundingBox().GetLeft(),
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("x: %d , y: %d , xM: %d , yM: %d ",
+        // call.GetBoundingBox().GetLeft(),
         //    call.GetBoundingBox().GetTop(), call.GetBoundingBox().GetRight(), call.GetBoundingBox().GetBottom());
     }
 
