@@ -15,42 +15,43 @@ using namespace megamol::gui;
 
 
 OverlayRenderer::OverlayRenderer(void)
-    : view::RendererModule<view::CallRender3D_2>()
-    , paramMode("mode", "Overlay mode.")
-    , paramAnchor("anchor", "Anchor of overlay.")
-    , paramCustomPosition("position_offset", "Custom relative position offset in respect to selected anchor.")
-    , paramFileName("texture::file_name", "The file name of the texture.")
-    , paramRelativeWidth("texture::relative_width", "Relative screen space width of texture.")
-    , paramIconColor("transport_ctrl::color", "Color of transpctrl icons.")
-    , paramDuration("transport_ctrl::duration",
-          "Duration transport ctrl icons are shown after value changes. Value of zero "
-          "means showing transport ctrl icons permanently.")
-    , paramFastSpeed(
-          "transport_ctrl::fast_speed", "Define factor of default speed for fast transport ctrl icon threshold.")
-    , paramUltraFastSpeed("transport_ctrl::value_scaling",
-          "Define factor of default speed for ultra fast transport ctrl icon threshold.")
-    , paramSpeedParameter("transport_ctrl::speed_parameter_name",
-          "The full parameter name for the animation speed, e.g. '::Project_1::View3D_21::anim::speed'.")
-    , paramTimeParameter("transport_ctrl::time_parameter_name",
-          "The full parameter name for the animation time, e.g. '::Project_1::View3D_21::anim::time'.")
-    , paramPrefix("parameter::prefix", "The parameter value prefix.")
-    , paramSufix("parameter::sufix", "The parameter value sufix.")
-    , paramParameterName("parameter::name", "The full parameter name, e.g. '::Project_1::View3D_21::cam::position'. "
-                                            "Supprted parameter types: float, int, Vector2f/3f/4f")
-    , paramText("label::text", "The displayed text.")
-    , paramFontName("font::name", "The font name.")
-    , paramFontSize("font::size", "The font size.")
-    , paramFontColor("font::color", "The font color.")
-    , m_texture()
-    , m_shader()
-    , m_font(nullptr)
-    , m_viewport()
-    , m_current_rectangle({0.0f, 0.0f, 0.0f, 0.0f})
-    , m_parameter_ptr(nullptr)
-    , m_transpctrl_icons()
-    , m_state()
-    , m_speed_parameter_ptr(nullptr)
-    , m_time_parameter_ptr(nullptr) {
+        : view::RendererModule<view::CallRender3D_2>()
+        , paramMode("mode", "Overlay mode.")
+        , paramAnchor("anchor", "Anchor of overlay.")
+        , paramCustomPosition("position_offset", "Custom relative position offset in respect to selected anchor.")
+        , paramFileName("texture::file_name", "The file name of the texture.")
+        , paramRelativeWidth("texture::relative_width", "Relative screen space width of texture.")
+        , paramIconColor("transport_ctrl::color", "Color of transpctrl icons.")
+        , paramDuration("transport_ctrl::duration",
+              "Duration transport ctrl icons are shown after value changes. Value of zero "
+              "means showing transport ctrl icons permanently.")
+        , paramFastSpeed(
+              "transport_ctrl::fast_speed", "Define factor of default speed for fast transport ctrl icon threshold.")
+        , paramUltraFastSpeed("transport_ctrl::value_scaling",
+              "Define factor of default speed for ultra fast transport ctrl icon threshold.")
+        , paramSpeedParameter("transport_ctrl::speed_parameter_name",
+              "The full parameter name for the animation speed, e.g. '::Project_1::View3D_21::anim::speed'.")
+        , paramTimeParameter("transport_ctrl::time_parameter_name",
+              "The full parameter name for the animation time, e.g. '::Project_1::View3D_21::anim::time'.")
+        , paramPrefix("parameter::prefix", "The parameter value prefix.")
+        , paramSufix("parameter::sufix", "The parameter value sufix.")
+        , paramParameterName("parameter::name",
+              "The full parameter name, e.g. '::Project_1::View3D_21::cam::position'. "
+              "Supprted parameter types: float, int, Vector2f/3f/4f")
+        , paramText("label::text", "The displayed text.")
+        , paramFontName("font::name", "The font name.")
+        , paramFontSize("font::size", "The font size.")
+        , paramFontColor("font::color", "The font color.")
+        , m_texture()
+        , m_shader()
+        , m_font(nullptr)
+        , m_viewport()
+        , m_current_rectangle({0.0f, 0.0f, 0.0f, 0.0f})
+        , m_parameter_ptr(nullptr)
+        , m_transpctrl_icons()
+        , m_state()
+        , m_speed_parameter_ptr(nullptr)
+        , m_time_parameter_ptr(nullptr) {
 
     this->MakeSlotAvailable(&this->chainRenderSlot);
     this->MakeSlotAvailable(&this->renderSlot);
@@ -149,7 +150,9 @@ OverlayRenderer::OverlayRenderer(void)
 }
 
 
-OverlayRenderer::~OverlayRenderer(void) { this->Release(); }
+OverlayRenderer::~OverlayRenderer(void) {
+    this->Release();
+}
 
 
 void OverlayRenderer::release(void) {
@@ -187,11 +190,13 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
     auto mode = static_cast<Mode>(this->paramMode.Param<param::EnumParam>()->Value());
     switch (mode) {
     case (Mode::TEXTURE): {
-        if (!this->loadShader(this->m_shader, "overlay::vertex", "overlay::fragment")) return false;
+        if (!this->loadShader(this->m_shader, "overlay::vertex", "overlay::fragment"))
+            return false;
         this->onTextureFileName(this->paramFileName);
     } break;
     case (Mode::TRANSPORT_CTRL): {
-        if (!this->loadShader(this->m_shader, "overlay::vertex", "overlay::fragment")) return false;
+        if (!this->loadShader(this->m_shader, "overlay::vertex", "overlay::fragment"))
+            return false;
         this->onParameterName(this->paramTimeParameter);
         this->onParameterName(this->paramSpeedParameter);
         std::string filename;
@@ -221,7 +226,8 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
             default:
                 break;
             }
-            if (!this->loadTexture(filename, this->m_transpctrl_icons[i])) return false;
+            if (!this->loadTexture(filename, this->m_transpctrl_icons[i]))
+                return false;
         }
     } break;
     case (Mode::PARAMETER): {
@@ -242,7 +248,8 @@ bool OverlayRenderer::onTextureFileName(param::ParamSlot& slot) {
     slot.ResetDirty();
     this->m_texture.tex.Release();
     std::string filename = std::string(this->paramFileName.Param<param::FilePathParam>()->Value().PeekBuffer());
-    if (!this->loadTexture(filename, this->m_texture)) return false;
+    if (!this->loadTexture(filename, this->m_texture))
+        return false;
     this->onTriggerRecalcRectangle(slot);
     return true;
 }
@@ -254,7 +261,8 @@ bool OverlayRenderer::onFontName(param::ParamSlot& slot) {
     this->m_font.reset();
     auto font_name = static_cast<utility::SDFFont::FontName>(this->paramFontName.Param<param::EnumParam>()->Value());
     this->m_font = std::make_unique<utility::SDFFont>(font_name);
-    if (!this->m_font->Initialise(this->GetCoreInstance())) return false;
+    if (!this->m_font->Initialise(this->GetCoreInstance()))
+        return false;
     return true;
 }
 
@@ -400,7 +408,7 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
     std::shared_ptr<const view::AbstractView> viewptr =
         std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
-    if (viewptr != nullptr) { // XXX move this behind the fbo magic?
+    if (viewptr != nullptr) { // XXX Move this behind the fbo magic?
         auto vp = call.GetViewport();
         glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
         auto backCol = call.BackgroundColor();
@@ -725,8 +733,10 @@ OverlayRenderer::Rectangle OverlayRenderer::getScreenSpaceRect(
 
 bool OverlayRenderer::loadTexture(const std::string& filename, TextureData& texture) const {
 
-    if (filename.empty()) return false;
-    if (texture.tex.IsValid()) texture.tex.Release();
+    if (filename.empty())
+        return false;
+    if (texture.tex.IsValid())
+        texture.tex.Release();
 
     static vislib::graphics::BitmapImage img;
     static sg::graphics::PngBitmapCodec pbc;
@@ -736,7 +746,7 @@ bool OverlayRenderer::loadTexture(const std::string& filename, TextureData& text
     size_t size = 0;
 
     size = utility::ResourceWrapper::LoadResource(
-        this->GetCoreInstance()->Configuration(), vislib::StringA(filename.c_str()), (void**)(&buf));
+        this->GetCoreInstance()->Configuration(), vislib::StringA(filename.c_str()), (void**) (&buf));
     if (size == 0) {
         size = this->loadRawFile(filename, &buf);
     }

@@ -63,7 +63,6 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
         //, resetFlagsSlot("resetFlags", "Reset item flags to initial state")
         , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
         , filterStateSlot("filterState", "stores filter state for serialization")
-
         , halveRes("halve Resolution", "halve Resolution for FPS test")
         , approachSlot("Approach", "Numerical Value assigned to each temporal reconstruction approach")
         , testingFloat("testingFloat", "Float for passing Test Values")

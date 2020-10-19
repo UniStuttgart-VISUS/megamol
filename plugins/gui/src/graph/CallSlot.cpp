@@ -18,7 +18,14 @@ using namespace megamol::gui;
 
 
 megamol::gui::CallSlot::CallSlot(ImGuiID uid)
-    : uid(uid), present(), name(), description(), compatible_call_idxs(), type(), parent_module(), connected_calls() {}
+        : uid(uid)
+        , present()
+        , name()
+        , description()
+        , compatible_call_idxs()
+        , type()
+        , parent_module()
+        , connected_calls() {}
 
 
 megamol::gui::CallSlot::~CallSlot() {
@@ -128,7 +135,9 @@ const std::vector<megamol::gui::CallPtr_t>& megamol::gui::CallSlot::GetConnected
 }
 
 
-bool megamol::gui::CallSlot::IsParentModuleConnected(void) const { return (this->parent_module != nullptr); }
+bool megamol::gui::CallSlot::IsParentModuleConnected(void) const {
+    return (this->parent_module != nullptr);
+}
 
 
 bool megamol::gui::CallSlot::ConnectParentModule(megamol::gui::ModulePtr_t parent_module) {

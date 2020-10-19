@@ -671,7 +671,7 @@ bool CinematicView::render_to_file_write() {
         }
         png_set_write_fn(this->png_data.structptr, static_cast<void*>(&this->png_data.file), &this->pngWrite, &this->pngFlush);
 
-        megamol::core::utility::graphics::ScreenShotComments ssc(this->GetCoreInstance());
+        megamol::core::utility::graphics::ScreenShotComments ssc(this->GetCoreInstance()->SerializeGraph());
         png_set_text(this->png_data.structptr, this->png_data.infoptr, ssc.GetComments().data(), ssc.GetComments().size());
         png_set_IHDR(this->png_data.structptr, this->png_data.infoptr, this->png_data.width, this->png_data.height, 8,
             PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
@@ -739,8 +739,7 @@ bool CinematicView::render_to_file_write() {
 
         // Check condition for finishing rendering
         auto lastFrame = static_cast<unsigned int>(this->lastRenderFrameParam.Param<param::IntParam>()->Value());
-        if ((this->png_data.animTime >= ccc->GetTotalAnimTime()) ||
-            (this->png_data.cnt > lastFrame)) {
+        if ((this->png_data.animTime > ccc->GetTotalAnimTime()) || (this->png_data.cnt > lastFrame)) {
             this->render_to_file_cleanup();
             return false;
         }

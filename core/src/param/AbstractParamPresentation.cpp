@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/param/AbstractParamPresentation.h"
 
+
 using namespace megamol::core::param;
 
 
@@ -146,165 +147,71 @@ void AbstractParamPresentation::SetGUIPresentation(AbstractParamPresentation::Pr
 }
 
 
-bool AbstractParamPresentation::ParameterGUIStateFromJSONString(const std::string& in_json_string, const std::string& param_fullname) {
-
-    bool retval = false;
+bool AbstractParamPresentation::StateFromJSON(const nlohmann::json& in_json, const std::string& param_fullname) {
 
     try {
-        if (in_json_string.empty()) {
+        if (!in_json.is_object()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
         bool found_parameters = false;
         bool valid = true;
-        nlohmann::json json;
-        json = nlohmann::json::parse(in_json_string);
-        if (!json.is_object()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-
-        for (auto& header_item : json.items()) {
+        for (auto& header_item : in_json.items()) {
             if (header_item.key() == GUI_JSON_TAG_GUISTATE_PARAMETERS) {
-
                 found_parameters = true;
                 for (auto& config_item : header_item.value().items()) {
                     std::string json_param_name = config_item.key();
                     if (json_param_name == param_fullname) {
-
                         auto gui_state = config_item.value();
+
                         valid = true;
+                        bool gui_visibility = true;
+                        valid &= megamol::core::utility::get_json_value<bool>(gui_state, { "gui_visibility" }, &gui_visibility);
 
-                        // gui_visibility
-                        bool gui_visibility;
-                        if (gui_state.at("gui_visibility").is_boolean()) {
-                            gui_state.at("gui_visibility").get_to(gui_visibility);
-                        }
-                        else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'gui_visibility' as boolean. [%s, %s, line %d]\n", __FILE__,
-                                __FUNCTION__, __LINE__);
-                            valid = false;
-                        }
+                        bool gui_read_only = false;
+                        valid &= megamol::core::utility::get_json_value<bool>(gui_state, { "gui_read-only" }, &gui_read_only);
 
-                        // gui_read-only
-                        bool gui_read_only;
-                        if (gui_state.at("gui_read-only").is_boolean()) {
-                            gui_state.at("gui_read-only").get_to(gui_read_only);
-                        }
-                        else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'gui_read-only' as boolean. [%s, %s, line %d]\n", __FILE__,
-                                __FUNCTION__, __LINE__);
-                            valid = false;
-                        }
-
-                        // gui_presentation_mode
-                        Presentation gui_presentation_mode;
-                        if (gui_state.at("gui_presentation_mode").is_number_integer()) {
-                            gui_presentation_mode =
-                                static_cast<Presentation>(gui_state.at("gui_presentation_mode").get<int>());
-                        }
-                        else {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "JSON state: Failed to read 'gui_presentation_mode' as integer. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                            valid = false;
-                        }
+                        int presentation_mode = 0;
+                        valid &= megamol::core::utility::get_json_value<int>(gui_state, { "gui_presentation_mode" }, &presentation_mode);
+                        auto gui_presentation_mode = static_cast<Presentation>(presentation_mode);
 
                         if (valid) {
                             this->SetGUIVisible(gui_visibility);
                             this->SetGUIReadOnly(gui_read_only);
                             this->SetGUIPresentation(gui_presentation_mode);
-                            retval = true;
+                            return true;
                         }
                     }
                 }
             }
         }
-
-        if (retval) {
-#ifdef GUI_VERBOSE
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Read parameter state from JSON string.");
-#endif // GUI_VERBOSE
-        }
-        else {
-            /// megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not find parameter gui state in JSON for '%s' [%s, %s, line
-            /// %d]\n", param_fullname.c_str(), __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-    }
-    catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
     }
     catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "JSON Error - Unable to read state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
-    return retval;
+    return false;
 }
 
 
-bool AbstractParamPresentation::ParameterGUIStateToJSON(nlohmann::json& inout_json, const std::string& param_fullname) {
+bool AbstractParamPresentation::StateToJSON(nlohmann::json& inout_json, const std::string& param_fullname) {
 
     try {
         // Append to given json
-
         inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_visibility"] =
             this->IsGUIVisible();
         inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_read-only"] =
             this->IsGUIReadOnly();
         inout_json[GUI_JSON_TAG_GUISTATE_PARAMETERS][param_fullname]["gui_presentation_mode"] =
             static_cast<int>(this->GetGUIPresentation());
-
-#ifdef GUI_VERBOSE
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[AbstractParamPresentation] Wrote parameter state to JSON.");
-#endif // GUI_VERBOSE
-
-    }
-    catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
     }
     catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unknown Error - Unable to write JSON of state. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "JSON Error - Unable to write state to JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

@@ -79,7 +79,7 @@ PresetGenerator CubeHelixAdapter(double start, double rots, double hue, double g
     };
 }
 
-template <size_t PaletteSize, bool NearestNeighbor = false>
+template<size_t PaletteSize, bool NearestNeighbor = false>
 PresetGenerator ColormapAdapter(const float palette[PaletteSize][3]) {
     const double LastIndex = static_cast<double>(PaletteSize - 1);
     return [=](auto& nodes, auto n) {
@@ -161,26 +161,26 @@ std::array<std::tuple<std::string, PresetGenerator>, 20> PRESETS = {
 
 
 TransferFunctionEditor::TransferFunctionEditor(void)
-    : connected_parameter_ptr(nullptr)
-    , connected_parameter_name()
-    , nodes()
-    , range({0.0f, 1.0f})
-    , last_range({0.0f, 1.0f})
-    , range_overwrite(false)
-    , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
-    , textureInvalid(true)
-    , textureSize(256)
-    , pendingChanges(true)
-    , activeChannels{false, false, false, false}
-    , currentNode(0)
-    , currentChannel(0)
-    , currentDragChange()
-    , immediateMode(false)
-    , showOptions(true)
-    , widget_buffer()
-    , flip_legend(false)
-    , tooltip()
-    , image_widget() {
+        : connected_parameter_ptr(nullptr)
+        , connected_parameter_name()
+        , nodes()
+        , range({0.0f, 1.0f})
+        , last_range({0.0f, 1.0f})
+        , range_overwrite(false)
+        , mode(param::TransferFunctionParam::InterpolationMode::LINEAR)
+        , textureInvalid(true)
+        , textureSize(256)
+        , pendingChanges(true)
+        , activeChannels{false, false, false, false}
+        , currentNode(0)
+        , currentChannel(0)
+        , currentDragChange()
+        , immediateMode(false)
+        , showOptions(true)
+        , widget_buffer()
+        , flip_legend(false)
+        , tooltip()
+        , image_widget() {
 
     // Init transfer function colors
     this->nodes.clear();
@@ -444,9 +444,9 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         size_t opts_cnt = opts.size();
         if (ImGui::BeginCombo("Interpolation", opts[this->mode].c_str())) {
             for (size_t i = 0; i < opts_cnt; ++i) {
-                if (ImGui::Selectable(opts[(param::TransferFunctionParam::InterpolationMode)i].c_str(),
-                        (this->mode == (param::TransferFunctionParam::InterpolationMode)i))) {
-                    this->mode = (param::TransferFunctionParam::InterpolationMode)i;
+                if (ImGui::Selectable(opts[(param::TransferFunctionParam::InterpolationMode) i].c_str(),
+                        (this->mode == (param::TransferFunctionParam::InterpolationMode) i))) {
+                    this->mode = (param::TransferFunctionParam::InterpolationMode) i;
                     this->textureInvalid = true;
                 }
             }
@@ -590,7 +590,8 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
 
     ImGuiStyle& style = ImGui::GetStyle();
     ImDrawList* drawList = ImGui::GetWindowDrawList();
-    if (drawList == nullptr) return;
+    if (drawList == nullptr)
+        return;
     ImVec2 reset_pos = ImGui::GetCursorScreenPos();
 
     const unsigned int scale_count = 3;
@@ -624,14 +625,18 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     for (unsigned int i = 0; i < scale_count; i++) {
         if (flip_legend) {
             float y = height_delta * static_cast<float>(i);
-            if (i == 0) y += (line_thickness / 2.0f);
-            if (i == (scale_count - 1)) y -= (line_thickness / 2.0f);
+            if (i == 0)
+                y += (line_thickness / 2.0f);
+            if (i == (scale_count - 1))
+                y -= (line_thickness / 2.0f);
             drawList->AddLine(
                 init_pos + ImVec2(0.0f, y), init_pos + ImVec2(line_length, y), line_color, line_thickness);
         } else {
             float x = width_delta * static_cast<float>(i);
-            if (i == 0) x += (line_thickness / 2.0f);
-            if (i == (scale_count - 1)) x -= (line_thickness / 2.0f);
+            if (i == 0)
+                x += (line_thickness / 2.0f);
+            if (i == (scale_count - 1))
+                x -= (line_thickness / 2.0f);
             drawList->AddLine(
                 init_pos + ImVec2(x, 0.0f), init_pos + ImVec2(x, line_length), line_color, line_thickness);
         }
@@ -699,8 +704,10 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
 
     ImVec2 canvas_pos = ImGui::GetCursorScreenPos(); // ImDrawList API uses screen coordinates!
     ImVec2 canvas_size = size;
-    if (canvas_size.x < 100.0f) canvas_size.x = 100.0f;
-    if (canvas_size.y < 100.0f) canvas_size.y = 100.0f;
+    if (canvas_size.x < 100.0f)
+        canvas_size.x = 100.0f;
+    if (canvas_size.y < 100.0f)
+        canvas_size.y = 100.0f;
     ImVec2 mouse_cur_pos = io.MousePos; // current mouse position
 
     ImVec4 tmp_frameBkgrd = style.Colors[ImGuiCol_FrameBg];
@@ -740,7 +747,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     glm::vec2 selected_delta = glm::vec2(0.0f, 0.0f);
     // For each enabled color channel
     for (size_t c = 0; c < channelColors.size(); ++c) {
-        if (!this->activeChannels[c]) continue;
+        if (!this->activeChannels[c])
+            continue;
 
         const float pointAndBorderRadius = point_radius + point_border_width - 2.0f;
 
@@ -759,8 +767,8 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
                 float x, g;
                 ImVec2 pos;
 
-                for (int p = 0; p < (int)canvas_size.x + step; p += step) {
-                    x = (float)(p) / canvas_size.x;
+                for (int p = 0; p < (int) canvas_size.x + step; p += step) {
+                    x = (float) (p) / canvas_size.x;
                     g = param::TransferFunctionParam::gauss(x, ga, gb, gc);
                     pos =
                         ImVec2(canvas_pos.x + (x * canvas_size.x), canvas_pos.y + canvas_size.y - (g * canvas_size.y));
