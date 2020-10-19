@@ -169,8 +169,14 @@ bool view_init_rendering_state(megamol::core::Module::ptr_type module_ptr, std::
         window_height = framebuffer_size.height;
     }
     window_events.size_events.push_back({window_width, window_height});
+    
+    auto& mouse_events = const_cast<megamol::frontend_resources::MouseEvents&>(resources[1].getResource<megamol::frontend_resources::MouseEvents>());
+    mouse_events.position_events.push_back({
+        mouse_events.previous_state.x_cursor_position,
+        mouse_events.previous_state.y_cursor_position});
 
     // resources are in order of initial requests from get_gl_view_runtime_resources_requests()
+    megamol::core::view::view_consume_mouse_events(view, resources[1]);
     megamol::core::view::view_consume_window_events(view, resources[2]);
     megamol::core::view::view_consume_framebuffer_events(view, resources[3]);
 
