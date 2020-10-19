@@ -618,7 +618,8 @@ void signalCtrlC(int) {
  * @param message The text of the log message.
  */
 void MEGAMOLCORE_CALLBACK writeLogEchoToConsole(unsigned int level, const char* message) {
-    std::cout << std::setw(4) << level << "|" << message;
+    auto closing = (message[std::strlen(message)-1] == '\n') ? "" : "\n";
+    std::cout << std::setw(4) << level << "|" << message << closing;
 }
 
 }

@@ -1225,25 +1225,18 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
         modelViewProjMatrix = projMatrix * modelViewMatrix; 
     }
 
-    // Store/Set blending
-    GLint blendSrc;
-    GLint blendDst;
-    glGetIntegerv(GL_BLEND_SRC, &blendSrc);
-    glGetIntegerv(GL_BLEND_DST, &blendDst);
-    bool blendEnabled = glIsEnabled(GL_BLEND);
-    if (!blendEnabled) {
-        glEnable(GL_BLEND);
-    }
+    // Set blending
+    glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // dFdx()/dFdx() in fragment shader:
     glHint(GL_FRAGMENT_SHADER_DERIVATIVE_HINT, GL_NICEST);
 
-    glBindVertexArray(this->vaoHandle);
-
     glEnable(GL_TEXTURE_2D);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->texture.GetId()); // instead of this->texture.Bind() => because draw() is CONST
+
+    glBindVertexArray(this->vaoHandle);
 
     glUseProgram(usedShader->ProgramHandle()); // instead of usedShader->Enable() => because draw() is CONST
 
@@ -1265,13 +1258,7 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
-    glDisable(GL_DEPTH_TEST);
-
-    // Reset blending
-    if (!blendEnabled) {
-        glDisable(GL_BLEND);
-    }
-    glBlendFunc(blendSrc, blendDst);
+    glDisable(GL_BLEND);
 }
 
 

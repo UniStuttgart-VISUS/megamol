@@ -1,3 +1,8 @@
+/*
+ * Modified by MegaMol Dev Team
+ * Based on project "ospray-module-pkd" files "ParticleModel.h" and "ParticleModel.cpp" (Apache License 2.0)
+ */
+
 #include "stdafx.h"
 #include "pkd/ParticleModel.h"
 
@@ -32,12 +37,12 @@ VISLIB_FORCEINLINE unsigned char byteColFromVoidArray(
 }
 
 
-typedef float(*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
-typedef unsigned char(*byteFromArrayFunc)(
+typedef float (*floatFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
+typedef unsigned char (*byteFromArrayFunc)(
     const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 
-typedef float(*floatColFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
-typedef unsigned char(*byteColFromArrayFunc)(
+typedef float (*floatColFromArrayFunc)(const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
+typedef unsigned char (*byteColFromArrayFunc)(
     const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 
 
@@ -50,51 +55,16 @@ inline ospcommon::vec3f makeRandomColor(const int i) {
 }
 
 
-uint32_t ospray::ParticleModel::getAtomTypeID(const std::string& name) {
-    if (atomTypeByName.find(name) == atomTypeByName.end()) {
-        if (name != "Default") std::cout << "New atom type '" + name + "'" << std::endl;
-        ParticleModel::AtomType* a = new ParticleModel::AtomType(name);
-        a->color = makeRandomColor(atomType.size());
-        atomTypeByName[name] = atomType.size();
-        atomType.push_back(a);
-    }
-    return atomTypeByName[name];
-}
-
-
-//! helper function for parser error recovery: 'clamp' all attributes to largest non-empty attribute
-void ospray::ParticleModel::cullPartialData() {
-    size_t largestCompleteSize = position.size();
-    for (std::vector<Attribute*>::const_iterator it = attribute.begin(); it != attribute.end(); it++)
-        largestCompleteSize = std::min(largestCompleteSize, (*it)->value.size());
-
-    if (position.size() > largestCompleteSize) {
-        std::cout << "#osp:uintah: atoms w missing attribute(s): discarding" << std::endl;
-        position.resize(largestCompleteSize);
-    }
-    if (type.size() > largestCompleteSize) {
-        std::cout << "#osp:uintah: atoms w missing attribute(s): discarding" << std::endl;
-        type.resize(largestCompleteSize);
-    }
-    for (std::vector<Attribute*>::const_iterator it = attribute.begin(); it != attribute.end(); it++) {
-        if ((*it)->value.size() > largestCompleteSize) {
-            std::cout << "#osp:uintah: attribute(s) w/o atom(s): discarding" << std::endl;
-            (*it)->value.resize(largestCompleteSize);
-        }
-    }
-}
-
-
 //! return world bounding box of all particle *positions* (i.e., particles *ex* radius)
 ospcommon::box3f ospray::ParticleModel::getBounds() const {
     ospcommon::box3f bounds = ospcommon::empty;
-    for (size_t i = 0; i < position.size(); i++) bounds.extend({position[i].x, position[i].y, position[i].z});
+    for (size_t i = 0; i < position.size(); ++i) bounds.extend({position[i].x, position[i].y, position[i].z});
     return bounds;
 }
 
 
 void megamol::ospray::ParticleModel::fill(megamol::core::moldyn::SimpleSphericalParticles parts) {
-    Attribute rgba("rgba");
+    // Attribute rgba("rgba");
 
     size_t vertexLength;
     size_t colorLength;
@@ -115,153 +85,23 @@ void megamol::ospray::ParticleModel::fill(megamol::core::moldyn::SimpleSpherical
     auto const& bAcc = parStore.GetCBAcc();
     auto const& aAcc = parStore.GetCAAcc();
 
-    // Color data type check
-    if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGBA) {
-        colorLength = 4;
-        // convertedColorType = OSP_FLOAT4;
+    for (size_t loop = 0; loop < parts.GetCount(); ++loop) {
 
-        /*floatFromArrayFunc ffaf;
-        ffaf = floatFromVoidArray;
+        ospcommon::vec3f pos;
 
-        floatColFromArrayFunc fcfaf;
-        fcfaf = floatColFromVoidArray;*/
+        pos.x = xAcc->Get_f(loop);
+        pos.y = yAcc->Get_f(loop);
+        pos.z = zAcc->Get_f(loop);
 
-        for (size_t loop = 0; loop < parts.GetCount(); loop++) {
+        ospcommon::vec4uc col;
 
-            ospcommon::vec3f pos;
-            pos.x = xAcc->Get_f(loop);
-            pos.y = yAcc->Get_f(loop);
-            pos.z = zAcc->Get_f(loop);
+        col.x = rAcc->Get_u8(loop);
+        col.y = gAcc->Get_u8(loop);
+        col.z = bAcc->Get_u8(loop);
+        col.w = aAcc->Get_u8(loop);
 
-            ospcommon::vec4f col;
-            col.x = rAcc->Get_f(loop);
-            col.y = gAcc->Get_f(loop);
-            col.z = bAcc->Get_f(loop);
-            col.w = aAcc->Get_f(loop);
+        float const color = encodeColorToFloat(col);
 
-            float const color = encodeColorToFloat(col);
-
-            this->position.emplace_back(pos, color);
-        }
-    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_I) {
-        // this colorType will be transformed to:
-        // convertedColorType = OSP_FLOAT4;
-        colorLength = 1;
-
-        for (size_t loop = 0; loop < parts.GetCount(); loop++) {
-
-            ospcommon::vec3f pos;
-
-            pos.x = xAcc->Get_f(loop);
-            pos.y = yAcc->Get_f(loop);
-            pos.z = zAcc->Get_f(loop);
-
-            float const color = rAcc->Get_f(loop);
-
-            this->position.emplace_back(pos, color);
-        }
-
-
-    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_FLOAT_RGB) {
-        colorLength = 3;
-
-        for (size_t loop = 0; loop < parts.GetCount(); loop++) {
-
-            ospcommon::vec3f pos;
-
-            pos.x = xAcc->Get_f(loop);
-            pos.y = yAcc->Get_f(loop);
-            pos.z = zAcc->Get_f(loop);
-
-            ospcommon::vec3f col;
-
-            col.x = rAcc->Get_f(loop);
-            col.y = gAcc->Get_f(loop);
-            col.z = bAcc->Get_f(loop);
-
-            float const color = encodeColorToFloat(col);
-
-            this->position.emplace_back(pos, color);
-        }
-
-    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGBA) {
-        for (size_t loop = 0; loop < parts.GetCount(); loop++) {
-
-            ospcommon::vec3f pos;
-
-            pos.x = xAcc->Get_f(loop);
-            pos.y = yAcc->Get_f(loop);
-            pos.z = zAcc->Get_f(loop);
-
-            ospcommon::vec4uc col;
-
-            col.x = rAcc->Get_u8(loop);
-            col.y = gAcc->Get_u8(loop);
-            col.z = bAcc->Get_u8(loop);
-            col.w = aAcc->Get_u8(loop);
-
-            float const color = encodeColorToFloat(col);
-
-            this->position.emplace_back(pos, color);
-        }
-    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_UINT8_RGB) {
-        for (size_t loop = 0; loop < parts.GetCount(); loop++) {
-
-            ospcommon::vec3f pos;
-
-            pos.x = xAcc->Get_f(loop);
-            pos.y = yAcc->Get_f(loop);
-            pos.z = zAcc->Get_f(loop);
-
-            ospcommon::vec3uc col;
-
-            col.x = rAcc->Get_u8(loop);
-            col.y = gAcc->Get_u8(loop);
-            col.z = bAcc->Get_u8(loop);
-
-            float const color = encodeColorToFloat(col);
-
-            this->position.emplace_back(pos, color);
-        }
-    } else if (parts.GetColourDataType() == core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
-        colorLength = 0;
-
-        for (size_t loop = 0; loop < parts.GetCount(); loop++) {
-
-            ospcommon::vec4f pos;
-
-            pos.x = xAcc->Get_f(loop);
-            pos.y = yAcc->Get_f(loop);
-            pos.z = zAcc->Get_f(loop);
-            pos.w = 0.0f;
-
-            this->position.push_back(pos);
-        }
+        this->position.emplace_back(pos, color);
     }
-}
-
-
-//! get attributeset of given name; create a new one if not yet exists */
-ospray::ParticleModel::Attribute* ospray::ParticleModel::getAttribute(const std::string& name) {
-    for (int i = 0; i < attribute.size(); i++)
-        if (attribute[i]->name == name) return attribute[i];
-    attribute.push_back(new Attribute(name));
-    return attribute[attribute.size() - 1];
-}
-
-
-//! return if attribute of this name exists
-bool ospray::ParticleModel::hasAttribute(const std::string& name) {
-    for (int i = 0; i < attribute.size(); i++)
-        if (attribute[i]->name == name) return true;
-    return false;
-}
-
-
-//! add one attribute value to set of attributes of given name
-void ospray::ParticleModel::addAttribute(const std::string& name, float value) {
-    ParticleModel::Attribute* a = getAttribute(name);
-    a->value.push_back(value);
-    a->minValue = std::min(a->minValue, value);
-    a->maxValue = std::max(a->maxValue, value);
 }

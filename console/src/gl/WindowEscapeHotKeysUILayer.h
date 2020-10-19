@@ -9,8 +9,8 @@
 #define MEGAMOLCON_GL_WINDOWESCAPEHOTKEYSUILAYER_H_INCLUDED
 #pragma once
 
-#include "AbstractUILayer.h"
 #include "gl/Window.h"
+#include <AbstractUILayer.h>
 
 #include <functional>
 
@@ -24,7 +24,7 @@ namespace gl {
         WindowEscapeHotKeysUILayer(Window& wnd);
         WindowEscapeHotKeysUILayer(std::function<void()> func);
         virtual ~WindowEscapeHotKeysUILayer();
-        virtual bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods);
+        virtual bool OnKey(Key key, KeyAction action, Modifiers mods);
 
 	private:
         Window* wndPtr = nullptr;

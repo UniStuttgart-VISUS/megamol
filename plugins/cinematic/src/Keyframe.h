@@ -8,10 +8,11 @@
 #ifndef MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
 #define MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
 
-#include "json.hpp"
 #include <glm/glm.hpp>
 
 #include "CinematicUtils.h"
+
+#include "mmcore/utility/JSONHelper.h"
 
 
 namespace megamol {
@@ -25,12 +26,12 @@ namespace cinematic {
 	public:
 
 		/** CTOR */
-        Keyframe();
+        Keyframe(void);
 
         Keyframe(float at, float st, camera_state_type cam);
 
 		/** DTOR */
-		~Keyframe();
+		~Keyframe(void);
 
         inline bool operator ==(Keyframe const& rhs){
 			return ((this->camera_state ==  rhs.camera_state) && (this->anim_time == rhs.anim_time) && (this->sim_time == rhs.sim_time));

@@ -146,6 +146,8 @@ private:
     /** gets a string from the stack position i. returns false if it's not a string */
     bool getString(int i, std::string& out);
 
+    bool getDouble(int i, double& out);
+
     /** print table on the stack somewhat */
     void printTable(std::stringstream& out);
 
@@ -332,9 +334,14 @@ bool megamol::core::LuaInterpreter<T>::RunString(
                     if (getString(1, res)) {
                         result = res;
                     } else {
-                        result = "Result is a non-string";
-                        megamol::core::utility::log::Log::DefaultLog.WriteError("Lua execution returned non-string");
-                        good = false;
+                        double r;
+                        if (getDouble(1, r)) {
+                            result = std::to_string(r);
+                        } else {
+                            result = "Result is a complex type.";
+                            megamol::core::utility::log::Log::DefaultLog.WriteError("Lua execution returned complex type");
+                            good = false;
+                        }
                     }
                 }
                 // clean up stack!
@@ -354,6 +361,15 @@ template <class T> bool megamol::core::LuaInterpreter<T>::getString(int i, std::
     if (t == LUA_TSTRING) {
         auto* res = lua_tostring(L, i);
         out = std::string(res);
+        return true;
+    }
+    return false;
+}
+
+template <class T> bool megamol::core::LuaInterpreter<T>::getDouble(int i, double& out) {
+    int t = lua_type(L, i);
+    if (t == LUA_TNUMBER) {
+        out = lua_tonumber(L, i);
         return true;
     }
     return false;
@@ -446,7 +462,7 @@ template <class T> int megamol::core::LuaInterpreter<T>::log(lua_State* L) {
             break;
         }
     }
-    megamol::core::utility::log::Log::DefaultLog.WriteMsg(static_cast<UINT>(level), "%s", out.str().c_str());
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(static_cast<unsigned int>(level), "%s", out.str().c_str());
     return 0;
 }
 

@@ -170,6 +170,24 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
         }
     }
 
+    // Propagate viewport changes to connected views.
+    // this cannot be done in a smart way currently since reconnects and early initialization
+    // would skip propagating the data when called in updateSize
+    auto propagateViewport = [](CallRenderView* crv, vislib::math::Rectangle<float>& clientArea) {
+        if (crv == nullptr) {
+            return;
+        }
+        // der ganz ganz dicke "because-i-know"-Knueppel
+        auto* crvView = const_cast<AbstractView*>(
+            dynamic_cast<const AbstractView*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
+        if (crvView != nullptr) {
+            crvView->Resize(
+                static_cast<unsigned int>(clientArea.Width()), static_cast<unsigned int>(clientArea.Height()));
+        }
+    };
+    propagateViewport(this->render1(), this->clientArea1);
+    propagateViewport(this->render2(), this->clientArea2);
+
     auto renderAndBlit = [&](vislib::graphics::gl::FramebufferObject& fbo, CallRenderView* crv,
                              const vislib::math::Rectangle<float>& ca) {
         if (crv == nullptr) {
@@ -502,21 +520,6 @@ void view::SplitView::updateSize(size_t width, size_t height) {
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif /* DEBUG || _DEBUG */
 
-    // Propagate viewport changes to connected views.
-    auto propagateViewport = [](CallRenderView* crv, vislib::math::Rectangle<float>& clientArea) {
-        if (crv == nullptr) {
-            return;
-        }
-        // der ganz ganz dicke "because-i-know"-Knueppel
-        auto* crvView = const_cast<AbstractView*>(
-            dynamic_cast<const AbstractView*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
-        if (crvView != nullptr) {
-            crvView->Resize(
-                static_cast<unsigned int>(clientArea.Width()), static_cast<unsigned int>(clientArea.Height()));
-        }
-    };
-    propagateViewport(this->render1(), this->clientArea1);
-    propagateViewport(this->render2(), this->clientArea2);
 }
 
 void view::SplitView::adjustClientAreas() {

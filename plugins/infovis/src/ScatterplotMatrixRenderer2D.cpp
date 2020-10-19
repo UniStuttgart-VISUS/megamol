@@ -44,7 +44,9 @@ inline std::string to_string(float x) {
     return stream.str();
 }
 
-inline float lerp(float x, float y, float a) { return x * (1.0f - a) + y * a; }
+inline float lerp(float x, float y, float a) {
+    return x * (1.0f - a) + y * a;
+}
 
 inline float rangeToSmallStep(double min, double max) {
     double countBigSteps = 4.0;
@@ -78,55 +80,55 @@ std::optional<size_t> nameToIndex(stdplugin::datatools::table::TableDataCall* ta
 }
 
 ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
-    : Renderer2D()
-    , floatTableInSlot("ftIn", "Float table input")
-    , transferFunctionInSlot("tfIn", "Transfer function input")
-    , readFlagStorageSlot("readFlags", "Flag storage input")
-    , writeFlagStorageSlot("writeFlags", "Flag storage output")
-    , valueMappingParam("valueMappingMode", "Value mapping")
-    , valueSelectorParam("valueSelector", "Sets a value column to as additional domain")
-    , labelSelectorParam("labelSelector", "Sets a label column (text mode)")
-    , labelSizeParam("labelSize", "Sets the fontsize for labels (text mode)")
-    , geometryTypeParam("geometryType", "Geometry type to map data to")
-    , kernelWidthParam("kernelWidth", "Kernel width of the geometry, i.e., point size or line width")
-    , kernelTypeParam("kernelType", "Kernel function, i.e., box or gaussian kernel")
-    , pickRadiusParam("pickRadius", "Picking radius")
-    , pickColorParam("pickColor", "Picking color")
-    , resetSelectionParam("resetSelection", "Reset selection")
-    , drawPickIndicatorParam("drawPickIndicator", "Draw picking indicator")
-    , drawMouseLabelsParam("drawMouseLabels", "Draw labels on cells on mouse hover")
-    , triangulationSmoothnessParam("triangulationSmoothness", "Number of iterations to smooth the triangulation")
-    , axisModeParam("axisMode", "Axis drawing mode")
-    , axisColorParam("axisColor", "Color of axis")
-    , axisWidthParam("axisWidth", "Line width for the axis")
-    , axisTicksParam("axisTicks", "Number of ticks on the axis")
-    , axisTicksRedundantParam("axisTicksRedundant", "Enable redundant (inner) ticks")
-    , axisTickLengthParam("axisTickLength", "Line length for the ticks")
-    , axisTickSizeParam("axisTickSize", "Sets the fontsize for the ticks")
-    , drawOuterLabelsParam("drawOuterLabels", "Draw labels outside of the matrix")
-    , drawDiagonalLabelsParam("drawDiagonalLabels", "Draw labels at matrix diagonal")
-    , cellInvertYParam("cellInvertY", "Draw diagonal top left to bottom right")
-    , cellSizeParam("cellSize", "Aspect ratio scaling x axis length")
-    , cellMarginParam("cellMargin", "Set the scaling of y axis")
-    , cellNameSizeParam("cellNameSize", "Sets the fontsize for cell names, i.e., column names")
-    , outerXLabelMarginParam("outerXLabelMarginParam", "Margin between tick labels and name labels on outer x axis")
-    , outerYLabelMarginParam("outerYLabelMarginParam", "Margin between tick labels and name labels on outer y axis")
-    , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
-    , alphaAttenuateSubpixelParam("alphaAttenuateSubpixel", "Attenuate alpha of points that have subpixel size")
-    , mouse({0, 0, BrushState::NOP})
-    , plotSSBO("Plots")
-    , valueSSBO("Values")
-    , triangleVBO(0)
-    , triangleIBO(0)
-    , triangleVertexCount(0)
-    , trianglesValid(false)
-    , screenFBO(nullptr)
-    , screenValid(false)
-    , axisFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
-    , textFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
-    , textValid(false)
-    , dataTime((std::numeric_limits<unsigned int>::max)())
-    , flagsBufferVersion(0) {
+        : Renderer2D()
+        , floatTableInSlot("ftIn", "Float table input")
+        , transferFunctionInSlot("tfIn", "Transfer function input")
+        , readFlagStorageSlot("readFlags", "Flag storage input")
+        , writeFlagStorageSlot("writeFlags", "Flag storage output")
+        , valueMappingParam("valueMappingMode", "Value mapping")
+        , valueSelectorParam("valueSelector", "Sets a value column to as additional domain")
+        , labelSelectorParam("labelSelector", "Sets a label column (text mode)")
+        , labelSizeParam("labelSize", "Sets the fontsize for labels (text mode)")
+        , geometryTypeParam("geometryType", "Geometry type to map data to")
+        , kernelWidthParam("kernelWidth", "Kernel width of the geometry, i.e., point size or line width")
+        , kernelTypeParam("kernelType", "Kernel function, i.e., box or gaussian kernel")
+        , pickRadiusParam("pickRadius", "Picking radius")
+        , pickColorParam("pickColor", "Picking color")
+        , resetSelectionParam("resetSelection", "Reset selection")
+        , drawPickIndicatorParam("drawPickIndicator", "Draw picking indicator")
+        , drawMouseLabelsParam("drawMouseLabels", "Draw labels on cells on mouse hover")
+        , triangulationSmoothnessParam("triangulationSmoothness", "Number of iterations to smooth the triangulation")
+        , axisModeParam("axisMode", "Axis drawing mode")
+        , axisColorParam("axisColor", "Color of axis")
+        , axisWidthParam("axisWidth", "Line width for the axis")
+        , axisTicksParam("axisTicks", "Number of ticks on the axis")
+        , axisTicksRedundantParam("axisTicksRedundant", "Enable redundant (inner) ticks")
+        , axisTickLengthParam("axisTickLength", "Line length for the ticks")
+        , axisTickSizeParam("axisTickSize", "Sets the fontsize for the ticks")
+        , drawOuterLabelsParam("drawOuterLabels", "Draw labels outside of the matrix")
+        , drawDiagonalLabelsParam("drawDiagonalLabels", "Draw labels at matrix diagonal")
+        , cellInvertYParam("cellInvertY", "Draw diagonal top left to bottom right")
+        , cellSizeParam("cellSize", "Aspect ratio scaling x axis length")
+        , cellMarginParam("cellMargin", "Set the scaling of y axis")
+        , cellNameSizeParam("cellNameSize", "Sets the fontsize for cell names, i.e., column names")
+        , outerXLabelMarginParam("outerXLabelMarginParam", "Margin between tick labels and name labels on outer x axis")
+        , outerYLabelMarginParam("outerYLabelMarginParam", "Margin between tick labels and name labels on outer y axis")
+        , alphaScalingParam("alphaScaling", "Scaling factor for overall alpha")
+        , alphaAttenuateSubpixelParam("alphaAttenuateSubpixel", "Attenuate alpha of points that have subpixel size")
+        , mouse({0, 0, BrushState::NOP})
+        , plotSSBO("Plots")
+        , valueSSBO("Values")
+        , triangleVBO(0)
+        , triangleIBO(0)
+        , triangleVertexCount(0)
+        , trianglesValid(false)
+        , screenFBO(nullptr)
+        , screenValid(false)
+        , axisFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
+        , textFont("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
+        , textValid(false)
+        , dataTime((std::numeric_limits<unsigned int>::max)())
+        , flagsBufferVersion(0) {
     this->floatTableInSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->floatTableInSlot);
 
@@ -275,18 +277,28 @@ ScatterplotMatrixRenderer2D::ScatterplotMatrixRenderer2D()
     screenParams.push_back(&this->alphaAttenuateSubpixelParam);
 }
 
-ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() { this->Release(); }
+ScatterplotMatrixRenderer2D::~ScatterplotMatrixRenderer2D() {
+    this->Release();
+}
 
 bool ScatterplotMatrixRenderer2D::create() {
-    if (!makeProgram("::splom::minimalisticAxis", this->minimalisticAxisShader)) return false;
-    if (!makeProgram("::splom::scientificAxis", this->scientificAxisShader)) return false;
-    if (!makeProgram("::splom::point", this->pointShader)) return false;
-    if (!makeProgram("::splom::line", this->lineShader)) return false;
-    if (!makeProgram("::splom::triangle", this->triangleShader)) return false;
-    if (!makeProgram("::splom::pickIndicator", this->pickIndicatorShader)) return false;
-    if (!makeProgram("::splom::screen", this->screenShader)) return false;
+    if (!makeProgram("::splom::minimalisticAxis", this->minimalisticAxisShader))
+        return false;
+    if (!makeProgram("::splom::scientificAxis", this->scientificAxisShader))
+        return false;
+    if (!makeProgram("::splom::point", this->pointShader))
+        return false;
+    if (!makeProgram("::splom::line", this->lineShader))
+        return false;
+    if (!makeProgram("::splom::triangle", this->triangleShader))
+        return false;
+    if (!makeProgram("::splom::pickIndicator", this->pickIndicatorShader))
+        return false;
+    if (!makeProgram("::splom::screen", this->screenShader))
+        return false;
 
-    if (!makeProgram("::splom::pick", this->pickProgram)) return false;
+    if (!makeProgram("::splom::pick", this->pickProgram))
+        return false;
 
     glGetProgramiv(this->pickProgram, GL_COMPUTE_WORK_GROUP_SIZE, pickWorkgroupSize);
 
@@ -294,8 +306,10 @@ bool ScatterplotMatrixRenderer2D::create() {
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &maxWorkgroupCount[1]);
     glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &maxWorkgroupCount[2]);
 
-    if (!this->axisFont.Initialise(this->GetCoreInstance())) return false;
-    if (!this->textFont.Initialise(this->GetCoreInstance())) return false;
+    if (!this->axisFont.Initialise(this->GetCoreInstance()))
+        return false;
+    if (!this->textFont.Initialise(this->GetCoreInstance()))
+        return false;
     this->axisFont.SetBatchDrawMode(true);
     this->textFont.SetBatchDrawMode(true);
 
@@ -340,7 +354,8 @@ bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
 
 bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
     try {
-        if (!this->validate(call, false)) return false;
+        if (!this->validate(call, false))
+            return false;
 
         if (this->selectionNeedsUpdate) {
             this->updateSelection();
@@ -390,9 +405,7 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
 
         this->drawScreen();
 
-    } catch (...) {
-        return false;
-    }
+    } catch (...) { return false; }
 
     return true;
 }
@@ -405,7 +418,8 @@ bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
 
 bool ScatterplotMatrixRenderer2D::hasDirtyData() const {
     for (auto* param : this->dataParams) {
-        if (param->IsDirty()) return true;
+        if (param->IsDirty())
+            return true;
     }
     return false;
 }
@@ -418,7 +432,8 @@ void ScatterplotMatrixRenderer2D::resetDirtyData() {
 
 bool ScatterplotMatrixRenderer2D::hasDirtyScreen() const {
     for (auto* param : this->screenParams) {
-        if (param->IsDirty()) return true;
+        if (param->IsDirty())
+            return true;
     }
     return false;
 }
@@ -433,20 +448,25 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
 
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
-    if ((this->transferFunction == nullptr) || !(*(this->transferFunction))(0)) return false;
+    if ((this->transferFunction == nullptr) || !(*(this->transferFunction))(0))
+        return false;
 
-    if (this->floatTable == nullptr || !(*this->floatTable)(1)) return false;
+    if (this->floatTable == nullptr || !(*this->floatTable)(1))
+        return false;
     const auto cntFrames = this->floatTable->GetFrameCount();
     call.SetTimeFramesCount(cntFrames); // Tell view about the data set size.
 
     const auto now = static_cast<unsigned int>(call.Time());
     this->floatTable->SetFrameID(now);
 
-    if (this->floatTable == nullptr || !(*(this->floatTable))(0)) return false;
-    if (this->floatTable->GetColumnsCount() == 0) return false;
+    if (this->floatTable == nullptr || !(*(this->floatTable))(0))
+        return false;
+    if (this->floatTable->GetColumnsCount() == 0)
+        return false;
 
     this->readFlags = this->readFlagStorageSlot.CallAs<core::FlagCallRead_GL>();
-    if (this->readFlags == nullptr) return false;
+    if (this->readFlags == nullptr)
+        return false;
     (*this->readFlags)(core::FlagCallRead_GL::CallGetData);
 
     auto columnInfos = this->floatTable->GetColumnsInfos();
@@ -477,7 +497,8 @@ bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool 
         }
     }
 
-    if (this->dataHash == this->floatTable->DataHash() && now == this->dataTime && !hasDirtyData()) return true;
+    if (this->dataHash == this->floatTable->DataHash() && now == this->dataTime && !hasDirtyData())
+        return true;
 
     if (this->dataHash != this->floatTable->DataHash()) {
         // Update dynamic parameters.

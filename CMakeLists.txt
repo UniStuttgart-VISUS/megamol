@@ -1,6 +1,5 @@
-#
 # MegaMol
-# Copyright 2020, by MegaMol Team
+# Copyright (c) 2020, MegaMol Dev Team
 # All rights reserved.
 #
 
@@ -44,6 +43,12 @@ include(ClangFormat)
 # External
 include("externals/CMakeExternals.cmake")
 
+# Frontend Resources, Input Events interfaces 
+add_subdirectory(${MEGAMOL_DIR}/frontend/resources)
+
+# Frontend Services (e.g. OpenGL_GLFW provider)
+add_subdirectory(${MEGAMOL_DIR}/frontend/services)
+
 # Vislib
 add_subdirectory(${MEGAMOL_VISLIB_DIR})
 
@@ -53,6 +58,9 @@ add_subdirectory(${MEGAMOL_CORE_DIR})
 # Console
 set(CONSOLE_NAME mmconsole)
 add_subdirectory(${MEGAMOL_CONSOLE_DIR})
+
+# MegaMol.exe, new frontend, Main3000
+add_subdirectory(${MEGAMOL_DIR}/frontend/main)
 
 # Add directory structure for visual studio
 if(WIN32)
