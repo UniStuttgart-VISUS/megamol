@@ -20,8 +20,8 @@ megamol::gui::LogConsole::LogConsole()
         , echo_log_target(nullptr)
         , log()
         , log_level(megamol::core::utility::log::Log::LEVEL_ALL)
-        , force_show(false)
-        , scroll_log(2)
+        , scroll_log_down(2)
+        , scroll_log_up(0)
         , tooltip() {
 
     this->echo_log_target =
@@ -46,18 +46,10 @@ LogConsole::~LogConsole() {
 
 bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
 
-    if (this->force_show) {
-        wc.win_show = true;
-        this->force_show = false;
-    }
-
     // Menu
     if (ImGui::BeginMenuBar()) {
+        // Log Level
         ImGui::TextUnformatted("Show:");
-        ImGui::SameLine();
-        if (ImGui::RadioButton("None", (this->log_level == megamol::core::utility::log::Log::LEVEL_NONE))) {
-            this->log_level = megamol::core::utility::log::Log::LEVEL_NONE;
-        }
         ImGui::SameLine();
         if (ImGui::RadioButton("Errors", (this->log_level >= megamol::core::utility::log::Log::LEVEL_ERROR))) {
             if (this->log_level >= megamol::core::utility::log::Log::LEVEL_ERROR) {
@@ -75,26 +67,40 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
             }
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("All", (this->log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
+        if (ImGui::RadioButton("Info", (this->log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
             if (this->log_level == megamol::core::utility::log::Log::LEVEL_ALL) {
                 this->log_level = megamol::core::utility::log::Log::LEVEL_WARN;
             } else {
                 this->log_level = megamol::core::utility::log::Log::LEVEL_ALL;
             }
         }
+
+        // Scrolling
+        ImGui::SameLine(0.0f, ImGui::GetContentRegionAvail().x - (2.0f * ImGui::GetFrameHeightWithSpacing()));
+        if (ImGui::ArrowButton("scroll_up", ImGuiDir_Up)) {
+            this->scroll_log_up = 2;
+        }
+        this->tooltip.ToolTip("Scroll to first log entry.");
         ImGui::SameLine();
-        if (ImGui::ArrowButton("scroll_end", ImGuiDir_Down)) {
-            this->scroll_log = 2;
+        if (ImGui::ArrowButton("scroll_down", ImGuiDir_Down)) {
+            this->scroll_log_down = 2;
         }
         this->tooltip.ToolTip("Scroll to last log entry.");
+
         ImGui::EndMenuBar();
     }
 
-    // Print messages
-    if (this->scroll_log > 0) {
+    // Scroll
+    if (this->scroll_log_down > 0) {
         ImGui::SetScrollY(ImGui::GetScrollMaxY());
-        this->scroll_log--;
+        this->scroll_log_down--;
     }
+    if (this->scroll_log_up > 0) {
+        ImGui::SetScrollY(0);
+        this->scroll_log_up--;
+    }
+
+    // Print messages
     for (auto& entry : this->log) {
         if (entry.level <= this->log_level) {
             if (entry.level >= megamol::core::utility::log::Log::LEVEL_INFO) {
@@ -111,7 +117,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
 }
 
 
-bool megamol::gui::LogConsole::Update(void) {
+bool megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc) {
 
     this->connect_log();
 
@@ -135,14 +141,12 @@ bool megamol::gui::LogConsole::Update(void) {
                     this->log.push_back(new_entry);
 
                     // Force open log window if there is an error
-                    if (new_log_level <= megamol::core::utility::log::Log::LEVEL_ERROR) {
-                        if (this->log_level < megamol::core::utility::log::Log::LEVEL_ERROR) {
-                            this->log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
-                        }
-                        this->force_show = true;
+                    if (new_log_level = megamol::core::utility::log::Log::LEVEL_ERROR) {
+                        this->log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
+                        wc.win_show = true;
                     }
 
-                    this->scroll_log = 2;
+                    this->scroll_log_down = 2;
                     updated = true;
                 }
             }
@@ -167,16 +171,3 @@ bool megamol::gui::LogConsole::connect_log(void) {
 
     return true;
 }
-
-
-/* UNUSED
-void megamol::gui::LogConsole::search_and_replace(
-    std::string& inout_string, const std::string& search_str, const std::string& replace_str) {
-
-    std::string::size_type pos = 0u;
-    while ((pos = inout_string.find(search_str, pos)) != std::string::npos) {
-        inout_string.replace(pos, search_str.length(), replace_str);
-        pos += replace_str.length();
-    }
-}
-*/

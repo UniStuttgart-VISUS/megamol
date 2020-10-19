@@ -42,9 +42,10 @@ namespace gui {
         /**
          * Update log.
          */
-        bool Update(void);
+        bool Update(WindowCollection::WindowConfiguration& wc);
 
     private:
+
         class LogBuffer : public std::stringbuf {
         public:
             virtual int sync() {
@@ -97,8 +98,8 @@ namespace gui {
         std::vector<LogEntry> log;
         unsigned int log_level;
 
-        bool force_show;
-        unsigned int scroll_log;
+        unsigned int scroll_log_down;
+        unsigned int scroll_log_up;
 
         // Widgets
         HoverToolTip tooltip;
@@ -106,9 +107,6 @@ namespace gui {
         // FUNCTIONS --------------------------------------------------------------
 
         bool connect_log(void);
-
-        /// UNUSED void search_and_replace(std::string& inout_string, const std::string& search_str, const std::string&
-        /// replace_str);
     };
 
 

@@ -223,7 +223,6 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
     this->validateParameters();
     this->checkMultipleHotkeyAssignement();
-    this->console.Update();
 
     // Set IO stuff for next frame --------------------------------------------
     io.DisplaySize = ImVec2(window_size.x, window_size.y);
@@ -363,6 +362,11 @@ bool GUIWindows::PostDraw(void) {
                 }
             }
             wc.buf_tfe_reset = false;
+        }
+
+        // Update log console
+        if (wc.win_callback == WindowCollection::DrawCallbacks::LOGCONSOLE) {
+            this->console.Update(wc);
         }
 
         // Draw window content
