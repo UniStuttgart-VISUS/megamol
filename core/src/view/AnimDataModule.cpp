@@ -228,7 +228,7 @@ DWORD view::AnimDataModule::loaderFunction(void *userData) {
     Frame *frame;
     vislib::StringA fullName(This->FullName());
 
-    std::chrono::high_resolution_clock::duration accumDuration;
+    std::chrono::high_resolution_clock::duration accumDuration = std::chrono::seconds(0);
     unsigned int accumCount = 0;
     std::chrono::system_clock::time_point lastReportTime = std::chrono::system_clock::now();
     const std::chrono::system_clock::duration lastReportDistance = std::chrono::seconds(3);

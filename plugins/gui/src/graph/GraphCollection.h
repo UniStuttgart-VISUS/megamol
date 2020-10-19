@@ -14,21 +14,13 @@
 #include "Graph.h"
 
 #include "mmcore/CoreInstance.h"
-///#include "mmcore/MegaMolGraph.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/plugins/AbstractPluginInstance.h"
 
 #include "utility/plugins/PluginManager.h"
-
-/// TEMP
-namespace megamol {
-namespace core {
-    class MegaMolGraph;
-}
-} // namespace megamol
-///
 
 
 namespace megamol {
