@@ -28,34 +28,7 @@ megamol::gui::Graph::Graph(const std::string& graph_name, GraphCoreInterface cor
 
 megamol::gui::Graph::~Graph(void) {
 
-    this->present.ResetStatePointers();
-
-    // 1) ! Delete all groups
-    std::vector<ImGuiID> group_uids;
-    for (auto& group_ptr : this->groups) {
-        group_uids.emplace_back(group_ptr->uid);
-    }
-    for (auto& group_uid : group_uids) {
-        this->DeleteGroup(group_uid);
-    }
-
-    // 2) Delete all modules
-    std::vector<ImGuiID> module_uids;
-    for (auto& module_ptr : this->modules) {
-        module_uids.emplace_back(module_ptr->uid);
-    }
-    for (auto& module_uid : module_uids) {
-        this->DeleteModule(module_uid, true);
-    }
-
-    // 3) Delete all calls
-    std::vector<ImGuiID> call_uids;
-    for (auto& call_ptr : this->calls) {
-        call_uids.emplace_back(call_ptr->uid);
-    }
-    for (auto& call_uid : call_uids) {
-        this->DeleteCall(call_uid);
-    }
+    this->Clear();
 }
 
 
@@ -186,6 +159,7 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
                 this->present.ResetStatePointers();
 
                 // 1) Reset module and call slot pointers in groups
+                auto current_full_name = (*iter)->FullName();
                 GroupPtr_t module_group_ptr = nullptr;
                 ImGuiID delete_empty_group = GUI_INVALID_ID;
                 for (auto& group_ptr : this->groups) {
@@ -197,6 +171,10 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
                         delete_empty_group = group_ptr->uid;
                     }
                 }
+                QueueData queue_data;
+                queue_data.name_id = current_full_name;
+                queue_data.rename_id = (*iter)->FullName();
+                this->PushSyncQueue(QueueAction::RENAME_MODULE, queue_data);
 
                 // 2)  Delete calls
                 for (auto& callslot_map : (*iter)->GetCallSlots()) {
@@ -224,7 +202,6 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
                     (*iter)->uid, this->name.c_str());
 #endif // GUI_VERBOSE
 
-                QueueData queue_data;
                 queue_data.name_id = (*iter)->FullName();
                 this->PushSyncQueue(QueueAction::DELETE_MODULE, queue_data);
 
@@ -713,6 +690,7 @@ bool megamol::gui::Graph::GetGroup(ImGuiID group_uid, megamol::gui::GroupPtr_t& 
 
 bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
 
+    // ! No syncronisation of module renaming considered
     try {
         for (auto iter = this->groups.begin(); iter != this->groups.end(); iter++) {
             if ((*iter)->uid == group_uid) {
@@ -773,7 +751,11 @@ ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const
             // Add module to group
             for (auto& group_ptr : this->groups) {
                 if (group_ptr->uid == existing_group_uid) {
+                    Graph::QueueData queue_data;
+                    queue_data.name_id = module_ptr->FullName();
                     if (group_ptr->AddModule(module_ptr)) {
+                        queue_data.rename_id = module_ptr->FullName();
+                        this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
                         this->ForceSetDirty();
                         return existing_group_uid;
                     }
@@ -791,6 +773,31 @@ ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const
     }
 
     return GUI_INVALID_ID;
+}
+
+
+void megamol::gui::Graph::Clear(void) {
+
+    this->present.ResetStatePointers();
+    // Groups are implicitly deleted when last module of group is deleted.
+
+    // 1) Delete all modules
+    std::vector<ImGuiID> module_uids;
+    for (auto& module_ptr : this->modules) {
+        module_uids.emplace_back(module_ptr->uid);
+    }
+    for (auto& module_uid : module_uids) {
+        this->DeleteModule(module_uid, true);
+    }
+
+    // 2) Delete all calls
+    std::vector<ImGuiID> call_uids;
+    for (auto& call_ptr : this->calls) {
+        call_uids.emplace_back(call_ptr->uid);
+    }
+    for (auto& call_uid : call_uids) {
+        this->DeleteCall(call_uid);
+    }
 }
 
 

@@ -191,12 +191,12 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 ImGui::TextDisabled("Project");
                 ImGui::Separator();
 
-                bool enable_save_graph = !inout_graph.HasCoreInterface();
-                if (ImGui::MenuItem("Save", nullptr, false, enable_save_graph)) {
-                    state.graph_save = true;
-                }
-                if (!enable_save_graph) {
-                    this->tooltip.ToolTip("Save running project using global project menu.");
+                if (ImGui::MenuItem("Save")) {
+                    if (inout_graph.HasCoreInterface()) {
+                        state.global_graph_save = true;
+                    } else {
+                        state.configurator_graph_save = true;
+                    }
                 }
 
                 if (ImGui::MenuItem("Rename")) {
@@ -635,8 +635,8 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 
         // Prevent closing tab of running project pop-up ----------------------
         bool tmp;
-        MinimalPopUp::PopUp(
-            "Close Project", popup_prevent_close_permanent, "Running project can not be closed!", "OK", tmp, "", tmp);
+        MinimalPopUp::PopUp("Close Project", popup_prevent_close_permanent,
+            "Running project can not be closed in configurator.", "OK", tmp, "", tmp);
 
         // Rename pop-up ------------------------------------------------------
         if (this->rename_popup.PopUp("Rename Project", popup_rename, inout_graph.name)) {
@@ -696,18 +696,14 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
             } else {
                 if (is_main_view) {
                     selected_mod_ptr->main_view_name = inout_graph.GenerateUniqueMainViewName();
-                    if (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
-                        Graph::QueueData queue_data;
-                        queue_data.name_id = selected_mod_ptr->FullName();
-                        inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
-                    }
+                    Graph::QueueData queue_data;
+                    queue_data.name_id = selected_mod_ptr->FullName();
+                    inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
                 } else {
                     selected_mod_ptr->main_view_name.clear();
-                    if (inout_graph.GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH) {
-                        Graph::QueueData queue_data;
-                        queue_data.name_id = selected_mod_ptr->FullName();
-                        inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
-                    }
+                    Graph::QueueData queue_data;
+                    queue_data.name_id = selected_mod_ptr->FullName();
+                    inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
                 }
             }
         }

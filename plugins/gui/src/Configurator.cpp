@@ -56,7 +56,8 @@ megamol::gui::Configurator::Configurator()
     this->graph_state.show_parameter_sidebar = false;
     this->graph_state.graph_selected_uid = GUI_INVALID_ID;
     this->graph_state.graph_delete = false;
-    this->graph_state.graph_save = false;
+    this->graph_state.configurator_graph_save = false;
+    this->graph_state.global_graph_save = false;
 }
 
 
@@ -130,13 +131,16 @@ bool megamol::gui::Configurator::Draw(
         // Hotkeys
         if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT].is_pressed &&
             (this->graph_state.graph_selected_uid != GUI_INVALID_ID)) {
-
             bool graph_has_core_interface = false;
             GraphPtr_t graph_ptr;
             if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
                 graph_has_core_interface = graph_ptr->HasCoreInterface();
             }
-            this->graph_state.graph_save = !graph_has_core_interface;
+            if (graph_has_core_interface) {
+                this->graph_state.global_graph_save = true;
+            } else {
+                this->graph_state.configurator_graph_save = true;
+            }
         }
 
         this->project_file_drop_valid = (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows));
@@ -179,7 +183,7 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
             "[GUI] Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
-
+    ImGui::PushID("Configurator::Menu");
     // Menu
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
@@ -214,21 +218,20 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
             }
 
             // Save currently active project to LUA file
-            bool graph_has_core_interface = false;
-            GraphPtr_t graph_ptr;
-            if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
-                graph_has_core_interface = graph_ptr->HasCoreInterface();
-            }
-            bool enable_save_graph = !graph_has_core_interface;
             if (ImGui::MenuItem("Save Project",
                     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT].keycode.ToString().c_str(),
-                    false, ((this->graph_state.graph_selected_uid != GUI_INVALID_ID) && enable_save_graph))) {
-                this->graph_state.graph_save = true;
+                    false, ((this->graph_state.graph_selected_uid != GUI_INVALID_ID)))) {
+                bool graph_has_core_interface = false;
+                GraphPtr_t graph_ptr;
+                if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
+                    graph_has_core_interface = graph_ptr->HasCoreInterface();
+                }
+                if (graph_has_core_interface) {
+                    this->graph_state.global_graph_save = true;
+                } else {
+                    this->graph_state.configurator_graph_save = true;
+                }
             }
-            if (!enable_save_graph) {
-                this->tooltip.ToolTip("Save running project using global menu.");
-            }
-
             ImGui::EndMenu();
         }
 
@@ -265,6 +268,7 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 
         ImGui::EndMenuBar();
     }
+    ImGui::PopID();
 }
 
 
@@ -644,12 +648,9 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
 
 bool megamol::gui::Configurator::load_graph_state_from_file(const std::string& filename) {
 
-    std::string file = filename;
-    if (!GUIUtils::GetGUIStateFileName(file))
-        return false;
-
     std::string state_str;
-    if (FileUtils::ReadFile(file, state_str, true)) {
+    if (FileUtils::ReadFile(filename, state_str, true)) {
+        state_str = GUIUtils::ExtractGUIState(state_str);
         if (state_str.empty())
             return false;
         nlohmann::json in_json = nlohmann::json::parse(state_str);
