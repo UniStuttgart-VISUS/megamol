@@ -4,8 +4,7 @@ print("I am the Standard MegaMol configuration!")
 
 basePath = "${CMAKE_INSTALL_PREFIX}/"
 
--- mmSetLogLevel(10000) -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=<uint max>
-mmSetEchoLevel("*")
+mmSetLogLevel("*") -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=*
 mmSetAppDir(basePath .. "${MMPLG_DIR}")
 mmAddShaderDir(basePath .. "share/shaders")
 mmAddResourceDir(basePath .. "share/shaders")

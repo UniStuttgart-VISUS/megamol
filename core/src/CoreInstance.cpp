@@ -634,7 +634,7 @@ mmcErrorCode megamol::core::CoreInstance::SetInitValue(mmcInitValue key, mmcValu
             if (type != MMC_TYPE_VOIDP) {
                 return MMC_ERR_TYPE;
             }
-            megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(
+            megamol::core::utility::log::Log::DefaultLog.SetMainTarget(
                 std::make_shared<utility::LogEchoTarget>(function_cast<mmcLogEchoFunction>(const_cast<void*>(value))));
             break;
         case MMC_INITVAL_CFGOVERRIDE:

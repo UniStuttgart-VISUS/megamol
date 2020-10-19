@@ -141,7 +141,7 @@ bool megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
                     this->log.push_back(new_entry);
 
                     // Force open log window if there is an error
-                    if (new_log_level = megamol::core::utility::log::Log::LEVEL_ERROR) {
+                    if (new_log_level == megamol::core::utility::log::Log::LEVEL_ERROR) {
                         this->log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
                         wc.win_show = true;
                     }
@@ -164,9 +164,6 @@ bool megamol::gui::LogConsole::connect_log(void) {
 
     if ((offline_echo_target != nullptr) && (this->echo_log_target != nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(this->echo_log_target);
-
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] TEST ... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
 
     return true;
