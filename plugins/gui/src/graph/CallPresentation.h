@@ -17,38 +17,38 @@ namespace megamol {
 namespace gui {
 
 
-// Forward declarations
-class Call;
+    // Forward declarations
+    class Call;
 
 
-/** ************************************************************************
- * Defines GUI call presentation.
- */
-class CallPresentation {
-public:
-    friend class Call;
+    /** ************************************************************************
+     * Defines GUI call presentation.
+     */
+    class CallPresentation {
+    public:
+        friend class Call;
 
-    // VARIABLES --------------------------------------------------------------
+        // VARIABLES --------------------------------------------------------------
 
-    bool label_visible;
+        bool label_visible;
 
-    // FUNCTIONS --------------------------------------------------------------
+        // FUNCTIONS --------------------------------------------------------------
 
-    CallPresentation(void);
-    ~CallPresentation(void);
+        CallPresentation(void);
+        ~CallPresentation(void);
 
-private:
-    // VARIABLES --------------------------------------------------------------
+    private:
+        // VARIABLES --------------------------------------------------------------
 
-    bool selected;
+        bool selected;
 
-    // Widgets
-    HoverToolTip tooltip;
+        // Widgets
+        HoverToolTip tooltip;
 
-    // FUNCTIONS --------------------------------------------------------------
+        // FUNCTIONS --------------------------------------------------------------
 
-    void Present(megamol::gui::PresentPhase phase, Call& inout_call, GraphItemsState_t& state);
-};
+        void Present(megamol::gui::PresentPhase phase, Call& inout_call, GraphItemsState_t& state);
+    };
 
 
 } // namespace gui

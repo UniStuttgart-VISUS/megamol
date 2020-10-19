@@ -30,56 +30,56 @@ using namespace megamol::infovis;
 using namespace megamol::stdplugin::datatools;
 
 ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
-    : Renderer2D()
-    , getDataSlot("getdata", "Float table input")
-    , getTFSlot("getTF", "connects to the transfer function")
-    , readFlagsSlot("readFlags", "reads the flag storage")
-    , writeFlagsSlot("writeFlags", "writes the flag storage")
-    , currentHash(0xFFFFFFFF)
-    , currentFlagsVersion(0)
-    , densityFBO()
-    , drawModeSlot("drawMode", "Draw mode")
-    , drawSelectedItemsSlot("drawSelectedItems", "Draw selected items")
-    , selectedItemsColorSlot("selectedItemsColor", "Color for selected items")
-    , drawOtherItemsSlot("drawOtherItems", "Draw other (e.g., non-selected) items")
-    , otherItemsColorSlot("otherItemsColor", "Color for other items (e.g., non-selected)")
-    , otherItemsAttribSlot("otherItemsAttrib", "attribute to use for TF lookup and item coloring")
-    , drawAxesSlot("drawAxes", "Draw dimension axes")
-    , axesColorSlot("axesColor", "Color for dimension axes")
-    , filterIndicatorColorSlot("filterIndicatorCol", "Color for filter indicators")
-    , selectionModeSlot("selectionMode", "Selection mode")
-    , drawSelectionIndicatorSlot("drawSelectionIndicator", "Draw selection indicator")
-    , selectionIndicatorColorSlot("selectionIndicatorColor", "Color for selection indicator")
-    , pickRadiusSlot("pickRadius", "Picking radius in object-space")
-    , scaleToFitSlot("scaleToFit", "fit the diagram in the viewport")
-    , glDepthTestSlot("glEnableDepthTest", "Toggle GLDEPTHTEST")
-    , glLineSmoothSlot("glEnableLineSmooth", "Toggle GLLINESMOOTH")
-    , glLineWidthSlot("glLineWidth", "Value for glLineWidth")
-    , sqrtDensitySlot("sqrtDensity", "map root of density to transfer function (instead of linear mapping)")
-    //, resetFlagsSlot("resetFlags", "Reset item flags to initial state")
-    , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
-    , filterStateSlot("filterState", "stores filter state for serialization")
-    , numTicks(5)
-    , columnCount(0)
-    , itemCount(0)
-    , dataBuffer(0)
-    , minimumsBuffer(0)
-    , maximumsBuffer(0)
-    , axisIndirectionBuffer(0)
-    , filtersBuffer(0)
-    , minmaxBuffer(0)
-    , interactionState(InteractionState::NONE)
-    , pickedAxis(-1)
-    , pickedIndicatorAxis(-1)
-    , pickedIndicatorIndex(-1)
-    , strokeStartX(0)
-    , strokeStartY(0)
-    , strokeEndX(0)
-    , strokeEndY(0)
-    , needSelectionUpdate(false)
-    , needFlagsUpdate(false)
-    , lastTimeStep(0)
-    , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
+        : Renderer2D()
+        , getDataSlot("getdata", "Float table input")
+        , getTFSlot("getTF", "connects to the transfer function")
+        , readFlagsSlot("readFlags", "reads the flag storage")
+        , writeFlagsSlot("writeFlags", "writes the flag storage")
+        , currentHash(0xFFFFFFFF)
+        , currentFlagsVersion(0)
+        , densityFBO()
+        , drawModeSlot("drawMode", "Draw mode")
+        , drawSelectedItemsSlot("drawSelectedItems", "Draw selected items")
+        , selectedItemsColorSlot("selectedItemsColor", "Color for selected items")
+        , drawOtherItemsSlot("drawOtherItems", "Draw other (e.g., non-selected) items")
+        , otherItemsColorSlot("otherItemsColor", "Color for other items (e.g., non-selected)")
+        , otherItemsAttribSlot("otherItemsAttrib", "attribute to use for TF lookup and item coloring")
+        , drawAxesSlot("drawAxes", "Draw dimension axes")
+        , axesColorSlot("axesColor", "Color for dimension axes")
+        , filterIndicatorColorSlot("filterIndicatorCol", "Color for filter indicators")
+        , selectionModeSlot("selectionMode", "Selection mode")
+        , drawSelectionIndicatorSlot("drawSelectionIndicator", "Draw selection indicator")
+        , selectionIndicatorColorSlot("selectionIndicatorColor", "Color for selection indicator")
+        , pickRadiusSlot("pickRadius", "Picking radius in object-space")
+        , scaleToFitSlot("scaleToFit", "fit the diagram in the viewport")
+        , glDepthTestSlot("glEnableDepthTest", "Toggle GLDEPTHTEST")
+        , glLineSmoothSlot("glEnableLineSmooth", "Toggle GLLINESMOOTH")
+        , glLineWidthSlot("glLineWidth", "Value for glLineWidth")
+        , sqrtDensitySlot("sqrtDensity", "map root of density to transfer function (instead of linear mapping)")
+        //, resetFlagsSlot("resetFlags", "Reset item flags to initial state")
+        , resetFiltersSlot("resetFilters", "Reset dimension filters to initial state")
+        , filterStateSlot("filterState", "stores filter state for serialization")
+        , numTicks(5)
+        , columnCount(0)
+        , itemCount(0)
+        , dataBuffer(0)
+        , minimumsBuffer(0)
+        , maximumsBuffer(0)
+        , axisIndirectionBuffer(0)
+        , filtersBuffer(0)
+        , minmaxBuffer(0)
+        , interactionState(InteractionState::NONE)
+        , pickedAxis(-1)
+        , pickedIndicatorAxis(-1)
+        , pickedIndicatorIndex(-1)
+        , strokeStartX(0)
+        , strokeStartY(0)
+        , strokeEndX(0)
+        , strokeEndY(0)
+        , needSelectionUpdate(false)
+        , needFlagsUpdate(false)
+        , lastTimeStep(0)
+        , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL) {
 
     this->getDataSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -169,7 +169,9 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
     fragmentMinMax.resize(2);
 }
 
-ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D(void) { this->Release(); }
+ParallelCoordinatesRenderer2D::~ParallelCoordinatesRenderer2D(void) {
+    this->Release();
+}
 
 bool ParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::GLSLShader& program) {
     program.Enable();
@@ -206,32 +208,47 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGenBuffers(1, &counterBuffer);
 
 #ifndef REMOVE_TEXT
-    if (!font.Initialise(this->GetCoreInstance())) return false;
+    if (!font.Initialise(this->GetCoreInstance()))
+        return false;
     font.SetBatchDrawMode(true);
 #endif
 
-    if (!makeProgram("::pc_axes_draw::axes", this->drawAxesProgram)) return false;
-    if (!makeProgram("::pc_axes_draw::scales", this->drawScalesProgram)) return false;
-    if (!makeProgram("::pc_axes_draw::filterindicators", this->drawFilterIndicatorsProgram)) return false;
+    if (!makeProgram("::pc_axes_draw::axes", this->drawAxesProgram))
+        return false;
+    if (!makeProgram("::pc_axes_draw::scales", this->drawScalesProgram))
+        return false;
+    if (!makeProgram("::pc_axes_draw::filterindicators", this->drawFilterIndicatorsProgram))
+        return false;
 
-    if (!makeProgram("::pc_item_stroke::indicator", this->drawStrokeIndicatorProgram)) return false;
-    if (!makeProgram("::pc_item_pick::indicator", this->drawPickIndicatorProgram)) return false;
+    if (!makeProgram("::pc_item_stroke::indicator", this->drawStrokeIndicatorProgram))
+        return false;
+    if (!makeProgram("::pc_item_pick::indicator", this->drawPickIndicatorProgram))
+        return false;
 
-    if (!makeProgram("::pc_item_draw::discrete", this->drawItemsDiscreteProgram)) return false;
-    if (!makeProgram("::pc_item_draw::muhaha", this->traceItemsDiscreteProgram)) return false;
+    if (!makeProgram("::pc_item_draw::discrete", this->drawItemsDiscreteProgram))
+        return false;
+    if (!makeProgram("::pc_item_draw::muhaha", this->traceItemsDiscreteProgram))
+        return false;
 
-    if (!makeProgram("::pc_item_draw::discTess", drawItemsDiscreteTessProgram)) return false;
+    if (!makeProgram("::pc_item_draw::discTess", drawItemsDiscreteTessProgram))
+        return false;
     glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &this->maxAxes); // TODO we should reject data with more axes!
     this->isoLinesPerInvocation = maxAxes; // warning: for tesslevel n there are JUST n lines!!! not n+1 !!
 
-    if (!makeProgram("::fragment_count", this->drawItemContinuousProgram)) return false;
-    if (!makeProgram("::fragment_count", this->minMaxProgram)) return false;
+    if (!makeProgram("::fragment_count", this->drawItemContinuousProgram))
+        return false;
+    if (!makeProgram("::fragment_count", this->minMaxProgram))
+        return false;
 
-    if (!makeProgram("::pc_item_draw::histogram", this->drawItemsHistogramProgram)) return false;
+    if (!makeProgram("::pc_item_draw::histogram", this->drawItemsHistogramProgram))
+        return false;
 
-    if (!makeProgram("::pc_item_filter", this->filterProgram)) return false;
-    if (!makeProgram("::pc_item_pick", this->pickProgram)) return false;
-    if (!makeProgram("::pc_item_stroke", this->strokeProgram)) return false;
+    if (!makeProgram("::pc_item_filter", this->filterProgram))
+        return false;
+    if (!makeProgram("::pc_item_pick", this->pickProgram))
+        return false;
+    if (!makeProgram("::pc_item_stroke", this->strokeProgram))
+        return false;
 
     glGetProgramiv(this->filterProgram, GL_COMPUTE_WORK_GROUP_SIZE, filterWorkgroupSize);
     glGetProgramiv(this->minMaxProgram, GL_COMPUTE_WORK_GROUP_SIZE, counterWorkgroupSize);
@@ -263,7 +280,8 @@ int ParallelCoordinatesRenderer2D::mouseXtoAxis(float x) {
     float f = (x - this->marginX) / this->axisDistance;
     float frac = f - static_cast<long>(f);
     int integral = static_cast<int>(std::round(f));
-    if (integral >= static_cast<int>(this->columnCount) || integral < 0) return -1;
+    if (integral >= static_cast<int>(this->columnCount) || integral < 0)
+        return -1;
     if (frac > 0.7 || frac < 0.3) {
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo("picking axis %i at mouse position of axis %i",
         // axisIndirection[integral], integral);
@@ -320,7 +338,8 @@ bool ParallelCoordinatesRenderer2D::resetFiltersSlotCallback(core::param::ParamS
 
 void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
     auto floats = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-    if (floats == nullptr) return;
+    if (floats == nullptr)
+        return;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tc == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
@@ -421,7 +440,8 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2D& call) {
 
 void ParallelCoordinatesRenderer2D::computeScaling(void) {
     auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-    if (fc == nullptr) return;
+    if (fc == nullptr)
+        return;
 
     this->marginX = 20.f;
     this->marginY = 20.f;
@@ -622,10 +642,10 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
                 color = this->axesColorSlot.Param<core::param::ColorParam>()->Value().data();
             }
             float x = this->marginX + this->axisDistance * c;
-#    if 0
+#if 0
             this->font.DrawString(color, x, this->marginY * 0.5f                   , fontSize, false, std::to_string(minimums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
             this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false, std::to_string(maximums[realCol]).c_str(), vislib::graphics::AbstractFont::ALIGN_CENTER_MIDDLE);
-#    else
+#else
             float bottom = filters[realCol].lower;
             // bottom *= (maximums[realCol] - minimums[realCol]);
             // bottom += minimums[realCol];
@@ -636,7 +656,7 @@ void ParallelCoordinatesRenderer2D::drawAxes(void) {
                 core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
             this->font.DrawString(color, x, this->marginY * 1.5f + this->axisHeight, fontSize, false,
                 std::to_string(top).c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
-#    endif
+#endif
             this->font.DrawString(color, x,
                 this->marginY * (2.0f + static_cast<float>(c % 2) * 0.5f) + this->axisHeight, fontSize * 2.0f, false,
                 names[realCol].c_str(), core::utility::AbstractFont::ALIGN_CENTER_MIDDLE);
@@ -662,18 +682,19 @@ void ParallelCoordinatesRenderer2D::drawDiscrete(
 void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     uint32_t testMask, uint32_t passMask, const float color[4], float tfColorFactor) {
     auto tf = this->getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
-    if (tf == nullptr) return;
+    if (tf == nullptr)
+        return;
 
     debugPush(2, "drawItemsDiscrete");
 
 #ifdef FUCK_THE_PIPELINE
     vislib::graphics::gl::GLSLShader& prog = this->traceItemsDiscreteProgram;
 #else
-#    ifdef USE_TESSELLATION
+#ifdef USE_TESSELLATION
     vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteTessProgram;
-#    else
+#else
     vislib::graphics::gl::GLSLShader& prog = this->drawItemsDiscreteProgram;
-#    endif
+#endif
 #endif
 
     this->enableProgramAndBind(prog);
@@ -699,16 +720,16 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
 #ifdef FUCK_THE_PIPELINE
     glDrawArrays(GL_TRIANGLES, 0, 6 * ((this->itemCount / 128) + 1));
 #else
-#    ifdef USE_TESSELLATION
+#ifdef USE_TESSELLATION
     glUniform1i(prog.ParameterLocation("isoLinesPerInvocation"), isoLinesPerInvocation);
     glPatchParameteri(GL_PATCH_VERTICES, 1);
     glDrawArrays(GL_PATCHES, 0, (this->itemCount / isoLinesPerInvocation) + 1);
-#    else
+#else
     // glDrawArraysInstanced(GL_LINE_STRIP, 0, this->columnCount, this->itemCount);
     // glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, this->columnCount * 2, this->itemCount);
     glDrawArrays(GL_LINES, 0, (this->columnCount - 1) * 2 * this->itemCount);
     // glDrawArrays(GL_TRIANGLES, 0, (this->columnCount - 1) * 6 * this->itemCount);
-#    endif
+#endif
 #endif
     prog.Disable();
     glDisable(GL_CLIP_DISTANCE0);
@@ -820,7 +841,8 @@ void ParallelCoordinatesRenderer2D::doFragmentCount(void) {
 
 void ParallelCoordinatesRenderer2D::drawItemsContinuous(void) {
     auto tf = this->getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
-    if (tf == nullptr) return;
+    if (tf == nullptr)
+        return;
     debugPush(6, "drawItemsContinuous");
     doFragmentCount();
     this->enableProgramAndBind(drawItemContinuousProgram);
@@ -957,7 +979,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     this->assertData(call);
 
     auto fc = getDataSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-    if (fc == nullptr) return false;
+    if (fc == nullptr)
+        return false;
     auto tc = getTFSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
     if (tc == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(

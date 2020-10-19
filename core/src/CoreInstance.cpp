@@ -79,6 +79,7 @@
 #include <sstream>
 
 #include "mmcore/utility/LuaHostService.h"
+#include "mmcore/utility/graphics/ScreenShotComments.h"
 
 /*****************************************************************************/
 
@@ -283,10 +284,12 @@ const megamol::core::factories::ModuleDescriptionManager& megamol::core::CoreIns
 /*
  * megamol::core::CoreInstance::Initialise
  */
-void megamol::core::CoreInstance::Initialise(void) {
+void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible) {
     if (this->preInit == NULL) {
         throw vislib::IllegalStateException("Cannot initialise a core instance twice.", __FILE__, __LINE__);
     }
+
+    this->mmconsoleFrontendCompatible = mmconsole_frontend_compatible;
 
     // logging mechanism
     if (this->preInit->IsLogEchoLevelSet()) {
@@ -356,7 +359,8 @@ void megamol::core::CoreInstance::Initialise(void) {
     }
 
     // register services? TODO: right place?
-    megamol::core::utility::LuaHostService::ID = this->InstallService<megamol::core::utility::LuaHostService>();
+    if (mmconsole_frontend_compatible)
+        megamol::core::utility::LuaHostService::ID = this->InstallService<megamol::core::utility::LuaHostService>();
 
     // loading plugins
     // printf("Log: %d:\n", (long)(&megamol::core::utility::log::Log::DefaultLog));
@@ -1940,42 +1944,6 @@ vislib::SmartPtr<megamol::core::param::AbstractParam> megamol::core::CoreInstanc
 }
 
 
-std::string megamol::core::CoreInstance::GetProjectFromPNG(std::string filename) {
-    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-    if (!png) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("getProjectFromPNG: Unable to create png struct");
-    } else {
-        FILE* fp = fopen(filename.c_str(), "rb");
-        if (fp == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "getProjectFromPNG: Unable to open png file \"%s\"", filename.c_str());
-        } else {
-            png_infop info = png_create_info_struct(png);
-            if (!info) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError("getProjectFromPNG: Unable to create png info struct");
-            } else {
-                setjmp(png_jmpbuf(png));
-                png_init_io(png, fp);
-                png_read_info(png, info);
-                png_uint_32 exif_size = 0;
-                png_bytep exif_data = nullptr;
-                png_get_eXIf_1(png, info, &exif_size, &exif_data);
-                if (exif_size > 0) {
-                    std::string content(reinterpret_cast<char*>(exif_data));
-                    return content;
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError("LoadProject: Unable to extract png exif data");
-                }
-                png_destroy_info_struct(png, &info);
-            }
-            fclose(fp);
-        }
-        png_destroy_read_struct(&png, nullptr, nullptr);
-        // exif_data buffer seems to live inside exif_info and is disposed automatically
-    }
-    return "";
-}
-
 /*
  * megamol::core::CoreInstance::LoadProject
  */
@@ -1998,7 +1966,7 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringA& filename) {
         }
     } else if (filename.EndsWith(".png")) {
         std::string result;
-        std::string content = GetProjectFromPNG(filename.PeekBuffer());
+        std::string content = megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(filename.PeekBuffer());
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.c_str());
         if (!this->lua->RunString(content.c_str(), result, filename.PeekBuffer())) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(megamol::core::utility::log::Log::LEVEL_INFO,
@@ -2043,7 +2011,7 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
         }
     } else if (filename.EndsWith(L".png")) {
         std::string result;
-        std::string content = GetProjectFromPNG(W2A(filename.PeekBuffer()));
+        std::string content = megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(W2A(filename.PeekBuffer()));
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo("Loaded project from png:\n%s", content.c_str());
         if (!this->lua->RunString(content.c_str(), result, W2A(filename.PeekBuffer()))) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(megamol::core::utility::log::Log::LEVEL_INFO,
@@ -2065,8 +2033,12 @@ void megamol::core::CoreInstance::LoadProject(const vislib::StringW& filename) {
 }
 
 
-void megamol::core::CoreInstance::SerializeGraph(
-    std::string& serInstances, std::string& serModules, std::string& serCalls, std::string& serParams) {
+std::string megamol::core::CoreInstance::SerializeGraph() {
+
+    std::string serInstances;
+    std::string serModules;
+    std::string serCalls;
+    std::string serParams;
 
     std::stringstream confInstances, confModules, confCalls, confParams;
 
@@ -2142,6 +2114,8 @@ void megamol::core::CoreInstance::SerializeGraph(
         serCalls = confCalls.str();
         serParams = confParams.str();
     }
+
+    return serInstances + '\n' + serModules + '\n' + serCalls + '\n' + serParams;
 }
 
 

@@ -11,17 +11,19 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#define GLOWL_OPENGL_INCLUDE_GLAD
+
 #include <mutex>
+#include "FlagCollection_GL.h"
+#include "FlagStorage.h"
+#include "glowl/BufferObject.hpp"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "vislib/RawStorage.h"
-#include "vislib/math/Cuboid.h"
-#include "glowl/BufferObject.hpp"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "FlagStorage.h"
-#include "FlagCollection_GL.h"
+#include "vislib/math/Cuboid.h"
 
 namespace megamol {
 namespace core {
@@ -34,7 +36,7 @@ namespace core {
  */
 class MEGAMOLCORE_API FlagStorage_GL : public core::Module {
 public:
-    //enum { ENABLED = 1 << 0, FILTERED = 1 << 1, SELECTED = 1 << 2, SOFTSELECTED = 1 << 3 };
+    // enum { ENABLED = 1 << 0, FILTERED = 1 << 1, SELECTED = 1 << 2, SOFTSELECTED = 1 << 3 };
 
     /**
      * Answer the name of this module.
@@ -48,7 +50,9 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "Module representing an index-synced array of flag uints as a GPU buffer"; }
+    static const char* Description(void) {
+        return "Module representing an index-synced array of flag uints as a GPU buffer";
+    }
 
     /**
      * Answers whether this module is available on the current system.

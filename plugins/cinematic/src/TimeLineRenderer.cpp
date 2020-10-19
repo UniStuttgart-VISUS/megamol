@@ -46,13 +46,13 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule()
     this->MakeSlotAvailable(&this->keyframeKeeperSlot);
 
     // init parameters
-    this->moveRightFrameParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_RIGHT, core::view::Modifier::CTRL));
+    this->moveRightFrameParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_RIGHT, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->moveRightFrameParam);
 
-    this->moveLeftFrameParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_LEFT, core::view::Modifier::CTRL));
+    this->moveLeftFrameParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_LEFT, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->moveLeftFrameParam);
 
-    this->resetPanScaleParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_P, core::view::Modifier::CTRL));
+    this->resetPanScaleParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_P, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->resetPanScaleParam);
 
     for (size_t i = 0; i < Axis::COUNT; ++i) {

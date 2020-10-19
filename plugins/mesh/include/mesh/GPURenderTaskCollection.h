@@ -14,6 +14,7 @@
 
 #include "mesh.h"
 
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
 #include "glowl/Mesh.hpp"
 
@@ -38,12 +39,12 @@ public:
                                                              : lhs.shader_program < rhs.shader_program);
         }
 
-        std::shared_ptr<Shader>              shader_program;
-        std::shared_ptr<glowl::Mesh>         mesh;
+        std::shared_ptr<Shader> shader_program;
+        std::shared_ptr<glowl::Mesh> mesh;
         std::shared_ptr<glowl::BufferObject> draw_commands;
         std::shared_ptr<glowl::BufferObject> per_draw_data;
 
-        size_t                               draw_cnt;
+        size_t draw_cnt;
     };
 
     /**
@@ -117,10 +118,8 @@ private:
 };
 
 template <typename PerDrawDataType>
-inline size_t GPURenderTaskCollection::addSingleRenderTask(
-    std::shared_ptr<Shader> const& shader_prgm,
-    std::shared_ptr<glowl::Mesh> const& mesh,
-    glowl::DrawElementsCommand const& draw_command,
+inline size_t GPURenderTaskCollection::addSingleRenderTask(std::shared_ptr<Shader> const& shader_prgm,
+    std::shared_ptr<glowl::Mesh> const& mesh, glowl::DrawElementsCommand const& draw_command,
     PerDrawDataType const& per_draw_data) {
     bool task_added = false;
 
@@ -200,10 +199,8 @@ inline size_t GPURenderTaskCollection::addSingleRenderTask(
 }
 
 template <typename DrawCommandContainer, typename PerDrawDataContainer>
-inline size_t GPURenderTaskCollection::addRenderTasks(
-    std::shared_ptr<Shader> const& shader_prgm,
-    std::shared_ptr<glowl::Mesh> const& mesh,
-    DrawCommandContainer const& draw_commands,
+inline size_t GPURenderTaskCollection::addRenderTasks(std::shared_ptr<Shader> const& shader_prgm,
+    std::shared_ptr<glowl::Mesh> const& mesh, DrawCommandContainer const& draw_commands,
     PerDrawDataContainer const& per_draw_data) {
     typedef typename PerDrawDataContainer::value_type PerDrawDataType;
     typedef typename DrawCommandContainer::value_type DrawCommandType;
@@ -293,9 +290,7 @@ inline size_t GPURenderTaskCollection::addRenderTasks(
 }
 
 template <typename PerDrawDataContainer>
-inline void GPURenderTaskCollection::updatePerDrawData(
-    size_t rt_base_idx,
-    PerDrawDataContainer const& per_draw_data) {
+inline void GPURenderTaskCollection::updatePerDrawData(size_t rt_base_idx, PerDrawDataContainer const& per_draw_data) {
     if (rt_base_idx > m_render_task_meta_data.size()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("RenderTask update error: Index out of bounds.");
         return;
@@ -310,8 +305,7 @@ inline void GPURenderTaskCollection::updatePerDrawData(
 
 template <typename PerFrameDataContainer>
 inline void GPURenderTaskCollection::addPerFrameDataBuffer(
-    PerFrameDataContainer const& per_frame_data,
-    uint32_t buffer_binding_point) {
+    PerFrameDataContainer const& per_frame_data, uint32_t buffer_binding_point) {
     if (buffer_binding_point == 0) {
         // TODO Error, 0 already in use for per draw data
     } else {
@@ -327,8 +321,7 @@ inline void GPURenderTaskCollection::addPerFrameDataBuffer(
 
 template <typename PerFrameDataContainer>
 inline void GPURenderTaskCollection::updatePerFrameDataBuffer(
-    PerFrameDataContainer const& per_frame_data,
-    uint32_t buffer_binding_point) {
+    PerFrameDataContainer const& per_frame_data, uint32_t buffer_binding_point) {
     typedef typename PerFrameDataContainer::value_type PerFrameDataType;
 
     for (auto& buffer : m_per_frame_data_buffers) {

@@ -16,14 +16,14 @@ using namespace megamol::gui;
 
 
 megamol::gui::GroupPresentation::GroupPresentation(void)
-    : position(ImVec2(FLT_MAX, FLT_MAX))
-    , size(ImVec2(0.0f, 0.0f))
-    , collapsed_view(false)
-    , allow_selection(false)
-    , allow_context(false)
-    , selected(false)
-    , update(true)
-    , rename_popup() {}
+        : position(ImVec2(FLT_MAX, FLT_MAX))
+        , size(ImVec2(0.0f, 0.0f))
+        , collapsed_view(false)
+        , allow_selection(false)
+        , allow_context(false)
+        , selected(false)
+        , update(true)
+        , rename_popup() {}
 
 
 megamol::gui::GroupPresentation::~GroupPresentation(void) {}
@@ -116,28 +116,32 @@ void megamol::gui::GroupPresentation::Present(
                     popup_rename = true;
                 }
                 if (ImGui::MenuItem("Delete",
-                        std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                        state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM].keycode.ToString().c_str())) {
                     state.interact.process_deletion = true;
                 }
                 ImGui::EndPopup();
             } /// else { this->allow_context = false; }
 
             // Rename pop-up
-            if (popup_rename) {
-                if (!state.interact.graph_running) {
-                    if (this->rename_popup.PopUp("Rename Group", popup_rename, inout_group.name)) {
-                        for (auto& module_ptr : inout_group.GetModules()) {
-                            module_ptr->present.group.name = inout_group.name;
-                            module_ptr->UpdateGUI(state.canvas);
-                        }
-                        this->UpdatePositionSize(inout_group, state.canvas);
-                    }
-                } else {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] The action [Rename Group] is not yet supported for the graph of the running project. "
-                        "Open project from file to make desired changes."
-                        "[%s, %s, line %d]\n",
+            if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
+                if (popup_rename) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                        "[GUI] The action [Rename Group] is not yet supported for the graph "
+                        "using the 'Core Instance Graph' interface. Open project from file to make desired "
+                        "changes. [%s, %s, line %d]\n",
                         __FILE__, __FUNCTION__, __LINE__);
+                }
+            } else {
+                if (this->rename_popup.PopUp("Rename Group", popup_rename, inout_group.name)) {
+                    for (auto& module_ptr : inout_group.GetModules()) {
+                        std::string last_module_name = module_ptr->FullName();
+                        module_ptr->present.group.name = inout_group.name;
+                        module_ptr->UpdateGUI(state.canvas);
+                        if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
+                            state.interact.module_rename.push_back(StrPair_t(last_module_name, module_ptr->FullName()));
+                        }
+                    }
+                    this->UpdatePositionSize(inout_group, state.canvas);
                 }
             }
         } else if (phase == megamol::gui::PresentPhase::RENDERING) {
@@ -363,11 +367,11 @@ void megamol::gui::GroupPresentation::UpdatePositionSize(
         for (auto& interfaceslot_ptr : interfaceslots_map.second) {
             if (interfaceslots_map.first == CallSlotType::CALLER) {
                 callslot_group_position = ImVec2((group_pos.x + group_size.x),
-                    (group_pos.y + group_size.y * ((float)caller_idx + 1) / ((float)caller_count + 1)));
+                    (group_pos.y + group_size.y * ((float) caller_idx + 1) / ((float) caller_count + 1)));
                 caller_idx++;
             } else if (interfaceslots_map.first == CallSlotType::CALLEE) {
                 callslot_group_position = ImVec2(
-                    group_pos.x, (group_pos.y + group_size.y * ((float)callee_idx + 1) / ((float)callee_count + 1)));
+                    group_pos.x, (group_pos.y + group_size.y * ((float) callee_idx + 1) / ((float) callee_count + 1)));
                 callee_idx++;
             }
             interfaceslot_ptr->present.SetPosition(callslot_group_position);

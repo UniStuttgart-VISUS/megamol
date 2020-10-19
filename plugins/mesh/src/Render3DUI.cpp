@@ -150,7 +150,7 @@ bool megamol::mesh::Render3DUI::Render(core::view::CallRender3D_2& call) {
     glGetFloatv(GL_VIEWPORT, viewport);
 
     if (m_fbo == nullptr) {    
-        m_fbo = std::make_unique<glowl::FramebufferObject>(viewport[2], viewport[3],true);
+        m_fbo = std::make_unique<glowl::FramebufferObject>(viewport[2], viewport[3]);
         m_fbo->createColorAttachment(GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT); // output image
         m_fbo->createColorAttachment(GL_R32I, GL_RED, GL_INT); // object ids
     }

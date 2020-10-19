@@ -263,14 +263,6 @@ namespace core {
             return p ? p->GetCoreInstance() : nullptr;
         }
 
-        /// Make this public for enabling renaming of modules from GUI
-        /**
-         * Sets the name for the object.
-         *
-         * @param name The new name for the object.
-         */
-        void setName(const vislib::StringA& name);
-
     protected:
 
         /**
@@ -283,6 +275,15 @@ namespace core {
          *         'false' otherwise.
          */
         static bool isNameValid(const vislib::StringA& name);
+
+	public: // for new MegaMolGraph, make this public:
+
+        /**
+         * Sets the name for the object.
+         *
+         * @param name The new name for the object.
+         */
+        void setName(const vislib::StringA& name);
 
         /**
          * Ctor.

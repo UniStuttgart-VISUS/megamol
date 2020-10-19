@@ -19,16 +19,16 @@ using namespace megamol::gui;
 
 
 megamol::gui::CallSlotPresentation::CallSlotPresentation(void)
-    : group()
-    , label_visible(false)
-    , position()
-    , selected(false)
-    , update_once(true)
-    , show_modulestock(false)
-    , last_compat_callslot_uid(GUI_INVALID_ID)
-    , last_compat_interface_uid(GUI_INVALID_ID)
-    , compatible(false)
-    , tooltip() {
+        : group()
+        , label_visible(false)
+        , position()
+        , selected(false)
+        , update_once(true)
+        , show_modulestock(false)
+        , last_compat_callslot_uid(GUI_INVALID_ID)
+        , last_compat_interface_uid(GUI_INVALID_ID)
+        , compatible(false)
+        , tooltip() {
 
     this->group.interfaceslot_ptr.reset();
 }
@@ -85,10 +85,14 @@ void megamol::gui::CallSlotPresentation::Present(
         ImVec2 slot_rect_min = ImVec2(slot_position.x - radius, slot_position.y - radius);
         ImVec2 slot_rect_max = ImVec2(slot_position.x + radius, slot_position.y + radius);
         if (this->label_visible) {
-            if (text_pos_left_upper.x < slot_rect_min.x) slot_rect_min.x = text_pos_left_upper.x;
-            if (text_pos_left_upper.x > slot_rect_max.x) slot_rect_max.x = text_pos_left_upper.x;
-            if (text_pos_left_upper.y < slot_rect_min.y) slot_rect_min.y = text_pos_left_upper.y;
-            if (text_pos_left_upper.y > slot_rect_max.y) slot_rect_max.y = text_pos_left_upper.y;
+            if (text_pos_left_upper.x < slot_rect_min.x)
+                slot_rect_min.x = text_pos_left_upper.x;
+            if (text_pos_left_upper.x > slot_rect_max.x)
+                slot_rect_max.x = text_pos_left_upper.x;
+            if (text_pos_left_upper.y < slot_rect_min.y)
+                slot_rect_min.y = text_pos_left_upper.y;
+            if (text_pos_left_upper.y > slot_rect_max.y)
+                slot_rect_max.y = text_pos_left_upper.y;
         }
         if (!((canvas_rect_min.x < (slot_rect_max.x)) && (canvas_rect_max.x > (slot_rect_min.x)) &&
                 (canvas_rect_min.y < (slot_rect_max.y)) && (canvas_rect_max.y > (slot_rect_min.y)))) {
@@ -296,6 +300,6 @@ void megamol::gui::CallSlotPresentation::Update(
         module_size.y -= line_height;
         ImVec2 size = module_size * in_canvas.zooming;
         this->position = ImVec2(pos.x + ((inout_callslot.type == CallSlotType::CALLER) ? (size.x) : (0.0f)),
-            pos.y + size.y * ((float)slot_idx + 1) / ((float)slot_count + 1));
+            pos.y + size.y * ((float) slot_idx + 1) / ((float) slot_count + 1));
     }
 }

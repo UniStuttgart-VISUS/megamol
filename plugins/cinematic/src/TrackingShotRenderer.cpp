@@ -39,7 +39,7 @@ TrackingShotRenderer::TrackingShotRenderer(void) : Renderer3DModule_2()
     this->stepsParam.SetParameter(new param::IntParam((int)this->interpolSteps, 1));
     this->MakeSlotAvailable(&this->stepsParam);
 
-    this->toggleHelpTextParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_H, core::view::Modifier::CTRL));
+    this->toggleHelpTextParam.SetParameter(new param::ButtonParam(core::view::Key::KEY_H, core::view::Modifier::SHIFT));
     this->MakeSlotAvailable(&this->toggleHelpTextParam);
 
     for (auto& slot : this->manipulators.GetParams()) {
@@ -221,9 +221,9 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     // Push menu --------------------------------------------------------------
     std::string leftLabel = " TRACKING SHOT ";
     std::string midLabel = "";
-    std::string rightLabel = " [Ctrl+h] Show Help Text ";
+    std::string rightLabel = " [Shift+h] Show Help Text ";
     if (this->showHelpText) {
-        rightLabel = " [Ctrl+h] Hide Help Text ";
+        rightLabel = " [Shift+h] Hide Help Text ";
     }
     this->utils.PushMenu(leftLabel, midLabel, rightLabel, vp_fw, vp_fh);
 

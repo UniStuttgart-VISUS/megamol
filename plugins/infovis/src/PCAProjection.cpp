@@ -16,15 +16,15 @@ using namespace Eigen;
 
 
 PCAProjection::PCAProjection(void)
-    : megamol::core::Module()
-    , dataOutSlot("dataOut", "Ouput")
-    , dataInSlot("dataIn", "Input")
-    , reduceToNSlot("nComponents", "Number of components (dimensions) to keep")
-    , scaleSlot("scale", "Set to scale each column to unit variance")
-    , centerSlot("center", "Set to shift the mean centroid to the origin")
-    , datahash(0)
-    , dataInHash(0)
-    , columnInfos() {
+        : megamol::core::Module()
+        , dataOutSlot("dataOut", "Ouput")
+        , dataInSlot("dataIn", "Input")
+        , reduceToNSlot("nComponents", "Number of components (dimensions) to keep")
+        , scaleSlot("scale", "Set to scale each column to unit variance")
+        , centerSlot("center", "Set to shift the mean centroid to the origin")
+        , datahash(0)
+        , dataInHash(0)
+        , columnInfos() {
 
     this->dataInSlot.SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
@@ -46,9 +46,13 @@ PCAProjection::PCAProjection(void)
 }
 
 
-PCAProjection::~PCAProjection(void) { this->Release(); }
+PCAProjection::~PCAProjection(void) {
+    this->Release();
+}
 
-bool PCAProjection::create(void) { return true; }
+bool PCAProjection::create(void) {
+    return true;
+}
 
 void PCAProjection::release(void) {}
 
@@ -57,17 +61,21 @@ bool PCAProjection::getDataCallback(core::Call& c) {
     try {
         megamol::stdplugin::datatools::table::TableDataCall* outCall =
             dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
-        if (outCall == NULL) return false;
+        if (outCall == NULL)
+            return false;
 
         megamol::stdplugin::datatools::table::TableDataCall* inCall =
             this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-        if (inCall == NULL) return false;
+        if (inCall == NULL)
+            return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
-        if (!(*inCall)()) return false;
+        if (!(*inCall)())
+            return false;
 
         bool finished = project(inCall);
-        if (finished == false) return false;
+        if (finished == false)
+            return false;
 
         outCall->SetFrameCount(inCall->GetFrameCount());
         outCall->SetDataHash(this->datahash);
@@ -93,14 +101,17 @@ bool PCAProjection::getHashCallback(core::Call& c) {
     try {
         megamol::stdplugin::datatools::table::TableDataCall* outCall =
             dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
-        if (outCall == NULL) return false;
+        if (outCall == NULL)
+            return false;
 
         megamol::stdplugin::datatools::table::TableDataCall* inCall =
             this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-        if (inCall == NULL) return false;
+        if (inCall == NULL)
+            return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
-        if (!(*inCall)(1)) return false;
+        if (!(*inCall)(1))
+            return false;
 
         outCall->SetFrameCount(inCall->GetFrameCount());
         outCall->SetDataHash(this->datahash);
@@ -183,7 +194,7 @@ bool megamol::infovis::PCAProjection::project(megamol::stdplugin::datatools::tab
 
 
     covarianceMatrix = covarianceMatrix.transpose() * covarianceMatrix;
-    covarianceMatrix = covarianceMatrix / (float)(rowsCount - 1);
+    covarianceMatrix = covarianceMatrix / (float) (rowsCount - 1);
 
 
     // calculate Eigenvalues and Eigenvectors
@@ -242,7 +253,8 @@ bool megamol::infovis::PCAProjection::project(megamol::stdplugin::datatools::tab
     this->data.reserve(rowsCount * outputDimCount);
 
     for (size_t row = 0; row < rowsCount; row++) {
-        for (size_t col = 0; col < outputDimCount; col++) this->data.push_back(result(row, col));
+        for (size_t col = 0; col < outputDimCount; col++)
+            this->data.push_back(result(row, col));
     }
 
 

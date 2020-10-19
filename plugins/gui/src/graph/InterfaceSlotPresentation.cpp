@@ -19,15 +19,15 @@ using namespace megamol::gui;
 
 
 megamol::gui::InterfaceSlotPresentation::InterfaceSlotPresentation(void)
-    : group()
-    , label_visible(false)
-    , tooltip()
-    , selected(false)
-    , label()
-    , last_compat_callslot_uid(GUI_INVALID_ID)
-    , last_compat_interface_uid(GUI_INVALID_ID)
-    , compatible(false)
-    , position(ImVec2(FLT_MAX, FLT_MAX)) {
+        : group()
+        , label_visible(false)
+        , tooltip()
+        , selected(false)
+        , label()
+        , last_compat_callslot_uid(GUI_INVALID_ID)
+        , last_compat_interface_uid(GUI_INVALID_ID)
+        , compatible(false)
+        , position(ImVec2(FLT_MAX, FLT_MAX)) {
 
     this->group.uid = GUI_INVALID_ID;
     this->group.collapsed_view = false;
@@ -89,7 +89,7 @@ void megamol::gui::InterfaceSlotPresentation::Present(
                 ImGui::Separator();
 
                 if (ImGui::MenuItem("Delete",
-                        std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]).ToString().c_str())) {
+                        state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM].keycode.ToString().c_str())) {
                     state.interact.process_deletion = true;
                 }
 

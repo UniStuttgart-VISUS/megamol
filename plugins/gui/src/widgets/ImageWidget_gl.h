@@ -18,6 +18,7 @@
 
 #include "vislib/graphics/BitmapImage.h"
 
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/Texture2D.hpp"
 
 
@@ -25,48 +26,49 @@ namespace megamol {
 namespace gui {
 
 
-/**
- * OpenGL implementation of textured image widget.
- */
-class ImageWidget {
-public:
-    ImageWidget(void);
-
-    ~ImageWidget(void) = default;
-
-    bool IsLoaded(void) {
-        if (this->tex_ptr == nullptr) return false;
-        return (this->tex_ptr->getName() != 0); // OpenGL texture id
-    }
-
     /**
-     * Load texture from file.
+     * OpenGL implementation of textured image widget.
      */
-    bool LoadTextureFromFile(const std::string& filename);
+    class ImageWidget {
+    public:
+        ImageWidget(void);
 
-    /**
-     * Load texture from data.
-     */
-    bool LoadTextureFromData(int width, int height, float* data);
+        ~ImageWidget(void) = default;
 
-    /**
-     * Draw texture as simple image.
-     */
-    void Widget(ImVec2 size, ImVec2 uv0 = ImVec2(0.0f, 0.0f), ImVec2 uv1 = ImVec2(1.0f, 1.0f));
+        bool IsLoaded(void) {
+            if (this->tex_ptr == nullptr)
+                return false;
+            return (this->tex_ptr->getName() != 0); // OpenGL texture id
+        }
 
-    /**
-     * Draw texture as button.
-     */
-    bool Button(const std::string& tooltip, ImVec2 size);
+        /**
+         * Load texture from file.
+         */
+        bool LoadTextureFromFile(const std::string& filename);
 
-private:
-    // VARIABLES --------------------------------------------------------------
+        /**
+         * Load texture from data.
+         */
+        bool LoadTextureFromData(int width, int height, float* data);
 
-    std::shared_ptr<glowl::Texture2D> tex_ptr;
+        /**
+         * Draw texture as simple image.
+         */
+        void Widget(ImVec2 size, ImVec2 uv0 = ImVec2(0.0f, 0.0f), ImVec2 uv1 = ImVec2(1.0f, 1.0f));
 
-    // Widgets
-    HoverToolTip tooltip;
-};
+        /**
+         * Draw texture as button.
+         */
+        bool Button(const std::string& tooltip, ImVec2 size);
+
+    private:
+        // VARIABLES --------------------------------------------------------------
+
+        std::shared_ptr<glowl::Texture2D> tex_ptr;
+
+        // Widgets
+        HoverToolTip tooltip;
+    };
 
 
 } // namespace gui
