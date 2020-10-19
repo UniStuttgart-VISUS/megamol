@@ -19,7 +19,7 @@
 
 #include "mmcore/RootModuleNamespace.h"
 
-#include "ModuleResource.h"
+#include "FrontendResource.h"
 
 namespace megamol {
 namespace core {
@@ -133,7 +133,7 @@ public:
     std::vector<megamol::core::param::ParamSlot*> ListParameterSlots() const;
 
     using EntryPointExecutionCallback =
-        std::function<void(Module::ptr_type, std::vector<megamol::frontend::ModuleResource> const&)>;
+        std::function<void(Module::ptr_type, std::vector<megamol::frontend::FrontendResource> const&)>;
 
     bool SetGraphEntryPoint(
         std::string moduleName,
@@ -145,7 +145,7 @@ public:
 
     void RenderNextFrame();
 
-    void AddModuleDependencies(std::vector<megamol::frontend::ModuleResource> const& resources);
+    void AddModuleDependencies(std::vector<megamol::frontend::FrontendResource> const& resources);
 
     MegaMolGraph_Convenience& Convenience();
 
@@ -177,7 +177,7 @@ private:
 
     bool delete_call(CallDeletionRequest_t const& request);
 
-    std::vector<megamol::frontend::ModuleResource> get_requested_resources(std::vector<std::string> resource_requests);
+    std::vector<megamol::frontend::FrontendResource> get_requested_resources(std::vector<std::string> resource_requests);
 
 
     // the dummy_namespace must be above the call_list_ and module_list_ because it needs to be destroyed AFTER all
@@ -190,7 +190,7 @@ private:
     /** List of call that this graph owns */
     CallList_t call_list_;
 
-    std::vector<megamol::frontend::ModuleResource> provided_resources;
+    std::vector<megamol::frontend::FrontendResource> provided_resources;
 
     // for each View in the MegaMol graph we create a GraphEntryPoint with corresponding callback for resource/input
     // consumption the graph makes sure that the (lifetime and rendering) resources/dependencies requested by the module
@@ -200,7 +200,7 @@ private:
     struct GraphEntryPoint {
         std::string moduleName;
         Module::ptr_type modulePtr = nullptr;
-        std::vector<megamol::frontend::ModuleResource> entry_point_resources;
+        std::vector<megamol::frontend::FrontendResource> entry_point_resources;
 
         EntryPointExecutionCallback execute;
     };

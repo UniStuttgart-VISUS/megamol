@@ -605,7 +605,7 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(
     if (resources.size() != execution_resource_requests.size() ||
         !std::equal<>(resources.begin(), resources.end(), 
             execution_resource_requests.begin(), execution_resource_requests.end(), 
-            [](megamol::frontend::ModuleResource& l, std::string& r) { return l.getIdentifier() == r; })) 
+            [](megamol::frontend::FrontendResource& l, std::string& r) { return l.getIdentifier() == r; })) 
     {
         return false;
     }
@@ -635,7 +635,7 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string moduleName) 
     return true;
 }
 
-void megamol::core::MegaMolGraph::AddModuleDependencies(std::vector<megamol::frontend::ModuleResource> const& resources) {
+void megamol::core::MegaMolGraph::AddModuleDependencies(std::vector<megamol::frontend::FrontendResource> const& resources) {
     this->provided_resources.insert(provided_resources.end(), resources.begin(), resources.end());
 }
 
@@ -643,12 +643,12 @@ megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenienc
     return this->convenience_functions;
 }
 
-std::vector<megamol::frontend::ModuleResource> megamol::core::MegaMolGraph::get_requested_resources(std::vector<std::string> resource_requests) {
-    std::vector<megamol::frontend::ModuleResource> result;
+std::vector<megamol::frontend::FrontendResource> megamol::core::MegaMolGraph::get_requested_resources(std::vector<std::string> resource_requests) {
+    std::vector<megamol::frontend::FrontendResource> result;
     result.reserve(resource_requests.size());
 
     for (auto& request : resource_requests) {
-        auto dependency_it = std::find_if(this->provided_resources.begin(), this->provided_resources.end(), [&](megamol::frontend::ModuleResource& dependency){
+        auto dependency_it = std::find_if(this->provided_resources.begin(), this->provided_resources.end(), [&](megamol::frontend::FrontendResource& dependency){
             return request == dependency.getIdentifier();
         });
 

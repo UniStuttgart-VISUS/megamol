@@ -98,7 +98,7 @@ void Lua_Service_Wrapper::close() {
     m_network_host->close();
 }
 
-std::vector<ModuleResource>& Lua_Service_Wrapper::getProvidedResources() {
+std::vector<FrontendResource>& Lua_Service_Wrapper::getProvidedResources() {
     this->m_providedResourceReferences =
     {
         {"LuaScriptPaths", m_scriptpath_resource}
@@ -111,7 +111,7 @@ const std::vector<std::string> Lua_Service_Wrapper::getRequestedResourceNames() 
     return m_requestedResourcesNames;
 }
 
-void Lua_Service_Wrapper::setRequestedResources(std::vector<ModuleResource> resources) {
+void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> resources) {
     // TODO: do something with ZMQ resource we get here
     m_requestedResourceReferences = resources;
 

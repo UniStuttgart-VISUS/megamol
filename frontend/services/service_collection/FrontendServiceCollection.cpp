@@ -52,7 +52,7 @@ namespace frontend {
         }
     }
 
-    std::vector<ModuleResource>& FrontendServiceCollection::getProvidedResources() {
+    std::vector<FrontendResource>& FrontendServiceCollection::getProvidedResources() {
         return m_serviceResources;
     }
 
@@ -70,7 +70,7 @@ namespace frontend {
         }
 
         // for each servie, provide him with requested resources
-        std::vector<ModuleResource> resources;
+        std::vector<FrontendResource> resources;
         for_each_service {
             resources.clear();
             auto request_names = service.get().getRequestedResourceNames();
@@ -93,9 +93,9 @@ namespace frontend {
         return true;
     }
 
-    ModuleResource* FrontendServiceCollection::findResource(std::string const& name) {
+    FrontendResource* FrontendServiceCollection::findResource(std::string const& name) {
         auto module_it = std::find_if(m_serviceResources.begin(), m_serviceResources.end(),
-            [&](ModuleResource const& resource) { return name == resource.getIdentifier(); });
+            [&](FrontendResource const& resource) { return name == resource.getIdentifier(); });
 
         if (module_it != m_serviceResources.end())
             return &(*module_it);

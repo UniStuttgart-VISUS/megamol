@@ -18,13 +18,13 @@ using namespace Eigen;
 
 
 MDSProjection::MDSProjection(void)
-    : megamol::core::Module()
-    , dataOutSlot("dataOut", "Ouput")
-    , dataInSlot("dataIn", "Input")
-    , reduceToNSlot("nComponents", "Number of components (dimensions) to keep")
-    , datahash(0)
-    , dataInHash(0)
-    , columnInfos() {
+        : megamol::core::Module()
+        , dataOutSlot("dataOut", "Ouput")
+        , dataInSlot("dataIn", "Input")
+        , reduceToNSlot("nComponents", "Number of components (dimensions) to keep")
+        , datahash(0)
+        , dataInHash(0)
+        , columnInfos() {
 
     this->dataInSlot.SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->dataInSlot);
@@ -39,9 +39,13 @@ MDSProjection::MDSProjection(void)
     this->MakeSlotAvailable(&reduceToNSlot);
 }
 
-MDSProjection::~MDSProjection(void) { this->Release(); }
+MDSProjection::~MDSProjection(void) {
+    this->Release();
+}
 
-bool MDSProjection::create(void) { return true; }
+bool MDSProjection::create(void) {
+    return true;
+}
 
 void MDSProjection::release(void) {}
 
@@ -49,17 +53,21 @@ bool MDSProjection::getDataCallback(core::Call& c) {
     try {
         megamol::stdplugin::datatools::table::TableDataCall* outCall =
             dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
-        if (outCall == NULL) return false;
+        if (outCall == NULL)
+            return false;
 
         megamol::stdplugin::datatools::table::TableDataCall* inCall =
             this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-        if (inCall == NULL) return false;
+        if (inCall == NULL)
+            return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
-        if (!(*inCall)()) return false;
+        if (!(*inCall)())
+            return false;
 
         bool finished = dataProjection(inCall);
-        if (finished == false) return false;
+        if (finished == false)
+            return false;
 
         outCall->SetFrameCount(inCall->GetFrameCount());
         outCall->SetDataHash(this->datahash);
@@ -85,14 +93,17 @@ bool MDSProjection::getHashCallback(core::Call& c) {
     try {
         megamol::stdplugin::datatools::table::TableDataCall* outCall =
             dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
-        if (outCall == NULL) return false;
+        if (outCall == NULL)
+            return false;
 
         megamol::stdplugin::datatools::table::TableDataCall* inCall =
             this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-        if (inCall == NULL) return false;
+        if (inCall == NULL)
+            return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
-        if (!(*inCall)(1)) return false;
+        if (!(*inCall)(1))
+            return false;
 
         outCall->SetFrameCount(inCall->GetFrameCount());
         outCall->SetDataHash(this->datahash);
@@ -155,7 +166,8 @@ bool megamol::infovis::MDSProjection::dataProjection(megamol::stdplugin::datatoo
     this->data.reserve(rowsCount * outputDimCount);
 
     for (size_t row = 0; row < rowsCount; row++) {
-        for (size_t col = 0; col < outputDimCount; col++) this->data.push_back(result(row, col));
+        for (size_t col = 0; col < outputDimCount; col++)
+            this->data.push_back(result(row, col));
     }
 
     this->dataInHash = inCall->DataHash();
@@ -189,7 +201,7 @@ Eigen::MatrixXd megamol::infovis::MDSProjection::classicMds(
     assert(squaredDissimilarityMatrix.rows() == squaredDissimilarityMatrix.cols());
 
     Eigen::MatrixXd J = Eigen::MatrixXd::Identity(rowsCount, rowsCount) -
-                        (1.0 / (double)rowsCount) * Eigen::MatrixXd::Ones(rowsCount, rowsCount);
+                        (1.0 / (double) rowsCount) * Eigen::MatrixXd::Ones(rowsCount, rowsCount);
 
     // Apply double centering
     Eigen::MatrixXd B = -0.5 * J * squaredDissimilarityMatrix * J;
@@ -308,7 +320,7 @@ Eigen::MatrixXd megamol::infovis::MDSProjection::smacofMds(Eigen::MatrixXd dissi
     for (k = 0; k < countSteps; k++) {
         if (weightsAllOne) {
             Eigen::MatrixXd B = bMatrix(X, weightsMatrix, dissimilarityMatrix);
-            X = ((B * X).array()) / (float)nPoints;
+            X = ((B * X).array()) / (float) nPoints;
 
         } else {
             X = Vp * bMatrix(X, weightsMatrix, dissimilarityMatrix) * X;
@@ -383,8 +395,10 @@ Eigen::MatrixXd megamol::infovis::MDSProjection::ordinalMds(Eigen::MatrixXd diss
                 int dissA = sortedIndexes(row, sortedIndex);
                 int dissB = sortedIndexes(row, sortedIndex + 1);
 
-                if (dissA == medianIndex) continue;
-                if (dissB == medianIndex) continue;
+                if (dissA == medianIndex)
+                    continue;
+                if (dissB == medianIndex)
+                    continue;
 
                 bool valueAdded = false;
 
@@ -416,9 +430,10 @@ Eigen::MatrixXd megamol::infovis::MDSProjection::ordinalMds(Eigen::MatrixXd diss
                         for (int i : notMonotoncols) {
                             avg += distances(row, i);
                         }
-                        avg /= (double)notMonotoncols.size();
+                        avg /= (double) notMonotoncols.size();
 
-                        for (int i : notMonotoncols) newDistances(row, i) = avg;
+                        for (int i : notMonotoncols)
+                            newDistances(row, i) = avg;
 
                         notMonotoncols.clear();
                     }
@@ -432,7 +447,8 @@ Eigen::MatrixXd megamol::infovis::MDSProjection::ordinalMds(Eigen::MatrixXd diss
 
         for (size_t i = 0, nRows = distances.rows(), nCols = distances.cols(); i < nRows; ++i)
             for (size_t j = 0; j < nRows; j++) {
-                if (i == j) continue;
+                if (i == j)
+                    continue;
                 X.row(i) = X.row(i).array() + alpha / (dissimilarityMatrix.cols() - 1) *
                                                   (1 - newDistances(i, j) / distances(i, j)) *
                                                   (Xold.row(j).array() - Xold.row(i).array());

@@ -27,7 +27,7 @@ public:
     void close();
 
     bool assignRequestedResources();
-    std::vector<ModuleResource>& getProvidedResources();
+    std::vector<FrontendResource>& getProvidedResources();
     
     void updateProvidedResources();
     void digestChangedRequestedResources();
@@ -41,7 +41,7 @@ public:
 private:
 
     void sortServices();
-    ModuleResource* findResource(std::string const& name);
+    FrontendResource* findResource(std::string const& name);
 
     struct ServiceEntry {
         AbstractFrontendService* service = nullptr;
@@ -52,7 +52,7 @@ private:
     };
 
     std::vector<ServiceEntry> m_services;
-    std::vector<ModuleResource> m_serviceResources;
+    std::vector<FrontendResource> m_serviceResources;
 };
 
 } // namespace frontend

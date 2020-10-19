@@ -33,10 +33,10 @@ public:
     bool init(void* configPtr) override;
     void close() override;
 
-    std::vector<ModuleResource>& getProvidedResources() override;
+    std::vector<FrontendResource>& getProvidedResources() override;
 
     const std::vector<std::string> getRequestedResourceNames() const override;
-    void setRequestedResources(std::vector<ModuleResource> resources) override;
+    void setRequestedResources(std::vector<FrontendResource> resources) override;
 
     void updateProvidedResources() override;
 
@@ -62,9 +62,9 @@ private:
 
     std::function<bool(std::string const&)> m_frontbufferToPNG_trigger;
 
-    std::vector<ModuleResource> m_providedResourceReferences;
+    std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
-    std::vector<ModuleResource> m_requestedResourceReferences;
+    std::vector<FrontendResource> m_requestedResourceReferences;
 };
 
 } // namespace frontend

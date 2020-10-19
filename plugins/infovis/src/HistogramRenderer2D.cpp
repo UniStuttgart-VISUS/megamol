@@ -12,27 +12,27 @@ using namespace megamol::stdplugin::datatools;
 using megamol::core::utility::log::Log;
 
 HistogramRenderer2D::HistogramRenderer2D()
-    : Renderer2D()
-    , tableDataCallerSlot("getData", "Float table input")
-    , transferFunctionCallerSlot("getTransferFunction", "Transfer function input")
-    , flagStorageReadCallerSlot("readFlagStorage", "Flag storage read input")
-    , flagStorageWriteCallerSlot("writeFlagStorage", "Flag storage write input")
-    , numberOfBinsParam("numberOfBins", "Number of bins")
-    , logPlotParam("logPlot", "Logarithmic scale")
-    , selectionColorParam("selectionColorParam", "Color of selection")
-    , currentTableDataHash(std::numeric_limits<std::size_t>::max())
-    , currentTableFrameId(std::numeric_limits<unsigned int>::max())
-    , bins(10)
-    , colCount(0)
-    , rowCount(0)
-    , maxBinValue(0)
-    , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
-    , mouseX(0.0f)
-    , mouseY(0.0f)
-    , needSelectionUpdate(false)
-    , selectionMode(0)
-    , selectedCol(-1)
-    , selectedBin(-1) {
+        : Renderer2D()
+        , tableDataCallerSlot("getData", "Float table input")
+        , transferFunctionCallerSlot("getTransferFunction", "Transfer function input")
+        , flagStorageReadCallerSlot("readFlagStorage", "Flag storage read input")
+        , flagStorageWriteCallerSlot("writeFlagStorage", "Flag storage write input")
+        , numberOfBinsParam("numberOfBins", "Number of bins")
+        , logPlotParam("logPlot", "Logarithmic scale")
+        , selectionColorParam("selectionColorParam", "Color of selection")
+        , currentTableDataHash(std::numeric_limits<std::size_t>::max())
+        , currentTableFrameId(std::numeric_limits<unsigned int>::max())
+        , bins(10)
+        , colCount(0)
+        , rowCount(0)
+        , maxBinValue(0)
+        , font("Evolventa-SansSerif", core::utility::SDFFont::RenderType::RENDERTYPE_FILL)
+        , mouseX(0.0f)
+        , mouseY(0.0f)
+        , needSelectionUpdate(false)
+        , selectionMode(0)
+        , selectedCol(-1)
+        , selectedBin(-1) {
     this->tableDataCallerSlot.SetCompatibleCall<table::TableDataCallDescription>();
     this->MakeSlotAvailable(&this->tableDataCallerSlot);
 
@@ -55,16 +55,23 @@ HistogramRenderer2D::HistogramRenderer2D()
     this->MakeSlotAvailable(&this->selectionColorParam);
 }
 
-HistogramRenderer2D::~HistogramRenderer2D() { this->Release(); }
+HistogramRenderer2D::~HistogramRenderer2D() {
+    this->Release();
+}
 
 bool HistogramRenderer2D::create() {
-    if (!this->font.Initialise(this->GetCoreInstance())) return false;
+    if (!this->font.Initialise(this->GetCoreInstance()))
+        return false;
     this->font.SetBatchDrawMode(true);
 
-    if (!makeProgram("::histo::calc", this->calcHistogramProgram)) return false;
-    if (!makeProgram("::histo::select", this->selectionProgram)) return false;
-    if (!makeProgram("::histo::draw", this->histogramProgram)) return false;
-    if (!makeProgram("::histo::axes", this->axesProgram)) return false;
+    if (!makeProgram("::histo::calc", this->calcHistogramProgram))
+        return false;
+    if (!makeProgram("::histo::select", this->selectionProgram))
+        return false;
+    if (!makeProgram("::histo::draw", this->histogramProgram))
+        return false;
+    if (!makeProgram("::histo::axes", this->axesProgram))
+        return false;
 
     glGenBuffers(1, &this->floatDataBuffer);
     glGenBuffers(1, &this->minBuffer);

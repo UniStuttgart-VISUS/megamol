@@ -40,12 +40,9 @@ public:
         int versionMajor = 4;
         int versionMinor = 6;
         std::string windowTitlePrefix = "MegaMol";
-        void* sharedContextPtr = nullptr;
-        std::string viewInstanceName = "";
         WindowPlacement windowPlacement{}; // window position, glfw creation hints // TODO: sane defaults??
         bool enableKHRDebug = true;        // max error reporting
         bool enableVsync = false;          // max frame rate
-                                           // TODO: request OpenGL context version, extensions?
         bool glContextCoreProfile = false;
     };
 
@@ -68,9 +65,9 @@ public:
     void postGraphRender() override; // clean up after rendering, e.g. stop and show frame-timers in GLFW window
 
     // expose the resources and input events this service provides: Keyboard inputs, Mouse inputs, GLFW Window events, Framebuffer resize events
-    std::vector<ModuleResource>& getProvidedResources() override;
+    std::vector<FrontendResource>& getProvidedResources() override;
     const std::vector<std::string> getRequestedResourceNames() const override;
-    void setRequestedResources(std::vector<ModuleResource> resources) override;
+    void setRequestedResources(std::vector<FrontendResource> resources) override;
 
     // from AbstractFrontendService:
     // int setPriority(const int p) // priority initially 0
@@ -101,6 +98,8 @@ public:
     void glfw_onFramebufferSize_func(const int widthpx, const int heightpx);
 
 private:
+    void register_glfw_callbacks();
+
     struct OpenGL_Context : public megamol::frontend_resources::IOpenGL_Context {
         void* ptr = nullptr;
 
@@ -127,8 +126,8 @@ private:
     frontend_resources::IOpenGL_Context* m_opengl_context;
 
     // this holds references to the event structs we fill. the events are passed to the renderers/views using
-    // const std::vector<ModuleResource>& getModuleResources() override
-    std::vector<ModuleResource> m_renderResourceReferences;
+    // const std::vector<FrontendResource>& getModuleResources() override
+    std::vector<FrontendResource> m_renderResourceReferences;
 };
 
 } // namespace frontend
