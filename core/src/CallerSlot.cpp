@@ -87,9 +87,11 @@ void CallerSlot::ClearCleanupMark(void) {
 void CallerSlot::DisconnectCalls(void) {
     if (this->CleanupMark() && (this->call != NULL)) {
         this->SetStatusDisconnected();
-        ::megamol::core::Call *c = this->call;
+        //::megamol::core::Call *c = this->call;
+        this->call->callee = nullptr;
+        this->call->caller = nullptr;
         this->call = NULL;
-        delete c;
+        //delete c;
     }
 }
 

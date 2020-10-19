@@ -20,7 +20,7 @@ namespace core {
     /**
      * Class of view descriptions.
      */
-    class ViewDescription : public InstanceDescription {
+    class MEGAMOLCORE_API ViewDescription : public InstanceDescription {
     public:
 
         /**

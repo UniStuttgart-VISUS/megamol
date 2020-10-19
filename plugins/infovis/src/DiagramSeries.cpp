@@ -15,15 +15,15 @@ using namespace megamol::stdplugin::datatools;
  * DiagramSeries::DiagramSeries
  */
 DiagramSeries::DiagramSeries(void)
-    : core::Module()
-    , seriesInSlot("seriesIn", "Input of series for passthrough")
-    , seriesOutSlot("seriesOut", "Output of owned series")
-    , ftInSlot("ftIn", "Input table to select series from")
-    , columnSelectorParam("columnSelector", "Param to select specific column from the table")
-    , scalingParam("scaling", "Param to set a scaling factor for selected column")
-    , colorParam("color", "Selecto color for series")
-    , myHash(0)
-    , inputHash((std::numeric_limits<size_t>::max)()) {
+        : core::Module()
+        , seriesInSlot("seriesIn", "Input of series for passthrough")
+        , seriesOutSlot("seriesOut", "Output of owned series")
+        , ftInSlot("ftIn", "Input table to select series from")
+        , columnSelectorParam("columnSelector", "Param to select specific column from the table")
+        , scalingParam("scaling", "Param to set a scaling factor for selected column")
+        , colorParam("color", "Selecto color for series")
+        , myHash(0)
+        , inputHash((std::numeric_limits<size_t>::max)()) {
     this->color = {1.0f, 1.0f, 1.0f};
 
     this->seriesInSlot.SetCompatibleCall<DiagramSeriesCallDescription>();
@@ -52,13 +52,17 @@ DiagramSeries::DiagramSeries(void)
 /*
  * DiagramSeries::~DiagramSeries
  */
-DiagramSeries::~DiagramSeries(void) { this->Release(); }
+DiagramSeries::~DiagramSeries(void) {
+    this->Release();
+}
 
 
 /*
  * DiagramSeries::create
  */
-bool DiagramSeries::create(void) { return true; }
+bool DiagramSeries::create(void) {
+    return true;
+}
 
 
 /*
@@ -73,16 +77,21 @@ void DiagramSeries::release(void) {}
 bool megamol::infovis::DiagramSeries::seriesSelectionCB(core::Call& c) {
     try {
         DiagramSeriesCall* outSeries = dynamic_cast<DiagramSeriesCall*>(&c);
-        if (outSeries == NULL) return false;
+        if (outSeries == NULL)
+            return false;
 
         DiagramSeriesCall* inSeries = this->seriesInSlot.CallAs<DiagramSeriesCall>();
 
         table::TableDataCall* ft = this->ftInSlot.CallAs<table::TableDataCall>();
-        if (ft == NULL) return false;
-        if (!(*ft)(1)) return false;
-        if (!(*ft)(0)) return false;
+        if (ft == NULL)
+            return false;
+        if (!(*ft)(1))
+            return false;
+        if (!(*ft)(0))
+            return false;
 
-        if (!assertData(ft)) return false;
+        if (!assertData(ft))
+            return false;
 
         //(*(outSeries->GetSeriesInsertionCB()))(this->series);
         outSeries->GetSeriesInsertionCB()(this->series);
@@ -94,9 +103,7 @@ bool megamol::infovis::DiagramSeries::seriesSelectionCB(core::Call& c) {
                 return false;
             }
         }
-    } catch (...) {
-        return false;
-    }
+    } catch (...) { return false; }
 
     return true;
 }
@@ -106,7 +113,8 @@ bool megamol::infovis::DiagramSeries::seriesSelectionCB(core::Call& c) {
  * DiagramSeries::assertData
  */
 bool DiagramSeries::assertData(const table::TableDataCall* const ft) {
-    if (this->inputHash == ft->DataHash() && !isAnythingDirty()) return true;
+    if (this->inputHash == ft->DataHash() && !isAnythingDirty())
+        return true;
 
     if (this->inputHash != ft->DataHash()) {
         this->columnSelectorParam.Param<core::param::FlexEnumParam>()->ClearValues();
@@ -121,7 +129,8 @@ bool DiagramSeries::assertData(const table::TableDataCall* const ft) {
     auto colname = this->columnSelectorParam.Param<core::param::FlexEnumParam>()->ValueString();
 
     uint32_t colIdx = 0;
-    if (!this->getColumnIdx(colIdx, colname, ft)) return false;
+    if (!this->getColumnIdx(colIdx, colname, ft))
+        return false;
 
     core::utility::ColourParser::FromString(
         this->colorParam.Param<core::param::StringParam>()->Value(), this->color[0], this->color[1], this->color[2]);

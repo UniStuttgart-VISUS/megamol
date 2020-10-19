@@ -776,9 +776,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             switch (action) {
             case (Graph::QueueAction::ADD_MODULE): {
                 if (megamol_graph != nullptr) {
-                    /* XXX MEGAMOL GRAPH
                     graph_sync_success &= megamol_graph->CreateModule(data.class_name, data.name_id);
-                    */
                 } else if (this->core_instance != nullptr) {
                     graph_sync_success &= this->core_instance->RequestModuleInstantiation(
                         vislib::StringA(data.class_name.c_str()), vislib::StringA(data.name_id.c_str()));
@@ -786,10 +784,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             } break;
             case (Graph::QueueAction::RENAME_MODULE): {
                 if (megamol_graph != nullptr) {
-                    /* XXX MEGAMOL GRAPH
                     bool rename_success = megamol_graph->RenameModule(data.name_id, data.rename_id);
                     graph_sync_success &= rename_success;
-                    */
                 } else if (this->core_instance != nullptr) {
                     /* XXX Currently not supported by core graph
                     bool rename_success = false;
@@ -804,9 +800,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             } break;
             case (Graph::QueueAction::DELETE_MODULE): {
                 if (megamol_graph != nullptr) {
-                    /* XXX MEGAMOL GRAPH
                     graph_sync_success &= megamol_graph->DeleteModule(data.name_id);
-                    */
                 } else if (this->core_instance != nullptr) {
                     graph_sync_success &=
                         this->core_instance->RequestModuleDeletion(vislib::StringA(data.name_id.c_str()));
@@ -814,9 +808,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             } break;
             case (Graph::QueueAction::ADD_CALL): {
                 if (megamol_graph != nullptr) {
-                    /* XXX MEGAMOL GRAPH
                     graph_sync_success &= megamol_graph->CreateCall(data.class_name, data.caller, data.callee);
-                    */
                 } else if (this->core_instance != nullptr) {
                     graph_sync_success &=
                         this->core_instance->RequestCallInstantiation(vislib::StringA(data.class_name.c_str()),
@@ -825,9 +817,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             } break;
             case (Graph::QueueAction::DELETE_CALL): {
                 if (megamol_graph != nullptr) {
-                    /* XXX MEGAMOL GRAPH
                     graph_sync_success &= megamol_graph->DeleteCall(data.caller, data.callee);
-                    */
                 } else if (this->core_instance != nullptr) {
                     graph_sync_success &= this->core_instance->RequestCallDeletion(
                         vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
@@ -835,11 +825,9 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             } break;
             case (Graph::QueueAction::CREATE_MAIN_VIEW): {
                 if (megamol_graph != nullptr) {
-                    /* XXX MEGAMOL GRAPH
                     megamol_graph->SetGraphEntryPoint(data.name_id,
                         megamol::core::view::get_gl_view_runtime_resources_requests(),
-                        megamol::core::view::view_rendering_execution);
-                    */
+                        megamol::core::view::view_rendering_execution, megamol::core::view::view_init_rendering_state);
                 } else if (this->core_instance != nullptr) {
                     /* XXX Currently not supported by core graph
                      */
@@ -847,9 +835,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             } break;
             case (Graph::QueueAction::REMOVE_MAIN_VIEW): {
                 if (megamol_graph != nullptr) {
-                    /* XXX MEGAMOL GRAPH
                     megamol_graph->RemoveGraphEntryPoint(data.name_id);
-                    */
                 } else if (this->core_instance != nullptr) {
                     /* XXX Currently not supported by core graph
                      */
@@ -916,9 +902,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     auto module_name = module_ptr->FullName();
                     megamol::core::Module* core_module_ptr = nullptr;
                     if (megamol_graph != nullptr) {
-                        /* XXX MEGAMOL GRAPH
                         core_module_ptr = megamol_graph->FindModule(module_name).get();
-                        */
                     } else if (this->core_instance != nullptr) {
                         // New core module will only be available next frame after module request is processed.
                         std::function<void(megamol::core::Module*)> fun = [&](megamol::core::Module* mod) {

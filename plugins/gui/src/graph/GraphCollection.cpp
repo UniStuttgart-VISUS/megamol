@@ -382,7 +382,6 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         std::vector<megamol::core::Module*> add_module_list;
         std::map<std::string, std::string> new_view_instances;
         if (use_megamol_graph) {
-            /* XXX MEGAMOL GRAPH
             for (auto& module_inst : megamol_graph->ListModules()) {
                 std::string module_fullname =
                     std::string(module_inst.modulePtr->Name().PeekBuffer()); /// Check only 'Name()'!
@@ -393,7 +392,6 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                     }
                 }
             }
-            */
         } else if (use_core_instance) {
             const auto module_func = [&, this](megamol::core::Module* mod) {
                 std::string module_fullname = std::string(mod->FullName().PeekBuffer());
@@ -565,12 +563,10 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         }
         for (auto& module_map : delete_module_map) {
             if (use_megamol_graph) {
-                /* XXX MEGAMOL GRAPH
                 if (!megamol_graph->FindModule(module_map.first)) {
                     graph_ptr->DeleteModule(module_map.second);
                     gui_graph_changed = true;
                 }
-                */
             } else if (use_core_instance) {
                 bool found_module = false;
                 std::function<void(megamol::core::Module*)> fun = [&](megamol::core::Module* mod) {
@@ -631,7 +627,6 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
 
         // ADD new calls to GUI graph ---------------------------------------------------
         if (use_megamol_graph) {
-            /* XXX MEGAMOL GRAPH
             for (auto& call : megamol_graph->ListCalls()) {
                 auto call_ptr = call.callPtr;
                 if (call_ptr == nullptr)
@@ -675,7 +670,6 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 cd.callee_module_callslot_name = call_callee_name;
                 call_data.emplace_back(cd);
             }
-            */
         } else if (use_core_instance) {
             /// TODO
             /// How to list calls in core instance graph?
@@ -684,12 +678,10 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         // REMOVE deleted calls from GUI graph ------------------------------------------
         for (auto& call_info : gui_graph_call_info) {
             if (use_megamol_graph) {
-                /* XXX MEGAMOL GRAPH
                 if (!megamol_graph->FindCall(call_info.from, call_info.to)) {
                     graph_ptr->DeleteCall(call_info.uid);
                     gui_graph_changed = true;
                 }
-                */
             } else if (use_core_instance) {
                 /// TODO
                 /// How to list calls in core instance graph?

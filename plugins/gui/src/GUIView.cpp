@@ -35,8 +35,6 @@ GUIView::~GUIView() {
 
 bool GUIView::create() {
 
-    return gui.CreateContext_GL(this->GetCoreInstance());
-    /* NEW FORONTEND
     if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
         return gui.CreateContext_GL(this->GetCoreInstance());
     } else {
@@ -45,7 +43,6 @@ bool GUIView::create() {
             __FUNCTION__, __LINE__);
         return false;
     }
-    */
 }
 
 
