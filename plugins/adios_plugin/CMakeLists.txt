@@ -78,13 +78,5 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
 
   # Register plugin
-  if (WIN32)
-    target_link_libraries(mmconsole PRIVATE ${PROJECT_NAME})
-    target_link_options(mmconsole PRIVATE "/WHOLEARCHIVE:${PROJECT_NAME}")
-  else ()
-    target_link_libraries(mmconsole PRIVATE
-      -Wl,--whole-archive
-      ${PROJECT_NAME}
-      -Wl,--no-whole-archive)
-  endif ()
+  megamol_register_plugin(${PROJECT_NAME})
 endif(BUILD_${EXPORT_NAME}_PLUGIN)

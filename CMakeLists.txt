@@ -76,6 +76,29 @@ if(WIN32)
   add_subdirectory(configurator)
 endif()
 
+# Plugin register function
+# This function must be called by every plugin.
+# Within this function we need to define every binary which should include plugins.
+function(megamol_register_plugin TARGET)
+  if (WIN32)
+    target_link_libraries(mmconsole PRIVATE ${TARGET})
+    target_link_options(mmconsole PRIVATE "/WHOLEARCHIVE:${TARGET}")
+
+    target_link_libraries(megamol PRIVATE ${TARGET})
+    target_link_options(megamol PRIVATE "/WHOLEARCHIVE:${TARGET}")
+  else ()
+    target_link_libraries(mmconsole PRIVATE
+      -Wl,--whole-archive
+      ${TARGET}
+      -Wl,--no-whole-archive)
+
+    target_link_libraries(megamol PRIVATE
+      -Wl,--whole-archive
+      ${TARGET}
+      -Wl,--no-whole-archive)
+  endif ()
+endfunction(megamol_register_plugin)
+
 # Plugins
 add_subdirectory(plugins)
 

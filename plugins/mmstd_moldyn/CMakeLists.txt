@@ -43,13 +43,5 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Shaders" FILES ${shader_files})
 
   # Register plugin
-  if (WIN32)
-    target_link_libraries(mmconsole PRIVATE ${PROJECT_NAME})
-    target_link_options(mmconsole PRIVATE "/WHOLEARCHIVE:${PROJECT_NAME}")
-  else ()
-    target_link_libraries(mmconsole PRIVATE
-      -Wl,--whole-archive
-      ${PROJECT_NAME}
-      -Wl,--no-whole-archive)
-  endif ()
+  megamol_register_plugin(${PROJECT_NAME})
 endif()
