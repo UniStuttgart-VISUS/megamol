@@ -4,7 +4,7 @@ print("I am the Standard MegaMol configuration!")
 
 basePath = "${CMAKE_INSTALL_PREFIX}/"
 
-mmSetLogLevel(0)
+-- mmSetLogLevel(10000) -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=<uint max>
 mmSetEchoLevel("*")
 mmSetAppDir(basePath .. "${MMPLG_DIR}")
 mmAddShaderDir(basePath .. "share/shaders")
@@ -20,5 +20,5 @@ mmSetConfigValue("topmost",     "off")
 mmSetConfigValue("fullscreen",  "off")
 mmSetConfigValue("vsync",       "off")
 mmSetConfigValue("useKHRdebug", "off")
-mmSetConfigValue("arcball",     "off")
+mmSetConfigValue("arcball",     "on")
 

@@ -51,10 +51,10 @@ int main(int argc, char* argv[]) {
     auto config = handle_cli_inputs(argc, argv);
 
     // setup log
-    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
     megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
     megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
-    megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(
+    megamol::core::utility::log::Log::DefaultLog.SetOfflineMessageBufferSize(100);
+    megamol::core::utility::log::Log::DefaultLog.SetMainTarget(
         std::make_shared<megamol::core::utility::log::StreamTarget>(
             std::cout, megamol::core::utility::log::Log::LEVEL_ALL));
 
