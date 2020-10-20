@@ -20,7 +20,7 @@ megamol::mesh::GlTFFileLoader::GlTFFileLoader()
         : AbstractMeshDataSource()
         , m_version(0)
         , m_glTFFilename_slot("glTF filename", "The name of the gltf file to load")
-        , m_gltf_slot("CallGlTFData", "The slot publishing the loaded data") {
+        , m_gltf_slot("gltfModels", "The slot publishing the loaded data") {
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetData", &GlTFFileLoader::getGltfDataCallback);
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetMetaData", &GlTFFileLoader::getGltfMetaDataCallback);
     this->MakeSlotAvailable(&this->m_gltf_slot);

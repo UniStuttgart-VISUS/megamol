@@ -20,8 +20,8 @@ using namespace megamol::mesh;
 
 RenderMDIMesh::RenderMDIMesh()
 	: Renderer3DModule_2()
-    , m_render_task_callerSlot("getRenderTaskData", "Connects the renderer with a render task data source")
-    , m_framebuffer_slot("Framebuffer", "Connects the renderer to an (optional) framebuffer render target from the calling module") 
+    , m_render_task_callerSlot("renderTasks", "Connects the renderer with a render task data source")
+    , m_framebuffer_slot("framebuffer", "Connects the renderer to an (optional) framebuffer render target from the calling module") 
 {
 	this->m_render_task_callerSlot.SetCompatibleCall<GPURenderTasksDataCallDescription>();
 	this->MakeSlotAvailable(&this->m_render_task_callerSlot);

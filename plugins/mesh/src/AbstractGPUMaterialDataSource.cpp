@@ -12,8 +12,8 @@
 megamol::mesh::AbstractGPUMaterialDataSource::AbstractGPUMaterialDataSource()
     : core::Module()
     , m_material_collection({nullptr, {}})
-    , m_getData_slot("getData", "The slot publishing the loaded data")
-    , m_mtl_callerSlot("getMaterial", "The slot for chaining material data sources") {
+    , m_getData_slot("gpuMaterials", "The slot publishing the loaded data")
+    , m_mtl_callerSlot("chainGpuMaterials", "The slot for chaining material data sources") {
     this->m_getData_slot.SetCallback(
         CallGPUMaterialData::ClassName(), "GetData", &AbstractGPUMaterialDataSource::getDataCallback);
     this->m_getData_slot.SetCallback(

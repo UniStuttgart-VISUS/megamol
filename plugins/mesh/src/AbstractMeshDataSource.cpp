@@ -6,8 +6,8 @@
 megamol::mesh::AbstractMeshDataSource::AbstractMeshDataSource()
     : core::Module()
     , m_mesh_access_collection({nullptr, {}})
-    , m_mesh_lhs_slot("getData", "The slot publishing the loaded data")
-    , m_mesh_rhs_slot("getMesh", "The slot for chaining mesh data sources") 
+    , m_mesh_lhs_slot("meshes", "The slot publishing the loaded data")
+    , m_mesh_rhs_slot("chainMeshes", "The slot for chaining mesh data sources") 
 {
     this->m_mesh_lhs_slot.SetCallback(
         CallMesh::ClassName(), "GetData", &AbstractMeshDataSource::getMeshDataCallback);
