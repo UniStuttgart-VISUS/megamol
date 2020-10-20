@@ -712,10 +712,10 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         float input_text_width = std::max(
             min_text_width, (ImGui::CalcTextSize(this->current_main_view_name.c_str()).x + 2.0f * style.ItemSpacing.x));
         ImGui::PushItemWidth(input_text_width);
-        /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
         GUIUtils::Utf8Encode(this->current_main_view_name);
-        if (ImGui::InputText(
-                "###current_main_view_name", &this->current_main_view_name, ImGuiInputTextFlags_EnterReturnsTrue)) {
+        ImGui::InputText("###current_main_view_name", &this->current_main_view_name, ImGuiInputTextFlags_None);
+        GUIUtils::Utf8Decode(this->current_main_view_name);
+        if (ImGui::IsItemDeactivatedAfterEdit()) {
             if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "[GUI] The action [Change Main View] is not yet supported for the graph "
@@ -725,8 +725,9 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
             } else {
                 selected_mod_ptr->main_view_name = this->current_main_view_name;
             }
+        } else {
+            this->current_main_view_name = selected_mod_ptr->main_view_name;
         }
-        GUIUtils::Utf8Decode(this->current_main_view_name);
         ImGui::PopItemWidth();
         ImGui::SameLine();
     }

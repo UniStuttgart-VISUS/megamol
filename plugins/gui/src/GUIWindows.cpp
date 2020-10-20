@@ -1992,20 +1992,6 @@ std::string megamol::gui::GUIWindows::dump_state_to_file(const std::string& file
 
     nlohmann::json state_json;
 
-    // Load existing gui state from file
-    std::string state_str;
-    if (FileUtils::ReadFile(filename, state_str, true)) {
-        state_str = GUIUtils::ExtractGUIState(state_str);
-        if (!state_str.empty()) {
-            state_json = nlohmann::json::parse(state_str);
-            if (!state_json.is_object()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                return std::string("");
-            }
-        }
-    }
-
     if (this->state_to_json(state_json)) {
         std::string state_str = state_json.dump(); // No line feed
         this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
@@ -2092,7 +2078,7 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
         // Write window configuration
         this->window_collection.StateToJSON(inout_json);
 
-        // Read configurator state
+        // Write the configurator state
         this->configurator.StateToJSON(inout_json);
 
         // Write GUI state of parameters (groups)
@@ -2109,9 +2095,6 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
                 }
             }
         }
-
-        // Write the configurator state
-        this->configurator.StateToJSON(inout_json);
 
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote GUI state to JSON.");
