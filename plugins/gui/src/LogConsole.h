@@ -45,6 +45,7 @@ namespace gui {
         bool Update(WindowCollection::WindowConfiguration& wc);
 
     private:
+        // DATA TYPES ---------------------------------------------------------
 
         class LogBuffer : public std::stringbuf {
         public:

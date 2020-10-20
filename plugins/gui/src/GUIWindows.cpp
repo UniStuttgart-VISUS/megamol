@@ -1019,7 +1019,7 @@ bool GUIWindows::createContext(void) {
     this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::CONFIGURATOR,
         [&, this](WindowCollection::WindowConfiguration& wc) { this->drawConfiguratorWindowCallback(wc); });
     this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::LOGCONSOLE,
-        [&, this](WindowCollection::WindowConfiguration& wc) { this->drawLogConsoleWindowCallback(wc); });
+        [&, this](WindowCollection::WindowConfiguration& wc) { this->console.Draw(wc); });
 
     // Create window configurations
     WindowCollection::WindowConfiguration buf_win;
@@ -1295,12 +1295,6 @@ void GUIWindows::drawTransferFunctionWindowCallback(WindowCollection::WindowConf
 void GUIWindows::drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc) {
 
     this->configurator.Draw(wc, this->core_instance);
-}
-
-
-void megamol::gui::GUIWindows::drawLogConsoleWindowCallback(WindowCollection::WindowConfiguration& wc) {
-
-    this->console.Draw(wc);
 }
 
 

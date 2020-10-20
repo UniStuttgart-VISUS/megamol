@@ -49,7 +49,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
     // Menu
     if (ImGui::BeginMenuBar()) {
         // Log Level
-        ImGui::TextUnformatted("Show:");
+        ImGui::TextUnformatted("Show");
         ImGui::SameLine();
         if (ImGui::RadioButton("Errors", (this->log_level >= megamol::core::utility::log::Log::LEVEL_ERROR))) {
             if (this->log_level >= megamol::core::utility::log::Log::LEVEL_ERROR) {
@@ -67,7 +67,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
             }
         }
         ImGui::SameLine();
-        if (ImGui::RadioButton("Info", (this->log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
+        if (ImGui::RadioButton("Infos", (this->log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
             if (this->log_level == megamol::core::utility::log::Log::LEVEL_ALL) {
                 this->log_level = megamol::core::utility::log::Log::LEVEL_WARN;
             } else {
@@ -76,7 +76,10 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
         }
 
         // Scrolling
-        ImGui::SameLine(0.0f, ImGui::GetContentRegionAvail().x - (2.0f * ImGui::GetFrameHeightWithSpacing()));
+        std::string scroll_label = "Scroll";
+        ImGui::SameLine(0.0f, ImGui::GetContentRegionAvail().x - (2.25f * ImGui::GetFrameHeightWithSpacing()) - ImGui::CalcTextSize(scroll_label.c_str()).x);
+        ImGui::TextUnformatted(scroll_label.c_str());
+        ImGui::SameLine();
         if (ImGui::ArrowButton("scroll_up", ImGuiDir_Up)) {
             this->scroll_log_up = 2;
         }

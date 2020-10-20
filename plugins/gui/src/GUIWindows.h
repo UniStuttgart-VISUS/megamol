@@ -272,7 +272,6 @@ namespace gui {
         void drawFontWindowCallback(WindowCollection::WindowConfiguration& wc);
         void drawTransferFunctionWindowCallback(WindowCollection::WindowConfiguration& wc);
         void drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc);
-        void drawLogConsoleWindowCallback(WindowCollection::WindowConfiguration& wc);
 
         void drawMenu(void);
         void drawPopUps(void);
