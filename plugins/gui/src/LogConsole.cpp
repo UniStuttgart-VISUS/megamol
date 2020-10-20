@@ -22,13 +22,13 @@ megamol::gui::LogConsole::LogConsole()
         , log_level(megamol::core::utility::log::Log::LEVEL_ALL)
         , scroll_log_down(2)
         , scroll_log_up(0)
+        , last_window_height(0.0f)
         , tooltip() {
 
     this->echo_log_target =
         std::make_shared<megamol::core::utility::log::StreamTarget>(this->echo_log_stream, this->log_level);
 
-    /// Note: Do not connect log in ctor, because otherwise temporary "GUIView" module loading in configurator would
-    /// overwrite echo target.
+    this->connect_log();
 }
 
 
@@ -45,6 +45,12 @@ LogConsole::~LogConsole() {
 
 
 bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
+
+    // Scroll down if window height changes
+    if (this->last_window_height != ImGui::GetWindowHeight()) {
+        this->last_window_height = ImGui::GetWindowHeight();
+        this->scroll_log_down = 2;
+    }
 
     // Menu
     if (ImGui::BeginMenuBar()) {
@@ -93,7 +99,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
         ImGui::EndMenuBar();
     }
 
-    // Scroll
+    // Scroll (requires 2 frames for being applyed)
     if (this->scroll_log_down > 0) {
         ImGui::SetScrollY(ImGui::GetScrollMaxY());
         this->scroll_log_down--;
@@ -122,8 +128,6 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
 
 bool megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc) {
 
-    this->connect_log();
-
     // Get new messages
     bool updated = false;
     std::vector<std::string> new_messages;
@@ -144,7 +148,7 @@ bool megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
                     this->log.push_back(new_entry);
 
                     // Force open log window if there is any warning
-                    if (new_log_level <= megamol::core::utility::log::Log::LEVEL_INFO) {
+                    if (new_log_level < megamol::core::utility::log::Log::LEVEL_INFO) {
                         if (this->log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
                             this->log_level = megamol::core::utility::log::Log::LEVEL_WARN;
                         }
@@ -167,6 +171,7 @@ bool megamol::gui::LogConsole::connect_log(void) {
     std::shared_ptr<megamol::core::utility::log::OfflineTarget> offline_echo_target =
         std::dynamic_pointer_cast<megamol::core::utility::log::OfflineTarget>(current_echo_target);
 
+    // Only connect if echo target is still default OfflineTarget
     if ((offline_echo_target != nullptr) && (this->echo_log_target != nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(this->echo_log_target);
     }

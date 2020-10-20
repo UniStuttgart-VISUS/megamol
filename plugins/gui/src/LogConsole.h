@@ -101,6 +101,7 @@ namespace gui {
 
         unsigned int scroll_log_down;
         unsigned int scroll_log_up;
+        float last_window_height;
 
         // Widgets
         HoverToolTip tooltip;
