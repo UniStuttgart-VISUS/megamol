@@ -71,7 +71,7 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        bool split_path(const stdfs::path& in_file_path, std::string& out_path, std::string& out_file);
+        bool validate_split_path(const std::string& in_path_file, std::string& out_path, std::string& out_file);
         void validate_directory(const std::string& path_str);
         void validate_file(const std::string& file_str, const std::string& extension, FileBrowserFlag flag);
         std::string get_absolute_path(const std::string& in_path_str) const;

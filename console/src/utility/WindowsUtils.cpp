@@ -175,7 +175,8 @@ void MEGAMOLCORE_CALLBACK utility::windowsConsoleLogEcho(unsigned int level, con
     if (level <= 200) {
         SetConsoleTextAttribute(hCO, sbi.wAttributes);
     }
-    std::cout << "|" << message;
+    auto closing = (message[std::strlen(message)-1] == '\n') ? "" : "\n";
+    std::cout << "|" << message << closing;
 }
 
 #endif

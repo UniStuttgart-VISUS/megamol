@@ -14,7 +14,7 @@ if(BUILD_CONSOLE)
   set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
   # Collect source files
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h" "src/*.hpp")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
 
   # Add target
@@ -50,8 +50,8 @@ if(BUILD_CONSOLE)
   if(UNIX)
     include(GNUInstallDirs)
     set(cfg_LIB_PATH "../lib") # relative path from bin to lib dir
-    set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
-    configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
+    set(MEGAMOL_SHELL_START_SCRIPT "mmconsole.sh")
+    configure_file(extra/mmconsole.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
     install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
   endif()
 

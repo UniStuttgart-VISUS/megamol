@@ -6,16 +6,12 @@
  */
 #pragma once
 
-#include <mmcore/view/AbstractInputScope.h>
+#include "AbstractInputScope.h"
 
 namespace megamol {
-namespace console {
+namespace frontend_resources {
 
-namespace gl {
-class Window;
-}
-
-class AbstractUILayer : public core::view::AbstractInputScope {
+class AbstractUILayer : public megamol::frontend_resources::AbstractInputScope {
 public:
     virtual bool Enabled() { return true; }
 
@@ -27,5 +23,5 @@ protected:
     virtual ~AbstractUILayer() = default;
 };
 
-} /* end namespace console */
+} /* end namespace frontend_resources */
 } /* end namespace megamol */
