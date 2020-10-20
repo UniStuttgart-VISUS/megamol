@@ -143,9 +143,11 @@ bool megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
                     new_entry.message = msg;
                     this->log.push_back(new_entry);
 
-                    // Force open log window if there is an error
-                    if (new_log_level == megamol::core::utility::log::Log::LEVEL_ERROR) {
-                        this->log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
+                    // Force open log window if there is any warning
+                    if (new_log_level <= megamol::core::utility::log::Log::LEVEL_INFO) {
+                        if (this->log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
+                            this->log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+                        }
                         wc.win_show = true;
                     }
 
