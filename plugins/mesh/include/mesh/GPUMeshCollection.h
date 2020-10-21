@@ -45,7 +45,7 @@ public:
     };
 
     struct SubMeshData {
-        size_t batch_index;
+        std::shared_ptr<BatchedMeshes> mesh;
         glowl::DrawElementsCommand sub_mesh_draw_command;
     };
 
@@ -53,29 +53,31 @@ public:
     ~GPUMeshCollection() = default;
 
     template <typename VertexBufferIterator, typename IndexBufferIterator>
-    size_t addMesh(std::vector<glowl::VertexLayout> const& vertex_descriptor,
+    void addMesh(std::string const& identifier, std::vector<glowl::VertexLayout> const& vertex_descriptor,
         std::vector<IteratorPair<VertexBufferIterator>> const& vertex_buffers,
         IteratorPair<IndexBufferIterator> index_buffer, GLenum index_type, GLenum usage, GLenum primitive_type,
         bool store_seperate = false);
 
-    void deleteSubMesh(size_t submesh_idx);
+    void addMesh(std::string const& identifier, std::shared_ptr<glowl::Mesh> mesh, SubMeshData submesh);
 
-    void clear() {
-        m_batched_meshes.clear();
-        m_sub_mesh_data.clear();
-    }
+    void deleteSubMesh(std::string const& identifier);
 
-    std::vector<BatchedMeshes> const& getMeshes();
+    void clear();
 
-    std::vector<SubMeshData> const& getSubMeshData();
+    SubMeshData const& getSubMesh(std::string const& identifier);
+
+    std::vector<std::shared_ptr<BatchedMeshes>> const& getMeshes();
+
+    std::unordered_map<std::string, SubMeshData> const& getSubMeshData();
 
 private:
-    std::vector<BatchedMeshes> m_batched_meshes;
-    std::vector<SubMeshData> m_sub_mesh_data;
+    std::vector<std::shared_ptr<BatchedMeshes>> m_batched_meshes;
+    std::unordered_map<std::string, SubMeshData> m_sub_mesh_data;
 };
 
 template <typename VertexBufferIterator, typename IndexBufferIterator>
-inline size_t GPUMeshCollection::addMesh(std::vector<glowl::VertexLayout> const& vertex_descriptor,
+inline void GPUMeshCollection::addMesh(std::string const& identifier,
+    std::vector<glowl::VertexLayout> const& vertex_descriptor,
     std::vector<IteratorPair<VertexBufferIterator>> const& vertex_buffers,
     IteratorPair<IndexBufferIterator> index_buffer, GLenum index_type, GLenum usage, GLenum primitive_type,
     bool store_seperate) {
@@ -102,40 +104,31 @@ inline size_t GPUMeshCollection::addMesh(std::vector<glowl::VertexLayout> const&
     size_t req_vertex_cnt = vb_byte_sizes.front() / vb_attrib_byte_sizes.front();
     size_t req_index_cnt = ib_byte_size / glowl::computeByteSize(index_type);
 
-    auto it = m_batched_meshes.begin();
-    if (!store_seperate) {
-        // check for existing mesh batch with matching vertex layout and index type and enough available space
-        for (; it != m_batched_meshes.end(); ++it) {
-            bool layout_check = true;
-
+    auto query = std::find_if(m_batched_meshes.begin(), m_batched_meshes.end(),
+        [&vertex_descriptor, index_type, req_vertex_cnt, req_index_cnt](std::shared_ptr<BatchedMeshes> const& batched_meshes) {
+            bool retval = true;
             for (int i = 0; i < vertex_descriptor.size(); ++i) {
-                vertex_descriptor[i] == it->mesh->getVertexLayouts()[i];
+                retval &= vertex_descriptor[i] == batched_meshes->mesh->getVertexLayouts()[i];
             }
+            retval &= index_type == batched_meshes->mesh->getIndexType();
 
-            bool idx_type_check = (index_type == it->mesh->getIndexType());
+            auto ava_vertex_cnt = batched_meshes->vertices_allocated - batched_meshes->vertices_used;
+            auto ava_index_cnt = batched_meshes->indices_allocated - batched_meshes->indices_used;
+            retval &= ((req_vertex_cnt < ava_vertex_cnt) && (req_index_cnt < ava_index_cnt));
+            return retval;
+        });
 
-            if (layout_check && idx_type_check) {
-                // check whether there is enough space left in batch
-                size_t ava_vertex_cnt = (it->vertices_allocated - it->vertices_used);
-                size_t ava_index_cnt = (it->indices_allocated - it->indices_used);
-
-                if ((req_vertex_cnt < ava_vertex_cnt) && (req_index_cnt < ava_index_cnt)) {
-                    break;
-                }
-            }
-        }
-    } else {
-        it = m_batched_meshes.end();
-    }
+    std::shared_ptr<BatchedMeshes> batched_mesh = nullptr;
 
     // if either no batch was found or mesh is requested to be stored seperated, create a new GPU mesh batch
-    if (it == m_batched_meshes.end()) {
+    if (query == m_batched_meshes.end() || store_seperate) {
         size_t new_allocation_vertex_cnt = store_seperate ? req_vertex_cnt : std::max<size_t>(req_vertex_cnt, 800000);
         size_t new_allocation_index_cnt = store_seperate ? req_index_cnt : std::max<size_t>(req_index_cnt, 3200000);
 
-        m_batched_meshes.push_back(BatchedMeshes(new_allocation_vertex_cnt, new_allocation_index_cnt));
-        m_batched_meshes.back().vertices_used = 0;
-        m_batched_meshes.back().indices_used = 0;
+        m_batched_meshes.push_back(std::make_shared<BatchedMeshes>(new_allocation_vertex_cnt, new_allocation_index_cnt));
+        batched_mesh = m_batched_meshes.back();
+        batched_mesh->vertices_used = 0;
+        batched_mesh->indices_used = 0;
 
         std::vector<GLvoid*> alloc_data(vertex_buffers.size(), nullptr);
         std::vector<size_t> alloc_vb_byte_sizes;
@@ -143,46 +136,71 @@ inline size_t GPUMeshCollection::addMesh(std::vector<glowl::VertexLayout> const&
             alloc_vb_byte_sizes.push_back(attrib_byte_size * new_allocation_vertex_cnt);
         }
 
-        m_batched_meshes.back().mesh = std::make_shared<glowl::Mesh>(alloc_data, alloc_vb_byte_sizes, nullptr,
+        batched_mesh->mesh = std::make_shared<glowl::Mesh>(alloc_data, alloc_vb_byte_sizes, nullptr,
             new_allocation_index_cnt * glowl::computeByteSize(index_type), vertex_descriptor, index_type, usage,
             primitive_type);
-
-        it = m_batched_meshes.end();
-        --it;
+    } else {
+        batched_mesh = (*query);
     }
 
-    auto sub_mesh_idx = m_sub_mesh_data.size();
-
-    m_sub_mesh_data.emplace_back(SubMeshData());
-    m_sub_mesh_data.back().batch_index = std::distance(m_batched_meshes.begin(), it);
-    m_sub_mesh_data.back().sub_mesh_draw_command.first_idx = it->indices_used;
-    m_sub_mesh_data.back().sub_mesh_draw_command.base_vertex = it->vertices_used;
-    m_sub_mesh_data.back().sub_mesh_draw_command.cnt = req_index_cnt;
-    m_sub_mesh_data.back().sub_mesh_draw_command.instance_cnt = 1;
-    m_sub_mesh_data.back().sub_mesh_draw_command.base_instance = 0;
+    auto new_sub_mesh = SubMeshData();
+    new_sub_mesh.mesh = batched_mesh;
+    new_sub_mesh.sub_mesh_draw_command.first_idx = batched_mesh->indices_used;
+    new_sub_mesh.sub_mesh_draw_command.base_vertex = batched_mesh->vertices_used;
+    new_sub_mesh.sub_mesh_draw_command.cnt = req_index_cnt;
+    new_sub_mesh.sub_mesh_draw_command.instance_cnt = 1;
+    new_sub_mesh.sub_mesh_draw_command.base_instance = 0;
+    m_sub_mesh_data.insert({identifier, new_sub_mesh});
 
     // upload data to GPU
     for (size_t i = 0; i < vb_data.size(); ++i) {
         // at this point, it should be guaranteed that it points at a mesh with matching vertex layout,
         // hence it's legal to multiply requested attrib byte sizes with vertex used count
-        it->mesh->bufferVertexSubData(i, vb_data[i], vb_byte_sizes[i], vb_attrib_byte_sizes[i] * (it->vertices_used));
+        batched_mesh->mesh->bufferVertexSubData(
+            i, vb_data[i], vb_byte_sizes[i], vb_attrib_byte_sizes[i] * (batched_mesh->vertices_used));
     }
 
-    it->mesh->bufferIndexSubData(reinterpret_cast<GLvoid*>(&*std::get<0>(index_buffer)), ib_byte_size,
-        glowl::computeByteSize(index_type) * it->indices_used);
+    batched_mesh->mesh->bufferIndexSubData(reinterpret_cast<GLvoid*>(&*std::get<0>(index_buffer)), ib_byte_size,
+        glowl::computeByteSize(index_type) * batched_mesh->indices_used);
 
     // updated vertices and indices used
-    it->vertices_used += req_vertex_cnt;
-    it->indices_used += req_index_cnt;
-
-    return sub_mesh_idx;
+    batched_mesh->vertices_used += req_vertex_cnt;
+    batched_mesh->indices_used += req_index_cnt;
 }
 
-inline void GPUMeshCollection::deleteSubMesh(size_t submesh_idx) {}
+inline void GPUMeshCollection::addMesh(
+    std::string const& identifier, std::shared_ptr<glowl::Mesh> mesh, SubMeshData submesh) {
+    // TODO!!!
+}
 
-inline std::vector<GPUMeshCollection::BatchedMeshes> const& GPUMeshCollection::getMeshes() { return m_batched_meshes; }
+inline void GPUMeshCollection::deleteSubMesh(std::string const& identifier) {
 
-inline std::vector<GPUMeshCollection::SubMeshData> const& GPUMeshCollection::getSubMeshData() {
+    auto query = m_sub_mesh_data.find(identifier);
+
+    if (query != m_sub_mesh_data.end()) {
+        m_sub_mesh_data.erase(query);
+    }
+}
+
+inline void GPUMeshCollection::clear() {
+    m_batched_meshes.clear();
+    m_sub_mesh_data.clear();
+}
+
+inline GPUMeshCollection::SubMeshData const& GPUMeshCollection::getSubMesh(std::string const& identifier) {
+
+    auto query = m_sub_mesh_data.find(identifier);
+
+    if (query != m_sub_mesh_data.end()) {
+        return query->second;
+    }
+
+    return GPUMeshCollection::SubMeshData();
+}
+
+inline std::vector<std::shared_ptr<GPUMeshCollection::BatchedMeshes>> const& GPUMeshCollection::getMeshes() { return m_batched_meshes; }
+
+inline std::unordered_map<std::string, GPUMeshCollection::SubMeshData> const& GPUMeshCollection::getSubMeshData() {
     return m_sub_mesh_data;
 }
 

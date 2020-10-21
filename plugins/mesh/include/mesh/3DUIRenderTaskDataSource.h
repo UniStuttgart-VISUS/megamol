@@ -78,7 +78,7 @@ namespace mesh {
 
         std::array<std::pair<GPUMeshCollection::SubMeshData,std::array<PerObjectShaderParams,1>>,4> m_UI_template_elements;
 
-        std::list < std::pair <uint32_t, std::array<PerObjectShaderParams,1> >> m_scene;
+        std::list < std::pair <std::string, std::array<PerObjectShaderParams,1> >> m_scene;
 
         std::shared_ptr<ThreeDimensionalInteractionCollection> m_interaction_collection;
 
