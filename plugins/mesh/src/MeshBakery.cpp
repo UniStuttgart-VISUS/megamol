@@ -3,63 +3,62 @@
 #include "mmcore/param/EnumParam.h"
 
 megamol::mesh::MeshBakery::MeshBakery() 
-    : core::Module()
+    : AbstractMeshDataSource()
     , m_version(0)
-    , m_mesh_access_collection(nullptr)
     , m_geometry_type("GeometryType", "...")
-    , m_mesh_lhs_slot("deployMeshAccess", "...")
-    , m_mesh_rhs_slot("chainMeshAccess", "...") 
 {
     this->m_geometry_type << new megamol::core::param::EnumParam(0);
     this->m_geometry_type.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Quad");
     this->m_geometry_type.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Cone");
     this->MakeSlotAvailable(&this->m_geometry_type);
-
-    this->m_mesh_lhs_slot.SetCallback(CallMesh::ClassName(), "GetData", &MeshBakery::getDataCallback);
-    this->m_mesh_lhs_slot.SetCallback(CallMesh::ClassName(), "GetMetaData", &MeshBakery::getMetaDataCallback);
-    this->MakeSlotAvailable(&this->m_mesh_lhs_slot);
-
-    this->m_mesh_rhs_slot.SetCompatibleCall<CallMeshDescription>();
-    this->MakeSlotAvailable(&this->m_mesh_rhs_slot);
 }
 
 megamol::mesh::MeshBakery::~MeshBakery() { this->Release(); }
 
 bool megamol::mesh::MeshBakery::create(void) {
-
-    this->m_mesh_access_collection = std::make_shared<MeshDataAccessCollection>();
-
     return true;
 }
 
 void megamol::mesh::MeshBakery::release() {}
 
-bool megamol::mesh::MeshBakery::getDataCallback(core::Call& caller) {
-
+bool megamol::mesh::MeshBakery::getMeshDataCallback(core::Call& caller) {
     CallMesh* lhs_mesh_call = dynamic_cast<CallMesh*>(&caller);
     CallMesh* rhs_mesh_call = m_mesh_rhs_slot.CallAs<CallMesh>();
 
-    if (lhs_mesh_call == NULL) return false;
-
-    std::shared_ptr<MeshDataAccessCollection> mesh_access_collection(nullptr);
-
-    if (lhs_mesh_call->getData() == nullptr) {
-        // no incoming mesh -> use your own mesh storage
-        mesh_access_collection = this->m_mesh_access_collection;
-    } else {
-        // incoming mesh -> use it (delete local?)
-        mesh_access_collection = lhs_mesh_call->getData();
+    if (lhs_mesh_call == NULL) {
+        return false;
     }
 
-    //TODO check chain
+    syncMeshAccessCollection(lhs_mesh_call, rhs_mesh_call);
+
+    // if there is a mesh connection to the right, pass on the mesh collection
+    if (rhs_mesh_call != NULL) {
+        if (!(*rhs_mesh_call)(0)) {
+            return false;
+        }
+        if (rhs_mesh_call->hasUpdate()) {
+            ++m_version;
+            rhs_mesh_call->getData();
+        }
+    }
 
     if (m_geometry_type.IsDirty()) {
         m_geometry_type.ResetDirty();
 
         ++m_version;
 
+        auto geometry_type = m_geometry_type.Param<core::param::EnumParam>()->Value();
+
         //TODO call geometry generating functions
-        createConeGeometry();
+        switch (geometry_type) {
+        case 0:
+            break;
+        case 1:
+            createConeGeometry();
+            break;
+        default:
+            break;
+        }
 
         std::array<float, 6> bbox;
 
@@ -100,9 +99,9 @@ bool megamol::mesh::MeshBakery::getDataCallback(core::Call& caller) {
             reinterpret_cast<uint8_t*>(m_vertex_uvs.data()), m_vertex_uvs.size() * sizeof(float), 2,
             MeshDataAccessCollection::FLOAT, 0, 0, MeshDataAccessCollection::TEXCOORD});
 
-
-        mesh_access_collection->addMesh(mesh_attributes, mesh_indices);
-
+        auto identifier = std::string(m_geometry_type.Param<core::param::EnumParam>()->ValueString());
+        m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices);
+        m_mesh_access_collection.second.push_back(identifier);
 
         auto meta_data = lhs_mesh_call->getMetaData();
         meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
@@ -110,12 +109,12 @@ bool megamol::mesh::MeshBakery::getDataCallback(core::Call& caller) {
         lhs_mesh_call->setMetaData(meta_data);
     }
 
-    lhs_mesh_call->setData(mesh_access_collection, m_version);
+    lhs_mesh_call->setData(m_mesh_access_collection.first, m_version);
 
     return true; 
 }
 
-bool megamol::mesh::MeshBakery::getMetaDataCallback(core::Call& caller) {
+bool megamol::mesh::MeshBakery::getMeshMetaDataCallback(core::Call& caller) {
     CallMesh* lhs_mesh_call = dynamic_cast<CallMesh*>(&caller);
     CallMesh* rhs_mesh_call = m_mesh_rhs_slot.CallAs<CallMesh>();
 
