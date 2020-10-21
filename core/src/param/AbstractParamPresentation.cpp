@@ -114,15 +114,18 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
             this->SetGUIPresentation(Presentation::TransferFunction);
         } break;
         case (ParamType::VECTOR2F): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse |
+                Presentation::Slider | Presentation::Drag;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::VECTOR3F): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse | Presentation::Rotation3D_Direction;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse |
+                Presentation::Rotation3D_Direction | Presentation::Slider | Presentation::Drag;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::VECTOR4F): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse | Presentation::Color | Presentation::Rotation3D_Axes;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse |
+                Presentation::Color | Presentation::Rotation3D_Axes | Presentation::Slider | Presentation::Drag;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::GROUP_ANIMATION): {
