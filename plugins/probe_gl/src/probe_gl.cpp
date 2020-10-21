@@ -14,6 +14,7 @@
 
 #include "ProbeBillboardGlyphMaterial.h"
 #include "ProbeBillboardGlyphRenderTasks.h"
+#include "ProbeDetailViewRenderTasks.h"
 #include "ProbeInteraction.h"
 #include "ProbeRenderTasks.h"
 #include "ProbeGlCalls.h"
@@ -55,6 +56,7 @@ public:
         //
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeBillboardGlyphMaterial>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeBillboardGlyphRenderTasks>();
+        this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeDetailViewRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeRenderTasks>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::ProbeInteraction>();
         this->module_descriptions.RegisterAutoDescription<megamol::probe_gl::FilterByProbe>();
