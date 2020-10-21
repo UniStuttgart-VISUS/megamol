@@ -34,9 +34,10 @@ public:
     static const char* Description(void) { return "Call that transports..."; }
 };
 
-class CallGlTFData : public core::GenericVersionedCall<std::shared_ptr<tinygltf::Model>, core::EmptyMetaData> {
+class CallGlTFData : public core::GenericVersionedCall<std::pair<std::string,std::shared_ptr<tinygltf::Model>>, core::EmptyMetaData> {
 public:
-    inline CallGlTFData() : GenericVersionedCall<std::shared_ptr<tinygltf::Model>, core::EmptyMetaData>() {}
+    inline CallGlTFData()
+        : GenericVersionedCall<std::pair<std::string, std::shared_ptr<tinygltf::Model>>, core::EmptyMetaData>() {}
     ~CallGlTFData() = default;
 
     static const char* ClassName(void) { return "CallGlTFData"; }
@@ -44,9 +45,9 @@ public:
 };
 
 class CallGPUMaterialData
-    : public core::GenericVersionedCall<std::shared_ptr<GPUMaterialCollecton>, core::EmptyMetaData> {
+    : public core::GenericVersionedCall<std::shared_ptr<GPUMaterialCollection>, core::EmptyMetaData> {
 public:
-    CallGPUMaterialData() : GenericVersionedCall<std::shared_ptr<GPUMaterialCollecton>, core::EmptyMetaData>() {}
+    CallGPUMaterialData() : GenericVersionedCall<std::shared_ptr<GPUMaterialCollection>, core::EmptyMetaData>() {}
     ~CallGPUMaterialData() = default;
 
     static const char* ClassName(void) { return "CallGPUMaterialData"; }

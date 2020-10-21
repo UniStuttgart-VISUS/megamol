@@ -29,7 +29,8 @@ namespace gui {
             PERFORMANCE = 3,
             FONT = 4,
             TRANSFER_FUNCTION = 5,
-            CONFIGURATOR = 6
+            CONFIGURATOR = 6,
+            LOGCONSOLE = 7
         };
 
         /** Performance mode for fps/ms windows. */

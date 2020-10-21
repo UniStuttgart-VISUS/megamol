@@ -462,6 +462,7 @@ bool megamol::gui::Configurator::StateToJSON(nlohmann::json& inout_json) {
 
         /// Make sure configurator processed loading of modules and calls
         if (this->init_state > 1) {
+
             // Write graph states
             for (auto& graph_ptr : this->GetGraphCollection().GetGraphs()) {
                 // For graphs with no interface to core save only file name of loaded project
@@ -515,6 +516,7 @@ bool megamol::gui::Configurator::StateFromJSON(const nlohmann::json& in_json) {
 
         /// Make sure configurator processed loading of modules and calls
         if (this->init_state > 1) {
+
             // Read graph states
             for (auto& graph_ptr : this->GetGraphCollection().GetGraphs()) {
                 if (graph_ptr->HasCoreInterface()) {

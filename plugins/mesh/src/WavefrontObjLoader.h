@@ -8,8 +8,10 @@
 #ifndef WAVEFRONT_OBJ_LOADER_H_INCLUDED
 #define WAVEFRONT_OBJ_LOADER_H_INCLUDED
 
+#include "mesh/AbstractMeshDataSource.h"
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataAccessCollection.h"
+
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
@@ -18,7 +20,7 @@
 namespace megamol {
 namespace mesh {
 
-class WavefrontObjLoader : public core::Module {
+class WavefrontObjLoader : public AbstractMeshDataSource {
 public:
     /**
      * Answer the name of this module.
@@ -59,9 +61,9 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    bool getDataCallback(core::Call& caller);
+    bool getMeshDataCallback(core::Call& caller);
 
-    bool getMetaDataCallback(core::Call& caller);
+    bool getMeshMetaDataCallback(core::Call& caller);
 
     /**
      * Implementation of 'Release'.
@@ -105,22 +107,12 @@ private:
     std::vector<std::vector<unsigned int>> m_indices;
 
     /**
-     * Shareable access to the internally stored mesh data from loaded obj file.
-     */
-    std::shared_ptr<MeshDataAccessCollection> m_mesh_data_access;
-
-    /**
      * Meta data for communicating data updates, as well as data size
      */
     core::Spatial3DMetaData m_meta_data;
 
     /** The gltf file name */
     core::param::ParamSlot m_filename_slot;
-
-    /** The slot for requesting data */
-    megamol::core::CalleeSlot m_getData_slot;
-
-    // TODO slot for chaining
 };
 
 } // namespace mesh

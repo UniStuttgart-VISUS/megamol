@@ -13,6 +13,7 @@
 
 #include "GPUMaterialCollection.h"
 #include "mmcore/CalleeSlot.h"
+#include "mesh/MeshCalls.h"
 
 namespace megamol {
 namespace mesh {
@@ -46,7 +47,12 @@ protected:
      */
     virtual void release();
 
-    std::shared_ptr<GPUMaterialCollecton> m_gpu_materials;
+    void syncMaterialCollection(CallGPUMaterialData* lhs_call);
+
+    /**
+     * Material collection that is used and indices of materials within the collection that were added by a module instance.
+     */
+    std::pair<std::shared_ptr<GPUMaterialCollection>, std::vector<std::string>> m_material_collection;
 
     /** The slot for querying additional material data, i.e. a rhs chaining connection */
     megamol::core::CallerSlot m_mtl_callerSlot;

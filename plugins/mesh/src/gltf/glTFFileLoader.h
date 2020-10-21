@@ -11,13 +11,14 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
+#include "mesh/AbstractMeshDataSource.h"
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataAccessCollection.h"
 
 namespace megamol {
 namespace mesh {
 
-class GlTFFileLoader : public core::Module {
+class GlTFFileLoader : public AbstractMeshDataSource {
 public:
     /**
      * Answer the name of this module.
@@ -76,8 +77,6 @@ protected:
 private:
     std::shared_ptr<tinygltf::Model> m_gltf_model;
 
-    std::shared_ptr<MeshDataAccessCollection> m_mesh_collection;
-
     uint32_t m_version;
 
     /** The gltf file name */
@@ -85,11 +84,6 @@ private:
 
     /** The slot for providing the complete gltf model */
     megamol::core::CalleeSlot m_gltf_slot;
-    //size_t m_gltf_cached_hash;
-
-    /** The slot for providing access to internal mesh data */
-    megamol::core::CalleeSlot m_mesh_slot;
-    //size_t m_mesh_cached_hash;
 };
 
 } // namespace mesh
