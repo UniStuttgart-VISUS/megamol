@@ -1188,8 +1188,8 @@ bool megamol::gui::ParameterPresentation::widget_vector2f(megamol::gui::Paramete
             const float offset = 2.0f;
             float value_min = std::min(value.x, value.y);
             float value_max = std::max(value.x, value.y);
-            auto slider_min = std::max(vec_min, ((value_min == 0.0f) ? (-offset) : (value_min - (offset * std::fabsf(value_min)))));
-            auto slider_max = std::min(vec_max, ((value_max == 0.0f) ? (offset) : (value_max + (offset * std::fabsf(value_max)))));
+            auto slider_min = std::max(vec_min, ((value_min == 0.0f) ? (-offset) : (value_min - (offset * fabsf(value_min)))));
+            auto slider_max = std::min(vec_max, ((value_max == 0.0f) ? (offset) : (value_max + (offset * fabsf(value_max)))));
             ImGui::SliderFloat2(label.c_str(), glm::value_ptr(std::get<glm::vec2>(this->widget_store)), slider_min, slider_max, this->float_format.c_str());
             this->help = "[Ctrl + Click] to turn slider into an input box.";
         }
@@ -1265,8 +1265,8 @@ bool megamol::gui::ParameterPresentation::widget_vector3f(megamol::gui::Paramete
             const float offset = 2.0f;
             float value_min = std::min(value.x, std::min(value.y, value.z));
             float value_max = std::max(value.x, std::max(value.y, value.z));
-            auto slider_min = std::max(vec_min, ((value_min == 0.0f) ? (-offset) : (value_min - (offset * std::fabsf(value_min)))));
-            auto slider_max = std::min(vec_max, ((value_max == 0.0f) ? (offset) : (value_max + (offset * std::fabsf(value_max)))));
+            auto slider_min = std::max(vec_min, ((value_min == 0.0f) ? (-offset) : (value_min - (offset * fabsf(value_min)))));
+            auto slider_max = std::min(vec_max, ((value_max == 0.0f) ? (offset) : (value_max + (offset * fabsf(value_max)))));
             ImGui::SliderFloat3(label.c_str(), glm::value_ptr(std::get<glm::vec3>(this->widget_store)), slider_min, slider_max, this->float_format.c_str());
             this->help = "[Ctrl + Click] to turn slider into an input box.";
         }
@@ -1342,8 +1342,8 @@ bool megamol::gui::ParameterPresentation::widget_vector4f(megamol::gui::Paramete
             const float offset = 2.0f;
             float value_min = std::min(value.x, std::min(value.y, std::min(value.z, value.w)));
             float value_max = std::max(value.x, std::max(value.y, std::max(value.z, value.w)));
-            auto slider_min = std::max(vec_min, ((value_min == 0.0f) ? (-offset) : (value_min - (offset * std::fabsf(value_min)))));
-            auto slider_max = std::min(vec_max, ((value_max == 0.0f) ? (offset) : (value_max + (offset * std::fabsf(value_max)))));
+            auto slider_min = std::max(vec_min, ((value_min == 0.0f) ? (-offset) : (value_min - (offset * fabsf(value_min)))));
+            auto slider_max = std::min(vec_max, ((value_max == 0.0f) ? (offset) : (value_max + (offset * fabsf(value_max)))));
             ImGui::SliderFloat4(label.c_str(), glm::value_ptr(std::get<glm::vec4>(this->widget_store)), slider_min, slider_max, this->float_format.c_str());
             this->help = "[Ctrl + Click] to turn slider into an input box.";
         }
