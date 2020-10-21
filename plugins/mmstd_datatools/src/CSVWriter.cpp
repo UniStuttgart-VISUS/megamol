@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <locale>
 
 #include "mmcore/param/FilePathParam.h"
 
@@ -57,6 +58,8 @@ bool megamol::stdplugin::datatools::CSVWriter::run() {
 
     std::ofstream file = std::ofstream(filename);
 
+    file.imbue(std::locale::classic());
+
     for (size_t col = 0; col < col_count; ++col) {
         if (col < col_count - 1) {
             file << infos[col].Name() << ",";
@@ -68,9 +71,9 @@ bool megamol::stdplugin::datatools::CSVWriter::run() {
     for (size_t row = 0; row < row_count; ++row) {
         for (size_t col = 0; col < col_count; ++col) {
             if (col < col_count - 1) {
-                file << std::to_string(inCall->GetData(col, row)) << ",";
+                file << inCall->GetData(col, row) << ",";
             } else {
-                file << std::to_string(inCall->GetData(col, row)) << "\n";
+                file << inCall->GetData(col, row) << "\n";
             }
         }
     }
