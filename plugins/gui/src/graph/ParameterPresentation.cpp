@@ -621,8 +621,9 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 error = false;
             }
         } break;
-            // SLIDER //////////////////////////////////////////////////
-        case (Present_t::Slider): {
+            // SLIDER or DRAG //////////////////////////////////////////////////
+        case (Present_t::Slider): 
+        case (Present_t::Drag): {
             // FLOAT -----------------------------------------------
             if constexpr (std::is_same_v<T, float>) {
                 auto value = arg;
@@ -993,6 +994,8 @@ bool megamol::gui::ParameterPresentation::widget_int(megamol::gui::ParameterPres
         if (!std::holds_alternative<int>(this->widget_store)) {
             this->widget_store = value;
         }
+        auto p = this->GetGUIPresentation();
+
         // Min Max Values
         ImGui::BeginGroup();
         if (ImGui::ArrowButton("###_min_max", ((this->show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
@@ -1010,13 +1013,16 @@ bool megamol::gui::ParameterPresentation::widget_int(megamol::gui::ParameterPres
         }
 
         // Value
-        if (this->GetGUIPresentation() == Present_t::Slider) {
+        if (p == Present_t::Slider) {
             const int offset = 100;
             auto slider_min = (minval > INT_MIN) ? (minval) : ((value == 0) ? (-offset) : (value - (offset * value)));
             auto slider_max = (maxval < INT_MAX) ? (maxval) : ((value == 0) ? (offset) : (value + (offset * value)));
             ImGui::SliderInt(
                 label.c_str(), &std::get<int>(this->widget_store), slider_min, slider_max);
             this->help = "[Ctrl + Click] to turn slider into an input box.";
+        }
+        else if (p == Present_t::Drag) {
+            ImGui::DragInt(label.c_str(), &std::get<int>(this->widget_store), min_step_size, minval, maxval);
         }
         else { // Present_t::Basic
             ImGui::InputInt(
@@ -1057,7 +1063,7 @@ bool megamol::gui::ParameterPresentation::widget_float(megamol::gui::ParameterPr
         ImGui::BeginGroup();
 
         // Min Max Option
-        if ((p == Present_t::Basic) || (p == Present_t::Slider)) {
+        if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
             if (ImGui::ArrowButton("###_min_max", ((this->show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
                 this->show_minmax = !this->show_minmax;
             }
@@ -1082,6 +1088,9 @@ bool megamol::gui::ParameterPresentation::widget_float(megamol::gui::ParameterPr
                 this->float_format.c_str());
             this->help = "[Ctrl + Click] to turn slider into an input box.";
         }
+        else if (p == Present_t::Drag) {
+            ImGui::DragFloat(label.c_str(), &std::get<float>(this->widget_store), min_step_size, minval, maxval);
+        }
         else { // Present_t::Basic
             ImGui::InputFloat(label.c_str(), &std::get<float>(this->widget_store), min_step_size, max_step_size,
                 this->float_format.c_str(), ImGuiInputTextFlags_None);
@@ -1095,7 +1104,7 @@ bool megamol::gui::ParameterPresentation::widget_float(megamol::gui::ParameterPr
         }
 
         // Min Max Values
-        if ((p == Present_t::Basic) || (p == Present_t::Slider)) {
+        if ((p == Present_t::Basic) || (p == Present_t::Slider) || (p == Present_t::Drag)) {
             if (this->show_minmax) {
                 GUIUtils::ReadOnlyWigetStyle(true);
                 auto min_value = minval;

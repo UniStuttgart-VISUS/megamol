@@ -1837,7 +1837,7 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(WindowCollection::W
             wc.win_collapsed = !wc.win_collapsed;
             out_collapsing_changed = true;
         }
-        if (ImGui::MenuItem("Viewport Width", nullptr)) {
+        if (ImGui::MenuItem("Full Width", nullptr)) {
             wc.win_size.x = viewport.x;
             wc.win_reset = true;
         }
