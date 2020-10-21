@@ -3,7 +3,6 @@ build-*/
 build_*/
 cmake-build-*/
 bin/
-include/
 external/
 share/
 stage/
