@@ -49,6 +49,7 @@ AbstractParamPresentation::AbstractParamPresentation(void)
     this->presentation_name_map.emplace(Presentation::FilePath, "File Path");
     this->presentation_name_map.emplace(Presentation::TransferFunction, "Transfer Function");
     this->presentation_name_map.emplace(Presentation::Knob, "Knob");
+    this->presentation_name_map.emplace(Presentation::Slider, "Slider");
     this->presentation_name_map.emplace(Presentation::PinValueToMouse, "Pin Value To Mouse");
     this->presentation_name_map.emplace(Presentation::Rotation3D_Direction, "3D Rotation - Direction");
     this->presentation_name_map.emplace(Presentation::Rotation3D_Axes, "3D Rotation - Axes");
@@ -90,11 +91,11 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::FLOAT): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::Knob | Presentation::PinValueToMouse;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::Knob | Presentation::PinValueToMouse | Presentation::Slider;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::INT): {
-            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse;
+            this->compatible = Presentation::Basic | Presentation::String | Presentation::PinValueToMouse | Presentation::Slider;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         case (ParamType::STRING): {

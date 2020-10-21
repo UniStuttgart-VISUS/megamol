@@ -352,7 +352,7 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
 }
 
 static std::list<megamol::core::CallList_t::iterator> find_all_of(
-    megamol::core::CallList_t list,
+    megamol::core::CallList_t& list,
     std::function<bool(megamol::core::CallInstance_t const&)> const& func) {
 
     std::list<megamol::core::CallList_t::iterator> result;

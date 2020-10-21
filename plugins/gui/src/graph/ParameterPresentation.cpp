@@ -621,6 +621,35 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                 error = false;
             }
         } break;
+            // SLIDER //////////////////////////////////////////////////
+        case (Present_t::Slider): {
+            // FLOAT -----------------------------------------------
+            if constexpr (std::is_same_v<T, float>) {
+                auto value = arg;
+                if (this->widget_float(scope, param_label, value, inout_parameter.GetMinValue<T>(),
+                    inout_parameter.GetMaxValue<T>())) {
+                    inout_parameter.SetValue(value);
+                    retval = true;
+                }
+                error = false;
+            }
+            else if constexpr (std::is_same_v<T, int>) {
+                switch (inout_parameter.type) {
+                    // INT ---------------------------------------------
+                case (Param_t::INT): {
+                    auto value = arg;
+                    if (this->widget_int(scope, param_label, value, inout_parameter.GetMinValue<T>(),
+                        inout_parameter.GetMaxValue<T>())) {
+                        inout_parameter.SetValue(value);
+                        retval = true;
+                    }
+                    error = false;
+                } break;
+                default:
+                    break;
+                }
+            }
+        } break;
             // 3D ROTATION //////////////////////////////////////////////////
         case (Present_t::Rotation3D_Axes): {
             // FLOAT -----------------------------------------------
@@ -981,8 +1010,18 @@ bool megamol::gui::ParameterPresentation::widget_int(megamol::gui::ParameterPres
         }
 
         // Value
-        ImGui::InputInt(
-            label.c_str(), &std::get<int>(this->widget_store), min_step_size, max_step_size, ImGuiInputTextFlags_None);
+        if (this->GetGUIPresentation() == Present_t::Slider) {
+            const int offset = 100;
+            auto slider_min = (minval > INT_MIN) ? (minval) : ((value == 0) ? (-offset) : (value - (offset * value)));
+            auto slider_max = (maxval < INT_MAX) ? (maxval) : ((value == 0) ? (offset) : (value + (offset * value)));
+            ImGui::SliderInt(
+                label.c_str(), &std::get<int>(this->widget_store), slider_min, slider_max);
+            this->help = "[Ctrl + Click] to turn slider into an input box.";
+        }
+        else { // Present_t::Basic
+            ImGui::InputInt(
+                label.c_str(), &std::get<int>(this->widget_store), min_step_size, max_step_size, ImGuiInputTextFlags_None);
+        }
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             this->widget_store = std::max(minval, std::min(std::get<int>(this->widget_store), maxval));
             value = std::get<int>(this->widget_store);
@@ -1013,13 +1052,18 @@ bool megamol::gui::ParameterPresentation::widget_float(megamol::gui::ParameterPr
         if (!std::holds_alternative<float>(this->widget_store)) {
             this->widget_store = value;
         }
-        // Min Max Values
+
+        auto p = this->GetGUIPresentation();
         ImGui::BeginGroup();
-        if (ImGui::ArrowButton("###_min_max", ((this->show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
-            this->show_minmax = !this->show_minmax;
+
+        // Min Max Option
+        if ((p == Present_t::Basic) || (p == Present_t::Slider)) {
+            if (ImGui::ArrowButton("###_min_max", ((this->show_minmax) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+                this->show_minmax = !this->show_minmax;
+            }
+            this->tooltip.ToolTip("Min/Max Values");
+            ImGui::SameLine();
         }
-        this->tooltip.ToolTip("Min/Max Values");
-        ImGui::SameLine();
 
         // Relative step size
         float min_step_size = 1.0f;
@@ -1030,8 +1074,18 @@ bool megamol::gui::ParameterPresentation::widget_float(megamol::gui::ParameterPr
         }
 
         // Value
-        ImGui::InputFloat(label.c_str(), &std::get<float>(this->widget_store), min_step_size, max_step_size,
-            this->float_format.c_str(), ImGuiInputTextFlags_None);
+        if (p == Present_t::Slider) {
+            const float offset = 100.0f;
+            auto slider_min = (minval > -FLT_MAX) ? (minval) : ((value == 0.0f) ? (-offset) : (value - (offset * value)));
+            auto slider_max = (maxval < FLT_MAX) ? (maxval) : ((value == 0.0f) ? (offset) : (value + (offset * value)));
+            ImGui::SliderFloat(label.c_str(), &std::get<float>(this->widget_store), slider_min, slider_max,
+                this->float_format.c_str());
+            this->help = "[Ctrl + Click] to turn slider into an input box.";
+        }
+        else { // Present_t::Basic
+            ImGui::InputFloat(label.c_str(), &std::get<float>(this->widget_store), min_step_size, max_step_size,
+                this->float_format.c_str(), ImGuiInputTextFlags_None);
+        }
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             this->widget_store = std::max(minval, std::min(std::get<float>(this->widget_store), maxval));
             value = std::get<float>(this->widget_store);
@@ -1039,15 +1093,19 @@ bool megamol::gui::ParameterPresentation::widget_float(megamol::gui::ParameterPr
         } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
             this->widget_store = value;
         }
-        if (this->show_minmax) {
-            GUIUtils::ReadOnlyWigetStyle(true);
-            auto min_value = minval;
-            ImGui::InputFloat("Min Value", &min_value, min_step_size, max_step_size, this->float_format.c_str(),
-                ImGuiInputTextFlags_None);
-            auto max_value = maxval;
-            ImGui::InputFloat("Max Value", &max_value, min_step_size, max_step_size, this->float_format.c_str(),
-                ImGuiInputTextFlags_None);
-            GUIUtils::ReadOnlyWigetStyle(false);
+
+        // Min Max Values
+        if ((p == Present_t::Basic) || (p == Present_t::Slider)) {
+            if (this->show_minmax) {
+                GUIUtils::ReadOnlyWigetStyle(true);
+                auto min_value = minval;
+                ImGui::InputFloat("Min Value", &min_value, min_step_size, max_step_size, this->float_format.c_str(),
+                    ImGuiInputTextFlags_None);
+                auto max_value = maxval;
+                ImGui::InputFloat("Max Value", &max_value, min_step_size, max_step_size, this->float_format.c_str(),
+                    ImGuiInputTextFlags_None);
+                GUIUtils::ReadOnlyWigetStyle(false);
+            }
         }
         ImGui::EndGroup();
     }
