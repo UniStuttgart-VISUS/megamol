@@ -20,5 +20,5 @@ mmSetConfigValue("topmost",     "off")
 mmSetConfigValue("fullscreen",  "off")
 mmSetConfigValue("vsync",       "off")
 mmSetConfigValue("useKHRdebug", "off")
-mmSetConfigValue("arcball",     "on")
+mmSetConfigValue("arcball",     "off")
 
