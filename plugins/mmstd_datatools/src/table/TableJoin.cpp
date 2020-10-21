@@ -107,7 +107,7 @@ bool TableJoin::processData(core::Call &c) {
             this->rows_count = std::max(firstRowsCount, secondRowsCount);
             this->column_count = firstColumnCount + secondColumnCount;
             this->column_info.clear();
-            this->column_info.reserve(this->column_count);
+            this->column_info.resize(this->column_count);
             memcpy(this->column_info.data(), firstColumnInfos,
                 sizeof(TableDataCall::ColumnInfo)*firstColumnCount);
             memcpy(&(this->column_info.data()[firstColumnCount]), secondColumnInfos,

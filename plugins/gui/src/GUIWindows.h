@@ -24,6 +24,7 @@
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
 #include "FileUtils.h"
+#include "LogConsole.h"
 #include "WindowCollection.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
@@ -240,6 +241,9 @@ namespace gui {
 
         /** The configurator. */
         megamol::gui::Configurator configurator;
+
+        /** The configurator. */
+        megamol::gui::LogConsole console;
 
         /** The current local state of the gui. */
         StateBuffer state;
