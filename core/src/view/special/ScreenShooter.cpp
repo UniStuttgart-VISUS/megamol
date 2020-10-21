@@ -943,7 +943,7 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
                     timeSlot->Param<param::FloatParam>()->SetValue(startTime);
                     this->animLastFrameTime = std::numeric_limits<decltype(animLastFrameTime)>::lowest();
                 } else {
-                    Log::DefaultLog.WriteError("Unable to make animation screen shots.");
+                    Log::DefaultLog.WriteError("Unable to find animation time parameter in given view. Unable to make animation screen shots.");
                     this->makeAnimSlot.Param<param::BoolParam>()->SetValue(false);
                 }
                 // this is not a good idea because the animation module interferes with the "anim::time" parameter in
