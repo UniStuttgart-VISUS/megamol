@@ -1071,18 +1071,16 @@ bool GUIWindows::createContext(void) {
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
     buf_win.win_callback = WindowCollection::DrawCallbacks::CONFIGURATOR;
-    // buf_win.win_size is set to current viewport later
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // LOG CONSOLE Window -----------------------------------------------
     buf_win.win_name = "Log Console";
     buf_win.win_show = false;
-    buf_win.win_size = ImVec2(850.0f, 300.0f);
+    buf_win.win_size = ImVec2(850.0f, 10.0f * ImGui::GetFrameHeightWithSpacing());
     buf_win.win_reset_size = buf_win.win_size;
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F6);
     buf_win.win_callback = WindowCollection::DrawCallbacks::LOGCONSOLE;
-    // buf_win.win_size is set to current viewport later
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // Style settings ---------------------------------------------------------
