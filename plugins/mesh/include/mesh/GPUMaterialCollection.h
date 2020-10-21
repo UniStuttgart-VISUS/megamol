@@ -13,6 +13,7 @@
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 
 #include <memory>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -56,7 +57,9 @@ public:
 
     Material const& getMaterial(std::string const& identifier);
 
-    inline std::unordered_map<std::string, Material> const& getMaterials();
+    inline std::unordered_map<std::string, GPUMaterialCollection::Material> const& getMaterials() {
+        return m_materials;
+    }
 
 private:
     std::unordered_map<std::string,Material> m_materials;

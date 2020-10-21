@@ -11,7 +11,9 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <algorithm>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
