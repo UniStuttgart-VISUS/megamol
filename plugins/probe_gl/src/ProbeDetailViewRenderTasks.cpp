@@ -127,10 +127,10 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         auto probes = pc->getData();
         auto probe_cnt = probes->getProbeCount();
 
-        m_vector_probe_draw_commands.clear;
+        m_vector_probe_draw_commands.clear();
         m_vector_probe_draw_commands.reserve(probe_cnt);
 
-        m_vector_probe_data.clear;
+        m_vector_probe_data.clear();
         m_vector_probe_data.reserve(probe_cnt);
 
         std::vector<std::vector<float>> vertex_data;
