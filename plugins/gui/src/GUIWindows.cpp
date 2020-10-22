@@ -1818,7 +1818,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
                 FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->state.open_popup_load, filename)) {
             graph_ptr->Clear();
             popup_failed |=
-                !this->configurator.GetGraphCollection().LoadAddProjectFromFile(this->state.graph_uid, filename);
+                (GUI_INVALID_ID == this->configurator.GetGraphCollection().LoadAddProjectFromFile(this->state.graph_uid, filename));
         }
         MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
             confirmed, "Cancel", aborted);
