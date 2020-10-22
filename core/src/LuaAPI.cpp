@@ -18,6 +18,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <filesystem>
 
 #ifndef _WIN32
 #    include <sys/types.h>
@@ -80,6 +81,7 @@
 #define MMC_LUA_MMGETENVVALUE "mmGetEnvValue"
 #define MMC_LUA_MMQUIT "mmQuit"
 #define MMC_LUA_MMREADTEXTFILE "mmReadTextFile"
+#define MMC_LUA_MMWRITETEXTFILE "mmWriteTextFile"
 #define MMC_LUA_MMFLUSH "mmRenderNextFrame"
 #define MMC_LUA_MMCURRENTSCRIPTPATH "mmCurrentScriptPath"
 #define MMC_LUA_MMLISTPARAMETERS "mmListParameters"
@@ -125,6 +127,7 @@ void megamol::core::LuaAPI::commonInit() {
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::Quit>(MMC_LUA_MMQUIT, "()\n\tClose the MegaMol instance.");
 
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ReadTextFile>(MMC_LUA_MMREADTEXTFILE, "(string fileName, function func)\n\tReturn the file contents after processing it with func(content).");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::WriteTextFile>(MMC_LUA_MMWRITETEXTFILE, "(string fileName, string content)\n\tWrite content to file. You CANNOT overwrite existing files!");
 
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::CurrentScriptPath>(MMC_LUA_MMCURRENTSCRIPTPATH, "()\n\tReturns the path of the currently running script, if possible. Empty string otherwise.");
     // TODO: imperative?
@@ -1015,6 +1018,36 @@ int megamol::core::LuaAPI::ReadTextFile(lua_State* L) {
         }
     }
     else {
+        luaApiInterpreter_.ThrowError(MMC_LUA_MMREADTEXTFILE " requires two parameters, fileName and a function pointer");
+    }
+    return 0;
+}
+
+int megamol::core::LuaAPI::WriteTextFile(lua_State* L) {
+    int n = lua_gettop(L);
+    if (n == 2) {
+        const auto filename = luaL_checkstring(L, 1);
+        if (std::filesystem::exists(filename)) {
+            std::string err = MMC_LUA_MMWRITETEXTFILE ": Overwriting existing file '";
+            err += filename;
+            err += "' is not allowed!";
+            luaApiInterpreter_.ThrowError(err);
+        } else {
+            std::ofstream t(filename, std::ofstream::out);
+            std::string output = luaL_checkstring(L, 2);
+            lua_remove(L, 1); // get rid of the filename on the stack
+            lua_remove(L, 1); // get rid of the string on the stack
+
+            if (t.good()) {
+                t.write(output.c_str(), output.length());
+            } else {
+                std::string err = MMC_LUA_MMWRITETEXTFILE ": cannot open file '";
+                err += filename;
+                err += "'.";
+                luaApiInterpreter_.ThrowError(err);
+            }
+        }
+    } else {
         luaApiInterpreter_.ThrowError(MMC_LUA_MMREADTEXTFILE " requires two parameters, fileName and a function pointer");
     }
     return 0;
