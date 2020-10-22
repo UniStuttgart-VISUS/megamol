@@ -604,7 +604,7 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
             ImGui::GetIO().MouseDoubleClicked[0] = false;
         }
     }
-    if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
+    if (!this->show_module_list_sidebar && this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
         this->show_module_list_child = true;
         this->module_list_popup_pos = ImGui::GetMousePos();
         this->module_list_popup_hovered_group_uid = selected_graph_ptr->present.GetHoveredGroup();
