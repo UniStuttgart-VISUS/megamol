@@ -57,7 +57,7 @@ private:
 
     core::CallerSlot m_probes_slot;
 
-    core::CallerSlot m_probe_manipulation_slot;
+    core::CallerSlot m_event_slot;
 
     std::shared_ptr<glowl::Mesh> m_ui_mesh; // for depth scale (parallel to probe, offset by cam right vector)
 
@@ -100,7 +100,7 @@ private:
 
     std::vector<glowl::DrawElementsCommand> m_vector_probe_draw_commands;
 
-    VectorProbeData createVectorProbeData(probe::Vec4Probe const& probe, int probe_id, float scale);
+    size_t m_draw_commands_collection_idx;
 };
 
 
