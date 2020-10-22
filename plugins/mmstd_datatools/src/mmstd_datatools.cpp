@@ -92,6 +92,9 @@
 #include "table/TableWhere.h"
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
+#include "MPDCGrid.h"
+#include "table/TableSplit.h"
+#include "CSVWriter.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -251,6 +254,9 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::CPERAWDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::LocalBoundingBoxExtractor>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleInstantiator>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPDCGrid>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSplit>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CSVWriter>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();

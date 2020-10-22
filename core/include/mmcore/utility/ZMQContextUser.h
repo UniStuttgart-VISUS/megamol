@@ -2,12 +2,13 @@
 
 #include <zmq.hpp>
 #include <memory>
+#include "mmcore/api/MegaMolCore.std.h"
 
 namespace megamol {
 namespace core {
 namespace utility {
 
-    class ZMQContextUser {
+    class MEGAMOLCORE_API ZMQContextUser {
     public:
 
         typedef std::shared_ptr<ZMQContextUser> ptr;

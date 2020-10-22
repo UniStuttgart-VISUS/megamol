@@ -40,23 +40,17 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     target_compile_definitions(${PROJECT_NAME} PRIVATE GUI_USE_GLFW)
   endif()
 
-  # Add C++ filesystem support, except for "stampede".
+  # Add C++ filesystem support.
   if(UNIX)
-    cmake_host_system_information(RESULT fqdn QUERY FQDN)
-    if(NOT fqdn MATCHES ".*stampede2.*")
-      target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
-      target_compile_definitions(${PROJECT_NAME} PRIVATE GUI_USE_FILESYSTEM)
-    endif()
-  elseif(WIN32)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE GUI_USE_FILESYSTEM)
+    target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
   endif()
-  
+
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS IMGUI_IMPL_OPENGL_LOADER_GLAD)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src" 
     "${SOURCE_DIR}/examples/" "${SOURCE_DIR}/misc/cpp/")
-  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad PUBLIC imgui imguizmoquat)
+  target_link_libraries(${PROJECT_NAME} PRIVATE vislib core glad abstract_frontend_service PUBLIC imgui imguizmoquat)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

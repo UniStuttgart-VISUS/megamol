@@ -8,7 +8,10 @@
 #include "stdafx.h"
 #include "TableSelectionTx.h"
 
+#include <unordered_set>
+
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 
 using namespace megamol::stdplugin::datatools;
@@ -22,7 +25,9 @@ TableSelectionTx::TableSelectionTx()
     , flagStorageWriteInSlot("writeFlagStorageIn", "Flag storage write input")
     , flagStorageReadOutSlot("readFlagStorageOut", "Flag storage read output")
     , flagStorageWriteOutSlot("writeFlagStorageOut", "Flag storage write output")
-    , updateSelectionParam("updateSelectionParam", "Enable selection update")
+    , updateSelectionParam("updateSelection", "Enable selection update")
+    , useColumnAsIndexParam("useColumnAsIndex", "Use column as index instead of row id")
+    , indexColumnParam("indexColumn", "Numeric index of column, which is used as row index")
     , senderThreadQuit_(false)
     , senderThreadNotified_(false)
     , receiverThreadQuit_(false)
@@ -47,6 +52,12 @@ TableSelectionTx::TableSelectionTx()
 
     this->updateSelectionParam << new core::param::BoolParam(true);
     this->MakeSlotAvailable(&this->updateSelectionParam);
+
+    this->useColumnAsIndexParam << new core::param::BoolParam(false);
+    this->MakeSlotAvailable(&this->useColumnAsIndexParam);
+
+    this->indexColumnParam << new core::param::IntParam(0, 0);
+    this->MakeSlotAvailable(&this->indexColumnParam);
 }
 
 TableSelectionTx::~TableSelectionTx() {
@@ -134,9 +145,19 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
     (*tableInCall)(1);
     (*tableInCall)(0);
 
+    bool useColumnAsIndex = this->useColumnAsIndexParam.Param<core::param::BoolParam>()->Value();
+    int indexColumn = this->indexColumnParam.Param<core::param::IntParam>()->Value();
+
     auto flags = flagsWriteOutCall->getData()->flags;
     size_t numberOfFlags = flags->getByteSize() / sizeof(uint32_t);
     size_t numberOfRows = tableInCall->GetRowsCount();
+    size_t numberOfCols = tableInCall->GetColumnsCount();
+    auto* tableData = tableInCall->GetData();
+
+    if (indexColumn >= numberOfCols) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("TableSelectionTx: invalid column index!");
+        return false;
+    }
 
     // validateFlagCount() only increases the buffer, therefore numberOfFlags > numberOfRows is also valid.
     if (numberOfFlags < numberOfRows) {
@@ -156,7 +177,11 @@ bool TableSelectionTx::writeDataCallback(core::Call& call) {
     for (size_t i = 0; i < numberOfRows; ++i) {
         if ((flagsData[i] & testMask) == passMask) {
             if (flagsData[i] & core::FlagStorage::SELECTED) {
-                selected_.push_back(static_cast<uint64_t>(i));
+                if (useColumnAsIndex) {
+                    selected_.push_back(static_cast<uint64_t>(tableData[indexColumn + i * numberOfCols]));
+                } else {
+                    selected_.push_back(static_cast<uint64_t>(i));
+                }
             } else {
                 // not selected
             }
@@ -223,10 +248,34 @@ bool TableSelectionTx::validateSelectionUpdate() {
 
     std::vector<uint32_t> flags_data(numberOfRows, core::FlagStorage::ENABLED);
 
-    // Select received rows
-    for (auto id : receivedSelection_) {
-        if (id >= 0 && id < numberOfRows) {
-            flags_data[id] = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED;
+    if (!this->useColumnAsIndexParam.Param<core::param::BoolParam>()->Value()) {
+        // Select received rows
+        for (auto id : receivedSelection_) {
+            if (id >= 0 && id < numberOfRows) {
+                flags_data[id] = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED;
+            }
+        }
+    } else {
+        // Select received values
+        size_t numberOfCols = tableInCall->GetColumnsCount();
+        auto* tableData = tableInCall->GetData();
+        int indexColumn = this->indexColumnParam.Param<core::param::IntParam>()->Value();
+        if (indexColumn >= numberOfCols) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError("TableSelectionTx: invalid column index!");
+            return false;
+        }
+
+        // Use unordered set for O(1) lookup of selected values
+        std::unordered_set<float> s;
+        for (auto id : receivedSelection_) {
+            s.insert(static_cast<float>(id));
+        }
+
+        for (size_t i = 0; i < numberOfRows; i++) {
+            float value = tableData[indexColumn + i * numberOfCols];
+            if (s.find(value) != s.end()) {
+                flags_data[i] = core::FlagStorage::ENABLED | core::FlagStorage::SELECTED;
+            }
         }
     }
 

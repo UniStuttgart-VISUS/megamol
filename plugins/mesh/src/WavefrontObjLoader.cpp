@@ -5,15 +5,11 @@
 #include "mmcore/param/FilePathParam.h"
 
 megamol::mesh::WavefrontObjLoader::WavefrontObjLoader()
-    : core::Module()
+    : AbstractMeshDataSource()
     , m_version(0)
     , m_meta_data()
     , m_filename_slot("Wavefront OBJ filename", "The name of the obj file to load")
-    , m_getData_slot("CallMesh", "The slot publishing the loaded data") {
-    this->m_getData_slot.SetCallback(CallMesh::ClassName(), "GetData", &WavefrontObjLoader::getDataCallback);
-    this->m_getData_slot.SetCallback(CallMesh::ClassName(), "GetMetaData", &WavefrontObjLoader::getDataCallback);
-    this->MakeSlotAvailable(&this->m_getData_slot);
-
+{
     this->m_filename_slot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->m_filename_slot);
 }
@@ -22,13 +18,27 @@ megamol::mesh::WavefrontObjLoader::~WavefrontObjLoader() {}
 
 bool megamol::mesh::WavefrontObjLoader::create(void) { return true; }
 
-bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) {
+bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) {
 
-    auto cm = dynamic_cast<CallMesh*>(&caller);
+    CallMesh* lhs_mesh_call = dynamic_cast<CallMesh*>(&caller);
+    CallMesh* rhs_mesh_call = m_mesh_rhs_slot.CallAs<CallMesh>();
 
-    // TODO detect whether a mesh data collection is given by lhs caller (chaining)
+    if (lhs_mesh_call == NULL) {
+        return false;
+    }
 
-    if (cm == nullptr) return false;
+    syncMeshAccessCollection(lhs_mesh_call, rhs_mesh_call);
+
+    // if there is a mesh connection to the right, pass on the mesh collection
+    if (rhs_mesh_call != NULL) {
+        if (!(*rhs_mesh_call)(0)) {
+            return false;
+        }
+        if (rhs_mesh_call->hasUpdate()) {
+            ++m_version;
+            rhs_mesh_call->getData();
+        }
+    }
 
     if (this->m_filename_slot.IsDirty()) {
         m_filename_slot.ResetDirty();
@@ -173,23 +183,26 @@ bool megamol::mesh::WavefrontObjLoader::getDataCallback(core::Call& caller) {
                 m_indices[s].size() * MeshDataAccessCollection::getByteSize(MeshDataAccessCollection::UNSIGNED_INT);
             mesh_indices.type = MeshDataAccessCollection::UNSIGNED_INT;
 
-            this->m_mesh_data_access->addMesh(mesh_attributes, mesh_indices);
+            //TODO add file name?
+            std::string identifier = m_obj_model->shapes[s].name;
+            m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices);
+            m_mesh_access_collection.second.push_back(identifier);
         }
 
         m_meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
         m_meta_data.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
     }
 
-    if (cm->version() < m_version)
+    if (lhs_mesh_call->version() < m_version)
     {
-        cm->setMetaData(m_meta_data);
-        cm->setData(m_mesh_data_access,m_version);
+        lhs_mesh_call->setMetaData(m_meta_data);
+        lhs_mesh_call->setData(m_mesh_access_collection.first, m_version);
     }
     
     return true;
 }
 
-bool megamol::mesh::WavefrontObjLoader::getMetaDataCallback(core::Call& caller) { 
+bool megamol::mesh::WavefrontObjLoader::getMeshMetaDataCallback(core::Call& caller) { 
 
     auto cm = dynamic_cast<CallMesh*>(&caller);
 

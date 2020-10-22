@@ -107,21 +107,21 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
         return false;
     }
 
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
-
     if (os->getTime() >= cd->FrameCount()) {
         cd->SetFrameID(cd->FrameCount() - 1, true); // isTimeForced flag set to true
     } else {
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
     }
-    
+
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
+    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+
     // do the callback to set the dirty flag
     if (!(*cgtf)(0)) return false;
-    
-    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty() ||
-        cgtf->IsDirty()) {
+    auto interface_diry = this->InterfaceIsDirty();
+    auto tf_dirty = cgtf->IsDirty();
+    if (this->datahash != cd->DataHash() || this->time != os->getTime() || interface_diry || tf_dirty) {
         this->datahash = cd->DataHash();
         this->time = os->getTime();
         this->structureContainer.dataChanged = true;
@@ -131,7 +131,7 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
 
     auto const metadata = cd->GetMetadata();
 
-    if (!metadata->GridType == core::misc::CARTESIAN) {
+    if (metadata->GridType != core::misc::CARTESIAN) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRayStructuredVolume only works with cartesian grids (for now)");
         return false;
     }

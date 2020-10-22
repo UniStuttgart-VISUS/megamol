@@ -25,7 +25,8 @@ Eigen::VectorXd DepthFunction::halfSpaceDepth(Eigen::MatrixXd dataMatrix) {
 
     for (int i = 0; i < nPoints; i++) {
         x[i] = new double[nDims];
-        for (int j = 0; j < nDims; j++) x[i][j] = dataMatrix(i, j);
+        for (int j = 0; j < nDims; j++)
+            x[i][j] = dataMatrix(i, j);
     }
 
     double* z;
@@ -38,7 +39,8 @@ Eigen::VectorXd DepthFunction::halfSpaceDepth(Eigen::MatrixXd dataMatrix) {
         result(pIndex) = HalfspaceDepth::HD_Comb2(z, x, nPoints, nDims);
     }
 
-    for (int k = 0; k < nPoints; k++) delete[] x[k];
+    for (int k = 0; k < nPoints; k++)
+        delete[] x[k];
     delete[] x;
     delete[] z;
 
@@ -72,10 +74,13 @@ Eigen::VectorXd DepthFunction::functionalDepth(
                 for (int rndIndexCounter = 0; rndIndexCounter < samplesLength; rndIndexCounter++) {
                     int rndIndex = rndIndices(rndIndexCounter);
 
-                    if (dataMatrix(rndIndex, dim) <= dataPointValue) dim_minFound = true;
-                    if (dataMatrix(rndIndex, dim) >= dataPointValue) dim_maxFound = true;
+                    if (dataMatrix(rndIndex, dim) <= dataPointValue)
+                        dim_minFound = true;
+                    if (dataMatrix(rndIndex, dim) >= dataPointValue)
+                        dim_maxFound = true;
 
-                    if (dim_minFound && dim_maxFound) break;
+                    if (dim_minFound && dim_maxFound)
+                        break;
                 }
 
                 // if a dimension was found where neither a min nor a max was found,
@@ -86,10 +91,11 @@ Eigen::VectorXd DepthFunction::functionalDepth(
                 }
             }
 
-            if (minMaxFound) hitsCount++;
+            if (minMaxFound)
+                hitsCount++;
         }
 
-        result(row) = (double)hitsCount / (double)samplesCount;
+        result(row) = (double) hitsCount / (double) samplesCount;
     }
 
     return result;
@@ -114,7 +120,8 @@ bool insideSimplexCheck(Eigen::VectorXd p, Eigen::MatrixXd x) {
         double alpha = sign * tmp.determinant() / nominator; // barycentric coordinate
 
         sum += alpha;
-        if (alpha > 1.0 || alpha < 0.0) return false;
+        if (alpha > 1.0 || alpha < 0.0)
+            return false;
     }
 
     return true;
@@ -147,10 +154,11 @@ Eigen::VectorXd DepthFunction::simplicalDepth(Eigen::MatrixXd dataMatrix, int sa
             }
 
 
-            if (insideSimplexCheck(dataPoint, vertices)) hitsCount++;
+            if (insideSimplexCheck(dataPoint, vertices))
+                hitsCount++;
         }
 
-        result(row) = (double)hitsCount / (double)samplesCount;
+        result(row) = (double) hitsCount / (double) samplesCount;
     }
 
     return result;
@@ -184,7 +192,8 @@ std::vector<std::string> split(std::string str, std::string token) {
         if (index != std::string::npos) {
             result.push_back(str.substr(0, index));
             str = str.substr(index + token.size());
-            if (str.size() == 0) result.push_back(str);
+            if (str.size() == 0)
+                result.push_back(str);
         } else {
             result.push_back(str);
             str = "";
@@ -211,18 +220,18 @@ std::vector<std::vector<int>> parseColumnGroups(std::string& columnGroupString) 
 // ---------------------------------------------------------------------------
 
 DepthFunction::DepthFunction(void)
-    : megamol::core::Module()
-    , dataOutSlot("dataOut", "Ouput")
-    , dataInSlot("dataIn", "Input")
-    , datahash(0)
-    , dataInHash(0)
-    , columnInfos()
-    , columnGroupsSlot("columnGroups", "Semicolon-separated groups of comma-separated column indices to compute "
-                                       "the data depth for. Defaults to one group, all columns.")
-    , depthType("depthType", "The depth function to use for computing the depth statistics")
-    , sampleCount("sampleCount", "The number of samples, that will be drawn (functional depth only)")
-    , sampleLength("sampleLength", "The length of one sample (functional depth only)")
-    , randomSeed("randomSeed", "The random seed (functional depth only)") {
+        : megamol::core::Module()
+        , dataOutSlot("dataOut", "Ouput")
+        , dataInSlot("dataIn", "Input")
+        , datahash(0)
+        , dataInHash(0)
+        , columnInfos()
+        , columnGroupsSlot("columnGroups", "Semicolon-separated groups of comma-separated column indices to compute "
+                                           "the data depth for. Defaults to one group, all columns.")
+        , depthType("depthType", "The depth function to use for computing the depth statistics")
+        , sampleCount("sampleCount", "The number of samples, that will be drawn (functional depth only)")
+        , sampleLength("sampleLength", "The length of one sample (functional depth only)")
+        , randomSeed("randomSeed", "The random seed (functional depth only)") {
 
     // Data input slot
     this->dataInSlot.SetCompatibleCall<megamol::stdplugin::datatools::table::TableDataCallDescription>();
@@ -264,9 +273,13 @@ DepthFunction::DepthFunction(void)
     params.push_back(&randomSeed);
 }
 
-DepthFunction::~DepthFunction(void) { this->Release(); }
+DepthFunction::~DepthFunction(void) {
+    this->Release();
+}
 
-bool DepthFunction::create(void) { return true; }
+bool DepthFunction::create(void) {
+    return true;
+}
 
 void DepthFunction::release(void) {}
 
@@ -274,17 +287,21 @@ bool DepthFunction::getDataCallback(core::Call& c) {
     try {
         megamol::stdplugin::datatools::table::TableDataCall* outCall =
             dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
-        if (outCall == NULL) return false;
+        if (outCall == NULL)
+            return false;
 
         megamol::stdplugin::datatools::table::TableDataCall* inCall =
             this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-        if (inCall == NULL) return false;
+        if (inCall == NULL)
+            return false;
 
         inCall->SetFrameID(outCall->GetFrameID()); // inCall->Set? not outCall???
-        if (!(*inCall)()) return false;
+        if (!(*inCall)())
+            return false;
 
         bool finished = apply(inCall);
-        if (finished == false) return false;
+        if (finished == false)
+            return false;
 
         outCall->SetFrameCount(inCall->GetFrameCount());
         outCall->SetDataHash(this->datahash);
@@ -310,14 +327,17 @@ bool DepthFunction::getHashCallback(core::Call& c) {
     try {
         megamol::stdplugin::datatools::table::TableDataCall* outCall =
             dynamic_cast<megamol::stdplugin::datatools::table::TableDataCall*>(&c);
-        if (outCall == NULL) return false;
+        if (outCall == NULL)
+            return false;
 
         megamol::stdplugin::datatools::table::TableDataCall* inCall =
             this->dataInSlot.CallAs<megamol::stdplugin::datatools::table::TableDataCall>();
-        if (inCall == NULL) return false;
+        if (inCall == NULL)
+            return false;
 
         inCall->SetFrameID(outCall->GetFrameID());
-        if (!(*inCall)(1)) return false;
+        if (!(*inCall)(1))
+            return false;
 
         outCall->SetFrameCount(inCall->GetFrameCount());
         outCall->SetDataHash(this->datahash);
@@ -347,7 +367,8 @@ void megamol::infovis::DepthFunction::assertData(megamol::stdplugin::datatools::
 
 bool megamol::infovis::DepthFunction::paramsIsDirty() {
     for (auto param : params) {
-        if (param->IsDirty()) return true;
+        if (param->IsDirty())
+            return true;
     }
 
     return false;
