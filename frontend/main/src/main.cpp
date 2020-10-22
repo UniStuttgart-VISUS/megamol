@@ -2,7 +2,7 @@
 #include "mmcore/MegaMolGraph.h"
 
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/log/StreamTarget.h"
+#include "mmcore/utility/log/DefaultTarget.h"
 
 #include "FrameStatistics_Service.hpp"
 #include "FrontendServiceCollection.hpp"
@@ -55,8 +55,7 @@ int main(int argc, char* argv[]) {
     megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
     megamol::core::utility::log::Log::DefaultLog.SetOfflineMessageBufferSize(100);
     megamol::core::utility::log::Log::DefaultLog.SetMainTarget(
-        std::make_shared<megamol::core::utility::log::StreamTarget>(
-            std::cout, megamol::core::utility::log::Log::LEVEL_ALL));
+        std::make_shared<megamol::core::utility::log::DefaultTarget>(megamol::core::utility::log::Log::LEVEL_ALL));
 
     megamol::core::CoreInstance core;
     core.Initialise(false); // false makes core not start his own lua service (else we collide on default port)
