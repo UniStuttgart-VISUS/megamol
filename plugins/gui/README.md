@@ -2,9 +2,9 @@
 
 This is the plugin providing the GUI for MegaMol.
 
-![gui](gui.png)
-
 See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for current work in progress.
+
+![gui](gui.png)
 
 ---
 
@@ -233,10 +233,10 @@ This is the default GUI state stored as JSON string in the lua project file:
 -- <GUI_STATE_JSON>{"ConfiguratorState":{"module_list_sidebar_width":250.0,"show_module_list_sidebar":false},"GUIState":{"menu_visible":true},"WindowConfigurations":{"All Parameters":{"font_name":"","ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":1,"win_collapsed":false,"win_flags":8,"win_hotkey":[300,0],"win_position":[0.0,18.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":true,"win_size":[400.0,600.0],"win_soft_reset":false},"Configurator":{"font_name":"","ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":6,"win_collapsed":false,"win_flags":1032,"win_hotkey":[296,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[800.0,600.0],"win_show":false,"win_size":[800.0,600.0],"win_soft_reset":true},"Font Settings":{"font_name":"","ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":4,"win_collapsed":false,"win_flags":64,"win_hotkey":[298,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":false,"win_size":[400.0,600.0],"win_soft_reset":true},"Log Console":{"font_name":"","ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":7,"win_collapsed":false,"win_flags":3072,"win_hotkey":[295,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[850.0,100.0],"win_show":false,"win_size":[850.0,100.0],"win_soft_reset":true},"Performance Metrics":{"font_name":"","ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":3,"win_collapsed":false,"win_flags":65,"win_hotkey":[299,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":false,"win_size":[400.0,600.0],"win_soft_reset":true},"Transfer Function Editor":{"font_name":"","ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":5,"win_collapsed":false,"win_flags":64,"win_hotkey":[297,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":false,"win_size":[400.0,600.0],"win_soft_reset":true}}}</GUI_STATE_JSON>
 ```
 
-#### GUI Graph Structure
+### GUI Graph Structure
 
 ![gui graph structure](graph_structure.png)
 
-#### Plugin Class Dependencies
+### Plugin Class Dependencies
 
 ![gui plugin class dependencies](class_dependencies.png)
