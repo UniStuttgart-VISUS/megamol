@@ -2,7 +2,7 @@
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
   message(STATUS "Downloading external scripts")
   execute_process(COMMAND
-    ${GIT_EXECUTABLE} clone -b v2.0 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
+    ${GIT_EXECUTABLE} clone -b v2.1 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
@@ -513,7 +513,7 @@ function(require_external NAME)
       if(TARGET megamol-shader-factory)
         return()
       endif()
-      
+
       if(WIN32)
         set(MEGAMOL_SHADER_FACTORY_LIB "lib/megamol-shader-factory.lib")
         set(SHADERC_LIB "lib/shaderc_combined.lib")
@@ -522,19 +522,22 @@ function(require_external NAME)
         set(MEGAMOL_SHADER_FACTORY_LIB "${CMAKE_INSTALL_LIBDIR}/libmegamol-shader-factory.a")
         set(SHADERC_LIB "${CMAKE_INSTALL_LIBDIR}/libshaderc_combined.a")
       endif()
-      
+
       add_external_project(megamol-shader-factory STATIC
         GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-        GIT_TAG a8bba6eaf3eccdc1e7f2aebd1b71c046e835d302
+        GIT_TAG 98e1a60a64c48978128b16fb3fbb9a8bae8899ab
         BUILD_BYPRODUCTS 
         "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
         "<INSTALL_DIR>/${SHADERC_LIB}")
-    
+
       external_get_property(megamol-shader-factory INSTALL_DIR)
 
       add_external_library(megamol-shader-factory
         LIBRARY ${MEGAMOL_SHADER_FACTORY_LIB}
-        INTERFACE_LIBRARIES ${INSTALL_DIR}/${SHADERC_LIB})
+        INTERFACE_LIBRARIES ${INSTALL_DIR}/$<CONFIG>/${SHADERC_LIB})
+      if(UNIX)
+        target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
+      endif()
 
   # quickhull
   elseif(NAME STREQUAL "quickhull")
