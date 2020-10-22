@@ -12,6 +12,7 @@
 #include "KeyboardMouse_Events.h"
 #include "Framebuffer_Events.h"
 #include "Window_Events.h"
+#include "WindowManipulation.h"
 #include "IOpenGL_Context.h"
 
 #include <memory>
@@ -33,6 +34,7 @@ class OpenGL_GLFW_Service final : public AbstractFrontendService {
     using MouseEvents = megamol::frontend_resources::MouseEvents;
     using WindowEvents = megamol::frontend_resources::WindowEvents;
     using FramebufferEvents = megamol::frontend_resources::FramebufferEvents;
+    using WindowManipulation = megamol::frontend_resources::WindowManipulation;
 
 public:
 
@@ -124,6 +126,7 @@ private:
     OpenGL_Context m_opengl_context_impl;
     Fake_OpenGL_Context m_fake_opengl_context;
     frontend_resources::IOpenGL_Context* m_opengl_context;
+    WindowManipulation m_windowManipulation;
 
     // this holds references to the event structs we fill. the events are passed to the renderers/views using
     // const std::vector<FrontendResource>& getModuleResources() override

@@ -203,6 +203,53 @@ static void APIENTRY opengl_debug_message_callback(GLenum source, GLenum type, G
     }
 }
 
+void megamol::frontend_resources::WindowManipulation::set_window_title(const char* title) const {
+    glfwSetWindowTitle(reinterpret_cast<GLFWwindow*>(window_ptr), title);
+}
+
+void megamol::frontend_resources::WindowManipulation::set_framebuffer_size(const unsigned int width, const unsigned int height) const {
+    auto window = reinterpret_cast<GLFWwindow*>(this->window_ptr);
+
+    int fbo_width = 0, fbo_height = 0;
+    int window_width = 0, window_height = 0;
+
+    glfwSetWindowSizeLimits(window, GLFW_DONT_CARE, GLFW_DONT_CARE, GLFW_DONT_CARE, GLFW_DONT_CARE);
+    glfwSetWindowSize(window, width, height);
+    glfwGetFramebufferSize(window, &fbo_width, &fbo_height);
+    glfwGetWindowSize(window, &window_width, &window_height);
+
+    if (fbo_width != width || fbo_height != height) {
+        log("WindowManipulation::set_framebuffer_size(): forcing window size limits to " + std::to_string(width) + "x" + std::to_string(height) + ". You wont be able to resize the window manually after this.");
+        glfwSetWindowSizeLimits(window, width, height, width, height);
+        glfwSetWindowSize(window, width, height);
+        glfwGetFramebufferSize(window, &fbo_width, &fbo_height);
+        glfwGetWindowSize(window, &window_width, &window_height);
+    }
+
+    if(fbo_width != width || fbo_height != height) {
+        log_error("WindowManipulation::set_framebuffer_size() could not enforce window size to achieve requested framebuffer size of w: " + std::to_string(width) + ", h: " + std::to_string(height) + ".\n Framebuffer has size w: " + std::to_string(fbo_width) + ", h: " + std::to_string(fbo_height));
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+        static_cast<megamol::frontend::OpenGL_GLFW_Service*>(glfwGetWindowUserPointer(window))->setShutdown();
+    }
+}
+
+void megamol::frontend_resources::WindowManipulation::set_window_position(const unsigned int width, const unsigned int height) const {
+    glfwSetWindowPos(reinterpret_cast<GLFWwindow*>(window_ptr), width, height);
+}
+
+void megamol::frontend_resources::WindowManipulation::set_fullscreen(const Fullscreen action) const {
+    switch (action) {
+        case Fullscreen::Maximize:
+            glfwMaximizeWindow(reinterpret_cast<GLFWwindow*>(window_ptr));
+            break;
+        case Fullscreen::Restore:
+            glfwRestoreWindow(reinterpret_cast<GLFWwindow*>(window_ptr));
+            break;
+        default:
+            break;
+    }
+}
+
 namespace megamol {
 namespace frontend {
 
@@ -401,13 +448,16 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     };
     m_windowEvents.previous_state.time = glfwGetTime();
 
+    m_windowManipulation.window_ptr = window_ptr;
+
     // make the events and resources managed/provided by this service available to the outside world
     m_renderResourceReferences = {
         {"KeyboardEvents", m_keyboardEvents},
         {"MouseEvents", m_mouseEvents},
         {"WindowEvents", m_windowEvents},
         {"FramebufferEvents", m_framebufferEvents},
-        {"IOpenGL_Context", *m_opengl_context}
+        {"IOpenGL_Context", *m_opengl_context},
+        {"WindowManipulation", m_windowManipulation}
     };
 
     log("initialized successfully");
