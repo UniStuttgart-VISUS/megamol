@@ -40,6 +40,7 @@ struct CLIConfig {
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool load_example_project = false;
     bool opengl_khr_debug = true;
+    std::array<unsigned int, 2> window_size = {0, 0};
 };
 
 CLIConfig handle_cli_inputs(int argc, char* argv[]);
@@ -69,6 +70,9 @@ int main(int argc, char* argv[]) {
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 5;
     openglConfig.enableKHRDebug = config.opengl_khr_debug;
+    openglConfig.windowPlacement.w = config.window_size[0];
+    openglConfig.windowPlacement.h = config.window_size[1];
+    openglConfig.windowPlacement.size = config.window_size[0] > 0 && config.window_size[1] > 0;
     gl_service.setPriority(2);
 
     megamol::frontend::GUI_Service gui_service;
