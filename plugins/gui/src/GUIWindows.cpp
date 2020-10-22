@@ -8,10 +8,10 @@
 /**
  * USED HOTKEYS:
  *
- * - Trigger Screenshot:        F3
- * - Toggle Main View:          F5
- * - Reset Windows Positions:   F6
- * - Show/hide Windows:         F7-F11
+ * - Trigger Screenshot:        F2
+ * - Toggle Main View:          F3
+ * - Reset Windows Positions:   F4
+ * - Show/hide Windows:         F6-F11
  * - Show/hide Menu:            F12
  * - Search Parameter:          Ctrl  + p
  * - Save Running Project:      Ctrl  + s
@@ -38,6 +38,7 @@ GUIWindows::GUIWindows(void)
         , api(GUIImGuiAPI::NO_API)
         , window_collection()
         , configurator()
+        , console()
         , state()
         , project_script_paths()
         , file_browser()
@@ -70,13 +71,13 @@ GUIWindows::GUIWindows(void)
     /// this->param_slots.push_back(&this->autosave_state_param);
 
     this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F2, core::view::Modifier::NONE), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F3, core::view::Modifier::NONE), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false};
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS] = {
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F5, core::view::Modifier::NONE), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS] = {
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F6, core::view::Modifier::NONE), false};
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::NONE), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] = {
@@ -169,7 +170,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->core_instance->SetCurrentImGuiContext(this->context);
     }
 
-    // Check hotkeys, parameters and hotkey assignment
+    // Check/Update hotkeys, parameters and hotkey assignment
     if (this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM].is_pressed) {
         this->triggerCoreInstanceShutdown();
         this->state.shutdown_triggered = true;
@@ -361,6 +362,11 @@ bool GUIWindows::PostDraw(void) {
                 }
             }
             wc.buf_tfe_reset = false;
+        }
+
+        // Update log console
+        if (wc.win_callback == WindowCollection::DrawCallbacks::LOGCONSOLE) {
+            this->console.Update(wc);
         }
 
         // Draw window content
@@ -1012,6 +1018,8 @@ bool GUIWindows::createContext(void) {
         [&, this](WindowCollection::WindowConfiguration& wc) { this->drawTransferFunctionWindowCallback(wc); });
     this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::CONFIGURATOR,
         [&, this](WindowCollection::WindowConfiguration& wc) { this->drawConfiguratorWindowCallback(wc); });
+    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::LOGCONSOLE,
+        [&, this](WindowCollection::WindowConfiguration& wc) { this->console.Draw(wc); });
 
     // Create window configurations
     WindowCollection::WindowConfiguration buf_win;
@@ -1063,7 +1071,16 @@ bool GUIWindows::createContext(void) {
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
     buf_win.win_callback = WindowCollection::DrawCallbacks::CONFIGURATOR;
-    // buf_win.win_size is set to current viewport later
+    this->window_collection.AddWindowConfiguration(buf_win);
+
+    // LOG CONSOLE Window -----------------------------------------------
+    buf_win.win_name = "Log Console";
+    buf_win.win_show = false;
+    buf_win.win_size = ImVec2(850.0f, 10.0f * ImGui::GetFrameHeightWithSpacing());
+    buf_win.win_reset_size = buf_win.win_size;
+    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F6);
+    buf_win.win_callback = WindowCollection::DrawCallbacks::LOGCONSOLE;
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // Style settings ---------------------------------------------------------
@@ -1992,20 +2009,6 @@ std::string megamol::gui::GUIWindows::dump_state_to_file(const std::string& file
 
     nlohmann::json state_json;
 
-    // Load existing gui state from file
-    std::string state_str;
-    if (FileUtils::ReadFile(filename, state_str, true)) {
-        state_str = GUIUtils::ExtractGUIState(state_str);
-        if (!state_str.empty()) {
-            state_json = nlohmann::json::parse(state_str);
-            if (!state_json.is_object()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                return std::string("");
-            }
-        }
-    }
-
     if (this->state_to_json(state_json)) {
         std::string state_str = state_json.dump(); // No line feed
         this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
@@ -2092,7 +2095,7 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
         // Write window configuration
         this->window_collection.StateToJSON(inout_json);
 
-        // Read configurator state
+        // Write the configurator state
         this->configurator.StateToJSON(inout_json);
 
         // Write GUI state of parameters (groups)
@@ -2109,9 +2112,6 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
                 }
             }
         }
-
-        // Write the configurator state
-        this->configurator.StateToJSON(inout_json);
 
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote GUI state to JSON.");

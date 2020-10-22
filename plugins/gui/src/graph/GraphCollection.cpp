@@ -1272,8 +1272,9 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
     try {
         /// Following code is adapted from megamol::core::job::job::PluginsStateFileGeneratorJob.cpp
 
-        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Creating module '%s' ...",
-        // mod_desc->ClassName());
+        /// DEBUG
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        //    "[GUI] [DEBUG] Temporary creating module '%s'...", mod_desc->ClassName());
 
         megamol::core::Module::ptr_type new_mod(mod_desc->CreateModule(nullptr));
         if (new_mod == nullptr) {
@@ -1285,6 +1286,10 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         megamol::core::RootModuleNamespace::ptr_type root_mod_ns =
             std::make_shared<megamol::core::RootModuleNamespace>();
         root_mod_ns->AddChild(new_mod);
+
+        /// DEBUG
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        //    "[GUI] [DEBUG] Created temporary module '%s'.", mod_desc->ClassName());
 
         std::shared_ptr<const core::view::AbstractView> viewptr =
             std::dynamic_pointer_cast<const core::view::AbstractView>(new_mod);
@@ -1346,6 +1351,10 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         new_mod->SetAllCleanupMarks();
         new_mod->PerformCleanup();
         new_mod = nullptr;
+
+        /// DEBUG
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        //    "[GUI] [DEBUG] Removed temporary module '%s'.", mod_desc->ClassName());
 
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

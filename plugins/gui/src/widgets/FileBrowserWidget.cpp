@@ -174,8 +174,9 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                         if (ImGui::Selectable(
                                 select_label.c_str(), (select_label == this->file_name_str), select_flags)) {
                             last_file_path_str = this->file_path_str;
-                            this->validate_split_path(
-                                path_pair.first.generic_u8string(), this->file_path_str, this->file_name_str);
+                            auto new_path = path_pair.first.generic_u8string();
+                            GUIUtils::Utf8Decode(new_path);
+                            this->validate_split_path(new_path, this->file_path_str, this->file_name_str);
                             this->validate_file(this->file_name_str, extension, flag);
                             if (last_file_path_str != this->file_path_str) {
                                 this->path_changed = true;
@@ -394,7 +395,7 @@ bool megamol::gui::FileBrowserWidget::validate_split_path(
 
 void megamol::gui::FileBrowserWidget::validate_directory(const std::string& path_str) {
 
-    // Validating directory
+    // Validating existing directory
     try {
         stdfs::path tmp_path = static_cast<stdfs::path>(path_str);
         this->valid_directory = (stdfs::status_known(stdfs::status(tmp_path)) && stdfs::is_directory(tmp_path));

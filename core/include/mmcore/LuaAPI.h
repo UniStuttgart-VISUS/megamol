@@ -229,6 +229,7 @@ protected:
     int Quit(lua_State* L);
 
     int ReadTextFile(lua_State* L);
+    int WriteTextFile(lua_State* L);
 
     int Flush(lua_State* L);
     int CurrentScriptPath(lua_State* L);
