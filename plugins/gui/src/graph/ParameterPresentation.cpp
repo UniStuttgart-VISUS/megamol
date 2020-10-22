@@ -71,7 +71,7 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
                         this->SetGUIVisible(!this->IsGUIVisible());
                         this->ForceSetGUIStateDirty();
                     }
-                    this->tooltip.ToolTip("Visibility", ImGui::GetItemID(), 0.5f);
+                    this->tooltip.ToolTip("Visibility", ImGui::GetItemID(), 1.0f, 3.0f);
 
                     ImGui::SameLine();
 
@@ -81,7 +81,7 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
                         this->SetGUIReadOnly(read_only);
                         this->ForceSetGUIStateDirty();
                     }
-                    this->tooltip.ToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
+                    this->tooltip.ToolTip("Read-Only", ImGui::GetItemID(), 1.0f, 3.0f);
 
                     ImGui::SameLine();
 
@@ -100,7 +100,7 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
                         }
                         ImGui::EndPopup();
                     }
-                    this->tooltip.ToolTip("Presentation", ImGui::GetItemID(), 0.5f);
+                    this->tooltip.ToolTip("Presentation", ImGui::GetItemID(), 1.0f, 3.0f);
 
                     ImGui::SameLine();
                 }
@@ -113,7 +113,9 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
                 ImGui::SameLine();
 
                 /// POSTFIX ------------------------------------------------
-                this->tooltip.ToolTip(this->description, ImGui::GetItemID(), 0.5f);
+                if (!ImGui::IsItemActive()) {
+                    this->tooltip.ToolTip(this->description, ImGui::GetItemID(), 1.0f, 4.0f);
+                }
                 this->tooltip.Marker(this->help);
 
                 ImGui::EndGroup();
