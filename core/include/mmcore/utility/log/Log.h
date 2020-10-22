@@ -30,7 +30,7 @@ namespace log {
     public:
 
         /** Default log message pattern for spdlog */
-        static const char std_pattern[3];
+        static const char std_pattern[7];
 
         /** type for time stamps */
         using TimeStamp = time_t;
