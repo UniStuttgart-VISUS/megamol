@@ -8,10 +8,10 @@
 #include "CallKDTree.h"
 #include "ProbeCalls.h"
 #include "adios_plugin/CallADIOSData.h"
+#include "glm/glm.hpp"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FlexEnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "glm/glm.hpp"
 
 
 namespace megamol {
@@ -26,7 +26,8 @@ SampleAlongPobes::SampleAlongPobes()
     , _adios_rhs_slot("getData", "")
     , _full_tree_rhs_slot("getTree", "")
     , _parameter_to_sample_slot("ParameterToSample", "")
-    , _num_samples_per_probe_slot("NumSamplesPerProbe", "Note: Tighter sample placement leads to reduced sampling radius.")
+    , _num_samples_per_probe_slot(
+          "NumSamplesPerProbe", "Note: Tighter sample placement leads to reduced sampling radius.")
     , _sample_radius_factor_slot("SampleRadiusFactor", "Multiplier for base sampling distance.")
     , _sampling_mode("SamplingMode", "")
     , _weighting("weighting", "")
@@ -78,23 +79,23 @@ SampleAlongPobes::SampleAlongPobes()
     this->_weighting.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "max_value");
     this->_weighting.SetUpdateCallback(&SampleAlongPobes::paramChanged);
     this->MakeSlotAvailable(&this->_weighting);
-	
-	core::param::FlexEnumParam* paramEnum_1 = new core::param::FlexEnumParam("undef");
+
+    core::param::FlexEnumParam* paramEnum_1 = new core::param::FlexEnumParam("undef");
     this->_vec_param_to_samplex_x << paramEnum_1;
     this->_vec_param_to_samplex_x.SetUpdateCallback(&SampleAlongPobes::paramChanged);
     this->MakeSlotAvailable(&this->_vec_param_to_samplex_x);
-	
-	core::param::FlexEnumParam* paramEnum_2 = new core::param::FlexEnumParam("undef");
+
+    core::param::FlexEnumParam* paramEnum_2 = new core::param::FlexEnumParam("undef");
     this->_vec_param_to_samplex_y << paramEnum_2;
     this->_vec_param_to_samplex_y.SetUpdateCallback(&SampleAlongPobes::paramChanged);
     this->MakeSlotAvailable(&this->_vec_param_to_samplex_y);
-	
-	core::param::FlexEnumParam* paramEnum_3 = new core::param::FlexEnumParam("undef");
+
+    core::param::FlexEnumParam* paramEnum_3 = new core::param::FlexEnumParam("undef");
     this->_vec_param_to_samplex_z << paramEnum_3;
     this->_vec_param_to_samplex_z.SetUpdateCallback(&SampleAlongPobes::paramChanged);
     this->MakeSlotAvailable(&this->_vec_param_to_samplex_z);
-	
-	core::param::FlexEnumParam* paramEnum_4 = new core::param::FlexEnumParam("undef");
+
+    core::param::FlexEnumParam* paramEnum_4 = new core::param::FlexEnumParam("undef");
     this->_vec_param_to_samplex_w << paramEnum_4;
     this->_vec_param_to_samplex_w.SetUpdateCallback(&SampleAlongPobes::paramChanged);
     this->MakeSlotAvailable(&this->_vec_param_to_samplex_w);
@@ -109,6 +110,10 @@ void SampleAlongPobes::release() {}
 void SampleAlongPobes::doVolumeSampling() {
     const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
     const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
+
+    glm::vec3 origin = {_vol_metadata->Origin[0], _vol_metadata->Origin[1], _vol_metadata->Origin[2]};
+    glm::vec3 spacing = {*_vol_metadata->SliceDists[0], *_vol_metadata->SliceDists[1], *_vol_metadata->SliceDists[2]};
+    float min_spacing = std::min(std::min(spacing.x, spacing.y), spacing.z);
 
     //#pragma omp parallel for
     for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); i++) {
@@ -146,14 +151,25 @@ void SampleAlongPobes::doVolumeSampling() {
 
         auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
         auto radius = 0.5 * sample_step * sample_radius_factor;
+        auto grid_radius = glm::vec3(radius) / spacing;
+        std::array<int, 3> num_grid_points_per_dim = {grid_radius.x * 2, grid_radius.y * 2, grid_radius.z * 2};
+
+        bool get_nearest = false;
+        for (int i = 0; i < num_grid_points_per_dim.size(); ++i) {
+            if (num_grid_points_per_dim[i] < 1) {
+                num_grid_points_per_dim[i] = 1;
+                get_nearest = true;
+            }
+        }
 
         std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
         float min_value = std::numeric_limits<float>::max();
-        float max_value = -std::numeric_limits<float>::min();
+        float max_value = std::numeric_limits<float>::min();
         float min_data = std::numeric_limits<float>::max();
-        float max_data = -std::numeric_limits<float>::min();
+        float max_data = std::numeric_limits<float>::min();
         float avg_value = 0.0f;
         samples->samples.resize(samples_per_probe);
+        
 
         for (int j = 0; j < samples_per_probe; j++) {
 
@@ -163,16 +179,54 @@ void SampleAlongPobes::doVolumeSampling() {
             sample_point.z = probe.m_position[2] + j * sample_step * probe.m_direction[2];
 
             // calculate in which cell (i,j,k) the point resides in
-            glm::vec3 origin = {
-                _vol_metadata->Origin[0],
-                _vol_metadata->Origin[1],
-                                   _vol_metadata->Origin[2]};
-            glm::vec3 spacing = {
-                *_vol_metadata->SliceDists[0], *_vol_metadata->SliceDists[1], *_vol_metadata->SliceDists[2]};
-            glm::vec3 grid_point = (sample_point - origin)/spacing;
+            glm::vec3 grid_point = (sample_point - origin) / spacing;
 
-            auto ijk = grid_point;
+            glm::vec3 start = {std::roundf(grid_point.x - grid_radius.x),
+                std::roundf(grid_point.y - grid_radius.y),
+                std::roundf(grid_point.z - grid_radius.z)};
+            auto end = grid_point + grid_radius;
 
+            float value = 0;
+            int num_samples = 0;
+            for (int k = 0; k < num_grid_points_per_dim[0]; ++k) {
+                for (int l = 0; l < num_grid_points_per_dim[1]; ++l) {
+                    for (int m = 0; m < num_grid_points_per_dim[2]; ++m) {
+                        auto pos = start + glm::vec3(k,l,m);
+                        auto dif = pos - grid_point;
+                        if ((std::abs(dif.x) <= grid_radius.x && std::abs(dif.y) <= grid_radius.y &&
+                            std::abs(dif.z) <= grid_radius.z) || get_nearest) {
+                            int index = pos.x + _vol_metadata->Resolution[1] *
+                                                 (pos.y + _vol_metadata->Resolution[2] * pos.z);
+                            auto current_data =
+                                _volume_data[index];
+                            value += current_data;
+                            min_data = std::min(min_data, current_data);
+                            max_data = std::max(max_data, current_data);
+
+                            num_samples++;
+                        }
+                    }
+                }
+            }
+            if (value != 0) value /= num_samples;
+            if (this->_weighting.Param<megamol::core::param::EnumParam>()->Value() == 0) {
+                samples->samples[j] = value;
+            } else {
+                samples->samples[j] = max_data;
+            }
+            min_value = std::min(min_value, value);
+            max_value = std::max(max_value, value);
+            avg_value += value;
+        }
+        if (avg_value != 0) avg_value /= samples_per_probe;
+        if (this->_weighting.Param<megamol::core::param::EnumParam>()->Value() == 0) {
+            samples->average_value = avg_value;
+            samples->max_value = max_value;
+            samples->min_value = min_value;
+        } else {
+            samples->average_value = max_data;
+            samples->max_value = max_data;
+            samples->min_value = max_data;
         }
     }
 }
@@ -246,6 +300,7 @@ bool SampleAlongPobes::getData(core::Call& call) {
         // get volume data
         if (!(*cv)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
 
+        meta_data.m_frame_cnt = cv->FrameCount();
         _vol_metadata = cv->GetMetadata();
 
         if (_vol_metadata->Components > 1) {
@@ -274,47 +329,45 @@ bool SampleAlongPobes::getData(core::Call& call) {
     if (something_has_changed) {
         ++_version;
 
-		if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 0) {
+        if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 0) {
             if (cd == nullptr || ct == nullptr) {
-                core::utility::log::Log::DefaultLog.WriteError("[SampleAlongProbes] Scalar mode selected but no particle data connected.");
+                core::utility::log::Log::DefaultLog.WriteError(
+                    "[SampleAlongProbes] Scalar mode selected but no particle data connected.");
                 return false;
             }
-			// scalar sampling
-			auto tree = ct->getData();
-			if (cd->getData(var_str)->getType() == "double") {
-			    std::vector<double> data = cd->getData(var_str)->GetAsDouble();
+            // scalar sampling
+            auto tree = ct->getData();
+            if (cd->getData(var_str)->getType() == "double") {
+                std::vector<double> data = cd->getData(var_str)->GetAsDouble();
                 doScalarSampling(tree, data);
 
-			} else if (cd->getData(var_str)->getType() == "float") {
-			    std::vector<float> data = cd->getData(var_str)->GetAsFloat();
+            } else if (cd->getData(var_str)->getType() == "float") {
+                std::vector<float> data = cd->getData(var_str)->GetAsFloat();
                 doScalarSampling(tree, data);
-			}
+            }
         } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 1) {
             if (cd == nullptr || ct == nullptr) {
                 core::utility::log::Log::DefaultLog.WriteError(
                     "[SampleAlongProbes] Vector mode selected but no particle data connected.");
                 return false;
             }
-			//vector sampling
+            // vector sampling
             auto tree = ct->getData();
-			if (cd->getData(x_var_str)->getType() == "double" && cd->getData(y_var_str)->getType() == "double" &&
-                cd->getData(z_var_str)->getType() == "double" && cd->getData(w_var_str)->getType() == "double")
-			{
+            if (cd->getData(x_var_str)->getType() == "double" && cd->getData(y_var_str)->getType() == "double" &&
+                cd->getData(z_var_str)->getType() == "double" && cd->getData(w_var_str)->getType() == "double") {
                 std::vector<double> data_x = cd->getData(x_var_str)->GetAsDouble();
                 std::vector<double> data_y = cd->getData(y_var_str)->GetAsDouble();
                 std::vector<double> data_z = cd->getData(z_var_str)->GetAsDouble();
                 std::vector<double> data_w = cd->getData(w_var_str)->GetAsDouble();
                 doVectorSamling(tree, data_x, data_y, data_z, data_w);
-			}
-			else if (cd->getData(x_var_str)->getType() == "float" && cd->getData(y_var_str)->getType() == "float" &&
-                cd->getData(z_var_str)->getType() == "float" && cd->getData(w_var_str)->getType() == "float"	)
-			{
+            } else if (cd->getData(x_var_str)->getType() == "float" && cd->getData(y_var_str)->getType() == "float" &&
+                       cd->getData(z_var_str)->getType() == "float" && cd->getData(w_var_str)->getType() == "float") {
                 std::vector<float> data_x = cd->getData(x_var_str)->GetAsFloat();
                 std::vector<float> data_y = cd->getData(y_var_str)->GetAsFloat();
                 std::vector<float> data_z = cd->getData(z_var_str)->GetAsFloat();
                 std::vector<float> data_w = cd->getData(w_var_str)->GetAsFloat();
                 doVectorSamling(tree, data_x, data_y, data_z, data_w);
-			}
+            }
         } else {
             if (cv == nullptr) {
                 core::utility::log::Log::DefaultLog.WriteError(
@@ -323,24 +376,20 @@ bool SampleAlongPobes::getData(core::Call& call) {
             }
 
             doVolumeSampling();
-
         }
     }
 
     // put data into probes
 
     if (cd != nullptr) {
-       _old_datahash = cd->getDataHash();
+        _old_datahash = cd->getDataHash();
         meta_data.m_bboxs = tree_meta_data.m_bboxs;
     }
     if (cv != nullptr) {
         _old_volume_datahash = cv->DataHash();
-        meta_data.m_bboxs.SetBoundingBox({_vol_metadata->Origin[0], 
-                                         _vol_metadata->Origin[1],
-            _vol_metadata->Origin[2] + _vol_metadata->Extents[2],
-            _vol_metadata->Origin[0] + _vol_metadata->Extents[0],
-            _vol_metadata->Origin[1] + _vol_metadata->Extents[1],
-            _vol_metadata->Origin[2]});
+        meta_data.m_bboxs.SetBoundingBox({_vol_metadata->Origin[0], _vol_metadata->Origin[1],
+            _vol_metadata->Origin[2] + _vol_metadata->Extents[2], _vol_metadata->Origin[0] + _vol_metadata->Extents[0],
+            _vol_metadata->Origin[1] + _vol_metadata->Extents[1], _vol_metadata->Origin[2]});
     }
     cp->setMetaData(meta_data);
     cp->setData(_probes, _version);
@@ -362,7 +411,7 @@ bool SampleAlongPobes::getMetaData(core::Call& call) {
     if (cprobes == nullptr) return false;
 
     auto meta_data = cp->getMetaData();
-    //if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() && !_trigger_recalc)
+    // if (cd->getDataHash() == _old_datahash && meta_data.m_frame_ID == cd->getFrameIDtoLoad() && !_trigger_recalc)
     //    return true;
 
     if (cd != nullptr && ct != nullptr) {
@@ -384,7 +433,6 @@ bool SampleAlongPobes::getMetaData(core::Call& call) {
         cv->SetFrameID(meta_data.m_frame_ID);
         if (!(*cv)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
         if (!(*cv)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
-
         meta_data.m_frame_cnt = cv->FrameCount();
     } else {
         return false;
