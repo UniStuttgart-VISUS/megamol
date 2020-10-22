@@ -22,7 +22,7 @@ function(add_clang_format TARGET)
       OUTPUT_STRIP_TRAILING_WHITESPACE)
     string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" CLANG_FORMAT_VERSION ${CLANG_FORMAT_VERSION})
 
-    if("${CLANG_FORMAT_VERSION}" VERSION_GREATER_EQUAL "6.0.0")
+    if("${CLANG_FORMAT_VERSION}" VERSION_GREATER_EQUAL "10.0.0")
       add_custom_target("${TARGET}_clangformat"
         COMMAND ${CLANG_FORMAT}
           "-i"

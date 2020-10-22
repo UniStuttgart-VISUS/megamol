@@ -14,20 +14,20 @@ using namespace megamol::gui;
 
 
 megamol::gui::Parameter::Parameter(ImGuiID uid, Param_t type, Stroage_t store, Min_t minval, Max_t maxval)
-    : uid(uid)
-    , type(type)
-    , present(type)
-    , full_name()
-    , description()
-    , core_param_ptr(nullptr)
-    , minval(minval)
-    , maxval(maxval)
-    , storage(store)
-    , value()
-    , tf_string_hash(0)
-    , default_value()
-    , default_value_mismatch(false)
-    , value_dirty(false) {
+        : uid(uid)
+        , type(type)
+        , present(type)
+        , full_name()
+        , description()
+        , core_param_ptr(nullptr)
+        , minval(minval)
+        , maxval(maxval)
+        , storage(store)
+        , value()
+        , tf_string_hash(0)
+        , default_value()
+        , default_value_mismatch(false)
+        , value_dirty(false) {
 
     // Initialize variant types which should/can not be changed afterwards.
     // Default ctor of variants initializes std::monostate.
@@ -475,6 +475,10 @@ bool megamol::gui::Parameter::ReadCoreParameterToParameter(
     out_param.present.SetGUIVisible(in_param_ptr->IsGUIVisible());
     out_param.present.SetGUIReadOnly(in_param_ptr->IsGUIReadOnly());
     out_param.present.SetGUIPresentation(in_param_ptr->GetGUIPresentation());
+
+    // Do not read param value from core param if gui param has already updated value
+    if (out_param.IsValueDirty())
+        return false;
 
     bool type_error = false;
 

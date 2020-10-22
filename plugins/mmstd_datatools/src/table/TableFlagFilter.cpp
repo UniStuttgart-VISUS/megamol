@@ -111,7 +111,7 @@ bool TableFlagFilter::handleCall(core::Call &call) {
     (*flagsInCall)(core::FlagCallRead_GL::CallGetData);
 
     if (this->tableInFrameCount != tableInCall->GetFrameCount() || this->tableInDataHash != tableInCall->DataHash() || flagsInCall->hasUpdate()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "TableFlagFilter: Filter table.");
+        // megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "TableFlagFilter: Filter table.");
 
         this->dataHash++;
 

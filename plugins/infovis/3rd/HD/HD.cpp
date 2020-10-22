@@ -32,7 +32,8 @@ const double eps_pivot = 1e-8;
 
 double norm2(double* x, int d) {
     double result = 0;
-    for (int i = 0; i < d; i++) result += x[i] * x[i];
+    for (int i = 0; i < d; i++)
+        result += x[i] * x[i];
     return sqrt(result);
 }
 
@@ -46,8 +47,10 @@ double norm2(double* x, int d) {
 int intHD1(double** x, int n) {
     int cnt1 = 0, cnt2 = 0;
     for (int i = 0; i < n; i++, x++) {
-        if (**x < eps_HD1) cnt1++;
-        if (**x > -eps_HD1) cnt2++;
+        if (**x < eps_HD1)
+            cnt1++;
+        if (**x > -eps_HD1)
+            cnt2++;
     }
     return min(cnt1, cnt2);
 }
@@ -75,8 +78,10 @@ int intHD2(double** x, int n) {
         else {
             alpha[i - nt] = atan2(x[i][1], x[i][0]); // alpha in (-pi,pi]
             // correction for points like (-1, -1e-16)
-            if (alpha[i - nt] < -M_PI + eps_HD2) alpha[i - nt] = M_PI;
-            if (alpha[i - nt] <= eps_HD2) nh++;
+            if (alpha[i - nt] < -M_PI + eps_HD2)
+                alpha[i - nt] = M_PI;
+            if (alpha[i - nt] <= eps_HD2)
+                nh++;
         }
     }
     int nn = n - nt;
@@ -87,13 +92,17 @@ int intHD2(double** x, int n) {
     if (result > 0) {
         int j = nh;
         for (int i = 0; i < nh; i++) {
-            while ((j <= nn - 1) && (alpha[j] - M_PI <= alpha[i] + eps_HD2)) j++;
-            if (j - i <= result) result = j - i - 1;
+            while ((j <= nn - 1) && (alpha[j] - M_PI <= alpha[i] + eps_HD2))
+                j++;
+            if (j - i <= result)
+                result = j - i - 1;
         }
         j = 0;
         for (int i = nh; i < nn; i++) {
-            while ((j <= nh - 1) && (alpha[j] + M_PI <= alpha[i] + eps_HD2)) j++;
-            if (j - (i - nn) <= result) result = j - (i - nn) - 1;
+            while ((j <= nh - 1) && (alpha[j] + M_PI <= alpha[i] + eps_HD2))
+                j++;
+            if (j - (i - nn) <= result)
+                result = j - (i - nn) - 1;
         }
     }
     delete[] alpha;
@@ -112,13 +121,16 @@ int intHD2(double** x, int n) {
 /****************************************************************************/
 
 int nHD_Rec(double** xx, int n, int d) {
-    if (d == 1) return intHD1(xx, n);
-    if (d == 2) return intHD2(xx, n);
+    if (d == 1)
+        return intHD1(xx, n);
+    if (d == 2)
+        return intHD2(xx, n);
 
     double* y = new double[d - 1];
     double* z = new double[d];
     double** x = new double*[n];
-    for (int k = 0; k < n; k++) x[k] = new double[d - 1];
+    for (int k = 0; k < n; k++)
+        x[k] = new double[d - 1];
 
     int result = n;
     for (int i = 0; i < n; i++) {
@@ -132,14 +144,18 @@ int nHD_Rec(double** xx, int n, int d) {
             }
         if (xmax > eps_HDx) {
             int nNull = 0, nPos = 0, nNeg = 0, m = 0;
-            for (int k = 0; k < d; k++) z[k] = xx[i][k] / xx[i][kmax];
+            for (int k = 0; k < d; k++)
+                z[k] = xx[i][k] / xx[i][kmax];
             // project data points
             for (int j = 0; j < n; j++) {
                 double alpha = -xx[j][kmax];
-                for (int k = 0; k < kmax; k++) y[k] = xx[j][k] + alpha * z[k];
-                for (int k = kmax; k < d - 1; k++) y[k] = xx[j][k + 1] + alpha * z[k + 1];
+                for (int k = 0; k < kmax; k++)
+                    y[k] = xx[j][k] + alpha * z[k];
+                for (int k = kmax; k < d - 1; k++)
+                    y[k] = xx[j][k + 1] + alpha * z[k + 1];
                 if (norm2(y, d - 1) > eps_HDx) {
-                    for (int k = 0; k < d - 1; k++) x[m][k] = y[k];
+                    for (int k = 0; k < d - 1; k++)
+                        x[m][k] = y[k];
                     m++;
                 } else {
                     // in this case alpha = -sign(x_i*x_j)
@@ -152,10 +168,12 @@ int nHD_Rec(double** xx, int n, int d) {
                 }
             }
             result = min(result, nHD_Rec(x, m, d - 1) + nNull + min(nPos, nNeg));
-            if (result == 0) break;
+            if (result == 0)
+                break;
         }
     }
-    for (int k = 0; k < n; k++) delete[] x[k];
+    for (int k = 0; k < n; k++)
+        delete[] x[k];
     delete[] x;
     delete[] z;
     delete[] y;
@@ -181,15 +199,18 @@ int nHD_Rec(double** xx, int n, int d) {
 /****************************************************************************/
 
 double HD_Rec(double* z, double** xx, int n, int d) {
-    if (n <= 0) throw invalid_argument("n <= 0");
-    if (d <= 0) throw invalid_argument("d <= 0");
+    if (n <= 0)
+        throw invalid_argument("n <= 0");
+    if (d <= 0)
+        throw invalid_argument("d <= 0");
     // preprocess data
     // subtract z from all data points x[i]
     int m = 0;
     double** x = new double*[n];
     for (int i = 0; i < n; i++) {
         x[m] = new double[d];
-        for (int j = 0; j < d; j++) x[m][j] = xx[i][j] - z[j];
+        for (int j = 0; j < d; j++)
+            x[m][j] = xx[i][j] - z[j];
         if (norm2(x[m], d) >= eps_HDx)
             m++;
         else
@@ -197,9 +218,10 @@ double HD_Rec(double* z, double** xx, int n, int d) {
     }
     int result = nHD_Rec(x, m, d) + (n - m);
     // deallocate array x
-    for (int i = 0; i < m; i++) delete[] x[i];
+    for (int i = 0; i < m; i++)
+        delete[] x[i];
     delete[] x;
-    return result / (double)n;
+    return result / (double) n;
 }
 
 /****************************************************************************/
@@ -220,7 +242,8 @@ int getRank(double** x, int n, int d, int* piv) {
     double** A = new double*[d];
     for (int i = 0; i < d; i++) {
         A[i] = new double[n];
-        for (int j = 0; j < n; j++) A[i][j] = x[j][i];
+        for (int j = 0; j < n; j++)
+            A[i][j] = x[j][i];
     }
     rank = 0;
     for (int k = 0; k < min(n, d); k++) {
@@ -235,7 +258,8 @@ int getRank(double** x, int n, int d, int* piv) {
                     imax = i;
                 }
             }
-            if (amax < eps_pivot) pc++;
+            if (amax < eps_pivot)
+                pc++;
         } while ((amax < eps_pivot) && (pc < n));
         if (pc < n) {
             rank++;
@@ -251,13 +275,16 @@ int getRank(double** x, int n, int d, int* piv) {
             // elimination
             for (int i = k + 1; i < d; i++) {
                 double factor = A[i][pc] / A[k][pc];
-                for (int j = pc + 1; j < n; j++) A[i][j] -= factor * A[k][j];
+                for (int j = pc + 1; j < n; j++)
+                    A[i][j] -= factor * A[k][j];
             }
-            if (++pc >= n) break;
+            if (++pc >= n)
+                break;
         } else
             break;
     }
-    for (int i = 0; i < d; i++) delete[] A[i];
+    for (int i = 0; i < d; i++)
+        delete[] A[i];
     delete[] A;
 
     return rank;
@@ -281,7 +308,8 @@ void project(double** x, int n, int d, int rank, int indices[]) {
         z[k] = new double[rank];
         for (int i = 0; i < rank; i++) {
             z[k][i] = 0;
-            for (int l = 0; l < d; l++) z[k][i] += x[k][l] * x[indices[i]][l];
+            for (int l = 0; l < d; l++)
+                z[k][i] += x[k][l] * x[indices[i]][l];
         }
     }
     for (int k = 0; k < n; k++) {
@@ -352,7 +380,8 @@ bool getNormal(double** A, int d, double* normal) {
         // elimination
         for (int i = k + 1; i < d - 1; i++) {
             double factor = A[i][k] / A[k][k];
-            for (int j = k + 1; j < d; j++) A[i][j] -= factor * A[k][j];
+            for (int j = k + 1; j < d; j++)
+                A[i][j] -= factor * A[k][j];
         }
     }
     // back substitution
@@ -360,7 +389,8 @@ bool getNormal(double** A, int d, double* normal) {
     normal[d - 1] = -1;
     for (int k = d - 2; k >= 0; k--) {
         normal[k] = A[k][d - 1] / A[k][k];
-        for (int i = k - 1; i >= 0; i--) A[i][d - 1] -= normal[k] * A[i][k];
+        for (int i = k - 1; i >= 0; i--)
+            A[i][d - 1] -= normal[k] * A[i][k];
     }
     // reverse column permutations
     for (int k = d - 1; k >= 0; k--) {
@@ -398,7 +428,8 @@ int HD1proj(double** x, int n, int d, double* p, int indices[]) {
     int* plane = new int[n];
     for (int i = 0; i < n; i++) {
         double sum = 0;
-        for (int j = 0; j < d; j++) sum += p[j] * x[i][j];
+        for (int j = 0; j < d; j++)
+            sum += p[j] * x[i][j];
         if (sum > eps_HD1)
             cnt1++;
         else if (sum < -eps_HD1)
@@ -413,11 +444,13 @@ int HD1proj(double** x, int n, int d, double* p, int indices[]) {
             z[i] = new double[d - 1];
             for (int j = 0; j < d - 1; j++) {
                 z[i][j] = 0;
-                for (int k = 0; k < d; k++) z[i][j] += x[indices[j]][k] * x[plane[i]][k];
+                for (int k = 0; k < d; k++)
+                    z[i][j] += x[indices[j]][k] * x[plane[i]][k];
             }
         }
         HDproj = nHD_Comb(z, cnt0, d - 1);
-        for (int i = 0; i < cnt0; i++) delete[] z[i];
+        for (int i = 0; i < cnt0; i++)
+            delete[] z[i];
         delete[] z;
     }
     delete[] plane;
@@ -436,31 +469,38 @@ int HD1proj(double** x, int n, int d, double* p, int indices[]) {
 /****************************************************************************/
 
 int nHD_Comb(double** xx, int n, int d) {
-    if (d == 1) return intHD1(xx, n);
-    if (d == 2) return intHD2(xx, n);
+    if (d == 1)
+        return intHD1(xx, n);
+    if (d == 2)
+        return intHD2(xx, n);
 
     int result = n + 1;
     double** a = new double*[d - 1];
-    for (int i = 0; i < d - 1; i++) a[i] = new double[d];
+    for (int i = 0; i < d - 1; i++)
+        a[i] = new double[d];
     double* p = new double[d];
     int* indices = new int[d - 1];
     indices[0] = -1;
     int pos = 0;
     while (pos >= 0) {
         indices[pos]++;
-        for (pos++; pos < d - 1; pos++) indices[pos] = indices[pos - 1] + 1;
+        for (pos++; pos < d - 1; pos++)
+            indices[pos] = indices[pos - 1] + 1;
         pos--;
         do {
             for (int i = 0; i < d - 1; i++)
-                for (int j = 0; j < d; j++) a[i][j] = xx[indices[i]][j];
-            if (getNormal(a, d, p)) result = min(result, HD1proj(xx, n, d, p, indices));
+                for (int j = 0; j < d; j++)
+                    a[i][j] = xx[indices[i]][j];
+            if (getNormal(a, d, p))
+                result = min(result, HD1proj(xx, n, d, p, indices));
             indices[pos]++;
         } while (indices[pos] < n - d + pos + 2);
         do
             pos--;
         while (pos >= 0 && indices[pos] >= n - d + pos + 1);
     }
-    for (int i = 0; i < d - 1; i++) delete[] a[i];
+    for (int i = 0; i < d - 1; i++)
+        delete[] a[i];
     delete[] a;
     delete[] p;
     delete[] indices;
@@ -490,8 +530,10 @@ int nHD_Comb(double** xx, int n, int d) {
 /****************************************************************************/
 
 double HD_Comb(double* z, double** xx, int n, int d) {
-    if (n <= 0) throw invalid_argument("n <= 0");
-    if (d <= 0) throw invalid_argument("d <= 0");
+    if (n <= 0)
+        throw invalid_argument("n <= 0");
+    if (d <= 0)
+        throw invalid_argument("d <= 0");
     // preprocess data
     //   subtract z from all data points x[i]
     //   check whether the data points are concentrated on a lower
@@ -501,22 +543,26 @@ double HD_Comb(double* z, double** xx, int n, int d) {
     double** x = new double*[n];
     for (int i = 0; i < n; i++) {
         x[m] = new double[d];
-        for (int j = 0; j < d; j++) x[m][j] = xx[i][j] - z[j];
+        for (int j = 0; j < d; j++)
+            x[m][j] = xx[i][j] - z[j];
         if (norm2(x[m], d) >= eps_HDx)
             m++;
         else
             delete[] x[m];
     }
-    if (m == 0) return 1.0;
+    if (m == 0)
+        return 1.0;
 
     rank = getRank(x, m, d, indices);
-    if (rank < d) project(x, m, d, rank, indices);
+    if (rank < d)
+        project(x, m, d, rank, indices);
     int result = nHD_Comb(x, m, rank) + (n - m);
     // deallocate array x
-    for (int i = 0; i < m; i++) delete[] x[i];
+    for (int i = 0; i < m; i++)
+        delete[] x[i];
     delete[] x;
     delete[] indices;
-    return result / (double)n;
+    return result / (double) n;
 }
 
 /****************************************************************************/
@@ -580,7 +626,8 @@ bool getBasisComplement(double** A, int d, double** basis) {
         // elimination
         for (int i = k + 1; i < d - 2; i++) {
             double factor = A[i][k] / A[k][k];
-            for (int j = k + 1; j < d; j++) A[i][j] -= factor * A[k][j];
+            for (int j = k + 1; j < d; j++)
+                A[i][j] -= factor * A[k][j];
         }
     }
     // back substitution
@@ -633,14 +680,16 @@ int nHD_Comb2(double** xx, int n, int d);
 
 int HD2proj(double** x, int n, int d, double** p, int* indices) {
     double** y = new double*[n];
-    for (int i = 0; i < n; i++) y[i] = new double[2];
+    for (int i = 0; i < n; i++)
+        y[i] = new double[2];
 
     int cnt0 = 0, cnt1 = 0, HDproj = 0;
     int* plane = new int[n];
     for (int i = 0; i < n; i++) {
         y[cnt1][0] = y[cnt1][1] = 0;
         for (int j = 0; j < d; j++)
-            for (int k = 0; k < 2; k++) y[cnt1][k] += p[k][j] * x[i][j];
+            for (int k = 0; k < 2; k++)
+                y[cnt1][k] += p[k][j] * x[i][j];
         if (norm2(y[cnt1], 2) > eps_HD2)
             cnt1++;
         else
@@ -652,16 +701,19 @@ int HD2proj(double** x, int n, int d, double** p, int* indices) {
             z[i] = new double[d - 2];
             for (int j = 0; j < d - 2; j++) {
                 z[i][j] = 0;
-                for (int k = 0; k < d; k++) z[i][j] += x[indices[j]][k] * x[plane[i]][k];
+                for (int k = 0; k < d; k++)
+                    z[i][j] += x[indices[j]][k] * x[plane[i]][k];
             }
         }
         HDproj = nHD_Comb2(z, cnt0, d - 2);
-        for (int i = 0; i < cnt0; i++) delete[] z[i];
+        for (int i = 0; i < cnt0; i++)
+            delete[] z[i];
         delete[] z;
     }
     int result = intHD2(y, cnt1) + HDproj;
     delete[] plane;
-    for (int i = 0; i < n; i++) delete[] y[i];
+    for (int i = 0; i < n; i++)
+        delete[] y[i];
     delete[] y;
     return result;
 }
@@ -678,35 +730,44 @@ int HD2proj(double** x, int n, int d, double** p, int* indices) {
 /****************************************************************************/
 
 int nHD_Comb2(double** xx, int n, int d) {
-    if (d == 1) return intHD1(xx, n);
-    if (d == 2) return intHD2(xx, n);
+    if (d == 1)
+        return intHD1(xx, n);
+    if (d == 2)
+        return intHD2(xx, n);
 
     int result = n + 1;
     double** a = new double*[d - 2];
-    for (int i = 0; i < d - 2; i++) a[i] = new double[d];
+    for (int i = 0; i < d - 2; i++)
+        a[i] = new double[d];
     double** p = new double*[2];
-    for (int i = 0; i < 2; i++) p[i] = new double[d];
+    for (int i = 0; i < 2; i++)
+        p[i] = new double[d];
     int* indices = new int[d - 2];
 
     indices[0] = -1;
     int pos = 0;
     while (pos >= 0) {
         indices[pos]++;
-        for (pos++; pos < d - 2; pos++) indices[pos] = indices[pos - 1] + 1;
+        for (pos++; pos < d - 2; pos++)
+            indices[pos] = indices[pos - 1] + 1;
         pos--;
         do {
             for (int i = 0; i < d - 2; i++)
-                for (int j = 0; j < d; j++) a[i][j] = xx[indices[i]][j];
-            if (getBasisComplement(a, d, p)) result = min(result, HD2proj(xx, n, d, p, indices));
+                for (int j = 0; j < d; j++)
+                    a[i][j] = xx[indices[i]][j];
+            if (getBasisComplement(a, d, p))
+                result = min(result, HD2proj(xx, n, d, p, indices));
             indices[pos]++;
         } while (indices[pos] < n - d + pos + 3);
         do
             pos--;
         while (pos >= 0 && indices[pos] >= n - d + pos + 2);
     }
-    for (int i = 0; i < d - 2; i++) delete[] a[i];
+    for (int i = 0; i < d - 2; i++)
+        delete[] a[i];
     delete[] a;
-    for (int i = 0; i < 2; i++) delete[] p[i];
+    for (int i = 0; i < 2; i++)
+        delete[] p[i];
     delete[] p;
     delete[] indices;
     return result;
@@ -735,8 +796,10 @@ int nHD_Comb2(double** xx, int n, int d) {
 /****************************************************************************/
 
 double HD_Comb2(double* z, double** xx, int n, int d) {
-    if (n <= 0) throw invalid_argument("n <= 0");
-    if (d <= 0) throw invalid_argument("d <= 0");
+    if (n <= 0)
+        throw invalid_argument("n <= 0");
+    if (d <= 0)
+        throw invalid_argument("d <= 0");
     int m = 0, rank;
     int* indices = new int[d];
     double** x = new double*[n];
@@ -746,23 +809,27 @@ double HD_Comb2(double* z, double** xx, int n, int d) {
     //   dimensional spcae
     for (int i = 0; i < n; i++) {
         x[m] = new double[d];
-        for (int j = 0; j < d; j++) x[m][j] = xx[i][j] - z[j];
+        for (int j = 0; j < d; j++)
+            x[m][j] = xx[i][j] - z[j];
         if (norm2(x[m], d) >= eps_HDx)
             m++;
         else
             delete[] x[m];
     }
-    if (m == 0) return 1.0;
+    if (m == 0)
+        return 1.0;
     rank = getRank(x, m, d, indices);
-    if (rank < d) project(x, m, d, rank, indices);
+    if (rank < d)
+        project(x, m, d, rank, indices);
 
     int result = nHD_Comb2(x, m, rank) + (n - m);
     // deallocate array x
-    for (int i = 0; i < m; i++) delete[] x[i];
+    for (int i = 0; i < m; i++)
+        delete[] x[i];
     delete[] x;
     delete[] indices;
     return result;
-    return result / (double)n;
+    return result / (double) n;
 }
 
 } // namespace HalfspaceDepth

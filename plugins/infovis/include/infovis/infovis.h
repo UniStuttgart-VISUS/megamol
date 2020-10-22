@@ -6,7 +6,7 @@
 #ifndef INFOVIS_H_INCLUDED
 #define INFOVIS_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
@@ -17,21 +17,21 @@
 // that uses this DLL. This way any other project whose source files include this file see
 // TRISOUPPLUGIN_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
-#    ifdef INFOVIS_EXPORTS
-#        define INFOVIS_API __declspec(dllexport)
-#    else
-#        define INFOVIS_API __declspec(dllimport)
-#    endif
+#ifdef INFOVIS_EXPORTS
+#define INFOVIS_API __declspec(dllexport)
+#else
+#define INFOVIS_API __declspec(dllimport)
+#endif
 #else /* _WIN32 */
-#    define INFOVIS_API
+#define INFOVIS_API
 #endif /* _WIN32 */
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
 
 #ifdef INFOVIS_EXPORTS
-#    ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-#    endif
+#endif
 
 /**
  * Returns the version of the MegaMol™ plugin api used by this plugin.
@@ -85,9 +85,9 @@ INFOVIS_API
  */
 INFOVIS_API void mmplgReleasePluginInstance(::megamol::core::utility::plugins::AbstractPluginInstance* pi);
 
-#    ifdef __cplusplus
+#ifdef __cplusplus
 } /* extern "C" */
-#    endif
+#endif
 #endif /* INFOVIS_EXPORTS */
 
 #endif /* INFOVIS_H_INCLUDED */
