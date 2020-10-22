@@ -36,9 +36,7 @@ LogConsole::~LogConsole() {
 
     // Reset echo target only if log target of this class instance is used
     if (megamol::core::utility::log::Log::DefaultLog.AccessEchoTarget() == this->echo_log_target) {
-        megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(
-            std::make_shared<megamol::core::utility::log::OfflineTarget>(
-                100, megamol::core::utility::log::Log::LEVEL_ALL));
+        megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(nullptr);
     }
     this->echo_log_target.reset();
 }
