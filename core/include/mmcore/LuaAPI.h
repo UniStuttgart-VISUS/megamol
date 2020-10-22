@@ -102,6 +102,8 @@ public:
 
     void setLastFrameTimeCallback(std::function<float()> callback);
 
+    void setFramebufferSizeCallback(std::function<void(const unsigned int, const unsigned int)> callback);
+
     /**
      * Communicates mmQuit request to rest of MegaMol main loop.
      */
@@ -237,6 +239,7 @@ protected:
     int Invoke(lua_State* L);
     int Screenshot(lua_State* L);
     int LastFrameTime(lua_State* L);
+    int SetFramebufferSize(lua_State *L);
 
 private:
 
@@ -272,6 +275,7 @@ private:
     std::function<std::vector<std::string>()> mmListResources_callback_; // returns list of resources available in frontend
     std::function<void(std::string const&)> mmScreenshot_callback_;
     std::function<float()> mmLastFrameTime_callback_;
+    std::function<void(const unsigned int, const unsigned int)> mmSetFramebufferSize_callback_;
 
     bool shutdown_ = false;
 

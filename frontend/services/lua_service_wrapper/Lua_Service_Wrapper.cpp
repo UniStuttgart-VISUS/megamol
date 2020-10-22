@@ -15,6 +15,7 @@
 
 #include "Screenshots.h"
 #include "FrameStatistics.h"
+#include "WindowManipulation.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "Window_Events.h"
@@ -72,7 +73,8 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "FrontendResourcesList",
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
         "WindowEvents", // for file drag and drop events
-        "FrameStatistics" // for LastFrameTime
+        "FrameStatistics", // for LastFrameTime
+        "WindowManipulation" // for Framebuffer resize
     }; //= {"ZMQ_Context"};
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
@@ -126,6 +128,11 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
     luaAPI.setLastFrameTimeCallback([&]() {
         auto& frame_statistics = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::FrameStatistics>();
         return static_cast<float>(frame_statistics.last_rendered_frame_time_milliseconds);
+    });
+
+    luaAPI.setFramebufferSizeCallback([&](unsigned int w, unsigned int h) {
+        auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
+        window_manipulation.set_framebuffer_size(w, h);
     });
 }
 
