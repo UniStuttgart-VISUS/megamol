@@ -276,11 +276,7 @@ bool megamol::core::utility::log::Log::SetLogFileName(const char *filename, bool
     std::shared_ptr<Target> omt = this->mainTarget;
     std::shared_ptr<OfflineTarget> ot = std::dynamic_pointer_cast<OfflineTarget>(omt);
 
-    if (filename == nullptr) {
-        if (ot == nullptr) {
-            this->mainTarget = std::make_shared<OfflineTarget>(20U, omt->Level());
-        }
-    } else {
+    if (filename != nullptr) {
         std::string path(filename);
         if (addSuffix) {
             path += this->getFileNameSuffix();

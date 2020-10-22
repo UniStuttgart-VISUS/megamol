@@ -74,6 +74,8 @@ private:
     core::CalleeSlot flagStorageWriteOutSlot;
 
     core::param::ParamSlot updateSelectionParam;
+    core::param::ParamSlot useColumnAsIndexParam;
+    core::param::ParamSlot indexColumnParam;
 
     std::thread senderThread_;
     std::thread receiverThread_;
