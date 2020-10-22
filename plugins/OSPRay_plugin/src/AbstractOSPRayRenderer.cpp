@@ -1077,7 +1077,7 @@ namespace ospray {
                     {
                         std::vector<mesh::ImageDataAccessCollection::Image> tex_vec;
                         if (element.mesh_textures != nullptr) {
-                            assert(element.mesh->accessMesh().size() == element.mesh_textures->accessImages().size());
+                            assert(element.mesh->accessMeshes().size() == element.mesh_textures->accessImages().size());
                             tex_vec = element.mesh_textures->accessImages();
                         }
                         this->numCreateGeo = element.mesh->accessMeshes().size();
