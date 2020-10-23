@@ -117,23 +117,33 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
     // TODO: do something with ZMQ resource we get here
     m_requestedResourceReferences = resources;
 
-    auto& list_callback = resources[0].getResource< 
-        std::function< std::vector<std::string> (void)> 
-    >();
-    luaAPI.setListResourcesCallback(list_callback);
+    megamol::core::LuaAPI::LuaCallbacks callbacks;
 
-    auto& screenshot_callback = m_requestedResourceReferences[1].getResource< std::function<bool(std::string const&)> >();
-    luaAPI.setScreenshotCallback(screenshot_callback);
+    callbacks.mmListResources_callback_= resources[0].getResource<std::function< std::vector<std::string> (void)> >();
 
-    luaAPI.setLastFrameTimeCallback([&]() {
+    callbacks.mmScreenshot_callback_ = m_requestedResourceReferences[1].getResource<std::function<bool(std::string const&)> >();
+
+    callbacks.mmLastFrameTime_callback_ = [&]() {
         auto& frame_statistics = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::FrameStatistics>();
         return static_cast<float>(frame_statistics.last_rendered_frame_time_milliseconds);
-    });
+    };
 
-    luaAPI.setFramebufferSizeCallback([&](unsigned int w, unsigned int h) {
+    callbacks.mmSetFramebufferSize_callback_ = [&](unsigned int w, unsigned int h) {
         auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
         window_manipulation.set_framebuffer_size(w, h);
-    });
+    };
+
+    callbacks.mmSetWindowPosition_callback_ = [&](unsigned int x, unsigned int y) {
+        auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
+        window_manipulation.set_window_position(x, y);
+    };
+
+    callbacks.mmSetFullscreen_callback_ = [&](bool fullscreen) {
+        auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
+        window_manipulation.set_fullscreen(fullscreen?frontend_resources::WindowManipulation::Fullscreen::Maximize:frontend_resources::WindowManipulation::Fullscreen::Restore);
+    };
+
+    luaAPI.SetCallbacks(callbacks);
 }
 
 // -------- main loop callbacks ---------
