@@ -227,7 +227,10 @@ void megamol::frontend_resources::WindowManipulation::set_framebuffer_size(const
     }
 
     if(fbo_width != width || fbo_height != height) {
-        log_error("WindowManipulation::set_framebuffer_size() could not enforce window size to achieve requested framebuffer size of w: " + std::to_string(width) + ", h: " + std::to_string(height) + ".\n Framebuffer has size w: " + std::to_string(fbo_width) + ", h: " + std::to_string(fbo_height));
+        log_error("WindowManipulation::set_framebuffer_size() could not enforce window size to achieve requested framebuffer size of w: "
+            + std::to_string(width) + ", h: " + std::to_string(height)
+            + ".\n Framebuffer has size w: " + std::to_string(fbo_width) + ", h: " + std::to_string(fbo_height)
+            + "\n Requesting shutdown.");
         glfwSetWindowShouldClose(window, GLFW_TRUE);
         static_cast<megamol::frontend::OpenGL_GLFW_Service*>(glfwGetWindowUserPointer(window))->setShutdown();
     }
