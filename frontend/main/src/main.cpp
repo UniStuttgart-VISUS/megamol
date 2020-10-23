@@ -39,7 +39,7 @@ struct CLIConfig {
     std::vector<std::string> project_files = {};
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool load_example_project = false;
-    bool opengl_khr_debug = true;
+    bool opengl_khr_debug = false;
     std::vector<unsigned int> window_size = {}; // if not set, GLFW service will open window with 3/4 of monitor resolution 
     std::vector<unsigned int> window_position = {};
 };
@@ -273,7 +273,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         ("project-files", "projects to load", cxxopts::value<std::vector<std::string>>())
         ("host", "address of lua host server, default: "+config.lua_host_address, cxxopts::value<std::string>())
         ("example", "load minimal test spheres example project", cxxopts::value<bool>())
-        ("khrdebug", "enable OpenGL KHR debug messages", cxxopts::value<bool>()->default_value("false"))
+        ("khrdebug", "enable OpenGL KHR debug messages", cxxopts::value<bool>())
         ("window", "set the window size and position, accepted format: WIDTHxHEIGHT[+POSX+POSY]", cxxopts::value<std::string>())
         ("help", "print help")
         ;
