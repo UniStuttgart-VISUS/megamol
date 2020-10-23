@@ -2,6 +2,8 @@
 
 This is the plugin providing the GUI for MegaMol.
 
+See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for current work in progress.
+
 ![gui](gui.png)
 
 ---
@@ -75,14 +77,11 @@ The `OverlayRenderer` is a rendering module which implements a `megamol::core::v
 ## Configurator
 
 The configurator is part of the GUI and can be opened via the GUI menu: `Windows`/`Configurator`.\
-**Any changes applied in the configurator will not affect the currently loaded MegaMol project.**\
 In order to start the configurator automatically, you can use the project  `/examples/configurator.lua`.
 
         mmCreateView("configurator","GUIView","::gui")
         mmSetParamValue("::gui::autostart_configurator",[=[true]=])
         
-See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for current work in progress.
-
 **NOTE**
 * In order to create a vaild project file which can be loaded successfully afterwards, it is necessary to define one view module as `main view`. A `main view` defines the entry point of the project.
 * Parameter values in the lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported any more.
@@ -226,235 +225,18 @@ In order to add a new custom widget for a group of parameters sharing the same n
 * Add a new group widget data set of the type `GroupWidgetData` in the ctor and register above function as callback. 
 * (WIP: Identification of parameter widget groups. Currently by name of namespace and number of parameter types of group.)
 
-#### Default gui state 
+### Default GUI State 
+
+This is the default GUI state stored as JSON string in the lua project file:
 
 ```lua
-mmSetParamValue("::gui::state",[=[{
-  "GUI": {
-    "menu_visible": true,
-    "project_file": ""
-  },
-  "Parameters": {
-    "::gui::autostart_configurator": {
-      "gui_presentation_mode": 2,
-      "gui_read-only": false,
-      "gui_visibility": true
-    },
-    "::gui::configurator::state": {
-      "gui_presentation_mode": 2,
-      "gui_read-only": true,
-      "gui_visibility": false
-    },
-    "::gui::state": {
-      "gui_presentation_mode": 2,
-      "gui_read-only": true,
-      "gui_visibility": false
-    },
-    "::gui::style": {
-      "gui_presentation_mode": 2,
-      "gui_read-only": false,
-      "gui_visibility": true
-    }
-  },
-  "WindowConfigurations": {
-    "All Parameters": {
-      "font_name": "",
-      "ms_max_history_count": 20,
-      "ms_mode": 0,
-      "ms_refresh_rate": 2.0,
-      "ms_show_options": false,
-      "param_extended_mode": false,
-      "param_module_filter": 0,
-      "param_modules_list": [],
-      "param_show_hotkeys": false,
-      "tfe_active_param": "",
-      "tfe_view_minimized": false,
-      "tfe_view_vertical": false,
-      "win_callback": 1,
-      "win_flags": 40,
-      "win_hotkey": [
-        300,
-        0
-      ],
-      "win_position": [
-        0.0,
-        18.0
-      ],
-      "win_reset_position": [
-        0.0,
-        0.0
-      ],
-      "win_reset_size": [
-        400.0,
-        600.0
-      ],
-      "win_show": true,
-      "win_size": [
-        400.0,
-        600.0
-      ],
-      "win_soft_reset": false
-    },
-    "Configurator": {
-      "font_name": "",
-      "ms_max_history_count": 20,
-      "ms_mode": 0,
-      "ms_refresh_rate": 2.0,
-      "ms_show_options": false,
-      "param_extended_mode": false,
-      "param_module_filter": 0,
-      "param_modules_list": [],
-      "param_show_hotkeys": false,
-      "tfe_active_param": "",
-      "tfe_view_minimized": false,
-      "tfe_view_vertical": false,
-      "win_callback": 6,
-      "win_flags": 1064,
-      "win_hotkey": [
-        296,
-        0
-      ],
-      "win_position": [
-        0.0,
-        0.0
-      ],
-      "win_reset_position": [
-        0.0,
-        0.0
-      ],
-      "win_reset_size": [
-        800.0,
-        600.0
-      ],
-      "win_show": false,
-      "win_size": [
-        800.0,
-        600.0
-      ],
-      "win_soft_reset": true
-    },
-    "Font Settings": {
-      "font_name": "",
-      "ms_max_history_count": 20,
-      "ms_mode": 0,
-      "ms_refresh_rate": 2.0,
-      "ms_show_options": false,
-      "param_extended_mode": false,
-      "param_module_filter": 0,
-      "param_modules_list": [],
-      "param_show_hotkeys": false,
-      "tfe_active_param": "",
-      "tfe_view_minimized": false,
-      "tfe_view_vertical": false,
-      "win_callback": 4,
-      "win_flags": 96,
-      "win_hotkey": [
-        298,
-        0
-      ],
-      "win_position": [
-        0.0,
-        0.0
-      ],
-      "win_reset_position": [
-        0.0,
-        0.0
-      ],
-      "win_reset_size": [
-        400.0,
-        600.0
-      ],
-      "win_show": false,
-      "win_size": [
-        400.0,
-        600.0
-      ],
-      "win_soft_reset": true
-    },
-    "Performance Metrics": {
-      "font_name": "",
-      "ms_max_history_count": 20,
-      "ms_mode": 0,
-      "ms_refresh_rate": 2.0,
-      "ms_show_options": false,
-      "param_extended_mode": false,
-      "param_module_filter": 0,
-      "param_modules_list": [],
-      "param_show_hotkeys": false,
-      "tfe_active_param": "",
-      "tfe_view_minimized": false,
-      "tfe_view_vertical": false,
-      "win_callback": 3,
-      "win_flags": 97,
-      "win_hotkey": [
-        299,
-        0
-      ],
-      "win_position": [
-        0.0,
-        0.0
-      ],
-      "win_reset_position": [
-        0.0,
-        0.0
-      ],
-      "win_reset_size": [
-        400.0,
-        600.0
-      ],
-      "win_show": false,
-      "win_size": [
-        400.0,
-        600.0
-      ],
-      "win_soft_reset": true
-    },
-    "Transfer Function Editor": {
-      "font_name": "",
-      "ms_max_history_count": 20,
-      "ms_mode": 0,
-      "ms_refresh_rate": 2.0,
-      "ms_show_options": false,
-      "param_extended_mode": false,
-      "param_module_filter": 0,
-      "param_modules_list": [],
-      "param_show_hotkeys": false,
-      "tfe_active_param": "",
-      "tfe_view_minimized": false,
-      "tfe_view_vertical": false,
-      "win_callback": 5,
-      "win_flags": 96,
-      "win_hotkey": [
-        297,
-        0
-      ],
-      "win_position": [
-        0.0,
-        0.0
-      ],
-      "win_reset_position": [
-        0.0,
-        0.0
-      ],
-      "win_reset_size": [
-        400.0,
-        600.0
-      ],
-      "win_show": false,
-      "win_size": [
-        400.0,
-        600.0
-      ],
-      "win_soft_reset": true
-    }
-  }
-}]=])
+-- <GUI_STATE_JSON>{"ConfiguratorState":{"module_list_sidebar_width":250.0,"show_module_list_sidebar":false},"GUIState":{"menu_visible":true},"WindowConfigurations":{"All Parameters":{"font_name":"","ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":1,"win_collapsed":false,"win_flags":8,"win_hotkey":[300,0],"win_position":[0.0,18.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":true,"win_size":[400.0,600.0],"win_soft_reset":false},"Configurator":{"font_name":"","ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":6,"win_collapsed":false,"win_flags":1032,"win_hotkey":[296,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[800.0,600.0],"win_show":false,"win_size":[800.0,600.0],"win_soft_reset":true},"Font Settings":{"font_name":"","ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":4,"win_collapsed":false,"win_flags":64,"win_hotkey":[298,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":false,"win_size":[400.0,600.0],"win_soft_reset":true},"Log Console":{"font_name":"","ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":7,"win_collapsed":false,"win_flags":3072,"win_hotkey":[295,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[850.0,100.0],"win_show":false,"win_size":[850.0,100.0],"win_soft_reset":true},"Performance Metrics":{"font_name":"","ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":3,"win_collapsed":false,"win_flags":65,"win_hotkey":[299,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":false,"win_size":[400.0,600.0],"win_soft_reset":true},"Transfer Function Editor":{"font_name":"","ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":5,"win_collapsed":false,"win_flags":64,"win_hotkey":[297,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":false,"win_size":[400.0,600.0],"win_soft_reset":true}}}</GUI_STATE_JSON>
 ```
 
-#### GUI Graph Structure
+### GUI Graph Structure
 
 ![gui graph structure](graph_structure.png)
 
-#### Plugin Class Dependencies
+### Plugin Class Dependencies
 
 ![gui plugin class dependencies](class_dependencies.png)

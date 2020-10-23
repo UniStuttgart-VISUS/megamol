@@ -61,6 +61,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
             } else {
                 this->log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
             }
+            this->scroll_log_down = 2;
         }
         ImGui::SameLine();
         if (ImGui::RadioButton("Warnings", (this->log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
@@ -69,6 +70,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
             } else {
                 this->log_level = megamol::core::utility::log::Log::LEVEL_WARN;
             }
+            this->scroll_log_down = 2;
         }
         ImGui::SameLine();
         if (ImGui::RadioButton("Infos", (this->log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
@@ -77,6 +79,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
             } else {
                 this->log_level = megamol::core::utility::log::Log::LEVEL_ALL;
             }
+            this->scroll_log_down = 2;
         }
 
         // Scrolling
@@ -147,9 +150,7 @@ bool megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
 
                     // Force open log window if there is any warning
                     if (new_log_level < megamol::core::utility::log::Log::LEVEL_INFO) {
-                        if (this->log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
-                            this->log_level = megamol::core::utility::log::Log::LEVEL_WARN;
-                        }
+                        this->log_level = megamol::core::utility::log::Log::LEVEL_WARN;
                         if (!wc.win_show) {
                             ImGuiIO& io = ImGui::GetIO();
                             ImVec2 viewport = io.DisplaySize;
