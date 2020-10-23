@@ -53,7 +53,7 @@ AbstractParamPresentation::AbstractParamPresentation(void)
     this->presentation_name_map.emplace(Presentation::Drag, "Drag");
     this->presentation_name_map.emplace(Presentation::Direction, "Direction");
     this->presentation_name_map.emplace(Presentation::Rotation, "Rotation");
-    this->presentation_name_map.emplace(Presentation::PinToMouse, "Pin to Mouse");
+    this->presentation_name_map.emplace(Presentation::PinMouse, "Pin to Mouse");
     this->presentation_name_map.emplace(Presentation::Group_Animation, "Animation");
 }
 

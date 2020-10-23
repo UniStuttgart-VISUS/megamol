@@ -573,7 +573,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
             }
         } break;
             // PIN VALUE TO MOUSE //////////////////////////////////////
-        case (Present_t::PinValueToMouse): {
+        case (Present_t::PinMouse): {
             bool compatible_type = false;
             // FLOAT -----------------------------------------------
             if constexpr (std::is_same_v<T, float>) {
@@ -689,7 +689,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
             }
         } break;
             // 3D ROTATION //////////////////////////////////////////////////
-        case (Present_t::Rotation3D_Axes): {
+        case (Present_t::Rotation): {
             // FLOAT -----------------------------------------------
             if constexpr (std::is_same_v<T, glm::vec4>) {
                 switch (inout_parameter.type) {
@@ -709,7 +709,7 @@ bool megamol::gui::ParameterPresentation::present_parameter(
             }
         } break;
             // 3D DIRECTION //////////////////////////////////////////////////
-        case (Present_t::Rotation3D_Direction): {
+        case (Present_t::Direction): {
             // FLOAT -----------------------------------------------
             if constexpr (std::is_same_v<T, glm::vec3>) {
                 switch (inout_parameter.type) {

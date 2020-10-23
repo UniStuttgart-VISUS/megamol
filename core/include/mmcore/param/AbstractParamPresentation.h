@@ -61,7 +61,7 @@ public:
         Drag = 1 << 8,                  // Drag widget for int and float
         Direction = 1 << 9,             // Widget for direction of vec3
         Rotation = 1 << 10,             // Widget for rotation of vec4
-        PinToMouse = 1 << 11,           // Pin parameter value to mouse position
+        PinMouse = 1 << 11,             // Pin parameter value to mouse position
         Group_Animation = 1 << 12       // Animation widget group
     };
 
