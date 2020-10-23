@@ -273,6 +273,7 @@ struct OpenGL_GLFW_Service::PimplData {
     GLFWwindow* glfwContextWindowPtr{nullptr};
     OpenGL_GLFW_Service::Config config;    // keep copy of user-provided config
     std::string fullWindowTitle;
+    std::chrono::system_clock::time_point topmost_before_time;
 };
 
 OpenGL_GLFW_Service::~OpenGL_GLFW_Service() {
@@ -339,6 +340,10 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         }
     }
 
+    if(m_pimpl->config.windowPlacement.topMost){
+        ::glfwWindowHint(GLFW_FLOATING, GL_TRUE); // floating above other windows / top most
+    }
+
     // options for fullscreen mode
     if (m_pimpl->config.windowPlacement.fullScreen) {
         if (m_pimpl->config.windowPlacement.pos)
@@ -381,10 +386,11 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     m_opengl_context_impl.ptr = window_ptr;
 
     if (!window_ptr) {
-        log_error("Failed to create GLFW window. Maybe OpenGL is not vailable in your current setup. Ask the person responsible.");
+        log_error("Could not create GLFW Window. You probably do not have OpenGL support. Your graphics hardware might "
+                "be very old, your drivers could be outdated or you are running in a remote desktop session.");
         return false;
     }
-    log(("Create window with size w: " + std::to_string(initial_width) + " h: " + std::to_string(initial_height)).c_str());
+    log("Create window with size w: " + std::to_string(initial_width) + " h: " + std::to_string(initial_height));
 
 
     // we publish a fake GL context to have a resource others can ask for
@@ -423,11 +429,9 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         log("Enabled OpenGL debug context. Will print debug messages.");
     }
 
-    // TODO: when do we need this?
-    // if (config.windowPlacement.fullScreen ||
-    //     config.windowPlacement.noDec) {
-    //     ::glfwSetInputMode(window_ptr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    // }
+    if (config.windowPlacement.noCursor) {
+        ::glfwSetInputMode(window_ptr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
 
     // note the m_data window position got overwritten with monitor position for fullscreen mode
     if (m_pimpl->config.windowPlacement.pos || m_pimpl->config.windowPlacement.fullScreen)
@@ -463,8 +467,24 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {"WindowManipulation", m_windowManipulation}
     };
 
+    m_pimpl->topmost_before_time = std::chrono::system_clock::now();
+
     log("initialized successfully");
     return true;
+}
+
+void OpenGL_GLFW_Service::reset_window_topmost() {
+#ifdef _WIN32
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    auto& topmost_before_time = m_pimpl->topmost_before_time;
+
+    if (now - topmost_before_time > std::chrono::seconds(1)) {
+        topmost_before_time = now;
+        // TODO fix this for EGL + Win
+        //log("Periodic reordering of windows.");
+        SetWindowPos(glfwGetWin32Window(m_pimpl->glfwContextWindowPtr), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+    }
+#endif
 }
 
 #define that static_cast<OpenGL_GLFW_Service*>(::glfwGetWindowUserPointer(wnd))
@@ -625,6 +645,10 @@ void OpenGL_GLFW_Service::postGraphRender() {
     //::glfwMakeContextCurrent(window_ptr);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
     //::glfwMakeContextCurrent(nullptr);
+
+    if (m_pimpl->config.windowPlacement.topMost) {
+        reset_window_topmost();
+    }
 }
 
 std::vector<FrontendResource>& OpenGL_GLFW_Service::getProvidedResources() {

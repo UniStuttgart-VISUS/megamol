@@ -27,6 +27,7 @@ struct WindowPlacement {
     bool noDec = false;
     bool fullScreen = false;
     bool topMost = false;
+    bool noCursor = false;
 };
 
 class OpenGL_GLFW_Service final : public AbstractFrontendService {
@@ -101,6 +102,7 @@ public:
 
 private:
     void register_glfw_callbacks();
+    void reset_window_topmost();
 
     struct OpenGL_Context : public megamol::frontend_resources::IOpenGL_Context {
         void* ptr = nullptr;

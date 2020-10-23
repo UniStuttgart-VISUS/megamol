@@ -42,6 +42,14 @@ struct CLIConfig {
     bool opengl_khr_debug = false;
     std::vector<unsigned int> window_size = {}; // if not set, GLFW service will open window with 3/4 of monitor resolution 
     std::vector<unsigned int> window_position = {};
+    enum WindowMode {
+        fullscreen   = 1 << 0,
+        nodecoration = 1 << 1,
+        topmost      = 1 << 2,
+        nocursor     = 1 << 3,
+    };
+    unsigned int window_mode = 0;
+    unsigned int window_monitor = 0;
 };
 
 CLIConfig handle_cli_inputs(int argc, char* argv[]);
@@ -84,6 +92,11 @@ int main(int argc, char* argv[]) {
         openglConfig.windowPlacement.x = config.window_position[0];
         openglConfig.windowPlacement.y = config.window_position[1];
     }
+    openglConfig.windowPlacement.mon = config.window_monitor;
+    openglConfig.windowPlacement.fullScreen = config.window_mode & CLIConfig::WindowMode::fullscreen;
+    openglConfig.windowPlacement.noDec      = config.window_mode & CLIConfig::WindowMode::nodecoration;
+    openglConfig.windowPlacement.topMost    = config.window_mode & CLIConfig::WindowMode::topmost;
+    openglConfig.windowPlacement.noCursor   = config.window_mode & CLIConfig::WindowMode::nocursor;
     gl_service.setPriority(2);
 
     megamol::frontend::GUI_Service gui_service;
@@ -275,6 +288,10 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         ("example", "load minimal test spheres example project", cxxopts::value<bool>())
         ("khrdebug", "enable OpenGL KHR debug messages", cxxopts::value<bool>())
         ("window", "set the window size and position, accepted format: WIDTHxHEIGHT[+POSX+POSY]", cxxopts::value<std::string>())
+        ("fullscreen", "open maximized window", cxxopts::value<bool>())
+        ("nodecoration", "open window without decorations", cxxopts::value<bool>())
+        ("topmost", "open window that stays on top of all others", cxxopts::value<bool>())
+        ("nocursor", "do not show mouse cursor inside window", cxxopts::value<bool>())
         ("help", "print help")
         ;
     // clang-format on
@@ -308,11 +325,14 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
             config.lua_host_address = parsed_options["host"].as<std::string>();
         }
 
-        if (parsed_options.count("example")) {
-            config.load_example_project = parsed_options["example"].as<bool>();
-        }
+        config.load_example_project = parsed_options["example"].as<bool>();
 
         config.opengl_khr_debug = parsed_options["khrdebug"].as<bool>();
+
+        config.window_mode |= parsed_options["fullscreen"].as<bool>()   * CLIConfig::WindowMode::fullscreen;
+        config.window_mode |= parsed_options["nodecoration"].as<bool>() * CLIConfig::WindowMode::nodecoration;
+        config.window_mode |= parsed_options["topmost"].as<bool>()      * CLIConfig::WindowMode::topmost;
+        config.window_mode |= parsed_options["nocursor"].as<bool>()     * CLIConfig::WindowMode::nocursor;
 
         if (parsed_options.count("window")) {
             auto s = parsed_options["window"].as<std::string>();
