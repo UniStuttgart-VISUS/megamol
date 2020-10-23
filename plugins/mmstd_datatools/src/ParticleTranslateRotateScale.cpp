@@ -38,7 +38,7 @@ datatools::ParticleTranslateRotateScale::ParticleTranslateRotateScale(void)
     this->quaternionSlot.SetParameter(new core::param::Vector4fParam(vislib::math::Vector<float, 4>(0, 0, 0, 1)));
     this->MakeSlotAvailable(&this->quaternionSlot);
     this->quaternionSlot.Parameter()->SetGUIPresentation(
-        core::param::AbstractParamPresentation::Presentation::Rotation3D_Axes);
+        core::param::AbstractParamPresentation::Presentation::Rotation);
 
     this->scaleSlot.SetParameter(new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1, 1, 1)));
     this->MakeSlotAvailable(&this->scaleSlot);
