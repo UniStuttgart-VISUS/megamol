@@ -263,6 +263,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         ("host", "address of lua host server, default: "+config.lua_host_address, cxxopts::value<std::string>())
         ("example", "load minimal test spheres example project", cxxopts::value<bool>())
         ("khrdebug", "enable OpenGL KHR debug messages", cxxopts::value<bool>()->default_value("false"))
+        ("window", "set the window size", cxxopts::value<std::string>())
         ("help", "print help")
         ;
     // clang-format on
@@ -301,6 +302,22 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         }
 
         config.opengl_khr_debug = parsed_options["khrdebug"].as<bool>();
+
+        if (parsed_options.count("window")) {
+            auto s = parsed_options["window"].as<std::string>();
+            std::regex geometry("(\\d+)x(\\d+)(?:\\+(\\d+)\\+(\\d+))?");
+            std::smatch match;
+            if (std::regex_match(s, match, geometry)) {
+                config.window_size[0] = std::stoul(match[1].str(), nullptr, 10);
+                config.window_size[1] = std::stoul(match[2].str(), nullptr, 10);
+                if (match[3].matched) {
+                    // TODO position
+                }
+            } else {
+                std::cout << "window option needs to be in the following format: wxh+x+y or wxh" << std::endl;
+                std::exit(1);
+            }
+        }
     } catch (cxxopts::option_not_exists_exception ex) {
         std::cout << ex.what() << std::endl;
         std::cout << options.help({""}) << std::endl;
