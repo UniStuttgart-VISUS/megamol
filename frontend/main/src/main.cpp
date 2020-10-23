@@ -40,7 +40,8 @@ struct CLIConfig {
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool load_example_project = false;
     bool opengl_khr_debug = true;
-    std::array<unsigned int, 2> window_size = {0, 0};
+    std::vector<unsigned int> window_size = {}; // if not set, GLFW service will open window with 3/4 of monitor resolution 
+    std::vector<unsigned int> window_position = {};
 };
 
 CLIConfig handle_cli_inputs(int argc, char* argv[]);
@@ -70,9 +71,19 @@ int main(int argc, char* argv[]) {
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 5;
     openglConfig.enableKHRDebug = config.opengl_khr_debug;
-    openglConfig.windowPlacement.w = config.window_size[0];
-    openglConfig.windowPlacement.h = config.window_size[1];
-    openglConfig.windowPlacement.size = config.window_size[0] > 0 && config.window_size[1] > 0;
+    // pass window size and position
+    if (!config.window_size.empty()) {
+        assert(config.window_size.size() == 2);
+        openglConfig.windowPlacement.size = true;
+        openglConfig.windowPlacement.w = config.window_size[0];
+        openglConfig.windowPlacement.h = config.window_size[1];
+    }
+    if (!config.window_position.empty()) {
+        assert(config.window_position.size() == 2);
+        openglConfig.windowPlacement.pos = true;
+        openglConfig.windowPlacement.x = config.window_position[0];
+        openglConfig.windowPlacement.y = config.window_position[1];
+    }
     gl_service.setPriority(2);
 
     megamol::frontend::GUI_Service gui_service;
@@ -263,7 +274,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         ("host", "address of lua host server, default: "+config.lua_host_address, cxxopts::value<std::string>())
         ("example", "load minimal test spheres example project", cxxopts::value<bool>())
         ("khrdebug", "enable OpenGL KHR debug messages", cxxopts::value<bool>()->default_value("false"))
-        ("window", "set the window size", cxxopts::value<std::string>())
+        ("window", "set the window size and position, accepted format: WIDTHxHEIGHT[+POSX+POSY]", cxxopts::value<std::string>())
         ("help", "print help")
         ;
     // clang-format on
@@ -305,13 +316,16 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
 
         if (parsed_options.count("window")) {
             auto s = parsed_options["window"].as<std::string>();
+            // 'WIDTHxHEIGHT[+POSX+POSY]'
+            // 'wxh+x+y' with optional '+x+y', e.g. 600x800+0+0 opens window in upper left corner
             std::regex geometry("(\\d+)x(\\d+)(?:\\+(\\d+)\\+(\\d+))?");
             std::smatch match;
             if (std::regex_match(s, match, geometry)) {
-                config.window_size[0] = std::stoul(match[1].str(), nullptr, 10);
-                config.window_size[1] = std::stoul(match[2].str(), nullptr, 10);
+                config.window_size.push_back( /*width*/ std::stoul(match[1].str(), nullptr, 10) );
+                config.window_size.push_back( /*height*/ std::stoul(match[2].str(), nullptr, 10) );
                 if (match[3].matched) {
-                    // TODO position
+                    config.window_position.push_back( /*x*/ std::stoul(match[3].str(), nullptr, 10) );
+                    config.window_position.push_back( /*y*/ std::stoul(match[4].str(), nullptr, 10) );
                 }
             } else {
                 std::cout << "window option needs to be in the following format: wxh+x+y or wxh" << std::endl;
