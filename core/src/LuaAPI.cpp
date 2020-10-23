@@ -137,7 +137,6 @@ void megamol::core::LuaAPI::commonInit() {
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::Screenshot>(MMC_LUA_MMSCREENSHOT, "(string filename)\n\tSave a screen shot of the GL front buffer under 'filename'.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::LastFrameTime>(MMC_LUA_MMLASTFRAMETIME, "()\n\tReturns the graph execution time of the last frame in ms.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetFramebufferSize>(MMC_LUA_MMSETFRAMEBUFFERSIZE, "(int width, int height)\n\tSet framebuffer dimensions to width x height.");
-#define MMC_LUA_MMSETFRAMEBUFFERSIZE "mmSetFramebufferSize"
 
     if (!imperative_only_) {
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetModuleParams>(MMC_LUA_MMGETMODULEPARAMS, "(string name)\n\tReturns a 0x1-separated list of module name and all parameters."
@@ -1114,21 +1113,17 @@ int megamol::core::LuaAPI::LastFrameTime(lua_State *L) {
 
 
 int megamol::core::LuaAPI::SetFramebufferSize(lua_State *L) {
-    std::string width_str = luaL_checkstring(L, 1);
-    std::string height_str = luaL_checkstring(L, 2);
+    int n = lua_gettop(L);
+    if (n == 2) {
+        unsigned int width = 0, height = 0;
+        width = luaL_checkinteger(L,1);
+        height = luaL_checkinteger(L, 2);
 
-    unsigned int width = 0, height = 0;
-
-    try {
-        width = static_cast<unsigned int>(std::stoul(width_str));
-        height = static_cast<unsigned int>(std::stoul(height_str));
-    }
-    catch (...) {
-        luaApiInterpreter_.ThrowError(MMC_LUA_MMSETFRAMEBUFFERSIZE " could not parse width/heigh to unsigned integer");
+        mmSetFramebufferSize_callback_(width, height);
+    } else {
+        luaApiInterpreter_.ThrowError(MMC_LUA_MMSETFRAMEBUFFERSIZE " requires two parameters: width, height");
     }
 
-    mmSetFramebufferSize_callback_(width, height);
-
-    return 0;
+  return 0;
 }
 
