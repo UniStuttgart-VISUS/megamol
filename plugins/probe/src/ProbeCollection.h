@@ -35,7 +35,7 @@ struct BaseProbe {
     /** sample radius used by this probe */
     float m_sample_radius;
     /** for clustered samples */
-    uint32_t m_cluster_id;
+    int m_cluster_id;
 
     // virtual void probe() = 0;
 };

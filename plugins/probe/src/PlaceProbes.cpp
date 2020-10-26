@@ -501,7 +501,7 @@ void megamol::probe::PlaceProbes::vertexNormalSampling(mesh::MeshDataAccessColle
             normal_accessor[normal_step * i + 2]};
         probe.m_begin = -2.0;
         probe.m_end = 50.0;
-        probe.m_cluster_id = i;
+        probe.m_cluster_id = -1;
 
         this->_probes->addProbe(std::move(probe));
     }
@@ -678,7 +678,7 @@ bool megamol::probe::PlaceProbes::placeByCenterline(
         probe.m_direction = normal;
         probe.m_begin = -0.1 * final_dist;
         probe.m_end = final_dist;
-        probe.m_cluster_id = i;
+        probe.m_cluster_id = -1;
 
         this->_probes->addProbe(std::move(probe));
     }
@@ -718,7 +718,7 @@ bool megamol::probe::PlaceProbes::placeByCenterpoint( ) {
         probe.m_direction = normal;
         probe.m_begin = -0.02 * normal_length;
         probe.m_end = normal_length;
-        probe.m_cluster_id = i;
+        probe.m_cluster_id = -1;
 
         this->_probes->addProbe(std::move(probe));
 

@@ -129,8 +129,8 @@ bool megamol::probe::TableToProbes::generateProbes() {
 
     
     assert(col_to_id_map.find("cluster_id") != col_to_id_map.end());
-    std::vector<uint32_t> cluster_ids(_num_rows);
-    std::map<uint32_t, uint32_t> cluster_id_count;
+    std::vector<int> cluster_ids(_num_rows);
+    std::map<int, uint32_t> cluster_id_count;
 
     for (uint32_t i = 0; i < _num_rows; ++i) {
         cluster_ids[i] = static_cast<uint32_t>(_table[_num_cols * i + col_to_id_map["cluster_id"]]);
