@@ -142,12 +142,12 @@ namespace utility {
         }
         catch (nlohmann::json::type_error& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+                "JSON TYPE ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::exception& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "JSON: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (...) {

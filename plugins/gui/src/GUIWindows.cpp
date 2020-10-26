@@ -28,11 +28,6 @@ using namespace megamol::gui;
 
 GUIWindows::GUIWindows(void)
         : core_instance(nullptr)
-        , param_slots()
-        , style_param("style", "Color style, theme")
-        , state_param("state", "Current state of all windows.")
-        , autosave_state_param("autosave_state", "Save state automatically to file on changes.")
-        , autostart_configurator_param("autostart_configurator", "Start the configurator at start up automatically. ")
         , hotkeys()
         , context(nullptr)
         , api(GUIImGuiAPI::NO_API)
@@ -40,35 +35,12 @@ GUIWindows::GUIWindows(void)
         , configurator()
         , console()
         , state()
-        , project_script_paths()
         , file_browser()
         , search_widget()
         , tf_editor_ptr(nullptr)
         , tooltip()
         , picking_buffer()
         , triangle_widget() {
-
-    core::param::EnumParam* styles = new core::param::EnumParam((int) (Styles::DarkColors));
-    styles->SetTypePair(Styles::CorporateGray, "Corporate Gray");
-    styles->SetTypePair(Styles::CorporateWhite, "Corporate White");
-    styles->SetTypePair(Styles::DarkColors, "Dark Colors");
-    styles->SetTypePair(Styles::LightColors, "Light Colors");
-    this->style_param << styles;
-    this->style_param.ForceSetDirty();
-    styles = nullptr;
-
-    this->state_param << new core::param::StringParam("");
-    this->state_param.Parameter()->SetGUIVisible(false);
-    this->state_param.Parameter()->SetGUIReadOnly(true);
-    this->autosave_state_param << new core::param::BoolParam(false);
-    this->autostart_configurator_param << new core::param::BoolParam(false);
-
-    this->param_slots.clear();
-    this->param_slots.push_back(&this->style_param);
-    this->param_slots.push_back(&this->autostart_configurator_param);
-    /// Completely hidden because unused, only internal state backup
-    /// this->param_slots.push_back(&this->state_param);
-    /// this->param_slots.push_back(&this->autosave_state_param);
 
     this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F2, core::view::Modifier::NONE), false};
@@ -140,13 +112,12 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // Check for existing fonts if shared between multiple contexts
     ImGuiIO& io = ImGui::GetIO();
     if (io.Fonts->Fonts.Size < 1) {
+        /// XXX TODO Solution for now is to shutdown megamol completely
+        /// Because if 'main' (= first) created imgui context is destroyed, fonts can not be restored for other contexts?!
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Found no valid fonts. Maybe the ImGui context the fonts were shared with is destroyed. "
             "[%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
-        /// XXX TODO Solution for now is to shutdown megamol completely
-        /// XXX Because if 'main' (= first) created imgui context is destroyed, fonts can not be restored for other
-        /// imgui contexts?!
         this->triggerCoreInstanceShutdown();
         this->state.shutdown_triggered = true;
         return false;
@@ -170,7 +141,28 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->core_instance->SetCurrentImGuiContext(this->context);
     }
 
-    // Check/Update hotkeys, parameters and hotkey assignment
+    // Set stuff for next frame --------------------------------------------
+
+    // IO
+    io.DisplaySize = ImVec2(window_size.x, window_size.y);
+    if ((window_size.x > 0.0f) && (window_size.y > 0.0f)) {
+        io.DisplayFramebufferScale = ImVec2(framebuffer_size.x / window_size.x, framebuffer_size.y / window_size.y);
+    }
+
+    if ((instance_time - this->state.last_instance_time) < 0.0) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[GUI] Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
+    }
+    io.DeltaTime = ((instance_time - this->state.last_instance_time) > 0.0)
+        ? (static_cast<float>(instance_time - this->state.last_instance_time))
+        : (io.DeltaTime);
+    this->state.last_instance_time = ((instance_time - this->state.last_instance_time) > 0.0)
+        ? (instance_time)
+        : (this->state.last_instance_time + io.DeltaTime);
+
+    // Process hotkeys
+    this->checkMultipleHotkeyAssignement();
     if (this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM].is_pressed) {
         this->triggerCoreInstanceShutdown();
         this->state.shutdown_triggered = true;
@@ -221,28 +213,47 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->state.toggle_main_view = false;
         this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].is_pressed = false;
     }
-    this->validateParameters();
-    this->checkMultipleHotkeyAssignement();
 
-    // Set IO stuff for next frame --------------------------------------------
-    io.DisplaySize = ImVec2(window_size.x, window_size.y);
-    if ((window_size.x > 0.0f) && (window_size.y > 0.0f)) {
-        io.DisplayFramebufferScale = ImVec2(framebuffer_size.x / window_size.x, framebuffer_size.y / window_size.y);
+    // Auto-save state
+    this->state.win_save_delay += io.DeltaTime;
+    if (this->state.autosave_gui_state && this->state.win_save_state && (this->state.win_save_delay > 1.0f)) {
+        // Delayed saving after triggering saving state (in seconds).
+        GraphPtr_t graph_ptr;
+        if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+            std::string filename = graph_ptr->GetFilename();
+            this->configurator.GetGraphCollection().SaveProjectToFile(
+                this->state.graph_uid, filename, this->dump_state_to_file(filename));
+        }
+        this->state.win_save_state = false;
     }
 
-    if ((instance_time - this->state.last_instance_time) < 0.0) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[GUI] Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
+    // Style
+    if (this->state.style_changed) {
+        ImGuiStyle& style = ImGui::GetStyle();
+        switch (this->state.style) {
+        case(GUIWindows::Styles::DarkColors): {
+            ImGui::StyleColorsDark();
+            style.WindowRounding = 0.0f;
+        } break;
+        case(GUIWindows::Styles::LightColors): {
+            ImGui::StyleColorsLight();
+        } break;
+        case(GUIWindows::Styles::CorporateGray): {
+            CorporateGreyStyle();
+        } break;
+        case(GUIWindows::Styles::CorporateWhite): {
+            CorporateWhiteStyle();
+        } break;
+        default: break;
+        }
+/// DOCKING
+#if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
+        ImVec4* colors = style.Colors;
+        colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+#endif
+        this->state.style_changed = false;
     }
-    io.DeltaTime = ((instance_time - this->state.last_instance_time) > 0.0)
-                       ? (static_cast<float>(instance_time - this->state.last_instance_time))
-                       : (io.DeltaTime);
-    this->state.last_instance_time = ((instance_time - this->state.last_instance_time) > 0.0)
-                                         ? (instance_time)
-                                         : (this->state.last_instance_time + io.DeltaTime);
 
-    // Changes that need to be applied before next frame ----------------------
     // Loading new font (set in FONT window)
     if (!this->state.font_file.empty()) {
         ImFontConfig config;
@@ -319,6 +330,13 @@ bool GUIWindows::PostDraw(void) {
             ImGui::EndMainMenuBar();
         }
     }
+
+    // Global Docking Space ---------------------------------------------------
+/// DOCKING
+#if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
+    //ImGui::SetNextWindowBgAlpha(0.0f);
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+#endif
 
     // Draw Windows ------------------------------------------------------------
     const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
@@ -827,8 +845,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     }
                 }
                 if (graph_ptr->GetFilename().empty()) {
-                    if (!this->project_script_paths.empty()) {
-                        graph_ptr->SetFilename(this->project_script_paths.front());
+                    if (!this->state.project_script_paths.empty()) {
+                        graph_ptr->SetFilename(this->state.project_script_paths.front());
                     }
                 }
                 // Load initial gui state from file
@@ -1030,15 +1048,22 @@ bool GUIWindows::createContext(void) {
                                ImGuiColorEditFlags_AlphaPreview);
     /// ... for detailed settings see styles defined in separate headers.
     ImGuiStyle& style = ImGui::GetStyle();
-    style.WindowRounding = 0.0f;
+    style.AntiAliasedFill = true;
+    style.AntiAliasedLines = true;
+    /// style.AntiAliasedLinesUseTex = true;
 
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
     io.IniSavingRate = 5.0f;                              //  in seconds
-    io.IniFilename = nullptr;                             // "imgui.ini"; - disabled, using own window settings profile
-    io.LogFilename = "imgui_log.txt";                     // (set to nullptr to disable)
+    io.IniFilename = nullptr;                             // "imgui.ini" - disabled, using own window settings profile
+    io.LogFilename = nullptr;                             // "imgui_log.txt" - disabled
     io.FontAllowUserScaling = false;                      // disable font scaling using ctrl + mouse wheel
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
+/// DOCKING
+#if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // enable window docking
+    io.ConfigDockingWithShift = false; // activate docking on pressing 'shift'
+#endif
 
     // Init global state -------------------------------------------------------
     this->init_state();
@@ -1172,55 +1197,6 @@ bool GUIWindows::destroyContext(void) {
     this->api = GUIImGuiAPI::NO_API;
 
     return true;
-}
-
-
-void GUIWindows::validateParameters() {
-    if (this->style_param.IsDirty()) {
-        auto style = static_cast<Styles>(this->style_param.Param<core::param::EnumParam>()->Value());
-        switch (style) {
-        case Styles::CorporateGray:
-            CorporateGreyStyle();
-            break;
-        case Styles::CorporateWhite:
-            CorporateWhiteStyle();
-            break;
-        case Styles::DarkColors:
-            ImGui::StyleColorsDark();
-            break;
-        case Styles::LightColors:
-            ImGui::StyleColorsLight();
-            break;
-        }
-        this->style_param.ResetDirty();
-    }
-    ImGuiIO& io = ImGui::GetIO();
-    this->state.win_save_delay += io.DeltaTime;
-
-    bool autosave_state = this->autosave_state_param.Param<core::param::BoolParam>()->Value();
-    if (autosave_state && this->state.win_save_state && (this->state.win_save_delay > 1.0f)) {
-        // Delayed saving after triggering saving state (in seconds).
-        GraphPtr_t graph_ptr;
-        if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-            std::string filename = graph_ptr->GetFilename();
-            this->configurator.GetGraphCollection().SaveProjectToFile(
-                this->state.graph_uid, filename, this->dump_state_to_file(filename));
-        }
-        this->state.win_save_state = false;
-    }
-
-    if (this->autostart_configurator_param.IsDirty()) {
-        bool autostart = this->autostart_configurator_param.Param<core::param::BoolParam>()->Value();
-        if (autostart) {
-            const auto configurator_func = [](WindowCollection::WindowConfiguration& wc) {
-                if (wc.win_callback == WindowCollection::DrawCallbacks::CONFIGURATOR) {
-                    wc.win_show = true;
-                }
-            };
-            this->window_collection.EnumWindows(configurator_func);
-        }
-        this->autostart_configurator_param.ResetDirty();
-    }
 }
 
 
@@ -1620,6 +1596,28 @@ void GUIWindows::drawMenu(void) {
         }
         ImGui::EndMenu();
     }
+    if (ImGui::BeginMenu("Settings")) {
+        if (ImGui::BeginMenu("Style")) {
+            if (ImGui::MenuItem("ImGui Dark Colors", nullptr, (this->state.style == GUIWindows::Styles::DarkColors))) {
+                this->state.style = GUIWindows::Styles::DarkColors;
+                this->state.style_changed = true;
+            }
+            if (ImGui::MenuItem("ImGui LightColors", nullptr, (this->state.style == GUIWindows::Styles::LightColors))) {
+                this->state.style = GUIWindows::Styles::LightColors;
+                this->state.style_changed = true;
+            }
+            if (ImGui::MenuItem("Corporate Gray", nullptr, (this->state.style == GUIWindows::Styles::CorporateGray))) {
+                this->state.style = GUIWindows::Styles::CorporateGray;
+                this->state.style_changed = true;
+            }
+            if (ImGui::MenuItem("Corporate White", nullptr, (this->state.style == GUIWindows::Styles::CorporateWhite))) {
+                this->state.style = GUIWindows::Styles::CorporateWhite;
+                this->state.style_changed = true;
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenu();
+    }
     if (ImGui::BeginMenu("Windows")) {
         ImGui::MenuItem("Menu", this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].keycode.ToString().c_str(),
             &this->state.menu_visible);
@@ -1667,7 +1665,7 @@ void GUIWindows::drawMenu(void) {
     }
     if (megamolgraph_interface) {
         if (graph_ptr != nullptr) {
-            if (ImGui::BeginMenu("View")) {
+            if (ImGui::BeginMenu("Render")) {
                 for (auto& module_ptr : graph_ptr->GetModules()) {
                     if (module_ptr->is_view) {
                         if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsMainView())) {
@@ -1854,11 +1852,12 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(WindowCollection::W
             wc.win_collapsed = !wc.win_collapsed;
             out_collapsing_changed = true;
         }
+
+        /// DOCKING Remove when 'real' docking is available
         if (ImGui::MenuItem("Full Width", nullptr)) {
             wc.win_size.x = viewport.x;
             wc.win_reset = true;
         }
-
         ImGui::TextUnformatted("Dock");
         ImGui::SameLine();
         if (ImGui::ArrowButton("dock_left", ImGuiDir_Left)) {
@@ -2050,7 +2049,6 @@ std::string megamol::gui::GUIWindows::dump_state_to_file(const std::string& file
 
     if (this->state_to_json(state_json)) {
         std::string state_str = state_json.dump(); // No line feed
-        this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
         return state_str;
     }
     return std::string("");
@@ -2064,7 +2062,6 @@ bool megamol::gui::GUIWindows::load_state_from_file(const std::string& filename)
         state_str = GUIUtils::ExtractGUIState(state_str);
         if (state_str.empty())
             return false;
-        this->state_param.Param<core::param::StringParam>()->SetValue(state_str.c_str(), true);
         nlohmann::json in_json = nlohmann::json::parse(state_str);
         return this->state_from_json(in_json);
     }
@@ -2087,6 +2084,10 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
             if (header_item.key() == GUI_JSON_TAG_GUI) {
                 auto gui_state = header_item.value();
                 megamol::core::utility::get_json_value<bool>(gui_state, {"menu_visible"}, &this->state.menu_visible);
+                int style = 0;
+                megamol::core::utility::get_json_value<int>(gui_state, { "style" }, &style);
+                this->state.style = static_cast<GUIWindows::Styles>(style);
+                this->state.style_changed = true;
             }
         }
 
@@ -2130,6 +2131,7 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
     try {
         // Write GUI state
         inout_json[GUI_JSON_TAG_GUI]["menu_visible"] = this->state.menu_visible;
+        inout_json[GUI_JSON_TAG_GUI]["style"] = static_cast<int>(this->state.style);
 
         // Write window configuration
         this->window_collection.StateToJSON(inout_json);
@@ -2168,6 +2170,10 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
 
 void megamol::gui::GUIWindows::init_state(void) {
 
+    this->state.style = GUIWindows::Styles::DarkColors;
+    this->state.style_changed = true;
+    this->state.autosave_gui_state = false;
+    this->state.project_script_paths.clear();
     this->state.graph_uid = GUI_INVALID_ID;
     this->state.font_file = "";
     this->state.font_size = 13.0f;
