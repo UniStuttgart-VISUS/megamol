@@ -39,7 +39,17 @@ struct CLIConfig {
     std::vector<std::string> project_files = {};
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool load_example_project = false;
-    bool opengl_khr_debug = true;
+    bool opengl_khr_debug = false;
+    std::vector<unsigned int> window_size = {}; // if not set, GLFW service will open window with 3/4 of monitor resolution 
+    std::vector<unsigned int> window_position = {};
+    enum WindowMode {
+        fullscreen   = 1 << 0,
+        nodecoration = 1 << 1,
+        topmost      = 1 << 2,
+        nocursor     = 1 << 3,
+    };
+    unsigned int window_mode = 0;
+    unsigned int window_monitor = 0;
 };
 
 CLIConfig handle_cli_inputs(int argc, char* argv[]);
@@ -69,6 +79,24 @@ int main(int argc, char* argv[]) {
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 5;
     openglConfig.enableKHRDebug = config.opengl_khr_debug;
+    // pass window size and position
+    if (!config.window_size.empty()) {
+        assert(config.window_size.size() == 2);
+        openglConfig.windowPlacement.size = true;
+        openglConfig.windowPlacement.w = config.window_size[0];
+        openglConfig.windowPlacement.h = config.window_size[1];
+    }
+    if (!config.window_position.empty()) {
+        assert(config.window_position.size() == 2);
+        openglConfig.windowPlacement.pos = true;
+        openglConfig.windowPlacement.x = config.window_position[0];
+        openglConfig.windowPlacement.y = config.window_position[1];
+    }
+    openglConfig.windowPlacement.mon = config.window_monitor;
+    openglConfig.windowPlacement.fullScreen = config.window_mode & CLIConfig::WindowMode::fullscreen;
+    openglConfig.windowPlacement.noDec      = config.window_mode & CLIConfig::WindowMode::nodecoration;
+    openglConfig.windowPlacement.topMost    = config.window_mode & CLIConfig::WindowMode::topmost;
+    openglConfig.windowPlacement.noCursor   = config.window_mode & CLIConfig::WindowMode::nocursor;
     gl_service.setPriority(2);
 
     megamol::frontend::GUI_Service gui_service;
@@ -258,7 +286,12 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         ("project-files", "projects to load", cxxopts::value<std::vector<std::string>>())
         ("host", "address of lua host server, default: "+config.lua_host_address, cxxopts::value<std::string>())
         ("example", "load minimal test spheres example project", cxxopts::value<bool>())
-        ("khrdebug", "enable OpenGL KHR debug messages", cxxopts::value<bool>()->default_value("false"))
+        ("khrdebug", "enable OpenGL KHR debug messages", cxxopts::value<bool>())
+        ("window", "set the window size and position, accepted format: WIDTHxHEIGHT[+POSX+POSY]", cxxopts::value<std::string>())
+        ("fullscreen", "open maximized window", cxxopts::value<bool>())
+        ("nodecoration", "open window without decorations", cxxopts::value<bool>())
+        ("topmost", "open window that stays on top of all others", cxxopts::value<bool>())
+        ("nocursor", "do not show mouse cursor inside window", cxxopts::value<bool>())
         ("help", "print help")
         ;
     // clang-format on
@@ -292,11 +325,33 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
             config.lua_host_address = parsed_options["host"].as<std::string>();
         }
 
-        if (parsed_options.count("example")) {
-            config.load_example_project = parsed_options["example"].as<bool>();
-        }
+        config.load_example_project = parsed_options["example"].as<bool>();
 
         config.opengl_khr_debug = parsed_options["khrdebug"].as<bool>();
+
+        config.window_mode |= parsed_options["fullscreen"].as<bool>()   * CLIConfig::WindowMode::fullscreen;
+        config.window_mode |= parsed_options["nodecoration"].as<bool>() * CLIConfig::WindowMode::nodecoration;
+        config.window_mode |= parsed_options["topmost"].as<bool>()      * CLIConfig::WindowMode::topmost;
+        config.window_mode |= parsed_options["nocursor"].as<bool>()     * CLIConfig::WindowMode::nocursor;
+
+        if (parsed_options.count("window")) {
+            auto s = parsed_options["window"].as<std::string>();
+            // 'WIDTHxHEIGHT[+POSX+POSY]'
+            // 'wxh+x+y' with optional '+x+y', e.g. 600x800+0+0 opens window in upper left corner
+            std::regex geometry("(\\d+)x(\\d+)(?:\\+(\\d+)\\+(\\d+))?");
+            std::smatch match;
+            if (std::regex_match(s, match, geometry)) {
+                config.window_size.push_back( /*width*/ std::stoul(match[1].str(), nullptr, 10) );
+                config.window_size.push_back( /*height*/ std::stoul(match[2].str(), nullptr, 10) );
+                if (match[3].matched) {
+                    config.window_position.push_back( /*x*/ std::stoul(match[3].str(), nullptr, 10) );
+                    config.window_position.push_back( /*y*/ std::stoul(match[4].str(), nullptr, 10) );
+                }
+            } else {
+                std::cout << "window option needs to be in the following format: wxh+x+y or wxh" << std::endl;
+                std::exit(1);
+            }
+        }
     } catch (cxxopts::option_not_exists_exception ex) {
         std::cout << ex.what() << std::endl;
         std::cout << options.help({""}) << std::endl;
