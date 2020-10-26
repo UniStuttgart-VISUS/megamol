@@ -56,11 +56,13 @@ public:
         Color = 1 << 3,                 // Color editor widget
         FilePath = 1 << 4,              // File path widget
         TransferFunction = 1 << 5,      // Transfer function editor widget
-        Knob = 1 << 6,                  // Knob widget for int and float
-        PinValueToMouse = 1 << 7,       // Pin parameter value to mouse position
-        Rotation3D_Direction = 1 << 8,  // Widget for 3D rotation - represented via direction vector (orbital manipulator)
-        Rotation3D_Axes = 1 << 9,       // Widget for 3D rotation - represented via axes (orbital manipulator)
-        Group_Animation = 1 << 10       // Animation widget group
+        Knob = 1 << 6,                  // Knob widget for float
+        Slider = 1 << 7,                // Slider widget for int and float
+        Drag = 1 << 8,                  // Drag widget for int and float
+        Direction = 1 << 9,             // Widget for direction of vec3
+        Rotation = 1 << 10,             // Widget for rotation of vec4
+        PinMouse = 1 << 11,             // Pin parameter value to mouse position
+        Group_Animation = 1 << 12       // Animation widget group
     };
 
     /**

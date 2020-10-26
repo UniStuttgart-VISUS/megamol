@@ -30,7 +30,7 @@
 #include "spdlog/spdlog.h"
 
 
-const char megamol::core::utility::log::Log::std_pattern[3] = "%v";
+const char megamol::core::utility::log::Log::std_pattern[7] = "%^%v%$";
 
 
 /*****************************************************************************/

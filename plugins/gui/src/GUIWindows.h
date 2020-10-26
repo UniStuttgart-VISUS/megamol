@@ -276,6 +276,9 @@ namespace gui {
         void drawMenu(void);
         void drawPopUps(void);
 
+        // Only call after ImGui::Begin() and before next ImGui::End()
+        void window_sizing_and_positioning(WindowCollection::WindowConfiguration& wc, bool& out_collapsing_changed);
+
         bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
         void checkMultipleHotkeyAssignement(void);
         bool isHotkeyPressed(megamol::core::view::KeyCode keycode);

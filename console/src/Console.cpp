@@ -35,7 +35,7 @@
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/Trace.h"
 
-#include "mmcore/utility/log/StreamTarget.h"
+#include "mmcore/utility/log/DefaultTarget.h"
 
 /** The core instance handle. */
 static megamol::console::CoreHandle hCore;
@@ -196,7 +196,8 @@ void initTraceAndLog() {
     megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
     megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
     megamol::core::utility::log::Log::DefaultLog.SetOfflineMessageBufferSize(100);
-    megamol::core::utility::log::Log::DefaultLog.SetMainTarget(std::make_shared<megamol::core::utility::log::StreamTarget>(std::cout, megamol::core::utility::log::Log::LEVEL_ALL));
+    megamol::core::utility::log::Log::DefaultLog.SetMainTarget(
+        std::make_shared<megamol::core::utility::log::DefaultTarget>(megamol::core::utility::log::Log::LEVEL_ALL));
     megamol::console::utility::AboutInfo::LogGreeting();
     megamol::console::utility::AboutInfo::LogVersionInfo();
     megamol::console::utility::AboutInfo::LogStartTime();

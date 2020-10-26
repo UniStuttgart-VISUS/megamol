@@ -80,7 +80,6 @@ public:
 
     // TODO: the 'serializable' and 'deferrable construction' concepts result in basically the same implementation?
     // serializable
-    std::string SerializeGraph() const;
 
     // deferrable_construction
 
