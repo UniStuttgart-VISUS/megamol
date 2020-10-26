@@ -353,7 +353,7 @@ function(require_external NAME)
 
       add_external_project(imgui STATIC
         GIT_REPOSITORY https://github.com/ocornut/imgui.git
-        GIT_TAG "v1.70"
+        GIT_TAG 455c21df7100a4727dd6e4c8e69249b7de21d24c # docking branch > version "1.79"
         BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUI_LIB}"
         PATCH_COMMAND ${CMAKE_COMMAND} -E copy
           "${CMAKE_SOURCE_DIR}/externals/imgui/CMakeLists.txt"
@@ -365,11 +365,11 @@ function(require_external NAME)
 
     external_get_property(imgui SOURCE_DIR)
 
-    target_include_directories(imgui INTERFACE "${SOURCE_DIR}/examples" "${SOURCE_DIR}/misc/cpp")
+    target_include_directories(imgui INTERFACE "${SOURCE_DIR}/backends" "${SOURCE_DIR}/misc/cpp")
 
     set(imgui_files
-      "${SOURCE_DIR}/examples/imgui_impl_opengl3.cpp"
-      "${SOURCE_DIR}/examples/imgui_impl_opengl3.h"
+      "${SOURCE_DIR}/backends/imgui_impl_opengl3.cpp"
+      "${SOURCE_DIR}/backends/imgui_impl_opengl3.h"
       "${SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp"
       "${SOURCE_DIR}/misc/cpp/imgui_stdlib.h"
       PARENT_SCOPE)
