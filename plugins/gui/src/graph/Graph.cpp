@@ -157,6 +157,7 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
                 }
 
                 this->present.ResetStatePointers();
+                QueueData queue_data;
 
                 // 1) Reset module and call slot pointers in groups
                 auto current_full_name = (*iter)->FullName();
@@ -166,24 +167,27 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
                     if (group_ptr->ContainsModule(module_uid)) {
                         group_ptr->RemoveModule(module_uid);
                         module_group_ptr = group_ptr;
+                        
+                        queue_data.name_id = current_full_name;
+                        queue_data.rename_id = (*iter)->FullName();
+                        this->PushSyncQueue(QueueAction::RENAME_MODULE, queue_data);
                     }
                     if (group_ptr->Empty()) {
                         delete_empty_group = group_ptr->uid;
                     }
                 }
-                QueueData queue_data;
-                queue_data.name_id = current_full_name;
-                queue_data.rename_id = (*iter)->FullName();
-                this->PushSyncQueue(QueueAction::RENAME_MODULE, queue_data);
 
                 // 2)  Delete calls
                 for (auto& callslot_map : (*iter)->GetCallSlots()) {
                     for (auto& callslot_ptr : callslot_map.second) {
+                        std::vector<ImGuiID> delete_call_uids;
                         for (auto& call_ptr : callslot_ptr->GetConnectedCalls()) {
                             if (call_ptr != nullptr) {
-                                auto call_uid = call_ptr->uid;
-                                this->DeleteCall(call_uid);
+                                delete_call_uids.push_back(call_ptr->uid);
                             }
+                        }
+                        for (auto& call_uid : delete_call_uids) {
+                            this->DeleteCall(call_uid);
                         }
                     }
                 }
@@ -215,10 +219,10 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
                 this->modules.erase(iter);
 
                 // 6) Delete empty groups
-                module_group_ptr.reset();
-                if (delete_empty_group != GUI_INVALID_ID) {
-                    this->DeleteGroup(delete_empty_group);
-                }
+                //module_group_ptr.reset();
+                //if (delete_empty_group != GUI_INVALID_ID) {
+                //    this->DeleteGroup(delete_empty_group);
+                //}
 
                 this->ForceSetDirty();
                 return true;

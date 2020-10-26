@@ -398,66 +398,7 @@ bool GUIWindows::PostDraw(void) {
             }
 
             bool collapsing_changed = false;
-
-            float y_offset = (this->state.menu_visible) ? (ImGui::GetFrameHeight()) : (0.0f);
-            ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
-            bool window_maximized = ((wc.win_size.x == window_viewport.x) && (wc.win_size.y == window_viewport.y));
-            bool change_window_size = false; // (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0));
-
-            // Context Menu
-            if (ImGui::BeginPopupContextItem()) {
-                if (ImGui::MenuItem(((window_maximized) ? ("Minimize") : ("Maximize")))) {
-                    change_window_size = true;
-                }
-                if (ImGui::MenuItem(((!wc.win_collapsed) ? ("Collapse") : ("Expand")), "Double Left Click")) {
-                    wc.win_collapsed = !wc.win_collapsed;
-                    collapsing_changed = true;
-                }
-                if (ImGui::MenuItem("Close", nullptr)) {
-                    wc.win_show = false;
-                }
-                ImGui::EndPopup();
-            }
-
-            // Set window size
-            /// TODO Add minmize/maximize buttons
-            if (change_window_size) {
-                if (window_maximized) {
-                    // Window is maximized
-                    wc.win_size = wc.win_reset_size;
-                    wc.win_position = wc.win_reset_position;
-                    wc.win_reset = true;
-                } else {
-                    // Window is minimized
-                    ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
-                    wc.win_reset_size = wc.win_size;
-                    wc.win_reset_position = wc.win_position;
-                    wc.win_size = window_viewport;
-                    wc.win_position = ImVec2(0.0f, y_offset);
-                    wc.win_reset = true;
-                }
-            }
-
-            // Force window menu
-            if (wc.win_soft_reset || wc.win_reset || (this->state.menu_visible && ImGui::IsMouseReleased(0))) {
-                float y_offset = ImGui::GetFrameHeight();
-                if (wc.win_position.y < y_offset) {
-                    wc.win_position.y = y_offset;
-                    ImGui::SetWindowPos(wc.win_position, ImGuiCond_Always);
-                }
-            }
-
-            // Apply soft reset of window position and size (before calling window callback)
-            if (wc.win_soft_reset) {
-                this->window_collection.SoftResetWindowSizePosition(wc);
-                wc.win_soft_reset = false;
-            }
-
-            // Apply window position and size reset (before calling window callback)
-            if (wc.win_reset) {
-                this->window_collection.ResetWindowSizePosition(wc);
-                wc.win_reset = false;
-            }
+            this->window_sizing_and_positioning(wc, collapsing_changed);
 
             // Calling callback drawing window content
             auto cb = this->window_collection.WindowCallback(wc.win_callback);
@@ -1877,7 +1818,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
                 FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->state.open_popup_load, filename)) {
             graph_ptr->Clear();
             popup_failed |=
-                !this->configurator.GetGraphCollection().LoadAddProjectFromFile(this->state.graph_uid, filename);
+                (GUI_INVALID_ID == this->configurator.GetGraphCollection().LoadAddProjectFromFile(this->state.graph_uid, filename));
         }
         MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
             confirmed, "Cancel", aborted);
@@ -1891,6 +1832,104 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         this->state.screenshot_filepath_id = 0;
     }
     this->state.open_popup_screenshot = false;
+}
+
+
+void megamol::gui::GUIWindows::window_sizing_and_positioning(WindowCollection::WindowConfiguration & wc, bool & out_collapsing_changed) {
+
+    ImGuiIO& io = ImGui::GetIO();
+    ImVec2 viewport = io.DisplaySize;
+    out_collapsing_changed = false;
+    float y_offset = (this->state.menu_visible) ? (ImGui::GetFrameHeight()) : (0.0f);
+    ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
+    bool window_maximized = ((wc.win_size.x == window_viewport.x) && (wc.win_size.y == window_viewport.y));
+    bool toggle_window_size = false; // (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0));
+
+    // Context Menu
+    if (ImGui::BeginPopupContextItem()) {
+        if (ImGui::MenuItem(((window_maximized) ? ("Minimize") : ("Maximize")))) {
+            toggle_window_size = true;
+        }
+        if (ImGui::MenuItem(((!wc.win_collapsed) ? ("Collapse") : ("Expand")), "Double Left Click")) {
+            wc.win_collapsed = !wc.win_collapsed;
+            out_collapsing_changed = true;
+        }
+        if (ImGui::MenuItem("Full Width", nullptr)) {
+            wc.win_size.x = viewport.x;
+            wc.win_reset = true;
+        }
+
+        ImGui::TextUnformatted("Dock");
+        ImGui::SameLine();
+        if (ImGui::ArrowButton("dock_left", ImGuiDir_Left)) {
+            wc.win_position.x = 0.0f;
+            wc.win_reset = true;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::ArrowButton("dock_up", ImGuiDir_Up)) {
+            wc.win_position.y = 0.0f;
+            wc.win_reset = true;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::ArrowButton("dock_down", ImGuiDir_Down)) {
+            wc.win_position.y = viewport.y - wc.win_size.y;
+            wc.win_reset = true;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::ArrowButton("dock_right", ImGuiDir_Right)) {
+            wc.win_position.x = viewport.x - wc.win_size.x;
+            wc.win_reset = true;
+            ImGui::CloseCurrentPopup();
+        }
+
+        if (ImGui::MenuItem("Close", nullptr)) {
+            wc.win_show = false;
+        }
+        ImGui::EndPopup();
+    }
+
+    // Toggle window size 
+    if (toggle_window_size) {
+        if (window_maximized) {
+            // Window is maximized
+            wc.win_size = wc.win_reset_size;
+            wc.win_position = wc.win_reset_position;
+            wc.win_reset = true;
+        }
+        else {
+            // Window is minimized
+            ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
+            wc.win_reset_size = wc.win_size;
+            wc.win_reset_position = wc.win_position;
+            wc.win_size = window_viewport;
+            wc.win_position = ImVec2(0.0f, y_offset);
+            wc.win_reset = true;
+        }
+    }
+
+    // Move current window below window menu
+    if (wc.win_soft_reset || wc.win_reset || (this->state.menu_visible && ImGui::IsMouseReleased(0))) {
+        float y_offset = ImGui::GetFrameHeight();
+        if (wc.win_position.y < y_offset) {
+            wc.win_position.y = y_offset;
+            ImGui::SetWindowPos(wc.win_position, ImGuiCond_Always);
+        }
+    }
+
+    // Apply soft reset of window reset position and reset size
+    if (wc.win_soft_reset) {
+        this->window_collection.SoftResetWindowSizePosition(wc);
+        wc.win_soft_reset = false;
+    }
+
+    // Apply window position and size reset 
+    if (wc.win_reset) {
+        this->window_collection.ResetWindowSizePosition(wc);
+        wc.win_reset = false;
+    }
 }
 
 
