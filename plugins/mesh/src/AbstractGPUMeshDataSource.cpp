@@ -10,11 +10,10 @@
 
 
 megamol::mesh::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()
-    : core::Module()
-    , m_mesh_collection({nullptr, {}})
-    , m_mesh_lhs_slot("gpuMeshes", "The slot publishing the loaded data")
-    , m_mesh_rhs_slot("chainGpuMeshes", "The slot for chaining material data sources") 
-{
+        : core::Module()
+        , m_mesh_collection({nullptr, {}})
+        , m_mesh_lhs_slot("gpuMeshes", "The slot publishing the loaded data")
+        , m_mesh_rhs_slot("chainGpuMeshes", "The slot for chaining material data sources") {
     this->m_mesh_lhs_slot.SetCallback(
         CallGPUMeshData::ClassName(), "GetData", &AbstractGPUMeshDataSource::getDataCallback);
     this->m_mesh_lhs_slot.SetCallback(
@@ -25,7 +24,9 @@ megamol::mesh::AbstractGPUMeshDataSource::AbstractGPUMeshDataSource()
     this->MakeSlotAvailable(&this->m_mesh_rhs_slot);
 }
 
-megamol::mesh::AbstractGPUMeshDataSource::~AbstractGPUMeshDataSource() { this->Release(); }
+megamol::mesh::AbstractGPUMeshDataSource::~AbstractGPUMeshDataSource() {
+    this->Release();
+}
 
 bool megamol::mesh::AbstractGPUMeshDataSource::create(void) {
     return true;
@@ -45,7 +46,7 @@ void megamol::mesh::AbstractGPUMeshDataSource::syncMeshCollection(CallGPUMeshDat
             std::pair<std::shared_ptr<GPUMeshCollection>, std::vector<std::string>> mesh_collection = {
                 lhs_call->getData(), {}};
             for (auto const& identifier : m_mesh_collection.second) {
-                //mtl_collection.first->addMesh(m_mesh_collection.first->getMeshes()[idx]);
+                // mtl_collection.first->addMesh(m_mesh_collection.first->getMeshes()[idx]);
                 auto const& submesh = m_mesh_collection.first->getSubMesh(identifier);
                 mesh_collection.first->addMesh(identifier, submesh.mesh->mesh, submesh);
                 m_mesh_collection.first->deleteSubMesh(identifier);

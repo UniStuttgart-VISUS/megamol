@@ -4,13 +4,11 @@
 
 
 megamol::mesh::AbstractMeshDataSource::AbstractMeshDataSource()
-    : core::Module()
-    , m_mesh_access_collection({nullptr, {}})
-    , m_mesh_lhs_slot("meshes", "The slot publishing the loaded data")
-    , m_mesh_rhs_slot("chainMeshes", "The slot for chaining mesh data sources") 
-{
-    this->m_mesh_lhs_slot.SetCallback(
-        CallMesh::ClassName(), "GetData", &AbstractMeshDataSource::getMeshDataCallback);
+        : core::Module()
+        , m_mesh_access_collection({nullptr, {}})
+        , m_mesh_lhs_slot("meshes", "The slot publishing the loaded data")
+        , m_mesh_rhs_slot("chainMeshes", "The slot for chaining mesh data sources") {
+    this->m_mesh_lhs_slot.SetCallback(CallMesh::ClassName(), "GetData", &AbstractMeshDataSource::getMeshDataCallback);
     this->m_mesh_lhs_slot.SetCallback(
         CallMesh::ClassName(), "GetMetaData", &AbstractMeshDataSource::getMeshMetaDataCallback);
     this->MakeSlotAvailable(&this->m_mesh_lhs_slot);
@@ -19,7 +17,9 @@ megamol::mesh::AbstractMeshDataSource::AbstractMeshDataSource()
     this->MakeSlotAvailable(&this->m_mesh_rhs_slot);
 }
 
-megamol::mesh::AbstractMeshDataSource::~AbstractMeshDataSource() { this->Release(); }
+megamol::mesh::AbstractMeshDataSource::~AbstractMeshDataSource() {
+    this->Release();
+}
 
 bool megamol::mesh::AbstractMeshDataSource::create(void) {
     return true;
