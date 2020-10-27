@@ -9,14 +9,14 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 
 megamol::probe_gl::ProbeDetailViewRenderTasks::ProbeDetailViewRenderTasks()
-    : m_version(0)
-    , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
-    , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
-    , m_event_slot("GetProbeManipulation", "")
-    , m_ui_mesh(nullptr)
-    , m_probes_mesh(nullptr)
-    , m_tf_min(0.0f)
-    , m_tf_max(1.0f) {
+        : m_version(0)
+        , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
+        , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
+        , m_event_slot("GetProbeManipulation", "")
+        , m_ui_mesh(nullptr)
+        , m_probes_mesh(nullptr)
+        , m_tf_min(0.0f)
+        , m_tf_max(1.0f) {
     this->m_transfer_function_Slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->m_transfer_function_Slot);
 
@@ -83,17 +83,12 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
     mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL) return false;
 
-    std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection;
-    // no incoming render task collection -> use your own collection
-    if (lhs_rtc->getData() == nullptr)
-        rt_collection = this->m_gpu_render_tasks;
-    else
-        rt_collection = lhs_rtc->getData();
+    syncRenderTaskCollection(lhs_rtc);
 
     // if there is a render task connection to the right, pass on the render task collection
     mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection, 0);
+        rhs_rtc->setData(m_rendertask_collection.first, 0);
         if (!(*rhs_rtc)(0)) return false;
     }
 
@@ -154,48 +149,48 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
 
                     auto probe_length = arg.m_end - arg.m_begin;
                     glm::vec3 center_point = glm::vec3(0.0f,-arg.m_begin,0.0f);
-
+                
                     auto base_vertex_idx = vertex_data.back().size() / 3u;
-
+                
                     auto sample_data = arg.getSamplingResult();
                     size_t sample_cnt = sample_data->samples.size();
-
-
+                
+                
                     VectorProbeData probe_data;
                     probe_data.position = glm::vec4(arg.m_position[0] + arg.m_direction[0] * (arg.m_begin * 1.25f),
                         arg.m_position[1] + arg.m_direction[1] * (arg.m_begin * 1.25f),
                         arg.m_position[2] + arg.m_direction[2] * (arg.m_begin * 1.25f), 1.0f);
                     probe_data.probe_direction = glm::vec4(arg.m_direction[0], arg.m_direction[1], arg.m_direction[2], 1.0f);
                     probe_data.scale = 1.0f; //TODO scale?
-                    if (arg.getSamplingResult()->samples.size() > 32) {
-                        // TODO print warning/error message
-                    }
+
+                    assert(sample_cnt <= 32);
+
                     probe_data.sample_cnt = std::min(static_cast<size_t>(32), sample_cnt);
                     for (int i = 0; i < probe_data.sample_cnt; ++i) {
                         probe_data.samples[i] = sample_data->samples[i];
                     }
                     probe_data.probe_id = probe_idx;
-
+                
                     m_vector_probe_data.push_back(probe_data);
                     
-
+                
                     // generate vertices
                     for (auto& sample : sample_data->samples )
                     {
                         vertex_data.back().push_back(center_point.x - 0.5f * std::get<0>(sample));
                         vertex_data.back().push_back(center_point.x - 0.5f * std::get<1>(sample));
                         vertex_data.back().push_back(center_point.x - 0.5f * std::get<2>(sample));
-
+                
                         vertex_data.back().push_back(center_point.x + 0.5f * std::get<0>(sample));
                         vertex_data.back().push_back(center_point.x + 0.5f * std::get<1>(sample));
                         vertex_data.back().push_back(center_point.x + 0.5f * std::get<2>(sample));
-
+                
                         center_point += glm::vec3(
                             0.0f,
                             probe_length / static_cast<float>(sample_cnt),
                             0.0f);
                     }
-
+                
                     auto first_index_idx = index_data.size();
                     // generate indices
                     auto patch_cnt = std::max(0,(static_cast<int>(sample_cnt) - 1));
@@ -206,7 +201,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                        index_data.push_back((i*2) + 2);
                        index_data.push_back((i*2) + 3);
                     }
-
+                
                     //TODO set correct values...
                     glowl::DrawElementsCommand draw_command;
                     draw_command.base_instance = 0;
@@ -214,8 +209,10 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                     draw_command.cnt = patch_cnt * 4;
                     draw_command.first_idx = first_index_idx;
                     draw_command.instance_cnt = 1;
-
+                
                     m_vector_probe_draw_commands.push_back(draw_command);
+                
+                    m_vector_probe_identifiers.emplace_back(std::string(FullName())+"_probe_"+std::to_string(probe_idx));
 
                 } else {
                     // unknown probe type, throw error? do nothing?
@@ -237,9 +234,10 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         auto gpu_mtl_storage = mtlc->getData();
 
         if (!m_vector_probe_draw_commands.empty()) {
-            auto const& probe_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
-            m_draw_commands_collection_idx = rt_collection->addRenderTasks(
-            probe_shader, m_probes_mesh, m_vector_probe_draw_commands, m_vector_probe_data);
+            auto const& probe_shader = gpu_mtl_storage->getMaterial("ProbeDetailView_Ribbon").shader_program;
+            m_rendertask_collection.first->addRenderTasks(m_vector_probe_identifiers,probe_shader, m_probes_mesh, m_vector_probe_draw_commands, m_vector_probe_data);
+            m_rendertask_collection.second.insert(
+                            m_rendertask_collection.second.end(), m_vector_probe_identifiers.begin(), m_vector_probe_identifiers.end());
         }
 
     }
@@ -316,4 +314,5 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
 }
 
 bool megamol::probe_gl::ProbeDetailViewRenderTasks::getMetaDataCallback(core::Call& caller) { return true; }
+
 

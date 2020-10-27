@@ -1,20 +1,13 @@
 #include "ProbeBillboardGlyphMaterial.h"
 
-#include "mesh/MeshCalls.h"
 #include "ProbeCalls.h"
+#include "mesh/MeshCalls.h"
 
-megamol::probe_gl::ProbeBillboardGlyphMaterial::ProbeBillboardGlyphMaterial() 
-    : m_version(0)
-    , m_textured_glyph_mtl_idx(0)
-    , m_vector_glpyh_mtl_idx(0)
-    , m_scalar_glyph_mtl_idx(0)
-    , m_clusterID_glyph_mtl_idx(0)
-    , m_glyph_images_slot("GetProbes", "Slot for accessing a probe collection") 
-{
+megamol::probe_gl::ProbeBillboardGlyphMaterial::ProbeBillboardGlyphMaterial()
+        : m_version(0), m_glyph_images_slot("GetProbes", "Slot for accessing a probe collection") {
 
     this->m_glyph_images_slot.SetCompatibleCall<mesh::CallImageDescription>();
     this->MakeSlotAvailable(&this->m_glyph_images_slot);
-
 }
 
 megamol::probe_gl::ProbeBillboardGlyphMaterial::~ProbeBillboardGlyphMaterial() {}
@@ -22,8 +15,7 @@ megamol::probe_gl::ProbeBillboardGlyphMaterial::~ProbeBillboardGlyphMaterial() {
 bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
 
 
-    auto create_progam = [this](vislib::StringA shader_base_name) -> std::shared_ptr<ShaderProgram>
-    {
+    auto create_progam = [this](vislib::StringA shader_base_name) -> std::shared_ptr<ShaderProgram> {
         vislib::graphics::gl::ShaderSource vert_shader_src;
         vislib::graphics::gl::ShaderSource frag_shader_src;
 
@@ -46,7 +38,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
 
         auto shader_prgm = std::make_unique<glowl::GLSLProgram>(shader_srcs);
         shader_prgm->setDebugLabel(std::string(shader_base_name)); // TODO debug label not set in time for catch...
-        
+
         return shader_prgm;
     };
 
@@ -120,10 +112,14 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
 
     // Set intial state of module
     ++m_version;
-    m_textured_glyph_mtl_idx = m_gpu_materials->addMaterial(m_textured_glyph_prgm);
-    m_scalar_glyph_mtl_idx = m_gpu_materials->addMaterial(m_scalar_probe_glyph_prgm);
-    m_vector_glpyh_mtl_idx = m_gpu_materials->addMaterial(m_vector_probe_glyph_prgm);
-    m_clusterID_glyph_mtl_idx = m_gpu_materials->addMaterial(m_clusterID_glyph_prgm);
+    m_material_collection.first->addMaterial("ProbeBillboard_Textured", m_textured_glyph_prgm);
+    m_material_collection.second.push_back("ProbeBillboard_Textured");
+    m_material_collection.first->addMaterial("ProbeBillboard_Scalar", m_scalar_probe_glyph_prgm);
+    m_material_collection.second.push_back("ProbeBillboard_Scalar");
+    m_material_collection.first->addMaterial("ProbeBillboard_Vector", m_vector_probe_glyph_prgm);
+    m_material_collection.second.push_back("ProbeBillboard_Vector");
+    m_material_collection.first->addMaterial("ProbeBillboard_ClusterID", m_clusterID_glyph_prgm);
+    m_material_collection.second.push_back("ProbeBillboard_ClusterID");
 
     return true;
 }
@@ -131,26 +127,23 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
 bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call& caller) {
 
     mesh::CallGPUMaterialData* lhs_mtl_call = dynamic_cast<mesh::CallGPUMaterialData*>(&caller);
-    if (lhs_mtl_call == NULL) return false;
+    if (lhs_mtl_call == NULL)
+        return false;
 
-    std::shared_ptr<mesh::GPUMaterialCollecton> mtl_collection;
-    // no incoming material -> use your own material storage
-    if (lhs_mtl_call->getData() == nullptr) 
-        mtl_collection = this->m_gpu_materials;
-    else
-        mtl_collection = lhs_mtl_call->getData();
+    syncMaterialCollection(lhs_mtl_call);
 
     // if there is a material connection to the right, pass on the material collection
     mesh::CallGPUMaterialData* rhs_mtl_call = this->m_mtl_callerSlot.CallAs<mesh::CallGPUMaterialData>();
-    if (rhs_mtl_call != NULL){
+    if (rhs_mtl_call != NULL) {
         auto rhs_version = rhs_mtl_call->version();
-        rhs_mtl_call->setData(mtl_collection, rhs_version);
+        rhs_mtl_call->setData(m_material_collection.first, rhs_version);
         (*rhs_mtl_call)(0);
     }
 
     mesh::CallImage* ic = this->m_glyph_images_slot.CallAs<mesh::CallImage>();
-    if (ic != NULL){
-        if (!(*ic)(0)) return false;
+    if (ic != NULL) {
+        if (!(*ic)(0))
+            return false;
 
         auto image_meta_data = ic->getMetaData();
 
@@ -205,37 +198,42 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call&
 
             glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
-            // ToDo Clear only existing entry in collection?
-            mtl_collection->clearMaterials();
+            for (auto& identifier : m_material_collection.second) {
+                m_material_collection.first->deleteMaterial(identifier);
+            }
+            m_material_collection.second.clear();
 
-            mtl_collection->addMaterial(this->m_textured_glyph_prgm, textures);
-            m_gpu_materials->addMaterial(this->m_scalar_probe_glyph_prgm);
-            m_gpu_materials->addMaterial(this->m_vector_probe_glyph_prgm);
-            m_gpu_materials->addMaterial(this->m_clusterID_glyph_prgm);
-
+            m_material_collection.first->addMaterial("ProbeBillboard_Textured", m_textured_glyph_prgm, textures);
+            m_material_collection.second.push_back("ProbeBillboard_Textured");
+            m_material_collection.first->addMaterial("ProbeBillboard_Scalar", m_scalar_probe_glyph_prgm);
+            m_material_collection.second.push_back("ProbeBillboard_Scalar");
+            m_material_collection.first->addMaterial("ProbeBillboard_Vector", m_vector_probe_glyph_prgm);
+            m_material_collection.second.push_back("ProbeBillboard_Vector");
+            m_material_collection.first->addMaterial("ProbeBillboard_ClusterID", m_clusterID_glyph_prgm);
+            m_material_collection.second.push_back("ProbeBillboard_ClusterID");
         }
-
-    }
-    
-    if (lhs_mtl_call->version() < m_version){
-        lhs_mtl_call->setData(mtl_collection, m_version);
     }
 
-    return true; 
+    if (lhs_mtl_call->version() < m_version) {
+        lhs_mtl_call->setData(m_material_collection.first, m_version);
+    }
+
+    return true;
 }
 
 bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getMetaDataCallback(core::Call& caller) {
 
-    //if (!mesh::AbstractGPUMaterialDataSource::getMetaDataCallback(caller)) return false;
+    // if (!mesh::AbstractGPUMaterialDataSource::getMetaDataCallback(caller)) return false;
 
-    //auto lhs_mtl_call = dynamic_cast<mesh::CallGPUMaterialData*>(&caller);
+    // auto lhs_mtl_call = dynamic_cast<mesh::CallGPUMaterialData*>(&caller);
     auto glyph_image_call = m_glyph_images_slot.CallAs<mesh::CallImage>();
     //
-    //auto lhs_mtl_meta_data = lhs_mtl_call->getMetaData();
-    //auto glyph_image_meta_data = glyph_image_call->getMetaData();
+    // auto lhs_mtl_meta_data = lhs_mtl_call->getMetaData();
+    // auto glyph_image_meta_data = glyph_image_call->getMetaData();
 
     if (glyph_image_call != NULL) {
-        if (!(*glyph_image_call)(1)) return false;
+        if (!(*glyph_image_call)(1))
+            return false;
     }
 
     return true;

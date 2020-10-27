@@ -16,7 +16,7 @@
 #include "mesh/MeshCalls.h"
 
 megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks()
-    : m_version(0), m_show_hull(true), m_event_slot("GetEvents", "") {
+        : m_version(0), m_show_hull(true), m_event_slot("GetEvents", "") {
     this->m_event_slot.SetCompatibleCall<core::CallEventDescription>();
     this->MakeSlotAvailable(&this->m_event_slot);
 }
@@ -26,40 +26,45 @@ megamol::probe_gl::ProbeHullRenderTasks::~ProbeHullRenderTasks() {}
 bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller) {
 
     mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == NULL) return false;
+    if (lhs_rtc == NULL)
+        return false;
 
     mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
-    if (mtlc == NULL) return false;
-    if (!(*mtlc)(0)) return false;
+    if (mtlc == NULL)
+        return false;
+    if (!(*mtlc)(0))
+        return false;
 
     mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
-    if (mc == NULL) return false;
-    if (!(*mc)(0)) return false;
+    if (mc == NULL)
+        return false;
+    if (!(*mc)(0))
+        return false;
 
-    std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection(nullptr);
-
-    if (lhs_rtc->getData() == nullptr) {
-        rt_collection = this->m_gpu_render_tasks;
-    } else {
-        rt_collection = lhs_rtc->getData();
-    }
+    syncRenderTaskCollection(lhs_rtc);
 
     bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate();
 
     if (something_has_changed) {
         ++m_version;
 
-        auto gpu_mtl_storage = mtlc->getData();
-        auto gpu_mesh_storage = mc->getData();
+        for (auto& identifier : m_rendertask_collection.second) {
+            m_rendertask_collection.first->deleteRenderTask(identifier);
+        }
+        m_rendertask_collection.second.clear();
 
+        m_identifiers.clear();
         m_draw_commands.clear();
         m_object_transforms.clear();
         m_batch_meshes.clear();
 
+        auto gpu_mtl_storage = mtlc->getData();
+        auto gpu_mesh_storage = mc->getData();
+
         std::shared_ptr<glowl::Mesh> prev_mesh(nullptr);
 
         for (auto& sub_mesh : gpu_mesh_storage->getSubMeshData()) {
-            auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
+            auto const& gpu_batch_mesh = sub_mesh.second.mesh->mesh;
 
             if (gpu_batch_mesh != prev_mesh) {
                 m_draw_commands.emplace_back(std::vector<glowl::DrawElementsCommand>());
@@ -73,16 +78,19 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
             std::array<float, 16> obj_xform = {
                 scale, 0.0f, 0.0f, 0.0f, 0.0f, scale, 0.0f, 0.0f, 0.0f, 0.0f, scale, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
-            m_draw_commands.back().push_back(sub_mesh.sub_mesh_draw_command);
+            m_identifiers.emplace_back(std::string(FullName()) + "_" + sub_mesh.first);
+            m_draw_commands.back().push_back(sub_mesh.second.sub_mesh_draw_command);
             m_object_transforms.back().push_back(obj_xform);
         }
 
         if (m_show_hull) {
-            for (int i = 0; i < m_batch_meshes.size(); ++i) {
-                auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-                rt_collection->addRenderTasks(shader, m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
+            auto const& shader = gpu_mtl_storage->getMaterial("ProbeHull").shader_program;
 
-                // TODO add index to index map for removal
+            for (int i = 0; i < m_batch_meshes.size(); ++i) {
+                m_rendertask_collection.first->addRenderTasks(
+                    m_identifiers, shader, m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
+                m_rendertask_collection.second.insert(
+                    m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
             }
         }
     }
@@ -90,7 +98,8 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
     // check for pending events
     auto call_event_storage = this->m_event_slot.CallAs<core::CallEvent>();
     if (call_event_storage != NULL) {
-        if ((!(*call_event_storage)(0))) return false;
+        if ((!(*call_event_storage)(0)))
+            return false;
 
         auto event_collection = call_event_storage->getData();
         auto gpu_mtl_storage = mtlc->getData();
@@ -102,14 +111,18 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
                 m_show_hull = !m_show_hull;
 
                 if (m_show_hull) {
+                    auto const& shader = gpu_mtl_storage->getMaterial("ProbeHull").shader_program;
                     for (int i = 0; i < m_batch_meshes.size(); ++i) {
-                        auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-                        rt_collection->addRenderTasks(
-                            shader, m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
+                        m_rendertask_collection.first->addRenderTasks(
+                            m_identifiers, shader, m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
+                        m_rendertask_collection.second.insert(
+                            m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
                     }
                 } else {
-                    // TODO this breaks chaining...
-                    rt_collection->clear();
+                    for (auto& identifier : m_rendertask_collection.second) {
+                        m_rendertask_collection.first->deleteRenderTask(identifier);
+                    }
+                    m_rendertask_collection.second.clear();
                 }
             }
         }
@@ -117,7 +130,7 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
 
     mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection, 0);
+        rhs_rtc->setData(m_rendertask_collection.first, 0);
         (*rhs_rtc)(0);
     }
 
@@ -125,7 +138,7 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
     auto mesh_meta_data = mc->getMetaData();
 
     // TODO set data if necessary
-    lhs_rtc->setData(rt_collection, m_version);
+    lhs_rtc->setData(m_rendertask_collection.first, m_version);
 
 
     return true;
@@ -133,7 +146,8 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
 
 bool megamol::probe_gl::ProbeHullRenderTasks::getMetaDataCallback(core::Call& caller) {
 
-    if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller)) return false;
+    if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller))
+        return false;
 
     mesh::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     mesh::CallGPUMeshData* mesh_call = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
@@ -144,7 +158,8 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getMetaDataCallback(core::Call& ca
         auto mesh_meta_data = mesh_call->getMetaData();
         mesh_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
         mesh_call->setMetaData(mesh_meta_data);
-        if (!(*mesh_call)(1)) return false;
+        if (!(*mesh_call)(1))
+            return false;
         mesh_meta_data = mesh_call->getMetaData();
 
         auto bbox = lhs_meta_data.m_bboxs.BoundingBox();
