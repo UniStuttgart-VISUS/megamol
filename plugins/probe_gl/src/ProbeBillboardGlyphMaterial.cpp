@@ -110,8 +110,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
         return false;
     }
 
-    // Set intial state of module
+    // Set initial state of module
     ++m_version;
+    m_material_collection.first = std::make_shared<mesh::GPUMaterialCollection>();
     m_material_collection.first->addMaterial("ProbeBillboard_Textured", m_textured_glyph_prgm);
     m_material_collection.second.push_back("ProbeBillboard_Textured");
     m_material_collection.first->addMaterial("ProbeBillboard_Scalar", m_scalar_probe_glyph_prgm);

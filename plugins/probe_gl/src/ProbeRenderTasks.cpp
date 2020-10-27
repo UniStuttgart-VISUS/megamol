@@ -139,7 +139,7 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
                 assert(gpu_mesh_storage->getSubMeshData().size() > 0);
 
-                m_identifiers.emplace_back(std::string(FullName()) + "_probe_" + std::to_string(probe_idx));
+                m_identifiers[probe_idx] = (std::string(FullName()) + "_probe_" + std::to_string(probe_idx));
 
                 auto const& gpu_sub_mesh = gpu_mesh_storage->getSubMeshData().begin()->second;
 

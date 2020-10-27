@@ -9,7 +9,8 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 
 megamol::probe_gl::ProbeDetailViewRenderTasks::ProbeDetailViewRenderTasks()
-        : m_version(0)
+        : AbstractGPURenderTaskDataSource()
+        , m_version(0)
         , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
         , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
         , m_event_slot("GetProbeManipulation", "")
@@ -73,7 +74,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
     m_probes_mesh = std::make_shared<glowl::Mesh>(
         data_ptrs, byte_sizes, indices.data(), 6 * 4, vertex_layout, GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
 
-    return false; 
+    return true; 
 }
 
 void megamol::probe_gl::ProbeDetailViewRenderTasks::release() {}
@@ -313,6 +314,37 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
     return true;
 }
 
-bool megamol::probe_gl::ProbeDetailViewRenderTasks::getMetaDataCallback(core::Call& caller) { return true; }
+bool megamol::probe_gl::ProbeDetailViewRenderTasks::getMetaDataCallback(core::Call& caller) {
+    if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller))
+        return false;
+
+    mesh::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
+    auto probe_call = m_probes_slot.CallAs<probe::CallProbes>();
+    if (probe_call == NULL)
+        return false;
+
+    auto lhs_meta_data = lhs_rt_call->getMetaData();
+
+    auto probe_meta_data = probe_call->getMetaData();
+    probe_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
+    probe_call->setMetaData(probe_meta_data);
+    if (!(*probe_call)(1))
+        return false;
+    probe_meta_data = probe_call->getMetaData();
+
+    lhs_meta_data.m_frame_cnt = std::min(lhs_meta_data.m_frame_cnt, probe_meta_data.m_frame_cnt);
+
+    auto bbox = lhs_meta_data.m_bboxs.BoundingBox();
+    bbox.Union(probe_meta_data.m_bboxs.BoundingBox());
+    lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
+
+    auto cbbox = lhs_meta_data.m_bboxs.ClipBox();
+    cbbox.Union(probe_meta_data.m_bboxs.ClipBox());
+    lhs_meta_data.m_bboxs.SetClipBox(cbbox);
+
+    lhs_rt_call->setMetaData(lhs_meta_data);
+
+    return true;
+}
 
 
