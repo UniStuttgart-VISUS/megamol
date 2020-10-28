@@ -240,6 +240,10 @@ void megamol::frontend_resources::WindowManipulation::set_window_position(const 
     glfwSetWindowPos(reinterpret_cast<GLFWwindow*>(window_ptr), width, height);
 }
 
+void megamol::frontend_resources::WindowManipulation::set_swap_interval(const unsigned int wait_frames) const {
+    glfwSwapInterval(wait_frames);
+}
+
 void megamol::frontend_resources::WindowManipulation::set_fullscreen(const Fullscreen action) const {
     switch (action) {
         case Fullscreen::Maximize:
