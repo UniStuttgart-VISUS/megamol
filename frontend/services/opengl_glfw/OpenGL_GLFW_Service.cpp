@@ -440,8 +440,8 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
     register_glfw_callbacks();
 
-    if (m_pimpl->config.enableVsync)
-        ::glfwSwapInterval(0);
+    int vsync = (m_pimpl->config.enableVsync) ? 1 : 0;
+    ::glfwSwapInterval(vsync);
 
     ::glfwShowWindow(window_ptr);
     //::glfwMakeContextCurrent(nullptr);
