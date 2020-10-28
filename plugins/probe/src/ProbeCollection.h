@@ -81,7 +81,7 @@ private:
 };
 
 using GenericProbe = std::variant<FloatProbe, IntProbe, Vec4Probe, BaseProbe>;
-
+using GenericMinMax = std::variant<float , int, std::vector<std::array<float,4>>>;
 
 class ProbeCollection {
 public:
@@ -98,8 +98,19 @@ public:
 
     uint32_t getProbeCount() const { return m_probes.size(); }
 
+    template <typename T> void setGlobalMinMax(T min_, T max_) {
+        m_global_min = min_;
+        m_global_max = max_;
+    }
+
+    template <typename T> T getGlobalMin() { return std::get<T>(m_global_min); }
+
+    template <typename T> T getGlobalMax() { return std::get<T>(m_global_max); }
+
 private:
     std::vector<GenericProbe> m_probes;
+    GenericMinMax m_global_min;
+    GenericMinMax m_global_max;
 };
 
 

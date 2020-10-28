@@ -8,7 +8,7 @@
 #include <random>
 #include "ProbeCalls.h"
 #include "mmcore/param/EnumParam.h"
-#include "mmcore/param/IntParam.h"
+#include "mmcore/param/FloatParam.h"
 #include "probe/MeshUtilities.h"
 
 
@@ -55,7 +55,7 @@ megamol::probe::PlaceProbes::PlaceProbes()
     this->_method_slot << ep;
     this->MakeSlotAvailable(&this->_method_slot);
 
-    this->_probes_per_unit_slot << new core::param::IntParam(1, 0);
+    this->_probes_per_unit_slot << new core::param::FloatParam(1, 0);
 
     /* Feasibility test */
     _probes = std::make_shared<ProbeCollection>();
@@ -245,7 +245,7 @@ void megamol::probe::PlaceProbes::forceDirectedSampling(const mesh::MeshDataAcce
 
     int full_iterations = 1;
     int iterations_per_triangle = 1;
-    float samples_per_area = 10000.0f;
+    float samples_per_area = _probes_per_unit_slot.Param<core::param::FloatParam>()->Value();
     double initial_delta_t = 1.0 / static_cast<double>(samples_per_area);
 
 
@@ -268,8 +268,9 @@ void megamol::probe::PlaceProbes::forceDirectedSampling(const mesh::MeshDataAcce
 
         auto area = _mu->calcTriangleArea(idx);
         total_area += area;
-        auto nu_points = static_cast<uint32_t>(area * samples_per_area);
-        total_points += nu_points;
+        auto num_points = static_cast<uint32_t>(area * samples_per_area);
+        if (num_points == 0) num_points = 1;
+        total_points += num_points;
 
         
         // Eigen::MatrixXd patch_vertices;
@@ -279,7 +280,7 @@ void megamol::probe::PlaceProbes::forceDirectedSampling(const mesh::MeshDataAcce
         // Eigen::MatrixXd vertices_uv;
         //_mu->UVMapping(patch_indices, patch_vertices, vertices_uv);
 
-        _mu->seedPoints(idx, nu_points, _pointsPerFace[idx]);
+        _mu->seedPoints(idx, num_points, _pointsPerFace[idx]);
 
         //_mu->fillMeshFaces(patch_indices, this->_mesh_faces);
         //_mu->fillMeshVertices(patch_vertices, this->_mesh_vertices);
