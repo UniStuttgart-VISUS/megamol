@@ -702,7 +702,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
         m_rendertask_collection.first->addRenderTasks(m_scalar_probe_glyph_identifiers, scalar_shader,
             m_billboard_dummy_mesh, m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
         m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
-            m_textured_glyph_identifiers.begin(), m_textured_glyph_identifiers.end());
+            m_scalar_probe_glyph_identifiers.begin(), m_scalar_probe_glyph_identifiers.end());
     }
 
     if (!m_vector_probe_glyph_data.empty()) {
@@ -710,7 +710,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
         m_rendertask_collection.first->addRenderTasks(m_vector_probe_glyph_identifiers, vector_shader,
             m_billboard_dummy_mesh, m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
         m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
-            m_textured_glyph_identifiers.begin(), m_textured_glyph_identifiers.end());
+            m_vector_probe_glyph_identifiers.begin(), m_vector_probe_glyph_identifiers.end());
     }
 
     if (!m_clusterID_gylph_draw_commands.empty()) {
@@ -719,7 +719,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
         m_rendertask_collection.first->addRenderTasks(m_clusterID_glyph_identifiers, vector_shader,
             m_billboard_dummy_mesh, m_clusterID_gylph_draw_commands, m_clusterID_glyph_data);
         m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
-            m_textured_glyph_identifiers.begin(), m_textured_glyph_identifiers.end());
+            m_clusterID_glyph_identifiers.begin(), m_clusterID_glyph_identifiers.end());
     }
 }
 
