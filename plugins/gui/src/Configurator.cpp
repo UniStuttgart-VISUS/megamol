@@ -571,7 +571,8 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
     }
     if (this->file_browser.PopUp(
             FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->open_popup_load, project_filename)) {
-        popup_failed = (GUI_INVALID_ID == this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename));
+        popup_failed = (GUI_INVALID_ID ==
+                        this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename));
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
     MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
@@ -604,7 +605,8 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
             ImGui::GetIO().MouseDoubleClicked[0] = false;
         }
     }
-    if (!this->show_module_list_sidebar && this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
+    if (!this->show_module_list_sidebar &&
+        this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
         this->show_module_list_child = true;
         this->module_list_popup_pos = ImGui::GetMousePos();
         this->module_list_popup_hovered_group_uid = selected_graph_ptr->present.GetHoveredGroup();

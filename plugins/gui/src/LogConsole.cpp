@@ -84,7 +84,8 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
 
         // Scrolling
         std::string scroll_label = "Scroll";
-        ImGui::SameLine(0.0f, ImGui::GetContentRegionAvail().x - (2.25f * ImGui::GetFrameHeightWithSpacing()) - ImGui::CalcTextSize(scroll_label.c_str()).x);
+        ImGui::SameLine(0.0f, ImGui::GetContentRegionAvail().x - (2.25f * ImGui::GetFrameHeightWithSpacing()) -
+                                  ImGui::CalcTextSize(scroll_label.c_str()).x);
         ImGui::TextUnformatted(scroll_label.c_str());
         ImGui::SameLine();
         if (ImGui::ArrowButton("scroll_up", ImGuiDir_Up)) {
@@ -179,7 +180,8 @@ bool megamol::gui::LogConsole::connect_log(void) {
         std::dynamic_pointer_cast<megamol::core::utility::log::OfflineTarget>(current_echo_target);
 
     // Only connect if echo target is still default OfflineTarget
-    /// Note: A second log console is temporarily created when "GUIView" module is loaded in configurator for complete module list.
+    /// Note: A second log console is temporarily created when "GUIView" module is loaded in configurator for complete
+    /// module list.
     if ((offline_echo_target != nullptr) && (this->echo_log_target != nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(this->echo_log_target);
     }

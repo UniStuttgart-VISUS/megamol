@@ -1817,8 +1817,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         if (this->file_browser.PopUp(
                 FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->state.open_popup_load, filename)) {
             graph_ptr->Clear();
-            popup_failed |=
-                (GUI_INVALID_ID == this->configurator.GetGraphCollection().LoadAddProjectFromFile(this->state.graph_uid, filename));
+            popup_failed |= (GUI_INVALID_ID == this->configurator.GetGraphCollection().LoadAddProjectFromFile(
+                                                   this->state.graph_uid, filename));
         }
         MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
             confirmed, "Cancel", aborted);
@@ -1835,7 +1835,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 }
 
 
-void megamol::gui::GUIWindows::window_sizing_and_positioning(WindowCollection::WindowConfiguration & wc, bool & out_collapsing_changed) {
+void megamol::gui::GUIWindows::window_sizing_and_positioning(
+    WindowCollection::WindowConfiguration& wc, bool& out_collapsing_changed) {
 
     ImGuiIO& io = ImGui::GetIO();
     ImVec2 viewport = io.DisplaySize;
@@ -1891,15 +1892,14 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(WindowCollection::W
         ImGui::EndPopup();
     }
 
-    // Toggle window size 
+    // Toggle window size
     if (toggle_window_size) {
         if (window_maximized) {
             // Window is maximized
             wc.win_size = wc.win_reset_size;
             wc.win_position = wc.win_reset_position;
             wc.win_reset = true;
-        }
-        else {
+        } else {
             // Window is minimized
             ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
             wc.win_reset_size = wc.win_size;
@@ -1925,7 +1925,7 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(WindowCollection::W
         wc.win_soft_reset = false;
     }
 
-    // Apply window position and size reset 
+    // Apply window position and size reset
     if (wc.win_reset) {
         this->window_collection.ResetWindowSizePosition(wc);
         wc.win_reset = false;
