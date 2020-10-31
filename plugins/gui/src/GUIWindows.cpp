@@ -113,7 +113,8 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     ImGuiIO& io = ImGui::GetIO();
     if (io.Fonts->Fonts.Size < 1) {
         /// XXX TODO Solution for now is to shutdown megamol completely
-        /// Because if 'main' (= first) created imgui context is destroyed, fonts can not be restored for other contexts?!
+        /// Because if 'main' (= first) created imgui context is destroyed, fonts can not be restored for other
+        /// contexts?!
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Found no valid fonts. Maybe the ImGui context the fonts were shared with is destroyed. "
             "[%s, %s, line %d]\n",
@@ -155,11 +156,11 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
             __LINE__);
     }
     io.DeltaTime = ((instance_time - this->state.last_instance_time) > 0.0)
-        ? (static_cast<float>(instance_time - this->state.last_instance_time))
-        : (io.DeltaTime);
+                       ? (static_cast<float>(instance_time - this->state.last_instance_time))
+                       : (io.DeltaTime);
     this->state.last_instance_time = ((instance_time - this->state.last_instance_time) > 0.0)
-        ? (instance_time)
-        : (this->state.last_instance_time + io.DeltaTime);
+                                         ? (instance_time)
+                                         : (this->state.last_instance_time + io.DeltaTime);
 
     // Process hotkeys
     this->checkMultipleHotkeyAssignement();
@@ -231,20 +232,21 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     if (this->state.style_changed) {
         ImGuiStyle& style = ImGui::GetStyle();
         switch (this->state.style) {
-        case(GUIWindows::Styles::DarkColors): {
+        case (GUIWindows::Styles::DarkColors): {
             ImGui::StyleColorsDark();
             style.WindowRounding = 0.0f;
         } break;
-        case(GUIWindows::Styles::LightColors): {
+        case (GUIWindows::Styles::LightColors): {
             ImGui::StyleColorsLight();
         } break;
-        case(GUIWindows::Styles::CorporateGray): {
+        case (GUIWindows::Styles::CorporateGray): {
             CorporateGreyStyle();
         } break;
-        case(GUIWindows::Styles::CorporateWhite): {
+        case (GUIWindows::Styles::CorporateWhite): {
             CorporateWhiteStyle();
         } break;
-        default: break;
+        default:
+            break;
         }
 /// DOCKING
 #if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
@@ -334,7 +336,7 @@ bool GUIWindows::PostDraw(void) {
     // Global Docking Space ---------------------------------------------------
 /// DOCKING
 #if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
-    //ImGui::SetNextWindowBgAlpha(0.0f);
+    // ImGui::SetNextWindowBgAlpha(0.0f);
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 #endif
 
@@ -1062,7 +1064,7 @@ bool GUIWindows::createContext(void) {
 /// DOCKING
 #if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // enable window docking
-    io.ConfigDockingWithShift = false; // activate docking on pressing 'shift'
+    io.ConfigDockingWithShift = false;                // activate docking on pressing 'shift'
 #endif
 
     // Init global state -------------------------------------------------------
@@ -1610,7 +1612,8 @@ void GUIWindows::drawMenu(void) {
                 this->state.style = GUIWindows::Styles::CorporateGray;
                 this->state.style_changed = true;
             }
-            if (ImGui::MenuItem("Corporate White", nullptr, (this->state.style == GUIWindows::Styles::CorporateWhite))) {
+            if (ImGui::MenuItem(
+                    "Corporate White", nullptr, (this->state.style == GUIWindows::Styles::CorporateWhite))) {
                 this->state.style = GUIWindows::Styles::CorporateWhite;
                 this->state.style_changed = true;
             }
@@ -1815,8 +1818,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         if (this->file_browser.PopUp(
                 FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->state.open_popup_load, filename)) {
             graph_ptr->Clear();
-            popup_failed |=
-                (GUI_INVALID_ID == this->configurator.GetGraphCollection().LoadAddProjectFromFile(this->state.graph_uid, filename));
+            popup_failed |= (GUI_INVALID_ID == this->configurator.GetGraphCollection().LoadAddProjectFromFile(
+                                                   this->state.graph_uid, filename));
         }
         MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
             confirmed, "Cancel", aborted);
@@ -1833,7 +1836,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 }
 
 
-void megamol::gui::GUIWindows::window_sizing_and_positioning(WindowCollection::WindowConfiguration & wc, bool & out_collapsing_changed) {
+void megamol::gui::GUIWindows::window_sizing_and_positioning(
+    WindowCollection::WindowConfiguration& wc, bool& out_collapsing_changed) {
 
     ImGuiIO& io = ImGui::GetIO();
     ImVec2 viewport = io.DisplaySize;
@@ -1890,15 +1894,14 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(WindowCollection::W
         ImGui::EndPopup();
     }
 
-    // Toggle window size 
+    // Toggle window size
     if (toggle_window_size) {
         if (window_maximized) {
             // Window is maximized
             wc.win_size = wc.win_reset_size;
             wc.win_position = wc.win_reset_position;
             wc.win_reset = true;
-        }
-        else {
+        } else {
             // Window is minimized
             ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
             wc.win_reset_size = wc.win_size;
@@ -1924,7 +1927,7 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(WindowCollection::W
         wc.win_soft_reset = false;
     }
 
-    // Apply window position and size reset 
+    // Apply window position and size reset
     if (wc.win_reset) {
         this->window_collection.ResetWindowSizePosition(wc);
         wc.win_reset = false;
@@ -2085,7 +2088,7 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
                 auto gui_state = header_item.value();
                 megamol::core::utility::get_json_value<bool>(gui_state, {"menu_visible"}, &this->state.menu_visible);
                 int style = 0;
-                megamol::core::utility::get_json_value<int>(gui_state, { "style" }, &style);
+                megamol::core::utility::get_json_value<int>(gui_state, {"style"}, &style);
                 this->state.style = static_cast<GUIWindows::Styles>(style);
                 this->state.style_changed = true;
             }

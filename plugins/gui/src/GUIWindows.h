@@ -167,16 +167,16 @@ namespace gui {
 
         /** The global state (for settings to be applied before ImGui::Begin). */
         struct StateBuffer {
-            Styles style;                                   // imgui predefined style
-            bool style_changed;                             // flag indicating changed style
-            bool autosave_gui_state;                        // automatically save state after gui has been changed
-            std::vector<std::string> project_script_paths;  // Project Script Path provided by Lua 
-            ImGuiID graph_uid;                              // UID of currently running graph
-            std::string font_file;                 // Apply changed font file name.
-            float font_size;                       // Apply changed font size.
-            unsigned int font_index;               // Apply cahnged font by index.
-            std::vector<ImWchar> font_utf8_ranges; // Additional UTF-8 glyph ranges for all ImGui fonts.
-            bool win_save_state;                   // Flag indicating that window state should be written to parameter.
+            Styles style;                                  // imgui predefined style
+            bool style_changed;                            // flag indicating changed style
+            bool autosave_gui_state;                       // automatically save state after gui has been changed
+            std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
+            ImGuiID graph_uid;                             // UID of currently running graph
+            std::string font_file;                         // Apply changed font file name.
+            float font_size;                               // Apply changed font size.
+            unsigned int font_index;                       // Apply cahnged font by index.
+            std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.
+            bool win_save_state;    // Flag indicating that window state should be written to parameter.
             float win_save_delay;   // Flag indicating how long to wait for saving window state since last user action.
             std::string win_delete; // Name of the window to delete.
             double last_instance_time;         // Last instance time.

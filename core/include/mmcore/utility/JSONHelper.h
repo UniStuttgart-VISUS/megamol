@@ -120,7 +120,7 @@ namespace utility {
                         return false;
                     }
                 }
-                else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, int>) {
+                else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, int> || std::is_same_v<T, unsigned int>) {
                     if (json_value.is_number()) {
                         json_value.get_to((*out_value));
                     }
