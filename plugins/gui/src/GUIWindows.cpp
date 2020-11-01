@@ -233,11 +233,16 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         ImGuiStyle& style = ImGui::GetStyle();
         switch (this->state.style) {
         case (GUIWindows::Styles::DarkColors): {
+            DefaultStyle();
             ImGui::StyleColorsDark();
             style.WindowRounding = 0.0f;
+            style.Colors[ImGuiCol_ChildBg] = style.Colors[ImGuiCol_WindowBg];
         } break;
         case (GUIWindows::Styles::LightColors): {
+            DefaultStyle();
             ImGui::StyleColorsLight();
+            style.WindowRounding = 0.0f;
+            style.Colors[ImGuiCol_ChildBg] = style.Colors[ImGuiCol_WindowBg];
         } break;
         case (GUIWindows::Styles::CorporateGray): {
             CorporateGreyStyle();
@@ -248,11 +253,6 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         default:
             break;
         }
-/// DOCKING
-#if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
-        ImVec4* colors = style.Colors;
-        colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
-#endif
         this->state.style_changed = false;
     }
 
@@ -336,8 +336,11 @@ bool GUIWindows::PostDraw(void) {
     // Global Docking Space ---------------------------------------------------
 /// DOCKING
 #if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
-    // ImGui::SetNextWindowBgAlpha(0.0f);
+    ImGuiStyle& style = ImGui::GetStyle();
+    auto child_bg = style.Colors[ImGuiCol_ChildBg];
+    style.Colors[ImGuiCol_ChildBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+    style.Colors[ImGuiCol_ChildBg] = child_bg;
 #endif
 
     // Draw Windows ------------------------------------------------------------
@@ -1048,11 +1051,6 @@ bool GUIWindows::createContext(void) {
     ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayRGB |
                                ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_AlphaBar |
                                ImGuiColorEditFlags_AlphaPreview);
-    /// ... for detailed settings see styles defined in separate headers.
-    ImGuiStyle& style = ImGui::GetStyle();
-    style.AntiAliasedFill = true;
-    style.AntiAliasedLines = true;
-    /// style.AntiAliasedLinesUseTex = true;
 
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
@@ -1064,7 +1062,7 @@ bool GUIWindows::createContext(void) {
 /// DOCKING
 #if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // enable window docking
-    io.ConfigDockingWithShift = false;                // activate docking on pressing 'shift'
+    io.ConfigDockingWithShift = true;                 // activate docking on pressing 'shift'
 #endif
 
     // Init global state -------------------------------------------------------
@@ -1598,29 +1596,6 @@ void GUIWindows::drawMenu(void) {
         }
         ImGui::EndMenu();
     }
-    if (ImGui::BeginMenu("Settings")) {
-        if (ImGui::BeginMenu("Style")) {
-            if (ImGui::MenuItem("ImGui Dark Colors", nullptr, (this->state.style == GUIWindows::Styles::DarkColors))) {
-                this->state.style = GUIWindows::Styles::DarkColors;
-                this->state.style_changed = true;
-            }
-            if (ImGui::MenuItem("ImGui LightColors", nullptr, (this->state.style == GUIWindows::Styles::LightColors))) {
-                this->state.style = GUIWindows::Styles::LightColors;
-                this->state.style_changed = true;
-            }
-            if (ImGui::MenuItem("Corporate Gray", nullptr, (this->state.style == GUIWindows::Styles::CorporateGray))) {
-                this->state.style = GUIWindows::Styles::CorporateGray;
-                this->state.style_changed = true;
-            }
-            if (ImGui::MenuItem(
-                    "Corporate White", nullptr, (this->state.style == GUIWindows::Styles::CorporateWhite))) {
-                this->state.style = GUIWindows::Styles::CorporateWhite;
-                this->state.style_changed = true;
-            }
-            ImGui::EndMenu();
-        }
-        ImGui::EndMenu();
-    }
     if (ImGui::BeginMenu("Windows")) {
         ImGui::MenuItem("Menu", this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].keycode.ToString().c_str(),
             &this->state.menu_visible);
@@ -1693,6 +1668,29 @@ void GUIWindows::drawMenu(void) {
                 ImGui::EndMenu();
             }
         }
+    }
+    if (ImGui::BeginMenu("Settings")) {
+        if (ImGui::BeginMenu("Style")) {
+            if (ImGui::MenuItem("ImGui Dark Colors", nullptr, (this->state.style == GUIWindows::Styles::DarkColors))) {
+                this->state.style = GUIWindows::Styles::DarkColors;
+                this->state.style_changed = true;
+            }
+            if (ImGui::MenuItem("ImGui LightColors", nullptr, (this->state.style == GUIWindows::Styles::LightColors))) {
+                this->state.style = GUIWindows::Styles::LightColors;
+                this->state.style_changed = true;
+            }
+            if (ImGui::MenuItem("Corporate Gray", nullptr, (this->state.style == GUIWindows::Styles::CorporateGray))) {
+                this->state.style = GUIWindows::Styles::CorporateGray;
+                this->state.style_changed = true;
+            }
+            if (ImGui::MenuItem(
+                    "Corporate White", nullptr, (this->state.style == GUIWindows::Styles::CorporateWhite))) {
+                this->state.style = GUIWindows::Styles::CorporateWhite;
+                this->state.style_changed = true;
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Help")) {
         if (ImGui::MenuItem("About")) {
@@ -1857,13 +1855,14 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
             out_collapsing_changed = true;
         }
 
-        /// DOCKING Remove when 'real' docking is available
         if (ImGui::MenuItem("Full Width", nullptr)) {
             wc.win_size.x = viewport.x;
             wc.win_reset = true;
         }
-        ImGui::TextUnformatted("Dock");
-        ImGui::SameLine();
+        ImGui::Separator();
+
+        ImGui::MenuItem("Docking", "Shift + Left-Drag", false, false);
+
         if (ImGui::ArrowButton("dock_left", ImGuiDir_Left)) {
             wc.win_position.x = 0.0f;
             wc.win_reset = true;
@@ -1887,6 +1886,7 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
             wc.win_reset = true;
             ImGui::CloseCurrentPopup();
         }
+        ImGui::Separator();
 
         if (ImGui::MenuItem("Close", nullptr)) {
             wc.win_show = false;

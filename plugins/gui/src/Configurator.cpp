@@ -277,8 +277,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
     ImGui::BeginGroup();
 
     const float search_child_height = ImGui::GetFrameHeightWithSpacing() * 2.5f;
-    auto child_flags =
-        ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
+    auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar;
     ImGui::BeginChild("module_search_child_window", ImVec2(width, search_child_height), false, child_flags);
 
     ImGui::TextUnformatted("Available Modules");
@@ -298,7 +297,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
 
     // ------------------------------------------------------------------------
 
-    child_flags = ImGuiWindowFlags_NavFlattened;
+    child_flags = ImGuiWindowFlags_None;
     ImGui::BeginChild("module_list_child_window", ImVec2(width, 0.0f), true, child_flags);
 
     bool search_filter = true;
@@ -426,8 +425,13 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
                             if (group_uid != GUI_INVALID_ID) {
                                 for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
                                     if (group_ptr->uid == group_uid) {
+                                        Graph::QueueData queue_data;
+                                        queue_data.name_id = module_ptr->FullName();
                                         selected_graph_ptr->present.ResetStatePointers();
                                         group_ptr->AddModule(module_ptr);
+                                        queue_data.rename_id = module_ptr->FullName();
+                                        selected_graph_ptr->PushSyncQueue(
+                                            Graph::QueueAction::RENAME_MODULE, queue_data);
                                     }
                                 }
                             }
@@ -616,6 +620,7 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
         ImVec4 tmpcol = style.Colors[ImGuiCol_ChildBg];
         tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
         ImGui::PushStyleColor(ImGuiCol_ChildBg, tmpcol);
+
         ImGui::SetCursorScreenPos(this->module_list_popup_pos);
         const float child_width = 250.0f;
         const float child_height = 350.0f;
@@ -630,13 +635,15 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
         }
         this->module_list_popup_pos.y = std::max(this->module_list_popup_pos.y, ImGui::GetWindowPos().y);
         ImGui::SetCursorScreenPos(this->module_list_popup_pos);
-        auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NavFlattened;
+        auto child_flags = ImGuiWindowFlags_HorizontalScrollbar;
         ImGui::BeginChild("module_list_child", ImVec2(child_width, child_height), true, child_flags);
+
         /// if (ImGui::Button("Close") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
         ///    this->show_module_list_child = false;
         ///}
         /// ImGui::Separator();
         this->draw_window_module_list(0.0f);
+
         ImGui::EndChild();
         ImGui::PopStyleColor();
         this->module_list_popup_hovered = false;

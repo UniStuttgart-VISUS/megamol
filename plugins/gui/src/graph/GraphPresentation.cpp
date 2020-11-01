@@ -845,10 +845,6 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
     ImGuiStyle& style = ImGui::GetStyle();
 
     // Colors
-    const ImU32 COLOR_CANVAS_BACKGROUND = ImGui::ColorConvertFloat4ToU32(
-        style.Colors[ImGuiCol_ChildBg]); // ImGuiCol_ScrollbarBg ImGuiCol_ScrollbarGrab ImGuiCol_Border
-
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_CANVAS_BACKGROUND);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
@@ -909,18 +905,20 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
         //  - Draw all graph elements
         PresentPhase phase = static_cast<PresentPhase>(p);
 
-        // 1] GROUPS and INTERFACE SLOTS --------------
+        // 1] GROUPS and INTERFACE SLOTS --------------------------------------
         for (auto& group_ptr : inout_graph.GetGroups()) {
-
             group_ptr->PresentGUI(phase, this->graph_state);
 
-            // 2] MODULES and CALL SLOTS ----------------
+            // 3] MODULES and CALL SLOTS (of group) ---------------------------
             for (auto& module_ptr : inout_graph.GetModules()) {
                 if (module_ptr->present.group.uid == group_ptr->uid) {
-
                     module_ptr->PresentGUI(phase, this->graph_state);
+                }
+            }
 
-                    // 3] CALLS ---------------------------------;
+            // 2] CALLS (of group) --------------------------------------------
+            for (auto& module_ptr : inout_graph.GetModules()) {
+                if (module_ptr->present.group.uid == group_ptr->uid) {
                     /// Check only for calls of caller slots for considering each call only once
                     for (auto& callslots_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
                         for (auto& call_ptr : callslots_ptr->GetConnectedCalls()) {
@@ -948,13 +946,16 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
                 }
             }
         }
-        // MODULES (non group members)
+
+        // 4] MODULES and CALL SLOTS (non group members) ----------------------
         for (auto& module_ptr : inout_graph.GetModules()) {
             if (module_ptr->present.group.uid == GUI_INVALID_ID) {
                 module_ptr->PresentGUI(phase, this->graph_state);
             }
         }
-        // CALLS (connected to call slots which are not part of module which is group member)
+
+        // 5] CALLS  (non group members) --------------------------------------
+        /// (connected to call slots which are not part of module which is group member)
         for (auto& call_ptr : inout_graph.GetCalls()) {
             bool caller_group = false;
             auto caller_ptr = call_ptr->GetCallSlot(CallSlotType::CALLER);
@@ -1037,7 +1038,6 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
     }
 
     ImGui::EndChild();
-    ImGui::PopStyleColor();
 
     // FONT scaling
     float font_scaling = this->graph_state.canvas.zooming / this->current_font_scaling;

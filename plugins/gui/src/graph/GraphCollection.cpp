@@ -23,7 +23,7 @@ bool megamol::gui::GraphCollection::AddEmptyProject(void) {
 
     ImGuiID graph_uid = this->AddGraph(GraphCoreInterface::NO_INTERFACE);
     if (graph_uid != GUI_INVALID_ID) {
-        /*
+        /* DEPRECATED: Only applies for Core Instance Graph, not for MegaMol Graph.
         // Add initial GUIView and set as view instance
         GraphPtr_t graph_ptr;
         if (this->GetGraph(graph_uid, graph_ptr)) {
