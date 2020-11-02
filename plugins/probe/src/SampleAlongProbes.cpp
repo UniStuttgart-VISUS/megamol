@@ -115,6 +115,8 @@ void SampleAlongPobes::doVolumeSampling() {
     glm::vec3 spacing = {*_vol_metadata->SliceDists[0], *_vol_metadata->SliceDists[1], *_vol_metadata->SliceDists[2]};
     float min_spacing = std::min(std::min(spacing.x, spacing.y), spacing.z);
 
+    float global_min = std::numeric_limits<float>::max();
+    float global_max = -std::numeric_limits<float>::max();
     //#pragma omp parallel for
     for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); i++) {
 
@@ -164,9 +166,9 @@ void SampleAlongPobes::doVolumeSampling() {
 
         std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
         float min_value = std::numeric_limits<float>::max();
-        float max_value = std::numeric_limits<float>::min();
+        float max_value = -std::numeric_limits<float>::max();
         float min_data = std::numeric_limits<float>::max();
-        float max_data = std::numeric_limits<float>::min();
+        float max_data = -std::numeric_limits<float>::max();
         float avg_value = 0.0f;
         samples->samples.resize(samples_per_probe);
         
@@ -219,6 +221,10 @@ void SampleAlongPobes::doVolumeSampling() {
             avg_value += value;
         }
         if (avg_value != 0) avg_value /= samples_per_probe;
+        if (!std::isfinite(avg_value)) {
+            core::utility::log::Log::DefaultLog.WriteError(
+                "[SampleAlongProbes] Non-finite value in sampled.");
+        }
         if (this->_weighting.Param<megamol::core::param::EnumParam>()->Value() == 0) {
             samples->average_value = avg_value;
             samples->max_value = max_value;
@@ -228,7 +234,10 @@ void SampleAlongPobes::doVolumeSampling() {
             samples->max_value = max_data;
             samples->min_value = max_data;
         }
-    }
+        global_min = std::min(global_min, samples->min_value);
+        global_max = std::max(global_max, samples->max_value);
+    } // end for probes
+    _probes->setGlobalMinMax(global_min, global_max);
 }
 
 bool SampleAlongPobes::getData(core::Call& call) {

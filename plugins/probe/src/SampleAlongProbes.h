@@ -111,7 +111,9 @@ void SampleAlongPobes::doScalarSampling(
     const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
     const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
 
-//#pragma omp parallel for
+    float global_min = std::numeric_limits<float>::max();
+    float global_max = -std::numeric_limits<float>::max();
+    //#pragma omp parallel for
     for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); i++) {
 
         FloatProbe probe;
@@ -151,9 +153,9 @@ void SampleAlongPobes::doScalarSampling(
         std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
 
         float min_value = std::numeric_limits<float>::max();
-        float max_value = -std::numeric_limits<float>::min();
+        float max_value = -std::numeric_limits<float>::max();
         float min_data = std::numeric_limits<float>::max();
-        float max_data = -std::numeric_limits<float>::min();
+        float max_data = -std::numeric_limits<float>::max();
         float avg_value = 0.0f;
         samples->samples.resize(samples_per_probe);
 
@@ -201,8 +203,10 @@ void SampleAlongPobes::doScalarSampling(
             samples->max_value = max_data;
             samples->min_value = max_data;
         }
-        
+        global_min = std::min(global_min, samples->min_value);
+        global_max = std::max(global_max, samples->max_value);
     } // end for probes
+    _probes->setGlobalMinMax(global_min, global_max);
 }
 
 template <typename T>

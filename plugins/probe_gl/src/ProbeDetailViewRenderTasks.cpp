@@ -58,7 +58,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
             glowl::VertexLayout(12,{glowl::VertexLayout::Attribute(3,GL_FLOAT,GL_FALSE,0)})
         };
         try {
-            m_probes_mesh = std::make_shared<glowl::Mesh>(vertices, indices, vertex_layout,
+            m_ui_mesh = std::make_shared<glowl::Mesh>(vertices, indices, vertex_layout,
                 GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
         } catch (const std::exception&) {
         }
@@ -115,10 +115,14 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         if (!(*tfc)(0)) return false;
     }
 
-    bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() || mc->hasUpdate() || ((tfc != NULL) ? tfc->IsDirty() : false);
+    bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() /*|| ((tfc != NULL) ? tfc->IsDirty() : false)*/;
 
     if (something_has_changed) {
         ++m_version;
+        lhs_rtc->setData(rt_collection,m_version);
+
+        //TODO this breaks chaining
+        rt_collection->clear();
 
         auto probes = pc->getData();
         auto probe_cnt = probes->getProbeCount();
@@ -136,6 +140,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         std::vector<uint32_t> index_data;
         index_data.reserve(4 * (probe_cnt-1));
 
+        //for (int probe_idx = 0; probe_idx < std::min(probe_cnt,1u); ++probe_idx) {
         for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
 
             auto generic_probe = probes->getGenericProbe(probe_idx);
@@ -174,18 +179,25 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                 
                     m_vector_probe_data.push_back(probe_data);
                     
-                
+                    float ribbon_width = 5.0f;
+
                     // generate vertices
                     for (auto& sample : sample_data->samples )
                     {
-                        vertex_data.back().push_back(center_point.x - 0.5f * std::get<0>(sample));
-                        vertex_data.back().push_back(center_point.x - 0.5f * std::get<1>(sample));
-                        vertex_data.back().push_back(center_point.x - 0.5f * std::get<2>(sample));
-                
-                        vertex_data.back().push_back(center_point.x + 0.5f * std::get<0>(sample));
-                        vertex_data.back().push_back(center_point.x + 0.5f * std::get<1>(sample));
-                        vertex_data.back().push_back(center_point.x + 0.5f * std::get<2>(sample));
-                
+                        std::array<float,4> sample_normalized = sample;
+                        float l = std::sqrt(sample_normalized[0]*sample_normalized[0] + sample_normalized[1]*sample_normalized[1] + sample_normalized[2]*sample_normalized[2]);
+                        sample_normalized[0] /= l;
+                        sample_normalized[1] /= l;
+                        sample_normalized[2] /= l;
+
+                        vertex_data.back().push_back(center_point.x - 0.5f * ribbon_width * std::get<0>(sample_normalized));
+                        vertex_data.back().push_back(center_point.y - 0.5f * ribbon_width * std::get<1>(sample_normalized));
+                        vertex_data.back().push_back(center_point.z - 0.5f * ribbon_width * std::get<2>(sample_normalized));
+
+                        vertex_data.back().push_back(center_point.x + 0.5f * ribbon_width * std::get<0>(sample_normalized));
+                        vertex_data.back().push_back(center_point.y + 0.5f * ribbon_width * std::get<1>(sample_normalized));
+                        vertex_data.back().push_back(center_point.z + 0.5f * ribbon_width * std::get<2>(sample_normalized));
+
                         center_point += glm::vec3(
                             0.0f,
                             probe_length / static_cast<float>(sample_cnt),
@@ -199,8 +211,8 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                     {
                        index_data.push_back((i*2) + 0);
                        index_data.push_back((i*2) + 1);
-                       index_data.push_back((i*2) + 2);
                        index_data.push_back((i*2) + 3);
+                       index_data.push_back((i*2) + 2);
                     }
                 
                     //TODO set correct values...
@@ -229,7 +241,10 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         try {
             m_probes_mesh = std::make_shared<glowl::Mesh>(vertex_data, index_data, vertex_layout,
                 GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_PATCHES);
-        } catch (const std::exception&) {
+        } catch (glowl::MeshException const& exc) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Error during mesh creation of\"%s\": %s. [%s, %s, line %d]\n", "ProbeDetailVieW",
+            exc.what(), __FILE__, __FUNCTION__, __LINE__);
         }
 
         auto gpu_mtl_storage = mtlc->getData();
@@ -240,6 +255,17 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
             m_rendertask_collection.second.insert(
                             m_rendertask_collection.second.end(), m_vector_probe_identifiers.begin(), m_vector_probe_identifiers.end());
         }
+
+        auto const& ui_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
+        std::vector<glowl::DrawElementsCommand> draw_commands = {glowl::DrawElementsCommand()};
+        draw_commands[0].cnt = 12;
+        draw_commands[0].instance_cnt = 1;
+        draw_commands[0].first_idx = 0;
+        draw_commands[0].base_vertex = 0;
+        draw_commands[0].base_instance = 0;
+        struct UIPerDrawData {};
+        std::vector<UIPerDrawData> per_draw_data = {UIPerDrawData()};
+        m_draw_commands_collection_idx = rt_collection->addRenderTasks(ui_shader, m_ui_mesh, draw_commands, per_draw_data );
 
     }
 
@@ -297,7 +323,14 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         {
             auto pending_events = event_collection->get<ProbeSelectExclusive>();
             if (!pending_events.empty()) {
-
+                auto probe_idx = pending_events.back().obj_id;
+                rt_collection->clear();
+                if (!m_vector_probe_draw_commands.empty()) {
+                    auto gpu_mtl_storage = mtlc->getData();
+                    auto const& probe_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
+                    m_draw_commands_collection_idx = rt_collection->addSingleRenderTask(
+                    probe_shader, m_probes_mesh, m_vector_probe_draw_commands[probe_idx], m_vector_probe_data);
+                }
             }
         }
 
@@ -315,21 +348,18 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
 }
 
 bool megamol::probe_gl::ProbeDetailViewRenderTasks::getMetaDataCallback(core::Call& caller) {
-    if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller))
-        return false;
+    if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller)) return false;
 
     mesh::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     auto probe_call = m_probes_slot.CallAs<probe::CallProbes>();
-    if (probe_call == NULL)
-        return false;
+    if (probe_call == NULL) return false;
 
     auto lhs_meta_data = lhs_rt_call->getMetaData();
 
     auto probe_meta_data = probe_call->getMetaData();
     probe_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
     probe_call->setMetaData(probe_meta_data);
-    if (!(*probe_call)(1))
-        return false;
+    if (!(*probe_call)(1)) return false;
     probe_meta_data = probe_call->getMetaData();
 
     lhs_meta_data.m_frame_cnt = std::min(lhs_meta_data.m_frame_cnt, probe_meta_data.m_frame_cnt);
@@ -337,7 +367,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getMetaDataCallback(core::Ca
     auto bbox = lhs_meta_data.m_bboxs.BoundingBox();
     bbox.Union(probe_meta_data.m_bboxs.BoundingBox());
     lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
-
+    
     auto cbbox = lhs_meta_data.m_bboxs.ClipBox();
     cbbox.Union(probe_meta_data.m_bboxs.ClipBox());
     lhs_meta_data.m_bboxs.SetClipBox(cbbox);
@@ -346,5 +376,4 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getMetaDataCallback(core::Ca
 
     return true;
 }
-
 

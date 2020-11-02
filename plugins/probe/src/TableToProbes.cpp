@@ -143,11 +143,14 @@ bool megamol::probe::TableToProbes::generateProbes() {
     }
 
     float min_x = std::numeric_limits<float>::max();
-    float max_x = -std::numeric_limits<float>::min();
+    float max_x = -std::numeric_limits<float>::max();
     float min_y = std::numeric_limits<float>::max();
-    float max_y = -std::numeric_limits<float>::min();
+    float max_y = -std::numeric_limits<float>::max();
     float min_z = std::numeric_limits<float>::max();
-    float max_z = -std::numeric_limits<float>::min();
+    float max_z = -std::numeric_limits<float>::max();
+
+    float global_min_value = std::numeric_limits<float>::max();
+    float global_max_value = -std::numeric_limits<float>::max();
 
     if (this->_accumulate_clustered_slot.Param<core::param::BoolParam>()->Value()) {
 
@@ -158,6 +161,7 @@ bool megamol::probe::TableToProbes::generateProbes() {
         std::vector<float> accum_end(cluster_id_count.size());
         float sample_radius = 0;
         float time_stamp = 0;
+
         for (uint32_t i = 0; i < _num_rows; ++i) {
             if (_accum_probes[cluster_ids[i]].empty()) {
                 _accum_probes[cluster_ids[i]].resize(samples_per_probe, 0);
@@ -224,6 +228,8 @@ bool megamol::probe::TableToProbes::generateProbes() {
             samples->average_value = avg_value;
             samples->max_value = max_value;
             samples->min_value = min_value;
+            global_max_value = std::max(samples->max_value, global_max_value);
+            global_min_value = std::min(samples->min_value, global_min_value);
 
             this->_probes->addProbe(std::move(probe));
         }
@@ -274,11 +280,14 @@ bool megamol::probe::TableToProbes::generateProbes() {
             samples->max_value = max_value;
             samples->min_value = min_value;
 
+            global_max_value = std::max(samples->max_value, global_max_value);
+            global_min_value = std::min(samples->min_value, global_min_value);
+
 
             this->_probes->addProbe(std::move(probe));
         }
     }
-
+    _probes->setGlobalMinMax(global_min_value, global_max_value);
     _bbox.SetBoundingBox({min_x, min_y, max_z, max_x, max_y, min_z});
 
     return true;
