@@ -1,0 +1,32 @@
+
+trigger:
+- master
+
+pr:
+- master
+
+strategy:
+  matrix:
+    windows-10-release:
+      agentName: BEIGUAN
+      configuration: Release
+      generator: 'Visual Studio 16 2019'
+    windows-10-debug:
+      agentName: BEIGUAN
+      configuration: Debug
+      generator: 'Visual Studio 16 2019'
+
+pool:
+  name: 'default'
+  demands:
+  - Agent.Name -equals $(agentName)
+
+steps:
+- task: CMake@1
+  displayName: 'CMake Configure'
+  inputs:
+    cmakeArgs: '.. -G"$(generator)" -A"x64" -DCMAKE_BUILD_TYPE=$(configuration)'
+- task: CMake@1
+  displayName: 'CMake Build'
+  inputs:
+    cmakeArgs: '--build . --config $(configuration)'
