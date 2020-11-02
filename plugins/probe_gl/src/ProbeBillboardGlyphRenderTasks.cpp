@@ -412,11 +412,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     draw_data.state = 0;
                 }
 
-                clearAllRenderTasks();
-
-                if (m_show_glyphs) {
-                    addAllRenderTasks();
-                }
+                updateAllRenderTasks();
             }
         }
 
@@ -430,20 +426,19 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
                     std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
                     per_probe_data[0].state = 1;
-                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_Scalar";
+                    std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
                     m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
                     std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
                     per_probe_data[0].state = 1;
-                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_Vector";
+                    std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
                     m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
                     std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
                     per_probe_data[0].state = 1;
-                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_ClusterID";
+                    std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
                     m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 }
-
 
                 //  bool my_tool_active = true;
                 //  float my_color[4] = {0.0, 0.0, 0.0, 0.0};
@@ -494,15 +489,15 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
                 if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
                     std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
-                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_Scalar";
+                    std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
                     m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
                     std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
-                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_Vector";
+                    std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
                     m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
                     std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
-                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_ClusterID";
+                    std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
                     m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 }
             }
@@ -544,17 +539,17 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
                     m_scalar_probe_glyph_data[probe_idx].state = 0;
                     std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
-                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_Scalar";
+                    std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
                     m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
                     m_vector_probe_glyph_data[probe_idx].state = 0;
                     std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
-                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_Vector";
+                    std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
                     m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
                     m_clusterID_glyph_data[probe_idx].state = 0;
                     std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
-                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_ClusterID";
+                    std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
                     m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 }
             }
@@ -578,7 +573,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 auto probe_type = m_type_index_map[pending_events.back().obj_id].first;
                 auto probe_idx = m_type_index_map[pending_events.back().obj_id].second;
 
-                // multiple exclusive selections make no sense, just applay the last one
+                // multiple exclusive selections make no sense, just apply the last one
                 if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
                     m_scalar_probe_glyph_data[probe_idx].state = 2;
                 } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
@@ -587,11 +582,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     m_clusterID_glyph_data[probe_idx].state = 2;
                 }
 
-                clearAllRenderTasks();
-
-                if (m_show_glyphs) {
-                    addAllRenderTasks();
-                }
+                updateAllRenderTasks();
             }
         }
 
@@ -606,18 +597,18 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     m_scalar_probe_glyph_data[probe_idx].state =
                         m_scalar_probe_glyph_data[probe_idx].state == 2 ? 0 : 2;
                     std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
-                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_Scalar";
+                    std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
                     m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
                     m_vector_probe_glyph_data[probe_idx].state =
                         m_vector_probe_glyph_data[probe_idx].state == 2 ? 0 : 2;
                     std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
-                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_Vector";
+                    std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
                     m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
                     m_clusterID_glyph_data[probe_idx].state = m_clusterID_glyph_data[probe_idx].state == 2 ? 0 : 2;
                     std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
-                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_ClusterID";
+                    std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
                     m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 }
             }
@@ -720,6 +711,27 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
             m_billboard_dummy_mesh, m_clusterID_gylph_draw_commands, m_clusterID_glyph_data);
         m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
             m_clusterID_glyph_identifiers.begin(), m_clusterID_glyph_identifiers.end());
+    }
+}
+
+void megamol::probe_gl::ProbeBillboardGlyphRenderTasks::updateAllRenderTasks() {
+    for (int i = 0; i < m_type_index_map.size(); ++i) {
+        auto probe_type = m_type_index_map[i].first;
+        auto probe_idx = m_type_index_map[i].second;
+
+        if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
+            std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
+            std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
+            m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
+        } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
+            std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
+            std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
+            m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
+        } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
+            std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
+            std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
+            m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
+        }
     }
 }
 

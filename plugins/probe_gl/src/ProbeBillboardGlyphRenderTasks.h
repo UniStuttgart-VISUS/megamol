@@ -174,6 +174,8 @@ namespace probe_gl {
 
         bool addAllRenderTasks();
 
+        void updateAllRenderTasks();
+
         void clearAllRenderTasks();
 
         template<typename ProbeType>
