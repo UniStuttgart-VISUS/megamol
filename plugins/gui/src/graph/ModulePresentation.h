@@ -72,12 +72,8 @@ namespace gui {
         bool selected;
         bool update;
         bool param_child_show;
-        float param_child_height;
         ImVec2 set_screen_position;
         bool set_selected_slot_position;
-
-        ImVec2 param_button_pos;
-        bool param_child_hovered;
 
         // Widgets
         HoverToolTip tooltip;

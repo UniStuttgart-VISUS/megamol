@@ -47,6 +47,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
         , multiselect_done(false)
         , canvas_hovered(false)
         , current_font_scaling(1.0f)
+        , module_param_child_height(1.0f)
         , graph_state()
         , search_widget()
         , splitter_widget()
@@ -74,6 +75,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     this->graph_state.interact.modules_layout = false;
     this->graph_state.interact.module_rename.clear();
     this->graph_state.interact.module_mainview_changed = vislib::math::Ternary::TRI_UNKNOWN;
+    this->graph_state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
 
     this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;
     this->graph_state.interact.call_hovered_uid = GUI_INVALID_ID;
@@ -643,6 +645,58 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             inout_graph.ForceSetDirty();
         }
 
+        // Module Parameter Child -------------------------------------------------
+        // Choose single selected view module
+        ModulePtr_t selected_mod_ptr;
+        if (this->graph_state.interact.modules_selected_uids.size() == 1) {
+            for (auto& mod : inout_graph.GetModules()) {
+                if ((this->graph_state.interact.modules_selected_uids.front() == mod->uid)) {
+                    selected_mod_ptr = mod;
+                }
+            }
+        }
+        if (selected_mod_ptr == nullptr) {
+            this->graph_state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
+        } else {
+            if ((this->graph_state.interact.module_param_child_position.x > 0.0f) &&
+                (this->graph_state.interact.module_param_child_position.y > 0.0f)) {
+                std::string pop_up_id = "module_param_child";
+
+                if (!ImGui::IsPopupOpen(pop_up_id.c_str())) {
+                    ImGui::OpenPopup(pop_up_id.c_str(), ImGuiPopupFlags_None);
+                    this->graph_state.interact.module_param_child_position.x += ImGui::GetFrameHeight();
+                    ImGui::SetNextWindowPos(this->graph_state.interact.module_param_child_position);
+                }
+                auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar |
+                                   ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
+                                   ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove;
+                if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
+                    // Draw parameters
+                    selected_mod_ptr->present.param_groups.PresentGUI(selected_mod_ptr->parameters,
+                        selected_mod_ptr->FullName(), "", vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN),
+                        false, ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
+
+                    ImVec2 popup_size = ImGui::GetWindowSize();
+                    bool param_popup_open = ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId);
+                    bool module_parm_child_popup_hovered = false;
+                    if ((ImGui::GetMousePos().x >= this->graph_state.interact.module_param_child_position.x) &&
+                        (ImGui::GetMousePos().x <=
+                            (this->graph_state.interact.module_param_child_position.x + popup_size.x)) &&
+                        (ImGui::GetMousePos().y >= this->graph_state.interact.module_param_child_position.y) &&
+                        (ImGui::GetMousePos().y <=
+                            (this->graph_state.interact.module_param_child_position.y + popup_size.y))) {
+                        module_parm_child_popup_hovered = true;
+                    }
+                    if (!param_popup_open && (ImGui::IsMouseClicked(0) && !module_parm_child_popup_hovered) ||
+                        ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+                        this->graph_state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
+            }
+        }
+
         ImGui::PopID();
 
     } catch (std::exception e) {
@@ -1112,7 +1166,7 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
 
     child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NavFlattened |
                   ImGuiWindowFlags_AlwaysUseWindowPadding;
-    ImGui::BeginChild("parameter_list_frame_child", ImVec2(graph_width, 0.0f), false, child_flags);
+    ImGui::BeginChild("parameter_param_frame_child", ImVec2(graph_width, 0.0f), false, child_flags);
 
     if (!this->graph_state.interact.modules_selected_uids.empty()) {
         // Loop over all selected modules

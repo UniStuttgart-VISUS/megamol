@@ -110,6 +110,7 @@ namespace gui {
         bool multiselect_done;
         bool canvas_hovered;
         float current_font_scaling;
+        float module_param_child_height;
         // State propagated and shared by all graph items.
         megamol::gui::GraphItemsState_t graph_state;
 
