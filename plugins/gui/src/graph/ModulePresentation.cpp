@@ -416,6 +416,8 @@ void megamol::gui::ModulePresentation::Present(
                                 if (this->selected) {
                                     this->param_child_show = ((state.interact.module_param_child_position.x > 0.0f) &&
                                                               (state.interact.module_param_child_position.y > 0.0f));
+                                } else {
+                                    this->param_child_show = false;
                                 }
                                 if (ImGui::ArrowButton("###parameter_toggle",
                                         ((this->param_child_show) ? (ImGuiDir_Down) : (ImGuiDir_Up))) &&
