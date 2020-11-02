@@ -690,7 +690,10 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                     }
                     if (!param_popup_open && (ImGui::IsMouseClicked(0) && !module_parm_child_popup_hovered) ||
                         ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+
                         this->graph_state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
+                        // Reset module selection to prevent irrgular dragging
+                        this->graph_state.interact.modules_selected_uids.clear();
                         ImGui::CloseCurrentPopup();
                     }
                     ImGui::EndPopup();
