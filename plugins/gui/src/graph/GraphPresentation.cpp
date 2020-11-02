@@ -666,6 +666,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                     ImGui::OpenPopup(pop_up_id.c_str(), ImGuiPopupFlags_None);
                     this->graph_state.interact.module_param_child_position.x += ImGui::GetFrameHeight();
                     ImGui::SetNextWindowPos(this->graph_state.interact.module_param_child_position);
+                    ImGui::SetNextWindowSize(ImVec2(10.0f, 10.0f));
                 }
                 auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar |
                                    ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |

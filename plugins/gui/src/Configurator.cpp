@@ -633,6 +633,7 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
             }
             this->module_list_popup_pos.y = std::max(this->module_list_popup_pos.y, ImGui::GetWindowPos().y);
             ImGui::SetNextWindowPos(this->module_list_popup_pos);
+            ImGui::SetNextWindowSize(ImVec2(10.0f, 10.0f));
         }
         auto popup_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
                            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove;
