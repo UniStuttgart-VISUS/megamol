@@ -197,18 +197,12 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 for (auto& draw_data : m_probe_draw_data) {
                     draw_data.highlighted = 0;
                 }
-                if (m_show_probes) {
-                    for (auto& identifier : m_rendertask_collection.second) {
-                        m_rendertask_collection.first->deleteRenderTask(identifier);
-                    }
-                    m_rendertask_collection.second.clear();
 
-                    auto const& gpu_sub_mesh = gpu_mesh_storage->getSubMeshData().begin()->second;
-                    auto const& shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
-                    m_rendertask_collection.first->addRenderTasks(
-                        m_identifiers, shader, gpu_sub_mesh.mesh->mesh, m_draw_commands, m_probe_draw_data);
-                    m_rendertask_collection.second.insert(
-                        m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
+                if (m_show_probes) {
+                    for (int i = 0; i < m_probe_draw_data.size(); ++i) {
+                        std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[i]};
+                        m_rendertask_collection.first->updatePerDrawData(m_identifiers[i], per_probe_data);
+                    }
                 }
             }
         }

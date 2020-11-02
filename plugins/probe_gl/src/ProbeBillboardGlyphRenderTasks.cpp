@@ -406,9 +406,15 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
         // process pobe clear selection events
         {
-            auto pending_clearselection_events = event_collection->get<ProbeClearSelection>();
-            for (auto& evt : pending_clearselection_events) {
+            auto pending_events = event_collection->get<ProbeClearSelection>();
+            if (!pending_events.empty()) {
+                for (auto& draw_data : m_scalar_probe_glyph_data) {
+                    draw_data.state = 0;
+                }
                 for (auto& draw_data : m_vector_probe_glyph_data) {
+                    draw_data.state = 0;
+                }
+                for (auto& draw_data : m_clusterID_glyph_data) {
                     draw_data.state = 0;
                 }
 
