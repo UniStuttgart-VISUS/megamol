@@ -167,7 +167,7 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
                     if (group_ptr->ContainsModule(module_uid)) {
                         group_ptr->RemoveModule(module_uid);
                         module_group_ptr = group_ptr;
-                        
+
                         queue_data.name_id = current_full_name;
                         queue_data.rename_id = (*iter)->FullName();
                         this->PushSyncQueue(QueueAction::RENAME_MODULE, queue_data);
@@ -219,8 +219,8 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
                 this->modules.erase(iter);
 
                 // 6) Delete empty groups
-                //module_group_ptr.reset();
-                //if (delete_empty_group != GUI_INVALID_ID) {
+                // module_group_ptr.reset();
+                // if (delete_empty_group != GUI_INVALID_ID) {
                 //    this->DeleteGroup(delete_empty_group);
                 //}
 

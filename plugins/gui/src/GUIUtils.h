@@ -44,7 +44,7 @@
 namespace megamol {
 namespace gui {
 
-/// #define GUI_VERBOSE
+    ///#define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f)
@@ -156,6 +156,7 @@ namespace gui {
         bool modules_layout;                           // out
         StrPairVector_t module_rename;                 // out
         vislib::math::Ternary module_mainview_changed; // out
+        ImVec2 module_param_child_position;            // out
 
         ImGuiID call_selected_uid; // in out
         ImGuiID call_hovered_uid;  // in out

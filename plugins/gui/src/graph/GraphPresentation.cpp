@@ -47,6 +47,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
         , multiselect_done(false)
         , canvas_hovered(false)
         , current_font_scaling(1.0f)
+        , module_param_child_height(1.0f)
         , graph_state()
         , search_widget()
         , splitter_widget()
@@ -74,6 +75,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     this->graph_state.interact.modules_layout = false;
     this->graph_state.interact.module_rename.clear();
     this->graph_state.interact.module_mainview_changed = vislib::math::Ternary::TRI_UNKNOWN;
+    this->graph_state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
 
     this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;
     this->graph_state.interact.call_hovered_uid = GUI_INVALID_ID;
@@ -643,6 +645,62 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             inout_graph.ForceSetDirty();
         }
 
+        // Module Parameter Child -------------------------------------------------
+        // Choose single selected view module
+        ModulePtr_t selected_mod_ptr;
+        if (this->graph_state.interact.modules_selected_uids.size() == 1) {
+            for (auto& mod : inout_graph.GetModules()) {
+                if ((this->graph_state.interact.modules_selected_uids.front() == mod->uid)) {
+                    selected_mod_ptr = mod;
+                }
+            }
+        }
+        if (selected_mod_ptr == nullptr) {
+            this->graph_state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
+        } else {
+            if ((this->graph_state.interact.module_param_child_position.x > 0.0f) &&
+                (this->graph_state.interact.module_param_child_position.y > 0.0f)) {
+                std::string pop_up_id = "module_param_child";
+
+                if (!ImGui::IsPopupOpen(pop_up_id.c_str())) {
+                    ImGui::OpenPopup(pop_up_id.c_str(), ImGuiPopupFlags_None);
+                    this->graph_state.interact.module_param_child_position.x += ImGui::GetFrameHeight();
+                    ImGui::SetNextWindowPos(this->graph_state.interact.module_param_child_position);
+                    ImGui::SetNextWindowSize(ImVec2(10.0f, 10.0f));
+                }
+                auto popup_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar |
+                                   ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
+                                   ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove;
+                if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
+                    // Draw parameters
+                    selected_mod_ptr->present.param_groups.PresentGUI(selected_mod_ptr->parameters,
+                        selected_mod_ptr->FullName(), "", vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN),
+                        false, ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
+
+                    ImVec2 popup_size = ImGui::GetWindowSize();
+                    bool param_popup_open = ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId);
+                    bool module_parm_child_popup_hovered = false;
+                    if ((ImGui::GetMousePos().x >= this->graph_state.interact.module_param_child_position.x) &&
+                        (ImGui::GetMousePos().x <=
+                            (this->graph_state.interact.module_param_child_position.x + popup_size.x)) &&
+                        (ImGui::GetMousePos().y >= this->graph_state.interact.module_param_child_position.y) &&
+                        (ImGui::GetMousePos().y <=
+                            (this->graph_state.interact.module_param_child_position.y + popup_size.y))) {
+                        module_parm_child_popup_hovered = true;
+                    }
+                    if (!param_popup_open && (ImGui::IsMouseClicked(0) && !module_parm_child_popup_hovered) ||
+                        ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+
+                        this->graph_state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
+                        // Reset module selection to prevent irrgular dragging
+                        this->graph_state.interact.modules_selected_uids.clear();
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
+            }
+        }
+
         ImGui::PopID();
 
     } catch (std::exception e) {
@@ -845,10 +903,6 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
     ImGuiStyle& style = ImGui::GetStyle();
 
     // Colors
-    const ImU32 COLOR_CANVAS_BACKGROUND = ImGui::ColorConvertFloat4ToU32(
-        style.Colors[ImGuiCol_ChildBg]); // ImGuiCol_ScrollbarBg ImGuiCol_ScrollbarGrab ImGuiCol_Border
-
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_CANVAS_BACKGROUND);
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
@@ -909,18 +963,20 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
         //  - Draw all graph elements
         PresentPhase phase = static_cast<PresentPhase>(p);
 
-        // 1] GROUPS and INTERFACE SLOTS --------------
+        // 1] GROUPS and INTERFACE SLOTS --------------------------------------
         for (auto& group_ptr : inout_graph.GetGroups()) {
-
             group_ptr->PresentGUI(phase, this->graph_state);
 
-            // 2] MODULES and CALL SLOTS ----------------
+            // 3] MODULES and CALL SLOTS (of group) ---------------------------
             for (auto& module_ptr : inout_graph.GetModules()) {
                 if (module_ptr->present.group.uid == group_ptr->uid) {
-
                     module_ptr->PresentGUI(phase, this->graph_state);
+                }
+            }
 
-                    // 3] CALLS ---------------------------------;
+            // 2] CALLS (of group) --------------------------------------------
+            for (auto& module_ptr : inout_graph.GetModules()) {
+                if (module_ptr->present.group.uid == group_ptr->uid) {
                     /// Check only for calls of caller slots for considering each call only once
                     for (auto& callslots_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
                         for (auto& call_ptr : callslots_ptr->GetConnectedCalls()) {
@@ -948,13 +1004,16 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
                 }
             }
         }
-        // MODULES (non group members)
+
+        // 4] MODULES and CALL SLOTS (non group members) ----------------------
         for (auto& module_ptr : inout_graph.GetModules()) {
             if (module_ptr->present.group.uid == GUI_INVALID_ID) {
                 module_ptr->PresentGUI(phase, this->graph_state);
             }
         }
-        // CALLS (connected to call slots which are not part of module which is group member)
+
+        // 5] CALLS  (non group members) --------------------------------------
+        /// (connected to call slots which are not part of module which is group member)
         for (auto& call_ptr : inout_graph.GetCalls()) {
             bool caller_group = false;
             auto caller_ptr = call_ptr->GetCallSlot(CallSlotType::CALLER);
@@ -1037,7 +1096,6 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
     }
 
     ImGui::EndChild();
-    ImGui::PopStyleColor();
 
     // FONT scaling
     float font_scaling = this->graph_state.canvas.zooming / this->current_font_scaling;
@@ -1112,7 +1170,7 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
 
     child_flags = ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NavFlattened |
                   ImGuiWindowFlags_AlwaysUseWindowPadding;
-    ImGui::BeginChild("parameter_list_frame_child", ImVec2(graph_width, 0.0f), false, child_flags);
+    ImGui::BeginChild("parameter_param_frame_child", ImVec2(graph_width, 0.0f), false, child_flags);
 
     if (!this->graph_state.interact.modules_selected_uids.empty()) {
         // Loop over all selected modules
