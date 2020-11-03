@@ -107,8 +107,6 @@ namespace probe_gl {
         std::vector<glowl::DrawElementsCommand> m_vector_probe_draw_commands;
 
         std::vector<std::string> m_vector_probe_identifiers;
-
-        size_t m_draw_commands_collection_idx;
     };
 
 

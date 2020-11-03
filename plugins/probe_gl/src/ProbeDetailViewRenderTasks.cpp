@@ -119,10 +119,12 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
 
     if (something_has_changed) {
         ++m_version;
-        lhs_rtc->setData(rt_collection,m_version);
+        lhs_rtc->setData(m_rendertask_collection.first,m_version);
 
-        //TODO this breaks chaining
-        rt_collection->clear();
+        for (auto& identifier : m_rendertask_collection.second) {
+            m_rendertask_collection.first->deleteRenderTask(identifier);
+        }
+        m_rendertask_collection.second.clear();
 
         auto probes = pc->getData();
         auto probe_cnt = probes->getProbeCount();
@@ -256,7 +258,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                             m_rendertask_collection.second.end(), m_vector_probe_identifiers.begin(), m_vector_probe_identifiers.end());
         }
 
-        auto const& ui_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
+        auto const& ui_shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
         std::vector<glowl::DrawElementsCommand> draw_commands = {glowl::DrawElementsCommand()};
         draw_commands[0].cnt = 12;
         draw_commands[0].instance_cnt = 1;
@@ -265,7 +267,9 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         draw_commands[0].base_instance = 0;
         struct UIPerDrawData {};
         std::vector<UIPerDrawData> per_draw_data = {UIPerDrawData()};
-        m_draw_commands_collection_idx = rt_collection->addRenderTasks(ui_shader, m_ui_mesh, draw_commands, per_draw_data );
+        std::vector<std::string> identifiers = {std::string(FullName()) + "UI"};
+        m_rendertask_collection.first->addRenderTasks(identifiers, ui_shader, m_ui_mesh, draw_commands, per_draw_data );
+        m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),identifiers.begin(),identifiers.end());
 
     }
 
@@ -324,11 +328,17 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
             auto pending_events = event_collection->get<ProbeSelectExclusive>();
             if (!pending_events.empty()) {
                 auto probe_idx = pending_events.back().obj_id;
-                rt_collection->clear();
+
+                for (auto& identifier : m_rendertask_collection.second) {
+                    m_rendertask_collection.first->deleteRenderTask(identifier);
+                }
+                m_rendertask_collection.second.clear();
+
                 if (!m_vector_probe_draw_commands.empty()) {
                     auto gpu_mtl_storage = mtlc->getData();
-                    auto const& probe_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
-                    m_draw_commands_collection_idx = rt_collection->addSingleRenderTask(
+                    auto const& probe_shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
+                    std::string identifier = std::string(FullName()) + std::to_string(probe_idx);
+                    m_rendertask_collection.first->addRenderTask(identifier,
                     probe_shader, m_probes_mesh, m_vector_probe_draw_commands[probe_idx], m_vector_probe_data);
                 }
             }
@@ -376,4 +386,5 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getMetaDataCallback(core::Ca
 
     return true;
 }
+
 
