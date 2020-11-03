@@ -3,34 +3,49 @@
 
 #include "mesh/MeshCalls.h"
 
-megamol::mesh::GPUMeshes::GPUMeshes()
-    : m_version(0), m_mesh_slot("meshes", "Connect mesh data for upload to the GPU") {
+megamol::mesh::GPUMeshes::GPUMeshes() : m_version(0), m_mesh_slot("meshes", "Connect mesh data for upload to the GPU") {
     this->m_mesh_slot.SetCompatibleCall<CallMeshDescription>();
     this->MakeSlotAvailable(&this->m_mesh_slot);
 }
 
-megamol::mesh::GPUMeshes::~GPUMeshes() { this->Release(); }
+megamol::mesh::GPUMeshes::~GPUMeshes() {
+    this->Release();
+}
 
 bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
     CallGPUMeshData* lhs_mesh_call = dynamic_cast<CallGPUMeshData*>(&caller);
-    if (lhs_mesh_call == NULL) return false;
+    CallGPUMeshData* rhs_mesh_call = this->m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
 
-    syncMeshCollection(lhs_mesh_call);
+    if (lhs_mesh_call == nullptr) {
+        return false;
+    }
+
+    syncMeshCollection(lhs_mesh_call, rhs_mesh_call);
+
+    // if there is a mesh connection to the right, pass on the mesh collection
+    if (rhs_mesh_call != nullptr) {
+        if (!(*rhs_mesh_call)(0)) {
+            return false;
+        }
+        if (rhs_mesh_call->hasUpdate()) {
+            ++m_version;
+            rhs_mesh_call->getData();
+        }
+    }
 
     CallMesh* mc = this->m_mesh_slot.CallAs<CallMesh>();
-    if (mc == NULL) return false;
-    if (!(*mc)(0)) return false;
+    if (mc == nullptr)
+        return false;
+    if (!(*mc)(0))
+        return false;
 
     bool something_has_changed = mc->hasUpdate(); // something has changed in the neath...
 
     if (something_has_changed) {
         ++m_version;
 
-        for (auto idx : m_mesh_collection.second) {
-            m_mesh_collection.first->deleteSubMesh(idx);
-        }
-        m_mesh_collection.second.clear();
+        clearMeshCollection();
 
         auto meshes = mc->getData()->accessMeshes();
 
@@ -66,23 +81,12 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
         }
     }
 
-    // update meta data to lhs
     auto lhs_meta_data = lhs_mesh_call->getMetaData();
     core::Spatial3DMetaData rhs_meta_data;
     auto src_meta_data = mc->getMetaData();
 
-    // if there is a mesh connection to the right, pass on the mesh collection
-    CallGPUMeshData* rhs_mesh_call = this->m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
-    if (rhs_mesh_call != NULL) {
-        rhs_mesh_call->setData(m_mesh_collection.first, 0);
-
-        if (!(*rhs_mesh_call)(0)) return false;
-
-        if (rhs_mesh_call->hasUpdate()) {
-            ++m_version;
-            rhs_mesh_call->getData();
-        }
-
+    if (rhs_mesh_call != nullptr) {
+        rhs_meta_data = rhs_mesh_call->getMetaData();
     } else {
         rhs_meta_data.m_frame_cnt = src_meta_data.m_frame_cnt;
     }
@@ -111,8 +115,10 @@ bool megamol::mesh::GPUMeshes::getMetaDataCallback(core::Call& caller) {
     CallGPUMeshData* rhs_mesh_call = m_mesh_rhs_slot.CallAs<CallGPUMeshData>();
     CallMesh* src_mesh_call = m_mesh_slot.CallAs<CallMesh>();
 
-    if (lhs_mesh_call == NULL) return false;
-    if (src_mesh_call == NULL) return false;
+    if (lhs_mesh_call == NULL)
+        return false;
+    if (src_mesh_call == NULL)
+        return false;
 
     auto lhs_meta_data = lhs_mesh_call->getMetaData();
     auto src_meta_data = src_mesh_call->getMetaData();
@@ -120,14 +126,16 @@ bool megamol::mesh::GPUMeshes::getMetaDataCallback(core::Call& caller) {
 
     src_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
     src_mesh_call->setMetaData(src_meta_data);
-    if (!(*src_mesh_call)(1)) return false;
+    if (!(*src_mesh_call)(1))
+        return false;
     src_meta_data = src_mesh_call->getMetaData();
 
     if (rhs_mesh_call != NULL) {
         rhs_meta_data = rhs_mesh_call->getMetaData();
         rhs_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
         rhs_mesh_call->setMetaData(rhs_meta_data);
-        if (!(*rhs_mesh_call)(1)) return false;
+        if (!(*rhs_mesh_call)(1))
+            return false;
         rhs_meta_data = rhs_mesh_call->getMetaData();
     } else {
         rhs_meta_data.m_frame_cnt = 1;

@@ -29,7 +29,8 @@ megamol::mesh::AbstractGPUMaterialDataSource::~AbstractGPUMaterialDataSource() {
 }
 
 bool megamol::mesh::AbstractGPUMaterialDataSource::create(void) {
-    // intentionally empty ?
+    // default empty collection
+    m_material_collection.first = std::make_shared<GPUMaterialCollection>();
     return true;
 }
 
@@ -38,12 +39,10 @@ void megamol::mesh::AbstractGPUMaterialDataSource::release() {
 }
 
 void megamol::mesh::AbstractGPUMaterialDataSource::syncMaterialCollection(
-    megamol::mesh::CallGPUMaterialData* lhs_call) {
+    megamol::mesh::CallGPUMaterialData* lhs_call, CallGPUMaterialData* rhs_call) {
     if (lhs_call->getData() == nullptr) {
-        // no incoming material -> use your own material storage
-        if (m_material_collection.first == nullptr) {
-            m_material_collection.first = std::make_shared<GPUMaterialCollection>();
-        }
+        // no incoming material -> use your own material storage, i.e share to left
+        lhs_call->setData(m_material_collection.first, lhs_call->version());
     } else {
         // incoming material -> use it, copy material from last used collection if needed
         if (lhs_call->getData() != m_material_collection.first) {
@@ -57,4 +56,15 @@ void megamol::mesh::AbstractGPUMaterialDataSource::syncMaterialCollection(
             m_material_collection = mtl_collection;
         }
     }
+
+    if (rhs_call != nullptr) {
+        rhs_call->setData(m_material_collection.first, rhs_call->version());
+    }
+}
+
+void megamol::mesh::AbstractGPUMaterialDataSource::clearMaterialCollection() {
+    for (auto& identifier : m_material_collection.second) {
+        m_material_collection.first->deleteMaterial(identifier);
+    }
+    m_material_collection.second.clear();
 }

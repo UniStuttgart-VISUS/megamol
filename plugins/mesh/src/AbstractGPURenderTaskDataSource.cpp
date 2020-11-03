@@ -43,6 +43,8 @@ megamol::mesh::AbstractGPURenderTaskDataSource::~AbstractGPURenderTaskDataSource
 }
 
 bool megamol::mesh::AbstractGPURenderTaskDataSource::create(void) {
+    // default empty collection
+    m_rendertask_collection.first = std::make_shared<GPURenderTaskCollection>();
     return true;
 }
 
@@ -72,8 +74,12 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::C
 
         frame_cnt = std::min(rhs_meta_data.m_frame_cnt, frame_cnt);
 
-        bbox.Union(rhs_meta_data.m_bboxs.BoundingBox());
-        cbbox.Union(rhs_meta_data.m_bboxs.ClipBox());
+        if (rhs_meta_data.m_bboxs.IsBoundingBoxValid()) {
+            bbox.Union(rhs_meta_data.m_bboxs.BoundingBox());
+        }
+        if (rhs_meta_data.m_bboxs.IsClipBoxValid()) {
+            cbbox.Union(rhs_meta_data.m_bboxs.ClipBox());
+        }
     }
 
     if (material_call != NULL) {
@@ -94,8 +100,12 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::C
 
         frame_cnt = std::min(mesh_meta_data.m_frame_cnt, frame_cnt);
 
-        bbox.Union(mesh_meta_data.m_bboxs.BoundingBox());
-        cbbox.Union(mesh_meta_data.m_bboxs.ClipBox());
+        if (mesh_meta_data.m_bboxs.IsBoundingBoxValid()) {
+            bbox.Union(mesh_meta_data.m_bboxs.BoundingBox());
+        }
+        if (mesh_meta_data.m_bboxs.IsClipBoxValid()) {
+            cbbox.Union(mesh_meta_data.m_bboxs.ClipBox());
+        }
     }
 
     lhs_meta_data.m_frame_cnt = frame_cnt;
@@ -125,19 +135,17 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::GetLights(void) {
     return lightDirty;
 }
 
-void megamol::mesh::AbstractGPURenderTaskDataSource::syncRenderTaskCollection(CallGPURenderTaskData* lhs_call) {
+void megamol::mesh::AbstractGPURenderTaskDataSource::syncRenderTaskCollection(
+    CallGPURenderTaskData* lhs_call, CallGPURenderTaskData* rhs_call) {
     if (lhs_call->getData() == nullptr) {
-        // no incoming material -> use your own material storage
-        if (m_rendertask_collection.first == nullptr) {
-            m_rendertask_collection.first = std::make_shared<GPURenderTaskCollection>();
-        }
+        // no incoming material -> use your own material storage, i.e. share to left
+        lhs_call->setData(m_rendertask_collection.first, lhs_call->version());
     } else {
         // incoming material -> use it, copy material from last used collection if needed
         if (lhs_call->getData() != m_rendertask_collection.first) {
             std::pair<std::shared_ptr<GPURenderTaskCollection>, std::vector<std::string>> rt_collection = {
                 lhs_call->getData(), {}};
             for (auto& identifier : m_rendertask_collection.second) {
-
                 auto render_task_meta_data = m_rendertask_collection.first->getRenderTaskMetaData(identifier);
                 rt_collection.first->copyGPURenderTask(identifier, render_task_meta_data);
                 rt_collection.second.push_back(identifier);
@@ -146,6 +154,17 @@ void megamol::mesh::AbstractGPURenderTaskDataSource::syncRenderTaskCollection(Ca
             m_rendertask_collection = rt_collection;
         }
     }
+
+    if (rhs_call != nullptr) {
+        rhs_call->setData(m_rendertask_collection.first, rhs_call->version());
+    }
+}
+
+void megamol::mesh::AbstractGPURenderTaskDataSource::clearRenderTaskCollection() {
+    for (auto& identifier : m_rendertask_collection.second) {
+        m_rendertask_collection.first->deleteRenderTask(identifier);
+    }
+    m_rendertask_collection.second.clear();
 }
 
 void megamol::mesh::AbstractGPURenderTaskDataSource::release() {

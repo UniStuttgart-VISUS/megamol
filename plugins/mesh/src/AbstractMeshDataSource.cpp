@@ -22,6 +22,8 @@ megamol::mesh::AbstractMeshDataSource::~AbstractMeshDataSource() {
 }
 
 bool megamol::mesh::AbstractMeshDataSource::create(void) {
+    // default empty collection
+    m_mesh_access_collection.first = std::make_shared<MeshDataAccessCollection>();
     return true;
 }
 
@@ -29,14 +31,11 @@ void megamol::mesh::AbstractMeshDataSource::release() {}
 
 void megamol::mesh::AbstractMeshDataSource::syncMeshAccessCollection(CallMesh* lhs_call, CallMesh* rhs_call) {
     if (lhs_call->getData() == nullptr) {
-        // no incoming mesh -> use your own mesh access collection
-        if (m_mesh_access_collection.first == nullptr) {
-            m_mesh_access_collection.first = std::make_shared<MeshDataAccessCollection>();
-        }
+        // no incoming mesh -> use your own mesh access collection, i.e. share to left
+        lhs_call->setData(m_mesh_access_collection.first, lhs_call->version());
     } else {
         // incoming material -> use it, copy material from last used collection if needed
         if (lhs_call->getData() != m_mesh_access_collection.first) {
-
 
             std::pair<std::shared_ptr<MeshDataAccessCollection>, std::vector<std::string>> mesh_access_collection = {
                 lhs_call->getData(), {}};
@@ -54,4 +53,11 @@ void megamol::mesh::AbstractMeshDataSource::syncMeshAccessCollection(CallMesh* l
     if (rhs_call != nullptr) {
         rhs_call->setData(m_mesh_access_collection.first, rhs_call->version());
     }
+}
+
+void megamol::mesh::AbstractMeshDataSource::clearMeshAccessCollection() {
+    for (auto& identifier : m_mesh_access_collection.second) {
+        m_mesh_access_collection.first->deleteMesh(identifier);
+    }
+    m_mesh_access_collection.second.clear();
 }

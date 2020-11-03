@@ -22,7 +22,6 @@ namespace mesh {
 
             rts->draw_cnt -= 1;
 
-
             if (rts->draw_cnt == 0) {
                 for (size_t i = 0; i < m_gpu_render_tasks.size(); ++i) {
                     if (m_gpu_render_tasks[i] == rts) {
@@ -38,27 +37,43 @@ namespace mesh {
                 size_t new_dcs_byte_size = old_dcs_byte_size - sizeof(glowl::DrawElementsCommand);
                 size_t new_pdd_byte_size = old_pdd_byte_size - rt_meta.per_draw_data_byteSize;
 
-                auto new_dcs_buffer = std::make_shared<glowl::BufferObject>(
-                    GL_DRAW_INDIRECT_BUFFER, nullptr, new_dcs_byte_size, GL_DYNAMIC_DRAW);
-                auto new_pdd_buffer = std::make_shared<glowl::BufferObject>(
-                    GL_SHADER_STORAGE_BUFFER, nullptr, new_pdd_byte_size, GL_DYNAMIC_DRAW);
+                try {
+                    auto new_dcs_buffer = std::make_shared<glowl::BufferObject>(
+                        GL_DRAW_INDIRECT_BUFFER, nullptr, new_dcs_byte_size, GL_DYNAMIC_DRAW);
+                    auto new_pdd_buffer = std::make_shared<glowl::BufferObject>(
+                        GL_SHADER_STORAGE_BUFFER, nullptr, new_pdd_byte_size, GL_DYNAMIC_DRAW);
 
-                // copy data from beg to delete
-                glowl::BufferObject::copy(
-                    rts->draw_commands.get(), new_dcs_buffer.get(), 0, 0, rt_meta.draw_command_byteOffset);
-                glowl::BufferObject::copy(
-                    rts->per_draw_data.get(), new_pdd_buffer.get(), 0, 0, rt_meta.per_draw_data_byteOffset);
+                    // copy data from beg to delete
+                    glowl::BufferObject::copy(
+                        rts->draw_commands.get(), new_dcs_buffer.get(), 0, 0, rt_meta.draw_command_byteOffset);
+                    glowl::BufferObject::copy(
+                        rts->per_draw_data.get(), new_pdd_buffer.get(), 0, 0, rt_meta.per_draw_data_byteOffset);
 
-                // copy data from delete to end
-                glowl::BufferObject::copy(rts->draw_commands.get(), new_dcs_buffer.get(),
-                    rt_meta.draw_command_byteOffset + sizeof(glowl::DrawElementsCommand),
-                    rt_meta.draw_command_byteOffset, new_dcs_byte_size - rt_meta.draw_command_byteOffset);
-                glowl::BufferObject::copy(rts->per_draw_data.get(), new_pdd_buffer.get(),
-                    rt_meta.per_draw_data_byteOffset + rt_meta.per_draw_data_byteSize, rt_meta.per_draw_data_byteOffset,
-                    new_pdd_byte_size - rt_meta.per_draw_data_byteOffset);
+                    // copy data from delete to end
+                    glowl::BufferObject::copy(rts->draw_commands.get(), new_dcs_buffer.get(),
+                        rt_meta.draw_command_byteOffset + sizeof(glowl::DrawElementsCommand),
+                        rt_meta.draw_command_byteOffset, new_dcs_byte_size - rt_meta.draw_command_byteOffset);
+                    glowl::BufferObject::copy(rts->per_draw_data.get(), new_pdd_buffer.get(),
+                        rt_meta.per_draw_data_byteOffset + rt_meta.per_draw_data_byteSize,
+                        rt_meta.per_draw_data_byteOffset, new_pdd_byte_size - rt_meta.per_draw_data_byteOffset);
 
-                rts->draw_commands = new_dcs_buffer;
-                rts->per_draw_data = new_pdd_buffer;
+                    rts->draw_commands = new_dcs_buffer;
+                    rts->per_draw_data = new_pdd_buffer;
+
+                    // adjust byte offsets of remaining render tasks
+                    for (auto& rtm : m_render_task_meta_data) {
+                        if (rtm.second.draw_command_byteOffset > rt_meta.draw_command_byteOffset) {
+                            rtm.second.draw_command_byteOffset -= sizeof(glowl::DrawElementsCommand);
+                        }
+                        if (rtm.second.per_draw_data_byteOffset > rt_meta.per_draw_data_byteOffset) {
+                            rtm.second.per_draw_data_byteOffset -= rt_meta.per_draw_data_byteSize;
+                        }
+                    }
+
+                } catch (glowl::BufferObjectException const& e) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                        "Error during GPU render task deletion: %s\n", e.what());
+                }
             }
 
             m_render_task_meta_data.erase(query);

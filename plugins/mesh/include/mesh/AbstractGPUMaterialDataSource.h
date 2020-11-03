@@ -8,60 +8,77 @@
 #ifndef ABSTRACT_GPU_MATERIAL_DATA_SOURCE_H_INCLUDED
 #define ABSTRACT_GPU_MATERIAL_DATA_SOURCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "GPUMaterialCollection.h"
-#include "mmcore/CalleeSlot.h"
-#include "mesh/mesh.h"
 #include "mesh/MeshCalls.h"
+#include "mesh/mesh.h"
+#include "mmcore/CalleeSlot.h"
 
 namespace megamol {
 namespace mesh {
 
-class MESH_API AbstractGPUMaterialDataSource : public core::Module {
-public:
-    AbstractGPUMaterialDataSource();
-    virtual ~AbstractGPUMaterialDataSource();
+    class MESH_API AbstractGPUMaterialDataSource : public core::Module {
+    public:
+        AbstractGPUMaterialDataSource();
+        virtual ~AbstractGPUMaterialDataSource();
 
-protected:
-    /**
-     * Implementation of 'Create'.
-     *
-     * @return 'true' on success, 'false' otherwise.
-     */
-    virtual bool create(void);
+    protected:
+        /**
+         * Implementation of 'Create'.
+         *
+         * @return 'true' on success, 'false' otherwise.
+         */
+        virtual bool create(void);
 
-    /**
-     * Gets the data from the source.
-     *
-     * @param caller The calling call.
-     *
-     * @return 'true' on success, 'false' on failure.
-     */
-    virtual bool getDataCallback(core::Call& caller) = 0;
+        /**
+         * Gets the data from the source.
+         *
+         * @param caller The calling call.
+         *
+         * @return 'true' on success, 'false' on failure.
+         */
+        virtual bool getDataCallback(core::Call& caller) = 0;
 
-    virtual bool getMetaDataCallback(core::Call& caller) = 0;
+        /**
+         * Gets the meta data from the source.
+         *
+         * @param caller The calling call.
+         *
+         * @return 'true' on success, 'false' on failure.
+         */
+        virtual bool getMetaDataCallback(core::Call& caller) = 0;
 
-    /**
-     * Implementation of 'Release'.
-     */
-    virtual void release();
+        /**
+         * Implementation of 'Release'.
+         */
+        virtual void release();
 
-    void syncMaterialCollection(CallGPUMaterialData* lhs_call);
+        /**
+         * Syncs the material collection of this module with the lefthand side (lhs) and righthand side (rhs)
+         * connections if available. Takes over materials from previously used to collection if lhs connection changes.
+         */
+        void syncMaterialCollection(CallGPUMaterialData* lhs_call, CallGPUMaterialData* rhs_call);
 
-    /**
-     * Material collection that is used and indices of materials within the collection that were added by a module instance.
-     */
-    std::pair<std::shared_ptr<GPUMaterialCollection>, std::vector<std::string>> m_material_collection;
+        /**
+         * Clears all material entries made by this module from the used material collection.
+         */
+        void clearMaterialCollection();
 
-    /** The slot for querying additional material data, i.e. a rhs chaining connection */
-    megamol::core::CallerSlot m_mtl_callerSlot;
+        /**
+         * Material collection that is used and indices of materials within the collection that were added by a module
+         * instance.
+         */
+        std::pair<std::shared_ptr<GPUMaterialCollection>, std::vector<std::string>> m_material_collection;
 
-private:
-    /** The slot for requesting data from this module, i.e. lhs connection */
-    megamol::core::CalleeSlot m_getData_slot;
-};
+        /** The slot for querying additional material data, i.e. a rhs chaining connection */
+        megamol::core::CallerSlot m_mtl_callerSlot;
+
+    private:
+        /** The slot for requesting data from this module, i.e. lhs connection */
+        megamol::core::CalleeSlot m_getData_slot;
+    };
 
 } // namespace mesh
 } // namespace megamol

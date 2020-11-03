@@ -29,17 +29,18 @@ megamol::mesh::AbstractGPUMeshDataSource::~AbstractGPUMeshDataSource() {
 }
 
 bool megamol::mesh::AbstractGPUMeshDataSource::create(void) {
+    // default empty collection
+    m_mesh_collection.first = std::make_shared<GPUMeshCollection>();
     return true;
 }
 
 void megamol::mesh::AbstractGPUMeshDataSource::release() {}
 
-void megamol::mesh::AbstractGPUMeshDataSource::syncMeshCollection(CallGPUMeshData* lhs_call) {
+void megamol::mesh::AbstractGPUMeshDataSource::syncMeshCollection(
+    CallGPUMeshData* lhs_call, CallGPUMeshData* rhs_call) {
     if (lhs_call->getData() == nullptr) {
-        // no incoming material -> use your own material storage
-        if (m_mesh_collection.first == nullptr) {
-            m_mesh_collection.first = std::make_shared<GPUMeshCollection>();
-        }
+        // no incoming material -> use your own mesh storage, i.e. share to left
+        lhs_call->setData(m_mesh_collection.first, lhs_call->version());
     } else {
         // incoming material -> use it, copy material from last used collection if needed
         if (lhs_call->getData() != m_mesh_collection.first) {
@@ -48,10 +49,21 @@ void megamol::mesh::AbstractGPUMeshDataSource::syncMeshCollection(CallGPUMeshDat
             for (auto const& identifier : m_mesh_collection.second) {
                 // mtl_collection.first->addMesh(m_mesh_collection.first->getMeshes()[idx]);
                 auto const& submesh = m_mesh_collection.first->getSubMesh(identifier);
-                mesh_collection.first->addMesh(identifier, submesh.mesh->mesh, submesh);
+                mesh_collection.first->addMesh(identifier, submesh);
                 m_mesh_collection.first->deleteSubMesh(identifier);
             }
             m_mesh_collection = mesh_collection;
         }
     }
+
+    if (rhs_call != nullptr) {
+        rhs_call->setData(m_mesh_collection.first, rhs_call->version());
+    }
+}
+
+void megamol::mesh::AbstractGPUMeshDataSource::clearMeshCollection() {
+    for (auto& identifier : m_mesh_collection.second) {
+        m_mesh_collection.first->deleteSubMesh(identifier);
+    }
+    m_mesh_collection.second.clear();
 }

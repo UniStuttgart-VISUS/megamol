@@ -8,90 +8,100 @@
 #ifndef ABSTRACT_GPU_RENDER_TASK_DATA_SOURCE_H_INCLUDED
 #define ABSTRACT_GPU_RENDER_TASK_DATA_SOURCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "GPURenderTaskCollection.h"
-#include "mmcore/CalleeSlot.h"
-#include "mmcore/CallerSlot.h"
 #include "mesh.h"
 #include "mesh/MeshCalls.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/CallerSlot.h"
 
 #include "mmcore/view/light/CallLight.h"
 
 namespace megamol {
 namespace mesh {
 
-class MESH_API AbstractGPURenderTaskDataSource : public core::Module {
-public:
-    AbstractGPURenderTaskDataSource();
-    virtual ~AbstractGPURenderTaskDataSource();
+    class MESH_API AbstractGPURenderTaskDataSource : public core::Module {
+    public:
+        AbstractGPURenderTaskDataSource();
+        virtual ~AbstractGPURenderTaskDataSource();
 
-protected:
-    /**
-     * Implementation of 'Create'.
-     *
-     * @return 'true' on success, 'false' otherwise.
-     */
-    virtual bool create(void);
+    protected:
+        /**
+         * Implementation of 'Create'.
+         *
+         * @return 'true' on success, 'false' otherwise.
+         */
+        virtual bool create(void);
 
-    /**
-     * Gets the data from the source.
-     *
-     * @param caller The calling call.
-     *
-     * @return 'true' on success, 'false' on failure.
-     */
-    virtual bool getDataCallback(core::Call& caller) = 0;
+        /**
+         * Gets the data from the source.
+         *
+         * @param caller The calling call.
+         *
+         * @return 'true' on success, 'false' on failure.
+         */
+        virtual bool getDataCallback(core::Call& caller) = 0;
 
-    /**
-     * Gets the data from the source.
-     *
-     * @param caller The calling call.
-     *
-     * @return 'true' on success, 'false' on failure.
-     */
-    virtual bool getMetaDataCallback(core::Call& caller);
+        /**
+         * Gets the data from the source.
+         *
+         * @param caller The calling call.
+         *
+         * @return 'true' on success, 'false' on failure.
+         */
+        virtual bool getMetaDataCallback(core::Call& caller);
 
-    /**
-     * Implementation of 'Release'.
-     */
-    virtual void release();
+        /**
+         * Implementation of 'Release'.
+         */
+        virtual void release();
 
-    /**
-     * Receives the current lights from the light call and writes them to the lightMap
-     *
-     * @return True if any light has changed, false otherwise.
-     */
-    bool GetLights(void);
+        /**
+         * Receives the current lights from the light call and writes them to the lightMap
+         *
+         * @return True if any light has changed, false otherwise.
+         */
+        bool GetLights(void);
 
-    void syncRenderTaskCollection(CallGPURenderTaskData* lhs_call);
+        /**
+         * Syncs the render task collection of this module with the lefthand side (lhs) and righthand side (rhs)
+         * connections if available. Takes over materials from previously used to collection if lhs connection changes.
+         */
+        void syncRenderTaskCollection(CallGPURenderTaskData* lhs_call, CallGPURenderTaskData* rhs_call);
 
-    /**
-     * Render task collection that is used with a list of indices of all RenderTasks that this module added to the used rt collection.
-     * Needed to delete/update RenderTasks if the rt collection is shared across a chain of rt data sources.
-     */
-    std::pair<std::shared_ptr<GPURenderTaskCollection>, std::vector<std::string>> m_rendertask_collection;
+        /**
+         * Clears all render task entries made by this module from the used material collection.
+         */
+        void clearRenderTaskCollection();
 
-    /** map to store the called lights */
-    core::view::light::LightMap lightMap;
+        /**
+         * Render task collection that is used with a list of indices of all RenderTasks that this module added to the
+         * used rt collection. Needed to delete/update RenderTasks if the rt collection is shared across a chain of rt
+         * data sources.
+         */
+        std::pair<std::shared_ptr<GPURenderTaskCollection>, std::vector<std::string>> m_rendertask_collection;
 
-    /** The slot for requesting data from this module, i.e. lhs connection */
-    megamol::core::CalleeSlot m_renderTask_lhs_slot;
+        /** map to store the called lights */
+        core::view::light::LightMap lightMap;
 
-    /** The slot for querying chained render tasks, i.e. a rhs connection */
-    megamol::core::CallerSlot m_renderTask_rhs_slot;
+        /** The slot for requesting data from this module, i.e. lhs connection */
+        megamol::core::CalleeSlot m_renderTask_lhs_slot;
 
-    /** The slot for querying material data, i.e. a rhs connection */
-    megamol::core::CallerSlot m_material_slot;
+        /** The slot for querying chained render tasks, i.e. a rhs connection */
+        megamol::core::CallerSlot m_renderTask_rhs_slot;
 
-    /** The slot for querying mesh data, i.e. a rhs connection */
-    megamol::core::CallerSlot m_mesh_slot;
+        /** The slot for querying material data, i.e. a rhs connection */
+        megamol::core::CallerSlot m_material_slot;
 
-    /** Slot to retrieve the light information */
-    megamol::core::CallerSlot m_light_slot;
-    size_t m_light_cached_hash;
-};
+        /** The slot for querying mesh data, i.e. a rhs connection */
+        megamol::core::CallerSlot m_mesh_slot;
+
+        /** Slot to retrieve the light information */
+        megamol::core::CallerSlot m_light_slot;
+        size_t m_light_cached_hash;
+    };
 
 } // namespace mesh
 } // namespace megamol

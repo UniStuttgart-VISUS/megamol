@@ -23,6 +23,7 @@ megamol::mesh::GlTFFileLoader::GlTFFileLoader()
         , m_gltf_slot("gltfModels", "The slot publishing the loaded data") {
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetData", &GlTFFileLoader::getGltfDataCallback);
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetMetaData", &GlTFFileLoader::getGltfMetaDataCallback);
+    this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "Disconnect", &GlTFFileLoader::disconnectGltfCallback);
     this->MakeSlotAvailable(&this->m_gltf_slot);
 
     this->m_glTFFilename_slot << new core::param::FilePathParam("");
@@ -31,10 +32,6 @@ megamol::mesh::GlTFFileLoader::GlTFFileLoader()
 
 megamol::mesh::GlTFFileLoader::~GlTFFileLoader() {
     this->Release();
-}
-
-bool megamol::mesh::GlTFFileLoader::create(void) {
-    return true;
 }
 
 bool megamol::mesh::GlTFFileLoader::getGltfDataCallback(core::Call& caller) {
@@ -68,7 +65,7 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
         return false;
     }
 
-    syncMeshAccessCollection(lhs_mesh_call,rhs_mesh_call);
+    syncMeshAccessCollection(lhs_mesh_call, rhs_mesh_call);
 
     // if there is a mesh connection to the right, pass on the mesh collection
     if (rhs_mesh_call != NULL) {
@@ -180,6 +177,18 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
             }
         }
 
+        if (bbox[0] == std::numeric_limits<float>::max() || bbox[1] == std::numeric_limits<float>::max() ||
+            bbox[2] == std::numeric_limits<float>::max() || bbox[3] == std::numeric_limits<float>::min() ||
+            bbox[4] == std::numeric_limits<float>::min() || bbox[5] == std::numeric_limits<float>::min()) {
+
+            bbox[0] = -0.5;
+            bbox[1] = -0.5;
+            bbox[2] = -0.5;
+            bbox[3] = 0.5;
+            bbox[4] = 0.5;
+            bbox[5] = 0.5;
+        }
+
         auto meta_data = lhs_mesh_call->getMetaData();
         meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
         meta_data.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
@@ -228,6 +237,10 @@ bool megamol::mesh::GlTFFileLoader::getMeshMetaDataCallback(core::Call& caller) 
     return true;
 }
 
+bool megamol::mesh::GlTFFileLoader::disconnectGltfCallback(core::Call& caller) {
+    return true;
+}
+
 bool megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
 
     if (this->m_glTFFilename_slot.IsDirty()) {
@@ -235,19 +248,21 @@ bool megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
 
         auto vislib_filename = m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value();
         std::string filename(vislib_filename.PeekBuffer());
-
         m_gltf_model = std::make_shared<tinygltf::Model>();
-        tinygltf::TinyGLTF loader;
-        std::string err;
-        std::string war;
 
-        bool ret = loader.LoadASCIIFromFile(&*m_gltf_model, &err, &war, filename);
-        if (!err.empty()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Err: %s\n", err.c_str());
-        }
+        if (filename != "") {
+            tinygltf::TinyGLTF loader;
+            std::string err;
+            std::string war;
 
-        if (!ret) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to parse glTF\n");
+            bool ret = loader.LoadASCIIFromFile(&*m_gltf_model, &err, &war, filename);
+            if (!err.empty()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Err: %s\n", err.c_str());
+            }
+
+            if (!ret) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to parse glTF\n");
+            }
         }
 
         return true;

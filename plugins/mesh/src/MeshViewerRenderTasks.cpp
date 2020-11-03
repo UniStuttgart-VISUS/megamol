@@ -18,31 +18,42 @@ megamol::mesh::MeshViewerRenderTasks::~MeshViewerRenderTasks() {}
 bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
 
     CallGPURenderTaskData* lhs_rtc = dynamic_cast<CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == NULL)
+    if (lhs_rtc == nullptr)
         return false;
 
+    CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
+
+    syncRenderTaskCollection(lhs_rtc, rhs_rtc);
+
+    if (rhs_rtc != nullptr) {
+        if (!(*rhs_rtc)(0)) {
+            return false;
+        }
+        if (rhs_rtc->hasUpdate()) {
+            ++m_version;
+            rhs_rtc->getData();
+        }
+    }
+
     CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<CallGPUMaterialData>();
-    if (mtlc == NULL)
+    if (mtlc == nullptr)
         return false;
     if (!(*mtlc)(0))
         return false;
 
     CallGPUMeshData* mc = this->m_mesh_slot.CallAs<CallGPUMeshData>();
-    if (mc == NULL)
+    if (mc == nullptr)
         return false;
     if (!(*mc)(0))
         return false;
 
-    syncRenderTaskCollection(lhs_rtc);
 
     bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate();
 
     if (something_has_changed) {
         ++m_version;
 
-        for (auto& idx : m_rendertask_collection.second) {
-            m_rendertask_collection.first->deleteRenderTask(idx);
-        }
+        clearRenderTaskCollection();
 
         auto gpu_mtl_storage = mtlc->getData();
         auto gpu_mesh_storage = mc->getData();
@@ -83,12 +94,6 @@ bool megamol::mesh::MeshViewerRenderTasks::getDataCallback(core::Call& caller) {
         }
     }
 
-
-    CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
-    if (rhs_rtc != NULL) {
-        rhs_rtc->setData(m_rendertask_collection.first, 0);
-        (*rhs_rtc)(0);
-    }
 
     // TODO merge meta data stuff, i.e. bounding box
     auto mesh_meta_data = mc->getMetaData();
