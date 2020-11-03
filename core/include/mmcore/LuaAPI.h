@@ -44,6 +44,7 @@ public:
         std::function<void(const unsigned int, const unsigned int)> mmSetFramebufferSize_callback_;
         std::function<void(const unsigned int, const unsigned int)> mmSetWindowPosition_callback_;
         std::function<void(const bool)> mmSetFullscreen_callback_;
+        std::function<void(const bool)> mmSetVsync_callback_;
     } LuaCallbacks;
 
     /**
@@ -247,6 +248,7 @@ protected:
     int SetFramebufferSize(lua_State *L);
     int SetWindowPosition(lua_State *L);
     int SetFullscreen(lua_State *L);
+    int SetVSync(lua_State *L);
 
 private:
 

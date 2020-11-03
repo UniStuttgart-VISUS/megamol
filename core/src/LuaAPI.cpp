@@ -91,6 +91,7 @@
 #define MMC_LUA_MMSETFRAMEBUFFERSIZE "mmSetFramebufferSize"
 #define MMC_LUA_MMSETWINDOWPOSITION "mmSetWindowPosition"
 #define MMC_LUA_MMSETFULLSCREEN "mmSetFullscreen"
+#define MMC_LUA_MMSETVSYNC "mmSetVSync"
 
 
 void megamol::core::LuaAPI::commonInit() {
@@ -141,6 +142,7 @@ void megamol::core::LuaAPI::commonInit() {
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetFramebufferSize>(MMC_LUA_MMSETFRAMEBUFFERSIZE, "(int width, int height)\n\tSet framebuffer dimensions to width x height.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetWindowPosition>(MMC_LUA_MMSETWINDOWPOSITION, "(int x, int y)\n\tSet window position to x,y.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetFullscreen>(MMC_LUA_MMSETFULLSCREEN, "(bool fullscreen)\n\tSet window to fullscreen (or restore).");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetVSync>(MMC_LUA_MMSETVSYNC, "(bool state)\n\tSet window VSync off (false) or on (true).");
 
     if (!imperative_only_) {
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetModuleParams>(MMC_LUA_MMGETMODULEPARAMS, "(string name)\n\tReturns a 0x1-separated list of module name and all parameters."
@@ -1143,3 +1145,18 @@ int megamol::core::LuaAPI::SetFullscreen(lua_State *L) {
 
   return 0;
 }
+
+int megamol::core::LuaAPI::SetVSync(lua_State *L) {
+    int n = lua_gettop(L);
+    if (n == 1) {
+        bool fs = false;
+        fs = lua_toboolean(L, 1);
+
+        callbacks_.mmSetVsync_callback_(fs);
+    } else {
+        luaApiInterpreter_.ThrowError(MMC_LUA_MMSETVSYNC " requires one bool parameter");
+    }
+
+  return 0;
+}
+
