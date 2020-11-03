@@ -36,15 +36,15 @@ LogConsole::~LogConsole() {
 
     // Reset echo target only if log target of this class instance is used
     if (megamol::core::utility::log::Log::DefaultLog.AccessEchoTarget() == this->echo_log_target) {
-        megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(
-            std::make_shared<megamol::core::utility::log::OfflineTarget>(
-                100, megamol::core::utility::log::Log::LEVEL_ALL));
+        megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(nullptr);
     }
     this->echo_log_target.reset();
 }
 
 
 bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
+
+    this->log_level = wc.log_level;
 
     // Scroll down if window height changes
     if (this->last_window_height != ImGui::GetWindowHeight()) {
@@ -54,6 +54,12 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
 
     // Menu
     if (ImGui::BeginMenuBar()) {
+
+        // Force Open on Warnings and Errors
+        ImGui::Checkbox("Force Open", &wc.log_force_open);
+        this->tooltip.Marker("Force open log console window on warnings and errors.");
+        ImGui::Separator();
+
         // Log Level
         ImGui::TextUnformatted("Show");
         ImGui::SameLine();
@@ -63,6 +69,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
             } else {
                 this->log_level = megamol::core::utility::log::Log::LEVEL_ERROR;
             }
+            this->scroll_log_down = 2;
         }
         ImGui::SameLine();
         if (ImGui::RadioButton("Warnings", (this->log_level >= megamol::core::utility::log::Log::LEVEL_WARN))) {
@@ -71,6 +78,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
             } else {
                 this->log_level = megamol::core::utility::log::Log::LEVEL_WARN;
             }
+            this->scroll_log_down = 2;
         }
         ImGui::SameLine();
         if (ImGui::RadioButton("Infos", (this->log_level == megamol::core::utility::log::Log::LEVEL_ALL))) {
@@ -79,11 +87,13 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
             } else {
                 this->log_level = megamol::core::utility::log::Log::LEVEL_ALL;
             }
+            this->scroll_log_down = 2;
         }
 
         // Scrolling
         std::string scroll_label = "Scroll";
-        ImGui::SameLine(0.0f, ImGui::GetContentRegionAvail().x - (2.25f * ImGui::GetFrameHeightWithSpacing()) - ImGui::CalcTextSize(scroll_label.c_str()).x);
+        ImGui::SameLine(0.0f, ImGui::GetContentRegionAvail().x - (2.25f * ImGui::GetFrameHeightWithSpacing()) -
+                                  ImGui::CalcTextSize(scroll_label.c_str()).x);
         ImGui::TextUnformatted(scroll_label.c_str());
         ImGui::SameLine();
         if (ImGui::ArrowButton("scroll_up", ImGuiDir_Up)) {
@@ -122,6 +132,8 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
         }
     }
 
+    wc.log_level = this->log_level;
+
     return true;
 }
 
@@ -148,10 +160,8 @@ bool megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
                     this->log.push_back(new_entry);
 
                     // Force open log window if there is any warning
-                    if (new_log_level < megamol::core::utility::log::Log::LEVEL_INFO) {
-                        if (this->log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
-                            this->log_level = megamol::core::utility::log::Log::LEVEL_WARN;
-                        }
+                    if (wc.log_force_open && (new_log_level < megamol::core::utility::log::Log::LEVEL_INFO)) {
+                        this->log_level = megamol::core::utility::log::Log::LEVEL_WARN;
                         if (!wc.win_show) {
                             ImGuiIO& io = ImGui::GetIO();
                             ImVec2 viewport = io.DisplaySize;
@@ -180,7 +190,10 @@ bool megamol::gui::LogConsole::connect_log(void) {
         std::dynamic_pointer_cast<megamol::core::utility::log::OfflineTarget>(current_echo_target);
 
     // Only connect if echo target is still default OfflineTarget
-    /// Note: A second log console is temporarily created when "GUIView" module is loaded in configurator for complete module list.
+    /// Note: A second log console is temporarily created when "GUIView" module is loaded in configurator for complete
+    /// module list.
+    ///       For this "GUIView" module NO log is connected, because the main LogConsole instance is already connected
+    ///       and the taget is not the default OfflineTarget.
     if ((offline_echo_target != nullptr) && (this->echo_log_target != nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(this->echo_log_target);
     }

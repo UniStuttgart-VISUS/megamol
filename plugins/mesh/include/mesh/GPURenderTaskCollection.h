@@ -69,8 +69,8 @@ namespace mesh {
             std::shared_ptr<glowl::Mesh> const& mesh, glowl::DrawElementsCommand const& draw_command,
             PerDrawDataType const& per_draw_data); // single struct of per draw data assumed?
 
-        template<typename DrawCommandContainer, typename PerDrawDataContainer>
-        void addRenderTasks(std::string const& identifier, std::shared_ptr<Shader> const& shader_prgm,
+        template<typename IdentifierContainer, typename DrawCommandContainer, typename PerDrawDataContainer>
+        void addRenderTasks(IdentifierContainer const& identifiers, std::shared_ptr<Shader> const& shader_prgm,
             std::shared_ptr<glowl::Mesh> const& mesh, DrawCommandContainer const& draw_commands,
             PerDrawDataContainer const& per_draw_data); // list of per draw data assumed?
 
@@ -130,14 +130,15 @@ namespace mesh {
         std::shared_ptr<Shader> const& shader_prgm, std::shared_ptr<glowl::Mesh> const& mesh,
         glowl::DrawElementsCommand const& draw_command, PerDrawDataType const& per_draw_data) {
 
+        std::vector<std::string> identifiers = {identifier};
         std::vector<glowl::DrawElementsCommand> draw_command_vector = {draw_command};
         std::vector<PerDrawDataType> per_draw_data_vector = {per_draw_data};
 
-        addRenderTasks(identifier, shader_prgm, mesh, draw_command_vector, per_draw_data_vector);
+        addRenderTasks(identifiers, shader_prgm, mesh, draw_command_vector, per_draw_data_vector);
     }
 
-    template<typename DrawCommandContainer, typename PerDrawDataContainer>
-    inline void GPURenderTaskCollection::addRenderTasks(std::string const& identifier,
+    template<typename IdentifierContainer, typename DrawCommandContainer, typename PerDrawDataContainer>
+    inline void GPURenderTaskCollection::addRenderTasks(IdentifierContainer const& identifiers,
         std::shared_ptr<Shader> const& shader_prgm, std::shared_ptr<glowl::Mesh> const& mesh,
         DrawCommandContainer const& draw_commands, PerDrawDataContainer const& per_draw_data) {
         typedef typename PerDrawDataContainer::value_type PerDrawDataType;
@@ -171,6 +172,8 @@ namespace mesh {
             (*query)->per_draw_data = new_pdd_buffer;
             (*query)->draw_cnt += draw_commands.size();
 
+            assert(identifiers.size() == draw_commands.size());
+
             for (int dc_idx = 0; dc_idx < draw_commands.size(); ++dc_idx) {
                 // Add render task meta data entry
                 RenderTaskMetaData rt_meta;
@@ -178,7 +181,7 @@ namespace mesh {
                 rt_meta.draw_command_byteOffset = old_dcs_byte_size + dc_idx * sizeof(DrawCommandType);
                 rt_meta.per_draw_data_byteOffset = old_pdd_byte_size + dc_idx * sizeof(PerDrawDataType);
                 rt_meta.per_draw_data_byteSize = sizeof(PerDrawDataType);
-                auto rtn = m_render_task_meta_data.insert({identifier, rt_meta});
+                auto rtn = m_render_task_meta_data.insert({identifiers[dc_idx], rt_meta});
                 if (rtn.second == false) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "AddRenderTasks error: identifier already in use.");
@@ -200,6 +203,8 @@ namespace mesh {
                 GL_SHADER_STORAGE_BUFFER, per_draw_data.data(), new_pdd_byte_size, GL_DYNAMIC_DRAW);
             new_task->draw_cnt = draw_commands.size();
 
+            assert(identifiers.size() == draw_commands.size());
+
             for (int dc_idx = 0; dc_idx < draw_commands.size(); ++dc_idx) {
                 // Add render task meta data entry
                 RenderTaskMetaData rt_meta;
@@ -207,7 +212,7 @@ namespace mesh {
                 rt_meta.draw_command_byteOffset = dc_idx * sizeof(DrawCommandType);
                 rt_meta.per_draw_data_byteOffset = dc_idx * sizeof(PerDrawDataType);
                 rt_meta.per_draw_data_byteSize = sizeof(PerDrawDataType);
-                auto rtn = m_render_task_meta_data.insert({identifier, rt_meta});
+                auto rtn = m_render_task_meta_data.insert({identifiers[dc_idx], rt_meta});
                 if (rtn.second == false) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "AddRenderTasks error: identifier already in use.");

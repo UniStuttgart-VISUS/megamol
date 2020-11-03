@@ -18,6 +18,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <filesystem>
 
 #ifndef _WIN32
 #    include <sys/types.h>
@@ -80,12 +81,16 @@
 #define MMC_LUA_MMGETENVVALUE "mmGetEnvValue"
 #define MMC_LUA_MMQUIT "mmQuit"
 #define MMC_LUA_MMREADTEXTFILE "mmReadTextFile"
+#define MMC_LUA_MMWRITETEXTFILE "mmWriteTextFile"
 #define MMC_LUA_MMFLUSH "mmRenderNextFrame"
 #define MMC_LUA_MMCURRENTSCRIPTPATH "mmCurrentScriptPath"
 #define MMC_LUA_MMLISTPARAMETERS "mmListParameters"
 #define MMC_LUA_MMINVOKE "mmInvoke"
 #define MMC_LUA_MMSCREENSHOT "mmScreenShot"
 #define MMC_LUA_MMLASTFRAMETIME "mmLastFrameTime"
+#define MMC_LUA_MMSETFRAMEBUFFERSIZE "mmSetFramebufferSize"
+#define MMC_LUA_MMSETWINDOWPOSITION "mmSetWindowPosition"
+#define MMC_LUA_MMSETFULLSCREEN "mmSetFullscreen"
 
 
 void megamol::core::LuaAPI::commonInit() {
@@ -125,6 +130,7 @@ void megamol::core::LuaAPI::commonInit() {
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::Quit>(MMC_LUA_MMQUIT, "()\n\tClose the MegaMol instance.");
 
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ReadTextFile>(MMC_LUA_MMREADTEXTFILE, "(string fileName, function func)\n\tReturn the file contents after processing it with func(content).");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::WriteTextFile>(MMC_LUA_MMWRITETEXTFILE, "(string fileName, string content)\n\tWrite content to file. You CANNOT overwrite existing files!");
 
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::CurrentScriptPath>(MMC_LUA_MMCURRENTSCRIPTPATH, "()\n\tReturns the path of the currently running script, if possible. Empty string otherwise.");
     // TODO: imperative?
@@ -132,6 +138,9 @@ void megamol::core::LuaAPI::commonInit() {
 
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::Screenshot>(MMC_LUA_MMSCREENSHOT, "(string filename)\n\tSave a screen shot of the GL front buffer under 'filename'.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::LastFrameTime>(MMC_LUA_MMLASTFRAMETIME, "()\n\tReturns the graph execution time of the last frame in ms.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetFramebufferSize>(MMC_LUA_MMSETFRAMEBUFFERSIZE, "(int width, int height)\n\tSet framebuffer dimensions to width x height.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetWindowPosition>(MMC_LUA_MMSETWINDOWPOSITION, "(int x, int y)\n\tSet window position to x,y.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetFullscreen>(MMC_LUA_MMSETFULLSCREEN, "(bool fullscreen)\n\tSet window to fullscreen (or restore).");
 
     if (!imperative_only_) {
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetModuleParams>(MMC_LUA_MMGETMODULEPARAMS, "(string name)\n\tReturns a 0x1-separated list of module name and all parameters."
@@ -870,7 +879,7 @@ int megamol::core::LuaAPI::ListResources(lua_State* L) {
 
     const int n = lua_gettop(L);
     std::ostringstream answer;
-    auto resources_list = this->mmListResources_callback_();
+    auto resources_list = this->callbacks_.mmListResources_callback_();
 
     for (auto& resource_name: resources_list) {
         answer << resource_name << std::endl;
@@ -1020,20 +1029,38 @@ int megamol::core::LuaAPI::ReadTextFile(lua_State* L) {
     return 0;
 }
 
+int megamol::core::LuaAPI::WriteTextFile(lua_State* L) {
+    int n = lua_gettop(L);
+    if (n == 2) {
+        const auto filename = luaL_checkstring(L, 1);
+        if (std::filesystem::exists(filename)) {
+            std::string err = MMC_LUA_MMWRITETEXTFILE ": Overwriting existing file '";
+            err += filename;
+            err += "' is not allowed!";
+            luaApiInterpreter_.ThrowError(err);
+        } else {
+            std::ofstream t(filename, std::ofstream::out);
+            std::string output = luaL_checkstring(L, 2);
+            lua_remove(L, 1); // get rid of the filename on the stack
+            lua_remove(L, 1); // get rid of the string on the stack
+
+            if (t.good()) {
+                t.write(output.c_str(), output.length());
+            } else {
+                std::string err = MMC_LUA_MMWRITETEXTFILE ": cannot open file '";
+                err += filename;
+                err += "'.";
+                luaApiInterpreter_.ThrowError(err);
+            }
+        }
+    } else {
+        luaApiInterpreter_.ThrowError(MMC_LUA_MMREADTEXTFILE " requires two parameters, fileName and a function pointer");
+    }
+    return 0;
+}
+
 void megamol::core::LuaAPI::setFlushCallback(std::function<bool()> const& callback) {
     mmFlush_callback_ = callback;
-}
-
-void megamol::core::LuaAPI::setListResourcesCallback(std::function<std::vector<std::string>()> const& callback) {
-    mmListResources_callback_ = callback;
-}
-
-void megamol::core::LuaAPI::setScreenshotCallback(std::function<void(std::string const&)> callback) {
-    mmScreenshot_callback_ = callback;
-}
-
-void megamol::core::LuaAPI::setLastFrameTimeCallback(std::function<float()> callback) {
-    mmLastFrameTime_callback_ = callback;
 }
 
 int megamol::core::LuaAPI::Flush(lua_State* L) {
@@ -1058,7 +1085,7 @@ int megamol::core::LuaAPI::Screenshot(lua_State* L) {
     int n = lua_gettop(L);
     if (n == 1) {
         const std::string filename (luaL_checkstring(L, 1));
-        mmScreenshot_callback_(filename);
+        callbacks_.mmScreenshot_callback_(filename);
     } else {
         luaApiInterpreter_.ThrowError(MMC_LUA_MMSCREENSHOT " requires one parameter: fileName");
     }
@@ -1068,7 +1095,51 @@ int megamol::core::LuaAPI::Screenshot(lua_State* L) {
 
 
 int megamol::core::LuaAPI::LastFrameTime(lua_State *L) {
-    lua_pushnumber(L, mmLastFrameTime_callback_());
+    lua_pushnumber(L, callbacks_.mmLastFrameTime_callback_());
     return 1;
 }
 
+
+int megamol::core::LuaAPI::SetFramebufferSize(lua_State *L) {
+    int n = lua_gettop(L);
+    if (n == 2) {
+        unsigned int width = 0, height = 0;
+        width = luaL_checkinteger(L,1);
+        height = luaL_checkinteger(L, 2);
+
+        callbacks_.mmSetFramebufferSize_callback_(width, height);
+    } else {
+        luaApiInterpreter_.ThrowError(MMC_LUA_MMSETFRAMEBUFFERSIZE " requires two parameters: width, height");
+    }
+
+  return 0;
+}
+
+int megamol::core::LuaAPI::SetWindowPosition(lua_State *L) {
+    int n = lua_gettop(L);
+    if (n == 2) {
+        unsigned int x = 0, y = 0;
+        x = luaL_checkinteger(L,1);
+        y = luaL_checkinteger(L, 2);
+
+        callbacks_.mmSetWindowPosition_callback_(x, y);
+    } else {
+        luaApiInterpreter_.ThrowError(MMC_LUA_MMSETWINDOWPOSITION " requires two parameters: x, y");
+    }
+
+  return 0;
+}
+
+int megamol::core::LuaAPI::SetFullscreen(lua_State *L) {
+    int n = lua_gettop(L);
+    if (n == 1) {
+        bool fs = false;
+        fs = lua_toboolean(L, 1);
+
+        callbacks_.mmSetFullscreen_callback_(fs);
+    } else {
+        luaApiInterpreter_.ThrowError(MMC_LUA_MMSETFULLSCREEN " requires one bool parameter");
+    }
+
+  return 0;
+}

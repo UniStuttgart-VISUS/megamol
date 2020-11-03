@@ -80,7 +80,7 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
     png_set_compression_level(pngPtr, 0);
 
     // todo: camera settings are not stored without magic knowledge about the view
-    megamol::core::utility::graphics::ScreenShotComments ssc(megamolgraph_ptr->SerializeGraph());
+    megamol::core::utility::graphics::ScreenShotComments ssc(megamolgraph_ptr->Convenience().SerializeGraph());
     png_set_text(pngPtr, pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
 
     png_set_IHDR(pngPtr, pngInfoPtr, image.width, image.height, 8,

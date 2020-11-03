@@ -37,6 +37,15 @@ class MEGAMOLCORE_API LuaAPI {
 public:
     static const std::string MEGAMOL_ENV;
 
+    typedef struct {
+        std::function<std::vector<std::string>()> mmListResources_callback_; // returns list of resources available in frontend
+        std::function<void(std::string const&)> mmScreenshot_callback_;
+        std::function<float()> mmLastFrameTime_callback_;
+        std::function<void(const unsigned int, const unsigned int)> mmSetFramebufferSize_callback_;
+        std::function<void(const unsigned int, const unsigned int)> mmSetWindowPosition_callback_;
+        std::function<void(const bool)> mmSetFullscreen_callback_;
+    } LuaCallbacks;
+
     /**
      * @param imperativeOnly choose whether only reply-less commands will be made available
      * to avoid having round-trips across frames/threads etc. Basically config/project scripts
@@ -92,15 +101,13 @@ public:
 
     /**
      * Sets the function callback used to trigger rendering of a frame due to mmFlush.
-     */
-    void setListResourcesCallback(std::function<std::vector<std::string>()> const& callback);
-
-    /**
      * Sets the function callback used to trigger screenshots from frontbuffer into a png file.
+     * Sets the function call used to retrieve the time in millis the last frame took until swapbuffers
+     * Sets the function call used to resize the framebuffer/window
+     * Sets the function call used to reposition the window
+     * Sets the function call used to set/unset fullscreen mode
      */
-    void setScreenshotCallback(std::function<void(std::string const&)> callback);
-
-    void setLastFrameTimeCallback(std::function<float()> callback);
+    void SetCallbacks(LuaCallbacks c) { callbacks_ = c; }
 
     /**
      * Communicates mmQuit request to rest of MegaMol main loop.
@@ -229,6 +236,7 @@ protected:
     int Quit(lua_State* L);
 
     int ReadTextFile(lua_State* L);
+    int WriteTextFile(lua_State* L);
 
     int Flush(lua_State* L);
     int CurrentScriptPath(lua_State* L);
@@ -236,6 +244,9 @@ protected:
     int Invoke(lua_State* L);
     int Screenshot(lua_State* L);
     int LastFrameTime(lua_State* L);
+    int SetFramebufferSize(lua_State *L);
+    int SetWindowPosition(lua_State *L);
+    int SetFullscreen(lua_State *L);
 
 private:
 
@@ -267,10 +278,10 @@ private:
     /** the respective MegaMol graph */
     megamol::core::MegaMolGraph& graph_;
 
+    LuaCallbacks callbacks_;
+    // this one is special since the frontend provides it
     std::function<bool()> mmFlush_callback_; // renders one next frame via main loop
-    std::function<std::vector<std::string>()> mmListResources_callback_; // returns list of resources available in frontend
-    std::function<void(std::string const&)> mmScreenshot_callback_;
-    std::function<float()> mmLastFrameTime_callback_;
+
 
     bool shutdown_ = false;
 
