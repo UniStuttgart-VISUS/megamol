@@ -303,6 +303,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
                         auto glyph_data = createScalarProbeGlyphData(arg, probe_idx, scale);
                         glyph_data.tf_texture_handle = texture_handle;
+                        glyph_data.min_value = m_tf_min;
+                        glyph_data.max_value = m_tf_max;
                         m_scalar_probe_gylph_draw_commands.push_back(draw_command);
                         this->m_scalar_probe_glyph_data.push_back(glyph_data);
 
