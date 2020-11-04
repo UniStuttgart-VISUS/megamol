@@ -50,7 +50,6 @@ ConstructKDTree::ConstructKDTree()
 
     core::param::FlexEnumParam* xyzEp = new core::param::FlexEnumParam("undef");
     this->_xyzSlot << xyzEp;
-    xyzEp->SetGUIVisible(false);
     this->MakeSlotAvailable(&this->_xyzSlot);
 
      this->_deployFullDataTree.SetCallback(CallKDTree::ClassName(), CallKDTree::FunctionName(0), &ConstructKDTree::getData);

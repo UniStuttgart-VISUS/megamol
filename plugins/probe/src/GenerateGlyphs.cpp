@@ -11,6 +11,7 @@
 #include "ProbeCalls.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/param/Vector2fParam.h"
+#include "mmcore/param/FloatParam.h"
 
 namespace megamol {
 namespace probe {
@@ -22,7 +23,8 @@ GenerateGlyphs::GenerateGlyphs()
     ,_deploy_texture("deployTexture", "")
     , _deploy_mesh("deployMesh", "")
     , _get_probes("getProbes", "")
-    , _resolutionSlot("glyphResolution", "") {
+    , _resolutionSlot("glyphResolution", "")
+    , _sizeSlot("size", "") {
 
     this->_deploy_mesh.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &GenerateGlyphs::getMesh);
@@ -40,7 +42,12 @@ GenerateGlyphs::GenerateGlyphs()
     this->MakeSlotAvailable(&this->_get_probes);
 
     this->_resolutionSlot << new megamol::core::param::Vector2fParam({200,200});
+    this->_resolutionSlot.SetUpdateCallback(&GenerateGlyphs::paramChanged);
     this->MakeSlotAvailable(&this->_resolutionSlot);
+
+    this->_sizeSlot << new megamol::core::param::FloatParam(1);
+    this->_sizeSlot.SetUpdateCallback(&GenerateGlyphs::paramChanged);
+    this->MakeSlotAvailable(&this->_sizeSlot);
 }
 
 GenerateGlyphs::~GenerateGlyphs() { this->Release(); }
@@ -462,10 +469,12 @@ bool GenerateGlyphs::getMesh(core::Call& call) {
 
     cm->setMetaData(mesh_meta_data);
 
-    if (cprobes->hasUpdate()) {
+    if (cprobes->hasUpdate() || _trigger_recalc) {
+        _trigger_recalc = false;
         ++_version;
-        
-        if (this->scale <= 0.0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3;
+
+        auto size = _sizeSlot.Param<core::param::FloatParam>()->Value();
+        this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3 * size;
 
         this->_probe_data = cprobes->getData();
 
@@ -552,10 +561,12 @@ bool GenerateGlyphs::getTexture(core::Call& call) {
     auto probe_meta_data = cprobes->getMetaData();
 
 
-    if (cprobes->hasUpdate()) {
+    if (cprobes->hasUpdate() || _trigger_recalc) {
+        _trigger_recalc = false;
         ++_version;
 
-        if (this->scale <= 0.0) this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3;
+        auto size = _sizeSlot.Param<core::param::FloatParam>()->Value();
+        this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3 * size;
 
         this->_probe_data = cprobes->getData();
         this->_mesh_data = std::make_shared<mesh::MeshDataAccessCollection>();
@@ -616,6 +627,12 @@ bool GenerateGlyphs::getTextureMetaData(core::Call& call) {
 
     ctex->setMetaData(tex_meta_data);
 
+    return true;
+}
+
+bool GenerateGlyphs::paramChanged(core::param::ParamSlot& p) {
+
+    _trigger_recalc = true;
     return true;
 }
 } // namespace probe

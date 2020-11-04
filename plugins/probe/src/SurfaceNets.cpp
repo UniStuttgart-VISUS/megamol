@@ -182,7 +182,7 @@ void SurfaceNets::calculateSurfaceNets() {
 
                 // Sum up edge intersections
                 auto const edge_mask = edge_table[mask];
-                std::array<float, 3> v = {0.0, 0.0, 0.0};
+                std::array<float, 4> v = {0.0, 0.0, 0.0};
                 int32_t e_count = 0;
                 // For every edge of the cube...
                 for (int32_t i = 0; i < 12; ++i) {
@@ -227,6 +227,7 @@ void SurfaceNets::calculateSurfaceNets() {
                 for (int32_t i = 0; i < 3; ++i) {
                     v[i] = (x[i] + s * v[i]) * _spacing[i] + _volume_origin[i];
                 }
+                v[3] = 1.0f;
 
                 // Add vertex to buffer, store pointer to vertex index in buffer
                 buffer[m] = _vertices.size();
@@ -385,10 +386,11 @@ void SurfaceNets::calculateSurfaceNets2() {
                     center_of_mass[1] /= normalization;
                     center_of_mass[2] /= normalization;
 
-                    std::array<float, 3> position;
+                    std::array<float, 4> position;
                     position[0] = ((center_of_mass[0] / _dims[0]) * _dims[0] * _spacing[0]) + _volume_origin[0];
                     position[1] = ((center_of_mass[1] / _dims[1]) * _dims[1] * _spacing[1]) + _volume_origin[1];
                     position[2] = ((center_of_mass[2] / _dims[2]) * _dims[2] * _spacing[2]) + _volume_origin[2];
+                    position[3] = 1.0f;
                     _vertices.push_back(position);
 
                     voxel_lookup[offset_now(x, y, z)] = _vertices.size() - 1;
@@ -514,9 +516,9 @@ bool SurfaceNets::getData(core::Call& call) {
 
         _mesh_attribs.resize(2);
         _mesh_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-        _mesh_attribs[0].byte_size = _vertices.size() * sizeof(std::array<float, 3>);
-        _mesh_attribs[0].component_cnt = 3;
-        _mesh_attribs[0].stride = sizeof(std::array<float, 3>);
+        _mesh_attribs[0].byte_size = _vertices.size() * sizeof(std::array<float, 4>);
+        _mesh_attribs[0].component_cnt = 4;
+        _mesh_attribs[0].stride = sizeof(std::array<float, 4>);
         _mesh_attribs[0].offset = 0;
         _mesh_attribs[0].data = reinterpret_cast<uint8_t*>(_vertices.data());
         _mesh_attribs[0].semantic = mesh::MeshDataAccessCollection::POSITION;
@@ -625,7 +627,7 @@ bool SurfaceNets::getNormalData(core::Call& call) {
     mpd->AccessParticles(0).SetGlobalRadius(cd->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge() * 1e-3);
     mpd->AccessParticles(0).SetCount(_vertices.size());
     mpd->AccessParticles(0).SetVertexData(core::moldyn::MultiParticleDataCall::Particles::VERTDATA_FLOAT_XYZ,
-        _vertices.data(), sizeof(std::array<float,3>));
+        _vertices.data(), sizeof(std::array<float,4>));
     mpd->AccessParticles(0).SetDirData(core::moldyn::MultiParticleDataCall::Particles::DIRDATA_FLOAT_XYZ,
         _normals.data(), sizeof(std::array<float,3>));
 
