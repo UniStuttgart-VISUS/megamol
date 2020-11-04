@@ -3,8 +3,7 @@
 uniform mat4 view_mx;
 uniform mat4 proj_mx;
 
-layout(location = 1) in vec3 v_position;
-
+layout(location = 0) in vec3 v_position;
 
 void main()
 {
