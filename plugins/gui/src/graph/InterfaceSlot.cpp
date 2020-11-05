@@ -194,7 +194,9 @@ CallSlotType megamol::gui::InterfaceSlot::GetCallSlotType(void) {
 }
 
 
-bool megamol::gui::InterfaceSlot::IsEmpty(void) { return (this->callslots.empty()); }
+bool megamol::gui::InterfaceSlot::IsEmpty(void) {
+    return (this->callslots.empty());
+}
 
 
 bool megamol::gui::InterfaceSlot::is_callslot_compatible(CallSlot& callslot) {

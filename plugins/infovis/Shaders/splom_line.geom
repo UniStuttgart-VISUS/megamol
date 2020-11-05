@@ -5,6 +5,7 @@ uniform float kernelWidth;
 in float vsValue[];
 in vec4 vsValueColor[];
 in vec4 vsPosition[];
+in int vsFiltered[];
 
 out float gsValue;
 out vec4 gsValueColor;
@@ -15,6 +16,11 @@ layout(lines) in;
 layout(triangle_strip, max_vertices = 4) out;
 
 void main(void) {
+    // Filter
+    if (vsFiltered[0] > 0 || vsFiltered[1] > 0) {
+        return;
+    }
+
     const vec2 p0 = vsPosition[0].xy;
     const vec2 p1 = vsPosition[1].xy;
 

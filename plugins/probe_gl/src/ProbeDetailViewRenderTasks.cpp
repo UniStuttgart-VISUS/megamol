@@ -9,14 +9,15 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 
 megamol::probe_gl::ProbeDetailViewRenderTasks::ProbeDetailViewRenderTasks()
-    : m_version(0)
-    , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
-    , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
-    , m_event_slot("GetProbeManipulation", "")
-    , m_ui_mesh(nullptr)
-    , m_probes_mesh(nullptr)
-    , m_tf_min(0.0f)
-    , m_tf_max(1.0f) {
+        : AbstractGPURenderTaskDataSource()
+        , m_version(0)
+        , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
+        , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
+        , m_event_slot("GetProbeManipulation", "")
+        , m_ui_mesh(nullptr)
+        , m_probes_mesh(nullptr)
+        , m_tf_min(0.0f)
+        , m_tf_max(1.0f) {
     this->m_transfer_function_Slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->m_transfer_function_Slot);
 
@@ -33,23 +34,46 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
 
     AbstractGPURenderTaskDataSource::create();
 
+    // Create local copy of transfer function texture (for compatibility with material pipeline)
+    glowl::TextureLayout tex_layout;
+    tex_layout.width = 1;
+    tex_layout.height = 1;
+    tex_layout.depth = 1;
+    tex_layout.levels = 1;
+    // TODO
+    tex_layout.format = GL_RGBA;
+    tex_layout.type = GL_FLOAT;
+    // TODO
+    tex_layout.internal_format = GL_RGBA32F;
+    tex_layout.int_parameters = {
+        {GL_TEXTURE_MIN_FILTER, GL_NEAREST}, {GL_TEXTURE_MAG_FILTER, GL_LINEAR}, {GL_TEXTURE_WRAP_S, GL_CLAMP}};
+    try {
+        this->m_transfer_function = std::make_shared<glowl::Texture2D>("ProbeTransferFunction", tex_layout, nullptr);
+    } catch (glowl::TextureException const& exc) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Error on transfer texture view pre-creation: %s. [%s, %s, line %d]\n", exc.what(), __FILE__, __FUNCTION__,
+            __LINE__);
+    }
+    // TODO intialize with value indicating that no transfer function is connected
+    this->m_transfer_function->makeResident();
+
     // TODO ui mesh
     {
         // clang-format off
         std::vector<std::vector<float>> vertices = {{
-                -1.0, -0.05, 0.0,
-                1.0, 0.05, 0.0,
-                -1.0, 0.05, 0.0,
-                1.0, 0.05, 0.0,
-                -1.0, -0.05, 0.0,
-                1.0, -0.05, 0.0,
+                -5.0, -0.05, 0.0,
+                5.0, 0.05, 0.0,
+                -5.0, 0.05, 0.0,
+                5.0, 0.05, 0.0,
+                -5.0, -0.05, 0.0,
+                5.0, -0.05, 0.0,
 
-                0.0, -0.05, -1.0,
-                0.0, 0.05, 1.0,
-                0.0, 0.05, -1.0,
-                0.0, 0.05, 1.0,
-                0.0, -0.05, -1.0,
-                0.0, -0.05, 1.0
+                0.0, -0.05, -5.0,
+                0.0, 0.05, 5.0,
+                0.0, 0.05, -5.0,
+                0.0, 0.05, 5.0,
+                0.0, -0.05, -5.0,
+                0.0, -0.05, 5.0
             }};
         std::vector<size_t> byte_sizes = {};
         std::vector<uint32_t> indices = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
@@ -59,7 +83,10 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
         try {
             m_ui_mesh = std::make_shared<glowl::Mesh>(vertices, indices, vertex_layout,
                 GL_UNSIGNED_INT, GL_STATIC_DRAW, GL_TRIANGLES);
-        } catch (const std::exception&) {
+        } catch (const std::exception& exc) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Error on UI mesh creation: %s. [%s, %s, line %d]\n", exc.what(), __FILE__, __FUNCTION__,
+            __LINE__);
         }
     }
     
@@ -83,20 +110,12 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
     mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL) return false;
 
-    std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection;
-    // no incoming render task collection -> use your own collection
-    if (lhs_rtc->getData() == nullptr) {
-        rt_collection = this->m_gpu_render_tasks;
-        lhs_rtc->setData(rt_collection,m_version);
-    }
-    else {
-        rt_collection = lhs_rtc->getData();
-    }
+    syncRenderTaskCollection(lhs_rtc);
 
     // if there is a render task connection to the right, pass on the render task collection
     mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection, 0);
+        rhs_rtc->setData(m_rendertask_collection.first, 0);
         if (!(*rhs_rtc)(0)) return false;
     }
 
@@ -122,14 +141,30 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         if (!(*tfc)(0)) return false;
     }
 
-    bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() /*|| ((tfc != NULL) ? tfc->IsDirty() : false)*/;
+    bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() || ((tfc != NULL) ? tfc->IsDirty() : false);
 
     if (something_has_changed) {
         ++m_version;
-        lhs_rtc->setData(rt_collection,m_version);
+        lhs_rtc->setData(m_rendertask_collection.first,m_version);
 
-        //TODO this breaks chaining
-        rt_collection->clear();
+        for (auto& identifier : m_rendertask_collection.second) {
+            m_rendertask_collection.first->deleteRenderTask(identifier);
+        }
+        m_rendertask_collection.second.clear();
+
+        auto gpu_mtl_storage = mtlc->getData();
+        auto const& ui_shader = gpu_mtl_storage->getMaterial("ProbeDetailViewUI").shader_program;
+        std::vector<glowl::DrawElementsCommand> draw_commands = {glowl::DrawElementsCommand()};
+        draw_commands[0].cnt = 12;
+        draw_commands[0].instance_cnt = 1;
+        draw_commands[0].first_idx = 0;
+        draw_commands[0].base_vertex = 0;
+        draw_commands[0].base_instance = 0;
+        struct UIPerDrawData {};
+        std::vector<UIPerDrawData> per_draw_data = {UIPerDrawData()};
+        std::vector<std::string> identifiers = {std::string(FullName()) + "UI"};
+        m_rendertask_collection.first->addRenderTasks(identifiers, ui_shader, m_ui_mesh, draw_commands, per_draw_data );
+        m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),identifiers.begin(),identifiers.end());
 
         auto probes = pc->getData();
         auto probe_cnt = probes->getProbeCount();
@@ -142,17 +177,72 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
 
         std::vector<std::vector<float>> vertex_data;
         vertex_data.push_back(std::vector<float>());
-        vertex_data.back().reserve(3 * 2 * probe_cnt * 32); //TODO generic sample count per probe...
+        vertex_data.back().reserve(4 * 2 * probe_cnt * 32); //TODO generic sample count per probe...
 
         std::vector<uint32_t> index_data;
         index_data.reserve(4 * (probe_cnt-1));
+
+        // Update transfer texture only if it available and has changed
+        if (tfc != NULL) {
+            if (tfc->IsDirty()) {
+                //++m_version;
+                tfc->ResetDirty();
+
+                this->m_transfer_function->makeNonResident();
+                this->m_transfer_function.reset();
+
+                {
+                    GLenum err = glGetError();
+                    if (err != GL_NO_ERROR) {
+                        // "Do something cop!"
+                        std::cerr << "GL error during transfer function update" << err << std::endl;
+                    }
+                }
+
+                glowl::TextureLayout tex_layout;
+                tex_layout.width = tfc->TextureSize();
+                tex_layout.height = 1;
+                tex_layout.depth = 1;
+                tex_layout.levels = 1;
+                // TODO
+                tex_layout.format = GL_RGBA;
+                tex_layout.type = GL_FLOAT;
+                // TODO
+                tex_layout.internal_format = GL_RGBA32F;
+                tex_layout.int_parameters = {{GL_TEXTURE_MIN_FILTER, GL_NEAREST},
+                    {GL_TEXTURE_MAG_FILTER, GL_LINEAR}, {GL_TEXTURE_WRAP_S, GL_CLAMP}};
+                try {
+                    this->m_transfer_function = std::make_shared<glowl::Texture2D>(
+                        "ProbeTransferFunction", tex_layout, (GLvoid*) tfc->GetTextureData());
+                } catch (glowl::TextureException const& exc) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "Error on transfer texture view creation: %s. [%s, %s, line %d]\n", exc.what(), __FILE__,
+                        __FUNCTION__, __LINE__);
+                }
+
+                this->m_transfer_function->makeResident();
+                {
+                    auto err = glGetError();
+                    if (err != GL_NO_ERROR) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "Error on making transfer texture view resident: %i. [%s, %s, line %d]\n", err,
+                            __FILE__, __FUNCTION__, __LINE__);
+                    }
+                }
+
+                m_tf_min = std::get<0>(tfc->Range());
+                m_tf_max = std::get<1>(tfc->Range());
+            }
+        }
+
+        GLuint64 texture_handle = this->m_transfer_function->getTextureHandle();
 
         //for (int probe_idx = 0; probe_idx < std::min(probe_cnt,1u); ++probe_idx) {
         for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
 
             auto generic_probe = probes->getGenericProbe(probe_idx);
 
-            auto visitor = [&vertex_data, &index_data, probe_idx, this](auto&& arg) {
+            auto visitor = [&vertex_data, &index_data, probe_idx, texture_handle, this](auto&& arg) {
                 using T = std::decay_t<decltype(arg)>;
                 if constexpr (std::is_same_v<T, probe::FloatProbe>) {
                     // TODO
@@ -162,31 +252,35 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
 
                     auto probe_length = arg.m_end - arg.m_begin;
                     glm::vec3 center_point = glm::vec3(0.0f,-arg.m_begin,0.0f);
-
-                    auto base_vertex_idx = vertex_data.back().size() / 3u;
-
+                
+                    auto base_vertex_idx = vertex_data.back().size() / 4u;
+                
                     auto sample_data = arg.getSamplingResult();
                     size_t sample_cnt = sample_data->samples.size();
-
-
+                
+                
                     VectorProbeData probe_data;
                     probe_data.position = glm::vec4(arg.m_position[0] + arg.m_direction[0] * (arg.m_begin * 1.25f),
                         arg.m_position[1] + arg.m_direction[1] * (arg.m_begin * 1.25f),
                         arg.m_position[2] + arg.m_direction[2] * (arg.m_begin * 1.25f), 1.0f);
                     probe_data.probe_direction = glm::vec4(arg.m_direction[0], arg.m_direction[1], arg.m_direction[2], 1.0f);
                     probe_data.scale = 1.0f; //TODO scale?
-                    if (arg.getSamplingResult()->samples.size() > 32) {
-                        // TODO print warning/error message
-                    }
+
+                    assert(sample_cnt <= 32);
+
                     probe_data.sample_cnt = std::min(static_cast<size_t>(32), sample_cnt);
                     for (int i = 0; i < probe_data.sample_cnt; ++i) {
                         probe_data.samples[i] = sample_data->samples[i];
                     }
                     probe_data.probe_id = probe_idx;
 
+                    probe_data.tf_texture_handle = texture_handle;
+                    probe_data.tf_max = m_tf_max;
+                    probe_data.tf_min = m_tf_min;
+                
                     m_vector_probe_data.push_back(probe_data);
                     
-                    float ribbon_width = 5.0f;
+                    float ribbon_width = 2.0f;
 
                     // generate vertices
                     for (auto& sample : sample_data->samples )
@@ -200,10 +294,12 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                         vertex_data.back().push_back(center_point.x - 0.5f * ribbon_width * std::get<0>(sample_normalized));
                         vertex_data.back().push_back(center_point.y - 0.5f * ribbon_width * std::get<1>(sample_normalized));
                         vertex_data.back().push_back(center_point.z - 0.5f * ribbon_width * std::get<2>(sample_normalized));
+                        vertex_data.back().push_back(sample[3]);
 
                         vertex_data.back().push_back(center_point.x + 0.5f * ribbon_width * std::get<0>(sample_normalized));
                         vertex_data.back().push_back(center_point.y + 0.5f * ribbon_width * std::get<1>(sample_normalized));
                         vertex_data.back().push_back(center_point.z + 0.5f * ribbon_width * std::get<2>(sample_normalized));
+                        vertex_data.back().push_back(sample[3]);
 
                         center_point += glm::vec3(
                             0.0f,
@@ -221,7 +317,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                        index_data.push_back((i*2) + 3);
                        index_data.push_back((i*2) + 2);
                     }
-
+                
                     //TODO set correct values...
                     glowl::DrawElementsCommand draw_command;
                     draw_command.base_instance = 0;
@@ -229,8 +325,10 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                     draw_command.cnt = patch_cnt * 4;
                     draw_command.first_idx = first_index_idx;
                     draw_command.instance_cnt = 1;
-
+                
                     m_vector_probe_draw_commands.push_back(draw_command);
+                
+                    m_vector_probe_identifiers.emplace_back(std::string(FullName())+"_probe_"+std::to_string(probe_idx));
 
                 } else {
                     // unknown probe type, throw error? do nothing?
@@ -241,7 +339,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         }
 
         std::vector<glowl::VertexLayout> vertex_layout = {
-            glowl::VertexLayout(12,{glowl::VertexLayout::Attribute(3,GL_FLOAT,GL_FALSE,0)})
+            glowl::VertexLayout(16,{glowl::VertexLayout::Attribute(4,GL_FLOAT,GL_FALSE,0)})
         };
         try {
             m_probes_mesh = std::make_shared<glowl::Mesh>(vertex_data, index_data, vertex_layout,
@@ -251,29 +349,31 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
             "Error during mesh creation of\"%s\": %s. [%s, %s, line %d]\n", "ProbeDetailVieW",
             exc.what(), __FILE__, __FUNCTION__, __LINE__);
         }
-
-        auto gpu_mtl_storage = mtlc->getData();
-
+        
         if (!m_vector_probe_draw_commands.empty()) {
-            //auto const& probe_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
-            //m_draw_commands_collection_idx = rt_collection->addRenderTasks(
-            //probe_shader, m_probes_mesh, m_vector_probe_draw_commands, m_vector_probe_data);
+            auto const& probe_shader = gpu_mtl_storage->getMaterial("ProbeDetailView").shader_program;
+            m_rendertask_collection.first->addRenderTasks(m_vector_probe_identifiers,probe_shader, m_probes_mesh, m_vector_probe_draw_commands, m_vector_probe_data);
+            m_rendertask_collection.second.insert(
+                            m_rendertask_collection.second.end(), m_vector_probe_identifiers.begin(), m_vector_probe_identifiers.end());
         }
-
-        auto const& ui_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
-        std::vector<glowl::DrawElementsCommand> draw_commands = {glowl::DrawElementsCommand()};
-        draw_commands[0].cnt = 12;
-        draw_commands[0].instance_cnt = 1;
-        draw_commands[0].first_idx = 0;
-        draw_commands[0].base_vertex = 0;
-        draw_commands[0].base_instance = 0;
-        struct UIPerDrawData {};
-        std::vector<UIPerDrawData> per_draw_data = {UIPerDrawData()};
-        m_draw_commands_collection_idx = rt_collection->addRenderTasks(ui_shader, m_ui_mesh, draw_commands, per_draw_data );
-
     }
 
     //TODO set data/metadata
+    // compute mesh call specific update
+    std::array<float, 6> bbox;
+
+    bbox[0] = -3.0f;
+    bbox[1] = 64.0f;
+    bbox[2] = -3.0f;
+    bbox[3] = 3.0f;
+    bbox[4] = -0.5f;
+    bbox[5] = 3.0f;
+
+    auto meta_data = lhs_rtc->getMetaData();
+    meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
+    meta_data.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
+    lhs_rtc->setMetaData(meta_data);
+
 
     // check for pending probe manipulations
     // check for pending events
@@ -328,13 +428,35 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
             auto pending_events = event_collection->get<ProbeSelectExclusive>();
             if (!pending_events.empty()) {
                 auto probe_idx = pending_events.back().obj_id;
-                rt_collection->clear();
+                
+                for (auto& identifier : m_rendertask_collection.second) {
+                    m_rendertask_collection.first->deleteRenderTask(identifier);
+                }
+                m_rendertask_collection.second.clear();
+                
                 if (!m_vector_probe_draw_commands.empty()) {
                     auto gpu_mtl_storage = mtlc->getData();
-                    auto const& probe_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
-                    m_draw_commands_collection_idx = rt_collection->addSingleRenderTask(
-                    probe_shader, m_probes_mesh, m_vector_probe_draw_commands[probe_idx], m_vector_probe_data);
+                    auto const& probe_shader = gpu_mtl_storage->getMaterial("ProbeDetailView").shader_program;
+                    std::string identifier = std::string(FullName()) + std::to_string(probe_idx);
+                    m_rendertask_collection.first->addRenderTask(identifier,
+                    probe_shader, m_probes_mesh, m_vector_probe_draw_commands[probe_idx], m_vector_probe_data[probe_idx]);
+                    m_rendertask_collection.second.push_back(identifier);
                 }
+
+
+                auto gpu_mtl_storage = mtlc->getData();
+                auto const& ui_shader = gpu_mtl_storage->getMaterial("ProbeDetailViewUI").shader_program;
+                std::vector<glowl::DrawElementsCommand> draw_commands = {glowl::DrawElementsCommand()};
+                draw_commands[0].cnt = 12;
+                draw_commands[0].instance_cnt = 1;
+                draw_commands[0].first_idx = 0;
+                draw_commands[0].base_vertex = 0;
+                draw_commands[0].base_instance = 0;
+                struct UIPerDrawData {};
+                std::vector<UIPerDrawData> per_draw_data = {UIPerDrawData()};
+                std::vector<std::string> identifiers = {std::string(FullName()) + "UI"};
+                m_rendertask_collection.first->addRenderTasks(identifiers, ui_shader, m_ui_mesh, draw_commands, per_draw_data );
+                m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),identifiers.begin(),identifiers.end());
             }
         }
 
@@ -368,16 +490,17 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getMetaDataCallback(core::Ca
 
     lhs_meta_data.m_frame_cnt = std::min(lhs_meta_data.m_frame_cnt, probe_meta_data.m_frame_cnt);
 
-    auto bbox = lhs_meta_data.m_bboxs.BoundingBox();
-    bbox.Union(probe_meta_data.m_bboxs.BoundingBox());
-    lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
-    
-    auto cbbox = lhs_meta_data.m_bboxs.ClipBox();
-    cbbox.Union(probe_meta_data.m_bboxs.ClipBox());
-    lhs_meta_data.m_bboxs.SetClipBox(cbbox);
+    //auto bbox = lhs_meta_data.m_bboxs.BoundingBox();
+    //bbox.Union(probe_meta_data.m_bboxs.BoundingBox());
+    //lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
+    //
+    //auto cbbox = lhs_meta_data.m_bboxs.ClipBox();
+    //cbbox.Union(probe_meta_data.m_bboxs.ClipBox());
+    //lhs_meta_data.m_bboxs.SetClipBox(cbbox);
 
     lhs_rt_call->setMetaData(lhs_meta_data);
 
     return true;
 }
+
 

@@ -12,10 +12,10 @@
 #include "glm/gtx/transform.hpp"
 
 megamol::probe_gl::ProbeRenderTasks::ProbeRenderTasks()
-    : m_version(0)
-    , m_show_probes(true)
-    , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
-    , m_event_slot("GetEvents", "") {
+        : m_version(0)
+        , m_show_probes(true)
+        , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
+        , m_event_slot("GetEvents", "") {
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->m_probes_slot);
 
@@ -35,19 +35,26 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
     }
 
     mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == NULL) return false;
+    if (lhs_rtc == NULL)
+        return false;
 
     mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
-    if (mtlc == NULL) return false;
-    if (!(*mtlc)(0)) return false;
+    if (mtlc == NULL)
+        return false;
+    if (!(*mtlc)(0))
+        return false;
 
     mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
-    if (mc == NULL) return false;
-    if (!(*mc)(0)) return false; // TODO only call callback when hash is outdated?
+    if (mc == NULL)
+        return false;
+    if (!(*mc)(0))
+        return false; // TODO only call callback when hash is outdated?
 
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
-    if (pc == NULL) return false;
-    if (!(*pc)(0)) return false;
+    if (pc == NULL)
+        return false;
+    if (!(*pc)(0))
+        return false;
 
     // something has changed in the neath
     bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate() || pc->hasUpdate();
@@ -56,18 +63,14 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
     auto gpu_mesh_storage = mc->getData();
     auto probes = pc->getData();
 
-    // no incoming render task collection -> use your own collection
-    std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection;
-    if (lhs_rtc->getData() == nullptr)
-        rt_collection = this->m_gpu_render_tasks;
-    else
-        rt_collection = lhs_rtc->getData();
+    syncRenderTaskCollection(lhs_rtc);
 
     // if there is a render task connection to the right, pass on the render task collection
     mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection, 0);
-        if (!(*rhs_rtc)(0)) return false;
+        rhs_rtc->setData(m_rendertask_collection.first, 0);
+        if (!(*rhs_rtc)(0))
+            return false;
     }
 
     struct PerObjData {
@@ -81,10 +84,15 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
     if (something_has_changed) {
         ++m_version;
 
-        // TODO this breaks chaining...
-        rt_collection->clear();
+        for (auto& identifier : m_rendertask_collection.second) {
+            m_rendertask_collection.first->deleteRenderTask(identifier);
+        }
+        m_rendertask_collection.second.clear();
 
         auto probe_cnt = probes->getProbeCount();
+
+        m_identifiers.clear();
+        m_identifiers.resize(probe_cnt);
 
         m_probe_draw_data.clear();
         m_probe_draw_data.resize(probe_cnt);
@@ -131,8 +139,9 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
                 assert(gpu_mesh_storage->getSubMeshData().size() > 0);
 
-                auto const& gpu_sub_mesh = gpu_mesh_storage->getSubMeshData().front();
-                auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
+                m_identifiers[probe_idx] = (std::string(FullName()) + "_probe_" + std::to_string(probe_idx));
+
+                auto const& gpu_sub_mesh = gpu_mesh_storage->getSubMeshData().begin()->second;
 
                 m_draw_commands[probe_idx] = gpu_sub_mesh.sub_mesh_draw_command;
 
@@ -155,12 +164,14 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
             }
         }
 
-        auto const& gpu_sub_mesh = gpu_mesh_storage->getSubMeshData().front();
-        auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
-        auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+        auto const& gpu_sub_mesh = gpu_mesh_storage->getSubMeshData().begin()->second;
+        auto const& shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
 
         if (m_show_probes) {
-            rt_collection->addRenderTasks(shader, gpu_batch_mesh, m_draw_commands, m_probe_draw_data);
+            m_rendertask_collection.first->addRenderTasks(
+                m_identifiers, shader, gpu_sub_mesh.mesh->mesh, m_draw_commands, m_probe_draw_data);
+            m_rendertask_collection.second.insert(
+                m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
         }
     }
 
@@ -174,7 +185,8 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
     // check for pending events
     auto call_event_storage = this->m_event_slot.CallAs<core::CallEvent>();
     if (call_event_storage != NULL) {
-        if ((!(*call_event_storage)(0))) return false;
+        if ((!(*call_event_storage)(0)))
+            return false;
 
         auto event_collection = call_event_storage->getData();
 
@@ -185,12 +197,12 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 for (auto& draw_data : m_probe_draw_data) {
                     draw_data.highlighted = 0;
                 }
+
                 if (m_show_probes) {
-                    // TODO this breaks chaining...
-                    rt_collection->clear();
-                    auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
-                    auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-                    rt_collection->addRenderTasks(shader, gpu_batch_mesh, m_draw_commands, m_probe_draw_data);
+                    for (int i = 0; i < m_probe_draw_data.size(); ++i) {
+                        std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[i]};
+                        m_rendertask_collection.first->updatePerDrawData(m_identifiers[i], per_probe_data);
+                    }
                 }
             }
         }
@@ -203,7 +215,8 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 per_probe_data[0].highlighted = 1;
 
                 if (m_show_probes) {
-                    rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_probe_" + std::to_string(evt.obj_id);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 }
             }
         }
@@ -215,7 +228,8 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
 
                 if (m_show_probes) {
-                    rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_probe_" + std::to_string(evt.obj_id);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 }
             }
         }
@@ -228,7 +242,8 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
 
                 if (m_show_probes) {
-                    rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_probe_" + std::to_string(evt.obj_id);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 }
             }
         }
@@ -241,7 +256,8 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 std::array<PerProbeDrawData, 1> per_probe_data = {m_probe_draw_data[evt.obj_id]};
 
                 if (m_show_probes) {
-                    rt_collection->updatePerDrawData(evt.obj_id, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_probe_" + std::to_string(evt.obj_id);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 }
             }
         }
@@ -253,36 +269,44 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
                 m_show_probes = !m_show_probes;
 
                 if (m_show_probes) {
-                    auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes().front().mesh;
-                    auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-                    rt_collection->addRenderTasks(shader, gpu_batch_mesh, m_draw_commands, m_probe_draw_data);
+                    auto const& gpu_sub_mesh = gpu_mesh_storage->getSubMeshData().begin()->second;
+                    auto const& shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
+                    m_rendertask_collection.first->addRenderTasks(
+                        m_identifiers, shader, gpu_sub_mesh.mesh->mesh, m_draw_commands, m_probe_draw_data);
+                    m_rendertask_collection.second.insert(
+                        m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
                 } else {
-                    // TODO this breaks chaining...
-                    rt_collection->clear();
+                    for (auto& identifier : m_rendertask_collection.second) {
+                        m_rendertask_collection.first->deleteRenderTask(identifier);
+                    }
+                    m_rendertask_collection.second.clear();
                 }
             }
         }
     }
 
-    lhs_rtc->setData(rt_collection, m_version);
+    lhs_rtc->setData(m_rendertask_collection.first, m_version);
 
     return true;
 }
 
 bool megamol::probe_gl::ProbeRenderTasks::getMetaDataCallback(core::Call& caller) {
 
-    if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller)) return false;
+    if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller))
+        return false;
 
     mesh::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     auto probe_call = m_probes_slot.CallAs<probe::CallProbes>();
-    if (probe_call == NULL) return false;
+    if (probe_call == NULL)
+        return false;
 
     auto lhs_meta_data = lhs_rt_call->getMetaData();
 
     auto probe_meta_data = probe_call->getMetaData();
     probe_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
     probe_call->setMetaData(probe_meta_data);
-    if (!(*probe_call)(1)) return false;
+    if (!(*probe_call)(1))
+        return false;
     probe_meta_data = probe_call->getMetaData();
 
     lhs_meta_data.m_frame_cnt = std::min(lhs_meta_data.m_frame_cnt, probe_meta_data.m_frame_cnt);

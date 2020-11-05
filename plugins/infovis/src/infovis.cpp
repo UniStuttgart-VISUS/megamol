@@ -32,15 +32,15 @@ class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Insta
 public:
     /** ctor */
     plugin_instance(void)
-        : ::megamol::core::utility::plugins::Plugin200Instance(
-              /* machine-readable plugin assembly name */
-              "infovis",
+            : ::megamol::core::utility::plugins::Plugin200Instance(
+                  /* machine-readable plugin assembly name */
+                  "infovis",
 
-              /* human-readable plugin description */
-              "Information visualization"){
+                  /* human-readable plugin description */
+                  "Information visualization"){
 
-              // here we could perform addition initialization
-          };
+                  // here we could perform addition initialization
+              };
     /** Dtor */
     virtual ~plugin_instance(void) {
         // here we could perform addition de-initialization

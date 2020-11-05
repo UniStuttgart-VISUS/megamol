@@ -64,7 +64,6 @@ private:
     bool InterfaceIsDirty();
 
     void calculateSurfaceNets();
-    void calculateSurfaceNets2();
 
     bool getMetaData(core::Call& call);
     bool getData(core::Call& call);

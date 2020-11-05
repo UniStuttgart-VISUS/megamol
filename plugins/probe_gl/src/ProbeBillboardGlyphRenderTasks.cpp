@@ -52,22 +52,18 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::create() {
 void megamol::probe_gl::ProbeBillboardGlyphRenderTasks::release() {}
 
 megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTasks()
-    : m_version(0)
-    , m_imgui_context(nullptr)
-    , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
-    , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
-    , m_event_slot("GetProbeEvents", "")
-    , m_billboard_dummy_mesh(nullptr)
-    , m_billboard_size_slot("BillBoardSize", "Sets the scaling factor of the texture billboards")
-    , m_rendering_mode_slot("RenderingMode", "Glyph rendering mode")
-    , m_use_interpolation_slot("UseInterpolation", "Interpolate between samples")
-    , m_tf_min(0.0f)
-    , m_tf_max(1.0f)
-    , m_show_glyphs(true)
-    , m_textured_glyphs_rendertasks_index_offset(0)
-    , m_vector_glyphs_rendertasks_index_offset(0)
-    , m_scalar_glyphs_rendertasks_index_offset(0)
-    , m_clusterID_glyphs_rendertasks_index_offset(0) {
+        : m_version(0)
+        , m_imgui_context(nullptr)
+        , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
+        , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
+        , m_event_slot("GetProbeEvents", "")
+        , m_billboard_dummy_mesh(nullptr)
+        , m_billboard_size_slot("BillBoardSize", "Sets the scaling factor of the texture billboards")
+        , m_rendering_mode_slot("RenderingMode", "Glyph rendering mode")
+        , m_use_interpolation_slot("UseInterpolation", "Interpolate between samples")
+        , m_tf_min(0.0f)
+        , m_tf_max(1.0f)
+        , m_show_glyphs(true) {
 
     this->m_transfer_function_Slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->m_transfer_function_Slot);
@@ -103,25 +99,25 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     }
 
     mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == NULL) return false;
+    if (lhs_rtc == NULL) {
+        return false;
+    }
 
-    std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection;
-    // no incoming render task collection -> use your own collection
-    if (lhs_rtc->getData() == nullptr)
-        rt_collection = this->m_gpu_render_tasks;
-    else
-        rt_collection = lhs_rtc->getData();
+    syncRenderTaskCollection(lhs_rtc);
 
     // if there is a render task connection to the right, pass on the render task collection
     mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection, 0);
-        if (!(*rhs_rtc)(0)) return false;
+        rhs_rtc->setData(m_rendertask_collection.first, 0);
+        if (!(*rhs_rtc)(0))
+            return false;
     }
 
     mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
-    if (mtlc == NULL) return false;
-    if (!(*mtlc)(0)) return false;
+    if (mtlc == NULL)
+        return false;
+    if (!(*mtlc)(0))
+        return false;
 
     // create an empty dummy mesh, actual billboard geometry will be build in vertex shader
     if (m_billboard_dummy_mesh == nullptr) {
@@ -135,8 +131,10 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     }
 
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
-    if (pc == NULL) return false;
-    if (!(*pc)(0)) return false;
+    if (pc == NULL)
+        return false;
+    if (!(*pc)(0))
+        return false;
 
 
     auto* tfc = this->m_transfer_function_Slot.CallAs<core::view::CallGetTransferFunction>();
@@ -155,12 +153,20 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         auto gpu_mtl_storage = mtlc->getData();
         auto probes = pc->getData();
 
-        rt_collection->clear();
+        for (auto& identifier : m_rendertask_collection.second) {
+            m_rendertask_collection.first->deleteRenderTask(identifier);
+        }
+        m_rendertask_collection.second.clear();
 
         auto probe_cnt = probes->getProbeCount();
 
         m_type_index_map.clear();
         m_type_index_map.reserve(probe_cnt);
+
+        m_textured_glyph_identifiers.clear();
+        m_vector_probe_glyph_identifiers.clear();
+        m_scalar_probe_glyph_identifiers.clear();
+        m_clusterID_glyph_identifiers.clear();
 
         m_textured_glyph_data.clear();
         m_vector_probe_glyph_data.clear();
@@ -198,17 +204,19 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         if (m_rendering_mode_slot.Param<core::param::EnumParam>()->Value() == 0) {
             // use precomputed textures if available
 
-            if (gpu_mtl_storage->getMaterials()[0].textures.size() > 0) {
+            if (gpu_mtl_storage->getMaterial("ProbeBillboard_Textured").textures.size() > 0) {
                 for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
 
-                    assert(probe_cnt <= (gpu_mtl_storage->getMaterials()[0].textures.size() * 2048));
+                    assert(
+                        probe_cnt <= (gpu_mtl_storage->getMaterial("ProbeBillboard_Textured").textures.size() * 2048));
 
                     auto generic_probe = probes->getGenericProbe(probe_idx);
 
-                    GLuint64 texture_handle =
-                        gpu_mtl_storage->getMaterials()[0].textures[probe_idx / 2048]->getTextureHandle();
+                    GLuint64 texture_handle = gpu_mtl_storage->getMaterial("ProbeBillboard_Textured")
+                                                  .textures[probe_idx / 2048]
+                                                  ->getTextureHandle();
                     float slice_idx = probe_idx % 2048;
-                    gpu_mtl_storage->getMaterials()[0].textures[probe_idx / 2048]->makeResident();
+                    gpu_mtl_storage->getMaterial("ProbeBillboard_Textured").textures[probe_idx / 2048]->makeResident();
 
                     auto visitor = [draw_command, scale, texture_handle, slice_idx, probe_idx, this](auto&& arg) {
                         using T = std::decay_t<decltype(arg)>;
@@ -216,6 +224,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         auto glyph_data = createTexturedGlyphData(arg, probe_idx, texture_handle, slice_idx, scale);
                         m_textured_gylph_draw_commands.push_back(draw_command);
                         this->m_textured_glyph_data.push_back(glyph_data);
+
+                        m_textured_glyph_identifiers.emplace_back(
+                            std::string(FullName()) + "_tg_" + std::to_string(probe_idx));
 
                         this->m_type_index_map.push_back({std::type_index(typeid(TexturedGlyphData)), probe_idx});
                     };
@@ -256,7 +267,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         {GL_TEXTURE_MAG_FILTER, GL_LINEAR}, {GL_TEXTURE_WRAP_S, GL_CLAMP}};
                     try {
                         this->m_transfer_function = std::make_shared<glowl::Texture2D>(
-                            "ProbeTransferFunction", tex_layout, (GLvoid*)tfc->GetTextureData());
+                            "ProbeTransferFunction", tex_layout, (GLvoid*) tfc->GetTextureData());
                     } catch (glowl::TextureException const& exc) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "Error on transfer texture view creation: %s. [%s, %s, line %d]\n", exc.what(), __FILE__,
@@ -268,8 +279,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         auto err = glGetError();
                         if (err != GL_NO_ERROR) {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "Error on making transfer texture view resident: %i. [%s, %s, line %d]\n", err, __FILE__, __FUNCTION__,
-                                __LINE__);
+                                "Error on making transfer texture view resident: %i. [%s, %s, line %d]\n", err,
+                                __FILE__, __FUNCTION__, __LINE__);
                         }
                     }
 
@@ -295,6 +306,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         m_scalar_probe_gylph_draw_commands.push_back(draw_command);
                         this->m_scalar_probe_glyph_data.push_back(glyph_data);
 
+                        m_scalar_probe_glyph_identifiers.emplace_back(
+                            std::string(FullName()) + "_sg_" + std::to_string(probe_idx));
+
                         this->m_type_index_map.push_back({std::type_index(typeid(GlyphScalarProbeData)), sp_idx});
 
                     } else if constexpr (std::is_same_v<T, probe::IntProbe>) {
@@ -309,6 +323,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                         glyph_data.tf_max = m_tf_max;
                         m_vector_probe_gylph_draw_commands.push_back(draw_command);
                         this->m_vector_probe_glyph_data.push_back(glyph_data);
+
+                        m_vector_probe_glyph_identifiers.emplace_back(
+                            std::string(FullName()) + "_vg_" + std::to_string(probe_idx));
 
                         this->m_type_index_map.push_back({std::type_index(typeid(GlyphVectorProbeData)), vp_idx});
 
@@ -343,6 +360,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     m_clusterID_gylph_draw_commands.push_back(draw_command);
                     this->m_clusterID_glyph_data.push_back(glyph_data);
 
+                    m_clusterID_glyph_identifiers.push_back(
+                        std::string(FullName()) + "_cg_" + std::to_string(probe_idx));
+
                     this->m_type_index_map.push_back({std::type_index(typeid(GlyphClusterIDData)), probe_idx});
                 };
 
@@ -350,13 +370,14 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
             }
         }
 
-        addAllRenderTasks(rt_collection);
+        addAllRenderTasks();
 
         std::array<PerFrameData, 1> data;
         data[0].use_interpolation = m_use_interpolation_slot.Param<core::param::BoolParam>()->Value();
 
-        if (rt_collection->getPerFrameBuffers().empty()) {
-            rt_collection->addPerFrameDataBuffer(data, 1);
+        if (m_rendertask_collection.first->getPerFrameBuffers().empty()) {
+            std::string identifier = std::string(FullName()) + "_perFrameData";
+            m_rendertask_collection.first->addPerFrameDataBuffer(identifier, data, 1);
         }
     }
 
@@ -367,34 +388,37 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         std::array<PerFrameData, 1> data;
         data[0].use_interpolation = m_use_interpolation_slot.Param<core::param::BoolParam>()->Value();
 
-        if (!rt_collection->getPerFrameBuffers().empty()) {
-            rt_collection->addPerFrameDataBuffer(data, 1);
+        std::string identifier = std::string(FullName()) + "_perFrameData";
+        if (!m_rendertask_collection.first->getPerFrameBuffers().empty()) {
+            m_rendertask_collection.first->addPerFrameDataBuffer(identifier, data, 1);
         } else {
-            rt_collection->updatePerFrameDataBuffer(data, 1);
+            m_rendertask_collection.first->updatePerFrameDataBuffer(identifier, data, 1);
         }
     }
 
     // check for pending events
     auto call_event_storage = this->m_event_slot.CallAs<core::CallEvent>();
     if (call_event_storage != NULL) {
-        if ((!(*call_event_storage)(0))) return false;
+        if ((!(*call_event_storage)(0)))
+            return false;
 
         auto event_collection = call_event_storage->getData();
 
         // process pobe clear selection events
         {
-            auto pending_clearselection_events = event_collection->get<ProbeClearSelection>();
-            for (auto& evt : pending_clearselection_events) {
+            auto pending_events = event_collection->get<ProbeClearSelection>();
+            if (!pending_events.empty()) {
+                for (auto& draw_data : m_scalar_probe_glyph_data) {
+                    draw_data.state = 0;
+                }
                 for (auto& draw_data : m_vector_probe_glyph_data) {
                     draw_data.state = 0;
                 }
-
-                // TODO this breaks chaining...
-                rt_collection->clear();
-
-                if (m_show_glyphs) {
-                    addAllRenderTasks(rt_collection);
+                for (auto& draw_data : m_clusterID_glyph_data) {
+                    draw_data.state = 0;
                 }
+
+                updateAllRenderTasks();
             }
         }
 
@@ -408,20 +432,19 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
                     std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
                     per_probe_data[0].state = 1;
-                    rt_collection->updatePerDrawData(
-                        m_scalar_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
                     std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
                     per_probe_data[0].state = 1;
-                    rt_collection->updatePerDrawData(
-                        m_vector_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
                     std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
                     per_probe_data[0].state = 1;
-                    rt_collection->updatePerDrawData(
-                        m_clusterID_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 }
-
 
                 //  bool my_tool_active = true;
                 //  float my_color[4] = {0.0, 0.0, 0.0, 0.0};
@@ -472,16 +495,16 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
                 if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
                     std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
-                    rt_collection->updatePerDrawData(
-                        m_scalar_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
                     std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
-                    rt_collection->updatePerDrawData(
-                        m_vector_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
                     std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
-                    rt_collection->updatePerDrawData(
-                        m_clusterID_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 }
             }
         }
@@ -496,18 +519,18 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
                     m_scalar_probe_glyph_data[probe_idx].state = 2;
                     std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
-                    rt_collection->updatePerDrawData(
-                        m_scalar_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_Scalar";
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
                     m_vector_probe_glyph_data[probe_idx].state = 2;
                     std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
-                    rt_collection->updatePerDrawData(
-                        m_vector_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_Vector";
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
                     m_clusterID_glyph_data[probe_idx].state = 2;
                     std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
-                    rt_collection->updatePerDrawData(
-                        m_clusterID_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_ProbeBillboard_ClusterID";
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 }
             }
         }
@@ -522,18 +545,18 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
                     m_scalar_probe_glyph_data[probe_idx].state = 0;
                     std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
-                    rt_collection->updatePerDrawData(
-                        m_scalar_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
                     m_vector_probe_glyph_data[probe_idx].state = 0;
                     std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
-                    rt_collection->updatePerDrawData(
-                        m_vector_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
                     m_clusterID_glyph_data[probe_idx].state = 0;
                     std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
-                    rt_collection->updatePerDrawData(
-                        m_clusterID_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 }
             }
         }
@@ -556,7 +579,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 auto probe_type = m_type_index_map[pending_events.back().obj_id].first;
                 auto probe_idx = m_type_index_map[pending_events.back().obj_id].second;
 
-                // multiple exclusive selections make no sense, just applay the last one
+                // multiple exclusive selections make no sense, just apply the last one
                 if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
                     m_scalar_probe_glyph_data[probe_idx].state = 2;
                 } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
@@ -565,12 +588,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     m_clusterID_glyph_data[probe_idx].state = 2;
                 }
 
-                // TODO this breaks chaining...
-                rt_collection->clear();
-
-                if (m_show_glyphs) {
-                    addAllRenderTasks(rt_collection);
-                }
+                updateAllRenderTasks();
             }
         }
 
@@ -585,19 +603,19 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                     m_scalar_probe_glyph_data[probe_idx].state =
                         m_scalar_probe_glyph_data[probe_idx].state == 2 ? 0 : 2;
                     std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
-                    rt_collection->updatePerDrawData(
-                        m_scalar_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
                     m_vector_probe_glyph_data[probe_idx].state =
                         m_vector_probe_glyph_data[probe_idx].state == 2 ? 0 : 2;
                     std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
-                    rt_collection->updatePerDrawData(
-                        m_vector_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
                     m_clusterID_glyph_data[probe_idx].state = m_clusterID_glyph_data[probe_idx].state == 2 ? 0 : 2;
                     std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
-                    rt_collection->updatePerDrawData(
-                        m_clusterID_glyphs_rendertasks_index_offset + probe_idx, per_probe_data);
+                    std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
+                    m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
                 }
             }
         }
@@ -609,10 +627,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
                 m_show_glyphs = !m_show_glyphs;
 
                 if (m_show_glyphs) {
-                    addAllRenderTasks(rt_collection);
+                    addAllRenderTasks();
                 } else {
-                    // TODO this breaks chaining...
-                    rt_collection->clear();
+                    clearAllRenderTasks();
                 }
             }
         }
@@ -620,7 +637,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
 
     if (lhs_rtc->version() < m_version) {
-        lhs_rtc->setData(rt_collection, m_version);
+        lhs_rtc->setData(m_rendertask_collection.first, m_version);
     }
 
     return true;
@@ -628,18 +645,21 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
 bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getMetaDataCallback(core::Call& caller) {
 
-    if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller)) return false;
+    if (!AbstractGPURenderTaskDataSource::getMetaDataCallback(caller))
+        return false;
 
     mesh::CallGPURenderTaskData* lhs_rt_call = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     auto probe_call = m_probes_slot.CallAs<probe::CallProbes>();
-    if (probe_call == NULL) return false;
+    if (probe_call == NULL)
+        return false;
 
     auto lhs_meta_data = lhs_rt_call->getMetaData();
 
     auto probe_meta_data = probe_call->getMetaData();
     probe_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
     probe_call->setMetaData(probe_meta_data);
-    if (!(*probe_call)(1)) return false;
+    if (!(*probe_call)(1))
+        return false;
     probe_meta_data = probe_call->getMetaData();
 
     lhs_meta_data.m_frame_cnt = std::min(lhs_meta_data.m_frame_cnt, probe_meta_data.m_frame_cnt);
@@ -657,37 +677,75 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getMetaDataCallback(core
     return true;
 }
 
-bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks(
-    std::shared_ptr<mesh::GPURenderTaskCollection> rt_collection) {
+bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
     mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
-    if (mtlc == NULL) return false;
-    if (!(*mtlc)(0)) return false;
+    if (mtlc == NULL)
+        return false;
+    if (!(*mtlc)(0))
+        return false;
 
     auto gpu_mtl_storage = mtlc->getData();
 
     if (!m_textured_gylph_draw_commands.empty()) {
-        auto const& textured_shader = gpu_mtl_storage->getMaterials()[0].shader_program;
-        m_textured_glyphs_rendertasks_index_offset = rt_collection->addRenderTasks(
-            textured_shader, m_billboard_dummy_mesh, m_textured_gylph_draw_commands, m_textured_glyph_data);
+        auto const& textured_shader = gpu_mtl_storage->getMaterial("ProbeBillboard_Textured").shader_program;
+        m_rendertask_collection.first->addRenderTasks(m_textured_glyph_identifiers, textured_shader,
+            m_billboard_dummy_mesh, m_textured_gylph_draw_commands, m_textured_glyph_data);
+        m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
+            m_textured_glyph_identifiers.begin(), m_textured_glyph_identifiers.end());
     }
 
     if (!m_scalar_probe_glyph_data.empty()) {
-        auto const& scalar_shader = gpu_mtl_storage->getMaterials()[1].shader_program;
-        m_scalar_glyphs_rendertasks_index_offset = rt_collection->addRenderTasks(
-            scalar_shader, m_billboard_dummy_mesh, m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
+        auto const& scalar_shader = gpu_mtl_storage->getMaterial("ProbeBillboard_Scalar").shader_program;
+        m_rendertask_collection.first->addRenderTasks(m_scalar_probe_glyph_identifiers, scalar_shader,
+            m_billboard_dummy_mesh, m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
+        m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
+            m_scalar_probe_glyph_identifiers.begin(), m_scalar_probe_glyph_identifiers.end());
     }
 
     if (!m_vector_probe_glyph_data.empty()) {
-        auto const& vector_shader = gpu_mtl_storage->getMaterials()[2].shader_program;
-        m_vector_glyphs_rendertasks_index_offset = rt_collection->addRenderTasks(
-            vector_shader, m_billboard_dummy_mesh, m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
+        auto const& vector_shader = gpu_mtl_storage->getMaterial("ProbeBillboard_Vector").shader_program;
+        m_rendertask_collection.first->addRenderTasks(m_vector_probe_glyph_identifiers, vector_shader,
+            m_billboard_dummy_mesh, m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
+        m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
+            m_vector_probe_glyph_identifiers.begin(), m_vector_probe_glyph_identifiers.end());
     }
 
     if (!m_clusterID_gylph_draw_commands.empty()) {
-        auto const& vector_shader = gpu_mtl_storage->getMaterials()[3].shader_program;
-        m_clusterID_glyphs_rendertasks_index_offset = rt_collection->addRenderTasks(
-            vector_shader, m_billboard_dummy_mesh, m_clusterID_gylph_draw_commands, m_clusterID_glyph_data);
+        auto const& vector_shader = gpu_mtl_storage->getMaterial("ProbeBillboard_ClusterID").shader_program;
+
+        m_rendertask_collection.first->addRenderTasks(m_clusterID_glyph_identifiers, vector_shader,
+            m_billboard_dummy_mesh, m_clusterID_gylph_draw_commands, m_clusterID_glyph_data);
+        m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
+            m_clusterID_glyph_identifiers.begin(), m_clusterID_glyph_identifiers.end());
     }
+}
+
+void megamol::probe_gl::ProbeBillboardGlyphRenderTasks::updateAllRenderTasks() {
+    for (int i = 0; i < m_type_index_map.size(); ++i) {
+        auto probe_type = m_type_index_map[i].first;
+        auto probe_idx = m_type_index_map[i].second;
+
+        if (probe_type == std::type_index(typeid(GlyphScalarProbeData))) {
+            std::array<GlyphScalarProbeData, 1> per_probe_data = {m_scalar_probe_glyph_data[probe_idx]};
+            std::string identifier = std::string(FullName()) + "_sg_" + std::to_string(probe_idx);
+            m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
+        } else if (probe_type == std::type_index(typeid(GlyphVectorProbeData))) {
+            std::array<GlyphVectorProbeData, 1> per_probe_data = {m_vector_probe_glyph_data[probe_idx]};
+            std::string identifier = std::string(FullName()) + "_vg_" + std::to_string(probe_idx);
+            m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
+        } else if (probe_type == std::type_index(typeid(GlyphClusterIDData))) {
+            std::array<GlyphClusterIDData, 1> per_probe_data = {m_clusterID_glyph_data[probe_idx]};
+            std::string identifier = std::string(FullName()) + "_cg_" + std::to_string(probe_idx);
+            m_rendertask_collection.first->updatePerDrawData(identifier, per_probe_data);
+        }
+    }
+}
+
+void megamol::probe_gl::ProbeBillboardGlyphRenderTasks::clearAllRenderTasks() {
+    for (auto& identifier : m_rendertask_collection.second) {
+        m_rendertask_collection.first->deleteRenderTask(identifier);
+    }
+    m_rendertask_collection.second.clear();
 }
 
 megamol::probe_gl::ProbeBillboardGlyphRenderTasks::GlyphScalarProbeData

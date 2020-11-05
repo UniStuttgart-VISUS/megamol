@@ -77,16 +77,16 @@ namespace core {
         bool ConnectCall(megamol::core::Call *call) {
             vislib::sys::AbstractReaderWriterLock *lock = NULL;
             if (this->Parent()) {
-                lock = &this->Parent()->ModuleGraphLock();
+                lock = &this->Parent()->ModuleGraphLock(); // TODO << This is a potential HAZARD!!!! Can lock ModuleGraph while ModuleGraph is already locked
                 lock->LockExclusive();
             }
 
             if (call == NULL) {
                 if (this->call != NULL) {
                     this->SetStatusDisconnected();
-                    megamol::core::Call *c = this->call;
+                    //megamol::core::Call *c = this->call;
                     this->call = NULL;
-                    delete c;
+                    //delete c;
                 }
                 if (lock != NULL) lock->UnlockExclusive();
                 return true;
@@ -95,7 +95,7 @@ namespace core {
             for (unsigned int i = 0; i < this->compDesc.size(); i++) {
                 if (this->compDesc[i]->IsDescribing(call)) {
                     if (this->call != NULL) this->call->caller = NULL;
-                    delete this->call;
+                    //delete this->call;
                     this->call = call;
                     this->call->caller = this;
                     this->SetStatusConnected();
@@ -108,6 +108,17 @@ namespace core {
             return false;
         }
 
+        bool IsCallCompatible(std::string const& call_class_name) const {
+            vislib::StringA dcn = call_class_name.c_str();
+
+            for (unsigned int i = 0; i < this->compDesc.size(); i++) {
+                if (dcn.Equals(this->compDesc[i]->ClassName())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /**
          * Answers whether a given call is compatible with this slot.
          *
@@ -115,16 +126,10 @@ namespace core {
          *
          * @return 'true' if the call is compatible, 'false' otherwise.
          */
-        inline bool IsCallCompatible(factories::CallDescription::ptr desc) const {
-            vislib::StringA dcn;
+        bool IsCallCompatible(factories::CallDescription::ptr desc) const override {
             if (!desc) return false;
-            dcn = desc->ClassName();
-            for (unsigned int i = 0; i < this->compDesc.size(); i++) {
-                if (dcn.Equals(this->compDesc[i]->ClassName())) {
-                    return true;
-                }
-            }
-            return false;
+
+            return IsCallCompatible(std::string{desc->ClassName()});
         }
 
         /**

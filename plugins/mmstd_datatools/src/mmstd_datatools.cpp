@@ -13,8 +13,8 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
-#include "table/TableManipulator.h"
 #include "CSVFileSequence.h"
+#include "CSVWriter.h"
 #include "DataFileSequence.h"
 #include "DataFileSequenceStepper.h"
 #include "DataSetTimeRewriteModule.h"
@@ -30,6 +30,7 @@
 #include "IColToIdentity.h"
 #include "IndexListIndexColor.h"
 #include "LocalBoundingBoxExtractor.h"
+#include "MPDCGrid.h"
 #include "MPDCListsConcatenate.h"
 #include "MPIParticleCollector.h"
 #include "MPIVolumeAggregator.h"
@@ -50,6 +51,7 @@
 #include "ParticleIColFilter.h"
 #include "ParticleIColGradientField.h"
 #include "ParticleIdentitySort.h"
+#include "ParticleInstantiator.h"
 #include "ParticleListMergeModule.h"
 #include "ParticleListSelector.h"
 #include "ParticleNeighborhood.h"
@@ -62,18 +64,17 @@
 #include "ParticleVelocities.h"
 #include "ParticleVisibilityFromVolume.h"
 #include "ParticlesToDensity.h"
-#include "ParticleInstantiator.h"
 #include "RemapIColValues.h"
 #include "SphereDataUnifier.h"
 #include "StaticMMPLDProvider.h"
 #include "SyncedMMPLDProvider.h"
+#include "io/CPERAWDataSource.h"
 #include "io/MMGDDDataSource.h"
 #include "io/MMGDDWriter.h"
 #include "io/PLYDataSource.h"
 #include "io/PlyWriter.h"
 #include "io/STLDataSource.h"
 #include "io/TriMeshSTLWriter.h"
-#include "io/CPERAWDataSource.h"
 #include "mmstd_datatools/GraphDataCall.h"
 #include "mmstd_datatools/MultiIndexListDataCall.h"
 #include "mmstd_datatools/ParticleFilterMapDataCall.h"
@@ -84,15 +85,17 @@
 #include "table/TableColumnFilter.h"
 #include "table/TableColumnScaler.h"
 #include "table/TableFlagFilter.h"
+#include "table/TableItemSelector.h"
 #include "table/TableJoin.h"
+#include "table/TableManipulator.h"
 #include "table/TableObserverPlane.h"
 #include "table/TableSampler.h"
 #include "table/TableSelectionTx.h"
 #include "table/TableSort.h"
-#include "table/TableWhere.h"
+#include "table/TableSplit.h"
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
-#include "table/TableItemSelector.h"
+#include "table/TableWhere.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -156,13 +159,13 @@ class plugin_instance : public megamol::core::utility::plugins::Plugin200Instanc
 public:
     /** ctor */
     plugin_instance(void)
-        : megamol::core::utility::plugins::Plugin200Instance(
-              /* machine-readable plugin assembly name */
-              "mmstd_datatools",
-              /* human-readable plugin description */
-              "MegaMol Standard-Plugin containing data manipulation and conversion modules"){
-              // here we could perform addition initialization
-          };
+            : megamol::core::utility::plugins::Plugin200Instance(
+                  /* machine-readable plugin assembly name */
+                  "mmstd_datatools",
+                  /* human-readable plugin description */
+                  "MegaMol Standard-Plugin containing data manipulation and conversion modules"){
+                  // here we could perform addition initialization
+              };
     /** Dtor */
     virtual ~plugin_instance(void) {
         // here we could perform addition de-initialization
@@ -253,6 +256,9 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::LocalBoundingBoxExtractor>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleInstantiator>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableItemSelector>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPDCGrid>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSplit>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CSVWriter>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();

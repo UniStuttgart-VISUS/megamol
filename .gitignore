@@ -10,14 +10,13 @@ stage/**/*
 lib/**/*
 issues/**/*
 mmprjs/**/*
-.vscode/ipch/**/*
 configurator/.vs/
 configurator/bin/
 configurator/MegaMolConf/obj/
 configurator/packages/
 configurator/MegaMolConf/Properties/AssemblyInfo\.cs
 configurator/MegaMolConf/Resources/mmconfig\.res
-.vscode/**/*.bat
+.vscode/**/*
 .idea/**/*
 .gitmodules
 *.orig

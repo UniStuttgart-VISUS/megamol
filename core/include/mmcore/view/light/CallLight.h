@@ -20,7 +20,7 @@ namespace core {
 namespace view {
 namespace light {
 
-enum MEGAMOLCORE_API lightenum { NONE, DISTANTLIGHT, POINTLIGHT, SPOTLIGHT, QUADLIGHT, AMBIENTLIGHT, HDRILIGHT };
+enum MEGAMOLCORE_API lightenum { NONE, DISTANTLIGHT, POINTLIGHT, SPOTLIGHT, QUADLIGHT, AMBIENTLIGHT, HDRILIGHT, TRIDIRECTIONALLIGHTING };
 
 struct MEGAMOLCORE_API LightContainer {
     // General light parameters
@@ -50,6 +50,11 @@ struct MEGAMOLCORE_API LightContainer {
     vislib::TString hdri_evnfile;
     bool isValid = false;
     bool dataChanged = true;
+    // tri-directional lighting parameters
+    std::array<float, 3> tdl_key_direction;
+    std::array<float, 3> tdl_fill_direction;
+    std::array<float, 3> tdl_back_direction;
+    bool tdl_in_view_space;
 };
 
 class CallLight;

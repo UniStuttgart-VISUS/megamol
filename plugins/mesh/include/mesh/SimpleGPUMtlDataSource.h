@@ -32,7 +32,7 @@ public:
      *
      * @return A human readable description of this module.
      */
-    static const char* Description(void) { return "mesh data source for loading a BTF Shader file"; }
+    static const char* Description(void) { return "material data source that loads a shader from a BTF file"; }
 
     /**
      * Answers whether this module is available on the current system.
@@ -53,10 +53,14 @@ protected:
     virtual bool getMetaDataCallback(core::Call& caller);
 
 private:
+    /** The module version */
     uint32_t m_version;
 
     /** The btf file name */
     core::param::ParamSlot m_btf_filename_slot;
+
+    /** */
+    size_t m_material_idx;
 };
 
 } // namespace mesh
