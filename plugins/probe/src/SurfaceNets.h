@@ -64,7 +64,6 @@ private:
     bool InterfaceIsDirty();
 
     void calculateSurfaceNets();
-    void calculateSurfaceNets2();
 
     bool getMetaData(core::Call& call);
     bool getData(core::Call& call);
@@ -90,7 +89,7 @@ private:
     float* _data;
 
     // store surface
-    std::vector<std::array<float, 3>> _vertices;
+    std::vector<std::array<float, 4>> _vertices;
     std::vector<std::array<float, 3>> _normals;
     std::vector<std::array<uint32_t, 4>> _faces;
     std::vector<std::array<uint32_t, 3>> _triangles;

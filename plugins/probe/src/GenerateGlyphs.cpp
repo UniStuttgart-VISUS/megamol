@@ -11,6 +11,7 @@
 #include "ProbeCalls.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/param/Vector2fParam.h"
+#include "mmcore/param/FloatParam.h"
 
 namespace megamol {
 namespace probe {
@@ -20,31 +21,38 @@ namespace probe {
         return std::abs(a - b) < std::numeric_limits<T>::epsilon();
     }
 
-    GenerateGlyphs::GenerateGlyphs()
-            : Module()
-            , _deploy_texture("deployTexture", "")
-            , _deploy_mesh("deployMesh", "")
-            , _get_probes("getProbes", "")
-            , _resolutionSlot("glyphResolution", "") {
+GenerateGlyphs::GenerateGlyphs()
+    : Module()
+    ,_deploy_texture("deployTexture", "")
+    , _deploy_mesh("deployMesh", "")
+    , _get_probes("getProbes", "")
+    , _resolutionSlot("glyphResolution", "")
+    , _sizeSlot("size", "") {
 
-        this->_deploy_mesh.SetCallback(
-            mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &GenerateGlyphs::getMesh);
-        this->_deploy_mesh.SetCallback(
-            mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &GenerateGlyphs::getMetaData);
-        this->MakeSlotAvailable(&this->_deploy_mesh);
+    this->_deploy_mesh.SetCallback(
+        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &GenerateGlyphs::getMesh);
+    this->_deploy_mesh.SetCallback(
+        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &GenerateGlyphs::getMetaData);
+    this->MakeSlotAvailable(&this->_deploy_mesh);
 
-        this->_deploy_texture.SetCallback(
-            mesh::CallImage::ClassName(), mesh::CallImage::FunctionName(0), &GenerateGlyphs::getTexture);
-        this->_deploy_texture.SetCallback(
-            mesh::CallImage::ClassName(), mesh::CallImage::FunctionName(1), &GenerateGlyphs::getTextureMetaData);
-        this->MakeSlotAvailable(&this->_deploy_texture);
+    this->_deploy_texture.SetCallback(
+        mesh::CallImage::ClassName(), mesh::CallImage::FunctionName(0), &GenerateGlyphs::getTexture);
+    this->_deploy_texture.SetCallback(
+        mesh::CallImage::ClassName(), mesh::CallImage::FunctionName(1), &GenerateGlyphs::getTextureMetaData);
+    this->MakeSlotAvailable(&this->_deploy_texture);
 
-        this->_get_probes.SetCompatibleCall<CallProbesDescription>();
-        this->MakeSlotAvailable(&this->_get_probes);
+    this->_get_probes.SetCompatibleCall<CallProbesDescription>();
+    this->MakeSlotAvailable(&this->_get_probes);
 
-        this->_resolutionSlot << new megamol::core::param::Vector2fParam({200, 200});
-        this->MakeSlotAvailable(&this->_resolutionSlot);
-    }
+    this->_resolutionSlot << new megamol::core::param::Vector2fParam({200,200});
+    this->_resolutionSlot.SetUpdateCallback(&GenerateGlyphs::paramChanged);
+    this->MakeSlotAvailable(&this->_resolutionSlot);
+
+    this->_sizeSlot << new megamol::core::param::FloatParam(1);
+    this->_sizeSlot.SetUpdateCallback(&GenerateGlyphs::paramChanged);
+    this->MakeSlotAvailable(&this->_sizeSlot);
+}
+
 
     GenerateGlyphs::~GenerateGlyphs() {
         this->Release();
@@ -457,7 +465,6 @@ namespace probe {
     }
 
     bool GenerateGlyphs::getMesh(core::Call& call) {
-
         auto cprobes = this->_get_probes.CallAs<CallProbes>();
         auto cm = dynamic_cast<mesh::CallMesh*>(&call);
 
@@ -476,11 +483,12 @@ namespace probe {
 
         cm->setMetaData(mesh_meta_data);
 
-        if (cprobes->hasUpdate()) {
-            ++_version;
+    if (cprobes->hasUpdate() || _trigger_recalc) {
+        _trigger_recalc = false;
+        ++_version;
 
-            if (this->scale <= 0.0)
-                this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3;
+        auto size = _sizeSlot.Param<core::param::FloatParam>()->Value();
+        this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3 * size;
 
             this->_probe_data = cprobes->getData();
 
@@ -573,11 +581,12 @@ namespace probe {
         auto probe_meta_data = cprobes->getMetaData();
 
 
-        if (cprobes->hasUpdate()) {
-            ++_version;
+    if (cprobes->hasUpdate() || _trigger_recalc) {
+        _trigger_recalc = false;
+        ++_version;
 
-            if (this->scale <= 0.0)
-                this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3;
+        auto size = _sizeSlot.Param<core::param::FloatParam>()->Value();
+        this->scale = probe_meta_data.m_bboxs.BoundingBox().LongestEdge() * 8e-3 * size;
 
             this->_probe_data = cprobes->getData();
             this->_mesh_data = std::make_shared<mesh::MeshDataAccessCollection>();
@@ -639,6 +648,12 @@ namespace probe {
 
         ctex->setMetaData(tex_meta_data);
 
+        return true;
+    }
+
+    bool GenerateGlyphs::paramChanged(core::param::ParamSlot& p) {
+    
+        _trigger_recalc = true;
         return true;
     }
 } // namespace probe

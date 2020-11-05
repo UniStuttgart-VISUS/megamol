@@ -54,6 +54,8 @@ public:
     core::CallerSlot _get_probes;
 
     core::param::ParamSlot _resolutionSlot;
+    core::param::ParamSlot _sizeSlot;
+
 
 protected:
     bool create() override { return true; };
@@ -72,6 +74,8 @@ private:
  
     bool doVectorRadarGlyphGeneration(Vec4Probe& probe);
 
+    bool paramChanged(core::param::ParamSlot& p);
+
     uint32_t _version = 0;
 
     std::shared_ptr<ProbeCollection> _probe_data;
@@ -88,6 +92,7 @@ private:
     std::vector<DrawTextureUtility> _dtu;
 
     double scale = -1.0;
+    bool _trigger_recalc;
 };
 
 } // namespace probe
