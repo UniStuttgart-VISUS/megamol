@@ -46,8 +46,6 @@ public:
     ~SimpleGPUMtlDataSource();
 
 protected:
-    virtual bool create();
-
     virtual bool getDataCallback(core::Call& caller);
 
     virtual bool getMetaDataCallback(core::Call& caller);
