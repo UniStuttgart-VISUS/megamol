@@ -1,5 +1,3 @@
-#extension GL_ARB_shader_draw_parameters : require
-
 layout(location = 0) in vec4 v_position;
 
 layout(location = 0) out vec3 world_pos;

@@ -1,5 +1,3 @@
-#extension GL_ARB_shader_draw_parameters : require
-
 uniform mat4 view_mx;
 uniform mat4 proj_mx;
 

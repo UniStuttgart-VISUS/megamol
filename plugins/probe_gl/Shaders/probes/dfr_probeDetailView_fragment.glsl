@@ -15,8 +15,6 @@ struct MeshShaderParams
     float tf_max;
 };
 
-#extension GL_ARB_bindless_texture : require
-
 layout(std430, binding = 0) readonly buffer MeshShaderParamsBuffer { MeshShaderParams[] mesh_shader_params; };
 
 layout(location = 0) in vec3 normal;
