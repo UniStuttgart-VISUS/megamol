@@ -169,6 +169,12 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         auto probes = pc->getData();
         auto probe_cnt = probes->getProbeCount();
 
+        m_vector_probe_identifiers.clear();
+        m_vector_probe_identifiers.reserve(probe_cnt);
+
+        m_vector_probe_selected.clear();
+        m_vector_probe_selected.reserve(probe_cnt);
+
         m_vector_probe_draw_commands.clear();
         m_vector_probe_draw_commands.reserve(probe_cnt);
 
@@ -329,6 +335,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                     m_vector_probe_draw_commands.push_back(draw_command);
                 
                     m_vector_probe_identifiers.emplace_back(std::string(FullName())+"_probe_"+std::to_string(probe_idx));
+                    m_vector_probe_selected.push_back(false);
 
                 } else {
                     // unknown probe type, throw error? do nothing?
@@ -433,6 +440,10 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                     m_rendertask_collection.first->deleteRenderTask(identifier);
                 }
                 m_rendertask_collection.second.clear();
+
+                for (int i=0; i< m_vector_probe_selected.size(); ++i) {
+                    m_vector_probe_selected[i] = false;
+                }
                 
                 if (!m_vector_probe_draw_commands.empty()) {
                     auto gpu_mtl_storage = mtlc->getData();
@@ -441,6 +452,8 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                     m_rendertask_collection.first->addRenderTask(identifier,
                     probe_shader, m_probes_mesh, m_vector_probe_draw_commands[probe_idx], m_vector_probe_data[probe_idx]);
                     m_rendertask_collection.second.push_back(identifier);
+
+                    m_vector_probe_selected[probe_idx] = true;
                 }
 
 
@@ -464,7 +477,25 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         {
             auto pending_select_events = event_collection->get<ProbeSelectToggle>();
             for (auto& evt : pending_select_events) {
-                
+                auto probe_idx = evt.obj_id;
+
+                if (!m_vector_probe_draw_commands.empty()) {
+                    std::string identifier = std::string(FullName()) + std::to_string(probe_idx);
+                    if (!m_vector_probe_selected[probe_idx]) {
+                        auto gpu_mtl_storage = mtlc->getData();
+                        auto const& probe_shader = gpu_mtl_storage->getMaterial("ProbeDetailView").shader_program;
+
+                        m_rendertask_collection.first->addRenderTask(identifier,
+                        probe_shader, m_probes_mesh, m_vector_probe_draw_commands[probe_idx], m_vector_probe_data[probe_idx]);
+                        m_rendertask_collection.second.push_back(identifier);
+
+                        m_vector_probe_selected[probe_idx] = true;
+                    }
+                    else {
+                        m_rendertask_collection.first->deleteRenderTask(identifier);
+                        m_vector_probe_selected[probe_idx] = false;
+                    }
+                }
             }
         }
 
