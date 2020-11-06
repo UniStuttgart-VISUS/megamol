@@ -34,22 +34,23 @@ megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::~ThreeDimensionalUIRender
 
 bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core::Call& caller) {
     CallGPURenderTaskData* lhs_rtc = dynamic_cast<CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == NULL)
+    if (lhs_rtc == nullptr) {
         return false;
+    }
 
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
 
-    syncRenderTaskCollection(lhs_rtc, rhs_rtc);
-
-    if (rhs_rtc != NULL) {
+    std::vector<std::shared_ptr<GPURenderTaskCollection>> gpu_render_tasks;
+    if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
         }
         if (rhs_rtc->hasUpdate()) {
             ++m_version;
-            rhs_rtc->getData();
         }
+        gpu_render_tasks = rhs_rtc->getData();
     }
+    gpu_render_tasks.push_back(m_rendertask_collection.first);
 
     CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<CallGPUMaterialData>();
     if (mtlc == NULL)
@@ -238,7 +239,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
         m_rendertask_collection.first->addPerFrameDataBuffer("lights", lights, 1);
     }
 
-    lhs_rtc->setData(m_rendertask_collection.first, m_version);
+    lhs_rtc->setData(gpu_render_tasks, m_version);
 
     return true;
 }

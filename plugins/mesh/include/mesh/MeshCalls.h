@@ -11,6 +11,7 @@
 #include "mmcore/CallGeneric.h"
 
 #include <memory>
+#include <vector>
 #include "tiny_gltf.h"
 
 #include "3DInteractionCollection.h"
@@ -67,10 +68,10 @@ public:
 };
 
 class MESH_API CallGPURenderTaskData
-    : public core::GenericVersionedCall<std::shared_ptr<GPURenderTaskCollection>, core::Spatial3DMetaData> {
+    : public core::GenericVersionedCall<std::vector<std::shared_ptr<GPURenderTaskCollection>>, core::Spatial3DMetaData> {
 public:
     CallGPURenderTaskData()
-        : GenericVersionedCall<std::shared_ptr<GPURenderTaskCollection>, core::Spatial3DMetaData>() {}
+            : GenericVersionedCall<std::vector<std::shared_ptr<GPURenderTaskCollection>>, core::Spatial3DMetaData>(){}
     ~CallGPURenderTaskData(){};
 
     static const char* ClassName(void) { return "CallGPURenderTaskData"; }

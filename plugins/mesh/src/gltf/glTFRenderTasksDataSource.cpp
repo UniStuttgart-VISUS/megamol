@@ -17,120 +17,116 @@ megamol::mesh::GlTFRenderTasksDataSource::~GlTFRenderTasksDataSource() {}
 
 bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& caller) {
     CallGPURenderTaskData* lhs_rtc = dynamic_cast<CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == nullptr)
+    if (lhs_rtc == nullptr) {
         return false;
+    }
 
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
 
-    syncRenderTaskCollection(lhs_rtc, rhs_rtc);
-
+    std::vector<std::shared_ptr<GPURenderTaskCollection>> gpu_render_tasks;
     if (rhs_rtc != nullptr) {
         if (!(*rhs_rtc)(0)) {
             return false;
         }
         if (rhs_rtc->hasUpdate()) {
             ++m_version;
-            rhs_rtc->getData();
         }
+        gpu_render_tasks = rhs_rtc->getData();
     }
+    gpu_render_tasks.push_back(m_rendertask_collection.first);
 
     CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<CallGPUMaterialData>();
-    if (mtlc == nullptr)
-        return false;
-
-    if (!(*mtlc)(0))
-        return false;
-
     CallGPUMeshData* mc = this->m_mesh_slot.CallAs<CallGPUMeshData>();
-    if (mc == nullptr)
-        return false;
-
-    if (!(*mc)(0))
-        return false;
-
     CallGlTFData* gltf_call = this->m_glTF_callerSlot.CallAs<CallGlTFData>();
-    if (gltf_call == nullptr)
-        return false;
 
-    if (!(*gltf_call)(0))
-        return false;
+    if (mtlc != nullptr && mc != nullptr && gltf_call != nullptr) {
+        if (!(*mtlc)(0)) {
+            return false;
+        }
 
-    auto gpu_mtl_storage = mtlc->getData();
-    auto gpu_mesh_storage = mc->getData();
+        if (!(*mc)(0)) {
+            return false;
+        }
 
-    if (gltf_call->hasUpdate()) {
-        ++m_version;
+        if (!(*gltf_call)(0)) {
+            return false;
+        }
 
-        clearRenderTaskCollection();
+        auto gpu_mtl_storage = mtlc->getData();
+        auto gpu_mesh_storage = mc->getData();
 
-        auto model = gltf_call->getData().second;
+        if (gltf_call->hasUpdate()) {
+            ++m_version;
 
-        for (size_t node_idx = 0; node_idx < model->nodes.size(); node_idx++) {
-            if (node_idx < model->nodes.size() && model->nodes[node_idx].mesh != -1) {
-                vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_transform;
+            clearRenderTaskCollection();
 
-                if (model->nodes[node_idx].matrix.size() != 0) // has matrix transform
-                {
-                    // TODO
-                } else {
-                    auto& translation = model->nodes[node_idx].translation;
-                    auto& scale = model->nodes[node_idx].scale;
-                    auto& rotation = model->nodes[node_idx].rotation;
+            auto model = gltf_call->getData().second;
 
-                    if (translation.size() != 0) {
-                        object_transform.SetAt(0, 3, translation[0]);
-                        object_transform.SetAt(1, 3, translation[1]);
-                        object_transform.SetAt(2, 3, translation[2]);
+            for (size_t node_idx = 0; node_idx < model->nodes.size(); node_idx++) {
+                if (node_idx < model->nodes.size() && model->nodes[node_idx].mesh != -1) {
+                    vislib::math::Matrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> object_transform;
+
+                    if (model->nodes[node_idx].matrix.size() != 0) // has matrix transform
+                    {
+                        // TODO
+                    } else {
+                        auto& translation = model->nodes[node_idx].translation;
+                        auto& scale = model->nodes[node_idx].scale;
+                        auto& rotation = model->nodes[node_idx].rotation;
+
+                        if (translation.size() != 0) {
+                            object_transform.SetAt(0, 3, translation[0]);
+                            object_transform.SetAt(1, 3, translation[1]);
+                            object_transform.SetAt(2, 3, translation[2]);
+                        }
+
+                        if (scale.size() != 0) {}
+
+                        if (rotation.size() != 0) {}
                     }
 
-                    if (scale.size() != 0) {}
+                    auto primitive_cnt = model->meshes[model->nodes[node_idx].mesh].primitives.size();
+                    for (size_t primitive_idx = 0; primitive_idx < primitive_cnt; ++primitive_idx) {
+                        std::string sub_mesh_identifier = gltf_call->getData().first +
+                                                          model->meshes[model->nodes[node_idx].mesh].name + "_" +
+                                                          std::to_string(primitive_idx);
+                        auto const& sub_mesh = gpu_mesh_storage->getSubMesh(sub_mesh_identifier);
 
-                    if (rotation.size() != 0) {}
-                }
+                        if (sub_mesh.mesh != nullptr && gpu_mtl_storage->getMaterials().size()) {
+                            auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
+                            auto const& shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
 
-                auto primitive_cnt = model->meshes[model->nodes[node_idx].mesh].primitives.size();
-                for (size_t primitive_idx = 0; primitive_idx < primitive_cnt; ++primitive_idx) {
-                    std::string sub_mesh_identifier = gltf_call->getData().first +
-                                                      model->meshes[model->nodes[node_idx].mesh].name + "_" +
-                                                      std::to_string(primitive_idx);
-                    auto const& sub_mesh = gpu_mesh_storage->getSubMesh(sub_mesh_identifier);
-
-                    if (sub_mesh.mesh != nullptr && gpu_mtl_storage->getMaterials().size()) {
-                        auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-                        auto const& shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
-
-                        std::string rt_identifier(std::string(this->FullName()) + "_" + sub_mesh_identifier);
-                        m_rendertask_collection.first->addRenderTask(
-                            rt_identifier, shader, gpu_batch_mesh, sub_mesh.sub_mesh_draw_command, object_transform);
-                        m_rendertask_collection.second.push_back(rt_identifier);
+                            std::string rt_identifier(std::string(this->FullName()) + "_" + sub_mesh_identifier);
+                            m_rendertask_collection.first->addRenderTask(rt_identifier, shader, gpu_batch_mesh,
+                                sub_mesh.sub_mesh_draw_command, object_transform);
+                            m_rendertask_collection.second.push_back(rt_identifier);
+                        }
                     }
                 }
             }
+
+            // add some lights to the scene to test the per frame buffers
+            struct LightParams {
+                float x, y, z, intensity;
+            };
+
+            // Place lights in icosahedron pattern
+            float x = 0.525731112119133606f * 1000.0f;
+            float z = 0.850650808352039932f * 1000.0f;
+
+            std::vector<LightParams> lights = {{-x, 0.0f, z, 1.0f}, {x, 0.0f, z, 1.0f}, {-x, 0.0f, -z, 1.0f},
+                {x, 0.0f, -z, 1.0f}, {0.0f, z, x, 1.0f}, {0.0f, z, -x, 1.0f}, {0.0f, -z, x, 1.0f}, {0.0f, -z, -x, 1.0f},
+                {z, x, 0.0f, 1.0f}, {-z, x, 0.0f, 1.0f}, {z, -x, 0.0f, 1.0f}, {-z, -x, 0.0f, 1.0f}};
+
+            // Add a key light
+            lights.push_back({-5000.0, 5000.0, -5000.0, 1000.0f});
+
+            m_rendertask_collection.first->deletePerFrameDataBuffer(1);
+            m_rendertask_collection.first->addPerFrameDataBuffer("lights", lights, 1);
         }
-
-        // add some lights to the scene to test the per frame buffers
-        struct LightParams {
-            float x, y, z, intensity;
-        };
-
-        // Place lights in icosahedron pattern
-        float x = 0.525731112119133606f * 1000.0f;
-        float z = 0.850650808352039932f * 1000.0f;
-
-        std::vector<LightParams> lights = {{-x, 0.0f, z, 1.0f}, {x, 0.0f, z, 1.0f}, {-x, 0.0f, -z, 1.0f},
-            {x, 0.0f, -z, 1.0f}, {0.0f, z, x, 1.0f}, {0.0f, z, -x, 1.0f}, {0.0f, -z, x, 1.0f}, {0.0f, -z, -x, 1.0f},
-            {z, x, 0.0f, 1.0f}, {-z, x, 0.0f, 1.0f}, {z, -x, 0.0f, 1.0f}, {-z, -x, 0.0f, 1.0f}};
-
-        // Add a key light
-        lights.push_back({-5000.0, 5000.0, -5000.0, 1000.0f});
-
-        m_rendertask_collection.first->deletePerFrameDataBuffer(1);
-        m_rendertask_collection.first->addPerFrameDataBuffer("lights", lights, 1);
     }
 
-    if (lhs_rtc->version() < m_version) {
-        lhs_rtc->setData(m_rendertask_collection.first, m_version);
-    }
+    lhs_rtc->setData(gpu_render_tasks, m_version);
 
     return true;
 }

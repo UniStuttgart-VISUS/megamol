@@ -66,13 +66,7 @@ namespace mesh {
         bool GetLights(void);
 
         /**
-         * Syncs the render task collection of this module with the lefthand side (lhs) and righthand side (rhs)
-         * connections if available. Takes over materials from previously used to collection if lhs connection changes.
-         */
-        void syncRenderTaskCollection(CallGPURenderTaskData* lhs_call, CallGPURenderTaskData* rhs_call);
-
-        /**
-         * Clears all render task entries made by this module from the used material collection.
+         * Clears all render tasks
          */
         void clearRenderTaskCollection();
 
