@@ -24,7 +24,7 @@ using namespace megamol;
 using namespace megamol::mmvtkm;
 
 
-/*
+/**
  * mmvtkmStreamLines::mmvtkmStreamLines
  */
 mmvtkmStreamLines::mmvtkmStreamLines()
@@ -45,18 +45,23 @@ mmvtkmStreamLines::mmvtkmStreamLines()
           "Connection2", "Specifies the second point with which the origin of the seed plane is connected")
     , psSeedPlaneNormal_("planeNormal", "Specifies the normal of the seed plane")
     , psSeedPlanePoint_("planePoint", "Specifies a point on the seed plane")
+    , psSeedPlaneU_("u", "Specifies the scale in u direction")
+    , psSeedPlaneV_("v", "Specifies the scale in v direction")
     //, seedPlaneDistance_("planeDistance", "Specifies the distance of the seed plane to the origin")
     , psSeedPlaneColor_("planeColor", "Specifies the color of the seed plane")
     , psSeedPlaneAlpha_("planeAlpha", "Specifies the transparency of the seed plane")
     , psApplyChanges_("apply", "Press to apply changes for streamline configuration")
     , psResampleSeeds_(
           "re-sample", "Press to re-sample the seeds of the streamlines. This deletes current streamlines.")
+    , psClearGhostPlane_("clearGhostPlane", "Press to clear/hide the ghost plane")
     , streamlineUpdate_(true)
     , planeUpdate_(false)
     , planeAppearanceUpdate_(false)
+    , planeNormalDirtyFlag_(false)
     , newVersion_(1)
     , streamlineOutput_()
     , dataSetBounds_()
+    , maxBoundLength_(0.f)
     , streamlineData_{}
     , streamlineColor_{}
     , streamlineIndices_{}
@@ -70,14 +75,18 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     , seedPlaneNormal_(1.f, 0.f, 0.f)
     , seedPlanePoint_(0.f, 0.f, 50.f)
     , seedPlaneDistance_(0.f)
-    , seedPlaneColor_({0.5f, 0.f, 0.f})
+    , seedPlaneColor_(0.5f, 0.f, 0.f)
     , seedPlaneAlpha_(1.f)
-    , seedPlane_{}
+    , liveSeedPlane_{}
+    , originalSeedPlane_{}
+    , uSeedPlane_{}
+    , vSeedPlane_{}
     , seedPlaneColorVec_{}
-    , seedPlaneIdcs_{}
+    , seedPlaneIndices_{}
     , seedPlaneTriangles_{}
     , seeds_{}
-    , planeMode_(0) {
+    , planeMode_(0)
+	, ghostCopy_{} {
     this->meshCalleeSlot_.SetCallback(mesh::CallMesh::ClassName(),
         mesh::CallMesh::FunctionName(0), // used to be mesh::CallMesh
         &mmvtkmStreamLines::getDataCallback);
@@ -98,6 +107,8 @@ mmvtkmStreamLines::mmvtkmStreamLines()
 
     this->psStreamlineStepSize_.SetParameter(new core::param::FloatParam(stepSize_, 0.f));
     this->MakeSlotAvailable(&this->psStreamlineStepSize_);
+    this->psStreamlineStepSize_.Parameter()->SetGUIPresentation(
+        core::param::AbstractParamPresentation::Presentation::Knob);
 
     this->psNumStreamlineSteps_.SetParameter(new core::param::IntParam(numSteps_, 1));
     this->MakeSlotAvailable(&this->psNumStreamlineSteps_);
@@ -129,12 +140,23 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     this->psPlaneConnectionPoint2_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
 
     this->psSeedPlaneNormal_.SetParameter(new core::param::Vector3fParam({1.f, 0.f, 0.f}));
+    this->psSeedPlaneNormal_.SetUpdateCallback(&mmvtkmStreamLines::ghostPlane);
     this->MakeSlotAvailable(&this->psSeedPlaneNormal_);
     this->psSeedPlaneNormal_.Parameter()->SetGUIPresentation(
         core::param::AbstractParamPresentation::Presentation::Rotation3D_Direction);
 
-    this->psSeedPlanePoint_.SetParameter(new core::param::Vector3fParam({0.f, 0.f, 0.f}));
+    this->psSeedPlanePoint_.SetParameter(new core::param::Vector3fParam({0.f, 0.f, 50.f}));
     this->MakeSlotAvailable(&this->psSeedPlanePoint_);
+
+    this->psSeedPlaneU_.SetParameter(new core::param::FloatParam(0.2f, 0.f, 1.f));
+    this->psSeedPlaneU_.SetUpdateCallback(&mmvtkmStreamLines::assignUV);
+    this->MakeSlotAvailable(&this->psSeedPlaneU_);
+    this->psSeedPlaneU_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
+
+    this->psSeedPlaneV_.SetParameter(new core::param::FloatParam(0.f, 0.f, 1.f));
+    this->psSeedPlaneV_.SetUpdateCallback(&mmvtkmStreamLines::assignUV);
+    this->MakeSlotAvailable(&this->psSeedPlaneV_);
+    this->psSeedPlaneV_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
 
     // this->psSeedPlaneDistance_.SetParameter(new core::param::FloatParam(psSeedPlaneDistance_));
     // this->MakeSlotAvailable(&this->psSeedPlaneDistance_);
@@ -153,22 +175,26 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     this->psResampleSeeds_.SetParameter(new core::param::ButtonParam());
     this->psResampleSeeds_.SetUpdateCallback(&mmvtkmStreamLines::setResampleSeeds);
     this->MakeSlotAvailable(&this->psResampleSeeds_);
+
+    this->psClearGhostPlane_.SetParameter(new core::param::ButtonParam());
+    this->psClearGhostPlane_.SetUpdateCallback(&mmvtkmStreamLines::clearGhostPlaneCallBack);
+    this->MakeSlotAvailable(&this->psClearGhostPlane_);
 }
 
 
-/*
+/**
  * mmvtkmStreamLines::~mmvtkmStreamLines
  */
 mmvtkmStreamLines::~mmvtkmStreamLines() { this->Release(); }
 
 
-/*
+/**
  * mmvtkmStreamLines::release
  */
 void mmvtkmStreamLines::release() {}
 
 
-/*
+/**
  * mmvtkmStreamLines::create
  */
 bool mmvtkmStreamLines::create() {
@@ -177,7 +203,224 @@ bool mmvtkmStreamLines::create() {
 }
 
 
-/*
+/**
+ * mmvtkmStreamLines::assignUV
+ */
+bool mmvtkmStreamLines::assignUV(core::param::ParamSlot& slot) {
+    float u = this->psSeedPlaneU_.Param<core::param::FloatParam>()->Value();
+    float v = this->psSeedPlaneV_.Param<core::param::FloatParam>()->Value();
+
+    // TODO: if seedplane is not aligned with ghostplane, then u and v shouldnt have an effect?
+    // i.e. only effect after pressing apply and seedplanenormal is not dirty
+
+	
+    // intersect line with seedplane
+    calcLiveSeedPlane(true, u, ghostCopy_[0], ghostCopy_[2], originalSeedPlane_);
+    calcLiveSeedPlane(false, v, ghostCopy_[1], ghostCopy_[3], uSeedPlane_);
+
+
+    // adapt colorvec and indexvec according to new plane
+    unsigned int num = liveSeedPlane_.size();
+    seedPlaneColorVec_.clear();
+    seedPlaneIndices_.clear();
+
+    for (int i = 0; i < num; ++i) {
+        seedPlaneColorVec_.push_back(glm::vec4(glm::vec3(i * 1.f / (num - 1)), seedPlaneAlpha_));
+        seedPlaneIndices_.push_back(i);
+	}
+    
+	// avoids complicated insert/erase handling of vector
+	mesh::MeshDataAccessCollection::Mesh ghostMda = meshDataAccess_->accessMesh().back();
+    meshDataAccess_->accessMesh().pop_back();	// pop ghostplane
+    meshDataAccess_->accessMesh().pop_back();	// pop liveseedplane
+    createAndAddMeshDataToCall(liveSeedPlane_, seedPlaneColorVec_, seedPlaneIndices_, liveSeedPlane_.size(),
+        seedPlaneIndices_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
+    meshDataAccess_->accessMesh().push_back(ghostMda);
+
+	
+	planeAppearanceUpdate_ = true;
+
+
+    return true;
+}
+
+
+/**
+ * mmvtkmStreamLines::calcLiveSeedPlane
+ */
+void mmvtkmStreamLines::calcLiveSeedPlane(
+    bool isU, float uv, const glm::vec3& start, const glm::vec3& stop, const std::vector<glm::vec3>& plane) {
+    glm::vec3 d = stop - start;
+    float l = glm::length(d);
+    glm::vec3 dir = glm::normalize(d);
+    // orthogonal line to v02 that also lies in plane
+    glm::vec3 vBorder = glm::normalize(glm::cross(d, seedPlaneNormal_));
+
+
+    float length = uv * l;
+    glm::vec3 pBorder = start + length * dir;
+    borderLine_[isU ? 0 : 2] = pBorder - maxBoundLength_ * vBorder;
+    borderLine_[isU ? 1 : 3] = pBorder + maxBoundLength_ * vBorder;
+
+    unsigned int numSeedPlanePoints = plane.size();
+
+    // check all dot products first to check whether the whole plane
+    // is in front of or behind the line
+    unsigned int cnt = 0;
+    std::vector<float> dots;
+    for (int i = 0; i < numSeedPlanePoints; ++i) {
+        glm::vec3 p = plane[i];
+        float dot = glm::dot(dir, p - pBorder);
+        dots.push_back(dot);
+        if (dot > 0.f) {
+            cnt++;
+        }
+    }
+
+
+    if (0 < cnt && cnt < numSeedPlanePoints) {
+        liveSeedPlane_.clear();
+
+        for (int i = 0; i < numSeedPlanePoints; ++i) {
+            glm::vec3 p = plane[i];
+
+            if (dots[i] >= 0.f) {
+                // acute angle --> same direction --> p is in front of line
+                // no need to do anything at this point
+                liveSeedPlane_.push_back(p);
+            } else {
+                // obtuse angle --> p is behind the line
+				// check if predecessor and successor are behind or in front of border
+                unsigned int preId = i == 0 ? numSeedPlanePoints - 1 : i - 1;
+                unsigned int sucId = i == numSeedPlanePoints - 1 ? 0 : i + 1;
+                glm::vec3 pPredecessor = plane[preId];
+                glm::vec3 pSuccessor = plane[sucId];
+
+
+                // first add ip of pPredecessor then of pSuccessor side
+                glm::vec3 ip(0.f);
+                if (dots[preId] > 0.f) {
+					if (lineLineIntersection(pPredecessor, p, pBorder, vBorder, ip)) {
+					    liveSeedPlane_.push_back(ip);
+					}
+				}
+
+				glm::vec3 ip2(0.f);
+				if (dots[sucId] > 0.f) {
+					if (lineLineIntersection(pSuccessor, p, pBorder, vBorder, ip2)) {
+					    liveSeedPlane_.push_back(ip2);
+					}
+				}
+            }
+        }
+    } else if(cnt == numSeedPlanePoints) {
+        liveSeedPlane_ = plane;
+    } else {
+        liveSeedPlane_.clear();
+        liveSeedPlane_ = {glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f)};
+	}
+
+	if (isU) {
+        uSeedPlane_.clear();
+        uSeedPlane_ = liveSeedPlane_;
+    }
+}
+
+
+/**
+ * mmvtkmStreamLines::lineLineIntersection
+ */
+bool mmvtkmStreamLines::lineLineIntersection(
+    const glm::vec3& p1, const glm::vec3& p, const glm::vec3& pBorder, const glm::vec3& vBorder, glm::vec3& ip) {
+
+    // intersection test for line-line-intersection taken from:
+    // http://mathforum.org/library/drmath/view/62814.html
+    glm::vec3 vl1 = glm::normalize(p1 - p);
+    glm::vec3 vl2 = glm::normalize(vBorder);
+
+    glm::vec3 vCrossLhs = glm::cross(vl1, vl2);
+
+    glm::vec3 pCrossRhs = glm::cross(pBorder - p, vl2);
+
+    // both conditions have to be met in order for a intersection to occur
+    if (!isNullVector(vCrossLhs) && areParallel(vCrossLhs, pCrossRhs)) {
+        float t = glm::length(pCrossRhs) / glm::length(vCrossLhs);
+
+        // check if directions are the same
+        if (glm::dot(pCrossRhs, vCrossLhs) < 0.f) {
+            t = -t;
+        }
+
+        glm::vec3 i = p + t * vl1;
+
+        // check if intersection point is between the two points p and p1
+        if (isBetween(i, p, p1)) {
+
+            ip = i;
+            // check if new ip is the same as an already included point in the plane
+            // avoids redundancies
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+/**
+ * mmvtkmStreamLines::ghostPlane
+ */
+bool mmvtkmStreamLines::ghostPlane(core::param::ParamSlot& slot) {
+    planeNormalDirtyFlag_ = true;
+
+    visVec3f normal = slot.Param<core::param::Vector3fParam>()->Value();
+    glm::vec3 spn = glm::normalize(glm::vec3(normal.GetX(), normal.GetY(), normal.GetZ()));
+
+    glm::vec3 pp = seedPlanePoint_;
+
+    float scale = sqrt(3.f);
+    float lx = dataSetBounds_.X.Length();
+    float ly = dataSetBounds_.Y.Length();
+    float lz = dataSetBounds_.Z.Length();
+    maxBoundLength_ = std::max(lx, std::max(ly, lz)) * scale;
+
+    glm::vec3 vUp(0.f, 0.f, 0.f);
+    vUp.x = 0.f;
+    vUp.y = 1.f;
+    vUp.z = (-vUp.x * spn.x - vUp.y * spn.y) / spn.z;
+    vUp = glm::normalize(vUp);
+
+    float x0 = pp.x - lx;
+    float z0 = pp.z - lz;
+    float y0 = (-spn.x * (x0 - pp.x) - spn.z * (z0 - pp.z)) / spn.y + pp.y;
+    glm::vec3 p = glm::vec3(x0, y0, z0);
+    glm::vec3 v0 = glm::normalize(p - pp);
+
+    glm::vec3 p0 = pp + v0 * maxBoundLength_;
+    glm::vec3 p1 = glm::rotate(3.14159265358979f / 2.f, spn) * glm::vec4(p0 - pp, 1.f);
+    glm::vec3 v1 = glm::normalize(p1);
+    p1 = pp + v1 * maxBoundLength_;
+    glm::vec3 p2 = pp - v0 * maxBoundLength_;
+    glm::vec3 p3 = pp - v1 * maxBoundLength_;
+
+
+	// CAUTION: EXTREMELY UNSAFE!
+	// this only works because the ghostplane always consists of 4 vertices
+	// if this varies, the meshdataaccess_ has to be modified directly
+    glm::vec3 zFightingOffset = 0.1f * spn;	// prevents z-fighting of ghost- and liveseedplane
+	ghostPlane_.clear();
+    ghostPlane_ = {p0 + zFightingOffset, p1 + zFightingOffset, p2 + zFightingOffset, p3 + zFightingOffset};
+    ghostCopy_.clear();
+    ghostCopy_ = {p0, p1, p2, p3};
+	
+
+    planeAppearanceUpdate_ = true;
+
+    return true;
+}
+
+
+/**
  * mmvtkmStreamLines::applyChanges
  */
 bool mmvtkmStreamLines::applyChanges(core::param::ParamSlot& slot) {
@@ -191,7 +434,7 @@ bool mmvtkmStreamLines::applyChanges(core::param::ParamSlot& slot) {
     bool origin = this->psPlaneOrigin_.IsDirty();
     bool connect1 = this->psPlaneConnectionPoint1_.IsDirty();
     bool connect2 = this->psPlaneConnectionPoint2_.IsDirty();
-    bool planeNormal = this->psSeedPlaneNormal_.IsDirty();
+    bool planeNormal = this->psSeedPlaneNormal_.IsDirty() || planeNormalDirtyFlag_;
     bool planePoint = this->psSeedPlanePoint_.IsDirty();
     bool plane = origin || connect1 || connect2 || planeNormal || planePoint;
 
@@ -201,6 +444,9 @@ bool mmvtkmStreamLines::applyChanges(core::param::ParamSlot& slot) {
     bool appearance = planeColor || planeAlpha;
 
 
+    // TODO: check if order is important:
+    // e.g. if streamlineSeeds is called, there is no need to call appearance beforehand
+    // because streamlineSeeds includes appearance
     if (appearance) {
         if (!setPlaneAndAppearanceUpdate()) return false;
     }
@@ -224,6 +470,7 @@ bool mmvtkmStreamLines::applyChanges(core::param::ParamSlot& slot) {
     this->psPlaneConnectionPoint1_.ResetDirty();
     this->psPlaneConnectionPoint2_.ResetDirty();
     this->psSeedPlaneNormal_.ResetDirty();
+    planeNormalDirtyFlag_ = false;
     this->psSeedPlanePoint_.ResetDirty();
 
 
@@ -231,11 +478,15 @@ bool mmvtkmStreamLines::applyChanges(core::param::ParamSlot& slot) {
     this->psSeedPlaneAlpha_.ResetDirty();
 
 
+	psSeedPlaneU_.Param<core::param::FloatParam>()->SetValue(0.f);
+	psSeedPlaneV_.Param<core::param::FloatParam>()->SetValue(0.f);
+
+
     return true;
 }
 
 
-/*
+/**
  * mmvtkmStreamLines::planeModeChanged
  */
 bool mmvtkmStreamLines::planeModeChanged(core::param::ParamSlot& slot) {
@@ -246,6 +497,8 @@ bool mmvtkmStreamLines::planeModeChanged(core::param::ParamSlot& slot) {
         this->psPlaneConnectionPoint2_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
         this->psSeedPlaneNormal_.Param<core::param::Vector3fParam>()->SetGUIVisible(true);
         this->psSeedPlanePoint_.Param<core::param::Vector3fParam>()->SetGUIVisible(true);
+        this->psSeedPlaneU_.Param<core::param::FloatParam>()->SetGUIVisible(true);
+        this->psSeedPlaneV_.Param<core::param::FloatParam>()->SetGUIVisible(true);
         // this->psSeedPlaneDistance_.Param<core::param::FloatParam>()->SetGUIVisible(true);
     } else if (slot.Param<core::param::EnumParam>()->Value() == PARAMETER) {
         planeMode_ = 1;
@@ -254,7 +507,14 @@ bool mmvtkmStreamLines::planeModeChanged(core::param::ParamSlot& slot) {
         this->psPlaneConnectionPoint2_.Param<core::param::Vector3fParam>()->SetGUIVisible(true);
         this->psSeedPlaneNormal_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
         this->psSeedPlanePoint_.Param<core::param::Vector3fParam>()->SetGUIVisible(false);
+        this->psSeedPlaneU_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+        this->psSeedPlaneV_.Param<core::param::FloatParam>()->SetGUIVisible(false);
         // this->psSeedPlaneDistance_.Param<core::param::FloatParam>()->SetGUIVisible(false);
+
+        ghostPlane_.clear();
+        ghostPlane_ = {glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f)};
+
+        planeAppearanceUpdate_ = true;
     }
 
 
@@ -271,7 +531,28 @@ bool mmvtkmStreamLines::setResampleSeeds(core::param::ParamSlot& slot) {
 }
 
 
-/*
+/**
+ * mmvtkmStreamLines::clearGhostPlane
+ */
+void mmvtkmStreamLines::clearGhostPlane() {
+    ghostPlane_.clear();
+    ghostPlane_ = {glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f)};
+}
+
+
+/**
+ * mmvtkmStreamLines::clearGhostPlane
+ */
+bool mmvtkmStreamLines::clearGhostPlaneCallBack(core::param::ParamSlot& slot) {
+    clearGhostPlane();
+
+    planeAppearanceUpdate_ = true;
+
+    return true;
+}
+
+
+/**
  * mmvtkmStreamLines::setStreamlineAndResampleSeedsUpdate
  */
 bool mmvtkmStreamLines::setStreamlineAndResampleSeedsUpdate() {
@@ -288,7 +569,7 @@ bool mmvtkmStreamLines::setStreamlineAndResampleSeedsUpdate() {
 }
 
 
-/*
+/**
  * mmvtkmStreamLInes::setPlaneAndAppearanceUpdate
  *
  * This function assumes that the plane is at the very last position in the mesh
@@ -307,25 +588,7 @@ bool mmvtkmStreamLines::setPlaneAndAppearanceUpdate() {
     }
 
 
-    mesh::MeshDataAccessCollection::VertexAttribute vColor;
-    vColor.data = reinterpret_cast<uint8_t*>(seedPlaneColorVec_.data());
-    vColor.byte_size = 4 * numColors * sizeof(float);
-    vColor.component_cnt = 4;
-    vColor.component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-    vColor.stride = 0;
-    vColor.offset = 0;
-    vColor.semantic = mesh::MeshDataAccessCollection::AttributeSemanticType::COLOR;
-
-
-    // this assumes plane is fixed in last batch in mesh
-    // here it's the second: one batch for the streamlines and one for the plane
-    // TODO: add function in MeshDataAccessCollection to do this
-    this->meshDataAccess_->accessMesh().back().attributes[1].data =
-        reinterpret_cast<uint8_t*>(seedPlaneColorVec_.data());
-
-
     planeAppearanceUpdate_ = true;
-
 
     return true;
 }
@@ -349,8 +612,7 @@ bool mmvtkmStreamLines::setPlaneUpdate() {
 
 
     if (isNullVector(normal)) {
-        core::utility::log::Log::DefaultLog.WriteError(
-            "Plane normal is null: (0, 0, 0).");
+        core::utility::log::Log::DefaultLog.WriteError("Plane normal is null vector.");
 
         return false;
     }
@@ -371,7 +633,7 @@ std::vector<glm::vec3> mmvtkmStreamLines::calcPlaneBboxIntersectionPoints(
     const visPlanef& samplePlane, const vtkm::Bounds& bounds) {
     std::vector<glm::vec3> intersectionPoints;
     seedPlaneColorVec_.clear();
-    seedPlaneIdcs_.clear();
+    seedPlaneIndices_.clear();
 
     vislib::math::Cuboid<float> bbox(
         bounds.X.Min, bounds.Y.Min, bounds.Z.Min, bounds.X.Max, bounds.Y.Max, bounds.Z.Max);
@@ -401,7 +663,7 @@ std::vector<glm::vec3> mmvtkmStreamLines::calcPlaneBboxIntersectionPoints(
 
             intersectionPoints.push_back(glm::vec3(ip[0], ip[1], ip[2]));
             seedPlaneColorVec_.push_back(glm::vec4(seedPlaneColor_, seedPlaneAlpha_));
-            seedPlaneIdcs_.push_back(cnt++);
+            seedPlaneIndices_.push_back(cnt++);
         }
     }
 
@@ -523,7 +785,7 @@ void mmvtkmStreamLines::orderPolygonVertices(std::vector<glm::vec3>& vertices) {
     ptrdiff_t d = std::distance(vertices.begin(), it);
     vertices.resize(d);
     seedPlaneColorVec_.resize(d);
-    seedPlaneIdcs_.resize(d);
+    seedPlaneIndices_.resize(d);
 }
 
 
@@ -715,7 +977,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
             visPlanef samplePlane(visPoint3f(o.x, o.y, o.z), visVec3f(n.x, n.y, n.z));
 
-            seedPlane_ = calcPlaneBboxIntersectionPoints(samplePlane, dataSetBounds_);
+            liveSeedPlane_ = calcPlaneBboxIntersectionPoints(samplePlane, dataSetBounds_);
 
         } else if (planeMode_ == 1) {
             glm::vec3 dir1 = planeConnectionPoint1_ - planeOrigin_;
@@ -724,14 +986,15 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
             // TODO: check if any point is out of bounds
 
-            seedPlane_.clear();
-            seedPlane_ = {planeOrigin_, planeConnectionPoint1_, newPoint, planeConnectionPoint2_};
+            liveSeedPlane_.clear();
+            liveSeedPlane_ = {planeOrigin_, planeConnectionPoint1_, newPoint, planeConnectionPoint2_};
         }
 
-
-        // decompose polygon into triangles
-        seedPlaneTriangles_.clear();
-        seedPlaneTriangles_ = decomposePolygon(seedPlane_);
+        // copy of seedplane used in mmvtkmStreamLines::assignUV to re-store plane
+        // if u and/or v are reverted
+        originalSeedPlane_ = liveSeedPlane_;
+        uSeedPlane_ = liveSeedPlane_;
+        vSeedPlane_ = liveSeedPlane_;
 
 
         planeUpdate_ = false;
@@ -739,6 +1002,10 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
 
     if (vtkmUpdate || streamlineUpdate_) {
+        // decompose polygon into triangles
+        seedPlaneTriangles_.clear();
+        seedPlaneTriangles_ = decomposePolygon(liveSeedPlane_);
+
         seeds_.clear();
 
         this->meshDataAccess_->accessMesh().clear();
@@ -877,9 +1144,18 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
                 numIndices, mesh::MeshDataAccessCollection::PrimitiveType::LINE_STRIP);
         }
 
-        // adds the mdac for the seed plane
-        createAndAddMeshDataToCall(seedPlane_, seedPlaneColorVec_, seedPlaneIdcs_, seedPlane_.size(),
-            seedPlaneIdcs_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
+        // adds the dummy mdac for the u and v border lines
+        createAndAddMeshDataToCall(borderLine_, borderColors_, borderIdcs_, borderLine_.size(), borderIdcs_.size(),
+            mesh::MeshDataAccessCollection::PrimitiveType::LINES);
+
+		// adds the mdac for the seed plane
+        createAndAddMeshDataToCall(liveSeedPlane_, seedPlaneColorVec_, seedPlaneIndices_, liveSeedPlane_.size(),
+            seedPlaneIndices_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
+
+		// adds the dummy mdac for the ghost plane
+        //clearGhostPlane();
+        createAndAddMeshDataToCall(ghostPlane_, ghostColors_, ghostIdcs_, ghostPlane_.size(), ghostIdcs_.size(),
+            mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
 
         lhsMeshDc->setData(meshDataAccess_, ++this->newVersion_);

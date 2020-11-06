@@ -143,7 +143,28 @@ private:
         }
     };
 
-    /** Callback functions to update the version after changing data */
+	/** Callback function to assign altered u and v values */
+    bool assignUV(core::param::ParamSlot& slot);
+
+	/** 
+	* Calculates the liveSeedPlane_ with the current u and v values 
+	* 
+	* @param isU, true for u, false for v
+	*/
+    void calcLiveSeedPlane(
+        bool isU, float uv, const glm::vec3& start, const glm::vec3& stop, 
+		const std::vector<glm::vec3>& plane);
+
+	/** Intersects two lines. Returns true, if intersection occured, false otherwise. */
+    bool lineLineIntersection(
+        const glm::vec3& p1, const glm::vec3& p, 
+		const glm::vec3& pBorder, const glm::vec3& vBorder, 
+		glm::vec3& ip);
+
+	/** Callback function used to calculate the ghost plane when altering the plane normal */
+    bool ghostPlane(core::param::ParamSlot& slot);
+
+    /** Callback function to update the version after changing data */
     bool applyChanges(core::param::ParamSlot& slot);
 
 	/** Callback function to set visibility of paramslots of corresponding plane mode */
@@ -174,6 +195,10 @@ private:
 
 	/** Callback function if seed re-sampling is set. */
     bool setResampleSeeds(core::param::ParamSlot& slot);
+
+	/** Callback function to clear the ghost plane. */
+    void clearGhostPlane();
+    bool clearGhostPlaneCallBack(core::param::ParamSlot& slot);
 
 	/**
      * Indirect Callback function if 'apply' is pressed.
@@ -217,11 +242,29 @@ private:
         const mesh::MeshDataAccessCollection::IndexData& id, mesh::MeshDataAccessCollection::PrimitiveType pt);
 
 	/** Checks if a float is equal or really close to 0 */
-    inline bool isZerof(float x) { return fabs(x) < 1e-6f; }
-    inline bool isNullVector(visVec3f v) {
+    inline bool isZerof(float x) { return fabs(x) < epsilon_; }
+    inline bool isNullVector(const visVec3f& v) {
 		return isZerof(v.GetX()) && isZerof(v.GetY()) && isZerof(v.GetZ());
     }
+    inline bool isNullVector(const glm::vec3& v) { 
+		return isZerof(v.x) && isZerof(v.y) && isZerof(v.z); 
+	}
+	inline bool areParallel(const glm::vec3& v1, const glm::vec3& v2) { 
+		float tx = v1.x / v2.x;
+		float ty = v1.y / v2.y;
+		float tz = v1.z / v2.z;
 
+		return isZerof(tx - ty) && isZerof(tx - tz);
+	}
+	inline bool isBetween(const glm::vec3& ip, const glm::vec3& p1, const glm::vec3& p2) {
+        glm::vec3 vip = ip - p1;
+        glm::vec3 vp2 = p2 - p1;
+		float dot = glm::dot(vip, vp2);
+        float lip = glm::length(vip);
+        float lp2 = glm::length(vp2);
+
+		return (dot >= 0.f) && (lip <= lp2);
+	}
 
     /** Gets converted vtk streamline data as megamol mesh */
     core::CalleeSlot meshCalleeSlot_;
@@ -265,6 +308,12 @@ private:
     /** Paramslot for point on seed plane */
     core::param::ParamSlot psSeedPlanePoint_;
 
+	/** Paramslot for point on seed plane */
+    core::param::ParamSlot psSeedPlaneU_;
+
+	/** Paramslot for point on seed plane */
+    core::param::ParamSlot psSeedPlaneV_;
+
     /** Paramslot for seed plane distance */
     // core::param::ParamSlot psSeedPlaneDistance_;
 
@@ -280,11 +329,18 @@ private:
 	/** Paramslot to activate re-sampling of seeds */
     core::param::ParamSlot psResampleSeeds_;
 
+	/** Paramslot to clear the ghost plane */
+    core::param::ParamSlot psClearGhostPlane_;
 
-    /** Used for data version control, same as 'hash_data' */
+	/** Update flags used to separate different calculations */
     bool streamlineUpdate_;
     bool planeUpdate_;
     bool planeAppearanceUpdate_;
+
+	/** Hack to have the dirtyflag from the psSeedPlaneNormal after its callback function */
+	bool planeNormalDirtyFlag_;
+
+    /** Used for data version control, same as 'hash_data' */
     uint32_t newVersion_;
 
     /** Used for mesh data call */
@@ -294,6 +350,7 @@ private:
 	/** Vtkm data structures */
     vtkm::cont::DataSet streamlineOutput_;
     vtkm::Bounds dataSetBounds_;
+    float maxBoundLength_;
 
     /** Pointers to streamline data */
     std::vector<std::vector<glm::vec3>> streamlineData_;
@@ -314,9 +371,12 @@ private:
     glm::vec3 seedPlaneColor_;
     float seedPlaneAlpha_;
 
-    std::vector<glm::vec3> seedPlane_;
+    std::vector<glm::vec3> liveSeedPlane_;
+    std::vector<glm::vec3> originalSeedPlane_;
+    std::vector<glm::vec3> uSeedPlane_;
+    std::vector<glm::vec3> vSeedPlane_;
     std::vector<glm::vec4> seedPlaneColorVec_;
-    std::vector<unsigned int> seedPlaneIdcs_;
+    std::vector<unsigned int> seedPlaneIndices_;
     std::vector<Triangle> seedPlaneTriangles_;
     std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> seeds_;
 
@@ -332,7 +392,30 @@ private:
     glm::vec3 blue_ = glm::vec3(0.f, 0.f, 0.5f);
     glm::vec3 purple_ = glm::vec3(0.5f, 0.f, 0.5f);
     glm::vec3 magenta_ = glm::vec3(0.25f, 0.f, 0.5f);
+    glm::vec3 white = glm::vec3(1.f);
+    glm::vec3 grey3 = glm::vec3(0.75f);
+    glm::vec3 grey2 = glm::vec3(0.5f);
+    glm::vec3 grey1 = glm::vec3(0.25f);
+    glm::vec3 black = glm::vec3(0.f);
     std::vector<glm::vec3> colorVec_ = { red_, orange_, yellow_, green_, cyan_, blue_, purple_, magenta_ };
+    
+	std::vector<glm::vec3> ghostCopy_;
+	std::vector<glm::vec3> ghostPlane_ = {
+        glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f),
+		glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f)};
+	std::vector<glm::vec4> ghostColors_ = {
+        glm::vec4(red_, 0.2f), glm::vec4(green_, 0.2f), glm::vec4(blue_, 0.2f), glm::vec4(grey2, 0.2f)};
+    std::vector<unsigned int> ghostIdcs_ = {0, 1, 2, 3};
+
+	std::vector<glm::vec3> borderLine_ = {
+        glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f),
+        glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f)};
+    std::vector<glm::vec4> borderColors_ = {
+        glm::vec4(grey2, 0.8f), glm::vec4(grey2, 0.8f),
+        glm::vec4(grey2, 0.8f), glm::vec4(grey2, 0.8f)};
+    std::vector<unsigned int> borderIdcs_ = {0, 1, 2, 3};
+
+	float epsilon_ = 1e-5f;
 };
 
 } // end namespace mmvtkm

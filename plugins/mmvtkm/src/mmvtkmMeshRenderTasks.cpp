@@ -75,10 +75,10 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
             object_transforms.back().push_back(obj_xform);
         }
         
-        for (int i = 0; i < batch_meshes.size(); ++i) {
+		for (int i = 0; i < batch_meshes.size(); ++i) {
             auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
             bool blending_and_depth = i == 0;
-
+            
 			if (i == batch_meshes.size() - 1) {
                 rt_collection->addRenderTasks(shader, batch_meshes[i], draw_commands[i], object_transforms[i],
                     {std::pair<std::vector<GLuint>, bool>({GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA}, true),
