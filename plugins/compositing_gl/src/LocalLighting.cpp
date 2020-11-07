@@ -21,7 +21,7 @@ megamol::compositing::LocalLighting::LocalLighting()
     , m_normal_tex_slot("NormalTexture", "Connects to the normals render target texture")
     , m_depth_tex_slot("DepthTexture", "Connects to the depth render target texture")
     , m_roughness_metalness_tex_slot("RoughMetalTexture","Connects to the roughness/metalness render target texture")
-    , m_lightSlot("lights", "Lights are retrieved over this slot. If no light is connected, a default camera light is used") 
+    , m_lightSlot("lights", "Lights are retrieved over this slot") 
     , m_camera_slot("Camera", "Connects a (copy of) camera state")
 {
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &LocalLighting::getDataCallback);
