@@ -8,6 +8,8 @@
 #include "stdafx.h"
 #include "GrimRenderer.h"
 
+#include "mmcore/view/light/DistantLight.h"
+
 
 using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn::rendering;
@@ -51,6 +53,7 @@ GrimRenderer::GrimRenderer(void) : view::Renderer3DModule_2(),
         initDepthPointShader(), vertCntShader(), vertCntShade2r(), fbo(),
         getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
+        getLightsSlot("lights", "Lights are retrieved over this slot."),
         useCellCullSlot("useCellCull", "Flag to activate per cell culling"),
         useVertCullSlot("useVertCull", "Flag to activate per vertex culling"),
         speakCellPercSlot("speakCellPerc", "Flag to activate output of percentage of culled cells"),
@@ -65,6 +68,9 @@ GrimRenderer::GrimRenderer(void) : view::Renderer3DModule_2(),
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
+
+    this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->getLightsSlot);
 
     this->useCellCullSlot << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->useCellCullSlot);
@@ -389,22 +395,31 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     float half_aperture_angle = cam.half_aperture_angle_radians();
 
     // Lights
-    this->GetLights();
     glm::vec4 curlightDir = {0.0f, 0.0f, 0.0f, 1.0f};
-    if (this->lightMap.size() > 1) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "Only one single 'Distant Light' source is supported by this renderer");
-    }
-    for (auto light : this->lightMap) {
-        if (light.second.lightType != core::view::light::DISTANTLIGHT) {
+
+    auto call_light = getLightsSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
+        }
+
+        auto lights = call_light->getData();
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
+
+        if (distant_lights.size() > 1) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "Only single 'Distant Light' source is supported by this renderer");
-        } else {
-            auto use_eyedir = light.second.dl_eye_direction;
+                "[GrimRenderer] Only one single 'Distant Light' source is supported by this renderer");
+        } else if (distant_lights.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GrimRenderer] No 'Distant Light' found");
+        }
+
+        for (auto const& light : distant_lights) {
+            auto use_eyedir = light.eye_direction;
             if (use_eyedir) {
                 curlightDir = -camView;
             } else {
-                auto lightDir = light.second.dl_direction;
+                auto lightDir = light.direction;
                 if (lightDir.size() == 3) {
                     curlightDir[0] = lightDir[0];
                     curlightDir[1] = lightDir[1];
