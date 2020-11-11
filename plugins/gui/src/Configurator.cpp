@@ -127,9 +127,11 @@ bool megamol::gui::Configurator::Draw(
 
         // Update state -------------------------------------------------------
 
-        // Hotkeys
+        // Process hotkeys
+        /// SAVE_PROJECT
         if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT].is_pressed &&
             (this->graph_state.graph_selected_uid != GUI_INVALID_ID)) {
+
             bool graph_has_core_interface = false;
             GraphPtr_t graph_ptr;
             if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
@@ -140,6 +142,13 @@ bool megamol::gui::Configurator::Draw(
             } else {
                 this->graph_state.configurator_graph_save = true;
             }
+            this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT].is_pressed = false;
+        }
+        /// MODULE_SEARCH
+        if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
+
+            this->search_widget.SetSearchFocus(true);
+            this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed = false;
         }
 
         this->project_file_drop_valid = (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows));
@@ -165,10 +174,13 @@ bool megamol::gui::Configurator::Draw(
         // Process Pop-ups
         this->drawPopUps(core_instance);
 
-        // Reset state -------------------------------------------------------
-        for (auto& h : this->graph_state.hotkeys) {
-            h.is_pressed = false;
-        }
+        // Reset state --------------------------------------------------------
+
+        // Only reset 'externally' processed hotkeys
+        /// PARAMETER_SEARCH
+        this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH].is_pressed = false;
+        /// DELETE_GRAPH_ITEM
+        this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM].is_pressed = false;
     }
 
     return true;
@@ -281,15 +293,11 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
 
     const float search_child_height = ImGui::GetFrameHeightWithSpacing() * 2.5f;
     auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar;
-    ImGui::BeginChild("module_search_child_window", ImVec2(group_width, std::min(group_height, search_child_height)),
-        false, child_flags);
+    ImGui::BeginChild("module_search_child_window", ImVec2(group_width, search_child_height), false, child_flags);
 
     ImGui::TextUnformatted("Available Modules");
     ImGui::Separator();
 
-    if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
-        this->search_widget.SetSearchFocus(true);
-    }
     std::string help_text = "[" +
                             this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].keycode.ToString() +
                             "] Set keyboard focus to search input field.\n"
