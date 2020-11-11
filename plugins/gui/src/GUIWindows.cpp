@@ -143,8 +143,6 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
 
     // Create new gui graph once if core instance graph is used (otherwise graph should already exist)
-    // GUI graph of running project should be available before loading states from parameters in
-    // validateParameters().
     if (this->state.graph_uid == GUI_INVALID_ID)
         this->SynchronizeGraphs();
 
