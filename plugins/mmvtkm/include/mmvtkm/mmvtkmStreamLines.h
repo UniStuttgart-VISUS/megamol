@@ -208,12 +208,13 @@ private:
     bool isInsideTriangle(const glm::vec3& p, const Triangle& tri);
 
     /** Creates and adds MeshDataAccessCollection to the mesh datacall */
-    bool createAndAddMeshDataToCall(std::vector<glm::vec3>& data, std::vector<glm::vec4>& color,
+    bool createAndAddMeshDataToCall(std::string const& identifier, std::vector<glm::vec3>& data, std::vector<glm::vec4>& color,
         std::vector<unsigned int>& idcs, int numPoints, int numIndices,
         mesh::MeshDataAccessCollection::PrimitiveType pt = mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES);
 
     /** Adds the MeshDataAccessCollection to the mesh datacall */
-    bool addMeshDataToCall(const std::vector<mesh::MeshDataAccessCollection::VertexAttribute>& va,
+    bool addMeshDataToCall(std::string const& identifier,
+        const std::vector<mesh::MeshDataAccessCollection::VertexAttribute>& va,
         const mesh::MeshDataAccessCollection::IndexData& id, mesh::MeshDataAccessCollection::PrimitiveType pt);
 
 	/** Checks if a float is equal or really close to 0 */
@@ -288,7 +289,7 @@ private:
     uint32_t newVersion_;
 
     /** Used for mesh data call */
-    std::shared_ptr<mesh::MeshDataAccessCollection> meshDataAccess_;
+    std::pair<std::shared_ptr<mesh::MeshDataAccessCollection>, std::vector<std::string>> meshDataAccess_;
     core::Spatial3DMetaData metaData_;
 
 	/** Vtkm data structures */

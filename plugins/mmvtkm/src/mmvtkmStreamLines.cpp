@@ -55,6 +55,7 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     , planeUpdate_(false)
     , planeAppearanceUpdate_(false)
     , newVersion_(1)
+    , meshDataAccess_({nullptr, {}})
     , streamlineOutput_()
     , dataSetBounds_()
     , streamlineData_{}
@@ -131,7 +132,7 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     this->psSeedPlaneNormal_.SetParameter(new core::param::Vector3fParam({1.f, 0.f, 0.f}));
     this->MakeSlotAvailable(&this->psSeedPlaneNormal_);
     this->psSeedPlaneNormal_.Parameter()->SetGUIPresentation(
-        core::param::AbstractParamPresentation::Presentation::Rotation3D_Direction);
+        core::param::AbstractParamPresentation::Presentation::Direction);
 
     this->psSeedPlanePoint_.SetParameter(new core::param::Vector3fParam({0.f, 0.f, 0.f}));
     this->MakeSlotAvailable(&this->psSeedPlanePoint_);
@@ -172,7 +173,7 @@ void mmvtkmStreamLines::release() {}
  * mmvtkmStreamLines::create
  */
 bool mmvtkmStreamLines::create() {
-    this->meshDataAccess_ = std::make_shared<mesh::MeshDataAccessCollection>();
+    this->meshDataAccess_.first = std::make_shared<mesh::MeshDataAccessCollection>();
     return true;
 }
 
@@ -290,8 +291,6 @@ bool mmvtkmStreamLines::setStreamlineAndResampleSeedsUpdate() {
 
 /*
  * mmvtkmStreamLInes::setPlaneAndAppearanceUpdate
- *
- * This function assumes that the plane is at the very last position in the mesh
  */
 bool mmvtkmStreamLines::setPlaneAndAppearanceUpdate() {
     visVec3f tmpColor = psSeedPlaneColor_.Param<core::param::Vector3fParam>()->Value();
@@ -316,13 +315,12 @@ bool mmvtkmStreamLines::setPlaneAndAppearanceUpdate() {
     vColor.offset = 0;
     vColor.semantic = mesh::MeshDataAccessCollection::AttributeSemanticType::COLOR;
 
-
-    // this assumes plane is fixed in last batch in mesh
-    // here it's the second: one batch for the streamlines and one for the plane
-    // TODO: add function in MeshDataAccessCollection to do this
-    this->meshDataAccess_->accessMesh().back().attributes[1].data =
-        reinterpret_cast<uint8_t*>(seedPlaneColorVec_.data());
-
+    auto seed_plane_ma = this->meshDataAccess_.first->accessMesh("seed_plane");
+    this->meshDataAccess_.first->deleteMesh("seed_plane");
+    seed_plane_ma.attributes[1].data = reinterpret_cast<uint8_t*>(seedPlaneColorVec_.data());
+    this->meshDataAccess_.first->addMesh(
+        "seed_plane", seed_plane_ma.attributes, seed_plane_ma.indices, seed_plane_ma.primitive_type);
+    // no update to list of entires in collection needed in this special case
 
     planeAppearanceUpdate_ = true;
 
@@ -594,7 +592,8 @@ bool mmvtkmStreamLines::isInsideTriangle(const glm::vec3& p, const Triangle& tri
 /**
  * mmvtkmStreamLines::createAndAddMeshDataToCall
  */
-bool mmvtkmStreamLines::createAndAddMeshDataToCall(std::vector<glm::vec3>& data, std::vector<glm::vec4>& color,
+bool mmvtkmStreamLines::createAndAddMeshDataToCall(std::string const& identifier, std::vector<glm::vec3>& data,
+    std::vector<glm::vec4>& color,
     std::vector<unsigned int>& idcs, int numPoints, int numIndices, mesh::MeshDataAccessCollection::PrimitiveType pt) {
 
     if (data.size() != color.size() && data.size() != idcs.size()) {
@@ -635,7 +634,7 @@ bool mmvtkmStreamLines::createAndAddMeshDataToCall(std::vector<glm::vec3>& data,
     idxData.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
 
 
-    if (!addMeshDataToCall({va, vColor}, idxData, pt)) {
+    if (!addMeshDataToCall(identifier, {va, vColor}, idxData, pt)) {
         return false;
     }
 
@@ -646,7 +645,8 @@ bool mmvtkmStreamLines::createAndAddMeshDataToCall(std::vector<glm::vec3>& data,
 /**
  * mmvtkmStreamLines::addMeshDataToCall
  */
-bool mmvtkmStreamLines::addMeshDataToCall(const std::vector<mesh::MeshDataAccessCollection::VertexAttribute>& va,
+bool mmvtkmStreamLines::addMeshDataToCall(
+    std::string const& identifier, const std::vector<mesh::MeshDataAccessCollection::VertexAttribute>& va,
     const mesh::MeshDataAccessCollection::IndexData& id, mesh::MeshDataAccessCollection::PrimitiveType pt) {
 
     if (va.size() == 0 || id.data == nullptr) {
@@ -655,8 +655,8 @@ bool mmvtkmStreamLines::addMeshDataToCall(const std::vector<mesh::MeshDataAccess
         return false;
     }
 
-
-    this->meshDataAccess_->addMesh(va, id, pt);
+    this->meshDataAccess_.first->addMesh(identifier, va, id, pt);
+    this->meshDataAccess_.second.push_back(identifier);
 
     return true;
 }
@@ -686,7 +686,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
     // this case only occurs when parameters of the plane, such as color or alpha, are changed
     // so we can early terminate
     if (planeAppearanceUpdate_) {
-        lhsMeshDc->setData(meshDataAccess_, ++this->newVersion_);
+        lhsMeshDc->setData(meshDataAccess_.first, ++this->newVersion_);
         planeAppearanceUpdate_ = false;
         return true;
     }
@@ -741,7 +741,10 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
     if (vtkmUpdate || streamlineUpdate_) {
         seeds_.clear();
 
-        this->meshDataAccess_->accessMesh().clear();
+        for (auto const& identifier : meshDataAccess_.second) {
+            meshDataAccess_.first->deleteMesh(identifier);
+        }
+        meshDataAccess_.second.clear();
 
 
         // sample points in triangles and combine each triangles' samples
@@ -873,16 +876,16 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             }
 
             // adds the mdacs of the streamlines to the call here
-            createAndAddMeshDataToCall(streamlineData_[i], streamlineColor_[i], streamlineIndices_[i], numPoints,
+            createAndAddMeshDataToCall("streamlines", streamlineData_[i], streamlineColor_[i], streamlineIndices_[i], numPoints,
                 numIndices, mesh::MeshDataAccessCollection::PrimitiveType::LINE_STRIP);
         }
 
         // adds the mdac for the seed plane
-        createAndAddMeshDataToCall(seedPlane_, seedPlaneColorVec_, seedPlaneIdcs_, seedPlane_.size(),
+        createAndAddMeshDataToCall("seed_plane", seedPlane_, seedPlaneColorVec_, seedPlaneIdcs_, seedPlane_.size(),
             seedPlaneIdcs_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
 
-        lhsMeshDc->setData(meshDataAccess_, ++this->newVersion_);
+        lhsMeshDc->setData(meshDataAccess_.first, ++this->newVersion_);
 
         streamlineUpdate_ = false;
 
