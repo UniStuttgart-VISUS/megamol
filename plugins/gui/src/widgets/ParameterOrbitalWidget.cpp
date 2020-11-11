@@ -13,14 +13,15 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-ParameterOrbitalWidget::ParameterOrbitalWidget(void) : m_rotation(1.0f, 0.0f, 0.0f, 0.0f) {}
+ParameterOrbitalWidget::ParameterOrbitalWidget(void)
+        : m_rotation(1.0f, 0.0f, 0.0f, 0.0f), m_direction(0.0f, 0.0f, -1.0f) {}
 
 
 bool megamol::gui::ParameterOrbitalWidget::gizmo3D_rotation_axes(glm::vec4& inout_rotation) {
 
     bool retval = false;
 
-    if (ImGui::gizmo3D("##gizmo1", this->m_rotation, ImGui::GetNextItemWidth(),
+    if (ImGui::gizmo3D("##gizmo_rotation", this->m_rotation, ImGui::CalcItemWidth(),
             imguiGizmo::mode3Axes | imguiGizmo::cubeAtOrigin | imguiGizmo::sphereAtOrigin)) {
         inout_rotation = glm::vec4(this->m_rotation.x, this->m_rotation.y, this->m_rotation.z, this->m_rotation.w);
         retval = true;
@@ -36,11 +37,11 @@ bool megamol::gui::ParameterOrbitalWidget::gizmo3D_rotation_direction(glm::vec3&
 
     bool retval = false;
 
-    if (ImGui::gizmo3D("##gizmo2", this->m_direction, ImGui::GetNextItemWidth(), imguiGizmo::modeDirection)) {
-        inout_direction = glm::vec3(this->m_direction.x, this->m_direction.y, this->m_direction.z) * (-1.0f);
+    if (ImGui::gizmo3D("##gizmo_direction", this->m_direction, ImGui::CalcItemWidth(), imguiGizmo::modeDirection)) {
+        inout_direction = glm::vec3(this->m_direction.x, this->m_direction.y, this->m_direction.z);
         retval = true;
     } else {
-        this->m_direction = ::vec3(inout_direction.x, inout_direction.y, inout_direction.z) * (-1.0f);
+        this->m_direction = ::vec3(inout_direction.x, inout_direction.y, inout_direction.z);
     }
 
     return retval;

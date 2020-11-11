@@ -20,8 +20,8 @@ using namespace megamol::mesh;
 
 RenderMDIMesh::RenderMDIMesh()
 	: Renderer3DModule_2()
-    , m_render_task_callerSlot("getRenderTaskData", "Connects the renderer with a render task data source")
-    , m_framebuffer_slot("Framebuffer", "Connects the renderer to an (optional) framebuffer render target from the calling module") 
+    , m_render_task_callerSlot("renderTasks", "Connects the renderer with a render task data source")
+    , m_framebuffer_slot("framebuffer", "Connects the renderer to an (optional) framebuffer render target from the calling module") 
 {
 	this->m_render_task_callerSlot.SetCompatibleCall<GPURenderTasksDataCallDescription>();
 	this->MakeSlotAvailable(&this->m_render_task_callerSlot);
@@ -195,7 +195,7 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	for (auto const& render_task : gpu_render_tasks->getRenderTasks())
 	{
         // Set GL state (otherwise bounding box or view cube rendering state is used)
-		for (auto const& state : render_task.states) {
+		for (auto const& state : render_task->states) {
 			if (state.capability.second) {
                 glEnable(state.capability.first.at(0));
 
@@ -222,26 +222,26 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
   //      glDisable(GL_CULL_FACE);
   //      // glCullFace(GL_BACK);
 
-		render_task.shader_program->use();
+        render_task->shader_program->use();
 		
 		// TODO introduce per frame "global" data buffer to store information like camera matrices?
-        render_task.shader_program->setUniform("view_mx", view_mx);
-        render_task.shader_program->setUniform("proj_mx", proj_mx);
+        render_task->shader_program->setUniform("view_mx", view_mx);
+        render_task->shader_program->setUniform("proj_mx", proj_mx);
 		
-		render_task.per_draw_data->bind(0);
+		render_task->per_draw_data->bind(0);
 		
-		render_task.draw_commands->bind();
-		render_task.mesh->bindVertexArray();
+		render_task->draw_commands->bind();
+		render_task->mesh->bindVertexArray();
 
-        if(render_task.mesh->getPrimitiveType() == GL_PATCHES){
+        if (render_task->mesh->getPrimitiveType() == GL_PATCHES) {
             glPatchParameteri(GL_PATCH_VERTICES, 4);
             //TODO add generic patch vertex count to render tasks....
         }
 		
-		glMultiDrawElementsIndirect(render_task.mesh->getPrimitiveType(),
-			render_task.mesh->getIndexType(),
+		glMultiDrawElementsIndirect(render_task->mesh->getPrimitiveType(),
+			render_task->mesh->getIndexType(),
 			(GLvoid*)0,
-			render_task.draw_cnt,
+			render_task->draw_cnt,
 			0);
 
 		//CallmeshRenderBatches::RenderBatchesData::DrawCommandData::glowl::DrawElementsCommand command_buffer;

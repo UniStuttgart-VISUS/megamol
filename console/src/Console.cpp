@@ -35,7 +35,7 @@
 #include "vislib/sys/sysfunctions.h"
 #include "vislib/Trace.h"
 
-#include "mmcore/utility/log/StreamTarget.h"
+#include "mmcore/utility/log/DefaultTarget.h"
 
 /** The core instance handle. */
 static megamol::console::CoreHandle hCore;
@@ -193,10 +193,11 @@ void initTraceAndLog() {
     vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_VL);
 
     // VISlib Log
-    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
     megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
     megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
-    megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(std::make_shared<megamol::core::utility::log::StreamTarget>(std::cout, megamol::core::utility::log::Log::LEVEL_ALL));
+    megamol::core::utility::log::Log::DefaultLog.SetOfflineMessageBufferSize(100);
+    megamol::core::utility::log::Log::DefaultLog.SetMainTarget(
+        std::make_shared<megamol::core::utility::log::DefaultTarget>(megamol::core::utility::log::Log::LEVEL_ALL));
     megamol::console::utility::AboutInfo::LogGreeting();
     megamol::console::utility::AboutInfo::LogVersionInfo();
     megamol::console::utility::AboutInfo::LogStartTime();
@@ -306,7 +307,8 @@ void setupCore(megamol::console::utility::CmdLineParser *& parser) {
         = writeLogEchoToConsole;
 #endif
 
-    MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, MMC_INITVAL_LOGECHOFUNC, MMC_TYPE_VOIDP, function_cast<void*>(echoFunc)));
+    /// NO MORE NECESSARY
+    /// MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, MMC_INITVAL_LOGECHOFUNC, MMC_TYPE_VOIDP, function_cast<void*>(echoFunc)));
     if (parser->IsLogFileSpecified()) {
         MMC_VERIFY_THROW(::mmcSetInitialisationValue(hCore, MMC_INITVAL_LOGFILE, MMC_TYPE_TSTR, parser->LogFile()));
     }
@@ -618,7 +620,8 @@ void signalCtrlC(int) {
  * @param message The text of the log message.
  */
 void MEGAMOLCORE_CALLBACK writeLogEchoToConsole(unsigned int level, const char* message) {
-    std::cout << std::setw(4) << level << "|" << message;
+    auto closing = (message[std::strlen(message)-1] == '\n') ? "" : "\n";
+    std::cout << std::setw(4) << level << "|" << message << closing;
 }
 
 }

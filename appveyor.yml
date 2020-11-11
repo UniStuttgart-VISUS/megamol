@@ -26,6 +26,7 @@ matrix:
   fast_finish: true
 
 before_build:
+  - SET PATH=C:\\Python39-x64;%PATH%
   - mkdir build
   - mkdir stage
   - cd build

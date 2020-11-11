@@ -11,6 +11,7 @@ using megamol::core::AbstractNamedObjectContainer;
 
 unsigned int megamol::core::utility::LuaHostService::ID = 0;
 
+
 megamol::core::utility::LuaHostService::LuaHostService(core::CoreInstance& core)
     : AbstractService(core), serverThread(), serverRunning(false), address("tcp://*:33333") {
     // Intentionally empty
@@ -247,10 +248,12 @@ std::string megamol::core::utility::LuaHostService::makePairAnswer(const std::st
     const bool ok = this->GetCoreInstance().GetLuaState()->RunString(req, result);
     if (ok) {
 #ifdef LRH_ANNOYING_DETAILS
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("LRH: execution is OK and returned\n\"%s\", sending.", result.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+            "LRH: execution is OK and returned\n\"%s\", sending.", result.c_str());
 #endif
     } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("LRH: execution is NOT OK and returned Error \"%s\"", result.c_str());
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "LRH: execution is NOT OK and returned Error \"%s\"", result.c_str());
         result = "Error: " + result;
     }
     return result;

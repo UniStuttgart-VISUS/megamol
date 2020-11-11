@@ -15,11 +15,11 @@ using namespace megamol::gui;
 
 
 megamol::gui::ParameterGroupsPresentation::ParameterGroupsPresentation(void)
-    : group_widget_ids()
-    , tooltip()
-    , speed_knob_pos(ImVec2(0.0f, 0.0f))
-    , time_knob_pos(ImVec2(0.0f, 0.0f))
-    , image_buttons() {
+        : group_widget_ids()
+        , tooltip()
+        , speed_knob_pos(ImVec2(0.0f, 0.0f))
+        , time_knob_pos(ImVec2(0.0f, 0.0f))
+        , image_buttons() {
 
     // Add group widget data for animation widget group
     /// View3D_2::anim
@@ -45,16 +45,19 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
     bool in_indent, megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
 
-    if (out_open_external_tf_editor != nullptr) (*out_open_external_tf_editor) = false;
+    if (out_open_external_tf_editor != nullptr)
+        (*out_open_external_tf_editor) = false;
 
     // Nothing to do if there are no parameters
-    if (inout_params.empty()) return true;
+    if (inout_params.empty())
+        return true;
 
     if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
         /// LOCAL
 
         ImGui::BeginGroup();
-        if (in_indent) ImGui::Indent();
+        if (in_indent)
+            ImGui::Indent();
     }
 
     // Analyse parameter group membership and draw ungrouped parameters
@@ -84,14 +87,11 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
         // Draw group widget (if defined) ...
         for (auto& group_widget_id : this->group_widget_ids) {
             // Check for same group name and count of different parameter types
-            /// TODO Is this check too expensive? (remove check for group_name)
             if ((group_widget_id.second.type == group.second.second) && (group_widget_id.first == group_name)) {
 
                 found_group_widget = true;
                 group_widget_id.second.active = true;
-
                 ImGui::PushID(group_widget_id.first.c_str());
-
                 if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
 
                     if (in_extended.IsTrue()) {
@@ -191,7 +191,8 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
     if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
         /// LOCAL
 
-        if (in_indent) ImGui::Unindent();
+        if (in_indent)
+            ImGui::Unindent();
         ImGui::EndGroup();
     }
 
@@ -199,14 +200,13 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
 }
 
 
-bool megamol::gui::ParameterGroupsPresentation::ParameterGroupGUIStateToJSON(
+bool megamol::gui::ParameterGroupsPresentation::StateToJSON(
     nlohmann::json& inout_json, const std::string& module_fullname) {
 
     for (auto& group_widget_id : group_widget_ids) {
         if (group_widget_id.second.active) {
-            std::string param_fullname = module_fullname + "::parametergroup::" + group_widget_id.first;
-
-            group_widget_id.second.ParameterGUIStateToJSON(inout_json, param_fullname);
+            std::string param_fullname = module_fullname + "::ParameterGroup::" + group_widget_id.first;
+            group_widget_id.second.StateToJSON(inout_json, param_fullname);
         }
     }
 
@@ -214,13 +214,13 @@ bool megamol::gui::ParameterGroupsPresentation::ParameterGroupGUIStateToJSON(
 }
 
 
-bool megamol::gui::ParameterGroupsPresentation::ParameterGroupGUIStateFromJSONString(
-    const std::string& in_json_string, const std::string& module_fullname) {
+bool megamol::gui::ParameterGroupsPresentation::StateFromJSON(
+    const nlohmann::json& in_json, const std::string& module_fullname) {
 
     for (auto& group_widget_id : group_widget_ids) {
-        std::string param_fullname = module_fullname + "::parametergroup::" + group_widget_id.first;
+        std::string param_fullname = module_fullname + "::ParameterGroup::" + group_widget_id.first;
 
-        if (group_widget_id.second.ParameterGUIStateFromJSONString(in_json_string, param_fullname)) {
+        if (group_widget_id.second.StateFromJSON(in_json, param_fullname)) {
             group_widget_id.second.active = true;
         }
     }
@@ -257,7 +257,8 @@ void megamol::gui::ParameterGroupsPresentation::draw_parameter(megamol::gui::Par
 
                 // Open window calling the transfer function editor callback
                 if ((inout_param.type == Param_t::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
-                    if (out_open_external_tf_editor != nullptr) (*out_open_external_tf_editor) = true;
+                    if (out_open_external_tf_editor != nullptr)
+                        (*out_open_external_tf_editor) = true;
                     auto param_fullname = std::string(in_module_fullname.c_str()) + "::" + inout_param.full_name;
                     in_external_tf_editor->SetConnectedParameter(&inout_param, param_fullname);
                 }
@@ -279,7 +280,8 @@ void megamol::gui::ParameterGroupsPresentation::draw_grouped_parameters(const st
         visible = visible || param->present.IsGUIVisible();
         extended = extended || param->present.extended;
     }
-    if (!visible && !extended) return;
+    if (!visible && !extended)
+        return;
 
     // Open namespace header when parameter search is active.
     if (!in_search.empty()) {
@@ -301,7 +303,8 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(ParamPtrV
     megamol::core::param::AbstractParamPresentation::Presentation presentation,
     megamol::gui::ParameterPresentation::WidgetScope in_scope) {
 
-    if (presentation != param::AbstractParamPresentation::Presentation::Group_Animation) return false;
+    if (presentation != param::AbstractParamPresentation::Presentation::Group_Animation)
+        return false;
 
     ImGuiStyle& style = ImGui::GetStyle();
     const std::string group_label("Animation");

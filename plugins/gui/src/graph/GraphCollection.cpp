@@ -19,12 +19,53 @@ megamol::gui::GraphCollection::GraphCollection(void) : graphs(), modules_stock()
 megamol::gui::GraphCollection::~GraphCollection(void) {}
 
 
-ImGuiID megamol::gui::GraphCollection::AddGraph(void) {
+bool megamol::gui::GraphCollection::AddEmptyProject(void) {
+
+    ImGuiID graph_uid = this->AddGraph(GraphCoreInterface::NO_INTERFACE);
+    if (graph_uid != GUI_INVALID_ID) {
+        /* DEPRECATED: Only applies for Core Instance Graph, not for MegaMol Graph.
+        // Add initial GUIView and set as view instance
+        GraphPtr_t graph_ptr;
+        if (this->GetGraph(graph_uid, graph_ptr)) {
+            std::string guiview_class_name("GUIView");
+            ImGuiID module_uid = graph_ptr->AddModule(this->GetModulesStock(), guiview_class_name);
+            ModulePtr_t module_ptr;
+            if (graph_ptr->GetModule(module_uid, module_ptr)) {
+                auto graph_module = graph_ptr->GetModules().back();
+                graph_module->main_view_name = graph_ptr->GenerateUniqueMainViewName();
+
+                Graph::QueueData queue_data;
+                queue_data.name_id = graph_module->FullName();
+                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+
+                return true;
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] Unable to add initial gui view module: '%s'. [%s, %s, line %d]\n",
+                    guiview_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                return false;
+            }
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to get last added graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+        */
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unable to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
+
+    return false;
+}
+
+
+ImGuiID megamol::gui::GraphCollection::AddGraph(GraphCoreInterface graph_core_interface) {
 
     ImGuiID retval = GUI_INVALID_ID;
 
     try {
-        GraphPtr_t graph_ptr = std::make_shared<Graph>(this->generate_unique_graph_name());
+        GraphPtr_t graph_ptr = std::make_shared<Graph>(this->generate_unique_graph_name(), graph_core_interface);
         if (graph_ptr != nullptr) {
             this->graphs.emplace_back(graph_ptr);
             retval = graph_ptr->uid;
@@ -228,9 +269,11 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             std::sort(this->modules_stock.begin(), this->modules_stock.end(),
                 [](Module::StockModule mod1, Module::StockModule mod2) {
                     std::string a_str(mod1.class_name);
-                    for (auto& c : a_str) c = std::toupper(c);
+                    for (auto& c : a_str)
+                        c = std::toupper(c);
                     std::string b_str(mod2.class_name);
-                    for (auto& c : b_str) c = std::toupper(c);
+                    for (auto& c : b_str)
+                        c = std::toupper(c);
                     return (a_str < b_str);
                 });
         }
@@ -257,18 +300,24 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 
 
 bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid,
-    megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph,
-    vislib::math::Ternary running_graph) {
+    megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph, bool sync) {
 
+    bool created_new_graph = false;
     ImGuiID valid_graph_id = inout_graph_uid;
     if (valid_graph_id == GUI_INVALID_ID) {
         // Create new graph
-        valid_graph_id = this->AddGraph();
+        GraphCoreInterface graph_core_interface = GraphCoreInterface::NO_INTERFACE;
+        if (sync) {
+            graph_core_interface = (megamol_graph != nullptr) ? (GraphCoreInterface::MEGAMOL_GRAPH)
+                                                              : (GraphCoreInterface::CORE_INSTANCE_GRAPH);
+        }
+        valid_graph_id = this->AddGraph(graph_core_interface);
         if (valid_graph_id == GUI_INVALID_ID) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
+        created_new_graph = true;
     }
 
     GraphPtr_t graph_ptr;
@@ -279,8 +328,11 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
     }
 
     if (this->AddUpdateProjectFromCore(valid_graph_id, core_instance, megamol_graph, false)) {
-        graph_ptr->SetRunning(running_graph);
         inout_graph_uid = valid_graph_id;
+        if (created_new_graph) {
+            graph_ptr->present.SetLayoutGraph();
+            graph_ptr->ResetDirty();
+        }
         return true;
     }
     // else { this->DeleteGraph(valid_graph_id); }
@@ -292,14 +344,11 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
 bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_uid,
     megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph, bool use_stock) {
 
-    // Apply updates from core graph to gui graph
-    //     Implemented synchronisations:
-    //     - Add module(s)      - Core Graph and Core Instance
-    //     - Add call(s)        - Core Graph
     /// TODO
-    ///     - Add call(s)       - Core Instance
-    ///     - Delete module(s)  - Core Graph and Core Instance
-    ///     - Delete call(s)    - Core Graph and Core Instance
+    ///    - Add call(s)       - Core Instance
+    ///    - Delete call(s)    - Core Instance
+
+    // Apply updates from core graph -> gui graph
     try {
         GraphPtr_t graph_ptr;
         if (!this->GetGraph(in_graph_uid, graph_ptr)) {
@@ -312,12 +361,12 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         const bool use_core_instance = (core_instance != nullptr);
         if (use_megamol_graph == use_core_instance) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Invalid references to the graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Ambiguous references to the graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
-        // Load call connections to temporary data structure, since not all call slots are available for being
-        // connected while modules are created consecutively.
+        // Collect new call connections to temporary data structure and apply in the end,
+        // since not all call slots might be available for being connected while modules are created consecutively.
         struct CallData {
             std::string call_class_name;
             std::string caller_module_full_name;
@@ -327,50 +376,51 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         };
         std::vector<CallData> call_data;
 
-        // Add new modules to list depending on available graph ---------------
-        // and search for view instance/graph entry points
-        std::vector<megamol::core::Module*> module_ptr_list;
-        std::map<std::string, std::string> view_instances;
+        bool gui_graph_changed = false;
+
+        // ADD new modules to GUI graph -------------------------------------------------
+        std::vector<megamol::core::Module*> add_module_list;
+        std::map<std::string, std::string> new_view_instances;
         if (use_megamol_graph) {
-            /* XXX
             for (auto& module_inst : megamol_graph->ListModules()) {
-                std::string module_fullname = std::string(module_inst.modulePtr->FullName().PeekBuffer());
+                std::string module_fullname =
+                    std::string(module_inst.modulePtr->Name().PeekBuffer()); /// Check only 'Name()'!
                 if (!graph_ptr->ModuleExists(module_fullname)) {
-                    module_ptr_list.emplace_back(module_inst.modulePtr.get());
+                    add_module_list.emplace_back(module_inst.modulePtr.get());
                     if (module_inst.isGraphEntryPoint) {
-                        view_instances[module_fullname] = std::string(module_inst.modulePtr->Name().PeekBuffer());
+                        new_view_instances[module_fullname] = graph_ptr->GenerateUniqueMainViewName();
                     }
                 }
             }
-            */
         } else if (use_core_instance) {
             const auto module_func = [&, this](megamol::core::Module* mod) {
                 std::string module_fullname = std::string(mod->FullName().PeekBuffer());
                 if (!graph_ptr->ModuleExists(module_fullname)) {
-                    module_ptr_list.emplace_back(mod);
+                    add_module_list.emplace_back(mod);
                 }
             };
             core_instance->EnumModulesNoLock(nullptr, module_func);
 
-            if (!module_ptr_list.empty()) {
+            if (!add_module_list.empty()) {
                 vislib::sys::AutoLock lock(core_instance->ModuleGraphRoot()->ModuleGraphLock());
                 megamol::core::AbstractNamedObjectContainer::const_ptr_type anoc =
                     megamol::core::AbstractNamedObjectContainer::dynamic_pointer_cast(core_instance->ModuleGraphRoot());
                 for (auto ano = anoc->ChildList_Begin(); ano != anoc->ChildList_End(); ++ano) {
                     auto vi = dynamic_cast<megamol::core::ViewInstance*>(ano->get());
                     if ((vi != nullptr) && (vi->View() != nullptr)) {
-                        view_instances[std::string(vi->View()->FullName().PeekBuffer())] =
+                        new_view_instances[std::string(vi->View()->FullName().PeekBuffer())] =
                             std::string(vi->Name().PeekBuffer());
                     }
                 }
             }
         }
-
-        bool gui_graph_changed = false;
-
-        // Add/Create new modules to gui graph
-        for (auto& module_ptr : module_ptr_list) {
-            std::string full_name(module_ptr->FullName().PeekBuffer());
+        for (auto& module_ptr : add_module_list) {
+            std::string full_name;
+            if (use_megamol_graph) {
+                full_name = (module_ptr->Name().PeekBuffer()); /// Check only 'Name()'!
+            } else if (use_core_instance) {
+                full_name = (module_ptr->FullName().PeekBuffer());
+            }
             std::string class_name(module_ptr->ClassName());
             std::string module_name;
             std::string module_namespace;
@@ -384,14 +434,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             /// '%s'.\n", mod->ClassName(), module_namespace.c_str(), module_name.c_str());
 
             // Ensure unique module name is not yet assigned
-            if (graph_ptr->UniqueModuleRename(module_name)) {
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] Renamed existing module '%s' while adding module with same name. "
-                    "This is required for successful unambiguous parameter addressing which uses the module "
-                    "name. [%s, "
-                    "%s, line %d]\n",
-                    module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-            }
+            graph_ptr->UniqueModuleRename(module_name);
 
             // Create new module
             ImGuiID moduel_uid = GUI_INVALID_ID;
@@ -404,7 +447,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 if (graph_ptr->GetModule(moduel_uid, new_module_ptr)) {
                     new_module_ptr->class_name = class_name;
                     new_module_ptr->description = "[n/a]";
-                    /// XXX ModuleDescriptionManager is so far only available in graph of core instance
+                    /// XXX ModuleDescriptionManager is only available via core instance graph yet.
                     if (use_core_instance) {
                         auto mod_desc =
                             core_instance->GetModuleDescriptionManager().Find(vislib::StringA(class_name.c_str()));
@@ -418,19 +461,22 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                     new_module_ptr->present.label_visible = graph_ptr->present.GetModuleLabelVisibility();
                 }
             }
-            // Set remaining module data
+            // Check for successfully created module
             if (new_module_ptr != nullptr) {
+                gui_graph_changed = true;
+                // Set remaining module data
                 new_module_ptr->name = module_name;
-                // Instance Name
-                new_module_ptr->is_view_instance = false;
-                if (view_instances.find(full_name) != view_instances.end()) {
-                    graph_ptr->name = view_instances[full_name];
-                    new_module_ptr->is_view_instance = (graph_ptr->IsMainViewSet()) ? (false) : (true);
+                // Check if module is view instance
+                auto view_inst_iter = new_view_instances.find(full_name);
+                if (view_inst_iter != new_view_instances.end()) {
+                    new_module_ptr->main_view_name = view_inst_iter->second;
+
+                    Graph::QueueData queue_data;
+                    queue_data.name_id = new_module_ptr->FullName();
+                    graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
                 }
                 // Add module to group
                 graph_ptr->AddGroupModule(module_namespace, new_module_ptr);
-
-                gui_graph_changed = true;
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] Unable to get created module. [%s, %s, line %d]\n", full_name.c_str(), __FILE__,
@@ -444,14 +490,14 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                      module_ptr->ChildList_Begin();
                  si != se; ++si) {
 
-                // Parameter
+                // Parameters
                 auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
                 if (param_slot != nullptr) {
                     std::string param_full_name(param_slot->Name().PeekBuffer());
 
                     if (use_stock) {
                         for (auto& parameter : new_module_ptr->parameters) {
-                            if (parameter.full_name == param_full_name) {
+                            if (this->case_insensitive_str_comp(parameter.full_name, param_full_name)) {
                                 megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                     (*param_slot), parameter, true, false, false);
                             }
@@ -464,7 +510,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                     }
                 }
 
-                // Collect call connection data from core instance graph
+                // Add call slots if required and collect call connection data from core instance graph
                 std::shared_ptr<core::CallerSlot> caller_slot =
                     std::dynamic_pointer_cast<megamol::core::CallerSlot>((*si));
                 if (caller_slot) {
@@ -509,70 +555,113 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 }
             }
         }
-        // Add/Create call connection data from core graph
-        if (use_megamol_graph) {
-            /* XXX
-            for (auto& call : megamol_graph->ListCalls()) {
-                auto call_ptr = call.first;
-                if (call_ptr == nullptr) continue;
 
-                bool add_new = true;
-                for (auto& call_ptr : graph_ptr->GetCalls()) {
-                    std::string class_name = call_ptr->class_name;
-                    std::string from, to;
-                    bool valid_ptr = false;
-                    auto caller_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLER);
-                    if (caller_ptr != nullptr) {
-                        if (caller_ptr->GetParentModule() != nullptr) {
-                            from = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->name;
-                            valid_ptr = true;
-                        }
-                    }
-                    if (!valid_ptr) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Pointer to caller slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                            __LINE__);
-                    }
-                    valid_ptr = false;
-                    auto callee_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLEE);
-                    if (callee_ptr != nullptr) {
-                        if (callee_ptr->GetParentModule() != nullptr) {
-                            to = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->name;
-                            valid_ptr = true;
-                        }
-                    }
-                    if (!valid_ptr) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                            __LINE__);
-                    }
-                    if ((class_name == call.second.className) && (from == call.second.from) && (to == call.second.to)) {
-                        add_new = false;
+        // REMOVE deleted modules from GUI graph ----------------------------------------
+        std::map<std::string, ImGuiID> delete_module_map;
+        for (auto& module_ptr : graph_ptr->GetModules()) {
+            delete_module_map[module_ptr->FullName()] = module_ptr->uid;
+        }
+        for (auto& module_map : delete_module_map) {
+            if (use_megamol_graph) {
+                if (!megamol_graph->FindModule(module_map.first)) {
+                    graph_ptr->DeleteModule(module_map.second);
+                    gui_graph_changed = true;
+                }
+            } else if (use_core_instance) {
+                bool found_module = false;
+                std::function<void(megamol::core::Module*)> fun = [&](megamol::core::Module* mod) {
+                    found_module = true;
+                };
+                core_instance->FindModuleNoLock(module_map.first, fun);
+                if (!found_module) {
+                    graph_ptr->DeleteModule(module_map.second);
+                    gui_graph_changed = true;
+                }
+            }
+        }
+
+        // Collect current call information of gui graph ----------------------
+        struct CallInfo {
+            std::string class_name;
+            std::string from;
+            std::string to;
+            ImGuiID uid;
+        };
+        std::vector<CallInfo> gui_graph_call_info;
+        for (auto& call_ptr : graph_ptr->GetCalls()) {
+            CallInfo call_info;
+            call_info.class_name = call_ptr->class_name;
+            call_info.uid = call_ptr->uid;
+            bool valid_callslot = false;
+            auto caller_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLER);
+            if (caller_ptr != nullptr) {
+                if (caller_ptr->GetParentModule() != nullptr) {
+                    call_info.from = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->name;
+                    valid_callslot = true;
+                }
+            }
+            if (!valid_callslot) {
+#ifdef GUI_VERBOSE
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] Caller slot is not valid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+#endif // GUI_VERBOSE
+                continue;
+            }
+            valid_callslot = false;
+            auto callee_ptr = call_ptr->GetCallSlot(megamol::gui::CallSlotType::CALLEE);
+            if (callee_ptr != nullptr) {
+                if (callee_ptr->GetParentModule() != nullptr) {
+                    call_info.to = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->name;
+                    valid_callslot = true;
+                }
+            }
+            if (!valid_callslot) {
+#ifdef GUI_VERBOSE
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] Callee slot is not valid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+#endif // GUI_VERBOSE
+                continue;
+            }
+            gui_graph_call_info.push_back(call_info);
+        }
+
+        // ADD new calls to GUI graph ---------------------------------------------------
+        if (use_megamol_graph) {
+            for (auto& call : megamol_graph->ListCalls()) {
+                auto call_ptr = call.callPtr;
+                if (call_ptr == nullptr)
+                    continue;
+                bool add_new_call = true;
+                for (auto& call_info : gui_graph_call_info) {
+                    if ((call_info.class_name == call.request.className) &&
+                        this->case_insensitive_str_comp(call_info.from, call.request.from) &&
+                        this->case_insensitive_str_comp(call_info.to, call.request.to)) {
+                        add_new_call = false;
                     }
                 }
-                if (!add_new) continue;
+                if (!add_new_call)
+                    continue;
 
-                auto call_class_name = call.second.className;
+                auto call_class_name = call.request.className;
                 std::string call_caller_name;
                 std::string call_caller_parent_name;
                 if (!this->project_separate_name_and_namespace(
-                        call.second.from, call_caller_parent_name, call_caller_name)) {
+                        call.request.from, call_caller_parent_name, call_caller_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n",
-                        call.second.from.c_str(), __FILE__, __FUNCTION__, __LINE__);
+                        call.request.from.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 }
                 std::string call_callee_name;
                 std::string call_callee_parent_name;
                 if (!this->project_separate_name_and_namespace(
-                        call.second.to, call_callee_parent_name, call_callee_name)) {
+                        call.request.to, call_callee_parent_name, call_callee_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n", call.second.to.c_str(),
+                        "[GUI] Core Project: Invalid call slot name '%s'. [%s, %s, line %d]\n", call.request.to.c_str(),
                         __FILE__, __FUNCTION__, __LINE__);
                 }
                 // Full module name required
                 call_callee_parent_name = "::" + call_callee_parent_name;
                 call_caller_parent_name = "::" + call_caller_parent_name;
-
                 CallData cd;
                 cd.call_class_name = call_class_name;
                 cd.caller_module_full_name = call_caller_parent_name;
@@ -581,15 +670,32 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 cd.callee_module_callslot_name = call_callee_name;
                 call_data.emplace_back(cd);
             }
-            */
+        } else if (use_core_instance) {
+            /// TODO
+            /// How to list calls in core instance graph?
         }
-        // Create calls
+
+        // REMOVE deleted calls from GUI graph ------------------------------------------
+        for (auto& call_info : gui_graph_call_info) {
+            if (use_megamol_graph) {
+                if (!megamol_graph->FindCall(call_info.from, call_info.to)) {
+                    graph_ptr->DeleteCall(call_info.uid);
+                    gui_graph_changed = true;
+                }
+            } else if (use_core_instance) {
+                /// TODO
+                /// How to list calls in core instance graph?
+                // gui_graph_changed = true;
+            }
+        }
+
+        // Actually create new calls from collected call connection data ----------------
         for (auto& cd : call_data) {
             CallSlotPtr_t callslot_1 = nullptr;
             for (auto& mod : graph_ptr->GetModules()) {
-                if (mod->FullName() == cd.caller_module_full_name) {
+                if (this->case_insensitive_str_comp(mod->FullName(), cd.caller_module_full_name)) {
                     for (auto& callslot : mod->GetCallSlots(CallSlotType::CALLER)) {
-                        if (callslot->name == cd.caller_module_callslot_name) {
+                        if (this->case_insensitive_str_comp(callslot->name, cd.caller_module_callslot_name)) {
                             callslot_1 = callslot;
                         }
                     }
@@ -597,9 +703,9 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             }
             CallSlotPtr_t callslot_2 = nullptr;
             for (auto& mod : graph_ptr->GetModules()) {
-                if (mod->FullName() == cd.callee_module_full_name) {
+                if (this->case_insensitive_str_comp(mod->FullName(), cd.callee_module_full_name)) {
                     for (auto& callslot : mod->GetCallSlots(CallSlotType::CALLEE)) {
-                        if (callslot->name == cd.callee_module_callslot_name) {
+                        if (this->case_insensitive_str_comp(callslot->name, cd.callee_module_callslot_name)) {
                             callslot_2 = callslot;
                         }
                     }
@@ -609,25 +715,21 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 gui_graph_changed = true;
             }
         }
+
         if (gui_graph_changed) {
-            // Clear queue, since changes do not have to be propagates back to core graph
-            auto queue = graph_ptr->GetSyncQueue();
-            while (!queue->empty()) {
-                queue->pop();
-            }
-            graph_ptr->present.SetLayoutGraph();
-            // graph_ptr->ResetDirty();
+            graph_ptr->ClearSyncQueue();
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[GUI] Successfully loaded/updated project '%s' from running MegaMol.\n", graph_ptr->name.c_str());
         }
-
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        this->DeleteGraph(in_graph_uid);
         return false;
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        this->DeleteGraph(in_graph_uid);
         return false;
     }
 
@@ -639,7 +741,10 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
     ImGuiID in_graph_uid, const std::string& project_filename) {
 
     std::string projectstr;
-    if (!FileUtils::ReadFile(project_filename, projectstr)) return false;
+
+    if (!FileUtils::ReadFile(project_filename, projectstr))
+        return false;
+    GUIUtils::Utf8Decode(projectstr);
 
     const std::string luacmd_view("mmCreateView");
     const std::string luacmd_module("mmCreateModule");
@@ -649,6 +754,23 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
     GraphPtr_t graph_ptr;
     this->GetGraph(in_graph_uid, graph_ptr);
     ImGuiID retval = in_graph_uid;
+    // Create new graph if necessary
+    if (graph_ptr == nullptr) {
+        ImGuiID new_graph_uid = this->AddGraph(GraphCoreInterface::NO_INTERFACE);
+        if (new_graph_uid == GUI_INVALID_ID) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Load Project File '%s': Unable to create new graph. [%s, %s, line %d]\n",
+                project_filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            return GUI_INVALID_ID;
+        }
+        if (!this->GetGraph(new_graph_uid, graph_ptr)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to get pointer to last added graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
+            return GUI_INVALID_ID;
+        }
+        retval = new_graph_uid;
+    }
 
     try {
         bool found_configurator_positions = false;
@@ -669,18 +791,16 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
             lines.emplace_back(tmpline);
         }
 
-        // First find main view for graph creation and view creation.
-        bool found_main_view = false;
         size_t lines_count = lines.size();
         for (unsigned int i = 0; i < lines_count; i++) {
-            // Lua command must start at beginning after removeing leading spaces
+            // Lua command must start at beginning after removing leading spaces
             if (lines[i].rfind(luacmd_view, 0) == 0) {
 
                 size_t arg_count = 3;
                 std::vector<std::string> args;
                 if (!this->read_project_command_arguments(lines[i], arg_count, args)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Error parsing lua command '%s' "
+                        "[GUI] Load Project File '%s' line %i: Error parsing lua command '%s' "
                         "requiring %i arguments. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_view.c_str(), arg_count, __FILE__, __FUNCTION__,
                         __LINE__);
@@ -694,7 +814,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 std::string view_name;
                 if (!this->project_separate_name_and_namespace(view_full_name, view_namespace, view_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Invalid view name argument "
+                        "[GUI] Load Project File '%s' line %i: Invalid view name argument "
                         "(3rd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
@@ -705,56 +825,27 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 ///     "[GUI] >>>> Instance: '%s' Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f, %f.\n",
                 ///     view_instance.c_str(), view_class_name.c_str(), view_namespace.c_str(), view_name.c_str());
 
-                // Create new graph
-                if (graph_ptr == nullptr) {
-                    ImGuiID new_graph_uid = this->AddGraph();
-                    if (new_graph_uid == GUI_INVALID_ID) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Project File '%s' line %i: Unable to create new graph '%s'. [%s, %s, line %d]\n",
-                            project_filename.c_str(), (i + 1), view_instance.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                        return GUI_INVALID_ID;
-                    }
-                    if (!this->GetGraph(new_graph_uid, graph_ptr)) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Unable to get pointer to last added graph. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
-                        return GUI_INVALID_ID;
-                    }
-                    graph_ptr->name = view_instance;
-                    retval = new_graph_uid;
-                }
-
-                // Ensure unique module name is not yet assigned
-                if (graph_ptr->UniqueModuleRename(view_name)) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                        "[GUI] Project File '%s' line %i: Renamed existing module '%s' while adding module with same "
-                        "name. "
-                        "This is required for successful unambiguous parameter addressing which uses the "
-                        "module name. "
-                        "[%s, %s, line %d]\n",
-                        project_filename.c_str(), (i + 1), view_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                }
-
                 // Add module and set as view instance
                 if (graph_ptr->AddModule(this->modules_stock, view_class_name) == GUI_INVALID_ID) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line %d]\n",
+                        "[GUI] Load Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), view_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
                 }
                 auto graph_module = graph_ptr->GetModules().back();
+
+                Graph::QueueData queue_data;
+                queue_data.name_id = graph_module->FullName();
+                graph_ptr->UniqueModuleRename(view_name);
                 graph_module->name = view_name;
                 graph_ptr->AddGroupModule(view_namespace, graph_module);
-
-                found_main_view = true;
+                graph_module->main_view_name = view_instance;
+                queue_data.name_id = graph_module->FullName();
+                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
             }
         }
-        if (!found_main_view) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Project File '%s': Missing main view lua command '%s'. [%s, %s, line %d]\n",
-                project_filename.c_str(), luacmd_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
-        }
-        // Save filename for graph (before saving states!)
+
+        // Save filename for graph
         graph_ptr->SetFilename(project_filename);
 
         // Find and create modules
@@ -766,7 +857,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 std::vector<std::string> args;
                 if (!this->read_project_command_arguments(lines[i], arg_count, args)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Error parsing lua command '%s' "
+                        "[GUI] Load Project File '%s' line %i: Error parsing lua command '%s' "
                         "requiring %i arguments. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_module.c_str(), arg_count, __FILE__, __FUNCTION__,
                         __LINE__);
@@ -779,7 +870,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 std::string module_name;
                 if (!this->project_separate_name_and_namespace(module_full_name, module_namespace, module_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Invalid module name argument "
+                        "[GUI] Load Project File '%s' line %i: Invalid module name argument "
                         "(2nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_module.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
@@ -792,29 +883,16 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
 
                 // Add module
                 if (graph_ptr != nullptr) {
-
-                    // Ensure unique module name is not yet assigned
-                    if (graph_ptr->UniqueModuleRename(module_name)) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                            "[GUI] Project File '%s' line %i: Renamed existing module '%s' while adding module with "
-                            "same "
-                            "name. "
-                            "This is required for successful unambiguous parameter addressing which uses the "
-                            "module "
-                            "name. [%s, %s, line %d]\n",
-                            project_filename.c_str(), (i + 1), module_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                    }
-
                     if (graph_ptr->AddModule(this->modules_stock, module_class_name) == GUI_INVALID_ID) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line %d]\n",
+                            "[GUI] Load Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), module_class_name.c_str(), __FILE__, __FUNCTION__,
                             __LINE__);
                         return GUI_INVALID_ID;
                     }
                     auto graph_module = graph_ptr->GetModules().back();
+                    graph_ptr->UniqueModuleRename(module_name);
                     graph_module->name = module_name;
-                    graph_module->is_view_instance = false;
                     graph_ptr->AddGroupModule(module_namespace, graph_module);
                 }
             }
@@ -829,7 +907,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 std::vector<std::string> args;
                 if (!this->read_project_command_arguments(lines[i], arg_count, args)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Error parsing lua command '%s' "
+                        "[GUI] Load Project File '%s' line %i: Error parsing lua command '%s' "
                         "requiring %i arguments. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_call.c_str(), arg_count, __FILE__, __FUNCTION__,
                         __LINE__);
@@ -845,7 +923,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 if (!this->project_separate_name_and_namespace(
                         caller_slot_full_name, caller_slot_namespace, caller_slot_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Invalid caller slot name "
+                        "[GUI] Load Project File '%s' line %i: Invalid caller slot name "
                         "argument (2nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 }
@@ -855,7 +933,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 if (!this->project_separate_name_and_namespace(
                         callee_slot_full_name, callee_slot_namespace, callee_slot_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Invalid callee slot name "
+                        "[GUI] Load Project File '%s' line %i: Invalid callee slot name "
                         "argument (3nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 }
@@ -880,7 +958,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         if (module_name_idx != std::string::npos) {
                             for (auto& callslot_map : mod->GetCallSlots()) {
                                 for (auto& callslot : callslot_map.second) {
-                                    if (caller_slot_name == callslot->name) {
+                                    if (this->case_insensitive_str_comp(caller_slot_name, callslot->name)) {
                                         caller_slot = callslot;
                                     }
                                 }
@@ -891,7 +969,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         if (module_name_idx != std::string::npos) {
                             for (auto& callslot_map : mod->GetCallSlots()) {
                                 for (auto& callslot : callslot_map.second) {
-                                    if (callee_slot_name == callslot->name) {
+                                    if (this->case_insensitive_str_comp(callee_slot_name, callslot->name)) {
                                         callee_slot = callslot;
                                     }
                                 }
@@ -901,7 +979,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
 
                     if (callee_slot == nullptr) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Project File '%s' line %i: Unable to find callee slot '%s' "
+                            "[GUI] Load Project File '%s' line %i: Unable to find callee slot '%s' "
                             "for creating call '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), callee_slot_full_name.c_str(), call_class_name.c_str(),
                             __FILE__, __FUNCTION__, __LINE__);
@@ -909,7 +987,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                     }
                     if (caller_slot == nullptr) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Project File '%s' line %i: Unable to find caller slot '%s' "
+                            "[GUI] Load Project File '%s' line %i: Unable to find caller slot '%s' "
                             "for creating call '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), caller_slot_full_name.c_str(), call_class_name.c_str(),
                             __FILE__, __FUNCTION__, __LINE__);
@@ -920,7 +998,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                     // Add call
                     if (!graph_ptr->AddCall(this->calls_stock, caller_slot, callee_slot)) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Project File '%s' line %i: Unable to add new call '%s'. [%s, %s, line %d]\n",
+                            "[GUI] Load Project File '%s' line %i: Unable to add new call '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), call_class_name.c_str(), __FILE__, __FUNCTION__,
                             __LINE__);
                         return GUI_INVALID_ID;
@@ -941,14 +1019,15 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 size_t first_bracket_idx = param_line.find('(');
                 if (first_bracket_idx == std::string::npos) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Missing opening brackets for '%s'. [%s, %s, line %d]\n",
+                        "[GUI] Load Project File '%s' line %i: Missing opening brackets for '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
                 }
                 size_t first_delimiter_idx = param_line.find(',');
                 if (first_delimiter_idx == std::string::npos) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Missing argument delimiter ',' for '%s'. [%s, %s, line %d]\n",
+                        "[GUI] Load Project File '%s' line %i: Missing argument delimiter ',' for '%s'. [%s, %s, line "
+                        "%d]\n",
                         project_filename.c_str(), (i + 1), luacmd_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
                 }
@@ -957,7 +1036,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                     param_line.substr(first_bracket_idx + 1, (first_delimiter_idx - first_bracket_idx - 1));
                 if ((param_slot_full_name.front() != '"') || (param_slot_full_name.back() != '"')) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Parameter name argument should "
+                        "[GUI] Load Project File '%s' line %i: Parameter name argument should "
                         "be enclosed in '\"' for '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
@@ -972,7 +1051,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 auto value_start_idx = param_line.find(start_delimieter);
                 if (value_start_idx == std::string::npos) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Unable to find parameter value "
+                        "[GUI] Load Project File '%s' line %i: Unable to find parameter value "
                         "start delimiter '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), start_delimieter.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
@@ -990,7 +1069,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 }
                 if (!found_end_delimiter) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Unable to find parameter value "
+                        "[GUI] Load Project File '%s' line %i: Unable to find parameter value "
                         "end delimiter '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), end_delimieter.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
@@ -1000,8 +1079,6 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
 
                 /// DEBUG
                 /// megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] >>>> '%s'\n", value_str.c_str());
-
-                std::string parameter_gui_state_json;
 
                 // Searching for parameter
                 if (graph_ptr != nullptr) {
@@ -1014,47 +1091,19 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                             std::string param_full_name =
                                 param_slot_full_name.substr(module_name_idx + module_full_name.size());
                             for (auto& parameter : module_ptr->parameters) {
-                                if (parameter.full_name == param_full_name) {
+                                if (this->case_insensitive_str_comp(parameter.full_name, param_full_name)) {
                                     parameter.SetValueString(value_str);
-
-                                    // Reading state parameters
-                                    if (module_ptr->class_name == GUI_MODULE_NAME) {
-                                        if (parameter.full_name == GUI_GUI_STATE_PARAM_NAME) {
-                                            parameter_gui_state_json = value_str;
-                                        }
-                                        if (parameter.full_name == GUI_CONFIGURATOR_STATE_PARAM_NAME) {
-                                            // Reading configurator state param containing a graph state
-                                            /// ! Needs filename set for graph because this is how the graph state is
-                                            /// found inside the JSON state
-                                            if (graph_ptr->GUIStateFromJsonString(value_str)) {
-                                                found_configurator_positions = true;
-                                            }
-                                        }
-                                    }
                                 }
                             }
-                        }
-                    }
-                }
-
-                // Reading parameter gui states
-                if (!parameter_gui_state_json.empty()) {
-                    for (auto& module_ptr : graph_ptr->GetModules()) {
-                        std::string module_full_name = module_ptr->FullName();
-                        module_ptr->present.param_groups.ParameterGroupGUIStateFromJSONString(
-                            parameter_gui_state_json, module_full_name);
-                        for (auto& param : module_ptr->parameters) {
-                            std::string full_param_name = module_full_name + "::" + param.full_name;
-                            param.present.ParameterGUIStateFromJSONString(parameter_gui_state_json, full_param_name);
-                            param.present.ForceSetGUIStateDirty();
                         }
                     }
                 }
             }
         }
 
-        // Layout graph if no positions for modules could be found in state.
-        if (!found_configurator_positions) {
+        // Load gui state from file
+        if (!this->load_state_from_file(project_filename, graph_ptr->uid)) {
+            // Layout graph if no positions for modules could be found in state.
             graph_ptr->present.SetLayoutGraph();
         }
         graph_ptr->ResetDirty();
@@ -1078,94 +1127,44 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
 
 
 bool megamol::gui::GraphCollection::SaveProjectToFile(
-    ImGuiID in_graph_uid, const std::string& project_filename, bool megamol_graph) {
-
-    std::string projectstr;
-    std::stringstream confInstances, confModules, confCalls, confParams;
-    GraphPtr_t found_graph_ptr = nullptr;
-
-    bool wrote_graph_state = false;
-    bool wrote_parameter_gui_state = false;
+    ImGuiID in_graph_uid, const std::string& project_filename, const std::string& state_json) {
 
     try {
         for (auto& graph_ptr : this->graphs) {
             if (graph_ptr->uid == in_graph_uid) {
 
-                // Some pre-checks
+                // Some pre-checks --------------------------------------------
                 bool found_error = false;
-                bool found_instance = false;
                 for (auto& mod_1 : graph_ptr->GetModules()) {
                     for (auto& mod_2 : graph_ptr->GetModules()) {
                         if ((mod_1 != mod_2) && (mod_1->FullName() == mod_2->FullName())) {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] Save Project >>> Found non unique module name: %s [%s, %s, line %d]\n",
-                                mod_1->FullName().c_str(), __FILE__, __FUNCTION__, __LINE__);
+                                "[GUI] Save Project File '%s': Found non unique module name: %s [%s, %s, line %d]\n",
+                                project_filename.c_str(), mod_1->FullName().c_str(), __FILE__, __FUNCTION__, __LINE__);
                             found_error = true;
                         }
                     }
-                    if (mod_1->is_view_instance) {
-                        if (found_instance) {
-                            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] Save Project >>> Found multiple view instances. [%s, %s, line %d]\n", __FILE__,
-                                __FUNCTION__, __LINE__);
-                            found_error = true;
-                        }
-                        found_instance = true;
-                    }
                 }
-                if (!found_instance) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Save Project >>> Could not find required main view. [%s, %s, line %d]\n", __FILE__,
-                        __FUNCTION__, __LINE__);
-                    found_error = true;
-                }
-                if (found_error) return false;
+                if (found_error)
+                    return false;
 
-                // Save filename for graph (before saving states!)
-                graph_ptr->SetFilename(project_filename);
-
-                // Serialze graph to string
+                // Serialze graph to string -----------------------------------
+                std::string projectstr;
+                std::stringstream confInstances, confModules, confCalls, confParams, confGUIState;
                 for (auto& module_ptr : graph_ptr->GetModules()) {
-                    std::string instance_name = graph_ptr->name;
-                    if (module_ptr->is_view_instance) {
-                        confInstances << "mmCreateView(\"" << instance_name << "\",\"" << module_ptr->class_name
-                                      << "\",\"" << module_ptr->FullName() << "\") \n";
+                    if (module_ptr->IsMainView()) {
+                        confInstances << "mmCreateView(\"" << module_ptr->main_view_name << "\",\""
+                                      << module_ptr->class_name << "\",\"" << module_ptr->FullName() << "\") \n";
                     } else {
                         confModules << "mmCreateModule(\"" << module_ptr->class_name << "\",\""
                                     << module_ptr->FullName() << "\") \n";
                     }
 
                     for (auto& parameter : module_ptr->parameters) {
-
-                        if (!megamol_graph) {
-                            // Writing state parameters
-                            /// ! Needs filename set for graph because this is how the graph state is found
-                            /// inside the JSON state
-                            if (module_ptr->class_name == GUI_MODULE_NAME) {
-                                // Store graph state to state parameter of configurator
-                                if (!wrote_graph_state && (parameter.full_name == GUI_CONFIGURATOR_STATE_PARAM_NAME)) {
-                                    // Replacing exisiting graph state with new one and leaving rest untouched
-                                    std::string new_configurator_graph_state;
-                                    this->replace_graph_state(
-                                        graph_ptr, parameter.GetValueString(), new_configurator_graph_state);
-                                    parameter.SetValue(new_configurator_graph_state, false, true);
-                                    wrote_graph_state = true;
-                                }
-                            }
-
-                            // Store parameter gui states to state parameter of gui
-                            if (!wrote_parameter_gui_state && (parameter.full_name == GUI_GUI_STATE_PARAM_NAME)) {
-                                // Replacing exisiting parameter gui state with new one and leaving rest untouched
-                                std::string new_parameter_gui_state;
-                                this->replace_parameter_gui_state(
-                                    graph_ptr, parameter.GetValueString(), new_parameter_gui_state);
-                                parameter.SetValue(new_parameter_gui_state, false, true);
-                                wrote_parameter_gui_state = true;
-                            }
-                        }
-
-                        // Only write parameters with other values than the default - ignore button parameters
-                        if ((megamol_graph || parameter.DefaultValueMismatch()) &&
+                        // - Write all parameters for running graph (default value is not available)
+                        // - For other graphs only write parameters with other values than the default
+                        // - Ignore button parameters
+                        if ((graph_ptr->HasCoreInterface() || parameter.DefaultValueMismatch()) &&
                             (parameter.type != Param_t::BUTTON)) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
@@ -1188,27 +1187,25 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                         }
                     }
                 }
+                if (!state_json.empty()) {
+                    confGUIState << (GUI_PROJECT_GUI_STATE_START_TAG) << state_json << (GUI_PROJECT_GUI_STATE_END_TAG);
+                }
 
                 projectstr = confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" +
-                             confParams.str() + "\n";
+                             confParams.str() + "\n" + confGUIState.str();
 
-                found_graph_ptr = graph_ptr;
+                graph_ptr->ResetDirty();
+                if (FileUtils::WriteFile(project_filename, projectstr)) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "[GUI] Successfully saved project '%s' to file '%s'.\n", graph_ptr->name.c_str(),
+                        project_filename.c_str());
+
+                    // Save filename for graph
+                    graph_ptr->SetFilename(project_filename);
+
+                    return true;
+                }
             }
-        }
-
-        if (found_graph_ptr != nullptr) {
-            found_graph_ptr->ResetDirty();
-            if (FileUtils::WriteFile(project_filename, projectstr)) {
-
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[GUI] Successfully saved project '%s' to file '%s'.\n", found_graph_ptr->name.c_str(),
-                    project_filename.c_str());
-                return true;
-            }
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] Invalid graph uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
         }
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1220,6 +1217,8 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
         return false;
     }
 
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        "[GUI] Invalid graph uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return false;
 }
 
@@ -1247,8 +1246,9 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
     try {
         /// Following code is adapted from megamol::core::job::job::PluginsStateFileGeneratorJob.cpp
 
-        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Creating module '%s' ...",
-        // mod_desc->ClassName());
+        /// DEBUG
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        //    "[GUI] [DEBUG] Temporary creating module '%s'...", mod_desc->ClassName());
 
         megamol::core::Module::ptr_type new_mod(mod_desc->CreateModule(nullptr));
         if (new_mod == nullptr) {
@@ -1261,6 +1261,10 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
             std::make_shared<megamol::core::RootModuleNamespace>();
         root_mod_ns->AddChild(new_mod);
 
+        /// DEBUG
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        //    "[GUI] [DEBUG] Created temporary module '%s'.", mod_desc->ClassName());
+
         std::shared_ptr<const core::view::AbstractView> viewptr =
             std::dynamic_pointer_cast<const core::view::AbstractView>(new_mod);
         mod.is_view = (viewptr != nullptr);
@@ -1272,16 +1276,20 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         core::Module::child_list_type::iterator ano_end = new_mod->ChildList_End();
         for (core::Module::child_list_type::iterator ano_i = new_mod->ChildList_Begin(); ano_i != ano_end; ++ano_i) {
             std::shared_ptr<core::param::ParamSlot> p_ptr = std::dynamic_pointer_cast<core::param::ParamSlot>(*ano_i);
-            if (p_ptr != nullptr) paramSlots.push_back(p_ptr);
+            if (p_ptr != nullptr)
+                paramSlots.push_back(p_ptr);
             std::shared_ptr<core::CallerSlot> cr_ptr = std::dynamic_pointer_cast<core::CallerSlot>(*ano_i);
-            if (cr_ptr != nullptr) callerSlots.push_back(cr_ptr);
+            if (cr_ptr != nullptr)
+                callerSlots.push_back(cr_ptr);
             std::shared_ptr<core::CalleeSlot> ce_ptr = std::dynamic_pointer_cast<core::CalleeSlot>(*ano_i);
-            if (ce_ptr != nullptr) calleeSlots.push_back(ce_ptr);
+            if (ce_ptr != nullptr)
+                calleeSlots.push_back(ce_ptr);
         }
 
         // Param Slots
         for (std::shared_ptr<core::param::ParamSlot> param_slot : paramSlots) {
-            if (param_slot == nullptr) continue;
+            if (param_slot == nullptr)
+                continue;
             Parameter::StockParameter psd;
             if (megamol::gui::Parameter::ReadNewCoreParameterToStockParameter((*param_slot), psd)) {
                 mod.parameters.emplace_back(psd);
@@ -1317,6 +1325,10 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         new_mod->SetAllCleanupMarks();
         new_mod->PerformCleanup();
         new_mod = nullptr;
+
+        /// DEBUG
+        // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        //    "[GUI] [DEBUG] Removed temporary module '%s'.", mod_desc->ClassName());
 
     } catch (std::exception e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1477,116 +1489,11 @@ bool megamol::gui::GraphCollection::project_separate_name_and_namespace(
             }
         }
     }
-
     if (name.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Invalid name in argument. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-
-    return true;
-}
-
-
-bool megamol::gui::GraphCollection::replace_graph_state(
-    const GraphPtr_t& graph_ptr, const std::string& in_json_string, std::string& out_json_string) {
-
-    try {
-        nlohmann::json json;
-        if (!in_json_string.empty()) {
-            json = nlohmann::json::parse(in_json_string);
-            if (!json.is_object()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                return false;
-            }
-            std::string json_graph_id = graph_ptr->GetFilename(); /// = graph filename
-            if (!json_graph_id.empty()) {
-                try {
-                    json[GUI_JSON_TAG_GRAPHS].erase(json_graph_id);
-                } catch (...) {
-                }
-            }
-        }
-        if (graph_ptr->GUIStateToJSON(json)) {
-            out_json_string = json.dump(2);
-        } else {
-            return false;
-        }
-
-    } catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    return true;
-}
-
-
-bool megamol::gui::GraphCollection::replace_parameter_gui_state(
-    const GraphPtr_t& graph_ptr, const std::string& in_json_string, std::string& out_json_string) {
-
-    try {
-        nlohmann::json json;
-        if (!in_json_string.empty()) {
-            json = nlohmann::json::parse(in_json_string);
-            if (!json.is_object()) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] State is no valid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                return false;
-            }
-            json.erase(GUI_JSON_TAG_GUISTATE_PARAMETERS);
-        }
-
-        for (auto& module_ptr : graph_ptr->GetModules()) {
-            std::string module_full_name = module_ptr->FullName();
-            module_ptr->present.param_groups.ParameterGroupGUIStateToJSON(json, module_full_name);
-            for (auto& param : module_ptr->parameters) {
-                std::string full_param_name = module_full_name + "::" + param.full_name;
-                param.present.ParameterGUIStateToJSON(json, full_param_name);
-            }
-        }
-        out_json_string = json.dump(2);
-
-    } catch (nlohmann::json::type_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::invalid_iterator& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::out_of_range& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (nlohmann::json::other_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unknown Error - Unable to parse JSON string. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
     return true;
 }
 
@@ -1596,7 +1503,8 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_callee_idxs(
 
     std::vector<size_t> retval;
     retval.clear();
-    if (callee_slot == nullptr) return retval;
+    if (callee_slot == nullptr)
+        return retval;
 
     SIZE_T callbackCount = callee_slot->GetCallbackCount();
     std::vector<std::string> callNames, funcNames;
@@ -1643,7 +1551,8 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_callee_idxs(
     for (std::string callName : completeCallNames) {
         size_t calls_cnt = this->calls_stock.size();
         for (size_t idx = 0; idx < calls_cnt; ++idx) {
-            if (this->calls_stock[idx].class_name == callName) {
+            /// XXX Case-Insensitive call slot comparison
+            if (this->case_insensitive_str_comp(this->calls_stock[idx].class_name, callName)) {
                 retval.emplace_back(idx);
             }
         }
@@ -1658,18 +1567,111 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_caller_idxs(
 
     std::vector<size_t> retval;
     retval.clear();
-    if (caller_slot == nullptr) return retval;
+    if (caller_slot == nullptr)
+        return retval;
 
     SIZE_T callCount = caller_slot->GetCompCallCount();
     for (SIZE_T i = 0; i < callCount; ++i) {
         std::string comp_call_class_name = std::string(caller_slot->GetCompCallClassName(i));
         size_t calls_cnt = this->calls_stock.size();
         for (size_t idx = 0; idx < calls_cnt; ++idx) {
-            if (this->calls_stock[idx].class_name == comp_call_class_name) {
+            /// XXX Case-Insensitive call slot comparison
+            if (this->case_insensitive_str_comp(this->calls_stock[idx].class_name, comp_call_class_name)) {
                 retval.emplace_back(idx);
             }
         }
     }
 
     return retval;
+}
+
+
+std::string megamol::gui::GraphCollection::GetUpdatedGUIState(ImGuiID graph_id, const std::string& filename) {
+
+    nlohmann::json state_json;
+
+    // Try to load existing gui state from file
+    std::string state_str;
+    if (FileUtils::ReadFile(filename, state_str, true)) {
+        state_str = GUIUtils::ExtractGUIState(state_str);
+        if (!state_str.empty()) {
+            state_json = nlohmann::json::parse(state_str);
+            if (!state_json.is_object()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                return std::string("");
+            }
+        }
+    }
+
+    GraphPtr_t graph_ptr;
+    if (this->GetGraph(graph_id, graph_ptr)) {
+        // Write/replace GUI_JSON_TAG_PROJECT graph state
+        try {
+            state_json[GUI_JSON_TAG_GRAPHS].erase(GUI_JSON_TAG_PROJECT);
+        } catch (...) {}
+        graph_ptr->StateToJSON(state_json);
+
+        // Write/replace GUI state of parameters (groups)
+        try {
+            state_json.erase(GUI_JSON_TAG_GUISTATE_PARAMETERS);
+        } catch (...) {}
+        for (auto& module_ptr : graph_ptr->GetModules()) {
+            std::string module_full_name = module_ptr->FullName();
+            // Parameter Groups
+            module_ptr->present.param_groups.StateToJSON(state_json, module_full_name);
+            // Parameters
+            for (auto& param : module_ptr->parameters) {
+                std::string param_full_name = module_full_name + "::" + param.full_name;
+                param.present.StateToJSON(state_json, param_full_name);
+            }
+        }
+        state_str = state_json.dump(); // No line feed
+        return state_str;
+    }
+    return std::string("");
+}
+
+
+bool megamol::gui::GraphCollection::load_state_from_file(const std::string& filename, ImGuiID graph_id) {
+
+    std::string state_str;
+    if (FileUtils::ReadFile(filename, state_str, true)) {
+        state_str = GUIUtils::ExtractGUIState(state_str);
+        if (state_str.empty())
+            return false;
+        nlohmann::json json;
+        json = nlohmann::json::parse(state_str);
+        if (!json.is_object()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+
+        GraphPtr_t graph_ptr;
+        if (this->GetGraph(graph_id, graph_ptr)) {
+
+            // Read GUI state of parameters (groups)
+            for (auto& module_ptr : graph_ptr->GetModules()) {
+                std::string module_full_name = module_ptr->FullName();
+                // Parameter Groups
+                module_ptr->present.param_groups.StateFromJSON(json, module_full_name);
+                // Parameters
+                for (auto& param : module_ptr->parameters) {
+                    std::string param_full_name = module_full_name + "::" + param.full_name;
+                    param.present.StateFromJSON(json, param_full_name);
+                    param.present.ForceSetGUIStateDirty();
+                }
+            }
+
+            // Read GUI_JSON_TAG_PROJECT graph state
+            if (graph_ptr->StateFromJSON(json)) {
+                // Disable layouting if graph state was found
+                graph_ptr->present.SetLayoutGraph(false);
+            }
+
+            return true;
+        }
+    }
+    return false;
 }

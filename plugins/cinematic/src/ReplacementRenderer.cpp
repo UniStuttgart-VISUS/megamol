@@ -53,6 +53,7 @@ ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererMo
     tmpEnum->SetTypePair(KeyAssignment::KEY_ASSIGN_0, "Alt + 0");
     this->replacementKeyParam << tmpEnum;
     this->MakeSlotAvailable(&this->replacementKeyParam);
+    tmpEnum = nullptr;
 }
 
 
@@ -71,7 +72,7 @@ bool ReplacementRenderer::create(void) {
 
     // Initialise render utils
     if (!this->utils.Initialise(this->GetCoreInstance())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't initialize the font.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[REPLACEMENT RENDERER] [create] Couldn't initialize the font. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

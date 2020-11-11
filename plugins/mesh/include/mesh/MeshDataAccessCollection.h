@@ -18,7 +18,7 @@ namespace mesh {
 class MESH_API MeshDataAccessCollection {
 public:
     enum ValueType { BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT, INT, UNSIGNED_INT, HALF_FLOAT, FLOAT, DOUBLE };
-    enum AttributeSemanticType { POSITION, NORMAL, COLOR, TEXCOORD, TANGENT};
+    enum AttributeSemanticType { POSITION, NORMAL, COLOR, TEXCOORD, TANGENT };
     enum PrimitiveType { TRIANGLES, QUADS, LINES, LINE_STRIP, TRIANGLE_FAN };
 
     static constexpr unsigned int convertToGLType(ValueType value_type) {
@@ -61,7 +61,7 @@ public:
     }
 
     static constexpr ValueType covertToValueType(unsigned int gl_type) {
-        ValueType retval = BYTE; //TODO default to something more reasonable
+        ValueType retval = BYTE; // TODO default to something more reasonable
 
         switch (gl_type) {
         case 0x1400:
@@ -137,8 +137,8 @@ public:
     }
 
     struct VertexAttribute {
-        uint8_t*     data;
-        size_t       byte_size;
+        uint8_t* data;
+        size_t byte_size;
         unsigned int component_cnt;
         ValueType component_type;
         size_t stride;
@@ -147,15 +147,15 @@ public:
     };
 
     struct IndexData {
-        uint8_t*  data;
-        size_t    byte_size;
+        uint8_t* data;
+        size_t byte_size;
         ValueType type;
     };
 
     struct Mesh {
         std::vector<VertexAttribute> attributes;
-        IndexData                    indices;
-        PrimitiveType                primitive_type;
+        IndexData indices;
+        PrimitiveType primitive_type;
 
         // TODO interleaved flag?
     };
@@ -163,33 +163,60 @@ public:
     MeshDataAccessCollection() = default;
     ~MeshDataAccessCollection() = default;
 
-    void addMesh(std::vector<VertexAttribute> const& attribs, IndexData const& indices, PrimitiveType primitive_type = TRIANGLES);
-    void addMesh(std::vector<VertexAttribute>&& attribs, IndexData const& indices, PrimitiveType primitive_type = TRIANGLES);
+    void addMesh(std::string const& identifier, std::vector<VertexAttribute> const& attribs, IndexData const& indices,
+        PrimitiveType primitive_type = TRIANGLES);
+    void addMesh(std::string const& identifier, std::vector<VertexAttribute>&& attribs, IndexData const& indices,
+        PrimitiveType primitive_type = TRIANGLES);
 
-    // TODO delete functionality
+    void deleteMesh(std::string const& identifier);
 
-    std::vector<Mesh>& accessMesh();
+    std::unordered_map<std::string, Mesh>& accessMeshes();
+
+    Mesh const& accessMesh(std::string const& identifier);
 
 private:
-
-    std::vector<Mesh> meshes;
+    std::unordered_map<std::string, Mesh> meshes;
 };
 
-inline void MeshDataAccessCollection::addMesh(std::vector<VertexAttribute> const& attribs, IndexData const& indices,
-    PrimitiveType primitive_type) {
-    meshes.push_back({attribs, indices, primitive_type});
+inline void MeshDataAccessCollection::addMesh(std::string const& identifier,
+    std::vector<VertexAttribute> const& attribs, IndexData const& indices, PrimitiveType primitive_type) {
+    meshes.insert({identifier, {attribs, indices, primitive_type}});
 }
 
-inline void MeshDataAccessCollection::addMesh(std::vector<VertexAttribute>&& attribs, IndexData const& indices,
-    PrimitiveType primitive_type) {
-    meshes.push_back({attribs, indices, primitive_type});
+inline void MeshDataAccessCollection::addMesh(std::string const& identifier, std::vector<VertexAttribute>&& attribs,
+    IndexData const& indices, PrimitiveType primitive_type) {
+    meshes.insert({identifier, {attribs, indices, primitive_type}});
 }
 
-inline std::vector<MeshDataAccessCollection::Mesh>& MeshDataAccessCollection::accessMesh() {
+inline void MeshDataAccessCollection::deleteMesh(std::string const& identifier) {
+    auto query = meshes.find(identifier);
+
+    if (query != meshes.end()) {
+        meshes.erase(query);
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("deleteMesh error: identifier not found.");
+    }
+}
+
+inline std::unordered_map<std::string, MeshDataAccessCollection::Mesh>& MeshDataAccessCollection::accessMeshes() {
     return meshes;
 }
 
+inline MeshDataAccessCollection::Mesh const& MeshDataAccessCollection::accessMesh(std::string const& identifier) {
+    auto retval = MeshDataAccessCollection::Mesh({{}, 0, 0});
+
+    auto query = meshes.find(identifier);
+
+    if (query != meshes.end()) {
+        return query->second;
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("accessMesh error: identifier not found.");
+    }
+
+    return retval;
 }
-}
+
+} // namespace mesh
+} // namespace megamol
 
 #endif // !MESH_DATA_ACCESS_COLLECTION_H_INCLUDED

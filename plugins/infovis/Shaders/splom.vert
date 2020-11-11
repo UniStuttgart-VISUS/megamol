@@ -13,6 +13,7 @@ out float vsPixelKernelSize;
 out float vsValue;
 out vec4 vsValueColor;
 out vec4 vsPosition;
+out int vsFiltered;
 
 void main() {
     const Plot plot = plots[gl_InstanceID];
@@ -45,8 +46,10 @@ void main() {
     if (bitflag_test(flags[gl_VertexID], FLAG_ENABLED | FLAG_FILTERED, FLAG_ENABLED)) {
     //if (true) {
         gl_Position = modelViewProjection * vsPosition;
-		gl_ClipDistance[0] = 1.0;
+        gl_ClipDistance[0] = 1.0;
+        vsFiltered = 0;
     } else {
         gl_ClipDistance[0] = -1.0; // clipping cheat
+        vsFiltered = 1; // info for geometry shader, clipping cheat will be ignored there when new geometry is created
     }
 }

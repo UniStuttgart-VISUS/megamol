@@ -37,13 +37,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
     CallGPURenderTaskData* lhs_rtc = dynamic_cast<CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL) return false;
 
-    std::shared_ptr<GPURenderTaskCollection> rt_collection(nullptr);
-
-    if (lhs_rtc->getData() == nullptr) {
-        rt_collection = this->m_gpu_render_tasks;
-    } else {
-        rt_collection = lhs_rtc->getData();
-    }
+    syncRenderTaskCollection(lhs_rtc);
 
     CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<CallGPUMaterialData>();
     if (mtlc == NULL) return false;
@@ -64,17 +58,11 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
     {
         ++m_version;
 
-        // rt_collection->clear();
-        if (!m_rt_collection_indices.empty()) {
-            // TODO delete all exisiting render task from this module
-            for (auto& rt_idx : m_rt_collection_indices) {
-                rt_collection->deleteSingleRenderTask(rt_idx);
-            }
-
-            m_rt_collection_indices.clear();
+        for (auto& idx : m_rendertask_collection.second) {
+            m_rendertask_collection.first->deleteRenderTask(idx);
         }
 
-        auto model = gltf_call->getData();
+        auto model = gltf_call->getData().second;
         auto gpu_mtl_storage = mtlc->getData();
         auto gpu_mesh_storage = mc->getData();
 
@@ -104,64 +92,41 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
                     }
                 }
 
-                // compute submesh offset by iterating over all meshes before the given mesh and summing up their
-                // primitive counts
-                size_t submesh_offset = 0;
-                for (int mesh_idx = 0; mesh_idx < model->nodes[node_idx].mesh; ++mesh_idx) {
-                    submesh_offset += model->meshes[mesh_idx].primitives.size();
-                }
-
-                GPUMeshCollection::SubMeshData sub_mesh_data;
-
-                auto primitive_cnt = model->meshes[model->nodes[node_idx].mesh].primitives.size();
-                for (size_t primitive_idx = 0; primitive_idx < primitive_cnt; ++primitive_idx) {
-                    // auto const& sub_mesh = gpu_mesh_storage->getSubMeshData()[model->nodes[node_idx].mesh];
-                    auto const& sub_mesh = gpu_mesh_storage->getSubMeshData()[submesh_offset + primitive_idx];
-                    auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-                    auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
-
-                    sub_mesh_data = sub_mesh;
-
-                    //size_t rt_idx = rt_collection->addSingleRenderTask(
-                    //    shader, gpu_batch_mesh, sub_mesh.sub_mesh_draw_command, per_obj_data);
-                    //
-                    //m_rt_collection_indices.push_back(rt_idx);
-                }
-
-
                 // TODO check node name for UI element names
                 if (model->nodes[node_idx].name == "axisX_arrow") {
                     per_obj_data[0].color = {1.0f, 0.0f, 0.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[0].first = sub_mesh_data;
+                    m_UI_template_elements[0].first = gpu_mesh_storage->getSubMesh("axisX_arrow");
                     m_UI_template_elements[0].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "axisY_arrow") {
                     per_obj_data[0].color = {0.0f, 1.0f, 0.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[1].first = sub_mesh_data;
+                    m_UI_template_elements[1].first = gpu_mesh_storage->getSubMesh("axisY_arrow");
                     m_UI_template_elements[1].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "axisZ_arrow") {
                     per_obj_data[0].color = {0.0f, 0.0f, 1.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[2].first = sub_mesh_data;
+                    m_UI_template_elements[2].first = gpu_mesh_storage->getSubMesh("axisZ_arrow");
                     m_UI_template_elements[2].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "slider_arrow") {
                     per_obj_data[0].color = {1.0f, 0.0f, 1.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[3].first = sub_mesh_data;
+                    m_UI_template_elements[3].first = gpu_mesh_storage->getSubMesh("slider_arrow");
                     m_UI_template_elements[3].second = per_obj_data;
                 }
 
             }
         }
 
+
+        int render_task_index = 0;
         {
             //TODO create debug scene from UI template obejcts
             m_scene.push_back({0,{PerObjectShaderParams()}});
@@ -169,13 +134,16 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             m_scene.back().second[0].id = 1;
             
             auto const& sub_mesh = m_UI_template_elements[3].first;
-            auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+            auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
+            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
-            size_t rt_idx = rt_collection->addSingleRenderTask(shader, gpu_batch_mesh, sub_mesh.sub_mesh_draw_command, m_scene.back().second);
+            std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
+            m_rendertask_collection.first->addRenderTask(
+                rt_identifier, shader, gpu_batch_mesh,
+                sub_mesh.sub_mesh_draw_command, m_scene.back().second);
+            m_rendertask_collection.second.push_back(rt_identifier);
             
-            m_rt_collection_indices.push_back(rt_idx);
-            m_scene.back().first = rt_idx;
+            m_scene.back().first = m_rendertask_collection.second.back();
 
             m_interaction_collection->addInteractionObject(1,{ThreeDimensionalInteraction{InteractionType::MOVE_ALONG_AXIS, 1, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
         }
@@ -185,14 +153,15 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             m_scene.back().second[0].id = 2;
 
             auto const& sub_mesh = m_UI_template_elements[2].first;
-            auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+            auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
+            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
-            size_t rt_idx = rt_collection->addSingleRenderTask(
-                shader, gpu_batch_mesh, sub_mesh.sub_mesh_draw_command, m_scene.back().second);
+            std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
+            m_rendertask_collection.first->addRenderTask(
+                rt_identifier, shader, gpu_batch_mesh, sub_mesh.sub_mesh_draw_command, m_scene.back().second);
+            m_rendertask_collection.second.push_back(rt_identifier);
 
-            m_rt_collection_indices.push_back(rt_idx);
-            m_scene.back().first = rt_idx;
+            m_scene.back().first = m_rendertask_collection.second.back();
 
             m_interaction_collection->addInteractionObject(2,
                 {ThreeDimensionalInteraction{InteractionType::MOVE_ALONG_AXIS, 2, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}});
@@ -203,14 +172,15 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             m_scene.back().second[0].id = 3;
 
             auto const& sub_mesh = m_UI_template_elements[1].first;
-            auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+            auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
+            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
-            size_t rt_idx = rt_collection->addSingleRenderTask(
-                shader, gpu_batch_mesh, sub_mesh.sub_mesh_draw_command, m_scene.back().second);
+            std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
+            m_rendertask_collection.first->addRenderTask(
+                rt_identifier, shader, gpu_batch_mesh, sub_mesh.sub_mesh_draw_command, m_scene.back().second);
+            m_rendertask_collection.second.push_back(rt_identifier);
 
-            m_rt_collection_indices.push_back(rt_idx);
-            m_scene.back().first = rt_idx;
+            m_scene.back().first = m_rendertask_collection.second.back();
 
             m_interaction_collection->addInteractionObject(3,
                 {ThreeDimensionalInteraction{InteractionType::MOVE_ALONG_AXIS, 3, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
@@ -221,14 +191,15 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             m_scene.back().second[0].id = 4;
 
             auto const& sub_mesh = m_UI_template_elements[0].first;
-            auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+            auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
+            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
-            size_t rt_idx = rt_collection->addSingleRenderTask(
-                shader, gpu_batch_mesh, sub_mesh.sub_mesh_draw_command, m_scene.back().second);
+            std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
+            m_rendertask_collection.first->addRenderTask(
+                rt_identifier, shader, gpu_batch_mesh, sub_mesh.sub_mesh_draw_command, m_scene.back().second);
+            m_rendertask_collection.second.push_back(rt_identifier);
 
-            m_rt_collection_indices.push_back(rt_idx);
-            m_scene.back().first = rt_idx;
+            m_scene.back().first = m_rendertask_collection.second.back();
 
             m_interaction_collection->addInteractionObject(4,
                 {ThreeDimensionalInteraction{InteractionType::MOVE_ALONG_AXIS, 4, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
@@ -251,15 +222,16 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
         // Add a key light
         lights.push_back({-5000.0, 5000.0, -5000.0, 1000.0f});
 
-        rt_collection->addPerFrameDataBuffer(lights, 1);
+        m_rendertask_collection.first->deletePerFrameDataBuffer(1);
+        m_rendertask_collection.first->addPerFrameDataBuffer("lights",lights, 1);
 
     }
 
-    lhs_rtc->setData(rt_collection,m_version);
+    lhs_rtc->setData(m_rendertask_collection.first,m_version);
 
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection,0);
+        rhs_rtc->setData(m_rendertask_collection.first,0);
 
         (*rhs_rtc)(0);
     }
@@ -286,7 +258,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
     {
         ThreeDimensionalManipulation manipulation = ci->getData()->accessPendingManipulations().front();
 
-        std::list<std::pair<uint32_t, std::array<PerObjectShaderParams, 1>>>::iterator it = m_scene.begin();
+        std::list<std::pair<std::string, std::array<PerObjectShaderParams, 1>>>::iterator it = m_scene.begin();
         std::advance(it, manipulation.obj_id-1);
 
         std::array<PerObjectShaderParams, 1> per_obj_data = it->second;
@@ -326,7 +298,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
 
     // update all per obj data buffers
     for (auto& entity : m_scene) {
-        this->m_gpu_render_tasks->updatePerDrawData(entity.first, entity.second);
+        this->m_rendertask_collection.first->updatePerDrawData(entity.first, entity.second);
     }
 
     return true; 
