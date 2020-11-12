@@ -8,18 +8,18 @@ pr:
 strategy:
   matrix:
     windows-10-release:
-      agentName: BEIGUAN
       configuration: Release
       generator: 'Visual Studio 16 2019'
     windows-10-debug:
-      agentName: BEIGUAN
       configuration: Debug
       generator: 'Visual Studio 16 2019'
 
 pool:
   name: 'default'
   demands:
-  - Agent.Name -equals $(agentName)
+  - cmake
+  - VisualStudio_16.0
+  - megamol_build_enabled
 
 steps:
 - task: CMake@1
