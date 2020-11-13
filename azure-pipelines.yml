@@ -5,28 +5,72 @@ trigger:
 pr:
 - master
 
-strategy:
-  matrix:
-    windows-10-release:
-      configuration: Release
-      generator: 'Visual Studio 16 2019'
-    windows-10-debug:
-      configuration: Debug
-      generator: 'Visual Studio 16 2019'
+jobs:
+- job: Windows
+  strategy:
+    matrix:
+      'VS2019 Release':
+        configuration: Release
+        generator: 'Visual Studio 16 2019'
+      'VS2019 Debug':
+        configuration: Debug
+        generator: 'Visual Studio 16 2019'
 
-pool:
-  name: 'default'
-  demands:
-  - cmake
-  - VisualStudio_16.0
-  - megamol_build_enabled
+  pool:
+    name: 'default'
+    demands:
+    - Agent.OS -equals Windows_NT
+    - cmake
+    - VisualStudio_16.0
+    - megamol_build_enabled
 
-steps:
-- task: CMake@1
-  displayName: 'CMake Configure'
-  inputs:
-    cmakeArgs: '.. -G"$(generator)" -A"x64" -DCMAKE_BUILD_TYPE=$(configuration)'
-- task: CMake@1
-  displayName: 'CMake Build'
-  inputs:
-    cmakeArgs: '--build . --config $(configuration)'
+  steps:
+  - task: CMake@1
+    displayName: 'CMake Configure'
+    inputs:
+      cmakeArgs: '.. -G"$(generator)" -A"x64"'
+  - task: CMake@1
+    displayName: 'CMake Build'
+    inputs:
+      cmakeArgs: '--build . --config $(configuration)'
+
+#- job: Linux
+#  strategy:
+#    matrix:
+#      'GCC8 / Make / Release':
+#        cCompiler: gcc-8
+#        cxxCompiler: g++-8
+#        configuration: Release
+#        generator: 'Unix Makefiles'
+#      'GCC8 / Make / Debug':
+#        cCompiler: gcc-8
+#        cxxCompiler: g++-8
+#        configuration: Debug
+#        generator: 'Unix Makefiles'
+#      'GCC8 / Ninja / Release':
+#        cCompiler: gcc-8
+#        cxxCompiler: g++-8
+#        configuration: Release
+#        generator: 'Ninja'
+#      'Clang10 / Make / Release':
+#        cCompiler: clang-10
+#        cxxCompiler: clang++-10
+#        configuration: Release
+#        generator: 'Unix Makefiles'
+#
+#  pool:
+#    name: 'default'
+#    demands:
+#    - Agent.OS -equals Linux
+#    - cmake
+#    - megamol_build_enabled
+#
+#  steps:
+#  - task: CMake@1
+#    displayName: 'CMake Configure'
+#    inputs:
+#      cmakeArgs: '.. -G"$(generator)" -DCMAKE_C_COMPILER=$(cCompiler) -DCMAKE_CXX_COMPILER=$(cxxCompiler) -DCMAKE_BUILD_TYPE=$(configuration)'
+#  - task: CMake@1
+#    displayName: 'CMake Build'
+#    inputs:
+#      cmakeArgs: '--build .'
