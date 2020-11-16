@@ -46,6 +46,7 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
                                         "sure you have a transfer function that has stops at 0.4 and 0.5. The 0.5 stop "
                                         "allows you to highlight the neighbors responsible for the extremes.")
     , extremeValueSlot("extreme value", "the extreme value that you find weird")
+    , fluidDensitySlot("fluid density", "Density of the fluid")
     , datahash(0)
     , lastTime(-1)
     , newColors()
@@ -84,6 +85,7 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
     mt->SetTypePair(metricsEnum::PRESSURE, "Pressure");
     mt->SetTypePair(metricsEnum::NEIGHBORS, "Num Neighbors");
     mt->SetTypePair(metricsEnum::NEAREST_DISTANCE, "Nearest Dist");
+    mt->SetTypePair(metricsEnum::PHASE, "Phase");
     this->metricsSlot << mt;
     this->MakeSlotAvailable(&this->metricsSlot);
 
@@ -108,6 +110,9 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
 
     this->extremeValueSlot.SetParameter(new core::param::FloatParam(50.0));
     this->MakeSlotAvailable(&this->extremeValueSlot);
+
+    this->fluidDensitySlot.SetParameter(new core::param::FloatParam(1.0f));
+    this->MakeSlotAvailable(&this->fluidDensitySlot);
 
     this->outDataSlot.SetCallback(
         megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleThermodyn::getDataCallback);
@@ -136,8 +141,28 @@ bool isListOK(megamol::core::moldyn::MultiParticleDataCall* in, const unsigned i
     auto& pl = in->AccessParticles(i);
     // TODO: double
     return ((pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZ) ||
-               (pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR)) &&
-           pl.GetDirDataType() == MultiParticleDataCall::Particles::DirDataType::DIRDATA_FLOAT_XYZ;
+               (pl.GetVertexDataType() == MultiParticleDataCall::Particles::VertexDataType::VERTDATA_FLOAT_XYZR));
+}
+
+
+bool hasDir(megamol::core::moldyn::MultiParticleDataCall* in, const unsigned int i) {
+    using megamol::core::moldyn::MultiParticleDataCall;
+    auto& pl = in->AccessParticles(i);
+    return pl.GetDirDataType() == MultiParticleDataCall::Particles::DirDataType::DIRDATA_FLOAT_XYZ;
+}
+
+
+bool metricRequiresDir(megamol::stdplugin::datatools::ParticleThermodyn::metricsEnum metric) {
+    return metric == megamol::stdplugin::datatools::ParticleThermodyn::metricsEnum::TEMPERATURE ||
+           metric == megamol::stdplugin::datatools::ParticleThermodyn::metricsEnum::FRACTIONAL_ANISOTROPY;
+}
+
+
+bool isDirOK(megamol::stdplugin::datatools::ParticleThermodyn::metricsEnum metric,
+    megamol::core::moldyn::MultiParticleDataCall* in, const unsigned int i) {
+    if (metricRequiresDir(metric) && !hasDir(in, i))
+        return false;
+    return true;
 }
 
 
@@ -164,6 +189,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
     const int theNumber = this->numNeighborSlot.Param<core::param::IntParam>()->Value();
     const auto theSearchType = this->searchTypeSlot.Param<core::param::EnumParam>()->Value();
     const auto theMetrics = this->metricsSlot.Param<core::param::EnumParam>()->Value();
+    const auto theFluidDensity = this->fluidDensitySlot.Param<core::param::FloatParam>()->Value();
     size_t allpartcnt = 0;
 
     if (this->lastTime != time || this->datahash != in->DataHash()) {
@@ -178,7 +204,8 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
         plc = in->GetParticleListCount();
 
         for (unsigned int i = 0; i < plc; i++) {
-            if (isListOK(in, i)) totalParts += in->AccessParticles(i).GetCount();
+            if (isListOK(in, i) && isDirOK(static_cast<metricsEnum>(theMetrics), in, i))
+                totalParts += in->AccessParticles(i).GetCount();
         }
 
         if (theSearchType == searchTypeEnum::RADIUS) {
@@ -194,7 +221,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
         allpartcnt = 0;
         for (unsigned int pli = 0; pli < plc; pli++) {
             auto& pl = in->AccessParticles(pli);
-            if (!isListOK(in, pli)) {
+            if (!isListOK(in, pli) || !isDirOK(static_cast<metricsEnum>(theMetrics), in, pli)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                     "ParticleThermodyn: ignoring list %d because it either has no proper positions or no velocity",
                     pli);
@@ -234,7 +261,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
     if (this->radiusSlot.IsDirty() || this->cyclXSlot.IsDirty() || this->cyclYSlot.IsDirty() ||
         this->cyclZSlot.IsDirty() || this->numNeighborSlot.IsDirty() || this->searchTypeSlot.IsDirty() ||
         this->metricsSlot.IsDirty() || this->removeSelfSlot.IsDirty() || this->findExtremesSlot.IsDirty() ||
-        this->extremeValueSlot.IsDirty()) {
+        this->extremeValueSlot.IsDirty() || this->fluidDensitySlot.IsDirty()) {
         allpartcnt = 0;
         ++myHash;
 
@@ -254,12 +281,16 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
         float theMinTemp = FLT_MAX;
         float theMaxTemp = 0.0f;
 
+        auto const search_volume = 4.0f / 3.0f * 3.14f * theRadius * theRadius * theRadius;
+        auto const inv_search_voume = 1.0f / search_volume;
+        auto const phase_krit = 0.5f * theFluidDensity;
+
         const bool remove_self = this->removeSelfSlot.Param<megamol::core::param::BoolParam>()->Value();
 
         allpartcnt = 0;
         for (unsigned int pli = 0; pli < plc; pli++) {
             auto& pl = in->AccessParticles(pli);
-            if (!isListOK(in, pli)) {
+            if (!isListOK(in, pli) || !isDirOK(static_cast<metricsEnum>(theMetrics), in, pli)) {
                 continue;
             }
 
@@ -395,8 +426,18 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
                                     magnitude = ret_matches[1].second;
                                 }
                             }
+                        } break;
+                    case metricsEnum::PHASE: {
+                        auto const num_density = num_matches * inv_search_voume;
+                        magnitude = 0.5f;
+                        if (num_density > phase_krit) {
+                            // fluid
+                            magnitude = phaseEnum::FLUID;
+                        } else {
+                            // gas
+                            magnitude = phaseEnum::GAS;
                         }
-                        break;
+                    } break;
                     default:
                         megamol::core::utility::log::Log::DefaultLog.WriteError("ParticleThermodyn: unknown metric");
                         break;
@@ -447,6 +488,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
         this->removeSelfSlot.ResetDirty();
         this->findExtremesSlot.ResetDirty();
         this->extremeValueSlot.ResetDirty();
+        this->fluidDensitySlot.ResetDirty();
     }
 
     // now the colors are known, inject them
@@ -461,7 +503,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
         outMPDC->SetParticleListCount(in->GetParticleListCount());
         for (unsigned int i = 0; i < in->GetParticleListCount(); ++i) {
             auto& pl = in->AccessParticles(i);
-            if (!isListOK(in, i)) {
+            if (!isListOK(in, i) || !isDirOK(static_cast<metricsEnum>(theMetrics), in, i)) {
                 outMPDC->AccessParticles(i).SetCount(0);
                 continue;
             }
