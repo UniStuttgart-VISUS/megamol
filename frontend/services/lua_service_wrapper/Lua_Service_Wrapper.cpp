@@ -143,6 +143,11 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
         window_manipulation.set_fullscreen(fullscreen?frontend_resources::WindowManipulation::Fullscreen::Maximize:frontend_resources::WindowManipulation::Fullscreen::Restore);
     };
 
+    callbacks.mmSetVsync_callback_= [&](bool state) {
+        auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
+        window_manipulation.set_swap_interval(state ? 1 : 0);
+    };
+
     luaAPI.SetCallbacks(callbacks);
 }
 
