@@ -90,7 +90,7 @@ void view::AnimDataModule::initFrameCache(unsigned int cacheSize) {
 
         this->isRunning.store(true);
         this->loader.Start(this);
-        vislib::sys::Thread::Sleep(250);
+        vislib::sys::Thread::Sleep(10);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to create frame data cache ('constructFrame' returned 'NULL').");

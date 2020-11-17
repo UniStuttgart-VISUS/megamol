@@ -745,14 +745,17 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         return true;
     }
 
-    // 1) Load all known calls from core instance ONCE ---------------------------
+    // 1) Load all known calls and modules from core instance ONCE ---------------------------
     if (!this->configurator.GetGraphCollection().LoadCallStock(core_instance)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    /// TODO Load all known modules from core instance ONCE
-    /// XXX Omitted since this task takes ~2 seconds and would always block megamol for this period at start up!
+    if (!this->configurator.GetGraphCollection().LoadModuleStock(core_instance)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Failed to load module stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
 
     bool synced = false;
     bool sync_success = false;
@@ -1835,13 +1838,6 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         if (this->file_browser.PopUp(
                 FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->state.open_popup_load, filename)) {
             graph_ptr->Clear();
-
-            // Core instance for loading module and call stock is required when calling function from outside
-            // configurator and before configurator was loaded once
-            if (core_instance != nullptr) {
-                this->configurator.GetGraphCollection().LoadCallStock(this->core_instance);
-                this->configurator.GetGraphCollection().LoadModuleStock(this->core_instance);
-            }
             popup_failed |= (GUI_INVALID_ID == this->configurator.GetGraphCollection().LoadAddProjectFromFile(
                                                    this->state.graph_uid, filename));
         }
