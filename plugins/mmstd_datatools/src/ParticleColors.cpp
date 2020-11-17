@@ -74,10 +74,10 @@ bool megamol::stdplugin::datatools::ParticleColors::manipulateData(
             auto const iAcc = parts.GetParticleStore().GetCRAcc();
 
             for (std::size_t pidx = 0; pidx < p_count; ++pidx) {
-                auto const val = (iAcc->Get_f(pidx) - min_i) * fac_i;
+                auto const val = (iAcc->Get_f(pidx) - min_i) * fac_i * static_cast<float>(tf_size);
                 std::remove_const_t<decltype(val)> main = 0;
                 auto rest = std::modf(val, &main);
-                col_vec[pidx].rgba = sample_tf(tf, tf_size, static_cast<int>(tf_size * main), rest);
+                col_vec[pidx].rgba = sample_tf(tf, tf_size, static_cast<int>(main), rest);
             }
 
             parts.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_RGBA, col_vec.data());
