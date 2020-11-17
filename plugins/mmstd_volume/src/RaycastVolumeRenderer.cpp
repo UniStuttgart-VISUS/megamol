@@ -317,29 +317,35 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     }
 
     // Lights
-    std::vector<core::view::light::DistantLightType> lights;
-    std::vector<std::string> warnings, errors;
+    auto curlight = core::view::light::DistantLightType{{{1.0f, 1.0f, 1.0f}, 1.0f}, {1.0f, 0.0f, 0.0f}, 0.0f, true};
+    auto call_light = m_lights_callerSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
+        }
 
-    //core::view::light::VerifyAndFetchLights<core::view::light::DistantLightType>(
-    //        m_lights_callerSlot, "SphereRenderer", 1, lights);
+        auto lights = call_light->getData();
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
 
-    //if (lights.size() == 0) {
-    //    core::view::light::DistantLightType l;
-    //    l.direction = {0.0f, 0.0f, 0.0f};
-    //    l.angularDiameter = 0.0f;
-    //    l.eye_direction = true;
-    //    l.intensity = 1.0f;
-    //    lights.push_back(l);
-    //}
+        if (distant_lights.size() > 1) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[RaycastVolumeRenderer] Only one single 'Distant Light' source is supported by this renderer");
+        } else if (distant_lights.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[RaycastVolumeRenderer] No 'Distant Light' found");
+        }
 
-    //auto use_eyedir = curlight.eye_direction;
-    //if (use_eyedir) {
-    //    curlight.direction[0] = cam.view_vector()[0];
-    //    curlight.direction[1] = cam.view_vector()[1];
-    //    curlight.direction[2] = cam.view_vector()[2];
-    //}
+        for (auto& l : distant_lights) {
+            const auto use_eyedir = l.eye_direction;
+            if (use_eyedir) {
+                auto view_vec = cam.view_vector();
+                l.direction[0] = view_vec[0];
+                l.direction[1] = view_vec[1];
+                l.direction[2] = view_vec[2];
+            }
+        }
 
-    auto curlight = lights[0];
+        curlight = distant_lights[0];
+    }
 
     // setup
     compute_shdr->Enable();
