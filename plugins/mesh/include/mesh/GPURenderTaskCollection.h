@@ -189,9 +189,9 @@ namespace mesh {
             (*query)->draw_commands = new_dcs_buffer;
             (*query)->per_draw_data = new_pdd_buffer;
             (*query)->draw_cnt += draw_commands.size();
-
+            
             assert(identifiers.size() == draw_commands.size());
-
+            
             for (int dc_idx = 0; dc_idx < draw_commands.size(); ++dc_idx) {
                 // Add render task meta data entry
                 RenderTaskMetaData rt_meta;
@@ -199,6 +199,7 @@ namespace mesh {
                 rt_meta.draw_command_byteOffset = old_dcs_byte_size + dc_idx * sizeof(DrawCommandType);
                 rt_meta.per_draw_data_byteOffset = old_pdd_byte_size + dc_idx * sizeof(PerDrawDataType);
                 rt_meta.per_draw_data_byteSize = sizeof(PerDrawDataType);
+                
                 auto rtn = m_render_task_meta_data.insert({identifiers[dc_idx], rt_meta});
                 if (rtn.second == false) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -231,6 +232,7 @@ namespace mesh {
                 rt_meta.draw_command_byteOffset = dc_idx * sizeof(DrawCommandType);
                 rt_meta.per_draw_data_byteOffset = dc_idx * sizeof(PerDrawDataType);
                 rt_meta.per_draw_data_byteSize = sizeof(PerDrawDataType);
+                
                 auto rtn = m_render_task_meta_data.insert({identifiers[dc_idx], rt_meta});
                 if (rtn.second == false) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(

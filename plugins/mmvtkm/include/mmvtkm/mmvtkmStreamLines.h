@@ -105,7 +105,7 @@ private:
         glm::vec3 v2;
 
         float area = 0.f;
-
+        
         // used for sampling within surrounding polygon
         // weight = triangle_area / polygon_area
         float weight = 0.f;
@@ -315,9 +315,7 @@ private:
     glm::vec3 seedPlaneColor_;
     float seedPlaneAlpha_;
 
-    std::vector<glm::vec3> seedPlane_;
-    std::vector<glm::vec4> seedPlaneColorVec_;
-    std::vector<unsigned int> seedPlaneIdcs_;
+    
     std::vector<Triangle> seedPlaneTriangles_;
     std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> seeds_;
 
@@ -334,6 +332,11 @@ private:
     glm::vec3 purple_ = glm::vec3(0.5f, 0.f, 0.5f);
     glm::vec3 magenta_ = glm::vec3(0.25f, 0.f, 0.5f);
     std::vector<glm::vec3> colorVec_ = { red_, orange_, yellow_, green_, cyan_, blue_, purple_, magenta_ };
+
+    std::vector<glm::vec3> seedPlane_ = {glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f)};
+    std::vector<glm::vec4> seedPlaneColorVec_ = {glm::vec4(red_, 1.0), glm::vec4(red_, 1.0), glm::vec4(red_, 1.0)};
+    std::vector<unsigned int> seedPlaneIdcs_ = {0, 1, 2};
+
 };
 
 } // end namespace mmvtkm

@@ -740,7 +740,6 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
     if (vtkmUpdate || streamlineUpdate_) {
         seeds_.clear();
-
         for (auto const& identifier : meshDataAccess_.second) {
             meshDataAccess_.first->deleteMesh(identifier);
         }
@@ -752,7 +751,6 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             unsigned int numTriSeeds = (unsigned int)floor(numSeeds_ * tri.weight);
 
             for (int i = 0; i < numTriSeeds; ++i) {
-                // minor TODO: watch out for bad randomness
                 float s = (float)rand() / (float)RAND_MAX;
                 float t = (float)rand() / (float)RAND_MAX;
                 glm::vec3 p = tri.o + s * tri.v1 + t * tri.v2;
@@ -773,7 +771,6 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
 
         // streamline calculation part here
-
         std::string activeField = static_cast<std::string>(activeField_);
 
         try {
@@ -874,14 +871,15 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
                 streamlineIndices_[i][idx + 0] = j;
                 streamlineIndices_[i][idx + 1] = j + 1;
             }
-
             // adds the mdacs of the streamlines to the call here
-            createAndAddMeshDataToCall("streamlines", streamlineData_[i], streamlineColor_[i], streamlineIndices_[i], numPoints,
+            std::string lineIdentifier = "streamline" + std::to_string(i);
+            createAndAddMeshDataToCall(lineIdentifier, streamlineData_[i], streamlineColor_[i], streamlineIndices_[i], numPoints, \
                 numIndices, mesh::MeshDataAccessCollection::PrimitiveType::LINE_STRIP);
         }
+        
 
         // adds the mdac for the seed plane
-        createAndAddMeshDataToCall("seed_plane", seedPlane_, seedPlaneColorVec_, seedPlaneIdcs_, seedPlane_.size(),
+        createAndAddMeshDataToCall("seed_plane", seedPlane_, seedPlaneColorVec_, seedPlaneIdcs_, seedPlane_.size(), \
             seedPlaneIdcs_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
 

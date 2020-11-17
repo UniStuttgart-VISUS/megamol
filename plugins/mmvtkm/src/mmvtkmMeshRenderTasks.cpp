@@ -46,10 +46,10 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
         auto gpu_mtl_storage = mtlc->getData();
         auto gpu_mesh_storage = mc->getData();
 
+        std::vector<std::vector<std::string>> identifiers;
         std::vector<std::vector<glowl::DrawElementsCommand>> draw_commands;
         std::vector<std::vector<std::array<float, 16>>> object_transforms;
         std::vector<std::shared_ptr<glowl::Mesh>> batch_meshes;
-        std::vector<std::string> identifiers;
         //std::vector<std::vector<mesh::GPURenderTaskCollection::GLState>> batch_states;
 
         std::shared_ptr<glowl::Mesh> prev_mesh(nullptr);
@@ -59,6 +59,7 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
             auto const& gpu_batch_mesh = sub_mesh.second.mesh->mesh;
             
             if (gpu_batch_mesh != prev_mesh) {
+                identifiers.emplace_back(std::vector<std::string>());
                 draw_commands.emplace_back(std::vector<glowl::DrawElementsCommand>());
                 object_transforms.emplace_back(std::vector<std::array<float, 16>>());
                 batch_meshes.push_back(gpu_batch_mesh);
@@ -70,25 +71,26 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
             std::array<float, 16> obj_xform = {
                 scale, 0.0f, 0.0f, 0.0f, 0.0f, scale, 0.0f, 0.0f, 0.0f, 0.0f, scale, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
+            identifiers.back().push_back(std::string(this->FullName()) + sub_mesh.first);
             draw_commands.back().push_back(sub_mesh.second.sub_mesh_draw_command);
             object_transforms.back().push_back(obj_xform);
-            identifiers.push_back(std::string(this->FullName()) + "_" + std::to_string(rt_idx++));
         }
         
         for (int i = 0; i < batch_meshes.size(); ++i) {
             auto const& shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
-            bool blending_and_depth = i == 0;
 
 			if (i == batch_meshes.size() - 1) {
-                m_rendertask_collection.first->addRenderTasks(identifiers, shader, batch_meshes[i], draw_commands[i],
+                m_rendertask_collection.first->addRenderTasks(identifiers[i], shader, batch_meshes[i], draw_commands[i],
                     object_transforms[i],
                     {std::pair<std::vector<GLuint>, bool>({GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA}, true),
                         std::pair<std::vector<GLuint>, bool>({GL_DEPTH_TEST}, true),
                         std::pair<std::vector<GLuint>, bool>({GL_CULL_FACE}, false)});
             } else{
-                            m_rendertask_collection.first->addRenderTasks(
-                                identifiers, shader, batch_meshes[i], draw_commands[i], object_transforms[i]);
+                m_rendertask_collection.first->addRenderTasks(
+                    identifiers[i], shader, batch_meshes[i], draw_commands[i], object_transforms[i]);
 			}
+
+            m_rendertask_collection.second.push_back(std::string(this->FullName())); // new
 
             // TODO add index to index map for removal
 
