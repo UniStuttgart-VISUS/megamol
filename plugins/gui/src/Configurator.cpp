@@ -100,7 +100,7 @@ bool megamol::gui::Configurator::Draw(
     } else if (this->init_state == 2) {
         /// Step 2] (one frame)
 
-        // Load available modules and calls and currently loaded project from core once(!)
+        // Load available modules and calls (if they are not loaded already)
         this->graph_collection.LoadCallStock(core_instance);
         this->graph_collection.LoadModuleStock(core_instance);
 
