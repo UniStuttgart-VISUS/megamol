@@ -233,8 +233,10 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
     try {
         std::string plugin_name;
         auto start_time = std::chrono::system_clock::now();
-
-        // MODULES ----------------------------------------------------------------
+#ifdef GUI_VERBOSE
+        auto module_load_time = std::chrono::system_clock::now();
+#endif // GUI_VERBOSE
+       // MODULES ----------------------------------------------------------------
         if (this->modules_stock.empty()) {
 
             // Get plugin modules (get prior to core modules for being  able to find duplicates in core instance module
@@ -244,10 +246,20 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             for (core::utility::plugins::AbstractPluginInstance::ptr_type plugin : plugins) {
                 plugin_name = plugin->GetAssemblyName();
                 for (auto& m_desc : plugin->GetModuleDescriptionManager()) {
+                    std::string class_name(m_desc->ClassName());
                     Module::StockModule mod;
                     mod.plugin_name = plugin_name;
                     this->get_module_stock_data(mod, m_desc);
                     this->modules_stock.emplace_back(mod);
+#ifdef GUI_VERBOSE
+                    auto module_load_time_count =
+                        static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - module_load_time)
+                            .count();
+                    module_load_time = std::chrono::system_clock::now();
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "[GUI] Reading module '%s' ... DONE (duration: %.3f seconds)\n", class_name.c_str(),
+                        module_load_time_count);
+#endif // GUI_VERBOSE
                 }
             }
 
@@ -262,6 +274,15 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
                     mod.plugin_name = plugin_name;
                     this->get_module_stock_data(mod, m_desc);
                     this->modules_stock.emplace_back(mod);
+#ifdef GUI_VERBOSE
+                    auto module_load_time_count =
+                        static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - module_load_time)
+                            .count();
+                    module_load_time = std::chrono::system_clock::now();
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "[GUI] Reading module '%s' ... DONE (duration: %.3f seconds)\n", class_name.c_str(),
+                        module_load_time_count);
+#endif // GUI_VERBOSE
                 }
             }
 
