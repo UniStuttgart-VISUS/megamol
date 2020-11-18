@@ -38,6 +38,7 @@ struct CLIConfig {
     std::string program_invocation_string = "";
     std::vector<std::string> project_files = {};
     std::string lua_host_address = "tcp://127.0.0.1:33333";
+    bool lua_host_port_retry = true;
     bool load_example_project = false;
     bool opengl_khr_debug = false;
     bool opengl_vsync = false;
@@ -127,6 +128,7 @@ int main(int argc, char* argv[]) {
     megamol::frontend::Lua_Service_Wrapper::Config luaConfig;
     luaConfig.lua_api_ptr = &lua_api;
     luaConfig.host_address = config.lua_host_address;
+    luaConfig.retry_socket_port = config.lua_host_port_retry;
     lua_service_wrapper.setPriority(0);
 
     // clang-format off
