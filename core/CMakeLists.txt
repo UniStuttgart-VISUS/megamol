@@ -137,6 +137,4 @@ if(BUILD_CORE)
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
-
-  add_subdirectory(remoteconsole)
 endif(BUILD_CORE)
