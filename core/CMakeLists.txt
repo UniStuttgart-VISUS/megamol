@@ -27,10 +27,8 @@ if(BUILD_CORE)
     find_package(EXPAT REQUIRED)
   endif()
 
-  # Add Lua.
-  add_subdirectory(lua)
-
   # Add externals.
+  require_external(lua)
   require_external(libzmq)
   require_external(libcppzmq)
   require_external(zlib)
