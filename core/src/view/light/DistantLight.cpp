@@ -56,6 +56,7 @@ void DistantLight::readParams() {
     light->intensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
 
     light->eye_direction = this->eye_direction.Param<core::param::BoolParam>()->Value();
+    if (light->eye_direction) { ++version; } // force update every frame is eye direction is used
     auto& dl_dir = this->direction.Param<core::param::Vector3fParam>()->Value();
     glm::vec3 dl_dir_normalized(dl_dir.X(), dl_dir.Y(), dl_dir.Z());
     dl_dir_normalized = glm::normalize(dl_dir_normalized);

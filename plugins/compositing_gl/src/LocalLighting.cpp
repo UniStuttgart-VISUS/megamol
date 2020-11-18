@@ -173,9 +173,9 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
 
             for (auto dl : distant_lights) {
                 if (dl.eye_direction) {
-                    glm::vec3 camPos(snapshot.view_vector.x(), snapshot.view_vector.y(), snapshot.view_vector.z());
-                    camPos = glm::normalize(-camPos);
-                    m_distant_lights.push_back({camPos.x, camPos.y, camPos.z, dl.intensity});
+                    glm::vec3 cam_dir(snapshot.view_vector.x(), snapshot.view_vector.y(), snapshot.view_vector.z());
+                    cam_dir = glm::normalize(cam_dir);
+                    m_distant_lights.push_back({cam_dir.x, cam_dir.y, cam_dir.z, dl.intensity});
                 } else {
                     m_distant_lights.push_back(
                         {dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
