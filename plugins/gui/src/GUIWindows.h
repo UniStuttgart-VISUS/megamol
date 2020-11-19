@@ -141,14 +141,21 @@ namespace gui {
         }
 
         /**
+         * Enable or disable GUI drawing
+         */
+        void SetEnableDisable(bool enable) {
+            this->state.gui_pre_drawing_enabled = enable;
+        }
+
+        /**
          * Synchronise changes between core graph <-> gui graph.
          *
          * - 'Old' core instance graph:    Call this function after(!) rendering of current frame.
          *                                 This way, graph changes will be applied next frame (and not 2 frames later).
          *                                 In this case in PreDraw() a gui graph is created once.
          * - 'New' megamol graph:          Call this function in GUI_Service::digestChangedRequestedResources() as
-         * pre-rendering step. In this case a new gui graph is created before first call of PreDraw() and a gui graph
-         * already exists.
+         *                                 pre-rendering step. In this case a new gui graph is created before first
+         *                                 call of PreDraw() and a gui graph already exists.
          *
          * @param megamol_graph    If no megamol_graph is given, 'old' graph is synchronised via core_instance.
          */
@@ -168,9 +175,11 @@ namespace gui {
 
         /** The global state (for settings to be applied before ImGui::Begin). */
         struct StateBuffer {
-            Styles style;                                  // imgui predefined style
-            bool style_changed;                            // flag indicating changed style
-            bool autosave_gui_state;                       // automatically save state after gui has been changed
+            bool gui_pre_drawing_enabled;                  // Flag indicating whether GUI should be drawn
+            bool gui_post_drawing_enabled;                 // Prevent gui drwing change between pre and post draw
+            Styles style;                                  // Predefined GUI style
+            bool style_changed;                            // Flag indicating changed style
+            bool autosave_gui_state;                       // Automatically save state after gui has been changed
             std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
             ImGuiID graph_uid;                             // UID of currently running graph
             std::string font_file;                         // Apply changed font file name.
