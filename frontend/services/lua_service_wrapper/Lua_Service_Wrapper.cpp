@@ -82,8 +82,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         [](void* ptr) { delete reinterpret_cast<megamol::core::utility::LuaHostNetworkConnectionsBroker*>(ptr); }
     );
 
-    m_network_host->broker_address = m_config.host_address;
-    bool host_ok = m_network_host->spawn_connection_broker();
+    bool host_ok = m_network_host->spawn_connection_broker(m_config.host_address, m_config.retry_socket_port);
 
     if (host_ok) {
         log("initialized successfully");
