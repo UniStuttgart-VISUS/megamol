@@ -3,11 +3,18 @@ import subprocess
 import tempfile
 import os
 import re
+import string
 # pip install jsondiff --user
 import jsondiff 
 import json
 
-apitrace = "T:\\Utilities\\apitrace-msvc\\x64\\bin\\apitrace.exe"
+import argparse
+
+parser = argparse.ArgumentParser(description='checks OpenGL states when entering/leaving Render() and during module creation (only Renderer[23]DModule)')
+parser.add_argument('args', nargs='+', help='the args you want to pass to MegaMol')
+parser.add_argument('--apitrace', action='store', help='the full path of apitrace.exe', default='T:\\Utilities\\apitrace-msvc\\x64\\bin\\apitrace.exe')
+parser.add_argument('--exe', action='store', help='the frontend you want to use (defaults to megamol.exe)', default='megamol.exe')
+parseResult = parser.parse_args()
 
 groupstack = []
 
@@ -20,7 +27,7 @@ def safeString(text):
 def findDebugGroups(startnum, endnum, mmtracefile):
     # dump that frame
     #c:\utilities\apitrace-8.0.20190414-win64\bin\apitrace.exe dump mmconsole.trace --calls=23165-23562
-    args = [apitrace, 'dump', '--calls=' + startnum + '-' + endnum, '--color=never', mmtracefile]
+    args = [parseResult.apitrace, 'dump', '--calls=' + startnum + '-' + endnum, '--color=never', mmtracefile]
     proc = subprocess.run(args, capture_output=True)
     res = proc.stdout.decode("utf-8") 
 
@@ -45,12 +52,12 @@ def findDebugGroups(startnum, endnum, mmtracefile):
                 else:
                     # dump both states
                     # c:\utilities\apitrace-msvc\x64\bin\apitrace.exe replay -D 167273 mmconsole.1.trace > before.json
-                    args = [apitrace, 'replay', '-D', groupstart, mmtracefile]
+                    args = [parseResult.apitrace, 'replay', '-D', groupstart, mmtracefile]
                     proc = subprocess.run(args, capture_output=True)
                     text = safeString(proc.stdout.decode("ascii"))
                     before = json.loads(text)
 
-                    args = [apitrace, 'replay', '-D', groupend, mmtracefile]
+                    args = [parseResult.apitrace, 'replay', '-D', groupend, mmtracefile]
                     proc = subprocess.run(args, capture_output=True)
                     text = safeString(proc.stdout.decode("ascii"))
                     after = json.loads(text)
@@ -87,14 +94,16 @@ def findDebugGroups(startnum, endnum, mmtracefile):
 
 mmtracefile = next(tempfile._get_candidate_names()) + ".trace"
 args = sys.argv
-args[0] = 'mmconsole.exe'
-args = [apitrace, "trace", "-o", mmtracefile] + args
+args = [parseResult.apitrace, "trace", "-o", mmtracefile, parseResult.exe] + parseResult.args
+
+sep = " "
+print("running " + sep.join(args))
 
 proc = subprocess.run(args, capture_output=True)
 #mmtracefile = "t0zmtikm.trace"
 
 # find frame delimiters
-args = [apitrace, 'dump', '--grep=SwapBuffers', '--color=never', mmtracefile]
+args = [parseResult.apitrace, 'dump', '--grep=SwapBuffers', '--color=never', mmtracefile]
 proc = subprocess.run(args, capture_output=True)
 res = proc.stdout.decode("utf-8") 
 frames = res.split(os.linesep + os.linesep)
