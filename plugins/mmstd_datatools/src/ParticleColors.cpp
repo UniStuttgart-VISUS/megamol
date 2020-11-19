@@ -38,10 +38,6 @@ glm::vec4 sample_tf(float const* tf, unsigned int tf_size, int base, float rest)
 
 bool megamol::stdplugin::datatools::ParticleColors::manipulateData(
     core::moldyn::MultiParticleDataCall& outData, core::moldyn::MultiParticleDataCall& inData) {
-    outData = inData; // also transfers the unlocker to 'outData'
-
-    inData.SetUnlocker(nullptr, false); // keep original data locked
-                                        // original data will be unlocked through outData
 
     core::view::CallGetTransferFunction* cgtf = _tf_slot.CallAs<core::view::CallGetTransferFunction>();
     if (cgtf == nullptr)
@@ -50,6 +46,8 @@ bool megamol::stdplugin::datatools::ParticleColors::manipulateData(
         return false;
 
     if (_frame_id != inData.FrameID() || _in_data_hash != inData.DataHash() || cgtf->IsDirty()) {
+        outData = inData;
+
         auto const tf = cgtf->GetTextureData();
         auto const tf_size = cgtf->TextureSize();
 
@@ -91,6 +89,8 @@ bool megamol::stdplugin::datatools::ParticleColors::manipulateData(
     }
 
     outData.SetDataHash(_out_data_hash);
+    outData.SetUnlocker(inData.GetUnlocker());
+    inData.SetUnlocker(nullptr, false);
 
     return true;
 }
