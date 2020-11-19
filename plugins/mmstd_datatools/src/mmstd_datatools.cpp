@@ -95,7 +95,7 @@
 #include "MPDCGrid.h"
 #include "table/TableSplit.h"
 #include "CSVWriter.h"
-#include "ParticleColors.h"
+#include "AddParticleColors.h"
 
 /*
  * mmplgPluginAPIVersion
@@ -258,7 +258,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPDCGrid>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSplit>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CSVWriter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleColors>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::AddParticleColors>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();

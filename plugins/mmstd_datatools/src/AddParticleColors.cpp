@@ -1,17 +1,17 @@
 #include "stdafx.h"
-#include "ParticleColors.h"
+#include "AddParticleColors.h"
 
 #include "mmcore/view/CallGetTransferFunction.h"
 
 
-megamol::stdplugin::datatools::ParticleColors::ParticleColors(void)
+megamol::stdplugin::datatools::AddParticleColors::AddParticleColors(void)
         : AbstractParticleManipulator("outData", "indata"), _tf_slot("inTF", "") {
     _tf_slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     MakeSlotAvailable(&_tf_slot);
 }
 
 
-megamol::stdplugin::datatools::ParticleColors::~ParticleColors(void) {
+megamol::stdplugin::datatools::AddParticleColors::~AddParticleColors(void) {
     this->Release();
 }
 
@@ -36,7 +36,7 @@ glm::vec4 sample_tf(float const* tf, unsigned int tf_size, int base, float rest)
 }
 
 
-bool megamol::stdplugin::datatools::ParticleColors::manipulateData(
+bool megamol::stdplugin::datatools::AddParticleColors::manipulateData(
     core::moldyn::MultiParticleDataCall& outData, core::moldyn::MultiParticleDataCall& inData) {
 
     core::view::CallGetTransferFunction* cgtf = _tf_slot.CallAs<core::view::CallGetTransferFunction>();

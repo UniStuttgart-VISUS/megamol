@@ -7,11 +7,11 @@
 #include "glm/glm.hpp"
 
 namespace megamol::stdplugin::datatools {
-class ParticleColors : public AbstractParticleManipulator {
+class AddParticleColors : public AbstractParticleManipulator {
 public:
     /** Return module class name */
     static const char* ClassName(void) {
-        return "ParticleColors";
+        return "AddParticleColors";
     }
 
     /** Return module class description */
@@ -25,10 +25,10 @@ public:
     }
 
     /** Ctor */
-    ParticleColors(void);
+    AddParticleColors(void);
 
     /** Dtor */
-    virtual ~ParticleColors(void);
+    virtual ~AddParticleColors(void);
 
 protected:
     bool manipulateData(core::moldyn::MultiParticleDataCall& outData, core::moldyn::MultiParticleDataCall& inData) override;
