@@ -1117,7 +1117,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
         for (auto const& light : distant_lights) {
             auto use_eyedir = light.eye_direction;
             if (use_eyedir) {
-                curlightDir = -curCamView;
+                curlightDir = curCamView;
             } else {
                 auto lightDir = light.direction;
                 if (lightDir.size() == 3) {
