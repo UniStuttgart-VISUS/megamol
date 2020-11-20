@@ -28,8 +28,6 @@ megamol::stdplugin::datatools::clustering::ParticleIColClustering::~ParticleICol
 
 bool megamol::stdplugin::datatools::clustering::ParticleIColClustering::manipulateData(
     megamol::core::moldyn::MultiParticleDataCall& outData, megamol::core::moldyn::MultiParticleDataCall& inData) {
-    
-
     if (_frame_id != inData.FrameID() || _in_data_hash != inData.DataHash() || isDirty()) {
         outData = inData;
 

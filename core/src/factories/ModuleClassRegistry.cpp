@@ -122,7 +122,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::TileView>();
     instance.RegisterAutoDescription<view::View2D>();
     instance.RegisterAutoDescription<view::View3D>();
-	instance.RegisterAutoDescription<view::View3D_2>();
+    instance.RegisterAutoDescription<view::View3D_2>();
     instance.RegisterAutoDescription<view::BoundingBoxRenderer>();
     instance.RegisterAutoDescription<view::BlinnPhongRendererDeferred>();
     instance.RegisterAutoDescription<view::SplitView>();
