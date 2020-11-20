@@ -335,7 +335,7 @@ bool adiosDataSource::getHeaderCallback(core::Call& caller) {
             this->variables = io->AvailableVariables();
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosDataSource] Number of variables %d", variables.size());
 
-
+            availVars.clear();
             availVars.reserve(variables.size());
 
             timesteps.clear();
