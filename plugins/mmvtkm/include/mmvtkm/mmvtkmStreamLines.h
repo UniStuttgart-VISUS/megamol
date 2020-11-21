@@ -143,8 +143,14 @@ private:
         }
     };
 
+	/** Callback function to rotate the ghostplane around its normal */
+	bool rotateGhostPlane(core::param::ParamSlot& slot);
+
+	/** Callback function to rotate the seedplane around its normal */
+	bool rotateSeedPlane(core::param::ParamSlot& slot);
+
 	/** Callback function to assign altered u and v values */
-    bool assignUV(core::param::ParamSlot& slot);
+    bool assignSTPQ(core::param::ParamSlot& slot);
 
 	/** 
 	* Calculates the liveSeedPlane_ with the current u and v values 
@@ -152,7 +158,7 @@ private:
 	* @param isU, true for u, false for v
 	*/
     void calcLiveSeedPlane(
-        bool isU, float uv, const glm::vec3& start, const glm::vec3& stop, 
+        unsigned int line, float uv, const glm::vec3& start, const glm::vec3& stop, 
 		const std::vector<glm::vec3>& plane);
 
 	/** Intersects two lines. Returns true, if intersection occured, false otherwise. */
@@ -196,9 +202,8 @@ private:
 	/** Callback function if seed re-sampling is set. */
     bool setResampleSeeds(core::param::ParamSlot& slot);
 
-	/** Callback function to clear the ghost plane. */
-    void clearGhostPlane();
-    bool clearGhostPlaneCallBack(core::param::ParamSlot& slot);
+	/** Callback function to toggle the ghost plane. */
+    bool toggleGhostPlane(core::param::ParamSlot& slot);
 
 	/**
      * Indirect Callback function if 'apply' is pressed.
@@ -242,19 +247,18 @@ private:
         const mesh::MeshDataAccessCollection::IndexData& id, mesh::MeshDataAccessCollection::PrimitiveType pt);
 
 	/** Checks if a float is equal or really close to 0 */
-    inline bool isZerof(float x) { return fabs(x) < epsilon_; }
+    inline bool isZerof(float x) { return fabs(x) < epsilon5_; }
     inline bool isNullVector(const visVec3f& v) {
 		return isZerof(v.GetX()) && isZerof(v.GetY()) && isZerof(v.GetZ());
     }
     inline bool isNullVector(const glm::vec3& v) { 
-		return isZerof(v.x) && isZerof(v.y) && isZerof(v.z); 
+		return isZerof(v.x) && isZerof(v.y) && isZerof(v.z);
 	}
 	inline bool areParallel(const glm::vec3& v1, const glm::vec3& v2) { 
-		float tx = v1.x / v2.x;
-		float ty = v1.y / v2.y;
-		float tz = v1.z / v2.z;
-
-		return isZerof(tx - ty) && isZerof(tx - tz);
+		// simple check if v1 is a multiple of v2 (or vice versa) is very imprecise
+		// and causes false negatives
+		// e. g. a = v1.x / v2.x = v1.y / v2.y = v1.z / v2.z
+		return isNullVector(glm::cross(v1, v2));
 	}
 	inline bool isBetween(const glm::vec3& ip, const glm::vec3& p1, const glm::vec3& p2) {
         glm::vec3 vip = ip - p1;
@@ -308,20 +312,29 @@ private:
     /** Paramslot for point on seed plane */
     core::param::ParamSlot psSeedPlanePoint_;
 
-	/** Paramslot for point on seed plane */
-    core::param::ParamSlot psSeedPlaneU_;
+	/** Paramslot for border line to bound seedplane */
+    core::param::ParamSlot psSeedPlaneS_;
 
-	/** Paramslot for point on seed plane */
-    core::param::ParamSlot psSeedPlaneV_;
+	/** Paramslot for border line to bound seedplane */
+    core::param::ParamSlot psSeedPlaneT_;
 
-    /** Paramslot for seed plane distance */
-    // core::param::ParamSlot psSeedPlaneDistance_;
+	/** Paramslot for border line to bound seedplane */
+	core::param::ParamSlot psSeedPlaneP_;
+
+	/** Paramslot for border line to bound seedplane */
+	core::param::ParamSlot psSeedPlaneQ_;
+
+	/** Paramslot for resetting borderLines */
+	//core::param::ParamSlot psResetBorderLines_;
+
+	/** Paramslot to rotate ghostplane around its normal */
+	core::param::ParamSlot psRotateGhostPlane_;
+
+	/** Paramslot to rotate seedplane around its normal */
+	core::param::ParamSlot psRotateSeedPlane_;
 
     /** Paramslot for seed plane color */
     core::param::ParamSlot psSeedPlaneColor_;
-
-	/** Paramslot for seed plane alpha */
-    core::param::ParamSlot psSeedPlaneAlpha_;
 
     /** Paramslot to apply changes to streamline configurations */
     core::param::ParamSlot psApplyChanges_;
@@ -329,8 +342,8 @@ private:
 	/** Paramslot to activate re-sampling of seeds */
     core::param::ParamSlot psResampleSeeds_;
 
-	/** Paramslot to clear the ghost plane */
-    core::param::ParamSlot psClearGhostPlane_;
+	/** Paramslot to toggle the ghost plane */
+    core::param::ParamSlot psToggleGhostPlane_;
 
 	/** Update flags used to separate different calculations */
     bool streamlineUpdate_;
@@ -366,15 +379,15 @@ private:
     glm::vec3 planeConnectionPoint2_;
     glm::vec3 planeOrigin_;
     glm::vec3 seedPlaneNormal_;
+	glm::vec3 seedPlaneZFightingOffset_;
     glm::vec3 seedPlanePoint_;
-    float seedPlaneDistance_;
     glm::vec3 seedPlaneColor_;
     float seedPlaneAlpha_;
 
     std::vector<glm::vec3> liveSeedPlane_;
+    std::vector<glm::vec3> liveCopy_;
     std::vector<glm::vec3> originalSeedPlane_;
-    std::vector<glm::vec3> uSeedPlane_;
-    std::vector<glm::vec3> vSeedPlane_;
+    std::vector<glm::vec3> stpqSeedPlane_;
     std::vector<glm::vec4> seedPlaneColorVec_;
     std::vector<unsigned int> seedPlaneIndices_;
     std::vector<Triangle> seedPlaneTriangles_;
@@ -400,6 +413,7 @@ private:
     std::vector<glm::vec3> colorVec_ = { red_, orange_, yellow_, green_, cyan_, blue_, purple_, magenta_ };
     
 	std::vector<glm::vec3> ghostCopy_;
+	std::vector<glm::vec3> rotatedGhostCopy_;
 	std::vector<glm::vec3> ghostPlane_ = {
         glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f),
 		glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f)};
@@ -409,13 +423,18 @@ private:
 
 	std::vector<glm::vec3> borderLine_ = {
         glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f),
+		glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f),
+		glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f),
         glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f)};
     std::vector<glm::vec4> borderColors_ = {
         glm::vec4(grey2, 0.8f), glm::vec4(grey2, 0.8f),
+		glm::vec4(grey2, 0.8f), glm::vec4(grey2, 0.8f),
+		glm::vec4(grey2, 0.8f), glm::vec4(grey2, 0.8f),
         glm::vec4(grey2, 0.8f), glm::vec4(grey2, 0.8f)};
-    std::vector<unsigned int> borderIdcs_ = {0, 1, 2, 3};
+    std::vector<unsigned int> borderIdcs_ = {0, 1, 2, 3, 4, 5, 6, 7};
 
-	float epsilon_ = 1e-5f;
+	float epsilon4_ = 1e-4f;
+	float epsilon5_ = 1e-5f;
 };
 
 } // end namespace mmvtkm

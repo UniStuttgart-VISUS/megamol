@@ -1,7 +1,7 @@
 /*
  * mmvtkmMeshRenderTasks.cpp
  *
- * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+ * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 
@@ -80,10 +80,20 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
             bool blending_and_depth = i == 0;
             
 			if (i == batch_meshes.size() - 1) {
-                rt_collection->addRenderTasks(shader, batch_meshes[i], draw_commands[i], object_transforms[i],
-                    {std::pair<std::vector<GLuint>, bool>({GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA}, true),
-                        std::pair<std::vector<GLuint>, bool>({GL_DEPTH_TEST}, true),
-                        std::pair<std::vector<GLuint>, bool>({GL_CULL_FACE}, false)});
+				auto setStates = [] { 
+					glEnable(GL_BLEND);
+					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+					glEnable(GL_DEPTH_TEST);
+					glDisable(GL_CULL_FACE);
+				};
+				auto resetStates = [] { 
+					glDisable(GL_BLEND);
+					glBlendFunc(GL_ONE, GL_NONE);
+					glDisable(GL_DEPTH_TEST);
+					glDisable(GL_CULL_FACE);
+				};
+				
+                rt_collection->addRenderTasks(shader, batch_meshes[i], draw_commands[i], object_transforms[i], setStates, resetStates);
             } else {
                 rt_collection->addRenderTasks(
                     shader, batch_meshes[i], draw_commands[i], object_transforms[i]);

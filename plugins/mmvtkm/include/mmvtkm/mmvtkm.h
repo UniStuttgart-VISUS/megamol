@@ -1,6 +1,6 @@
 /*
- * VTKM.h
- * Copyright (C) 2009-2015 by MegaMol Team
+ * MMVTKM.h
+ * Copyright (C) 2019-2020 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 #ifndef MMVTKM_H_INCLUDED

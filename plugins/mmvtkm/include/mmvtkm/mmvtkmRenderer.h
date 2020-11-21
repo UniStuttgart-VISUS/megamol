@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MMVTKM_MMVTKMRENDERER_H_INCLUDED
-#define MEGAMOL_MMVTKM_MMVTKMRENDERER_H_INCLUDED
+#ifndef MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED
+#define MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -54,7 +54,7 @@ public:
     static bool IsAvailable(void) { return true; }
 
     /** Ctor. */
-    mmvtkmDataRenderer(void);
+     mmvtkmDataRenderer(void);
 
     /** Dtor. */
     virtual ~mmvtkmDataRenderer(void);
@@ -146,4 +146,4 @@ private:
 } /* end namespace mmvtkm */
 } /* end namespace megamol */
 
-#endif // MEGAMOL_MMVTKM_MMVTKMRENDERER_H_INCLUDED
+#endif // MEGAMOL_MMVTKM_VTKMRENDERER_H_INCLUDED
