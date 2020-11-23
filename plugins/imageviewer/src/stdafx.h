@@ -4,8 +4,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef IMAGEVIEWER2_STDAFX_H_INCLUDED
-#define IMAGEVIEWER2_STDAFX_H_INCLUDED
+#ifndef IMAGEVIEWER_STDAFX_H_INCLUDED
+#define IMAGEVIEWER_STDAFX_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -33,4 +33,4 @@
 
 #include "vislib/types.h"
 
-#endif /* IMAGEVIEWER2_STDAFX_H_INCLUDED */
+#endif /* IMAGEVIEWER_STDAFX_H_INCLUDED */

@@ -34,10 +34,10 @@
 using namespace megamol::core;
 
 namespace megamol {
-namespace imageviewer2 {
+namespace imageviewer {
 
 /**
- * Mesh-based renderer for bézier curve tubes
+ * Mesh-based renderer for bï¿½zier curve tubes
  */
 class ImageRenderer : public view::Renderer3DModule_2 {
 public:
@@ -187,6 +187,9 @@ private:
     /** if only one image per pair is defined: where it should go */
     param::ParamSlot defaultEye;
 
+    /** Index of the shown image if the one from the call is taken */
+    param::ParamSlot shownImage;
+
     /** slot for MPIprovider */
     CallerSlot callRequestMpi;
 
@@ -219,6 +222,8 @@ private:
     /** The height of the image */
     unsigned int height;
 
+    bool newImageNeeded;
+
     vislib::graphics::gl::GLSLShader theShader;
     GLuint theVertBuffer;
     GLuint theTexCoordBuffer;
@@ -244,7 +249,7 @@ private:
     size_t datahash;
 };
 
-} /* end namespace imageviewer2 */
+} /* end namespace imageviewer */
 } /* end namespace megamol */
 
 #endif /* MEGAMOLCORE_IMAGEVIEWER_H_INCLUDED */
