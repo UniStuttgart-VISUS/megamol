@@ -1,5 +1,5 @@
-## Imageviewer2
-Imageviewer2 displays `jpg` or `png` pictures in MegaMol.
+## Imageviewer
+Imageviewer displays `jpg` or `png` pictures in MegaMol.
 
 ## Build
 Linux users need to install `libjpeg` in advance to be able to compile this plugin.
@@ -7,6 +7,8 @@ Linux users need to install `libjpeg` in advance to be able to compile this plug
 ## Modules
 The plugin provides a single module called `ImageViewer`.
 The module connects via a `CallRender3D`.
+
+The module is also able to connect via a Image2DCall. This allows for an easy display of arbitrary images from other modules.
 
 List of Parameters:
 
