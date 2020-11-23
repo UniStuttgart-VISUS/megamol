@@ -23,9 +23,9 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallRender3D.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::molsurfmapcluster;
@@ -34,21 +34,21 @@ using namespace megamol::molsurfmapcluster;
  * Clustering::Clustering
  */
 Clustering::Clustering(void)
-    : core::Module()
-    , inSlotImageLoader("inImages", "Input slot for image data")
-    , inSlotImageLoader2("inImages2", "Second input slot for image data")
-    , inSlotImageLoader3("inImages3", "Third input slot for image data")
-    , inSlotCLUSTERINGLoader("inClustering", "Input Slot for Clustering Data")
-    , outSlot("outClusteringSlot", "OUtput slot for the Clustering")
-    , dumpdot("Dump Dot-File", "")
-    , dumpdotpath("File-Path for Dot-File", "")
-    , selectionmode("Mode for selection of similar nodes", "")
-    , linkagemodeparam("Linkage Mode", "")
-    , distancemultiplier("Distance Multiplier", "")
-    , momentsmethode("Moments Methode", "")
-    , featuresSlot1Param("feat::featuresCall1", "Path to an additional feature vector file for input call 1")
-    , featuresSlot2Param("feat::featuresCall2", "Path to an additional feature vector file for input call 2")
-    , featuresSlot3Param("feat::featuresCall3", "Path to an additional feature vector file for input call 3") {
+        : core::Module()
+        , inSlotImageLoader("inImages", "Input slot for image data")
+        , inSlotImageLoader2("inImages2", "Second input slot for image data")
+        , inSlotImageLoader3("inImages3", "Third input slot for image data")
+        , inSlotCLUSTERINGLoader("inClustering", "Input Slot for Clustering Data")
+        , outSlot("outClusteringSlot", "OUtput slot for the Clustering")
+        , dumpdot("Dump Dot-File", "")
+        , dumpdotpath("File-Path for Dot-File", "")
+        , selectionmode("Mode for selection of similar nodes", "")
+        , linkagemodeparam("Linkage Mode", "")
+        , distancemultiplier("Distance Multiplier", "")
+        , momentsmethode("Moments Methode", "")
+        , featuresSlot1Param("feat::featuresCall1", "Path to an additional feature vector file for input call 1")
+        , featuresSlot2Param("feat::featuresCall2", "Path to an additional feature vector file for input call 2")
+        , featuresSlot3Param("feat::featuresCall3", "Path to an additional feature vector file for input call 3") {
 
     // Callee-Slot
     this->outSlot.SetCallback(CallClustering::ClassName(), "GetData", &Clustering::getDataCallback);
@@ -147,7 +147,9 @@ Clustering::Clustering(void)
 /*
  * Clustering::~Clustering
  */
-Clustering::~Clustering(void) { this->Release(); }
+Clustering::~Clustering(void) {
+    this->Release();
+}
 
 /*
  * Clustering::clusterData
@@ -167,18 +169,18 @@ void Clustering::clusterData(
         auto ps2 = this->featuresSlot2Param.Param<core::param::FilePathParam>()->Value();
         auto ps3 = this->featuresSlot3Param.Param<core::param::FilePathParam>()->Value();
 
-        std::filesystem::path path1(T2A(ps1).PeekBuffer());
-        std::filesystem::path path2(T2A(ps2).PeekBuffer());
-        std::filesystem::path path3(T2A(ps3).PeekBuffer());
-        
+        std::filesystem::path path1(ps1.PeekBuffer());
+        std::filesystem::path path2(ps2.PeekBuffer());
+        std::filesystem::path path3(ps3.PeekBuffer());
+
         this->loadFeatureVectorFromFile(path1, this->slot1Features);
         this->loadFeatureVectorFromFile(path2, this->slot2Features);
         this->loadFeatureVectorFromFile(path3, this->slot3Features);
     }
 
     // Clustering
-    vislib::sys::Log::DefaultLog.WriteMsg(
-        vislib::sys::Log::LEVEL_INFO, "Clustering %I64u Pictures", this->picturecount);
+    core::utility::log::Log::DefaultLog.WriteMsg(
+        core::utility::log::Log::LEVEL_INFO, "Clustering %I64u Pictures", this->picturecount);
     int mode = this->selectionmode.Param<core::param::EnumParam>()->Value();
     int bla = mode > 4 ? 1 : 2;
     mode = mode > 4 ? mode - 4 : mode;
@@ -194,7 +196,8 @@ void Clustering::clusterData(
                 this->momentsmethode.Param<core::param::EnumParam>()->Value());
         this->picturecount = this->picdata.size();
     }
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
+    core::utility::log::Log::DefaultLog.WriteMsg(
+        core::utility::log::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
 }
 
 /*
@@ -205,14 +208,15 @@ void Clustering::clusterData(CallClusteringLoader* ccl) {
     this->picturecount = ccl->Count();
 
     // Clustering
-    vislib::sys::Log::DefaultLog.WriteMsg(
-        vislib::sys::Log::LEVEL_INFO, "Clustering %I64u Pictures", this->picturecount);
+    core::utility::log::Log::DefaultLog.WriteMsg(
+        core::utility::log::Log::LEVEL_INFO, "Clustering %I64u Pictures", this->picturecount);
     this->clustering = new HierarchicalClustering(ccl->getLeaves(), ccl->Count(),
         this->momentsmethode.Param<core::param::EnumParam>()->Value(),
         this->selectionmode.Param<core::param::EnumParam>()->Value(),
         this->linkagemodeparam.Param<core::param::EnumParam>()->Value(),
         this->momentsmethode.Param<core::param::EnumParam>()->Value());
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
+    core::utility::log::Log::DefaultLog.WriteMsg(
+        core::utility::log::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
 }
 
 
@@ -231,7 +235,8 @@ bool Clustering::getDataCallback(core::Call& caller) {
 
     // Outgoing Call
     CallClustering* ccOut = dynamic_cast<CallClustering*>(&caller);
-    if (ccOut == nullptr) return false;
+    if (ccOut == nullptr)
+        return false;
 
     // Incoming Call
     image_calls::Image2DCall* imin = this->inSlotImageLoader.CallAs<image_calls::Image2DCall>();
@@ -256,9 +261,12 @@ bool Clustering::getDataCallback(core::Call& caller) {
             if (!imageloader) {
 
                 if (imin2 == nullptr && imin3 == nullptr) {
-                    if (!(*imin)(image_calls::Image2DCall::CallForWaitForData)) return false;
-                    if (!(*imin)(image_calls::Image2DCall::CallForGetData)) return false;
-                    if (!(*imin)(image_calls::Image2DCall::CallForWaitForData)) return false;
+                    if (!(*imin)(image_calls::Image2DCall::CallForWaitForData))
+                        return false;
+                    if (!(*imin)(image_calls::Image2DCall::CallForGetData))
+                        return false;
+                    if (!(*imin)(image_calls::Image2DCall::CallForWaitForData))
+                        return false;
                     auto ptr = imin->GetImagePtr();
                     this->clusterData(imin);
                     freshlyClustered = true;
@@ -269,7 +277,8 @@ bool Clustering::getDataCallback(core::Call& caller) {
             }
 
             if (!clusterloader) {
-                if (!(*cclIn)(CallClusteringLoader::CallForGetData)) return false;
+                if (!(*cclIn)(CallClusteringLoader::CallForGetData))
+                    return false;
                 this->clusterData(cclIn);
                 freshlyClustered = true;
             }
@@ -286,8 +295,8 @@ bool Clustering::getDataCallback(core::Call& caller) {
             if (!filename.IsEmpty()) {
                 this->clustering->dump_dot(filename);
             } else {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_INFO, "No Output-Filname given. File saved with defualt filename.");
+                core::utility::log::Log::DefaultLog.WriteMsg(
+                    core::utility::log::Log::LEVEL_INFO, "No Output-Filname given. File saved with defualt filename.");
                 this->clustering->dump_dot();
             }
         }
@@ -300,57 +309,58 @@ bool Clustering::getDataCallback(core::Call& caller) {
         int value = this->selectionmode.Param<core::param::EnumParam>()->Value();
         switch (value) {
         case 1:
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO, "Selection Mode changed to Cosinus-Koeffizient");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Selection Mode changed to Cosinus-Koeffizient");
             clustering->changeModeTo(2);
             clustering->setSimilarityMethod(value);
             break;
         case 2:
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO, "Selection Mode changed to Dice-Koeffizient");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Selection Mode changed to Dice-Koeffizient");
             clustering->changeModeTo(2);
             clustering->setSimilarityMethod(value);
             break;
         case 3:
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO, "Selection Mode changed to Jaccard-Koeffizient");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Selection Mode changed to Jaccard-Koeffizient");
             clustering->changeModeTo(2);
             clustering->setSimilarityMethod(value);
             break;
         case 4:
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO, "Selection Mode changed to Overlap-Koeffizient");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Selection Mode changed to Overlap-Koeffizient");
             clustering->changeModeTo(2);
             clustering->setSimilarityMethod(value);
             break;
         case 5:
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO, "Selection Mode changed to City-Block-Mannhatten");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Selection Mode changed to City-Block-Mannhatten");
             clustering->changeModeTo(1);
             clustering->setDistanceMethod(value - 4);
             break;
         case 6:
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO, "Selection Mode changed to Euclidian-Distance");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Selection Mode changed to Euclidian-Distance");
             clustering->changeModeTo(1);
             clustering->setDistanceMethod(value - 4);
             break;
         case 7:
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO, "Selection Mode changed to L3-Distance");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Selection Mode changed to L3-Distance");
             clustering->changeModeTo(1);
             clustering->setDistanceMethod(value - 4);
             break;
         case 8:
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO, "Selection Mode changed to Gower Distance");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Selection Mode changed to Gower Distance");
             clustering->changeModeTo(1);
             clustering->setDistanceMethod(value - 4);
             break;
         }
 
         // Recalculate clusterin
-        if (!freshlyClustered) clustering->clusterthedata();
+        if (!freshlyClustered)
+            clustering->clusterthedata();
     }
 
     if (this->linkagemodechanged) {
@@ -359,24 +369,25 @@ bool Clustering::getDataCallback(core::Call& caller) {
         int value = this->linkagemodeparam.Param<core::param::EnumParam>()->Value();
         switch (value) {
         case 1:
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO, "Linkage Mode changed to Centroid-Linkage");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Linkage Mode changed to Centroid-Linkage");
             clustering->setLinkageMethod(1);
             break;
         case 2:
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO, "Linkage Mode changed to Single-Linkage");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Linkage Mode changed to Single-Linkage");
             clustering->setLinkageMethod(2);
             break;
         case 3:
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_INFO, "Linkage Mode changed to Avarage-Linkage");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Linkage Mode changed to Avarage-Linkage");
             clustering->setLinkageMethod(3);
             break;
         }
 
         // Recalculate clusterin
-        if (!freshlyClustered) clustering->clusterthedata();
+        if (!freshlyClustered)
+            clustering->clusterthedata();
     }
 
     if (this->distancemultiplierchanged) {
@@ -391,20 +402,23 @@ bool Clustering::getDataCallback(core::Call& caller) {
         int value = this->momentsmethode.Param<core::param::EnumParam>()->Value();
         switch (value) {
         case 1:
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Changed to Image-Moments");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Changed to Image-Moments");
             clustering->setMoments(1);
             break;
         case 2:
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Changed to Color-Moments");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Changed to Color-Moments");
             clustering->setMoments(2);
             break;
         case 3:
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Changed to AI Features");
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO, "Changed to AI Features");
             clustering->setMoments(3);
         }
 
         // Reanalyse Pictures
-        if (!freshlyClustered) clustering->reanalyse();
+        if (!freshlyClustered)
+            clustering->reanalyse();
     }
 
     if (this->clustering->finished()) {
@@ -424,7 +438,8 @@ bool Clustering::getExtentCallback(core::Call& caller) {
 
     // OUtgoing Call
     CallClustering* ccOut = dynamic_cast<CallClustering*>(&caller);
-    if (ccOut == nullptr) return false;
+    if (ccOut == nullptr)
+        return false;
 
     // Incoming Call
     image_calls::Image2DCall* cppIn = this->inSlotImageLoader.CallAs<image_calls::Image2DCall>();
@@ -440,24 +455,29 @@ bool Clustering::getExtentCallback(core::Call& caller) {
         return false;
     } else {
         if (!pngpicloader) {
-            if (!(*cppIn)(image_calls::Image2DCall::CallForGetMetaData)) return false;
+            if (!(*cppIn)(image_calls::Image2DCall::CallForGetMetaData))
+                return false;
 
             bool bothNull = true;
             if (imin2 != nullptr) {
-                if (!(*imin2)(image_calls::Image2DCall::CallForGetMetaData)) return false;
+                if (!(*imin2)(image_calls::Image2DCall::CallForGetMetaData))
+                    return false;
                 bothNull = false;
             }
             if (imin3 != nullptr) {
-                if (!(*imin3)(image_calls::Image2DCall::CallForGetMetaData)) return false;
+                if (!(*imin3)(image_calls::Image2DCall::CallForGetMetaData))
+                    return false;
                 bothNull = false;
             }
             if (bothNull) {
-                if (!(*cppIn)(image_calls::Image2DCall::CallForSetWishlist)) return false;
+                if (!(*cppIn)(image_calls::Image2DCall::CallForSetWishlist))
+                    return false;
             }
         }
 
         if (!clusterloader) {
-            if (!(*cclIn)(CallClusteringLoader::CallForGetExtent)) return false;
+            if (!(*cclIn)(CallClusteringLoader::CallForGetExtent))
+                return false;
         }
     }
 
@@ -503,7 +523,8 @@ bool Clustering::getExtentCallback(core::Call& caller) {
         hashchange = true;
     }
 
-    if (hashchange) this->outhashoffset++;
+    if (hashchange)
+        this->outhashoffset++;
 
     if (ccOut->DataHash() != this->outHash + this->outhashoffset)
         ccOut->SetDataHash(this->outHash + this->outhashoffset);
@@ -558,7 +579,8 @@ void Clustering::loadValueImageForGivenPicture(
             v = std::abs(v); // paranoia
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("The file \"%s\" could not be opened for reading", newpath.c_str());
+        core::utility::log::Log::DefaultLog.WriteError(
+            "The file \"%s\" could not be opened for reading", newpath.c_str());
     }
 }
 

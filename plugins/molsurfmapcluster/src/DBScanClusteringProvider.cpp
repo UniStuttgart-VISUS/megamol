@@ -1,7 +1,7 @@
 #include "DBScanClusteringProvider.h"
 
 #include <sstream>
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::molsurfmapcluster;
@@ -140,9 +140,7 @@ void DBScanClusteringProvider::loadMapFromFile(const core::CoreInstance& coreIns
                 } else if (i == 1) {
                     try {
                         res.second = std::stoi(substr);
-                    } catch (...) {
-                        res.second = -1;
-                    }
+                    } catch (...) { res.second = -1; }
                 }
                 ++i;
             }
@@ -152,7 +150,8 @@ void DBScanClusteringProvider::loadMapFromFile(const core::CoreInstance& coreIns
             }
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("Could not load the configuration file \"%s\"", filepath.c_str());
+        core::utility::log::Log::DefaultLog.WriteError(
+            "Could not load the configuration file \"%s\"", filepath.c_str());
     }
 }
 

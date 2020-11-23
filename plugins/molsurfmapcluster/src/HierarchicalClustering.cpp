@@ -12,7 +12,7 @@
 #include <string>
 #include <thread>
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "vislib/Array.h"
 #include "vislib/math/Matrix.h"
@@ -57,7 +57,7 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& pics, S
     this->clusteringfinished = false;
 
     // Create Datastructure
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Creating Clustering");
+    core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO, "Creating Clustering");
     for (int index = 0; index < picturecount; index++) {
         CLUSTERNODE* node = new CLUSTERNODE();
         // Set ID
@@ -132,19 +132,19 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
 
         // the wishlist is a nullptr, so we want all pictures
         if (!(*call.second)(image_calls::Image2DCall::CallForSetWishlist)) {
-            vislib::sys::Log::DefaultLog.WriteError("ImageLoader function call failed");
+            core::utility::log::Log::DefaultLog.WriteError("ImageLoader function call failed");
             return;
         }
         if (!(*call.second)(image_calls::Image2DCall::CallForWaitForData)) {
-            vislib::sys::Log::DefaultLog.WriteError("ImageLoader function call failed");
+            core::utility::log::Log::DefaultLog.WriteError("ImageLoader function call failed");
             return;
         }
         if (!(*call.second)(image_calls::Image2DCall::CallForGetData)) {
-            vislib::sys::Log::DefaultLog.WriteError("ImageLoader function call failed");
+            core::utility::log::Log::DefaultLog.WriteError("ImageLoader function call failed");
             return;
         }
         if (!(*call.second)(image_calls::Image2DCall::CallForWaitForData)) {
-            vislib::sys::Log::DefaultLog.WriteError("ImageLoader function call failed");
+            core::utility::log::Log::DefaultLog.WriteError("ImageLoader function call failed");
             return;
         }
 
@@ -221,7 +221,8 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
                         const std::vector<float>& feat = features1.at(node->pic->pdbid);
                         node->features->insert(node->features->end(), feat.begin(), feat.end());
                     } else {
-                        vislib::sys::Log::DefaultLog.WriteWarn("Could not find feature vector in the feature list");
+                        core::utility::log::Log::DefaultLog.WriteWarn(
+                            "Could not find feature vector in the feature list");
                     }
                     break;
                 }
@@ -230,7 +231,8 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
                         const std::vector<float>& feat = features2.at(node->pic->pdbid);
                         node->features->insert(node->features->end(), feat.begin(), feat.end());
                     } else {
-                        vislib::sys::Log::DefaultLog.WriteWarn("Could not find feature vector in the feature list");
+                        core::utility::log::Log::DefaultLog.WriteWarn(
+                            "Could not find feature vector in the feature list");
                     }
                     break;
                 }
@@ -239,7 +241,8 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
                         const std::vector<float>& feat = features3.at(node->pic->pdbid);
                         node->features->insert(node->features->end(), feat.begin(), feat.end());
                     } else {
-                        vislib::sys::Log::DefaultLog.WriteWarn("Could not find feature vector in the feature list");
+                        core::utility::log::Log::DefaultLog.WriteWarn(
+                            "Could not find feature vector in the feature list");
                     }
                     break;
                 }
@@ -248,7 +251,8 @@ HierarchicalClustering::HierarchicalClustering(std::vector<PictureData>& picture
                         const std::vector<float>& feat = features1.at(node->pic->pdbid);
                         node->features->insert(node->features->end(), feat.begin(), feat.end());
                     } else {
-                        vislib::sys::Log::DefaultLog.WriteWarn("Could not find feature vector in the feature list");
+                        core::utility::log::Log::DefaultLog.WriteWarn(
+                            "Could not find feature vector in the feature list");
                     }
                     break;
                 }
@@ -294,7 +298,8 @@ HierarchicalClustering::HierarchicalClustering(
 }
 
 void HierarchicalClustering::calculateImageMomentsValue(CLUSTERNODE* node) {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "\tAnalyzing %s", node->pic->path.c_str());
+    core::utility::log::Log::DefaultLog.WriteMsg(
+        core::utility::log::Log::LEVEL_INFO, "\tAnalyzing %s", node->pic->path.c_str());
 
     PictureData* pic = node->pic;
     const auto& img = node->pic->valueImage;
@@ -314,13 +319,13 @@ void HierarchicalClustering::calculateImageMomentsValue(CLUSTERNODE* node) {
     double xc = m10 / m00;
     double yc = m01 / m00;
 
-    double m¸ij[IMAGEORDER + 1][IMAGEORDER + 1] = {0.0};
+    double m√ºij[IMAGEORDER + 1][IMAGEORDER + 1] = {0.0};
     for (int i = 0; i <= IMAGEORDER; i++) {
         for (int j = 0; j <= IMAGEORDER; j++) {
             for (int y = 0; y < pic->height; y++) {
                 for (int x = 0; x < pic->width; x++) {
                     if ((i + j <= 3) && !((i == 1 && j == 0) || (i == 0 && j == 1))) {
-                        m¸ij[i][j] += pow(static_cast<double>(x) - xc, i) * pow(static_cast<double>(y) - yc, j) *
+                        m√ºij[i][j] += pow(static_cast<double>(x) - xc, i) * pow(static_cast<double>(y) - yc, j) *
                                       static_cast<double>(img[(y * pic->width) + x]);
                     }
                 }
@@ -331,7 +336,7 @@ void HierarchicalClustering::calculateImageMomentsValue(CLUSTERNODE* node) {
     std::vector<double> nu;
     for (int i = 0; i <= IMAGEORDER; i++) {
         for (int j = 0; j <= IMAGEORDER; j++) {
-            nu.push_back(m¸ij[i][j] / (pow(m¸ij[0][0], (1.0 + (static_cast<double>(i + j) / 2.0)))));
+            nu.push_back(m√ºij[i][j] / (pow(m√ºij[0][0], (1.0 + (static_cast<double>(i + j) / 2.0)))));
         }
     }
 
@@ -362,11 +367,12 @@ void HierarchicalClustering::calculateImageMomentsValue(CLUSTERNODE* node) {
 
     node->features->insert(node->features->end(), {i1, 0.0, 0.0, i2, i4, i5, i6, i7, i8});
     bla++;
-    vislib::sys::Log::DefaultLog.WriteInfo("Calculated %u", bla);
+    core::utility::log::Log::DefaultLog.WriteInfo("Calculated %u", bla);
 }
 
 void HierarchicalClustering::calculateColorMomentsValue(CLUSTERNODE* node) {
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "\tAnalyzing %s", node->pic->path.c_str());
+    core::utility::log::Log::DefaultLog.WriteMsg(
+        core::utility::log::Log::LEVEL_INFO, "\tAnalyzing %s", node->pic->path.c_str());
 
     PictureData* pic = node->pic;
 
@@ -422,7 +428,7 @@ void HierarchicalClustering::calculateColorMomentsValue(CLUSTERNODE* node) {
         {mean[0], mean[1], mean[2], deviation[0], deviation[1], deviation[2], skewness[0], skewness[1], skewness[2]});
 
     bla++;
-    vislib::sys::Log::DefaultLog.WriteInfo("Calculated %u", bla);
+    core::utility::log::Log::DefaultLog.WriteInfo("Calculated %u", bla);
 }
 
 std::vector<double>* HierarchicalClustering::gray_scale_image(PictureData* pic) {
@@ -457,7 +463,8 @@ double HierarchicalClustering::distance(std::vector<double>* X, std::vector<doub
             }
             distance = summe;
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Can not calculate Distance");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Can not calculate Distance");
         }
         break;
     case 2:
@@ -470,7 +477,8 @@ double HierarchicalClustering::distance(std::vector<double>* X, std::vector<doub
             distance = sqrt(summe);
 
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Can not calculate Distance");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Can not calculate Distance");
         }
         break;
     case 3:
@@ -482,7 +490,8 @@ double HierarchicalClustering::distance(std::vector<double>* X, std::vector<doub
             }
             distance = cbrt(summe);
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Can not calculate Distance");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Can not calculate Distance");
         }
         break;
     case 4:
@@ -725,7 +734,7 @@ void HierarchicalClustering::dump_dot(const vislib::TString& filename) {
     std::string path(filename);
     file.open(path);
 
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Creating .dot File at %s", path);
+    core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO, "Creating .dot File at %s", path);
 
     file << "graph g {" << std::endl;
 
@@ -779,7 +788,8 @@ void HierarchicalClustering::dump_pca(const vislib::TString& filename) {
     std::string path(filename);
     file.open(path);
 
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Creating PCA-CSV-File at %s", path);
+    core::utility::log::Log::DefaultLog.WriteMsg(
+        core::utility::log::Log::LEVEL_INFO, "Creating PCA-CSV-File at %s", path);
 
     for (CLUSTERNODE* node : *this->leaves) {
         for (double comp : *node->pca2d) {
@@ -815,7 +825,7 @@ void HierarchicalClustering::clusterthedata() {
 
     this->clusteringfinished = false;
 
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+   core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO,
         "Set up the Clustering with: Mode: %i, Distance: %i, Similarity: %i, Linkage: %i, Moments: %i", this->mode,
         this->distancemethod, this->similaritymethod, this->linkagemethod, this->momentsmethode);
 
@@ -852,7 +862,7 @@ void HierarchicalClustering::clusterthedata() {
 
 
     // Clustering
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Clustering the Data");
+    core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO, "Clustering the Data");
     while (this->root->size() > 1) {
         if (this->mode == DISTANCEMODE) {
             // Search for minimum Distance Cluster
@@ -947,7 +957,8 @@ double HierarchicalClustering::similarity(std::vector<double>* X, std::vector<do
             // Calculate similarity
             similar = sumXY / (sqrt(sumX) * sqrt(sumY));
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Can not calculate Similarity");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Can not calculate Similarity");
         }
         break;
     case 2:
@@ -966,7 +977,8 @@ double HierarchicalClustering::similarity(std::vector<double>* X, std::vector<do
             similar = 2.0 * sumXY / (sumX + sumY);
 
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Can not calculate Similarity");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Can not calculate Similarity");
         }
         break;
     case 3:
@@ -984,7 +996,8 @@ double HierarchicalClustering::similarity(std::vector<double>* X, std::vector<do
             // Calculate similarity
             similar = sumXY / (sumX + sumY - sumXY);
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Can not calculate Similarity");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Can not calculate Similarity");
         }
         break;
     case 4:
@@ -992,7 +1005,8 @@ double HierarchicalClustering::similarity(std::vector<double>* X, std::vector<do
         if (X->size() == Y->size()) {
 
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Can not calculate Similarity");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Can not calculate Similarity");
         }
         break;
     default:
@@ -1205,6 +1219,7 @@ std::pair<float, float> HierarchicalClustering::loadValueImage(
         auto newminmax = std::minmax_element(outValueImage.begin(), outValueImage.end());
         return std::make_pair(*newminmax.first, *newminmax.second);
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("The file \"%s\" could not be opened for reading", newpath.c_str());
+        core::utility::log::Log::DefaultLog.WriteError(
+            "The file \"%s\" could not be opened for reading", newpath.c_str());
     }
 }

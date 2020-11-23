@@ -16,7 +16,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/Renderer2DModule.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "CallClusterPosition.h"
 #include "ClusterHierarchieRenderer.h"
@@ -38,27 +38,27 @@ using namespace megamol::molsurfmapcluster;
  * ClusterRenderer::ClusterRenderer
  */
 ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
-    : view::Renderer2DModule()
-    , clusterDataSlot("inData", "The input data slot for sphere data.")
-    , positionDataSlot("position", "The inoput data slot for the aktual position")
-    , positionoutslot("getposition", "Returns the aktual Rendered-Root-Node from clustering")
-    , showEnzymeClassesParam("showEnzymeClasses", "Display the Enzyme classes alongside with the popup renders")
-    , showPDBIdsParam("showPDBIds", "Display the PDB Ids alongside with the popup renders")
-    , fontSizeParam("fontSize", "Size of the rendered font")
-    , useDistanceColors("useDistanceColors", "Use the distance colors instead of the coloring by cluster")
-    , minColorParam("color::minColor", "the minimum color for interpolation")
-    , midColorParam("color::midColor", "the mid color for interpolation")
-    , maxColorParam("color::maxColor", "the maximum color for interpolation")
-    , failColorParam("color::failColor", "color used for failed comparisons")
-    , windowHeightParam("window::height", "height of the displayed window")
-    , windowWidthParam("window::width", "width of the displayed window")
-    , addBrendaParam("addparam::brendaClass", "Additionally display the brenda class below each leaf node")
-    , addMapParam("addparam::map", "Additionally display the map below each leaf node")
-    , addIdParam("addparam::pdbId", "Additionally display the pdb id below each leaf node")
-    , distanceMatrixParam("distanceMatrixFile", "Path of the file containing a distance matrix to compare")
-    , sizeMultiplierParam("sizeMultiplier", "Factor that is able to tweak the size of drawn GL_POINTS and GL_LINES")
-    , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
-    , texVa(0) {
+        : view::Renderer2DModule()
+        , clusterDataSlot("inData", "The input data slot for sphere data.")
+        , positionDataSlot("position", "The inoput data slot for the aktual position")
+        , positionoutslot("getposition", "Returns the aktual Rendered-Root-Node from clustering")
+        , showEnzymeClassesParam("showEnzymeClasses", "Display the Enzyme classes alongside with the popup renders")
+        , showPDBIdsParam("showPDBIds", "Display the PDB Ids alongside with the popup renders")
+        , fontSizeParam("fontSize", "Size of the rendered font")
+        , useDistanceColors("useDistanceColors", "Use the distance colors instead of the coloring by cluster")
+        , minColorParam("color::minColor", "the minimum color for interpolation")
+        , midColorParam("color::midColor", "the mid color for interpolation")
+        , maxColorParam("color::maxColor", "the maximum color for interpolation")
+        , failColorParam("color::failColor", "color used for failed comparisons")
+        , windowHeightParam("window::height", "height of the displayed window")
+        , windowWidthParam("window::width", "width of the displayed window")
+        , addBrendaParam("addparam::brendaClass", "Additionally display the brenda class below each leaf node")
+        , addMapParam("addparam::map", "Additionally display the map below each leaf node")
+        , addIdParam("addparam::pdbId", "Additionally display the pdb id below each leaf node")
+        , distanceMatrixParam("distanceMatrixFile", "Path of the file containing a distance matrix to compare")
+        , sizeMultiplierParam("sizeMultiplier", "Factor that is able to tweak the size of drawn GL_POINTS and GL_LINES")
+        , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
+        , texVa(0) {
 
     // Callee Slot
     this->positionoutslot.SetCallback(CallClusterPosition::ClassName(), CallClusterPosition::FunctionName(1),
@@ -148,7 +148,9 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
 /*
  * ClusterRenderer::~ClusterRenderer
  */
-ClusterHierarchieRenderer::~ClusterHierarchieRenderer(void) { this->Release(); }
+ClusterHierarchieRenderer::~ClusterHierarchieRenderer(void) {
+    this->Release();
+}
 
 
 /*
@@ -158,7 +160,7 @@ bool ClusterHierarchieRenderer::create(void) {
 
     // Initialise font
     if (!this->theFont.Initialise(this->GetCoreInstance())) {
-        vislib::sys::Log::DefaultLog.WriteError("Couldn't initialize the font.");
+        core::utility::log::Log::DefaultLog.WriteError("Couldn't initialize the font.");
         return false;
     }
 
@@ -166,13 +168,13 @@ bool ClusterHierarchieRenderer::create(void) {
     vislib::graphics::gl::ShaderSource texFragShader;
 
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("molsurfTexture::vertex", texVertShader)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to load vertex shader source for texture Vertex Shader");
+        core::utility::log::Log::DefaultLog.WriteMsg(
+            core::utility::log::Log::LEVEL_ERROR, "Unable to load vertex shader source for texture Vertex Shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("molsurfTexture::fragment", texFragShader)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to load fragment shader source for texture Fragment Shader");
+        core::utility::log::Log::DefaultLog.WriteMsg(
+            core::utility::log::Log::LEVEL_ERROR, "Unable to load fragment shader source for texture Fragment Shader");
         return false;
     }
 
@@ -182,7 +184,7 @@ bool ClusterHierarchieRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to create shader: %s\n", e.GetMsgA());
+        core::utility::log::Log::DefaultLog.WriteError("Unable to create shader: %s\n", e.GetMsgA());
         return false;
     }
 
@@ -190,14 +192,14 @@ bool ClusterHierarchieRenderer::create(void) {
     texFragShader.Clear();
 
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("molsurfPassthrough::vertex", texVertShader)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to load vertex shader source for passthrough Vertex Shader");
+        core::utility::log::Log::DefaultLog.WriteMsg(
+            core::utility::log::Log::LEVEL_ERROR, "Unable to load vertex shader source for passthrough Vertex Shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
             "molsurfPassthrough::fragment", texFragShader)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to load fragment shader source for passthrough Fragment Shader");
+        core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+            "Unable to load fragment shader source for passthrough Fragment Shader");
         return false;
     }
 
@@ -207,7 +209,7 @@ bool ClusterHierarchieRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to create shader: %s\n", e.GetMsgA());
+        core::utility::log::Log::DefaultLog.WriteError("Unable to create shader: %s\n", e.GetMsgA());
         return false;
     }
 
@@ -229,7 +231,7 @@ bool ClusterHierarchieRenderer::create(void) {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) (3 * sizeof(float)));
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -257,7 +259,8 @@ bool ClusterHierarchieRenderer::GetExtents(view::CallRender2D& call) {
 
     // Incoming Call
     core::view::CallRender2D* cr = dynamic_cast<core::view::CallRender2D*>(&call);
-    if (cr == nullptr) return false;
+    if (cr == nullptr)
+        return false;
 
     this->windowMeasurements = cr->GetViewport();
 
@@ -269,15 +272,19 @@ bool ClusterHierarchieRenderer::GetExtents(view::CallRender2D& call) {
 
     // Check for new Data in clustering
     CallClustering* cc = this->clusterDataSlot.CallAs<CallClustering>();
-    if (cc == nullptr) return false;
+    if (cc == nullptr)
+        return false;
 
-    if (!(*cc)(CallClustering::CallForGetExtent)) return false;
+    if (!(*cc)(CallClustering::CallForGetExtent))
+        return false;
 
     // Check for new Position to render
     CallClusterPosition* ccp = this->positionDataSlot.CallAs<CallClusterPosition>();
-    if (ccp == nullptr) return false;
+    if (ccp == nullptr)
+        return false;
 
-    if (!(*ccp)(CallClusterPosition::CallForGetExtent)) return false;
+    if (!(*ccp)(CallClusterPosition::CallForGetExtent))
+        return false;
 
     // if viewport changes ....
     if (currentViewport != this->viewport) {
@@ -335,8 +342,10 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
         std::string rightpdb = node->right == nullptr ? node->pic->pdbid : node->right->pic->pdbid;
 
         bool isleaf = true;
-        if (node->left != nullptr && node->left->left != nullptr) isleaf = false;
-        if (node->right != nullptr && node->right->left != nullptr) isleaf = false;
+        if (node->left != nullptr && node->left->left != nullptr)
+            isleaf = false;
+        if (node->right != nullptr && node->right->left != nullptr)
+            isleaf = false;
 
         float mindist;
         float middle;
@@ -348,16 +357,20 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
             for (const auto& l : leftvec) {
                 for (const auto& r : rightvec) {
                     auto d = this->enzymeClassDistance(l, r);
-                    if (d < mindist) mindist = d;
+                    if (d < mindist)
+                        mindist = d;
                 }
             }
             middle = 2.0f;
-            if (!isleaf) mindist = -1.0f; 
+            if (!isleaf)
+                mindist = -1.0f;
         } else {
             mindist = DistanceMatrixLoader::GetDistance(leftpdb, rightpdb);
-            if (mindist >= 0.0) mindist = 1.0 - mindist;
+            if (mindist >= 0.0)
+                mindist = 1.0 - mindist;
             middle = 0.5f;
-            if (!isleaf) mindist = -1.0f;
+            if (!isleaf)
+                mindist = -1.0f;
         }
 
         auto minColor = glm::make_vec4(this->minColorParam.Param<param::ColorParam>()->Value().data());
@@ -501,7 +514,8 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
 bool ClusterHierarchieRenderer::Render(view::CallRender2D& call) {
 
     core::view::CallRender2D* cr = dynamic_cast<core::view::CallRender2D*>(&call);
-    if (cr == nullptr) return false;
+    if (cr == nullptr)
+        return false;
 
     this->windowMeasurements = cr->GetViewport();
 
@@ -514,9 +528,11 @@ bool ClusterHierarchieRenderer::Render(view::CallRender2D& call) {
 
     // Update data Clustering
     CallClustering* ccc = this->clusterDataSlot.CallAs<CallClustering>();
-    if (!ccc) return false;
+    if (!ccc)
+        return false;
     // Updated data from cinematic camera call
-    if (!(*ccc)(CallClustering::CallForGetData)) return false;
+    if (!(*ccc)(CallClustering::CallForGetData))
+        return false;
 
     // read matrices (old bullshit)
     GLfloat viewMatrixColumn[16];
@@ -530,9 +546,11 @@ bool ClusterHierarchieRenderer::Render(view::CallRender2D& call) {
 
     // Update data Position
     CallClusterPosition* ccp = this->positionDataSlot.CallAs<CallClusterPosition>();
-    if (!ccp) return false;
+    if (!ccp)
+        return false;
     // Updated data from cinematic camera call
-    if (!(*ccp)(CallClusterPosition::CallForGetData)) return false;
+    if (!(*ccp)(CallClusterPosition::CallForGetData))
+        return false;
 
     if (ccc->DataHash() != this->lastHashClustering) {
         // update Clustering to work with
@@ -659,7 +677,8 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
                 std::string instname = "inst";
                 for (auto it = istart; it != iend; ++it) {
                     core::AbstractNamedObject::ptr_type ptr = *it;
-                    if (ptr != nullptr) instname = ptr->Name();
+                    if (ptr != nullptr)
+                        instname = ptr->Name();
                 }
 
                 auto left =
@@ -680,7 +699,8 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
                     path.replace_filename(pdbid + ".pdb");
                     vislib::TString pstring(path.c_str());
                     bool res = curparam->ParseValue(pstring);
-                    if (!res) std::cout << "Could not change parameter" << std::endl;
+                    if (!res)
+                        std::cout << "Could not change parameter" << std::endl;
                 }
             }
         }
@@ -695,8 +715,8 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
 bool ClusterHierarchieRenderer::OnMouseMove(double x, double y) {
     // Only save actual Mouse Position
 
-    this->mouseX = (float)static_cast<int>(x);
-    this->mouseY = (float)static_cast<int>(y);
+    this->mouseX = (float) static_cast<int>(x);
+    this->mouseY = (float) static_cast<int>(y);
 
     // Check mouse position => if position is on cluster => render popup
     // first delete old popup boolean
@@ -740,7 +760,8 @@ void ClusterHierarchieRenderer::renderPopup(glm::mat4 mvp) {
         // Render Texture
         // Position -> Mouse Position? Cluster Center?
         int width = static_cast<int>(1.0f / this->zoomFactor);
-        if (width % 2 == 1) width++;
+        if (width % 2 == 1)
+            width++;
         int height = width / 2;
 
         // Berechne verschiebung
@@ -864,7 +885,8 @@ double ClusterHierarchieRenderer::checkposition(HierarchicalClustering::CLUSTERN
 
 bool ClusterHierarchieRenderer::GetPositionExtents(Call& call) {
     CallClusterPosition* ccp = dynamic_cast<CallClusterPosition*>(&call);
-    if (ccp == nullptr) return false;
+    if (ccp == nullptr)
+        return false;
 
     // Wenn neuer root node
     if (ccp->getPosition() != this->position) {
@@ -877,7 +899,8 @@ bool ClusterHierarchieRenderer::GetPositionExtents(Call& call) {
 
 bool ClusterHierarchieRenderer::GetPositionData(Call& call) {
     CallClusterPosition* ccp = dynamic_cast<CallClusterPosition*>(&call);
-    if (ccp == nullptr) return false;
+    if (ccp == nullptr)
+        return false;
     if (this->newposition) {
         this->newposition = false;
         this->DataHashPosition += this->hashoffset;
@@ -888,7 +911,8 @@ bool ClusterHierarchieRenderer::GetPositionData(Call& call) {
 }
 
 float ClusterHierarchieRenderer::enzymeClassDistance(const std::array<int, 4>& arr1, const std::array<int, 4>& arr2) {
-    if (arr1[0] < 0 || arr2[0] < 0) return 10.0f;
+    if (arr1[0] < 0 || arr2[0] < 0)
+        return 10.0f;
     if (arr1[0] == arr2[0]) {
         if (arr1[1] == arr2[1] || arr1[2] == arr2[2]) {
             if (arr1[1] == arr2[1] && arr1[2] == arr2[2]) {

@@ -9,8 +9,8 @@
 
 #include "mmcore/view/Renderer2DModule.h"
 
-#include "vislib/sys/Log.h"
-#include "vislib\math\ForceDirected.h"
+#include "mmcore/utility/log/Log.h"
+#include "vislib/math/ForceDirected.h"
 
 #include <filesystem>
 #include <istream>
@@ -42,20 +42,20 @@ using namespace megamol::molsurfmapcluster;
  * ClusterRenderer::ClusterRenderer
  */
 ClusterRenderer::ClusterRenderer(void)
-    : view::Renderer2DModule()
-    , clusterDataSlot("inData", "The input data slot for sphere data.")
-    , getPosition("getPosition", "Returns the aktual Rendered-Root-Node from clustering")
-    , setPosition("setPosition", "Set the aktual position-root-node from clustering")
-    , colorTableFileParam("colortable", "Path to the file containing an alternative color table")
-    , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
-    , mouseX(0.0f)
-    , mouseY(0.0f)
-    , lastMouseX(0.0f)
-    , lastMouseY(0.0f)
-    , fontSize(22.0f)
-    , texVa(0)
-    , mouseButton(MouseButton::BUTTON_LEFT)
-    , mouseAction(MouseButtonAction::RELEASE) {
+        : view::Renderer2DModule()
+        , clusterDataSlot("inData", "The input data slot for sphere data.")
+        , getPosition("getPosition", "Returns the aktual Rendered-Root-Node from clustering")
+        , setPosition("setPosition", "Set the aktual position-root-node from clustering")
+        , colorTableFileParam("colortable", "Path to the file containing an alternative color table")
+        , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS)
+        , mouseX(0.0f)
+        , mouseY(0.0f)
+        , lastMouseX(0.0f)
+        , lastMouseY(0.0f)
+        , fontSize(22.0f)
+        , texVa(0)
+        , mouseButton(MouseButton::BUTTON_LEFT)
+        , mouseAction(MouseButtonAction::RELEASE) {
 
 
     // Callee Slot
@@ -99,7 +99,9 @@ ClusterRenderer::ClusterRenderer(void)
 /*
  * ClusterRenderer::~ClusterRenderer
  */
-ClusterRenderer::~ClusterRenderer(void) { this->Release(); }
+ClusterRenderer::~ClusterRenderer(void) {
+    this->Release();
+}
 
 
 /*
@@ -109,7 +111,7 @@ bool ClusterRenderer::create(void) {
 
     // Initialise font
     if (!this->theFont.Initialise(this->GetCoreInstance())) {
-        vislib::sys::Log::DefaultLog.WriteError("Couldn't initialize the font.");
+        core::utility::log::Log::DefaultLog.WriteError("Couldn't initialize the font.");
         return false;
     }
 
@@ -117,13 +119,13 @@ bool ClusterRenderer::create(void) {
     vislib::graphics::gl::ShaderSource texFragShader;
 
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("molsurfTexture::vertex", texVertShader)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to load vertex shader source for texture Vertex Shader");
+        core::utility::log::Log::DefaultLog.WriteMsg(
+            core::utility::log::Log::LEVEL_ERROR, "Unable to load vertex shader source for texture Vertex Shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("molsurfTexture::fragment", texFragShader)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to load fragment shader source for texture Fragment Shader");
+        core::utility::log::Log::DefaultLog.WriteMsg(
+            core::utility::log::Log::LEVEL_ERROR, "Unable to load fragment shader source for texture Fragment Shader");
         return false;
     }
 
@@ -133,19 +135,19 @@ bool ClusterRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to create shader: %s\n", e.GetMsgA());
+        core::utility::log::Log::DefaultLog.WriteError("Unable to create shader: %s\n", e.GetMsgA());
         return false;
     }
 
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource("molsurfPassthrough::vertex", texVertShader)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to load vertex shader source for passthrough Vertex Shader");
+        core::utility::log::Log::DefaultLog.WriteMsg(
+            core::utility::log::Log::LEVEL_ERROR, "Unable to load vertex shader source for passthrough Vertex Shader");
         return false;
     }
     if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
             "molsurfPassthrough::fragment", texFragShader)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to load fragment shader source for passthrough Fragment Shader");
+        core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+            "Unable to load fragment shader source for passthrough Fragment Shader");
         return false;
     }
 
@@ -155,7 +157,7 @@ bool ClusterRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
         }
     } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteError("Unable to create shader: %s\n", e.GetMsgA());
+        core::utility::log::Log::DefaultLog.WriteError("Unable to create shader: %s\n", e.GetMsgA());
         return false;
     }
 
@@ -176,7 +178,7 @@ bool ClusterRenderer::create(void) {
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*) (3 * sizeof(float)));
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -205,7 +207,8 @@ bool ClusterRenderer::GetExtents(view::CallRender2D& call) {
 
     // Incoming Call
     core::view::CallRender2D* cr = dynamic_cast<core::view::CallRender2D*>(&call);
-    if (cr == nullptr) return false;
+    if (cr == nullptr)
+        return false;
 
     vislib::math::Vector<float, 2> currentViewport;
     currentViewport.SetX(static_cast<float>(VIEWPORT_WIDTH));
@@ -215,15 +218,19 @@ bool ClusterRenderer::GetExtents(view::CallRender2D& call) {
 
     // Check for new Data in clustering
     CallClustering* cc = this->clusterDataSlot.CallAs<CallClustering>();
-    if (cc == nullptr) return false;
+    if (cc == nullptr)
+        return false;
 
-    if (!(*cc)(CallClustering::CallForGetExtent)) return false;
+    if (!(*cc)(CallClustering::CallForGetExtent))
+        return false;
 
     // Check for new Position from HierarchieClusterRenderer
     CallClusterPosition* ccp = this->setPosition.CallAs<CallClusterPosition>();
-    if (ccp == nullptr) return false;
+    if (ccp == nullptr)
+        return false;
 
-    if (!(*ccp)(CallClusterPosition::CallForGetExtent)) return false;
+    if (!(*ccp)(CallClusterPosition::CallForGetExtent))
+        return false;
 
     // if viewport changes ....
     if (currentViewport != this->viewport) {
@@ -493,10 +500,14 @@ void ClusterRenderer::setMinMax(std::vector<HierarchicalClustering::CLUSTERNODE*
         double x = (*(*leaves)[i]->pca2d)[0];
         double y = (*(*leaves)[i]->pca2d)[1];
 
-        if (x > this->maxX) this->maxX = x;
-        if (x < this->minX) this->minX = x;
-        if (y > this->maxY) this->maxY = y;
-        if (y < this->minY) this->minY = y;
+        if (x > this->maxX)
+            this->maxX = x;
+        if (x < this->minX)
+            this->minX = x;
+        if (y > this->maxY)
+            this->maxY = y;
+        if (y < this->minY)
+            this->minY = y;
     }
 }
 
@@ -506,12 +517,15 @@ void ClusterRenderer::setMinMax(std::vector<HierarchicalClustering::CLUSTERNODE*
 bool ClusterRenderer::Render(view::CallRender2D& call) {
 
     core::view::CallRender2D* cr = dynamic_cast<core::view::CallRender2D*>(&call);
-    if (cr == nullptr) return false;
+    if (cr == nullptr)
+        return false;
 
     // Update data
     CallClustering* ccc = this->clusterDataSlot.CallAs<CallClustering>();
-    if (!ccc) return false;
-    if (!(*ccc)(CallClustering::CallForGetData)) return false;
+    if (!ccc)
+        return false;
+    if (!(*ccc)(CallClustering::CallForGetData))
+        return false;
 
     if (this->colorTableFileParam.IsDirty()) {
         this->colorTableFileParam.ResetDirty();
@@ -547,8 +561,10 @@ bool ClusterRenderer::Render(view::CallRender2D& call) {
             } else {
                 // Check for new position from hierarchie
                 CallClusterPosition* ccp = this->setPosition.CallAs<CallClusterPosition>();
-                if (!ccp) return false;
-                if (!(*ccp)(CallClusterPosition::CallForGetData)) return false;
+                if (!ccp)
+                    return false;
+                if (!(*ccp)(CallClusterPosition::CallForGetData))
+                    return false;
 
                 if (ccp->DataHash() != this->GetPositionDataHash) {
                     // update Clustering to work with
@@ -662,15 +678,16 @@ bool ClusterRenderer::OnMouseButton(megamol::core::view::MouseButton button,
 bool ClusterRenderer::OnMouseMove(double x, double y) {
     // Only save actual Mouse Position
 
-    this->mouseX = (float)static_cast<int>(x);
-    this->mouseY = (float)static_cast<int>(y);
+    this->mouseX = (float) static_cast<int>(x);
+    this->mouseY = (float) static_cast<int>(y);
 
     return false;
 }
 
 bool ClusterRenderer::GetPositionExtents(Call& call) {
     CallClusterPosition* ccp = dynamic_cast<CallClusterPosition*>(&call);
-    if (ccp == nullptr) return false;
+    if (ccp == nullptr)
+        return false;
 
     // Wenn neuer root node
     if (ccp->getPosition() != this->root) {
@@ -683,7 +700,8 @@ bool ClusterRenderer::GetPositionExtents(Call& call) {
 
 bool ClusterRenderer::GetPositionData(Call& call) {
     CallClusterPosition* ccp = dynamic_cast<CallClusterPosition*>(&call);
-    if (ccp == nullptr) return false;
+    if (ccp == nullptr)
+        return false;
     ccp->setPosition(this->root);
     ccp->setClusterColors(this->colors);
     if (this->newposition) {
@@ -781,8 +799,8 @@ ClusterRenderer::getNdiffrentColors(std::vector<HierarchicalClustering::CLUSTERN
     }
 
 
-    /* Dieser Teil der Funktion ermittelt für jeden Farbkanal einzeln, in wie viele Teile die 255 Werte
-    des jeweiligen Farbkanals mindestens zerlegt werden müssen, damit die Funktion die geforderte Anzahl
+    /* Dieser Teil der Funktion ermittelt fÃ¼r jeden Farbkanal einzeln, in wie viele Teile die 255 Werte
+    des jeweiligen Farbkanals mindestens zerlegt werden mÃ¼ssen, damit die Funktion die geforderte Anzahl
     Farben durch Permutationen erzeugen kann.
         */
 
@@ -799,12 +817,13 @@ ClusterRenderer::getNdiffrentColors(std::vector<HierarchicalClustering::CLUSTERN
         red_number = blue_number = green_number = ceil(root);
     }
 
-    /* Dieser Teil berechnet die Permutationen und bricht ab, wenn genügend erzeugt wurden. */
+    /* Dieser Teil berechnet die Permutationen und bricht ab, wenn genÃ¼gend erzeugt wurden. */
 
     for (int red_counter = 0; red_counter <= red_number; red_counter++) {
         for (int green_counter = 0; green_counter <= green_number; green_counter++) {
             for (int blue_counter = 0; blue_counter <= blue_number; blue_counter++) {
-                if (counter >= quantity) return result;
+                if (counter >= quantity)
+                    return result;
 
                 RGBCOLOR* tmp = new RGBCOLOR();
                 tmp->r = red_counter * floor(255 / red_number);
@@ -827,7 +846,8 @@ std::vector<glm::uvec4> ClusterRenderer::loadColorTable(void) {
     std::vector<glm::uvec4> result;
     auto path = this->colorTableFileParam.Param<param::FilePathParam>()->Value();
     std::string pstring = path.PeekBuffer();
-    if (pstring.empty()) return result;
+    if (pstring.empty())
+        return result;
     std::ifstream file(pstring);
     if (file.is_open()) {
         std::string line;

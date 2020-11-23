@@ -6,7 +6,7 @@
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/CallAutoDescription.h"
-#include "vislib/graphics/BitmapCodecCollection.h"
+#include "mmcore/utility/graphics/BitmapCodecCollection.h"
 
 #include "image_calls/image_calls.h"
 

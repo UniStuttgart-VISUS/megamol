@@ -9,7 +9,7 @@
 #include "imageviewer/ImageLoader.h"
 #include "imageviewer/JpegBitmapCodec.h"
 #include "mmcore/misc/PngBitmapCodec.h"
-#include "vislib/graphics/BitmapCodecCollection.h"
+#include "mmcore/utility/graphics/BitmapCodecCollection.h"
 
 #include <filesystem>
 #include <functional>
@@ -31,19 +31,21 @@ uint32_t ImageLoader::loaded = 0;
  * ImageLoader::ImageLoader
  */
 ImageLoader::ImageLoader(void)
-    : Module()
-    , callRequestImage("requestImage", "Slot that provides the data of the loaded images")
-    , filenameSlot("filepath",
-          "Path to the image file (*.png, *.bmp) that should be loaded. If the file to load has a *.txt extension the "
-          "file will be treated as list of image paths. The module will then load all of the listed images.")
-    , loadEverythingSlot("loadEverything", "Forces this module to ignore the maxMemory value and all loading wishes by "
-                                           "callers by loading all given data by default.")
-    , maximumMemoryOccupationSlot("maxMemory",
-          "The maximum memory in Gigabyte that will be occupied by the loaded data. This value can be "
-          "ignored by selecting the loadEverything option.")
-    , imageData(std::make_shared<image_calls::Image2DCall::ImageMap>())
-    , availableFiles(std::make_shared<std::vector<std::string>>())
-    , datahash(0) {
+        : Module()
+        , callRequestImage("requestImage", "Slot that provides the data of the loaded images")
+        , filenameSlot("filepath",
+              "Path to the image file (*.png, *.bmp) that should be loaded. If the file to load has a *.txt extension "
+              "the "
+              "file will be treated as list of image paths. The module will then load all of the listed images.")
+        , loadEverythingSlot("loadEverything",
+              "Forces this module to ignore the maxMemory value and all loading wishes by "
+              "callers by loading all given data by default.")
+        , maximumMemoryOccupationSlot("maxMemory",
+              "The maximum memory in Gigabyte that will be occupied by the loaded data. This value can be "
+              "ignored by selecting the loadEverything option.")
+        , imageData(std::make_shared<image_calls::Image2DCall::ImageMap>())
+        , availableFiles(std::make_shared<std::vector<std::string>>())
+        , datahash(0) {
 
     this->callRequestImage.SetCallback(image_calls::Image2DCall::ClassName(),
         image_calls::Image2DCall::FunctionName(image_calls::Image2DCall::CallForGetData), &ImageLoader::GetData);
@@ -73,7 +75,9 @@ ImageLoader::ImageLoader(void)
 /*
  * ImageLoader::~ImageLoader
  */
-ImageLoader::~ImageLoader(void) { this->Release(); }
+ImageLoader::~ImageLoader(void) {
+    this->Release();
+}
 
 /*
  * ImageLoader::create
@@ -100,7 +104,8 @@ void ImageLoader::release(void) {
  */
 bool ImageLoader::GetData(core::Call& call) {
     image_calls::Image2DCall* ic = dynamic_cast<image_calls::Image2DCall*>(&call);
-    if (ic == nullptr) return false;
+    if (ic == nullptr)
+        return false;
 
     if (this->newImageAvailable) {
         this->imageMutex.lock();
@@ -121,7 +126,8 @@ bool ImageLoader::GetData(core::Call& call) {
  */
 bool ImageLoader::GetMetaData(core::Call& call) {
     image_calls::Image2DCall* ic = dynamic_cast<image_calls::Image2DCall*>(&call);
-    if (ic == nullptr) return false;
+    if (ic == nullptr)
+        return false;
 
     if (this->filenameSlot.IsDirty()) {
         this->filenameSlot.ResetDirty();
@@ -150,7 +156,8 @@ bool ImageLoader::GetMetaData(core::Call& call) {
                     this->queueMutex.unlock();
                 }
             } else {
-                vislib::sys::Log::DefaultLog.WriteError("ImageLoader: The file \"%s\" could not be opened", path);
+                core::utility::log::Log::DefaultLog.WriteError(
+                    "ImageLoader: The file \"%s\" could not be opened", path);
                 return false;
             }
         }
@@ -166,7 +173,8 @@ bool ImageLoader::GetMetaData(core::Call& call) {
  */
 bool ImageLoader::SetWishlist(core::Call& call) {
     image_calls::Image2DCall* ic = dynamic_cast<image_calls::Image2DCall*>(&call);
-    if (ic == nullptr) return false;
+    if (ic == nullptr)
+        return false;
     const auto wishlist = ic->GetWishlistPtr();
 
     if (wishlist == nullptr) {
@@ -181,7 +189,7 @@ bool ImageLoader::SetWishlist(core::Call& call) {
     } else {
         for (const auto& id : *wishlist) {
             if (id >= wishlist->size()) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                core::utility::log::Log::DefaultLog.WriteError(
                     "There is no image with the id %u", static_cast<unsigned int>(id));
                 continue;
             }
@@ -227,7 +235,7 @@ bool ImageLoader::DeleteData(core::Call& call) {
  */
 bool ImageLoader::loadImage(const std::filesystem::path& path) {
     if (!std::filesystem::is_regular_file(path)) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        core::utility::log::Log::DefaultLog.WriteError(
             "ImageLoader: Could not open the file \"%s\" because it is no regular file", path.c_str());
     }
     auto fileSize = std::filesystem::file_size(path);
@@ -237,7 +245,8 @@ bool ImageLoader::loadImage(const std::filesystem::path& path) {
     if (file.is_open()) {
         file.read(reinterpret_cast<char*>(loadedFile.data()), fileSize);
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("ImageLoader: Could not open the file \"%s\" from disk", path.c_str());
+        core::utility::log::Log::DefaultLog.WriteError(
+            "ImageLoader: Could not open the file \"%s\" from disk", path.c_str());
     }
 
     vislib::graphics::BitmapImage image;
@@ -253,7 +262,7 @@ bool ImageLoader::loadImage(const std::filesystem::path& path) {
         vislib::sys::Log::DefaultLog.WriteInfo("Successfully loaded image %u", this->loaded);
 #endif
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("ImageLoader: failed decoding file \"%s\"", path.c_str());
+        core::utility::log::Log::DefaultLog.WriteError("ImageLoader: failed decoding file \"%s\"", path.c_str());
         return false;
     }
 

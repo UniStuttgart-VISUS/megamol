@@ -7,7 +7,7 @@
 #include "HierarchicalClustering.h"
 #include "PictureData.h"
 #include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <glad/glad.h>
 #include <iostream>

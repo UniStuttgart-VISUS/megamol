@@ -1,7 +1,7 @@
 #include "EnzymeClassProvider.h"
 
 #include <sstream>
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::molsurfmapcluster;
@@ -109,9 +109,7 @@ void EnzymeClassProvider::loadMapFromFile(const core::CoreInstance& coreInstance
                         int val;
                         try {
                             val = std::stoi(idsubstr);
-                        } catch (...) {
-                            val = -1;
-                        }
+                        } catch (...) { val = -1; }
                         res.second[j] = val;
                         ++j;
                     }
@@ -123,7 +121,8 @@ void EnzymeClassProvider::loadMapFromFile(const core::CoreInstance& coreInstance
             classMap.insert(res);
         }
     } else {
-        vislib::sys::Log::DefaultLog.WriteError("Could not load the configuration file \"%s\"", filepath.c_str());
+        core::utility::log::Log::DefaultLog.WriteError(
+            "Could not load the configuration file \"%s\"", filepath.c_str());
     }
 }
 

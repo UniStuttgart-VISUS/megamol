@@ -12,8 +12,8 @@
 #include <string>
 #include "CallPNGPics.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::molsurfmapcluster;
@@ -22,9 +22,9 @@ using namespace megamol::molsurfmapcluster;
  * PNGPicLoader::PNGPicLoader
  */
 PNGPicLoader::PNGPicLoader(void)
-    : core::Module()
-    , filenameSlot("filename", "The path to the file that contains the PNG-Filepaths to be loaded")
-    , getDataSlot("getdata", "The slot publishing the loaded data") {
+        : core::Module()
+        , filenameSlot("filename", "The path to the file that contains the PNG-Filepaths to be loaded")
+        , getDataSlot("getdata", "The slot publishing the loaded data") {
 
     // For each CalleeSlot all callback functions have to be set
     this->getDataSlot.SetCallback(CallPNGPics::ClassName(), "GetData", &PNGPicLoader::getDataCallback);
@@ -44,7 +44,9 @@ PNGPicLoader::PNGPicLoader(void)
 /*
  * PNGPicLoader::PNGPicLoader
  */
-PNGPicLoader::~PNGPicLoader(void) { this->Release(); }
+PNGPicLoader::~PNGPicLoader(void) {
+    this->Release();
+}
 
 /*
  * PNGPicLoader::assertData
@@ -62,24 +64,25 @@ void PNGPicLoader::assertData(void) {
             loaded = this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
         } catch (vislib::Exception ex) {
             // a known vislib exception was raised
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
                 "Unexpected exception: %s at (%s, %d)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
             loaded = false;
         } catch (...) {
             // an unknown exception was raised
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unexpected exception: unkown exception\n");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Unexpected exception: unkown exception\n");
             loaded = false;
         }
 
         if (loaded) {
             // All PNG-Pics has been successfully loaded
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO,
                 "Loaded %I64u PNG-Pictures from file \"%s\"", numPics,
                 vislib::StringA(this->filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
         } else {
             // Picture not successfully loaded
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Failed to load file \"%s\"",
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+                "Failed to load file \"%s\"",
                 vislib::StringA(this->filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
             // we are in an erronous state, clean up everything
             this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
@@ -106,7 +109,8 @@ bool PNGPicLoader::create(void) {
 bool PNGPicLoader::getDataCallback(core::Call& caller) {
 
     CallPNGPics* cs = dynamic_cast<CallPNGPics*>(&caller);
-    if (cs == nullptr) return false;
+    if (cs == nullptr)
+        return false;
 
     this->assertData();
 
@@ -121,7 +125,8 @@ bool PNGPicLoader::getDataCallback(core::Call& caller) {
 bool PNGPicLoader::getExtentCallback(core::Call& caller) {
 
     CallPNGPics* cs = dynamic_cast<CallPNGPics*>(&caller);
-    if (cs == nullptr) return false;
+    if (cs == nullptr)
+        return false;
 
     this->assertData();
 
@@ -137,13 +142,14 @@ bool PNGPicLoader::getExtentCallback(core::Call& caller) {
 bool PNGPicLoader::load(const vislib::TString& filename) {
 
     if (filename.IsEmpty()) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "No file to load (filename empty)");
+        core::utility::log::Log::DefaultLog.WriteMsg(
+            core::utility::log::Log::LEVEL_INFO, "No file to load (filename empty)");
         return true;
     }
 
     this->bbox.Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
     std::string line;
-    std::ifstream file(T2A(filename));
+    std::ifstream file(filename.PeekBuffer());
     if (file.is_open()) {
         // Make all ready and clean old up
         this->pngpics.clear();
@@ -154,23 +160,28 @@ bool PNGPicLoader::load(const vislib::TString& filename) {
         while (std::getline(file, line)) {
             lineNum++;
             vislib::StringA lineA(line.c_str());
-            if (lineA.IsEmpty()) continue; // Empty line move on
+            if (lineA.IsEmpty())
+                continue; // Empty line move on
             lineA.TrimSpaces();
-            if (lineA.StartsWith("#")) continue; // Comment move on
+            if (lineA.StartsWith("#"))
+                continue; // Comment move on
 
             // try to load PNG File from String
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Load Picture %s", lineA);
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO, "Load Picture %s", lineA);
 
             // OPen File and check for PNG-Picture
             FILE* fp = fopen(lineA, "rb");
 
             png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-            if (!png) abort();
+            if (!png)
+                abort();
 
             png_infop info = png_create_info_struct(png);
-            if (!info) abort();
+            if (!info)
+                abort();
 
-            if (setjmp(png_jmpbuf(png))) abort();
+            if (setjmp(png_jmpbuf(png)))
+                abort();
 
             // Init PNG-Pic
             png_set_palette_to_rgb(png);
@@ -205,4 +216,6 @@ bool PNGPicLoader::load(const vislib::TString& filename) {
 /*
  * PNGPicLoader::release
  */
-void PNGPicLoader::release(void) { this->pngpics.clear(); }
+void PNGPicLoader::release(void) {
+    this->pngpics.clear();
+}

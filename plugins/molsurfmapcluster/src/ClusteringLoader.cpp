@@ -13,9 +13,9 @@
 #include <string>
 #include "CallClusteringLoader.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/utility/graphics/BitmapCodecCollection.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/StringTokeniser.h"
-#include "vislib/graphics/BitmapCodecCollection.h"
-#include "vislib/sys/Log.h"
 
 using namespace megamol;
 using namespace megamol::molsurfmapcluster;
@@ -24,9 +24,9 @@ using namespace megamol::molsurfmapcluster;
  * PNGPicLoader::PNGPicLoader
  */
 ClusteringLoader::ClusteringLoader(void)
-    : core::Module()
-    , filenameSlot("filename", "The path to the dot file")
-    , getDataSlot("getdata", "The slot publishing the loaded data") {
+        : core::Module()
+        , filenameSlot("filename", "The path to the dot file")
+        , getDataSlot("getdata", "The slot publishing the loaded data") {
 
     // For each CalleeSlot all callback functions have to be set
     this->getDataSlot.SetCallback(CallClusteringLoader::ClassName(), "GetData", &ClusteringLoader::getDataCallback);
@@ -45,7 +45,9 @@ ClusteringLoader::ClusteringLoader(void)
 /*
  * PNGPicLoader::PNGPicLoader
  */
-ClusteringLoader::~ClusteringLoader(void) { this->Release(); }
+ClusteringLoader::~ClusteringLoader(void) {
+    this->Release();
+}
 
 /*
  * PNGPicLoader::assertData
@@ -62,24 +64,25 @@ void ClusteringLoader::assertData(void) {
             loaded = this->load(this->filenameSlot.Param<core::param::FilePathParam>()->Value());
         } catch (vislib::Exception ex) {
             // a known vislib exception was raised
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
                 "Unexpected exception: %s at (%s, %d)\n", ex.GetMsgA(), ex.GetFile(), ex.GetLine());
             loaded = false;
         } catch (...) {
             // an unknown exception was raised
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unexpected exception: unkown exception\n");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Unexpected exception: unkown exception\n");
             loaded = false;
         }
 
         if (loaded) {
             // All PNG-Pics has been successfully loaded
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO,
                 "Loaded %I64u Pictrues from file \"%s\"", leaves.size(),
                 vislib::StringA(this->filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
         } else {
             // Picture not successfully loaded
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Failed to load file \"%s\"",
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+                "Failed to load file \"%s\"",
                 vislib::StringA(this->filenameSlot.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
             // we are in an erronous state, clean up everything
             this->bbox.Set(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
@@ -104,7 +107,8 @@ bool ClusteringLoader::create(void) {
 bool ClusteringLoader::getDataCallback(core::Call& caller) {
 
     CallClusteringLoader* cs = dynamic_cast<CallClusteringLoader*>(&caller);
-    if (cs == nullptr) return false;
+    if (cs == nullptr)
+        return false;
 
     this->assertData();
 
@@ -119,7 +123,8 @@ bool ClusteringLoader::getDataCallback(core::Call& caller) {
 bool ClusteringLoader::getExtentCallback(core::Call& caller) {
 
     CallClusteringLoader* cs = dynamic_cast<CallClusteringLoader*>(&caller);
-    if (cs == nullptr) return false;
+    if (cs == nullptr)
+        return false;
 
     this->assertData();
 
@@ -135,13 +140,14 @@ bool ClusteringLoader::getExtentCallback(core::Call& caller) {
 bool ClusteringLoader::load(const vislib::TString& filename) {
 
     if (filename.IsEmpty()) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "No file to load (filename empty)");
+        core::utility::log::Log::DefaultLog.WriteMsg(
+            core::utility::log::Log::LEVEL_INFO, "No file to load (filename empty)");
         return true;
     }
 
     this->bbox.Set(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
     std::string line;
-    std::ifstream file(T2A(filename));
+    std::ifstream file(filename.PeekBuffer());
     if (file.is_open()) {
         // Make all ready and clean old up
         int64_t lineNum = 0;
@@ -150,10 +156,13 @@ bool ClusteringLoader::load(const vislib::TString& filename) {
         while (std::getline(file, line)) {
             lineNum++;
             vislib::StringA lineA(line.c_str());
-            if (lineA.IsEmpty()) continue; // Empty line move on
+            if (lineA.IsEmpty())
+                continue; // Empty line move on
             lineA.TrimSpaces();
-            if (lineA.StartsWith("#")) continue;     // Comment move on
-            if (lineA.StartsWith("graph")) continue; // Start line
+            if (lineA.StartsWith("#"))
+                continue; // Comment move on
+            if (lineA.StartsWith("graph"))
+                continue; // Start line
 
             if (lineA.Contains("--")) {
                 // Line is node
@@ -181,8 +190,8 @@ bool ClusteringLoader::load(const vislib::TString& filename) {
                             s.Trim("\"");
                             node->pic->path = s;
                             // Load pic...
-                            vislib::sys::Log::DefaultLog.WriteMsg(
-                                vislib::sys::Log::LEVEL_INFO, "Load Picture: %s", node->pic->path);
+                            core::utility::log::Log::DefaultLog.WriteMsg(
+                                core::utility::log::Log::LEVEL_INFO, "Load Picture: %s", node->pic->path);
                             // OPen File and check for PNG-Picture
                             /*
                             FILE* fp = fopen(node->pic->name, "rb");
@@ -204,7 +213,8 @@ bool ClusteringLoader::load(const vislib::TString& filename) {
                             std::vector<uint8_t> loadedFile;
                             loadedFile.resize(fileSize);
                             std::ifstream fp(node->pic->path, std::ios::binary);
-                            if (!fp.is_open()) abort();
+                            if (!fp.is_open())
+                                abort();
                             file.read(reinterpret_cast<char*>(loadedFile.data()), fileSize);
                             node->pic->image = new vislib::graphics::BitmapImage(); // ugly shit, but is not removable
                                                                                     // without major refactoring
