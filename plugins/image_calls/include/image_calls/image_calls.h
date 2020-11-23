@@ -3,8 +3,8 @@
  * Copyright (C) 2009-2015 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
-#ifndef image_calls_H_INCLUDED
-#define image_calls_H_INCLUDED
+#ifndef IMAGE_CALLS_H_INCLUDED
+#define IMAGE_CALLS_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -18,12 +18,12 @@
 // TRISOUPPLUGIN_API functions as being imported from a DLL, whereas this DLL sees symbols
 // defined with this macro as being exported.
 #ifdef image_calls_EXPORTS
-#define image_calls_API __declspec(dllexport)
+#define IMAGE_CALLS_API __declspec(dllexport)
 #else
-#define image_calls_API __declspec(dllimport)
+#define IMAGE_CALLS_API __declspec(dllimport)
 #endif
 #else /* _WIN32 */
-#define image_calls_API
+#define IMAGE_CALLS_API
 #endif /* _WIN32 */
 
 #include "mmcore/utility/plugins/Plugin200Instance.h"
@@ -38,7 +38,7 @@ extern "C" {
  *
  * @return 200 -- (ver.: 2.00)
  */
-image_calls_API int mmplgPluginAPIVersion(void);
+IMAGE_CALLS_API int mmplgPluginAPIVersion(void);
 
 /**
  * Provides compatibility information
@@ -51,7 +51,7 @@ image_calls_API int mmplgPluginAPIVersion(void);
  * @remarks Always use 'mmplgReleasePluginCompatibilityInfo' to release the
  *          memory of the returned struct.
  */
-image_calls_API
+IMAGE_CALLS_API
 ::megamol::core::utility::plugins::PluginCompatibilityInfo *
 mmplgGetPluginCompatibilityInfo(
     ::megamol::core::utility::plugins::ErrorCallback onError);
@@ -62,7 +62,7 @@ mmplgGetPluginCompatibilityInfo(
  *
  * @param ci The compatibility information struct to be released
  */
-image_calls_API void mmplgReleasePluginCompatibilityInfo(
+IMAGE_CALLS_API void mmplgReleasePluginCompatibilityInfo(
     ::megamol::core::utility::plugins::PluginCompatibilityInfo* ci);
 
 /**
@@ -75,7 +75,7 @@ image_calls_API void mmplgReleasePluginCompatibilityInfo(
  * @remarks Always use 'mmplgReleasePluginInstance' to release the memory of
  *          the returned object.
  */
-image_calls_API
+IMAGE_CALLS_API
 ::megamol::core::utility::plugins::AbstractPluginInstance*
 mmplgGetPluginInstance
     (::megamol::core::utility::plugins::ErrorCallback onError);
@@ -86,7 +86,7 @@ mmplgGetPluginInstance
  *
  * @param pi The plugin instance to be released
  */
-image_calls_API void mmplgReleasePluginInstance(
+IMAGE_CALLS_API void mmplgReleasePluginInstance(
     ::megamol::core::utility::plugins::AbstractPluginInstance* pi);
 
 #ifdef __cplusplus
