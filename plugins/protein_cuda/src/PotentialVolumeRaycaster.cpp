@@ -47,6 +47,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein_calls;
 using namespace megamol::protein_cuda;
+using namespace megamol::core::utility::log;
 
 
 /*
@@ -353,7 +354,6 @@ void PotentialVolumeRaycaster::release(void) {
 bool PotentialVolumeRaycaster::computeDensityMap(
         const MolecularDataCall *mol) {
 
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     //Vec3f gridXAxis, gridYAxis, gridZAxis;
@@ -523,7 +523,6 @@ bool PotentialVolumeRaycaster::computeDensityMap(
  * megamol::protein_cuda::PotentialVolumeRaycaster::create
  */
 bool PotentialVolumeRaycaster::create() {
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     // Create quicksurf objects
@@ -626,7 +625,7 @@ bool PotentialVolumeRaycaster::createFbos(UINT width, UINT height) {
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                "%s: (re)creating raycasting fbo.", this->ClassName());
 
     glEnable(GL_TEXTURE_2D);
@@ -652,7 +651,7 @@ bool PotentialVolumeRaycaster::createFbos(UINT width, UINT height) {
 
     if(!this->rcFbo.Create(width, height, 3, cap0, dap0, sap0)) return false;
 
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                "%s: (re)creating source fbo.", this->ClassName());
 
     glEnable(GL_TEXTURE_2D);
@@ -823,7 +822,6 @@ bool PotentialVolumeRaycaster::initPotential(VTIDataCall *cmd) {
  */
 bool PotentialVolumeRaycaster::Render(core::Call& call) {
 
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     // Get render call

@@ -23,16 +23,16 @@ class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Insta
 public:
     /** ctor */
     plugin_instance(void)
-        : ::megamol::core::utility::plugins::Plugin200Instance(
+            : ::megamol::core::utility::plugins::Plugin200Instance(
 
-              /* machine-readable plugin assembly name */
-              "gui",
+                  /* machine-readable plugin assembly name */
+                  "gui",
 
-              /* human-readable plugin description */
-              "Graphical User Interface Plugin"){
+                  /* human-readable plugin description */
+                  "Graphical User Interface Plugin"){
 
-              // here we could perform addition initialization
-          };
+                  // here we could perform addition initialization
+              };
     /** Dtor */
     virtual ~plugin_instance(void) {
         // here we could perform addition de-initialization

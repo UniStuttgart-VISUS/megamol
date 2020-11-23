@@ -1,7 +1,7 @@
 /*
  * View3D_2.h
  *
- * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2018, 2020 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
@@ -339,6 +339,8 @@ protected:
     /** The angle rotate step in degrees */
     param::ParamSlot viewKeyAngleStepSlot;
 
+    param::ParamSlot viewKeyFixToWorldUpSlot;
+
     /** sensitivity for mouse rotation in WASD mode */
     param::ParamSlot mouseSensitivitySlot;
 
@@ -366,9 +368,18 @@ protected:
     param::ParamSlot cameraEyeParam;
     param::ParamSlot cameraGateScalingParam;
     param::ParamSlot cameraFilmGateParam;
+    param::ParamSlot cameraResolutionXParam;
+    param::ParamSlot cameraResolutionYParam;
     param::ParamSlot cameraCenterOffsetParam;
-    param::ParamSlot cameraHalfApertureRadiansParam;
+    param::ParamSlot cameraHalfApertureDegreesParam;
     param::ParamSlot cameraHalfDisparityParam;
+
+    /** Camara override parameters */
+    param::ParamSlot cameraOvrUpParam;
+    param::ParamSlot cameraOvrLookatParam;
+    param::ParamSlot cameraOvrParam;
+
+    bool cameraOvrCallback(param::ParamSlot& p);
 
     /** The mouse x coordinate */
     float mouseX;

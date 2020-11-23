@@ -1,7 +1,6 @@
-#
-# MegaMol™ Core
-# Copyright 2017, by MegaMol Team
-# Alle Rechte vorbehalten. All rights reserved.
+# MegaMol
+# Copyright (c) 2020, MegaMol Dev Team
+# All rights reserved.
 #
 
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
@@ -15,7 +14,7 @@ endif()
 project(megamol)
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}
+  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install"
     CACHE PATH "default install path" FORCE)
 endif()
 
@@ -42,7 +41,13 @@ include(check_mmdep)
 include(ClangFormat)
 
 # External
-include("CMakeExternals.cmake")
+include("externals/CMakeExternals.cmake")
+
+# Frontend Resources, Input Events interfaces 
+add_subdirectory(${MEGAMOL_DIR}/frontend/resources)
+
+# Frontend Services (e.g. OpenGL_GLFW provider)
+add_subdirectory(${MEGAMOL_DIR}/frontend/services)
 
 # Vislib
 add_subdirectory(${MEGAMOL_VISLIB_DIR})
@@ -53,6 +58,9 @@ add_subdirectory(${MEGAMOL_CORE_DIR})
 # Console
 set(CONSOLE_NAME mmconsole)
 add_subdirectory(${MEGAMOL_CONSOLE_DIR})
+
+# MegaMol.exe, new frontend, Main3000
+add_subdirectory(${MEGAMOL_DIR}/frontend/main)
 
 # Add directory structure for visual studio
 if(WIN32)

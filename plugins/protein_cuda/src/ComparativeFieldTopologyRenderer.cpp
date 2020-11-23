@@ -23,7 +23,7 @@
 #include "mmcore/param/BoolParam.h"
 
 #include "vislib/math/Matrix.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/mathfunctions.h"
 
 #include "protein_calls/VTIDataCall.h"
@@ -42,6 +42,7 @@ bool myisinf(double x) { return !myisnan(x) && myisnan(x - x); } // uses inf-inf
 using namespace megamol;
 using namespace megamol::protein_cuda;
 using namespace megamol::core;
+using namespace megamol::core::utility::log;
 
 
 /*
@@ -356,7 +357,6 @@ bool ComparativeFieldTopologyRenderer::create(void) {
 
     // Load shaders
     using namespace vislib;
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     if(!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) {
@@ -528,7 +528,6 @@ bool ComparativeFieldTopologyRenderer::GetExtents(core::Call& call) {
 bool ComparativeFieldTopologyRenderer::Render(core::Call& call) {
 
     using namespace vislib::math;
-    using namespace vislib::sys;
 
     // Get render call from view3d
     view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
@@ -1115,7 +1114,6 @@ void ComparativeFieldTopologyRenderer::calcElectrostaticField(protein_calls::VTI
 bool ComparativeFieldTopologyRenderer::renderCritPointsSpheres() {
     using namespace vislib;
     using namespace vislib::math;
-    using namespace vislib::sys;
 
     // Render spheres for all critical points found
     vislib::Array<float> spherePos, sphereCol;
@@ -1406,7 +1404,6 @@ bool ComparativeFieldTopologyRenderer::renderCritPointsSpheres() {
 bool ComparativeFieldTopologyRenderer::renderFieldArrows(const protein_calls::VTIDataCall *cmd) {
     using namespace vislib;
     using namespace vislib::math;
-    using namespace vislib::sys;
 
     int arrowCnt = static_cast<int>(cmd->GetGridsize().X()*cmd->GetGridsize().Y()*cmd->GetGridsize().Z());
 
@@ -1566,7 +1563,6 @@ void ComparativeFieldTopologyRenderer::findNeighbours() {
  */
 bool ComparativeFieldTopologyRenderer::renderStreamlineBundleManual() {
     using namespace vislib;
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     // (Re-)calculate streamlines if necessary
@@ -1770,7 +1766,6 @@ bool ComparativeFieldTopologyRenderer::renderStreamlinesRoi(
         const protein_calls::VTIDataCall *cmd0,
         const protein_calls::VTIDataCall *cmd1) {
     using namespace vislib;
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     // (Re-)calculate streamlines if necessary

@@ -15,13 +15,15 @@
 #include "vislib/sys/AutoLock.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/IllegalStateException.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #endif
+
+#include "IOpenGL_Context.h"
 
 using namespace megamol::core;
 
@@ -49,8 +51,20 @@ Module::~Module(void) {
 /*
  * Module::Create
  */
-bool Module::Create(void) {
-    using vislib::sys::Log;
+bool Module::Create(std::vector<megamol::frontend::FrontendResource> resources) {
+    using megamol::core::utility::log::Log;
+
+	const megamol::frontend_resources::IOpenGL_Context* opengl_context = nullptr;
+    auto opengl_context_it = std::find_if(resources.begin(), resources.end(),
+        [&](megamol::frontend::FrontendResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
+
+    if (opengl_context_it != resources.end()) {
+        opengl_context = &opengl_context_it->getResource<megamol::frontend_resources::IOpenGL_Context>();
+    }
+
+	if (opengl_context)
+		opengl_context->activate();
+
     ASSERT(this->instance() != NULL);
     if (!this->created) {
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
@@ -74,6 +88,10 @@ bool Module::Create(void) {
         // Now reregister parents at children
         this->fixParentBackreferences();
     }
+
+	if (opengl_context)
+		opengl_context->close();
+
     return this->created;
 }
 
@@ -111,14 +129,30 @@ vislib::StringA Module::GetDemiRootName() const {
 /*
  * Module::Release
  */
-void Module::Release(void) {
-    using vislib::sys::Log;
+void Module::Release(std::vector<megamol::frontend::FrontendResource> resources) {
+    using megamol::core::utility::log::Log;
+
+    auto opengl_context_it = std::find_if(resources.begin(), resources.end(),
+        [&](megamol::frontend::FrontendResource& dep) { return dep.getIdentifier() == "IOpenGL_Context"; });
+
+	const megamol::frontend_resources::IOpenGL_Context* opengl_context = nullptr;
+
+    if (opengl_context_it != resources.end()) {
+        opengl_context = &opengl_context_it->getResource<megamol::frontend_resources::IOpenGL_Context>();
+    }
+
+	if (opengl_context)
+		opengl_context->activate();
+
     if (this->created) {
         this->release();
         this->created = false;
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 350,
             "Released module \"%s\"\n", typeid(*this).name());
     }
+
+	if (opengl_context)
+		opengl_context->close();
 }
 
 

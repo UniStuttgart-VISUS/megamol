@@ -8,11 +8,14 @@
 /**
  * USED HOTKEYS:
  *
- * - Show/hide Windows: F8-F12
- * - Reset windows:     Shift + F8-F12
- * - Search Paramter:   Shift + Alt + p
- * - Save Project:      Shift + Alt + s
- * - Quit program:      Alt   + F4
+ * - Trigger Screenshot:        F2
+ * - Toggle Main View:          F3
+ * - Reset Windows Positions:   F4
+ * - Show/hide Windows:         F6-F11
+ * - Show/hide Menu:            F12
+ * - Search Parameter:          Ctrl  + p
+ * - Save Running Project:      Ctrl  + s
+ * - Quit Program:              Alt   + F4
  */
 
 #include "stdafx.h"
@@ -23,76 +26,64 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-GUIWindows::GUIWindows()
-    : core_instance(nullptr)
-    , param_slots()
-    , style_param("style", "Color style, theme")
-    , state_param("state", "Current state of all windows. Automatically updated.")
-    , autostart_configurator("autostart_configurator", "Start the configurator at start up automatically. ")
-    , context(nullptr)
-    , impl(Implementation::NONE)
-    , window_manager()
-    , tf_editor()
-    , configurator()
-    , utils()
-    , file_utils()
-    , state()
-    , widgtmap_text()
-    , widgtmap_int()
-    , widgtmap_float()
-    , widgtmap_vec2()
-    , widgtmap_vec3()
-    , widgtmap_vec4()
-    , graph_fonts_reserved(0) {
+GUIWindows::GUIWindows(void)
+        : core_instance(nullptr)
+        , hotkeys()
+        , context(nullptr)
+        , api(GUIImGuiAPI::NO_API)
+        , window_collection()
+        , configurator()
+        , console()
+        , state()
+        , file_browser()
+        , search_widget()
+        , tf_editor_ptr(nullptr)
+        , tooltip()
+        , picking_buffer()
+        , triangle_widget() {
 
-    core::param::EnumParam* styles = new core::param::EnumParam((int)(Styles::DarkColors));
-    styles->SetTypePair(Styles::CorporateGray, "Corporate Gray");
-    styles->SetTypePair(Styles::CorporateWhite, "Corporate White");
-    styles->SetTypePair(Styles::DarkColors, "Dark Colors");
-    styles->SetTypePair(Styles::LightColors, "Light Colors");
-    this->style_param << styles;
-    this->style_param.ForceSetDirty();
-    styles = nullptr;
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F2, core::view::Modifier::NONE), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F3, core::view::Modifier::NONE), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::NONE), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P, core::view::Modifier::CTRL), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_L, core::view::Modifier::CTRL), false};
 
-    this->state_param << new core::param::StringParam("");
+    // Init State
+    this->init_state();
 
-    this->autostart_configurator << new core::param::BoolParam(false);
-
-    this->param_slots.clear();
-    this->param_slots.push_back(&this->state_param);
-    this->param_slots.push_back(&this->style_param);
-    this->param_slots.push_back(&this->autostart_configurator);
-
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = megamol::gui::HotkeyDataType(
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false);
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] =
-        megamol::gui::HotkeyDataType(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_P,
-                                         core::view::Modifier::CTRL | core::view::Modifier::ALT),
-            false);
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT] =
-        megamol::gui::HotkeyDataType(megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S,
-                                         core::view::Modifier::CTRL | core::view::Modifier::ALT),
-            false);
+    this->tf_editor_ptr = std::make_shared<TransferFunctionEditor>();
 }
 
 
-GUIWindows::~GUIWindows() { this->destroyContext(); }
+GUIWindows::~GUIWindows(void) {
+    this->destroyContext();
+}
 
 
 bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 
     if (instance == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[GUI] Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
     this->core_instance = instance;
 
     if (this->createContext()) {
         // Init OpenGL for ImGui
-        const char* glsl_version = "#version 130"; /// "#version 150"
+        const char* glsl_version = "#version 130"; /// "#version 150" or nullptr
         if (ImGui_ImplOpenGL3_Init(glsl_version)) {
-            this->impl = Implementation::OpenGL;
+            this->api = GUIImGuiAPI::OPEN_GL;
             return true;
         }
     }
@@ -101,46 +92,182 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 }
 
 
-bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime) {
+bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time) {
 
-    ImGui::SetCurrentContext(this->context);
-    this->core_instance->SetCurrentImGuiContext(this->context);
-    if (this->context == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
+    // Required to prevent change in gui drawing between pre and post draw
+    this->state.gui_post_drawing_enabled = this->state.gui_pre_drawing_enabled;
 
-    if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM])) {
-        this->shutdown();
+    // Early exit when drawing is disabled
+    if (!this->state.gui_pre_drawing_enabled) {
+        if (this->core_instance != nullptr) {
+            this->core_instance->SetCurrentImGuiContext(nullptr);
+        }
         return true;
     }
 
-    this->validateParameter();
+    // Check for initialized imgui api
+    if (this->api == GUIImGuiAPI::NO_API) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line "
+            "%d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    // Check for existing imgui context
+    if (this->context == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
 
-    this->checkMultipleHotkeyAssignement();
+    // Propagate ImGui context to core instance
+    if (this->core_instance != nullptr) {
+        this->core_instance->SetCurrentImGuiContext(this->context);
+    }
 
-    auto viewportWidth = viewport.Width();
-    auto viewportHeight = viewport.Height();
-
-    // Set IO stuff for next frame --------------------------------------------
+    // Set ImGui context
+    ImGui::SetCurrentContext(this->context);
+    // Check for existing fonts if shared between multiple contexts
     ImGuiIO& io = ImGui::GetIO();
-    io.DisplaySize = ImVec2((float)viewportWidth, (float)viewportHeight);
-    io.DisplayFramebufferScale = ImVec2(1.0, 1.0);
+    if (io.Fonts->Fonts.Size < 1) {
+        /// XXX TODO Solution for now is to shutdown megamol completely
+        /// Because if 'main' (= first) created imgui context is destroyed, fonts can not be restored for other
+        /// contexts?!
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Found no valid fonts. Maybe the ImGui context the fonts were shared with is destroyed. "
+            "[%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+        this->triggerCoreInstanceShutdown();
+        this->state.shutdown_triggered = true;
+        return false;
+    }
 
-    if ((instanceTime - this->state.last_instance_time) < 0.0) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+    // Create new gui graph once if core instance graph is used (otherwise graph should already exist)
+    if (this->state.graph_uid == GUI_INVALID_ID)
+        this->SynchronizeGraphs();
+
+    // Check if gui graph is present
+    if (this->state.graph_uid == GUI_INVALID_ID) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Failed to find required gui graph for running core graph. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    // Set stuff for next frame --------------------------------------------
+
+    // IO
+    io.DisplaySize = ImVec2(window_size.x, window_size.y);
+    if ((window_size.x > 0.0f) && (window_size.y > 0.0f)) {
+        io.DisplayFramebufferScale = ImVec2(framebuffer_size.x / window_size.x, framebuffer_size.y / window_size.y);
+    }
+
+    if ((instance_time - this->state.last_instance_time) < 0.0) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[GUI] Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
             __LINE__);
     }
-    io.DeltaTime = ((instanceTime - this->state.last_instance_time) > 0.0)
-                       ? (static_cast<float>(instanceTime - this->state.last_instance_time))
+    io.DeltaTime = ((instance_time - this->state.last_instance_time) > 0.0)
+                       ? (static_cast<float>(instance_time - this->state.last_instance_time))
                        : (io.DeltaTime);
-    this->state.last_instance_time = ((instanceTime - this->state.last_instance_time) > 0.0)
-                                         ? (instanceTime)
+    this->state.last_instance_time = ((instance_time - this->state.last_instance_time) > 0.0)
+                                         ? (instance_time)
                                          : (this->state.last_instance_time + io.DeltaTime);
 
-    // Changes that need to be applied before next frame ----------------------
+    // Process hotkeys
+    this->checkMultipleHotkeyAssignement();
+    if (this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM].is_pressed) {
+        this->triggerCoreInstanceShutdown();
+        this->state.shutdown_triggered = true;
+        return true;
+    }
+    if (this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].is_pressed) {
+        this->state.menu_visible = !this->state.menu_visible;
+        this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].is_pressed = false;
+    }
+    if (this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT].is_pressed) {
+        this->state.screenshot_triggered = true;
+        this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT].is_pressed = false;
+    }
+    if (this->state.toggle_main_view || this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].is_pressed) {
+        GraphPtr_t graph_ptr;
+        if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+            megamol::gui::ModulePtrVector_t::const_iterator module_mainview_iter = graph_ptr->GetModules().begin();
+            // Search for first main view and set next view to main view (= graph entry point)
+            for (auto module_iter = graph_ptr->GetModules().begin(); module_iter != graph_ptr->GetModules().end();
+                 module_iter++) {
+                if ((*module_iter)->is_view) {
+                    if ((*module_iter)->IsMainView()) {
+                        // Remove first found main view
+                        (*module_iter)->main_view_name.clear();
+                        Graph::QueueData queue_data;
+                        queue_data.name_id = (*module_iter)->FullName();
+                        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                        if (module_iter != graph_ptr->GetModules().end()) {
+                            module_mainview_iter = module_iter + 1;
+                        }
+                    }
+                }
+            }
+            if ((module_mainview_iter == graph_ptr->GetModules().begin()) ||
+                (module_mainview_iter != graph_ptr->GetModules().end())) {
+                for (auto module_iter = module_mainview_iter; module_iter != graph_ptr->GetModules().end();
+                     module_iter++) {
+                    if ((*module_iter)->is_view) {
+                        (*module_iter)->main_view_name = graph_ptr->GenerateUniqueMainViewName();
+                        Graph::QueueData queue_data;
+                        queue_data.name_id = (*module_iter)->FullName();
+                        graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                        break;
+                    }
+                }
+            }
+        }
+        this->state.toggle_main_view = false;
+        this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].is_pressed = false;
+    }
+
+    // Auto-save state
+    this->state.win_save_delay += io.DeltaTime;
+    if (this->state.autosave_gui_state && this->state.win_save_state && (this->state.win_save_delay > 1.0f)) {
+        // Delayed saving after triggering saving state (in seconds).
+        GraphPtr_t graph_ptr;
+        if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+            std::string filename = graph_ptr->GetFilename();
+            this->configurator.GetGraphCollection().SaveProjectToFile(
+                this->state.graph_uid, filename, this->dump_state_to_file(filename));
+        }
+        this->state.win_save_state = false;
+    }
+
+    // Style
+    if (this->state.style_changed) {
+        ImGuiStyle& style = ImGui::GetStyle();
+        switch (this->state.style) {
+        case (GUIWindows::Styles::DarkColors): {
+            DefaultStyle();
+            ImGui::StyleColorsDark();
+            style.WindowRounding = 0.0f;
+            style.Colors[ImGuiCol_ChildBg] = style.Colors[ImGuiCol_WindowBg];
+        } break;
+        case (GUIWindows::Styles::LightColors): {
+            DefaultStyle();
+            ImGui::StyleColorsLight();
+            style.WindowRounding = 0.0f;
+            style.Colors[ImGuiCol_ChildBg] = style.Colors[ImGuiCol_WindowBg];
+        } break;
+        case (GUIWindows::Styles::CorporateGray): {
+            CorporateGreyStyle();
+        } break;
+        case (GUIWindows::Styles::CorporateWhite): {
+            CorporateWhiteStyle();
+        } break;
+        default:
+            break;
+        }
+        this->state.style_changed = false;
+    }
+
     // Loading new font (set in FONT window)
     if (!this->state.font_file.empty()) {
         ImFontConfig config;
@@ -151,22 +278,22 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
         GUIUtils::Utf8Encode(this->state.font_file);
         io.Fonts->AddFontFromFileTTF(this->state.font_file.c_str(), this->state.font_size, &config);
         ImGui_ImplOpenGL3_CreateFontsTexture();
-        /// Load last added font
+        // Load last added font
         io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
         this->state.font_file.clear();
     }
 
     // Loading new font from state (set in loaded FONT window configuration)
-    if (this->state.font_index >= this->graph_fonts_reserved) {
+    if (this->state.font_index >= this->state.graph_fonts_reserved) {
         if (this->state.font_index < static_cast<unsigned int>(io.Fonts->Fonts.Size)) {
             io.FontDefault = io.Fonts->Fonts[this->state.font_index];
         }
         this->state.font_index = GUI_INVALID_ID;
     }
 
-    // Deleting window (set in menu of MAIN window)
+    // Delete window
     if (!this->state.win_delete.empty()) {
-        this->window_manager.DeleteWindowConfiguration(this->state.win_delete);
+        this->window_collection.DeleteWindowConfiguration(this->state.win_delete);
         this->state.win_delete.clear();
     }
 
@@ -180,29 +307,68 @@ bool GUIWindows::PreDraw(vislib::math::Rectangle<int> viewport, double instanceT
 
 bool GUIWindows::PostDraw(void) {
 
-    if (ImGui::GetCurrentContext() != this->context) {
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "Unknown ImGui context ... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    // Early exit when drawing is disabled
+    if (!this->state.gui_post_drawing_enabled) {
+        return true;
+    }
+
+    // Check for initialized imgui api
+    if (this->api == GUIImGuiAPI::NO_API) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line "
+            "%d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    ImGui::SetCurrentContext(this->context);
+    // Check for existing imgui context
     if (this->context == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-
+    // Check for expected imgui context
+    if (ImGui::GetCurrentContext() != this->context) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[GUI] Unknown ImGui context ... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    // Check for existing font atlas if shared between multiple contexts
     ImGuiIO& io = ImGui::GetIO();
-    ImVec2 viewport = ImVec2(io.DisplaySize.x, io.DisplaySize.y);
+    if (io.Fonts->Fonts.Size < 1) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Found no valid font atlas. Maybe the ImGui context the font atlas was shared with is destroyed. "
+            "[%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    ImVec2 viewport = io.DisplaySize;
 
-    // Draw GUI Windows -------------------------------------------------------
-    const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-        // Loading font (from FONT window configuration - even if FONT window is not shown)
-        if (wc.buf_font_reset) {
+    // Main Menu ---------------------------------------------------------------
+    if (this->state.menu_visible) {
+        if (ImGui::BeginMainMenuBar()) {
+            this->drawMenu();
+            ImGui::EndMainMenuBar();
+        }
+    }
+
+    // Global Docking Space ---------------------------------------------------
+/// DOCKING
+#if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
+    ImGuiStyle& style = ImGui::GetStyle();
+    auto child_bg = style.Colors[ImGuiCol_ChildBg];
+    style.Colors[ImGuiCol_ChildBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+    style.Colors[ImGuiCol_ChildBg] = child_bg;
+#endif
+
+    // Draw Windows ------------------------------------------------------------
+    const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
+        // Loading changed window state of font (even if window is not shown)
+        if ((wc.win_callback == WindowCollection::DrawCallbacks::FONT) && wc.buf_font_reset) {
             if (!wc.font_name.empty()) {
                 this->state.font_index = GUI_INVALID_ID;
-                for (unsigned int n = this->graph_fonts_reserved; n < static_cast<unsigned int>(io.Fonts->Fonts.Size);
-                     n++) {
+                for (unsigned int n = this->state.graph_fonts_reserved;
+                     n < static_cast<unsigned int>(io.Fonts->Fonts.Size); n++) {
                     std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
                     GUIUtils::Utf8Decode(font_name);
                     if (font_name == wc.font_name) {
@@ -210,62 +376,131 @@ bool GUIWindows::PostDraw(void) {
                     }
                 }
                 if (this->state.font_index == GUI_INVALID_ID) {
-                    vislib::sys::Log::DefaultLog.WriteWarn(
-                        "Could not find font '%s' for loaded state. [%s, %s, line %d]\n", wc.font_name.c_str(),
+                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                        "[GUI] Could not find font '%s' for loaded state. [%s, %s, line %d]\n", wc.font_name.c_str(),
                         __FILE__, __FUNCTION__, __LINE__);
                 }
             }
             wc.buf_font_reset = false;
         }
 
+        // Loading changed window state of transfer function editor (even if window is not shown)
+        if ((wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) && wc.buf_tfe_reset) {
+            this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
+            this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
+
+            GraphPtr_t graph_ptr;
+            if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+                for (auto& module_ptr : graph_ptr->GetModules()) {
+                    std::string module_full_name = module_ptr->FullName();
+                    for (auto& param : module_ptr->parameters) {
+                        std::string param_full_name = module_full_name + "::" + param.full_name;
+                        if ((wc.tfe_active_param == param_full_name) && (param.type == Param_t::TRANSFERFUNCTION)) {
+                            this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
+                            this->tf_editor_ptr->SetTransferFunction(std::get<std::string>(param.GetValue()), true);
+                        }
+                    }
+                }
+            }
+            wc.buf_tfe_reset = false;
+        }
+
+        // Update log console
+        if (wc.win_callback == WindowCollection::DrawCallbacks::LOGCONSOLE) {
+            this->console.Update(wc);
+        }
+
         // Draw window content
         if (wc.win_show) {
+
+            // Change window flags depending on current view of transfer function editor
+            if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {
+                if (this->tf_editor_ptr->IsMinimized()) {
+                    wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
+                                   ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
+                } else {
+                    wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
+                }
+                wc.tfe_view_minimized = this->tf_editor_ptr->IsMinimized();
+                wc.tfe_view_vertical = this->tf_editor_ptr->IsVertical();
+            }
+
             ImGui::SetNextWindowBgAlpha(1.0f);
-            if (!ImGui::Begin(wn.c_str(), &wc.win_show, wc.win_flags)) {
+            ImGui::SetNextWindowCollapsed(wc.win_collapsed, ImGuiCond_Always);
+
+            wc.win_soft_reset |= this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS].is_pressed;
+
+            // Begin Window
+            auto window_title = wc.win_name + "     " + wc.win_hotkey.ToString();
+            if (!ImGui::Begin(window_title.c_str(), &wc.win_show, wc.win_flags)) {
+                wc.win_collapsed = ImGui::IsWindowCollapsed();
                 ImGui::End(); // early ending
                 return;
             }
 
-            // Always set configurator window size to current viewport
-            if (wc.win_callback == WindowManager::DrawCallbacks::CONFIGURATOR) {
-                wc.win_size = viewport;
-                wc.win_reset = true;
-            }
-
-            // Apply soft reset of window position and size (before calling window callback)
-            if (wc.win_soft_reset) {
-                this->window_manager.SoftResetWindowSizePos(wn, wc);
-                wc.win_soft_reset = false;
-            }
-            // Apply reset after new state has been loaded (before calling window callback)
-            if (wc.win_reset) {
-                this->window_manager.ResetWindowOnStateLoad(wn, wc);
-                wc.win_reset = false;
-            }
+            bool collapsing_changed = false;
+            this->window_sizing_and_positioning(wc, collapsing_changed);
 
             // Calling callback drawing window content
-            auto cb = this->window_manager.WindowCallback(wc.win_callback);
+            auto cb = this->window_collection.WindowCallback(wc.win_callback);
             if (cb) {
-                cb(wn, wc);
+                cb(wc);
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(
-                    "Missing valid callback for WindowDrawCallback: '%d'.[%s, %s, line %d]\n", (int)wc.win_callback,
-                    __FILE__, __FUNCTION__, __LINE__);
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] Missing valid callback for WindowDrawCallback: '%d'. [%s, %s, line %d]\n",
+                    (int) wc.win_callback, __FILE__, __FUNCTION__, __LINE__);
             }
 
-            // Saving current window position and size for all window configurations for possible state saving.
+            // Saving some of the current window state.
             wc.win_position = ImGui::GetWindowPos();
             wc.win_size = ImGui::GetWindowSize();
+            if (!collapsing_changed) {
+                wc.win_collapsed = ImGui::IsWindowCollapsed();
+            }
 
             ImGui::End();
         }
     };
-    this->window_manager.EnumWindows(func);
+    this->window_collection.EnumWindows(func);
 
-    // Render the current ImGui frame -----------------------------------------
+    // Draw global parameter widgets -------------------------------------------
+
+    /// DEBUG TEST OpenGL Picking
+    // auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
+    // this->picking_buffer.EnableInteraction(viewport_dim);
+
+    GraphPtr_t graph_ptr;
+    if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+        for (auto& module_ptr : graph_ptr->GetModules()) {
+
+            /// DEBUG TEST OpenGL Picking
+            /// TODO Pass picked UID to parameters
+
+            module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "",
+                vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN), false,
+                ParameterPresentation::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr);
+        }
+    }
+
+    /// DEBUG TEST OpenGL Picking
+    // unsigned int id = 5;
+    // this->picking_buffer.AddInteractionObject(id, this->triangle_widget.GetInteractions(id));
+    // this->triangle_widget.Draw(
+    //    id, glm::vec2(0.0f, 200.0f), viewport_dim, this->picking_buffer.GetPendingManipulations());
+    // this->picking_buffer.DisableInteraction();
+
+    // Draw pop-ups ------------------------------------------------------------
+    this->drawPopUps();
+
+    // Render the current ImGui frame ------------------------------------------
     glViewport(0, 0, static_cast<GLsizei>(viewport.x), static_cast<GLsizei>(viewport.y));
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    // Reset hotkeys
+    for (auto& h : this->hotkeys) {
+        h.is_pressed = false;
+    }
 
     return true;
 }
@@ -276,8 +511,6 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     ImGui::SetCurrentContext(this->context);
 
     ImGuiIO& io = ImGui::GetIO();
-
-    bool hotkeyPressed = false;
 
     bool last_return_key = io.KeysDown[static_cast<size_t>(core::view::Key::KEY_ENTER)];
     bool last_num_enter_key = io.KeysDown[static_cast<size_t>(core::view::Key::KEY_KP_ENTER)];
@@ -304,18 +537,25 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     bool enter_pressed = (!last_num_enter_key && cur_num_enter_key);
     io.KeysDown[static_cast<size_t>(core::view::Key::KEY_ENTER)] = (return_pressed || enter_pressed);
 
-    // Check for GUIWindows specific hotkeys
+
+    bool hotkeyPressed = false;
+
+    // GUI
     for (auto& h : this->hotkeys) {
-        auto key = std::get<0>(h).key;
-        auto mods = std::get<0>(h).mods;
-        if (ImGui::IsKeyDown(static_cast<int>(key)) && (mods.test(core::view::Modifier::CTRL) == io.KeyCtrl) &&
-            (mods.test(core::view::Modifier::ALT) == io.KeyAlt) &&
-            (mods.test(core::view::Modifier::SHIFT) == io.KeyShift)) {
-            std::get<1>(h) = true;
+        if (this->isHotkeyPressed(h.keycode)) {
+            h.is_pressed = true;
             hotkeyPressed = true;
         }
     }
-    if (hotkeyPressed) return true;
+    // Configurator
+    for (auto& h : this->configurator.GetHotkeys()) {
+        if (this->isHotkeyPressed(h.keycode)) {
+            h.is_pressed = true;
+            hotkeyPressed = true;
+        }
+    }
+    if (hotkeyPressed)
+        return true;
 
     // Check for additional text modification hotkeys
     if (action == core::view::KeyAction::RELEASE) {
@@ -348,76 +588,56 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     }
 
     // Hotkeys for showing/hiding window(s)
-    hotkeyPressed = false;
-    const auto func = [&](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-        bool windowHotkeyPressed = this->hotkeyPressed(wc.win_hotkey);
+    const auto windows_func = [&](WindowCollection::WindowConfiguration& wc) {
+        bool windowHotkeyPressed = this->isHotkeyPressed(wc.win_hotkey);
         if (windowHotkeyPressed) {
             wc.win_show = !wc.win_show;
         }
-        hotkeyPressed = (hotkeyPressed || windowHotkeyPressed);
-
-        auto window_hotkey = wc.win_hotkey;
-        auto mods = window_hotkey.mods;
-        mods |= megamol::core::view::Modifier::SHIFT;
-        window_hotkey = megamol::core::view::KeyCode(window_hotkey.key, mods);
-        windowHotkeyPressed = this->hotkeyPressed(window_hotkey);
-        if (windowHotkeyPressed) {
-            wc.win_soft_reset = true;
-        }
-        hotkeyPressed = (hotkeyPressed || windowHotkeyPressed);
+        hotkeyPressed |= windowHotkeyPressed;
     };
-    this->window_manager.EnumWindows(func);
-    if (hotkeyPressed) return true;
-
-    // Check for configurator hotkeys
-    if (this->configurator.CheckHotkeys()) {
+    this->window_collection.EnumWindows(windows_func);
+    if (hotkeyPressed)
         return true;
-    }
 
     // Always consume keyboard input if requested by any imgui widget (e.g. text input).
     // User expects hotkey priority of text input thus needs to be processed before parameter hotkeys.
-    if (io.WantCaptureKeyboard) {
+    if (io.WantTextInput) { /// io.WantCaptureKeyboard
         return true;
     }
 
-    // Check for parameter hotkeys
-    hotkeyPressed = false;
+    // Collect modules which should be considered for parameter hotkey check.
+    bool check_all_modules = false;
     std::vector<std::string> modules_list;
-    const auto modfunc = [&](const std::string& wn, WindowManager::WindowConfiguration& wc) {
+    const auto modfunc = [&](WindowCollection::WindowConfiguration& wc) {
         for (auto& m : wc.param_modules_list) {
             modules_list.emplace_back(m);
         }
+        if (wc.param_modules_list.empty())
+            check_all_modules = true;
     };
-    this->window_manager.EnumWindows(modfunc);
-    const core::Module* current_mod = nullptr;
-    bool consider_module = false;
-    if (this->core_instance != nullptr) {
-        this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
-            if (current_mod != &mod) {
-                current_mod = &mod;
-                consider_module = this->considerModule(mod.FullName().PeekBuffer(), modules_list);
-            }
-
-            if (consider_module) {
-                auto param = slot.Parameter();
-                if (!param.IsNull()) {
-                    if (auto* p = slot.template Param<core::param::ButtonParam>()) {
-                        auto keyCode = p->GetKeyCode();
-
-                        // Break loop after first occurrence of parameter hotkey
-                        if (hotkeyPressed) return;
-
-                        if (this->hotkeyPressed(keyCode)) {
-                            p->setDirty();
+    this->window_collection.EnumWindows(modfunc);
+    // Check for parameter hotkeys
+    hotkeyPressed = false;
+    GraphPtr_t graph_ptr;
+    if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+        for (auto& module_ptr : graph_ptr->GetModules()) {
+            // Break loop after first occurrence of parameter hotkey
+            if (hotkeyPressed)
+                break;
+            if (check_all_modules || this->considerModule(module_ptr->FullName(), modules_list)) {
+                for (auto& param : module_ptr->parameters) {
+                    if (param.type == Param_t::BUTTON) {
+                        auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
+                        if (this->isHotkeyPressed(keyCode)) {
+                            param.ForceSetValueDirty();
+                            hotkeyPressed = true;
                         }
                     }
                 }
             }
-        });
-    } else {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
     }
+
     return hotkeyPressed;
 }
 
@@ -428,7 +648,7 @@ bool GUIWindows::OnChar(unsigned int codePoint) {
     ImGuiIO& io = ImGui::GetIO();
     io.ClearInputCharacters();
     if (codePoint > 0 && codePoint < 0x10000) {
-        io.AddInputCharacter((unsigned short)codePoint);
+        io.AddInputCharacter((unsigned short) codePoint);
     }
 
     return false;
@@ -446,6 +666,10 @@ bool GUIWindows::OnMouseMove(double x, double y) {
 
     // Always consumed if any imgui windows is hovered.
     bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    if (!consumed) {
+        consumed = this->picking_buffer.ProcessMouseMove(x, y);
+    }
+
     return consumed;
 }
 
@@ -462,16 +686,20 @@ bool GUIWindows::OnMouseButton(
     auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
 
-    // Trigger saving state when mouse hoverd any window and on button mouse release event
-    if ((!down) && (io.MouseDown[buttonIndex]) && hoverFlags) {
+    io.MouseDown[buttonIndex] = down;
+
+    // Trigger saving state when mouse hovered any window and on button mouse release event
+    if (!io.MouseDown[buttonIndex] && ImGui::IsWindowHovered(hoverFlags)) {
         this->state.win_save_state = true;
         this->state.win_save_delay = 0.0f;
     }
 
-    io.MouseDown[buttonIndex] = down;
-
     // Always consumed if any imgui windows is hovered.
     bool consumed = ImGui::IsWindowHovered(hoverFlags);
+    if (!consumed) {
+        consumed = this->picking_buffer.ProcessMouseClick(button, action, mods);
+    }
+
     return consumed;
 }
 
@@ -480,8 +708,8 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
     ImGui::SetCurrentContext(this->context);
 
     ImGuiIO& io = ImGui::GetIO();
-    io.MouseWheelH += (float)dx;
-    io.MouseWheel += (float)dy;
+    io.MouseWheelH += (float) dx;
+    io.MouseWheel += (float) dy;
 
     auto hoverFlags = ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenDisabled |
                       ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
@@ -492,98 +720,354 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 }
 
 
+bool megamol::gui::GUIWindows::ConsumeTriggeredScreenshot(void) {
+
+    bool trigger_screenshot = this->state.screenshot_triggered;
+    this->state.screenshot_triggered = false;
+    if (trigger_screenshot) {
+        this->create_not_existing_png_filepath(this->state.screenshot_filepath);
+        if (this->state.screenshot_filepath.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Filename for screenshot should not be empty. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
+            trigger_screenshot = false;
+        }
+    }
+
+    return trigger_screenshot;
+}
+
+
+bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
+
+    // If gui is not drawn, there is no need to synchronize graphs
+    if (!this->state.gui_pre_drawing_enabled) {
+        return true;
+    }
+
+    // 1) Load all known calls and modules from core instance ONCE ---------------------------
+    if (!this->configurator.GetGraphCollection().LoadCallStock(core_instance)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    if (!this->configurator.GetGraphCollection().LoadModuleStock(core_instance)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Failed to load module stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    bool synced = false;
+    bool sync_success = false;
+    GraphPtr_t graph_ptr;
+    bool found_graph = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr);
+    // 2a) Either synchronize GUI Graph -> Core Graph ... ---------------------
+    if (!synced && found_graph) {
+        bool graph_sync_success = true;
+
+        Graph::QueueAction action;
+        Graph::QueueData data;
+        while (graph_ptr->PopSyncQueue(action, data)) {
+            synced = true;
+            switch (action) {
+            case (Graph::QueueAction::ADD_MODULE): {
+                if (megamol_graph != nullptr) {
+                    graph_sync_success &= megamol_graph->CreateModule(data.class_name, data.name_id);
+                } else if (this->core_instance != nullptr) {
+                    graph_sync_success &= this->core_instance->RequestModuleInstantiation(
+                        vislib::StringA(data.class_name.c_str()), vislib::StringA(data.name_id.c_str()));
+                }
+            } break;
+            case (Graph::QueueAction::RENAME_MODULE): {
+                if (megamol_graph != nullptr) {
+                    bool rename_success = megamol_graph->RenameModule(data.name_id, data.rename_id);
+                    graph_sync_success &= rename_success;
+                } else if (this->core_instance != nullptr) {
+                    /* XXX Currently not supported by core graph
+                    bool rename_success = false;
+                    std::function<void(megamol::core::Module*)> fun = [&](megamol::core::Module* mod) {
+                        mod->setName(vislib::StringA(data.rename_id.c_str()));
+                        rename_success = true;
+                    };
+                    this->core_instance->FindModuleNoLock(data.name_id, fun);
+                    graph_sync_success &= rename_success;
+                    */
+                }
+            } break;
+            case (Graph::QueueAction::DELETE_MODULE): {
+                if (megamol_graph != nullptr) {
+                    graph_sync_success &= megamol_graph->DeleteModule(data.name_id);
+                } else if (this->core_instance != nullptr) {
+                    graph_sync_success &=
+                        this->core_instance->RequestModuleDeletion(vislib::StringA(data.name_id.c_str()));
+                }
+            } break;
+            case (Graph::QueueAction::ADD_CALL): {
+                if (megamol_graph != nullptr) {
+                    graph_sync_success &= megamol_graph->CreateCall(data.class_name, data.caller, data.callee);
+                } else if (this->core_instance != nullptr) {
+                    graph_sync_success &=
+                        this->core_instance->RequestCallInstantiation(vislib::StringA(data.class_name.c_str()),
+                            vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
+                }
+            } break;
+            case (Graph::QueueAction::DELETE_CALL): {
+                if (megamol_graph != nullptr) {
+                    graph_sync_success &= megamol_graph->DeleteCall(data.caller, data.callee);
+                } else if (this->core_instance != nullptr) {
+                    graph_sync_success &= this->core_instance->RequestCallDeletion(
+                        vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
+                }
+            } break;
+            case (Graph::QueueAction::CREATE_MAIN_VIEW): {
+                if (megamol_graph != nullptr) {
+                    megamol_graph->SetGraphEntryPoint(data.name_id,
+                        megamol::core::view::get_gl_view_runtime_resources_requests(),
+                        megamol::core::view::view_rendering_execution, megamol::core::view::view_init_rendering_state);
+                } else if (this->core_instance != nullptr) {
+                    /* XXX Currently not supported by core graph
+                     */
+                }
+            } break;
+            case (Graph::QueueAction::REMOVE_MAIN_VIEW): {
+                if (megamol_graph != nullptr) {
+                    megamol_graph->RemoveGraphEntryPoint(data.name_id);
+                } else if (this->core_instance != nullptr) {
+                    /* XXX Currently not supported by core graph
+                     */
+                }
+            } break;
+            default:
+                break;
+            }
+        }
+        if (!graph_sync_success) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Failed to synchronize gui graph with core graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
+        }
+        sync_success &= graph_sync_success;
+    }
+
+    // 2b) ... OR (exclusive or) synchronize Core Graph -> GUI Graph ----------
+    if (!synced) {
+        auto last_graph_uid = this->state.graph_uid;
+
+        // Creates new graph at first call
+        bool graph_sync_success =
+            this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(this->state.graph_uid,
+                ((megamol_graph == nullptr) ? (this->core_instance) : (nullptr)), megamol_graph, true);
+        if (!graph_sync_success) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
+        }
+
+        GraphPtr_t graph_ptr;
+        if (graph_sync_success && this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+            std::string last_script_filename = graph_ptr->GetFilename();
+            if (graph_ptr->GetFilename().empty()) {
+                if (this->core_instance != nullptr) {
+                    // Set project filename from lua state of core instance
+                    graph_ptr->SetFilename(this->core_instance->GetLuaState()->GetScriptPath());
+                }
+            }
+            // Always check for changed script path when project file is dropped
+            if (!this->state.project_script_paths.empty()) {
+                graph_ptr->SetFilename(this->state.project_script_paths.front());
+            }
+            // Load GUI state from project file when project file changed
+            if (last_script_filename != graph_ptr->GetFilename()) {
+                this->load_state_from_file(graph_ptr->GetFilename());
+            }
+        }
+        sync_success &= graph_sync_success;
+    }
+
+    // 3) Synchronize parameter values -------------------------------------------
+    if (found_graph) {
+        bool param_sync_success = true;
+        for (auto& module_ptr : graph_ptr->GetModules()) {
+            for (auto& param : module_ptr->parameters) {
+
+                // Try to connect gui parameters to newly created parameters of core modules
+                if (param.core_param_ptr.IsNull()) {
+                    auto module_name = module_ptr->FullName();
+                    megamol::core::Module* core_module_ptr = nullptr;
+                    if (megamol_graph != nullptr) {
+                        core_module_ptr = megamol_graph->FindModule(module_name).get();
+                    } else if (this->core_instance != nullptr) {
+                        // New core module will only be available next frame after module request is processed.
+                        std::function<void(megamol::core::Module*)> fun = [&](megamol::core::Module* mod) {
+                            core_module_ptr = mod;
+                        };
+                        this->core_instance->FindModuleNoLock(module_name, fun);
+                    }
+                    // Connect pointer of new parameters of core module to parameters in gui module
+                    if (core_module_ptr != nullptr) {
+                        megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator se =
+                            core_module_ptr->ChildList_End();
+                        for (megamol::core::AbstractNamedObjectContainer::child_list_type::const_iterator si =
+                                 core_module_ptr->ChildList_Begin();
+                             si != se; ++si) {
+                            auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
+                            if (param_slot != nullptr) {
+                                std::string param_full_name(param_slot->Name().PeekBuffer());
+                                for (auto& parameter : module_ptr->parameters) {
+                                    if (parameter.full_name == param_full_name) {
+                                        megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
+                                            (*param_slot), parameter, true, false, true);
+                                    }
+                                }
+                            }
+                        }
+                    }
+#ifdef GUI_VERBOSE
+                    if (param.core_param_ptr.IsNull()) {
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "[GUI] Unable to connect core parameter to gui parameter. [%s, %s, line %d]\n", __FILE__,
+                            __FUNCTION__, __LINE__);
+                    }
+#endif // GUI_VERBOSE
+                }
+
+                if (!param.core_param_ptr.IsNull()) {
+                    // Write changed gui state to core parameter
+                    if (param.present.IsGUIStateDirty()) {
+                        param_sync_success &=
+                            megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.core_param_ptr);
+                        param.present.ResetGUIStateDirty();
+                    }
+                    // Write changed parameter value to core parameter
+                    if (param.IsValueDirty()) {
+                        param_sync_success &=
+                            megamol::gui::Parameter::WriteCoreParameterValue(param, param.core_param_ptr);
+                        param.ResetValueDirty();
+                    }
+                    // Read current parameter value and GUI state fro core parameter
+                    param_sync_success &= megamol::gui::Parameter::ReadCoreParameterToParameter(
+                        param.core_param_ptr, param, false, false);
+                }
+            }
+        }
+#ifdef GUI_VERBOSE
+        if (!param_sync_success) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] Failed to synchronize parameter values. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        }
+#endif // GUI_VERBOSE
+        sync_success &= param_sync_success;
+    }
+    return sync_success;
+}
+
+
 bool GUIWindows::createContext(void) {
+
+    // Check for successfully created tf editor
+    if (this->tf_editor_ptr == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Pointer to transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
+        return false;
+    }
 
     // Create ImGui context ---------------------------------------------------
     // Check for existing context and share FontAtlas with new context (required by ImGui).
     bool other_context = (ImGui::GetCurrentContext() != nullptr);
     ImFontAtlas* current_fonts = nullptr;
+    ImFont* default_font = nullptr;
     if (other_context) {
         ImGuiIO& current_io = ImGui::GetIO();
         current_fonts = current_io.Fonts;
+        default_font = current_io.FontDefault;
     }
     IMGUI_CHECKVERSION();
     this->context = ImGui::CreateContext(current_fonts);
     if (this->context == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Unable to create ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unable to create ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     ImGui::SetCurrentContext(this->context);
 
-    // Register window callbacks in window manager ----------------------------
-    this->window_manager.RegisterDrawWindowCallback(
-        WindowManager::DrawCallbacks::MAIN, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            this->drawMainWindowCallback(wn, wc);
-        });
-    this->window_manager.RegisterDrawWindowCallback(
-        WindowManager::DrawCallbacks::PARAM, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            this->drawParametersCallback(wn, wc);
-        });
-    this->window_manager.RegisterDrawWindowCallback(
-        WindowManager::DrawCallbacks::FPSMS, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            this->drawFpsWindowCallback(wn, wc);
-        });
-    this->window_manager.RegisterDrawWindowCallback(
-        WindowManager::DrawCallbacks::FONT, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            this->drawFontWindowCallback(wn, wc);
-        });
-    this->window_manager.RegisterDrawWindowCallback(
-        WindowManager::DrawCallbacks::TF, [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            this->drawTFWindowCallback(wn, wc);
-        });
-    this->window_manager.RegisterDrawWindowCallback(WindowManager::DrawCallbacks::CONFIGURATOR,
-        [&, this](
-            const std::string& wn, WindowManager::WindowConfiguration& wc) { this->drawConfiguratorCallback(wn, wc); });
+    // Register window callbacks in window collection -------------------------
+    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::MAIN_PARAMETERS,
+        [&, this](WindowCollection::WindowConfiguration& wc) { this->drawParamWindowCallback(wc); });
+    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::PARAMETERS,
+        [&, this](WindowCollection::WindowConfiguration& wc) { this->drawParamWindowCallback(wc); });
+    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::PERFORMANCE,
+        [&, this](WindowCollection::WindowConfiguration& wc) { this->drawFpsWindowCallback(wc); });
+    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::FONT,
+        [&, this](WindowCollection::WindowConfiguration& wc) { this->drawFontWindowCallback(wc); });
+    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::TRANSFER_FUNCTION,
+        [&, this](WindowCollection::WindowConfiguration& wc) { this->drawTransferFunctionWindowCallback(wc); });
+    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::CONFIGURATOR,
+        [&, this](WindowCollection::WindowConfiguration& wc) { this->drawConfiguratorWindowCallback(wc); });
+    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::LOGCONSOLE,
+        [&, this](WindowCollection::WindowConfiguration& wc) { this->console.Draw(wc); });
 
     // Create window configurations
-    WindowManager::WindowConfiguration buf_win;
+    WindowCollection::WindowConfiguration buf_win;
+    buf_win.win_store_config = true;
     buf_win.win_reset = true;
-    // MAIN Window ------------------------------------------------------------
-    buf_win.win_show = true;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F12);
-    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoTitleBar;
-    buf_win.win_callback = WindowManager::DrawCallbacks::MAIN;
     buf_win.win_position = ImVec2(0.0f, 0.0f);
-    buf_win.win_size = ImVec2(250.0f, 600.0f);
+    buf_win.win_reset_position = ImVec2(0.0f, 0.0f);
+    buf_win.win_size = ImVec2(400.0f, 600.0f);
+
+    // MAIN Window ------------------------------------------------------------
+    buf_win.win_name = "All Parameters";
+    buf_win.win_show = true;
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
+    buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
+    buf_win.win_callback = WindowCollection::DrawCallbacks::MAIN_PARAMETERS;
     buf_win.win_reset_size = buf_win.win_size;
-    this->window_manager.AddWindowConfiguration("Main Window", buf_win);
+    this->window_collection.AddWindowConfiguration(buf_win);
 
     // FPS/MS Window ----------------------------------------------------------
-    buf_win.win_show = false;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
-    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
-    buf_win.win_callback = WindowManager::DrawCallbacks::FPSMS;
-    // buf_win.win_size = autoresize
-    this->window_manager.AddWindowConfiguration("Performance Metrics", buf_win);
-
-    // FONT Window ------------------------------------------------------------
+    buf_win.win_name = "Performance Metrics";
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
-    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
-    buf_win.win_callback = WindowManager::DrawCallbacks::FONT;
-    // buf_win.win_size = autoresize
-    this->window_manager.AddWindowConfiguration("Font Settings", buf_win);
+    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
+    buf_win.win_callback = WindowCollection::DrawCallbacks::PERFORMANCE;
+    this->window_collection.AddWindowConfiguration(buf_win);
 
-    // TRANSFER FUNCTION Window -----------------------------------------------
+    // FONT Window ------------------------------------------------------------
+    buf_win.win_name = "Font Settings";
     buf_win.win_show = false;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
-    buf_win.win_callback = WindowManager::DrawCallbacks::TF;
-    // buf_win.win_size = autoresize
-    this->window_manager.AddWindowConfiguration("Transfer Function Editor", buf_win);
+    buf_win.win_callback = WindowCollection::DrawCallbacks::FONT;
+    this->window_collection.AddWindowConfiguration(buf_win);
+
+    // TRANSFER FUNCTION Window -----------------------------------------------
+    buf_win.win_name = "Transfer Function Editor";
+    buf_win.win_show = false;
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
+    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
+    buf_win.win_callback = WindowCollection::DrawCallbacks::TRANSFER_FUNCTION;
+    this->window_collection.AddWindowConfiguration(buf_win);
 
     // CONFIGURATOR Window -----------------------------------------------
+    buf_win.win_name = "Configurator";
     buf_win.win_show = false;
-    // State of configurator should not be stored (visibility is configured via auto load parameter and will always be i
-    // viewport size).
-    buf_win.win_store_config = false;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
-    buf_win.win_flags =
-        ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse;
-    buf_win.win_callback = WindowManager::DrawCallbacks::CONFIGURATOR;
-    // buf_win.win_size is set to current viewport later
-    this->window_manager.AddWindowConfiguration("Configurator", buf_win);
+    /// TODO Better initial size for configurator (use current viewport?)
+    buf_win.win_size = ImVec2(800.0f, 600.0f);
+    buf_win.win_reset_size = buf_win.win_size;
+    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
+    buf_win.win_callback = WindowCollection::DrawCallbacks::CONFIGURATOR;
+    this->window_collection.AddWindowConfiguration(buf_win);
+
+    // LOG CONSOLE Window -----------------------------------------------
+    buf_win.win_name = "Log Console";
+    buf_win.win_show = false;
+    buf_win.win_size = ImVec2(850.0f, 10.0f * ImGui::GetFrameHeightWithSpacing());
+    buf_win.win_reset_size = buf_win.win_size;
+    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F6);
+    buf_win.win_callback = WindowCollection::DrawCallbacks::LOGCONSOLE;
+    this->window_collection.AddWindowConfiguration(buf_win);
 
     // Style settings ---------------------------------------------------------
     ImGui::SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayRGB |
@@ -593,22 +1077,20 @@ bool GUIWindows::createContext(void) {
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
     io.IniSavingRate = 5.0f;                              //  in seconds
-    io.IniFilename = nullptr;                             // "imgui.ini"; - disabled, using own window settings profile
-    io.LogFilename = "imgui_log.txt";                     // (set to nullptr to disable)
+    io.IniFilename = nullptr;                             // "imgui.ini" - disabled, using own window settings profile
+    io.LogFilename = nullptr;                             // "imgui_log.txt" - disabled
     io.FontAllowUserScaling = false;                      // disable font scaling using ctrl + mouse wheel
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
+/// DOCKING
+#if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // enable window docking
+    io.ConfigDockingWithShift = true;                 // activate docking on pressing 'shift'
+#endif
 
     // Init global state -------------------------------------------------------
-    this->state.font_file = "";
-    this->state.font_size = 13.0f;
-    this->state.font_index = GUI_INVALID_ID;
-    this->state.win_save_state = false;
-    this->state.win_save_delay = 0.0f;
-    this->state.win_delete = "";
-    this->state.last_instance_time = 0.0f;
-    this->state.hotkeys_check_once = true;
+    this->init_state();
     // Adding additional utf-8 glyph ranges
-    /// (there is no error if glyph has no representation in font atlas)
+    // (there is no error if glyph has no representation in font atlas)
     this->state.font_utf8_ranges.clear();
     this->state.font_utf8_ranges.emplace_back(0x0020);
     this->state.font_utf8_ranges.emplace_back(0x03FF); // Basic Latin + Latin Supplement + Greek Alphabet
@@ -623,6 +1105,7 @@ bool GUIWindows::createContext(void) {
 
     // Load initial fonts only once for all imgui contexts --------------------
     if (!other_context) {
+        ImGuiIO& io = ImGui::GetIO();
         const float default_font_size = 12.0f;
         ImFontConfig config;
         config.OversampleH = 4;
@@ -630,6 +1113,7 @@ bool GUIWindows::createContext(void) {
         config.GlyphRanges = this->state.font_utf8_ranges.data();
         std::string configurator_font;
         std::string default_font;
+
         // Add other known fonts
         std::vector<std::string> font_paths;
         if (this->core_instance != nullptr) {
@@ -650,25 +1134,24 @@ bool GUIWindows::createContext(void) {
                     font_paths.emplace_back(font_path);
                 }
             }
-        } else {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
-        // Configurator Graph Font: Add default font at first indices for exclusive use in configurator graph.
-        /// (Workaraound: Using different font sizes for different graph zooming factors to improve font readability
-        /// when zooming.)
+
+        // Configurator Graph Font: Add default font at first n indices for exclusive use in configurator graph.
+        /// Workaround: Using different font sizes for different graph zooming factors to improve font readability when
+        /// zooming.
         const auto graph_font_scalings = this->configurator.GetGraphFontScalings();
-        this->graph_fonts_reserved = graph_font_scalings.size();
+        this->state.graph_fonts_reserved = graph_font_scalings.size();
         if (configurator_font.empty()) {
-            for (unsigned int i = 0; i < this->graph_fonts_reserved; i++) {
+            for (unsigned int i = 0; i < this->state.graph_fonts_reserved; i++) {
                 io.Fonts->AddFontDefault(&config);
             }
         } else {
-            for (unsigned int i = 0; i < this->graph_fonts_reserved; i++) {
+            for (unsigned int i = 0; i < this->state.graph_fonts_reserved; i++) {
                 io.Fonts->AddFontFromFileTTF(
                     configurator_font.c_str(), default_font_size * graph_font_scalings[i], &config);
             }
         }
+
         // Add other fonts for gui.
         io.Fonts->AddFontDefault(&config);
         io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
@@ -677,6 +1160,16 @@ bool GUIWindows::createContext(void) {
             if (default_font == font_path) {
                 io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
             }
+        }
+    } else {
+        // Fonts are already loaded
+        if (default_font != nullptr) {
+            io.FontDefault = default_font;
+        } else {
+            // ... else default font is font loaded after configurator fonts -> Index equals number of graph fonts.
+            auto default_font_index = static_cast<int>(this->configurator.GetGraphFontScalings().size());
+            default_font_index = std::min(default_font_index, io.Fonts->Fonts.Size - 1);
+            io.FontDefault = io.Fonts->Fonts[default_font_index];
         }
     }
 
@@ -711,10 +1204,10 @@ bool GUIWindows::destroyContext(void) {
 
     this->core_instance = nullptr;
 
-    if (this->impl != Implementation::NONE) {
+    if (this->api != GUIImGuiAPI::NO_API) {
         if (this->context != nullptr) {
-            switch (this->impl) {
-            case (Implementation::OpenGL):
+            switch (this->api) {
+            case (GUIImGuiAPI::OPEN_GL):
                 ImGui_ImplOpenGL3_Shutdown();
                 break;
             default:
@@ -723,371 +1216,175 @@ bool GUIWindows::destroyContext(void) {
             ImGui::DestroyContext(this->context);
         }
     }
+    this->api = GUIImGuiAPI::NO_API;
+
     return true;
 }
 
 
-void GUIWindows::validateParameter() {
-    if (this->style_param.IsDirty()) {
-        auto style = static_cast<Styles>(this->style_param.Param<core::param::EnumParam>()->Value());
-        switch (style) {
-        case Styles::CorporateGray:
-            CorporateGreyStyle();
-            break;
-        case Styles::CorporateWhite:
-            CorporateWhiteStyle();
-            break;
-        case Styles::DarkColors:
-            ImGui::StyleColorsDark();
-            break;
-        case Styles::LightColors:
-            ImGui::StyleColorsLight();
-            break;
-        }
-        this->style_param.ResetDirty();
-    }
+void GUIWindows::drawTransferFunctionWindowCallback(WindowCollection::WindowConfiguration& wc) {
 
-    ImGuiIO& io = ImGui::GetIO();
-    this->state.win_save_delay += io.DeltaTime;
-    if (this->state_param.IsDirty()) {
-        auto state = this->state_param.Param<core::param::StringParam>()->Value();
-        this->window_manager.StateFromJSON(std::string(state));
-        this->state_param.ResetDirty();
-    } else if (this->state.win_save_state &&
-               (this->state.win_save_delay > 2.0f)) { // Delayed saving after triggering saving state (in seconds).
-        std::string state;
-        this->window_manager.StateToJSON(state);
-        this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
-        this->state.win_save_state = false;
-    }
-
-    if (this->autostart_configurator.IsDirty()) {
-        bool autostart = this->autostart_configurator.Param<core::param::BoolParam>()->Value();
-        if (autostart) {
-            const auto configurator_func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-                if (wc.win_callback != WindowManager::DrawCallbacks::CONFIGURATOR) {
-                    wc.win_show = false;
-                } else {
-                    wc.win_show = true;
-                }
-            };
-            this->window_manager.EnumWindows(configurator_func);
-        }
-        this->autostart_configurator.ResetDirty();
-    }
+    this->tf_editor_ptr->Widget(true);
+    wc.tfe_active_param = this->tf_editor_ptr->GetConnectedParameterName();
 }
 
 
-void GUIWindows::drawMainWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
-
-    // Menu -------------------------------------------------------------------
-    /// Requires window flag ImGuiWindowFlags_MenuBar
-    if (ImGui::BeginMenuBar()) {
-        this->drawMenu(wn, wc);
-        ImGui::EndMenuBar();
-    }
-
-    // Parameters -------------------------------------------------------------
-    ImGui::TextUnformatted("Parameters");
-    std::string color_param_help = "[Hover] Show Parameter Description Tooltip\n"
-                                   "[Right-Click] Context Menu\n"
-                                   "[Drag & Drop] Move Module to other Parameter Window\n"
-                                   "[Enter],[Tab],[Left-Click outside Widget] Confirm input changes";
-    this->utils.HelpMarkerToolTip(color_param_help);
-    ImGui::Separator();
-
-    this->drawParametersCallback(wn, wc);
-}
-
-
-void GUIWindows::drawTFWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
-
-    this->tf_editor.DrawTransferFunctionEditor();
-}
-
-
-void GUIWindows::drawConfiguratorCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
+void GUIWindows::drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc) {
 
     this->configurator.Draw(wc, this->core_instance);
 }
 
 
-void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
+void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& wc) {
 
-    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.5f); // set general proportional item width
+    // Mode
+    megamol::gui::ParameterPresentation::ParameterExtendedModeButton(wc.param_extended_mode);
+    // std::string mode_help("Expert mode enables buttons for additional parameter presentation options.");
+    // this->tooltip.HelpMarker(mode_help);
+    ImGui::SameLine();
 
     // Options
-    ImGuiID overrideState = GUI_INVALID_ID; /// invalid
+    ImGuiID overrideState = GUI_INVALID_ID;
     if (ImGui::Button("Expand All")) {
-        overrideState = 1; /// open
+        overrideState = 1; // open
     }
     ImGui::SameLine();
+
     if (ImGui::Button("Collapse All")) {
-        overrideState = 0; /// close
+        overrideState = 0; // close
     }
     ImGui::SameLine();
-    bool show_only_hotkeys = wc.param_show_hotkeys;
-    ImGui::Checkbox("Show Hotkeys", &show_only_hotkeys);
-    wc.param_show_hotkeys = show_only_hotkeys;
+
+    /// DISBALED --- Does anybody use this?
+    /// Toggel Hotkeys
+    // ImGui::SameLine();
+    // bool show_only_hotkeys = wc.param_show_hotkeys;
+    // ImGui::Checkbox("Show Hotkeys", &show_only_hotkeys);
+    // wc.param_show_hotkeys = show_only_hotkeys;
+
+    // Info
+    std::string help_marker = "[INFO]";
+    std::string param_help = "[Hover] Show Parameter Description Tooltip\n"
+                             "[Right Click] Context Menu\n"
+                             "[Drag & Drop] Move Module to other Parameter Window\n"
+                             "[Enter], [Tab], [Left Click outside Widget] Confirm input changes";
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextDisabled(help_marker.c_str());
+    this->tooltip.ToolTip(param_help);
 
     // Paramter substring name filtering (only for main parameter view)
-    if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
-        if (std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH])) {
-            this->utils.SetSearchFocus(true);
-            std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH]) = false;
+    if (wc.win_callback == WindowCollection::DrawCallbacks::MAIN_PARAMETERS) {
+        if (this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].is_pressed) {
+            this->search_widget.SetSearchFocus(true);
+            this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].is_pressed = false;
         }
         std::string help_test =
-            "[" + std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH]).ToString() +
+            "[" + this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].keycode.ToString() +
             "] Set keyboard focus to search input field.\n"
             "Case insensitive substring search in\nparameter names.\nGlobally in all parameter views.\n";
-        this->utils.StringSearch("guiwindow_parameter_earch", help_test);
+        this->search_widget.Widget("guiwindow_parameter_earch", help_test);
     }
 
-    /// XXX Disabled since core instance and module name of GUIView is currently no more available ...
-    /*
-    // Module filtering (only for main parameter view)
-    if (wc.win_callback == WindowManager::DrawCallbacks::MAIN) {
-        std::map<int, std::string> opts;
-        opts[static_cast<int>(WindowManager::FilterModes::ALL)] = "All";
-        opts[static_cast<int>(WindowManager::FilterModes::INSTANCE)] = "Instance";
-        opts[static_cast<int>(WindowManager::FilterModes::VIEW)] = "View";
-        unsigned int opts_cnt = (unsigned int)opts.size();
-        if (ImGui::BeginCombo("Filter Modules", opts[(int)wc.param_module_filter].c_str())) {
-            for (unsigned int i = 0; i < opts_cnt; ++i) {
-                if (ImGui::Selectable(opts[i].c_str(), (static_cast<int>(wc.param_module_filter) == i))) {
-                    wc.param_module_filter = static_cast<WindowManager::FilterModes>(i);
-                    wc.param_modules_list.clear();
-                    if ((wc.param_module_filter == WindowManager::FilterModes::INSTANCE) ||
-                        (wc.param_module_filter == WindowManager::FilterModes::VIEW)) {
-                        // Goal is to find view module with shortest call connection path to this module.
-                        // Since enumeration of modules goes bottom up, result for first abstract view is
-                        // stored and following hits are ignored.
-                        std::string viewname;
-                        std::string thisname = this->FullName().PeekBuffer();
-                        const auto view_func = [&, this](core::Module* viewmod) {
-                            auto v = dynamic_cast<core::view::AbstractView*>(viewmod);
-                            if (v != nullptr) {
-                                std::string vname = v->FullName().PeekBuffer();
-                                bool found = false;
-                                const auto find_func = [&, this](core::Module* guimod) {
-                                    std::string modname = guimod->FullName().PeekBuffer();
-                                    if (thisname == modname) {
-                                        found = true;
-                                    }
-                                };
-                                this->GetCoreInstance()->EnumModulesNoLock(viewmod, find_func);
-                                if (found && viewname.empty()) {
-                                    viewname = vname;
-                                }
-                            }
-                        };
-                        this->GetCoreInstance()->EnumModulesNoLock(nullptr, view_func);
-                        if (!viewname.empty()) {
-                            if (wc.param_module_filter == WindowManager::FilterModes::INSTANCE) {
-                                // Considering modules depending on the INSTANCE NAME of the first view this module is
-    connected to. std::string instname = ""; if (viewname.find("::", 2) != std::string::npos) { instname =
-    viewname.substr(0, viewname.find("::", 2));
-                                }
-                                if (!instname.empty()) { /// Consider all modules if view is not assigned to any
-                                                         /// instance
-                                    const auto func = [&, this](core::Module* mod) {
-                                        std::string modname = mod->FullName().PeekBuffer();
-                                        bool foundInstanceName = (modname.find(instname) != std::string::npos);
-                                        // Modules with no namespace are always taken into account ...
-                                        bool noInstanceNamePresent = (modname.find("::", 2) == std::string::npos);
-                                        if (foundInstanceName || noInstanceNamePresent) {
-                                            wc.param_modules_list.emplace_back(modname);
-                                        }
-                                    };
-                                    this->GetCoreInstance()->EnumModulesNoLock(nullptr, func);
-                                }
-                            } else { // (wc.param_module_filter == WindowManager::FilterModes::VIEW)
-                                // Considering modules depending on their connection to the first VIEW this module is
-    connected to. const auto add_func = [&, this](core::Module* mod) { std::string modname =
-    mod->FullName().PeekBuffer(); wc.param_modules_list.emplace_back(modname);
-                                };
-                                this->GetCoreInstance()->EnumModulesNoLock(viewname, add_func);
-                            }
-                        } else {
-                            vislib::sys::Log::DefaultLog.WriteWarn(
-                                "Could not find abstract view "
-                                "module this gui is connected to. [%s, %s, line %d]\n",
-                                __FILE__, __FUNCTION__, __LINE__);
-                        }
-                    }
-                }
-                std::string hover = "Show all Modules."; // == WindowManager::FilterModes::ALL
-                if (i == static_cast<int>(WindowManager::FilterModes::INSTANCE)) {
-                    hover = "Show Modules with same Instance Name as current View and Modules with no Instance Name.";
-                } else if (i == static_cast<int>(WindowManager::FilterModes::VIEW)) {
-                    hover = "Show Modules subsequently connected to the View Module the Gui Module is connected to.";
-                }
-                this->utils.HoverToolTip(hover);
-            }
-            ImGui::EndCombo();
-        }
-        this->utils.HelpMarkerToolTip("Selected filter is not refreshed on graph changes.\n"
-                                      "Select filter again to trigger refresh.");
-    }
     ImGui::Separator();
-    */
 
     // Create child window for sepearte scroll bar and keeping header always visible on top of parameter list
-    ImGui::BeginChild("###ParameterList");
+    ImGui::BeginChild("###ParameterList", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar);
 
-    // Listing parameters
-    const core::Module* current_mod = nullptr;
-    bool current_mod_open = false;
     const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
-    std::string param_namespace = "";
-    unsigned int param_indent_stack = 0;
-    bool param_namespace_open = true;
+    auto currentSearchString = this->search_widget.GetSearchString();
+    GraphPtr_t graph_ptr;
+    // Listing modules and their parameters
+    if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+        for (auto& module_ptr : graph_ptr->GetModules()) {
+            std::string module_label = module_ptr->FullName();
 
-    if (this->core_instance != nullptr) {
-        this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
-            auto currentSearchString = this->utils.GetSearchString();
-
-            // Check for new module
-            if (current_mod != &mod) {
-                current_mod = &mod;
-                std::string label = mod.FullName().PeekBuffer();
-
-                // Reset parameter namespace stuff
-                param_namespace = "";
-                param_namespace_open = true;
-                while (param_indent_stack > 0) {
-                    param_indent_stack--;
-                    ImGui::Unindent();
-                }
-
-                // Check if module should be considered.
-                if (!this->considerModule(label, wc.param_modules_list)) {
-                    current_mod_open = false;
-                    return;
-                }
-
-                // Determine header state and change color depending on active parameter search
-                auto headerId = ImGui::GetID(label.c_str());
-                auto headerState = overrideState;
-                if (headerState == GUI_INVALID_ID) {
-                    headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
-                }
-                if (!currentSearchString.empty()) {
-                    headerState = 1;
-                    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
-                }
-                ImGui::GetStateStorage()->SetInt(headerId, headerState);
-                current_mod_open = ImGui::CollapsingHeader(label.c_str(), nullptr);
-                if (!currentSearchString.empty()) {
-                    ImGui::PopStyleColor();
-                }
-
-                // Module description as hover tooltip
-                auto mod_desc = this->core_instance->GetModuleDescriptionManager().Find(mod.ClassName());
-                if (mod_desc != nullptr) {
-                    this->utils.HoverToolTip(
-                        std::string(mod_desc->Description()), ImGui::GetID(label.c_str()), 0.5f, 5.0f);
-                }
-
-                // Context menu
-                if (ImGui::BeginPopupContextItem()) {
-                    if (ImGui::MenuItem("Copy to new Window")) {
-                        // using instance time as hidden unique id
-                        std::string window_name =
-                            "Parameters###parameters" + std::to_string(this->state.last_instance_time);
-
-                        WindowManager::WindowConfiguration buf_win;
-                        buf_win.win_show = true;
-                        buf_win.win_flags = ImGuiWindowFlags_HorizontalScrollbar;
-                        buf_win.win_callback = WindowManager::DrawCallbacks::PARAM;
-                        buf_win.param_show_hotkeys = false;
-                        buf_win.param_modules_list.emplace_back(label);
-                        this->window_manager.AddWindowConfiguration(window_name, buf_win);
-                    }
-
-                    // Deleting module's parameters is not available in main parameter window.
-                    if (wc.win_callback != WindowManager::DrawCallbacks::MAIN) {
-                        if (ImGui::MenuItem("Delete from List")) {
-                            std::vector<std::string>::iterator find_iter =
-                                std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), label);
-                            // Break if module name is not contained in list
-                            if (find_iter != wc.param_modules_list.end()) {
-                                wc.param_modules_list.erase(find_iter);
-                            }
-                        }
-                    }
-                    ImGui::EndPopup();
-                }
-
-
-                // Drag source
-                label.resize(dnd_size);
-                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-                    ImGui::SetDragDropPayload(
-                        "DND_COPY_MODULE_PARAMETERS", label.c_str(), (label.size() * sizeof(char)));
-                    ImGui::TextUnformatted(label.c_str());
-                    ImGui::EndDragDropSource();
-                }
+            // Check if module should be considered.
+            if (!this->considerModule(module_label, wc.param_modules_list)) {
+                continue;
             }
 
-            if (current_mod_open) {
-                auto param = slot.Parameter();
-                std::string param_name = slot.Name().PeekBuffer();
-                bool showSearchedParameter = true;
-                if (!currentSearchString.empty()) {
-                    showSearchedParameter = this->utils.FindCaseInsensitiveSubstring(param_name, currentSearchString);
-                }
-                if (!param.IsNull() && param->IsGUIVisible() && showSearchedParameter) {
-                    // Check for changed parameter namespace
-                    auto pos = param_name.find("::");
-                    std::string current_param_namespace = "";
-                    if (pos != std::string::npos) {
-                        current_param_namespace = param_name.substr(0, pos);
-                    }
-                    if (current_param_namespace != param_namespace) {
-                        param_namespace = current_param_namespace;
-                        while (param_indent_stack > 0) {
-                            param_indent_stack--;
-                            ImGui::Unindent();
-                        }
-                        ImGui::Separator();
-                        if (!param_namespace.empty()) {
-                            ImGui::Indent();
-                            std::string label = param_namespace + "###" + param_namespace + "__" + param_name;
-                            // Open all namespace headers when parameter search is active
-                            if (!currentSearchString.empty()) {
-                                auto headerId = ImGui::GetID(label.c_str());
-                                ImGui::GetStateStorage()->SetInt(headerId, 1);
-                            }
-                            param_namespace_open =
-                                ImGui::CollapsingHeader(label.c_str(), ImGuiTreeNodeFlags_DefaultOpen);
-                            param_indent_stack++;
-                        } else {
-                            param_namespace_open = true;
-                        }
-                    }
+            // Determine header state and change color depending on active parameter search
+            auto headerId = ImGui::GetID(module_label.c_str());
+            auto headerState = overrideState;
+            if (headerState == GUI_INVALID_ID) {
+                headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
+            }
+            if (!currentSearchString.empty()) {
+                headerState = 1;
+                ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
+            }
+            ImGui::GetStateStorage()->SetInt(headerId, headerState);
 
-                    // Draw parameter
-                    if (param_namespace_open) {
-                        if (wc.param_show_hotkeys) {
-                            this->drawParameterHotkey(mod, slot);
-                        } else {
-                            this->drawParameter(mod, slot);
+            bool header_open = ImGui::CollapsingHeader(module_label.c_str(), nullptr);
+
+            if (!currentSearchString.empty()) {
+                ImGui::PopStyleColor();
+            }
+
+            // Module description as hover tooltip
+            this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
+
+            // Context menu
+            if (ImGui::BeginPopupContextItem()) {
+                if (ImGui::MenuItem("Copy to new Window")) {
+                    std::srand(std::time(nullptr));
+                    std::string window_name = "Parameters###parameters_" + std::to_string(std::rand());
+                    WindowCollection::WindowConfiguration buf_win;
+                    buf_win.win_name = window_name;
+                    buf_win.win_show = true;
+                    buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
+                    buf_win.win_callback = WindowCollection::DrawCallbacks::PARAMETERS;
+                    buf_win.param_show_hotkeys = false;
+                    buf_win.win_position = ImVec2(0.0f, ImGui::GetTextLineHeightWithSpacing());
+                    buf_win.win_size = ImVec2(400.0f, 600.0f);
+                    buf_win.param_modules_list.emplace_back(module_label);
+                    this->window_collection.AddWindowConfiguration(buf_win);
+                }
+
+                // Deleting module's parameters is not available in main parameter window.
+                if (wc.win_callback != WindowCollection::DrawCallbacks::MAIN_PARAMETERS) {
+                    if (ImGui::MenuItem("Delete from List")) {
+                        std::vector<std::string>::iterator find_iter =
+                            std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), module_label);
+                        // Break if module name is not contained in list
+                        if (find_iter != wc.param_modules_list.end()) {
+                            wc.param_modules_list.erase(find_iter);
+                        }
+                        if (wc.param_modules_list.empty()) {
+                            this->state.win_delete = wc.win_name;
                         }
                     }
+                }
+                ImGui::EndPopup();
+            }
+
+            // Drag source
+            module_label.resize(dnd_size);
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+                ImGui::SetDragDropPayload(
+                    "DND_COPY_MODULE_PARAMETERS", module_label.c_str(), (module_label.size() * sizeof(char)));
+                ImGui::TextUnformatted(module_label.c_str());
+                ImGui::EndDragDropSource();
+            }
+
+            if (header_open) {
+                // Draw parameters
+
+                bool out_open_external_tf_editor;
+                module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, currentSearchString,
+                    vislib::math::Ternary(wc.param_extended_mode), true, ParameterPresentation::WidgetScope::LOCAL,
+                    this->tf_editor_ptr, &out_open_external_tf_editor);
+
+                if (out_open_external_tf_editor) {
+                    const auto func = [](WindowCollection::WindowConfiguration& wc) {
+                        if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {
+                            wc.win_show = true;
+                        }
+                    };
+                    this->window_collection.EnumWindows(func);
                 }
             }
-        });
-    } else {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
-
-
-    // Reset parameter namespace stuff
-    while (param_indent_stack > 0) {
-        param_indent_stack--;
-        ImGui::Unindent();
+        }
     }
 
     // Drop target
@@ -1096,7 +1393,7 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DND_COPY_MODULE_PARAMETERS")) {
 
             IM_ASSERT(payload->DataSize == (dnd_size * sizeof(char)));
-            std::string payload_id = (const char*)payload->Data;
+            std::string payload_id = (const char*) payload->Data;
 
             // Insert dragged module name only if not contained in list
             if (!this->considerModule(payload_id, wc.param_modules_list)) {
@@ -1107,13 +1404,12 @@ void GUIWindows::drawParametersCallback(const std::string& wn, WindowManager::Wi
     }
 
     ImGui::EndChild();
-
-    ImGui::PopItemWidth();
 }
 
 
-void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
+void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc) {
     ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
 
     // Leave some space in histogram for text of current value
     wc.buf_current_delay += io.DeltaTime;
@@ -1150,19 +1446,29 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
     }
 
     // Draw window content
-    if (ImGui::RadioButton("fps", (wc.ms_mode == WindowManager::TimingModes::FPS))) {
-        wc.ms_mode = WindowManager::TimingModes::FPS;
+    if (ImGui::RadioButton("fps", (wc.ms_mode == WindowCollection::TimingModes::FPS))) {
+        wc.ms_mode = WindowCollection::TimingModes::FPS;
     }
     ImGui::SameLine();
-    if (ImGui::RadioButton("ms", (wc.ms_mode == WindowManager::TimingModes::MS))) {
-        wc.ms_mode = WindowManager::TimingModes::MS;
+
+    if (ImGui::RadioButton("ms", (wc.ms_mode == WindowCollection::TimingModes::MS))) {
+        wc.ms_mode = WindowCollection::TimingModes::MS;
     }
 
-    ImGui::SameLine(0.0f, 50.0f);
-    ImGui::Checkbox("Options", &wc.ms_show_options);
+    if (this->core_instance != nullptr) {
+        ImGui::TextDisabled("Frame ID:");
+        ImGui::SameLine();
+        ImGui::Text("%u", this->core_instance->GetFrameID());
+    }
+
+    ImGui::SameLine(
+        ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() - style.ItemSpacing.x - style.ItemInnerSpacing.x));
+    if (ImGui::ArrowButton("Options_", ((wc.ms_show_options) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+        wc.ms_show_options = !wc.ms_show_options;
+    }
 
     std::vector<float> value_array = wc.buf_values;
-    if (wc.ms_mode == WindowManager::TimingModes::FPS) {
+    if (wc.ms_mode == WindowCollection::TimingModes::FPS) {
         for (auto& v : value_array) {
             v = (v > 0.0f) ? (1.0f / v * 1000.f) : (0.0f);
         }
@@ -1177,18 +1483,18 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
     }
 
     float plot_scale_factor = 1.5f;
-    if (wc.ms_mode == WindowManager::TimingModes::FPS) {
+    if (wc.ms_mode == WindowCollection::TimingModes::FPS) {
         plot_scale_factor *= wc.buf_plot_fps_scaling;
-    } else if (wc.ms_mode == WindowManager::TimingModes::MS) {
+    } else if (wc.ms_mode == WindowCollection::TimingModes::MS) {
         plot_scale_factor *= wc.buf_plot_ms_scaling;
     }
 
-    ImGui::PlotLines("###msplot", value_ptr, buffer_size, 0, overlay.c_str(), 0.0f, plot_scale_factor,
-        ImVec2(0.0f, 50.0f)); /// use hidden label
+    ImGui::PlotLines(
+        "###msplot", value_ptr, buffer_size, 0, overlay.c_str(), 0.0f, plot_scale_factor, ImVec2(0.0f, 50.0f));
 
     if (wc.ms_show_options) {
-        if (ImGui::InputFloat(
-                "Refresh Rate", &wc.ms_refresh_rate, 1.0f, 10.0f, "%.3f", ImGuiInputTextFlags_EnterReturnsTrue)) {
+        if (ImGui::InputFloat("Refresh Rate (per sec.)", &wc.ms_refresh_rate, 1.0f, 10.0f, "%.3f",
+                ImGuiInputTextFlags_EnterReturnsTrue)) {
             wc.ms_refresh_rate = std::max(1.0f, wc.ms_refresh_rate);
         }
 
@@ -1203,9 +1509,10 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
 #elif _WIN32
             ImGui::SetClipboardText(overlay.c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("Current Performance Monitor Value:\n%s", overlay.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[GUI] Current Performance Monitor Value:\n%s", overlay.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1223,26 +1530,28 @@ void GUIWindows::drawFpsWindowCallback(const std::string& wn, WindowManager::Win
 #elif _WIN32
             ImGui::SetClipboardText(stream.str().c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("All Performance Monitor Values:\n%s", stream.str().c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                "[GUI] All Performance Monitor Values:\n%s", stream.str().c_str());
 #endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted("Copy to Clipborad");
-        std::string help = "Values are copied in chronological order (newest first)";
-        this->utils.HelpMarkerToolTip(help);
+        std::string help("Values are copied in chronological order (newest first)");
+        this->tooltip.Marker(help);
     }
 }
 
 
-void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc) {
+void GUIWindows::drawFontWindowCallback(WindowCollection::WindowConfiguration& wc) {
     ImGuiIO& io = ImGui::GetIO();
 
     ImFont* font_current = ImGui::GetFont();
     if (ImGui::BeginCombo("Select available Font", font_current->GetDebugName())) {
-        for (int n = 0; n < (io.Fonts->Fonts.Size - 1); n++) { // ! n < size-1 for skipping last added font which is
-                                                               // exclusively used by configurator for the graph.
+        for (int n = this->state.graph_fonts_reserved; n < io.Fonts->Fonts.Size;
+             n++) { // first fonts until index this->graph_fonts_reserved are exclusively used by configurator for the
+                    // graph.
             if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current)))
                 io.FontDefault = io.Fonts->Fonts[n];
         }
@@ -1255,104 +1564,179 @@ void GUIWindows::drawFontWindowCallback(const std::string& wn, WindowManager::Wi
 
     ImGui::Separator();
     ImGui::TextUnformatted("Load Font from File");
-    std::string help = "Same font can be loaded multiple times with different font size.";
-    this->utils.HelpMarkerToolTip(help);
+    std::string help("Same font can be loaded multiple times with different font size.");
+    this->tooltip.Marker(help);
 
-    std::string label = "Font Size";
+    std::string label("Font Size");
     ImGui::InputFloat(label.c_str(), &wc.buf_font_size, 1.0f, 10.0f, "%.2f", ImGuiInputTextFlags_None);
     // Validate font size
     if (wc.buf_font_size <= 0.0f) {
-        wc.buf_font_size = 5.0f; /// min valid font size
+        wc.buf_font_size = 5.0f; // minimum valid font size
     }
 
-    label = "Font File Name (.ttf)";
+    label = "Font Filename (.ttf)";
     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
     GUIUtils::Utf8Encode(wc.buf_font_file);
     ImGui::InputText(label.c_str(), &wc.buf_font_file, ImGuiInputTextFlags_AutoSelectAll);
     GUIUtils::Utf8Decode(wc.buf_font_file);
     // Validate font file before offering load button
-    if (FileUtils::FilesExistingExtension<std::string>(wc.buf_font_file, std::string(".ttf"))) {
+    if (FileUtils::FileWithExtensionExists<std::string>(wc.buf_font_file, std::string(".ttf"))) {
         if (ImGui::Button("Add Font")) {
             this->state.font_file = wc.buf_font_file;
             this->state.font_size = wc.buf_font_size;
         }
     } else {
-        ImGui::TextColored(ImVec4(0.9f, 0.0f, 0.0f, 1.0f), "Please enter valid font file name.");
+        ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font filename.");
     }
 }
 
 
-void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfiguration& wc) {
+void GUIWindows::drawMenu(void) {
 
-    bool open_popup_project = false;
+    bool megamolgraph_interface = false;
+    GraphPtr_t graph_ptr;
+    if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+        megamolgraph_interface = (graph_ptr->GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH);
+    }
+
+    ImGui::PushID("GUI::Menu");
+
     if (ImGui::BeginMenu("File")) {
-        // Load/save parameter values to LUA file
-        if (ImGui::MenuItem("Save Project",
-                std::get<0>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]).ToString().c_str())) {
-            open_popup_project = true;
+        if (megamolgraph_interface) {
+            if (ImGui::MenuItem("Load Project",
+                    this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].keycode.ToString().c_str())) {
+                this->state.open_popup_load = true;
+            }
         }
-
+        if (ImGui::MenuItem(
+                "Save Project", this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].keycode.ToString().c_str())) {
+            this->state.open_popup_save = true;
+        }
         if (ImGui::MenuItem("Exit", "ALT + 'F4'")) {
-            // Exit program
-            this->shutdown();
+            this->triggerCoreInstanceShutdown();
+            this->state.shutdown_triggered = true;
         }
         ImGui::EndMenu();
     }
-
-    // Windows
     if (ImGui::BeginMenu("Windows")) {
-        const auto func = [&, this](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            bool win_open = wc.win_show;
-            std::string hotkey_label = wc.win_hotkey.ToString();
-            if (!hotkey_label.empty()) {
-                hotkey_label = "(SHIFT +) " + hotkey_label;
-            }
-            if (ImGui::MenuItem(wn.c_str(), hotkey_label.c_str(), &win_open)) {
-                wc.win_show = !wc.win_show;
-            }
-            // Add conext menu for deleting windows without hotkey (= custom parameter windows).
-            if (wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN) {
-                if (ImGui::BeginPopupContextItem()) {
-                    if (ImGui::MenuItem("Delete Window")) {
-                        this->state.win_delete = wn;
-                    }
-                    ImGui::EndPopup();
-                }
-                this->utils.HoverToolTip("[Right-Click] Open Context Menu for Deleting Window Permanently.");
+        ImGui::MenuItem("Menu", this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].keycode.ToString().c_str(),
+            &this->state.menu_visible);
+        const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
+            bool registered_window = !(wc.win_hotkey.key == core::view::Key::KEY_UNKNOWN);
+            if (registered_window) {
+                ;
+                ImGui::MenuItem(wc.win_name.c_str(), wc.win_hotkey.ToString().c_str(), &wc.win_show);
             } else {
-                this->utils.HoverToolTip("['Window Hotkey'] Show/Hide Window.\n[Shift]+['Window Hotkey'] Reset Size "
-                                         "and Position of Window.");
+                if (ImGui::BeginMenu(wc.win_name.c_str())) {
+                    std::string menu_label = "Show";
+                    if (wc.win_show)
+                        menu_label = "Hide";
+                    if (ImGui::MenuItem(menu_label.c_str(), wc.win_hotkey.ToString().c_str(), nullptr)) {
+                        wc.win_show = !wc.win_show;
+                    }
+                    // Enable option to delete window if it is a newly created custom parameter window
+                    if (ImGui::MenuItem("Delete Window")) {
+                        this->state.win_delete = wc.win_name;
+                    }
+                    ImGui::EndMenu();
+                }
             }
         };
-        this->window_manager.EnumWindows(func);
-
-        ImGui::EndMenu();
-    }
-
-    // Help
-    bool open_popup_about = false;
-    if (ImGui::BeginMenu("Help")) {
-        // if (ImGui::MenuItem("Usability Hints")) {
-        //}
-
-        if (ImGui::MenuItem("About")) {
-            open_popup_about = true;
+        this->window_collection.EnumWindows(func);
+        ImGui::Separator();
+        if (ImGui::MenuItem("Reset Size and Position",
+                this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS].keycode.ToString().c_str(), nullptr)) {
+            this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS].is_pressed = true;
         }
         ImGui::EndMenu();
     }
+    if (megamolgraph_interface) {
+        if (ImGui::BeginMenu("Screenshot")) {
+            this->create_not_existing_png_filepath(this->state.screenshot_filepath);
+            if (ImGui::MenuItem("Select Filename", this->state.screenshot_filepath.c_str())) {
+                this->state.open_popup_screenshot = true;
+            }
+            if (ImGui::MenuItem("Trigger",
+                    this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT].keycode.ToString().c_str())) {
+                this->state.screenshot_triggered = true;
+            }
+            ImGui::EndMenu();
+        }
+    }
+    if (megamolgraph_interface) {
+        if (graph_ptr != nullptr) {
+            if (ImGui::BeginMenu("Render")) {
+                for (auto& module_ptr : graph_ptr->GetModules()) {
+                    if (module_ptr->is_view) {
+                        if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsMainView())) {
+                            if (!module_ptr->IsMainView()) {
+                                module_ptr->main_view_name = graph_ptr->GenerateUniqueMainViewName();
+                                Graph::QueueData queue_data;
+                                queue_data.name_id = module_ptr->FullName();
+                                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                            } else {
+                                module_ptr->main_view_name.clear();
+                                Graph::QueueData queue_data;
+                                queue_data.name_id = module_ptr->FullName();
+                                graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                            }
+                        }
+                    }
+                }
+                if (ImGui::MenuItem("Toggle Main Views",
+                        this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].keycode.ToString().c_str())) {
+                    this->state.toggle_main_view = true;
+                }
+                ImGui::EndMenu();
+            }
+        }
+    }
+    if (ImGui::BeginMenu("Settings")) {
+        if (ImGui::BeginMenu("Style")) {
+            if (ImGui::MenuItem("ImGui Dark Colors", nullptr, (this->state.style == GUIWindows::Styles::DarkColors))) {
+                this->state.style = GUIWindows::Styles::DarkColors;
+                this->state.style_changed = true;
+            }
+            if (ImGui::MenuItem("ImGui LightColors", nullptr, (this->state.style == GUIWindows::Styles::LightColors))) {
+                this->state.style = GUIWindows::Styles::LightColors;
+                this->state.style_changed = true;
+            }
+            if (ImGui::MenuItem("Corporate Gray", nullptr, (this->state.style == GUIWindows::Styles::CorporateGray))) {
+                this->state.style = GUIWindows::Styles::CorporateGray;
+                this->state.style_changed = true;
+            }
+            if (ImGui::MenuItem(
+                    "Corporate White", nullptr, (this->state.style == GUIWindows::Styles::CorporateWhite))) {
+                this->state.style = GUIWindows::Styles::CorporateWhite;
+                this->state.style_changed = true;
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Help")) {
+        if (ImGui::MenuItem("About")) {
+            this->state.open_popup_about = true;
+        }
+        ImGui::EndMenu();
+    }
+    ImGui::PopID();
+}
 
-    // Popups -----------------------------------------------------------------
+
+void megamol::gui::GUIWindows::drawPopUps(void) {
 
     // ABOUT
-    if (open_popup_about) {
+    if (this->state.open_popup_about) {
+        this->state.open_popup_about = false;
         ImGui::OpenPopup("About");
     }
     bool open = true;
     if (ImGui::BeginPopupModal("About", &open, (ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))) {
 
-        const std::string eMail = "megamol@visus.uni-stuttgart.de";
-        const std::string webLink = "https://megamol.org/";
-        const std::string gitLink = "https://github.com/UniStuttgart-VISUS/megamol";
+        const std::string eMail("megamol@visus.uni-stuttgart.de");
+        const std::string webLink("https://megamol.org/");
+        const std::string gitLink("https://github.com/UniStuttgart-VISUS/megamol");
 
         std::string about = std::string("MegaMol - Version ") + std::to_string(MEGAMOL_CORE_MAJOR_VER) + (".") +
                             std::to_string(MEGAMOL_CORE_MINOR_VER) + ("\ngit# ") + std::string(MEGAMOL_CORE_COMP_REV) +
@@ -1371,9 +1755,9 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #elif _WIN32
             ImGui::SetClipboardText(eMail.c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("E-Mail address:\n%s", eMail.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] E-Mail address:\n%s", eMail.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1387,9 +1771,9 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #elif _WIN32
             ImGui::SetClipboardText(webLink.c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("Website link:\n%s", webLink.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Website link:\n%s", webLink.c_str());
 #endif
         }
         ImGui::SameLine();
@@ -1402,16 +1786,16 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
 #elif _WIN32
             ImGui::SetClipboardText(gitLink.c_str());
 #else // LINUX
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            vislib::sys::Log::DefaultLog.WriteInfo("GitHub link:\n%s", gitLink.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] GitHub link:\n%s", gitLink.c_str());
 #endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(gitstr.c_str());
 
         ImGui::Separator();
-        about = "Copyright (C) 2009-2019 by Universitaet Stuttgart "
+        about = "Copyright (C) 2009-2020 by University of Stuttgart "
                 "(VIS).\nAll rights reserved.";
         ImGui::TextUnformatted(about.c_str());
 
@@ -1424,377 +1808,155 @@ void GUIWindows::drawMenu(const std::string& wn, WindowManager::WindowConfigurat
     }
 
     // Save project pop-up
-    open_popup_project = (open_popup_project || std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]));
-    if (open_popup_project) {
-        std::get<1>(this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT]) = false;
+    this->state.open_popup_save |= this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].is_pressed;
+    bool confirmed, aborted;
+    bool popup_failed = false;
+    std::string filename;
+    GraphPtr_t graph_ptr;
+    if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+        filename = graph_ptr->GetFilename();
     }
-    if (this->file_utils.FileBrowserPopUp(
-            FileUtils::FileBrowserFlag::SAVE, "Save Project", open_popup_project, wc.main_project_file)) {
-        // Serialize current state to parameter.
-        std::string state;
-        this->window_manager.StateToJSON(state);
-        this->state_param.Param<core::param::StringParam>()->SetValue(state.c_str(), false);
-        // Serialize project to file
-        FileUtils::SaveProjectFile(wc.main_project_file, this->core_instance);
+    if (graph_ptr != nullptr) {
+        this->state.open_popup_save |= this->configurator.ConsumeTriggeredGlobalProjectSave();
+        if (this->file_browser.PopUp(
+                FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project", this->state.open_popup_save, filename)) {
+
+            graph_ptr->SetFilename(filename);
+            popup_failed |= !this->configurator.GetGraphCollection().SaveProjectToFile(
+                this->state.graph_uid, filename, this->dump_state_to_file(filename));
+        }
+        MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
+            confirmed, "Cancel", aborted);
     }
+    this->state.open_popup_save = false;
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].is_pressed = false;
+
+    // Load project pop-up
+    popup_failed = false;
+    if (graph_ptr != nullptr) {
+        this->state.open_popup_load |= this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed;
+        if (this->file_browser.PopUp(
+                FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->state.open_popup_load, filename)) {
+            graph_ptr->Clear();
+            popup_failed |= (GUI_INVALID_ID == this->configurator.GetGraphCollection().LoadAddProjectFromFile(
+                                                   this->state.graph_uid, filename));
+        }
+        MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
+            confirmed, "Cancel", aborted);
+    }
+    this->state.open_popup_load = false;
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed = false;
+
+    // Filename for screenshot pop-up
+    if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Select Filename for Screenshot",
+            this->state.open_popup_screenshot, this->state.screenshot_filepath, ".png")) {
+        this->state.screenshot_filepath_id = 0;
+    }
+    this->state.open_popup_screenshot = false;
 }
 
 
-void GUIWindows::drawParameter(const core::Module& mod, core::param::ParamSlot& slot) {
-    ImGuiStyle& style = ImGui::GetStyle();
-    std::string help;
+void megamol::gui::GUIWindows::window_sizing_and_positioning(
+    WindowCollection::WindowConfiguration& wc, bool& out_collapsing_changed) {
 
-    auto param = slot.Parameter();
-    if (!param.IsNull()) {
-        // Set different style if parameter is read-only
-        bool readOnly = param->IsGUIReadOnly();
-        if (readOnly) {
-            GUIUtils::ReadOnlyWigetStyle(true);
+    ImGuiIO& io = ImGui::GetIO();
+    ImVec2 viewport = io.DisplaySize;
+    out_collapsing_changed = false;
+    float y_offset = (this->state.menu_visible) ? (ImGui::GetFrameHeight()) : (0.0f);
+    ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
+    bool window_maximized = ((wc.win_size.x == window_viewport.x) && (wc.win_size.y == window_viewport.y));
+    bool toggle_window_size = false; // (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0));
+
+    // Context Menu
+    if (ImGui::BeginPopupContextItem()) {
+        if (ImGui::MenuItem(((window_maximized) ? ("Minimize") : ("Maximize")))) {
+            toggle_window_size = true;
+        }
+        if (ImGui::MenuItem(((!wc.win_collapsed) ? ("Collapse") : ("Expand")), "Double Left Click")) {
+            wc.win_collapsed = !wc.win_collapsed;
+            out_collapsing_changed = true;
         }
 
-        std::string param_name = slot.Name().PeekBuffer();
-        std::string param_id = std::string(mod.FullName().PeekBuffer()) + "::" + param_name;
-        auto pos = param_name.find("::");
-        if (pos != std::string::npos) {
-            param_name = param_name.substr(pos + 2);
+        if (ImGui::MenuItem("Full Width", nullptr)) {
+            wc.win_size.x = viewport.x;
+            wc.win_reset = true;
         }
-        std::string param_label_hidden = "###" + param_id;
-        std::string param_label = param_name + param_label_hidden;
-        std::string param_desc = slot.Description().PeekBuffer();
-        std::string float_format = "%.7f";
+        ImGui::Separator();
 
-        ImGui::PushID(param_label.c_str());
-        ImGui::BeginGroup();
+/// DOCKING
+#if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
+        ImGui::MenuItem("Docking", "Shift + Left-Drag", false, false);
+#else
+        ImGui::MenuItem("Docking", nullptr, false, false);
+#endif
+        if (ImGui::ArrowButton("dock_left", ImGuiDir_Left)) {
+            wc.win_position.x = 0.0f;
+            wc.win_reset = true;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::ArrowButton("dock_up", ImGuiDir_Up)) {
+            wc.win_position.y = 0.0f;
+            wc.win_reset = true;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::ArrowButton("dock_down", ImGuiDir_Down)) {
+            wc.win_position.y = viewport.y - wc.win_size.y;
+            wc.win_reset = true;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::ArrowButton("dock_right", ImGuiDir_Right)) {
+            wc.win_position.x = viewport.x - wc.win_size.x;
+            wc.win_reset = true;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::Separator();
 
-        if (auto* p = slot.template Param<core::param::BoolParam>()) {
-            auto value = p->Value();
-            if (ImGui::Checkbox(param_label.c_str(), &value)) {
-                p->SetValue(value);
-            }
-        } else if (auto* p = slot.template Param<core::param::ButtonParam>()) {
-            std::string hotkey = "";
-            std::string buttonHotkey = p->GetKeyCode().ToString();
-            if (!buttonHotkey.empty()) {
-                hotkey = " (" + buttonHotkey + ")";
-            }
-            auto insert_pos = param_label.find("###");
-            param_label.insert(insert_pos, hotkey);
-            if (ImGui::Button(param_label.c_str())) {
-                p->setDirty();
-            }
-        } else if (auto* p = slot.template Param<core::param::ColorParam>()) {
-            core::param::ColorParam::ColorType value = p->Value();
-            auto color_flags = ImGuiColorEditFlags_AlphaPreview; // | ImGuiColorEditFlags_Float;
-            if (ImGui::ColorEdit4(param_label.c_str(), (float*)value.data(), color_flags)) {
-                p->SetValue(value);
-            }
-            help = "[Click] on the colored square to open a color picker.\n"
-                   "[CTRL+Click] on individual component to input value.\n"
-                   "[Right-Click] on the individual color widget to show options.";
-        } else if (auto* p = slot.template Param<core::param::TransferFunctionParam>()) {
-            drawTransferFunctionEdit(param_id, param_label, *p);
-        } else if (auto* p = slot.template Param<core::param::EnumParam>()) {
-            /// XXX: no UTF8 fanciness required here?
-            auto map = p->getMap();
-            auto key = p->Value();
-            if (ImGui::BeginCombo(param_label.c_str(), map[key].PeekBuffer())) {
-                auto iter = map.GetConstIterator();
-                while (iter.HasNext()) {
-                    auto pair = iter.Next();
-                    bool isSelected = (pair.Key() == key);
-                    if (ImGui::Selectable(pair.Value().PeekBuffer(), isSelected)) {
-                        p->SetValue(pair.Key());
-                    }
-                    if (isSelected) {
-                        ImGui::SetItemDefaultFocus();
-                    }
-                }
-                ImGui::EndCombo();
-            }
-        } else if (auto* p = slot.template Param<core::param::FlexEnumParam>()) {
-            /// XXX: no UTF8 fanciness required here?
-            auto value = p->Value();
-            if (ImGui::BeginCombo(param_label.c_str(), value.c_str())) {
-                for (auto valueOption : p->getStorage()) {
-                    bool isSelected = (valueOption == value);
-                    if (ImGui::Selectable(valueOption.c_str(), isSelected)) {
-                        p->SetValue(valueOption);
-                    }
-                    if (isSelected) {
-                        ImGui::SetItemDefaultFocus();
-                    }
-                }
-                ImGui::EndCombo();
-            }
-        } else if (auto* p = slot.template Param<core::param::FloatParam>()) {
-            auto it = this->widgtmap_float.find(param_id);
-            if (it == this->widgtmap_float.end()) {
-                this->widgtmap_float.emplace(param_id, p->Value());
-                it = this->widgtmap_float.find(param_id);
-            }
-            ImGui::InputFloat(
-                param_label.c_str(), &it->second, 1.0f, 10.0f, float_format.c_str(), ImGuiInputTextFlags_None);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                it->second = std::max(p->MinValue(), std::min(it->second, p->MaxValue()));
-                p->SetValue(it->second);
-            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                it->second = p->Value();
-            }
-        } else if (auto* p = slot.template Param<core::param::IntParam>()) {
-            auto it = this->widgtmap_int.find(param_id);
-            if (it == this->widgtmap_int.end()) {
-                this->widgtmap_int.emplace(param_id, p->Value());
-                it = this->widgtmap_int.find(param_id);
-            }
-            ImGui::InputInt(param_label.c_str(), &it->second, 1, 10, ImGuiInputTextFlags_None);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                it->second = std::max(p->MinValue(), std::min(it->second, p->MaxValue()));
-                p->SetValue(it->second);
-            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                it->second = p->Value();
-            }
-        } else if (auto* p = slot.template Param<core::param::Vector2fParam>()) {
-            auto it = this->widgtmap_vec2.find(param_id);
-            if (it == this->widgtmap_vec2.end()) {
-                this->widgtmap_vec2.emplace(param_id, p->Value());
-                it = this->widgtmap_vec2.find(param_id);
-            }
-            ImGui::InputFloat2(
-                param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                auto x = std::max(p->MinValue().X(), std::min(it->second.X(), p->MaxValue().X()));
-                auto y = std::max(p->MinValue().Y(), std::min(it->second.Y(), p->MaxValue().Y()));
-                it->second = vislib::math::Vector<float, 2>(x, y);
-                p->SetValue(it->second);
-            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                it->second = p->Value();
-            }
-        } else if (auto* p = slot.template Param<core::param::Vector3fParam>()) {
-            auto it = this->widgtmap_vec3.find(param_id);
-            if (it == this->widgtmap_vec3.end()) {
-                this->widgtmap_vec3.emplace(param_id, p->Value());
-                it = this->widgtmap_vec3.find(param_id);
-            }
-            ImGui::InputFloat3(
-                param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                auto x = std::max(p->MinValue().X(), std::min(it->second.X(), p->MaxValue().X()));
-                auto y = std::max(p->MinValue().Y(), std::min(it->second.Y(), p->MaxValue().Y()));
-                auto z = std::max(p->MinValue().Z(), std::min(it->second.Z(), p->MaxValue().Z()));
-                it->second = vislib::math::Vector<float, 3>(x, y, z);
-                p->SetValue(it->second);
-            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                it->second = p->Value();
-            }
-        } else if (auto* p = slot.template Param<core::param::Vector4fParam>()) {
-            auto it = this->widgtmap_vec4.find(param_id);
-            if (it == this->widgtmap_vec4.end()) {
-                this->widgtmap_vec4.emplace(param_id, p->Value());
-                it = this->widgtmap_vec4.find(param_id);
-            }
-            ImGui::InputFloat4(
-                param_label.c_str(), it->second.PeekComponents(), float_format.c_str(), ImGuiInputTextFlags_None);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                auto x = std::max(p->MinValue().X(), std::min(it->second.X(), p->MaxValue().X()));
-                auto y = std::max(p->MinValue().Y(), std::min(it->second.Y(), p->MaxValue().Y()));
-                auto z = std::max(p->MinValue().Z(), std::min(it->second.Z(), p->MaxValue().Z()));
-                auto w = std::max(p->MinValue().W(), std::min(it->second.W(), p->MaxValue().W()));
-                it->second = vislib::math::Vector<float, 4>(x, y, z, w);
-                p->SetValue(it->second);
-            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                it->second = p->Value();
-            }
-        } else if (auto* p = slot.template Param<core::param::TernaryParam>()) {
-            auto value = p->Value();
-            if (ImGui::RadioButton("True", value.IsTrue())) {
-                p->SetValue(vislib::math::Ternary::TRI_TRUE);
-            }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("False", value.IsFalse())) {
-                p->SetValue(vislib::math::Ternary::TRI_FALSE);
-            }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Unknown", value.IsUnknown())) {
-                p->SetValue(vislib::math::Ternary::TRI_UNKNOWN);
-            }
-            ImGui::SameLine();
-            ImGui::TextDisabled("|");
-            ImGui::SameLine();
-            ImGui::TextUnformatted(param_name.c_str());
-        } else if (auto* p = slot.Param<core::param::StringParam>()) {
-            /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            auto it = this->widgtmap_text.find(param_id);
-            if (it == this->widgtmap_text.end()) {
-                std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                GUIUtils::Utf8Encode(utf8Str);
-                this->widgtmap_text.emplace(param_id, utf8Str);
-                it = this->widgtmap_text.find(param_id);
-            }
-            // Determine multi line count of string
-            int lcnt = static_cast<int>(std::count(it->second.begin(), it->second.end(), '\n'));
-            lcnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), lcnt);
-            ImVec2 ml_dim = ImVec2(
-                ImGui::CalcItemWidth(), ImGui::GetFrameHeight() + (ImGui::GetFontSize() * static_cast<float>(lcnt)));
-            ImGui::InputTextMultiline(
-                param_label_hidden.c_str(), &it->second, ml_dim, ImGuiInputTextFlags_CtrlEnterForNewLine);
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                std::string utf8Str = it->second;
-                GUIUtils::Utf8Decode(utf8Str);
-                p->SetValue(vislib::StringA(utf8Str.c_str()));
-            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                GUIUtils::Utf8Encode(utf8Str);
-                it->second = utf8Str;
-            }
-            ImGui::SameLine();
-            ImGui::TextUnformatted(param_name.c_str());
-            help = "[Ctrl + Enter] for new line.\nPress [Return] to confirm changes.";
-        } else if (auto* p = slot.Param<core::param::FilePathParam>()) {
-            /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-            auto it = this->widgtmap_text.find(param_id);
-            if (it == this->widgtmap_text.end()) {
-                std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                GUIUtils::Utf8Encode(utf8Str);
-                this->widgtmap_text.emplace(param_id, utf8Str);
-                it = this->widgtmap_text.find(param_id);
-            }
-            ImGui::PushItemWidth(
-                ImGui::GetContentRegionAvail().x * 0.65f - ImGui::GetFrameHeight() - style.ItemSpacing.x);
-            bool button_edit = this->file_utils.FileBrowserButton(it->second);
-            ImGui::SameLine();
-            ImGui::InputText(param_label.c_str(), &it->second, ImGuiInputTextFlags_None);
-            if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
-                GUIUtils::Utf8Decode(it->second);
-                p->SetValue(vislib::StringA(it->second.c_str()));
-            } else if (!ImGui::IsItemActive() && !ImGui::IsItemEdited()) {
-                std::string utf8Str = std::string(p->ValueString().PeekBuffer());
-                GUIUtils::Utf8Encode(utf8Str);
-                it->second = utf8Str;
-            }
-            ImGui::PopItemWidth();
+        if (ImGui::MenuItem("Close", nullptr)) {
+            wc.win_show = false;
+        }
+        ImGui::EndPopup();
+    }
+
+    // Toggle window size
+    if (toggle_window_size) {
+        if (window_maximized) {
+            // Window is maximized
+            wc.win_size = wc.win_reset_size;
+            wc.win_position = wc.win_reset_position;
+            wc.win_reset = true;
         } else {
-            vislib::sys::Log::DefaultLog.WriteWarn(
-                "Unknown Parameter Type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return;
+            // Window is minimized
+            ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
+            wc.win_reset_size = wc.win_size;
+            wc.win_reset_position = wc.win_position;
+            wc.win_size = window_viewport;
+            wc.win_position = ImVec2(0.0f, y_offset);
+            wc.win_reset = true;
         }
+    }
 
-        ImGui::EndGroup();
-        ImGui::PopID();
-
-        // Reset to default style
-        if (param->IsGUIReadOnly()) {
-            GUIUtils::ReadOnlyWigetStyle(false);
+    // Move current window below window menu
+    if (wc.win_soft_reset || wc.win_reset || (this->state.menu_visible && ImGui::IsMouseReleased(0))) {
+        float y_offset = ImGui::GetFrameHeight();
+        if (wc.win_position.y < y_offset) {
+            wc.win_position.y = y_offset;
+            ImGui::SetWindowPos(wc.win_position, ImGuiCond_Always);
         }
-
-        this->utils.HoverToolTip(param_desc, ImGui::GetID(param_label.c_str()), 0.5f);
-        this->utils.HelpMarkerToolTip(help);
-    }
-}
-
-void GUIWindows::drawTransferFunctionEdit(
-    const std::string& id, const std::string& label, megamol::core::param::TransferFunctionParam& p) {
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    ImGui::BeginGroup();
-    ImGui::PushID(id.c_str());
-
-    // Reduced display of value and editor state.
-    if (p.Value().empty()) {
-        ImGui::TextDisabled("{    (empty)    }");
-    } else {
-        // XXX: A gradient texture would be nice here (sharing some editor code?)
-        ImGui::TextUnformatted("{ ............. }");
     }
 
-    bool isActive = (&p == this->tf_editor.GetActiveParameter());
-    bool updateEditor = false;
-
-    // Copy transfer function.
-    if (ImGui::Button("Copy")) {
-#ifdef GUI_USE_GLFW
-        auto glfw_win = ::glfwGetCurrentContext();
-        ::glfwSetClipboardString(glfw_win, p.Value().c_str());
-#elif _WIN32
-        ImGui::SetClipboardText(p.Value().c_str());
-#else // LINUX
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        vislib::sys::Log::DefaultLog.WriteInfo("Transfer Function JSON String:\n%s", p.Value().c_str());
-#endif
-    }
-    ImGui::SameLine();
-
-    //  Paste transfer function.
-    if (ImGui::Button("Paste")) {
-#ifdef GUI_USE_GLFW
-        auto glfw_win = ::glfwGetCurrentContext();
-        p.SetValue(::glfwGetClipboardString(glfw_win));
-#elif _WIN32
-        p.SetValue(ImGui::GetClipboardText());
-#else // LINUX
-        vislib::sys::Log::DefaultLog.WriteWarn(
-            "No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-#endif
-        updateEditor = true;
+    // Apply soft reset of window reset position and reset size
+    if (wc.win_soft_reset) {
+        this->window_collection.SoftResetWindowSizePosition(wc);
+        wc.win_soft_reset = false;
     }
 
-    // Edit transfer function.
-    ImGui::SameLine();
-    ImGui::PushID("Edit_");
-    ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[isActive ? ImGuiCol_ButtonHovered : ImGuiCol_Button]);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.Colors[isActive ? ImGuiCol_Button : ImGuiCol_ButtonHovered]);
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
-    if (ImGui::Button("Edit")) {
-        updateEditor = true;
-        isActive = true;
-        this->tf_editor.SetActiveParameter(&p);
-        // Open window calling the transfer function editor callback
-        const auto func = [](const std::string& wn, WindowManager::WindowConfiguration& wc) {
-            if (wc.win_callback == WindowManager::DrawCallbacks::TF) {
-                wc.win_show = true;
-            }
-        };
-        this->window_manager.EnumWindows(func);
-    }
-    ImGui::PopStyleColor(3);
-    ImGui::PopID();
-
-    // Propagate the transfer function to the editor.
-    if (isActive && updateEditor) {
-        this->tf_editor.SetTransferFunction(p.Value());
-    }
-
-    ImGui::PopID();
-
-    ImGui::SameLine();
-    ImGui::TextEx(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
-    ImGui::EndGroup();
-}
-
-
-void GUIWindows::drawParameterHotkey(const core::Module& mod, core::param::ParamSlot& slot) {
-    auto param = slot.Parameter();
-    if (!param.IsNull()) {
-        if (auto* p = slot.template Param<core::param::ButtonParam>()) {
-            std::string label = slot.Name().PeekBuffer();
-            std::string desc = slot.Description().PeekBuffer();
-            std::string keycode = p->GetKeyCode().ToString();
-
-            ImGui::Columns(2, "hotkey_columns", false);
-
-            ImGui::TextUnformatted(label.c_str());
-            this->utils.HoverToolTip(desc);
-
-            ImGui::NextColumn();
-
-            ImGui::TextUnformatted(keycode.c_str());
-            this->utils.HoverToolTip(desc);
-
-            // Reset colums
-            ImGui::Columns(1);
-
-            ImGui::Separator();
-        }
+    // Apply window position and size reset
+    if (wc.win_reset) {
+        this->window_collection.ResetWindowSizePosition(wc);
+        wc.win_reset = false;
     }
 }
 
@@ -1830,44 +1992,58 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
         hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_DOWN));
         hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_LEFT));
         hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_RIGHT));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_W, core::view::Modifier::ALT));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_A, core::view::Modifier::ALT));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::ALT));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_D, core::view::Modifier::ALT));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_C, core::view::Modifier::ALT));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_V, core::view::Modifier::ALT));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_Q, core::view::Modifier::ALT));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_E, core::view::Modifier::ALT));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_UP, core::view::Modifier::ALT));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_DOWN, core::view::Modifier::ALT));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_LEFT, core::view::Modifier::ALT));
+        hotkeylist.emplace_back(core::view::KeyCode(core::view::Key::KEY_RIGHT, core::view::Modifier::ALT));
 
+        // Add hotkeys of gui
         for (auto& h : this->hotkeys) {
-            hotkeylist.emplace_back(std::get<0>(h));
+            hotkeylist.emplace_back(h.keycode);
         }
 
-        if (this->core_instance != nullptr) {
-            this->core_instance->EnumParameters([&, this](const auto& mod, auto& slot) {
-                auto param = slot.Parameter();
-                if (!param.IsNull()) {
-                    if (auto* p = slot.template Param<core::param::ButtonParam>()) {
-                        auto hotkey = p->GetKeyCode();
+        // Add hotkeys of configurator
+        for (auto& h : this->configurator.GetHotkeys()) {
+            hotkeylist.emplace_back(h.keycode);
+        }
 
+        GraphPtr_t graph_ptr;
+        if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+            for (auto& module_ptr : graph_ptr->GetModules()) {
+                for (auto& param : module_ptr->parameters) {
+
+                    if (param.type == Param_t::BUTTON) {
+                        auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
                         // Ignore not set hotekey
-                        if (hotkey.key == core::view::Key::KEY_UNKNOWN) {
-                            return;
+                        if (keyCode.key == core::view::Key::KEY_UNKNOWN) {
+                            break;
                         }
-
-                        // check in hotkey map
+                        // Check in hotkey map
                         bool found = false;
-                        for (auto kc : hotkeylist) {
-                            if ((kc.key == hotkey.key) && (kc.mods.equals(hotkey.mods))) {
+                        for (auto& kc : hotkeylist) {
+                            if ((kc.key == keyCode.key) && (kc.mods.equals(keyCode.mods))) {
                                 found = true;
                             }
                         }
                         if (!found) {
-                            hotkeylist.emplace_back(hotkey);
+                            hotkeylist.emplace_back(keyCode);
                         } else {
-                            vislib::sys::Log::DefaultLog.WriteWarn(
-                                "The hotkey [%s] of the parameter \"%s::%s\" has already been assigned. "
+                            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                                "[GUI] The hotkey [%s] of the parameter \"%s\" has already been assigned. "
                                 ">>> If this hotkey is pressed, there will be no effect on this parameter!",
-                                hotkey.ToString().c_str(), mod.FullName().PeekBuffer(), slot.Name().PeekBuffer());
+                                keyCode.ToString().c_str(), param.full_name.c_str());
                         }
                     }
                 }
-            });
-        } else {
-            vislib::sys::Log::DefaultLog.WriteError(
-                "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            }
         }
 
         this->state.hotkeys_check_once = false;
@@ -1875,7 +2051,7 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
 }
 
 
-bool megamol::gui::GUIWindows::hotkeyPressed(megamol::core::view::KeyCode keycode) {
+bool megamol::gui::GUIWindows::isHotkeyPressed(megamol::core::view::KeyCode keycode) {
     ImGuiIO& io = ImGui::GetIO();
 
     return (ImGui::IsKeyDown(static_cast<int>(keycode.key))) &&
@@ -1885,13 +2061,205 @@ bool megamol::gui::GUIWindows::hotkeyPressed(megamol::core::view::KeyCode keycod
 }
 
 
-void GUIWindows::shutdown(void) {
+void megamol::gui::GUIWindows::triggerCoreInstanceShutdown(void) {
 
     if (this->core_instance != nullptr) {
-        vislib::sys::Log::DefaultLog.WriteInfo("GUIWindows: Triggering MegaMol instance shutdown.");
+#ifdef GUI_VERBOSE
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Shutdown MegaMol instance.");
+#endif // GUI_VERBOSE
         this->core_instance->Shutdown();
-    } else {
-        vislib::sys::Log::DefaultLog.WriteError(
-            "Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
+}
+
+
+std::string megamol::gui::GUIWindows::dump_state_to_file(const std::string& filename) {
+
+    nlohmann::json state_json;
+
+    if (this->state_to_json(state_json)) {
+        std::string state_str = state_json.dump(); // No line feed
+        return state_str;
+    }
+    return std::string("");
+}
+
+
+bool megamol::gui::GUIWindows::load_state_from_file(const std::string& filename) {
+
+    std::string state_str;
+    if (FileUtils::ReadFile(filename, state_str, true)) {
+        state_str = GUIUtils::ExtractGUIState(state_str);
+        if (state_str.empty())
+            return false;
+        nlohmann::json in_json = nlohmann::json::parse(state_str);
+        return this->state_from_json(in_json);
+    }
+
+    return false;
+}
+
+
+bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
+
+    try {
+        if (!in_json.is_object()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+
+        // Read GUI state
+        for (auto& header_item : in_json.items()) {
+            if (header_item.key() == GUI_JSON_TAG_GUI) {
+                auto gui_state = header_item.value();
+                megamol::core::utility::get_json_value<bool>(gui_state, {"menu_visible"}, &this->state.menu_visible);
+                int style = 0;
+                megamol::core::utility::get_json_value<int>(gui_state, {"style"}, &style);
+                this->state.style = static_cast<GUIWindows::Styles>(style);
+                this->state.style_changed = true;
+            }
+        }
+
+        // Read window configurations
+        this->window_collection.StateFromJSON(in_json);
+
+        // Read configurator state
+        this->configurator.StateFromJSON(in_json);
+
+        // Read GUI state of parameters (groups)
+        GraphPtr_t graph_ptr;
+        if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+            for (auto& module_ptr : graph_ptr->GetModules()) {
+                std::string module_full_name = module_ptr->FullName();
+                // Parameter Groups
+                module_ptr->present.param_groups.StateFromJSON(in_json, module_full_name);
+                // Parameters
+                for (auto& param : module_ptr->parameters) {
+                    std::string param_full_name = module_full_name + "::" + param.full_name;
+                    param.present.StateFromJSON(in_json, param_full_name);
+                    param.present.ForceSetGUIStateDirty();
+                }
+            }
+        }
+
+#ifdef GUI_VERBOSE
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Read GUI state from JSON.");
+#endif // GUI_VERBOSE
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] JSON Error - Unable to read state from JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}
+
+
+bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
+
+    try {
+        // Write GUI state
+        inout_json[GUI_JSON_TAG_GUI]["menu_visible"] = this->state.menu_visible;
+        inout_json[GUI_JSON_TAG_GUI]["style"] = static_cast<int>(this->state.style);
+
+        // Write window configuration
+        this->window_collection.StateToJSON(inout_json);
+
+        // Write the configurator state
+        this->configurator.StateToJSON(inout_json);
+
+        // Write GUI state of parameters (groups)
+        GraphPtr_t graph_ptr;
+        if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+            for (auto& module_ptr : graph_ptr->GetModules()) {
+                std::string module_full_name = module_ptr->FullName();
+                // Parameter Groups
+                module_ptr->present.param_groups.StateToJSON(inout_json, module_full_name);
+                // Parameters
+                for (auto& param : module_ptr->parameters) {
+                    std::string param_full_name = module_full_name + "::" + param.full_name;
+                    param.present.StateToJSON(inout_json, param_full_name);
+                }
+            }
+        }
+
+#ifdef GUI_VERBOSE
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote GUI state to JSON.");
+#endif // GUI_VERBOSE
+
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] JSON Error - Unable to write state to JSON. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}
+
+
+void megamol::gui::GUIWindows::init_state(void) {
+
+    this->state.gui_pre_drawing_enabled = true;
+    this->state.gui_post_drawing_enabled = true;
+    this->state.style = GUIWindows::Styles::DarkColors;
+    this->state.style_changed = true;
+    this->state.autosave_gui_state = false;
+    this->state.project_script_paths.clear();
+    this->state.graph_uid = GUI_INVALID_ID;
+    this->state.font_file = "";
+    this->state.font_size = 13.0f;
+    this->state.font_index = GUI_INVALID_ID;
+    this->state.font_utf8_ranges.clear();
+    this->state.win_save_state = false;
+    this->state.win_save_delay = 0.0f;
+    this->state.win_delete = "";
+    this->state.last_instance_time = 0.0;
+    this->state.open_popup_about = false;
+    this->state.open_popup_save = false;
+    this->state.open_popup_load = false;
+    this->state.open_popup_screenshot = false;
+    this->state.menu_visible = true;
+    this->state.graph_fonts_reserved = 0;
+    this->state.toggle_main_view = false;
+    this->state.shutdown_triggered = false;
+    this->state.screenshot_triggered = false;
+    this->state.screenshot_filepath = "megamol_screenshot.png";
+    this->state.screenshot_filepath_id = 0;
+    this->state.hotkeys_check_once = true;
+
+    this->create_not_existing_png_filepath(this->state.screenshot_filepath);
+}
+
+
+bool megamol::gui::GUIWindows::create_not_existing_png_filepath(std::string& inout_filepath) {
+
+    // Check for existing file
+    bool created_filepath = false;
+    if (!inout_filepath.empty()) {
+        while (FileUtils::FileExists<std::string>(inout_filepath)) {
+            // Create new filename with iterating suffix
+            std::string filename = FileUtils::GetFilenameStem<std::string>(inout_filepath);
+            std::string id_separator = "_";
+            bool new_separator = false;
+            auto separator_index = filename.find_last_of(id_separator);
+            if (separator_index != std::string::npos) {
+                auto last_id_str = filename.substr(separator_index + 1);
+                try {
+                    this->state.screenshot_filepath_id = std::stoi(last_id_str);
+                } catch (...) { new_separator = true; }
+                this->state.screenshot_filepath_id++;
+                if (new_separator) {
+                    this->state.screenshot_filepath =
+                        filename + id_separator + std::to_string(this->state.screenshot_filepath_id) + ".png";
+                } else {
+                    inout_filepath = filename.substr(0, separator_index + 1) +
+                                     std::to_string(this->state.screenshot_filepath_id) + ".png";
+                }
+            } else {
+                inout_filepath = filename + id_separator + std::to_string(this->state.screenshot_filepath_id) + ".png";
+            }
+        }
+        created_filepath = true;
+    }
+    return created_filepath;
 }

@@ -8,7 +8,7 @@
 #ifdef _WIN32
 #include "utility/WindowsUtils.h"
 #include "vislib/String.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/VersionNumber.h"
 #include <strsafe.h>
 #include <iostream>
@@ -175,7 +175,8 @@ void MEGAMOLCORE_CALLBACK utility::windowsConsoleLogEcho(unsigned int level, con
     if (level <= 200) {
         SetConsoleTextAttribute(hCO, sbi.wAttributes);
     }
-    std::cout << "|" << message;
+    auto closing = (message[std::strlen(message)-1] == '\n') ? "" : "\n";
+    std::cout << "|" << message << closing;
 }
 
 #endif

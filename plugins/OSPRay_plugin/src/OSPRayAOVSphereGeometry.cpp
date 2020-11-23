@@ -14,7 +14,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "ospray/ospray.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol::ospray;
@@ -116,7 +116,7 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
     if (!isInitAOV) {
         auto error = ospLoadModule("aovspheres");
         if (error != OSP_NO_ERROR) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "Unable to load OSPRay module: AOVSpheres. Error occured in %s:%d", __FILE__, __LINE__);
             return false;
         } else {
@@ -127,23 +127,23 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
     OSPVolume aovol = NULL;
     std::vector<OSPGeometry> geo;
     if (!volDataOK) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "OSPRayAOVSphereGeometry: connected module supplies no volume data, ignore subsequent errors\n");
     }
     if (!volMetaOK) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "OSPRayAOVSphereGeometry: connected module supplies no volume metadata, ignore subsequent errors\n");
     }
     if (!volExtentsOK) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "OSPRayAOVSphereGeometry: connected module supplies no volume extents, ignore subsequent errors\n");
     }
     if (!particleDataOK) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "OSPRayAOVSphereGeometry: connected module supplies no particle data, ignore subsequent errors\n");
     }
     if (!particleExtentsOK) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "OSPRayAOVSphereGeometry: connected module supplies no particle extents, ignore subsequent errors\n");
     }
 
@@ -189,32 +189,32 @@ bool OSPRayAOVSphereGeometry::getDataCallback(megamol::core::Call& call) {
 
             if (parts.GetVertexDataType() == core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE &&
                 parts.GetColourDataType() != core::moldyn::MultiParticleDataCall::Particles::COLDATA_NONE) {
-                vislib::sys::Log::DefaultLog.WriteError("Only color data is not allowed.");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Only color data is not allowed.");
             }
 
             // get the volume stuff
             auto const volSDT = vd->GetScalarType(); //< unfortunately only float is part of the intersection
             if (volSDT != core::misc::VolumetricDataCall::ScalarType::FLOATING_POINT) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "OSPRayAOVSphereGeometry: Only float is supported as AOVol data type\n");
                 continue;
             }
             auto const volGT = vd->GetGridType();
             if (volGT != core::misc::VolumetricDataCall::GridType::CARTESIAN &&
                 volGT != core::misc::VolumetricDataCall::GridType::RECTILINEAR) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "OSPRayAOVSphereGeometry: Currently only grids are supported as AOVol grid type\n");
                 continue;
             }
             auto const volCom = vd->GetComponents();
             if (volCom != 1) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "OSPRayAOVSphereGeometry: Only one component per cell is allowed as AOVol\n");
                 continue;
             }
             auto const metadata = vd->GetMetadata();
             if (metadata->MinValues == nullptr || metadata->MaxValues == nullptr) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "OSPRayAOVSphereGeometry: AOVol requires a specified value range\n");
                 recompute = false;
             }

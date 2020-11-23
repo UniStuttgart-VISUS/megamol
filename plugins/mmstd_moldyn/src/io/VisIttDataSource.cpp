@@ -16,10 +16,10 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/CoreInstance.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/String.h"
 #include "vislib/sys/sysfunctions.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 #include "vislib/graphics/ColourRGBAu8.h"
 #include <algorithm>
 
@@ -305,7 +305,7 @@ void VisIttDataSource::loadFrame(core::view::AnimDataModule::Frame *frame, unsig
         }
     }
 
-    vislib::sys::Log::DefaultLog.WriteInfo(100, "Frame %u loaded", idx);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(100, "Frame %u loaded", idx);
 }
 
 
@@ -409,7 +409,7 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
 
     if (!this->file->Open(this->filename.Param<core::param::FilePathParam>()->Value(),
             vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        this->GetCoreInstance()->Log().WriteError("Unable to open VisItt-File \"%s\".",
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open VisItt-File \"%s\".",
             vislib::StringA(this->filename.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
 
         SAFE_DELETE(this->file);
@@ -427,7 +427,7 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
     this->file->SeekToBegin();
     vislib::StringA header = vislib::sys::ReadLineFromFileA(*this->file);
     if (!this->parseHeader(header)) {
-        this->GetCoreInstance()->Log().WriteError("Unable to parse VisItt-file header line");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to parse VisItt-file header line");
 
         this->file->Close();
         SAFE_DELETE(this->file);
@@ -487,12 +487,12 @@ bool VisIttDataSource::filenameChanged(core::param::ParamSlot& slot) {
         vislib::StringA msg;
         msg.Format("Frame cache size forced to %i. Calculated size was %u.\n",
             CACHE_SIZE_MIN, cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_WARN, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, msg);
         cacheSize = CACHE_SIZE_MIN;
     } else {
         vislib::StringA msg;
         msg.Format("Frame cache size set to %i.\n", cacheSize);
-        this->GetCoreInstance()->Log().WriteMsg(vislib::sys::Log::LEVEL_INFO, msg);
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, msg);
     }
     if (this->frameTable.Count() > 0) {
         // refine bounding box using more frames

@@ -9,7 +9,7 @@
 #include "imageviewer/ImageRenderer.h"
 #include "imageviewer/JpegBitmapCodec.h"
 #include "mmcore/misc/PngBitmapCodec.h"
-#include "vislib/graphics/BitmapCodecCollection.h"
+#include "mmcore/utility/graphics/BitmapCodecCollection.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 //#define _USE_MATH_DEFINES
@@ -24,8 +24,8 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/CallRender3D_2.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/SystemInformation.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/SystemInformation.h"
 //#include <cmath>
 
 using namespace megamol::core;
@@ -221,7 +221,7 @@ bool imageviewer::ImageRenderer::GetExtents(view::CallRender3D_2& call) {
 
 
 /*
- * imageviewer::ImageRenderer::release
+ * imageviewer2::ImageRenderer::release
  */
 void imageviewer::ImageRenderer::release(void) {
     //    this->image.Release();
@@ -247,7 +247,7 @@ bool imageviewer::ImageRenderer::assertImage(bool rightEye) {
         MPI_Comm_split(this->comm, myRole, 0, &roleComm);
         MPI_Comm_rank(roleComm, &roleRank);
         MPI_Comm_size(roleComm, &roleSize);
-        vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: role %s (rank %i of %i)",
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: role %s (rank %i of %i)",
             myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
         registered = true;
     }
@@ -257,6 +257,10 @@ bool imageviewer::ImageRenderer::assertImage(bool rightEye) {
     bool imgcConnected = false;
     auto imgc = this->callRequestImage.CallAs<image_calls::Image2DCall>();
     if (imgc != nullptr) imgcConnected = true;
+    uint8_t imgc_enc = megamol::image_calls::Image2DCall::Encoding::RAW;
+    if (imgcConnected) {
+        imgc_enc = imgc->GetEncoding();
+    }
 
     param::ParamSlot* filenameSlot = rightEye ? (&this->rightFilenameSlot) : (&this->leftFilenameSlot);
     auto selected = this->currentSlot.Param<param::IntParam>()->Value();
@@ -275,6 +279,7 @@ bool imageviewer::ImageRenderer::assertImage(bool rightEye) {
                 filename = vislib::TString((*it).first.c_str());
             }
         }
+        const vislib::TString& filename = filenameSlot->Param<param::FilePathParam>()->Value();
         static vislib::graphics::BitmapImage img;
         // static ::sg::graphics::PngBitmapCodec codec;
         // codec.Image() = &img;
@@ -310,7 +315,7 @@ bool imageviewer::ImageRenderer::assertImage(bool rightEye) {
                 } else {
                     roleImgcRank = 0;
                 }
-                vislib::sys::Log::DefaultLog.WriteInfo(
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "ImageRenderer: IMGC Handshake result remoteness = %d imgcRank = %d\n", remoteness, roleImgcRank);
             }
 #endif /* WITH_MPI */
@@ -322,12 +327,11 @@ bool imageviewer::ImageRenderer::assertImage(bool rightEye) {
 #ifdef WITH_MPI
                 // single node or role boss loads the image
                 if (!useMpi || roleRank == roleImgcRank) {
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: role %s (rank %i of %i) loads an image",
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: role %s (rank %i of %i) loads an image",
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_RIGHT ? "right" : "left"), roleRank, roleSize);
 #endif /* WITH_MPI */
-
                     if (!remoteness && !imgcConnected) {
-                        vislib::sys::Log::DefaultLog.WriteInfo(
+                        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                             "ImageRenderer: Loading file '%s' from disk\n", filename.PeekBuffer());
                         vislib::sys::FastFile in;
                         if (in.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ,
@@ -341,7 +345,7 @@ bool imageviewer::ImageRenderer::assertImage(bool rightEye) {
                             fileSize = 0;
                         }
                     } else if (roleRank == roleImgcRank) {
-                        // vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Retrieving image from call\n");
+                        megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: Retrieving image from call\n");
                         auto it = imgc->GetImagePtr()->begin();
                         std::advance(it, selected);
                         this->width = (*it).second.Width();
@@ -353,14 +357,14 @@ bool imageviewer::ImageRenderer::assertImage(bool rightEye) {
                 // cluster nodes broadcast file size
                 if (useMpi) {
                     int bcastRoot = roleImgcRank;
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: Broadcast root = %d\n", bcastRoot);
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: Broadcast root = %d\n", bcastRoot);
                     MPI_Bcast(&fileSize, 1, MPI_INT, bcastRoot, roleComm);
-                    vislib::sys::Log::DefaultLog.WriteInfo("ImageRenderer: rank %i of %i (role %s) knows fileSize = %i",
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("ImageRenderer: rank %i of %i (role %s) knows fileSize = %i",
                         roleRank, roleSize, myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"),
                         fileSize);
                     if (roleRank != 0) {
                         allFile = new BYTE[fileSize];
-                        vislib::sys::Log::DefaultLog.WriteInfo(
+                        megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                             "ImageRenderer: rank %i of %i (role %s) late allocated file storage", roleRank, roleSize,
                             myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                     }
@@ -396,6 +400,7 @@ bool imageviewer::ImageRenderer::assertImage(bool rightEye) {
                 } else {
                     image_ptr = allFile;
                 }
+
                 // now everyone should have a copy of the loaded image
 
                 this->tiles.Clear();
@@ -434,11 +439,11 @@ bool imageviewer::ImageRenderer::assertImage(bool rightEye) {
 #ifdef WITH_MPI
                 // we finish this together
                 if (useMpi) {
-                    vislib::sys::Log::DefaultLog.WriteInfo(
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                         "ImageRenderer: rank %i of %i (role %s) entering sync barrier", roleRank, roleSize,
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                     MPI_Barrier(roleComm);
-                    vislib::sys::Log::DefaultLog.WriteInfo(
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                         "ImageRenderer: rank %i of %i (role %s) leaving sync barrier", roleRank, roleSize,
                         myRole == IMG_BLANK ? "blank" : (myRole == IMG_LEFT ? "left" : "right"));
                 }
@@ -465,21 +470,21 @@ bool imageviewer::ImageRenderer::initMPI() {
         if (c != nullptr) {
             /* New method: let MpiProvider do all the stuff. */
             if ((*c)(cluster::mpi::MpiCall::IDX_PROVIDE_MPI)) {
-                vislib::sys::Log::DefaultLog.WriteInfo("Got MPI communicator.");
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("Got MPI communicator.");
                 this->comm = c->GetComm();
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(_T("Could not ")
+                megamol::core::utility::log::Log::DefaultLog.WriteError(_T("Could not ")
                                                         _T("retrieve MPI communicator for the MPI-based view ")
                                                         _T("from the registered provider module."));
             }
         }
 
         if (this->comm != MPI_COMM_NULL) {
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("MPI is ready, ")
                                                    _T("retrieving communicator properties ..."));
             ::MPI_Comm_rank(this->comm, &this->mpiRank);
             ::MPI_Comm_size(this->comm, &this->mpiSize);
-            vislib::sys::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(_T("This view on %hs is %d ")
                                                    _T("of %d."),
                 vislib::sys::SystemInformation::ComputerNameA().PeekBuffer(), this->mpiRank, this->mpiSize);
         } /* end if (this->comm != MPI_COMM_NULL) */

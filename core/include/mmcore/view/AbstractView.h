@@ -16,23 +16,31 @@
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/AbstractParam.h"
-#include "mmcore/view/AbstractInputScope.h"
 #include "vislib/Array.h"
 #include "vislib/Serialiser.h"
 #include "vislib/SingleLinkedList.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/String.h"
-
+#include <AbstractInputScope.h>
 
 namespace megamol {
 namespace core {
 namespace view {
 
+using megamol::frontend_resources::Key;
+using megamol::frontend_resources::KeyAction;
+using megamol::frontend_resources::KeyCode;
+using megamol::frontend_resources::Modifier;
+using megamol::frontend_resources::Modifiers;
+using megamol::frontend_resources::MouseButton;
+using megamol::frontend_resources::MouseButtonAction;
 
 /**
  * Abstract base class of rendering views
  */
-class MEGAMOLCORE_API AbstractView : public Module, public AbstractInputScope {
+class MEGAMOLCORE_API AbstractView : public Module, public megamol::frontend_resources::AbstractInputScope {
+
+
 public:
     /**
      * Interfaces class for hooking into view processes
@@ -158,7 +166,7 @@ public:
      *
      * @param hook The hook to register
      */
-    void RegisterHook(view::AbstractView::Hooks* hook) {
+    void RegisterHook(Hooks* hook) {
         if (!this->hooks.Contains(hook)) {
             this->hooks.Add(hook);
         }
@@ -169,7 +177,7 @@ public:
      *
      * @param hook The hook to unregister
      */
-    void UnregisterHook(view::AbstractView::Hooks* hook) { this->hooks.RemoveAll(hook); }
+    void UnregisterHook(Hooks* hook) { this->hooks.RemoveAll(hook); }
 
     /**
      * Callback requesting a rendering of this view
@@ -179,6 +187,16 @@ public:
      * @return The return value
      */
     virtual bool OnRenderView(Call& call);
+
+
+    /**
+     * Callback requesting the extents of this view
+     *
+     * @param call The calling call
+     *
+     * @return The return value
+     */
+    virtual bool GetExtents(Call& call);
 
     /**
      * Callback requesting a rendering of this view
@@ -286,8 +304,6 @@ private:
      * @return The return value
      */
     bool onResetView(Call& call);
-
-	bool GetExtentsCallback(Call& call);
 
     bool OnKeyCallback(Call& call);
 

@@ -28,21 +28,27 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "ScatterplotMatrixRenderer2D"; }
+    static const char* ClassName() {
+        return "ScatterplotMatrixRenderer2D";
+    }
 
     /**
      * Answer a human readable description of this module.
      *
      * @return A human readable description of this module.
      */
-    static const char* Description() { return "Scatterplot matrix renderer for generic tables."; }
+    static const char* Description() {
+        return "Scatterplot matrix renderer for generic tables.";
+    }
 
     /**
      * Answers whether this module is available on the current system.
      *
      * @return 'true' if the module is available, 'false' otherwise.
      */
-    static bool IsAvailable() { return true; }
+    static bool IsAvailable() {
+        return true;
+    }
 
     /**
      * Initialises a new instance.
@@ -205,6 +211,8 @@ private:
 
     core::param::ParamSlot pickRadiusParam;
 
+    core::param::ParamSlot pickColorParam;
+
     core::param::ParamSlot resetSelectionParam;
 
     core::param::ParamSlot drawPickIndicatorParam;
@@ -227,11 +235,21 @@ private:
 
     core::param::ParamSlot axisTickSizeParam;
 
+    core::param::ParamSlot drawOuterLabelsParam;
+
+    core::param::ParamSlot drawDiagonalLabelsParam;
+
+    core::param::ParamSlot cellInvertYParam;
+
     core::param::ParamSlot cellSizeParam;
 
     core::param::ParamSlot cellMarginParam;
 
     core::param::ParamSlot cellNameSizeParam;
+
+    core::param::ParamSlot outerXLabelMarginParam;
+
+    core::param::ParamSlot outerYLabelMarginParam;
 
     core::param::ParamSlot alphaScalingParam;
 

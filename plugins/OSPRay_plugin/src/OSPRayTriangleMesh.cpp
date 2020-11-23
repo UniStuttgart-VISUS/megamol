@@ -8,22 +8,22 @@
 #include "OSPRayTriangleMesh.h"
 #include <functional>
 #include "geometry_calls/CallTriMeshData.h"
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/Call.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/Vector3fParam.h"
-#include "vislib/sys/Log.h"
-#include "mmcore/BoundingBoxes_2.h"
+#include "mmcore/utility/log/Log.h"
 
 
 using namespace megamol::ospray;
 
 
 OSPRayTriangleMesh::OSPRayTriangleMesh(void)
-    : AbstractOSPRayStructure()
-    , getTrimeshDataSlot("getTrimeshData", "Connects to the data source")
-    , getMeshDataSlot("getMeshData", "Connects to the data source") {
+        : AbstractOSPRayStructure()
+        , getTrimeshDataSlot("getTrimeshData", "Connects to the data source")
+        , getMeshDataSlot("getMeshData", "Connects to the data source") {
 
     this->getTrimeshDataSlot.SetCompatibleCall<geocalls::CallTriMeshDataDescription>();
     this->MakeSlotAvailable(&this->getTrimeshDataSlot);
@@ -55,8 +55,10 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
             meta_data.m_frame_ID = os->getTime();
         }
         cm->setMetaData(meta_data);
-        if (!(*cm)(1)) return false;
-        if (!(*cm)(0)) return false;
+        if (!(*cm)(1))
+            return false;
+        if (!(*cm)(0))
+            return false;
         meta_data = cm->getMetaData();
         if (cm->hasUpdate() || this->time != os->getTime() || this->InterfaceIsDirty()) {
             this->time = os->getTime();
@@ -72,7 +74,8 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
         geocalls::CallTriMeshData* cd = this->getTrimeshDataSlot.CallAs<geocalls::CallTriMeshData>();
 
         this->structureContainer.dataChanged = false;
-        if (cd == NULL) return false;
+        if (cd == NULL)
+            return false;
         if (os->getTime() > cd->FrameCount()) {
             cd->SetFrameID(cd->FrameCount() - 1, true); // isTimeForced flag set to true
         } else {
@@ -86,8 +89,10 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
             return true;
         }
 
-        if (!(*cd)(1)) return false;
-        if (!(*cd)(0)) return false;
+        if (!(*cd)(1))
+            return false;
+        if (!(*cd)(0))
+            return false;
 
         this->structureContainer.mesh = std::make_shared<mesh::MeshDataAccessCollection>();
 
@@ -121,7 +126,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                 break;
             // case geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
             default:
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[OSPRayTriangleMesh] Vertex: No other data types than FLOAT are supported.");
                 return false;
             }
@@ -138,7 +143,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                         mesh::MeshDataAccessCollection::AttributeSemanticType::NORMAL});
                     break;
                 default:
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[OSPRayTriangleMesh] Normals: No other data types than FLOAT are supported.");
                     return false;
                 }
@@ -151,7 +156,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                 case geocalls::CallTriMeshData::Mesh::DT_BYTE:
                     _color.reserve(vertexCount * 4);
                     for (unsigned int i = 0; i < 3 * obj.GetVertexCount(); i++) {
-                        _color.push_back((float)obj.GetColourPointerByte()[i] / 255.0f);
+                        _color.push_back((float) obj.GetColourPointerByte()[i] / 255.0f);
                         if ((i + 1) % 3 == 0) {
                             _color.push_back(1.0f);
                         }
@@ -168,7 +173,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                     }
                     break;
                 default:
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[OSPRayTriangleMesh] Color: No other data types than BYTE or FLOAT are supported.");
                     return false;
                 }
@@ -190,12 +195,13 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                         const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(obj.GetTextureCoordinatePointerFloat())),
                         2 * vertexCount *
                             mesh::MeshDataAccessCollection::getByteSize(mesh::MeshDataAccessCollection::FLOAT),
-                        2, mesh::MeshDataAccessCollection::FLOAT, 2*sizeof(float), 0,
+                        2, mesh::MeshDataAccessCollection::FLOAT, 2 * sizeof(float), 0,
                         mesh::MeshDataAccessCollection::AttributeSemanticType::TEXCOORD});
                     break;
                 default:
-                    vislib::sys::Log::DefaultLog.WriteError("[OSPRayTriangleMesh] TextureCoordinate: No other data "
-                                                            "types than BYTE or FLOAT are supported.");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[OSPRayTriangleMesh] TextureCoordinate: No other data "
+                        "types than BYTE or FLOAT are supported.");
                     return false;
                 }
             }
@@ -214,12 +220,13 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                     break;
 
                 default:
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[OSPRayTriangleMesh] Index: No other data types than BYTE or FLOAT are supported.");
                     return false;
                 }
             }
-            this->structureContainer.mesh->addMesh(attrib, index);
+            std::string identifier = std::string(FullName()) + "_object_" + std::to_string(i);
+            this->structureContainer.mesh->addMesh(identifier, attrib, index);
 
         } // end for
     }
@@ -240,9 +247,13 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
 }
 
 
-OSPRayTriangleMesh::~OSPRayTriangleMesh() { this->Release(); }
+OSPRayTriangleMesh::~OSPRayTriangleMesh() {
+    this->Release();
+}
 
-bool OSPRayTriangleMesh::create() { return true; }
+bool OSPRayTriangleMesh::create() {
+    return true;
+}
 
 void OSPRayTriangleMesh::release() {}
 
@@ -250,7 +261,7 @@ void OSPRayTriangleMesh::release() {}
 ospray::OSPRaySphereGeometry::InterfaceIsDirty()
 */
 bool OSPRayTriangleMesh::InterfaceIsDirty() {
-        return false;
+    return false;
 }
 
 
@@ -261,7 +272,8 @@ bool OSPRayTriangleMesh::getExtends(megamol::core::Call& call) {
 
     if (cm != nullptr) {
 
-        if (!(*cm)(1)) return false;
+        if (!(*cm)(1))
+            return false;
         auto meta_data = cm->getMetaData();
         if (os->getTime() > meta_data.m_frame_cnt) {
             meta_data.m_frame_ID = meta_data.m_frame_cnt - 1;
@@ -278,14 +290,16 @@ bool OSPRayTriangleMesh::getExtends(megamol::core::Call& call) {
 
         megamol::geocalls::CallTriMeshData* cd = this->getTrimeshDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
 
-        if (cd == NULL) return false;
+        if (cd == NULL)
+            return false;
         if (os->getTime() > cd->FrameCount()) {
             cd->SetFrameID(cd->FrameCount() - 1, true); // isTimeForced flag set to true
         } else {
             cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
         }
 
-        if (!(*cd)(1)) return false;
+        if (!(*cd)(1))
+            return false;
 
         this->extendContainer.boundingBox = std::make_shared<core::BoundingBoxes_2>();
         this->extendContainer.boundingBox->SetBoundingBox(cd->AccessBoundingBoxes().ObjectSpaceBBox());

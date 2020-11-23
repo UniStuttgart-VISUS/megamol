@@ -36,7 +36,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/ColourParser.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Matrix.h"
@@ -1496,7 +1496,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CreateFbo(UINT width, UINT he
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                "%s: (re)creating raycasting fbo.", this->ClassName());
 
     glEnable(GL_TEXTURE_2D);
@@ -1532,7 +1532,7 @@ bool protein_cuda::CrystalStructureVolumeRenderer::CreateSrcFbo(size_t width, si
     using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
                "%s: (re)creating source fbo.", this->ClassName());
 
     glEnable(GL_TEXTURE_2D);

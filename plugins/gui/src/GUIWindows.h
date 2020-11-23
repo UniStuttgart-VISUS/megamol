@@ -9,312 +9,281 @@
 #define MEGAMOL_GUI_GUIWINDOWS_H_INCLUDED
 
 
-#include "mmcore/CoreInstance.h"
-#include "mmcore/param/ParamSlot.h"
+#ifdef _WIN32
+#ifdef GUI_EXPORTS
+#define GUI_API __declspec(dllexport)
+#else
+#define GUI_API __declspec(dllimport)
+#endif
+#else // _WIN32
+#define GUI_API
+#endif // _WIN32
 
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/ButtonParam.h"
-#include "mmcore/param/ColorParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/FilePathParam.h"
-#include "mmcore/param/FlexEnumParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/StringParam.h"
-#include "mmcore/param/TernaryParam.h"
-#include "mmcore/param/TransferFunctionParam.h"
-#include "mmcore/param/Vector2fParam.h"
-#include "mmcore/param/Vector3fParam.h"
-#include "mmcore/param/Vector4fParam.h"
+
+#include "Configurator.h"
+#include "CorporateGreyStyle.h"
+#include "CorporateWhiteStyle.h"
+#include "DefaultStyle.h"
+#include "FileUtils.h"
+#include "LogConsole.h"
+#include "WindowCollection.h"
+#include "widgets/FileBrowserWidget.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/MinimalPopUp.h"
+#include "widgets/StringSearchWidget.h"
+#include "widgets/TransferFunctionEditor.h"
+#include "widgets/WidgetPicking_gl.h"
+
+#include "mmcore/CoreInstance.h"
+#include "mmcore/MegaMolGraph.h"
+#include "mmcore/ViewDescription.h"
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/versioninfo.h"
+#include "mmcore/view/AbstractView_EventConsumption.h"
 
 #include "vislib/math/Rectangle.h"
 
-#include <algorithm>
+#include <ctime>
 #include <iomanip>
 #include <sstream>
 
-#include "CorporateGreyStyle.h"
-#include "CorporateWhiteStyle.h"
-#include "FileUtils.h"
-#include "TransferFunctionEditor.h"
-#include "WindowManager.h"
-#include "configurator/Configurator.h"
-
 // Used for platform independent clipboard (ImGui so far only provides windows implementation)
 #ifdef GUI_USE_GLFW
-#    include "GLFW/glfw3.h"
+#include "GLFW/glfw3.h"
 #endif
 
 
 namespace megamol {
 namespace gui {
 
-class GUIWindows {
-public:
-    /**
-     * CTOR.
-     */
-    GUIWindows();
+    class GUI_API GUIWindows {
+    public:
+        /**
+         * CTOR.
+         */
+        GUIWindows(void);
 
-    /**
-     * DTOR.
-     */
-    virtual ~GUIWindows();
+        /**
+         * DTOR.
+         */
+        virtual ~GUIWindows(void);
 
-    /**
-     * Create ImGui context using OpenGL.
-     *
-     * @param core_instance     The currently available core instance.
-     */
-    bool CreateContext_GL(megamol::core::CoreInstance* core_instance);
+        /**
+         * Create ImGui context using OpenGL.
+         *
+         * @param core_instance     The currently available core instance.
+         */
+        bool CreateContext_GL(megamol::core::CoreInstance* core_instance);
 
-    /**
-     * Setup and enable ImGui context for subsequent use.
-     *
-     * @param viewport      The currently available viewport.
-     * @param instanceTime  The current instance time.
-     */
-    bool PreDraw(vislib::math::Rectangle<int> viewport, double instanceTime);
+        /**
+         * Setup and enable ImGui context for subsequent use.
+         *
+         * @param framebuffer_size   The currently available size of the framebuffer.
+         * @param window_size        The currently available size of the window.
+         * @param instance_time      The current instance time.
+         */
+        bool PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time);
 
+        /**
+         * Actual drawing of Gui windows and final rendering of pushed ImGui draw commands.
+         */
+        bool PostDraw(void);
 
-    /**
-     * Actual Gui windows drawing and final rednering of pushed ImGui draw commands.
-     */
-    bool PostDraw(void);
+        /**
+         * Process key events.
+         */
+        bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods);
 
-    /**
-     * Process key events.
-     */
-    bool OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods);
+        /**
+         * Process character events.
+         */
+        bool OnChar(unsigned int codePoint);
 
-    /**
-     * Process character events.
-     */
-    bool OnChar(unsigned int codePoint);
+        /**
+         * Process mouse button events.
+         */
+        bool OnMouseButton(
+            core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods);
 
-    /**
-     * Process mouse button events.
-     */
-    bool OnMouseButton(
-        core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods);
+        /**
+         * Process mouse move events.
+         */
+        bool OnMouseMove(double x, double y);
 
-    /**
-     * Process mouse move events.
-     */
-    bool OnMouseMove(double x, double y);
+        /**
+         * Process mouse scroll events.
+         */
+        bool OnMouseScroll(double dx, double dy);
 
-    /**
-     * Process mouse scroll events.
-     */
-    bool OnMouseScroll(double dx, double dy);
+        /**
+         * Triggered Shutdown.
+         */
+        inline bool ConsumeTriggeredShutdown(void) {
+            bool request_shutdown = this->state.shutdown_triggered;
+            this->state.shutdown_triggered = false;
+            return request_shutdown;
+        }
 
-    /**
-     * Return list of parameter slots provided by this class. Make available in module which uses this class.
-     */
-    inline const std::vector<megamol::core::param::ParamSlot*> GetParams(void) const { return this->param_slots; }
+        /**
+         * Triggered Screenshot.
+         */
+        bool ConsumeTriggeredScreenshot(void);
+        // Valid filename is only ensured after screenshot was triggered.
+        inline const std::string ConsumeScreenshotFileName(void) const {
+            return this->state.screenshot_filepath;
+        }
 
-private:
-    /** Available ImGui implementations */
-    enum Implementation { NONE, OpenGL };
+        /**
+         * Set Project Script Paths.
+         */
+        void SetProjectScriptPaths(const std::vector<std::string>& script_paths) {
+            this->state.project_script_paths = script_paths;
+        }
 
-    /** Available GUI styles. */
-    enum Styles {
-        CorporateGray,
-        CorporateWhite,
-        DarkColors,
-        LightColors,
+        /**
+         * Enable or disable GUI drawing
+         */
+        void SetEnableDisable(bool enable) {
+            this->state.gui_pre_drawing_enabled = enable;
+        }
+
+        /**
+         * Synchronise changes between core graph <-> gui graph.
+         *
+         * - 'Old' core instance graph:    Call this function after(!) rendering of current frame.
+         *                                 This way, graph changes will be applied next frame (and not 2 frames later).
+         *                                 In this case in PreDraw() a gui graph is created once.
+         * - 'New' megamol graph:          Call this function in GUI_Service::digestChangedRequestedResources() as
+         *                                 pre-rendering step. In this case a new gui graph is created before first
+         *                                 call of PreDraw() and a gui graph already exists.
+         *
+         * @param megamol_graph    If no megamol_graph is given, 'old' graph is synchronised via core_instance.
+         */
+        bool SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph = nullptr);
+
+    private:
+        /** Available GUI styles. */
+        enum Styles {
+            CorporateGray,
+            CorporateWhite,
+            DarkColors,
+            LightColors,
+        };
+
+        /** ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512) */
+        enum GuiTextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
+
+        /** The global state (for settings to be applied before ImGui::Begin). */
+        struct StateBuffer {
+            bool gui_pre_drawing_enabled;                  // Flag indicating whether GUI should be drawn
+            bool gui_post_drawing_enabled;                 // Prevent gui drwing change between pre and post draw
+            Styles style;                                  // Predefined GUI style
+            bool style_changed;                            // Flag indicating changed style
+            bool autosave_gui_state;                       // Automatically save state after gui has been changed
+            std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
+            ImGuiID graph_uid;                             // UID of currently running graph
+            std::string font_file;                         // Apply changed font file name.
+            float font_size;                               // Apply changed font size.
+            unsigned int font_index;                       // Apply cahnged font by index.
+            std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.
+            bool win_save_state;    // Flag indicating that window state should be written to parameter.
+            float win_save_delay;   // Flag indicating how long to wait for saving window state since last user action.
+            std::string win_delete; // Name of the window to delete.
+            double last_instance_time;         // Last instance time.
+            bool open_popup_about;             // Flag for opening about pop-up
+            bool open_popup_save;              // Flag for opening save pop-up
+            bool open_popup_load;              // Flag for opening load pop-up
+            bool open_popup_screenshot;        // Flag for opening screenshot file pop-up
+            bool menu_visible;                 // Flag indicating menu state
+            unsigned int graph_fonts_reserved; // Number of fonts reserved for the configurator graph canvas
+            bool toggle_main_view;             // Flag indicating that the main view should be toggeled
+            bool shutdown_triggered;           // Flag indicating user triggered shutdown
+            bool screenshot_triggered;         // Trigger and file name for screenshot
+            std::string screenshot_filepath;   // Filename the screenshot should be saved to
+            int screenshot_filepath_id;        // Last unique id for screenshot filename
+            bool hotkeys_check_once;           // WORKAROUND: Check multiple hotkey assignments once
+        };
+
+        /** The GUI hotkey array index mapping. */
+        enum GuiHotkeyIndex : size_t {
+            EXIT_PROGRAM = 0,
+            PARAMETER_SEARCH = 1,
+            SAVE_PROJECT = 2,
+            LOAD_PROJECT = 3,
+            MENU = 4,
+            TOGGLE_MAIN_VIEWS = 5,
+            TRIGGER_SCREENSHOT = 6,
+            RESET_WINDOWS_POS = 7,
+            INDEX_COUNT = 8
+        };
+
+        // VARIABLES --------------------------------------------------------------
+
+        /** Pointer to core instance. */
+        megamol::core::CoreInstance* core_instance;
+
+        /** Hotkeys */
+        std::array<megamol::gui::HotkeyData_t, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
+
+        /** The ImGui context created and used by this GUIWindows */
+        ImGuiContext* context;
+
+        /** The currently initialized ImGui API */
+        GUIImGuiAPI api;
+
+        /** The window collection. */
+        WindowCollection window_collection;
+
+        /** The configurator. */
+        megamol::gui::Configurator configurator;
+
+        /** The configurator. */
+        megamol::gui::LogConsole console;
+
+        /** The current local state of the gui. */
+        StateBuffer state;
+
+        // Widgets
+        FileBrowserWidget file_browser;
+        StringSearchWidget search_widget;
+        std::shared_ptr<TransferFunctionEditor> tf_editor_ptr;
+        HoverToolTip tooltip;
+        PickingBuffer picking_buffer;
+        PickableTriangle triangle_widget;
+
+        // FUNCTIONS --------------------------------------------------------------
+
+        bool createContext(void);
+        bool destroyContext(void);
+
+        // Window Draw Callbacks
+        void drawParamWindowCallback(WindowCollection::WindowConfiguration& wc);
+        void drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc);
+        void drawFontWindowCallback(WindowCollection::WindowConfiguration& wc);
+        void drawTransferFunctionWindowCallback(WindowCollection::WindowConfiguration& wc);
+        void drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc);
+
+        void drawMenu(void);
+        void drawPopUps(void);
+
+        // Only call after ImGui::Begin() and before next ImGui::End()
+        void window_sizing_and_positioning(WindowCollection::WindowConfiguration& wc, bool& out_collapsing_changed);
+
+        bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
+        void checkMultipleHotkeyAssignement(void);
+        bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
+        void triggerCoreInstanceShutdown(void);
+
+        std::string dump_state_to_file(const std::string& filename);
+        bool load_state_from_file(const std::string& filename);
+
+        bool state_from_json(const nlohmann::json& in_json);
+        bool state_to_json(nlohmann::json& inout_json);
+
+        void init_state(void);
+
+        bool create_not_existing_png_filepath(std::string& inout_filepath);
     };
-
-    /** ImGui key map assignment for text manipulation hotkeys (using last unused indices < 512) */
-    enum GuiTextModHotkeys { CTRL_A = 506, CTRL_C = 507, CTRL_V = 508, CTRL_X = 509, CTRL_Y = 510, CTRL_Z = 511 };
-
-    /** The global state (for settings to be applied before ImGui::Begin). */
-    struct StateBuffer {
-        std::string font_file;                 // Apply changed font file name.
-        float font_size;                       // Apply changed font size.
-        unsigned int font_index;               // Apply cahnged font by index.
-        std::vector<ImWchar> font_utf8_ranges; // Additional UTF-8 glyph ranges for all ImGui fonts.
-        bool win_save_state;                   // Flag indicating that window state should be written to parameter.
-        float win_save_delay;      // Flag indicating how long to wait for saving window state since last user action.
-        std::string win_delete;    // Name of the window to delete.
-        double last_instance_time; // Last instance time.
-        bool hotkeys_check_once;   // WORKAROUND: Check multiple hotkey assignments once.
-    };
-
-    /** The GUI hotkey array index mapping. */
-    enum GuiHotkeyIndex : size_t { EXIT_PROGRAM = 0, PARAMETER_SEARCH = 1, SAVE_PROJECT = 2, INDEX_COUNT = 3 };
-
-    // VARIABLES --------------------------------------------------------------
-
-    /** Pointer to core isntance. */
-    megamol::core::CoreInstance* core_instance;
-
-    /** List of pointers to all paramters. */
-    std::vector<megamol::core::param::ParamSlot*> param_slots;
-
-    /** A parameter to select the style */
-    megamol::core::param::ParamSlot style_param;
-
-    /** A parameter to store the profile */
-    megamol::core::param::ParamSlot state_param;
-
-    /** A parameter for automatically start the configurator at start up */
-    megamol::core::param::ParamSlot autostart_configurator;
-
-    /** Hotkeys */
-    std::array<megamol::gui::HotkeyDataType, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
-
-    /** The ImGui context created and used by this GUIWindows */
-    ImGuiContext* context;
-
-    /** The currently initialized ImGui implementation */
-    Implementation impl;
-
-    /** The window manager. */
-    WindowManager window_manager;
-
-    /** The transfer function editor. */
-    TransferFunctionEditor tf_editor;
-
-    /** The configurator. */
-    megamol::gui::configurator::Configurator configurator;
-
-    /** Utils being used all over the place */
-    megamol::gui::GUIUtils utils;
-
-    /** File utils providing stuff interacting with files */
-    megamol::gui::FileUtils file_utils;
-
-    /** The current local state of the gui. */
-    StateBuffer state;
-
-    /** Input Widget Buffers. */
-    std::map<std::string, std::string> widgtmap_text;
-    std::map<std::string, int> widgtmap_int;
-    std::map<std::string, float> widgtmap_float;
-    std::map<std::string, vislib::math::Vector<float, 2>> widgtmap_vec2;
-    std::map<std::string, vislib::math::Vector<float, 3>> widgtmap_vec3;
-    std::map<std::string, vislib::math::Vector<float, 4>> widgtmap_vec4;
-
-    /** Numer of fonts reserved for the configurator graph canvas. */
-    unsigned int graph_fonts_reserved;
-
-    // FUNCTIONS --------------------------------------------------------------
-
-    /**
-     * Creates the ImGui context indepedant of the required implementation.
-     */
-    bool createContext(void);
-
-    /**
-     * Creates the ImGui context indepedant of the required implementation.
-     */
-    bool destroyContext(void);
-
-    /**
-     * Validates GUI parameters.
-     */
-    void validateParameter();
-
-    /**
-     * Callback for drawing the parameter window.
-     *
-     * @param window_name    The label of the calling window.
-     * @param window_config  The configuration of the calling window.
-     */
-    void drawMainWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-
-    /**
-     * Draws parameters and options.
-     *
-     * @param window_name    The label of the calling window.
-     * @param window_config  The configuration of the calling window.
-     */
-    void drawParametersCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-
-    /**
-     * Draws fps overlay window.
-     *
-     * @param window_name    The label of the calling window.
-     * @param window_config  The configuration of the calling window.
-     */
-    void drawFpsWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-
-    /**
-     * Callback for drawing font selection window.
-     *
-     * @param window_name    The label of the calling window.
-     * @param window_config  The configuration of the calling window.
-     */
-    void drawFontWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-
-    /**
-     * Callback for drawing the demo window.
-     *
-     * @param window_name    The label of the calling window.
-     * @param window_config  The configuration of the calling window.
-     */
-    void drawTFWindowCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-
-    /**
-     * Callback for drawing the configurator.
-     *
-     * @param window_name    The label of the calling window.
-     * @param window_config  The configuration of the calling window.
-     */
-    void drawConfiguratorCallback(const std::string& wn, WindowManager::WindowConfiguration& wc);
-
-    /**
-     * Draws the menu bar.
-     *
-     * @param window_config  The configuration of the calling window.
-     */
-    void drawMenu(const std::string& wn, WindowManager::WindowConfiguration& wc);
-
-    /**
-     * Draws one parameter.
-     *
-     * @param mod   Module the paramter belongs to.
-     * @param slot  The current parameter slot.
-     */
-    void drawParameter(const core::Module& mod, core::param::ParamSlot& slot);
-
-    /**
-     * Transfer function edit widget.
-     */
-    void drawTransferFunctionEdit(
-        const std::string& id, const std::string& label, megamol::core::param::TransferFunctionParam& p);
-
-    /**
-     * Draws only a button parameter's hotkey.
-     *
-     * @param mod   Module the paramter belongs to.
-     * @param slot  The current parameter slot.
-     */
-    void drawParameterHotkey(const core::Module& mod, core::param::ParamSlot& slot);
-
-    /**
-     * Check if module's parameters should be visible.
-     */
-    bool considerModule(const std::string& modname, std::vector<std::string>& modules_list);
-
-    /**
-     * Checks for multiple hotkey assignement.
-     */
-    void checkMultipleHotkeyAssignement(void);
-
-    /**
-     * Check if given hotkey is pressed.
-     */
-    bool hotkeyPressed(megamol::core::view::KeyCode keycode);
-
-    /**
-     * Shutdown megmol program.
-     */
-    void shutdown(void);
-};
 
 } // namespace gui
 } // namespace megamol

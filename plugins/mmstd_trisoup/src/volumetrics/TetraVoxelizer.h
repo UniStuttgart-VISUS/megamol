@@ -4,7 +4,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "vislib/sys/ThreadPool.h"
+#include "mmcore/utility/sys/ThreadPool.h"
 #include "JobStructures.h"
 #include "TagVolume.h"
 #include "vislib/math/ShallowShallowTriangle.h"

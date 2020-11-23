@@ -15,6 +15,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
+#define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/GLSLProgram.hpp"
 #include "glowl/Texture2D.hpp"
 
@@ -108,10 +109,9 @@ private:
 
     /** Slot for querying secondary depth texture, i.e. a rhs connection */
     megamol::core::CallerSlot m_depth_tex_1_slot;
-
 };
 
-}
-}
+} // namespace compositing
+} // namespace megamol
 
 #endif // !TEXTURE_DEPTH_COMPOSITING_H_INCLUDED

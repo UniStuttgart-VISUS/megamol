@@ -18,7 +18,7 @@
 
 #include "vislib/math/Matrix.h"
 #include "vislib/math/ShallowVector.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include <limits>
 
@@ -484,7 +484,7 @@ bool SecStructFlattener::getExtent(core::Call& call) {
 		}
 
 		if (cAlphaIndices.size() != oIndices.size()) {
-			vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
 				"Malformed molecule (different number of c alpha and primary oxygen atoms)\n");
 		}
 

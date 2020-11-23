@@ -10,9 +10,9 @@
 #include "mmcore/param/BoolParam.h"
 #include <cstdint>
 #include <algorithm>
-#include "vislib/sys/Log.h"
-#include "vislib/sys/ConsoleProgressBar.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/ConsoleProgressBar.h"
+#include "mmcore/utility/sys/Thread.h"
 #include <cassert>
 
 using namespace megamol;
@@ -109,7 +109,7 @@ namespace {
 
 bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiParticleDataCall& inData) {
     outDataHash++;
-    vislib::sys::Log::DefaultLog.WriteInfo("Updating Particle Sorting ID Data...");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Updating Particle Sorting ID Data...");
 
     inData.SetFrameID(0, false);
     if (!inData(1)) return false; // query extends first for number for frames
@@ -120,7 +120,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
         ? inData.AccessBoundingBoxes().ObjectSpaceBBox()
         : inData.AccessBoundingBoxes().WorldSpaceBBox();
     vislib::math::Dimension<float, 3> bboxsize = bbox.GetSize();
-    vislib::sys::Log::DefaultLog.WriteInfo("Bounding Box size (%f, %f, %f)", bboxsize[0], bboxsize[1], bboxsize[2]);
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Bounding Box size (%f, %f, %f)", bboxsize[0], bboxsize[1], bboxsize[2]);
 
     unsigned int frame_cnt = inData.FrameCount();
     this->ids.resize(frame_cnt); // allocate data for all frames! We are memory-hungry! but I don't care
@@ -145,7 +145,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
         unsigned int list_cnt = inData.GetParticleListCount();
         if (frame_i > 0) {
             if (ids[frame_i - 1].size() != list_cnt) {
-                vislib::sys::Log::DefaultLog.WriteError("Data sets changes lists over time. Unsupported!");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Data sets changes lists over time. Unsupported!");
                 return false;
             }
         }
@@ -158,7 +158,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
             unsigned int part_cnt = static_cast<unsigned int>(parts.GetCount());
             if (frame_i > 0) {
                 if (ids[frame_i - 1][list_i].size() != part_cnt) {
-                    vislib::sys::Log::DefaultLog.WriteError("Data sets changes particle numbers in list over time. Unsupported!");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("Data sets changes particle numbers in list over time. Unsupported!");
                     return false;
                 }
             }
@@ -344,7 +344,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
                     //swapped = true;
 
                     if ((update_print % 10) == 0) {
-                        vislib::sys::Log::DefaultLog.WriteInfo("[%u][%u] whole_dist = %g\n", frame_i, list_i, whole_dist);
+                        megamol::core::utility::log::Log::DefaultLog.WriteInfo("[%u][%u] whole_dist = %g\n", frame_i, list_i, whole_dist);
                     }
                     ++update_print;
 
@@ -374,7 +374,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
             for (unsigned int i = 0; i < part_cnt; ++i) {
                 if (ids[frame_i][list_i][i] != i) wcc++;
             }
-            vislib::sys::Log::DefaultLog.WriteInfo("[%u][%u] Particle list mixing: %u/%u\n", frame_i, list_i, wcc, part_cnt);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[%u][%u] Particle list mixing: %u/%u\n", frame_i, list_i, wcc, part_cnt);
 
         }
 
@@ -409,7 +409,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
         unsigned int list_cnt = inData.GetParticleListCount();
         if (frame_i > 0) {
             if (ids[frame_i - 1].size() != list_cnt) {
-                vislib::sys::Log::DefaultLog.WriteError("Data sets changes lists over time. Unsupported!");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Data sets changes lists over time. Unsupported!");
                 return false;
             }
         }
@@ -422,7 +422,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
             unsigned int part_cnt = static_cast<unsigned int>(parts.GetCount());
             if (frame_i > 0) {
                 if (ids[frame_i - 1][list_i].size() != part_cnt) {
-                    vislib::sys::Log::DefaultLog.WriteError("Data sets changes particle numbers in list over time. Unsupported!");
+                    megamol::core::utility::log::Log::DefaultLog.WriteError("Data sets changes particle numbers in list over time. Unsupported!");
                     return false;
                 }
             }
@@ -505,7 +505,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
             for (unsigned int i = 0; i < part_cnt; ++i) {
                 if (ids[frame_i][list_i][i] != i) wcc++;
             }
-            vislib::sys::Log::DefaultLog.WriteInfo("[%u][%u] Particle list mixing: %u/%u\n", frame_i, list_i, wcc, part_cnt);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[%u][%u] Particle list mixing: %u/%u\n", frame_i, list_i, wcc, part_cnt);
         }
 
         inData.Unlock();
@@ -528,7 +528,7 @@ bool datatools::ParticleSortFixHack::updateIDdata(megamol::core::moldyn::MultiPa
     }
 
     // preparation complete
-    vislib::sys::Log::DefaultLog.WriteInfo("Particle Sorting ID Data updated.");
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Particle Sorting ID Data updated.");
     return true;
 }
 

@@ -11,20 +11,20 @@
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-
-#include <imgui.h>
-#include <imgui_internal.h>
-
+#include "imgui.h"
 #include "imgui_impl_opengl3.h"
+#include "imgui_internal.h"
 #include "imgui_stdlib.h"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #include <algorithm> // search
 #include <array>
 #include <cctype> // toupper
+#include <cmath>  // fmodf
+#include <list>
 #include <map>
 #include <memory>
 #include <string>
@@ -32,224 +32,240 @@
 #include <utility>
 #include <vector>
 
+#include "mmcore/param/AbstractParamPresentation.h"
+#include "mmcore/utility/JSONHelper.h"
+#include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
 
 #include "vislib/UTF8Encoder.h"
-#include "vislib/sys/Log.h"
+#include "vislib/math/Ternary.h"
 
 
 namespace megamol {
 namespace gui {
 
-
-/********** Defines **********/
+    /// #define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
-#define GUI_CALL_SLOT_RADIUS (8.0f)
+#define GUI_SLOT_RADIUS (8.0f)
+#define GUI_LINE_THICKNESS (3.0f)
 #define GUI_RECT_CORNER_RADIUS (0.0f)
 #define GUI_MAX_MULITLINE (7)
-#define GUI_DND_CALL_UID_TYPE ("DND_CALL")
-#define GUI_GRAPH_BORDER (GUI_CALL_SLOT_RADIUS * 4.0f)
+#define GUI_DND_CALLSLOT_UID_TYPE ("DND_CALL")
+#define GUI_GRAPH_BORDER (GUI_SLOT_RADIUS * 4.0f)
+#define GUI_MULTISELECT_MODIFIER (ImGui::GetIO().KeyShift)
 
-/********** Types **********/
+#define GUI_JSON_TAG_GUI ("GUIState")
+#define GUI_JSON_TAG_WINDOW_CONFIGS ("WindowConfigurations")
+#define GUI_JSON_TAG_CONFIGURATOR ("ConfiguratorState")
+#define GUI_JSON_TAG_GRAPHS ("GraphStates")
+#define GUI_JSON_TAG_PROJECT ("Project")
+#define GUI_JSON_TAG_MODULES ("Modules")
+#define GUI_JSON_TAG_INTERFACES ("Interfaces")
+    /// #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") see
+    /// megamol::core::param::AbstractParamPresentation.h
 
-/** Hotkey Data Types (exclusively for configurator) */
-typedef std::tuple<megamol::core::view::KeyCode, bool> HotkeyDataType;
-enum HotkeyIndex : size_t {
-    MODULE_SEARCH = 0,
-    PARAMETER_SEARCH = 1,
-    DELETE_GRAPH_ITEM = 2,
-    SAVE_PROJECT = 3,
-    INDEX_COUNT = 4
-};
-typedef std::array<megamol::gui::HotkeyDataType, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArrayType;
+#define GUI_PROJECT_GUI_STATE_START_TAG ("-- <GUI_STATE_JSON>")
+#define GUI_PROJECT_GUI_STATE_END_TAG ("</GUI_STATE_JSON>")
 
-namespace configurator {
-// Forward declaration
-class CallSlot;
-// Pointer types to classes
-typedef std::shared_ptr<megamol::gui::configurator::CallSlot> CallSlotPtrType;
-} // namespace configurator
+// Global Colors
+#define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))
+#define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.f, 1.0f))
+#define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.6f, 0.0f, 0.3f, 1.0f))
+#define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.45f, 1.0f))
+#define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 1.0f, 0.75f, 1.0f))
+#define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
+#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.75f, 1.0f, 0.25f, 1.0f))
 
-/* Data type holding a pair of uids. */
-typedef std::vector<ImGuiID> UIDVectorType;
-typedef std::pair<ImGuiID, ImGuiID> UIDPairType;
-typedef std::vector<UIDPairType> UIDPairVectorType;
+    /********** Types **********/
 
-/* Data type holding current group uid and group name pairs. */
-typedef std::pair<ImGuiID, std::string> GroupPairType;
-typedef std::vector<megamol::gui::GroupPairType> GroupPairVectorType;
+    // Forward declaration
+    class CallSlot;
+    class InterfaceSlot;
+    typedef std::shared_ptr<megamol::gui::CallSlot> CallSlotPtr_t;
+    typedef std::shared_ptr<megamol::gui::InterfaceSlot> InterfaceSlotPtr_t;
 
-typedef std::array<float, 5> FontScalingArrayType;
+    /** Available ImGui APIs */
+    enum GUIImGuiAPI { NO_API, OPEN_GL };
 
-/* Data type holding information of graph canvas. */
-typedef struct _canvas_ {
-    ImVec2 position;  // in
-    ImVec2 size;      // in
-    ImVec2 scrolling; // in
-    float zooming;    // in
-    ImVec2 offset;    // in
-} GraphCanvasType;
+    /** Hotkey Data Types (exclusively for configurator) */
+    enum HotkeyIndex : size_t {
+        MODULE_SEARCH = 0,
+        PARAMETER_SEARCH = 1,
+        DELETE_GRAPH_ITEM = 2,
+        SAVE_PROJECT = 3,
+        INDEX_COUNT = 4
+    };
 
-/* Data type holding information on graph item interaction. */
-typedef struct _interact_state_ {
-    ImGuiID group_selected_uid;                                      // in out
-    bool group_save;                                                 // out
-    UIDVectorType modules_selected_uids;                             // in out
-    ImGuiID module_hovered_uid;                                      // in out
-    ImGuiID module_mainview_uid;                                     // out
-    UIDPairVectorType modules_add_group_uids;                        // out
-    UIDVectorType modules_remove_group_uids;                         // out
-    ImGuiID call_selected_uid;                                       // in out
-    ImGuiID callslot_selected_uid;                                   // in out
-    ImGuiID callslot_hovered_uid;                                    // in out
-    ImGuiID callslot_dropped_uid;                                    // in out
-    megamol::gui::UIDPairType callslot_add_group_uid;                // in out
-    ImGuiID callslot_remove_group_uid;                               // in out
-    megamol::gui::configurator::CallSlotPtrType callslot_compat_ptr; // in
-} GraphItemsInteractType;
+    struct HotkeyData_t {
+        megamol::core::view::KeyCode keycode;
+        bool is_pressed = false;
+    };
 
-/* Data type holding shared state of graph items. */
-typedef struct _graph_item_state_ {
-    megamol::gui::GraphCanvasType canvas;          // (see above)
-    megamol::gui::GraphItemsInteractType interact; // (see above)
-    megamol::gui::HotkeyArrayType hotkeys;         // in out
-    megamol::gui::GroupPairVectorType groups;      // in
-} GraphItemsStateType;
+    typedef std::array<megamol::gui::HotkeyData_t, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArray_t;
 
-/* Data type holding shared state of graphs. */
-typedef struct _graph_state_ {
-    FontScalingArrayType font_scalings;    // in
-    float child_width;                     // in
-    bool show_parameter_sidebar;           // in
-    megamol::gui::HotkeyArrayType hotkeys; // in out
-    ImGuiID graph_selected_uid;            // out
-    bool graph_delete;                     // out
-} GraphStateType;
+    typedef megamol::core::param::AbstractParamPresentation::Presentation Present_t;
+    typedef megamol::core::param::AbstractParamPresentation::ParamType Param_t;
+    typedef std::map<int, std::string> EnumStorage_t;
 
-/********** Class **********/
+    typedef std::array<float, 5> FontScalingArray_t;
 
-/**
- * Utility class for GUIUtils-style widgets.
- */
-class GUIUtils {
-public:
-    GUIUtils(void);
+    /* Data type holding a pair of uids. */
+    typedef std::vector<ImGuiID> UIDVector_t;
+    typedef std::pair<ImGuiID, ImGuiID> UIDPair_t;
+    typedef std::vector<UIDPair_t> UIDPairVector_t;
 
-    ~GUIUtils(void) = default;
+    typedef std::pair<std::string, std::string> StrPair_t;
+    typedef std::vector<StrPair_t> StrPairVector_t;
 
-    // Tool tip widgets -------------------------------------------------------
+    /* Data type holding current group uid and group name pairs. */
+    typedef std::pair<ImGuiID, std::string> GraphGroupPair_t;
+    typedef std::vector<megamol::gui::GraphGroupPair_t> GraphGroupPairVector_t;
 
-    /**
-     * Show tooltip on hover.
-     *
-     * @param text        The tooltip text.
-     * @param id          The id of the imgui item the tooltip belongs (only needed for delayed appearance of tooltip).
-     * @param time_start  The time delay to wait until the tooltip is shown for a hovered imgui item.
-     * @param time_end    The time delay to wait until the tooltip is hidden for a hovered imgui item.
-     */
-    bool HoverToolTip(const std::string& text, ImGuiID id = 0, float time_start = 0.0f, float time_end = 4.0f);
+    enum PresentPhase : size_t { INTERACTION = 0, RENDERING = 1 };
 
-    void ResetHoverToolTip(void);
+    /* Data type holding information of graph canvas. */
+    typedef struct _canvas_ {
+        ImVec2 position;  // in
+        ImVec2 size;      // in
+        ImVec2 scrolling; // in
+        float zooming;    // in
+        ImVec2 offset;    // in
+    } GraphCanvas_t;
 
-    /**
-     * Show help marker text with tooltip on hover.
-     *
-     * @param text   The help tooltip text.
-     * @param label  The visible text for which the tooltip is enabled.
-     */
-    bool HelpMarkerToolTip(const std::string& text, std::string label = "(?)");
+    enum GraphCoreInterface {
+        NO_INTERFACE,
+        CORE_INSTANCE_GRAPH,
+        MEGAMOL_GRAPH,
+    };
 
+    /* Data type holding information on graph item interaction. */
+    typedef struct _interact_state_ {
+        ImGuiID button_active_uid;  // in out
+        ImGuiID button_hovered_uid; // in out
+        bool process_deletion;      // out
 
-    // Pu-up widgets -------------------------------------------------------
+        ImGuiID group_selected_uid; // in out
+        ImGuiID group_hovered_uid;  // in out
+        bool group_layout;          // out
 
-    bool MinimalPopUp(const std::string& caption, bool open_popup, const std::string& info_text,
-        const std::string& confirm_btn_text, bool& confirmed, const std::string& abort_btn_text, bool& aborted);
+        UIDVector_t modules_selected_uids;             // in out
+        ImGuiID module_hovered_uid;                    // in out
+        UIDPairVector_t modules_add_group_uids;        // out
+        UIDVector_t modules_remove_group_uids;         // out
+        bool modules_layout;                           // out
+        StrPairVector_t module_rename;                 // out
+        vislib::math::Ternary module_mainview_changed; // out
+        ImVec2 module_param_child_position;            // out
 
-    bool RenamePopUp(const std::string& caption, bool open_popup, std::string& rename);
+        ImGuiID call_selected_uid; // in out
+        ImGuiID call_hovered_uid;  // in out
 
+        ImGuiID slot_dropped_uid; // in out
 
-    // Misc widgets -------------------------------------------------------
+        ImGuiID callslot_selected_uid;       // in out
+        ImGuiID callslot_hovered_uid;        // in out
+        UIDPair_t callslot_add_group_uid;    // in out
+        UIDPair_t callslot_remove_group_uid; // in out
+        CallSlotPtr_t callslot_compat_ptr;   // in
 
-    /**
-     * Draw draggable splitter between two child windows, relative to parent window size.
-     * https://github.com/ocornut/imgui/issues/319
-     */
-    enum FixedSplitterSide { LEFT, RIGHT };
-    bool VerticalSplitter(FixedSplitterSide fixed_side, float& size_left, float& size_right);
+        ImGuiID interfaceslot_selected_uid;          // in out
+        ImGuiID interfaceslot_hovered_uid;           // in out
+        InterfaceSlotPtr_t interfaceslot_compat_ptr; // in
 
-    /** "Point in Circle" Button */
-    bool PointCircleButton(const std::string& label = "");
+        GraphCoreInterface graph_core_interface; // in
 
+    } GraphItemsInteract_t;
 
-    // Static UTF8 String En-/Decoding ----------------------------------------
+    /* Data type holding shared state of graph items. */
+    typedef struct _graph_item_state_ {
+        megamol::gui::GraphCanvas_t canvas;          // (see above)
+        megamol::gui::GraphItemsInteract_t interact; // (see above)
+        megamol::gui::HotkeyArray_t hotkeys;         // in out
+        megamol::gui::GraphGroupPairVector_t groups; // in
+    } GraphItemsState_t;
 
-    /** Decode string from UTF-8. */
-    static bool Utf8Decode(std::string& str);
+    /* Data type holding shared state of graphs. */
+    typedef struct _graph_state_ {
+        FontScalingArray_t font_scalings;    // in
+        float graph_width;                   // in
+        bool show_parameter_sidebar;         // in
+        megamol::gui::HotkeyArray_t hotkeys; // in out
+        ImGuiID graph_selected_uid;          // out
+        bool graph_delete;                   // out
+        bool configurator_graph_save;        // out
+        bool global_graph_save;              // out
+    } GraphState_t;
 
-    /** Encode string into UTF-8. */
-    static bool Utf8Encode(std::string& str);
+    /********** Global Unique ID **********/
 
-
-    // String search widget ---------------------------------------------------
-
-    /** Show string serach widget. */
-    bool StringSearch(const std::string& label, const std::string& help);
-
-    /**
-     * Returns true if search string is found in source as a case insensitive substring.
-     *
-     * @param source   The string to search in.
-     * @param search   The string to search for in the source.
-     */
-    inline bool FindCaseInsensitiveSubstring(const std::string& source, const std::string& search) const {
-
-        auto it = std::search(source.begin(), source.end(), search.begin(), search.end(),
-            [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
-        return (it != source.end());
+    extern ImGuiID gui_generated_uid;
+    inline ImGuiID GenerateUniqueID(void) {
+        return (++megamol::gui::gui_generated_uid);
     }
 
-    /** Set keyboard focus to search text input. */
-    inline void SetSearchFocus(bool focus) { this->search_focus = focus; }
-
-    /** Set keyboard focus to search text input. */
-    inline std::string GetSearchString(void) const { return this->search_string; }
-
-
-    // Other utility functions ------------------------------------------------
+    /********** Class **********/
 
     /**
-     * Returns width of text drawn as widget.
+     * Static GUI utility functions.
      */
-    static float TextWidgetWidth(const std::string& text);
+    class GUIUtils {
+    public:
+        /** Extract gui state enclosed in predefined tags. */
+        static std::string ExtractGUIState(std::string& str) {
+            std::string return_str;
+            auto start_idx = str.find(GUI_PROJECT_GUI_STATE_START_TAG);
+            if (start_idx != std::string::npos) {
+                auto end_idx = str.find(GUI_PROJECT_GUI_STATE_END_TAG);
+                if ((end_idx != std::string::npos) && (start_idx < end_idx)) {
+                    start_idx += std::string(GUI_PROJECT_GUI_STATE_START_TAG).length();
+                    return_str = str.substr(start_idx, (end_idx - start_idx));
+                }
+            }
+            return return_str;
+        }
 
-    /**
-     * Set/Unset read only widget style.
-     */
-    static void ReadOnlyWigetStyle(bool set);
+        /** Decode string from UTF-8. */
+        static bool Utf8Decode(std::string& str) {
 
-private:
-    // VARIABLES --------------------------------------------------------------
+            vislib::StringA dec_tmp;
+            if (vislib::UTF8Encoder::Decode(dec_tmp, vislib::StringA(str.c_str()))) {
+                str = std::string(dec_tmp.PeekBuffer());
+                return true;
+            }
+            return false;
+        }
 
-    /** Current tooltip hover time. */
-    float tooltip_time;
+        /** Encode string into UTF-8. */
+        static bool Utf8Encode(std::string& str) {
 
-    /** Current hovered tooltip item. */
-    ImGuiID tooltip_id;
+            vislib::StringA dec_tmp;
+            if (vislib::UTF8Encoder::Encode(dec_tmp, vislib::StringA(str.c_str()))) {
+                str = std::string(dec_tmp.PeekBuffer());
+                return true;
+            }
+            return false;
+        }
 
-    /** Set focus to search text input. */
-    bool search_focus;
+        /**
+         * Enable/Disable read only widget style.
+         */
+        static void ReadOnlyWigetStyle(bool set) {
 
-    /** Current search string. */
-    std::string search_string;
+            if (set) {
+                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+            } else {
+                ImGui::PopItemFlag();
+                ImGui::PopStyleVar();
+            }
+        }
 
-    /** Current rename string. */
-    std::string rename_string;
+    private:
+        GUIUtils(void) = default;
 
-    /** Splitter width for restoring after collapsing.  */
-    float splitter_last_width;
-};
-
+        ~GUIUtils(void) = default;
+    };
 
 } // namespace gui
 } // namespace megamol

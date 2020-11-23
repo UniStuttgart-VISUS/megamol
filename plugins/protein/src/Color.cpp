@@ -15,7 +15,11 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/math/ShallowVector.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
+#include "vislib/math/ShallowVector.h"
+#include "mmcore/CoreInstance.h"
+#include <string>
+#include <iostream>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -1086,6 +1090,7 @@ std::pair<float, float> Color::MakeColorTable(const megamol::protein_calls::Mole
         for (unsigned int cnt = 0; cnt < mol->AtomCount() * 3; cnt++) {
             atomColorTable.Add(color0[cnt] * weight0 + color1[cnt] * weight1);
         }
+
     }
 
     // apply the neighborhood colors
