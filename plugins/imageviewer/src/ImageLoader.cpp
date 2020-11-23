@@ -140,6 +140,14 @@ bool ImageLoader::GetMetaData(core::Call& call) {
         // check path extension
         if (path.has_extension() && path.extension().string().compare(".txt") != 0) { // normal file
             this->availableFiles->push_back(path.string());
+            if (this->loadEverythingSlot.Param<param::BoolParam>()->Value()) {
+                this->queueMutex.lock();
+                this->queueElements.insert(this->availableFiles->begin(), this->availableFiles->end());
+                for (const auto& e : this->queueElements) {
+                    this->imageLoadingQueue.push(e);
+                }
+                this->queueMutex.unlock();
+            }
         } else { // list of files
             std::ifstream file(path.string());
             if (file.is_open()) {
