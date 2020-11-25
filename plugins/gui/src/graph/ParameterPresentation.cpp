@@ -39,7 +39,12 @@ megamol::gui::ParameterPresentation::ParameterPresentation(Param_t type)
 }
 
 
-megamol::gui::ParameterPresentation::~ParameterPresentation(void) {}
+megamol::gui::ParameterPresentation::~ParameterPresentation(void) {
+
+    if (this->tf_editor_external_ptr != nullptr) {
+        this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
+    }
+}
 
 
 bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout_parameter, WidgetScope scope) {
@@ -1472,16 +1477,19 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
         if (this->tf_editor_external_ptr != nullptr) {
             if (ImGui::RadioButton("External", this->use_external_tf_editor)) {
                 this->use_external_tf_editor = true;
-                /// If not this->tf_editor_external_ptr->SetConnectedParameter(&param, full_param_name); additional
+                /// this->tf_editor_external_ptr->SetConnectedParameter(&param, full_param_name); additional
                 /// click on edit is required.
-            }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Internal", !this->use_external_tf_editor)) {
-                this->use_external_tf_editor = false;
-                this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
+                this->show_tf_editor = false;
             }
             ImGui::SameLine();
         }
+        if (ImGui::RadioButton("Internal", !this->use_external_tf_editor)) {
+            this->use_external_tf_editor = false;
+            if (this->tf_editor_external_ptr != nullptr) {
+                this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
+            }
+        }
+        ImGui::SameLine();
 
         if (this->use_external_tf_editor) {
 

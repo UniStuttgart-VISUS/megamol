@@ -388,16 +388,19 @@ bool GUIWindows::PostDraw(void) {
         if ((wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) && wc.buf_tfe_reset) {
             this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
+            this->tf_editor_ptr->SetOverwriteRange(wc.tfe_overwrite_range);
 
-            GraphPtr_t graph_ptr;
-            if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-                for (auto& module_ptr : graph_ptr->GetModules()) {
-                    std::string module_full_name = module_ptr->FullName();
-                    for (auto& param : module_ptr->parameters) {
-                        std::string param_full_name = module_full_name + "::" + param.full_name;
-                        if ((wc.tfe_active_param == param_full_name) && (param.type == Param_t::TRANSFERFUNCTION)) {
-                            this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
-                            this->tf_editor_ptr->SetTransferFunction(std::get<std::string>(param.GetValue()), true);
+            if (!wc.tfe_active_param.empty()) {
+                GraphPtr_t graph_ptr;
+                if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+                    for (auto& module_ptr : graph_ptr->GetModules()) {
+                        std::string module_full_name = module_ptr->FullName();
+                        for (auto& param : module_ptr->parameters) {
+                            std::string param_full_name = module_full_name + "::" + param.full_name;
+                            if ((wc.tfe_active_param == param_full_name) && (param.type == Param_t::TRANSFERFUNCTION)) {
+                                this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
+                                this->tf_editor_ptr->SetTransferFunction(std::get<std::string>(param.GetValue()), true);
+                            }
                         }
                     }
                 }
@@ -416,13 +419,15 @@ bool GUIWindows::PostDraw(void) {
             // Change window flags depending on current view of transfer function editor
             if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {
                 if (this->tf_editor_ptr->IsMinimized()) {
-                    wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
-                                   ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
+                    wc.win_flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar |
+                                   ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize;
+
                 } else {
                     wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
                 }
                 wc.tfe_view_minimized = this->tf_editor_ptr->IsMinimized();
                 wc.tfe_view_vertical = this->tf_editor_ptr->IsVertical();
+                wc.tfe_overwrite_range = this->tf_editor_ptr->OverwriteRange();
             }
 
             ImGui::SetNextWindowBgAlpha(1.0f);
@@ -1369,8 +1374,8 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
 
             if (header_open) {
                 // Draw parameters
-
                 bool out_open_external_tf_editor;
+
                 module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, currentSearchString,
                     vislib::math::Ternary(wc.param_extended_mode), true, ParameterPresentation::WidgetScope::LOCAL,
                     this->tf_editor_ptr, &out_open_external_tf_editor);

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * TransferFunctionEditor.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
@@ -285,9 +285,21 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         this->currentNode = 0;
     }
 
+    const float height = 30.0f;
+    const float width = 300.0f;
     const float tfw_item_width = ImGui::GetContentRegionAvail().x * 0.75f;
     ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
-    ImVec2 image_size = ImVec2(tfw_item_width, 30.0f);
+    ImVec2 image_size = ImVec2(width, height);
+    if (this->showOptions) {
+        image_size = ImVec2(tfw_item_width, height);
+        if (this->flip_legend) {
+            image_size = ImVec2(height, width);
+        }
+    } else {
+        if (this->flip_legend) {
+            image_size = ImVec2(height, width);
+        }
+    }
 
     ImGui::BeginGroup();
     this->drawTextureBox(image_size, this->flip_legend);
@@ -353,7 +365,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         }
         ImGui::PopItemWidth();
 
-        ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
+        ImGui::SameLine(0.0f, (style.ItemSpacing.x + style.ItemInnerSpacing.x));
         ImGui::TextUnformatted("Value Range");
 
         if (ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite)) {
@@ -557,12 +569,9 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_legend
     ImVec2 uv0 = ImVec2(0.0f, 0.0f);
     ImVec2 uv1 = ImVec2(1.0f, 1.0f);
     if (flip_legend) {
-        image_size.x = size.y;
-        image_size.y = size.x;
         uv0 = ImVec2(1.0f, 1.0f);
         uv1 = ImVec2(0.0f, 0.0f);
     }
-
     if (textureSize == 0 || !this->image_widget.IsLoaded()) {
         // Reserve layout space and draw a black background rectangle.
         ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -598,10 +607,6 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
 
     float width = size.x;
     float height = size.y;
-    if (flip_legend) {
-        width = size.y;
-        height = size.x;
-    }
     float item_x_spacing = style.ItemInnerSpacing.x;
     float item_y_spacing = style.ItemInnerSpacing.y;
 

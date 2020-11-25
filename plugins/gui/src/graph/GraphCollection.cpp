@@ -860,11 +860,16 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
 
                 Graph::QueueData queue_data;
                 queue_data.name_id = graph_module->FullName();
+
                 graph_ptr->UniqueModuleRename(view_name);
                 graph_module->name = view_name;
                 graph_ptr->AddGroupModule(view_namespace, graph_module);
                 graph_module->main_view_name = view_instance;
-                queue_data.name_id = graph_module->FullName();
+
+                queue_data.rename_id = graph_module->FullName();
+                graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+
+                queue_data.name_id = queue_data.rename_id;
                 graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
             }
         }
@@ -918,9 +923,16 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         continue;
                     }
                     auto graph_module = graph_ptr->GetModules().back();
+
+                    Graph::QueueData queue_data;
+                    queue_data.name_id = graph_module->FullName();
+
                     graph_ptr->UniqueModuleRename(module_name);
                     graph_module->name = module_name;
                     graph_ptr->AddGroupModule(module_namespace, graph_module);
+
+                    queue_data.rename_id = graph_module->FullName();
+                    graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
                 }
             }
         }
