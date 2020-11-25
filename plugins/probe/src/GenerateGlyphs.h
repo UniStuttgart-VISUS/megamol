@@ -54,6 +54,8 @@ public:
     core::CallerSlot _get_probes;
 
     core::param::ParamSlot _resolutionSlot;
+    core::param::ParamSlot _sizeSlot;
+
 
 protected:
     bool create() override { return true; };
@@ -66,11 +68,13 @@ private:
     bool getTexture(core::Call& call);
     bool getTextureMetaData(core::Call& call);
 
-    bool doScalarGlyphGeneration(FloatProbe& probe);
+    bool doScalarGlyphGeneration(FloatProbe& probe, float global_min, float global_max);
 
     bool doVectorRibbonGlyphGeneration(Vec4Probe& probe);
  
     bool doVectorRadarGlyphGeneration(Vec4Probe& probe);
+
+    bool paramChanged(core::param::ParamSlot& p);
 
     uint32_t _version = 0;
 
@@ -88,6 +92,7 @@ private:
     std::vector<DrawTextureUtility> _dtu;
 
     double scale = -1.0;
+    bool _trigger_recalc;
 };
 
 } // namespace probe

@@ -1,5 +1,5 @@
 /*
- * Module.cpp
+ * ModulePresentation.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -19,19 +19,19 @@ using namespace megamol::gui;
 
 
 megamol::gui::ModulePresentation::ModulePresentation(void)
-    : group()
-    , label_visible(true)
-    , position(ImVec2(FLT_MAX, FLT_MAX))
-    , param_groups()
-    , size(ImVec2(0.0f, 0.0f))
-    , selected(false)
-    , update(true)
-    , param_child_show(false)
-    , param_child_height(1.0f)
-    , set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
-    , set_selected_slot_position(false)
-    , tooltip()
-    , rename_popup() {
+        : group()
+        , label_visible(true)
+        , position(ImVec2(FLT_MAX, FLT_MAX))
+        , param_groups()
+        , size(ImVec2(0.0f, 0.0f))
+        , selected(false)
+        , update(true)
+        , param_child_show(false)
+        , param_child_height(1.0f)
+        , set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
+        , set_selected_slot_position(false)
+        , tooltip()
+        , rename_popup() {
 
     this->group.uid = GUI_INVALID_ID;
     this->group.visible = false;
@@ -176,10 +176,9 @@ void megamol::gui::ModulePresentation::Present(
                         ImGui::TextDisabled("Module");
                         ImGui::Separator();
 
-                        if (ImGui::MenuItem(
-                                "Delete", std::get<0>(state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM])
-                                              .ToString()
-                                              .c_str())) {
+                        if (ImGui::MenuItem("Delete", state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM]
+                                                          .keycode.ToString()
+                                                          .c_str())) {
                             state.interact.process_deletion = true;
                         }
                         if (ImGui::MenuItem("Layout", nullptr, false, !singleselect)) {
@@ -249,8 +248,23 @@ void megamol::gui::ModulePresentation::Present(
                     }
 
                     // Rename pop-up
-                    if (this->rename_popup.PopUp("Rename Project", popup_rename, inout_module.name)) {
-                        this->Update(inout_module, state.canvas);
+                    if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
+                        if (popup_rename) {
+                            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                                "[GUI] The action [Rename Module] is not yet supported for the graph "
+                                "using the 'Core Instance Graph' interface. Open project from file to make desired "
+                                "changes. [%s, %s, line %d]\n",
+                                __FILE__, __FUNCTION__, __LINE__);
+                        }
+                    } else {
+                        std::string last_module_name = inout_module.FullName();
+                        if (this->rename_popup.PopUp("Rename Project", popup_rename, inout_module.name)) {
+                            this->Update(inout_module, state.canvas);
+                            if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
+                                state.interact.module_rename.push_back(
+                                    StrPair_t(last_module_name, inout_module.FullName()));
+                            }
+                        }
                     }
                 } else if (phase == megamol::gui::PresentPhase::RENDERING) {
 
@@ -363,15 +377,33 @@ void megamol::gui::ModulePresentation::Present(
                             ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
 
                             if (main_view_button) {
-                                if (ImGui::RadioButton("###main_view_switch", inout_module.is_view_instance)) {
-                                    if (hovered) {
-                                        state.interact.module_mainview_uid = inout_module.uid;
-                                        inout_module.is_view_instance = !inout_module.is_view_instance;
+                                bool is_main_view = inout_module.IsMainView();
+                                if (ImGui::RadioButton("###main_view_switch", is_main_view)) {
+                                    if (state.interact.graph_core_interface ==
+                                        GraphCoreInterface::CORE_INSTANCE_GRAPH) {
+                                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                                            "[GUI] The action [Change Main View] is not yet supported for the graph "
+                                            "using the 'Core Instance Graph' interface. Open project from file to make "
+                                            "desired changes. [%s, %s, line %d]\n",
+                                            __FILE__, __FUNCTION__, __LINE__);
+                                    } else {
+                                        if (!is_main_view) {
+                                            state.interact.module_mainview_changed = vislib::math::Ternary::TRI_TRUE;
+                                        } else {
+                                            state.interact.module_mainview_changed = vislib::math::Ternary::TRI_FALSE;
+                                        }
                                     }
                                 }
                                 ImGui::SetItemAllowOverlap();
                                 if (hovered) {
-                                    other_item_hovered = other_item_hovered || this->tooltip.ToolTip("Main View");
+                                    std::string tooltip_label;
+                                    if (is_main_view) {
+                                        tooltip_label =
+                                            tooltip_label + "Main View '" + inout_module.main_view_name + "'";
+                                    } else {
+                                        tooltip_label = "No Main View";
+                                    }
+                                    other_item_hovered = other_item_hovered || this->tooltip.ToolTip(tooltip_label);
                                 }
                                 ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
                             }
@@ -398,9 +430,11 @@ void megamol::gui::ModulePresentation::Present(
 
                                     ImGui::SetCursorScreenPos(param_child_pos);
 
-                                    auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoMove |
-                                                       ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-                                                       ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NavFlattened;
+                                    auto child_flags = ImGuiWindowFlags_HorizontalScrollbar |
+                                                       ImGuiWindowFlags_AlwaysVerticalScrollbar |
+                                                       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar |
+                                                       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
+                                                       ImGuiWindowFlags_NavFlattened;
                                     ImGui::BeginChild("module_parameter_child",
                                         ImVec2(param_child_width, this->param_child_height), true, child_flags);
 
@@ -451,7 +485,7 @@ void megamol::gui::ModulePresentation::Present(
                     }
 
                     // Draw Outline
-                    float border = ((inout_module.is_view_instance) ? (4.0f) : (1.0f)) * state.canvas.zooming;
+                    float border = ((!inout_module.main_view_name.empty()) ? (4.0f) : (1.0f)) * state.canvas.zooming;
                     draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, GUI_RECT_CORNER_RADIUS,
                         ImDrawCornerFlags_All, border);
                 }

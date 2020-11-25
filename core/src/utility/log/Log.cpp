@@ -30,7 +30,7 @@
 #include "spdlog/spdlog.h"
 
 
-const char megamol::core::utility::log::Log::std_pattern[3] = "%v";
+const char megamol::core::utility::log::Log::std_pattern[7] = "%^%v%$";
 
 
 /*****************************************************************************/
@@ -276,11 +276,7 @@ bool megamol::core::utility::log::Log::SetLogFileName(const char *filename, bool
     std::shared_ptr<Target> omt = this->mainTarget;
     std::shared_ptr<OfflineTarget> ot = std::dynamic_pointer_cast<OfflineTarget>(omt);
 
-    if (filename == nullptr) {
-        if (ot == nullptr) {
-            this->mainTarget = std::make_shared<OfflineTarget>(20U, omt->Level());
-        }
-    } else {
+    if (filename != nullptr) {
         std::string path(filename);
         if (addSuffix) {
             path += this->getFileNameSuffix();
@@ -394,8 +390,9 @@ void megamol::core::utility::log::Log::WriteMessage(UINT level,
         megamol::core::utility::log::Log::TimeStamp time, megamol::core::utility::log::Log::SourceID sid,
         const std::string& msg) {
     if (msg.empty()) return;
-    if (msg.back() != '\n') {
-        this->WriteMessage(level, time, sid, msg + "\n");
+    // remove newline at end because spdlog and other log targets already add newlines
+    if (msg.back() == '\n') {
+        this->WriteMessage(level, time, sid, msg.substr(0, msg.size()-1));
         return;
     }
     if (this->mainTarget != nullptr) {

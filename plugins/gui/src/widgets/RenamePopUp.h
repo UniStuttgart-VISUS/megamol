@@ -10,26 +10,29 @@
 
 
 #include "GUIUtils.h"
+#include "widgets/HoverToolTip.h"
 
 
 namespace megamol {
 namespace gui {
 
 
-/**
- * String search widget.
- */
-class RenamePopUp {
-public:
-    RenamePopUp(void);
+    /**
+     * String search widget.
+     */
+    class RenamePopUp {
+    public:
+        RenamePopUp(void);
 
-    ~RenamePopUp(void) = default;
+        ~RenamePopUp(void) = default;
 
-    bool PopUp(const std::string& caption, bool open_popup, std::string& rename);
+        bool PopUp(const std::string& caption, bool open_popup, std::string& rename);
 
-private:
-    std::string rename_string;
-};
+    private:
+        std::string rename_string;
+
+        HoverToolTip tooltip;
+    };
 
 
 } // namespace gui

@@ -69,6 +69,7 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/view/light/QuadLight.h"
 #include "mmcore/view/light/SpotLight.h"
+#include "mmcore/view/light/TriDirectionalLighting.h"
 #include "../job/TickSwitch.h"
 #include "mmcore/FileStreamProvider.h"
 #include "mmcore/view/special/CallbackScreenShooter.h"
@@ -152,6 +153,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::light::PointLight>();
     instance.RegisterAutoDescription<view::light::QuadLight>();
     instance.RegisterAutoDescription<view::light::SpotLight>();
+    instance.RegisterAutoDescription<view::light::TriDirectionalLighting>();
     instance.RegisterAutoDescription<FlagStorage>();
     instance.RegisterAutoDescription<FlagStorage_GL>();
     instance.RegisterAutoDescription<DeferredShading>();

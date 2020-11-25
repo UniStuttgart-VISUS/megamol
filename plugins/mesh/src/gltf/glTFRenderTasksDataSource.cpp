@@ -8,7 +8,7 @@
 #include "mesh/MeshCalls.h"
 
 megamol::mesh::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
-	: m_glTF_callerSlot("CallGlTFData", "Connects the data source with a loaded glTF file")
+	: m_glTF_callerSlot("gltfModels", "Connects a collection of loaded glTF files")
 {
 	this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
 	this->MakeSlotAvailable(&this->m_glTF_callerSlot);
@@ -24,13 +24,7 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
     if (lhs_rtc == NULL)
 		return false;
 
-    std::shared_ptr<GPURenderTaskCollection> rt_collection(nullptr);
-    
-    if (lhs_rtc->getData() == nullptr){
-        rt_collection = this->m_gpu_render_tasks;
-    } else {
-        rt_collection = lhs_rtc->getData();
-    }
+    syncRenderTaskCollection(lhs_rtc);
 
 	CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<CallGPUMaterialData>();
 	if (mtlc == NULL)
@@ -62,19 +56,12 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
     {
         ++m_version;
 
-		//rt_collection->clear();
-        if (!m_rt_collection_indices.empty())
-        {
-            // TODO delete all exisiting render task from this module
-            for (auto& rt_idx : m_rt_collection_indices)
-            {
-                rt_collection->deleteSingleRenderTask(rt_idx);   
-            }
+		for (auto& identifier : m_rendertask_collection.second) {
+            m_rendertask_collection.first->deleteRenderTask(identifier);
+		}
+        m_rendertask_collection.second.clear();
 
-            m_rt_collection_indices.clear();
-        }
-
-		auto model = gltf_call->getData();
+		auto model = gltf_call->getData().second;
 
 		for (size_t node_idx = 0; node_idx < model->nodes.size(); node_idx++)
 		{
@@ -107,28 +94,21 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
 					}
 				}
 
-				// compute submesh offset by iterating over all meshes before the given mesh and summing up their primitive counts
-				size_t submesh_offset = 0;
-				for (int mesh_idx = 0; mesh_idx < model->nodes[node_idx].mesh; ++mesh_idx)
-				{
-					submesh_offset += model->meshes[mesh_idx].primitives.size();
-				}
-
 				auto primitive_cnt = model->meshes[model->nodes[node_idx].mesh].primitives.size();
 				for (size_t primitive_idx = 0; primitive_idx < primitive_cnt; ++primitive_idx)
 				{
-					//auto const& sub_mesh = gpu_mesh_storage->getSubMeshData()[model->nodes[node_idx].mesh];
-					auto const& sub_mesh = gpu_mesh_storage->getSubMeshData()[submesh_offset + primitive_idx];
-					auto const& gpu_batch_mesh = gpu_mesh_storage->getMeshes()[sub_mesh.batch_index].mesh;
-					auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+                    std::string sub_mesh_identifier = gltf_call->getData().first +
+                                                      model->meshes[model->nodes[node_idx].mesh].name + "_" +
+                                                      std::to_string(primitive_idx);
+                    auto const& sub_mesh = gpu_mesh_storage->getSubMesh(sub_mesh_identifier);
+                    //TODO check if submesh existed...
+                    auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
+                    auto const& shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
 
-					size_t rt_idx = rt_collection->addSingleRenderTask(
-						shader,
-						gpu_batch_mesh,
-						sub_mesh.sub_mesh_draw_command,
-						object_transform);
-
-                    m_rt_collection_indices.push_back(rt_idx);
+					std::string rt_identifier(std::string(this->FullName()) + "_" + sub_mesh_identifier);
+                    m_rendertask_collection.first->addRenderTask(rt_identifier, shader, gpu_batch_mesh,
+                        sub_mesh.sub_mesh_draw_command, object_transform);
+                    m_rendertask_collection.second.push_back(rt_identifier);
 				}
 			}
 		}
@@ -160,17 +140,18 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call & call
 		// Add a key light
 		lights.push_back({-5000.0,5000.0,-5000.0,1000.0f});
 
-		rt_collection->addPerFrameDataBuffer(lights,1);
+		m_rendertask_collection.first->deletePerFrameDataBuffer(1);
+		m_rendertask_collection.first->addPerFrameDataBuffer("lights",lights,1);
     }
 
     if (lhs_rtc->version() < m_version) {
-        lhs_rtc->setData(rt_collection, m_version);
+        lhs_rtc->setData(m_rendertask_collection.first, m_version);
     }
 
 
     CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
     if (rhs_rtc != NULL) {
-        rhs_rtc->setData(rt_collection,0);
+        rhs_rtc->setData(m_rendertask_collection.first,0);
 
         (*rhs_rtc)(0);
     }
@@ -183,8 +164,14 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getMetaDataCallback(core::Call& c
     AbstractGPURenderTaskDataSource::getMetaDataCallback(caller);
 
     auto gltf_call = m_glTF_callerSlot.CallAs<CallGlTFData>();
-    if (!(*gltf_call)(1)) return false;
-    //auto gltf_meta_data = gltf_call->getMetaData();
+
+    if (gltf_call == nullptr) {
+        return false;
+    }
+
+    if (!(*gltf_call)(1)) {
+        return false;
+    }
 
     return true;
 }

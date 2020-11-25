@@ -103,9 +103,11 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
     if (!(*call_depth)(0)) return false;
     if (!(*call_camera)(0)) return false;
 
+    auto light_update = this->GetLights();
+
     // something has changed in the neath...
-    bool something_has_changed =
-        call_albedo->hasUpdate() || call_normal->hasUpdate() || call_depth->hasUpdate() || call_camera->hasUpdate();
+    bool something_has_changed = call_albedo->hasUpdate() || call_normal->hasUpdate() || call_depth->hasUpdate() ||
+                                 call_camera->hasUpdate() || light_update;
 
     if (something_has_changed) {
         ++m_version;
@@ -132,8 +134,6 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
         glm::mat4 view_mx = view_tmp;
         glm::mat4 proj_mx = proj_tmp;
 
-        auto light_update = this->GetLights();
-
         this->m_point_lights.clear();
         this->m_distant_lights.clear();
         for (const auto element : this->m_light_map) {
@@ -150,6 +150,26 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
                 } else {
                     m_distant_lights.push_back(
                         {light.dl_direction[0], light.dl_direction[1], light.dl_direction[2], light.lightIntensity});
+                }
+            } else if (light.lightType == core::view::light::TRIDIRECTIONALLIGHTING) {
+                if (light.tdl_in_view_space) {
+                    auto inverse_view = glm::transpose(glm::mat3(view_mx));
+                    auto key_dir = inverse_view * glm::vec3(light.tdl_key_direction[0], light.tdl_key_direction[1],
+                                                      light.tdl_key_direction[2]);
+                    auto fill_dir = inverse_view * glm::vec3(light.tdl_fill_direction[0], light.tdl_fill_direction[1],
+                                                      light.tdl_fill_direction[2]);
+                    auto back_dir = inverse_view * glm::vec3(light.tdl_back_direction[0], light.tdl_back_direction[1],
+                                                      light.tdl_back_direction[2]);
+                    m_distant_lights.push_back({key_dir[0], key_dir[1], key_dir[2], light.lightIntensity});
+                    m_distant_lights.push_back({fill_dir[0], fill_dir[1], fill_dir[2], light.lightIntensity});
+                    m_distant_lights.push_back({back_dir[0], back_dir[1], back_dir[2], light.lightIntensity});
+                } else {
+                    m_distant_lights.push_back({light.tdl_key_direction[0], light.tdl_key_direction[1],
+                        light.tdl_key_direction[2], light.lightIntensity});
+                    m_distant_lights.push_back({light.tdl_fill_direction[0], light.tdl_fill_direction[1],
+                        light.tdl_fill_direction[2], light.lightIntensity});
+                    m_distant_lights.push_back({light.tdl_back_direction[0], light.tdl_back_direction[1],
+                        light.tdl_back_direction[2], light.lightIntensity});
                 }
             }
         }

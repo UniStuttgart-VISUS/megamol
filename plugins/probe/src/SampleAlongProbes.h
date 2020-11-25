@@ -16,6 +16,7 @@
 #include "kdtree.h"
 #include "mmcore/param/IntParam.h"
 #include "adios_plugin/CallADIOSData.h"
+#include "mmcore/misc/VolumetricDataCall.h"
 
 namespace megamol {
 namespace probe {
@@ -78,9 +79,10 @@ protected:
     core::param::ParamSlot _vec_param_to_samplex_w;
 
 private:
-	//TODO rename to "doScalarSampling" ?
     template <typename T>
-    void doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data);
+    void doScalarSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data);
+
+    void doVolumeSampling();
 
 	template <typename T>
     void doVectorSamling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, const std::vector<T>& data_x,
@@ -92,19 +94,26 @@ private:
 
     std::shared_ptr<ProbeCollection> _probes;
 
+    const float* _volume_data;
+    const core::misc::VolumetricDataCall::Metadata* _vol_metadata;
+
     size_t _old_datahash;
+    size_t _old_volume_datahash;
     bool _trigger_recalc;
     bool paramChanged(core::param::ParamSlot& p);
 };
 
 
 template <typename T>
-void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data) {
+void SampleAlongPobes::doScalarSampling(
+    const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data) {
 
     const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
     const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
 
-//#pragma omp parallel for
+    float global_min = std::numeric_limits<float>::max();
+    float global_max = -std::numeric_limits<float>::max();
+    //#pragma omp parallel for
     for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); i++) {
 
         FloatProbe probe;
@@ -122,7 +131,7 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
                 probe.m_cluster_id = arg.m_cluster_id;
 
                 auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
-                auto radius = sample_step * sample_radius_factor;
+                auto radius = 0.5 * sample_step * sample_radius_factor;
                 probe.m_sample_radius = radius;
 
                 _probes->setProbe(i, probe);
@@ -144,9 +153,9 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
         std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
 
         float min_value = std::numeric_limits<float>::max();
-        float max_value = -std::numeric_limits<float>::min();
+        float max_value = -std::numeric_limits<float>::max();
         float min_data = std::numeric_limits<float>::max();
-        float max_data = -std::numeric_limits<float>::min();
+        float max_data = -std::numeric_limits<float>::max();
         float avg_value = 0.0f;
         samples->samples.resize(samples_per_probe);
 
@@ -194,8 +203,10 @@ void SampleAlongPobes::doSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::Po
             samples->max_value = max_data;
             samples->min_value = max_data;
         }
-        
+        global_min = std::min(global_min, samples->min_value);
+        global_max = std::max(global_max, samples->max_value);
     } // end for probes
+    _probes->setGlobalMinMax(global_min, global_max);
 }
 
 template <typename T>
