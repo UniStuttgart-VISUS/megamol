@@ -201,6 +201,7 @@ namespace gui {
             bool screenshot_triggered;         // Trigger and file name for screenshot
             std::string screenshot_filepath;   // Filename the screenshot should be saved to
             int screenshot_filepath_id;        // Last unique id for screenshot filename
+            std::string last_script_filename;  // Last script filename provided from lua
             bool hotkeys_check_once;           // WORKAROUND: Check multiple hotkey assignments once
         };
 

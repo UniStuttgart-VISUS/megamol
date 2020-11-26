@@ -419,8 +419,8 @@ bool GUIWindows::PostDraw(void) {
             // Change window flags depending on current view of transfer function editor
             if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {
                 if (this->tf_editor_ptr->IsMinimized()) {
-                    wc.win_flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar |
-                                   ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize;
+                    wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
+                                   ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
 
                 } else {
                     wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
@@ -870,20 +870,22 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 
         GraphPtr_t graph_ptr;
         if (graph_sync_success && this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-            std::string last_script_filename = graph_ptr->GetFilename();
+            std::string script_filename = this->state.last_script_filename;
             if (graph_ptr->GetFilename().empty()) {
                 if (this->core_instance != nullptr) {
                     // Set project filename from lua state of core instance
-                    graph_ptr->SetFilename(this->core_instance->GetLuaState()->GetScriptPath());
+                    script_filename = this->core_instance->GetLuaState()->GetScriptPath();
                 }
             }
             // Always check for changed script path when project file is dropped
             if (!this->state.project_script_paths.empty()) {
-                graph_ptr->SetFilename(this->state.project_script_paths.front());
+                script_filename = this->state.project_script_paths.front();
             }
             // Load GUI state from project file when project file changed
-            if (last_script_filename != graph_ptr->GetFilename()) {
+            if (script_filename != this->state.last_script_filename) {
                 this->load_state_from_file(graph_ptr->GetFilename());
+                graph_ptr->SetFilename(script_filename);
+                this->state.last_script_filename = script_filename;
             }
         }
         sync_success &= graph_sync_success;
@@ -1852,7 +1854,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     this->state.open_popup_load = false;
     this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed = false;
 
-    // Filename for screenshot pop-up
+    // File name for screenshot pop-up
     if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Select Filename for Screenshot",
             this->state.open_popup_screenshot, this->state.screenshot_filepath, ".png")) {
         this->state.screenshot_filepath_id = 0;
@@ -2230,6 +2232,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.screenshot_triggered = false;
     this->state.screenshot_filepath = "megamol_screenshot.png";
     this->state.screenshot_filepath_id = 0;
+    this->state.last_script_filename = "";
     this->state.hotkeys_check_once = true;
 
     this->create_not_existing_png_filepath(this->state.screenshot_filepath);

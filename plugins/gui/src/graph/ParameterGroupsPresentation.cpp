@@ -234,7 +234,7 @@ void megamol::gui::ParameterGroupsPresentation::draw_parameter(megamol::gui::Par
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
 
-    if ((inout_param.type == Param_t::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
+    if (inout_param.type == Param_t::TRANSFERFUNCTION) {
         inout_param.present.ConnectExternalTransferFunctionEditor(in_external_tf_editor);
     }
 

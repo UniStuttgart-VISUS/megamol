@@ -1439,12 +1439,10 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
 
     if (this->use_external_tf_editor) {
         if (this->tf_editor_external_ptr == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Pointer to external transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__,
-                __FUNCTION__, __LINE__);
-            return false;
+            this->use_external_tf_editor = false;
+        } else {
+            isActive = !(this->tf_editor_external_ptr->GetConnectedParameterName().empty());
         }
-        isActive = !(this->tf_editor_external_ptr->GetConnectedParameterName().empty());
     }
 
     // LOCAL -----------------------------------------------------------
@@ -1477,8 +1475,6 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
         if (this->tf_editor_external_ptr != nullptr) {
             if (ImGui::RadioButton("External", this->use_external_tf_editor)) {
                 this->use_external_tf_editor = true;
-                /// this->tf_editor_external_ptr->SetConnectedParameter(&param, full_param_name); additional
-                /// click on edit is required.
                 this->show_tf_editor = false;
             }
             ImGui::SameLine();
@@ -1494,16 +1490,15 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
         if (this->use_external_tf_editor) {
 
             // Editor
-            ImGui::PushID("Edit_");
-            ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[isActive ? ImGuiCol_ButtonHovered : ImGuiCol_Button]);
-            ImGui::PushStyleColor(
-                ImGuiCol_ButtonHovered, style.Colors[isActive ? ImGuiCol_Button : ImGuiCol_ButtonHovered]);
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
-            if (ImGui::Button("Edit")) {
+            if (isActive) {
+                GUIUtils::ReadOnlyWigetStyle(true);
+            }
+            if (ImGui::Button("Connect")) {
                 retval = true;
             }
-            ImGui::PopStyleColor(3);
-            ImGui::PopID();
+            if (isActive) {
+                GUIUtils::ReadOnlyWigetStyle(false);
+            }
 
         } else { // Internal Editor
 
