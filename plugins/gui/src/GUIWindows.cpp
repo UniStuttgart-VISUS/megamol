@@ -388,7 +388,6 @@ bool GUIWindows::PostDraw(void) {
         if ((wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) && wc.buf_tfe_reset) {
             this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
-            this->tf_editor_ptr->SetOverwriteRange(wc.tfe_overwrite_range);
 
             if (!wc.tfe_active_param.empty()) {
                 GraphPtr_t graph_ptr;
@@ -427,7 +426,6 @@ bool GUIWindows::PostDraw(void) {
                 }
                 wc.tfe_view_minimized = this->tf_editor_ptr->IsMinimized();
                 wc.tfe_view_vertical = this->tf_editor_ptr->IsVertical();
-                wc.tfe_overwrite_range = this->tf_editor_ptr->OverwriteRange();
             }
 
             ImGui::SetNextWindowBgAlpha(1.0f);
@@ -883,8 +881,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             }
             // Load GUI state from project file when project file changed
             if (script_filename != this->state.last_script_filename) {
-                this->load_state_from_file(graph_ptr->GetFilename());
                 graph_ptr->SetFilename(script_filename);
+                this->load_state_from_file(graph_ptr->GetFilename());
                 this->state.last_script_filename = script_filename;
             }
         }

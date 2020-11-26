@@ -204,38 +204,56 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
         return;
     }
 
-    std::array<float, 2> new_range;
-    unsigned int tex_size = 0;
-    bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-        tfs, this->nodes, this->mode, tex_size, new_range);
-
-    if (!ok) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Could not parse transfer function");
-        return;
-    }
-
-    // Check for required initial node data
-    assert(this->nodes.size() > 1);
-
     this->currentNode = 0;
     this->currentChannel = 0;
     this->currentDragChange = glm::vec2(0.0f, 0.0f);
 
-    if (!this->range_overwrite) {
-        this->range = new_range;
+    unsigned int new_tex_size = 0;
+    std::array<float, 2> new_range;
+    megamol::core::param::TransferFunctionParam::TFNodeType new_nodes;
+    megamol::core::param::TransferFunctionParam::InterpolationMode new_mode;
+    bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
+        tfs, new_nodes, new_mode, new_tex_size, new_range);
+    if (!ok) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Could not parse transfer function");
+        return;
     }
-    // Save new range propagated by renderers for later recovery
-    this->last_range = new_range;
+    // Check for required initial node data
+    if (new_nodes.size() <= 1) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[GUI] At least two nodes are required for valid transfer function description");
+        return;
+    }
 
-    this->widget_buffer.min_range = this->range[0];
-    this->widget_buffer.max_range = this->range[1];
-    this->widget_buffer.tex_size = static_cast<int>(tex_size);
-    this->widget_buffer.range_value =
-        (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
+    bool tf_changed = false;
+    if (this->mode != new_mode) {
+        this->mode = new_mode;
+        tf_changed = true;
+    }
+    if (this->nodes != new_nodes) {
+        this->nodes = new_nodes;
+        tf_changed = true;
+    }
+    if (this->range != new_range) {
+        this->range_overwrite = false;
+        this->range = new_range;
+        this->last_range = new_range;
+        tf_changed = true;
+    }
+    if (this->widget_buffer.tex_size != new_tex_size) {
+        this->widget_buffer.tex_size = new_tex_size;
+        tf_changed = true;
+    }
 
-    this->widget_buffer.gauss_sigma = this->nodes[this->currentNode][5];
+    if (tf_changed) {
+        this->widget_buffer.min_range = this->range[0];
+        this->widget_buffer.max_range = this->range[1];
+        this->widget_buffer.range_value =
+            (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
+        this->widget_buffer.gauss_sigma = this->nodes[this->currentNode][5];
 
-    this->textureInvalid = true;
+        this->textureInvalid = true;
+    }
 }
 
 bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
@@ -383,7 +401,8 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             }
         }
         help = "[Enable] for overwriting value range propagated from connected module(s).\n"
-               "[Disable] for recovery of last value range or last value range propagated from connected module(s).";
+               "[Disable] for recovery of last value range or last value range propagated from connected module(s).\n"
+               "NB: This option will be disabled when running animation propagates new range every frame.";
         this->tooltip.Marker(help);
 
         // Value slider -------------------------------------------------------

@@ -101,20 +101,6 @@ namespace gui {
             this->flip_legend = vertical;
         }
 
-        /**
-         * Returns true if overwriting range is enabled.
-         */
-        inline bool OverwriteRange(void) const {
-            return this->range_overwrite;
-        }
-
-        /**
-         * Enable range overwrite.
-         */
-        inline void SetOverwriteRange(bool overwrite) {
-            this->range_overwrite = overwrite;
-        }
-
     private:
         /** The global input widget state buffer. */
         struct WidgetBuffer {

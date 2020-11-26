@@ -76,7 +76,6 @@ namespace gui {
             // ---------- Transfer Function Editor specific configuration ---------
             bool tfe_view_minimized;      // flag indicating minimized window state
             bool tfe_view_vertical;       // flag indicating vertical window state
-            bool tfe_overwrite_range;     // flag indicating if range overwrite is enabled
             std::string tfe_active_param; // last active parameter connected to editor
             bool buf_tfe_reset;           // flag for reset of tfe window on state loading             [NOT SAVED]
             // ---------- LOG specific configuration ----------
@@ -117,7 +116,6 @@ namespace gui {
                     , tfe_view_minimized(false)
                     , tfe_view_vertical(false)
                     , tfe_active_param("")
-                    , tfe_overwrite_range(false)
                     , buf_tfe_reset(false)
                     , log_level(static_cast<int>(megamol::core::utility::log::Log::LEVEL_ALL))
                     , log_force_open(true) {}

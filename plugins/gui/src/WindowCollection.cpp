@@ -220,9 +220,6 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                     megamol::core::utility::get_json_value<bool>(
                         config_values, {"tfe_view_vertical"}, &tmp_config.tfe_view_vertical);
 
-                    megamol::core::utility::get_json_value<bool>(
-                        config_values, {"tfe_overwrite_range"}, &tmp_config.tfe_overwrite_range);
-
                     megamol::core::utility::get_json_value<std::string>(
                         config_values, {"tfe_active_param"}, &tmp_config.tfe_active_param);
 
@@ -340,8 +337,6 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
                     window_config.tfe_view_minimized;
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["tfe_view_vertical"] =
                     window_config.tfe_view_vertical;
-                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["tfe_overwrite_range"] =
-                    window_config.tfe_overwrite_range;
 
                 GUIUtils::Utf8Encode(window_config.tfe_active_param);
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["tfe_active_param"] =

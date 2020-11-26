@@ -303,7 +303,7 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - start_time).count();
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[GUI] Reading %i available module ... DONE (duration: %.3f seconds)\n", this->modules_stock.size(),
+            "[GUI] Reading %i available modules ... DONE (duration: %.3f seconds)\n", this->modules_stock.size(),
             delta_time);
 
     } catch (std::exception e) {
