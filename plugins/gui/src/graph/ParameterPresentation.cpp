@@ -25,7 +25,7 @@ megamol::gui::ParameterPresentation::ParameterPresentation(Param_t type)
         , set_focus(0)
         , guistate_dirty(false)
         , tf_editor_external_ptr(nullptr)
-        , tf_editor_internal()
+        , tf_editor_inplace()
         , use_external_tf_editor(false)
         , show_tf_editor(false)
         , tf_editor_hash(0)
@@ -1471,15 +1471,15 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
             ImGui::TextEx(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
         }
 
-        // Toggle internal and external editor, if available
+        // Toggle inplace and external editor, if available
         if (this->tf_editor_external_ptr != nullptr) {
-            if (ImGui::RadioButton("External", this->use_external_tf_editor)) {
+            if (ImGui::RadioButton("External Editor", this->use_external_tf_editor)) {
                 this->use_external_tf_editor = true;
                 this->show_tf_editor = false;
             }
             ImGui::SameLine();
         }
-        if (ImGui::RadioButton("Internal", !this->use_external_tf_editor)) {
+        if (ImGui::RadioButton("Inplace", !this->use_external_tf_editor)) {
             this->use_external_tf_editor = false;
             if (this->tf_editor_external_ptr != nullptr) {
                 this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
@@ -1500,7 +1500,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
                 GUIUtils::ReadOnlyWigetStyle(false);
             }
 
-        } else { // Internal Editor
+        } else { // Inplace Editor
 
             // Editor
             if (ImGui::Checkbox("Editor ", &this->show_tf_editor)) {
@@ -1554,7 +1554,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
                     this->tf_editor_external_ptr->SetTransferFunction(value, true);
                 }
             } else {
-                this->tf_editor_internal.SetTransferFunction(value, false);
+                this->tf_editor_inplace.SetTransferFunction(value, false);
             }
         }
 
@@ -1565,13 +1565,13 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
             }
             // Propagate the transfer function to the editor.
             if (updateEditor) {
-                this->tf_editor_internal.SetTransferFunction(value, false);
+                this->tf_editor_inplace.SetTransferFunction(value, false);
             }
             // Draw transfer function editor
             if (this->show_tf_editor) {
-                if (this->tf_editor_internal.Widget(false)) {
+                if (this->tf_editor_inplace.Widget(false)) {
                     std::string value;
-                    if (this->tf_editor_internal.GetTransferFunction(value)) {
+                    if (this->tf_editor_inplace.GetTransferFunction(value)) {
                         inout_parameter.SetValue(value);
                         retval = false; /// (Returning true opens external editor)
                     }

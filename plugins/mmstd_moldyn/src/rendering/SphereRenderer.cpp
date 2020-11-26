@@ -1048,7 +1048,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     // Update current state variables -----------------------------------------
 
     // Update data set range (only if new data set was loaded, not on frame loading)
-    if (hash != this->oldHash) { // (this->stateInvalid) {
+    if (hash != this->oldHash) { // or (this->stateInvalid) {
         this->range[0] = std::numeric_limits<float>::max(); // min
         this->range[1] = std::numeric_limits<float>::min(); // max
         for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
