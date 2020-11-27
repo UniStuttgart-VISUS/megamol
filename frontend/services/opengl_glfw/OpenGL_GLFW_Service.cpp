@@ -240,6 +240,10 @@ void megamol::frontend_resources::WindowManipulation::set_window_position(const 
     glfwSetWindowPos(reinterpret_cast<GLFWwindow*>(window_ptr), width, height);
 }
 
+void megamol::frontend_resources::WindowManipulation::set_swap_interval(const unsigned int wait_frames) const {
+    glfwSwapInterval(wait_frames);
+}
+
 void megamol::frontend_resources::WindowManipulation::set_fullscreen(const Fullscreen action) const {
     switch (action) {
         case Fullscreen::Maximize:
@@ -440,8 +444,8 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
 
     register_glfw_callbacks();
 
-    if (m_pimpl->config.enableVsync)
-        ::glfwSwapInterval(0);
+    int vsync = (m_pimpl->config.enableVsync) ? 1 : 0;
+    ::glfwSwapInterval(vsync);
 
     ::glfwShowWindow(window_ptr);
     //::glfwMakeContextCurrent(nullptr);

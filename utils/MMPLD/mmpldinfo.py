@@ -115,7 +115,7 @@ def readParticles(number, vertType, colType, file):
     if (number > 0):
         print("        bounding box of these particles: (%f, %f, %f) - (%f, %f, %f)" % tuple(mins + maxs))
 
-vertexSizes = [0, 12, 16, 5, 24]
+vertexSizes = [0, 12, 16, 6, 24]
 vertexNames = ["VERTDATA_NONE", "VERTDATA_FLOAT_XYZ", "VERTDATA_FLOAT_XYZR", "VERTDATA_SHORT_XYZ", "VERTDATA_DOUBLE_XYZ"]
 colorSizes = [0, 3, 4, 4, 12, 16, 8, 8]
 colorNames = ["COLDATA_NONE", "COLDATA_UINT8_RGB", "COLDATA_UINT8_RGBA", "COLDATA_FLOAT_I", "COLDATA_FLOAT_RGB", "COLDATA_FLOAT_RGBA", "COLDATA_USHORT_RGBA", "COLDATA_DOUBLE_I"]
