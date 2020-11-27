@@ -56,6 +56,7 @@ void main() {
     vec3 normal = texture(normal_tx2D,pixel_coords_norm).rgb;
     float depth = texture(depth_tx2D,pixel_coords_norm).r;
 
+    //var for saving alpha channel 
     vec4 retval = albedo;
 
     if (depth > 0.0f && depth < 1.0f)
@@ -69,14 +70,18 @@ void main() {
             float d = length(light_dir);
             light_dir = normalize(light_dir);
             reflected_light += lambert(light_dir,normal) * point_light_params[i].intensity * (1.0/(d*d));
+            //TODO phong lighting (switch?)
+
         }
 
         for(int i=0; i<distant_light_cnt; ++i)
         {
             vec3 light_dir = vec3(distant_light_params[i].x,distant_light_params[i].y,distant_light_params[i].z);
             reflected_light += lambert(light_dir,normal) * distant_light_params[i].intensity;
-        }
+            //TODO phong lighting (switch?)
 
+        }
+        //Sets pixelcolor to illumination + color (alpha channels remains the same)
         retval.rgb = vec3(reflected_light) * albedo.rgb;
     }
 
