@@ -10,7 +10,7 @@ uniform sampler2D albedo_tx2D;
 uniform sampler2D normal_tx2D;
 uniform sampler2D depth_tx2D;
 
-layout(RGBA16) writeonly uniform image2D tgt_tx2D;
+layout(rgba16) writeonly uniform image2D tgt_tx2D;
 
 uniform int point_light_cnt;
 uniform int distant_light_cnt;
