@@ -93,6 +93,14 @@ protected:
 
 
 private:
+	void dumpPlane(const std::vector<glm::vec3>& p) {
+		std::cout << "Plane: \n";
+		for (const auto& v : p) {
+			std::cout << "(" << v.x << ", " << v.y << ", " << v.z << "), ";
+		}
+		std::cout << "\n";
+	}
+
     enum planeMode { NORMAL, PARAMETER };
 
     struct Triangle {
@@ -143,13 +151,16 @@ private:
         }
     };
 
-	/** Callback function to rotate the ghostplane around its normal */
-	bool rotateGhostPlane(core::param::ParamSlot& slot);
+	/** Function to rotate the ghostplane around its normal */
+	void rotateGhostPlane(const float spRot);
 
-	/** Callback function to rotate the seedplane around its normal */
+	/** Callback function to rotate the seedplane around its normal. This includes rotating the ghost plane */
 	bool rotateSeedPlane(core::param::ParamSlot& slot);
 
-	/** Callback function to assign altered u and v values */
+	/** Callback function to assign s, t, p, and q values */
+	bool setSTQP(core::param::ParamSlot& slot);
+
+	/** Callback function to assign altered s, t, p, and q values */
     bool assignSTPQ(core::param::ParamSlot& slot);
 
 	/** 
@@ -312,6 +323,9 @@ private:
     /** Paramslot for point on seed plane */
     core::param::ParamSlot psSeedPlanePoint_;
 
+	/** Paramslot for setting all border lines to bound seedplane to the same value */
+	core::param::ParamSlot psSeedPlaneSTPQ_;
+
 	/** Paramslot for border line to bound seedplane */
     core::param::ParamSlot psSeedPlaneS_;
 
@@ -326,9 +340,6 @@ private:
 
 	/** Paramslot for resetting borderLines */
 	//core::param::ParamSlot psResetBorderLines_;
-
-	/** Paramslot to rotate ghostplane around its normal */
-	core::param::ParamSlot psRotateGhostPlane_;
 
 	/** Paramslot to rotate seedplane around its normal */
 	core::param::ParamSlot psRotateSeedPlane_;
@@ -383,6 +394,7 @@ private:
     glm::vec3 seedPlanePoint_;
     glm::vec3 seedPlaneColor_;
     float seedPlaneAlpha_;
+	float gpRot_;
 
     std::vector<glm::vec3> liveSeedPlane_;
     std::vector<glm::vec3> liveCopy_;

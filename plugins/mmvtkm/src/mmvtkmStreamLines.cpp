@@ -47,11 +47,11 @@ mmvtkmStreamLines::mmvtkmStreamLines()
           "Connection2", "Specifies the second point with which the origin of the seed plane is connected")
     , psSeedPlaneNormal_("planeNormal", "Specifies the normal of the seed plane")
     , psSeedPlanePoint_("planePoint", "Specifies a point on the seed plane")
+    , psSeedPlaneSTPQ_("stpq", "Specifies all the scales in all directions equally")
     , psSeedPlaneS_("s", "Specifies the scale in s direction")
     , psSeedPlaneT_("t", "Specifies the scale in t direction")
     , psSeedPlaneP_("p", "Specifies the scale in q direction")
     , psSeedPlaneQ_("q", "Specifies the scale in p direction")
-	, psRotateGhostPlane_("rotateGhostPlane", "Rotates the ghostplane around its normal")
 	, psRotateSeedPlane_("rotateSeedPlane", "Rotates the seedplane around its normal")
     , psSeedPlaneColor_("planeColor", "Specifies the color of the seed plane")
     , psApplyChanges_("apply", "Press to apply changes for streamline configuration")
@@ -81,6 +81,7 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     , seedPlanePoint_(0.f, 0.f, 50.f)
     , seedPlaneColor_(0.5f, 0.f, 0.f)
     , seedPlaneAlpha_(1.f)
+	, gpRot_(0.f)
     , liveSeedPlane_{}
 	, liveCopy_{}
     , originalSeedPlane_{}
@@ -153,6 +154,11 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     this->psSeedPlanePoint_.SetParameter(new core::param::Vector3fParam({0.f, 0.f, 50.f}));
     this->MakeSlotAvailable(&this->psSeedPlanePoint_);
 
+	this->psSeedPlaneSTPQ_.SetParameter(new core::param::FloatParam(0.f, 0.f, 1.f));
+	this->psSeedPlaneSTPQ_.SetUpdateCallback(&mmvtkmStreamLines::setSTQP);
+	this->MakeSlotAvailable(&this->psSeedPlaneSTPQ_);
+	this->psSeedPlaneSTPQ_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
+
     this->psSeedPlaneS_.SetParameter(new core::param::FloatParam(0.f, 0.f, 1.f));
     this->psSeedPlaneS_.SetUpdateCallback(&mmvtkmStreamLines::assignSTPQ);
     this->MakeSlotAvailable(&this->psSeedPlaneS_);
@@ -173,12 +179,7 @@ mmvtkmStreamLines::mmvtkmStreamLines()
 	this->MakeSlotAvailable(&this->psSeedPlaneQ_);
 	this->psSeedPlaneQ_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
 
-	this->psRotateGhostPlane_.SetParameter(new core::param::FloatParam(0.f, 0.f, 1.f));
-	this->psRotateGhostPlane_.SetUpdateCallback(&mmvtkmStreamLines::rotateGhostPlane);
-	this->MakeSlotAvailable(&this->psRotateGhostPlane_);
-	this->psRotateGhostPlane_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
-
-	this->psRotateSeedPlane_.SetParameter(new core::param::FloatParam(0.f, 0.f, 1.f));
+	this->psRotateSeedPlane_.SetParameter(new core::param::FloatParam(0.f));
 	this->psRotateSeedPlane_.SetUpdateCallback(&mmvtkmStreamLines::rotateSeedPlane);
 	this->MakeSlotAvailable(&this->psRotateSeedPlane_);
 	this->psRotateSeedPlane_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
@@ -223,25 +224,22 @@ bool mmvtkmStreamLines::create() {
 
 
 /**
- * mmvtkmStreamLines::rotateGhostPlane
- */
-bool mmvtkmStreamLines::rotateGhostPlane(core::param::ParamSlot& slot) {
-	glm::mat4 rot = glm::rotate(slot.Param<core::param::FloatParam>()->Value() * 2 * 3.14159265358979f, seedPlaneNormal_);
-
+* mmvtkmStreamLines::rotateGhostPlane
+*/
+void mmvtkmStreamLines::rotateGhostPlane(const float spRot) {
 	assert(ghostCopy_.size() == rotatedGhostCopy_.size());
+
+	float s = psRotateSeedPlane_.Param<core::param::FloatParam>()->Value();
+	glm::mat4 rot2 = glm::rotate((gpRot_ + spRot) * 2.f * 3.14159265358979f, seedPlaneNormal_);
 
 	glm::vec3 zFight = 0.1f * seedPlaneNormal_;
 
 	for (int i = 0; i < ghostCopy_.size(); ++i) {
 		// rotate around seedplanepoint, not around origin
-		glm::vec3 newV = rot * glm::vec4(ghostCopy_[i] - seedPlanePoint_, 1.f) + glm::vec4(seedPlanePoint_, 0.f);
+		glm::vec3 newV = rot2 * glm::vec4(ghostCopy_[i] - seedPlanePoint_, 1.f) + glm::vec4(seedPlanePoint_, 0.f);
 		rotatedGhostCopy_[i] = newV;
 		ghostPlane_[i] = newV + zFight;
 	}
-
-	planeAppearanceUpdate_ = true;
-
-	return true;
 }
 
 
@@ -249,7 +247,9 @@ bool mmvtkmStreamLines::rotateGhostPlane(core::param::ParamSlot& slot) {
  * mmvtkmStreamLines::rotateSeedPlane
  */
 bool mmvtkmStreamLines::rotateSeedPlane(core::param::ParamSlot& slot) {
-	glm::mat4 rot = glm::rotate(slot.Param<core::param::FloatParam>()->Value() * 2 * 3.14159265358979f, seedPlaneNormal_);
+	float scale = slot.Param<core::param::FloatParam>()->Value();
+
+	glm::mat4 rot = glm::rotate(scale * 2.f * 3.14159265358979f, seedPlaneNormal_);
 
 	assert(liveCopy_.size() == liveSeedPlane_.size());
 
@@ -259,7 +259,26 @@ bool mmvtkmStreamLines::rotateSeedPlane(core::param::ParamSlot& slot) {
 		liveSeedPlane_[i] = newV;
 	}
 
+	rotateGhostPlane(scale);
+
 	planeAppearanceUpdate_ = true;
+
+	return true;
+}
+
+
+/**
+ * mmvtkmStreamLines::setSTPQ
+ */
+bool mmvtkmStreamLines::setSTQP(core::param::ParamSlot& slot) {
+	float s = slot.Param<core::param::FloatParam>()->Value();
+	// note: this causes to call mmvtkmStreamLines::assignSTQP 4 times in a row
+	// not beautiful, but it works
+	// TODO: do it better^^
+	this->psSeedPlaneS_.Param<core::param::FloatParam>()->SetValue(s);
+	this->psSeedPlaneT_.Param<core::param::FloatParam>()->SetValue(s);
+	this->psSeedPlaneP_.Param<core::param::FloatParam>()->SetValue(s);
+	this->psSeedPlaneQ_.Param<core::param::FloatParam>()->SetValue(s);
 
 	return true;
 }
@@ -273,8 +292,8 @@ bool mmvtkmStreamLines::assignSTPQ(core::param::ParamSlot& slot) {
     float t = this->psSeedPlaneT_.Param<core::param::FloatParam>()->Value();
     float p = this->psSeedPlaneP_.Param<core::param::FloatParam>()->Value();
     float q = this->psSeedPlaneQ_.Param<core::param::FloatParam>()->Value();
+	std::cout << "value check: " << s << ", " << t << ", " << p << ", " << q << "\n";
 
-	
     // intersect line with seedplane
 	// probably need a more performant solution
     calcLiveSeedPlane(0, s, rotatedGhostCopy_[0], rotatedGhostCopy_[2], originalSeedPlane_);
@@ -283,6 +302,13 @@ bool mmvtkmStreamLines::assignSTPQ(core::param::ParamSlot& slot) {
     calcLiveSeedPlane(3, q, rotatedGhostCopy_[3], rotatedGhostCopy_[1], stpqSeedPlane_);
 	liveCopy_.clear();
 	liveCopy_ = liveSeedPlane_;
+
+	// used to keep track of the overall rotation of the seedplane
+	// in order to correctly rotate the ghostplane along the seedplane
+	// and preserve mutual alignment
+	gpRot_ += psRotateSeedPlane_.Param<core::param::FloatParam>()->Value();
+	psRotateSeedPlane_.Param<core::param::FloatParam>()->SetValue(0.f, false);
+
 
     // adapt colorvec and indexvec according to new plane
     unsigned int num = liveSeedPlane_.size();
@@ -537,10 +563,10 @@ bool mmvtkmStreamLines::applyChanges(core::param::ParamSlot& slot) {
     this->psSeedPlaneColor_.ResetDirty();
 
 
-	psSeedPlaneS_.Param<core::param::FloatParam>()->SetValue(0.f);
-	psSeedPlaneT_.Param<core::param::FloatParam>()->SetValue(0.f);
-	psSeedPlaneP_.Param<core::param::FloatParam>()->SetValue(0.f);
-	psSeedPlaneQ_.Param<core::param::FloatParam>()->SetValue(0.f);
+	psSeedPlaneS_.Param<core::param::FloatParam>()->SetValue(0.f, false);
+	psSeedPlaneT_.Param<core::param::FloatParam>()->SetValue(0.f, false);
+	psSeedPlaneP_.Param<core::param::FloatParam>()->SetValue(0.f, false);
+	psSeedPlaneQ_.Param<core::param::FloatParam>()->SetValue(0.f, false);
 
 
     return true;
@@ -1031,8 +1057,8 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             dataSetBounds_ = rhsVtkmDc->GetBounds();
             visVec3f low = {(float)dataSetBounds_.X.Min, (float)dataSetBounds_.Y.Min, (float)dataSetBounds_.Z.Min};
             visVec3f up = {(float)dataSetBounds_.X.Max, (float)dataSetBounds_.Y.Max, (float)dataSetBounds_.Z.Max};
-            this->psLowerStreamlineSeedBound_.Param<core::param::Vector3fParam>()->SetValue(low);
-            this->psUpperStreamlineSeedBound_.Param<core::param::Vector3fParam>()->SetValue(up);
+            this->psLowerStreamlineSeedBound_.Param<core::param::Vector3fParam>()->SetValue(low, false);
+            this->psUpperStreamlineSeedBound_.Param<core::param::Vector3fParam>()->SetValue(up, false);
         }
 
 
