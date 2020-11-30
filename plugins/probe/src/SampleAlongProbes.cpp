@@ -71,6 +71,8 @@ SampleAlongPobes::SampleAlongPobes()
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Scalar");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Vector");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "Volume");
+    this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(3, "Tetrahedral");
+    this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(4, "Nearest");
     this->_sampling_mode.SetUpdateCallback(&SampleAlongPobes::paramChanged);
     this->MakeSlotAvailable(&this->_sampling_mode);
 
@@ -274,7 +276,9 @@ bool SampleAlongPobes::getData(core::Call& call) {
     if (cd != nullptr && ct != nullptr) {
 
         toInq.clear();
-        if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 0) {
+        if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 0 ||
+            _sampling_mode.Param<core::param::EnumParam>()->Value() == 3 ||
+            _sampling_mode.Param<core::param::EnumParam>()->Value() == 4) {
             toInq.emplace_back(
                 std::string(this->_parameter_to_sample_slot.Param<core::param::FlexEnumParam>()->ValueString()));
         } else {
@@ -338,7 +342,9 @@ bool SampleAlongPobes::getData(core::Call& call) {
     if (something_has_changed) {
         ++_version;
 
-        if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 0) {
+        if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 0 ||
+            _sampling_mode.Param<core::param::EnumParam>()->Value() == 3 ||
+            _sampling_mode.Param<core::param::EnumParam>()->Value() == 4) {
             if (cd == nullptr || ct == nullptr) {
                 core::utility::log::Log::DefaultLog.WriteError(
                     "[SampleAlongProbes] Scalar mode selected but no particle data connected.");
@@ -348,11 +354,23 @@ bool SampleAlongPobes::getData(core::Call& call) {
             auto tree = ct->getData();
             if (cd->getData(var_str)->getType() == "double") {
                 std::vector<double> data = cd->getData(var_str)->GetAsDouble();
-                doScalarSampling(tree, data);
+                if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 0) {
+                    doScalarSampling(tree, data);
+                } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 3) {
+                    doTetrahedralSampling(tree, data);
+                } else {
+                    doNearestNeighborSampling(tree, data);
+                }
 
             } else if (cd->getData(var_str)->getType() == "float") {
                 std::vector<float> data = cd->getData(var_str)->GetAsFloat();
-                doScalarSampling(tree, data);
+                if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 0) {
+                    doScalarSampling(tree, data);
+                } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 3) {
+                    doTetrahedralSampling(tree, data);
+                } else {
+                    doNearestNeighborSampling(tree, data);
+                }
             }
         } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 1) {
             if (cd == nullptr || ct == nullptr) {

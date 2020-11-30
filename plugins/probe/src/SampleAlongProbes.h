@@ -15,8 +15,16 @@
 #include "mmcore/param/ParamSlot.h"
 #include "kdtree.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "adios_plugin/CallADIOSData.h"
 #include "mmcore/misc/VolumetricDataCall.h"
+
+#include "CGAL/Exact_predicates_inexact_constructions_kernel.h"
+#include "CGAL/Delaunay_triangulation_3.h"
+#include "CGAL/Delaunay_triangulation_cell_base_3.h"
+#include "CGAL/Triangulation_vertex_base_3.h"
+#include "CGAL/Triangulation_vertex_base_with_info_3.h"
 
 namespace megamol {
 namespace probe {
@@ -71,7 +79,7 @@ protected:
     core::param::ParamSlot _num_samples_per_probe_slot;
     core::param::ParamSlot _sample_radius_factor_slot;
 
-	core::param::ParamSlot _sampling_mode;
+    core::param::ParamSlot _sampling_mode;
     core::param::ParamSlot _weighting;
     core::param::ParamSlot _vec_param_to_samplex_x;
     core::param::ParamSlot _vec_param_to_samplex_y;
@@ -84,9 +92,15 @@ private:
 
     void doVolumeSampling();
 
-	template <typename T>
+    template <typename T>
     void doVectorSamling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, const std::vector<T>& data_x,
         const std::vector<T>& data_y, const std::vector<T>& data_z, const std::vector<T>& data_w);
+
+    template <typename T>
+    void doTetrahedralSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data);
+
+    template<typename T>
+    void doNearestNeighborSampling(const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data);
 
     bool getData(core::Call& call);
 
@@ -211,12 +225,12 @@ void SampleAlongPobes::doScalarSampling(
 
 template <typename T>
 inline void SampleAlongPobes::doVectorSamling(
-	const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree,
+    const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree,
     const std::vector<T>& data_x,
-	const std::vector<T>& data_y,
-	const std::vector<T>& data_z,
+    const std::vector<T>& data_y,
+    const std::vector<T>& data_z,
     const std::vector<T>& data_w) {
-	
+    
     const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
     const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
 
@@ -308,6 +322,259 @@ inline void SampleAlongPobes::doVectorSamling(
         //samples->min_value = min_value;
     } // end for probes
 
+}
+
+
+    template<typename T>
+void SampleAlongPobes::doTetrahedralSampling(
+    const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data) {
+
+    using K = CGAL::Exact_predicates_inexact_constructions_kernel;
+    using Vb = CGAL::Triangulation_vertex_base_with_info_3<T, K>;
+    using Cb = CGAL::Delaunay_triangulation_cell_base_3<K>;
+    using Tds = CGAL::Triangulation_data_structure_3<Vb, Cb>;
+    using Triangulation = CGAL::Delaunay_triangulation_3<K, Tds>;
+    using Point = Triangulation::Point;
+    using Segment = Triangulation::Segment;
+    using Tetrahedron = Triangulation::Tetrahedron;
+
+    Triangulation tri;
+
+    {
+        auto const num_points = tree->getInputCloud()->points.size();
+        auto const& cloud = tree->getInputCloud()->points;
+        std::vector<std::pair<Point, T>> points(num_points);
+        std::transform(cloud.cbegin(), cloud.cend(), data.cbegin(), points.begin(),
+            [](pcl::PointXYZ const& p, T const& val) { return std::make_pair(Point(p.x, p.y, p.z), val); });
+        tri = Triangulation(points.cbegin(), points.cend());
+    }
+
+    const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
+    const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
+
+    float global_min = std::numeric_limits<float>::max();
+    float global_max = std::numeric_limits<float>::lowest();
+    //#pragma omp parallel for
+    for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); ++i) {
+
+        FloatProbe probe;
+
+        auto visitor = [&probe, i, samples_per_probe, sample_radius_factor, this](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::Vec4Probe>) {
+
+                probe.m_timestamp = arg.m_timestamp;
+                probe.m_value_name = arg.m_value_name;
+                probe.m_position = arg.m_position;
+                probe.m_direction = arg.m_direction;
+                probe.m_begin = arg.m_begin;
+                probe.m_end = arg.m_end;
+                probe.m_cluster_id = arg.m_cluster_id;
+
+                auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
+                auto radius = 0.5 * sample_step * sample_radius_factor;
+                probe.m_sample_radius = radius;
+
+                _probes->setProbe(i, probe);
+
+            } else if constexpr (std::is_same_v<T, probe::FloatProbe>) {
+                probe = arg;
+
+            } else {
+                // unknown/incompatible probe type, throw error? do nothing?
+            }
+        };
+
+        auto generic_probe = _probes->getGenericProbe(i);
+        std::visit(visitor, generic_probe);
+
+        auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
+        auto radius = 0.5 * sample_step * sample_radius_factor;
+
+        std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
+
+        float min_value = std::numeric_limits<float>::max();
+        float max_value = std::numeric_limits<float>::lowest();
+        /*float min_data = std::numeric_limits<float>::max();
+        float max_data = -std::numeric_limits<float>::max();*/
+        float avg_value = 0.0f;
+        samples->samples.resize(samples_per_probe);
+
+        for (int j = 0; j < samples_per_probe; ++j) {
+
+            Point sample_point(probe.m_position[0] + static_cast<float>(j) * sample_step * probe.m_direction[0],
+                probe.m_position[1] + static_cast<float>(j) * sample_step * probe.m_direction[1],
+                probe.m_position[2] + static_cast<float>(j) * sample_step * probe.m_direction[2]);
+
+            T val = 0;
+
+            auto cell = tri.locate(sample_point);
+            if (!tri.is_infinite(cell)) {
+                Tetrahedron tet_c = Tetrahedron(cell->vertex(0)->point(), cell->vertex(1)->point(),
+                    cell->vertex(2)->point(), cell->vertex(3)->point());
+                Tetrahedron tet_0 = Tetrahedron(
+                    sample_point, cell->vertex(1)->point(), cell->vertex(2)->point(), cell->vertex(3)->point());
+                Tetrahedron tet_1 = Tetrahedron(
+                    cell->vertex(0)->point(), sample_point, cell->vertex(2)->point(), cell->vertex(3)->point());
+                Tetrahedron tet_2 = Tetrahedron(
+                    cell->vertex(0)->point(), cell->vertex(1)->point(), sample_point, cell->vertex(3)->point());
+                Tetrahedron tet_3 = Tetrahedron(
+                    cell->vertex(0)->point(), cell->vertex(1)->point(), cell->vertex(2)->point(), sample_point);
+
+                auto const V_c = tet_c.volume();
+
+                auto const V_0 = tet_0.volume();
+                auto const V_1 = tet_1.volume();
+                auto const V_2 = tet_2.volume();
+                auto const V_3 = tet_3.volume();
+
+                auto const a_0 = V_0 / V_c;
+                auto const a_1 = V_1 / V_c;
+                auto const a_2 = V_2 / V_c;
+                auto const a_3 = V_3 / V_c;
+
+                auto const val_0 = cell->vertex(0)->info();
+                auto const val_1 = cell->vertex(1)->info();
+                auto const val_2 = cell->vertex(2)->info();
+                auto const val_3 = cell->vertex(3)->info();
+
+                val = a_0 * val_0 + a_1 * val_1 + a_2 * val_2 + a_3 * val_3;
+            }
+            samples->samples[j] = val;
+
+            min_value = std::min<decltype(min_value)>(min_value, val);
+            max_value = std::max<decltype(max_value)>(max_value, val);
+            avg_value += val;
+        } // end num samples per probe
+
+        avg_value /= samples_per_probe;
+        /*if (this->_weighting.Param<megamol::core::param::EnumParam>()->Value() == 0) {
+            samples->average_value = avg_value;
+            samples->max_value = max_value;
+            samples->min_value = min_value;
+        } else {
+            samples->average_value = max_data;
+            samples->max_value = max_data;
+            samples->min_value = max_data;
+        }*/
+        global_min = std::min(global_min, samples->min_value);
+        global_max = std::max(global_max, samples->max_value);
+    } // end for probes
+    _probes->setGlobalMinMax(global_min, global_max);
+}
+
+
+template<typename T>
+void SampleAlongPobes::doNearestNeighborSampling(
+    const std::shared_ptr<pcl::KdTreeFLANN<pcl::PointXYZ>>& tree, std::vector<T>& data) {
+
+    using K = CGAL::Exact_predicates_inexact_constructions_kernel;
+    using Vb = CGAL::Triangulation_vertex_base_with_info_3<T, K>;
+    using Cb = CGAL::Delaunay_triangulation_cell_base_3<K>;
+    using Tds = CGAL::Triangulation_data_structure_3<Vb, Cb>;
+    using Triangulation = CGAL::Delaunay_triangulation_3<K, Tds>;
+    using Point = Triangulation::Point;
+    using Segment = Triangulation::Segment;
+    using Tetrahedron = Triangulation::Tetrahedron;
+
+    Triangulation tri;
+
+    {
+        auto const num_points = tree->getInputCloud()->points.size();
+        auto const& cloud = tree->getInputCloud()->points;
+        std::vector<std::pair<Point, T>> points(num_points);
+        std::transform(cloud.cbegin(), cloud.cend(), data.cbegin(), points.begin(),
+            [](pcl::PointXYZ const& p, T const& val) { return std::make_pair(Point(p.x, p.y, p.z), val); });
+        tri = Triangulation(points.begin(), points.end());
+    }
+
+    const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
+    const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
+
+    float global_min = std::numeric_limits<float>::max();
+    float global_max = std::numeric_limits<float>::lowest();
+    //#pragma omp parallel for
+    for (int32_t i = 0; i < static_cast<int32_t>(_probes->getProbeCount()); ++i) {
+
+        FloatProbe probe;
+
+        auto visitor = [&probe, i, samples_per_probe, sample_radius_factor, this](auto&& arg) {
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, probe::BaseProbe> || std::is_same_v<T, probe::Vec4Probe>) {
+
+                probe.m_timestamp = arg.m_timestamp;
+                probe.m_value_name = arg.m_value_name;
+                probe.m_position = arg.m_position;
+                probe.m_direction = arg.m_direction;
+                probe.m_begin = arg.m_begin;
+                probe.m_end = arg.m_end;
+                probe.m_cluster_id = arg.m_cluster_id;
+
+                auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
+                auto radius = 0.5 * sample_step * sample_radius_factor;
+                probe.m_sample_radius = radius;
+
+                _probes->setProbe(i, probe);
+
+            } else if constexpr (std::is_same_v<T, probe::FloatProbe>) {
+                probe = arg;
+
+            } else {
+                // unknown/incompatible probe type, throw error? do nothing?
+            }
+        };
+
+        auto generic_probe = _probes->getGenericProbe(i);
+        std::visit(visitor, generic_probe);
+
+        auto sample_step = probe.m_end / static_cast<float>(samples_per_probe);
+        auto radius = 0.5 * sample_step * sample_radius_factor;
+
+        std::shared_ptr<FloatProbe::SamplingResult> samples = probe.getSamplingResult();
+
+        float min_value = std::numeric_limits<float>::max();
+        float max_value = std::numeric_limits<float>::lowest();
+        /*float min_data = std::numeric_limits<float>::max();
+        float max_data = -std::numeric_limits<float>::max();*/
+        float avg_value = 0.0f;
+        samples->samples.resize(samples_per_probe);
+
+        for (int j = 0; j < samples_per_probe; ++j) {
+
+            Point sample_point(probe.m_position[0] + static_cast<float>(j) * sample_step * probe.m_direction[0],
+                probe.m_position[1] + static_cast<float>(j) * sample_step * probe.m_direction[1],
+                probe.m_position[2] + static_cast<float>(j) * sample_step * probe.m_direction[2]);
+
+            T val = 0;
+
+            auto cell = tri.locate(sample_point);
+            if (!tri.is_infinite(cell)) {
+                auto vertex = tri.nearest_vertex_in_cell(sample_point, cell);
+
+                val = vertex->info();
+            }
+
+            samples->samples[j] = val;
+
+            min_value = std::min<decltype(min_value)>(min_value, val);
+            max_value = std::max<decltype(max_value)>(max_value, val);
+            avg_value += val;
+        } // end num samples per probe
+
+        avg_value /= samples_per_probe;
+        /*if (this->_weighting.Param<megamol::core::param::EnumParam>()->Value() == 0) {
+            samples->average_value = avg_value;
+            samples->max_value = max_value;
+            samples->min_value = min_value;
+        } else {
+            samples->average_value = max_data;
+            samples->max_value = max_data;
+            samples->min_value = max_data;
+        }*/
+        global_min = std::min(global_min, samples->min_value);
+        global_max = std::max(global_max, samples->max_value);
+    } // end for probes
+    _probes->setGlobalMinMax(global_min, global_max);
 }
 
 

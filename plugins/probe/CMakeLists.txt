@@ -65,6 +65,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   require_external(nanoflann)
   require_external(libigl)
 
+  find_package(CGAL CONFIG REQUIRED)
+
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_ADIOS_PLUGIN_PLUGIN BUILD_MESH_PLUGIN BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
@@ -101,7 +103,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/probe_ospray/include> "probe_ospray/src")
   endif()
 
-  target_link_libraries(${PROJECT_NAME} PRIVATE core adios_plugin Eigen nanoflann mesh blend2d qhull libigl mmstd_datatools)# Qhull::libqhull )
+  target_link_libraries(${PROJECT_NAME} PRIVATE core adios_plugin Eigen nanoflann mesh blend2d qhull libigl mmstd_datatools CGAL::CGAL)# Qhull::libqhull )
   if(BUILD_OSPRAY_PLUGIN_PLUGIN)
     target_link_libraries(${PROJECT_NAME} PUBLIC OSPRay_plugin)
   endif()
