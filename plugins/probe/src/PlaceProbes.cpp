@@ -111,6 +111,11 @@ namespace probe {
             _centerline = ccl->getData();
         }
 
+        // react to user selecting different method
+        if (_method_slot.IsDirty()) {
+            _method_slot.ResetDirty();
+            something_changed = true;
+        }
 
         // here something really happens
         if (something_changed) {

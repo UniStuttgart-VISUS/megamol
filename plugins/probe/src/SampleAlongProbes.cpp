@@ -333,11 +333,10 @@ bool SampleAlongPobes::getData(core::Call& call) {
     if (cprobes == nullptr) return false;
     if (!(*cprobes)(0)) return false;
 
-    _probes = cprobes->getData();
-
     something_has_changed = something_has_changed || cprobes->hasUpdate() || _trigger_recalc;
 
     probes_meta_data = cprobes->getMetaData();
+    _probes = cprobes->getData();
 
     if (something_has_changed) {
         ++_version;
