@@ -20,6 +20,7 @@
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #endif
 
@@ -69,8 +70,9 @@ bool Module::Create(std::vector<megamol::frontend::FrontendResource> resources) 
     if (!this->created) {
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         auto p3 = dynamic_cast<core::view::Renderer3DModule*>(this);
+        auto p3_2 = dynamic_cast<core::view::Renderer3DModule_2*>(this);
         auto p2 = dynamic_cast<core::view::Renderer2DModule*>(this);
-        if (p2 || p3) {
+        if (p2 || p3 || p3_2) {
             std::string output = this->ClassName();
             output += "::create";
             glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
@@ -78,7 +80,7 @@ bool Module::Create(std::vector<megamol::frontend::FrontendResource> resources) 
 #endif
         this->created = this->create();
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
-        if (p2 || p3) glPopDebugGroup();
+        if (p2 || p3 || p3_2) glPopDebugGroup();
 #endif
         Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 350,
             "%s module \"%s\"\n", ((this->created) ? "Created"
