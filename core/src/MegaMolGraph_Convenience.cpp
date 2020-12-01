@@ -1,4 +1,4 @@
-﻿#include <sstream>
+#include <sstream>
 #include "mmcore/MegaMolGraph_Convenience.h"
 #include "mmcore/MegaMolGraph.h"
 
@@ -19,6 +19,55 @@ static void err(std::string text) {
 }
 
 MegaMolGraph_Convenience::MegaMolGraph_Convenience(void* graph_ptr) : m_graph_ptr{graph_ptr} {}
+
+#include "mmcore/param/ButtonParam.h"
+std::string megamol::core::MegaMolGraph_Convenience::SerializeGraph() const {
+
+    std::string serViews;
+    std::string serModules;
+    std::string serCalls;
+    std::string serParams;
+
+    for (auto& module : get(m_graph_ptr).ListModules()) {
+        if (module.isGraphEntryPoint) {
+            auto first = module.request.id.find_first_not_of(':');
+            auto last = module.request.id.find_first_of(':', first);
+            auto first_name = module.request.id.substr(first, last-first);
+            auto improvised_instance_name = "::"+first_name;
+            serViews.append("mmCreateView(\"" + improvised_instance_name + "\",\"" + module.request.className + "\",\"" + module.request.id + "\")\n");
+        }
+    }
+
+    for (auto& module : get(m_graph_ptr).ListModules()) {
+        if (!module.isGraphEntryPoint) {
+            serModules.append("mmCreateModule(\"" + module.request.className + "\",\"" + module.request.id + "\")\n");
+        }
+    }
+
+    for (auto& module : get(m_graph_ptr).ListModules()) {
+        for (auto& paramSlot : get(m_graph_ptr).EnumerateModuleParameterSlots(module.request.id)) {
+            // it seems serialiing button params is illegal
+            if (auto* p_ptr = paramSlot->template Param<core::param::ButtonParam>()) {
+                continue;
+            }
+            auto name = std::string{paramSlot->FullName()};
+            // as FullName() prepends :: to module names, normalize multiple leading :: in parameter name path
+            name = "::" + name.substr(name.find_first_not_of(':'));
+            auto value = std::string{paramSlot->Parameter()->ValueString().PeekBuffer()};
+            serParams.append("mmSetParamValue(\"" + name + "\",[=[" + value + "]=])\n");
+        }
+    }
+
+    for (auto& call : get(m_graph_ptr).ListCalls()) {
+        serCalls.append("mmCreateCall(\""
+            + call.request.className + "\",\""
+            + call.request.from + "\",\""
+            + call.request.to + "\",\""
+            + "\")\n");
+    }
+
+    return serViews + "\n" + serModules + "\n" + serCalls + "\n" + serParams;
+}
 
 MegaMolGraph_Convenience::ParameterGroup& MegaMolGraph_Convenience::CreateParameterGroup(
     const std::string& group_name) {

@@ -27,7 +27,6 @@ megamol::gui::ModulePresentation::ModulePresentation(void)
         , selected(false)
         , update(true)
         , param_child_show(false)
-        , param_child_height(1.0f)
         , set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
         , set_selected_slot_position(false)
         , tooltip()
@@ -136,12 +135,19 @@ void megamol::gui::ModulePresentation::Present(
             ImVec2 module_rect_max = module_rect_min + module_size;
             ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
 
+            // Colors
+            ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
+            tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
+            const ImU32 COLOR_MODULE_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+
             // Clip module if lying ouside the canvas
             /// Is there a benefit since ImGui::PushClipRect is used?
             ImVec2 canvas_rect_min = state.canvas.position;
             ImVec2 canvas_rect_max = state.canvas.position + state.canvas.size;
-            if (!((canvas_rect_min.x < module_rect_max.x) && (canvas_rect_max.x > module_rect_min.x) &&
-                    (canvas_rect_min.y < module_rect_max.y) && (canvas_rect_max.y > module_rect_min.y))) {
+            bool module_clipped =
+                !((canvas_rect_min.x < module_rect_max.x) && (canvas_rect_max.x > module_rect_min.x) &&
+                    (canvas_rect_min.y < module_rect_max.y) && (canvas_rect_max.y > module_rect_min.y));
+            if (module_clipped) {
                 if (mouse_clicked_anywhere) {
                     this->selected = false;
                     if (this->found_uid(state.interact.modules_selected_uids, inout_module.uid)) {
@@ -314,11 +320,7 @@ void megamol::gui::ModulePresentation::Present(
                         state.interact.module_hovered_uid = GUI_INVALID_ID;
                     }
 
-                    // Colors
-                    ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
-                    tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-                    const ImU32 COLOR_MODULE_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
+                    // Colors (cont.)
                     tmpcol = style.Colors[ImGuiCol_FrameBgActive];
                     tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                     const ImU32 COLOR_MODULE_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
@@ -408,73 +410,24 @@ void megamol::gui::ModulePresentation::Present(
                                 ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
                             }
 
+                            // Param Button
                             if (parameter_button) {
-                                bool param_child_hovered = false;
                                 ImVec2 param_button_pos = ImGui::GetCursorScreenPos();
-
-                                // Parameter Child Window
-                                if (this->param_child_show) {
-                                    ImGui::PushStyleColor(ImGuiCol_ChildBg, COLOR_MODULE_BACKGROUND);
-                                    const ImGuiID last_active_id = ImGui::GetActiveID();
-
-                                    const float param_child_width = 325.0f * state.canvas.zooming;
-                                    ImVec2 param_child_pos = param_button_pos;
-                                    param_child_pos.x +=
-                                        ImGui::GetFrameHeight(); // Fix x position to right side of button
-                                    float avail_height =
-                                        (state.canvas.position.y + state.canvas.size.y) - param_child_pos.y;
-                                    this->param_child_height = std::min(state.canvas.size.y, this->param_child_height);
-                                    if (this->param_child_height > avail_height) {
-                                        param_child_pos.y -= (this->param_child_height - avail_height);
-                                    }
-
-                                    ImGui::SetCursorScreenPos(param_child_pos);
-
-                                    auto child_flags = ImGuiWindowFlags_HorizontalScrollbar |
-                                                       ImGuiWindowFlags_AlwaysVerticalScrollbar |
-                                                       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar |
-                                                       ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
-                                                       ImGuiWindowFlags_NavFlattened;
-                                    ImGui::BeginChild("module_parameter_child",
-                                        ImVec2(param_child_width, this->param_child_height), true, child_flags);
-
-                                    float cursor_pos_y = ImGui::GetCursorPosY();
-
-                                    // Draw parameters
-                                    this->param_groups.PresentGUI(inout_module.parameters, inout_module.FullName(), "",
-                                        vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN), false,
-                                        ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
-
-                                    this->param_child_height = ImGui::GetCursorPosY() - cursor_pos_y +
-                                                               ImGui::GetFrameHeight() + ImGui::GetFrameHeight();
-
-                                    ImGui::EndChild();
-                                    ImGui::PopStyleColor();
-
-                                    // Also check for active items because combo box might fold out below the child
-                                    // window's border
-                                    bool param_active = last_active_id != ImGui::GetActiveID();
-                                    if (((ImGui::GetMousePos().x >= param_child_pos.x) &&
-                                            (ImGui::GetMousePos().x <= (param_child_pos.x + param_child_width)) &&
-                                            (ImGui::GetMousePos().y >= param_child_pos.y) &&
-                                            (ImGui::GetMousePos().y <=
-                                                (param_child_pos.y + this->param_child_height))) ||
-                                        param_active) {
-                                        param_child_hovered = true;
-                                    }
+                                if (this->selected) {
+                                    this->param_child_show = ((state.interact.module_param_child_position.x > 0.0f) &&
+                                                              (state.interact.module_param_child_position.y > 0.0f));
+                                } else {
+                                    this->param_child_show = false;
                                 }
-
-                                // Param Button
-                                ImGui::SetCursorScreenPos(param_button_pos);
                                 if (ImGui::ArrowButton("###parameter_toggle",
                                         ((this->param_child_show) ? (ImGuiDir_Down) : (ImGuiDir_Up))) &&
                                     hovered) {
                                     this->param_child_show = !this->param_child_show;
-                                } else if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)) ||
-                                           (ImGui::IsMouseClicked(0) && !param_child_hovered &&
-                                               !ImGui::IsItemHovered())) { /// Ignore if button is hovered
-                                    // Close child window: 'Escape' and 'Mouse Click' outside param window
-                                    this->param_child_show = false;
+                                    if (this->param_child_show) {
+                                        state.interact.module_param_child_position = param_button_pos;
+                                    } else {
+                                        state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
+                                    }
                                 }
                                 ImGui::SetItemAllowOverlap();
                                 if (hovered) {
@@ -491,14 +444,13 @@ void megamol::gui::ModulePresentation::Present(
                 }
             }
 
-            ImGui::PopID();
-
             // CALL SLOTS ------------------------------------------------------
             for (auto& callslots_map : inout_module.GetCallSlots()) {
                 for (auto& callslot_ptr : callslots_map.second) {
                     callslot_ptr->PresentGUI(phase, state);
                 }
             }
+            ImGui::PopID();
         }
 
     } catch (std::exception e) {

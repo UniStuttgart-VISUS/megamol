@@ -23,7 +23,7 @@ bool megamol::gui::GraphCollection::AddEmptyProject(void) {
 
     ImGuiID graph_uid = this->AddGraph(GraphCoreInterface::NO_INTERFACE);
     if (graph_uid != GUI_INVALID_ID) {
-        /*
+        /* DEPRECATED: Only applies for Core Instance Graph, not for MegaMol Graph.
         // Add initial GUIView and set as view instance
         GraphPtr_t graph_ptr;
         if (this->GetGraph(graph_uid, graph_ptr)) {
@@ -233,8 +233,10 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
     try {
         std::string plugin_name;
         auto start_time = std::chrono::system_clock::now();
-
-        // MODULES ----------------------------------------------------------------
+#ifdef GUI_VERBOSE
+        auto module_load_time = std::chrono::system_clock::now();
+#endif // GUI_VERBOSE
+       // MODULES ----------------------------------------------------------------
         if (this->modules_stock.empty()) {
 
             // Get plugin modules (get prior to core modules for being  able to find duplicates in core instance module
@@ -244,10 +246,20 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             for (core::utility::plugins::AbstractPluginInstance::ptr_type plugin : plugins) {
                 plugin_name = plugin->GetAssemblyName();
                 for (auto& m_desc : plugin->GetModuleDescriptionManager()) {
+                    std::string class_name(m_desc->ClassName());
                     Module::StockModule mod;
                     mod.plugin_name = plugin_name;
                     this->get_module_stock_data(mod, m_desc);
                     this->modules_stock.emplace_back(mod);
+#ifdef GUI_VERBOSE
+                    auto module_load_time_count =
+                        static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - module_load_time)
+                            .count();
+                    module_load_time = std::chrono::system_clock::now();
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "[GUI] Reading module '%s' ... DONE (duration: %.3f seconds)\n", class_name.c_str(),
+                        module_load_time_count);
+#endif // GUI_VERBOSE
                 }
             }
 
@@ -262,6 +274,15 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
                     mod.plugin_name = plugin_name;
                     this->get_module_stock_data(mod, m_desc);
                     this->modules_stock.emplace_back(mod);
+#ifdef GUI_VERBOSE
+                    auto module_load_time_count =
+                        static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - module_load_time)
+                            .count();
+                    module_load_time = std::chrono::system_clock::now();
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "[GUI] Reading module '%s' ... DONE (duration: %.3f seconds)\n", class_name.c_str(),
+                        module_load_time_count);
+#endif // GUI_VERBOSE
                 }
             }
 
@@ -754,6 +775,23 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
     GraphPtr_t graph_ptr;
     this->GetGraph(in_graph_uid, graph_ptr);
     ImGuiID retval = in_graph_uid;
+    // Create new graph if necessary
+    if (graph_ptr == nullptr) {
+        ImGuiID new_graph_uid = this->AddGraph(GraphCoreInterface::NO_INTERFACE);
+        if (new_graph_uid == GUI_INVALID_ID) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Load Project File '%s': Unable to create new graph. [%s, %s, line %d]\n",
+                project_filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
+            return GUI_INVALID_ID;
+        }
+        if (!this->GetGraph(new_graph_uid, graph_ptr)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to get pointer to last added graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
+            return GUI_INVALID_ID;
+        }
+        retval = new_graph_uid;
+    }
 
     try {
         bool found_configurator_positions = false;
@@ -774,8 +812,6 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
             lines.emplace_back(tmpline);
         }
 
-        // First find main view for graph creation and view creation.
-        bool found_main_view = false;
         size_t lines_count = lines.size();
         for (unsigned int i = 0; i < lines_count; i++) {
             // Lua command must start at beginning after removing leading spaces
@@ -785,7 +821,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 std::vector<std::string> args;
                 if (!this->read_project_command_arguments(lines[i], arg_count, args)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Error parsing lua command '%s' "
+                        "[GUI] Load Project File '%s' line %i: Error parsing lua command '%s' "
                         "requiring %i arguments. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_view.c_str(), arg_count, __FILE__, __FUNCTION__,
                         __LINE__);
@@ -799,7 +835,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 std::string view_name;
                 if (!this->project_separate_name_and_namespace(view_full_name, view_namespace, view_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Invalid view name argument "
+                        "[GUI] Load Project File '%s' line %i: Invalid view name argument "
                         "(3rd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
@@ -810,27 +846,10 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 ///     "[GUI] >>>> Instance: '%s' Class: '%s' NameSpace: '%s' Name: '%s' ConfPos: %f, %f.\n",
                 ///     view_instance.c_str(), view_class_name.c_str(), view_namespace.c_str(), view_name.c_str());
 
-                // Create new graph
-                if (graph_ptr == nullptr) {
-                    ImGuiID new_graph_uid = this->AddGraph(GraphCoreInterface::NO_INTERFACE);
-                    if (new_graph_uid == GUI_INVALID_ID) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Project File '%s' line %i: Unable to create new graph '%s'. [%s, %s, line %d]\n",
-                            project_filename.c_str(), (i + 1), view_instance.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                        return GUI_INVALID_ID;
-                    }
-                    if (!this->GetGraph(new_graph_uid, graph_ptr)) {
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Unable to get pointer to last added graph. [%s, %s, line %d]\n", __FILE__,
-                            __FUNCTION__, __LINE__);
-                        return GUI_INVALID_ID;
-                    }
-                    retval = new_graph_uid;
-                }
                 // Add module and set as view instance
                 if (graph_ptr->AddModule(this->modules_stock, view_class_name) == GUI_INVALID_ID) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line %d]\n",
+                        "[GUI] Load Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), view_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
                 }
@@ -841,20 +860,10 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 graph_ptr->UniqueModuleRename(view_name);
                 graph_module->name = view_name;
                 graph_ptr->AddGroupModule(view_namespace, graph_module);
-                queue_data.rename_id = graph_module->FullName();
-                graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
-
                 graph_module->main_view_name = view_instance;
                 queue_data.name_id = graph_module->FullName();
                 graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
-
-                found_main_view = true;
             }
-        }
-        if (!found_main_view) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Project File '%s': Missing main view lua command '%s'. [%s, %s, line %d]\n",
-                project_filename.c_str(), luacmd_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
         }
 
         // Save filename for graph
@@ -869,7 +878,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 std::vector<std::string> args;
                 if (!this->read_project_command_arguments(lines[i], arg_count, args)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Error parsing lua command '%s' "
+                        "[GUI] Load Project File '%s' line %i: Error parsing lua command '%s' "
                         "requiring %i arguments. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_module.c_str(), arg_count, __FILE__, __FUNCTION__,
                         __LINE__);
@@ -882,7 +891,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 std::string module_name;
                 if (!this->project_separate_name_and_namespace(module_full_name, module_namespace, module_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Invalid module name argument "
+                        "[GUI] Load Project File '%s' line %i: Invalid module name argument "
                         "(2nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_module.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
@@ -897,20 +906,15 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 if (graph_ptr != nullptr) {
                     if (graph_ptr->AddModule(this->modules_stock, module_class_name) == GUI_INVALID_ID) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line %d]\n",
+                            "[GUI] Load Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), module_class_name.c_str(), __FILE__, __FUNCTION__,
                             __LINE__);
                         return GUI_INVALID_ID;
                     }
                     auto graph_module = graph_ptr->GetModules().back();
-
-                    Graph::QueueData queue_data;
-                    queue_data.name_id = graph_module->FullName();
                     graph_ptr->UniqueModuleRename(module_name);
                     graph_module->name = module_name;
                     graph_ptr->AddGroupModule(module_namespace, graph_module);
-                    queue_data.rename_id = graph_module->FullName();
-                    graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
                 }
             }
         }
@@ -924,7 +928,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 std::vector<std::string> args;
                 if (!this->read_project_command_arguments(lines[i], arg_count, args)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Error parsing lua command '%s' "
+                        "[GUI] Load Project File '%s' line %i: Error parsing lua command '%s' "
                         "requiring %i arguments. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_call.c_str(), arg_count, __FILE__, __FUNCTION__,
                         __LINE__);
@@ -940,7 +944,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 if (!this->project_separate_name_and_namespace(
                         caller_slot_full_name, caller_slot_namespace, caller_slot_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Invalid caller slot name "
+                        "[GUI] Load Project File '%s' line %i: Invalid caller slot name "
                         "argument (2nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 }
@@ -950,7 +954,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 if (!this->project_separate_name_and_namespace(
                         callee_slot_full_name, callee_slot_namespace, callee_slot_name)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Invalid callee slot name "
+                        "[GUI] Load Project File '%s' line %i: Invalid callee slot name "
                         "argument (3nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_call.c_str(), __FILE__, __FUNCTION__, __LINE__);
                 }
@@ -996,7 +1000,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
 
                     if (callee_slot == nullptr) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Project File '%s' line %i: Unable to find callee slot '%s' "
+                            "[GUI] Load Project File '%s' line %i: Unable to find callee slot '%s' "
                             "for creating call '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), callee_slot_full_name.c_str(), call_class_name.c_str(),
                             __FILE__, __FUNCTION__, __LINE__);
@@ -1004,7 +1008,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                     }
                     if (caller_slot == nullptr) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Project File '%s' line %i: Unable to find caller slot '%s' "
+                            "[GUI] Load Project File '%s' line %i: Unable to find caller slot '%s' "
                             "for creating call '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), caller_slot_full_name.c_str(), call_class_name.c_str(),
                             __FILE__, __FUNCTION__, __LINE__);
@@ -1015,7 +1019,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                     // Add call
                     if (!graph_ptr->AddCall(this->calls_stock, caller_slot, callee_slot)) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[GUI] Project File '%s' line %i: Unable to add new call '%s'. [%s, %s, line %d]\n",
+                            "[GUI] Load Project File '%s' line %i: Unable to add new call '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), call_class_name.c_str(), __FILE__, __FUNCTION__,
                             __LINE__);
                         return GUI_INVALID_ID;
@@ -1036,14 +1040,15 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 size_t first_bracket_idx = param_line.find('(');
                 if (first_bracket_idx == std::string::npos) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Missing opening brackets for '%s'. [%s, %s, line %d]\n",
+                        "[GUI] Load Project File '%s' line %i: Missing opening brackets for '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
                 }
                 size_t first_delimiter_idx = param_line.find(',');
                 if (first_delimiter_idx == std::string::npos) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Missing argument delimiter ',' for '%s'. [%s, %s, line %d]\n",
+                        "[GUI] Load Project File '%s' line %i: Missing argument delimiter ',' for '%s'. [%s, %s, line "
+                        "%d]\n",
                         project_filename.c_str(), (i + 1), luacmd_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
                 }
@@ -1052,7 +1057,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                     param_line.substr(first_bracket_idx + 1, (first_delimiter_idx - first_bracket_idx - 1));
                 if ((param_slot_full_name.front() != '"') || (param_slot_full_name.back() != '"')) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Parameter name argument should "
+                        "[GUI] Load Project File '%s' line %i: Parameter name argument should "
                         "be enclosed in '\"' for '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
@@ -1067,7 +1072,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 auto value_start_idx = param_line.find(start_delimieter);
                 if (value_start_idx == std::string::npos) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Unable to find parameter value "
+                        "[GUI] Load Project File '%s' line %i: Unable to find parameter value "
                         "start delimiter '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), start_delimieter.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
@@ -1085,7 +1090,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 }
                 if (!found_end_delimiter) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Project File '%s' line %i: Unable to find parameter value "
+                        "[GUI] Load Project File '%s' line %i: Unable to find parameter value "
                         "end delimiter '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), end_delimieter.c_str(), __FILE__, __FUNCTION__, __LINE__);
                     return GUI_INVALID_ID;
@@ -1151,25 +1156,15 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
 
                 // Some pre-checks --------------------------------------------
                 bool found_error = false;
-                bool found_instance = false;
                 for (auto& mod_1 : graph_ptr->GetModules()) {
                     for (auto& mod_2 : graph_ptr->GetModules()) {
                         if ((mod_1 != mod_2) && (mod_1->FullName() == mod_2->FullName())) {
                             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                "[GUI] Save Project >>> Found non unique module name: %s [%s, %s, line %d]\n",
-                                mod_1->FullName().c_str(), __FILE__, __FUNCTION__, __LINE__);
+                                "[GUI] Save Project File '%s': Found non unique module name: %s [%s, %s, line %d]\n",
+                                project_filename.c_str(), mod_1->FullName().c_str(), __FILE__, __FUNCTION__, __LINE__);
                             found_error = true;
                         }
                     }
-                    if (mod_1->IsMainView()) {
-                        found_instance = true;
-                    }
-                }
-                if (!found_instance) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Save Project >>> Could not find required main view. [%s, %s, line %d]\n", __FILE__,
-                        __FUNCTION__, __LINE__);
-                    found_error = true;
                 }
                 if (found_error)
                     return false;
