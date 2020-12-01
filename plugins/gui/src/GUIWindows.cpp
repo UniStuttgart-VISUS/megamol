@@ -1739,69 +1739,87 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     bool open = true;
     if (ImGui::BeginPopupModal("About", &open, (ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))) {
 
-        const std::string eMail("megamol@visus.uni-stuttgart.de");
-        const std::string webLink("https://megamol.org/");
-        const std::string gitLink("https://github.com/UniStuttgart-VISUS/megamol");
+        const std::string email("megamol@visus.uni-stuttgart.de");
+        const std::string web_link("https://megamol.org/");
+        const std::string github_link("https://github.com/UniStuttgart-VISUS/megamol");
+        const std::string docu_link("https://github.com/UniStuttgart-VISUS/megamol/tree/master/plugins/gui");
+        const std::string imgui_link("https://github.com/ocornut/imgui");
 
-        std::string about = std::string("MegaMol - Version ") + std::to_string(MEGAMOL_CORE_MAJOR_VER) + (".") +
-                            std::to_string(MEGAMOL_CORE_MINOR_VER) + ("\ngit# ") + std::string(MEGAMOL_CORE_COMP_REV) +
-                            ("\nDear ImGui - Version ") + std::string(IMGUI_VERSION) + ("\n");
-        std::string mailstr = std::string("Contact: ") + eMail;
-        std::string webstr = std::string("Web: ") + webLink;
-        std::string gitstr = std::string("Git-Hub: ") + gitLink;
+        const std::string mmstr = std::string("MegaMol - Version ") + std::to_string(MEGAMOL_CORE_MAJOR_VER) + (".") +
+                                  std::to_string(MEGAMOL_CORE_MINOR_VER) + ("\ngit# ") +
+                                  std::string(MEGAMOL_CORE_COMP_REV) + ("\n");
+        const std::string mailstr = std::string("Contact: ") + email;
+        const std::string webstr = std::string("Web: ") + web_link;
+        const std::string gitstr = std::string("Git-Hub: ") + github_link;
+        const std::string imguistr = ("Dear ImGui - Version ") + std::string(IMGUI_VERSION) + ("\n");
+        const std::string imguigitstr = std::string("Git-Hub: ") + imgui_link;
+        const std::string about = "Copyright (C) 2009-2020 by University of Stuttgart (VIS).\nAll rights reserved.";
 
-        ImGui::TextUnformatted(about.c_str());
+        ImGui::TextUnformatted(mmstr.c_str());
 
-        ImGui::Separator();
         if (ImGui::Button("Copy E-Mail")) {
 #ifdef GUI_USE_GLFW
             auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, eMail.c_str());
+            ::glfwSetClipboardString(glfw_win, email.c_str());
 #elif _WIN32
-            ImGui::SetClipboardText(eMail.c_str());
+            ImGui::SetClipboardText(email.c_str());
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] E-Mail address:\n%s", eMail.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] E-Mail address:\n%s", email.c_str());
 #endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(mailstr.c_str());
 
-
         if (ImGui::Button("Copy Website")) {
 #ifdef GUI_USE_GLFW
             auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, webLink.c_str());
+            ::glfwSetClipboardString(glfw_win, web_link.c_str());
 #elif _WIN32
-            ImGui::SetClipboardText(webLink.c_str());
+            ImGui::SetClipboardText(web_link.c_str());
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Website link:\n%s", webLink.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Website link:\n%s", web_link.c_str());
 #endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(webstr.c_str());
 
-        if (ImGui::Button("Copy GitHub")) {
+        if (ImGui::Button("Copy GitHub###megamol_copy_github")) {
 #ifdef GUI_USE_GLFW
             auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, gitLink.c_str());
+            ::glfwSetClipboardString(glfw_win, github_link.c_str());
 #elif _WIN32
-            ImGui::SetClipboardText(gitLink.c_str());
+            ImGui::SetClipboardText(github_link.c_str());
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] GitHub link:\n%s", gitLink.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] GitHub link:\n%s", github_link.c_str());
 #endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(gitstr.c_str());
 
         ImGui::Separator();
-        about = "Copyright (C) 2009-2020 by University of Stuttgart "
-                "(VIS).\nAll rights reserved.";
+        ImGui::TextUnformatted(imguistr.c_str());
+        if (ImGui::Button("Copy GitHub###imgui_copy_github")) {
+#ifdef GUI_USE_GLFW
+            auto glfw_win = ::glfwGetCurrentContext();
+            ::glfwSetClipboardString(glfw_win, imgui_link.c_str());
+#elif _WIN32
+            ImGui::SetClipboardText(imgui_link.c_str());
+#else // LINUX
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] ImGui GitHub Link:\n%s", imgui_link.c_str());
+#endif
+        }
+        ImGui::SameLine();
+        ImGui::TextUnformatted(imguigitstr.c_str());
+
+        ImGui::Separator();
         ImGui::TextUnformatted(about.c_str());
 
         ImGui::Separator();
