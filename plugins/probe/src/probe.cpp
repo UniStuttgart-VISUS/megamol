@@ -28,6 +28,7 @@
 #endif
 #include "MeshSelector.h"
 #include "TableToProbes.h"
+#include "ComputeDTWDistance.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -68,6 +69,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ProbeToTable>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::MeshSelector>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::TableToProbes>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::ComputeDTWDistance>();
 #ifdef PROBE_HAS_OSPRAY
             this->module_descriptions.RegisterAutoDescription<megamol::probe::OSPRayGlyphGeometry>();
 #endif
