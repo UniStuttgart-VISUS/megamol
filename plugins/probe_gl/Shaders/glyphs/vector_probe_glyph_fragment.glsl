@@ -65,6 +65,14 @@ void main() {
     if(r > 1.0) discard;
     if(r < 0.1) discard;
 
+    if(r > 0.96){
+        albedo_out = glyph_border_color;
+        normal_out = vec3(0.0,0.0,1.0);
+        depth_out = gl_FragCoord.z;
+        objID_out = mesh_shader_params[draw_id].probe_id;
+        return;
+    }
+
     float radar_sections_cnt = mesh_shader_params[draw_id].sample_cnt;
     vec3 proj_pv = normalize(projectOntoPlane(pixel_vector,mesh_shader_params[draw_id].probe_direction.xyz));
     
@@ -102,6 +110,9 @@ void main() {
         sample_vector = normalize(mesh_shader_params[draw_id].samples[radar_section].xyz);
         sample_magnitude = mesh_shader_params[draw_id].samples[radar_section].w;
     }
+
+    //discard invalid samples
+    if(sample_magnitude < 0.005 && sample_magnitude > -0.005) discard;
 
     vec3 proj_sv =  normalize(projectOntoPlane(sample_vector,mesh_shader_params[draw_id].probe_direction.xyz));
 
