@@ -23,6 +23,28 @@ vec3 fakeViridis(float lerp)
 
 void main() {
 
+    vec4 glyph_border_color = vec4(1.0);
+
+    if(mesh_shader_params[draw_id].state == 1) {
+        glyph_border_color = vec4(1.0,1.0,0.0,1.0);
+    }
+    else if(mesh_shader_params[draw_id].state == 2) {
+        glyph_border_color = vec4(1.0,0.58,0.0,1.0);
+    }
+
+    // Highlight glyph up and glyph right directions
+    if( (uv_coords.x > 0.99 && uv_coords.x > uv_coords.y && uv_coords.y > 0.9) ||
+        (uv_coords.y > 0.99 && uv_coords.x < uv_coords.y && uv_coords.x > 0.9) ||
+        (uv_coords.x < 0.01 && uv_coords.x < uv_coords.y && uv_coords.y < 0.05) ||
+        (uv_coords.y < 0.01 && uv_coords.x > uv_coords.y && uv_coords.x < 0.05) )
+    {
+        albedo_out = glyph_border_color;
+        normal_out = vec3(0.0,0.0,1.0);
+        depth_out = gl_FragCoord.z;
+        objID_out = mesh_shader_params[draw_id].probe_id;
+        return;
+    }
+
     vec2 pixel_coords = uv_coords * 2.0 - vec2(1.0,1.0);
     float radius = length(pixel_coords);
 

@@ -73,6 +73,7 @@ SampleAlongPobes::SampleAlongPobes()
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(2, "Volume");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(3, "Tetrahedral");
     this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(4, "Nearest");
+    this->_sampling_mode.Param<megamol::core::param::EnumParam>()->SetTypePair(5, "TetrahedralVector");
     this->_sampling_mode.SetUpdateCallback(&SampleAlongPobes::paramChanged);
     this->MakeSlotAvailable(&this->_sampling_mode);
 
@@ -371,7 +372,8 @@ bool SampleAlongPobes::getData(core::Call& call) {
                     doNearestNeighborSampling(tree, data);
                 }
             }
-        } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 1) {
+        } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 1 ||
+                   _sampling_mode.Param<core::param::EnumParam>()->Value() == 5) {
             if (cd == nullptr || ct == nullptr) {
                 core::utility::log::Log::DefaultLog.WriteError(
                     "[SampleAlongProbes] Vector mode selected but no particle data connected.");
@@ -385,14 +387,24 @@ bool SampleAlongPobes::getData(core::Call& call) {
                 std::vector<double> data_y = cd->getData(y_var_str)->GetAsDouble();
                 std::vector<double> data_z = cd->getData(z_var_str)->GetAsDouble();
                 std::vector<double> data_w = cd->getData(w_var_str)->GetAsDouble();
-                doVectorSamling(tree, data_x, data_y, data_z, data_w);
+
+                if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 1) {
+                    doVectorSamling(tree, data_x, data_y, data_z, data_w);
+                } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 5) {
+                    doTetrahedralVectorSamling(tree, data_x, data_y, data_z, data_w);
+                }
             } else if (cd->getData(x_var_str)->getType() == "float" && cd->getData(y_var_str)->getType() == "float" &&
                        cd->getData(z_var_str)->getType() == "float" && cd->getData(w_var_str)->getType() == "float") {
                 std::vector<float> data_x = cd->getData(x_var_str)->GetAsFloat();
                 std::vector<float> data_y = cd->getData(y_var_str)->GetAsFloat();
                 std::vector<float> data_z = cd->getData(z_var_str)->GetAsFloat();
                 std::vector<float> data_w = cd->getData(w_var_str)->GetAsFloat();
-                doVectorSamling(tree, data_x, data_y, data_z, data_w);
+
+                if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 1) {
+                    doVectorSamling(tree, data_x, data_y, data_z, data_w);
+                } else if (_sampling_mode.Param<core::param::EnumParam>()->Value() == 5) {
+                    doTetrahedralVectorSamling(tree, data_x, data_y, data_z, data_w);
+                }
             }
         } else {
             if (cv == nullptr) {
