@@ -4,7 +4,7 @@
 
 #include "mmstd_datatools/AbstractParticleManipulator.h"
 
-#include "DBSCAN.h"
+#include "mmstd_datatools/clustering/DBSCAN.h"
 
 namespace megamol::stdplugin::datatools::clustering {
 class ParticleIColClustering : public AbstractParticleManipulator {

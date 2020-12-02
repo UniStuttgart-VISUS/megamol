@@ -410,7 +410,7 @@ void SampleAlongPobes::doTetrahedralSampling(
                 probe.m_position[1] + static_cast<float>(j) * sample_step * probe.m_direction[1],
                 probe.m_position[2] + static_cast<float>(j) * sample_step * probe.m_direction[2]);
 
-            T val = 0;
+            T val = std::numeric_limits<T>::signaling_NaN();
 
             auto cell = tri.locate(sample_point);
             if (!tri.is_infinite(cell)) {
@@ -713,7 +713,7 @@ void SampleAlongPobes::doNearestNeighborSampling(
                 probe.m_position[1] + static_cast<float>(j) * sample_step * probe.m_direction[1],
                 probe.m_position[2] + static_cast<float>(j) * sample_step * probe.m_direction[2]);
 
-            T val = 0;
+            T val = std::numeric_limits<T>::signaling_NaN();
 
             auto cell = tri.locate(sample_point);
             if (!tri.is_infinite(cell)) {
