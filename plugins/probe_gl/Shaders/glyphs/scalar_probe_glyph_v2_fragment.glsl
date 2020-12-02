@@ -23,7 +23,7 @@ vec3 fakeViridis(float lerp)
 
 void main() {
 
-    vec4 glyph_border_color = vec4(1.0);
+    vec4 glyph_border_color = vec4(0.0,0.0,0.0,1.0);
 
     if(mesh_shader_params[draw_id].state == 1) {
         glyph_border_color = vec4(1.0,1.0,0.0,1.0);
@@ -71,7 +71,7 @@ void main() {
     float zero_value_radius = -min_value / value_range;
     float zero_arc_width = 0.005;
 
-    if(angle_normalized > 0.025 && angle_normalized < 0.975 && radius < 0.96  && (radius > zero_value_radius+zero_arc_width || radius < zero_value_radius-zero_arc_width) )
+    if(angle_normalized > 0.025 && angle_normalized < 0.975 && (radius > zero_value_radius+zero_arc_width || radius < zero_value_radius-zero_arc_width) )
     {
         float angle_shifted = (angle_normalized - 0.025) / 0.95;
 
@@ -111,16 +111,16 @@ void main() {
 
         out_colour = texture(tf_tx, vec2(sample_value_normalized, 1.0) ).rgb;
 
-        if( sample_value_normalized >= zero_value_radius ){
+        if( sample_value_normalized >= zero_value_radius && radius < 0.96){
             if( radius < (zero_value_radius) || radius > sample_value_normalized ) discard;
         }
-        else if(sample_value_normalized < zero_value_radius ){
-            if( radius > (zero_value_radius) || radius < (zero_value_radius - sample_value_normalized) ) discard;
+        else if(sample_value_normalized < zero_value_radius && radius < 0.96){
+            if( radius > (zero_value_radius) || radius < sample_value_normalized ) discard;
         }
     }
 
     if(abs(radius - zero_value_radius) < 0.005) out_colour = vec3(1.0);
-    if(radius > 0.96 && radius < 0.98) out_colour = vec3(0.0);
+    if(radius > 0.96 && radius < 0.98) out_colour = glyph_border_color.rgb;
 
     float test = dFdx(radius);
 
