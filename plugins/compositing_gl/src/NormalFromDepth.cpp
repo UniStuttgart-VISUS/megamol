@@ -23,7 +23,9 @@ megamol::compositing::NormalFromDepth::NormalFromDepth()
     this->MakeSlotAvailable(&this->m_camera_slot);
 }
 
-megamol::compositing::NormalFromDepth::~NormalFromDepth() {}
+megamol::compositing::NormalFromDepth::~NormalFromDepth() {
+    this->Release();
+}
 
 bool megamol::compositing::NormalFromDepth::create() {
     vislib::graphics::gl::ShaderSource compute_shader_src;
