@@ -32,7 +32,6 @@ megamol::gui::Configurator::Configurator()
         , show_module_list_sidebar(false)
         , show_module_list_child(false)
         , module_list_popup_pos()
-        , module_list_popup_hovered(false)
         , last_selected_callslot_uid(GUI_INVALID_ID)
         , graph_state()
         , open_popup_load(false)
@@ -101,7 +100,7 @@ bool megamol::gui::Configurator::Draw(
     } else if (this->init_state == 2) {
         /// Step 2] (one frame)
 
-        // Load available modules and calls and currently loaded project from core once(!)
+        // Load available modules and calls (if they are not loaded already)
         this->graph_collection.LoadCallStock(core_instance);
         this->graph_collection.LoadModuleStock(core_instance);
 
@@ -128,9 +127,11 @@ bool megamol::gui::Configurator::Draw(
 
         // Update state -------------------------------------------------------
 
-        // Hotkeys
+        // Process hotkeys
+        /// SAVE_PROJECT
         if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT].is_pressed &&
             (this->graph_state.graph_selected_uid != GUI_INVALID_ID)) {
+
             bool graph_has_core_interface = false;
             GraphPtr_t graph_ptr;
             if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
@@ -141,6 +142,13 @@ bool megamol::gui::Configurator::Draw(
             } else {
                 this->graph_state.configurator_graph_save = true;
             }
+            this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT].is_pressed = false;
+        }
+        /// MODULE_SEARCH
+        if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
+
+            this->search_widget.SetSearchFocus(true);
+            this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed = false;
         }
 
         this->project_file_drop_valid = (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows));
@@ -157,7 +165,7 @@ bool megamol::gui::Configurator::Draw(
                 this->graph_state.graph_width);
 
             // Module List
-            this->draw_window_module_list(this->module_list_sidebar_width);
+            this->draw_window_module_list(this->module_list_sidebar_width, 0.0f);
             ImGui::SameLine();
         }
         // Graphs
@@ -166,10 +174,13 @@ bool megamol::gui::Configurator::Draw(
         // Process Pop-ups
         this->drawPopUps(core_instance);
 
-        // Reset state -------------------------------------------------------
-        for (auto& h : this->graph_state.hotkeys) {
-            h.is_pressed = false;
-        }
+        // Reset state --------------------------------------------------------
+
+        // Only reset 'externally' processed hotkeys
+        /// PARAMETER_SEARCH
+        this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH].is_pressed = false;
+        /// DELETE_GRAPH_ITEM
+        this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM].is_pressed = false;
     }
 
     return true;
@@ -248,45 +259,27 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 
         ImGui::SameLine();
 
-        if (ImGui::BeginMenu("Help")) {
-            const std::string docu_link =
-                "https://github.com/UniStuttgart-VISUS/megamol/tree/master/plugins/gui#configurator";
-            if (ImGui::Button("Readme on GitHub (Copy Link)")) {
-#ifdef GUI_USE_GLFW
-                auto glfw_win = ::glfwGetCurrentContext();
-                ::glfwSetClipboardString(glfw_win, docu_link.c_str());
-#elif _WIN32
-                ImGui::SetClipboardText(docu_link.c_str());
-#else // LINUX
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Readme Link:\n%s", docu_link.c_str());
-#endif
-            }
-            ImGui::EndMenu();
-        }
-
         ImGui::EndMenuBar();
     }
     ImGui::PopID();
 }
 
 
-void megamol::gui::Configurator::draw_window_module_list(float width) {
+void megamol::gui::Configurator::draw_window_module_list(float width, float height) {
+
+    ImGuiStyle& style = ImGui::GetStyle();
 
     ImGui::BeginGroup();
+    const float group_height = std::max(0.0f, (height - (2.0f * style.WindowPadding.y)));
+    const float group_width = std::max(0.0f, (width - (2.0f * style.WindowPadding.x)));
 
     const float search_child_height = ImGui::GetFrameHeightWithSpacing() * 2.5f;
-    auto child_flags =
-        ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened;
-    ImGui::BeginChild("module_search_child_window", ImVec2(width, search_child_height), false, child_flags);
+    auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar;
+    ImGui::BeginChild("module_search_child_window", ImVec2(group_width, search_child_height), false, child_flags);
 
     ImGui::TextUnformatted("Available Modules");
     ImGui::Separator();
 
-    if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
-        this->search_widget.SetSearchFocus(true);
-    }
     std::string help_text = "[" +
                             this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].keycode.ToString() +
                             "] Set keyboard focus to search input field.\n"
@@ -298,8 +291,9 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
 
     // ------------------------------------------------------------------------
 
-    child_flags = ImGuiWindowFlags_NavFlattened;
-    ImGui::BeginChild("module_list_child_window", ImVec2(width, 0.0f), true, child_flags);
+    child_flags = ImGuiWindowFlags_None;
+    ImGui::BeginChild("module_list_child_window",
+        ImVec2(group_width, std::max(0.0f, group_height - search_child_height)), true, child_flags);
 
     bool search_filter = true;
     bool compat_filter = true;
@@ -309,7 +303,6 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
     CallSlotPtr_t selected_callslot_ptr;
     GraphPtr_t selected_graph_ptr;
     if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
-
         auto callslot_id = selected_graph_ptr->present.GetSelectedCallSlot();
         if (callslot_id != GUI_INVALID_ID) {
             for (auto& module_ptr : selected_graph_ptr->GetModules()) {
@@ -336,7 +329,6 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
 
     ImGuiID id = 1;
     for (auto& mod : this->graph_collection.GetModulesStock()) {
-
         // Filter module by given search string
         search_filter = true;
         if (!search_string.empty()) {
@@ -426,14 +418,22 @@ void megamol::gui::Configurator::draw_window_module_list(float width) {
                             if (group_uid != GUI_INVALID_ID) {
                                 for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
                                     if (group_ptr->uid == group_uid) {
+                                        Graph::QueueData queue_data;
+                                        queue_data.name_id = module_ptr->FullName();
                                         selected_graph_ptr->present.ResetStatePointers();
                                         group_ptr->AddModule(module_ptr);
+                                        queue_data.rename_id = module_ptr->FullName();
+                                        selected_graph_ptr->PushSyncQueue(
+                                            Graph::QueueAction::RENAME_MODULE, queue_data);
                                     }
                                 }
                             }
                         }
                     }
-                    this->show_module_list_child = false;
+                    if (this->show_module_list_child) {
+                        this->show_module_list_child = false;
+                        // ImGui::CloseCurrentPopup();
+                    }
                 } else {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[GUI] No project loaded. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -557,8 +557,7 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
 
     bool confirmed, aborted;
 
-    // Pop-ups-----------------------------------
-    // LOAD
+    // Load Project -----------------------------------------------------------
     bool popup_failed = false;
     std::string project_filename;
     GraphPtr_t graph_ptr;
@@ -571,7 +570,8 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
     }
     if (this->file_browser.PopUp(
             FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->open_popup_load, project_filename)) {
-        popup_failed = (GUI_INVALID_ID == this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename));
+        popup_failed = (GUI_INVALID_ID ==
+                        this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename));
         this->add_project_graph_uid = GUI_INVALID_ID;
     }
     MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
@@ -581,11 +581,6 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
     // Module Stock List Child Window ------------------------------------------
     GraphPtr_t selected_graph_ptr;
     if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
-
-        if (this->show_module_list_child && ((ImGui::IsMouseClicked(0) && !this->module_list_popup_hovered) ||
-                                                ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))) {
-            this->show_module_list_child = false;
-        }
 
         ImGuiID selected_callslot_uid = selected_graph_ptr->present.GetSelectedCallSlot();
         ImGuiID selected_group_uid = selected_graph_ptr->present.GetSelectedGroup();
@@ -604,45 +599,51 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
             ImGui::GetIO().MouseDoubleClicked[0] = false;
         }
     }
-    if (!this->show_module_list_sidebar && this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
+    if (!this->show_module_list_sidebar &&
+        this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
         this->show_module_list_child = true;
         this->module_list_popup_pos = ImGui::GetMousePos();
         this->module_list_popup_hovered_group_uid = selected_graph_ptr->present.GetHoveredGroup();
     }
     if (this->show_module_list_child) {
-        ImGuiStyle& style = ImGui::GetStyle();
-        ImVec4 tmpcol = style.Colors[ImGuiCol_ChildBg];
-        tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, tmpcol);
-        ImGui::SetCursorScreenPos(this->module_list_popup_pos);
-        const float child_width = 250.0f;
-        const float child_height = 350.0f;
-        float diff_width = (ImGui::GetWindowPos().x + ImGui::GetWindowSize().x - this->module_list_popup_pos.x);
-        float diff_height = (ImGui::GetWindowPos().y + ImGui::GetWindowSize().y - this->module_list_popup_pos.y);
-        if (diff_width < child_width) {
-            this->module_list_popup_pos.x -= (child_width - diff_width);
+        const float popup_width = 250.0f;
+        const float popup_height = 350.0f;
+        std::string pop_up_id = "module_list_child";
+        if (!ImGui::IsPopupOpen(pop_up_id.c_str())) {
+            ImGui::OpenPopup(pop_up_id.c_str(), ImGuiPopupFlags_None);
+            ImGuiStyle& style = ImGui::GetStyle();
+            float diff_width = (ImGui::GetWindowPos().x + ImGui::GetWindowSize().x - this->module_list_popup_pos.x);
+            float diff_height = (ImGui::GetWindowPos().y + ImGui::GetWindowSize().y - this->module_list_popup_pos.y);
+            if (diff_width < popup_width) {
+                this->module_list_popup_pos.x -= ((popup_width - diff_width) + 2.0f * style.WindowPadding.x);
+            }
+            this->module_list_popup_pos.x = std::max(this->module_list_popup_pos.x, ImGui::GetWindowPos().x);
+            if (diff_height < popup_height) {
+                this->module_list_popup_pos.y -= ((popup_height - diff_height) + 2.5f * style.WindowPadding.y);
+            }
+            this->module_list_popup_pos.y = std::max(this->module_list_popup_pos.y, ImGui::GetWindowPos().y);
+            ImGui::SetNextWindowPos(this->module_list_popup_pos);
+            ImGui::SetNextWindowSize(ImVec2(10.0f, 10.0f));
         }
-        this->module_list_popup_pos.x = std::max(this->module_list_popup_pos.x, ImGui::GetWindowPos().x);
-        if (diff_height < child_height) {
-            this->module_list_popup_pos.y -= (child_height - diff_height);
-        }
-        this->module_list_popup_pos.y = std::max(this->module_list_popup_pos.y, ImGui::GetWindowPos().y);
-        ImGui::SetCursorScreenPos(this->module_list_popup_pos);
-        auto child_flags = ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NavFlattened;
-        ImGui::BeginChild("module_list_child", ImVec2(child_width, child_height), true, child_flags);
-        /// if (ImGui::Button("Close") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
-        ///    this->show_module_list_child = false;
-        ///}
-        /// ImGui::Separator();
-        this->draw_window_module_list(0.0f);
-        ImGui::EndChild();
-        ImGui::PopStyleColor();
-        this->module_list_popup_hovered = false;
-        if ((ImGui::GetMousePos().x >= this->module_list_popup_pos.x) &&
-            (ImGui::GetMousePos().x <= (this->module_list_popup_pos.x + child_width)) &&
-            (ImGui::GetMousePos().y >= this->module_list_popup_pos.y) &&
-            (ImGui::GetMousePos().y <= (this->module_list_popup_pos.y + child_height))) {
-            this->module_list_popup_hovered = true;
+        auto popup_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
+                           ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove;
+        if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
+
+            this->draw_window_module_list(popup_width, popup_height);
+
+            bool module_list_popup_hovered = false;
+            if ((ImGui::GetMousePos().x >= this->module_list_popup_pos.x) &&
+                (ImGui::GetMousePos().x <= (this->module_list_popup_pos.x + popup_width)) &&
+                (ImGui::GetMousePos().y >= this->module_list_popup_pos.y) &&
+                (ImGui::GetMousePos().y <= (this->module_list_popup_pos.y + popup_height))) {
+                module_list_popup_hovered = true;
+            }
+            if ((ImGui::IsMouseClicked(0) && !module_list_popup_hovered) ||
+                ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+                this->show_module_list_child = false;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
         }
     }
 }

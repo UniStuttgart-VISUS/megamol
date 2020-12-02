@@ -23,7 +23,7 @@ bool megamol::gui::GraphCollection::AddEmptyProject(void) {
 
     ImGuiID graph_uid = this->AddGraph(GraphCoreInterface::NO_INTERFACE);
     if (graph_uid != GUI_INVALID_ID) {
-        /*
+        /* DEPRECATED: Only applies for Core Instance Graph, not for MegaMol Graph.
         // Add initial GUIView and set as view instance
         GraphPtr_t graph_ptr;
         if (this->GetGraph(graph_uid, graph_ptr)) {
@@ -188,7 +188,7 @@ bool megamol::gui::GraphCollection::LoadCallStock(const megamol::core::CoreInsta
 
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[GUI] Reading available calls (#%i) ... DONE (duration: %.3f seconds)\n", this->calls_stock.size(),
+            "[GUI] Reading %i available calls ... DONE (duration: %.3f seconds)\n", this->calls_stock.size(),
             delta_time);
 
     } catch (std::exception e) {
@@ -233,8 +233,10 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
     try {
         std::string plugin_name;
         auto start_time = std::chrono::system_clock::now();
-
-        // MODULES ----------------------------------------------------------------
+#ifdef GUI_VERBOSE
+        auto module_load_time = std::chrono::system_clock::now();
+#endif // GUI_VERBOSE
+       // MODULES ----------------------------------------------------------------
         if (this->modules_stock.empty()) {
 
             // Get plugin modules (get prior to core modules for being  able to find duplicates in core instance module
@@ -244,10 +246,20 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             for (core::utility::plugins::AbstractPluginInstance::ptr_type plugin : plugins) {
                 plugin_name = plugin->GetAssemblyName();
                 for (auto& m_desc : plugin->GetModuleDescriptionManager()) {
+                    std::string class_name(m_desc->ClassName());
                     Module::StockModule mod;
                     mod.plugin_name = plugin_name;
                     this->get_module_stock_data(mod, m_desc);
                     this->modules_stock.emplace_back(mod);
+#ifdef GUI_VERBOSE
+                    auto module_load_time_count =
+                        static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - module_load_time)
+                            .count();
+                    module_load_time = std::chrono::system_clock::now();
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "[GUI] Reading module '%s' ... DONE (duration: %.3f seconds)\n", class_name.c_str(),
+                        module_load_time_count);
+#endif // GUI_VERBOSE
                 }
             }
 
@@ -262,6 +274,15 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
                     mod.plugin_name = plugin_name;
                     this->get_module_stock_data(mod, m_desc);
                     this->modules_stock.emplace_back(mod);
+#ifdef GUI_VERBOSE
+                    auto module_load_time_count =
+                        static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - module_load_time)
+                            .count();
+                    module_load_time = std::chrono::system_clock::now();
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                        "[GUI] Reading module '%s' ... DONE (duration: %.3f seconds)\n", class_name.c_str(),
+                        module_load_time_count);
+#endif // GUI_VERBOSE
                 }
             }
 
@@ -282,7 +303,7 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             static_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - start_time).count();
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-            "[GUI] Reading available modules (#%i) ... DONE (duration: %.3f seconds)\n", this->modules_stock.size(),
+            "[GUI] Reading %i available modules ... DONE (duration: %.3f seconds)\n", this->modules_stock.size(),
             delta_time);
 
     } catch (std::exception e) {
@@ -765,8 +786,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
         }
         if (!this->GetGraph(new_graph_uid, graph_ptr)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unable to get pointer to last added graph. [%s, %s, line %d]\n", __FILE__,
-                __FUNCTION__, __LINE__);
+                "[GUI] Unable to get pointer to last added graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
             return GUI_INVALID_ID;
         }
         retval = new_graph_uid;
@@ -804,7 +825,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         "requiring %i arguments. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_view.c_str(), arg_count, __FILE__, __FUNCTION__,
                         __LINE__);
-                    return GUI_INVALID_ID;
+                    retval = GUI_INVALID_ID;
+                    continue;
                 }
 
                 std::string view_instance(args[0]);
@@ -817,7 +839,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         "[GUI] Load Project File '%s' line %i: Invalid view name argument "
                         "(3rd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_view.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                    return GUI_INVALID_ID;
+                    retval = GUI_INVALID_ID;
+                    continue;
                 }
 
                 /// DEBUG
@@ -830,17 +853,23 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[GUI] Load Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), view_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                    return GUI_INVALID_ID;
+                    retval = GUI_INVALID_ID;
+                    continue;
                 }
                 auto graph_module = graph_ptr->GetModules().back();
 
                 Graph::QueueData queue_data;
                 queue_data.name_id = graph_module->FullName();
+
                 graph_ptr->UniqueModuleRename(view_name);
                 graph_module->name = view_name;
                 graph_ptr->AddGroupModule(view_namespace, graph_module);
                 graph_module->main_view_name = view_instance;
-                queue_data.name_id = graph_module->FullName();
+
+                queue_data.rename_id = graph_module->FullName();
+                graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
+
+                queue_data.name_id = queue_data.rename_id;
                 graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
             }
         }
@@ -861,7 +890,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         "requiring %i arguments. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_module.c_str(), arg_count, __FILE__, __FUNCTION__,
                         __LINE__);
-                    return GUI_INVALID_ID;
+                    retval = GUI_INVALID_ID;
+                    continue;
                 }
 
                 std::string module_class_name(args[0]);
@@ -873,7 +903,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         "[GUI] Load Project File '%s' line %i: Invalid module name argument "
                         "(2nd) in lua command '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_module.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                    return GUI_INVALID_ID;
+                    retval = GUI_INVALID_ID;
+                    continue;
                 }
 
                 /// DEBUG
@@ -888,12 +919,20 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                             "[GUI] Load Project File '%s' line %i: Unable to add new module '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), module_class_name.c_str(), __FILE__, __FUNCTION__,
                             __LINE__);
-                        return GUI_INVALID_ID;
+                        retval = GUI_INVALID_ID;
+                        continue;
                     }
                     auto graph_module = graph_ptr->GetModules().back();
+
+                    Graph::QueueData queue_data;
+                    queue_data.name_id = graph_module->FullName();
+
                     graph_ptr->UniqueModuleRename(module_name);
                     graph_module->name = module_name;
                     graph_ptr->AddGroupModule(module_namespace, graph_module);
+
+                    queue_data.rename_id = graph_module->FullName();
+                    graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
                 }
             }
         }
@@ -911,7 +950,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         "requiring %i arguments. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_call.c_str(), arg_count, __FILE__, __FUNCTION__,
                         __LINE__);
-                    return GUI_INVALID_ID;
+                    retval = GUI_INVALID_ID;
+                    continue;
                 }
 
                 std::string call_class_name(args[0]);
@@ -983,7 +1023,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                             "for creating call '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), callee_slot_full_name.c_str(), call_class_name.c_str(),
                             __FILE__, __FUNCTION__, __LINE__);
-                        return GUI_INVALID_ID;
+                        retval = GUI_INVALID_ID;
+                        continue;
                     }
                     if (caller_slot == nullptr) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -991,7 +1032,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                             "for creating call '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), caller_slot_full_name.c_str(), call_class_name.c_str(),
                             __FILE__, __FUNCTION__, __LINE__);
-                        return GUI_INVALID_ID;
+                        retval = GUI_INVALID_ID;
+                        continue;
                     }
 
 
@@ -1001,7 +1043,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                             "[GUI] Load Project File '%s' line %i: Unable to add new call '%s'. [%s, %s, line %d]\n",
                             project_filename.c_str(), (i + 1), call_class_name.c_str(), __FILE__, __FUNCTION__,
                             __LINE__);
-                        return GUI_INVALID_ID;
+                        retval = GUI_INVALID_ID;
+                        continue;
                     }
                 }
             }
@@ -1021,14 +1064,17 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[GUI] Load Project File '%s' line %i: Missing opening brackets for '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                    return GUI_INVALID_ID;
+                    retval = GUI_INVALID_ID;
+                    continue;
                 }
                 size_t first_delimiter_idx = param_line.find(',');
                 if (first_delimiter_idx == std::string::npos) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[GUI] Load Project File '%s' line %i: Missing argument delimiter ',' for '%s'. [%s, %s, line %d]\n",
+                        "[GUI] Load Project File '%s' line %i: Missing argument delimiter ',' for '%s'. [%s, %s, line "
+                        "%d]\n",
                         project_filename.c_str(), (i + 1), luacmd_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                    return GUI_INVALID_ID;
+                    retval = GUI_INVALID_ID;
+                    continue;
                 }
 
                 std::string param_slot_full_name =
@@ -1038,7 +1084,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         "[GUI] Load Project File '%s' line %i: Parameter name argument should "
                         "be enclosed in '\"' for '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), luacmd_param.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                    return GUI_INVALID_ID;
+                    retval = GUI_INVALID_ID;
+                    continue;
                 }
                 param_slot_full_name = param_slot_full_name.substr(1, param_slot_full_name.size() - 2);
 
@@ -1053,7 +1100,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         "[GUI] Load Project File '%s' line %i: Unable to find parameter value "
                         "start delimiter '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), start_delimieter.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                    return GUI_INVALID_ID;
+                    retval = GUI_INVALID_ID;
+                    continue;
                 }
                 bool found_end_delimiter = true;
                 if (param_line.find(end_delimieter) == std::string::npos) {
@@ -1071,7 +1119,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                         "[GUI] Load Project File '%s' line %i: Unable to find parameter value "
                         "end delimiter '%s'. [%s, %s, line %d]\n",
                         project_filename.c_str(), (i + 1), end_delimieter.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                    return GUI_INVALID_ID;
+                    retval = GUI_INVALID_ID;
+                    continue;
                 }
                 std::string value_str = param_line.substr(value_start_idx + start_delimieter.size(),
                     (param_line.find(end_delimieter)) - value_start_idx - end_delimieter.size());

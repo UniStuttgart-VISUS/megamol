@@ -44,7 +44,7 @@
 namespace megamol {
 namespace gui {
 
-/// #define GUI_VERBOSE
+    /// #define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f)
@@ -70,7 +70,7 @@ namespace gui {
 
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))
-#define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.f, 1.0f))
+#define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.0f, 1.0f))
 #define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.6f, 0.0f, 0.3f, 1.0f))
 #define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.45f, 1.0f))
 #define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 1.0f, 0.75f, 1.0f))
@@ -156,6 +156,7 @@ namespace gui {
         bool modules_layout;                           // out
         StrPairVector_t module_rename;                 // out
         vislib::math::Ternary module_mainview_changed; // out
+        ImVec2 module_param_child_position;            // out
 
         ImGuiID call_selected_uid; // in out
         ImGuiID call_hovered_uid;  // in out

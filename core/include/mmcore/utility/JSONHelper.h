@@ -120,7 +120,7 @@ namespace utility {
                         return false;
                     }
                 }
-                else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, int>) {
+                else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, int> || std::is_same_v<T, unsigned int>) {
                     if (json_value.is_number()) {
                         json_value.get_to((*out_value));
                     }
@@ -142,12 +142,12 @@ namespace utility {
         }
         catch (nlohmann::json::type_error& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+                "JSON TYPE ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (nlohmann::json::exception& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "JSON ERROR: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "JSON: %s. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
         catch (...) {

@@ -77,7 +77,10 @@ namespace gui {
             bool tfe_view_minimized;      // flag indicating minimized window state
             bool tfe_view_vertical;       // flag indicating vertical window state
             std::string tfe_active_param; // last active parameter connected to editor
-            bool buf_tfe_reset;           // flag for reset of tfe window on state loading            [NOT SAVED]
+            bool buf_tfe_reset;           // flag for reset of tfe window on state loading             [NOT SAVED]
+            // ---------- LOG specific configuration ----------
+            unsigned int log_level; // Log level used in log window
+            bool log_force_open;    // Flag indicating if log window should be forced open on warnings and errors
 
             // Ctor for default values
             WindowConfiguration(void)
@@ -113,7 +116,9 @@ namespace gui {
                     , tfe_view_minimized(false)
                     , tfe_view_vertical(false)
                     , tfe_active_param("")
-                    , buf_tfe_reset(false) {}
+                    , buf_tfe_reset(false)
+                    , log_level(static_cast<int>(megamol::core::utility::log::Log::LEVEL_ALL))
+                    , log_force_open(true) {}
         };
 
         /** Type for callback function. */

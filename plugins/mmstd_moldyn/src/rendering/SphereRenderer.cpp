@@ -1048,7 +1048,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     // Update current state variables -----------------------------------------
 
     // Update data set range (only if new data set was loaded, not on frame loading)
-    if (hash != this->oldHash) {
+    if (hash != this->oldHash) { // or (this->stateInvalid) {
         this->range[0] = std::numeric_limits<float>::max(); // min
         this->range[1] = std::numeric_limits<float>::min(); // max
         for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
@@ -1094,33 +1094,34 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     this->curlightDir = { 0.0f, 0.0f, 0.0f, 1.0f };
     if (this->lightMap.size() > 1) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single 'Distant Light' source is supported by this renderer");
-    }
-    for (auto light : this->lightMap) {
-        if (light.second.lightType != core::view::light::DISTANTLIGHT) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single 'Distant Light' source is supported by this renderer");
-        }
-        else {
-            auto use_eyedir = light.second.dl_eye_direction;
-            if (use_eyedir) {
-                this->curlightDir = -this->curCamView;
+    } else {
+        for (auto light : this->lightMap) {
+            if (light.second.lightType != core::view::light::DISTANTLIGHT) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single 'Distant Light' source is supported by this renderer");
             }
             else {
-                auto lightDir = light.second.dl_direction;
-                if (lightDir.size() == 3) {
-                    this->curlightDir[0] = lightDir[0];
-                    this->curlightDir[1] = lightDir[1];
-                    this->curlightDir[2] = lightDir[2];
+                auto use_eyedir = light.second.dl_eye_direction;
+                if (use_eyedir) {
+                    this->curlightDir = -this->curCamView;
                 }
-                if (lightDir.size() == 4) {
-                    this->curlightDir[3] = lightDir[3];
+                else {
+                    auto lightDir = light.second.dl_direction;
+                    if (lightDir.size() == 3) {
+                        this->curlightDir[0] = lightDir[0];
+                        this->curlightDir[1] = lightDir[1];
+                        this->curlightDir[2] = lightDir[2];
+                    }
+                    if (lightDir.size() == 4) {
+                        this->curlightDir[3] = lightDir[3];
+                    }
+                    /// View Space Lighting. Comment line to change to Object Space Lighting.
+                    //this->curlightDir = this->curMVtransp * this->curlightDir;
                 }
-                /// View Space Lighting. Comment line to change to Object Space Lighting.
-                //this->curlightDir = this->curMVtransp * this->curlightDir;
+                /// TODO Implement missing distant light parameters:
+                            //light.second.dl_angularDiameter;
+                            //light.second.lightColor;
+                            //light.second.lightIntensity;
             }
-            /// TODO Implement missing distant light parameters:
-                        //light.second.dl_angularDiameter;
-                        //light.second.lightColor;
-                        //light.second.lightIntensity;
         }
     }
 

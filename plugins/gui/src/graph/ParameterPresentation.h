@@ -116,7 +116,7 @@ namespace gui {
         bool show_minmax;
 
         std::shared_ptr<megamol::gui::TransferFunctionEditor> tf_editor_external_ptr;
-        megamol::gui::TransferFunctionEditor tf_editor_internal;
+        megamol::gui::TransferFunctionEditor tf_editor_inplace;
         bool use_external_tf_editor;
         bool show_tf_editor;
         size_t tf_editor_hash;

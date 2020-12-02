@@ -122,10 +122,10 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                     tmp_config.win_name = config_item.key();
                     tmp_config.win_reset = true;
                     tmp_config.buf_font_reset = false;
-                    tmp_config.buf_tfe_reset = false;
+                    tmp_config.buf_tfe_reset = true;
                     auto config_values = config_item.value();
 
-                    // WindowConfiguration -----------------------------------
+                    // Window Configuration -----------------------------------
                     megamol::core::utility::get_json_value<bool>(config_values, {"win_show"}, &tmp_config.win_show);
 
                     int win_flags = 0;
@@ -168,7 +168,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                     megamol::core::utility::get_json_value<bool>(
                         config_values, {"win_collapsed"}, &tmp_config.win_collapsed);
 
-                    // ParamConfig --------------------------------------------
+                    // Param Config --------------------------------------------
                     megamol::core::utility::get_json_value<bool>(
                         config_values, {"param_show_hotkeys"}, &tmp_config.param_show_hotkeys);
 
@@ -195,7 +195,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                     megamol::core::utility::get_json_value<bool>(
                         config_values, {"param_extended_mode"}, &tmp_config.param_extended_mode);
 
-                    // FpsMsConfig --------------------------------------------
+                    // FpsMs Config --------------------------------------------
                     megamol::core::utility::get_json_value<bool>(
                         config_values, {"ms_show_options"}, &tmp_config.ms_show_options);
 
@@ -209,11 +209,11 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                     megamol::core::utility::get_json_value<int>(config_values, {"ms_mode"}, &mode);
                     tmp_config.ms_mode = static_cast<TimingModes>(mode);
 
-                    // FontConfig ---------------------------------------------
+                    // Font Config ---------------------------------------------
                     megamol::core::utility::get_json_value<std::string>(
                         config_values, {"font_name"}, &tmp_config.font_name);
 
-                    // FTFEConfig ---------------------------------------------
+                    // TFE Config ---------------------------------------------
                     megamol::core::utility::get_json_value<bool>(
                         config_values, {"tfe_view_minimized"}, &tmp_config.tfe_view_minimized);
 
@@ -222,6 +222,13 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
 
                     megamol::core::utility::get_json_value<std::string>(
                         config_values, {"tfe_active_param"}, &tmp_config.tfe_active_param);
+
+                    // Log Config ---------------------------------------------
+                    megamol::core::utility::get_json_value<unsigned int>(
+                        config_values, {"log_level"}, &tmp_config.log_level);
+
+                    megamol::core::utility::get_json_value<bool>(
+                        config_values, {"log_force_open"}, &tmp_config.log_force_open);
 
                     // --------------------------------------------------------
                     // add current window config to tmp window config list
@@ -335,6 +342,9 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["tfe_active_param"] =
                     window_config.tfe_active_param;
                 GUIUtils::Utf8Decode(window_config.tfe_active_param);
+
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["log_level"] = window_config.log_level;
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["log_force_open"] = window_config.log_force_open;
             }
         }
 #ifdef GUI_VERBOSE
