@@ -122,15 +122,25 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
                 auto const val = sim_matrix[a + b * col_count];
                 return val <= threshold;
             },
-            [sim_matrix, col_count, row_count, handwaving](stdplugin::datatools::clustering::index_t& pivot,
-                stdplugin::datatools::clustering::index_t idx, float score,
-                stdplugin::datatools::clustering::index_t& pivot_size) -> float {
-                auto const dis = sim_matrix[pivot + idx * col_count];
-                if (std::abs(dis - score) <= handwaving) {
-                    score += (dis - score) / static_cast<float>(++pivot_size);
-                    pivot = idx;
+            [sim_matrix, col_count, row_count, handwaving](
+                stdplugin::datatools::clustering::index_t pivot,
+                std::vector<stdplugin::datatools::clustering::index_t> const& cluster)
+                -> stdplugin::datatools::clustering::index_t {
+                if (cluster.empty())
+                    return pivot;
+                std::vector<float> scores;
+                scores.reserve(cluster.size());
+                for (auto const& lhs : cluster) {
+                    auto val = 0.0f;
+                    for (auto const& rhs : cluster) {
+                        val = sim_matrix[lhs + rhs * col_count];
+                    }
+                    val /= static_cast<float>(cluster.size() - 1);
+                    scores.push_back(val);
                 }
-                return score;
+                auto it = std::min_element(scores.begin(), scores.end());
+                auto idx = std::distance(scores.begin(), it);
+                return cluster[idx];
             });
 
 
