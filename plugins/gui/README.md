@@ -49,7 +49,7 @@ The main menu provides the following options:
 
 ### [2] Configurator
 
-The configurator is part of the GUI and can be opened via the GUI menu: `Windows`/`Configurator`.\
+The configurator is part of the GUI and can be opened via the main menu: `Windows`/`Configurator`.  
 
 ![configurator demo picture](configurator.png)
 
@@ -162,11 +162,11 @@ Interface slots are stored in project files as part of the configurators state p
 
 Additonal modules provided by the GUI plugin:
 
-### GUIView
+### [1] GUIView
 
 The GUIView module is deprecated. It was required for using the GUI with the former MegaMol frontend provided by mmconsle.exe / mmconsole.sh.
 
-### OverlayRenderer
+### [2] OverlayRenderer
 
 The `OverlayRenderer` is a rendering module which implements a `megamol::core::view::RendererModule<megamol::core::view::CallRender3D_2>`. The `OverlayRenderer` provides overlay rendering like textures, text, parameter values and transport control icons. Prepend the `OverlayRenderer` module any other existing 3D renderer module you want to have an overlay for. 
 
