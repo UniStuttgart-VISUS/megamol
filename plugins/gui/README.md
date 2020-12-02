@@ -18,7 +18,7 @@ The GUI of MegaMol is based on [Dear ImGui](https://github.com/ocornut/imgui).
 * Hotkeys use the key mapping of the US keyboard layout. Other keyboard layouts are currently not considerd or recognised. Consider possible transposed `z` and `y` which are used in `undo` and `redo` hotkeys on text input.
 * Parameter values in the lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported any more.
 
-#### Menu
+### Main Menu
 
 The main menu provides the following options:
 (Assigned hotkeys are given in brackets.)
@@ -41,27 +41,19 @@ The main menu provides the following options:
     * `Select Filename` (`megamol_screenshot.png`) Open file dialog for choosing filename for screenshot. Current filename is shown in menu.
     * `Trigger` (`F2`) Trigger screenshot.
 * `Render`  
-    --
     * `Toggle Main Views` (`F3`) Toggle between available main views. After toggling last main view intermediate state disables all mai views.
 * `Settings`    
     * `Style` Select predefined GUI Style.
 * `Help`
     * `About`: Some information and links concerning the currently running MegaMol.
 
-*Use `Shift` for resetting the window to fit the currrent viewport.
-
 ### Configurator
 
 The configurator is part of the GUI and can be opened via the GUI menu: `Windows`/`Configurator`.\
-How to start the configurator at start-up: 
-* Open empty project
-* Open configurator
-* Right click on title bar of configurator and choose `Maximize`. 
-* Save project to file.
 
 ![configurator demo picture](configurator.png)
 
-#### Menu
+#### Main Menu
 
 * `File`
     * `New Project` 
@@ -75,18 +67,6 @@ How to start the configurator at start-up:
 * `View`
     * `Modules Sidebar`  Show/Hide sidebar with module stock list.
     * `Parameter Sidebar` Show/Hide sidebar with parameters of currently selected module.
-* `Help` Link to this Readme.
-
-#### Project Menu
-
-* `Main View` Change main view state of currently selected view module.
-* `Reset Scrolling` Reset scrolling.
-* `Reset Zooming` Reset zooming.
-* `Grid` Show/Hide grid.
-* `Call Names`Show/Hide call names.
-* `Module Names` Show/Hide module names and other decoration.
-* `Slot Names` Show/Hide slot names.
-* `Layout Graph` Simple layouting of project graph.
 
 #### *Module Stock List* Sidebar
 
@@ -99,7 +79,20 @@ How to start the configurator at start-up:
 
 * Search for Parameter (`Ctrl + Shift + p`)
         
-#### Project Graph
+#### Project Tab 
+
+##### Menu Bar
+
+* `Main View` Change main view state of currently selected view module.
+* `Reset Scrolling` Reset scrolling.
+* `Reset Zooming` Reset zooming.
+* `Grid` Show/Hide grid.
+* `Call Names`Show/Hide call names.
+* `Module Names` Show/Hide module names and other decoration.
+* `Slot Names` Show/Hide slot names.
+* `Layout Graph` Simple layouting of project graph.
+
+##### Graph
 
 * Call Creation
     * Drag and Drop from Call Slot to other highlighted compatible Call Slot.
@@ -144,7 +137,7 @@ How to start the configurator at start-up:
         * Rename      
         * Delete (Alternative: Select with `Left Click` an press `Delete`)
 
-#### Module Groups
+##### Module Groups
 
 Modules can be bundled in groups. 
 This allows a minimized (collapsed) view of large module groups inside the configurator. 
@@ -152,7 +145,7 @@ Grouped modules can be reused when stored separately.
 Module groups can be added to any other projects.
 Module groups are stored in project files using the already available module namespace (which is currently unused in the core). 
 
-#### Module Group Interface Slots
+##### Module Group Interface Slots
 
 Call slots of modules, which are part of a group, can be added to the group interface. 
 This generates new interface slot which allow outgoing calls. 
@@ -168,6 +161,10 @@ Interface slots are stored in project files as part of the configurators state p
 ## Modules
 
 Additonal modules provided by the GUI plugin:
+
+### GUIView
+
+The GUIView module is deprecated. It was required for using the GUI with the former MegaMol frontend provided by mmconsle.exe/mmconsole.sh.
 
 ### OverlayRenderer
 
@@ -198,7 +195,7 @@ The `OverlayRenderer` is a rendering module which implements a `megamol::core::v
 
 ---
 
-## Developers
+## Information for Developers
 
 ### New Parameter Widgets
 
@@ -235,10 +232,10 @@ This is the default GUI state stored as JSON string in the lua project file:
 -- <GUI_STATE_JSON>{"ConfiguratorState":{"module_list_sidebar_width":250.0,"show_module_list_sidebar":false},"GUIState":{"menu_visible":true,"style":2},"WindowConfigurations":{"All Parameters":{"font_name":"","log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":1,"win_collapsed":false,"win_flags":8,"win_hotkey":[300,0],"win_position":[0.0,18.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":true,"win_size":[400.0,600.0],"win_soft_reset":false},"Configurator":{"font_name":"","log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":6,"win_collapsed":false,"win_flags":1032,"win_hotkey":[296,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[800.0,600.0],"win_show":false,"win_size":[800.0,600.0],"win_soft_reset":true},"Font Settings":{"font_name":"","log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":4,"win_collapsed":false,"win_flags":64,"win_hotkey":[298,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":false,"win_size":[400.0,600.0],"win_soft_reset":true},"Log Console":{"font_name":"","log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":7,"win_collapsed":false,"win_flags":3072,"win_hotkey":[295,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[850.0,100.0],"win_show":false,"win_size":[850.0,100.0],"win_soft_reset":true},"Performance Metrics":{"font_name":"","log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":3,"win_collapsed":false,"win_flags":65,"win_hotkey":[299,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":false,"win_size":[400.0,600.0],"win_soft_reset":true},"Transfer Function Editor":{"font_name":"","log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":5,"win_collapsed":false,"win_flags":64,"win_hotkey":[297,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":false,"win_size":[400.0,600.0],"win_soft_reset":true}}}</GUI_STATE_JSON>
 ```
 
-### GUI Graph Structure
+### Graph Data Structure
 
 ![gui graph structure](graph_structure.png)
 
-### Plugin Class Dependencies
+### Class Dependencies
 
 ![gui plugin class dependencies](class_dependencies.png)

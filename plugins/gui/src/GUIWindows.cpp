@@ -1753,7 +1753,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         const std::string gitstr = std::string("Git-Hub: ") + github_link;
         const std::string imguistr = ("Dear ImGui - Version ") + std::string(IMGUI_VERSION) + ("\n");
         const std::string imguigitstr = std::string("Git-Hub: ") + imgui_link;
-        const std::string about = "Copyright (C) 2009-2020 by University of Stuttgart (VIS).\nAll rights reserved.";
+        const std::string about = "Copyright (C) 2009-2020 by University of Stuttgart (VISUS).\nAll rights reserved.";
 
         ImGui::TextUnformatted(mmstr.c_str());
 
