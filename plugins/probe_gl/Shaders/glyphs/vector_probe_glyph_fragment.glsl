@@ -65,7 +65,7 @@ void main() {
     if(r > 1.0) discard;
     if(r < 0.1) discard;
 
-    if(r > 0.96){
+    if(r > 0.98){
         albedo_out = glyph_border_color;
         normal_out = vec3(0.0,0.0,1.0);
         depth_out = gl_FragCoord.z;
