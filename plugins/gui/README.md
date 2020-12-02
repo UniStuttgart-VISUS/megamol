@@ -2,7 +2,7 @@
 
 This is the plugin providing the GUI for MegaMol.
 
-**!!! The following description ONLY refers to the use of the new MegaMol frontend provided via megamol.exe or megamol.sh !!!**
+**!!! The following description ONLY refers to the use of the new MegaMol frontend provided via megamol.exe / megamol.sh !!!**
 
 See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for current work in progress.
 
@@ -10,7 +10,7 @@ See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol
 
 ---
 
-## Graphical User Interface (GUI)
+## 1) Graphical User Interface (GUI)
 
 The GUI of MegaMol is based on [Dear ImGui](https://github.com/ocornut/imgui).
 
@@ -18,7 +18,7 @@ The GUI of MegaMol is based on [Dear ImGui](https://github.com/ocornut/imgui).
 * Hotkeys use the key mapping of the US keyboard layout. Other keyboard layouts are currently not considerd or recognised. Consider possible transposed `z` and `y` which are used in `undo` and `redo` hotkeys on text input.
 * Parameter values in the lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported any more.
 
-### Main Menu
+### [1] Main Menu
 
 The main menu provides the following options:
 (Assigned hotkeys are given in brackets.)
@@ -47,7 +47,7 @@ The main menu provides the following options:
 * `Help`
     * `About`: Some information and links concerning the currently running MegaMol.
 
-### Configurator
+### [2] Configurator
 
 The configurator is part of the GUI and can be opened via the GUI menu: `Windows`/`Configurator`.\
 
@@ -158,13 +158,13 @@ Interface slots are stored in project files as part of the configurators state p
 
 ---
 
-## Modules
+## 2) Modules
 
 Additonal modules provided by the GUI plugin:
 
 ### GUIView
 
-The GUIView module is deprecated. It was required for using the GUI with the former MegaMol frontend provided by mmconsle.exe/mmconsole.sh.
+The GUIView module is deprecated. It was required for using the GUI with the former MegaMol frontend provided by mmconsle.exe / mmconsole.sh.
 
 ### OverlayRenderer
 
@@ -195,9 +195,9 @@ The `OverlayRenderer` is a rendering module which implements a `megamol::core::v
 
 ---
 
-## Information for Developers
+## 3) Information for Developers
 
-### New Parameter Widgets
+### [1] New Parameter Widgets
 
 Parameter widgets can be defined for the `local` or the `global` scope. The widgets of the local scope are shown inside the parameter list in the `All Parameters` window. The global scope of a parameter widget can contain arbitrary ImGui code.
 There are widgets for the basic parameter types defined in `gui/src/graph/Parameter.h`and there are group widgets bundling parameters of the same namespace in `gui/src/graph/ParameterGroups.h`. The parameters namespace is a prefix in the parameters, name delimited with `::`. The presentation of a parameter (group) can be changed by switching to `expert` mode in the `All Parameters` window an clicking on the 'circle button'.
@@ -224,7 +224,7 @@ In order to add a new custom widget for a group of parameters sharing the same n
 * Add a new group widget data set of the type `GroupWidgetData` in the ctor and register above function as callback. 
 * (WIP: Identification of parameter widget groups. Currently by name of namespace and number of parameter types of group.)
 
-### Default GUI State 
+### [2] Default GUI State 
 
 This is the default GUI state stored as JSON string in the lua project file:
 
@@ -232,10 +232,10 @@ This is the default GUI state stored as JSON string in the lua project file:
 -- <GUI_STATE_JSON>{"ConfiguratorState":{"module_list_sidebar_width":250.0,"show_module_list_sidebar":false},"GUIState":{"menu_visible":true,"style":2},"WindowConfigurations":{"All Parameters":{"font_name":"","log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":1,"win_collapsed":false,"win_flags":8,"win_hotkey":[300,0],"win_position":[0.0,18.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":true,"win_size":[400.0,600.0],"win_soft_reset":false},"Configurator":{"font_name":"","log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":6,"win_collapsed":false,"win_flags":1032,"win_hotkey":[296,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[800.0,600.0],"win_show":false,"win_size":[800.0,600.0],"win_soft_reset":true},"Font Settings":{"font_name":"","log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":4,"win_collapsed":false,"win_flags":64,"win_hotkey":[298,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":false,"win_size":[400.0,600.0],"win_soft_reset":true},"Log Console":{"font_name":"","log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":7,"win_collapsed":false,"win_flags":3072,"win_hotkey":[295,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[850.0,100.0],"win_show":false,"win_size":[850.0,100.0],"win_soft_reset":true},"Performance Metrics":{"font_name":"","log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":3,"win_collapsed":false,"win_flags":65,"win_hotkey":[299,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":false,"win_size":[400.0,600.0],"win_soft_reset":true},"Transfer Function Editor":{"font_name":"","log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":5,"win_collapsed":false,"win_flags":64,"win_hotkey":[297,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,600.0],"win_show":false,"win_size":[400.0,600.0],"win_soft_reset":true}}}</GUI_STATE_JSON>
 ```
 
-### Graph Data Structure
+### [3] Graph Data Structure
 
 ![gui graph structure](graph_structure.png)
 
-### Class Dependencies
+### [4] Class Dependencies
 
 ![gui plugin class dependencies](class_dependencies.png)
