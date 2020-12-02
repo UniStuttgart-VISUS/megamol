@@ -90,7 +90,9 @@ void view::AnimDataModule::initFrameCache(unsigned int cacheSize) {
 
         this->isRunning.store(true);
         this->loader.Start(this);
-        vislib::sys::Thread::Sleep(250);
+        // XXX Is there a race condition that requires higher sleep time (value originally was 250)?
+        // XXX Reduced for faster module creation, because called in ctor.
+        vislib::sys::Thread::Sleep(10); 
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to create frame data cache ('constructFrame' returned 'NULL').");

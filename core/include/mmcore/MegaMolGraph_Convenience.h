@@ -8,7 +8,7 @@
 namespace megamol {
 namespace core {
 
-class MegaMolGraph_Convenience {
+class MEGAMOLCORE_API MegaMolGraph_Convenience {
 public:
 
     // parameter groups hold requests for new parameter values
@@ -23,6 +23,8 @@ public:
     };
 
     MegaMolGraph_Convenience(void* graph_ptr = nullptr);
+
+    std::string SerializeGraph() const;
 
     ParameterGroup& CreateParameterGroup(const std::string& group_name);
     ParameterGroup* FindParameterGroup(const std::string& group_name);
