@@ -68,6 +68,9 @@ bool megamol::probe::ComputeDTWDistance::get_data_cb(core::Call& c) {
                     a_samples_tmp.cbegin(), a_samples_tmp.cend(), a_samples.begin(), [&tmp_cnt](auto const val) {
                         return std::vector<double>{tmp_cnt++, static_cast<double>(val)};
                     });
+                auto const it = std::stable_partition(
+                    a_samples.begin(), a_samples.end(), [](auto const& el) { return !std::isnan(el[1]); });
+                std::for_each(it, a_samples.end(), [](auto& el) { el[1] = 0.0; });
             }
             for (std::int64_t b_pidx = a_pidx; b_pidx < probe_count; ++b_pidx) {
                 std::vector<std::vector<double>> b_samples;
@@ -80,6 +83,9 @@ bool megamol::probe::ComputeDTWDistance::get_data_cb(core::Call& c) {
                         b_samples_tmp.cbegin(), b_samples_tmp.cend(), b_samples.begin(), [&tmp_cnt](auto const val) {
                             return std::vector<double>{tmp_cnt++, static_cast<double>(val)};
                         });
+                    auto const it = std::stable_partition(
+                        b_samples.begin(), b_samples.end(), [](auto const& el) { return !std::isnan(el[1]); });
+                    std::for_each(it, b_samples.end(), [](auto& el) { el[1] = 0.0; });
                 }
                 auto const dis = DTW::dtw_distance_only(a_samples, b_samples, 2);
                 _dis_mat[a_pidx + b_pidx * probe_count] = dis;
