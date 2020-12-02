@@ -689,8 +689,8 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                                 (this->graph_state.interact.module_param_child_position.y + popup_size.y))) {
                             module_parm_child_popup_hovered = true;
                         }
-                        if (!param_popup_open && (ImGui::IsMouseClicked(0) && !module_parm_child_popup_hovered) ||
-                            ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+                        if (!param_popup_open && ((ImGui::IsMouseClicked(0) && !module_parm_child_popup_hovered) ||
+                            ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))) {
 
                             this->graph_state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
                             // Reset module selection to prevent irrgular dragging
@@ -710,7 +710,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 
         ImGui::PopID();
 
-    } catch (std::exception e) {
+    } catch (std::exception &e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
@@ -907,7 +907,6 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
 void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_graph, float graph_width) {
 
     ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
 
     // Colors
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));

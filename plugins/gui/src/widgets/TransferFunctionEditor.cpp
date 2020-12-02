@@ -240,8 +240,8 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
         this->last_range = new_range;
         tf_changed = true;
     }
-    if (this->widget_buffer.tex_size != new_tex_size) {
-        this->widget_buffer.tex_size = new_tex_size;
+    if (this->widget_buffer.tex_size != static_cast<int>(new_tex_size)) {
+        this->widget_buffer.tex_size = static_cast<int>(new_tex_size);
         tf_changed = true;
     }
 

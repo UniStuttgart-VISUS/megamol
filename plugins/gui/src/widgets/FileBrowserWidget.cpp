@@ -267,7 +267,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
 
         ImGui::PopID();
 
-    } catch (std::exception e) {
+    } catch (std::exception &e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -382,7 +382,7 @@ bool megamol::gui::FileBrowserWidget::validate_split_path(
         GUIUtils::Utf8Decode(out_path);
         GUIUtils::Utf8Decode(out_file);
 
-    } catch (stdfs::filesystem_error e) {
+    } catch (stdfs::filesystem_error &e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         out_path.clear();
@@ -399,7 +399,7 @@ void megamol::gui::FileBrowserWidget::validate_directory(const std::string& path
     try {
         stdfs::path tmp_path = static_cast<stdfs::path>(path_str);
         this->valid_directory = (stdfs::status_known(stdfs::status(tmp_path)) && stdfs::is_directory(tmp_path));
-    } catch (stdfs::filesystem_error e) {
+    } catch (stdfs::filesystem_error &e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
@@ -476,7 +476,7 @@ void megamol::gui::FileBrowserWidget::validate_file(
             this->valid_file = false;
         }
 
-    } catch (stdfs::filesystem_error e) {
+    } catch (stdfs::filesystem_error &e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Filesystem Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;

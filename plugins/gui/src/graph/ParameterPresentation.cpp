@@ -24,6 +24,7 @@ megamol::gui::ParameterPresentation::ParameterPresentation(Param_t type)
         , widget_store()
         , set_focus(0)
         , guistate_dirty(false)
+        , show_minmax(false)        
         , tf_editor_external_ptr(nullptr)
         , tf_editor_inplace()
         , use_external_tf_editor(false)
@@ -32,8 +33,7 @@ megamol::gui::ParameterPresentation::ParameterPresentation(Param_t type)
         , file_browser()
         , tooltip()
         , image_widget()
-        , rotation_widget()
-        , show_minmax(false) {
+        , rotation_widget() {
 
     this->InitPresentation(type);
 }
@@ -139,7 +139,7 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
 
         ImGui::PopID();
 
-    } catch (std::exception e) {
+    } catch (std::exception &e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -688,6 +688,8 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     }
                     error = false;
                 } break;
+                default : 
+                    break;
                 }
             }
         } break;

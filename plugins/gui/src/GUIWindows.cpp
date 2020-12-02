@@ -854,8 +854,6 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 
     // 2b) ... OR (exclusive or) synchronize Core Graph -> GUI Graph ----------
     if (!synced) {
-        auto last_graph_uid = this->state.graph_uid;
-
         // Creates new graph at first call
         bool graph_sync_success =
             this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(this->state.graph_uid,
@@ -1122,8 +1120,7 @@ bool GUIWindows::createContext(void) {
         // Add other known fonts
         std::vector<std::string> font_paths;
         if (this->core_instance != nullptr) {
-            const vislib::Array<vislib::StringW>& search_paths =
-                this->core_instance->Configuration().ResourceDirectories();
+            auto search_paths = this->core_instance->Configuration().ResourceDirectories();
             for (size_t i = 0; i < search_paths.Count(); ++i) {
                 std::wstring search_path(search_paths[i].PeekBuffer());
                 std::string font_path =
