@@ -825,16 +825,10 @@ bool megamol::gui::ParameterPresentation::widget_string(
         int multiline_cnt = static_cast<int>(std::count(
             std::get<std::string>(this->widget_store).begin(), std::get<std::string>(this->widget_store).end(), '\n'));
         multiline_cnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), multiline_cnt);
-        /// if (multiline_cnt == 0) {
-        ///    ImGui::InputText(hidden_label.c_str(), &std::get<std::string>(this->widget_store),
-        ///    ImGuiInputTextFlags_CtrlEnterForNewLine);
-        ///}
-        /// else {
         ImVec2 multiline_size = ImVec2(ImGui::CalcItemWidth(),
             ImGui::GetFrameHeightWithSpacing() + (ImGui::GetFontSize() * static_cast<float>(multiline_cnt)));
         ImGui::InputTextMultiline(hidden_label.c_str(), &std::get<std::string>(this->widget_store), multiline_size,
             ImGuiInputTextFlags_CtrlEnterForNewLine);
-        ///}
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             std::string utf8Str = std::get<std::string>(this->widget_store);
             GUIUtils::Utf8Decode(utf8Str);
