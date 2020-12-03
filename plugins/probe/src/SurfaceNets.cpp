@@ -263,6 +263,55 @@ void SurfaceNets::calculateSurfaceNets() {
                         triangle2[1] = indices[2];
                         triangle2[2] = indices[3];
 
+                        // hack normals
+                        auto tangent = _vertices[indices[2]];
+                        auto bitangent = _vertices[indices[1]];
+
+                        tangent[0] -= _vertices[indices[0]][0];
+                        tangent[1] -= _vertices[indices[0]][1];
+                        tangent[2] -= _vertices[indices[0]][2];
+                        auto t_length =
+                            std::sqrt(tangent[0] * tangent[0] + tangent[1] * tangent[1] + tangent[2] * tangent[2]);
+                        tangent[0] /= t_length;
+                        tangent[1] /= t_length;
+                        tangent[2] /= t_length;
+
+                        bitangent[0] -= _vertices[indices[0]][0];
+                        bitangent[1] -= _vertices[indices[0]][1];
+                        bitangent[2] -= _vertices[indices[0]][2];
+                        auto bt_length = std::sqrt(
+                            bitangent[0] * bitangent[0] + bitangent[1] * bitangent[1] + bitangent[2] * bitangent[2]);
+                        bitangent[0] /= bt_length;
+                        bitangent[1] /= bt_length;
+                        bitangent[2] /= bt_length;
+
+                        std::array<float, 3> normal;
+                        normal[0] = tangent[1] * bitangent[2] - tangent[2] * bitangent[1];
+                        normal[1] = tangent[2] * bitangent[0] - tangent[0] * bitangent[2];
+                        normal[2] = tangent[0] * bitangent[1] - tangent[1] * bitangent[0];
+                        auto n_length =
+                            std::sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+                        normal[0] /= n_length;
+                        normal[1] /= n_length;
+                        normal[2] /= n_length;
+
+                        auto myDot = [](std::array<float, 3> const& v0, std::array<float, 3> const& v1) -> float{
+                            return (v0[0] * v1[0] + v0[1] * v1[1] + v0[2] * v1[2]);
+                        };
+
+                        _normals[indices[0]] = myDot(_normals[indices[0]], normal) > 0.0
+                                                   ? normal
+                                                   : std::array<float, 3>{-normal[0], -normal[1] - normal[2]};
+                        _normals[indices[1]] = myDot(_normals[indices[1]], normal) > 0.0
+                                                   ? normal
+                                                   : std::array<float, 3>{-normal[0], -normal[1] - normal[2]};
+                        _normals[indices[2]] = myDot(_normals[indices[2]], normal) > 0.0
+                                                   ? normal
+                                                   : std::array<float, 3>{-normal[0], -normal[1] - normal[2]};
+                        _normals[indices[3]] = myDot(_normals[indices[3]], normal) > 0.0
+                                                   ? normal
+                                                   : std::array<float, 3>{-normal[0], -normal[1] - normal[2]};
+
                         _faces.emplace_back(indices);
                         _triangles.emplace_back(triangle1);
                         _triangles.emplace_back(triangle2);
