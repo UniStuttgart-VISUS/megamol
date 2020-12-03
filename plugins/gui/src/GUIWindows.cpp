@@ -1280,10 +1280,10 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
             this->search_widget.SetSearchFocus(true);
             this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].is_pressed = false;
         }
-        std::string help_test =
-            "[" + this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].keycode.ToString() +
-            "] Set keyboard focus to search input field.\n"
-            "Case insensitive substring search in\nparameter names.\nGlobally in all parameter views.\n";
+        std::string help_test = "[" + this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].keycode.ToString() +
+                                "] Set keyboard focus to search input field.\n"
+                                "Case insensitive substring search in module and parameter names.\nSearches globally "
+                                "in all parameter windows.\n";
         this->search_widget.Widget("guiwindow_parameter_earch", help_test);
     }
 
@@ -1293,7 +1293,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     ImGui::BeginChild("###ParameterList", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar);
 
     const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
-    auto currentSearchString = this->search_widget.GetSearchString();
+    auto current_search_string = this->search_widget.GetSearchString();
     GraphPtr_t graph_ptr;
     // Listing modules and their parameters
     if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
@@ -1311,15 +1311,24 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
             if (headerState == GUI_INVALID_ID) {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
             }
-            if (!currentSearchString.empty()) {
+            auto search_string = current_search_string;
+            bool module_searched = true;
+            if (!search_string.empty()) {
                 headerState = 1;
-                ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
+                module_searched =
+                    megamol::gui::StringSearchWidget::FindCaseInsensitiveSubstring(module_label, search_string);
+                if (!module_searched) {
+                    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
+                } else {
+                    // Show all when module is part of the search
+                    search_string.clear();
+                }
             }
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
 
             bool header_open = ImGui::CollapsingHeader(module_label.c_str(), nullptr);
 
-            if (!currentSearchString.empty()) {
+            if (!search_string.empty() && !module_searched) {
                 ImGui::PopStyleColor();
             }
 
@@ -1373,7 +1382,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                 // Draw parameters
                 bool out_open_external_tf_editor;
 
-                module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, currentSearchString,
+                module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, search_string,
                     vislib::math::Ternary(wc.param_extended_mode), true, ParameterPresentation::WidgetScope::LOCAL,
                     this->tf_editor_ptr, &out_open_external_tf_editor);
 

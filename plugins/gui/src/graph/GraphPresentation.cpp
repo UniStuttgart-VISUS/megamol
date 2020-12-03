@@ -690,7 +690,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                             module_parm_child_popup_hovered = true;
                         }
                         if (!param_popup_open && ((ImGui::IsMouseClicked(0) && !module_parm_child_popup_hovered) ||
-                            ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))) {
+                                                     ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))) {
 
                             this->graph_state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
                             // Reset module selection to prevent irrgular dragging
@@ -710,7 +710,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 
         ImGui::PopID();
 
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
@@ -1166,7 +1166,7 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
     std::string help_text = "[" +
                             this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH].keycode.ToString() +
                             "] Set keyboard focus to search input field.\n"
-                            "Case insensitive substring search in parameter names.";
+                            "Case insensitive substring search in module and parameter names.";
     this->search_widget.Widget("graph_parameter_search", help_text);
     auto search_string = this->search_widget.GetSearchString();
 

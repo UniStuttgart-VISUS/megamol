@@ -74,7 +74,7 @@ ImGuiID megamol::gui::GraphCollection::AddGraph(GraphCoreInterface graph_core_in
                 "[GUI] Added graph %s' (uid %i). \n", graph_ptr->name.c_str(), graph_ptr->uid);
 #endif // GUI_VERBOSE
         }
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
@@ -191,7 +191,7 @@ bool megamol::gui::GraphCollection::LoadCallStock(const megamol::core::CoreInsta
             "[GUI] Reading %i available calls ... DONE (duration: %.3f seconds)\n", this->calls_stock.size(),
             delta_time);
 
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -306,7 +306,7 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
             "[GUI] Reading %i available modules ... DONE (duration: %.3f seconds)\n", this->modules_stock.size(),
             delta_time);
 
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -742,7 +742,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[GUI] Successfully loaded/updated project '%s' from running MegaMol.\n", graph_ptr->name.c_str());
         }
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         this->DeleteGraph(in_graph_uid);
@@ -1158,7 +1158,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
             "[GUI] Successfully loaded project '%s' from file '%s'.\n", graph_ptr->name.c_str(),
             project_filename.c_str());
 
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
@@ -1253,7 +1253,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                 }
             }
         }
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -1376,7 +1376,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         //    "[GUI] [DEBUG] Removed temporary module '%s'.", mod_desc->ClassName());
 
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -1402,7 +1402,7 @@ bool megamol::gui::GraphCollection::get_call_stock_data(
         /// call.plugin_name is not (yet) available in call_desc (set from AbstractAssemblyInstance or
         /// AbstractPluginInstance).
 
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -1494,7 +1494,7 @@ ImVec2 megamol::gui::GraphCollection::project_read_confpos(const std::string& li
         try {
             std::string val_str = line.substr(x_start_idx + x_start_tag.length(), x_length);
             x = std::stof(val_str);
-        } catch (std::invalid_argument &e) {
+        } catch (std::invalid_argument& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI]  Error while reading x value of confPos: %s [%s, %s, line %d]\n", e.what(), __FILE__,
                 __FUNCTION__, __LINE__);
@@ -1503,7 +1503,7 @@ ImVec2 megamol::gui::GraphCollection::project_read_confpos(const std::string& li
         try {
             std::string val_str = line.substr(y_start_idx + y_start_tag.length(), y_length);
             y = std::stof(val_str);
-        } catch (std::invalid_argument &e) {
+        } catch (std::invalid_argument& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI]  Error while reading y value of confPos: %s [%s, %s, line %d]\n", e.what(), __FILE__,
                 __FUNCTION__, __LINE__);

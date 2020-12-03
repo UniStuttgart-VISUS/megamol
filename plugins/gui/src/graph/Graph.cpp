@@ -45,7 +45,7 @@ ImGuiID megamol::gui::Graph::AddEmptyModule(void) {
 #endif // GUI_VERBOSE
 
         return mod_uid;
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
@@ -122,7 +122,7 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                 return mod_uid;
             }
         }
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
@@ -219,7 +219,7 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
             }
         }
 
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -351,7 +351,7 @@ bool megamol::gui::Graph::AddCall(const CallStockVector_t& stock_calls, ImGuiID 
                 }
             }
         }
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -394,7 +394,7 @@ bool megamol::gui::Graph::AddCall(
 
         return this->AddCall(call_ptr, callslot_1, callslot_2);
 
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -598,7 +598,7 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                             "[GUI] Pointer to callee slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                             __LINE__);
                     }
-                    
+
                     if (!valid_caller_ptr || !valid_callee_ptr) {
                         return false;
                     }
@@ -628,7 +628,7 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                 }
             }
         }
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -656,7 +656,7 @@ ImGuiID megamol::gui::Graph::AddGroup(const std::string& group_name) {
 #endif // GUI_VERBOSE
         return group_id;
 
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
@@ -712,7 +712,7 @@ bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
                 return true;
             }
         }
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -758,7 +758,7 @@ ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const
                 }
             }
         }
-    } catch (std::exception &e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return GUI_INVALID_ID;
