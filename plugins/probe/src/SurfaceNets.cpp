@@ -301,16 +301,16 @@ void SurfaceNets::calculateSurfaceNets() {
 
                         _normals[indices[0]] = myDot(_normals[indices[0]], normal) > 0.0
                                                    ? normal
-                                                   : std::array<float, 3>{-normal[0], -normal[1] - normal[2]};
+                                                   : std::array<float, 3>{-normal[0], -normal[1], - normal[2]};
                         _normals[indices[1]] = myDot(_normals[indices[1]], normal) > 0.0
                                                    ? normal
-                                                   : std::array<float, 3>{-normal[0], -normal[1] - normal[2]};
+                                                   : std::array<float, 3>{-normal[0], -normal[1], - normal[2]};
                         _normals[indices[2]] = myDot(_normals[indices[2]], normal) > 0.0
                                                    ? normal
-                                                   : std::array<float, 3>{-normal[0], -normal[1] - normal[2]};
+                                                   : std::array<float, 3>{-normal[0], -normal[1], - normal[2]};
                         _normals[indices[3]] = myDot(_normals[indices[3]], normal) > 0.0
                                                    ? normal
-                                                   : std::array<float, 3>{-normal[0], -normal[1] - normal[2]};
+                                                   : std::array<float, 3>{-normal[0], -normal[1], - normal[2]};
 
                         _faces.emplace_back(indices);
                         _triangles.emplace_back(triangle1);
