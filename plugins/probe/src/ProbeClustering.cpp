@@ -86,12 +86,27 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
         auto const threshold = _threshold_slot.Param<core::param::FloatParam>()->Value();
         auto const handwaving = _handwaving_slot.Param<core::param::FloatParam>()->Value();
 
+        bool vec_probe = false;
+        {
+            auto const test_probe = probes->getGenericProbe(0);
+            vec_probe = std::holds_alternative<Vec4Probe>(test_probe);
+        }
+
         std::vector<float> cur_points(num_probes * 3);
-        for (std::remove_const_t<decltype(num_probes)> pidx = 0; pidx < num_probes; ++pidx) {
-            auto const probe = probes->getProbe<FloatProbe>(pidx);
-            cur_points[pidx * 3 + 0] = probe.m_position[0];
-            cur_points[pidx * 3 + 1] = probe.m_position[1];
-            cur_points[pidx * 3 + 2] = probe.m_position[2];
+        if (vec_probe) {
+            for (std::remove_const_t<decltype(num_probes)> pidx = 0; pidx < num_probes; ++pidx) {
+                auto const probe = probes->getProbe<Vec4Probe>(pidx);
+                cur_points[pidx * 3 + 0] = probe.m_position[0];
+                cur_points[pidx * 3 + 1] = probe.m_position[1];
+                cur_points[pidx * 3 + 2] = probe.m_position[2];
+            }
+        } else {
+            for (std::remove_const_t<decltype(num_probes)> pidx = 0; pidx < num_probes; ++pidx) {
+                auto const probe = probes->getProbe<FloatProbe>(pidx);
+                cur_points[pidx * 3 + 0] = probe.m_position[0];
+                cur_points[pidx * 3 + 1] = probe.m_position[1];
+                cur_points[pidx * 3 + 2] = probe.m_position[2];
+            }
         }
 
         auto const p_bbox = meta_data.m_bboxs.BoundingBox();
@@ -120,7 +135,7 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
             [sim_matrix, col_count, row_count, threshold](
                 stdplugin::datatools::clustering::index_t a, stdplugin::datatools::clustering::index_t b) -> bool {
                 auto const val = sim_matrix[a + b * col_count];
-                return val <= threshold;
+                return val >= threshold;
             },
             [sim_matrix, col_count, row_count, handwaving](
                 stdplugin::datatools::clustering::index_t pivot,
@@ -153,10 +168,18 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
             return sum / static_cast<float>(vec.size());
         }*/
 
-        for (decltype(cluster_res)::size_type pidx = 0; pidx < cluster_res.size(); ++pidx) {
-            auto probe = probes->getProbe<FloatProbe>(pidx);
-            probe.m_cluster_id = cluster_res[pidx];
-            probes->setProbe(pidx, probe);
+        if (vec_probe) {
+            for (decltype(cluster_res)::size_type pidx = 0; pidx < cluster_res.size(); ++pidx) {
+                auto probe = probes->getProbe<Vec4Probe>(pidx);
+                probe.m_cluster_id = cluster_res[pidx];
+                probes->setProbe(pidx, probe);
+            }
+        } else {
+            for (decltype(cluster_res)::size_type pidx = 0; pidx < cluster_res.size(); ++pidx) {
+                auto probe = probes->getProbe<FloatProbe>(pidx);
+                probe.m_cluster_id = cluster_res[pidx];
+                probes->setProbe(pidx, probe);
+            }
         }
 
         auto const max_el = std::max_element(cluster_res.cbegin(), cluster_res.cend());

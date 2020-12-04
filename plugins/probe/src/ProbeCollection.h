@@ -107,6 +107,20 @@ public:
 
     template <typename T> T getGlobalMax() { return std::get<T>(m_global_max); }
 
+    void erase_probes(std::vector<char> const& indicator) {
+        if (indicator.size() != m_probes.size())
+            return;
+        auto const num_el = std::count_if(indicator.begin(), indicator.end(), [](auto const el) { return el == 0; });
+        std::vector<GenericProbe> tmp;
+        tmp.reserve(num_el);
+        for (std::vector<GenericProbe>::size_type idx = 0; idx < m_probes.size(); ++idx) {
+            if (indicator[idx] == 0) {
+                tmp.push_back(m_probes[idx]);
+            }
+        }
+        m_probes = tmp;
+    }
+
 private:
     std::vector<GenericProbe> m_probes;
     GenericMinMax m_global_min;

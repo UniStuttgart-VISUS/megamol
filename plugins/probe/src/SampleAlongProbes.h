@@ -504,6 +504,8 @@ void SampleAlongPobes::doTetrahedralSampling(
 
         const int samples_per_probe = this->_num_samples_per_probe_slot.Param<core::param::IntParam>()->Value();
         const float sample_radius_factor = this->_sample_radius_factor_slot.Param<core::param::FloatParam>()->Value();
+
+        std::vector<char> invalid_probes(_probes->getProbeCount(), 1);
         
         float global_min = std::numeric_limits<float>::max();
         float global_max = std::numeric_limits<float>::lowest();
@@ -565,10 +567,14 @@ void SampleAlongPobes::doTetrahedralSampling(
                     probe.m_position[1] + static_cast<float>(j) * sample_step * probe.m_direction[1],
                     probe.m_position[2] + static_cast<float>(j) * sample_step * probe.m_direction[2]);
         
-                InfoType val = {0, 0, 0, 0};
+                InfoType val = {std::numeric_limits<float>::signaling_NaN(),
+                    std::numeric_limits<float>::signaling_NaN(), std::numeric_limits<float>::signaling_NaN(),
+                    std::numeric_limits<float>::signaling_NaN()};
         
                 auto cell = tri.locate(sample_point);
                 if (!tri.is_infinite(cell)) {
+                    invalid_probes[i] = 0;
+
                     Tetrahedron tet_c = Tetrahedron(cell->vertex(0)->point(), cell->vertex(1)->point(),
                         cell->vertex(2)->point(), cell->vertex(3)->point());
                     Tetrahedron tet_0 = Tetrahedron(
@@ -629,6 +635,7 @@ void SampleAlongPobes::doTetrahedralSampling(
             //global_max = std::max(global_max, samples->max_value);
         } // end for probes
         _probes->setGlobalMinMax(global_min, global_max);
+        _probes->erase_probes(invalid_probes);
     }
 
 
