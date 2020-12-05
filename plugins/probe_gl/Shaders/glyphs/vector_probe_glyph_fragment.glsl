@@ -111,6 +111,8 @@ void main() {
         sample_magnitude = mesh_shader_params[draw_id].samples[radar_section].w;
     }
 
+    if( isnan(sample_magnitude) ) discard;
+
     //discard invalid samples
     if(sample_magnitude < 0.005 && sample_magnitude > -0.005) discard;
 
