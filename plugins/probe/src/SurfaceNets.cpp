@@ -65,6 +65,8 @@ namespace probe {
 
 void SurfaceNets::calculateSurfaceNets() {
 
+    _bboxs.Clear();
+
     _vertices.clear();
     _normals.clear();
     _faces.clear();
@@ -191,6 +193,17 @@ void SurfaceNets::calculateSurfaceNets() {
                     position[2] = ((center_of_mass[2] / _dims[2]) * _dims[2] * _spacing[2]) + _volume_origin[2];
                     position[3] = 1.0f;
                     _vertices.push_back(position);
+
+                    float eps = 0.005;
+                    vislib::math::Cuboid<float> point_box(position[0] - eps, position[1] - eps, position[2] - eps,
+                        position[0] + eps, position[1] + eps, position[2] + eps);
+
+                    auto bbox = _bboxs.BoundingBox();
+                    auto cbox = _bboxs.ClipBox();
+                    bbox.Union(point_box);
+                    cbox.Union(point_box);
+                    _bboxs.SetBoundingBox(bbox);
+                    _bboxs.SetClipBox(cbox);
 
                     voxel_lookup[offset_now(x, y, z)] = _vertices.size() - 1;
                     voxel_filled.push_back(offset_now(x, y, z));
@@ -346,7 +359,7 @@ bool SurfaceNets::getData(core::Call& call) {
     if (cd->DataHash() != _old_datahash) {
         something_changed = true;
         auto mesh_meta_data = cm->getMetaData();
-        mesh_meta_data.m_bboxs = cd->AccessBoundingBoxes();
+        //mesh_meta_data.m_bboxs = cd->AccessBoundingBoxes();
         mesh_meta_data.m_frame_cnt = cd->GetAvailableFrames();
         cm->setMetaData(mesh_meta_data);
 
@@ -408,6 +421,10 @@ bool SurfaceNets::getData(core::Call& call) {
         _old_datahash = cd->DataHash();
         _recalc = false;
 
+        auto meta_data = cm->getMetaData();
+        meta_data.m_bboxs = _bboxs;
+        cm->setMetaData(meta_data);
+
         return true;
     }
 
@@ -430,11 +447,12 @@ bool SurfaceNets::getData(core::Call& call) {
         if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA))
             return false;
 
-        if (cd->DataHash() == _old_datahash && !_recalc)
-            return true;
+        //if (cd->DataHash() == _old_datahash && !_recalc)
+        //    return true;
 
         // put metadata in mesh call
-        meta_data.m_bboxs = cd->AccessBoundingBoxes();
+        //meta_data.m_bboxs = cd->AccessBoundingBoxes();
+        meta_data.m_bboxs = _bboxs;
         meta_data.m_frame_cnt = cd->GetAvailableFrames();
         cm->setMetaData(meta_data);
 

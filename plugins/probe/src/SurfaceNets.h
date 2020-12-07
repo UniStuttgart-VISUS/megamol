@@ -93,6 +93,9 @@ private:
     std::vector<std::array<float, 3>> _normals;
     std::vector<std::array<uint32_t, 4>> _faces;
     std::vector<std::array<uint32_t, 3>> _triangles;
+
+    // store bounding box
+    megamol::core::BoundingBoxes_2 _bboxs;
 };
 
 } // namespace probe
