@@ -1240,6 +1240,7 @@ bool GUIWindows::destroyContext(void) {
                 }
             }
             ImGui::DestroyContext(this->context);
+            megamol::gui::imgui_context_count--;
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Destroyed ImGui context.");
         }
         this->context = nullptr;
