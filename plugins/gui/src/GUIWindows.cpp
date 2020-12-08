@@ -1084,7 +1084,7 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
     // LOG CONSOLE Window -----------------------------------------------
     buf_win.win_name = "Log Console";
     buf_win.win_show = false;
-    buf_win.win_size = ImVec2(850.0f, 10.0f * ImGui::GetFrameHeightWithSpacing());
+    buf_win.win_size = ImVec2(850.0f, 250.0f);
     buf_win.win_reset_size = buf_win.win_size;
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F6);
