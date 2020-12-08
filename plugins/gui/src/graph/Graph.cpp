@@ -198,7 +198,7 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
 
 #ifdef GUI_VERBOSE
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[GUI] Deleted module '%s' (uid %i) from  project '%s'.\n", (*iter)->class_name.c_str(),
+                    "[GUI] Deleted module '%s' (uid %i) from  project '%s'.\n", (*iter)->FullName().c_str(),
                     (*iter)->uid, this->name.c_str());
 #endif // GUI_VERBOSE
 
@@ -1043,10 +1043,9 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                                         }
                                     }
                                     if (!module_found) {
-                                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                                             "[GUI] JSON state: Unable to find module '%s' to apply graph position "
-                                            "in "
-                                            "configurator. [%s, %s, line %d]\n",
+                                            "in configurator. [%s, %s, line %d]\n",
                                             module_fullname.c_str(), __FILE__, __FUNCTION__, __LINE__);
                                     }
                                 }
@@ -1122,7 +1121,7 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                                                 }
                                             }
                                             if (!group_found) {
-                                                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                                                     "[GUI] JSON state: Unable to find group '%s' to add interface "
                                                     "slot. "
                                                     "[%s, %s, line %d]\n",

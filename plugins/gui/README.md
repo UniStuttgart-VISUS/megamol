@@ -164,7 +164,7 @@ Additonal modules provided by the GUI plugin:
 
 ### [1] GUIView
 
-The GUIView module is deprecated. It was required for using the GUI with the former MegaMol frontend provided by mmconsle.exe / mmconsole.sh.
+The GUIView module is deprecated. It was required for using the GUI with the former MegaMol frontend provided by mmconsole.exe / mmconsole.sh.
 
 ### [2] OverlayRenderer
 

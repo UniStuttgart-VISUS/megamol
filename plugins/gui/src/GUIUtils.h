@@ -86,7 +86,7 @@ namespace gui {
     typedef std::shared_ptr<megamol::gui::InterfaceSlot> InterfaceSlotPtr_t;
 
     /** Available ImGui APIs */
-    enum GUIImGuiAPI { NO_API, OPEN_GL };
+    enum GUIImGuiAPI { NONE, OPEN_GL };
 
     /** Hotkey Data Types (exclusively for configurator) */
     enum HotkeyIndex : size_t {
@@ -203,6 +203,10 @@ namespace gui {
     inline ImGuiID GenerateUniqueID(void) {
         return (++megamol::gui::gui_generated_uid);
     }
+
+    /********** Global Context Pointer Counter **********/
+
+    extern unsigned int imgui_context_count;
 
     /********** Class **********/
 

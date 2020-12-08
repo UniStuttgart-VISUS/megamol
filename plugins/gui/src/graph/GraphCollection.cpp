@@ -23,34 +23,7 @@ bool megamol::gui::GraphCollection::AddEmptyProject(void) {
 
     ImGuiID graph_uid = this->AddGraph(GraphCoreInterface::NO_INTERFACE);
     if (graph_uid != GUI_INVALID_ID) {
-        /* DEPRECATED: Only applies for Core Instance Graph, not for MegaMol Graph.
-        // Add initial GUIView and set as view instance
-        GraphPtr_t graph_ptr;
-        if (this->GetGraph(graph_uid, graph_ptr)) {
-            std::string guiview_class_name("GUIView");
-            ImGuiID module_uid = graph_ptr->AddModule(this->GetModulesStock(), guiview_class_name);
-            ModulePtr_t module_ptr;
-            if (graph_ptr->GetModule(module_uid, module_ptr)) {
-                auto graph_module = graph_ptr->GetModules().back();
-                graph_module->main_view_name = graph_ptr->GenerateUniqueMainViewName();
-
-                Graph::QueueData queue_data;
-                queue_data.name_id = graph_module->FullName();
-                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
-
-                return true;
-            } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Unable to add initial gui view module: '%s'. [%s, %s, line %d]\n",
-                    guiview_class_name.c_str(), __FILE__, __FUNCTION__, __LINE__);
-                return false;
-            }
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unable to get last added graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        */
+        /// Setup new empty graph ...
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unable to create new graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -122,7 +95,8 @@ bool megamol::gui::GraphCollection::GetGraph(ImGuiID in_graph_uid, megamol::gui:
             }
         }
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[GUI] Unable to find graph for given graph uid. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Unable to find graph for given graph uid: %i [%s, %s, line %d]\n", in_graph_uid, __FILE__,
+            __FUNCTION__, __LINE__);
     }
     return false;
 }
@@ -491,8 +465,16 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 auto view_inst_iter = new_view_instances.find(full_name);
                 if (view_inst_iter != new_view_instances.end()) {
                     new_module_ptr->main_view_name = view_inst_iter->second;
-
                     Graph::QueueData queue_data;
+                    // Remove all main views
+                    // for (auto module_ptr : graph_ptr->GetModules()) {
+                    //    if (module_ptr->is_view && module_ptr->IsMainView()) {
+                    //        module_ptr->main_view_name.clear();
+                    //        queue_data.name_id = module_ptr->FullName();
+                    //        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                    //    }
+                    //}
+                    // Add new main view
                     queue_data.name_id = new_module_ptr->FullName();
                     graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
                 }
@@ -585,7 +567,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
         for (auto& module_map : delete_module_map) {
             if (use_megamol_graph) {
                 if (!megamol_graph->FindModule(module_map.first)) {
-                    graph_ptr->DeleteModule(module_map.second);
+                    graph_ptr->DeleteModule(module_map.second, true);
                     gui_graph_changed = true;
                 }
             } else if (use_core_instance) {
@@ -595,7 +577,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 };
                 core_instance->FindModuleNoLock(module_map.first, fun);
                 if (!found_module) {
-                    graph_ptr->DeleteModule(module_map.second);
+                    graph_ptr->DeleteModule(module_map.second, true);
                     gui_graph_changed = true;
                 }
             }
@@ -867,8 +849,20 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 queue_data.rename_id = graph_module->FullName();
                 graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
 
+                // Remove all main views
+                // for (auto module_ptr : graph_ptr->GetModules()) {
+                //    if (module_ptr->is_view && module_ptr->IsMainView()) {
+                //        module_ptr->main_view_name.clear();
+                //        queue_data.name_id = module_ptr->FullName();
+                //        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                //    }
+                //}
+                // Add new main view
                 queue_data.name_id = queue_data.rename_id;
                 graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+
+                // Allow only one main view at a time
+                /// XXX TODO reset other main views
             }
         }
 

@@ -300,11 +300,21 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 }
                 if (selected_mod_ptr != nullptr) {
                     Graph::QueueData queue_data;
-                    queue_data.name_id = selected_mod_ptr->FullName();
                     if (this->graph_state.interact.module_mainview_changed == vislib::math::Ternary::TRI_TRUE) {
+                        // Remove all main views
+                        for (auto module_ptr : inout_graph.GetModules()) {
+                            if (module_ptr->is_view && module_ptr->IsMainView()) {
+                                module_ptr->main_view_name.clear();
+                                queue_data.name_id = module_ptr->FullName();
+                                inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                            }
+                        }
+                        // Add new main view
+                        queue_data.name_id = selected_mod_ptr->FullName();
                         selected_mod_ptr->main_view_name = inout_graph.GenerateUniqueMainViewName();
                         inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
                     } else {
+                        queue_data.name_id = selected_mod_ptr->FullName();
                         selected_mod_ptr->main_view_name.clear();
                         inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
                     }
@@ -759,14 +769,22 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
                     "changes. [%s, %s, line %d]\n",
                     __FILE__, __FUNCTION__, __LINE__);
             } else {
+                Graph::QueueData queue_data;
                 if (is_main_view) {
+                    // Remove all main views
+                    for (auto module_ptr : inout_graph.GetModules()) {
+                        if (module_ptr->is_view && module_ptr->IsMainView()) {
+                            module_ptr->main_view_name.clear();
+                            queue_data.name_id = module_ptr->FullName();
+                            inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                        }
+                    }
+                    // Add new main view
                     selected_mod_ptr->main_view_name = inout_graph.GenerateUniqueMainViewName();
-                    Graph::QueueData queue_data;
                     queue_data.name_id = selected_mod_ptr->FullName();
                     inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
                 } else {
                     selected_mod_ptr->main_view_name.clear();
-                    Graph::QueueData queue_data;
                     queue_data.name_id = selected_mod_ptr->FullName();
                     inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
                 }

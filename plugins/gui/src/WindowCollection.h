@@ -204,6 +204,11 @@ namespace gui {
          */
         bool DeleteWindowConfiguration(const std::string& window_name);
 
+        bool DeleteWindowConfigurations(void) {
+            this->windows.clear();
+            return true;
+        };
+
         // --------------------------------------------------------------------
         // STATE
 
