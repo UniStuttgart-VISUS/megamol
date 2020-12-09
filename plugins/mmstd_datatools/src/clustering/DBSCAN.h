@@ -36,7 +36,7 @@ inline void expand_cluster(std::shared_ptr<kd_tree_t<T, DIM>> const& D, index_t 
 
     search_res_t<T> tmp_res(minPts);
 
-    for (search_res_t<T>::size_type vec_idx = 0; vec_idx < Nvec.size(); ++vec_idx) {
+    for (typename search_res_t<T>::size_type vec_idx = 0; vec_idx < Nvec.size(); ++vec_idx) {
         auto const idx = Nvec[vec_idx].first;
         if (visited[idx] == 0) {
             visited[idx] = 1;
