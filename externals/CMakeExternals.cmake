@@ -183,6 +183,29 @@ function(require_external NAME)
         GIT_TAG "v2.1.0"
         INCLUDE_DIR "include")
 
+  # ann
+  elseif(NAME STREQUAL "ann")
+    if(TARGET ann)
+      return()
+    endif()
+
+    if(WIN32)
+      set(ANN_LIB "bin/ann.dll")
+      set(ANN_LIB_IMPORT "lib/ann.lib")
+    else()
+      set(ANN_LIB "lib/ann.so")
+    endif()
+
+    add_external_project(ann SHARED
+      GIT_REPOSITORY https://github.com/dials/annlib.git
+      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ANN_LIB}"
+      PATCH_COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/externals/ann/CMakeLists.txt"
+        "<SOURCE_DIR>/CMakeLists.txt")
+
+    add_external_library(ann
+      LIBRARY ${ANN_LIB}
+      IMPORT_LIBRARY ${ANN_LIB_IMPORT})
 
   # bhtsne
   elseif(NAME STREQUAL "bhtsne")

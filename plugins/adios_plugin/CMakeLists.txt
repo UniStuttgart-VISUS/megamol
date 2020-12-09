@@ -20,17 +20,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     require_external(adios2)
   endif()
 
-  # http://www.fftw.org/fftw-3.3.8.tar.gz
-  # https://github.com/FFTW/fftw3/pull/161
-  # ENABLE_FLOAT=ON
-  # CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON
-  find_package(fftw3f CONFIG REQUIRED)
-  if (WIN32)
-    set(FFTW_LIB "${FFTW3f_LIBRARY_DIRS}/${FFTW3f_LIBRARIES}.lib")
-  else()
-    set(FFTW_LIB "${FFTW3f_LIBRARY_DIRS}/${FFTW3f_LIBRARIES}.a")
-  endif()
-
   # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -40,8 +29,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
-  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools ${FFTW_LIB})
-  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src" ${FFTW3f_INCLUDE_DIRS})
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools)
+  target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
 
   if(USE_EXTERNAL_ADIOS)
     target_link_libraries(${PROJECT_NAME} PRIVATE adios2::adios2)

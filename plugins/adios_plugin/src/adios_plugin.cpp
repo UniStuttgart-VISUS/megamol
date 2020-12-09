@@ -21,7 +21,6 @@
 #include "ADIOSFlexConvert.h"
 #include "ADIOStoTable.h"
 
-#include "DFT.h"
 #include "SignalPeaks.h"
 #include "Clustering.h"
 
@@ -59,7 +58,6 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::adios::TableToADIOS>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOSFlexConvert>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::ADIOStoTable>();
-            this->module_descriptions.RegisterAutoDescription<megamol::adios::DFT>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::SignalPeaks>();
             this->module_descriptions.RegisterAutoDescription<megamol::adios::Clustering>();
 
