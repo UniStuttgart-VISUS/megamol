@@ -37,19 +37,19 @@ jobs:
 - job: Linux
   strategy:
     matrix:
-      'GCC8 / Make / Release':
-        cCompiler: gcc-8
-        cxxCompiler: g++-8
+      'GCC9 / Make / Release':
+        cCompiler: gcc-9
+        cxxCompiler: g++-9
         configuration: Release
         generator: 'Unix Makefiles'
-      'GCC8 / Make / Debug':
-        cCompiler: gcc-8
-        cxxCompiler: g++-8
+      'GCC9 / Make / Debug':
+        cCompiler: gcc-9
+        cxxCompiler: g++-9
         configuration: Debug
         generator: 'Unix Makefiles'
-      'GCC8 / Ninja / Release':
-        cCompiler: gcc-8
-        cxxCompiler: g++-8
+      'GCC9 / Ninja / Release':
+        cCompiler: gcc-9
+        cxxCompiler: g++-9
         configuration: Release
         generator: 'Ninja'
       'Clang10 / Make / Release':
