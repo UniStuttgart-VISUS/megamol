@@ -5,38 +5,37 @@
 // http://www.kr.tuwien.ac.at/staff/eiter/et-archive/cdtr9464.pdf
 
 namespace {
-template<typename T, typename DIST>
-inline T c(std::vector<T>& ca, std::vector<T>::size_type i, std::vector<T>::size_type j, DIST const& dist,
-    std::vector<T> const& a, std::vector<T> const& b) {
-    if (ca(i, j) > -1) {
-        return ca(i, j);
+template<typename T>
+inline T c(std::vector<T>& ca, typename std::vector<T>::size_type width, typename std::vector<T>::size_type i,
+    typename std::vector<T>::size_type j, std::vector<T> const& a, std::vector<T> const& b) {
+    auto dist = [](T const& a, T const& b) -> T { return std::abs(a - b); };
+    if (ca[i + j * a.size()] > static_cast<T>(-1)) {
+        return ca[i + j * a.size()];
     } else if (i == 0 && j == 0) {
-        ca(i, j) = dist(a[0], b[0]);
+        ca[i + j * a.size()] = dist(a[0], b[0]);
     } else if (i > 0 && j == 0) {
-        ca(i, j) = std::max<T>(c(i - 1, 0), dist(a[i], b[0]));
+        ca[i + j * a.size()] = std::max<T>(c(ca, width, i - 1, 0, a, b), dist(a[i], b[0]));
     } else if (i == 0 && j > 0) {
-        ca(i, j) = std::max<T>(c(0, j - 1), dist(a[0], b[j]));
+        ca[i + j * a.size()] = std::max<T>(c(ca, width, 0, j - 1, a, b), dist(a[0], b[j]));
     } else if (i > 0 && j > 0) {
-        ca(i, j) = std::max<T>(std::min<T>(c(i - 1, j), std::min<T>(c(i - 1, j - 1), c(i, j - 1))), dist(a[i], b[j]));
+        ca[i + j * a.size()] =
+            std::max<T>(std::min<T>(c(ca, width, i - 1, j, a, b),
+                            std::min<T>(c(ca, width, i - 1, j - 1, a, b), c(ca, width, i, j - 1, a, b))),
+                dist(a[i], b[j]));
     } else {
-        return std::numeric_limits<T>::infinite();
+        return std::numeric_limits<T>::infinity();
     }
-    return ca(i, j);
+    return ca[i + j * a.size()];
 }
 } // namespace
 
 namespace megamol::stdplugin::datatools::misc {
 
 template<typename T>
-inline T std_dist(T const& a, T const& b) {
-    return std::abs(a - b);
-}
-
-template<typename T, typename DIST>
-inline T frechet_distance(std::vector<T> const& a, std::vector<T> const& b, DIST const& dist) {
+inline T frechet_distance(std::vector<T> const& a, std::vector<T> const& b) {
     auto const total_size = a.size() * b.size();
-    std::vector<T> ca(total_size, -1);
-    return c(ca, a.size() - 1, b.size() - 1, dist, a, b);
+    std::vector<T> ca(total_size, static_cast<T>(-1));
+    return c<T>(ca, a.size(), a.size() - 1, b.size() - 1, a, b);
 }
 
 } // namespace megamol::stdplugin::datatools::misc
