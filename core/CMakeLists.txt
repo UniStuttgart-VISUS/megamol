@@ -27,10 +27,8 @@ if(BUILD_CORE)
     find_package(EXPAT REQUIRED)
   endif()
 
-  # Add Lua.
-  add_subdirectory(lua)
-
   # Add externals.
+  require_external(lua)
   require_external(libzmq)
   require_external(libcppzmq)
   require_external(zlib)
@@ -134,6 +132,4 @@ if(BUILD_CORE)
   else()
     #install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
-
-  add_subdirectory(remoteconsole)
 endif(BUILD_CORE)

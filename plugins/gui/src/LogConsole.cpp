@@ -191,9 +191,8 @@ bool megamol::gui::LogConsole::connect_log(void) {
 
     // Only connect if echo target is still default OfflineTarget
     /// Note: A second log console is temporarily created when "GUIView" module is loaded in configurator for complete
-    /// module list.
-    ///       For this "GUIView" module NO log is connected, because the main LogConsole instance is already connected
-    ///       and the taget is not the default OfflineTarget.
+    /// module list. For this "GUIView" module NO log is connected, because the main LogConsole instance is already
+    /// connected and the taget is not the default OfflineTarget.
     if ((offline_echo_target != nullptr) && (this->echo_log_target != nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(this->echo_log_target);
     }

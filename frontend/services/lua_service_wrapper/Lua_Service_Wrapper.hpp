@@ -40,6 +40,7 @@ public:
     struct Config {
         std::string host_address;
         megamol::core::LuaAPI* lua_api_ptr = nullptr; // lua api object that will be used/called by the service wrapper only one level deep
+        bool retry_socket_port = false;
     };
 
     // sometimes somebody wants to know the name of the service

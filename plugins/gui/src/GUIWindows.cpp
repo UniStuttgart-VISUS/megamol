@@ -94,10 +94,22 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 
 bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time) {
 
+    // Required to prevent change in gui drawing between pre and post draw
+    this->state.gui_post_drawing_enabled = this->state.gui_pre_drawing_enabled;
+
+    // Early exit when drawing is disabled
+    if (!this->state.gui_pre_drawing_enabled) {
+        if (this->core_instance != nullptr) {
+            this->core_instance->SetCurrentImGuiContext(nullptr);
+        }
+        return true;
+    }
+
     // Check for initialized imgui api
     if (this->api == GUIImGuiAPI::NO_API) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
+            "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line "
+            "%d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -107,6 +119,12 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
             "[GUI] Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+
+    // Propagate ImGui context to core instance
+    if (this->core_instance != nullptr) {
+        this->core_instance->SetCurrentImGuiContext(this->context);
+    }
+
     // Set ImGui context
     ImGui::SetCurrentContext(this->context);
     // Check for existing fonts if shared between multiple contexts
@@ -125,7 +143,6 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
 
     // Create new gui graph once if core instance graph is used (otherwise graph should already exist)
-    // GUI graph of running project should be available before loading states from parameters in validateParameters().
     if (this->state.graph_uid == GUI_INVALID_ID)
         this->SynchronizeGraphs();
 
@@ -135,11 +152,6 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
             "[GUI] Failed to find required gui graph for running core graph. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
         return false;
-    }
-
-    // Propagate ImGui context to core instance
-    if (this->core_instance != nullptr) {
-        this->core_instance->SetCurrentImGuiContext(this->context);
     }
 
     // Set stuff for next frame --------------------------------------------
@@ -295,10 +307,16 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
 bool GUIWindows::PostDraw(void) {
 
+    // Early exit when drawing is disabled
+    if (!this->state.gui_post_drawing_enabled) {
+        return true;
+    }
+
     // Check for initialized imgui api
     if (this->api == GUIImGuiAPI::NO_API) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line %d]\n",
+            "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line "
+            "%d]\n",
             __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -722,20 +740,28 @@ bool megamol::gui::GUIWindows::ConsumeTriggeredScreenshot(void) {
 
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
 
-    // 1) Load all known calls from core instance ONCE ---------------------------
+    // If gui is not drawn, there is no need to synchronize graphs
+    if (!this->state.gui_pre_drawing_enabled) {
+        return true;
+    }
+
+    // 1) Load all known calls and modules from core instance ONCE ---------------------------
     if (!this->configurator.GetGraphCollection().LoadCallStock(core_instance)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    /// TODO Load all known modules from core instance ONCE
-    /// XXX Omitted since this task takes ~2 seconds and would always block megamol for this period at start up!
+    if (!this->configurator.GetGraphCollection().LoadModuleStock(core_instance)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Failed to load module stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
 
     bool synced = false;
     bool sync_success = false;
     GraphPtr_t graph_ptr;
     bool found_graph = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr);
-    // 2a) Either synchronize GUI Graph -> Core Graph ... ----------------------
+    // 2a) Either synchronize GUI Graph -> Core Graph ... ---------------------
     if (!synced && found_graph) {
         bool graph_sync_success = true;
 
@@ -823,7 +849,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         sync_success &= graph_sync_success;
     }
 
-    // 2b) ... or synchronize Core Graph -> GUI Graph -------------------------
+    // 2b) ... OR (exclusive or) synchronize Core Graph -> GUI Graph ----------
     if (!synced) {
         auto last_graph_uid = this->state.graph_uid;
 
@@ -837,24 +863,21 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                 __LINE__);
         }
 
-        // Init after graph was created
-        if (graph_sync_success && (last_graph_uid == GUI_INVALID_ID) && (this->state.graph_uid != GUI_INVALID_ID)) {
-            GraphPtr_t graph_ptr;
-            if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-                std::string script_filename;
-                // Try setting initial project filename from lua state of core instance
-                if (graph_ptr->GetFilename().empty()) {
-                    if (this->core_instance != nullptr) {
-                        script_filename = this->core_instance->GetLuaState()->GetScriptPath();
-                        graph_ptr->SetFilename(script_filename);
-                    }
+        GraphPtr_t graph_ptr;
+        if (graph_sync_success && this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+            std::string last_script_filename = graph_ptr->GetFilename();
+            if (graph_ptr->GetFilename().empty()) {
+                if (this->core_instance != nullptr) {
+                    // Set project filename from lua state of core instance
+                    graph_ptr->SetFilename(this->core_instance->GetLuaState()->GetScriptPath());
                 }
-                if (graph_ptr->GetFilename().empty()) {
-                    if (!this->state.project_script_paths.empty()) {
-                        graph_ptr->SetFilename(this->state.project_script_paths.front());
-                    }
-                }
-                // Load initial gui state from file
+            }
+            // Always check for changed script path when project file is dropped
+            if (!this->state.project_script_paths.empty()) {
+                graph_ptr->SetFilename(this->state.project_script_paths.front());
+            }
+            // Load GUI state from project file when project file changed
+            if (last_script_filename != graph_ptr->GetFilename()) {
                 this->load_state_from_file(graph_ptr->GetFilename());
             }
         }
@@ -935,7 +958,6 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 #endif // GUI_VERBOSE
         sync_success &= param_sync_success;
     }
-
     return sync_success;
 }
 
@@ -1861,8 +1883,12 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
         }
         ImGui::Separator();
 
+/// DOCKING
+#if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
         ImGui::MenuItem("Docking", "Shift + Left-Drag", false, false);
-
+#else
+        ImGui::MenuItem("Docking", nullptr, false, false);
+#endif
         if (ImGui::ArrowButton("dock_left", ImGuiDir_Left)) {
             wc.win_position.x = 0.0f;
             wc.win_reset = true;
@@ -2173,6 +2199,8 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
 
 void megamol::gui::GUIWindows::init_state(void) {
 
+    this->state.gui_pre_drawing_enabled = true;
+    this->state.gui_post_drawing_enabled = true;
     this->state.style = GUIWindows::Styles::DarkColors;
     this->state.style_changed = true;
     this->state.autosave_gui_state = false;

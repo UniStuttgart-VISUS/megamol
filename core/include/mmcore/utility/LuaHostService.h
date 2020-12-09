@@ -97,7 +97,6 @@ public:
         bool is_running() { return running.load(std::memory_order_acquire); }
     };
 
-    std::string broker_address;
     struct Worker {
         ThreadSignaler signal;
         std::thread thread;
@@ -129,21 +128,56 @@ public:
     zmq::context_t zmq_context;
 
     // connection broker starts threads that execute incoming lua commands
-    bool spawn_connection_broker() {
+    bool spawn_connection_broker(std::string broker_address, bool retry_socket_port = false) {
         assert(broker_worker.signal.is_running() == false);
 
-        std::promise<bool> socket_feedback;
-        auto socket_ok = socket_feedback.get_future();
+        int retries = 0;
+        int max_retries = 100+1;
 
-        broker_worker.thread =
-            std::thread([&]() { this->connection_broker_routine(zmq_context, broker_address, broker_worker.signal, socket_feedback); });
+        auto delimiter_pos = broker_address.find_last_of(':');
+        std::string base_address = broker_address.substr(0, delimiter_pos+1); // include delimiter
+        std::string port_string = broker_address.substr(delimiter_pos+1); // ignore delimiter
+        int port = std::stoi(port_string);
 
-        // wait for lua socket to start successfully or fail - so we can propagate the fail and stop megamol execution
-        socket_ok.wait();
+        // retry to start broker socket on next port until max_retries reached
+        std::string address;
+        do {
+            port_string = std::to_string(port + retries);
+            address = base_address + port_string;
 
-       if (!socket_ok.get() || !broker_worker.signal.is_running()) {
-           return false;
-       }
+            std::promise<bool> socket_feedback;
+            auto socket_ok = socket_feedback.get_future();
+
+            auto thread =
+                std::thread([&]() { this->connection_broker_routine(zmq_context, address, broker_worker.signal, socket_feedback); });
+
+            // wait for lua socket to start successfully or fail - so we can propagate the fail and stop megamol execution
+            socket_ok.wait();
+
+            if (!socket_ok.get() || !broker_worker.signal.is_running()) {
+                if(retry_socket_port) {
+                    // do loop one more time
+                    retries++;
+
+                    if(thread.joinable())
+                        thread.join();
+                }
+                else {
+                    // no retries, just fail
+                    return false;
+                }
+            }
+            else {
+                // broker thread started successfully, so break out of retry loop
+                broker_worker.thread = std::move(thread);
+                break;
+            }
+        } while(retries < max_retries);
+
+        if (retry_socket_port && retries == max_retries) {
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo(("LRH Server max socket port retries reached (" + std::to_string(max_retries) + "). Address: " + broker_address + ", tried up to port: " + port_string).c_str());
+            return false;
+        }
 
         return true;
     }
@@ -206,6 +240,7 @@ public:
         try {
             socket.close();
         } catch (...) {
+            Log::DefaultLog.WriteInfo("LRH Server socket close threw exception");
         }
         Log::DefaultLog.WriteInfo("LRH Server socket closed");
     }

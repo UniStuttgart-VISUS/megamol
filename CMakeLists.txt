@@ -59,6 +59,9 @@ add_subdirectory(${MEGAMOL_CORE_DIR})
 set(CONSOLE_NAME mmconsole)
 add_subdirectory(${MEGAMOL_CONSOLE_DIR})
 
+# Remoteconsole
+add_subdirectory(remoteconsole)
+
 # MegaMol.exe, new frontend, Main3000
 add_subdirectory(${MEGAMOL_DIR}/frontend/main)
 

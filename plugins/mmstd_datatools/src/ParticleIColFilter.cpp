@@ -136,6 +136,19 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
     float maxVal = maxValSlot.Param<core::param::FloatParam>()->Value();
     if (maxVal < minVal) std::swap(minVal, maxVal);
 
+    uint8_t const* dp = reinterpret_cast<uint8_t const*>(s.GetDirData());
+    int d_size = 0;
+    int d_step = s.GetDirDataStride();
+    switch (s.GetDirDataType()) {
+    case SimpleSphericalParticles::DIRDATA_FLOAT_XYZ:
+        d_size = 12;
+        break;
+    default:
+        break;
+    }
+    if (d_step < d_size)
+        d_step = d_size;
+
     //const float minStaifDist = 0.0001f;
     //float staifDist = staifHackDistSlot.Param<core::param::FloatParam>()->Value();
     //if (staifDist > minStaifDist) {
@@ -148,7 +161,7 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
     uint64_t r_cnt = 0;
     for (uint64_t i = 0; i < cnt; ++i) {
         const float *ci = reinterpret_cast<const float*>(cp + c_step * i);
-        const float *vi = reinterpret_cast<const float*>(vp + v_step * i);
+        //const float *vi = reinterpret_cast<const float*>(vp + v_step * i);
         if ((minVal <= *ci) && (*ci <= maxVal)) { // || !bbox.Contains(vislib::math::Point<float, 3>(vi))) {
             r_cnt++;
         }
@@ -160,28 +173,37 @@ void datatools::ParticleIColFilter::setData(core::moldyn::MultiParticleDataCall:
         p.SetGlobalColour(s.GetGlobalColour()[0], s.GetGlobalColour()[1], s.GetGlobalColour()[2], s.GetGlobalColour()[3]);
         p.SetVertexData(SimpleSphericalParticles::VERTDATA_NONE, nullptr);
         p.SetColourData(SimpleSphericalParticles::COLDATA_NONE, nullptr);
+        p.SetDirData(SimpleSphericalParticles::DIRDATA_NONE, nullptr);
         p.SetColourMapIndexValues(s.GetMinColourIndexValue(), s.GetMaxColourIndexValue());
         return;
     }
 
     // now copying particles
     mapIndex.reserve(mapIndex.size() + static_cast<size_t>(r_cnt));
-    d.AssertSize(static_cast<size_t>(r_cnt * (v_size + c_size)));
+    d.AssertSize(static_cast<size_t>(r_cnt * (v_size + c_size + d_size)));
     const size_t c_off = static_cast<size_t>(r_cnt * v_size);
+    const size_t d_off = static_cast<size_t>(c_off + r_cnt * c_size);
     p.SetCount(r_cnt);
     p.SetGlobalRadius(s.GetGlobalRadius());
     p.SetGlobalColour(s.GetGlobalColour()[0], s.GetGlobalColour()[1], s.GetGlobalColour()[2], s.GetGlobalColour()[3]);
     p.SetVertexData(s.GetVertexDataType(), d);
     p.SetColourData(SimpleSphericalParticles::COLDATA_FLOAT_I, d.At(c_off));
+    if (d_size != 0)
+        p.SetDirData(SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, d.At(d_off));
+    else
+        p.SetDirData(SimpleSphericalParticles::DIRDATA_NONE, nullptr);
     p.SetColourMapIndexValues(s.GetMinColourIndexValue(), s.GetMaxColourIndexValue());
 
     r_cnt = 0;
     for (size_t i = 0; i < cnt; ++i) {
         const float *ci = reinterpret_cast<const float*>(cp + c_step * i);
         const float *vi = reinterpret_cast<const float*>(vp + v_step * i);
+        const float* di = reinterpret_cast<const float*>(dp + d_step * i);
         if ((minVal <= *ci) && (*ci <= maxVal)) { // || !bbox.Contains(vislib::math::Point<float, 3>(vi))) {
             ::memcpy(d.At(static_cast<size_t>(r_cnt * v_size)), vi, static_cast<size_t>(v_size));
             ::memcpy(d.At(static_cast<size_t>(c_off + r_cnt * c_size)), ci, static_cast<size_t>(c_size));
+            if (d_size != 0)
+                memcpy(d.At(static_cast<size_t>(d_off + r_cnt * d_size)), di, static_cast<size_t>(d_size));
             r_cnt++;
             mapIndex.push_back(static_cast<ParticleFilterMapDataCall::index_t>(mapOffset + i));
         }
