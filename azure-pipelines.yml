@@ -66,8 +66,7 @@ jobs:
     - megamol_build_enabled
 
   steps:
-  - bash: |
-    echo "##vso[task.setvariable variable=numberOfCpuCores]$(nproc)"
+  - bash: echo "##vso[task.setvariable variable=numberOfCpuCores]$(nproc)"
     displayName: 'Bash get number of CPU cores'
   - task: CMake@1
     displayName: 'CMake Configure'
