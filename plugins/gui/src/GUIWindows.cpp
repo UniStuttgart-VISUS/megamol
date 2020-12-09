@@ -87,6 +87,14 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 
 bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time) {
 
+    // Disable GUI drawing if GUIView module is chained
+    if (!this->state.gui_pre_disabled && ImGui::GetCurrentContext()->WithinFrameScope) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Chaining GUIVIew modules is not supported. GUI is disabled. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
+        this->state.gui_pre_disabled = true;
+    }
+
     // Required to prevent change in gui drawing between pre and post draw
     this->state.gui_post_disabled = this->state.gui_pre_disabled;
 
@@ -98,15 +106,13 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // Check for initialized imgui api
     if (this->initialized_api == GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line "
-            "%d]\n",
-            __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No ImGui API initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Check for existing imgui context
     if (this->context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -293,24 +299,18 @@ bool GUIWindows::PostDraw(void) {
     // Check for initialized imgui api
     if (this->initialized_api == GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line "
-            "%d]\n",
-            __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No ImGui API initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Check for existing imgui context
     if (this->context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    // Check for expected imgui context
-    if (ImGui::GetCurrentContext() != this->context) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[GUI] Unknown ImGui context ... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
+    // Set ImGui context
+    ImGui::SetCurrentContext(this->context);
     ImGuiIO& io = ImGui::GetIO();
 
     ////////// DRAW ///////////////////////////////////////////////////////////
@@ -963,6 +963,7 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
     ImFont* default_font = nullptr;
 
     if (other_context_exists) {
+
         ImGuiIO& current_io = ImGui::GetIO();
         font_atlas = current_io.Fonts;
         default_font = current_io.FontDefault;
@@ -1231,6 +1232,8 @@ bool GUIWindows::destroyContext(void) {
         if (this->context != nullptr) {
             // Shutdown API only if only one context is left
             if (megamol::gui::imgui_context_count < 2) {
+                ImGui::SetCurrentContext(this->context);
+
                 switch (this->initialized_api) {
                 case (GUIImGuiAPI::OPEN_GL):
                     ImGui_ImplOpenGL3_Shutdown();
@@ -1238,8 +1241,9 @@ bool GUIWindows::destroyContext(void) {
                 default:
                     break;
                 }
+                // Last context should delete font atlas
+                ImGui::GetCurrentContext()->FontAtlasOwnedByContext = true;
             }
-            ImGui::GetCurrentContext()->FontAtlasOwnedByContext = true;
             ImGui::DestroyContext(this->context);
             megamol::gui::imgui_context_count--;
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Destroyed ImGui context.");
