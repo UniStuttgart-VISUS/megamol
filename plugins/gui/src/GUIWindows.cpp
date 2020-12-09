@@ -63,6 +63,10 @@ GUIWindows::GUIWindows(void)
     this->init_state();
 
     this->tf_editor_ptr = std::make_shared<TransferFunctionEditor>();
+    if (this->tf_editor_ptr == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unable to create transfer function editor. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
 }
 
 
@@ -87,6 +91,7 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
 
 bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time) {
 
+    /// [DEPRECATED USAGE] ///
     // Disable GUI drawing if GUIView module is chained
     if (!this->state.gui_pre_disabled && ImGui::GetCurrentContext()->WithinFrameScope) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -941,39 +946,28 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 
 bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
 
-    // Check for successfully created tf editor
-    if (this->tf_editor_ptr == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Pointer to transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
-        return false;
-    }
-
     if (this->initialized_api != GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[GUI] ImGui context has alreday been created. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return true;
     }
 
-    // Create ImGui context ---------------------------------------------------
-
     // Check for existing context and share FontAtlas with new context (required by ImGui).
     bool other_context_exists = (ImGui::GetCurrentContext() != nullptr);
     ImFontAtlas* font_atlas = nullptr;
     ImFont* default_font = nullptr;
 
+    /// [DEPRECATED USAGE] ///
     if (other_context_exists) {
-
         ImGuiIO& current_io = ImGui::GetIO();
         font_atlas = current_io.Fonts;
         default_font = current_io.FontDefault;
-
         ImGui::GetCurrentContext()->FontAtlasOwnedByContext = false;
-
         // Init API only once (is it same as the already initialized one?)
         this->initialized_api = imgui_api;
     }
 
+    // Create ImGui context ---------------------------------------------------
     IMGUI_CHECKVERSION();
     this->context = ImGui::CreateContext(font_atlas);
     if (this->context == nullptr) {
@@ -1230,7 +1224,9 @@ bool GUIWindows::destroyContext(void) {
 
     if (this->initialized_api != GUIImGuiAPI::NONE) {
         if (this->context != nullptr) {
-            // Shutdown API only if only one context is left
+
+            /// [DEPRECATED USAGE] ///
+            // Shutdown API only if one context is left
             if (megamol::gui::imgui_context_count < 2) {
                 ImGui::SetCurrentContext(this->context);
 
