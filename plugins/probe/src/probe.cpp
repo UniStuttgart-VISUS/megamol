@@ -28,7 +28,7 @@
 #endif
 #include "MeshSelector.h"
 #include "TableToProbes.h"
-#include "ComputeDTWDistance.h"
+#include "ComputeDistance.h"
 #include "ProbeClustering.h"
 
 
@@ -70,7 +70,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ProbeToTable>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::MeshSelector>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::TableToProbes>();
-            this->module_descriptions.RegisterAutoDescription<megamol::probe::ComputeDTWDistance>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::ComputeDistance>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ProbeClustering>();
 #ifdef PROBE_HAS_OSPRAY
             this->module_descriptions.RegisterAutoDescription<megamol::probe::OSPRayGlyphGeometry>();

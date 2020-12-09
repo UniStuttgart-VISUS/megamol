@@ -10,7 +10,7 @@
 #include "mmstd_datatools/table/TableDataCall.h"
 
 namespace megamol::probe {
-class ComputeDTWDistance : public core::Module {
+class ComputeDistance : public core::Module {
 public:
     /**
      * Answer the name of this module.
@@ -18,7 +18,7 @@ public:
      * @return The name of this module.
      */
     static const char* ClassName() {
-        return "ComputeDTWDistance";
+        return "ComputeDistance";
     }
 
     /**
@@ -39,9 +39,9 @@ public:
         return true;
     }
 
-    ComputeDTWDistance();
+    ComputeDistance();
 
-    virtual ~ComputeDTWDistance();
+    virtual ~ComputeDistance();
 
 protected:
     bool create() override;

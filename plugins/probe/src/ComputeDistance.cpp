@@ -1,17 +1,19 @@
 #include "stdafx.h"
-#include "ComputeDTWDistance.h"
+#include "ComputeDistance.h"
 
 #include "DTW.hpp"
 
 #include "glm/glm.hpp"
 
+#include "mmstd_datatools/misc/FrechetDistance.h"
 
-megamol::probe::ComputeDTWDistance::ComputeDTWDistance()
+
+megamol::probe::ComputeDistance::ComputeDistance()
         : _out_table_slot("outTable", ""), _in_probes_slot("inProbes", "") {
     _out_table_slot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
-        stdplugin::datatools::table::TableDataCall::FunctionName(0), &ComputeDTWDistance::get_data_cb);
+        stdplugin::datatools::table::TableDataCall::FunctionName(0), &ComputeDistance::get_data_cb);
     _out_table_slot.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
-        stdplugin::datatools::table::TableDataCall::FunctionName(1), &ComputeDTWDistance::get_extent_cb);
+        stdplugin::datatools::table::TableDataCall::FunctionName(1), &ComputeDistance::get_extent_cb);
     MakeSlotAvailable(&_out_table_slot);
 
     _in_probes_slot.SetCompatibleCall<CallProbesDescription>();
@@ -19,20 +21,20 @@ megamol::probe::ComputeDTWDistance::ComputeDTWDistance()
 }
 
 
-megamol::probe::ComputeDTWDistance::~ComputeDTWDistance() {
+megamol::probe::ComputeDistance::~ComputeDistance() {
     this->Release();
 }
 
 
-bool megamol::probe::ComputeDTWDistance::create() {
+bool megamol::probe::ComputeDistance::create() {
     return true;
 }
 
 
-void megamol::probe::ComputeDTWDistance::release() {}
+void megamol::probe::ComputeDistance::release() {}
 
 
-bool megamol::probe::ComputeDTWDistance::get_data_cb(core::Call& c) {
+bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
     auto out_table = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
     if (out_table == nullptr)
         return false;
@@ -64,11 +66,11 @@ bool megamol::probe::ComputeDTWDistance::get_data_cb(core::Call& c) {
         bool vec_probe = false;
         {
             auto test_probe = probe_data->getGenericProbe(0);
-            vec_probe = std::holds_alternative<Vec4Probe>(test_probe);    
+            vec_probe = std::holds_alternative<Vec4Probe>(test_probe);
         }
 
         if (vec_probe) {
-            core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDTWDistance] Computing distances for vector probes");
+            core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Computing distances for vector probes");
 #pragma omp parallel for
             for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
                 std::vector<glm::vec4> a_samples;
@@ -97,7 +99,7 @@ bool megamol::probe::ComputeDTWDistance::get_data_cb(core::Call& c) {
                                 std::isnan(rhs.x) || std::isnan(rhs.y) || std::isnan(rhs.z) || std::isnan(rhs.w)) {
                                 return 0.0f;
                             }
-                            //return glm::dot(lhs, rhs);
+                            // return glm::dot(lhs, rhs);
                             auto const angle = std::acos(glm::dot(lhs, rhs));
                             auto const angle_dis = angle / 3.14f;
                             return 1.0f - angle_dis;
@@ -108,10 +110,10 @@ bool megamol::probe::ComputeDTWDistance::get_data_cb(core::Call& c) {
                 }
             }
         } else {
-            core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDTWDistance] Computing distances for scalar probes");
+            core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Computing distances for scalar probes");
 #pragma omp parallel for
             for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
-                std::vector<std::vector<double>> a_samples;
+                /*std::vector<std::vector<double>> a_samples;
                 {
                     auto const a_probe = probe_data->getProbe<FloatProbe>(a_pidx);
                     auto const& a_samples_tmp = a_probe.getSamplingResult()->samples;
@@ -124,9 +126,22 @@ bool megamol::probe::ComputeDTWDistance::get_data_cb(core::Call& c) {
                     auto const it = std::stable_partition(
                         a_samples.begin(), a_samples.end(), [](auto const& el) { return !std::isnan(el[1]); });
                     std::for_each(it, a_samples.end(), [](auto& el) { el[1] = 0.0; });
+                }*/
+                std::vector<double> a_samples;
+                {
+                    auto const a_probe = probe_data->getProbe<FloatProbe>(a_pidx);
+                    auto const& a_samples_tmp = a_probe.getSamplingResult()->samples;
+                    a_samples.resize(a_samples_tmp.size());
+                    std::transform(
+                        a_samples_tmp.cbegin(), a_samples_tmp.cend(), a_samples.begin(), [](auto const val) {
+                            return static_cast<double>(val);
+                        });
+                    auto const it = std::stable_partition(
+                        a_samples.begin(), a_samples.end(), [](auto const& el) { return !std::isnan(el); });
+                    std::for_each(it, a_samples.end(), [](auto& el) { el = 0.0; });
                 }
                 for (std::int64_t b_pidx = a_pidx; b_pidx < probe_count; ++b_pidx) {
-                    std::vector<std::vector<double>> b_samples;
+                    /*std::vector<std::vector<double>> b_samples;
                     {
                         auto const b_probe = probe_data->getProbe<FloatProbe>(b_pidx);
                         auto const b_samples_tmp = b_probe.getSamplingResult()->samples;
@@ -139,8 +154,22 @@ bool megamol::probe::ComputeDTWDistance::get_data_cb(core::Call& c) {
                         auto const it = std::stable_partition(
                             b_samples.begin(), b_samples.end(), [](auto const& el) { return !std::isnan(el[1]); });
                         std::for_each(it, b_samples.end(), [](auto& el) { el[1] = 0.0; });
+                    }*/
+                    std::vector<double> b_samples;
+                    {
+                        auto const b_probe = probe_data->getProbe<FloatProbe>(b_pidx);
+                        auto const b_samples_tmp = b_probe.getSamplingResult()->samples;
+                        b_samples.resize(b_samples_tmp.size());
+                        std::transform(b_samples_tmp.cbegin(), b_samples_tmp.cend(), b_samples.begin(),
+                            [](auto const val) {
+                                return static_cast<double>(val);
+                            });
+                        auto const it = std::stable_partition(
+                            b_samples.begin(), b_samples.end(), [](auto const& el) { return !std::isnan(el); });
+                        std::for_each(it, b_samples.end(), [](auto& el) { el = 0.0; });
                     }
-                    auto const dis = DTW::dtw_distance_only(a_samples, b_samples, 2);
+                    auto const dis = stdplugin::datatools::misc::frechet_distance<double>(a_samples, b_samples);
+                    //auto const dis = DTW::dtw_distance_only(a_samples, b_samples, 2);
                     _dis_mat[a_pidx + b_pidx * probe_count] = dis;
                     _dis_mat[b_pidx + a_pidx * probe_count] = dis;
                 }
@@ -148,7 +177,8 @@ bool megamol::probe::ComputeDTWDistance::get_data_cb(core::Call& c) {
         }
 
         for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
-            auto const minmax = std::minmax_element(&_dis_mat[a_pidx * probe_count], &_dis_mat[a_pidx * probe_count + probe_count]);
+            auto const minmax =
+                std::minmax_element(&_dis_mat[a_pidx * probe_count], &_dis_mat[a_pidx * probe_count + probe_count]);
             _col_infos[a_pidx].SetName("p" + std::to_string(a_pidx));
             _col_infos[a_pidx].SetType(stdplugin::datatools::table::TableDataCall::ColumnType::QUANTITATIVE);
             _col_infos[a_pidx].SetMinimumValue(*minmax.first);
@@ -168,7 +198,7 @@ bool megamol::probe::ComputeDTWDistance::get_data_cb(core::Call& c) {
 }
 
 
-bool megamol::probe::ComputeDTWDistance::get_extent_cb(core::Call& c) {
+bool megamol::probe::ComputeDistance::get_extent_cb(core::Call& c) {
     auto ctd = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
     if (ctd == nullptr)
         return false;
