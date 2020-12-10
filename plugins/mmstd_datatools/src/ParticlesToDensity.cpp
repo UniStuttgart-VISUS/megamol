@@ -218,15 +218,17 @@ bool datatools::ParticlesToDensity::getDataCallback(megamol::core::Call& c) {
 
     if (outVol != nullptr || outGrid != nullptr) {
         auto frameID = outVol != nullptr ? outVol->FrameID() : (outGrid != nullptr ? outGrid->FrameID() : 0);
-        inMpdc->SetFrameID(frameID, true);
-        if (!(*inMpdc)(1)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get extents.");
-            return false;
-        }
-        if (!(*inMpdc)(0)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get data.");
-            return false;
-        }
+        do {
+            inMpdc->SetFrameID(frameID, true);
+            if (!(*inMpdc)(1)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get extents.");
+                return false;
+            }
+            if (!(*inMpdc)(0)) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("ParticlesToDensity: Unable to get data.");
+                return false;
+            }
+        } while (inMpdc->FrameID() != frameID);
         if (this->time != inMpdc->FrameID() || this->in_datahash != inMpdc->DataHash() || this->anythingDirty()) {
             if (this->surfaceSlot.Param<core::param::BoolParam>()->Value()) modifyBBox(inMpdc);
             if (!this->createVolumeCPU(inMpdc)) return false;
