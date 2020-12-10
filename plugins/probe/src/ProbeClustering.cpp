@@ -16,7 +16,7 @@ megamol::probe::ProbeClustering::ProbeClustering()
         , _eps_slot("eps", "")
         , _minpts_slot("minpts", "")
         , _threshold_slot("threshold", "")
-        , _handwaving_slot("handwaving", "") {
+        , _handwaving_slot("handwaving", ""), _lhs_idx_slot("debug::lhs_idx", ""), _rhs_idx_slot("debug::rhs_idx", "") {
     _out_probes_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(0), &ProbeClustering::get_data_cb);
     _out_probes_slot.SetCallback(CallProbes::ClassName(), CallProbes::FunctionName(1), &ProbeClustering::get_extent_cb);
     MakeSlotAvailable(&_out_probes_slot);
@@ -38,6 +38,12 @@ megamol::probe::ProbeClustering::ProbeClustering()
 
     _handwaving_slot << new core::param::FloatParam(0.05f, 0.0f);
     MakeSlotAvailable(&_handwaving_slot);
+
+    _lhs_idx_slot << new core::param::IntParam(0, 0);
+    MakeSlotAvailable(&_lhs_idx_slot);
+
+    _rhs_idx_slot << new core::param::IntParam(0, 0);
+    MakeSlotAvailable(&_rhs_idx_slot);
 }
 
 
@@ -73,6 +79,21 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
         return false;
     if (!(*in_table)(0))
         return false;
+
+    auto const col_count = in_table->GetColumnsCount();
+    auto const row_count = in_table->GetRowsCount();
+    auto const sim_matrix = in_table->GetData();
+
+    if (is_debug_dirty()) {
+        auto const lhs_idx = _lhs_idx_slot.Param<core::param::IntParam>()->Value();
+        auto const rhs_idx = _rhs_idx_slot.Param<core::param::IntParam>()->Value();
+        if (lhs_idx < col_count && rhs_idx < row_count) {
+            auto const val = sim_matrix[lhs_idx + rhs_idx * col_count];
+            core::utility::log::Log::DefaultLog.WriteInfo(
+                "[ProbeClustering]: Similiarty val for %d:%d is %f", lhs_idx, rhs_idx, val);
+        }
+        reset_debug_dirty();
+    }
 
     auto const& meta_data = in_probes->getMetaData();
     auto& probes = in_probes->getData();
@@ -119,9 +140,7 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
             3, *_points, nanoflann::KDTreeSingleIndexAdaptorParams());
         _kd_tree->buildIndex();
 
-        auto const col_count = in_table->GetColumnsCount();
-        auto const row_count = in_table->GetRowsCount();
-        auto const sim_matrix = in_table->GetData();
+        
 
         /*auto const cluster_res =
             stdplugin::datatools::clustering::DBSCAN_with_similarity<float, 3>(_kd_tree, eps, minpts,
@@ -130,12 +149,12 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
                     auto const val = sim_matrix[a + b * col_count];
                     return val <= threshold;
                 });*/
-        auto const cluster_res = stdplugin::datatools::clustering::DBSCAN_with_similarity_and_score<float, 3>(
+        auto const cluster_res = stdplugin::datatools::clustering::GROWING_with_similarity_and_score<float, 3>(
             _kd_tree, eps, minpts,
             [sim_matrix, col_count, row_count, threshold](
                 stdplugin::datatools::clustering::index_t a, stdplugin::datatools::clustering::index_t b) -> bool {
                 auto const val = sim_matrix[a + b * col_count];
-                return val >= threshold;
+                return val <= threshold;
             },
             [sim_matrix, col_count, row_count, handwaving](
                 stdplugin::datatools::clustering::index_t pivot,

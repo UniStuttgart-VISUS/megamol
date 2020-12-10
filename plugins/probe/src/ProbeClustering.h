@@ -56,11 +56,20 @@ private:
         return _eps_slot.IsDirty() || _minpts_slot.IsDirty() || _threshold_slot.IsDirty() || _handwaving_slot.IsDirty();
     }
 
+    bool is_debug_dirty() {
+        return _lhs_idx_slot.IsDirty() || _rhs_idx_slot.IsDirty();
+    }
+
     void reset_dirty() {
         _eps_slot.ResetDirty();
         _minpts_slot.ResetDirty();
         _threshold_slot.ResetDirty();
         _handwaving_slot.ResetDirty();
+    }
+
+    void reset_debug_dirty() {
+        _lhs_idx_slot.ResetDirty();
+        _rhs_idx_slot.ResetDirty();
     }
 
     core::CalleeSlot _out_probes_slot;
@@ -76,6 +85,10 @@ private:
     core::param::ParamSlot _threshold_slot;
 
     core::param::ParamSlot _handwaving_slot;
+
+    core::param::ParamSlot _lhs_idx_slot;
+
+    core::param::ParamSlot _rhs_idx_slot;
 
     std::shared_ptr<stdplugin::datatools::genericPointcloud<float, 3>> _points;
 
