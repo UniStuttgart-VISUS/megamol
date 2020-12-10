@@ -6,6 +6,7 @@
 #include "glm/glm.hpp"
 
 #include "mmstd_datatools/misc/FrechetDistance.h"
+#include "mmstd_datatools/misc/KDE.h"
 
 
 megamol::probe::ComputeDistance::ComputeDistance()
@@ -111,6 +112,18 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
             }
         } else {
             core::utility::log::Log::DefaultLog.WriteInfo("[ComputeDistance] Computing distances for scalar probes");
+            std::size_t base_skip = 0;
+            for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
+                auto const a_probe = probe_data->getProbe<FloatProbe>(a_pidx);
+                auto const& a_samples_tmp = a_probe.getSamplingResult()->samples;
+                auto first_not_nan = std::find_if_not(a_samples_tmp.begin(), a_samples_tmp.end(), std::isnan<float>);
+                if (first_not_nan != a_samples_tmp.end()) {
+                    auto first_not_nan_idx = std::distance(a_samples_tmp.begin(), first_not_nan);
+                    if (first_not_nan_idx > base_skip) {
+                        base_skip = first_not_nan_idx;
+                    }
+                }
+            }
 #pragma omp parallel for
             for (std::int64_t a_pidx = 0; a_pidx < probe_count; ++a_pidx) {
                 /*std::vector<std::vector<double>> a_samples;
@@ -136,9 +149,27 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                         a_samples_tmp.cbegin(), a_samples_tmp.cend(), a_samples.begin(), [](auto const val) {
                             return static_cast<double>(val);
                         });
-                    auto const it = std::stable_partition(
+                    /*auto const it = std::stable_partition(
                         a_samples.begin(), a_samples.end(), [](auto const& el) { return !std::isnan(el); });
-                    std::for_each(it, a_samples.end(), [](auto& el) { el = 0.0; });
+                    std::for_each(it, a_samples.end(), [](auto& el) { el = 0.0; });*/
+                    /*auto first_val = std::find_if_not(a_samples.begin(), a_samples.end(), std::isnan<double>);
+                    auto last_val = std::find_if_not(a_samples.rbegin(), a_samples.rend(), std::isnan<double>);
+                    std::for_each(a_samples.begin(), first_val, [&first_val](auto& el){
+                        el = *first_val;});
+                    std::for_each(a_samples.rbegin(), last_val, [&last_val](auto& el) { el = *last_val; });
+                    auto a_tmp = a_samples;
+                    for (size_t idx = 0; idx < a_samples.size(); ++idx) {
+                        auto a = idx - 1;
+                        if (idx == 0)
+                            a = 0;
+                        auto b = idx;
+                        auto c = idx + 1;
+                        if (idx == a_samples.size() - 1)
+                            c = a_samples.size() - 1;
+
+                        a_samples[idx] = 0.5 * (0.5 * a_tmp[a] + a_tmp[b] + 0.5 * a_tmp[c]);
+                    }*/
+                    a_samples.erase(a_samples.begin(), a_samples.begin() + base_skip);
                 }
                 for (std::int64_t b_pidx = a_pidx; b_pidx < probe_count; ++b_pidx) {
                     /*std::vector<std::vector<double>> b_samples;
@@ -164,9 +195,26 @@ bool megamol::probe::ComputeDistance::get_data_cb(core::Call& c) {
                             [](auto const val) {
                                 return static_cast<double>(val);
                             });
-                        auto const it = std::stable_partition(
+                        /*auto const it = std::stable_partition(
                             b_samples.begin(), b_samples.end(), [](auto const& el) { return !std::isnan(el); });
-                        std::for_each(it, b_samples.end(), [](auto& el) { el = 0.0; });
+                        std::for_each(it, b_samples.end(), [](auto& el) { el = 0.0; });*/
+                        /*auto first_val = std::find_if_not(b_samples.begin(), b_samples.end(), std::isnan<double>);
+                        auto last_val = std::find_if_not(b_samples.rbegin(), b_samples.rend(), std::isnan<double>);
+                        std::for_each(b_samples.begin(), first_val, [&first_val](auto& el) { el = *first_val; });
+                        std::for_each(b_samples.rbegin(), last_val, [&last_val](auto& el) { el = *last_val; });
+                        auto b_tmp = b_samples;
+                        for (size_t idx = 0; idx < b_samples.size(); ++idx) {
+                            auto a = idx - 1;
+                            if (idx == 0)
+                                a = 0;
+                            auto b = idx;
+                            auto c = idx + 1;
+                            if (idx == b_samples.size() - 1)
+                                c = b_samples.size() - 1;
+
+                            b_samples[idx] = 0.5 * (0.5 * b_tmp[a] + b_tmp[b] + 0.5 * b_tmp[c]);
+                        }*/
+                        b_samples.erase(b_samples.begin(), b_samples.begin() + base_skip);
                     }
                     auto const dis = stdplugin::datatools::misc::frechet_distance<double>(a_samples, b_samples);
                     //auto const dis = DTW::dtw_distance_only(a_samples, b_samples, 2);
