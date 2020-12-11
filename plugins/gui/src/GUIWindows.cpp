@@ -412,7 +412,8 @@ bool GUIWindows::PostDraw(void) {
             wc.win_soft_reset |= this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS].is_pressed;
 
             // Begin Window
-            if (!ImGui::Begin(wc.win_name.c_str(), &wc.win_show, wc.win_flags)) {
+            auto window_title = wc.win_name + "     " + wc.win_hotkey.ToString();
+            if (!ImGui::Begin(window_title.c_str(), &wc.win_show, wc.win_flags)) {
                 wc.win_collapsed = ImGui::IsWindowCollapsed();
                 ImGui::End(); // early ending
                 return;
@@ -1029,8 +1030,6 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
     buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
     buf_win.win_callback = WindowCollection::DrawCallbacks::MAIN_PARAMETERS;
     buf_win.win_reset_size = buf_win.win_size;
-
-    buf_win.win_name.append(std::string("     " + buf_win.win_hotkey.ToString()));
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // FPS/MS Window ----------------------------------------------------------
@@ -1039,8 +1038,6 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
     buf_win.win_callback = WindowCollection::DrawCallbacks::PERFORMANCE;
-
-    buf_win.win_name.append(std::string("     " + buf_win.win_hotkey.ToString()));
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // FONT Window ------------------------------------------------------------
@@ -1049,8 +1046,6 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     buf_win.win_callback = WindowCollection::DrawCallbacks::FONT;
-
-    buf_win.win_name.append(std::string("     " + buf_win.win_hotkey.ToString()));
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // TRANSFER FUNCTION Window -----------------------------------------------
@@ -1059,8 +1054,6 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     buf_win.win_callback = WindowCollection::DrawCallbacks::TRANSFER_FUNCTION;
-
-    buf_win.win_name.append(std::string("     " + buf_win.win_hotkey.ToString()));
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // CONFIGURATOR Window -----------------------------------------------
@@ -1072,8 +1065,6 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
     buf_win.win_callback = WindowCollection::DrawCallbacks::CONFIGURATOR;
-
-    buf_win.win_name.append(std::string("     " + buf_win.win_hotkey.ToString()));
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // LOG CONSOLE Window -----------------------------------------------
@@ -1084,8 +1075,6 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F6);
     buf_win.win_callback = WindowCollection::DrawCallbacks::LOGCONSOLE;
-
-    buf_win.win_name.append(std::string("     " + buf_win.win_hotkey.ToString()));
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // Style settings ---------------------------------------------------------
