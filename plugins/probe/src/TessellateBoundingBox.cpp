@@ -10,6 +10,7 @@
 #include "adios_plugin/CallADIOSData.h"
 #include "mesh/Utility.h"
 #include "mmcore/param/IntParam.h"
+#include "mmcore/param/FloatParam.h"
 
 megamol::probe::TessellateBoundingBox::TessellateBoundingBox(void)
         : _mesh_access_collection({std::make_shared<mesh::MeshDataAccessCollection>(), {}})
@@ -17,7 +18,8 @@ megamol::probe::TessellateBoundingBox::TessellateBoundingBox(void)
         , _mesh_lhs_slot("mesh", "")
         , _x_subdiv_slot("x_subdiv_param", "")
         , _y_subdiv_slot("y_subdiv_param", "")
-        , _z_subdiv_slot("z_subdiv_param", "") {
+        , _z_subdiv_slot("z_subdiv_param", "")
+        , _padding_slot("padding_param","") {
     this->_mesh_lhs_slot.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &TessellateBoundingBox::getData);
     this->_mesh_lhs_slot.SetCallback(
@@ -33,6 +35,9 @@ megamol::probe::TessellateBoundingBox::TessellateBoundingBox(void)
     this->MakeSlotAvailable(&this->_y_subdiv_slot);
     this->_z_subdiv_slot << new core::param::IntParam(16);
     this->MakeSlotAvailable(&this->_z_subdiv_slot);
+
+    this->_padding_slot << new core::param::FloatParam(0.01f);
+    this->MakeSlotAvailable(&this->_padding_slot);
 }
 
 megamol::probe::TessellateBoundingBox::~TessellateBoundingBox(void) {
@@ -46,7 +51,7 @@ bool megamol::probe::TessellateBoundingBox::create() {
 void megamol::probe::TessellateBoundingBox::release() {}
 
 bool megamol::probe::TessellateBoundingBox::InterfaceIsDirty() {
-    return _x_subdiv_slot.IsDirty() || _y_subdiv_slot.IsDirty() || _z_subdiv_slot.IsDirty();
+    return _x_subdiv_slot.IsDirty() || _y_subdiv_slot.IsDirty() || _z_subdiv_slot.IsDirty() || _padding_slot.IsDirty();
 }
 
 bool megamol::probe::TessellateBoundingBox::getMetaData(core::Call& call) {
@@ -91,6 +96,7 @@ bool megamol::probe::TessellateBoundingBox::getData(core::Call& call) {
             _x_subdiv_slot.ResetDirty();
             _y_subdiv_slot.ResetDirty();
             _z_subdiv_slot.ResetDirty();
+            _padding_slot.ResetDirty();
 
             auto meta_data = cm->getMetaData();
             //bboxc->setFrameIDtoLoad(meta_data.m_frame_ID);
@@ -123,6 +129,7 @@ bool megamol::probe::TessellateBoundingBox::getData(core::Call& call) {
                 _vertices[i].clear();
                 _normals[i].clear();
                 _faces[i].clear();
+                _probe_index[i].clear();
             }
             _mesh_access_collection.first->clear();
             _mesh_access_collection.second.clear();
@@ -169,6 +176,15 @@ bool megamol::probe::TessellateBoundingBox::getData(core::Call& call) {
                     bbox[5] = std::max(data_z[i], bbox[5]);
                 }
             }
+
+            // apply additional padding to bounding box
+            bbox[0] -= _padding_slot.Param<megamol::core::param::FloatParam>()->Value();
+            bbox[1] -= _padding_slot.Param<megamol::core::param::FloatParam>()->Value();
+            bbox[2] -= _padding_slot.Param<megamol::core::param::FloatParam>()->Value();
+
+            bbox[3] += _padding_slot.Param<megamol::core::param::FloatParam>()->Value();
+            bbox[4] += _padding_slot.Param<megamol::core::param::FloatParam>()->Value();
+            bbox[5] += _padding_slot.Param<megamol::core::param::FloatParam>()->Value();
 
             // get bounding box corners
             glm::vec3 lbb = glm::vec3(bbox[0], bbox[1], bbox[2]);
@@ -228,7 +244,7 @@ bool megamol::probe::TessellateBoundingBox::getData(core::Call& call) {
                 mesh::MeshDataAccessCollection::IndexData mesh_indices;
                 mesh::MeshDataAccessCollection::PrimitiveType mesh_type;
 
-                mesh_attribs.resize(2);
+                mesh_attribs.resize(3);
                 mesh_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
                 mesh_attribs[0].byte_size = _vertices[i].size() * sizeof(std::array<float, 3>);
                 mesh_attribs[0].component_cnt = 3;
@@ -244,6 +260,15 @@ bool megamol::probe::TessellateBoundingBox::getData(core::Call& call) {
                 mesh_attribs[1].offset = 0;
                 mesh_attribs[1].data = reinterpret_cast<uint8_t*>(_normals[i].data());
                 mesh_attribs[1].semantic = mesh::MeshDataAccessCollection::NORMAL;
+
+                _probe_index[i].resize(_vertices[i].size(), std::numeric_limits<uint32_t>::max()); // allocate memory for probe ID now, but the acutal data will be written later (by probe placement)
+                mesh_attribs[2].component_type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
+                mesh_attribs[2].byte_size = _probe_index[i].size() * sizeof(uint32_t);
+                mesh_attribs[2].component_cnt = 1;
+                mesh_attribs[2].stride = sizeof(uint32_t);
+                mesh_attribs[2].offset = 0;
+                mesh_attribs[2].data = reinterpret_cast<uint8_t*>(_probe_index[i].data());
+                mesh_attribs[2].semantic = mesh::MeshDataAccessCollection::AttributeSemanticType::ID;
 
                 mesh_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
                 mesh_indices.byte_size = _faces[i].size() * sizeof(std::array<uint32_t, 4>);

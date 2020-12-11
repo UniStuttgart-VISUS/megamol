@@ -61,6 +61,8 @@ namespace probe {
         core::param::ParamSlot _y_subdiv_slot;
         core::param::ParamSlot _z_subdiv_slot;
 
+        core::param::ParamSlot _padding_slot;
+
     private:
         bool InterfaceIsDirty();
 
@@ -81,6 +83,7 @@ namespace probe {
         // store surfaces of the six tessellated sides of the bounding box
         std::array<std::vector<std::array<float, 3>>,6>    _vertices;
         std::array<std::vector<std::array<float, 3>>,6>    _normals;
+        std::array<std::vector<uint32_t>, 6>               _probe_index;
         std::array<std::vector<std::array<uint32_t, 4>>,6> _faces;
 
         // store bounding box

@@ -11,7 +11,7 @@ std::tuple<VertexPositions, VertexNormals, QuadIndices> tessellateFace(
     VertexNormals vertex_normals;
     QuadIndices quad_indices;
 
-    auto normal = glm::cross(glm::normalize(v10 - v00), glm::normalize(v01 - v00));
+    auto normal = -1.0f * glm::cross(glm::normalize(v10 - v00), glm::normalize(v01 - v00));
 
     // compute vertex positions using bilinear interpolation
     for (int v = 0; v <= v_subdivs + 1; ++v) {
