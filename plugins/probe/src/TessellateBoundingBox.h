@@ -11,11 +11,8 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 
-// plugin internal includes
-#include "Utility.h"
-
 namespace megamol {
-namespace mesh {
+namespace probe {
 
     class TessellateBoundingBox : public core::Module {
     public:
@@ -60,8 +57,9 @@ namespace mesh {
         core::CallerSlot _bounding_box_rhs_slot;
         core::CalleeSlot _mesh_lhs_slot;
 
-        core::param::ParamSlot _subdiv_slot;
-        core::param::ParamSlot _face_type_slot;
+        core::param::ParamSlot _x_subdiv_slot;
+        core::param::ParamSlot _y_subdiv_slot;
+        core::param::ParamSlot _z_subdiv_slot;
 
     private:
         bool InterfaceIsDirty();
@@ -69,22 +67,24 @@ namespace mesh {
         bool getMetaData(core::Call& call);
         bool getData(core::Call& call);
 
-        // CallMesh stuff
-        std::vector<mesh::MeshDataAccessCollection::VertexAttribute> _mesh_attribs;
-        mesh::MeshDataAccessCollection::IndexData _mesh_indices;
-        mesh::MeshDataAccessCollection::PrimitiveType _mesh_type;
         uint32_t _version = 0;
-
         size_t _old_datahash;
         bool _recalc = false;
 
-        std::array<uint32_t, 3> _subdivs;
+        /**
+         * Mesh access collection that is used with a list of identifier strings of meshs accesses that this module added to
+         * the mesh collection. Needed to delete/update submeshes if the collection is shared across a chain of data
+         * sources modules.
+         */
+        std::pair<std::shared_ptr<mesh::MeshDataAccessCollection>, std::vector<std::string>> _mesh_access_collection;
 
-        // store surface
-        std::vector<std::array<float, 3>> _vertices;
-        std::vector<std::array<float, 3>> _normals;
-        std::vector<std::array<uint32_t, 4>> _faces;
+        // store surfaces of the six tessellated sides of the bounding box
+        std::array<std::vector<std::array<float, 3>>,6>    _vertices;
+        std::array<std::vector<std::array<float, 3>>,6>    _normals;
+        std::array<std::vector<std::array<uint32_t, 4>>,6> _faces;
 
+        // store bounding box
+        megamol::core::BoundingBoxes_2 _bboxs;
     };
 
 } // namespace probe

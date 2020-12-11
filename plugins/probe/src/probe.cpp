@@ -30,6 +30,7 @@
 #include "TableToProbes.h"
 #include "ComputeDistance.h"
 #include "ProbeClustering.h"
+#include "TessellateBoundingBox.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -72,6 +73,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::probe::TableToProbes>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ComputeDistance>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ProbeClustering>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::TessellateBoundingBox>();
 #ifdef PROBE_HAS_OSPRAY
             this->module_descriptions.RegisterAutoDescription<megamol::probe::OSPRayGlyphGeometry>();
 #endif

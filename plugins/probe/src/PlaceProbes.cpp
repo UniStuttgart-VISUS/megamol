@@ -558,14 +558,23 @@ namespace probe {
 
         if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 4) {
 
-            mesh::MeshDataAccessCollection::VertexAttribute normals;
-            for (auto& attribute : _mesh->accessMeshes().begin()->second.attributes) {
-                if (attribute.semantic == mesh::MeshDataAccessCollection::NORMAL) {
-                    normals = attribute;
-                }
-            }
+            for (auto& mesh : _mesh->accessMeshes()) {
 
-            this->vertexNormalSampling(vertices, normals);
+                for (auto& attribute : mesh.second.attributes) {
+                    if (attribute.semantic == mesh::MeshDataAccessCollection::POSITION) {
+                        vertices = attribute;
+                    }
+                }
+
+                mesh::MeshDataAccessCollection::VertexAttribute normals;
+                for (auto& attribute : mesh.second.attributes) {
+                    if (attribute.semantic == mesh::MeshDataAccessCollection::NORMAL) {
+                        normals = attribute;
+                    }
+                }
+
+                this->vertexNormalSampling(vertices, normals);
+            }
         } else {
             mesh::CallMesh* ccl = this->_centerline_slot.CallAs<mesh::CallMesh>();
             if (ccl == nullptr) {

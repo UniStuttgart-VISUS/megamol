@@ -6,7 +6,7 @@
 #include "glm/glm.hpp"
 
 #include "mmstd_datatools/misc/FrechetDistance.h"
-#include "mmstd_datatools/misc/KDE.h"
+//#include "mmstd_datatools/misc/KDE.h"
 
 
 megamol::probe::ComputeDistance::ComputeDistance()
