@@ -93,18 +93,18 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     /// [DEPRECATED USAGE] ///
     // Disable GUI drawing if GUIView module is chained
-    if (!this->state.gui_pre_disabled && ImGui::GetCurrentContext()->WithinFrameScope) {
+    if (this->state.gui_enabled && ImGui::GetCurrentContext()->WithinFrameScope) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Chaining GUIVIew modules is not supported. GUI is disabled. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
-        this->state.gui_pre_disabled = true;
+        this->state.gui_enabled = false;
     }
 
     // Required to prevent change in gui drawing between pre and post draw
-    this->state.gui_post_disabled = this->state.gui_pre_disabled;
+    this->state.enable_gui_post = this->state.gui_enabled;
 
     // Early exit when pre step should be omitted
-    if (this->state.gui_pre_disabled) {
+    if (!this->state.gui_enabled) {
         return true;
     }
 
@@ -297,7 +297,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 bool GUIWindows::PostDraw(void) {
 
     // Early exit when post step should be omitted
-    if (this->state.gui_post_disabled) {
+    if (!this->state.enable_gui_post) {
         return true;
     }
 
@@ -723,7 +723,7 @@ bool megamol::gui::GUIWindows::ConsumeTriggeredScreenshot(void) {
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
 
     // Disable synchronizing graphs when pre step is omitted
-    if (this->state.gui_pre_disabled) {
+    if (!this->state.gui_enabled) {
         return true;
     }
 
@@ -2261,8 +2261,8 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
 
 void megamol::gui::GUIWindows::init_state(void) {
 
-    this->state.gui_pre_disabled = false;
-    this->state.gui_post_disabled = false;
+    this->state.gui_enabled = true;
+    this->state.enable_gui_post = true;
     this->state.style = GUIWindows::Styles::DarkColors;
     this->state.style_changed = true;
     this->state.autosave_gui_state = false;

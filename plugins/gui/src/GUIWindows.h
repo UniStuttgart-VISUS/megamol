@@ -144,7 +144,7 @@ namespace gui {
          * Enable or disable GUI drawing
          */
         void SetEnableDisable(bool enable) {
-            this->state.gui_pre_disabled = !enable;
+            this->state.gui_enabled = enable;
         }
 
         /**
@@ -175,8 +175,9 @@ namespace gui {
 
         /** The global state (for settings to be applied before ImGui::Begin). */
         struct StateBuffer {
-            bool gui_pre_disabled;   // Flag indicating whether GUI is completely disabled in 'pre' step
-            bool gui_post_disabled;  // Flag indicating whether GUI is completely disabled in 'post' step
+            bool gui_enabled;        // Flag indicating whether GUI is completely disabled
+            bool enable_gui_post;    // Required to prevent changes to 'gui_enabled' being applied between pre and post
+                                     // drawing
             Styles style;            // Predefined GUI style
             bool style_changed;      // Flag indicating changed style
             bool autosave_gui_state; // Automatically save state after gui has been changed
