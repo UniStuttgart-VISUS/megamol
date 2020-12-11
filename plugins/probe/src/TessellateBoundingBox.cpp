@@ -56,6 +56,16 @@ bool megamol::probe::TessellateBoundingBox::getMetaData(core::Call& call) {
         return false;
     }
     auto meta_data = cm->getMetaData();
+
+    adios::CallADIOSData* bboxc = this->_bounding_box_rhs_slot.CallAs<adios::CallADIOSData>();
+    if (bboxc != nullptr) {
+        bboxc->setFrameIDtoLoad(meta_data.m_frame_ID);
+        if (!(*bboxc)(1)) {
+            return false;
+        }
+        meta_data.m_frame_cnt = bboxc->getFrameCount();
+    }
+
     meta_data.m_bboxs = _bboxs;
     cm->setMetaData(meta_data);
 
@@ -83,10 +93,10 @@ bool megamol::probe::TessellateBoundingBox::getData(core::Call& call) {
             _z_subdiv_slot.ResetDirty();
 
             auto meta_data = cm->getMetaData();
-            bboxc->setFrameIDtoLoad(meta_data.m_frame_ID);
-            if (!(*bboxc)(1)) {
-                return false;
-            }
+            //bboxc->setFrameIDtoLoad(meta_data.m_frame_ID);
+            //if (!(*bboxc)(1)) {
+            //    return false;
+            //}
 
             auto x_var_str = "x";
             auto y_var_str = "y";
