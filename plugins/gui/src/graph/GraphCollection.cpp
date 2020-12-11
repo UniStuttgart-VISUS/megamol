@@ -749,6 +749,8 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
         return false;
     GUIUtils::Utf8Decode(projectstr);
 
+    std::cout << projectstr;
+
     const std::string luacmd_view("mmCreateView");
     const std::string luacmd_module("mmCreateModule");
     const std::string luacmd_param("mmSetParamValue");
@@ -1099,7 +1101,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 if (param_line.find(end_delimieter) == std::string::npos) {
                     found_end_delimiter = false;
                     for (unsigned int j = (i + 1); j < lines_count; j++) {
-                        param_line += lines[j];
+                        param_line += (lines[j] + '\n');
                         if (lines[j].find(end_delimieter) != std::string::npos) {
                             found_end_delimiter = true;
                             break;
