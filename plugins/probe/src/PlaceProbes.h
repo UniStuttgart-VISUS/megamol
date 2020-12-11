@@ -81,6 +81,8 @@ private:
     void vertexNormalSampling(
         mesh::MeshDataAccessCollection::VertexAttribute& vertices,
         mesh::MeshDataAccessCollection::VertexAttribute& normals);
+    void faceNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
+        mesh::MeshDataAccessCollection::IndexData& indices, mesh::MeshDataAccessCollection::VertexAttribute& normals);
     bool placeProbes();
     bool placeByCenterline(uint32_t lei, mesh::MeshDataAccessCollection::VertexAttribute& centerline);
     bool placeByCenterpoint();
