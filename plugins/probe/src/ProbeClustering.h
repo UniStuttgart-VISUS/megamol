@@ -90,9 +90,13 @@ private:
 
     core::param::ParamSlot _rhs_idx_slot;
 
+    core::param::ParamSlot _toggle_reps_slot;
+
     std::shared_ptr<stdplugin::datatools::genericPointcloud<float, 3>> _points;
 
     std::shared_ptr<stdplugin::datatools::clustering::kd_tree_t<float, 3>> _kd_tree;
+
+    stdplugin::datatools::clustering::cluster_result_t _cluster_res;
 
     unsigned int _frame_id = std::numeric_limits<unsigned int>::max();
 
