@@ -539,7 +539,7 @@ namespace probe {
         auto normal_accessor = reinterpret_cast<float*>(normals.data);
         auto normal_step = normals.stride / sizeof(float);
 
-        auto probe_id_accessor = reinterpret_cast<float*>(probe_ids.data);
+        auto probe_id_accessor = reinterpret_cast<uint32_t*>(probe_ids.data);
 
         auto index_accessor = reinterpret_cast<uint32_t*>(indices.data);
 

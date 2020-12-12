@@ -9,6 +9,7 @@
 
 #include "mmcore/EventCall.h"
 
+#include "ProbeCalls.h"
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "ProbeHUllRenderTasks.h"
@@ -16,7 +17,10 @@
 #include "mesh/MeshCalls.h"
 
 megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks()
-        : m_version(0), m_show_hull(true), m_event_slot("GetEvents", "") {
+        : m_version(0), m_show_hull(true), m_probes_slot("probes",""), m_event_slot("GetEvents", "") {
+    this->m_probes_slot.SetCompatibleCall<megamol::probe::CallProbesDescription>();
+    this->MakeSlotAvailable(&this->m_probes_slot);
+
     this->m_event_slot.SetCompatibleCall<core::CallEventDescription>();
     this->MakeSlotAvailable(&this->m_event_slot);
 }
