@@ -80,11 +80,18 @@ bool megamol::probe::InjectClusterID::getData(core::Call& call) {
                         auto vertex_cnt = attribute.byte_size / sizeof(uint32_t);
 
                         for (int i = 0; i < vertex_cnt; ++i) {
-                            auto generic_probe = probes->getGenericProbe(probe_id_accessor[i]);
+                            if (probe_id_accessor[i] != std::numeric_limits<uint32_t>::max()) {
+                                auto generic_probe = probes->getGenericProbe(probe_id_accessor[i]);
 
-                            uint32_t cluster_id = std::visit([](auto&& arg) -> uint32_t { return arg.m_cluster_id; }, generic_probe);
+                                uint32_t cluster_id =
+                                    std::visit([](auto&& arg) -> uint32_t { return arg.m_cluster_id; }, generic_probe);
 
-                            probe_id_accessor[i] = cluster_id;
+                                probe_id_accessor[i] = cluster_id;
+                            } else {
+                                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                                    "Tried injecting cluster ID to vertex with invalid probe ID. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                                    __LINE__);
+                            }
                         }
                     }
                 }

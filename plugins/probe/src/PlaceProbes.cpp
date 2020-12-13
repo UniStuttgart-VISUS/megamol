@@ -500,8 +500,10 @@ namespace probe {
         }
     }
 
-    void megamol::probe::PlaceProbes::vertexNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
-        mesh::MeshDataAccessCollection::VertexAttribute& normals) {
+    void megamol::probe::PlaceProbes::vertexNormalSampling(
+        mesh::MeshDataAccessCollection::VertexAttribute& vertices,
+        mesh::MeshDataAccessCollection::VertexAttribute& normals,
+        mesh::MeshDataAccessCollection::VertexAttribute& probe_ids) {
 
         uint32_t probe_count = vertices.byte_size / vertices.stride;
 
@@ -510,6 +512,8 @@ namespace probe {
 
         auto normal_accessor = reinterpret_cast<float*>(normals.data);
         auto normal_step = normals.stride / sizeof(float);
+
+        auto probe_id_accessor = reinterpret_cast<uint32_t*>(probe_ids.data);
 
         //#pragma omp parallel for
         for (int i = 0; i < probe_count; i++) {
@@ -524,7 +528,10 @@ namespace probe {
             probe.m_end = 50.0;
             probe.m_cluster_id = -1;
 
+            auto probe_idx = this->_probes->getProbeCount();
             this->_probes->addProbe(std::move(probe));
+
+            probe_id_accessor[i] = probe_idx;
         }
     }
 
@@ -582,12 +589,13 @@ namespace probe {
             probe.m_end = 50.0;
             probe.m_cluster_id = -1;
 
+            auto probe_idx = this->_probes->getProbeCount();
             this->_probes->addProbe(std::move(probe));
 
-            probe_id_accessor[i00] = i;
-            probe_id_accessor[i01] = i;
-            probe_id_accessor[i11] = i;
-            probe_id_accessor[i10] = i;
+            probe_id_accessor[i00] = probe_idx;
+            probe_id_accessor[i01] = probe_idx;
+            probe_id_accessor[i11] = probe_idx;
+            probe_id_accessor[i10] = probe_idx;
         }
     }
 
@@ -635,7 +643,14 @@ namespace probe {
                     }
                 }
 
-                this->vertexNormalSampling(vertices, normals);
+                mesh::MeshDataAccessCollection::VertexAttribute probe_ids;
+                for (auto& attribute : mesh.second.attributes) {
+                    if (attribute.semantic == mesh::MeshDataAccessCollection::ID) {
+                        probe_ids = attribute;
+                    }
+                }
+
+                this->vertexNormalSampling(vertices, normals, probe_ids);
             }
         } else if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 5) {
 

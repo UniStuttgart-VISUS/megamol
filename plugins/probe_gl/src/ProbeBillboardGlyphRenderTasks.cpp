@@ -95,7 +95,6 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
     if (err != GL_NO_ERROR) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unexpeced OpenGL error: %i. [%s, %s, line %d]\n", err, __FILE__, __FUNCTION__, __LINE__);
-        ;
     }
 
     mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
