@@ -55,20 +55,20 @@ bool megamol::probe::InjectClusterID::getData(core::Call& call) {
         return false;
     }
 
-    std::shared_ptr<mesh::MeshDataAccessCollection> mesh_collection;
+    std::shared_ptr<mesh::MeshDataAccessCollection> mesh_collection =
+        std::make_shared<mesh::MeshDataAccessCollection>();
 
     mesh::CallMesh* cm_rhs = this->_mesh_rhs_slot.CallAs<mesh::CallMesh>();
     probe::CallProbes* cp_rhs = this->_probes_rhs_slot.CallAs<probe::CallProbes>();
     if (cm_rhs != nullptr && cp_rhs != nullptr) {
 
+        if (!(*cm_rhs)(0) || !(*cp_rhs)(0)) {
+            return false;
+        }
+
         auto something_has_changed = cm_rhs->hasUpdate() || cp_rhs->hasUpdate();
 
         if (something_has_changed) {
-
-            if (!(*cm_rhs)(0) || !(*cp_rhs)(0)) {
-                return false;
-            }
-
             ++_version;
             auto meshes = cm_rhs->getData();
             auto probes = cp_rhs->getData();

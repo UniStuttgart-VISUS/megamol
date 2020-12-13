@@ -8,6 +8,7 @@
 #include "stdafx.h"
 
 #include "mmcore/EventCall.h"
+#include "mmcore/param/EnumParam.h"
 
 #include "ProbeCalls.h"
 #include "ProbeEvents.h"
@@ -17,12 +18,21 @@
 #include "mesh/MeshCalls.h"
 
 megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks()
-        : m_version(0), m_show_hull(true), m_probes_slot("probes",""), m_event_slot("GetEvents", "") {
-    this->m_probes_slot.SetCompatibleCall<megamol::probe::CallProbesDescription>();
-    this->MakeSlotAvailable(&this->m_probes_slot);
+        : m_version(0)
+        , m_show_hull(true)
+        //, m_probes_slot("probes","")
+        , m_event_slot("GetEvents", "")
+        , m_shading_mode_slot("ShadingMode","") {
+    //this->m_probes_slot.SetCompatibleCall<megamol::probe::CallProbesDescription>();
+    //this->MakeSlotAvailable(&this->m_probes_slot);
 
     this->m_event_slot.SetCompatibleCall<core::CallEventDescription>();
     this->MakeSlotAvailable(&this->m_event_slot);
+
+    this->m_shading_mode_slot << new megamol::core::param::EnumParam(0);
+    this->m_shading_mode_slot.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Color");
+    this->m_shading_mode_slot.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "ClusterID");
+    this->MakeSlotAvailable(&this->m_shading_mode_slot);
 }
 
 megamol::probe_gl::ProbeHullRenderTasks::~ProbeHullRenderTasks() {}

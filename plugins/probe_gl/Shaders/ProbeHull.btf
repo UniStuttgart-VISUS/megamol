@@ -11,6 +11,7 @@
     <shader name="fragment">
         <snippet type="version">450</snippet>
         <snippet name="CommonDefines"    type="file">commondefines.glsl</snippet>
+        <snippet name="ColorLUT"         type="file">utility/random_colors_lut.glsl</snippet>
         <snippet name="Main"             type="file">hull/dfr_hull_fragment.glsl</snippet>
     </shader>
 
