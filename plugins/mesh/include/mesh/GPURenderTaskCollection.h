@@ -83,10 +83,12 @@ namespace mesh {
         template<typename PerDrawDataContainer>
         void updatePerDrawData(std::string const& identifier, PerDrawDataContainer const& per_draw_data);
 
+        // TODO identifier not actually used...
         template<typename PerFrameDataContainer>
         void addPerFrameDataBuffer(
             std::string const& identifier, PerFrameDataContainer const& per_frame_data, uint32_t buffer_binding_point);
 
+        //TODO identifier not actually used...
         template<typename PerFrameDataContainer>
         void updatePerFrameDataBuffer(
             std::string const& identifier, PerFrameDataContainer const& per_frame_data, uint32_t buffer_binding_point);

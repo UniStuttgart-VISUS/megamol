@@ -17,6 +17,22 @@
 
 #include "mesh/MeshCalls.h"
 
+bool megamol::probe_gl::ProbeHullRenderTasks::create() {
+
+    m_rendertask_collection.first = std::make_shared<mesh::GPURenderTaskCollection>();
+
+    struct PerFrameData {
+        int shading_mode;
+    };
+
+    std::array<PerFrameData, 1> per_frame_data;
+    per_frame_data[0].shading_mode = m_shading_mode_slot.Param<core::param::EnumParam>()->Value();
+
+    m_rendertask_collection.first->addPerFrameDataBuffer("", per_frame_data, 1);
+
+    return true;
+}
+
 megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks()
         : m_version(0)
         , m_show_hull(true)
@@ -30,7 +46,7 @@ megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks()
     this->MakeSlotAvailable(&this->m_event_slot);
 
     this->m_shading_mode_slot << new megamol::core::param::EnumParam(0);
-    this->m_shading_mode_slot.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Color");
+    this->m_shading_mode_slot.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Grey");
     this->m_shading_mode_slot.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "ClusterID");
     this->MakeSlotAvailable(&this->m_shading_mode_slot);
 }
@@ -56,6 +72,19 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
         return false;
 
     syncRenderTaskCollection(lhs_rtc);
+
+    if (m_shading_mode_slot.IsDirty()) {
+        m_shading_mode_slot.ResetDirty();
+
+        struct PerFrameData {
+            int shading_mode;
+        };
+
+        std::array<PerFrameData, 1> per_frame_data;
+        per_frame_data[0].shading_mode = m_shading_mode_slot.Param<core::param::EnumParam>()->Value();
+
+        m_rendertask_collection.first->updatePerFrameDataBuffer("", per_frame_data, 1);
+    }
 
     bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate();
 

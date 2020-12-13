@@ -42,6 +42,8 @@ namespace probe_gl {
             return true;
         }
 
+        bool create();
+
         ProbeHullRenderTasks();
         ~ProbeHullRenderTasks();
 
