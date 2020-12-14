@@ -681,6 +681,9 @@ private:
     /** min and max values of the buffer */
     std::pair<float, float> bufferMinMax;
 
+    /** enables the shutdown of megamol when a screenshot is stored */
+    core::param::ParamSlot close_after_screen_store_param;
+
     /** Button parameter that triggers the computation */
     core::param::ParamSlot computeButton;
 

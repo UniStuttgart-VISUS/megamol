@@ -56,6 +56,7 @@ MapGenerator::MapGenerator(void)
     , bindingSiteRadiusOffset("bindingSite::radiusOffset",
           "The offset that gets added to the radius of the computed sphere. This is ignored if radius is positive.")
     , blending("rendering::blending", "Flag whether or not use blending for the surface")
+    , close_after_screen_store_param("screenshot::closeAfterScreenshot", "When set, MegaMol is shut down when a screenshot has been performed")
     , computeButton("recompute", "Button that starts the computation of the molecular map")
     , cut_colour_param("colour::cutColour", "The path to the file that contains the colours for the cuts")
     , display_param("display mode", "Choose what to display, protein, sphere, map and debug modes")
@@ -147,6 +148,9 @@ MapGenerator::MapGenerator(void)
 
     this->bufferIDs = nullptr;
     this->bufferValues = nullptr;
+
+    this->close_after_screen_store_param.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->close_after_screen_store_param);
 
     this->computeButton.SetParameter(new param::ButtonParam(view::Key::KEY_C));
     this->MakeSlotAvailable(&this->computeButton);
@@ -4155,6 +4159,11 @@ bool MapGenerator::Render(Call& call) {
                 T2A(this->store_png_path.Param<param::FilePathParam>()->Value()));
         }
         delete this->store_png_image.Image();
+        if (this->close_after_screen_store_param.Param<param::BoolParam>()->Value()) {
+            // TODO this should just shut down the core instance instead of hard exiting.
+            // however, this does not seem to work here
+            std::exit(0);
+        }
     }
 
     // If we render the tunnels we need blending.
@@ -4818,3 +4827,4 @@ void MapGenerator::writeValueImage(const vislib::TString& path_to_image, const g
     }
 #endif
 }
+
