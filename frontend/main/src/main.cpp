@@ -49,6 +49,7 @@ struct CLIConfig {
         nodecoration = 1 << 1,
         topmost      = 1 << 2,
         nocursor     = 1 << 3,
+        invisible    = 1 << 4,
     };
     unsigned int window_mode = 0;
     unsigned int window_monitor = 0;
@@ -100,6 +101,7 @@ int main(int argc, char* argv[]) {
     openglConfig.windowPlacement.noDec      = config.window_mode & CLIConfig::WindowMode::nodecoration;
     openglConfig.windowPlacement.topMost    = config.window_mode & CLIConfig::WindowMode::topmost;
     openglConfig.windowPlacement.noCursor   = config.window_mode & CLIConfig::WindowMode::nocursor;
+    openglConfig.windowPlacement.invisible  = config.window_mode & CLIConfig::WindowMode::invisible;
     gl_service.setPriority(2);
 
     megamol::frontend::GUI_Service gui_service;
@@ -297,6 +299,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         ("nodecoration", "open window without decorations", cxxopts::value<bool>())
         ("topmost", "open window that stays on top of all others", cxxopts::value<bool>())
         ("nocursor", "do not show mouse cursor inside window", cxxopts::value<bool>())
+        ("invisible", "start the window invisible", cxxopts::value<bool>())
         ("help", "print help")
         ;
     // clang-format on
@@ -339,6 +342,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         config.window_mode |= parsed_options["nodecoration"].as<bool>() * CLIConfig::WindowMode::nodecoration;
         config.window_mode |= parsed_options["topmost"].as<bool>()      * CLIConfig::WindowMode::topmost;
         config.window_mode |= parsed_options["nocursor"].as<bool>()     * CLIConfig::WindowMode::nocursor;
+        config.window_mode |= parsed_options["invisible"].as<bool>()    * CLIConfig::WindowMode::invisible;
 
         if (parsed_options.count("window")) {
             auto s = parsed_options["window"].as<std::string>();

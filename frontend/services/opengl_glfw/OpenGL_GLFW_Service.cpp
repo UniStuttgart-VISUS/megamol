@@ -449,7 +449,9 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     int vsync = (m_pimpl->config.enableVsync) ? 1 : 0;
     ::glfwSwapInterval(vsync);
 
-    ::glfwShowWindow(window_ptr);
+    if (!m_pimpl->config.windowPlacement.invisible) {
+        ::glfwShowWindow(window_ptr);
+    }
     //::glfwMakeContextCurrent(nullptr);
 
     m_windowEvents._clipboard_user_data = window_ptr;
