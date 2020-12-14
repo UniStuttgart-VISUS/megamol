@@ -4,6 +4,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
 
 #include "ProbeCalls.h"
 
@@ -56,6 +57,8 @@ private:
     core::CalleeSlot _out_table_slot;
 
     core::CallerSlot _in_probes_slot;
+
+    core::param::ParamSlot _stretching_factor_slot;
 
     std::size_t _row_count = 0;
 
