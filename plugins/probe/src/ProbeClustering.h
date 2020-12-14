@@ -53,7 +53,8 @@ private:
     bool get_extent_cb(core::Call& c);
 
     bool is_dirty() {
-        return _eps_slot.IsDirty() || _minpts_slot.IsDirty() || _threshold_slot.IsDirty() || _handwaving_slot.IsDirty();
+        return _eps_slot.IsDirty() || _minpts_slot.IsDirty() || _threshold_slot.IsDirty() ||
+               _handwaving_slot.IsDirty() || _angle_threshold_slot.IsDirty();
     }
 
     bool is_debug_dirty() {
@@ -65,6 +66,7 @@ private:
         _minpts_slot.ResetDirty();
         _threshold_slot.ResetDirty();
         _handwaving_slot.ResetDirty();
+        _angle_threshold_slot.ResetDirty();
     }
 
     void reset_debug_dirty() {
@@ -91,6 +93,8 @@ private:
     core::param::ParamSlot _rhs_idx_slot;
 
     core::param::ParamSlot _toggle_reps_slot;
+
+    core::param::ParamSlot _angle_threshold_slot;
 
     std::shared_ptr<stdplugin::datatools::genericPointcloud<float, 3>> _points;
 
