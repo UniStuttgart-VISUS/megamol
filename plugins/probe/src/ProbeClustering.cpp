@@ -97,6 +97,9 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
     auto const row_count = in_table->GetRowsCount();
     auto const sim_matrix = in_table->GetData();
 
+    auto const& meta_data = in_probes->getMetaData();
+    auto& probes = in_probes->getData();
+
     if (is_debug_dirty()) {
         auto const lhs_idx = _lhs_idx_slot.Param<core::param::IntParam>()->Value();
         auto const rhs_idx = _rhs_idx_slot.Param<core::param::IntParam>()->Value();
@@ -106,10 +109,19 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
                 "[ProbeClustering]: Similiarty val for %d:%d is %f", lhs_idx, rhs_idx, val);
         }
         // reset_debug_dirty();
-    }
 
-    auto const& meta_data = in_probes->getMetaData();
-    auto& probes = in_probes->getData();
+        if (lhs_idx < probes->getProbeCount() && rhs_idx < probes->getProbeCount()) {
+
+            auto rhs_generic_probe = probes->getGenericProbe(rhs_idx);
+            auto lhs_generic_probe = probes->getGenericProbe(lhs_idx);
+            uint32_t rhs_cluster_id = std::visit(
+                [](auto&& arg) -> uint32_t { return static_cast<uint32_t>(arg.m_cluster_id); }, rhs_generic_probe);
+            uint32_t lhs_cluster_id = std::visit(
+                [](auto&& arg) -> uint32_t { return static_cast<uint32_t>(arg.m_cluster_id); }, lhs_generic_probe);
+            core::utility::log::Log::DefaultLog.WriteInfo(
+                "[ProbeClustering]: Assigned cluster IDs for %d:%d are %d:%d", lhs_idx, rhs_idx, lhs_cluster_id, rhs_cluster_id);
+        }
+    }
 
     if (in_probes->hasUpdate() || meta_data.m_frame_ID != _frame_id || in_table->DataHash() != _in_table_data_hash ||
         is_dirty() || _toggle_reps_slot.IsDirty() || is_debug_dirty()) {

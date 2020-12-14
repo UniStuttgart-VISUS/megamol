@@ -314,9 +314,9 @@ inline void expand_GROWING_with_similarity_and_score(std::shared_ptr<kd_tree_t<T
             if (clusters[idx] <= static_cast<cluster_type_ut>(cluster_type::NOISE)) {
                 clusters[idx] = C;
                 cluster_identity[C].push_back(idx);
-                pivot = score(pivot, cluster_identity[C]);
             }
         }
+        pivot = score(pivot, cluster_identity[C]);
         Nvec = nextNvec;
     }
 }
