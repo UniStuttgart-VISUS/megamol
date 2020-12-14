@@ -311,6 +311,8 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
     ::glfwWindowHint(GLFW_DECORATED,
         (m_pimpl->config.windowPlacement.fullScreen) ? (GL_FALSE) : (m_pimpl->config.windowPlacement.noDec ? GL_FALSE : GL_TRUE));
     ::glfwWindowHint(GLFW_VISIBLE, GL_FALSE); // initially invisible
+    ::glfwWindowHint(GLFW_FOCUS_ON_SHOW, GL_FALSE);
+    ::glfwWindowHint(GLFW_FOCUSED, GL_FALSE);
 
     int monCnt = 0;
     GLFWmonitor** monitors = ::glfwGetMonitors(&monCnt); // primary monitor is first in list
