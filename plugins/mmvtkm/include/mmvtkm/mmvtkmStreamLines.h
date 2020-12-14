@@ -222,8 +222,8 @@ private:
      * Sets values of paramslots to all cooresponding param member variables.
      * The corresponding parameter slots are:
      * psPlaneOrigin_
-     * psPlaneConnectionPoint1_
-     * psPlaneConnectionPoint2_
+     * psPlaneConnectionVertex1_
+     * psPlaneConnectionVertex2_
      * psSeedPlaneNormal_
 	 * psSeedPlanePoint_
      *
@@ -312,10 +312,10 @@ private:
     core::param::ParamSlot psPlaneOrigin_;
 
     /** Paramslot for lower left corner of seed plane */
-    core::param::ParamSlot psPlaneConnectionPoint1_;
+    core::param::ParamSlot psPlaneConnectionVertex1_;
 
     /** Paramslot for lower left corner of seed plane */
-    core::param::ParamSlot psPlaneConnectionPoint2_;
+    core::param::ParamSlot psPlaneConnectionVertex2_;
 
     /** Paramslot for normal of seed plane */
     core::param::ParamSlot psSeedPlaneNormal_;
@@ -386,8 +386,8 @@ private:
     vtkm::Id numSteps_;
     vtkm::FloatDefault stepSize_;
     vislib::TString activeField_;
-    glm::vec3 planeConnectionPoint1_;
-    glm::vec3 planeConnectionPoint2_;
+    glm::vec3 planeConnectionVertex1_;
+    glm::vec3 planeConnectionVertex2_;
     glm::vec3 planeOrigin_;
     glm::vec3 seedPlaneNormal_;
 	glm::vec3 seedPlaneZFightingOffset_;
