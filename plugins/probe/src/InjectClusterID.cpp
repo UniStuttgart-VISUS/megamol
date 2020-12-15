@@ -76,15 +76,15 @@ bool megamol::probe::InjectClusterID::getData(core::Call& call) {
             for (auto& mesh : meshes->accessMeshes()) {
                 for (auto& attribute : mesh.second.attributes) {
                     if (attribute.semantic == mesh::MeshDataAccessCollection::ID) {
-                        auto probe_id_accessor = reinterpret_cast<uint32_t*>(attribute.data);
-                        auto vertex_cnt = attribute.byte_size / sizeof(uint32_t);
+                        auto probe_id_accessor = reinterpret_cast<int*>(attribute.data);
+                        auto vertex_cnt = attribute.byte_size / sizeof(int);
 
                         for (int i = 0; i < vertex_cnt; ++i) {
-                            if (probe_id_accessor[i] != std::numeric_limits<uint32_t>::max()) {
+                            if (probe_id_accessor[i] != std::numeric_limits<int>::max()) {
                                 auto generic_probe = probes->getGenericProbe(probe_id_accessor[i]);
 
-                                uint32_t cluster_id =
-                                    std::visit([](auto&& arg) -> uint32_t { return arg.m_cluster_id; }, generic_probe);
+                                int cluster_id =
+                                    std::visit([](auto&& arg) -> int { return arg.m_cluster_id; }, generic_probe);
 
                                 probe_id_accessor[i] = cluster_id;
                             } else {

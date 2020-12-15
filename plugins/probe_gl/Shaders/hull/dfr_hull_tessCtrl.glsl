@@ -2,11 +2,11 @@ layout (vertices = 4) out;
 
 layout(location = 0) in vec3 world_pos[];
 layout(location = 1) in vec3 normal[];
-layout(location = 2) flat in uint cluster_id[];
+layout(location = 2) flat in int cluster_id[];
 
 layout(location = 0) out vec3 world_pos_out[];
 layout(location = 1) out vec3 normal_out[];
-layout(location = 2) flat out uint cluster_id_out[];
+layout(location = 2) flat out int cluster_id_out[];
 
 void main(void)
 {

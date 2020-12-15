@@ -261,11 +261,11 @@ bool megamol::probe::TessellateBoundingBox::getData(core::Call& call) {
                 mesh_attribs[1].data = reinterpret_cast<uint8_t*>(_normals[i].data());
                 mesh_attribs[1].semantic = mesh::MeshDataAccessCollection::NORMAL;
 
-                _probe_index[i].resize(_vertices[i].size(), std::numeric_limits<uint32_t>::max()); // allocate memory for probe ID now, but the acutal data will be written later (by probe placement)
-                mesh_attribs[2].component_type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
-                mesh_attribs[2].byte_size = _probe_index[i].size() * sizeof(uint32_t);
+                _probe_index[i].resize(_vertices[i].size(), std::numeric_limits<int>::max()); // allocate memory for probe ID now, but the acutal data will be written later (by probe placement)
+                mesh_attribs[2].component_type = mesh::MeshDataAccessCollection::ValueType::INT;
+                mesh_attribs[2].byte_size = _probe_index[i].size() * sizeof(int);
                 mesh_attribs[2].component_cnt = 1;
-                mesh_attribs[2].stride = sizeof(uint32_t);
+                mesh_attribs[2].stride = sizeof(int);
                 mesh_attribs[2].offset = 0;
                 mesh_attribs[2].data = reinterpret_cast<uint8_t*>(_probe_index[i].data());
                 mesh_attribs[2].semantic = mesh::MeshDataAccessCollection::AttributeSemanticType::ID;

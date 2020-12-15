@@ -83,7 +83,7 @@ namespace probe {
         // store surfaces of the six tessellated sides of the bounding box
         std::array<std::vector<std::array<float, 3>>,6>    _vertices;
         std::array<std::vector<std::array<float, 3>>,6>    _normals;
-        std::array<std::vector<uint32_t>, 6>               _probe_index;
+        std::array<std::vector<int>, 6>                    _probe_index;
         std::array<std::vector<std::array<uint32_t, 4>>,6> _faces;
 
         // store bounding box
