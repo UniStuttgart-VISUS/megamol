@@ -87,13 +87,15 @@ mmvtkmStreamLines::mmvtkmStreamLines()
 	, liveCopy_{}
     , originalSeedPlane_{}
     , stpqSeedPlane_{}
-    , seedPlaneColorVec_{}
-    , seedPlaneIndices_{}
     , seedPlaneTriangles_{}
     , seeds_{}
     , planeMode_(0)
 	, ghostCopy_{}
-	, rotatedGhostCopy_{} {
+	, rotatedGhostCopy_{}
+    , streamlineBaseIdentifier_{"streamline"}
+    , seedPlaneIdentifier_{"seedplane"}
+    , ghostPlaneIdentifier_{"ghostplane"}
+    , borderlineIdentifier_{"borderline"} {
     this->meshCalleeSlot_.SetCallback(mesh::CallMesh::ClassName(),
         mesh::CallMesh::FunctionName(0),
         &mmvtkmStreamLines::getDataCallback);
@@ -293,7 +295,6 @@ bool mmvtkmStreamLines::assignSTPQ(core::param::ParamSlot& slot) {
     float t = this->psSeedPlaneT_.Param<core::param::FloatParam>()->Value();
     float p = this->psSeedPlaneP_.Param<core::param::FloatParam>()->Value();
     float q = this->psSeedPlaneQ_.Param<core::param::FloatParam>()->Value();
-	std::cout << "value check: " << s << ", " << t << ", " << p << ", " << q << "\n";
 
     // intersect line with seedplane
 	// probably need a more performant solution
@@ -312,23 +313,19 @@ bool mmvtkmStreamLines::assignSTPQ(core::param::ParamSlot& slot) {
 
 
     // adapt colorvec and indexvec according to new plane
-    unsigned int num = liveSeedPlane_.size();
+    unsigned int numPoints = liveSeedPlane_.size();
     seedPlaneColorVec_.clear();
     seedPlaneIndices_.clear();
 
-    for (int i = 0; i < num; ++i) {
-        seedPlaneColorVec_.push_back(glm::vec4(glm::vec3(i * 1.f / (num - 1)), seedPlaneAlpha_));
+    for (int i = 0; i < numPoints; ++i) {
+        seedPlaneColorVec_.push_back(glm::vec4(glm::vec3(i * 1.f / (numPoints - 1)), seedPlaneAlpha_));
         seedPlaneIndices_.push_back(i);
 	}
-    
-	// avoids complicated insert/erase handling of vector
-	mesh::MeshDataAccessCollection::Mesh ghostMda = meshDataAccess_->accessMesh().back();
-	// TODO this becomes troublesome with the new master
-    meshDataAccess_->accessMesh().pop_back();	// pop ghostplane
-    meshDataAccess_->accessMesh().pop_back();	// pop liveseedplane
-    createAndAddMeshDataToCall(liveSeedPlane_, seedPlaneColorVec_, seedPlaneIndices_, liveSeedPlane_.size(),
-        seedPlaneIndices_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
-    meshDataAccess_->accessMesh().push_back(ghostMda);
+
+
+    this->meshDataAccess_.first->deleteMesh(seedPlaneIdentifier_);
+    createAndAddMeshDataToCall(seedPlaneIdentifier_, liveSeedPlane_, seedPlaneColorVec_, seedPlaneIndices_,
+            numPoints, numPoints, mesh::MeshDataAccessCollection::TRIANGLE_FAN);
 
 	
 	planeAppearanceUpdate_ = true;
@@ -678,20 +675,11 @@ bool mmvtkmStreamLines::setPlaneAndAppearanceUpdate() {
     }
 
 
-    mesh::MeshDataAccessCollection::VertexAttribute vColor;
-    vColor.data = reinterpret_cast<uint8_t*>(seedPlaneColorVec_.data());
-    vColor.byte_size = 4 * (size_t)numColors * sizeof(float);
-    vColor.component_cnt = 4;
-    vColor.component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-    vColor.stride = 0;
-    vColor.offset = 0;
-    vColor.semantic = mesh::MeshDataAccessCollection::AttributeSemanticType::COLOR;
-
-    auto seed_plane_ma = this->meshDataAccess_.first->accessMesh("seed_plane");
-    this->meshDataAccess_.first->deleteMesh("seed_plane");
-    seed_plane_ma.attributes[1].data = reinterpret_cast<uint8_t*>(seedPlaneColorVec_.data());
+    auto seedPlaneMa = this->meshDataAccess_.first->accessMesh(seedPlaneIdentifier_);
+    this->meshDataAccess_.first->deleteMesh(seedPlaneIdentifier_);
+    seedPlaneMa.attributes[1].data = reinterpret_cast<uint8_t*>(seedPlaneColorVec_.data());
     this->meshDataAccess_.first->addMesh(
-        "seed_plane", seed_plane_ma.attributes, seed_plane_ma.indices, seed_plane_ma.primitive_type);
+        seedPlaneIdentifier_, seedPlaneMa.attributes, seedPlaneMa.indices, seedPlaneMa.primitive_type);
     // no update to list of entires in collection needed in this special case
 
     planeAppearanceUpdate_ = true;
@@ -885,10 +873,10 @@ void mmvtkmStreamLines::orderPolygonVertices(std::vector<glm::vec3>& vertices) {
 
 
     // need to ensure that there are no duplicates in the list
-    // other wrong triangles are created
+    // so no other wrong triangles are created
     // this happens e. g. when the plane intersects the corners of the bbox
     std::vector<glm::vec3>::iterator it;
-    it = std::unique_copy(vertices.begin(), vertices.end(), vertices.begin());
+    it = std::unique_copy(vertices.begin(), vertices.end(), vertices.begin()); // possibly troublesome with inacurate '==' comparisons of vectors
     ptrdiff_t d = std::distance(vertices.begin(), it);
     vertices.resize(d);
     seedPlaneColorVec_.resize(d);
@@ -1243,21 +1231,22 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
                 streamlineIndices_[i][idx + (size_t)1] = j + 1;
             }
             // adds the mdacs of the streamlines to the call here
-            std::string lineIdentifier = "streamline" + std::to_string(i);
-            createAndAddMeshDataToCall(lineIdentifier, streamlineData_[i], streamlineColor_[i], streamlineIndices_[i], numPoints, \
+            std::string streamlineIdentifier = streamlineBaseIdentifier_ + std::to_string(i);
+            createAndAddMeshDataToCall(streamlineIdentifier, streamlineData_[i], streamlineColor_[i],
+                streamlineIndices_[i], numPoints, \
                 numIndices, mesh::MeshDataAccessCollection::PrimitiveType::LINE_STRIP);
         }
 
         // adds the dummy mdac for the u and v border lines
-        createAndAddMeshDataToCall("borderline", borderLine_, borderColors_, borderIdcs_, borderLine_.size(), borderIdcs_.size(),
+        createAndAddMeshDataToCall(borderlineIdentifier_, borderLine_, borderColors_, borderIdcs_, borderLine_.size(), borderIdcs_.size(), \
             mesh::MeshDataAccessCollection::PrimitiveType::LINES);
 
 		// adds the mdac for the seed plane
-        createAndAddMeshDataToCall("seedPlane", liveSeedPlane_, seedPlaneColorVec_, seedPlaneIndices_, liveSeedPlane_.size(),
+        createAndAddMeshDataToCall(seedPlaneIdentifier_, liveSeedPlane_, seedPlaneColorVec_, seedPlaneIndices_, liveSeedPlane_.size(), \
             seedPlaneIndices_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
 		// adds the dummy mdac for the ghost plane
-        createAndAddMeshDataToCall("ghostPlane", ghostPlane_, ghostColors_, ghostIdcs_, ghostPlane_.size(), ghostIdcs_.size(),
+        createAndAddMeshDataToCall(ghostPlaneIdentifier_, ghostPlane_, ghostColors_, ghostIdcs_, ghostPlane_.size(), ghostIdcs_.size(), \
             mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
         

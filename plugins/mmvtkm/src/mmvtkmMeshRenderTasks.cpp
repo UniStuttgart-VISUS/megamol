@@ -50,7 +50,6 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
         std::vector<std::vector<glowl::DrawElementsCommand>> draw_commands;
         std::vector<std::vector<std::array<float, 16>>> object_transforms;
         std::vector<std::shared_ptr<glowl::Mesh>> batch_meshes;
-        //std::vector<std::vector<mesh::GPURenderTaskCollection::GLState>> batch_states;
 
         std::shared_ptr<glowl::Mesh> prev_mesh(nullptr);
 
@@ -77,26 +76,27 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
         }
         
 		for (int i = 0; i < batch_meshes.size(); ++i) {
-            auto const& shader = gpu_mtl_storage->getMaterials().front().shader_program;
+            auto const& shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
             bool blending_and_depth = i == 0;
             
 			if (i == batch_meshes.size() - 1) {
-				auto setStates = [] { 
+				auto set_states = [] { 
 					glEnable(GL_BLEND);
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 					glEnable(GL_DEPTH_TEST);
 					glDisable(GL_CULL_FACE);
 				};
-				auto resetStates = [] { 
+				auto reset_states = [] { 
 					glDisable(GL_BLEND);
 					glBlendFunc(GL_ONE, GL_NONE);
 					glDisable(GL_DEPTH_TEST);
 					glDisable(GL_CULL_FACE);
 				};
 				
-                rt_collection->addRenderTasks(identifiers[i], shader, batch_meshes[i], draw_commands[i], object_transforms[i], setStates, resetStates);
+                m_rendertask_collection.first->addRenderTasks(identifiers[i], shader, batch_meshes[i],
+                                    draw_commands[i], object_transforms[i], set_states, reset_states);
             } else {
-                rt_collection->addRenderTasks(
+                m_rendertask_collection.first->addRenderTasks(
                     identifiers[i], shader, batch_meshes[i], draw_commands[i], object_transforms[i]);
 			}
 

@@ -401,8 +401,6 @@ private:
     std::vector<glm::vec3> liveCopy_;
     std::vector<glm::vec3> originalSeedPlane_;
     std::vector<glm::vec3> stpqSeedPlane_;
-    std::vector<glm::vec4> seedPlaneColorVec_;
-    std::vector<unsigned int> seedPlaneIndices_;
     std::vector<Triangle> seedPlaneTriangles_;
     std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> seeds_;
 
@@ -427,7 +425,7 @@ private:
 
     std::vector<glm::vec3> seedPlane_ = {glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f)};
     std::vector<glm::vec4> seedPlaneColorVec_ = {glm::vec4(red_, 1.0), glm::vec4(red_, 1.0), glm::vec4(red_, 1.0)};
-    std::vector<unsigned int> seedPlaneIdcs_ = {0, 1, 2};
+    std::vector<unsigned int> seedPlaneIndices_ = {0, 1, 2};
 
     
 	std::vector<glm::vec3> ghostCopy_;
@@ -453,6 +451,12 @@ private:
 
 	float epsilon4_ = 1e-4f;
 	float epsilon5_ = 1e-5f;
+
+    // mesh identifier
+    std::string streamlineBaseIdentifier_;
+    std::string seedPlaneIdentifier_;
+    std::string ghostPlaneIdentifier_;
+    std::string borderlineIdentifier_;
 };
 
 } // end namespace mmvtkm

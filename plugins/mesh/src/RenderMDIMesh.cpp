@@ -196,7 +196,7 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	for (auto const& render_task : gpu_render_tasks->getRenderTasks())
 	{
         // Set GL states (otherwise bounding box or view cube rendering state is used)
-		render_task.setStates();
+		render_task->set_states();
 
 		//glDisable(GL_BLEND);
   //      glEnable(GL_DEPTH_TEST);
@@ -249,7 +249,7 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 
 
 		// Reset previously set GLStates
-		render_task.resetStates();
+		render_task->reset_states();
 	}
 	
 	// Clear the way for his ancient majesty, the mighty immediate mode...
