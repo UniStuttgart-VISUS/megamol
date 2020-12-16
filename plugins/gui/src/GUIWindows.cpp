@@ -1059,7 +1059,6 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
     // CONFIGURATOR Window -----------------------------------------------
     buf_win.win_name = "Configurator";
     buf_win.win_show = false;
-    /// TODO Better initial size for configurator (use current viewport?)
     buf_win.win_size = ImVec2(800.0f, 600.0f);
     buf_win.win_reset_size = buf_win.win_size;
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
@@ -1264,7 +1263,8 @@ void GUIWindows::drawConfiguratorWindowCallback(WindowCollection::WindowConfigur
 void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& wc) {
 
     // Mode
-    megamol::gui::ParameterPresentation::ParameterExtendedModeButton(wc.param_extended_mode);
+    megamol::gui::ParameterPresentation::ParameterExtendedModeButton(
+        "draw_param_window_callback", wc.param_extended_mode);
     this->tooltip.Marker("Expert mode enables options for additional parameter presentation options.");
     ImGui::SameLine();
 

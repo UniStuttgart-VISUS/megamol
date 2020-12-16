@@ -688,7 +688,6 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             } else if (use_core_instance) {
                 /// TODO
                 /// How to list calls in core instance graph?
-                // gui_graph_changed = true;
             }
         }
 
@@ -859,6 +858,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 //        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
                 //    }
                 //}
+
                 // Add new main view
                 queue_data.name_id = queue_data.rename_id;
                 graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
@@ -1593,7 +1593,7 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_callee_idxs(
     for (std::string callName : completeCallNames) {
         size_t calls_cnt = this->calls_stock.size();
         for (size_t idx = 0; idx < calls_cnt; ++idx) {
-            /// XXX Case-Insensitive call slot comparison
+            // Case-Insensitive call slot comparison
             if (this->case_insensitive_str_comp(this->calls_stock[idx].class_name, callName)) {
                 retval.emplace_back(idx);
             }
@@ -1617,7 +1617,7 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_caller_idxs(
         std::string comp_call_class_name = std::string(caller_slot->GetCompCallClassName(i));
         size_t calls_cnt = this->calls_stock.size();
         for (size_t idx = 0; idx < calls_cnt; ++idx) {
-            /// XXX Case-Insensitive call slot comparison
+            // Case-Insensitive call slot comparison
             if (this->case_insensitive_str_comp(this->calls_stock[idx].class_name, comp_call_class_name)) {
                 retval.emplace_back(idx);
             }

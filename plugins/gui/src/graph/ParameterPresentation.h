@@ -96,6 +96,8 @@ namespace gui {
         void LoadTransferFunctionTexture(
             std::vector<float>& in_texture_data, int& in_texture_width, int& in_texture_height);
 
+        // Custom Buttons ---------------
+
         /** "Point in Circle" Button for additional drop down Options. */
         static bool OptionButton(const std::string& id, const std::string& label = "", bool dirty = false);
 
@@ -103,7 +105,11 @@ namespace gui {
         static bool KnobButton(const std::string& id, float size, float& inout_value, float minval, float maxval);
 
         /** Extended parameter mode button. */
-        static bool ParameterExtendedModeButton(bool& inout_extended_mode);
+        static bool ParameterExtendedModeButton(const std::string& id, bool& inout_extended_mode);
+
+        /** Lua parameter command copy button. */
+        static bool LuaButton(const std::string& id, const std::string& param_value, const std::string& param_fullname,
+            const std::string& module_fullname);
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -128,7 +134,7 @@ namespace gui {
         ParameterOrbitalWidget rotation_widget;
 
         // FUNCTIONS --------------------------------------------------------------
-        bool Present(Parameter& inout_param, WidgetScope scope);
+        bool Present(Parameter& inout_param, WidgetScope scope, const std::string& module_fullname);
 
         bool present_parameter(Parameter& inout_parameter, WidgetScope scope);
 

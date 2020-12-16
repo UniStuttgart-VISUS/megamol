@@ -241,7 +241,7 @@ void megamol::gui::ParameterGroupsPresentation::draw_parameter(megamol::gui::Par
     if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
         /// GLOBAL
 
-        inout_param.PresentGUI(in_scope);
+        inout_param.PresentGUI(in_scope, in_module_fullname);
     } else {
         /// LOCAL
 
@@ -257,7 +257,7 @@ void megamol::gui::ParameterGroupsPresentation::draw_parameter(megamol::gui::Par
             (inout_param.present.IsGUIVisible() || inout_param.present.extended) && (param_searched || module_searched);
 
         if (visible) {
-            if (inout_param.PresentGUI(in_scope)) {
+            if (inout_param.PresentGUI(in_scope, in_module_fullname)) {
 
                 // Open window calling the transfer function editor callback
                 if ((inout_param.type == Param_t::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
