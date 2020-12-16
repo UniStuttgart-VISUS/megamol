@@ -156,7 +156,7 @@ bool RenderMDIMesh::GetExtents(core::view::CallRender3D_2& call) {
 }
 
 bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
-	
+    
 	megamol::core::view::CallRender3D_2* cr = &call; //dynamic_cast<core::view::CallRender3D_2*>(&call);
 	if (cr == NULL) return false;
 	
@@ -169,7 +169,7 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
     glm::mat4 proj_mx = proj_tmp;
 	
 	CallGPURenderTaskData* task_call = this->m_render_task_callerSlot.CallAs<CallGPURenderTaskData>();
-	
+
 	if (task_call == NULL)
 		return false;
 	
@@ -221,7 +221,7 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
   //      // glEnable(GL_CULL_FACE);
   //      glDisable(GL_CULL_FACE);
   //      // glCullFace(GL_BACK);
-
+        
         render_task->shader_program->use();
 		
 		// TODO introduce per frame "global" data buffer to store information like camera matrices?
@@ -243,7 +243,7 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 			(GLvoid*)0,
 			render_task->draw_cnt,
 			0);
-
+        
 		//CallmeshRenderBatches::RenderBatchesData::DrawCommandData::glowl::DrawElementsCommand command_buffer;
 		//command_buffer.cnt = 3;
 		//command_buffer.instance_cnt = 1;

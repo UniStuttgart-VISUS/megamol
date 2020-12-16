@@ -308,7 +308,7 @@ bool mmvtkmStreamLines::setPlaneAndAppearanceUpdate() {
 
     mesh::MeshDataAccessCollection::VertexAttribute vColor;
     vColor.data = reinterpret_cast<uint8_t*>(seedPlaneColorVec_.data());
-    vColor.byte_size = 4 * numColors * sizeof(float);
+    vColor.byte_size = 4 * (size_t)numColors * sizeof(float);
     vColor.component_cnt = 4;
     vColor.component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
     vColor.stride = 0;
@@ -612,7 +612,7 @@ bool mmvtkmStreamLines::createAndAddMeshDataToCall(std::string const& identifier
 
     mesh::MeshDataAccessCollection::VertexAttribute va;
     va.data = reinterpret_cast<uint8_t*>(data.data());
-    va.byte_size = 3 * numPoints * sizeof(float);
+    va.byte_size = 3 * (size_t)numPoints * sizeof(float);
     va.component_cnt = 3;
     va.component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
     va.stride = 0;
@@ -621,7 +621,7 @@ bool mmvtkmStreamLines::createAndAddMeshDataToCall(std::string const& identifier
 
     mesh::MeshDataAccessCollection::VertexAttribute vColor;
     vColor.data = reinterpret_cast<uint8_t*>(color.data());
-    vColor.byte_size = 4 * numPoints * sizeof(float);
+    vColor.byte_size = 4 * (size_t)numPoints * sizeof(float);
     vColor.component_cnt = 4;
     vColor.component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
     vColor.stride = 0;
@@ -682,7 +682,6 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         return false;
     }
 
-
     // this case only occurs when parameters of the plane, such as color or alpha, are changed
     // so we can early terminate
     if (planeAppearanceUpdate_) {
@@ -691,7 +690,6 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         return true;
     }
 
-
     bool vtkmUpdate = rhsVtkmDc->HasUpdate();
     // plane calculation part here
     if (vtkmUpdate || planeUpdate_) {
@@ -699,7 +697,6 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             if (!(*rhsVtkmDc)(1)) {
                 return false;
             }
-
             dataSetBounds_ = rhsVtkmDc->GetBounds();
             visVec3f low = {(float)dataSetBounds_.X.Min, (float)dataSetBounds_.Y.Min, (float)dataSetBounds_.Z.Min};
             visVec3f up = {(float)dataSetBounds_.X.Max, (float)dataSetBounds_.Y.Max, (float)dataSetBounds_.Z.Max};
@@ -728,11 +725,9 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             seedPlane_ = {planeOrigin_, planeConnectionPoint1_, newPoint, planeConnectionPoint2_};
         }
 
-
         // decompose polygon into triangles
         seedPlaneTriangles_.clear();
         seedPlaneTriangles_ = decomposePolygon(seedPlane_);
-
 
         planeUpdate_ = false;
     }
@@ -744,7 +739,6 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             meshDataAccess_.first->deleteMesh(identifier);
         }
         meshDataAccess_.second.clear();
-
 
         // sample points in triangles and combine each triangles' samples
         for (const auto& tri : seedPlaneTriangles_) {
@@ -767,6 +761,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             }
         }
 
+        
         vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> seedArray = vtkm::cont::make_ArrayHandle(seeds_);
 
 
@@ -797,7 +792,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             core::utility::log::Log::DefaultLog.WriteError(e.what());
             return false;
         }
-
+        
 
         // get polylines
         const vtkm::cont::DynamicCellSet& polylineSet = streamlineOutput_.GetCellSet(0);
@@ -823,7 +818,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             polylinePointIds[i] = pointIds;
         }
 
-
+        
         // there most probably will only be one coordinate system which name isn't specifically set
         // so this should be sufficient
         const vtkm::cont::CoordinateSystem& coordData = streamlineOutput_.GetCoordinateSystem(0);
@@ -862,14 +857,14 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             // calc indices
             int numLineSegments = numPoints - 1;
             int numIndices = 2 * numLineSegments;
-
+            
             streamlineIndices_[i].clear();
             streamlineIndices_[i].resize(numIndices);
 
             for (int j = 0; j < numLineSegments; ++j) {
-                int idx = 2 * j;
+                size_t idx = 2 * j;
                 streamlineIndices_[i][idx + 0] = j;
-                streamlineIndices_[i][idx + 1] = j + 1;
+                streamlineIndices_[i][idx + (size_t)1] = j + 1;
             }
             // adds the mdacs of the streamlines to the call here
             std::string lineIdentifier = "streamline" + std::to_string(i);
@@ -877,12 +872,12 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
                 numIndices, mesh::MeshDataAccessCollection::PrimitiveType::LINE_STRIP);
         }
         
-
+        
         // adds the mdac for the seed plane
         createAndAddMeshDataToCall("seed_plane", seedPlane_, seedPlaneColorVec_, seedPlaneIdcs_, seedPlane_.size(), \
             seedPlaneIdcs_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
-
+        
         lhsMeshDc->setData(meshDataAccess_.first, ++this->newVersion_);
 
         streamlineUpdate_ = false;

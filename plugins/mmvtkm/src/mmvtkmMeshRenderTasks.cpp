@@ -19,7 +19,7 @@ mmvtkmMeshRenderTasks ::mmvtkmMeshRenderTasks() : m_version(0) {}
 mmvtkmMeshRenderTasks ::~mmvtkmMeshRenderTasks () {}
 
 bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
-
+    
     mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL) return false;
 
@@ -32,7 +32,7 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
     mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
     if (mc == NULL) return false;
     if (!(*mc)(0)) return false;
-
+    
     bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate();
 
     if (something_has_changed) {
@@ -42,7 +42,7 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
             m_rendertask_collection.first->deleteRenderTask(identifier);
         }
         m_rendertask_collection.second.clear();
-
+        
         auto gpu_mtl_storage = mtlc->getData();
         auto gpu_mesh_storage = mc->getData();
 
@@ -103,7 +103,7 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
         rhs_rtc->setData(m_rendertask_collection.first, 0);
         (*rhs_rtc)(0);
     }
-
+    
     // TODO merge meta data stuff, i.e. bounding box
     auto mesh_meta_data = mc->getMetaData();
 
