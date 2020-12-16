@@ -11,8 +11,10 @@
 
 #include "probe/probe.h"
 
+#include <algorithm>
 #include <array>
 #include <string>
+#include <random>
 #include <variant>
 
 namespace megamol {
@@ -119,6 +121,12 @@ public:
             }
         }
         m_probes = tmp;
+    }
+
+    void shuffle_probes() {
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::shuffle(m_probes.begin(), m_probes.end(), g);
     }
 
 private:
