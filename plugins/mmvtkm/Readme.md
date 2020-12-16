@@ -1,4 +1,4 @@
-# mmvtkm
+# mmvtkm-Plugin
 This plugin is primarily used to calculate streamlines, in the vtkmStreamLines module, in a vector field which is based on tetrahedron cells. Each tetrahedron of the vector field is built within the vtkmDataSource module after loading the nodes the tetrahedrons consist of. In the upper callslot of the vtkmDataSource, the nodes themselves are loaded, i. e. their labels, coordinates, etc. In the bottom callslot all the information about the tetrahedrons are loaded, i. e. the label of the tetrahedron and the four node labels that represent the tetrahedron. An example module graph can look like the this:
 
 <img src="images/ModuleGraphStreamLines.PNG">

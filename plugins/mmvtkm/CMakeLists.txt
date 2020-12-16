@@ -1,10 +1,10 @@
 ﻿#
-# MegaMol™ vtkm Plugin
-# Copyright 2017, by MegaMol Team
+# MegaMol™ mmvtkm Plugin
+# Copyright 2020, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER mmvtkm EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build mmvtkm" OFF)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build vtkm plugin" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(mmvtkm)# LANGUAGES CXX CUDA)

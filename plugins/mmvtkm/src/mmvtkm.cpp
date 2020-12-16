@@ -1,7 +1,7 @@
 /*
  * mmvtkm.cpp
  *
- * Copyright (C) 2009-2020 by MegaMol Team
+ * Copyright (C) 2019-2020 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 

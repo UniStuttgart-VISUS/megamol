@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOL_MMVTKM_MMVTKMDATACALL_H_INCLUDED
-#define MEGAMOL_MMVTKM_MMVTKMDATACALL_H_INCLUDED
+#ifndef MEGAMOL_MMVTKM_VTKMDATACALL_H_INCLUDED
+#define MEGAMOL_MMVTKM_VTKMDATACALL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -129,10 +129,10 @@ private:
 
 
 /** Description class typedef */
-typedef core::factories::CallAutoDescription<mmvtkmDataCall> mmvtkmDataCallDescription;
+typedef core::factories::CallAutoDescription<mmvtkmDataCall> vtkmDataCallDescription;
 
 
 } /* end namespace mmvtkm */
 } /* end namespace megamol */
 
-#endif /* MEGAMOL_MMVTKM_MMVTKMDATACALL_H_INCLUDED */
+#endif /* MEGAMOL_MMVTKM_VTKMDATACALL_H_INCLUDED */

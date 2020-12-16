@@ -191,30 +191,12 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
         std::get<0>(buffer)->bind(std::get<1>(buffer));
 	}
     
+
 	// loop through "registered" render batches
 	for (auto const& render_task : gpu_render_tasks->getRenderTasks())
 	{
-        // Set GL state (otherwise bounding box or view cube rendering state is used)
-		for (auto const& state : render_task->states) {
-			if (state.capability.second) {
-                glEnable(state.capability.first.at(0));
-
-                if (state.capability.first.size() > 1) {
-                    switch (state.capability.first.at(0)) {
-                    case GL_BLEND:
-                        glBlendFunc(state.capability.first.at(1), state.capability.first.at(2));
-                        break;
-                    case GL_CULL_FACE:
-                        glCullFace(state.capability.first.at(1));
-                        break;
-                    default:
-                        break;
-					}
-				}
-			} else {
-                glDisable(state.capability.first.at(0));
-			}
-		}
+        // Set GL states (otherwise bounding box or view cube rendering state is used)
+		render_task.setStates();
 
 		//glDisable(GL_BLEND);
   //      glEnable(GL_DEPTH_TEST);
@@ -264,6 +246,10 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 
 		//GLenum err = glGetError();
 		//std::cout << "Error: " << err << std::endl;
+
+
+		// Reset previously set GLStates
+		render_task.resetStates();
 	}
 	
 	// Clear the way for his ancient majesty, the mighty immediate mode...

@@ -57,37 +57,63 @@ namespace mesh {
         /**
          * Meta data describing an individual render task.
          */
-        struct RenderTaskMetaData {
-            std::shared_ptr<GPURenderTask>
-                render_tasks; // IDEA: store only this shared pointer to the actual GPU render task data s.t. it is
-                              // automatically deleted if now longer used by any render task
-            size_t draw_command_byteOffset;
-            size_t per_draw_data_byteOffset;
-            size_t per_draw_data_byteSize;
-        };
+        inline friend bool operator<(const RenderTasks& lhs, const RenderTasks& rhs) {
+            return (lhs.shader_program == rhs.shader_program ? lhs.mesh < rhs.mesh
+                                                             : lhs.shader_program < rhs.shader_program);
+        }
 
-        // void reserveRenderTask(
-        //	std::shared_ptr<GLSLShader> const& shader_prgm,
-        //	std::shared_ptr<Mesh> const&       mesh,
-        //	size_t                             draw_cnt,
-        //	size_t                             per_draw_data_byte_size
-        //);
+        std::shared_ptr<Shader> shader_program;
+        std::shared_ptr<glowl::Mesh> mesh;
+        std::shared_ptr<glowl::BufferObject> draw_commands;
+        std::shared_ptr<glowl::BufferObject> per_draw_data;
 
-        template<typename PerDrawDataType>
-        void addRenderTask(std::string const& identifier, std::shared_ptr<Shader> const& shader_prgm,
-            std::shared_ptr<glowl::Mesh> const& mesh, glowl::DrawElementsCommand const& draw_command,
-            PerDrawDataType const& per_draw_data, // single struct of per draw data assumed?
-            std::vector<GLState> const& states = {std::pair<std::vector<GLuint>, bool>({GL_BLEND}, false),
-            std::pair<std::vector<GLuint>, bool>({GL_DEPTH_TEST}, true),
-            std::pair<std::vector<GLuint>, bool>({GL_CULL_FACE}, false)}); 
+		std::function<void()> setStates;
+		std::function<void()> resetStates;
 
-        template<typename IdentifierContainer, typename DrawCommandContainer, typename PerDrawDataContainer>
-        void addRenderTasks(IdentifierContainer const& identifiers, std::shared_ptr<Shader> const& shader_prgm,
-            std::shared_ptr<glowl::Mesh> const& mesh, DrawCommandContainer const& draw_commands,
-            PerDrawDataContainer const& per_draw_data, // list of per draw data assumed?
-            std::vector<GLState> const& states = {std::pair<std::vector<GLuint>, bool>({GL_BLEND}, false),
-            std::pair<std::vector<GLuint>, bool>({GL_DEPTH_TEST}, true),
-            std::pair<std::vector<GLuint>, bool>({GL_CULL_FACE}, false)});
+        size_t draw_cnt;
+    };
+
+    /**
+     * Meta data describing an individual render task.
+     */
+    struct RenderTaskMetaData {
+        size_t rts_idx; // index of the render task bundle that contains this render task
+
+        size_t draw_command_byteOffset;
+        size_t per_draw_data_byteOffset;
+        size_t per_draw_data_byteSize;
+    };
+
+    // void reserveRenderTask(
+    //	std::shared_ptr<GLSLShader> const& shader_prgm,
+    //	std::shared_ptr<Mesh> const&       mesh,
+    //	size_t                             draw_cnt,
+    //	size_t                             per_draw_data_byte_size
+    //);
+
+    template <typename PerDrawDataType>
+    size_t addSingleRenderTask(std::shared_ptr<Shader> const& shader_prgm, std::shared_ptr<glowl::Mesh> const& mesh,
+        glowl::DrawElementsCommand const& draw_command,
+        PerDrawDataType const& per_draw_data, // single struct of per draw data assumed?
+		std::function<void()> set = [] { // function to set opengl states
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+	}, 
+		std::function<void()> reset = [] { // reset them to default
+		glDisable(GL_DEPTH_TEST);
+	});
+
+    template <typename DrawCommandContainer, typename PerDrawDataContainer>
+    size_t addRenderTasks(std::shared_ptr<Shader> const& shader_prgm, std::shared_ptr<glowl::Mesh> const& mesh,
+        DrawCommandContainer const& draw_commands,
+        PerDrawDataContainer const& per_draw_data, // list of per draw data assumed?
+		std::function<void()> set = [] { // function to set opengl states
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+	},
+		std::function<void()> reset = [] { // reset them to default
+		glDisable(GL_DEPTH_TEST);
+	});
 
         void copyGPURenderTask(std::string const& identifier, RenderTaskMetaData render_task_meta_data);
 
@@ -113,6 +139,11 @@ namespace mesh {
         std::vector<std::shared_ptr<GPURenderTaskCollection::GPURenderTask>> const& getRenderTasks();
 
         GPURenderTaskCollection::RenderTaskMetaData const& getRenderTaskMetaData(std::string const& identifier);
+template <typename PerDrawDataType>
+inline size_t GPURenderTaskCollection::addSingleRenderTask(std::shared_ptr<Shader> const& shader_prgm,
+    std::shared_ptr<glowl::Mesh> const& mesh, glowl::DrawElementsCommand const& draw_command,
+    PerDrawDataType const& per_draw_data, std::function<void()> set, std::function<void()> reset) {
+    bool task_added = false;
 
         std::vector<std::pair<std::shared_ptr<glowl::BufferObject>, uint32_t>> const& getPerFrameBuffers();
 
@@ -125,6 +156,24 @@ namespace mesh {
          * Render tasks storage. Store tasks sorted by shader program and mesh.
          */
         std::vector<std::shared_ptr<GPURenderTask>> m_gpu_render_tasks;
+    // find matching RenderTasks set
+    for (auto& rts : m_render_tasks) {
+        if (rts.shader_program == shader_prgm && rts.mesh == mesh) {
+            size_t old_dcs_byte_size = rts.draw_commands->getByteSize();
+            size_t old_pdd_byte_size = rts.per_draw_data->getByteSize();
+            size_t new_dcs_byte_size = old_dcs_byte_size + sizeof(glowl::DrawElementsCommand);
+            size_t new_pdd_byte_size = old_pdd_byte_size + sizeof(PerDrawDataType);
+
+            auto new_dcs_buffer = std::make_shared<glowl::BufferObject>(
+                GL_DRAW_INDIRECT_BUFFER, nullptr, new_dcs_byte_size, GL_DYNAMIC_DRAW);
+            auto new_pdd_buffer = std::make_shared<glowl::BufferObject>(
+                GL_SHADER_STORAGE_BUFFER, nullptr, new_pdd_byte_size, GL_DYNAMIC_DRAW);
+
+            glowl::BufferObject::copy(rts.draw_commands.get(), new_dcs_buffer.get());
+            glowl::BufferObject::copy(rts.per_draw_data.get(), new_pdd_buffer.get());
+
+            new_dcs_buffer->bufferSubData(&draw_command, sizeof(glowl::DrawElementsCommand), old_dcs_byte_size);
+            new_pdd_buffer->bufferSubData(&per_draw_data, sizeof(PerDrawDataType), old_pdd_byte_size);
 
         /**
          * Store per render task meta data to identify GPU memory of individual tasks for updating.
@@ -158,6 +207,48 @@ namespace mesh {
         std::shared_ptr<Shader> const& shader_prgm, std::shared_ptr<glowl::Mesh> const& mesh,
         DrawCommandContainer const& draw_commands, PerDrawDataContainer const& per_draw_data,
         std::vector<GLState> const& states) {
+    // TODO add new RenderTasks if necessary and sort vector
+    if (!task_added) {
+        rts_idx = m_render_tasks.size();
+        m_render_tasks.push_back(RenderTasks());
+
+        RenderTasks& new_task = m_render_tasks.back();
+
+        size_t new_dcs_byte_size = sizeof(glowl::DrawElementsCommand);
+        size_t new_pdd_byte_size = sizeof(PerDrawDataType);
+
+        new_task.shader_program = shader_prgm;
+        new_task.mesh = mesh;
+        new_task.draw_commands = std::make_shared<glowl::BufferObject>(
+            GL_DRAW_INDIRECT_BUFFER, &draw_command, new_dcs_byte_size, GL_DYNAMIC_DRAW);
+        new_task.per_draw_data = std::make_shared<glowl::BufferObject>(
+            GL_SHADER_STORAGE_BUFFER, &per_draw_data, new_pdd_byte_size, GL_DYNAMIC_DRAW);
+        new_task.draw_cnt = 1;
+		new_task.setStates = set;
+		new_task.resetStates = reset;
+
+        // Add render task meta data entry
+        RenderTaskMetaData rt_meta;
+        rt_meta.rts_idx = rts_idx;
+        rt_meta.draw_command_byteOffset = 0;
+        rt_meta.per_draw_data_byteOffset = 0;
+        rt_meta.per_draw_data_byteSize = sizeof(PerDrawDataType);
+        m_render_task_meta_data.push_back(rt_meta);
+
+        retval = m_render_task_meta_data.size() - 1;
+    }
+
+    return retval;
+}
+
+template <typename DrawCommandContainer, typename PerDrawDataContainer>
+inline size_t GPURenderTaskCollection::addRenderTasks(std::shared_ptr<Shader> const& shader_prgm,
+    std::shared_ptr<glowl::Mesh> const& mesh, DrawCommandContainer const& draw_commands,
+    PerDrawDataContainer const& per_draw_data, std::function<void()> set, std::function<void()> reset) {
+    typedef typename PerDrawDataContainer::value_type PerDrawDataType;
+    typedef typename DrawCommandContainer::value_type DrawCommandType;
+
+    bool task_added = false;
 
         typedef typename PerDrawDataContainer::value_type PerDrawDataType;
         typedef typename DrawCommandContainer::value_type DrawCommandType;
@@ -214,14 +305,15 @@ namespace mesh {
             size_t new_dcs_byte_size = sizeof(DrawCommandType) * draw_commands.size();
             size_t new_pdd_byte_size = sizeof(PerDrawDataType) * per_draw_data.size();
 
-            new_task->shader_program = shader_prgm;
-            new_task->mesh = mesh;
-            new_task->draw_commands = std::make_shared<glowl::BufferObject>(
-                GL_DRAW_INDIRECT_BUFFER, draw_commands.data(), new_dcs_byte_size, GL_DYNAMIC_DRAW);
-            new_task->per_draw_data = std::make_shared<glowl::BufferObject>(
-                GL_SHADER_STORAGE_BUFFER, per_draw_data.data(), new_pdd_byte_size, GL_DYNAMIC_DRAW);
-            new_task->draw_cnt = draw_commands.size();
-            new_task->states = states;
+        new_task.shader_program = shader_prgm;
+        new_task.mesh = mesh;
+        new_task.draw_commands = std::make_shared<glowl::BufferObject>(
+            GL_DRAW_INDIRECT_BUFFER, draw_commands.data(), new_dcs_byte_size, GL_DYNAMIC_DRAW);
+        new_task.per_draw_data = std::make_shared<glowl::BufferObject>(
+            GL_SHADER_STORAGE_BUFFER, per_draw_data.data(), new_pdd_byte_size, GL_DYNAMIC_DRAW);
+        new_task.draw_cnt = draw_commands.size();
+        new_task.setStates = set;
+		new_task.resetStates = reset;
 
             assert(identifiers.size() == draw_commands.size());
 

@@ -40,7 +40,7 @@ mmvtkmDataRenderer::mmvtkmDataRenderer(void)
     , canvasDepth_(0.f)
 	, localUpdate_(false) 
 {
-    this->vtkmDataCallerSlot_.SetCompatibleCall<megamol::mmvtkm::mmvtkmDataCallDescription>();
+    this->vtkmDataCallerSlot_.SetCompatibleCall<megamol::mmvtkm::vtkmDataCallDescription>();
     this->MakeSlotAvailable(&this->vtkmDataCallerSlot_);
 
 	this->psColorTables_.SetParameter(new core::param::EnumParam(3));
