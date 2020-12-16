@@ -24,22 +24,27 @@ megamol::gui::ParameterPresentation::ParameterPresentation(Param_t type)
         , widget_store()
         , set_focus(0)
         , guistate_dirty(false)
+        , show_minmax(false)
         , tf_editor_external_ptr(nullptr)
-        , tf_editor_internal()
+        , tf_editor_inplace()
         , use_external_tf_editor(false)
         , show_tf_editor(false)
         , tf_editor_hash(0)
         , file_browser()
         , tooltip()
         , image_widget()
-        , rotation_widget()
-        , show_minmax(false) {
+        , rotation_widget() {
 
     this->InitPresentation(type);
 }
 
 
-megamol::gui::ParameterPresentation::~ParameterPresentation(void) {}
+megamol::gui::ParameterPresentation::~ParameterPresentation(void) {
+
+    if (this->tf_editor_external_ptr != nullptr) {
+        this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
+    }
+}
 
 
 bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout_parameter, WidgetScope scope) {
@@ -134,7 +139,7 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
 
         ImGui::PopID();
 
-    } catch (std::exception e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -683,6 +688,8 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     }
                     error = false;
                 } break;
+                default:
+                    break;
                 }
             }
         } break;
@@ -818,16 +825,10 @@ bool megamol::gui::ParameterPresentation::widget_string(
         int multiline_cnt = static_cast<int>(std::count(
             std::get<std::string>(this->widget_store).begin(), std::get<std::string>(this->widget_store).end(), '\n'));
         multiline_cnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), multiline_cnt);
-        /// if (multiline_cnt == 0) {
-        ///    ImGui::InputText(hidden_label.c_str(), &std::get<std::string>(this->widget_store),
-        ///    ImGuiInputTextFlags_CtrlEnterForNewLine);
-        ///}
-        /// else {
         ImVec2 multiline_size = ImVec2(ImGui::CalcItemWidth(),
             ImGui::GetFrameHeightWithSpacing() + (ImGui::GetFontSize() * static_cast<float>(multiline_cnt)));
         ImGui::InputTextMultiline(hidden_label.c_str(), &std::get<std::string>(this->widget_store), multiline_size,
             ImGuiInputTextFlags_CtrlEnterForNewLine);
-        ///}
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             std::string utf8Str = std::get<std::string>(this->widget_store);
             GUIUtils::Utf8Decode(utf8Str);
@@ -1434,12 +1435,10 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
 
     if (this->use_external_tf_editor) {
         if (this->tf_editor_external_ptr == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Pointer to external transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__,
-                __FUNCTION__, __LINE__);
-            return false;
+            this->use_external_tf_editor = false;
+        } else {
+            isActive = !(this->tf_editor_external_ptr->GetConnectedParameterName().empty());
         }
-        isActive = !(this->tf_editor_external_ptr->GetConnectedParameterName().empty());
     }
 
     // LOCAL -----------------------------------------------------------
@@ -1468,36 +1467,36 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
             ImGui::TextEx(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
         }
 
-        // Toggle internal and external editor, if available
+        // Toggle inplace and external editor, if available
         if (this->tf_editor_external_ptr != nullptr) {
-            if (ImGui::RadioButton("External", this->use_external_tf_editor)) {
+            if (ImGui::RadioButton("External Editor", this->use_external_tf_editor)) {
                 this->use_external_tf_editor = true;
-                /// If not this->tf_editor_external_ptr->SetConnectedParameter(&param, full_param_name); additional
-                /// click on edit is required.
-            }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Internal", !this->use_external_tf_editor)) {
-                this->use_external_tf_editor = false;
-                this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
+                this->show_tf_editor = false;
             }
             ImGui::SameLine();
         }
+        if (ImGui::RadioButton("Inplace", !this->use_external_tf_editor)) {
+            this->use_external_tf_editor = false;
+            if (this->tf_editor_external_ptr != nullptr) {
+                this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
+            }
+        }
+        ImGui::SameLine();
 
         if (this->use_external_tf_editor) {
 
             // Editor
-            ImGui::PushID("Edit_");
-            ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[isActive ? ImGuiCol_ButtonHovered : ImGuiCol_Button]);
-            ImGui::PushStyleColor(
-                ImGuiCol_ButtonHovered, style.Colors[isActive ? ImGuiCol_Button : ImGuiCol_ButtonHovered]);
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
-            if (ImGui::Button("Edit")) {
+            if (isActive) {
+                GUIUtils::ReadOnlyWigetStyle(true);
+            }
+            if (ImGui::Button("Connect")) {
                 retval = true;
             }
-            ImGui::PopStyleColor(3);
-            ImGui::PopID();
+            if (isActive) {
+                GUIUtils::ReadOnlyWigetStyle(false);
+            }
 
-        } else { // Internal Editor
+        } else { // Inplace Editor
 
             // Editor
             if (ImGui::Checkbox("Editor ", &this->show_tf_editor)) {
@@ -1551,7 +1550,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
                     this->tf_editor_external_ptr->SetTransferFunction(value, true);
                 }
             } else {
-                this->tf_editor_internal.SetTransferFunction(value, false);
+                this->tf_editor_inplace.SetTransferFunction(value, false);
             }
         }
 
@@ -1562,13 +1561,13 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
             }
             // Propagate the transfer function to the editor.
             if (updateEditor) {
-                this->tf_editor_internal.SetTransferFunction(value, false);
+                this->tf_editor_inplace.SetTransferFunction(value, false);
             }
             // Draw transfer function editor
             if (this->show_tf_editor) {
-                if (this->tf_editor_internal.Widget(false)) {
+                if (this->tf_editor_inplace.Widget(false)) {
                     std::string value;
-                    if (this->tf_editor_internal.GetTransferFunction(value)) {
+                    if (this->tf_editor_inplace.GetTransferFunction(value)) {
                         inout_parameter.SetValue(value);
                         retval = false; /// (Returning true opens external editor)
                     }

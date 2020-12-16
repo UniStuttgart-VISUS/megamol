@@ -30,7 +30,7 @@ GUIWindows::GUIWindows(void)
         : core_instance(nullptr)
         , hotkeys()
         , context(nullptr)
-        , api(GUIImGuiAPI::NO_API)
+        , initialized_api(GUIImGuiAPI::NONE)
         , window_collection()
         , configurator()
         , console()
@@ -63,10 +63,15 @@ GUIWindows::GUIWindows(void)
     this->init_state();
 
     this->tf_editor_ptr = std::make_shared<TransferFunctionEditor>();
+    if (this->tf_editor_ptr == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unable to create transfer function editor. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
 }
 
 
 GUIWindows::~GUIWindows(void) {
+
     this->destroyContext();
 }
 
@@ -76,75 +81,58 @@ bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
     if (instance == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[GUI] Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
     }
     this->core_instance = instance;
 
-    if (this->createContext()) {
-        // Init OpenGL for ImGui
-        const char* glsl_version = "#version 130"; /// "#version 150" or nullptr
-        if (ImGui_ImplOpenGL3_Init(glsl_version)) {
-            this->api = GUIImGuiAPI::OPEN_GL;
-            return true;
-        }
-    }
-
-    return false;
+    return this->createContext(GUIImGuiAPI::OPEN_GL);
 }
 
 
 bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time) {
 
-    // Required to prevent change in gui drawing between pre and post draw
-    this->state.gui_post_drawing_enabled = this->state.gui_pre_drawing_enabled;
+    /// [DEPRECATED USAGE] ///
+    // Disable GUI drawing if GUIView module is chained
+    if (this->state.gui_enabled && ImGui::GetCurrentContext()->WithinFrameScope) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Chaining GUIVIew modules is not supported. GUI is disabled. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
+        this->state.gui_enabled = false;
+    }
 
-    // Early exit when drawing is disabled
-    if (!this->state.gui_pre_drawing_enabled) {
-        if (this->core_instance != nullptr) {
-            this->core_instance->SetCurrentImGuiContext(nullptr);
-        }
+    // Required to prevent change in gui drawing between pre and post draw
+    this->state.enable_gui_post = this->state.gui_enabled;
+
+    // Early exit when pre step should be omitted
+    if (!this->state.gui_enabled) {
         return true;
     }
 
     // Check for initialized imgui api
-    if (this->api == GUIImGuiAPI::NO_API) {
+    if (this->initialized_api == GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line "
-            "%d]\n",
-            __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No ImGui API initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Check for existing imgui context
     if (this->context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+
+    // Set ImGui context
+    ImGui::SetCurrentContext(this->context);
 
     // Propagate ImGui context to core instance
     if (this->core_instance != nullptr) {
         this->core_instance->SetCurrentImGuiContext(this->context);
     }
 
-    // Set ImGui context
-    ImGui::SetCurrentContext(this->context);
-    // Check for existing fonts if shared between multiple contexts
-    ImGuiIO& io = ImGui::GetIO();
-    if (io.Fonts->Fonts.Size < 1) {
-        /// XXX TODO Solution for now is to shutdown megamol completely
-        /// Because if 'main' (= first) created imgui context is destroyed, fonts can not be restored for other
-        /// contexts?!
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Found no valid fonts. Maybe the ImGui context the fonts were shared with is destroyed. "
-            "[%s, %s, line %d]\n",
-            __FILE__, __FUNCTION__, __LINE__);
-        this->triggerCoreInstanceShutdown();
-        this->state.shutdown_triggered = true;
-        return false;
-    }
-
     // Create new gui graph once if core instance graph is used (otherwise graph should already exist)
-    if (this->state.graph_uid == GUI_INVALID_ID)
+    if (this->state.graph_uid == GUI_INVALID_ID) {
         this->SynchronizeGraphs();
+    }
 
     // Check if gui graph is present
     if (this->state.graph_uid == GUI_INVALID_ID) {
@@ -157,6 +145,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // Set stuff for next frame --------------------------------------------
 
     // IO
+    ImGuiIO& io = ImGui::GetIO();
     io.DisplaySize = ImVec2(window_size.x, window_size.y);
     if ((window_size.x > 0.0f) && (window_size.y > 0.0f)) {
         io.DisplayFramebufferScale = ImVec2(framebuffer_size.x / window_size.x, framebuffer_size.y / window_size.y);
@@ -196,21 +185,21 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
             // Search for first main view and set next view to main view (= graph entry point)
             for (auto module_iter = graph_ptr->GetModules().begin(); module_iter != graph_ptr->GetModules().end();
                  module_iter++) {
-                if ((*module_iter)->is_view) {
-                    if ((*module_iter)->IsMainView()) {
-                        // Remove first found main view
-                        (*module_iter)->main_view_name.clear();
-                        Graph::QueueData queue_data;
-                        queue_data.name_id = (*module_iter)->FullName();
-                        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
-                        if (module_iter != graph_ptr->GetModules().end()) {
-                            module_mainview_iter = module_iter + 1;
-                        }
+                if ((*module_iter)->is_view && (*module_iter)->IsMainView()) {
+                    // Remove all main views
+                    (*module_iter)->main_view_name.clear();
+                    Graph::QueueData queue_data;
+                    queue_data.name_id = (*module_iter)->FullName();
+                    graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                    // Save index of last found main view
+                    if (module_iter != graph_ptr->GetModules().end()) {
+                        module_mainview_iter = module_iter + 1;
                     }
                 }
             }
             if ((module_mainview_iter == graph_ptr->GetModules().begin()) ||
                 (module_mainview_iter != graph_ptr->GetModules().end())) {
+                // Search for next main view
                 for (auto module_iter = module_mainview_iter; module_iter != graph_ptr->GetModules().end();
                      module_iter++) {
                     if ((*module_iter)->is_view) {
@@ -307,44 +296,33 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
 bool GUIWindows::PostDraw(void) {
 
-    // Early exit when drawing is disabled
-    if (!this->state.gui_post_drawing_enabled) {
+    // Early exit when post step should be omitted
+    if (!this->state.enable_gui_post) {
         return true;
     }
 
     // Check for initialized imgui api
-    if (this->api == GUIImGuiAPI::NO_API) {
+    if (this->initialized_api == GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Found no initialized ImGui implementation. First call CreateContext_...() once. [%s, %s, line "
-            "%d]\n",
-            __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No ImGui API initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     // Check for existing imgui context
     if (this->context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Found no valid ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    // Check for expected imgui context
-    if (ImGui::GetCurrentContext() != this->context) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[GUI] Unknown ImGui context ... [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    // Check for existing font atlas if shared between multiple contexts
+
+    // Set ImGui context
+    ImGui::SetCurrentContext(this->context);
     ImGuiIO& io = ImGui::GetIO();
-    if (io.Fonts->Fonts.Size < 1) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Found no valid font atlas. Maybe the ImGui context the font atlas was shared with is destroyed. "
-            "[%s, %s, line %d]\n",
-            __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    ImVec2 viewport = io.DisplaySize;
+
+    ////////// DRAW ///////////////////////////////////////////////////////////
 
     // Main Menu ---------------------------------------------------------------
     if (this->state.menu_visible) {
+
         if (ImGui::BeginMainMenuBar()) {
             this->drawMenu();
             ImGui::EndMainMenuBar();
@@ -352,7 +330,7 @@ bool GUIWindows::PostDraw(void) {
     }
 
     // Global Docking Space ---------------------------------------------------
-/// DOCKING
+    /// DOCKING
 #if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
     ImGuiStyle& style = ImGui::GetStyle();
     auto child_bg = style.Colors[ImGuiCol_ChildBg];
@@ -389,15 +367,17 @@ bool GUIWindows::PostDraw(void) {
             this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
 
-            GraphPtr_t graph_ptr;
-            if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-                for (auto& module_ptr : graph_ptr->GetModules()) {
-                    std::string module_full_name = module_ptr->FullName();
-                    for (auto& param : module_ptr->parameters) {
-                        std::string param_full_name = module_full_name + "::" + param.full_name;
-                        if ((wc.tfe_active_param == param_full_name) && (param.type == Param_t::TRANSFERFUNCTION)) {
-                            this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
-                            this->tf_editor_ptr->SetTransferFunction(std::get<std::string>(param.GetValue()), true);
+            if (!wc.tfe_active_param.empty()) {
+                GraphPtr_t graph_ptr;
+                if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+                    for (auto& module_ptr : graph_ptr->GetModules()) {
+                        std::string module_full_name = module_ptr->FullName();
+                        for (auto& param : module_ptr->parameters) {
+                            std::string param_full_name = module_full_name + "::" + param.full_name;
+                            if ((wc.tfe_active_param == param_full_name) && (param.type == Param_t::TRANSFERFUNCTION)) {
+                                this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
+                                this->tf_editor_ptr->SetTransferFunction(std::get<std::string>(param.GetValue()), true);
+                            }
                         }
                     }
                 }
@@ -418,6 +398,7 @@ bool GUIWindows::PostDraw(void) {
                 if (this->tf_editor_ptr->IsMinimized()) {
                     wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize |
                                    ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
+
                 } else {
                     wc.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
                 }
@@ -492,12 +473,14 @@ bool GUIWindows::PostDraw(void) {
     // Draw pop-ups ------------------------------------------------------------
     this->drawPopUps();
 
+    ///////////////////////////////////////////////////////////////////////////
+
     // Render the current ImGui frame ------------------------------------------
-    glViewport(0, 0, static_cast<GLsizei>(viewport.x), static_cast<GLsizei>(viewport.y));
+    glViewport(0, 0, static_cast<GLsizei>(io.DisplaySize.x), static_cast<GLsizei>(io.DisplaySize.y));
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    // Reset hotkeys
+    // Reset hotkeys ----------------------------------------------------------
     for (auto& h : this->hotkeys) {
         h.is_pressed = false;
     }
@@ -740,8 +723,8 @@ bool megamol::gui::GUIWindows::ConsumeTriggeredScreenshot(void) {
 
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
 
-    // If gui is not drawn, there is no need to synchronize graphs
-    if (!this->state.gui_pre_drawing_enabled) {
+    // Disable synchronizing graphs when pre step is omitted
+    if (!this->state.gui_enabled) {
         return true;
     }
 
@@ -851,8 +834,6 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 
     // 2b) ... OR (exclusive or) synchronize Core Graph -> GUI Graph ----------
     if (!synced) {
-        auto last_graph_uid = this->state.graph_uid;
-
         // Creates new graph at first call
         bool graph_sync_success =
             this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(this->state.graph_uid,
@@ -865,20 +846,22 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 
         GraphPtr_t graph_ptr;
         if (graph_sync_success && this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-            std::string last_script_filename = graph_ptr->GetFilename();
+            std::string script_filename = this->state.last_script_filename;
             if (graph_ptr->GetFilename().empty()) {
                 if (this->core_instance != nullptr) {
                     // Set project filename from lua state of core instance
-                    graph_ptr->SetFilename(this->core_instance->GetLuaState()->GetScriptPath());
+                    script_filename = this->core_instance->GetLuaState()->GetScriptPath();
                 }
             }
             // Always check for changed script path when project file is dropped
             if (!this->state.project_script_paths.empty()) {
-                graph_ptr->SetFilename(this->state.project_script_paths.front());
+                script_filename = this->state.project_script_paths.front();
             }
             // Load GUI state from project file when project file changed
-            if (last_script_filename != graph_ptr->GetFilename()) {
+            if (script_filename != this->state.last_script_filename) {
+                graph_ptr->SetFilename(script_filename);
                 this->load_state_from_file(graph_ptr->GetFilename());
+                this->state.last_script_filename = script_filename;
             }
         }
         sync_success &= graph_sync_success;
@@ -962,34 +945,59 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 }
 
 
-bool GUIWindows::createContext(void) {
+bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
 
-    // Check for successfully created tf editor
-    if (this->tf_editor_ptr == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Pointer to transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
-        return false;
+    if (this->initialized_api != GUIImGuiAPI::NONE) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[GUI] ImGui context has alreday been created. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return true;
+    }
+
+    // Check for existing context and share FontAtlas with new context (required by ImGui).
+    bool other_context_exists = (ImGui::GetCurrentContext() != nullptr);
+    ImFontAtlas* font_atlas = nullptr;
+    ImFont* default_font = nullptr;
+
+    /// [DEPRECATED USAGE] ///
+    if (other_context_exists) {
+        ImGuiIO& current_io = ImGui::GetIO();
+        font_atlas = current_io.Fonts;
+        default_font = current_io.FontDefault;
+        ImGui::GetCurrentContext()->FontAtlasOwnedByContext = false;
+        // Init API only once (is it same as the already initialized one?)
+        this->initialized_api = imgui_api;
     }
 
     // Create ImGui context ---------------------------------------------------
-    // Check for existing context and share FontAtlas with new context (required by ImGui).
-    bool other_context = (ImGui::GetCurrentContext() != nullptr);
-    ImFontAtlas* current_fonts = nullptr;
-    ImFont* default_font = nullptr;
-    if (other_context) {
-        ImGuiIO& current_io = ImGui::GetIO();
-        current_fonts = current_io.Fonts;
-        default_font = current_io.FontDefault;
-    }
     IMGUI_CHECKVERSION();
-    this->context = ImGui::CreateContext(current_fonts);
+    this->context = ImGui::CreateContext(font_atlas);
     if (this->context == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unable to create ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    megamol::gui::imgui_context_count++;
     ImGui::SetCurrentContext(this->context);
+
+    // Create ImGui API
+    if (!other_context_exists) {
+        switch (imgui_api) {
+        case (GUIImGuiAPI::OPEN_GL): {
+            // Init OpenGL for ImGui
+            const char* glsl_version = "#version 130"; /// "#version 150" or nullptr
+            if (ImGui_ImplOpenGL3_Init(glsl_version)) {
+                this->initialized_api = GUIImGuiAPI::OPEN_GL;
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Created ImGui context for Open GL.");
+            }
+        } break;
+        default: {
+            this->destroyContext();
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] ImGui API is not supported yet. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        } break;
+        }
+    }
 
     // Register window callbacks in window collection -------------------------
     this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::MAIN_PARAMETERS,
@@ -1062,7 +1070,7 @@ bool GUIWindows::createContext(void) {
     // LOG CONSOLE Window -----------------------------------------------
     buf_win.win_name = "Log Console";
     buf_win.win_show = false;
-    buf_win.win_size = ImVec2(850.0f, 10.0f * ImGui::GetFrameHeightWithSpacing());
+    buf_win.win_size = ImVec2(850.0f, 250.0f);
     buf_win.win_reset_size = buf_win.win_size;
     buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F6);
@@ -1104,7 +1112,19 @@ bool GUIWindows::createContext(void) {
     this->state.font_utf8_ranges.emplace_back(0); // (range termination)
 
     // Load initial fonts only once for all imgui contexts --------------------
-    if (!other_context) {
+    if (other_context_exists) {
+
+        // Fonts are already loaded
+        if (default_font != nullptr) {
+            io.FontDefault = default_font;
+        } else {
+            // ... else default font is font loaded after configurator fonts -> Index equals number of graph fonts.
+            auto default_font_index = static_cast<int>(this->configurator.GetGraphFontScalings().size());
+            default_font_index = std::min(default_font_index, io.Fonts->Fonts.Size - 1);
+            io.FontDefault = io.Fonts->Fonts[default_font_index];
+        }
+    } else {
+
         ImGuiIO& io = ImGui::GetIO();
         const float default_font_size = 12.0f;
         ImFontConfig config;
@@ -1117,8 +1137,7 @@ bool GUIWindows::createContext(void) {
         // Add other known fonts
         std::vector<std::string> font_paths;
         if (this->core_instance != nullptr) {
-            const vislib::Array<vislib::StringW>& search_paths =
-                this->core_instance->Configuration().ResourceDirectories();
+            auto search_paths = this->core_instance->Configuration().ResourceDirectories();
             for (size_t i = 0; i < search_paths.Count(); ++i) {
                 std::wstring search_path(search_paths[i].PeekBuffer());
                 std::string font_path =
@@ -1161,16 +1180,6 @@ bool GUIWindows::createContext(void) {
                 io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
             }
         }
-    } else {
-        // Fonts are already loaded
-        if (default_font != nullptr) {
-            io.FontDefault = default_font;
-        } else {
-            // ... else default font is font loaded after configurator fonts -> Index equals number of graph fonts.
-            auto default_font_index = static_cast<int>(this->configurator.GetGraphFontScalings().size());
-            default_font_index = std::min(default_font_index, io.Fonts->Fonts.Size - 1);
-            io.FontDefault = io.Fonts->Fonts[default_font_index];
-        }
     }
 
     // ImGui Key Map
@@ -1202,21 +1211,38 @@ bool GUIWindows::createContext(void) {
 
 bool GUIWindows::destroyContext(void) {
 
-    this->core_instance = nullptr;
-
-    if (this->api != GUIImGuiAPI::NO_API) {
+    if (this->initialized_api != GUIImGuiAPI::NONE) {
         if (this->context != nullptr) {
-            switch (this->api) {
-            case (GUIImGuiAPI::OPEN_GL):
-                ImGui_ImplOpenGL3_Shutdown();
-                break;
-            default:
-                break;
+
+            /// [DEPRECATED USAGE] ///
+            // Shutdown API only if one context is left
+            if (megamol::gui::imgui_context_count < 2) {
+                ImGui::SetCurrentContext(this->context);
+
+                switch (this->initialized_api) {
+                case (GUIImGuiAPI::OPEN_GL):
+                    ImGui_ImplOpenGL3_Shutdown();
+                    break;
+                default:
+                    break;
+                }
+                // Last context should delete font atlas
+                ImGui::GetCurrentContext()->FontAtlasOwnedByContext = true;
             }
             ImGui::DestroyContext(this->context);
+            megamol::gui::imgui_context_count--;
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Destroyed ImGui context.");
         }
+        this->context = nullptr;
+        this->initialized_api = GUIImGuiAPI::NONE;
     }
-    this->api = GUIImGuiAPI::NO_API;
+
+    this->window_collection.DeleteWindowConfigurations();
+
+    this->configurator.GetGraphCollection().DeleteGraph(this->state.graph_uid);
+    this->state.graph_uid = GUI_INVALID_ID;
+
+    this->core_instance = nullptr;
 
     return true;
 }
@@ -1239,8 +1265,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
 
     // Mode
     megamol::gui::ParameterPresentation::ParameterExtendedModeButton(wc.param_extended_mode);
-    // std::string mode_help("Expert mode enables buttons for additional parameter presentation options.");
-    // this->tooltip.HelpMarker(mode_help);
+    this->tooltip.Marker("Expert mode enables options for additional parameter presentation options.");
     ImGui::SameLine();
 
     // Options
@@ -1254,13 +1279,6 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
         overrideState = 0; // close
     }
     ImGui::SameLine();
-
-    /// DISBALED --- Does anybody use this?
-    /// Toggel Hotkeys
-    // ImGui::SameLine();
-    // bool show_only_hotkeys = wc.param_show_hotkeys;
-    // ImGui::Checkbox("Show Hotkeys", &show_only_hotkeys);
-    // wc.param_show_hotkeys = show_only_hotkeys;
 
     // Info
     std::string help_marker = "[INFO]";
@@ -1278,10 +1296,10 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
             this->search_widget.SetSearchFocus(true);
             this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].is_pressed = false;
         }
-        std::string help_test =
-            "[" + this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].keycode.ToString() +
-            "] Set keyboard focus to search input field.\n"
-            "Case insensitive substring search in\nparameter names.\nGlobally in all parameter views.\n";
+        std::string help_test = "[" + this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH].keycode.ToString() +
+                                "] Set keyboard focus to search input field.\n"
+                                "Case insensitive substring search in module and parameter names.\nSearches globally "
+                                "in all parameter windows.\n";
         this->search_widget.Widget("guiwindow_parameter_earch", help_test);
     }
 
@@ -1291,7 +1309,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     ImGui::BeginChild("###ParameterList", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar);
 
     const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
-    auto currentSearchString = this->search_widget.GetSearchString();
+    auto current_search_string = this->search_widget.GetSearchString();
     GraphPtr_t graph_ptr;
     // Listing modules and their parameters
     if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
@@ -1309,15 +1327,24 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
             if (headerState == GUI_INVALID_ID) {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
             }
-            if (!currentSearchString.empty()) {
+            auto search_string = current_search_string;
+            bool module_searched = true;
+            if (!search_string.empty()) {
                 headerState = 1;
-                ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
+                module_searched =
+                    megamol::gui::StringSearchWidget::FindCaseInsensitiveSubstring(module_label, search_string);
+                if (!module_searched) {
+                    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
+                } else {
+                    // Show all when module is part of the search
+                    search_string.clear();
+                }
             }
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
 
             bool header_open = ImGui::CollapsingHeader(module_label.c_str(), nullptr);
 
-            if (!currentSearchString.empty()) {
+            if (!search_string.empty() && !module_searched) {
                 ImGui::PopStyleColor();
             }
 
@@ -1369,9 +1396,9 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
 
             if (header_open) {
                 // Draw parameters
-
                 bool out_open_external_tf_editor;
-                module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, currentSearchString,
+
+                module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, search_string,
                     vislib::math::Ternary(wc.param_extended_mode), true, ParameterPresentation::WidgetScope::LOCAL,
                     this->tf_editor_ptr, &out_open_external_tf_editor);
 
@@ -1599,8 +1626,6 @@ void GUIWindows::drawMenu(void) {
         megamolgraph_interface = (graph_ptr->GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH);
     }
 
-    ImGui::PushID("GUI::Menu");
-
     if (ImGui::BeginMenu("File")) {
         if (megamolgraph_interface) {
             if (ImGui::MenuItem("Load Project",
@@ -1648,6 +1673,7 @@ void GUIWindows::drawMenu(void) {
                 this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS].keycode.ToString().c_str(), nullptr)) {
             this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS].is_pressed = true;
         }
+        this->tooltip.ToolTip("Reset size and position of all windows to lie within the current viewport.");
         ImGui::EndMenu();
     }
     if (megamolgraph_interface) {
@@ -1663,32 +1689,40 @@ void GUIWindows::drawMenu(void) {
             ImGui::EndMenu();
         }
     }
-    if (megamolgraph_interface) {
-        if (graph_ptr != nullptr) {
-            if (ImGui::BeginMenu("Render")) {
-                for (auto& module_ptr : graph_ptr->GetModules()) {
-                    if (module_ptr->is_view) {
-                        if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsMainView())) {
-                            if (!module_ptr->IsMainView()) {
-                                module_ptr->main_view_name = graph_ptr->GenerateUniqueMainViewName();
-                                Graph::QueueData queue_data;
-                                queue_data.name_id = module_ptr->FullName();
-                                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
-                            } else {
-                                module_ptr->main_view_name.clear();
-                                Graph::QueueData queue_data;
-                                queue_data.name_id = module_ptr->FullName();
-                                graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+    if (megamolgraph_interface && (graph_ptr != nullptr)) {
+        if (ImGui::BeginMenu("Render")) {
+            for (auto& module_ptr : graph_ptr->GetModules()) {
+                if (module_ptr->is_view) {
+                    if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsMainView())) {
+                        if (!module_ptr->IsMainView()) {
+                            // Remove all main views
+                            for (auto module_ptr : graph_ptr->GetModules()) {
+                                if (module_ptr->is_view && module_ptr->IsMainView()) {
+                                    module_ptr->main_view_name.clear();
+                                    Graph::QueueData queue_data;
+                                    queue_data.name_id = module_ptr->FullName();
+                                    graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                                }
                             }
+                            // Add new main view
+                            module_ptr->main_view_name = graph_ptr->GenerateUniqueMainViewName();
+                            Graph::QueueData queue_data;
+                            queue_data.name_id = module_ptr->FullName();
+                            graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                        } else {
+                            module_ptr->main_view_name.clear();
+                            Graph::QueueData queue_data;
+                            queue_data.name_id = module_ptr->FullName();
+                            graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
                         }
                     }
                 }
-                if (ImGui::MenuItem("Toggle Main Views",
-                        this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].keycode.ToString().c_str())) {
-                    this->state.toggle_main_view = true;
-                }
-                ImGui::EndMenu();
             }
+            if (ImGui::MenuItem("Toggle Main Views",
+                    this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].keycode.ToString().c_str())) {
+                this->state.toggle_main_view = true;
+            }
+            ImGui::EndMenu();
         }
     }
     if (ImGui::BeginMenu("Settings")) {
@@ -1720,7 +1754,6 @@ void GUIWindows::drawMenu(void) {
         }
         ImGui::EndMenu();
     }
-    ImGui::PopID();
 }
 
 
@@ -1734,69 +1767,87 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     bool open = true;
     if (ImGui::BeginPopupModal("About", &open, (ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))) {
 
-        const std::string eMail("megamol@visus.uni-stuttgart.de");
-        const std::string webLink("https://megamol.org/");
-        const std::string gitLink("https://github.com/UniStuttgart-VISUS/megamol");
+        const std::string email("megamol@visus.uni-stuttgart.de");
+        const std::string web_link("https://megamol.org/");
+        const std::string github_link("https://github.com/UniStuttgart-VISUS/megamol");
+        const std::string docu_link("https://github.com/UniStuttgart-VISUS/megamol/tree/master/plugins/gui");
+        const std::string imgui_link("https://github.com/ocornut/imgui");
 
-        std::string about = std::string("MegaMol - Version ") + std::to_string(MEGAMOL_CORE_MAJOR_VER) + (".") +
-                            std::to_string(MEGAMOL_CORE_MINOR_VER) + ("\ngit# ") + std::string(MEGAMOL_CORE_COMP_REV) +
-                            ("\nDear ImGui - Version ") + std::string(IMGUI_VERSION) + ("\n");
-        std::string mailstr = std::string("Contact: ") + eMail;
-        std::string webstr = std::string("Web: ") + webLink;
-        std::string gitstr = std::string("Git-Hub: ") + gitLink;
+        const std::string mmstr = std::string("MegaMol - Version ") + std::to_string(MEGAMOL_CORE_MAJOR_VER) + (".") +
+                                  std::to_string(MEGAMOL_CORE_MINOR_VER) + ("\ngit# ") +
+                                  std::string(MEGAMOL_CORE_COMP_REV) + ("\n");
+        const std::string mailstr = std::string("Contact: ") + email;
+        const std::string webstr = std::string("Web: ") + web_link;
+        const std::string gitstr = std::string("Git-Hub: ") + github_link;
+        const std::string imguistr = ("Dear ImGui - Version ") + std::string(IMGUI_VERSION) + ("\n");
+        const std::string imguigitstr = std::string("Git-Hub: ") + imgui_link;
+        const std::string about = "Copyright (C) 2009-2020 by University of Stuttgart (VISUS).\nAll rights reserved.";
 
-        ImGui::TextUnformatted(about.c_str());
+        ImGui::TextUnformatted(mmstr.c_str());
 
-        ImGui::Separator();
         if (ImGui::Button("Copy E-Mail")) {
 #ifdef GUI_USE_GLFW
             auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, eMail.c_str());
+            ::glfwSetClipboardString(glfw_win, email.c_str());
 #elif _WIN32
-            ImGui::SetClipboardText(eMail.c_str());
+            ImGui::SetClipboardText(email.c_str());
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] E-Mail address:\n%s", eMail.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] E-Mail address:\n%s", email.c_str());
 #endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(mailstr.c_str());
 
-
         if (ImGui::Button("Copy Website")) {
 #ifdef GUI_USE_GLFW
             auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, webLink.c_str());
+            ::glfwSetClipboardString(glfw_win, web_link.c_str());
 #elif _WIN32
-            ImGui::SetClipboardText(webLink.c_str());
+            ImGui::SetClipboardText(web_link.c_str());
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Website link:\n%s", webLink.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Website link:\n%s", web_link.c_str());
 #endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(webstr.c_str());
 
-        if (ImGui::Button("Copy GitHub")) {
+        if (ImGui::Button("Copy GitHub###megamol_copy_github")) {
 #ifdef GUI_USE_GLFW
             auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, gitLink.c_str());
+            ::glfwSetClipboardString(glfw_win, github_link.c_str());
 #elif _WIN32
-            ImGui::SetClipboardText(gitLink.c_str());
+            ImGui::SetClipboardText(github_link.c_str());
 #else // LINUX
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] GitHub link:\n%s", gitLink.c_str());
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] GitHub link:\n%s", github_link.c_str());
 #endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(gitstr.c_str());
 
         ImGui::Separator();
-        about = "Copyright (C) 2009-2020 by University of Stuttgart "
-                "(VIS).\nAll rights reserved.";
+        ImGui::TextUnformatted(imguistr.c_str());
+        if (ImGui::Button("Copy GitHub###imgui_copy_github")) {
+#ifdef GUI_USE_GLFW
+            auto glfw_win = ::glfwGetCurrentContext();
+            ::glfwSetClipboardString(glfw_win, imgui_link.c_str());
+#elif _WIN32
+            ImGui::SetClipboardText(imgui_link.c_str());
+#else // LINUX
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] ImGui GitHub Link:\n%s", imgui_link.c_str());
+#endif
+        }
+        ImGui::SameLine();
+        ImGui::TextUnformatted(imguigitstr.c_str());
+
+        ImGui::Separator();
         ImGui::TextUnformatted(about.c_str());
 
         ImGui::Separator();
@@ -1847,7 +1898,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     this->state.open_popup_load = false;
     this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed = false;
 
-    // Filename for screenshot pop-up
+    // File name for screenshot pop-up
     if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Select Filename for Screenshot",
             this->state.open_popup_screenshot, this->state.screenshot_filepath, ".png")) {
         this->state.screenshot_filepath_id = 0;
@@ -2199,8 +2250,8 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
 
 void megamol::gui::GUIWindows::init_state(void) {
 
-    this->state.gui_pre_drawing_enabled = true;
-    this->state.gui_post_drawing_enabled = true;
+    this->state.gui_enabled = true;
+    this->state.enable_gui_post = true;
     this->state.style = GUIWindows::Styles::DarkColors;
     this->state.style_changed = true;
     this->state.autosave_gui_state = false;
@@ -2225,6 +2276,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.screenshot_triggered = false;
     this->state.screenshot_filepath = "megamol_screenshot.png";
     this->state.screenshot_filepath_id = 0;
+    this->state.last_script_filename = "";
     this->state.hotkeys_check_once = true;
 
     this->create_not_existing_png_filepath(this->state.screenshot_filepath);

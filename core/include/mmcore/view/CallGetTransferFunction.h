@@ -186,7 +186,7 @@ public:
      */
     inline void CopyColor(size_t index, float* color, size_t colorSize) {
         assert(index > 0 && index < this->texSize && "Invalid index");
-        assert(colorSize == 3 * sizeof(float) || colorSize == 4 * sizeof(float) && "Not a RGB(A) color");
+        assert((colorSize == 3 * sizeof(float) || colorSize == 4 * sizeof(float)) && "Not a RGB(A) color");
         memcpy(color, &this->texData[index * 4], colorSize);
     }
 
