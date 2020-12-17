@@ -27,12 +27,18 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget()
         , additional_lines(0) {}
 
 
-bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::FileBrowserFlag flag,
-    const std::string& label_id, bool open_popup, std::string& inout_filename, const std::string& extension) {
+bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
+    megamol::gui::FileBrowserWidget::FileBrowserFlag flag, const std::string& label, bool open_popup,
+    const std::string& extension) {
 
     bool retval = false;
 
     try {
+        std::string label_id = label;
+        if (!extension.empty()) {
+            label_id.append(" (." + extension + ")");
+        }
+
         ImGui::PushID(label_id.c_str());
 
         if (open_popup) {
@@ -247,7 +253,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
             if (apply && this->valid_directory && this->valid_file) {
                 // Appending required extension
                 if (!this->valid_ending) {
-                    std::string ext_lower = extension;
+                    std::string ext_lower = "." + extension;
                     this->string_to_lower_case(ext_lower);
                     this->file_name_str.append(ext_lower);
                 }
@@ -281,7 +287,8 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
 }
 
 
-bool megamol::gui::FileBrowserWidget::Button(std::string& inout_filename) {
+bool megamol::gui::FileBrowserWidget::Button(
+    std::string& inout_filename, megamol::gui::FileBrowserWidget::FileBrowserFlag flag, const std::string& extension) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -320,7 +327,22 @@ bool megamol::gui::FileBrowserWidget::Button(std::string& inout_filename) {
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
-    bool retval = this->PopUp(FileBrowserFlag::SELECT, "Select File", popup_select_file, inout_filename);
+    std::string label;
+    switch (flag) {
+    case (FileBrowserFlag::SELECT):
+        label = "Select File";
+        break;
+    case (FileBrowserFlag::LOAD):
+        label = "Load File";
+        break;
+    case (FileBrowserFlag::SAVE):
+        label = "Save File";
+        break;
+    }
+    if (!extension.empty()) {
+        label.append(" (." + extension + ")");
+    }
+    bool retval = this->PopUp(inout_filename, flag, label, popup_select_file, extension);
 
     return retval;
 }
@@ -416,7 +438,7 @@ void megamol::gui::FileBrowserWidget::validate_file(
         std::string file_lower = file_str;
         this->string_to_lower_case(file_lower);
 
-        std::string ext_lower = extension;
+        std::string ext_lower = "." + extension;
         this->string_to_lower_case(ext_lower);
 
         this->file_error.clear();

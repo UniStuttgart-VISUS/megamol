@@ -44,7 +44,7 @@
 namespace megamol {
 namespace gui {
 
-    /// #define GUI_VERBOSE
+#define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f)
@@ -76,6 +76,17 @@ namespace gui {
 #define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 1.0f, 0.75f, 1.0f))
 #define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
 #define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.75f, 1.0f, 0.25f, 1.0f))
+
+    /********** Operators **********/
+
+    // inline bool operator==(const ImVec2& left, const ImVec2& right) {
+    //    return ((left.x == right.x) && (left.y == right.y));
+    //};
+
+    // inline bool operator!=(const ImVec2& left, const ImVec2& right) {
+    //    return !(left == right);
+    //};
+
 
     /********** Types **********/
 

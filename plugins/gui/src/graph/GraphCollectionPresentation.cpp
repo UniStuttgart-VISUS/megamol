@@ -78,8 +78,8 @@ void megamol::gui::GraphCollectionPresentation::Present(
                 project_filename = graph_ptr->GetFilename();
             }
         }
-        if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
-                state.configurator_graph_save, project_filename)) {
+        if (this->file_browser.PopUp(project_filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
+                state.configurator_graph_save, "lua")) {
             popup_failed = !inout_graph_collection.SaveProjectToFile(state.graph_selected_uid, project_filename,
                 inout_graph_collection.GetUpdatedGUIState(state.graph_selected_uid, project_filename));
         }

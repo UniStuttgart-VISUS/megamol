@@ -1059,7 +1059,8 @@ bool megamol::gui::ParameterPresentation::widget_filepath(
         ImGuiStyle& style = ImGui::GetStyle();
         float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
         ImGui::PushItemWidth(widget_width);
-        bool button_edit = this->file_browser.Button(std::get<std::string>(this->widget_store));
+        bool button_edit = this->file_browser.Button(
+            std::get<std::string>(this->widget_store), megamol::gui::FileBrowserWidget::FileBrowserFlag::SELECT, "");
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {

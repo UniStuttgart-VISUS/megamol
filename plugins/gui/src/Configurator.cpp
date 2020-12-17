@@ -569,7 +569,7 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
         project_filename = core_instance->GetLuaState()->GetScriptPath();
     }
     if (this->file_browser.PopUp(
-            FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->open_popup_load, project_filename)) {
+            project_filename, FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->open_popup_load, "lua")) {
         popup_failed = (GUI_INVALID_ID ==
                         this->graph_collection.LoadAddProjectFromFile(this->add_project_graph_uid, project_filename));
         this->add_project_graph_uid = GUI_INVALID_ID;

@@ -10,8 +10,8 @@
  *
  * - Trigger Screenshot:        F2
  * - Toggle Main View:          F3
- * - Reset Windows Positions:   F4
- * - Show/hide Windows:         F6-F11
+ * - Reset Windows Positions:   Ctrl + r
+ * - Show/hide Windows:         F7-F11
  * - Show/hide Menu:            F12
  * - Search Parameter:          Ctrl  + p
  * - Save Running Project:      Ctrl  + s
@@ -48,8 +48,8 @@ GUIWindows::GUIWindows(void)
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F3, core::view::Modifier::NONE), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false};
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS] = {
-        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::NONE), false};
+    // this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE] = {
+    //    megamol::core::view::KeyCode(megamol::core::view::Key::KEY_R, core::view::Modifier::CTRL), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] = {
@@ -258,26 +258,39 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
 
     // Loading new font (set in FONT window)
-    if (!this->state.font_file.empty()) {
-        ImFontConfig config;
-        config.OversampleH = 4;
-        config.OversampleV = 4;
-        config.GlyphRanges = this->state.font_utf8_ranges.data();
-
-        GUIUtils::Utf8Encode(this->state.font_file);
-        io.Fonts->AddFontFromFileTTF(this->state.font_file.c_str(), this->state.font_size, &config);
-        ImGui_ImplOpenGL3_CreateFontsTexture();
-        // Load last added font
-        io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
-        this->state.font_file.clear();
-    }
-
-    // Loading new font from state (set in loaded FONT window configuration)
-    if (this->state.font_index >= this->state.graph_fonts_reserved) {
-        if (this->state.font_index < static_cast<unsigned int>(io.Fonts->Fonts.Size)) {
-            io.FontDefault = io.Fonts->Fonts[this->state.font_index];
+    if (this->state.font_apply) {
+        bool load_success = false;
+        if (FileUtils::FileWithExtensionExists<std::string>(this->state.font_file_name, std::string("ttf"))) {
+            ImFontConfig config;
+            config.OversampleH = 4;
+            config.OversampleV = 4;
+            config.GlyphRanges = this->state.font_utf8_ranges.data();
+            GUIUtils::Utf8Encode(this->state.font_file_name);
+            if (io.Fonts->AddFontFromFileTTF(this->state.font_file_name.c_str(), this->state.font_size, &config) !=
+                nullptr) {
+                ImGui_ImplOpenGL3_CreateFontsTexture();
+                // Load last added font
+                io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
+                load_success = true;
+            }
+            GUIUtils::Utf8Decode(this->state.font_file_name);
+        } else {
+            for (unsigned int n = this->state.graph_fonts_reserved; n < static_cast<unsigned int>(io.Fonts->Fonts.Size);
+                 n++) {
+                std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
+                GUIUtils::Utf8Decode(font_name);
+                if (font_name == this->state.font_file_name) {
+                    io.FontDefault = io.Fonts->Fonts[n];
+                    load_success = true;
+                }
+            }
         }
-        this->state.font_index = GUI_INVALID_ID;
+        if (!load_success) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] Unable to load font '%s'. [%s, %s, line %d]\n", this->state.font_file_name.c_str(), __FILE__,
+                __FUNCTION__, __LINE__);
+        }
+        this->state.font_apply = false;
     }
 
     // Delete window
@@ -341,27 +354,6 @@ bool GUIWindows::PostDraw(void) {
 
     // Draw Windows ------------------------------------------------------------
     const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
-        // Loading changed window state of font (even if window is not shown)
-        if ((wc.win_callback == WindowCollection::DrawCallbacks::FONT) && wc.buf_font_reset) {
-            if (!wc.font_name.empty()) {
-                this->state.font_index = GUI_INVALID_ID;
-                for (unsigned int n = this->state.graph_fonts_reserved;
-                     n < static_cast<unsigned int>(io.Fonts->Fonts.Size); n++) {
-                    std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
-                    GUIUtils::Utf8Decode(font_name);
-                    if (font_name == wc.font_name) {
-                        this->state.font_index = n;
-                    }
-                }
-                if (this->state.font_index == GUI_INVALID_ID) {
-                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                        "[GUI] Could not find font '%s' for loaded state. [%s, %s, line %d]\n", wc.font_name.c_str(),
-                        __FILE__, __FUNCTION__, __LINE__);
-                }
-            }
-            wc.buf_font_reset = false;
-        }
-
         // Loading changed window state of transfer function editor (even if window is not shown)
         if ((wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) && wc.buf_tfe_reset) {
             this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
@@ -409,7 +401,7 @@ bool GUIWindows::PostDraw(void) {
             ImGui::SetNextWindowBgAlpha(1.0f);
             ImGui::SetNextWindowCollapsed(wc.win_collapsed, ImGuiCond_Always);
 
-            wc.win_soft_reset |= this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS].is_pressed;
+            // wc.win_set_pos_size |= this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE].is_pressed;
 
             // Begin Window
             auto window_title = wc.win_name + "     " + wc.win_hotkey.ToString();
@@ -984,7 +976,7 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
         switch (imgui_api) {
         case (GUIImGuiAPI::OPEN_GL): {
             // Init OpenGL for ImGui
-            const char* glsl_version = "#version 130"; /// "#version 150" or nullptr
+            const char* glsl_version = "#version 150"; /// "#version 150" or nullptr
             if (ImGui_ImplOpenGL3_Init(glsl_version)) {
                 this->initialized_api = GUIImGuiAPI::OPEN_GL;
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Created ImGui context for Open GL.");
@@ -1006,8 +998,6 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
         [&, this](WindowCollection::WindowConfiguration& wc) { this->drawParamWindowCallback(wc); });
     this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::PERFORMANCE,
         [&, this](WindowCollection::WindowConfiguration& wc) { this->drawFpsWindowCallback(wc); });
-    this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::FONT,
-        [&, this](WindowCollection::WindowConfiguration& wc) { this->drawFontWindowCallback(wc); });
     this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::TRANSFER_FUNCTION,
         [&, this](WindowCollection::WindowConfiguration& wc) { this->drawTransferFunctionWindowCallback(wc); });
     this->window_collection.RegisterDrawWindowCallback(WindowCollection::DrawCallbacks::CONFIGURATOR,
@@ -1017,63 +1007,74 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
 
     // Create window configurations
     WindowCollection::WindowConfiguration buf_win;
+    buf_win.win_set_pos_size = true;
+    buf_win.win_collapsed = false;
     buf_win.win_store_config = true;
-    buf_win.win_reset = true;
-    buf_win.win_position = ImVec2(0.0f, 0.0f);
-    buf_win.win_reset_position = ImVec2(0.0f, 0.0f);
-    buf_win.win_size = ImVec2(400.0f, 600.0f);
 
-    // MAIN Window ------------------------------------------------------------
-    buf_win.win_name = "All Parameters";
-    buf_win.win_show = true;
+    float vp[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+    ::glGetFloatv(GL_VIEWPORT, vp);
+
+    // CONFIGURATOR Window ----------------------------------------------------
+    buf_win.win_name = "Configurator";
+    buf_win.win_show = false;
+    buf_win.win_size = ImVec2(vp[2], vp[3]);
+    buf_win.win_reset_size = buf_win.win_size;
+    buf_win.win_position = ImVec2(0.0f, 0.0f);
+    buf_win.win_reset_position = buf_win.win_position;
+    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F11);
+    buf_win.win_callback = WindowCollection::DrawCallbacks::CONFIGURATOR;
+    this->window_collection.AddWindowConfiguration(buf_win);
+
+    // Parameters -------------------------------------------------------------
+    buf_win.win_name = "Parameters";
+    buf_win.win_show = true;
+    buf_win.win_size = ImVec2(400.0f, 500.0f);
+    buf_win.win_reset_size = buf_win.win_size;
+    buf_win.win_position = ImVec2(0.0f, 0.0f);
+    buf_win.win_reset_position = buf_win.win_position;
+    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
     buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
     buf_win.win_callback = WindowCollection::DrawCallbacks::MAIN_PARAMETERS;
     buf_win.win_reset_size = buf_win.win_size;
     this->window_collection.AddWindowConfiguration(buf_win);
+    float param_win_width = buf_win.win_size.x;
+    float param_win_height = buf_win.win_size.y;
 
-    // FPS/MS Window ----------------------------------------------------------
-    buf_win.win_name = "Performance Metrics";
+    // LOG CONSOLE Window -----------------------------------------------------
+    buf_win.win_name = "Log Console";
     buf_win.win_show = false;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F10);
-    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
-    buf_win.win_callback = WindowCollection::DrawCallbacks::PERFORMANCE;
-    this->window_collection.AddWindowConfiguration(buf_win);
-
-    // FONT Window ------------------------------------------------------------
-    buf_win.win_name = "Font Settings";
-    buf_win.win_show = false;
+    buf_win.win_size = ImVec2(vp[2], 200.0f);
+    buf_win.win_reset_size = buf_win.win_size;
+    buf_win.win_position = ImVec2(0.0f, vp[3] - buf_win.win_size.y);
+    buf_win.win_reset_position = buf_win.win_position;
+    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F9);
-    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
-    buf_win.win_callback = WindowCollection::DrawCallbacks::FONT;
+    buf_win.win_callback = WindowCollection::DrawCallbacks::LOGCONSOLE;
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // TRANSFER FUNCTION Window -----------------------------------------------
     buf_win.win_name = "Transfer Function Editor";
     buf_win.win_show = false;
+    buf_win.win_size = ImVec2(0.0f, 0.0f); /// see ImGuiWindowFlags_AlwaysAutoResize
+    buf_win.win_reset_size = buf_win.win_size;
+    buf_win.win_position = ImVec2(param_win_width, 0.0f);
+    buf_win.win_reset_position = buf_win.win_position;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F8);
     buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize;
     buf_win.win_callback = WindowCollection::DrawCallbacks::TRANSFER_FUNCTION;
     this->window_collection.AddWindowConfiguration(buf_win);
 
-    // CONFIGURATOR Window -----------------------------------------------
-    buf_win.win_name = "Configurator";
+    // FPS/MS Window ----------------------------------------------------------
+    buf_win.win_name = "Performance Metrics";
     buf_win.win_show = false;
-    buf_win.win_size = ImVec2(800.0f, 600.0f);
+    buf_win.win_size = ImVec2(0.0f, 0.0f); /// see ImGuiWindowFlags_AlwaysAutoResize
     buf_win.win_reset_size = buf_win.win_size;
-    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar;
+    buf_win.win_position = ImVec2(vp[2] / 2.0f, 0.0f);
+    buf_win.win_reset_position = buf_win.win_position;
     buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F7);
-    buf_win.win_callback = WindowCollection::DrawCallbacks::CONFIGURATOR;
-    this->window_collection.AddWindowConfiguration(buf_win);
-
-    // LOG CONSOLE Window -----------------------------------------------
-    buf_win.win_name = "Log Console";
-    buf_win.win_show = false;
-    buf_win.win_size = ImVec2(850.0f, 250.0f);
-    buf_win.win_reset_size = buf_win.win_size;
-    buf_win.win_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_HorizontalScrollbar;
-    buf_win.win_hotkey = core::view::KeyCode(core::view::Key::KEY_F6);
-    buf_win.win_callback = WindowCollection::DrawCallbacks::LOGCONSOLE;
+    buf_win.win_flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar;
+    buf_win.win_callback = WindowCollection::DrawCallbacks::PERFORMANCE;
     this->window_collection.AddWindowConfiguration(buf_win);
 
     // Style settings ---------------------------------------------------------
@@ -1111,6 +1112,9 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
     this->state.font_utf8_ranges.emplace_back(0); // (range termination)
 
     // Load initial fonts only once for all imgui contexts --------------------
+    const auto graph_font_scalings = this->configurator.GetGraphFontScalings();
+    this->state.graph_fonts_reserved = graph_font_scalings.size();
+
     if (other_context_exists) {
 
         // Fonts are already loaded
@@ -1157,8 +1161,6 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
         // Configurator Graph Font: Add default font at first n indices for exclusive use in configurator graph.
         /// Workaround: Using different font sizes for different graph zooming factors to improve font readability when
         /// zooming.
-        const auto graph_font_scalings = this->configurator.GetGraphFontScalings();
-        this->state.graph_fonts_reserved = graph_font_scalings.size();
         if (configurator_font.empty()) {
             for (unsigned int i = 0; i < this->state.graph_fonts_reserved; i++) {
                 io.Fonts->AddFontDefault(&config);
@@ -1180,6 +1182,7 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
             }
         }
     }
+    this->state.font_file_name = std::string(io.FontDefault->GetDebugName());
 
     // ImGui Key Map
     io.KeyMap[ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
@@ -1571,53 +1574,6 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
 }
 
 
-void GUIWindows::drawFontWindowCallback(WindowCollection::WindowConfiguration& wc) {
-    ImGuiIO& io = ImGui::GetIO();
-
-    ImFont* font_current = ImGui::GetFont();
-    if (ImGui::BeginCombo("Select available Font", font_current->GetDebugName())) {
-        for (int n = this->state.graph_fonts_reserved; n < io.Fonts->Fonts.Size;
-             n++) { // first fonts until index this->graph_fonts_reserved are exclusively used by configurator for the
-                    // graph.
-            if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current)))
-                io.FontDefault = io.Fonts->Fonts[n];
-        }
-        ImGui::EndCombo();
-    }
-
-    // Saving current font to window configuration.
-    wc.font_name = std::string(font_current->GetDebugName());
-    GUIUtils::Utf8Decode(wc.font_name);
-
-    ImGui::Separator();
-    ImGui::TextUnformatted("Load Font from File");
-    std::string help("Same font can be loaded multiple times with different font size.");
-    this->tooltip.Marker(help);
-
-    std::string label("Font Size");
-    ImGui::InputFloat(label.c_str(), &wc.buf_font_size, 1.0f, 10.0f, "%.2f", ImGuiInputTextFlags_None);
-    // Validate font size
-    if (wc.buf_font_size <= 0.0f) {
-        wc.buf_font_size = 5.0f; // minimum valid font size
-    }
-
-    label = "Font Filename (.ttf)";
-    /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.
-    GUIUtils::Utf8Encode(wc.buf_font_file);
-    ImGui::InputText(label.c_str(), &wc.buf_font_file, ImGuiInputTextFlags_AutoSelectAll);
-    GUIUtils::Utf8Decode(wc.buf_font_file);
-    // Validate font file before offering load button
-    if (FileUtils::FileWithExtensionExists<std::string>(wc.buf_font_file, std::string(".ttf"))) {
-        if (ImGui::Button("Add Font")) {
-            this->state.font_file = wc.buf_font_file;
-            this->state.font_size = wc.buf_font_size;
-        }
-    } else {
-        ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font filename.");
-    }
-}
-
-
 void GUIWindows::drawMenu(void) {
 
     bool megamolgraph_interface = false;
@@ -1626,6 +1582,7 @@ void GUIWindows::drawMenu(void) {
         megamolgraph_interface = (graph_ptr->GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH);
     }
 
+    // FILE -------------------------------------------------------------------
     if (ImGui::BeginMenu("File")) {
         if (megamolgraph_interface) {
             if (ImGui::MenuItem("Load Project",
@@ -1643,6 +1600,8 @@ void GUIWindows::drawMenu(void) {
         }
         ImGui::EndMenu();
     }
+
+    // WINDOWS ----------------------------------------------------------------
     if (ImGui::BeginMenu("Windows")) {
         ImGui::MenuItem("Menu", this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].keycode.ToString().c_str(),
             &this->state.menu_visible);
@@ -1668,14 +1627,17 @@ void GUIWindows::drawMenu(void) {
             }
         };
         this->window_collection.EnumWindows(func);
-        ImGui::Separator();
-        if (ImGui::MenuItem("Reset Size and Position",
-                this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS].keycode.ToString().c_str(), nullptr)) {
-            this->hotkeys[GUIWindows::GuiHotkeyIndex::RESET_WINDOWS_POS].is_pressed = true;
-        }
+        // ImGui::Separator();
+        // if (ImGui::MenuItem("Reset Size and Position",
+        //        this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE].keycode.ToString().c_str(), nullptr))
+        //        {
+        //    this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE].is_pressed = true;
+        //}
         this->tooltip.ToolTip("Reset size and position of all windows to lie within the current viewport.");
         ImGui::EndMenu();
     }
+
+    // SCREENSHOT -------------------------------------------------------------
     if (megamolgraph_interface) {
         if (ImGui::BeginMenu("Screenshot")) {
             this->create_not_existing_png_filepath(this->state.screenshot_filepath);
@@ -1689,6 +1651,8 @@ void GUIWindows::drawMenu(void) {
             ImGui::EndMenu();
         }
     }
+
+    // RENDER -----------------------------------------------------------------
     if (megamolgraph_interface && (graph_ptr != nullptr)) {
         if (ImGui::BeginMenu("Render")) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
@@ -1725,8 +1689,12 @@ void GUIWindows::drawMenu(void) {
             ImGui::EndMenu();
         }
     }
+
+    // SETTINGS ---------------------------------------------------------------
     if (ImGui::BeginMenu("Settings")) {
+
         if (ImGui::BeginMenu("Style")) {
+
             if (ImGui::MenuItem("ImGui Dark Colors", nullptr, (this->state.style == GUIWindows::Styles::DarkColors))) {
                 this->state.style = GUIWindows::Styles::DarkColors;
                 this->state.style_changed = true;
@@ -1746,8 +1714,75 @@ void GUIWindows::drawMenu(void) {
             }
             ImGui::EndMenu();
         }
+
+        if (ImGui::BeginMenu("Font")) {
+
+            ImGuiIO& io = ImGui::GetIO();
+            ImFont* font_current = ImGui::GetFont();
+            if (ImGui::BeginCombo("Select Available Font", font_current->GetDebugName())) {
+                // first fonts until index this->graph_fonts_reserved are exclusively used by configurator for the
+                // graph.
+                for (int n = this->state.graph_fonts_reserved; n < io.Fonts->Fonts.Size; n++) {
+                    if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current))) {
+                        io.FontDefault = io.Fonts->Fonts[n];
+                        // Saving font to window configuration.
+                        this->state.font_file_name = std::string(io.FontDefault->GetDebugName());
+                    }
+                }
+                ImGui::EndCombo();
+            }
+
+            ImGui::Separator();
+
+            ImGui::AlignTextToFramePadding();
+            ImGui::TextUnformatted("Load Font from File");
+            std::string help("Same font can be loaded multiple times with different font size.");
+            this->tooltip.Marker(help);
+
+            std::string label("Font Size");
+            ImGui::InputFloat(label.c_str(), &this->state.font_size, 1.0f, 10.0f, "%.2f", ImGuiInputTextFlags_None);
+            // Validate font size
+            if (this->state.font_size <= 5.0f) {
+                this->state.font_size = 5.0f; // minimum valid font size
+            }
+
+            ImGui::BeginGroup();
+            ImGuiStyle& style = ImGui::GetStyle();
+            float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
+            ImGui::PushItemWidth(widget_width);
+            this->file_browser.Button(
+                this->state.font_file_name, megamol::gui::FileBrowserWidget::FileBrowserFlag::LOAD, "ttf");
+            ImGui::SameLine();
+            GUIUtils::Utf8Encode(this->state.font_file_name);
+            ImGui::InputText(
+                "Font Filename (.ttf)", &this->state.font_file_name, ImGuiInputTextFlags_CtrlEnterForNewLine);
+            GUIUtils::Utf8Decode(this->state.font_file_name);
+            ImGui::PopItemWidth();
+            // Validate font file before offering load button
+            bool valid_file =
+                FileUtils::FileWithExtensionExists<std::string>(this->state.font_file_name, std::string("ttf"));
+            if (!valid_file) {
+                megamol::gui::GUIUtils::ReadOnlyWigetStyle(true);
+                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            }
+            if (ImGui::Button("Add Font")) {
+                this->state.font_apply = true;
+            }
+            if (!valid_file) {
+                ImGui::PopItemFlag();
+                megamol::gui::GUIUtils::ReadOnlyWigetStyle(false);
+                ImGui::SameLine();
+                ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font filename.");
+            }
+            ImGui::EndGroup();
+
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMenu();
     }
+
+    // HELP -------------------------------------------------------------------
     if (ImGui::BeginMenu("Help")) {
         if (ImGui::MenuItem("About")) {
             this->state.open_popup_about = true;
@@ -1869,8 +1904,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     }
     if (graph_ptr != nullptr) {
         this->state.open_popup_save |= this->configurator.ConsumeTriggeredGlobalProjectSave();
-        if (this->file_browser.PopUp(
-                FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project", this->state.open_popup_save, filename)) {
+        if (this->file_browser.PopUp(filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
+                this->state.open_popup_save, "lua")) {
 
             graph_ptr->SetFilename(filename);
             popup_failed |= !this->configurator.GetGraphCollection().SaveProjectToFile(
@@ -1886,11 +1921,14 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     popup_failed = false;
     if (graph_ptr != nullptr) {
         this->state.open_popup_load |= this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed;
-        if (this->file_browser.PopUp(
-                FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->state.open_popup_load, filename)) {
+        if (this->file_browser.PopUp(filename, FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project",
+                this->state.open_popup_load, "lua")) {
             graph_ptr->Clear();
             popup_failed |= (GUI_INVALID_ID == this->configurator.GetGraphCollection().LoadAddProjectFromFile(
                                                    this->state.graph_uid, filename));
+            if (!popup_failed) {
+                this->load_state_from_file(filename);
+            }
         }
         MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
             confirmed, "Cancel", aborted);
@@ -1899,8 +1937,8 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed = false;
 
     // File name for screenshot pop-up
-    if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Select Filename for Screenshot",
-            this->state.open_popup_screenshot, this->state.screenshot_filepath, ".png")) {
+    if (this->file_browser.PopUp(this->state.screenshot_filepath, FileBrowserWidget::FileBrowserFlag::SAVE,
+            "Select Filename for Screenshot", this->state.open_popup_screenshot, "png")) {
         this->state.screenshot_filepath_id = 0;
     }
     this->state.open_popup_screenshot = false;
@@ -1930,7 +1968,7 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
 
         if (ImGui::MenuItem("Full Width", nullptr)) {
             wc.win_size.x = viewport.x;
-            wc.win_reset = true;
+            wc.win_set_pos_size = true;
         }
         ImGui::Separator();
 
@@ -1942,25 +1980,25 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
 #endif
         if (ImGui::ArrowButton("dock_left", ImGuiDir_Left)) {
             wc.win_position.x = 0.0f;
-            wc.win_reset = true;
+            wc.win_set_pos_size = true;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
         if (ImGui::ArrowButton("dock_up", ImGuiDir_Up)) {
             wc.win_position.y = 0.0f;
-            wc.win_reset = true;
+            wc.win_set_pos_size = true;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
         if (ImGui::ArrowButton("dock_down", ImGuiDir_Down)) {
             wc.win_position.y = viewport.y - wc.win_size.y;
-            wc.win_reset = true;
+            wc.win_set_pos_size = true;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
         if (ImGui::ArrowButton("dock_right", ImGuiDir_Right)) {
             wc.win_position.x = viewport.x - wc.win_size.x;
-            wc.win_reset = true;
+            wc.win_set_pos_size = true;
             ImGui::CloseCurrentPopup();
         }
         ImGui::Separator();
@@ -1977,7 +2015,7 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
             // Window is maximized
             wc.win_size = wc.win_reset_size;
             wc.win_position = wc.win_reset_position;
-            wc.win_reset = true;
+            wc.win_set_pos_size = true;
         } else {
             // Window is minimized
             ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
@@ -1985,29 +2023,14 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
             wc.win_reset_position = wc.win_position;
             wc.win_size = window_viewport;
             wc.win_position = ImVec2(0.0f, y_offset);
-            wc.win_reset = true;
+            wc.win_set_pos_size = true;
         }
     }
 
-    // Move current window below window menu
-    if (wc.win_soft_reset || wc.win_reset || (this->state.menu_visible && ImGui::IsMouseReleased(0))) {
-        float y_offset = ImGui::GetFrameHeight();
-        if (wc.win_position.y < y_offset) {
-            wc.win_position.y = y_offset;
-            ImGui::SetWindowPos(wc.win_position, ImGuiCond_Always);
-        }
-    }
-
-    // Apply soft reset of window reset position and reset size
-    if (wc.win_soft_reset) {
-        this->window_collection.SoftResetWindowSizePosition(wc);
-        wc.win_soft_reset = false;
-    }
-
-    // Apply window position and size reset
-    if (wc.win_reset) {
-        this->window_collection.ResetWindowSizePosition(wc);
-        wc.win_reset = false;
+    // Apply window position and size
+    if (wc.win_set_pos_size || (this->state.menu_visible && ImGui::IsMouseReleased(0) && ImGui::IsWindowFocused())) {
+        this->window_collection.SetWindowSizePosition(wc);
+        wc.win_set_pos_size = false;
     }
 }
 
@@ -2168,6 +2191,10 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
                 megamol::core::utility::get_json_value<int>(gui_state, {"style"}, &style);
                 this->state.style = static_cast<GUIWindows::Styles>(style);
                 this->state.style_changed = true;
+                megamol::core::utility::get_json_value<std::string>(
+                    gui_state, {"font_file_name"}, &this->state.font_file_name);
+                megamol::core::utility::get_json_value<float>(gui_state, {"font_size"}, &this->state.font_size);
+                this->state.font_apply = true;
             }
         }
 
@@ -2212,6 +2239,10 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
         // Write GUI state
         inout_json[GUI_JSON_TAG_GUI]["menu_visible"] = this->state.menu_visible;
         inout_json[GUI_JSON_TAG_GUI]["style"] = static_cast<int>(this->state.style);
+        GUIUtils::Utf8Encode(this->state.font_file_name);
+        inout_json[GUI_JSON_TAG_GUI]["font_file_name"] = this->state.font_file_name;
+        GUIUtils::Utf8Decode(this->state.font_file_name);
+        inout_json[GUI_JSON_TAG_GUI]["font_size"] = this->state.font_size;
 
         // Write window configuration
         this->window_collection.StateToJSON(inout_json);
@@ -2257,9 +2288,6 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.autosave_gui_state = false;
     this->state.project_script_paths.clear();
     this->state.graph_uid = GUI_INVALID_ID;
-    this->state.font_file = "";
-    this->state.font_size = 13.0f;
-    this->state.font_index = GUI_INVALID_ID;
     this->state.font_utf8_ranges.clear();
     this->state.win_save_state = false;
     this->state.win_save_delay = 0.0f;
@@ -2278,6 +2306,9 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.screenshot_filepath_id = 0;
     this->state.last_script_filename = "";
     this->state.hotkeys_check_once = true;
+    this->state.font_apply = false;
+    this->state.font_file_name = "";
+    this->state.font_size = 13.0f;
 
     this->create_not_existing_png_filepath(this->state.screenshot_filepath);
 }

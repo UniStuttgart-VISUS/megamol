@@ -168,7 +168,7 @@ bool megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
                             const float height = 10.0f * ImGui::GetFrameHeightWithSpacing();
                             wc.win_position = ImVec2(0.0f, viewport.y - height);
                             wc.win_size = ImVec2(viewport.x, height);
-                            wc.win_reset = true;
+                            wc.win_set_pos_size = true;
                         }
                         wc.win_show = true;
                     }
