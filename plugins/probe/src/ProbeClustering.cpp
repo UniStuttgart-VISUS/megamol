@@ -288,11 +288,29 @@ bool megamol::probe::ProbeClustering::get_data_cb(core::Call& c) {
                 cluster_reps.push_back(min_idx);
             }
 
-            std::vector<char> indicator(probes->getProbeCount(), 1);
+            bool vec_probe = false;
+            {
+                auto const test_probe = probes->getGenericProbe(0);
+                vec_probe = std::holds_alternative<Vec4Probe>(test_probe);
+            }
+            if (vec_probe) {
+                for (auto const& el : cluster_reps) {
+                    auto probe = probes->getProbe<Vec4Probe>(el);
+                    probe.m_representant = true;
+                    probes->setProbe(el, probe);
+                }
+            } else {
+                for (auto const& el : cluster_reps) {
+                    auto probe = probes->getProbe<FloatProbe>(el);
+                    probe.m_representant = true;
+                    probes->setProbe(el, probe);
+                }
+            }
+            /*std::vector<char> indicator(probes->getProbeCount(), 1);
             for (auto const& el : cluster_reps) {
                 indicator[el] = 0;
             }
-            probes->erase_probes(indicator);
+            probes->erase_probes(indicator);*/
         }
 
         _frame_id = meta_data.m_frame_ID;

@@ -38,6 +38,8 @@ struct BaseProbe {
     float m_sample_radius;
     /** for clustered samples */
     int m_cluster_id;
+    /** true, if clustering considers this probe to be a representant */
+    bool m_representant;
 
     // virtual void probe() = 0;
 };
