@@ -1048,7 +1048,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     // Update current state variables -----------------------------------------
 
     // Update data set range (only if new data set was loaded, not on frame loading)
-    if (hash != this->oldHash) {
+    if (hash != this->oldHash) { // or (this->stateInvalid) {
         this->range[0] = std::numeric_limits<float>::max(); // min
         this->range[1] = std::numeric_limits<float>::min(); // max
         for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
@@ -1178,10 +1178,10 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     // Reset default OpenGL state ---------------------------------------------
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glDisable(GL_CLIP_DISTANCE0);
-    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glDisable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_ONE, GL_ZERO);
     glDisable(GL_POINT_SPRITE);
 
     // Save some current data
@@ -2701,8 +2701,14 @@ void SphereRenderer::renderDeferredPass(view::CallRender3D_2& call) {
 
     this->lightingShader.Disable();
 
+    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_3D, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_TEXTURE_3D);

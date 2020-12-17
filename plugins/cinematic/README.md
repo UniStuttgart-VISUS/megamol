@@ -48,41 +48,41 @@ Therefore only a coloured bounding box of the model is drawn.
 The module `KeyframeKeeper` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
-* `applyKeyframe` (Assigned key: `CTRL+a`): Apply current settings to selected or new keyframe.
-* `undoChanges` (Assigned key: `CTRL+z`): Undo keyframe changes.
-* `redoChanges` (Assigned key: `CTRL+y`): Redo keyframe changes.
-* `deleteKeyframe` (Assigned key: `CTRL+d`): Deletes the currently selected keyframe.
+* `applyKeyframe` (Assigned key: `SHIFT + a`): Apply current settings to selected or new keyframe.
+* `undoChanges` (Assigned key: `SHIFT + z`): Undo keyframe changes.
+* `redoChanges` (Assigned key: `SHIFT + y`): Redo keyframe changes.
+* `deleteKeyframe` (Assigned key: `SHIFT + d`): Deletes the currently selected keyframe.
 * `maxAnimTime` (`1.0`): The total timespan of the animation.
-* `snapAnimFrames` (Assigned key: `CTRL+f`): Snap animation time of all keyframes to fixed frames.
-* `snapSimFrames` (Assigned key: `CTRL+g`): Snap simulation time of all keyframes to integer simulation frames.
-* `linearizeSimTime` (Assigned key: `CTRL+t`): Linearize simulation time between two keyframes between currently selected keyframe and subsequently selected keyframe.
+* `snapAnimFrames` (Assigned key: `SHIFT + f`): Snap animation time of all keyframes to fixed frames.
+* `snapSimFrames` (Assigned key: `SHIFT + g`): Snap simulation time of all keyframes to integer simulation frames.
+* `linearizeSimTime` (Assigned key: `SHIFT + t`): Linearize simulation time between two keyframes between currently selected keyframe and subsequently selected keyframe.
 * `interpolTangent` (`0.5`): Length of keyframe tangets affecting curvature of interpolation spline.
 * `editSelected::animTime` (`1.0`): Edit animation time of the selected keyframe.
 * `editSelected::simTime` (`1.0`): Edit simulation time of the selected keyframe.
 * `editSelected::positionVector`: Edit the position vector of the selected keyframe.
 * `editSelected::lookAtVector`: Edit the 'look at' vector of the selected keyframe.
-* `editSelected::resetLookAt` (Assigned key: `CTRL+l`): Reset the 'look at' vector of the selected keyframe to the center of the model boundng box.
+* `editSelected::resetLookAt` (Assigned key: `SHIFT + l`): Reset the 'look at' vector of the selected keyframe to the center of the model boundng box.
 * `editSelected::upVector`:  Edit up vector direction relative to 'look at' vector of the selected keyframe.
 * `editSelected::apertureAngle`: Edit aperture angle of the selected keyframe.
 * `storage::filename`:  The name of the file to load or save keyframes. 
-* `storage::save` (Assigned key: `CTRL+s`): Save keyframes to file.
-* `storage::load` (Assigned key: `CTRL+l`): Load keyframes from file.
+* `storage::save` (Assigned key: `SHIFT + s`): Save keyframes to file.
+* `storage::load` (Assigned key: `SHIFT + l`): Load keyframes from file.
 
 The module `TrackingShotRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
 * `splineSubdivision` (`20`): Amount of interpolation steps between keyframes.          
-* `helpText` (Assigned key: `CTRL+h`): Show/hide help text for key assignments.
-* `manipulators::toggleVisibleGroup` (Assigned key: `CTRL+q`): Toggle visibility of different manipulator groups.  
+* `helpText` (Assigned key: `SHIFT + h`): Show/hide help text for key assignments.
+* `manipulators::toggleVisibleGroup` (Assigned key: `SHIFT + q`): Toggle visibility of different manipulator groups.  
 * `manipulators::visibleGroup`: Select visible manipulator group.  
-* `manipulators::showOutsideBBox` (Assigned key: `CTRL+w`): Show manipulators always outside of model bounding box.
+* `manipulators::showOutsideBBox` (Assigned key: `SHIFT + w`): Show manipulators always outside of model bounding box.
 
 The module `CinematicView` exposes the following parameters:
 (The values in brackets indicate the default values.)
 
-* `cinematic::renderAnim` (Assigned key: `CTRL+r`): Toggle rendering of complete animation to png files.   
+* `cinematic::renderAnim` (Assigned key: `SHIFT + r`): Toggle rendering of complete animation to png files.   
    Whenever rendering is begun a new folder holding the frame image files (png) is generated.
-* `cinematic::playPreview` (Assigned key: `CTRL+space`): Toggle playing animation as preview.
+* `cinematic::playPreview` (Assigned key: `SHIFT + Space`): Toggle playing animation as preview.
 * `cinematic::skyboxSide` (`NONE`): Select the skybox side.
 * `cinematic::cubeMode` (`false`): Activate mode that renders the bounding box side selected with `skyboxSide`.
 * `cinematic::cinematicWidth` (`1920`): The width resolution of the cinematic view to render.
@@ -101,7 +101,7 @@ The module `TimeLineRenderer` exposes the following parameters:
 
 * `gotoRightFrame` (Assigned key: `right arrow`): Move to right animation time frame.
 * `gotoLeftFrame` (Assigned key: `left arrow`): Move to left animation time frame.
-* `resetAxes` (Assigned key: `CTRL+x`): Reset all shifted and scaled time axes.
+* `resetAxes` (Assigned key: `SHIFT + x`): Reset all shifted and scaled time axes.
 
 The module `ReplacementRenderer` exposes the following parameters:
 (The values in brackets indicate the default values.)

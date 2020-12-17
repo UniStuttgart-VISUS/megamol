@@ -453,7 +453,7 @@ void megamol::gui::ModulePresentation::Present(
             ImGui::PopID();
         }
 
-    } catch (std::exception e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;
