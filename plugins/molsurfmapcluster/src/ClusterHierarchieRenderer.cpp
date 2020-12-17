@@ -81,7 +81,7 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     this->showPDBIdsParam.SetParameter(new core::param::BoolParam(true));
     this->MakeSlotAvailable(&this->showPDBIdsParam);
 
-    this->fontSizeParam.SetParameter(new core::param::FloatParam(22.0f, 5.0f, 300.0f));
+    this->fontSizeParam.SetParameter(new core::param::FloatParam(100.0f, 5.0f, 300.0f));
     this->MakeSlotAvailable(&this->fontSizeParam);
 
     core::param::EnumParam* enpar = new core::param::EnumParam(static_cast<int>(DistanceColorMode::NONE));
@@ -132,6 +132,7 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     this->rendered = false;
     this->newposition = false;
     this->position = nullptr;
+    this->root = nullptr;
 
     this->newcolor = false;
     this->hashoffset = 0;
@@ -475,7 +476,8 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
         }
 
         if (this->addIdParam.Param<param::BoolParam>()->Value()) {
-            auto stringToDraw = node->pic->pdbid.c_str();
+            auto substr = node->pic->pdbid.substr(0, 4);
+            auto stringToDraw = substr.c_str();
             auto lineWidth = theFont.LineWidth(height, stringToDraw);
 
             std::array<float, 4> color = {0.1f, 0.1f, 0.1f, 1.0f};
@@ -546,8 +548,11 @@ bool ClusterHierarchieRenderer::Render(view::CallRender2D& call) {
 
     // Update data Position
     CallClusterPosition* ccp = this->positionDataSlot.CallAs<CallClusterPosition>();
-    if (!ccp)
+    if (!ccp) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            "CallClusterPosition not connected, Module might not work correctly.");
         return false;
+    }
     // Updated data from cinematic camera call
     if (!(*ccp)(CallClusterPosition::CallForGetData))
         return false;
@@ -597,6 +602,9 @@ bool ClusterHierarchieRenderer::Render(view::CallRender2D& call) {
  */
 bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton button,
     megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) {
+
+    if (this->root == nullptr)
+        return false;
 
     auto down = action == MouseButtonAction::PRESS;
     auto shiftmod = mods.test(Modifier::SHIFT);
@@ -717,6 +725,9 @@ bool ClusterHierarchieRenderer::OnMouseMove(double x, double y) {
 
     this->mouseX = (float) static_cast<int>(x);
     this->mouseY = (float) static_cast<int>(y);
+
+    if (this->clustering == nullptr)
+        return false;
 
     // Check mouse position => if position is on cluster => render popup
     // first delete old popup boolean
@@ -885,8 +896,11 @@ double ClusterHierarchieRenderer::checkposition(HierarchicalClustering::CLUSTERN
 
 bool ClusterHierarchieRenderer::GetPositionExtents(Call& call) {
     CallClusterPosition* ccp = dynamic_cast<CallClusterPosition*>(&call);
-    if (ccp == nullptr)
+    if (ccp == nullptr) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            "CallClusterPosition not connected, Module might not work correctly.");
         return false;
+    }
 
     // Wenn neuer root node
     if (ccp->getPosition() != this->position) {
@@ -899,8 +913,11 @@ bool ClusterHierarchieRenderer::GetPositionExtents(Call& call) {
 
 bool ClusterHierarchieRenderer::GetPositionData(Call& call) {
     CallClusterPosition* ccp = dynamic_cast<CallClusterPosition*>(&call);
-    if (ccp == nullptr)
+    if (ccp == nullptr) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            "CallClusterPosition not connected, Module might not work correctly.");
         return false;
+    }
     if (this->newposition) {
         this->newposition = false;
         this->DataHashPosition += this->hashoffset;

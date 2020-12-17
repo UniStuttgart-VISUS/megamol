@@ -561,8 +561,11 @@ bool ClusterRenderer::Render(view::CallRender2D& call) {
             } else {
                 // Check for new position from hierarchie
                 CallClusterPosition* ccp = this->setPosition.CallAs<CallClusterPosition>();
-                if (!ccp)
+                if (!ccp) {
+                    core::utility::log::Log::DefaultLog.WriteError(
+                        "CallClusterPosition not connected, Module might not work correctly");
                     return false;
+                }
                 if (!(*ccp)(CallClusterPosition::CallForGetData))
                     return false;
 
@@ -686,8 +689,11 @@ bool ClusterRenderer::OnMouseMove(double x, double y) {
 
 bool ClusterRenderer::GetPositionExtents(Call& call) {
     CallClusterPosition* ccp = dynamic_cast<CallClusterPosition*>(&call);
-    if (ccp == nullptr)
+    if (ccp == nullptr) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            "CallClusterPosition not connected, Module might not work correctly.");
         return false;
+    }
 
     // Wenn neuer root node
     if (ccp->getPosition() != this->root) {

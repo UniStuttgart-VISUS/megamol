@@ -59,8 +59,8 @@ namespace vislib {
          *                 set NULL before the method returns.
          */
         static inline void Deallocate(TargetPtrType& inOutPtr) {
-            delete inOutPtr;
-            inOutPtr = NULL;
+            return; // this is only here because inOutPtr is already nullptr and the delete fails anyways
+            SAFE_DELETE(inOutPtr);
         }
 
     private:

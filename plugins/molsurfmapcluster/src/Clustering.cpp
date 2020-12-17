@@ -197,7 +197,7 @@ void Clustering::clusterData(
         this->picturecount = this->picdata.size();
     }
     core::utility::log::Log::DefaultLog.WriteMsg(
-        core::utility::log::Log::LEVEL_INFO, "Clustering finished", this->picturecount);
+        core::utility::log::Log::LEVEL_INFO, "Clustering finished");
 }
 
 /*
