@@ -6,6 +6,9 @@
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
+#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib/graphics/gl/ShaderSource.h"
+
 #include "ProbeCalls.h"
 
 #include "mmstd_datatools/table/TableDataCall.h"
@@ -71,5 +74,9 @@ private:
     unsigned int _frame_id = std::numeric_limits<unsigned int>::max();
 
     std::size_t _out_data_hash = 0;
+
+    vislib::graphics::gl::GLSLComputeShader _fd_shader;
+
+    vislib::graphics::gl::ShaderSource _compute_shader_src;
 };
 } // namespace megamol::probe
