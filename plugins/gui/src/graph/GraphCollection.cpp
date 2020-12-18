@@ -13,14 +13,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::GraphCollection::GraphCollection(void) : graphs(), modules_stock(), calls_stock(), graph_name_uid(0) {
-
-
-    megamol::core::LuaAPI lua_api(graph, true);
-
-
-
-}
+megamol::gui::GraphCollection::GraphCollection(void) : graphs(), modules_stock(), calls_stock(), graph_name_uid(0) {}
 
 
 megamol::gui::GraphCollection::~GraphCollection(void) {}

@@ -383,14 +383,13 @@ bool megamol::gui::ParameterPresentation::LuaButton(const std::string& id, const
     if (ImGui::BeginPopupContextItem("param_lua_button_context", 0)) {
         bool copy_to_clipboard = false;
         std::string lua_param_cmd;
-
+        std::string mod_name(module_fullname.c_str()); /// local copy required
         if (ImGui::MenuItem("Copy mmSetParamValue")) {
-            lua_param_cmd =
-                "mmSetParamValue(\"" + module_fullname + "::" + param_fullname + "\",[=[" + param_value + "]=])";
+            lua_param_cmd = "mmSetParamValue(\"" + mod_name + "::" + param_fullname + "\",[=[" + param_value + "]=])";
             copy_to_clipboard = true;
         }
         if (ImGui::MenuItem("Copy mmGetParamValue")) {
-            lua_param_cmd = "mmGetParamValue(\"" + module_fullname + "::" + param_fullname + "\")";
+            lua_param_cmd = "mmGetParamValue(\"" + mod_name + "::" + param_fullname + "\")";
             copy_to_clipboard = true;
         }
 
