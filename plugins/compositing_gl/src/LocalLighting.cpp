@@ -3,6 +3,9 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmcore/param/ColorParam.h"
+#include "mmcore/param/FloatParam.h"
+
 
 #include "vislib/graphics/gl/ShaderSource.h"
 
@@ -14,7 +17,18 @@ megamol::compositing::LocalLighting::LocalLighting()
     , m_output_texture(nullptr)
     , m_point_lights_buffer(nullptr)
     , m_distant_lights_buffer(nullptr)
-    , m_illuminationmode("Mode", "Sets illumination mode e.g. Lambertian, Phong")
+
+    , m_illuminationmode("IlluminationMode", "Sets illumination mode e.g. Lambertian, Phong")
+
+    , m_phong_ambientColor("AmbientColor", "Sets the ambient Color for Blinn-Phong")
+    , m_phong_diffuseColor("DiffuseColor", "Sets the diffuse Color for Blinn-Phong")
+    , m_phong_specularColor("SpecularColor", "Sets the specular Color for Blinn-Phong")
+
+    , m_phong_k_ambient("AmbientFactor", "Sets the ambient factor for Blinn-Phong")
+    , m_phong_k_diffuse("DiffuseFactor", "Sets the diffuse factor for Blinn-Phong")
+    , m_phong_k_specular("SpecularFactor", "Sets the specular factor for Blinn-Phong")
+    , m_phong_k_exp("ExponentialFactor", "Sets the exponential factor for Blinn-Phong")
+
     , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
     , m_albedo_tex_slot("AlbedoTexture", "Connect to the albedo render target texture")
     , m_normal_tex_slot("NormalTexture", "Connects to the normals render target texture")
@@ -27,6 +41,25 @@ megamol::compositing::LocalLighting::LocalLighting()
     this->m_illuminationmode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Lambert");
     this->m_illuminationmode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Blinn-Phong");
     this->MakeSlotAvailable(&this->m_illuminationmode);
+
+    this->m_phong_ambientColor << new megamol::core::param::ColorParam(1.0,1.0,1.0,1.0);
+    this->MakeSlotAvailable(&this->m_phong_ambientColor);
+    this->m_phong_diffuseColor << new megamol::core::param::ColorParam(1.0, 1.0, 1.0, 1.0);
+    this->MakeSlotAvailable(&this->m_phong_diffuseColor);
+    this->m_phong_specularColor << new megamol::core::param::ColorParam(1.0, 1.0, 1.0, 1.0);
+    this->MakeSlotAvailable(&this->m_phong_specularColor);
+
+    this->m_phong_k_ambient << new megamol::core::param::FloatParam(0.2f,0.0f,1.0f);
+    this->MakeSlotAvailable(&this->m_phong_k_ambient);
+
+    this->m_phong_k_diffuse << new megamol::core::param::FloatParam(0.7f,0.0,1.0f);
+    this->MakeSlotAvailable(&this->m_phong_k_diffuse);
+
+    this->m_phong_k_specular << new megamol::core::param::FloatParam(0.1f,0.0f,1.0f);
+    this->MakeSlotAvailable(&this->m_phong_k_specular);
+
+    this->m_phong_k_exp << new megamol::core::param::FloatParam(120.0f,0.0f,1000.0f);
+    this->MakeSlotAvailable(&this->m_phong_k_exp);
 
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &LocalLighting::getDataCallback);
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &LocalLighting::getMetaDataCallback);
@@ -167,10 +200,26 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
         //m_illumination mode: Change between Lambert & Blinn Phong
         if (this->m_illuminationmode.Param<core::param::EnumParam>()->Value() == 0) {
             //Lambert: std::cout << "Lambert" << std::endl;
+            m_phong_ambientColor.Param<core::param::ColorParam>()->SetGUIVisible(false);
+            m_phong_diffuseColor.Param<core::param::ColorParam>()->SetGUIVisible(false);
+            m_phong_specularColor.Param<core::param::ColorParam>()->SetGUIVisible(false);
+
+            m_phong_k_ambient.Param<core::param::FloatParam>()->SetGUIVisible(false);
+            m_phong_k_diffuse.Param<core::param::FloatParam>()->SetGUIVisible(false);
+            m_phong_k_specular.Param<core::param::FloatParam>()->SetGUIVisible(false);
+            m_phong_k_exp.Param<core::param::FloatParam>()->SetGUIVisible(false);
+
         }
         else if (this->m_illuminationmode.Param<core::param::EnumParam>()->Value() == 1) {
             //Blinn-Phong: std::cout << "Blinn Phong" << std::endl;
-
+            m_phong_ambientColor.Param<core::param::ColorParam>()->SetGUIVisible(true);
+            m_phong_diffuseColor.Param<core::param::ColorParam>()->SetGUIVisible(true);
+            m_phong_specularColor.Param<core::param::ColorParam>()->SetGUIVisible(true);
+     
+            m_phong_k_ambient.Param<core::param::FloatParam>()->SetGUIVisible(true);
+            m_phong_k_diffuse.Param<core::param::FloatParam>()->SetGUIVisible(true);
+            m_phong_k_specular.Param<core::param::FloatParam>()->SetGUIVisible(true);
+            m_phong_k_exp.Param<core::param::FloatParam>()->SetGUIVisible(true);
         }
 
 
