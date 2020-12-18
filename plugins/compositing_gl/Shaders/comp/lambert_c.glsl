@@ -18,6 +18,15 @@ uniform int distant_light_cnt;
 uniform mat4 inv_view_mx;
 uniform mat4 inv_proj_mx;
 
+uniform vec3 ambientColor; 
+uniform vec3 diffuseColor;
+uniform vec3 specularColor;
+
+uniform float k_amb;
+uniform float k_diff;
+uniform float k_spec;
+uniform float k_exp;
+
 
 vec3 depthToWorldPos(float depth, vec2 uv) {
     float z = depth * 2.0 - 1.0;
@@ -33,11 +42,32 @@ vec3 depthToWorldPos(float depth, vec2 uv) {
     return ws_pos.xyz;
 }
 
+//Lambert Illumination 
 float lambert(vec3 normal, vec3 light_dir)
 {
     return clamp(dot(normal,light_dir),0.0,1.0);
 }
 
+//Blinn-Phong Illumination 
+float blinnPhong(vec3 normal, vec3 l, vec3 v){
+    vec3 Colorout = vec3(0.0);
+
+    //Ambient Part
+    //vec3 Camb = k_amb * ambientColor ;
+
+    //Diffuse Part
+    //vec3 Cdiff = diffuseColor * k_diff * dot(n,l);
+
+    //Specular Part
+    //vec3 h = normalize(v+l);
+    //normal = normal / sqrt(normal.x*normal.x + normal.y*normal.y + normal.z*normal.z);
+    //float costheta = dot(h,normal);
+    //vec3 Cspek = specularColor * k_spec * ((k_exp + 2)/(2 * M_PI)) * pow(costheta, k_exp);
+
+    //Final Equation
+    //Colorout = Camb + Cdiff + Cspek;
+    return Colorout;
+}
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
