@@ -83,22 +83,35 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
     case (GUIImGuiAPI::OPEN_GL): {
         bool prerequisities_given = true;
 #ifdef _WIN32 // Windows
-        auto dc = ::wglGetCurrentDC();
-        auto rc = ::wglGetCurrentContext();
-#else // Linux
-        auto dc = ::glXGetCurrentDisplay();
-        auto rc = ::glXGetCurrentContext();
-#endif /// _WIN32
-        if (dc == nullptr) {
+        HDC ogl_current_display = ::wglGetCurrentDC();
+        HGLRC ogl_current_context = ::wglGetCurrentContext();
+        if (ogl_current_display == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                 megamol::core::utility::log::Log::LEVEL_ERROR, "[GUI] There is no OpenGL rendering context available.");
             prerequisities_given = false;
         }
-        if (rc == nullptr) {
+        if (ogl_current_context == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "[GUI] There is no current OpenGL rendering context available from the calling thread.");
             prerequisities_given = false;
         }
+#else // Linux
+      /// XXX The following throws segfault if OpenGL is not loaded yet:
+        Display* gl_current_display = ::glXGetCurrentDisplay();
+        GLXContext ogl_current_context = ::glXGetCurrentContext();
+        /// XXX Is there a better way to check existing OpenGL context?
+        if (glXGetCurrentDisplay == nullptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "[GUI] There is no OpenGL rendering context available.");
+            prerequisities_given = false;
+        }
+        if (glXGetCurrentContext == nullptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "[GUI] There is no current OpenGL rendering context available from the calling thread.");
+            prerequisities_given = false;
+        }
+#endif /// _WIN32
+
         if (!prerequisities_given) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to create ImGui context for OpenGL API. [%s, %s, line %d]\n     <<< HINT: Check if "
