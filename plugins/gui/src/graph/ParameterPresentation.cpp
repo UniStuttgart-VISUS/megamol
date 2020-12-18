@@ -113,7 +113,7 @@ bool megamol::gui::ParameterPresentation::Present(
                     // Lua
                     ParameterPresentation::LuaButton("param_lua_button", inout_parameter.GetValueString(),
                         inout_parameter.full_name, module_fullname);
-                    // this->tooltip.ToolTip("Copy LUA Command", ImGui::GetItemID(), 1.0f, 3.0f);
+                    this->tooltip.ToolTip("Copy lua command to clipboard.", ImGui::GetItemID(), 1.0f, 3.0f);
 
                     ImGui::SameLine();
                 }

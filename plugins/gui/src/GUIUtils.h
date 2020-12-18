@@ -41,10 +41,7 @@
 #include "vislib/math/Ternary.h"
 
 
-namespace megamol {
-namespace gui {
-
-    /// #define GUI_VERBOSE
+/// #define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f)
@@ -62,8 +59,8 @@ namespace gui {
 #define GUI_JSON_TAG_PROJECT ("Project")
 #define GUI_JSON_TAG_MODULES ("Modules")
 #define GUI_JSON_TAG_INTERFACES ("Interfaces")
-    /// #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") see
-    /// megamol::core::param::AbstractParamPresentation.h
+/// #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") see
+/// megamol::core::param::AbstractParamPresentation.h
 
 #define GUI_PROJECT_GUI_STATE_START_TAG ("-- <GUI_STATE_JSON>")
 #define GUI_PROJECT_GUI_STATE_END_TAG ("</GUI_STATE_JSON>")
@@ -77,16 +74,35 @@ namespace gui {
 #define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
 #define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.75f, 1.0f, 0.25f, 1.0f))
 
-    /********** Operators **********/
+namespace {
 
-    // inline bool operator==(const ImVec2& left, const ImVec2& right) {
-    //    return ((left.x == right.x) && (left.y == right.y));
-    //};
+/********** Global Unique ID **********/
 
-    // inline bool operator!=(const ImVec2& left, const ImVec2& right) {
-    //    return !(left == right);
-    //};
+ImGuiID gui_generated_uid;
 
+ImGuiID GenerateUniqueID(void) {
+    return (++gui_generated_uid);
+}
+
+/********** Global ImGui Context Pointer Counter **********/
+
+unsigned int imgui_context_count;
+
+/********** Global Operators **********/
+
+bool operator==(const ImVec2& left, const ImVec2& right) {
+    return ((left.x == right.x) && (left.y == right.y));
+};
+
+bool operator!=(const ImVec2& left, const ImVec2& right) {
+    return !(left == right);
+};
+
+} // namespace
+
+
+namespace megamol {
+namespace gui {
 
     /********** Types **********/
 
@@ -208,16 +224,6 @@ namespace gui {
         bool global_graph_save;              // out
     } GraphState_t;
 
-    /********** Global Unique ID **********/
-
-    extern ImGuiID gui_generated_uid;
-    inline ImGuiID GenerateUniqueID(void) {
-        return (++megamol::gui::gui_generated_uid);
-    }
-
-    /********** Global Context Pointer Counter **********/
-
-    extern unsigned int imgui_context_count;
 
     /********** Class **********/
 

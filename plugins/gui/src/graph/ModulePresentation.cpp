@@ -63,7 +63,7 @@ void megamol::gui::ModulePresentation::Present(
         }
 
         // Init position of newly created module (check after size update)
-        if ((this->set_screen_position.x != FLT_MAX) && (this->set_screen_position.y != FLT_MAX)) {
+        if (this->set_screen_position != ImVec2(FLT_MAX, FLT_MAX)) {
             this->position = (this->set_screen_position - state.canvas.offset) / state.canvas.zooming;
             this->set_screen_position = ImVec2(FLT_MAX, FLT_MAX);
         }

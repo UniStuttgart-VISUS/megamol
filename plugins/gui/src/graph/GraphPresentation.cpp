@@ -938,21 +938,20 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
 
     // Update canvas position
     ImVec2 new_position = ImGui::GetWindowPos();
-    if ((this->graph_state.canvas.position.x != new_position.x) ||
-        (this->graph_state.canvas.position.y != new_position.y)) {
+    if (this->graph_state.canvas.position != new_position) {
         this->update = true;
     }
     this->graph_state.canvas.position = new_position;
     // Update canvas size
     ImVec2 new_size = ImGui::GetWindowSize();
-    if ((this->graph_state.canvas.size.x != new_size.x) || (this->graph_state.canvas.size.y != new_size.y)) {
+    if (this->graph_state.canvas.size != new_size) {
         this->update = true;
     }
     this->graph_state.canvas.size = new_size;
     // Update canvas offset
     ImVec2 new_offset =
         this->graph_state.canvas.position + (this->graph_state.canvas.scrolling * this->graph_state.canvas.zooming);
-    if ((this->graph_state.canvas.offset.x != new_offset.x) || (this->graph_state.canvas.offset.y != new_offset.y)) {
+    if (this->graph_state.canvas.offset != new_offset) {
         this->update = true;
     }
     this->graph_state.canvas.offset = new_offset;

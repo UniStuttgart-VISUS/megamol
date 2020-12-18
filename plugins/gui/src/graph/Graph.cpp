@@ -14,7 +14,7 @@ using namespace megamol::gui;
 
 
 megamol::gui::Graph::Graph(const std::string& graph_name, GraphCoreInterface core_interface)
-        : uid(megamol::gui::GenerateUniqueID())
+        : uid(GenerateUniqueID())
         , name(graph_name)
         , present()
         , modules()
@@ -35,7 +35,7 @@ megamol::gui::Graph::~Graph(void) {
 ImGuiID megamol::gui::Graph::AddEmptyModule(void) {
 
     try {
-        ImGuiID mod_uid = megamol::gui::GenerateUniqueID();
+        ImGuiID mod_uid = GenerateUniqueID();
         auto mod_ptr = std::make_shared<Module>(mod_uid);
         this->modules.emplace_back(mod_ptr);
         this->ForceSetDirty();
@@ -66,7 +66,7 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
     try {
         for (auto& mod : stock_modules) {
             if (module_class_name == mod.class_name) {
-                ImGuiID mod_uid = megamol::gui::GenerateUniqueID();
+                ImGuiID mod_uid = GenerateUniqueID();
                 auto mod_ptr = std::make_shared<Module>(mod_uid);
                 mod_ptr->class_name = mod.class_name;
                 mod_ptr->description = mod.description;
@@ -77,7 +77,7 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                 mod_ptr->present.label_visible = this->present.GetModuleLabelVisibility();
 
                 for (auto& p : mod.parameters) {
-                    Parameter param_slot(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval);
+                    Parameter param_slot(GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval);
                     param_slot.full_name = p.full_name;
                     param_slot.description = p.description;
                     param_slot.SetValueString(p.default_value, true, true);
@@ -93,7 +93,7 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
 
                 for (auto& callslots_type : mod.callslots) {
                     for (auto& c : callslots_type.second) {
-                        auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID());
+                        auto callslot_ptr = std::make_shared<CallSlot>(GenerateUniqueID());
                         callslot_ptr->name = c.name;
                         callslot_ptr->description = c.description;
                         callslot_ptr->compatible_call_idxs = c.compatible_call_idxs;
@@ -385,7 +385,7 @@ bool megamol::gui::Graph::AddCall(
         }
         Call::StockCall call_stock_data = stock_calls[compat_idx];
 
-        auto call_ptr = std::make_shared<Call>(megamol::gui::GenerateUniqueID());
+        auto call_ptr = std::make_shared<Call>(GenerateUniqueID());
         call_ptr->class_name = call_stock_data.class_name;
         call_ptr->description = call_stock_data.description;
         call_ptr->plugin_name = call_stock_data.plugin_name;
@@ -644,7 +644,7 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
 ImGuiID megamol::gui::Graph::AddGroup(const std::string& group_name) {
 
     try {
-        ImGuiID group_id = megamol::gui::GenerateUniqueID();
+        ImGuiID group_id = GenerateUniqueID();
         auto group_ptr = std::make_shared<Group>(group_id);
         group_ptr->name = (group_name.empty()) ? (this->generate_unique_group_name()) : (group_name);
         this->groups.emplace_back(group_ptr);

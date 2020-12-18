@@ -97,9 +97,9 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
         }
 #else // Linux
       /// XXX The following throws segfault if OpenGL is not loaded yet:
-        Display* gl_current_display = ::glXGetCurrentDisplay();
-        GLXContext ogl_current_context = ::glXGetCurrentContext();
-        /// XXX Is there a better way to check existing OpenGL context?
+      // Display* gl_current_display = ::glXGetCurrentDisplay();
+      // GLXContext ogl_current_context = ::glXGetCurrentContext();
+      /// XXX Is there a better way to check existing OpenGL context?
         if (glXGetCurrentDisplay == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(
                 megamol::core::utility::log::Log::LEVEL_ERROR, "[GUI] There is no OpenGL rendering context available.");
@@ -111,11 +111,10 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
             prerequisities_given = false;
         }
 #endif /// _WIN32
-
         if (!prerequisities_given) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Failed to create ImGui context for OpenGL API. [%s, %s, line %d]\n     <<< HINT: Check if "
-                "project contains view module >>>",
+                "[GUI] Failed to create ImGui context for OpenGL API. [%s, %s, line %d]\n<<< HINT: Check if "
+                "project contains view module. >>>",
                 __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
@@ -165,7 +164,7 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
         }
 
         this->initialized_api = imgui_api;
-        megamol::gui::imgui_context_count++;
+        imgui_context_count++;
         ImGui::SetCurrentContext(this->context);
         return true;
     }
@@ -1277,7 +1276,7 @@ bool GUIWindows::destroyContext(void) {
 
             /// [DEPRECATED USAGE] ///
             // Shutdown API only if one context is left
-            if (megamol::gui::imgui_context_count < 2) {
+            if (imgui_context_count < 2) {
                 ImGui::SetCurrentContext(this->context);
 
                 switch (this->initialized_api) {
@@ -1291,7 +1290,7 @@ bool GUIWindows::destroyContext(void) {
                 ImGui::GetCurrentContext()->FontAtlasOwnedByContext = true;
             }
             ImGui::DestroyContext(this->context);
-            megamol::gui::imgui_context_count--;
+            imgui_context_count--;
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Destroyed ImGui context.");
         }
         this->context = nullptr;
@@ -2011,7 +2010,7 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
     out_collapsing_changed = false;
     float y_offset = (this->state.menu_visible) ? (ImGui::GetFrameHeight()) : (0.0f);
     ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
-    bool window_maximized = ((wc.win_size.x == window_viewport.x) && (wc.win_size.y == window_viewport.y));
+    bool window_maximized = (wc.win_size == window_viewport);
     bool toggle_window_size = false; // (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0));
 
     // Context Menu
