@@ -322,8 +322,12 @@ namespace gui {
                 headerState = 1;
                 searched = megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(name, inout_search);
                 if (!searched) {
-                    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
+                    auto header_col = ImGui::GetStyleColorVec4(ImGuiCol_Header);
+                    header_col.w *= 0.25;
+                    ImGui::PushStyleColor(ImGuiCol_Header, header_col);
+                    auto text_col = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+                    text_col.w *= 0.25;
+                    ImGui::PushStyleColor(ImGuiCol_Text, text_col);
                 } else {
                     // Show all below when given name is part of the search
                     inout_search.clear();
