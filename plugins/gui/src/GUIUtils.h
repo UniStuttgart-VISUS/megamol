@@ -76,18 +76,6 @@
 
 namespace {
 
-/********** Global Unique ID **********/
-
-ImGuiID gui_generated_uid;
-
-ImGuiID GenerateUniqueID(void) {
-    return (++gui_generated_uid);
-}
-
-/********** Global ImGui Context Pointer Counter **********/
-
-unsigned int imgui_context_count;
-
 /********** Global Operators **********/
 
 bool operator==(const ImVec2& left, const ImVec2& right) {
@@ -103,6 +91,21 @@ bool operator!=(const ImVec2& left, const ImVec2& right) {
 
 namespace megamol {
 namespace gui {
+
+
+    /********** Global Unique ID **********/
+
+    extern ImGuiID gui_generated_uid;
+
+    inline ImGuiID GenerateUniqueID(void) {
+        return (++gui_generated_uid);
+    }
+
+
+    /********** Global ImGui Context Pointer Counter **********/
+
+    extern unsigned int imgui_context_count;
+
 
     /********** Types **********/
 

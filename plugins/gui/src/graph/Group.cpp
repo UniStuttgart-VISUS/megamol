@@ -157,7 +157,8 @@ ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr,
     }
 
     if (parent_module_group_uid) {
-        InterfaceSlotPtr_t interfaceslot_ptr = std::make_shared<InterfaceSlot>(GenerateUniqueID(), auto_add);
+        InterfaceSlotPtr_t interfaceslot_ptr =
+            std::make_shared<InterfaceSlot>(megamol::gui::GenerateUniqueID(), auto_add);
         if (interfaceslot_ptr != nullptr) {
             interfaceslot_ptr->present.group.uid = this->uid;
             this->interfaceslots[callslot_ptr->type].emplace_back(interfaceslot_ptr);

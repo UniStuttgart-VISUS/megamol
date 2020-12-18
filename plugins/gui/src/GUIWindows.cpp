@@ -164,7 +164,7 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
         }
 
         this->initialized_api = imgui_api;
-        imgui_context_count++;
+        megamol::gui::imgui_context_count++;
         ImGui::SetCurrentContext(this->context);
         return true;
     }
@@ -1276,7 +1276,7 @@ bool GUIWindows::destroyContext(void) {
 
             /// [DEPRECATED USAGE] ///
             // Shutdown API only if one context is left
-            if (imgui_context_count < 2) {
+            if (megamol::gui::imgui_context_count < 2) {
                 ImGui::SetCurrentContext(this->context);
 
                 switch (this->initialized_api) {
@@ -1290,7 +1290,7 @@ bool GUIWindows::destroyContext(void) {
                 ImGui::GetCurrentContext()->FontAtlasOwnedByContext = true;
             }
             ImGui::DestroyContext(this->context);
-            imgui_context_count--;
+            megamol::gui::imgui_context_count--;
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Destroyed ImGui context.");
         }
         this->context = nullptr;

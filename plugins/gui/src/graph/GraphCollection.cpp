@@ -532,7 +532,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                         }
                     }
                     if (!use_stock) {
-                        auto callslot_ptr = std::make_shared<CallSlot>(GenerateUniqueID());
+                        auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID());
                         callslot_ptr->name = std::string(caller_slot->Name().PeekBuffer());
                         callslot_ptr->description = std::string(caller_slot->Description().PeekBuffer());
                         callslot_ptr->compatible_call_idxs = this->get_compatible_caller_idxs(caller_slot.get());
@@ -546,7 +546,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 std::shared_ptr<core::CalleeSlot> callee_slot =
                     std::dynamic_pointer_cast<megamol::core::CalleeSlot>((*si));
                 if (callee_slot && !use_stock) {
-                    auto callslot_ptr = std::make_shared<CallSlot>(GenerateUniqueID());
+                    auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID());
                     callslot_ptr->name = std::string(callee_slot->Name().PeekBuffer());
                     callslot_ptr->description = std::string(callee_slot->Description().PeekBuffer());
                     callslot_ptr->compatible_call_idxs = this->get_compatible_callee_idxs(callee_slot.get());

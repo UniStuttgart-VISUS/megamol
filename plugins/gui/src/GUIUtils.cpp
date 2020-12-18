@@ -8,6 +8,6 @@
 #include "stdafx.h"
 #include "GUIUtils.h"
 
-ImGuiID gui_generated_uid = 0;
+ImGuiID megamol::gui::gui_generated_uid = 0;
 
-unsigned int imgui_context_count = 0;
+unsigned int megamol::gui::imgui_context_count = 0;
