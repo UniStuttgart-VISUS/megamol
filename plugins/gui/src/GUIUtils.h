@@ -315,7 +315,7 @@ namespace gui {
             auto headerId = ImGui::GetID(name.c_str());
             auto headerState = override_header_state;
             if (headerState == GUI_INVALID_ID) {
-                headerState = ImGui::GetStateStorage()->GetInt(headerId, 1); // 0=close 1=open
+                headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
             }
             bool searched = true;
             if (!inout_search.empty()) {
@@ -323,6 +323,7 @@ namespace gui {
                 searched = megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(name, inout_search);
                 if (!searched) {
                     ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
                 } else {
                     // Show all below when given name is part of the search
                     inout_search.clear();
@@ -331,7 +332,11 @@ namespace gui {
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
             bool header_open = ImGui::CollapsingHeader(name.c_str(), nullptr);
             if (!inout_search.empty() && !searched) {
-                ImGui::PopStyleColor();
+                ImGui::PopStyleColor(2);
+            }
+            // Keep following elements open for one more frame to propagate override changes to headers below.
+            if (override_header_state == 0) {
+                header_open = true;
             }
             return header_open;
         }

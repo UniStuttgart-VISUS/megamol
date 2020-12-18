@@ -36,7 +36,8 @@ namespace gui {
         bool PresentGUI(megamol::gui::ParamVector_t& inout_params, const std::string& in_module_fullname,
             const std::string& in_search, vislib::math::Ternary in_extended, bool in_indent,
             megamol::gui::ParameterPresentation::WidgetScope in_scope,
-            const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor);
+            const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
+            ImGuiID in_override_header_state);
 
         bool StateFromJSON(const nlohmann::json& in_json, const std::string& module_fullname);
         bool StateToJSON(nlohmann::json& inout_json, const std::string& module_fullname);
@@ -90,7 +91,8 @@ namespace gui {
         void draw_grouped_parameters(const std::string& in_group_name, ParamPtrVector_t& params,
             const std::string& in_module_fullname, const std::string& in_search,
             megamol::gui::ParameterPresentation::WidgetScope in_scope,
-            const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor);
+            const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
+            ImGuiID in_override_header_state);
 
         bool group_widget_animation(ParamPtrVector_t& params,
             megamol::core::param::AbstractParamPresentation::Presentation presentation,

@@ -43,7 +43,8 @@ megamol::gui::ParameterGroupsPresentation::~ParameterGroupsPresentation(void) {}
 bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVector_t& inout_params,
     const std::string& in_module_fullname, const std::string& in_search, vislib::math::Ternary in_extended,
     bool in_indent, megamol::gui::ParameterPresentation::WidgetScope in_scope,
-    const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
+    const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
+    ImGuiID in_override_header_state) {
 
     if (out_open_external_tf_editor != nullptr)
         (*out_open_external_tf_editor) = false;
@@ -138,7 +139,7 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
                             param::AbstractParamPresentation::Presentation::Basic) {
 
                             this->draw_grouped_parameters(group_name, group.second.first, in_module_fullname, in_search,
-                                in_scope, in_external_tf_editor, out_open_external_tf_editor);
+                                in_scope, in_external_tf_editor, out_open_external_tf_editor, in_override_header_state);
                         } else {
                             if (!group_widget_id.second.callback(
                                     group.second.first, group_widget_id.second.GetGUIPresentation(), in_scope)) {
@@ -175,7 +176,7 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
                 /// LOCAL
 
                 this->draw_grouped_parameters(group_name, group.second.first, in_module_fullname, in_search, in_scope,
-                    in_external_tf_editor, out_open_external_tf_editor);
+                    in_external_tf_editor, out_open_external_tf_editor, in_override_header_state);
             } else {
                 /// GLOBAL
 
@@ -274,7 +275,8 @@ void megamol::gui::ParameterGroupsPresentation::draw_parameter(megamol::gui::Par
 void megamol::gui::ParameterGroupsPresentation::draw_grouped_parameters(const std::string& in_group_name,
     ParamPtrVector_t& params, const std::string& in_module_fullname, const std::string& in_search,
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
-    const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
+    const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
+    ImGuiID in_override_header_state) {
 
     // Skip if no parameter is visible and extended mode is not set.
     bool visible = false;
@@ -288,9 +290,10 @@ void megamol::gui::ParameterGroupsPresentation::draw_grouped_parameters(const st
 
     // Open namespace header when parameter search is active.
     auto search_string = in_search;
-    bool header_open = megamol::gui::GUIUtils::GroupHeader(in_group_name, search_string);
+    bool param_group_header_open =
+        megamol::gui::GUIUtils::GroupHeader(in_group_name, search_string, in_override_header_state);
 
-    if (header_open) {
+    if (param_group_header_open) {
         ImGui::Indent();
         for (auto& param : params) {
             this->draw_parameter((*param), in_module_fullname, search_string, in_scope, in_external_tf_editor,

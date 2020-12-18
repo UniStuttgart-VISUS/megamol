@@ -686,7 +686,7 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                         // Draw parameters
                         selected_mod_ptr->present.param_groups.PresentGUI(selected_mod_ptr->parameters,
                             selected_mod_ptr->FullName(), "", vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN),
-                            false, ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
+                            false, ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr, GUI_INVALID_ID);
 
                         ImVec2 popup_size = ImGui::GetWindowSize();
                         bool param_popup_open = ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId);
@@ -1186,7 +1186,7 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
                             "] Set keyboard focus to search input field.\n"
                             "Case insensitive substring search in module and parameter names.";
     this->search_widget.Widget("graph_parameter_search", help_text);
-    auto search_string = this->search_widget.GetSearchString();
+
 
     ImGui::EndChild();
 
@@ -1197,27 +1197,51 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
     ImGui::BeginChild("parameter_param_frame_child", ImVec2(graph_width, 0.0f), false, child_flags);
 
     if (!this->graph_state.interact.modules_selected_uids.empty()) {
-        // Loop over all selected modules
+        // Get module groups
+        std::map<std::string, std::vector<ModulePtr_t>> group_map;
         for (auto& module_uid : this->graph_state.interact.modules_selected_uids) {
             ModulePtr_t module_ptr;
             // Get pointer to currently selected module(s)
             if (inout_graph.GetModule(module_uid, module_ptr)) {
-                ImGui::PushID(module_ptr->uid);
-                std::string module_label = module_ptr->FullName();
-
-                // Draw module header
-                bool header_open = GUIUtils::GroupHeader(module_label, search_string);
-                // Module description as hover tooltip
-                this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
-
-                // Draw parameters
-                if (header_open) {
-                    module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(),
-                        search_string, vislib::math::Ternary(this->param_extended_mode), true,
-                        ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
+                auto group_name = module_ptr->present.group.name;
+                if (!group_name.empty()) {
+                    group_map["::" + group_name].emplace_back(module_ptr);
+                } else {
+                    group_map[""].emplace_back(module_ptr);
                 }
+            }
+        }
+        for (auto& group : group_map) {
+            std::string search_string = this->search_widget.GetSearchString();
+            bool indent = false;
+            bool group_header_open = group.first.empty();
+            if (!group_header_open) {
+                group_header_open = GUIUtils::GroupHeader(group.first, search_string);
+                indent = true;
+                ImGui::Indent();
+            }
+            if (group_header_open) {
+                for (auto& module_ptr : group.second) {
+                    ImGui::PushID(module_ptr->uid);
+                    std::string module_label = module_ptr->FullName();
 
-                ImGui::PopID();
+                    // Draw module header
+                    bool module_header_open = GUIUtils::GroupHeader(module_label, search_string);
+                    // Module description as hover tooltip
+                    this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
+
+                    // Draw parameters
+                    if (module_header_open) {
+                        module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(),
+                            search_string, vislib::math::Ternary(this->param_extended_mode), true,
+                            ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr, GUI_INVALID_ID);
+                    }
+
+                    ImGui::PopID();
+                }
+            }
+            if (indent) {
+                ImGui::Unindent();
             }
         }
     }

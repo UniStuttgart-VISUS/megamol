@@ -534,7 +534,7 @@ bool GUIWindows::PostDraw(void) {
 
             module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "",
                 vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN), false,
-                ParameterPresentation::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr);
+                ParameterPresentation::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr, GUI_INVALID_ID);
         }
     }
 
@@ -1368,82 +1368,110 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     // Create child window for sepearte scroll bar and keeping header always visible on top of parameter list
     ImGui::BeginChild("###ParameterList", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar);
 
-    const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
-    auto search_string = this->search_widget.GetSearchString();
-    GraphPtr_t graph_ptr;
-
     // Listing modules and their parameters
+    GraphPtr_t graph_ptr;
+    const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
     if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+
+        // Get module groups
+        std::map<std::string, std::vector<ModulePtr_t>> group_map;
         for (auto& module_ptr : graph_ptr->GetModules()) {
-            std::string module_label = module_ptr->FullName();
-
-            // Check if module should be considered.
-            if (!this->considerModule(module_label, wc.param_modules_list)) {
-                continue;
+            auto group_name = module_ptr->present.group.name;
+            if (!group_name.empty()) {
+                group_map["::" + group_name].emplace_back(module_ptr);
+            } else {
+                group_map[""].emplace_back(module_ptr);
             }
+        }
+        for (auto& group : group_map) {
+            std::string search_string = this->search_widget.GetSearchString();
+            bool indent = false;
+            bool group_header_open = group.first.empty();
+            if (!group_header_open) {
+                group_header_open = GUIUtils::GroupHeader(group.first, search_string, override_header_state);
+                indent = true;
+                ImGui::Indent();
+            }
+            if (group_header_open) {
+                for (auto& module_ptr : group.second) {
+                    std::string module_label = module_ptr->FullName();
+                    ImGui::PushID(module_ptr->uid);
 
-            // Draw module header
-            bool header_open = GUIUtils::GroupHeader(module_label, search_string, override_header_state);
-            // Module description as hover tooltip
-            this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
+                    // Check if module should be considered.
+                    if (!this->considerModule(module_label, wc.param_modules_list)) {
+                        continue;
+                    }
 
-            // Context menu
-            if (ImGui::BeginPopupContextItem()) {
-                if (ImGui::MenuItem("Copy to new Window")) {
-                    std::srand(std::time(nullptr));
-                    std::string window_name = "Parameters###parameters_" + std::to_string(std::rand());
-                    WindowCollection::WindowConfiguration buf_win;
-                    buf_win.win_name = window_name;
-                    buf_win.win_show = true;
-                    buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
-                    buf_win.win_callback = WindowCollection::DrawCallbacks::PARAMETERS;
-                    buf_win.param_show_hotkeys = false;
-                    buf_win.win_position = ImVec2(0.0f, ImGui::GetTextLineHeightWithSpacing());
-                    buf_win.win_size = ImVec2(400.0f, 600.0f);
-                    buf_win.param_modules_list.emplace_back(module_label);
-                    this->window_collection.AddWindowConfiguration(buf_win);
-                }
+                    // Draw module header
+                    bool module_header_open = GUIUtils::GroupHeader(module_label, search_string, override_header_state);
+                    // Module description as hover tooltip
+                    this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
 
-                // Deleting module's parameters is not available in main parameter window.
-                if (wc.win_callback != WindowCollection::DrawCallbacks::MAIN_PARAMETERS) {
-                    if (ImGui::MenuItem("Delete from List")) {
-                        std::vector<std::string>::iterator find_iter =
-                            std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), module_label);
-                        // Break if module name is not contained in list
-                        if (find_iter != wc.param_modules_list.end()) {
-                            wc.param_modules_list.erase(find_iter);
+                    // Context menu
+                    if (ImGui::BeginPopupContextItem()) {
+                        if (ImGui::MenuItem("Copy to new Window")) {
+                            std::srand(std::time(nullptr));
+                            std::string window_name = "Parameters###parameters_" + std::to_string(std::rand());
+                            WindowCollection::WindowConfiguration buf_win;
+                            buf_win.win_name = window_name;
+                            buf_win.win_show = true;
+                            buf_win.win_flags = ImGuiWindowFlags_NoScrollbar;
+                            buf_win.win_callback = WindowCollection::DrawCallbacks::PARAMETERS;
+                            buf_win.param_show_hotkeys = false;
+                            buf_win.win_position = ImVec2(0.0f, ImGui::GetTextLineHeightWithSpacing());
+                            buf_win.win_size = ImVec2(400.0f, 600.0f);
+                            buf_win.param_modules_list.emplace_back(module_label);
+                            this->window_collection.AddWindowConfiguration(buf_win);
                         }
-                        if (wc.param_modules_list.empty()) {
-                            this->state.win_delete = wc.win_name;
+
+                        // Deleting module's parameters is not available in main parameter window.
+                        if (wc.win_callback != WindowCollection::DrawCallbacks::MAIN_PARAMETERS) {
+                            if (ImGui::MenuItem("Delete from List")) {
+                                std::vector<std::string>::iterator find_iter =
+                                    std::find(wc.param_modules_list.begin(), wc.param_modules_list.end(), module_label);
+                                // Break if module name is not contained in list
+                                if (find_iter != wc.param_modules_list.end()) {
+                                    wc.param_modules_list.erase(find_iter);
+                                }
+                                if (wc.param_modules_list.empty()) {
+                                    this->state.win_delete = wc.win_name;
+                                }
+                            }
+                        }
+                        ImGui::EndPopup();
+                    }
+
+                    // Drag source
+                    module_label.resize(dnd_size);
+                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+                        ImGui::SetDragDropPayload(
+                            "DND_COPY_MODULE_PARAMETERS", module_label.c_str(), (module_label.size() * sizeof(char)));
+                        ImGui::TextUnformatted(module_label.c_str());
+                        ImGui::EndDragDropSource();
+                    }
+
+                    // Draw parameters
+                    if (module_header_open) {
+                        bool out_open_external_tf_editor;
+                        module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, search_string,
+                            vislib::math::Ternary(wc.param_extended_mode), true,
+                            ParameterPresentation::WidgetScope::LOCAL, this->tf_editor_ptr,
+                            &out_open_external_tf_editor, override_header_state);
+                        if (out_open_external_tf_editor) {
+                            const auto func = [](WindowCollection::WindowConfiguration& wc) {
+                                if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {
+                                    wc.win_show = true;
+                                }
+                            };
+                            this->window_collection.EnumWindows(func);
                         }
                     }
-                }
-                ImGui::EndPopup();
-            }
 
-            // Drag source
-            module_label.resize(dnd_size);
-            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
-                ImGui::SetDragDropPayload(
-                    "DND_COPY_MODULE_PARAMETERS", module_label.c_str(), (module_label.size() * sizeof(char)));
-                ImGui::TextUnformatted(module_label.c_str());
-                ImGui::EndDragDropSource();
-            }
-
-            // Draw parameters
-            if (header_open) {
-                bool out_open_external_tf_editor;
-                module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, search_string,
-                    vislib::math::Ternary(wc.param_extended_mode), true, ParameterPresentation::WidgetScope::LOCAL,
-                    this->tf_editor_ptr, &out_open_external_tf_editor);
-                if (out_open_external_tf_editor) {
-                    const auto func = [](WindowCollection::WindowConfiguration& wc) {
-                        if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {
-                            wc.win_show = true;
-                        }
-                    };
-                    this->window_collection.EnumWindows(func);
+                    ImGui::PopID();
                 }
+            }
+            if (indent) {
+                ImGui::Unindent();
             }
         }
     }
@@ -1660,7 +1688,8 @@ void GUIWindows::drawMenu(void) {
         this->window_collection.EnumWindows(func);
         // ImGui::Separator();
         // if (ImGui::MenuItem("Reset Size and Position",
-        //        this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE].keycode.ToString().c_str(), nullptr))
+        //        this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE].keycode.ToString().c_str(),
+        //        nullptr))
         //        {
         //    this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE].is_pressed = true;
         //}
