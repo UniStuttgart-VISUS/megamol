@@ -73,7 +73,7 @@ namespace gui {
          *
          * @param core_instance     The currently available core instance.
          */
-        bool CreateContext_GL(megamol::core::CoreInstance* core_instance);
+        bool CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstance* core_instance);
 
         /**
          * Setup and enable ImGui context for subsequent use.
@@ -255,7 +255,7 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        bool createContext(GUIImGuiAPI imgui_api);
+        bool createContext(void);
         bool destroyContext(void);
 
         // Window Draw Callbacks

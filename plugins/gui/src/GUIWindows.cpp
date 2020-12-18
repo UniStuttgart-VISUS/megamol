@@ -76,16 +76,87 @@ GUIWindows::~GUIWindows(void) {
 }
 
 
-bool GUIWindows::CreateContext_GL(megamol::core::CoreInstance* instance) {
+bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstance* core_instance) {
 
-    if (instance == nullptr) {
+    // Check prerequisities for requested API
+    switch (imgui_api) {
+    case (GUIImGuiAPI::OPEN_GL): {
+        bool prerequisities_given = true;
+#ifdef _WIN32 // Windows
+        auto dc = ::wglGetCurrentDC();
+        auto rc = ::wglGetCurrentContext();
+#else // Linux
+        auto dc = ::glXGetCurrentDisplay();
+        auto rc = ::glXGetCurrentContext();
+#endif /// _WIN32
+        if (dc == nullptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "[GUI] There is no OpenGL rendering context available.");
+            prerequisities_given = false;
+        }
+        if (rc == nullptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+                "[GUI] There is no current OpenGL rendering context available from the calling thread.");
+            prerequisities_given = false;
+        }
+        if (!prerequisities_given) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Failed to create ImGui context for OpenGL API. [%s, %s, line %d]\n     <<< HINT: Check if "
+                "project contains view module >>>",
+                __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+    } break;
+    default: {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] ImGui API is not supported yet. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    } break;
+    }
+
+    // Set pointer to core instance
+    if (core_instance == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "[GUI] Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    this->core_instance = instance;
+    this->core_instance = core_instance;
 
-    return this->createContext(GUIImGuiAPI::OPEN_GL);
+    // Create ImGui Context
+    bool other_context_exists = (ImGui::GetCurrentContext() != nullptr);
+    if (this->createContext()) {
+
+        // Initialize ImGui API
+        if (!other_context_exists) {
+            switch (imgui_api) {
+            case (GUIImGuiAPI::OPEN_GL): {
+                // Init OpenGL for ImGui
+                const char* glsl_version = "#version 150"; /// "#version 150" or nullptr
+                if (ImGui_ImplOpenGL3_Init(glsl_version)) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Created ImGui context for Open GL.");
+                } else {
+                    this->destroyContext();
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] Unable to initialize OpenGL for ImGui. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                        __LINE__);
+                }
+
+            } break;
+            default: {
+                this->destroyContext();
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] ImGui API is not supported yet. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                return false;
+            } break;
+            }
+        }
+
+        this->initialized_api = imgui_api;
+        megamol::gui::imgui_context_count++;
+        ImGui::SetCurrentContext(this->context);
+        return true;
+    }
+    return false;
 }
 
 
@@ -274,7 +345,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
                 load_success = true;
             }
             GUIUtils::Utf8Decode(this->state.font_file_name);
-        } else {
+        } else if (this->state.font_file_name != "<unknown>") {
             for (unsigned int n = this->state.graph_fonts_reserved; n < static_cast<unsigned int>(io.Fonts->Fonts.Size);
                  n++) {
                 std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
@@ -937,7 +1008,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 }
 
 
-bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
+bool GUIWindows::createContext(void) {
 
     if (this->initialized_api != GUIImGuiAPI::NONE) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -949,15 +1020,12 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
     bool other_context_exists = (ImGui::GetCurrentContext() != nullptr);
     ImFontAtlas* font_atlas = nullptr;
     ImFont* default_font = nullptr;
-
     /// [DEPRECATED USAGE] ///
     if (other_context_exists) {
         ImGuiIO& current_io = ImGui::GetIO();
         font_atlas = current_io.Fonts;
         default_font = current_io.FontDefault;
         ImGui::GetCurrentContext()->FontAtlasOwnedByContext = false;
-        // Init API only once (is it same as the already initialized one?)
-        this->initialized_api = imgui_api;
     }
 
     // Create ImGui context ---------------------------------------------------
@@ -967,28 +1035,6 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unable to create ImGui context. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
-    }
-    megamol::gui::imgui_context_count++;
-    ImGui::SetCurrentContext(this->context);
-
-    // Create ImGui API
-    if (!other_context_exists) {
-        switch (imgui_api) {
-        case (GUIImGuiAPI::OPEN_GL): {
-            // Init OpenGL for ImGui
-            const char* glsl_version = "#version 150"; /// "#version 150" or nullptr
-            if (ImGui_ImplOpenGL3_Init(glsl_version)) {
-                this->initialized_api = GUIImGuiAPI::OPEN_GL;
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Created ImGui context for Open GL.");
-            }
-        } break;
-        default: {
-            this->destroyContext();
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] ImGui API is not supported yet. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        } break;
-        }
     }
 
     // Register window callbacks in window collection -------------------------
@@ -1126,6 +1172,7 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
             default_font_index = std::min(default_font_index, io.Fonts->Fonts.Size - 1);
             io.FontDefault = io.Fonts->Fonts[default_font_index];
         }
+
     } else {
 
         ImGuiIO& io = ImGui::GetIO();
@@ -1182,7 +1229,6 @@ bool GUIWindows::createContext(GUIImGuiAPI imgui_api) {
             }
         }
     }
-    this->state.font_file_name = std::string(io.FontDefault->GetDebugName());
 
     // ImGui Key Map
     io.KeyMap[ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
@@ -1754,8 +1800,7 @@ void GUIWindows::drawMenu(void) {
                 this->state.font_file_name, megamol::gui::FileBrowserWidget::FileBrowserFlag::LOAD, "ttf");
             ImGui::SameLine();
             GUIUtils::Utf8Encode(this->state.font_file_name);
-            ImGui::InputText(
-                "Font Filename (.ttf)", &this->state.font_file_name, ImGuiInputTextFlags_CtrlEnterForNewLine);
+            ImGui::InputText("Font Filename (.ttf)", &this->state.font_file_name, ImGuiInputTextFlags_None);
             GUIUtils::Utf8Decode(this->state.font_file_name);
             ImGui::PopItemWidth();
             // Validate font file before offering load button
