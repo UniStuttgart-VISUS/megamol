@@ -246,6 +246,7 @@ namespace gui {
             return return_str;
         }
 
+
         /** Decode string from UTF-8. */
         static bool Utf8Decode(std::string& str) {
 
@@ -257,6 +258,7 @@ namespace gui {
             return false;
         }
 
+
         /** Encode string into UTF-8. */
         static bool Utf8Encode(std::string& str) {
 
@@ -267,6 +269,7 @@ namespace gui {
             }
             return false;
         }
+
 
         /**
          * Enable/Disable read only widget style.
@@ -280,6 +283,57 @@ namespace gui {
                 ImGui::PopItemFlag();
                 ImGui::PopStyleVar();
             }
+        }
+
+
+        /**
+         * Returns true if search string is found in source as a case insensitive substring.
+         *
+         * @param source   The string to search in.
+         * @param search   The string to search for in the source.
+         */
+        static bool FindCaseInsensitiveSubstring(const std::string& source, const std::string& search) {
+            if (search.empty())
+                return true;
+            auto it = std::search(source.begin(), source.end(), search.begin(), search.end(),
+                [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
+            return (it != source.end());
+        }
+
+
+        /*
+         * Draw collapsing group header.
+         */
+        static bool GroupHeader(
+            const std::string& name, std::string& inout_search, ImGuiID override_header_state = GUI_INVALID_ID) {
+            if (ImGui::GetCurrentContext() == nullptr) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                return false;
+            }
+            // Determine header state and change color depending on active parameter search
+            auto headerId = ImGui::GetID(name.c_str());
+            auto headerState = override_header_state;
+            if (headerState == GUI_INVALID_ID) {
+                headerState = ImGui::GetStateStorage()->GetInt(headerId, 1); // 0=close 1=open
+            }
+            bool searched = true;
+            if (!inout_search.empty()) {
+                headerState = 1;
+                searched = megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(name, inout_search);
+                if (!searched) {
+                    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
+                } else {
+                    // Show all below when given name is part of the search
+                    inout_search.clear();
+                }
+            }
+            ImGui::GetStateStorage()->SetInt(headerId, headerState);
+            bool header_open = ImGui::CollapsingHeader(name.c_str(), nullptr);
+            if (!inout_search.empty() && !searched) {
+                ImGui::PopStyleColor();
+            }
+            return header_open;
         }
 
     private:

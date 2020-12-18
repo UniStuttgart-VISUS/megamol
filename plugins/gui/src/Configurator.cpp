@@ -332,7 +332,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
         // Filter module by given search string
         search_filter = true;
         if (!search_string.empty()) {
-            search_filter = StringSearchWidget::FindCaseInsensitiveSubstring(mod.class_name, search_string);
+            search_filter = megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(mod.class_name, search_string);
         }
 
         // Filter module by compatible call slots

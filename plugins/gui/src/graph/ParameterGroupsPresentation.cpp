@@ -93,6 +93,7 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
                 group_widget_id.second.active = true;
                 ImGui::PushID(group_widget_id.first.c_str());
                 if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+                    // LOCAL
 
                     if (in_extended.IsTrue()) {
                         // Visibility
@@ -130,11 +131,9 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
 
                     // Call group widget draw function
                     if (group_widget_id.second.IsGUIVisible() || in_extended.IsTrue()) {
-
                         if (group_widget_id.second.IsGUIReadOnly()) {
                             GUIUtils::ReadOnlyWigetStyle(true);
                         }
-
                         if (group_widget_id.second.GetGUIPresentation() ==
                             param::AbstractParamPresentation::Presentation::Basic) {
 
@@ -249,9 +248,8 @@ void megamol::gui::ParameterGroupsPresentation::draw_parameter(megamol::gui::Par
         bool param_searched = true;
         bool module_searched = true;
         if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
-            param_searched = megamol::gui::StringSearchWidget::FindCaseInsensitiveSubstring(param_name, in_search);
-            module_searched =
-                megamol::gui::StringSearchWidget::FindCaseInsensitiveSubstring(in_module_fullname, in_search);
+            param_searched = megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(param_name, in_search);
+            module_searched = megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(in_module_fullname, in_search);
         }
         bool visible =
             (inout_param.present.IsGUIVisible() || inout_param.present.extended) && (param_searched || module_searched);
@@ -290,31 +288,15 @@ void megamol::gui::ParameterGroupsPresentation::draw_grouped_parameters(const st
 
     // Open namespace header when parameter search is active.
     auto search_string = in_search;
-    bool namespace_searched = true;
-    if (!search_string.empty()) {
-        auto headerId = ImGui::GetID(in_group_name.c_str());
-        ImGui::GetStateStorage()->SetInt(headerId, 1);
-        namespace_searched =
-            megamol::gui::StringSearchWidget::FindCaseInsensitiveSubstring(in_group_name, search_string);
-        if (!namespace_searched) {
-            ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
-        } else {
-            // Show all when namespace is part of the search
-            search_string.clear();
-        }
-    }
+    bool header_open = megamol::gui::GUIUtils::GroupHeader(in_group_name, search_string);
 
-    if (ImGui::CollapsingHeader(in_group_name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+    if (header_open) {
         ImGui::Indent();
         for (auto& param : params) {
             this->draw_parameter((*param), in_module_fullname, search_string, in_scope, in_external_tf_editor,
                 out_open_external_tf_editor);
         }
         ImGui::Unindent();
-    }
-
-    if (!search_string.empty() && !namespace_searched) {
-        ImGui::PopStyleColor();
     }
 }
 

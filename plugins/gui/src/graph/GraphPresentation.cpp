@@ -1203,10 +1203,15 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
             // Get pointer to currently selected module(s)
             if (inout_graph.GetModule(module_uid, module_ptr)) {
                 ImGui::PushID(module_ptr->uid);
+                std::string module_label = module_ptr->FullName();
 
-                bool header_open = module_ptr->HeaderGUI(GUI_INVALID_ID, search_string);
+                // Draw module header
+                bool header_open = GUIUtils::GroupHeader(module_label, search_string);
+                // Module description as hover tooltip
+                this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
+
+                // Draw parameters
                 if (header_open) {
-                    // Draw parameters
                     module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(),
                         search_string, vislib::math::Ternary(this->param_extended_mode), true,
                         ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);

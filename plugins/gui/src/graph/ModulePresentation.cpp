@@ -465,48 +465,6 @@ void megamol::gui::ModulePresentation::Present(
 }
 
 
-bool megamol::gui::ModulePresentation::Header(
-    Module& inout_module, ImGuiID override_header_state, std::string& inout_search) {
-
-    if (ImGui::GetCurrentContext() == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    std::string module_label = inout_module.FullName();
-
-    // Determine header state and change color depending on active parameter search
-    auto headerId = ImGui::GetID(module_label.c_str());
-    auto headerState = override_header_state;
-    if (headerState == GUI_INVALID_ID) {
-        headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
-    }
-    bool module_searched = true;
-    if (!inout_search.empty()) {
-        headerState = 1;
-        module_searched = megamol::gui::StringSearchWidget::FindCaseInsensitiveSubstring(module_label, inout_search);
-        if (!module_searched) {
-            ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
-        } else {
-            // Show all when module is part of the search
-            inout_search.clear();
-        }
-    }
-    ImGui::GetStateStorage()->SetInt(headerId, headerState);
-
-    bool header_open = ImGui::CollapsingHeader(module_label.c_str(), nullptr);
-
-    if (!inout_search.empty() && !module_searched) {
-        ImGui::PopStyleColor();
-    }
-    // Module description as hover tooltip
-    this->tooltip.ToolTip(inout_module.description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
-
-    return header_open;
-}
-
-
 ImVec2 megamol::gui::ModulePresentation::GetDefaultModulePosition(const GraphCanvas_t& canvas) {
 
     return ((ImVec2((2.0f * GUI_GRAPH_BORDER), (2.0f * GUI_GRAPH_BORDER)) + // ImGui::GetTextLineHeightWithSpacing()) +

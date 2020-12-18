@@ -1102,7 +1102,7 @@ bool GUIWindows::createContext(void) {
     // LOG CONSOLE Window -----------------------------------------------------
     buf_win.win_name = "Log Console";
     buf_win.win_show = false;
-    buf_win.win_size = ImVec2(vp[2], 200.0f);
+    buf_win.win_size = ImVec2(vp[2], vp[3] - param_win_height);
     buf_win.win_reset_size = buf_win.win_size;
     buf_win.win_position = ImVec2(0.0f, vp[3] - buf_win.win_size.y);
     buf_win.win_reset_position = buf_win.win_position;
@@ -1330,14 +1330,13 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     ImGui::SameLine();
 
     // Options
-    ImGuiID overrideState = GUI_INVALID_ID;
+    ImGuiID override_header_state = GUI_INVALID_ID;
     if (ImGui::Button("Expand All")) {
-        overrideState = 1; // open
+        override_header_state = 1; // open
     }
     ImGui::SameLine();
-
     if (ImGui::Button("Collapse All")) {
-        overrideState = 0; // close
+        override_header_state = 0; // close
     }
     ImGui::SameLine();
 
@@ -1370,19 +1369,24 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     ImGui::BeginChild("###ParameterList", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar);
 
     const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
-    auto current_search_string = this->search_widget.GetSearchString();
+    auto search_string = this->search_widget.GetSearchString();
     GraphPtr_t graph_ptr;
+
     // Listing modules and their parameters
     if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
-
             std::string module_label = module_ptr->FullName();
+
             // Check if module should be considered.
             if (!this->considerModule(module_label, wc.param_modules_list)) {
                 continue;
             }
 
-            bool header_open = module_ptr->HeaderGUI(overrideState, current_search_string);
+            // Draw module header
+            bool header_open = GUIUtils::GroupHeader(module_label, search_string, override_header_state);
+            // Module description as hover tooltip
+            this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
+
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Copy to new Window")) {
@@ -1429,7 +1433,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
             // Draw parameters
             if (header_open) {
                 bool out_open_external_tf_editor;
-                module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, current_search_string,
+                module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, search_string,
                     vislib::math::Ternary(wc.param_extended_mode), true, ParameterPresentation::WidgetScope::LOCAL,
                     this->tf_editor_ptr, &out_open_external_tf_editor);
                 if (out_open_external_tf_editor) {
