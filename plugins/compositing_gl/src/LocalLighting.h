@@ -13,6 +13,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/param/ParamSlot.h"
 
 #include "vislib/graphics/gl/GLSLComputeShader.h"
 
@@ -107,7 +108,8 @@ private:
     std::vector<LightParams> m_point_lights, m_distant_lights;
 
 
-    // TODO mode slot for LAMBERT, PHONG, etc.
+    /**Parameter for different illuminations e.g. Lambertian, Phong */ 
+    megamol::core::param::ParamSlot m_illuminationmode;
 
     /** Slot for requesting the output textures from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_output_tex_slot;

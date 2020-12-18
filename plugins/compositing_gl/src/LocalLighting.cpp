@@ -2,6 +2,7 @@
 #include "LocalLighting.h"
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore/param/EnumParam.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
 
@@ -13,6 +14,7 @@ megamol::compositing::LocalLighting::LocalLighting()
     , m_output_texture(nullptr)
     , m_point_lights_buffer(nullptr)
     , m_distant_lights_buffer(nullptr)
+    , m_illuminationmode("Mode", "Sets illumination mode e.g. Lambertian, Phong")
     , m_output_tex_slot("OutputTexture", "Gives access to resulting output texture")
     , m_albedo_tex_slot("AlbedoTexture", "Connect to the albedo render target texture")
     , m_normal_tex_slot("NormalTexture", "Connects to the normals render target texture")
@@ -21,6 +23,11 @@ megamol::compositing::LocalLighting::LocalLighting()
     , m_lightSlot("lights", "Lights are retrieved over this slot. If no light is connected, a default camera light is used") 
     , m_camera_slot("Camera", "Connects a (copy of) camera state")
 {
+    this->m_illuminationmode << new megamol::core::param::EnumParam(0);
+    this->m_illuminationmode.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Lambert");
+    this->m_illuminationmode.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "Blinn-Phong");
+    this->MakeSlotAvailable(&this->m_illuminationmode);
+
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &LocalLighting::getDataCallback);
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetMetaData", &LocalLighting::getMetaDataCallback);
     this->MakeSlotAvailable(&this->m_output_tex_slot);
@@ -156,6 +163,16 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
 
         m_point_lights_buffer->rebuffer(m_point_lights);
         m_distant_lights_buffer->rebuffer(m_distant_lights);
+
+        //m_illumination mode: Change between Lambert & Blinn Phong
+        if (this->m_illuminationmode.Param<core::param::EnumParam>()->Value() == 0) {
+            //Lambert: std::cout << "Lambert" << std::endl;
+        }
+        else if (this->m_illuminationmode.Param<core::param::EnumParam>()->Value() == 1) {
+            //Blinn-Phong: std::cout << "Blinn Phong" << std::endl;
+
+        }
+
 
         if (m_lighting_prgm != nullptr && m_point_lights_buffer != nullptr && m_distant_lights_buffer != nullptr) {
             m_lighting_prgm->Enable();
