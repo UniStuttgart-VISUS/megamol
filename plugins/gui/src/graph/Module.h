@@ -92,6 +92,9 @@ namespace gui {
         inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsState_t& state) {
             this->present.Present(phase, *this, state);
         }
+        inline bool HeaderGUI(ImGuiID override_header_state, std::string& inout_search) {
+            return this->present.Header(*this, override_header_state, inout_search);
+        }
         inline void UpdateGUI(const GraphCanvas_t& in_canvas) {
             this->present.Update(*this, in_canvas);
         }

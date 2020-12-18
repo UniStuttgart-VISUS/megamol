@@ -82,6 +82,8 @@ namespace gui {
         // FUNCTIONS --------------------------------------------------------------
 
         void Present(megamol::gui::PresentPhase phase, Module& inout_module, GraphItemsState_t& state);
+        bool Header(Module& inout_module, ImGuiID override_header_state, std::string& inout_search);
+
         void Update(Module& inout_module, const GraphCanvas_t& in_canvas);
 
         inline bool found_uid(UIDVector_t& modules_uid_vector, ImGuiID module_uid) const {

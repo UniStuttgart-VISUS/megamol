@@ -1375,43 +1375,14 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     // Listing modules and their parameters
     if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
-            std::string module_label = module_ptr->FullName();
 
+            std::string module_label = module_ptr->FullName();
             // Check if module should be considered.
             if (!this->considerModule(module_label, wc.param_modules_list)) {
                 continue;
             }
 
-            // Determine header state and change color depending on active parameter search
-            auto headerId = ImGui::GetID(module_label.c_str());
-            auto headerState = overrideState;
-            if (headerState == GUI_INVALID_ID) {
-                headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
-            }
-            auto search_string = current_search_string;
-            bool module_searched = true;
-            if (!search_string.empty()) {
-                headerState = 1;
-                module_searched =
-                    megamol::gui::StringSearchWidget::FindCaseInsensitiveSubstring(module_label, search_string);
-                if (!module_searched) {
-                    ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
-                } else {
-                    // Show all when module is part of the search
-                    search_string.clear();
-                }
-            }
-            ImGui::GetStateStorage()->SetInt(headerId, headerState);
-
-            bool header_open = ImGui::CollapsingHeader(module_label.c_str(), nullptr);
-
-            if (!search_string.empty() && !module_searched) {
-                ImGui::PopStyleColor();
-            }
-
-            // Module description as hover tooltip
-            this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
-
+            bool header_open = module_ptr->HeaderGUI(overrideState, current_search_string);
             // Context menu
             if (ImGui::BeginPopupContextItem()) {
                 if (ImGui::MenuItem("Copy to new Window")) {
@@ -1455,14 +1426,12 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                 ImGui::EndDragDropSource();
             }
 
+            // Draw parameters
             if (header_open) {
-                // Draw parameters
                 bool out_open_external_tf_editor;
-
-                module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, search_string,
+                module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, current_search_string,
                     vislib::math::Ternary(wc.param_extended_mode), true, ParameterPresentation::WidgetScope::LOCAL,
                     this->tf_editor_ptr, &out_open_external_tf_editor);
-
                 if (out_open_external_tf_editor) {
                     const auto func = [](WindowCollection::WindowConfiguration& wc) {
                         if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {

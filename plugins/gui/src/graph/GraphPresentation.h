@@ -55,7 +55,6 @@ namespace gui {
             this->graph_state.interact.interfaceslot_compat_ptr.reset();
         }
 
-
         ImGuiID GetHoveredGroup(void) const {
             return this->graph_state.interact.group_hovered_uid;
         }

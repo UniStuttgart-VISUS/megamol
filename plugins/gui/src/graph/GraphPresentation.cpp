@@ -1204,15 +1204,8 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
             if (inout_graph.GetModule(module_uid, module_ptr)) {
                 ImGui::PushID(module_ptr->uid);
 
-                // Set default state of header
-                /// XXX Utf8 encode not required(?)
-                auto headerId = ImGui::GetID(module_ptr->name.c_str());
-                auto headerState = ImGui::GetStateStorage()->GetInt(headerId, 1); // 0=close 1=open
-                ImGui::GetStateStorage()->SetInt(headerId, headerState);
-                bool open = ImGui::CollapsingHeader(module_ptr->name.c_str(), nullptr, ImGuiTreeNodeFlags_None);
-                this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
-
-                if (open) {
+                bool header_open = module_ptr->HeaderGUI(GUI_INVALID_ID, search_string);
+                if (header_open) {
                     // Draw parameters
                     module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(),
                         search_string, vislib::math::Ternary(this->param_extended_mode), true,
