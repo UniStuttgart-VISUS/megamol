@@ -490,6 +490,7 @@ bool mmvtkmStreamLines::ghostPlane(core::param::ParamSlot& slot) {
 	// CAUTION: EXTREMELY UNSAFE!
 	// this only works because the ghostplane always consists of 4 vertices
 	// if this varies, the meshdataaccess_ has to be modified directly
+    // TODO: possibly need to be adjusted with new master
     glm::vec3 zfo = seedPlaneZFightingOffset_;	// prevents z-fighting of ghost- and liveseedplane
 	ghostPlane_.clear();
     ghostPlane_ = {p0 + zfo, p1 + zfo, p2 + zfo, p3 + zfo };
@@ -598,6 +599,7 @@ bool mmvtkmStreamLines::planeModeChanged(core::param::ParamSlot& slot) {
         this->psSeedPlaneP_.Param<core::param::FloatParam>()->SetGUIVisible(false);
         this->psSeedPlaneQ_.Param<core::param::FloatParam>()->SetGUIVisible(false);
 
+        // TODO: possibly need to be adjusted with new master
         ghostPlane_.clear();
         ghostPlane_ = {glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f)};
 
@@ -625,12 +627,14 @@ bool mmvtkmStreamLines::toggleGhostPlane(core::param::ParamSlot& slot) {
 	// TODO for new master maybe just delete mesh and re-add if toggled again
 	bool show = slot.Param<core::param::BoolParam>()->Value();
 	if (show) {
+            // TODO: possibly need to be adjusted with new master
 		ghostPlane_.clear();
 		for (const auto& v : ghostCopy_) {
 			ghostPlane_.push_back(v + seedPlaneZFightingOffset_);
 		}
 	}
 	else {
+            // TODO: possibly need to be adjusted with new master
 		ghostPlane_.clear();
 		ghostPlane_ = { glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f) };
 	}
@@ -1010,7 +1014,7 @@ bool mmvtkmStreamLines::addMeshDataToCall(
 
     if (va.size() == 0 || id.data == nullptr) {
         core::utility::log::Log::DefaultLog.WriteError(
-            "In %s at line %d.\LineData, color, or index vector is empty.", __FILE__, __LINE__);
+            "In %s at line %d. LineData, color, or index vector is empty.", __FILE__, __LINE__);
         return false;
     }
 
@@ -1099,10 +1103,12 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         seedPlaneTriangles_ = decomposePolygon(liveSeedPlane_);
 
         seeds_.clear();
+
         for (auto const& identifier : meshDataAccess_.second) {
             meshDataAccess_.first->deleteMesh(identifier);
         }
         meshDataAccess_.second.clear();
+
 
         // sample points in triangles and combine each triangles' samples
         for (const auto& tri : seedPlaneTriangles_) {
@@ -1232,7 +1238,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             }
             // adds the mdacs of the streamlines to the call here
             std::string streamlineIdentifier = streamlineBaseIdentifier_ + std::to_string(i);
-            createAndAddMeshDataToCall(streamlineIdentifier, streamlineData_[i], streamlineColor_[i],
+            createAndAddMeshDataToCall(streamlineIdentifier, streamlineData_[i], streamlineColor_[i], \
                 streamlineIndices_[i], numPoints, \
                 numIndices, mesh::MeshDataAccessCollection::PrimitiveType::LINE_STRIP);
         }

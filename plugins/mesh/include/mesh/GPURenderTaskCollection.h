@@ -176,6 +176,8 @@ namespace mesh {
             });
 
         if (query != m_gpu_render_tasks.end()) {
+            // maybe if found
+            // m_rendertask_collection.first->deleteRenderTask(identifier);
             size_t old_dcs_byte_size = (*query)->draw_commands->getByteSize();
             size_t old_pdd_byte_size = (*query)->per_draw_data->getByteSize();
             size_t new_dcs_byte_size = old_dcs_byte_size + sizeof(DrawCommandType) * draw_commands.size();
@@ -207,7 +209,6 @@ namespace mesh {
                 rt_meta.draw_command_byteOffset = old_dcs_byte_size + dc_idx * sizeof(DrawCommandType);
                 rt_meta.per_draw_data_byteOffset = old_pdd_byte_size + dc_idx * sizeof(PerDrawDataType);
                 rt_meta.per_draw_data_byteSize = sizeof(PerDrawDataType);
-                
                 auto rtn = m_render_task_meta_data.insert({identifiers[dc_idx], rt_meta});
                 if (rtn.second == false) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -241,7 +242,6 @@ namespace mesh {
                 rt_meta.draw_command_byteOffset = dc_idx * sizeof(DrawCommandType);
                 rt_meta.per_draw_data_byteOffset = dc_idx * sizeof(PerDrawDataType);
                 rt_meta.per_draw_data_byteSize = sizeof(PerDrawDataType);
-                
                 auto rtn = m_render_task_meta_data.insert({identifiers[dc_idx], rt_meta});
                 if (rtn.second == false) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(

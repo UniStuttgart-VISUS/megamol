@@ -13,7 +13,7 @@ void GPURenderTaskCollection::deleteRenderTask(std::string const& identifier) {
     glGetError(); //TODO fuck this
     
     auto query = m_render_task_meta_data.find(identifier);
-
+    
     if (query != m_render_task_meta_data.end()) {
 
         auto rt_meta = query->second;
@@ -21,7 +21,6 @@ void GPURenderTaskCollection::deleteRenderTask(std::string const& identifier) {
         auto rts = rt_meta.render_tasks;
 
         rts->draw_cnt -= 1;
-
 
         if (rts->draw_cnt == 0) {
             for (size_t i = 0; i < m_gpu_render_tasks.size(); ++i) {
@@ -59,6 +58,20 @@ void GPURenderTaskCollection::deleteRenderTask(std::string const& identifier) {
 
             rts->draw_commands = new_dcs_buffer;
             rts->per_draw_data = new_pdd_buffer;
+
+            // adapt meta data offsets within same render_task
+            // otherwise you run in a problem that the buffersize of e.g. draw_commands
+            // steadily decreases while the offsets stay the same and will, eventually at some point,
+            // exceed the buffersize --> BufferObjectException at copy calls above
+            for (auto& tmp : m_render_task_meta_data) {
+                if (rts == tmp.second.render_tasks) {
+                    if (tmp.second.draw_command_byteOffset > rt_meta.draw_command_byteOffset)
+                        tmp.second.draw_command_byteOffset -= sizeof(glowl::DrawElementsCommand);
+
+                    if (tmp.second.per_draw_data_byteOffset > rt_meta.per_draw_data_byteOffset)
+                        tmp.second.per_draw_data_byteOffset -= rt_meta.per_draw_data_byteSize;
+                }
+            }
         
         }
 

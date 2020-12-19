@@ -42,7 +42,7 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
             m_rendertask_collection.first->deleteRenderTask(identifier);
         }
         m_rendertask_collection.second.clear();
-        
+
         auto gpu_mtl_storage = mtlc->getData();
         auto gpu_mesh_storage = mc->getData();
 
@@ -77,9 +77,11 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
         
 		for (int i = 0; i < batch_meshes.size(); ++i) {
             auto const& shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
-            bool blending_and_depth = i == 0;
-            
-			if (i == batch_meshes.size() - 1) {
+
+            // TODO use identifier as condition, not position
+            std::vector<std::string>::iterator it =
+                std::find(identifiers[i].begin(), identifiers[i].end(), "seedplane");
+			if (it != identifiers[i].end()) {
 				auto set_states = [] { 
 					glEnable(GL_BLEND);
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -90,17 +92,19 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
 					glDisable(GL_BLEND);
 					glBlendFunc(GL_ONE, GL_NONE);
 					glDisable(GL_DEPTH_TEST);
-					glDisable(GL_CULL_FACE);
 				};
 				
                 m_rendertask_collection.first->addRenderTasks(identifiers[i], shader, batch_meshes[i],
                                     draw_commands[i], object_transforms[i], set_states, reset_states);
+                       
             } else {
                 m_rendertask_collection.first->addRenderTasks(
                     identifiers[i], shader, batch_meshes[i], draw_commands[i], object_transforms[i]);
 			}
 
-            m_rendertask_collection.second.push_back(std::string(this->FullName())); // new
+            for (const auto& s : identifiers[i]) {
+                m_rendertask_collection.second.push_back(s); // new
+            }
 
             // TODO add index to index map for removal
 
