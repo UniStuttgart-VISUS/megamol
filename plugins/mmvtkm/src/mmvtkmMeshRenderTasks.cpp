@@ -78,10 +78,11 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
 		for (int i = 0; i < batch_meshes.size(); ++i) {
             auto const& shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
 
-            // TODO use identifier as condition, not position
+            std::string seedIdentifier = (std::string)this->FullName() + "seedplane";
             std::vector<std::string>::iterator it =
-                std::find(identifiers[i].begin(), identifiers[i].end(), "seedplane");
+                std::find(identifiers[i].begin(), identifiers[i].end(), seedIdentifier.c_str());
 			if (it != identifiers[i].end()) {
+                std::cout << i << "\n";
 				auto set_states = [] { 
 					glEnable(GL_BLEND);
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

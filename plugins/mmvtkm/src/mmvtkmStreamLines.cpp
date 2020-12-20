@@ -318,7 +318,7 @@ bool mmvtkmStreamLines::assignSTPQ(core::param::ParamSlot& slot) {
     seedPlaneIndices_.clear();
 
     for (int i = 0; i < numPoints; ++i) {
-        seedPlaneColorVec_.push_back(glm::vec4(glm::vec3(i * 1.f / (numPoints - 1)), seedPlaneAlpha_));
+        seedPlaneColorVec_.push_back(glm::vec4(seedPlaneColor_, seedPlaneAlpha_));
         seedPlaneIndices_.push_back(i);
 	}
 
@@ -599,7 +599,6 @@ bool mmvtkmStreamLines::planeModeChanged(core::param::ParamSlot& slot) {
         this->psSeedPlaneP_.Param<core::param::FloatParam>()->SetGUIVisible(false);
         this->psSeedPlaneQ_.Param<core::param::FloatParam>()->SetGUIVisible(false);
 
-        // TODO: possibly need to be adjusted with new master
         ghostPlane_.clear();
         ghostPlane_ = {glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f)};
 
@@ -624,17 +623,15 @@ bool mmvtkmStreamLines::setResampleSeeds(core::param::ParamSlot& slot) {
  * mmvtkmStreamLines::clearGhostPlane
  */
 bool mmvtkmStreamLines::toggleGhostPlane(core::param::ParamSlot& slot) {
-	// TODO for new master maybe just delete mesh and re-add if toggled again
+
 	bool show = slot.Param<core::param::BoolParam>()->Value();
 	if (show) {
-            // TODO: possibly need to be adjusted with new master
 		ghostPlane_.clear();
 		for (const auto& v : ghostCopy_) {
 			ghostPlane_.push_back(v + seedPlaneZFightingOffset_);
 		}
 	}
 	else {
-            // TODO: possibly need to be adjusted with new master
 		ghostPlane_.clear();
 		ghostPlane_ = { glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f) };
 	}
@@ -679,11 +676,11 @@ bool mmvtkmStreamLines::setPlaneAndAppearanceUpdate() {
     }
 
 
-    auto seedPlaneMa = this->meshDataAccess_.first->accessMesh(seedPlaneIdentifier_);
+    /*auto seedPlaneMa = this->meshDataAccess_.first->accessMesh(seedPlaneIdentifier_);
     this->meshDataAccess_.first->deleteMesh(seedPlaneIdentifier_);
     seedPlaneMa.attributes[1].data = reinterpret_cast<uint8_t*>(seedPlaneColorVec_.data());
     this->meshDataAccess_.first->addMesh(
-        seedPlaneIdentifier_, seedPlaneMa.attributes, seedPlaneMa.indices, seedPlaneMa.primitive_type);
+        seedPlaneIdentifier_, seedPlaneMa.attributes, seedPlaneMa.indices, seedPlaneMa.primitive_type);*/
     // no update to list of entires in collection needed in this special case
 
     planeAppearanceUpdate_ = true;
@@ -1232,9 +1229,9 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             streamlineIndices_[i].resize(numIndices);
 
             for (int j = 0; j < numLineSegments; ++j) {
-                size_t idx = 2 * j;
+                int idx = 2 * j;
                 streamlineIndices_[i][idx + 0] = j;
-                streamlineIndices_[i][idx + (size_t)1] = j + 1;
+                streamlineIndices_[i][idx + 1] = j + 1;
             }
             // adds the mdacs of the streamlines to the call here
             std::string streamlineIdentifier = streamlineBaseIdentifier_ + std::to_string(i);
