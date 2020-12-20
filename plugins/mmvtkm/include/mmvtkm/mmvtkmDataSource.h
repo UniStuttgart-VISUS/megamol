@@ -126,6 +126,8 @@ private:
 
 	/** Min and max boundaries from vtkm data. Used for metadata */
     vtkm::Bounds minMaxBounds_;
+
+    
 };
 
 } /* end namespace mmvtkm */

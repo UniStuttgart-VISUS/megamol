@@ -74,6 +74,7 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     , numSteps_(2000)
     , stepSize_(0.1f)
     , activeField_("hs1")
+    , dataSetFields_{"hs1", "hs2", "hs3", "hs"}
     , planeOrigin_(0.f, 0.f, 0.f)
     , planeConnectionVertex1_(-50.f, -50.f, 0)
     , planeConnectionVertex2_(50.f, 50.f, 100.f)
@@ -108,7 +109,11 @@ mmvtkmStreamLines::mmvtkmStreamLines()
 
     // (TODO: instead of hardcoding fieldnames,
     // maybe also read all field names and show them as dropdown menu in megamol)
-    this->psStreamlineFieldName_.SetParameter(new core::param::StringParam(activeField_));
+    this->psStreamlineFieldName_.SetParameter(new core::param::EnumParam(0));
+    this->psStreamlineFieldName_.Param<core::param::EnumParam>()->SetTypePair(0, dataSetFields_[0].c_str());
+    this->psStreamlineFieldName_.Param<core::param::EnumParam>()->SetTypePair(1, dataSetFields_[1].c_str());
+    this->psStreamlineFieldName_.Param<core::param::EnumParam>()->SetTypePair(2, dataSetFields_[2].c_str());
+    this->psStreamlineFieldName_.Param<core::param::EnumParam>()->SetTypePair(3, dataSetFields_[3].c_str());
     this->MakeSlotAvailable(&this->psStreamlineFieldName_);
 
     this->psNumStreamlineSeeds_.SetParameter(new core::param::IntParam(numSeeds_, 0));
@@ -490,7 +495,6 @@ bool mmvtkmStreamLines::ghostPlane(core::param::ParamSlot& slot) {
 	// CAUTION: EXTREMELY UNSAFE!
 	// this only works because the ghostplane always consists of 4 vertices
 	// if this varies, the meshdataaccess_ has to be modified directly
-    // TODO: possibly need to be adjusted with new master
     glm::vec3 zfo = seedPlaneZFightingOffset_;	// prevents z-fighting of ghost- and liveseedplane
 	ghostPlane_.clear();
     ghostPlane_ = {p0 + zfo, p1 + zfo, p2 + zfo, p3 + zfo };
@@ -529,9 +533,6 @@ bool mmvtkmStreamLines::applyChanges(core::param::ParamSlot& slot) {
     bool appearance = planeColor;
 
 
-    // TODO: check if order is important:
-    // e.g. if streamlineSeeds is called, there is no need to call appearance beforehand
-    // because streamlineSeeds includes appearance
     if (appearance) {
         if (!setPlaneAndAppearanceUpdate()) return false;
     }
@@ -646,7 +647,7 @@ bool mmvtkmStreamLines::toggleGhostPlane(core::param::ParamSlot& slot) {
  * mmvtkmStreamLines::setStreamlineAndResampleSeedsUpdate
  */
 bool mmvtkmStreamLines::setStreamlineAndResampleSeedsUpdate() {
-    activeField_ = this->psStreamlineFieldName_.Param<core::param::StringParam>()->Value();
+    activeField_ = dataSetFields_[this->psStreamlineFieldName_.Param<core::param::EnumParam>()->Value()];
     numSeeds_ = this->psNumStreamlineSeeds_.Param<core::param::IntParam>()->Value();
     stepSize_ = this->psStreamlineStepSize_.Param<core::param::FloatParam>()->Value();
     numSteps_ = this->psNumStreamlineSteps_.Param<core::param::IntParam>()->Value();
@@ -1057,6 +1058,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             if (!(*rhsVtkmDc)(1)) {
                 return false;
             }
+
             dataSetBounds_ = rhsVtkmDc->GetBounds();
             visVec3f low = {(float)dataSetBounds_.X.Min, (float)dataSetBounds_.Y.Min, (float)dataSetBounds_.Z.Min};
             visVec3f up = {(float)dataSetBounds_.X.Max, (float)dataSetBounds_.Y.Max, (float)dataSetBounds_.Z.Max};
@@ -1133,13 +1135,11 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
 
         // streamline calculation part here
-        std::string activeField = static_cast<std::string>(activeField_);
-
         try {
             // for non-temporal data (steady flow) it holds that streamlines = streaklines = pathlines
             // therefore we can calculate the pathlines via the streamline filter
             vtkm::filter::Streamline mmvtkmStreamLines;
-            mmvtkmStreamLines.SetActiveField(activeField);
+            mmvtkmStreamLines.SetActiveField(activeField_);
             mmvtkmStreamLines.SetStepSize(stepSize_);
             mmvtkmStreamLines.SetNumberOfSteps(numSteps_);
             mmvtkmStreamLines.SetSeeds(seedArray);

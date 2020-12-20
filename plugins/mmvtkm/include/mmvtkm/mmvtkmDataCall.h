@@ -115,6 +115,20 @@ public:
 		return this->minMaxBounds_;
 	}
 
+    /**
+    * Sets lower and upper bounds of the current dataset
+    */
+    void SetFieldNames(const std::vector<std::string>& fieldnames) {
+            this->fieldNames_ = fieldnames;
+    }
+
+    /**
+    * Returns lower and upper bounds of the current dataset
+    */
+    const std::vector<std::string> GetFieldNames() const {
+        return this->fieldNames_;
+    }
+
 
 private:
     /** Vtkm dataset storage */
@@ -122,6 +136,9 @@ private:
 	
 	/** Min and max bounds of the dataset */
 	vtkm::Bounds minMaxBounds_;
+
+    /** Fieldnames available in the current dataset */
+    std::vector<std::string> fieldNames_;
 
 	/** True, if data was changed, false otherwise */
 	bool dataChanges_;

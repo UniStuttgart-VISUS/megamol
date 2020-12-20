@@ -386,7 +386,8 @@ private:
     vtkm::Id numSeeds_;
     vtkm::Id numSteps_;
     vtkm::FloatDefault stepSize_;
-    vislib::TString activeField_;
+    std::string activeField_;
+    std::vector<std::string> dataSetFields_;
     glm::vec3 planeConnectionVertex1_;
     glm::vec3 planeConnectionVertex2_;
     glm::vec3 planeOrigin_;
@@ -404,7 +405,6 @@ private:
     std::vector<Triangle> seedPlaneTriangles_;
     std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> seeds_;
 
-    /** used for plane mode */
     int planeMode_;
 
     /** some colors for testing */

@@ -255,10 +255,14 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
 		    core::utility::log::Log::DefaultLog.WriteInfo("Number of skipped tetrahedrons: %i", numSkipped);
 
 		    vtkmData_ = dataSetBuilder.Create(points, cellShapes, numIndices, cellIndices);
-		    dataSetFieldAdd.AddPointField(vtkmData_, "hs1", pointHs1);
-		    dataSetFieldAdd.AddPointField(vtkmData_, "hs2", pointHs2);
-		    dataSetFieldAdd.AddPointField(vtkmData_, "hs3", pointHs3);
-		    dataSetFieldAdd.AddPointField(vtkmData_, "hs", pointHs);
+                    std::string field0 = "hs1";
+                    std::string field1 = "hs2";
+                    std::string field2 = "hs3";
+                    std::string field3 = "hs";
+		    dataSetFieldAdd.AddPointField(vtkmData_, field0, pointHs1);
+		    dataSetFieldAdd.AddPointField(vtkmData_, field1, pointHs2);
+		    dataSetFieldAdd.AddPointField(vtkmData_, field2, pointHs3);
+		    dataSetFieldAdd.AddPointField(vtkmData_, field3, pointHs);
 
 		    // vtkm::io::writer::VTKDataSetWriter writer("tetrahedron.vtk");
 		    // writer.WriteDataSet(vtkmData_);
@@ -269,6 +273,7 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
 
 		    lhsVtkmDc->UpdateDataChanges(true);
             lhsVtkmDc->SetDataSet(&this->vtkmData_);
+            lhsVtkmDc->SetFieldNames({field0, field1, field2, field3});
 
             return true;
         }
