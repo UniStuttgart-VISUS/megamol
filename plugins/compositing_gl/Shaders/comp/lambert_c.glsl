@@ -48,27 +48,6 @@ float lambert(vec3 normal, vec3 light_dir)
     return clamp(dot(normal,light_dir),0.0,1.0);
 }
 
-//Blinn-Phong Illumination 
-vec3 blinnPhong(vec3 normal, vec3 l, vec3 v){
-    vec3 Colorout = vec3(0.0);
-
-    //Ambient Part
-    //vec3 Camb = k_amb * ambientColor ;
-
-    //Diffuse Part
-    //vec3 Cdiff = diffuseColor * k_diff * dot(n,l);
-
-    //Specular Part
-    //vec3 h = normalize(v+l);
-    //normal = normal / sqrt(normal.x*normal.x + normal.y*normal.y + normal.z*normal.z);
-    //float costheta = dot(h,normal);
-    //vec3 Cspek = specularColor * k_spec * ((k_exp + 2)/(2 * M_PI)) * pow(costheta, k_exp);
-
-    //Final Equation
-    //Colorout = Camb + Cdiff + Cspek;
-    return Colorout;
-}
-
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 void main() {
@@ -100,16 +79,12 @@ void main() {
             float d = length(light_dir);
             light_dir = normalize(light_dir);
             reflected_light += lambert(light_dir,normal) * point_light_params[i].intensity * (1.0/(d*d));
-            //TODO phong lighting (switch?)
-
         }
 
         for(int i=0; i<distant_light_cnt; ++i)
         {
             vec3 light_dir = vec3(distant_light_params[i].x,distant_light_params[i].y,distant_light_params[i].z);
             reflected_light += lambert(light_dir,normal) * distant_light_params[i].intensity;
-            //TODO phong lighting (switch?)
-
         }
         //Sets pixelcolor to illumination + color (alpha channels remains the same)
         retval.rgb = vec3(reflected_light) * albedo.rgb;

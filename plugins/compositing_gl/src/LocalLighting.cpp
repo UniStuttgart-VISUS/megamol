@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "stdafx.h"
 #include "LocalLighting.h"
 
@@ -263,6 +265,17 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
 
             if (m_phong_prgm != nullptr && m_point_lights_buffer != nullptr && m_distant_lights_buffer != nullptr) {
                 m_phong_prgm->Enable();
+
+                //Phong Parameter to Shader
+                glUniform4fv(m_phong_prgm->ParameterLocation("ambientColor"),1, m_phong_ambientColor.Param<core::param::ColorParam>()->Value().data());
+
+                glUniform1f(m_phong_prgm->ParameterLocation("k_amb"), m_phong_k_ambient.Param<core::param::FloatParam>()->Value());
+                glUniform1f(m_phong_prgm->ParameterLocation("k_diff"), m_phong_k_diffuse.Param<core::param::FloatParam>()->Value());
+                glUniform1f(m_phong_prgm->ParameterLocation("k_spec"), m_phong_k_specular.Param<core::param::FloatParam>()->Value());
+                glUniform1f(m_phong_prgm->ParameterLocation("k_exp"), m_phong_k_exp.Param<core::param::FloatParam>()->Value());
+
+
+
 
                 m_point_lights_buffer->bind(1);
                 glUniform1i(m_phong_prgm->ParameterLocation("point_light_cnt"), static_cast<GLint>(m_point_lights.size()));

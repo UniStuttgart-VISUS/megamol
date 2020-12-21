@@ -18,7 +18,7 @@ uniform int distant_light_cnt;
 uniform mat4 inv_view_mx;
 uniform mat4 inv_proj_mx;
 
-uniform vec3 ambientColor; 
+uniform vec4 ambientColor; 
 uniform vec3 diffuseColor;
 uniform vec3 specularColor;
 
@@ -42,23 +42,17 @@ vec3 depthToWorldPos(float depth, vec2 uv) {
     return ws_pos.xyz;
 }
 
-//Lambert Illumination 
-float lambert(vec3 normal, vec3 light_dir)
-{
-    return clamp(dot(normal,light_dir),0.0,1.0);
-}
-
 //TODO: ambient part adding via light component through uniforms like Point/Distant lights
 
 //Blinn-Phong Illumination 
-vec3 blinnPhong(vec3 normal, vec3 l, vec3 v){
-    vec3 Colorout = vec3(0.0);
+vec3 blinnPhong(vec3 normal, vec3 lightdirection){//, vec3 v){
+    vec3 Colorout = ambientColor.rgb;//vec3(k_amb, 0.0, 0.0);//vec3(1.0,0.0,0.0);
 
     //Ambient Part
-    //vec3 Camb = k_amb * ambientColor ;
+    //vec3 Camb = k_amb * ambientColor;
 
     //Diffuse Part
-    //vec3 Cdiff = diffuseColor * k_diff * dot(n,l);
+    //vec3 Cdiff = diffuseColor * k_diff * dot(normal,lightdirection);
 
     //Specular Part
     //vec3 h = normalize(v+l);
@@ -95,26 +89,24 @@ void main() {
     {
         vec3 world_pos = depthToWorldPos(depth,pixel_coords_norm);
 
-        //float reflected_light = 0.0;
-        //for(int i=0; i<point_light_cnt; ++i)
-        //{
-        //    vec3 light_dir = vec3(point_light_params[i].x,point_light_params[i].y,point_light_params[i].z) - world_pos;
-        //    float d = length(light_dir);
-        //    light_dir = normalize(light_dir);
-        //    reflected_light += lambert(light_dir,normal) * point_light_params[i].intensity * (1.0/(d*d));
-        //    //TODO phong lighting (switch?)
-        //
-        //}
-        //
-        //for(int i=0; i<distant_light_cnt; ++i)
-        //{
-        //    vec3 light_dir = vec3(distant_light_params[i].x,distant_light_params[i].y,distant_light_params[i].z);
-        //    reflected_light += lambert(light_dir,normal) * distant_light_params[i].intensity;
-        //    //TODO phong lighting (switch?)
-        //
-        //}
-        ////Sets pixelcolor to illumination + color (alpha channels remains the same)
-        //retval.rgb = vec3(reflected_light) * albedo.rgb;
+        vec3 reflected_light = vec3(0.0);
+        for(int i=0; i<point_light_cnt; ++i)
+        {
+            vec3 light_dir = vec3(point_light_params[i].x,point_light_params[i].y,point_light_params[i].z) - world_pos;
+            float d = length(light_dir);
+            light_dir = normalize(light_dir);
+            reflected_light += blinnPhong(normal,light_dir) * point_light_params[i].intensity * (1.0/(d*d));
+       
+        }
+        
+        for(int i=0; i<distant_light_cnt; ++i)
+        {
+            vec3 light_dir = vec3(distant_light_params[i].x,distant_light_params[i].y,distant_light_params[i].z);
+            reflected_light += blinnPhong(normal,light_dir) * distant_light_params[i].intensity;
+        
+        }
+        //Sets pixelcolor to illumination + color (alpha channels remains the same)
+        retval.rgb = reflected_light * albedo.rgb;
     }
 
     imageStore(tgt_tx2D, pixel_coords , retval );
