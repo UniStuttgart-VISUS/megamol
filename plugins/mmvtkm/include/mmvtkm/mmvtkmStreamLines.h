@@ -428,8 +428,8 @@ private:
     std::vector<unsigned int> seedPlaneIndices_ = {0, 1, 2};
 
     
-	std::vector<glm::vec3> ghostCopy_;
-	std::vector<glm::vec3> rotatedGhostCopy_;
+	std::vector<glm::vec3> ghostCopy_ = {glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f)};
+    std::vector<glm::vec3> rotatedGhostCopy_ = {glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f)};
 	std::vector<glm::vec3> ghostPlane_ = {
         glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f),
 		glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f)};

@@ -91,8 +91,6 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     , seedPlaneTriangles_{}
     , seeds_{}
     , planeMode_(0)
-	, ghostCopy_{}
-	, rotatedGhostCopy_{}
     , streamlineBaseIdentifier_{"streamline"}
     , seedPlaneIdentifier_{"seedplane"}
     , ghostPlaneIdentifier_{"ghostplane"}
@@ -296,6 +294,14 @@ bool mmvtkmStreamLines::setSTQP(core::param::ParamSlot& slot) {
  * mmvtkmStreamLines::assignSTPQ
  */
 bool mmvtkmStreamLines::assignSTPQ(core::param::ParamSlot& slot) {
+    if (isNullVector(rotatedGhostCopy_[0]) && isNullVector(rotatedGhostCopy_[1]) &&
+        isNullVector(rotatedGhostCopy_[2]) && isNullVector(rotatedGhostCopy_[3])) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            "Can't assign s, t, p, or q. Ghost plane is null. Create ghost plane first by moving the plane normal.");
+
+        return false;
+    }
+
     float s = this->psSeedPlaneS_.Param<core::param::FloatParam>()->Value();
     float t = this->psSeedPlaneT_.Param<core::param::FloatParam>()->Value();
     float p = this->psSeedPlaneP_.Param<core::param::FloatParam>()->Value();
@@ -647,7 +653,7 @@ bool mmvtkmStreamLines::toggleGhostPlane(core::param::ParamSlot& slot) {
  * mmvtkmStreamLines::setStreamlineAndResampleSeedsUpdate
  */
 bool mmvtkmStreamLines::setStreamlineAndResampleSeedsUpdate() {
-    activeField_ = dataSetFields_[this->psStreamlineFieldName_.Param<core::param::EnumParam>()->Value()];
+    activeField_ = dataSetFields_.at(this->psStreamlineFieldName_.Param<core::param::EnumParam>()->Value());
     numSeeds_ = this->psNumStreamlineSeeds_.Param<core::param::IntParam>()->Value();
     stepSize_ = this->psStreamlineStepSize_.Param<core::param::FloatParam>()->Value();
     numSteps_ = this->psNumStreamlineSteps_.Param<core::param::IntParam>()->Value();
@@ -1235,7 +1241,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             }
             // adds the mdacs of the streamlines to the call here
             std::string streamlineIdentifier = streamlineBaseIdentifier_ + std::to_string(i);
-            createAndAddMeshDataToCall(streamlineIdentifier, streamlineData_[i], streamlineColor_[i], \
+            bool added = createAndAddMeshDataToCall(streamlineIdentifier, streamlineData_[i], streamlineColor_[i], \
                 streamlineIndices_[i], numPoints, \
                 numIndices, mesh::MeshDataAccessCollection::PrimitiveType::LINE_STRIP);
         }
@@ -1254,6 +1260,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
 
         
         lhsMeshDc->setData(meshDataAccess_.first, ++this->newVersion_);
+
 
         streamlineUpdate_ = false;
 

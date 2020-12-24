@@ -194,7 +194,7 @@ inline void MeshDataAccessCollection::deleteMesh(std::string const& identifier) 
     if (query != meshes.end()) {
         meshes.erase(query);
     } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("deleteMesh error: identifier not found.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("deleteMesh error: identifier %s not found.", identifier);
     }
 }
 

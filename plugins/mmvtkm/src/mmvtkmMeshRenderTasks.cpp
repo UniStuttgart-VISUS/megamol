@@ -82,7 +82,6 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
             std::vector<std::string>::iterator it =
                 std::find(identifiers[i].begin(), identifiers[i].end(), seedIdentifier.c_str());
 			if (it != identifiers[i].end()) {
-                std::cout << i << "\n";
 				auto set_states = [] { 
 					glEnable(GL_BLEND);
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
