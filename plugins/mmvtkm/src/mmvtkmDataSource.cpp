@@ -123,10 +123,10 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
         return false;
     }
 
+
 	size_t newNodeHash = rhsTopNodesCad->getDataHash();		// TODO how hash is set in tabletoadios or csvdatasource
 	size_t newLabelHash = rhsBottomLabelCad->getDataHash();
     bool update = newNodeHash != oldNodeDataHash_ || newLabelHash != oldLabelDataHash_;
-
 
     if (update) {
 		/////////////////////////////
@@ -275,6 +275,9 @@ bool mmvtkmDataSource::getDataCallback(core::Call& caller) {
             lhsVtkmDc->SetDataSet(&this->vtkmData_);
             lhsVtkmDc->SetFieldNames({field0, field1, field2, field3});
 
+            oldNodeDataHash_ = newNodeHash;
+            oldLabelDataHash_ = newLabelHash;
+
             return true;
         }
         catch (const std::exception& e) {
@@ -310,19 +313,7 @@ bool mmvtkmDataSource::getMetaDataCallback(core::Call& caller) {
         return false;
     }
 
-	size_t newNodeHash = rhsTopNodesCad->getDataHash();
-    size_t newLabelHash = rhsBottomLabelCad->getDataHash();
-
-
-	bool update = newNodeHash != oldNodeDataHash_ || newLabelHash != oldLabelDataHash_;
-
-	if (update) {
-        lhsVtkmDc->SetBounds(this->minMaxBounds_);
-
-		oldNodeDataHash_ = newNodeHash;
-		oldLabelDataHash_ = newLabelHash;
-		return true;
-    }
+    lhsVtkmDc->SetBounds(this->minMaxBounds_);
 
     return true;
 }

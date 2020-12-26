@@ -1241,7 +1241,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             }
             // adds the mdacs of the streamlines to the call here
             std::string streamlineIdentifier = streamlineBaseIdentifier_ + std::to_string(i);
-            bool added = createAndAddMeshDataToCall(streamlineIdentifier, streamlineData_[i], streamlineColor_[i], \
+            createAndAddMeshDataToCall(streamlineIdentifier, streamlineData_[i], streamlineColor_[i], \
                 streamlineIndices_[i], numPoints, \
                 numIndices, mesh::MeshDataAccessCollection::PrimitiveType::LINE_STRIP);
         }
@@ -1292,22 +1292,21 @@ bool mmvtkmStreamLines::getMetaDataCallback(core::Call& caller) {
         return false;
     }
 
-    if (rhsVtkmDc->HasUpdate()) {
-        std::array<float, 6> bbox;
-        bbox[0] = dataSetBounds_.X.Min;
-        bbox[1] = dataSetBounds_.Y.Min;
-        bbox[2] = dataSetBounds_.Z.Min;
-        bbox[3] = dataSetBounds_.X.Max;
-        bbox[4] = dataSetBounds_.Y.Max;
-        bbox[5] = dataSetBounds_.Z.Max;
+    vtkm::Bounds rhsBounds = rhsVtkmDc->GetBounds();
 
-        auto md = lhsMeshDc->getMetaData();
-        md.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
-        md.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
+    std::array<float, 6> bbox;
+    bbox[0] = rhsBounds.X.Min;
+    bbox[1] = rhsBounds.Y.Min;
+    bbox[2] = rhsBounds.Z.Min;
+    bbox[3] = rhsBounds.X.Max;
+    bbox[4] = rhsBounds.Y.Max;
+    bbox[5] = rhsBounds.Z.Max;
 
-        md.m_frame_cnt = 1;
-        lhsMeshDc->setMetaData(md);
-    }
+    auto md = lhsMeshDc->getMetaData();
+    md.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
+    md.m_bboxs.SetClipBox(bbox[0] - 1, bbox[1] - 1, bbox[2] - 1, bbox[3] + 1, bbox[4] + 1, bbox[5] + 1);
+    md.m_frame_cnt = 1;
+    lhsMeshDc->setMetaData(md);
 
 
     return true;
