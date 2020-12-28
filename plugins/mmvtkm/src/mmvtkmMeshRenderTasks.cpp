@@ -86,6 +86,7 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
 					glEnable(GL_BLEND);
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 					glEnable(GL_DEPTH_TEST);
+                    glCullFace(GL_BACK);
 					glDisable(GL_CULL_FACE);
 				};
 				auto reset_states = [] { 

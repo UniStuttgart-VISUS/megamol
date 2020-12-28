@@ -163,7 +163,8 @@ mmvtkmStreamLines::mmvtkmStreamLines()
 	this->psSeedPlaneSTPQ_.SetParameter(new core::param::FloatParam(0.f, 0.f, 1.f));
 	this->psSeedPlaneSTPQ_.SetUpdateCallback(&mmvtkmStreamLines::setSTQP);
 	this->MakeSlotAvailable(&this->psSeedPlaneSTPQ_);
-	this->psSeedPlaneSTPQ_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
+        this->psSeedPlaneSTPQ_.Parameter()->SetGUIPresentation(
+            core::param::AbstractParamPresentation::Presentation::Knob);
 
     this->psSeedPlaneS_.SetParameter(new core::param::FloatParam(0.f, 0.f, 1.f));
     this->psSeedPlaneS_.SetUpdateCallback(&mmvtkmStreamLines::assignSTPQ);
@@ -178,17 +179,18 @@ mmvtkmStreamLines::mmvtkmStreamLines()
 	this->psSeedPlaneP_.SetParameter(new core::param::FloatParam(0.f, 0.f, 1.f));
 	this->psSeedPlaneP_.SetUpdateCallback(&mmvtkmStreamLines::assignSTPQ);
 	this->MakeSlotAvailable(&this->psSeedPlaneP_);
-	this->psSeedPlaneP_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
+        this->psSeedPlaneP_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
 
 	this->psSeedPlaneQ_.SetParameter(new core::param::FloatParam(0.f, 0.f, 1.f));
 	this->psSeedPlaneQ_.SetUpdateCallback(&mmvtkmStreamLines::assignSTPQ);
 	this->MakeSlotAvailable(&this->psSeedPlaneQ_);
-	this->psSeedPlaneQ_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
+        this->psSeedPlaneQ_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
 
 	this->psRotateSeedPlane_.SetParameter(new core::param::FloatParam(0.f));
 	this->psRotateSeedPlane_.SetUpdateCallback(&mmvtkmStreamLines::rotateSeedPlane);
 	this->MakeSlotAvailable(&this->psRotateSeedPlane_);
-	this->psRotateSeedPlane_.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Knob);
+        this->psRotateSeedPlane_.Parameter()->SetGUIPresentation(
+            core::param::AbstractParamPresentation::Presentation::Knob);
 
     this->psSeedPlaneColor_.SetParameter(
         new core::param::ColorParam(red_.x, red_.y, red_.z, 1.f));
