@@ -336,7 +336,7 @@ bool mmvtkmStreamLines::assignSTPQ(core::param::ParamSlot& slot) {
 	}
 
 
-    this->meshDataAccess_.first->deleteMesh(seedPlaneIdentifier_);
+    deleteMesh(seedPlaneIdentifier_);
     createAndAddMeshDataToCall(seedPlaneIdentifier_, liveSeedPlane_, seedPlaneColorVec_, seedPlaneIndices_,
             numPoints, numPoints, mesh::MeshDataAccessCollection::TRIANGLE_FAN);
 
@@ -500,9 +500,6 @@ bool mmvtkmStreamLines::ghostPlane(core::param::ParamSlot& slot) {
     glm::vec3 p3 = spp - v1 * maxBoundLength_;
 
 
-	// CAUTION: EXTREMELY UNSAFE!
-	// this only works because the ghostplane always consists of 4 vertices
-	// if this varies, the meshdataaccess_ has to be modified directly
     glm::vec3 zfo = seedPlaneZFightingOffset_;	// prevents z-fighting of ghost- and liveseedplane
 	ghostPlane_.clear();
     ghostPlane_ = {p0 + zfo, p1 + zfo, p2 + zfo, p3 + zfo };
@@ -510,7 +507,13 @@ bool mmvtkmStreamLines::ghostPlane(core::param::ParamSlot& slot) {
     ghostCopy_ = {p0, p1, p2, p3};
 	rotatedGhostCopy_.clear();
 	rotatedGhostCopy_ = { p0, p1, p2, p3 };
-	
+
+    deleteMesh(ghostPlaneIdentifier_);
+    createAndAddMeshDataToCall(ghostPlaneIdentifier_, ghostPlane_, ghostColors_, ghostIdcs_, ghostPlane_.size(),
+        ghostIdcs_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
+
+    std::cout << this->meshDataAccess_.second.size() << "\n";
+
 
     planeAppearanceUpdate_ = true;
 
@@ -1054,7 +1057,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
     // this case only occurs when parameters of the plane, such as color or alpha, are changed
     // so we can early terminate
     if (planeAppearanceUpdate_) {
-        lhsMeshDc->setData(meshDataAccess_.first, ++this->newVersion_);
+        lhsMeshDc->setData(this->meshDataAccess_.first, ++this->newVersion_);
         planeAppearanceUpdate_ = false;
         return true;
     }
@@ -1078,7 +1081,6 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         if (planeMode_ == 0) {
             glm::vec3 n = glm::normalize(seedPlaneNormal_);
             glm::vec3 o = seedPlanePoint_;
-            // d = seedPlaneDistance_;
 
             visPlanef samplePlane(visPoint3f(o.x, o.y, o.z), visVec3f(n.x, n.y, n.z));
 
@@ -1095,7 +1097,7 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             liveSeedPlane_ = {planeOrigin_, planeConnectionVertex1_, newPoint, planeConnectionVertex2_};
         }
 
-        // copy of seedplane used in mmvtkmStreamLines::assignUV to re-store plane
+        // copy of seedplane used in mmvtkmStreamLines::assignUV to restore plane
         // if u and/or v are reverted
         originalSeedPlane_ = liveSeedPlane_;
         stpqSeedPlane_ = liveSeedPlane_;

@@ -258,20 +258,23 @@ private:
         const std::vector<mesh::MeshDataAccessCollection::VertexAttribute>& va,
         const mesh::MeshDataAccessCollection::IndexData& id, mesh::MeshDataAccessCollection::PrimitiveType pt);
 
-	/** Checks if a float is equal or really close to 0 */
     inline bool isZerof(float x) { return fabs(x) < epsilon5_; }
+
     inline bool isNullVector(const visVec3f& v) {
 		return isZerof(v.GetX()) && isZerof(v.GetY()) && isZerof(v.GetZ());
     }
+
     inline bool isNullVector(const glm::vec3& v) { 
 		return isZerof(v.x) && isZerof(v.y) && isZerof(v.z);
 	}
+
 	inline bool areParallel(const glm::vec3& v1, const glm::vec3& v2) { 
 		// simple check if v1 is a multiple of v2 (or vice versa) is very imprecise
 		// and causes false negatives
 		// e. g. a = v1.x / v2.x = v1.y / v2.y = v1.z / v2.z
 		return isNullVector(glm::cross(v1, v2));
 	}
+
 	inline bool isBetween(const glm::vec3& ip, const glm::vec3& p1, const glm::vec3& p2) {
         glm::vec3 vip = ip - p1;
         glm::vec3 vp2 = p2 - p1;
@@ -281,6 +284,26 @@ private:
 
 		return (dot >= 0.f) && (lip <= lp2);
 	}
+
+    inline bool deleteMesh(const std::string& identifier) {
+        this->meshDataAccess_.first->deleteMesh(identifier);
+        // reverse iteration order, because we know the ghostplane is near the end
+        /*for (auto it = this->meshDataAccess_.second.end() - 1; it > this->meshDataAccess_.second.begin(); --it) {
+                if (*it == identifier) {
+                this->meshDataAccess_.second.erase(it);
+                break;
+            }
+        }*/
+
+        auto query = std::find(this->meshDataAccess_.second.begin(), this->meshDataAccess_.second.end(), identifier);
+
+        if (query != this->meshDataAccess_.second.end()) {
+            this->meshDataAccess_.second.erase(query);
+        }
+
+        return true;
+    }
+
 
     /** Gets converted vtk streamline data as megamol mesh */
     core::CalleeSlot meshCalleeSlot_;

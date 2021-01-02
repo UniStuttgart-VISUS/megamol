@@ -65,10 +65,12 @@ void GPURenderTaskCollection::deleteRenderTask(std::string const& identifier) {
             // exceed the buffersize --> BufferObjectException at copy calls above
             for (auto& tmp : m_render_task_meta_data) {
                 if (rts == tmp.second.render_tasks) {
-                    if (tmp.second.draw_command_byteOffset > rt_meta.draw_command_byteOffset)
+                    if (tmp.second.draw_command_byteOffset > rt_meta.draw_command_byteOffset &&
+                        tmp.second.draw_command_byteOffset > 0)
                         tmp.second.draw_command_byteOffset -= sizeof(glowl::DrawElementsCommand);
 
-                    if (tmp.second.per_draw_data_byteOffset > rt_meta.per_draw_data_byteOffset)
+                    if (tmp.second.per_draw_data_byteOffset > rt_meta.per_draw_data_byteOffset &&
+                        tmp.second.per_draw_data_byteOffset > 0)
                         tmp.second.per_draw_data_byteOffset -= rt_meta.per_draw_data_byteSize;
                 }
             }

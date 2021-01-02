@@ -111,9 +111,7 @@ inline void GPUMeshCollection::addMesh(std::string const& identifier,
                 retval &= vertex_descriptor[i] == batched_meshes->mesh->getVertexLayouts()[i];
             }
             retval &= index_type == batched_meshes->mesh->getIndexType();
-
             retval &= primitive_type == batched_meshes->mesh->getPrimitiveType();
-
             auto ava_vertex_cnt = batched_meshes->vertices_allocated - batched_meshes->vertices_used;
             auto ava_index_cnt = batched_meshes->indices_allocated - batched_meshes->indices_used;
             retval &= ((req_vertex_cnt < ava_vertex_cnt) && (req_index_cnt < ava_index_cnt));
@@ -181,6 +179,27 @@ inline void GPUMeshCollection::deleteSubMesh(std::string const& identifier) {
 
     if (query != m_sub_mesh_data.end()) {
         m_sub_mesh_data.erase(query);
+    }
+
+    // after deleting submesh we need to adjust the batched_meshes
+    // otherwise it causes a memory hog
+    auto batch_query = std::find_if(m_batched_meshes.begin(), m_batched_meshes.end(),
+        [query](
+            std::shared_ptr<BatchedMeshes> const& batched_meshes) {
+            std::shared_ptr<glowl::Mesh> query_mesh = (*query).second.mesh->mesh;
+            bool retval = true;
+            for (int i = 0; i < query_mesh->getVertexLayouts().size(); ++i) {
+                retval &= query_mesh->getVertexLayouts()[i] == batched_meshes->mesh->getVertexLayouts()[i];
+            }
+            retval &= query_mesh->getIndexType() == batched_meshes->mesh->getIndexType();
+            retval &= query_mesh->getPrimitiveType() == batched_meshes->mesh->getPrimitiveType();
+
+            return retval;
+        });
+
+    if (batch_query != m_batched_meshes.end()) {
+        (*batch_query)->vertices_used -= (*query).second.mesh->vertices_used;
+        (*batch_query)->indices_used -= (*query).second.mesh->indices_used;
     }
 }
 
