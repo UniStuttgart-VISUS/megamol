@@ -58,7 +58,7 @@ public:
 
     Material const& getMaterial(std::string const& identifier);
 
-    inline std::unordered_map<std::string, Material> const& getMaterials();
+    std::unordered_map<std::string, Material> const& getMaterials();
 
 private:
     std::unordered_map<std::string,Material> m_materials;

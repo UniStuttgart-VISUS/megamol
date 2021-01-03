@@ -139,7 +139,7 @@ GPUMaterialCollection::Material const& GPUMaterialCollection::getMaterial(std::s
     return Material();
 }
 
-inline std::unordered_map<std::string, GPUMaterialCollection::Material> const& GPUMaterialCollection::getMaterials() {
+std::unordered_map<std::string, GPUMaterialCollection::Material> const& GPUMaterialCollection::getMaterials() {
     return m_materials;
 }
 
