@@ -53,7 +53,8 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
 
         std::shared_ptr<glowl::Mesh> prev_mesh(nullptr);
 
-        int rt_idx = 0;
+        int gp_batch_idx = -1;
+        int cnt = -1;
         for (auto& sub_mesh : gpu_mesh_storage->getSubMeshData()) {
             auto const& gpu_batch_mesh = sub_mesh.second.mesh->mesh;
             
@@ -64,6 +65,8 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
                 batch_meshes.push_back(gpu_batch_mesh);
 
                 prev_mesh = gpu_batch_mesh;
+
+                ++cnt;
             }
 
             float scale = 1.0f;
@@ -73,15 +76,31 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
             identifiers.back().push_back(std::string(this->FullName()) + sub_mesh.first);
             draw_commands.back().push_back(sub_mesh.second.sub_mesh_draw_command);
             object_transforms.back().push_back(obj_xform);
+
+            if(sub_mesh.first == "ghostplane") gp_batch_idx = cnt;
         }
-        
+
+        // swap batch that contains ghostplane to the last position for blending
+        if(gp_batch_idx != -1 && gp_batch_idx != batch_meshes.size() - 1) {
+            //std::swap(identifiers[gp_batch_idx], identifiers[identifiers.size() - 1]);
+            //std::swap(draw_commands[gp_batch_idx], draw_commands[draw_commands.size() - 1]);
+            //std::swap(object_transforms[gp_batch_idx], object_transforms[object_transforms.size() - 1]);
+        }
+
 		for (int i = 0; i < batch_meshes.size(); ++i) {
             auto const& shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
 
-            std::string seedIdentifier = (std::string)this->FullName() + "seedplane";
+            std::string ghostIdentifier = (std::string)this->FullName() + "ghostplane";
             std::vector<std::string>::iterator it =
-                std::find(identifiers[i].begin(), identifiers[i].end(), seedIdentifier.c_str());
+                std::find(identifiers[i].begin(), identifiers[i].end(), ghostIdentifier.c_str());
 			if (it != identifiers[i].end()) {
+                // swap ghostplane to last position for blending
+                int gp_idx = std::distance(identifiers[i].begin(), it);
+                //std::cout << identifiers[i].size() << " " << gp_idx << "\n";
+                //std::swap(identifiers[i][gp_idx], identifiers[i][identifiers[i].size() - 1]);
+                //std::swap(draw_commands[i][gp_idx], draw_commands[i][draw_commands.size() - 1]);
+                //std::swap(object_transforms[i][gp_idx], object_transforms[i][object_transforms.size() - 1]);
+
 				auto set_states = [] { 
 					glEnable(GL_BLEND);
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

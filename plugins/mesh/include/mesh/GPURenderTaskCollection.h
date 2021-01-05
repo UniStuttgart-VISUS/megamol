@@ -205,6 +205,7 @@ namespace mesh {
             for (int dc_idx = 0; dc_idx < draw_commands.size(); ++dc_idx) {
                 // Add render task meta data entry
                 RenderTaskMetaData rt_meta;
+                //std::cout << identifiers[dc_idx] << "\n";
                 rt_meta.render_tasks = (*query);
                 rt_meta.draw_command_byteOffset = old_dcs_byte_size + dc_idx * sizeof(DrawCommandType);
                 rt_meta.per_draw_data_byteOffset = old_pdd_byte_size + dc_idx * sizeof(PerDrawDataType);
@@ -237,6 +238,7 @@ namespace mesh {
 
             for (int dc_idx = 0; dc_idx < draw_commands.size(); ++dc_idx) {
                 // Add render task meta data entry
+                //std::cout << identifiers[dc_idx] << "\n";
                 RenderTaskMetaData rt_meta;
                 rt_meta.render_tasks = new_task;
                 rt_meta.draw_command_byteOffset = dc_idx * sizeof(DrawCommandType);

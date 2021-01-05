@@ -512,8 +512,6 @@ bool mmvtkmStreamLines::ghostPlane(core::param::ParamSlot& slot) {
     createAndAddMeshDataToCall(ghostPlaneIdentifier_, ghostPlane_, ghostColors_, ghostIdcs_, ghostPlane_.size(),
         ghostIdcs_.size(), mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
-    std::cout << this->meshDataAccess_.second.size() << "\n";
-
 
     planeAppearanceUpdate_ = true;
 
@@ -1263,7 +1261,16 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
             mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
         
+        for(auto a : this->meshDataAccess_.second) {
+            std::cout << "streamline module vector strng before: " << a << "\n";
+        }
+
         lhsMeshDc->setData(meshDataAccess_.first, ++this->newVersion_);
+
+        auto after = lhsMeshDc->getData()->accessMeshes();
+        for(auto a : after) {
+            std::cout << "streamline module vector strng after: " << a.first << "\n";
+        }
 
 
         streamlineUpdate_ = false;

@@ -33,6 +33,10 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
         m_mesh_collection.second.clear();
 
         auto meshes = mc->getData()->accessMeshes();
+
+        for(auto a : meshes) {
+        std::cout << "gpumeshes module vector strng: " << a.first << "\n";
+    }
         
         for (auto& mesh : meshes) {
 
