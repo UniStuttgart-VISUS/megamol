@@ -121,7 +121,7 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] ImGui API is not supported yet. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     } break;
     }
@@ -143,7 +143,7 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
             switch (imgui_api) {
             case (GUIImGuiAPI::OPEN_GL): {
                 // Init OpenGL for ImGui
-                const char* glsl_version = "#version 150"; /// "#version 150" or nullptr
+                const char* glsl_version = "#version 150"; /// or "#version 130" or nullptr
                 if (ImGui_ImplOpenGL3_Init(glsl_version)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Created ImGui context for Open GL.");
                 } else {
@@ -151,13 +151,14 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[GUI] Unable to initialize OpenGL for ImGui. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
                         __LINE__);
+                    return false;
                 }
 
             } break;
             default: {
                 this->destroyContext();
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] ImGui API is not supported yet. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                    "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             } break;
             }
@@ -229,6 +230,8 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     // IO
     ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
+
     io.DisplaySize = ImVec2(window_size.x, window_size.y);
     if ((window_size.x > 0.0f) && (window_size.y > 0.0f)) {
         io.DisplayFramebufferScale = ImVec2(framebuffer_size.x / window_size.x, framebuffer_size.y / window_size.y);
@@ -340,42 +343,6 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->state.style_changed = false;
     }
 
-    // Loading new font (set in FONT window)
-    if (this->state.font_apply) {
-        bool load_success = false;
-        if (FileUtils::FileWithExtensionExists<std::string>(this->state.font_file_name, std::string("ttf"))) {
-            ImFontConfig config;
-            config.OversampleH = 4;
-            config.OversampleV = 4;
-            config.GlyphRanges = this->state.font_utf8_ranges.data();
-            GUIUtils::Utf8Encode(this->state.font_file_name);
-            if (io.Fonts->AddFontFromFileTTF(this->state.font_file_name.c_str(), this->state.font_size, &config) !=
-                nullptr) {
-                ImGui_ImplOpenGL3_CreateFontsTexture();
-                // Load last added font
-                io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
-                load_success = true;
-            }
-            GUIUtils::Utf8Decode(this->state.font_file_name);
-        } else if (this->state.font_file_name != "<unknown>") {
-            for (unsigned int n = this->state.graph_fonts_reserved; n < static_cast<unsigned int>(io.Fonts->Fonts.Size);
-                 n++) {
-                std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
-                GUIUtils::Utf8Decode(font_name);
-                if (font_name == this->state.font_file_name) {
-                    io.FontDefault = io.Fonts->Fonts[n];
-                    load_success = true;
-                }
-            }
-        }
-        if (!load_success) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] Unable to load font '%s'. [%s, %s, line %d]\n", this->state.font_file_name.c_str(), __FILE__,
-                __FUNCTION__, __LINE__);
-        }
-        this->state.font_apply = false;
-    }
-
     // Delete window
     if (!this->state.win_delete.empty()) {
         this->window_collection.DeleteWindowConfiguration(this->state.win_delete);
@@ -413,6 +380,7 @@ bool GUIWindows::PostDraw(void) {
     // Set ImGui context
     ImGui::SetCurrentContext(this->context);
     ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
 
     ////////// DRAW ///////////////////////////////////////////////////////////
 
@@ -428,7 +396,6 @@ bool GUIWindows::PostDraw(void) {
     // Global Docking Space ---------------------------------------------------
     /// DOCKING
 #if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
-    ImGuiStyle& style = ImGui::GetStyle();
     auto child_bg = style.Colors[ImGuiCol_ChildBg];
     style.Colors[ImGuiCol_ChildBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
@@ -558,6 +525,65 @@ bool GUIWindows::PostDraw(void) {
     // Reset hotkeys ----------------------------------------------------------
     for (auto& h : this->hotkeys) {
         h.is_pressed = false;
+    }
+
+    // Apply new gui size -----------------------------------------------------
+    if (this->state.gui_size != this->state.new_gui_size) {
+        this->load_default_fonts(true);
+        style.ScaleAllSizes(this->state.new_gui_size / this->state.gui_size);
+        this->state.gui_size = this->state.new_gui_size;
+    }
+
+    // Loading new font -------------------------------------------------------
+    // (after first imgui frame for default fonts being available)
+    if (this->state.font_apply) {
+        bool load_success = false;
+        if (FileUtils::FileWithExtensionExists<std::string>(this->state.font_file_name, std::string("ttf"))) {
+            ImFontConfig config;
+            config.OversampleH = 4;
+            config.OversampleV = 4;
+            config.GlyphRanges = this->state.font_utf8_ranges.data();
+            GUIUtils::Utf8Encode(this->state.font_file_name);
+            if (io.Fonts->AddFontFromFileTTF(this->state.font_file_name.c_str(),
+                    static_cast<float>(this->state.font_size), &config) != nullptr) {
+
+                bool font_api_load_success = false;
+                switch (this->initialized_api) {
+                case (GUIImGuiAPI::OPEN_GL): {
+                    font_api_load_success = ImGui_ImplOpenGL3_CreateFontsTexture();
+                } break;
+                default: {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                } break;
+                }
+                // Load last added font
+                if (font_api_load_success) {
+                    io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
+                    load_success = true;
+                }
+            }
+            GUIUtils::Utf8Decode(this->state.font_file_name);
+        } else if (this->state.font_file_name != "<unknown>") {
+            std::string imgui_font_string =
+                this->state.font_file_name + ", " + std::to_string(this->state.font_size) + "px";
+            for (unsigned int n = this->state.graph_fonts_reserved; n < static_cast<unsigned int>(io.Fonts->Fonts.Size);
+                 n++) {
+                std::string font_name = std::string(io.Fonts->Fonts[n]->GetDebugName());
+                GUIUtils::Utf8Decode(font_name);
+                if (font_name == imgui_font_string) {
+                    io.FontDefault = io.Fonts->Fonts[n];
+                    load_success = true;
+                }
+            }
+        }
+        if (!load_success) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] Unable to load font '%s' with size %d (NB: ImGui default font ProggyClean.ttf can only be "
+                "loaded with predefined size 13). [%s, %s, line %d]\n",
+                this->state.font_file_name.c_str(), this->state.font_size, __FILE__, __FUNCTION__, __LINE__);
+        }
+        this->state.font_apply = false;
     }
 
     return true;
@@ -1152,96 +1178,6 @@ bool GUIWindows::createContext(void) {
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // enable window docking
     io.ConfigDockingWithShift = true;                 // activate docking on pressing 'shift'
 #endif
-
-    // Init global state -------------------------------------------------------
-    this->init_state();
-    // Adding additional utf-8 glyph ranges
-    // (there is no error if glyph has no representation in font atlas)
-    this->state.font_utf8_ranges.clear();
-    this->state.font_utf8_ranges.emplace_back(0x0020);
-    this->state.font_utf8_ranges.emplace_back(0x03FF); // Basic Latin + Latin Supplement + Greek Alphabet
-    this->state.font_utf8_ranges.emplace_back(0x20AC);
-    this->state.font_utf8_ranges.emplace_back(0x20AC); // Euro
-    this->state.font_utf8_ranges.emplace_back(0x2122);
-    this->state.font_utf8_ranges.emplace_back(0x2122); // TM
-    this->state.font_utf8_ranges.emplace_back(0x212B);
-    this->state.font_utf8_ranges.emplace_back(0x212B); // Angstroem
-    this->state.font_utf8_ranges.emplace_back(0x0391);
-    this->state.font_utf8_ranges.emplace_back(0); // (range termination)
-
-    // Load initial fonts only once for all imgui contexts --------------------
-    const auto graph_font_scalings = this->configurator.GetGraphFontScalings();
-    this->state.graph_fonts_reserved = graph_font_scalings.size();
-
-    if (other_context_exists) {
-
-        // Fonts are already loaded
-        if (default_font != nullptr) {
-            io.FontDefault = default_font;
-        } else {
-            // ... else default font is font loaded after configurator fonts -> Index equals number of graph fonts.
-            auto default_font_index = static_cast<int>(this->configurator.GetGraphFontScalings().size());
-            default_font_index = std::min(default_font_index, io.Fonts->Fonts.Size - 1);
-            io.FontDefault = io.Fonts->Fonts[default_font_index];
-        }
-
-    } else {
-
-        ImGuiIO& io = ImGui::GetIO();
-        const float default_font_size = 12.0f;
-        ImFontConfig config;
-        config.OversampleH = 4;
-        config.OversampleV = 4;
-        config.GlyphRanges = this->state.font_utf8_ranges.data();
-        std::string configurator_font;
-        std::string default_font;
-
-        // Add other known fonts
-        std::vector<std::string> font_paths;
-        if (this->core_instance != nullptr) {
-            auto search_paths = this->core_instance->Configuration().ResourceDirectories();
-            for (size_t i = 0; i < search_paths.Count(); ++i) {
-                std::wstring search_path(search_paths[i].PeekBuffer());
-                std::string font_path =
-                    FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, "Roboto-Regular.ttf");
-                if (!font_path.empty()) {
-                    font_paths.emplace_back(font_path);
-                    configurator_font = font_path;
-                    default_font = font_path;
-                }
-                font_path =
-                    FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, "SourceCodePro-Regular.ttf");
-                if (!font_path.empty()) {
-                    font_paths.emplace_back(font_path);
-                }
-            }
-        }
-
-        // Configurator Graph Font: Add default font at first n indices for exclusive use in configurator graph.
-        /// Workaround: Using different font sizes for different graph zooming factors to improve font readability when
-        /// zooming.
-        if (configurator_font.empty()) {
-            for (unsigned int i = 0; i < this->state.graph_fonts_reserved; i++) {
-                io.Fonts->AddFontDefault(&config);
-            }
-        } else {
-            for (unsigned int i = 0; i < this->state.graph_fonts_reserved; i++) {
-                io.Fonts->AddFontFromFileTTF(
-                    configurator_font.c_str(), default_font_size * graph_font_scalings[i], &config);
-            }
-        }
-
-        // Add other fonts for gui.
-        io.Fonts->AddFontDefault(&config);
-        io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
-        for (auto& font_path : font_paths) {
-            io.Fonts->AddFontFromFileTTF(font_path.c_str(), default_font_size, &config);
-            if (default_font == font_path) {
-                io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
-            }
-        }
-    }
-
     // ImGui Key Map
     io.KeyMap[ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
     io.KeyMap[ImGuiKey_LeftArrow] = static_cast<int>(core::view::Key::KEY_LEFT);
@@ -1264,6 +1200,40 @@ bool GUIWindows::createContext(void) {
     io.KeyMap[ImGuiKey_X] = static_cast<int>(GuiTextModHotkeys::CTRL_X);
     io.KeyMap[ImGuiKey_Y] = static_cast<int>(GuiTextModHotkeys::CTRL_Y);
     io.KeyMap[ImGuiKey_Z] = static_cast<int>(GuiTextModHotkeys::CTRL_Z);
+
+    // Init global state -------------------------------------------------------
+    this->init_state();
+
+    // Adding additional utf-8 glyph ranges
+    // (there is no error if glyph has no representation in font atlas)
+    this->state.font_utf8_ranges.clear();
+    this->state.font_utf8_ranges.emplace_back(0x0020);
+    this->state.font_utf8_ranges.emplace_back(0x03FF); // Basic Latin + Latin Supplement + Greek Alphabet
+    this->state.font_utf8_ranges.emplace_back(0x20AC);
+    this->state.font_utf8_ranges.emplace_back(0x20AC); // Euro
+    this->state.font_utf8_ranges.emplace_back(0x2122);
+    this->state.font_utf8_ranges.emplace_back(0x2122); // TM
+    this->state.font_utf8_ranges.emplace_back(0x212B);
+    this->state.font_utf8_ranges.emplace_back(0x212B); // Angstroem
+    this->state.font_utf8_ranges.emplace_back(0x0391);
+    this->state.font_utf8_ranges.emplace_back(0); // (range termination)
+
+    // Load initial fonts only once for all imgui contexts --------------------
+    if (other_context_exists) {
+
+        // Fonts are already loaded
+        if (default_font != nullptr) {
+            io.FontDefault = default_font;
+        } else {
+            // ... else default font is font loaded after configurator fonts -> Index equals number of graph fonts.
+            auto default_font_index = static_cast<int>(this->configurator.GetGraphFontScalings().size());
+            default_font_index = std::min(default_font_index, io.Fonts->Fonts.Size - 1);
+            io.FontDefault = io.Fonts->Fonts[default_font_index];
+        }
+
+    } else {
+        this->load_default_fonts(false);
+    }
 
     return true;
 }
@@ -1305,6 +1275,86 @@ bool GUIWindows::destroyContext(void) {
     this->core_instance = nullptr;
 
     return true;
+}
+
+
+void megamol::gui::GUIWindows::load_default_fonts(bool reload_font_api) {
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.Fonts->Clear();
+
+    const auto graph_font_scalings = this->configurator.GetGraphFontScalings();
+    this->state.graph_fonts_reserved = graph_font_scalings.size();
+
+    const float default_font_size = 12.0f * this->state.gui_size;
+    ImFontConfig config;
+    config.OversampleH = 4;
+    config.OversampleV = 4;
+    config.GlyphRanges = this->state.font_utf8_ranges.data();
+    std::string configurator_font;
+    std::string default_font;
+
+    // Get other known fonts
+    std::vector<std::string> font_paths;
+    if (this->core_instance != nullptr) {
+        auto search_paths = this->core_instance->Configuration().ResourceDirectories();
+        for (size_t i = 0; i < search_paths.Count(); ++i) {
+            std::wstring search_path(search_paths[i].PeekBuffer());
+            std::string font_path =
+                FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, "Roboto-Regular.ttf");
+            if (!font_path.empty()) {
+                font_paths.emplace_back(font_path);
+                configurator_font = font_path;
+                default_font = font_path;
+            }
+            font_path =
+                FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, "SourceCodePro-Regular.ttf");
+            if (!font_path.empty()) {
+                font_paths.emplace_back(font_path);
+            }
+        }
+    }
+
+    // Configurator Graph Font: Add default font at first n indices for exclusive use in configurator graph.
+    /// Workaround: Using different font sizes for different graph zooming factors to improve font readability when
+    /// zooming.
+    if (configurator_font.empty()) {
+        for (unsigned int i = 0; i < this->state.graph_fonts_reserved; i++) {
+            io.Fonts->AddFontDefault(&config);
+        }
+    } else {
+        for (unsigned int i = 0; i < this->state.graph_fonts_reserved; i++) {
+            io.Fonts->AddFontFromFileTTF(
+                configurator_font.c_str(), default_font_size * graph_font_scalings[i], &config);
+        }
+    }
+
+    // Add other fonts for gui.
+    io.Fonts->AddFontDefault(&config);
+    io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
+    for (auto& font_path : font_paths) {
+        io.Fonts->AddFontFromFileTTF(font_path.c_str(), default_font_size, &config);
+        if (default_font == font_path) {
+            io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
+        }
+    }
+
+    if (reload_font_api) {
+        switch (this->initialized_api) {
+        case (GUIImGuiAPI::NONE): {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Fonts can only be loaded after API was initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
+        } break;
+        case (GUIImGuiAPI::OPEN_GL): {
+            ImGui_ImplOpenGL3_CreateFontsTexture();
+        } break;
+        default: {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        } break;
+        }
+    }
 }
 
 
@@ -1635,6 +1685,9 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
 
 void GUIWindows::drawMenu(void) {
 
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuiStyle& style = ImGui::GetStyle();
+
     bool megamolgraph_interface = false;
     GraphPtr_t graph_ptr;
     if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
@@ -1780,13 +1833,15 @@ void GUIWindows::drawMenu(void) {
             ImGuiIO& io = ImGui::GetIO();
             ImFont* font_current = ImGui::GetFont();
             if (ImGui::BeginCombo("Select Available Font", font_current->GetDebugName())) {
-                // first fonts until index this->graph_fonts_reserved are exclusively used by configurator for the
-                // graph.
+                /// first fonts until index this->graph_fonts_reserved are exclusively used by graph in configurator
                 for (int n = this->state.graph_fonts_reserved; n < io.Fonts->Fonts.Size; n++) {
                     if (ImGui::Selectable(io.Fonts->Fonts[n]->GetDebugName(), (io.Fonts->Fonts[n] == font_current))) {
                         io.FontDefault = io.Fonts->Fonts[n];
-                        // Saving font to window configuration.
+                        // Saving font to window configuration (Remove font size from font name)
                         this->state.font_file_name = std::string(io.FontDefault->GetDebugName());
+                        auto sep_index = this->state.font_file_name.find(",");
+                        this->state.font_file_name = this->state.font_file_name.substr(0, sep_index);
+                        this->state.font_size = static_cast<int>(io.FontDefault->FontSize);
                     }
                 }
                 ImGui::EndCombo();
@@ -1800,14 +1855,13 @@ void GUIWindows::drawMenu(void) {
             this->tooltip.Marker(help);
 
             std::string label("Font Size");
-            ImGui::InputFloat(label.c_str(), &this->state.font_size, 1.0f, 10.0f, "%.2f", ImGuiInputTextFlags_None);
+            ImGui::InputInt(label.c_str(), &this->state.font_size, 1, 10, ImGuiInputTextFlags_None);
             // Validate font size
-            if (this->state.font_size <= 5.0f) {
-                this->state.font_size = 5.0f; // minimum valid font size
+            if (this->state.font_size <= 5) {
+                this->state.font_size = 5; // minimum valid font size
             }
 
             ImGui::BeginGroup();
-            ImGuiStyle& style = ImGui::GetStyle();
             float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
             ImGui::PushItemWidth(widget_width);
             this->file_browser.Button(
@@ -1834,6 +1888,33 @@ void GUIWindows::drawMenu(void) {
                 ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font filename.");
             }
             ImGui::EndGroup();
+
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Size")) {
+            this->state.new_gui_size = this->state.gui_size;
+            if (ImGui::RadioButton("100%", (this->state.gui_size == 1.0f))) {
+                this->state.new_gui_size = 1.0f;
+            }
+            if (ImGui::RadioButton("150%", (this->state.gui_size == 1.5f))) {
+                this->state.new_gui_size = 1.5f;
+            }
+            if (ImGui::RadioButton("200%", (this->state.gui_size == 2.0f))) {
+                this->state.new_gui_size = 2.0f;
+            }
+            if (ImGui::RadioButton("250%", (this->state.gui_size == 2.5f))) {
+                this->state.new_gui_size = 2.5f;
+            }
+            if (ImGui::RadioButton("300%", (this->state.gui_size == 3.0f))) {
+                this->state.new_gui_size = 3.0f;
+            }
+            // Additionally trigger reload of currently used font
+            if (this->state.gui_size != this->state.new_gui_size) {
+                this->state.font_apply = true;
+                this->state.font_size = static_cast<int>(
+                    static_cast<float>(this->state.font_size) * (this->state.new_gui_size / this->state.gui_size));
+            }
 
             ImGui::EndMenu();
         }
@@ -2252,8 +2333,10 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
                 this->state.style_changed = true;
                 megamol::core::utility::get_json_value<std::string>(
                     gui_state, {"font_file_name"}, &this->state.font_file_name);
-                megamol::core::utility::get_json_value<float>(gui_state, {"font_size"}, &this->state.font_size);
+                megamol::core::utility::get_json_value<int>(gui_state, {"font_size"}, &this->state.font_size);
                 this->state.font_apply = true;
+                this->state.new_gui_size = this->state.gui_size;
+                megamol::core::utility::get_json_value<float>(gui_state, {"size"}, &this->state.new_gui_size);
             }
         }
 
@@ -2302,6 +2385,7 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
         inout_json[GUI_JSON_TAG_GUI]["font_file_name"] = this->state.font_file_name;
         GUIUtils::Utf8Decode(this->state.font_file_name);
         inout_json[GUI_JSON_TAG_GUI]["font_size"] = this->state.font_size;
+        inout_json[GUI_JSON_TAG_GUI]["size"] = this->state.gui_size;
 
         // Write window configuration
         this->window_collection.StateToJSON(inout_json);
@@ -2343,6 +2427,8 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.gui_enabled = true;
     this->state.enable_gui_post = true;
     this->state.style = GUIWindows::Styles::DarkColors;
+    this->state.gui_size = 1.0f;
+    this->state.new_gui_size = this->state.gui_size;
     this->state.style_changed = true;
     this->state.autosave_gui_state = false;
     this->state.project_script_paths.clear();
@@ -2367,7 +2453,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.hotkeys_check_once = true;
     this->state.font_apply = false;
     this->state.font_file_name = "";
-    this->state.font_size = 13.0f;
+    this->state.font_size = 13;
 
     this->create_not_existing_png_filepath(this->state.screenshot_filepath);
 }

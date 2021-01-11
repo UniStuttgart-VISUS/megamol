@@ -176,8 +176,9 @@ namespace gui {
         /** The global state (for settings to be applied before ImGui::Begin). */
         struct StateBuffer {
             bool gui_enabled;        // Flag indicating whether GUI is completely disabled
-            bool enable_gui_post;    // Required to prevent changes to 'gui_enabled' being applied between pre and post
-                                     // drawing
+            bool enable_gui_post;    // Required to prevent changes to 'gui_enabled' between pre and post drawing
+            float gui_size;          /// TEST: GUI size (used for high DPI displays - default is 96 DPI)
+            float new_gui_size;      // Indicates new gui size
             Styles style;            // Predefined GUI style
             bool style_changed;      // Flag indicating changed style
             bool autosave_gui_state; // Automatically save state after gui has been changed
@@ -202,7 +203,7 @@ namespace gui {
             std::string last_script_filename;  // Last script filename provided from lua
             bool font_apply;                   // Flag indicating whether new font should be applied
             std::string font_file_name;        // Font imgui name or font file name.
-            float font_size;                   // Font size (only used whe font file name is given)
+            int font_size;                     // Font size (only used whe font file name is given)
             bool hotkeys_check_once;           // WORKAROUND: Check multiple hotkey assignments once
         };
 
@@ -257,6 +258,8 @@ namespace gui {
 
         bool createContext(void);
         bool destroyContext(void);
+
+        void load_default_fonts(bool reload_font_api);
 
         // Window Draw Callbacks
         void drawParamWindowCallback(WindowCollection::WindowConfiguration& wc);

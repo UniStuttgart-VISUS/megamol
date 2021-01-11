@@ -47,6 +47,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
         , multiselect_done(false)
         , canvas_hovered(false)
         , current_font_scaling(1.0f)
+        , add_menu_scrollbar_height(false)
         , graph_state()
         , search_widget()
         , splitter_widget()
@@ -736,9 +737,13 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
 
     const std::string delimiter("|");
 
-    const float child_height = ImGui::GetFrameHeightWithSpacing() * 1.0f;
-    auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened;
+    float child_height = ImGui::GetFrameHeightWithSpacing();
+    if (this->add_menu_scrollbar_height) {
+        child_height += static_cast<float>(ImGuiStyleVar_ScrollbarSize);
+    }
+    auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_HorizontalScrollbar;
     ImGui::BeginChild("graph_menu", ImVec2(0.0f, child_height), false, child_flags);
+    float content_region_avail_x = ImGui::GetContentRegionAvail().x;
 
     // Choose single selected view module
     ModulePtr_t selected_mod_ptr;
@@ -916,6 +921,14 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
 
     if (ImGui::Button("Layout Graph")) {
         this->graph_layout = 1;
+    }
+
+    // --------------------------------------------------
+    ImGui::SameLine();
+    float cursor_pos_x = ImGui::GetCursorPosX() - style.ItemSpacing.x;
+    this->add_menu_scrollbar_height = false;
+    if (content_region_avail_x < cursor_pos_x) {
+        this->add_menu_scrollbar_height = true;
     }
 
     ImGui::EndChild();
