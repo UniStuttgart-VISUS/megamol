@@ -529,9 +529,9 @@ bool GUIWindows::PostDraw(void) {
 
     // Apply new gui size -----------------------------------------------------
     if (this->state.gui_size != this->state.new_gui_size) {
-        this->load_default_fonts(true);
         style.ScaleAllSizes(this->state.new_gui_size / this->state.gui_size);
         this->state.gui_size = this->state.new_gui_size;
+        this->load_default_fonts(true); // uses this->state.gui_size
     }
 
     // Loading new font -------------------------------------------------------
