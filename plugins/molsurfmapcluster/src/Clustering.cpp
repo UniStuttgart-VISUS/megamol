@@ -196,8 +196,7 @@ void Clustering::clusterData(
                 this->momentsmethode.Param<core::param::EnumParam>()->Value());
         this->picturecount = this->picdata.size();
     }
-    core::utility::log::Log::DefaultLog.WriteMsg(
-        core::utility::log::Log::LEVEL_INFO, "Clustering finished");
+    core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO, "Clustering finished");
 }
 
 /*
@@ -587,21 +586,49 @@ void Clustering::loadValueImageForGivenPicture(
 bool Clustering::loadFeatureVectorFromFile(
     const std::filesystem::path& filePath, std::map<std::string, std::vector<float>>& outFeatureMap) {
     auto fsize = std::filesystem::file_size(filePath);
-    auto numstructs = fsize / sizeof(FeatureStruct);
-    std::vector<FeatureStruct> readVec(numstructs);
+    std::vector<FeatureStruct> readVec;
+
     std::ifstream file(filePath, std::ios::binary);
     if (file.is_open()) {
-        file.read(reinterpret_cast<char*>(readVec.data()), fsize);
-        file.close();
+        int ver;
+        file.read(reinterpret_cast<char*>(&ver), sizeof(int));
+        if (ver != 0) {
+            file.seekg(0, std::ios::beg);
+            auto numstructs = fsize / sizeof(FeatureStruct);
+            readVec.resize(numstructs);
+            file.read(reinterpret_cast<char*>(readVec.data()), fsize);
+            file.close();
+
+            outFeatureMap.clear();
+            for (const auto& el : readVec) {
+                std::string id;
+                id.append(el.pdbId.data(), 4);
+                std::vector<float> copy(el.featureVec.begin(), el.featureVec.end());
+                outFeatureMap.insert(std::make_pair(id, copy));
+            }
+        } else {
+            int length = 0;
+            file.read(reinterpret_cast<char*>(&length), sizeof(int));
+            std::vector<char> pdbId(length);
+            pdbId.shrink_to_fit();
+            DataStruct str;
+            uint64_t numstructs = fsize / (length + (sizeof(float) * 1792));
+            outFeatureMap.clear();
+            for (uint64_t i = 0; i < numstructs; ++i) {
+                file.read(reinterpret_cast<char*>(pdbId.data()), length);
+                file.read(reinterpret_cast<char*>(str.featureVec.data()), sizeof(float) * str.featureVec.size());
+                str.pdbId.clear();
+                str.pdbId.append(pdbId.data(), length);
+                // remove spaces
+                str.pdbId.erase(std::remove_if(str.pdbId.begin(), str.pdbId.end(),
+                                    [](char& c) { return std::isspace<char>(c, std::locale::classic()); }),
+                    str.pdbId.end());
+                std::vector<float> copy(str.featureVec.begin(), str.featureVec.end());
+                outFeatureMap.insert(std::make_pair(str.pdbId, copy));
+            }
+        }
     } else {
         return false;
-    }
-    outFeatureMap.clear();
-    for (const auto& el : readVec) {
-        std::string id;
-        id.append(el.pdbId.data(), 4);
-        std::vector<float> copy(el.featureVec.begin(), el.featureVec.end());
-        outFeatureMap.insert(std::make_pair(id, copy));
     }
     return true;
 }

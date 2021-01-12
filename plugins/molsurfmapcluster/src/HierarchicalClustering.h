@@ -29,6 +29,11 @@ struct FeatureStruct {
 };
 #pragma pack(pop)
 
+struct DataStruct {
+    std::string pdbId;
+    std::array<float, 1792> featureVec;
+};
+
 
 class HierarchicalClustering {
 public:
