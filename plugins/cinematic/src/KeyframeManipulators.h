@@ -8,8 +8,6 @@
 #ifndef MEGAMOL_CINEMATIC_KEYFRAMEMANIPULATORS_H_INCLUDED
 #define MEGAMOL_CINEMATIC_KEYFRAMEMANIPULATORS_H_INCLUDED
 
-#include "Cinematic/Cinematic.h"
-
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/ButtonParam.h"
 
