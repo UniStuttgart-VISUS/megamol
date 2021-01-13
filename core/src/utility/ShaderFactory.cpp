@@ -6,6 +6,8 @@
 #include "stdafx.h"
 #include "mmcore/utility/ShaderFactory.h"
 
+#include "msf/compiler_utils.h"
+
 
 GLuint megamol::core::utility::make_shader(
     std::filesystem::path const& shader_source_path, megamol::shaderfactory::compiler_options const& options) {

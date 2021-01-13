@@ -824,7 +824,7 @@ public:
     /**
     * Getter for ShaderFactory compiler options.
     */
-    megamol::shaderfactory::compiler_options const& GetShaderCompilerOptions();
+    std::shared_ptr<megamol::shaderfactory::compiler_options> GetShaderCompilerOptions();
 
 private:
     /**
@@ -1182,7 +1182,7 @@ private:
     utility::ShaderSourceFactory shaderSourceFactory;
 
     /** Default options for ShaderFactory */
-    megamol::shaderfactory::compiler_options msfCompilerOptions;
+    std::shared_ptr<megamol::shaderfactory::compiler_options> msfCompilerOptions;
 
     /** The Lua state */
     megamol::core::LuaState* lua;

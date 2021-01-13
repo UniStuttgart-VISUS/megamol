@@ -131,6 +131,7 @@ megamol::core::CoreInstance::CoreInstance(void)
     , preInit(new PreInit)
     , config()
     , shaderSourceFactory(config)
+    , msfCompilerOptions(nullptr)
     , lua(nullptr)
     , builtinViewDescs()
     , projViewDescs()
@@ -3517,11 +3518,15 @@ void megamol::core::CoreInstance::translateShaderPaths(megamol::core::utility::C
         paths[idx] = std::filesystem::path(v_paths[idx].PeekBuffer());
     }
 
-    msfCompilerOptions.set_include_paths(paths);
+    if (msfCompilerOptions == nullptr) {
+        msfCompilerOptions = std::make_shared<megamol::shaderfactory::compiler_options>(paths);
+    } else {
+        msfCompilerOptions->set_include_paths(paths);
+    }
 }
 
 
-megamol::shaderfactory::compiler_options const& megamol::core::CoreInstance::GetShaderCompilerOptions() {
+std::shared_ptr<megamol::shaderfactory::compiler_options> megamol::core::CoreInstance::GetShaderCompilerOptions() {
     translateShaderPaths(config);
     return msfCompilerOptions;
 }

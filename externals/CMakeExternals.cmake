@@ -2,7 +2,7 @@
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
   message(STATUS "Downloading external scripts")
   execute_process(COMMAND
-    ${GIT_EXECUTABLE} clone -b v2.1 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
+    ${GIT_EXECUTABLE} clone -b v2.2 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
@@ -514,27 +514,50 @@ function(require_external NAME)
         return()
       endif()
 
+      require_external(glad)
+
       if(WIN32)
         set(MEGAMOL_SHADER_FACTORY_LIB "lib/megamol-shader-factory.lib")
-        set(SHADERC_LIB "lib/shaderc_combined.lib")
+        set(GLSLANG_LIB "lib/glslang$<$<CONFIG:Debug>:d>.lib")
+        set(GENERICCODEGEN_LIB "lib/GenericCodeGen$<$<CONFIG:Debug>:d>.lib")
+        set(MACHINEINDEPENDENT_LIB "lib/MachineIndependent$<$<CONFIG:Debug>:d>.lib")
+        set(OSDEPENDENT_LIB "lib/OSDependent$<$<CONFIG:Debug>:d>.lib")
+        set(OGLCOMPILER_LIB "lib/OGLCompiler$<$<CONFIG:Debug>:d>.lib")
+        set(SPIRV_LIB "lib/SPIRV$<$<CONFIG:Debug>:d>.lib")
       else()
         include(GNUInstallDirs)
         set(MEGAMOL_SHADER_FACTORY_LIB "${CMAKE_INSTALL_LIBDIR}/libmegamol-shader-factory.a")
-        set(SHADERC_LIB "${CMAKE_INSTALL_LIBDIR}/libshaderc_combined.a")
+        set(GLSLANG_LIB "${CMAKE_INSTALL_LIBDIR}/libglslang$<$<CONFIG:Debug>:d>.a")
+        set(GENERICCODEGEN_LIB "lib/libGenericCodeGen$<$<CONFIG:Debug>:d>.a")
+        set(MACHINEINDEPENDENT_LIB "lib/libMachineIndependent$<$<CONFIG:Debug>:d>.a")
+        set(OSDEPENDENT_LIB "lib/libOSDependent$<$<CONFIG:Debug>:d>.a")
+        set(OGLCOMPILER_LIB "lib/libOGLCompiler$<$<CONFIG:Debug>:d>.a")
+        set(SPIRV_LIB "lib/libSPIRV$<$<CONFIG:Debug>:d>.a")
       endif()
+
+      external_get_property(glad INSTALL_DIR)
 
       add_external_project(megamol-shader-factory STATIC
         GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-        GIT_TAG 98e1a60a64c48978128b16fb3fbb9a8bae8899ab
+        GIT_TAG v0.2
         BUILD_BYPRODUCTS 
         "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
-        "<INSTALL_DIR>/${SHADERC_LIB}")
+        "<INSTALL_DIR>/${GLSLANG_LIB}"
+        "<INSTALL_DIR>/${GENERICCODEGEN_LIB}"
+        "<INSTALL_DIR>/${MACHINEINDEPENDENT_LIB}"
+        "<INSTALL_DIR>/${OSDEPENDENT_LIB}"
+        "<INSTALL_DIR>/${OGLCOMPILER_LIB}"
+        "<INSTALL_DIR>/${SPIRV_LIB}"
+        DEPENDS glad
+        CMAKE_ARGS
+          -DGLAD_IS_SHARED=ON
+          -DGLAD_PATH=${INSTALL_DIR})
 
       external_get_property(megamol-shader-factory INSTALL_DIR)
 
       add_external_library(megamol-shader-factory
         LIBRARY ${MEGAMOL_SHADER_FACTORY_LIB}
-        INTERFACE_LIBRARIES ${INSTALL_DIR}/$<CONFIG>/${SHADERC_LIB})
+        INTERFACE_LIBRARIES glad ${INSTALL_DIR}/$<CONFIG>/${GLSLANG_LIB} ${INSTALL_DIR}/$<CONFIG>/${GENERICCODEGEN_LIB} ${INSTALL_DIR}/$<CONFIG>/${MACHINEINDEPENDENT_LIB} ${INSTALL_DIR}/$<CONFIG>/${OSDEPENDENT_LIB} ${INSTALL_DIR}/$<CONFIG>/${OGLCOMPILER_LIB} ${INSTALL_DIR}/$<CONFIG>/${SPIRV_LIB})
       if(UNIX)
         target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
       endif()
