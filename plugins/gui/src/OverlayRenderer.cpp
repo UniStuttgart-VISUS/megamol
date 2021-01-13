@@ -806,13 +806,13 @@ bool OverlayRenderer::loadShader(
                 "[GUI] Unable to compile: Unknown error [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException& ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unable to compile shader (@%s): %s [%s, %s, line %d]\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return false;
-    } catch (vislib::Exception e) {
+    } catch (vislib::Exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unable to compile shader: %s [%s, %s, line %d]\n", e.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return false;

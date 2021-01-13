@@ -234,7 +234,7 @@ void megamol::gui::ParameterGroupsPresentation::draw_parameter(megamol::gui::Par
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
 
-    if ((inout_param.type == Param_t::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
+    if (inout_param.type == Param_t::TRANSFERFUNCTION) {
         inout_param.present.ConnectExternalTransferFunctionEditor(in_external_tf_editor);
     }
 
@@ -247,18 +247,23 @@ void megamol::gui::ParameterGroupsPresentation::draw_parameter(megamol::gui::Par
 
         auto param_name = inout_param.full_name;
         bool param_searched = true;
+        bool module_searched = true;
         if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
             param_searched = megamol::gui::StringSearchWidget::FindCaseInsensitiveSubstring(param_name, in_search);
+            module_searched =
+                megamol::gui::StringSearchWidget::FindCaseInsensitiveSubstring(in_module_fullname, in_search);
         }
-        bool visible = (inout_param.present.IsGUIVisible() || inout_param.present.extended) && param_searched;
+        bool visible =
+            (inout_param.present.IsGUIVisible() || inout_param.present.extended) && (param_searched || module_searched);
 
         if (visible) {
             if (inout_param.PresentGUI(in_scope)) {
 
                 // Open window calling the transfer function editor callback
                 if ((inout_param.type == Param_t::TRANSFERFUNCTION) && (in_external_tf_editor != nullptr)) {
-                    if (out_open_external_tf_editor != nullptr)
+                    if (out_open_external_tf_editor != nullptr) {
                         (*out_open_external_tf_editor) = true;
+                    }
                     auto param_fullname = std::string(in_module_fullname.c_str()) + "::" + inout_param.full_name;
                     in_external_tf_editor->SetConnectedParameter(&inout_param, param_fullname);
                 }
@@ -284,17 +289,32 @@ void megamol::gui::ParameterGroupsPresentation::draw_grouped_parameters(const st
         return;
 
     // Open namespace header when parameter search is active.
-    if (!in_search.empty()) {
+    auto search_string = in_search;
+    bool namespace_searched = true;
+    if (!search_string.empty()) {
         auto headerId = ImGui::GetID(in_group_name.c_str());
         ImGui::GetStateStorage()->SetInt(headerId, 1);
+        namespace_searched =
+            megamol::gui::StringSearchWidget::FindCaseInsensitiveSubstring(in_group_name, search_string);
+        if (!namespace_searched) {
+            ImGui::PushStyleColor(ImGuiCol_Header, ImGui::GetStyleColorVec4(ImGuiCol_PopupBg));
+        } else {
+            // Show all when namespace is part of the search
+            search_string.clear();
+        }
     }
+
     if (ImGui::CollapsingHeader(in_group_name.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::Indent();
         for (auto& param : params) {
-            this->draw_parameter(
-                (*param), in_module_fullname, in_search, in_scope, in_external_tf_editor, out_open_external_tf_editor);
+            this->draw_parameter((*param), in_module_fullname, search_string, in_scope, in_external_tf_editor,
+                out_open_external_tf_editor);
         }
         ImGui::Unindent();
+    }
+
+    if (!search_string.empty() && !namespace_searched) {
+        ImGui::PopStyleColor();
     }
 }
 

@@ -8,30 +8,13 @@
 #include "mmcore/CallAutoDescription.h"
 #include "mmcore/utility/graphics/BitmapCodecCollection.h"
 
-#include "image_calls/image_calls.h"
+
 
 namespace megamol {
 namespace image_calls {
 
-class IMAGE_CALLS_API Image2DCall : public megamol::core::AbstractGetDataCall {
+class Image2DCall : public megamol::core::AbstractGetDataCall {
 public:
-    typedef std::map<std::string, vislib::graphics::BitmapImage> ImageMap;
-
-    /** Index of the GetData function */
-    static const uint32_t CallForGetData;
-
-    /** Index of the GetMetaData function */
-    static const uint32_t CallForGetMetaData;
-
-    /** Index of the SetWishlist function */
-    static const uint32_t CallForSetWishlist;
-
-    /** Index of the WaitForData function */
-    static const uint32_t CallForWaitForData;
-
-    /** Index of the DeleteData function */
-    static const uint32_t CallForDeleteData;
-
     /**
      * Answer the name of this call.
      *
@@ -145,5 +128,5 @@ private:
 
 typedef megamol::core::CallAutoDescription<Image2DCall> Image2DCallDescription;
 
-} // namespace image_calls
-} // namespace megamol
+} // end namespace image_calls
+} // end namespace megamol

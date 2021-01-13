@@ -9,3 +9,5 @@
 #include "GUIUtils.h"
 
 ImGuiID megamol::gui::gui_generated_uid = 0;
+
+unsigned int megamol::gui::imgui_context_count = 0;

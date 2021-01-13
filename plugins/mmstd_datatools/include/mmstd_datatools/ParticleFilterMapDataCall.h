@@ -9,7 +9,6 @@
 #define MEGAMOL_DATATOOLS_PARTICLEFILTERMAPDATACALL_H_INCLUDED
 #pragma once
 
-#include "mmstd_datatools/mmstd_datatools.h"
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include <cstdint>
@@ -18,7 +17,7 @@ namespace megamol {
 namespace stdplugin {
 namespace datatools {
 
-    class MMSTD_DATATOOLS_API ParticleFilterMapDataCall : public core::AbstractGetDataCall {
+    class ParticleFilterMapDataCall : public core::AbstractGetDataCall {
     public:
         typedef uint32_t index_t;
 

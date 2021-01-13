@@ -81,7 +81,7 @@ bool megamol::gui::Module::DeleteCallSlots(void) {
             }
             callslots_map.second.clear();
         }
-    } catch (std::exception e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;

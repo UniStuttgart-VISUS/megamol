@@ -9,7 +9,6 @@
 #define MEGAMOL_DATATOOLS_TABLEDATACALL_H_INCLUDED
 #pragma once
 
-#include "mmstd_datatools/mmstd_datatools.h"
 #include "mmcore/AbstractGetDataCall.h"
 #include "vislib/String.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -29,7 +28,7 @@ namespace table {
 	 * Cells are expected to be stored in a consecutive row-major format 
 	 * (until the shitty API no longer provides unsafe pointer access).
 	 */
-    class MMSTD_DATATOOLS_API TableDataCall : public core::AbstractGetDataCall {
+    class TableDataCall : public core::AbstractGetDataCall {
     public:
         static const char *ClassName(void) { return "TableDataCall"; }
         static const char *Description(void) { return "Data of a table of floats"; }
@@ -47,7 +46,7 @@ namespace table {
             QUANTITATIVE
         };
 
-        class MMSTD_DATATOOLS_API ColumnInfo {
+        class ColumnInfo {
         public:
             ColumnInfo();
             ColumnInfo(const ColumnInfo& src);

@@ -8,7 +8,6 @@
 #define MEGAMOL_DATATOOLS_MULTIPARTICLEDATAADAPTOR_H_INCLUDED
 #pragma once
 
-#include "mmstd_datatools/mmstd_datatools.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 
 namespace megamol {
@@ -24,7 +23,7 @@ namespace datatools {
      *   - Only works with float data for position and color!
      *   - All list should use the same data types (but can use different memory layouts).
      */
-    class MMSTD_DATATOOLS_API MultiParticleDataAdaptor {
+    class MultiParticleDataAdaptor {
     private:
 
         typedef struct _list_data_t {
