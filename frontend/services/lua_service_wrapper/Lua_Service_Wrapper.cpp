@@ -82,8 +82,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         [](void* ptr) { delete reinterpret_cast<megamol::core::utility::LuaHostNetworkConnectionsBroker*>(ptr); }
     );
 
-    m_network_host->broker_address = m_config.host_address;
-    bool host_ok = m_network_host->spawn_connection_broker();
+    bool host_ok = m_network_host->spawn_connection_broker(m_config.host_address, m_config.retry_socket_port);
 
     if (host_ok) {
         log("initialized successfully");
@@ -141,6 +140,11 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
     callbacks.mmSetFullscreen_callback_ = [&](bool fullscreen) {
         auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
         window_manipulation.set_fullscreen(fullscreen?frontend_resources::WindowManipulation::Fullscreen::Maximize:frontend_resources::WindowManipulation::Fullscreen::Restore);
+    };
+
+    callbacks.mmSetVsync_callback_= [&](bool state) {
+        auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
+        window_manipulation.set_swap_interval(state ? 1 : 0);
     };
 
     luaAPI.SetCallbacks(callbacks);

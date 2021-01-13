@@ -15,7 +15,6 @@
 
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmstd_moldyn.h"
 #include "vislib/Array.h"
 #include "vislib/math/Cuboid.h"
 
@@ -27,7 +26,7 @@ namespace moldyn {
      * Call transporting information about particle/point
      * dataset bricks.
      */
-    class MMSTD_MOLDYN_API BrickStatsCall : public megamol::core::AbstractGetData3DCall {
+    class BrickStatsCall : public megamol::core::AbstractGetData3DCall {
     public:
         typedef float BrickStatsType;
 

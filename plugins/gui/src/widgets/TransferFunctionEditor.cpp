@@ -1,4 +1,4 @@
-﻿/*
+/*
  * TransferFunctionEditor.cpp
  *
  * Copyright (C) 2019 by Universitaet Stuttgart (VIS).
@@ -204,38 +204,56 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
         return;
     }
 
-    std::array<float, 2> new_range;
-    unsigned int tex_size = 0;
-    bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-        tfs, this->nodes, this->mode, tex_size, new_range);
-
-    if (!ok) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Could not parse transfer function");
-        return;
-    }
-
-    // Check for required initial node data
-    assert(this->nodes.size() > 1);
-
     this->currentNode = 0;
     this->currentChannel = 0;
     this->currentDragChange = glm::vec2(0.0f, 0.0f);
 
-    if (!this->range_overwrite) {
-        this->range = new_range;
+    unsigned int new_tex_size = 0;
+    std::array<float, 2> new_range;
+    megamol::core::param::TransferFunctionParam::TFNodeType new_nodes;
+    megamol::core::param::TransferFunctionParam::InterpolationMode new_mode;
+    bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
+        tfs, new_nodes, new_mode, new_tex_size, new_range);
+    if (!ok) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Could not parse transfer function");
+        return;
     }
-    // Save new range propagated by renderers for later recovery
-    this->last_range = new_range;
+    // Check for required initial node data
+    if (new_nodes.size() <= 1) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[GUI] At least two nodes are required for valid transfer function description");
+        return;
+    }
 
-    this->widget_buffer.min_range = this->range[0];
-    this->widget_buffer.max_range = this->range[1];
-    this->widget_buffer.tex_size = static_cast<int>(tex_size);
-    this->widget_buffer.range_value =
-        (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
+    bool tf_changed = false;
+    if (this->mode != new_mode) {
+        this->mode = new_mode;
+        tf_changed = true;
+    }
+    if (this->nodes != new_nodes) {
+        this->nodes = new_nodes;
+        tf_changed = true;
+    }
+    if (this->range != new_range) {
+        this->range_overwrite = false;
+        this->range = new_range;
+        this->last_range = new_range;
+        tf_changed = true;
+    }
+    if (this->widget_buffer.tex_size != static_cast<int>(new_tex_size)) {
+        this->widget_buffer.tex_size = static_cast<int>(new_tex_size);
+        tf_changed = true;
+    }
 
-    this->widget_buffer.gauss_sigma = this->nodes[this->currentNode][5];
+    if (tf_changed) {
+        this->widget_buffer.min_range = this->range[0];
+        this->widget_buffer.max_range = this->range[1];
+        this->widget_buffer.range_value =
+            (this->nodes[this->currentNode][4] * (this->range[1] - this->range[0])) + this->range[0];
+        this->widget_buffer.gauss_sigma = this->nodes[this->currentNode][5];
 
-    this->textureInvalid = true;
+        this->textureInvalid = true;
+    }
 }
 
 bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
@@ -285,9 +303,21 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         this->currentNode = 0;
     }
 
+    const float height = 30.0f;
+    const float width = 300.0f;
     const float tfw_item_width = ImGui::GetContentRegionAvail().x * 0.75f;
     ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
-    ImVec2 image_size = ImVec2(tfw_item_width, 30.0f);
+    ImVec2 image_size = ImVec2(width, height);
+    if (this->showOptions) {
+        image_size = ImVec2(tfw_item_width, height);
+        if (this->flip_legend) {
+            image_size = ImVec2(height, width);
+        }
+    } else {
+        if (this->flip_legend) {
+            image_size = ImVec2(height, width);
+        }
+    }
 
     ImGui::BeginGroup();
     this->drawTextureBox(image_size, this->flip_legend);
@@ -353,7 +383,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         }
         ImGui::PopItemWidth();
 
-        ImGui::SameLine(0.0f, style.ItemInnerSpacing.x);
+        ImGui::SameLine(0.0f, (style.ItemSpacing.x + style.ItemInnerSpacing.x));
         ImGui::TextUnformatted("Value Range");
 
         if (ImGui::Checkbox("Overwrite Value Range", &this->range_overwrite)) {
@@ -371,7 +401,8 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
             }
         }
         help = "[Enable] for overwriting value range propagated from connected module(s).\n"
-               "[Disable] for recovery of last value range or last value range propagated from connected module(s).";
+               "[Disable] for recovery of last value range or last value range propagated from connected module(s).\n"
+               "NB: This option will be disabled when running animation propagates new range every frame.";
         this->tooltip.Marker(help);
 
         // Value slider -------------------------------------------------------
@@ -557,12 +588,9 @@ void TransferFunctionEditor::drawTextureBox(const ImVec2& size, bool flip_legend
     ImVec2 uv0 = ImVec2(0.0f, 0.0f);
     ImVec2 uv1 = ImVec2(1.0f, 1.0f);
     if (flip_legend) {
-        image_size.x = size.y;
-        image_size.y = size.x;
         uv0 = ImVec2(1.0f, 1.0f);
         uv1 = ImVec2(0.0f, 0.0f);
     }
-
     if (textureSize == 0 || !this->image_widget.IsLoaded()) {
         // Reserve layout space and draw a black background rectangle.
         ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -598,10 +626,6 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
 
     float width = size.x;
     float height = size.y;
-    if (flip_legend) {
-        width = size.y;
-        height = size.x;
-    }
     float item_x_spacing = style.ItemInnerSpacing.x;
     float item_y_spacing = style.ItemInnerSpacing.y;
 

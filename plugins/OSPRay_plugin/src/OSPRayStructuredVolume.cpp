@@ -107,15 +107,16 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
         return false;
     }
 
-    if (os->getTime() >= cd->FrameCount()) {
-        cd->SetFrameID(cd->FrameCount() - 1, true); // isTimeForced flag set to true
-    } else {
-        cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
+    uint32_t requested_frame = os->getTime();
+    if (requested_frame >= cd->FrameCount()) {
+        requested_frame = cd->FrameCount() - 1;
     }
-
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
-    if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+    do {
+        cd->SetFrameID(requested_frame, true);
+        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
+        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_METADATA)) return false;
+        if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_DATA)) return false;
+    } while (cd->FrameID() != requested_frame);
 
     // do the callback to set the dirty flag
     if (!(*cgtf)(0)) return false;
