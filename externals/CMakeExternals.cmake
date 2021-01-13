@@ -567,7 +567,7 @@ function(require_external NAME)
         "<INSTALL_DIR>/${SPIRV_LIB}"
         DEPENDS glad
         CMAKE_ARGS
-          -DGLAD_IS_SHARED=ON
+          -DGLAD_IS_SHARED=OFF
           -DGLAD_PATH=${INSTALL_DIR})
 
       external_get_property(megamol-shader-factory INSTALL_DIR)
