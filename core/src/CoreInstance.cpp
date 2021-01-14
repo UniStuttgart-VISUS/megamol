@@ -161,8 +161,6 @@ megamol::core::CoreInstance::CoreInstance(void)
     megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ERROR);
 #endif
 
-    translateShaderPaths(config);
-
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
 #endif /* ULTRA_SOCKET_STARTUP */
@@ -563,6 +561,8 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
             "Unable to instance \"%s\" as \"%s\": Description not found.\n",
             vislib::StringA(r.Description()).PeekBuffer(), vislib::StringA(r.Identifier()).PeekBuffer());
     }
+
+    translateShaderPaths(config);
 
     SAFE_DELETE(this->preInit);
 }
