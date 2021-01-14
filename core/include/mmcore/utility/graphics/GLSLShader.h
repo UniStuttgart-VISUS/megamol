@@ -1,7 +1,7 @@
 /*
  * GLSLShader.h
  *
- * Copyright (C) 2020 by Universitaet Stuttgart (VISUS). Alle Rechte vorbehalten.
+ * Copyright (C) 2020-2021 by Universitaet Stuttgart (VISUS). Alle Rechte vorbehalten.
  */
 #pragma once
 
@@ -24,9 +24,9 @@ public:
 
     GLSLShader() : _program(0) {}
 
-    template <typename... Paths>
+    template<typename... Paths>
     GLSLShader(megamol::shaderfactory::compiler_options const& options, Paths... paths)
-        : _program(megamol::core::utility::make_program(options, std::forward<Paths>(paths)...)) {
+            : _program(megamol::core::utility::make_program(options, std::forward<Paths>(paths)...)) {
         // https://github.com/fendevel/Guide-to-Modern-OpenGL-Functions
         GLint uniform_count = 0;
         glGetProgramiv(_program, GL_ACTIVE_UNIFORMS, &uniform_count);
@@ -50,19 +50,53 @@ public:
         }
     }
 
-    GLint get_uniform_location(std::string const& name) { return _uniform_map.at(name).location; }
+    GLSLShader(GLSLShader const& rhs) = delete;
 
-    GLsizei get_uniform_size(std::string const& name) { return _uniform_map.at(name).count; }
+    GLSLShader& operator=(GLSLShader const& rhs) = delete;
 
-    GLenum get_uniform_type(std::string const& name) { return _uniform_map.at(name).type; }
+    GLSLShader(GLSLShader&& rhs) noexcept : _program(std::move(rhs._program)), _uniform_map(std::move(rhs._uniform_map)) {}
 
-    void enable() const { glUseProgram(_program); }
+    GLSLShader& operator=(GLSLShader&& rhs) noexcept {
+        if (this != std::addressof(rhs)) {
+            std::swap(_program, rhs._program);
+            std::swap(_uniform_map, rhs._uniform_map);
+        }
+        return *this;
+    }
 
-    void disable() const { glUseProgram(0); }
+    GLint get_uniform_location(std::string const& name) {
+        GLint res = -1;
+        try {
+            res = _uniform_map.at(name).location;
+        } catch (std::out_of_range const& e) {
+            // empty
+        }
+        return res;
+    }
 
-    ~GLSLShader() { glDeleteProgram(_program); }
+    GLsizei get_uniform_size(std::string const& name) {
+        return _uniform_map.at(name).count;
+    }
 
-    operator GLuint() { return _program; }
+    GLenum get_uniform_type(std::string const& name) {
+        return _uniform_map.at(name).type;
+    }
+
+    void enable() const {
+        glUseProgram(_program);
+    }
+
+    void disable() const {
+        glUseProgram(0);
+    }
+
+    ~GLSLShader() {
+        glDeleteProgram(_program);
+    }
+
+    operator GLuint() {
+        return _program;
+    }
 
 private:
     GLuint _program;
