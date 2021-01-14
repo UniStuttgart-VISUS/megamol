@@ -138,8 +138,8 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
     this->structureContainer.geometryType = geometryTypeEnum::SPHERES;
-    this->structureContainer.clipPlaneData = std::make_shared<std::vector<float>>(std::move(clipDat));
-    this->structureContainer.clipPlaneColor = std::make_shared<std::vector<float>>(std::move(clipCol));
+    //this->structureContainer.clipPlaneData = std::make_shared<std::vector<float>>(std::move(clipDat));
+    //this->structureContainer.clipPlaneColor = std::make_shared<std::vector<float>>(std::move(clipCol));
 
     return true;
 }

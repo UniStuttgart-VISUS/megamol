@@ -46,18 +46,18 @@ typedef unsigned char (*byteColFromArrayFunc)(
     const megamol::core::moldyn::MultiParticleDataCall::Particles& p, size_t index);
 
 
-inline ospcommon::vec3f makeRandomColor(const int i) {
+inline rkcommon::math::vec3f makeRandomColor(const int i) {
     const int mx = 13 * 17 * 43;
     const int my = 11 * 29;
     const int mz = 7 * 23 * 63;
     const uint32_t g = (i * (3 * 5 * 127) + 12312314);
-    return ospcommon::vec3f((g % mx) * (1.f / (mx - 1)), (g % my) * (1.f / (my - 1)), (g % mz) * (1.f / (mz - 1)));
+    return rkcommon::math::vec3f((g % mx) * (1.f / (mx - 1)), (g % my) * (1.f / (my - 1)), (g % mz) * (1.f / (mz - 1)));
 }
 
 
 //! return world bounding box of all particle *positions* (i.e., particles *ex* radius)
-ospcommon::box3f ospray::ParticleModel::getBounds() const {
-    ospcommon::box3f bounds = ospcommon::empty;
+rkcommon::math::box3f ospray::ParticleModel::getBounds() const {
+    rkcommon::math::box3f bounds = rkcommon::math::empty;
     for (size_t i = 0; i < position.size(); ++i) bounds.extend({position[i].x, position[i].y, position[i].z});
     return bounds;
 }
@@ -87,13 +87,13 @@ void megamol::ospray::ParticleModel::fill(megamol::core::moldyn::SimpleSpherical
 
     for (size_t loop = 0; loop < parts.GetCount(); ++loop) {
 
-        ospcommon::vec3f pos;
+        rkcommon::math::vec3f pos;
 
         pos.x = xAcc->Get_f(loop);
         pos.y = yAcc->Get_f(loop);
         pos.z = zAcc->Get_f(loop);
 
-        ospcommon::vec4uc col;
+        rkcommon::math::vec4uc col;
 
         col.x = rAcc->Get_u8(loop);
         col.y = gAcc->Get_u8(loop);

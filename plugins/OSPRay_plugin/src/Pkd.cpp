@@ -74,14 +74,14 @@ void ospray::Pkd::setDim(size_t ID, int dim) const {
 #if DIM_FROM_DEPTH
     return;
 #else
-    ospcommon::vec3f& particle = (ospcommon::vec3f&)this->model->position[ID];
+    rkcommon::math::vec3f& particle = (rkcommon::math::vec3f&) this->model->position[ID];
     int& pxAsInt = (int&)particle.x;
     pxAsInt = (pxAsInt & ~3) | dim;
 #endif
 }
 
-inline size_t ospray::Pkd::maxDim(const ospcommon::vec3f& v) const {
-    const float maxVal = ospcommon::reduce_max(v);
+inline size_t ospray::Pkd::maxDim(const rkcommon::math::vec3f& v) const {
+    const float maxVal = rkcommon::math::reduce_max(v);
     if (maxVal == v.x) {
         return 0;
     } else if (maxVal == v.y) {
@@ -129,14 +129,14 @@ void ospray::Pkd::build() {
     }
     // PRINT(numLevels);
 
-    const ospcommon::box3f& bounds = model->getBounds();
+    const rkcommon::math::box3f& bounds = model->getBounds();
     /*std::cout << "#osp:pkd: bounds of model " << bounds << std::endl;
     std::cout << "#osp:pkd: number of input particles " << numParticles << std::endl;*/
     this->buildRec(0, bounds, 0);
 }
 
 
-void ospray::Pkd::buildRec(const size_t nodeID, const ospcommon::box3f& bounds, const size_t depth) const {
+void ospray::Pkd::buildRec(const size_t nodeID, const rkcommon::math::box3f& bounds, const size_t depth) const {
     // if (depth < 4)
     // std::cout << "#osp:pkd: building subtree " << nodeID << std::endl;
     if (!hasLeftChild(nodeID))
@@ -230,8 +230,8 @@ void ospray::Pkd::buildRec(const size_t nodeID, const ospcommon::box3f& bounds, 
         }
     }
 
-    ospcommon::box3f lBounds = bounds;
-    ospcommon::box3f rBounds = bounds;
+    rkcommon::math::box3f lBounds = bounds;
+    rkcommon::math::box3f rBounds = bounds;
 
     setDim(nodeID, dim);
 

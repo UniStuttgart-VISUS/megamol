@@ -27,6 +27,7 @@ enum geometryTypeEnum {
     NHSPHERES,
     TRIANGLES,
     STREAMLINES,
+    CURVES,
     CYLINDERS,
     QUADS
 };
@@ -52,8 +53,9 @@ static uint32_t voxelDataTypeOSP[] = {2500, 3000, 3500, 6000, 7000};
 
 class OSPRayStructureContainer {
 public:
-    structureTypeEnum type;
+    structureTypeEnum type = structureTypeEnum::UNINITIALIZED;
     std::shared_ptr<OSPRayMaterialContainer> materialContainer;
+
     geometryTypeEnum geometryType;
     volumeTypeEnum volumeType;
     volumeRepresentationType volRepType;
@@ -65,20 +67,18 @@ public:
     std::shared_ptr<std::vector<float>> colorData;
     std::shared_ptr<std::vector<unsigned int>> indexData;
     void* voxels;
-    std::shared_ptr<std::vector<float>> gridOrigin;
-    std::shared_ptr<std::vector<float>> gridSpacing;
-    std::shared_ptr<std::vector<int>> dimensions;
-    std::shared_ptr<std::vector<float>> clippingBoxLower;
-    std::shared_ptr<std::vector<float>> clippingBoxUpper;
-    std::shared_ptr<std::vector<float>> isoValue;
-    std::shared_ptr<std::vector<float>> sliceData;
-    std::shared_ptr<std::vector<float>> clipPlaneData;
-    std::shared_ptr<std::vector<float>> clipPlaneColor;
+    std::array<float,3> gridOrigin;
+    std::array<float, 3> gridSpacing;
+    std::array<int, 3> dimensions;
+    std::array<float,3> clippingBoxLower;
+    std::array<float, 3> clippingBoxUpper;
+    float isoValue;
+    std::array<float,4> sliceData;
     const void* raw;
     std::shared_ptr<void const*> raw2;
     std::shared_ptr<std::vector<float>> tfRGB;
     std::shared_ptr<std::vector<float>> tfA;
-    std::shared_ptr<std::pair<float, float>> valueRange;
+    std::array<float,2> valueRange;
     std::shared_ptr<std::vector<float>> xData;
     std::shared_ptr<std::vector<float>> yData;
     std::shared_ptr<std::vector<float>> zData;
@@ -100,14 +100,14 @@ public:
     int colorType;
     long long int partCount;
     float globalRadius;
-    core::moldyn::SimpleSphericalParticles::ColourDataType mmpldColor;
+    core::moldyn::SimpleSphericalParticles::ColourDataType mmpldColor =
+        core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_NONE;
 
     bool clippingBoxActive;
     bool dataChanged;
     bool materialChanged;
     bool parameterChanged;
-    bool isValid;
-    bool smooth; //< valid for lines
+    bool isValid = false;
 
     // stuff that should be in OSPRayVolumetricStructure: AbstractOSPRayStructure
     // TODO: both actually.
@@ -124,18 +124,19 @@ public:
     float aoThreshold;
     float aoRayOffsetFactor;
 
-    OSPRayStructureContainer();
-    ~OSPRayStructureContainer();
+    OSPRayStructureContainer() = default;
+    ~OSPRayStructureContainer() = default;
+
 };
 
 class OSPRayExtendContainer {
 public:
     std::shared_ptr<megamol::core::BoundingBoxes_2> boundingBox;
     unsigned int timeFramesCount;
-    bool isValid;
+    bool isValid = false;
 
-    OSPRayExtendContainer();
-    ~OSPRayExtendContainer();
+    OSPRayExtendContainer() = default;
+    ~OSPRayExtendContainer() = default;
 };
 
 

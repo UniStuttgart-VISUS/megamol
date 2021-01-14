@@ -18,7 +18,6 @@
 #include "OSPRayAPIStructure.h"
 #include "OSPRayLineGeometry.h"
 #include "OSPRayNHSphereGeometry.h"
-#include "OSPRayCylinderGeometry.h"
 #include "OSPRaySphereGeometry.h"
 #include "OSPRayStructuredVolume.h"
 #include "OSPRayTriangleMesh.h"
@@ -75,7 +74,6 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAPIStructure>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayLineGeometry>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayQuadMesh>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayCylinderGeometry>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayOBJMaterial>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayLuminousMaterial>();
