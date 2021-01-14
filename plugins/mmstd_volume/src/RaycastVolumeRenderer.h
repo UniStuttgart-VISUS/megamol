@@ -14,9 +14,9 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 
+#include "mmcore/utility/graphics/GLSLShader.h"
+
 #include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLComputeShader.h"
-#include "vislib/graphics/gl/GLSLShader.h"
 
 #include "glowl/Texture2D.hpp"
 #include "glowl/Texture3D.hpp"
@@ -59,7 +59,7 @@ public:
         ASSERT(rc != NULL);
 #    endif // DEBUG || _DEBUG
 #endif     // _WIN32
-        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable() && ogl_IsVersionGEQ(4, 3);
+        return ogl_IsVersionGEQ(4, 3);
     }
 
     RaycastVolumeRenderer();
@@ -103,11 +103,11 @@ protected:
     bool updateTransferFunction();
 
 private:
-    vislib::graphics::gl::GLSLComputeShader m_raycast_volume_compute_shdr;
-    vislib::graphics::gl::GLSLComputeShader m_raycast_volume_compute_iso_shdr;
-    vislib::graphics::gl::GLSLComputeShader m_raycast_volume_compute_aggr_shdr;
-    vislib::graphics::gl::GLSLShader m_render_to_framebuffer_shdr;
-    vislib::graphics::gl::GLSLShader m_render_to_framebuffer_aggr_shdr;
+    core::utility::graphics::GLSLShader rvc_dvr_shdr;
+    core::utility::graphics::GLSLShader rvc_iso_shdr;
+    core::utility::graphics::GLSLShader rvc_aggr_shdr;
+    core::utility::graphics::GLSLShader rtf_shdr;
+    core::utility::graphics::GLSLShader rtf_aggr_shdr;
 
     std::unique_ptr<glowl::Texture2D> m_render_target;
     std::unique_ptr<glowl::Texture2D> m_normal_target;
