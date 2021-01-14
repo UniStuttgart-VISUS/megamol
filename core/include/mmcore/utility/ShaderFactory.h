@@ -11,7 +11,6 @@
 
 #include "glad/glad.h"
 
-#include "msf/compiler.h"
 #include "msf/compiler_options.h"
 
 #include "mmcore/utility/log/Log.h"
@@ -29,7 +28,7 @@ inline GLint check_and_log_shader_compile(GLuint shader) {
         shader_info.resize(logSize);
         glGetShaderInfoLog(shader, logSize, &logSize, shader_info.data());
 
-        megamol::core::utility::log::Log::DefaultLog.WriteError("MSF Shader Compile Error:\n%s", shader_info);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("MSF Shader Compile Error:\n%s", shader_info.data());
     }
 
     return success;
@@ -47,7 +46,7 @@ inline GLint check_and_log_program_link(GLuint program) {
         program_info.resize(logSize);
         glGetProgramInfoLog(program, logSize, &logSize, program_info.data());
 
-        megamol::core::utility::log::Log::DefaultLog.WriteError("MSF Program Link Error:\n%s", program_info);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("MSF Program Link Error:\n%s", program_info.data());
     }
 
     return success;
@@ -85,6 +84,7 @@ std::enable_if_t<(std::is_convertible_v<std::filesystem::path, Paths> && ...), G
 
     for (std::size_t idx = 0; idx < size; ++idx) {
         glDetachShader(program, shaders[idx]);
+        glDeleteShader(shaders[idx]);
     }
 
     return program;
