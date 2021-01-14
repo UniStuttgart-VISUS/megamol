@@ -132,7 +132,6 @@ megamol::core::CoreInstance::CoreInstance(void)
     , preInit(new PreInit)
     , config()
     , shaderSourceFactory(config)
-    , msfCompilerOptions(nullptr)
     , lua(nullptr)
     , builtinViewDescs()
     , projViewDescs()
@@ -3495,21 +3494,14 @@ void megamol::core::CoreInstance::shortenFlushIdxList(size_t const eventCount, s
 void megamol::core::CoreInstance::translateShaderPaths(megamol::core::utility::Configuration const& config) {
     auto const v_paths = config.ShaderDirectories();
 
-    std::vector<std::filesystem::path> paths(v_paths.Count());
+    shaderPaths.resize(v_paths.Count());
 
     for (size_t idx = 0; idx < v_paths.Count(); ++idx) {
-        paths[idx] = std::filesystem::path(v_paths[idx].PeekBuffer());
-    }
-
-    if (msfCompilerOptions == nullptr) {
-        msfCompilerOptions = std::make_shared<megamol::shaderfactory::compiler_options>(paths);
-    } else {
-        msfCompilerOptions->set_include_paths(paths);
+        shaderPaths[idx] = std::filesystem::path(v_paths[idx].PeekBuffer());
     }
 }
 
 
-std::shared_ptr<megamol::shaderfactory::compiler_options> megamol::core::CoreInstance::GetShaderCompilerOptions() {
-    translateShaderPaths(config);
-    return msfCompilerOptions;
+std::vector<std::filesystem::path> megamol::core::CoreInstance::GetShaderPaths() const {
+    return shaderPaths;
 }

@@ -53,12 +53,11 @@
 #include "vislib/sys/Lockable.h"
 #include "mmcore/utility/log/Log.h"
 
-#include "msf/compiler_options.h"
-
 #include <functional>
 #include <memory>
 #include <unordered_map>
 #include <string>
+#include <filesystem>
 
 #define GOES_INTO_GRAPH
 #define GOES_INTO_TRASH
@@ -823,9 +822,9 @@ public:
     inline bool IsmmconsoleFrontendCompatible(void) const { return this->mmconsoleFrontendCompatible;  }
 
     /**
-    * Getter for ShaderFactory compiler options.
+    * Getter for shader paths
     */
-    std::shared_ptr<megamol::shaderfactory::compiler_options> GetShaderCompilerOptions();
+    std::vector<std::filesystem::path> GetShaderPaths() const;
 
 private:
     /**
@@ -1182,8 +1181,8 @@ private:
     /** The shader source factory */
     utility::ShaderSourceFactory shaderSourceFactory;
 
-    /** Default options for ShaderFactory */
-    std::shared_ptr<megamol::shaderfactory::compiler_options> msfCompilerOptions;
+    /** The paths to the shaders */
+    std::vector<std::filesystem::path> shaderPaths;
 
     /** The Lua state */
     megamol::core::LuaState* lua;
