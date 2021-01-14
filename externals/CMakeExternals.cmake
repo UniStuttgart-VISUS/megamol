@@ -544,19 +544,19 @@ function(require_external NAME)
       else()
         include(GNUInstallDirs)
         set(MEGAMOL_SHADER_FACTORY_LIB "${CMAKE_INSTALL_LIBDIR}/libmegamol-shader-factory.a")
-        set(GLSLANG_LIB "${CMAKE_INSTALL_LIBDIR}/libglslang$<$<CONFIG:Debug>:d>.a")
-        set(GENERICCODEGEN_LIB "lib/libGenericCodeGen$<$<CONFIG:Debug>:d>.a")
-        set(MACHINEINDEPENDENT_LIB "lib/libMachineIndependent$<$<CONFIG:Debug>:d>.a")
-        set(OSDEPENDENT_LIB "lib/libOSDependent$<$<CONFIG:Debug>:d>.a")
-        set(OGLCOMPILER_LIB "lib/libOGLCompiler$<$<CONFIG:Debug>:d>.a")
-        set(SPIRV_LIB "lib/libSPIRV$<$<CONFIG:Debug>:d>.a")
+        set(GLSLANG_LIB "${CMAKE_INSTALL_LIBDIR}/libglslang.a")
+        set(GENERICCODEGEN_LIB "lib/libGenericCodeGen.a")
+        set(MACHINEINDEPENDENT_LIB "lib/libMachineIndependent.a")
+        set(OSDEPENDENT_LIB "lib/libOSDependent.a")
+        set(OGLCOMPILER_LIB "lib/libOGLCompiler.a")
+        set(SPIRV_LIB "lib/libSPIRV.a")
       endif()
 
       external_get_property(glad INSTALL_DIR)
 
       add_external_project(megamol-shader-factory STATIC
         GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-        GIT_TAG v0.2
+        GIT_TAG 2dae25bbeb5395a1711bff0e58c91dee08fc272f
         BUILD_BYPRODUCTS 
         "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
         "<INSTALL_DIR>/${GLSLANG_LIB}"
