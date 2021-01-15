@@ -13,13 +13,12 @@
 
 #include "GPUMaterialCollection.h"
 #include "mmcore/CalleeSlot.h"
-#include "mesh/mesh.h"
 #include "mesh/MeshCalls.h"
 
 namespace megamol {
 namespace mesh {
 
-class MESH_API AbstractGPUMaterialDataSource : public core::Module {
+class AbstractGPUMaterialDataSource : public core::Module {
 public:
     AbstractGPUMaterialDataSource();
     virtual ~AbstractGPUMaterialDataSource();

@@ -7,7 +7,6 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "protein_calls/MolecularDataCall.h"
-#include "protein/Protein.h"
 
 namespace megamol {
 namespace protein {
@@ -19,7 +18,7 @@ namespace protein {
 	 * @param mol The molecular data call
 	 * @return 'false' if no data is available or if the molecule just one time step; 'true' on success.
 	 */
-	PROTEIN_API bool computeRMSF(protein_calls::MolecularDataCall *mol);
+	bool computeRMSF(protein_calls::MolecularDataCall *mol);
 }
 }
 
