@@ -67,7 +67,7 @@ template <typename EventType> inline std::vector<EventType> DoubleBufferedEventC
     static_assert(EventType::is_consumable_t::value);
 
     auto retval = m_event_collections[m_read_idx].get<EventType>();
-    ctions[m_read_idx].remove<EventType>();
+    m_event_collections[m_read_idx].remove<EventType>();
 
     return retval;
 }
