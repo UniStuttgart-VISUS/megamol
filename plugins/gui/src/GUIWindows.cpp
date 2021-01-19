@@ -533,9 +533,13 @@ bool GUIWindows::PostDraw(void) {
 
         style.ScaleAllSizes(scaling_factor);
 
-        /// TODO:
-        // - scale window sizes -> reset positions: this->window_sizing_and_positioning(wc, collapsing_changed);
-
+        bool collapsing_changed;
+        const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
+            wc.win_reset_size *= scaling_factor;
+            wc.win_size *= scaling_factor;
+            wc.win_set_pos_size = true;
+        };
+        this->window_collection.EnumWindows(func);
 
         this->state.gui_size = this->state.new_gui_size;
         this->load_default_fonts(true); // requires new this->state.gui_size
