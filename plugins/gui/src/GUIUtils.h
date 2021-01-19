@@ -227,6 +227,7 @@ namespace gui {
         bool global_graph_save;              // out
     } GraphState_t;
 
+    enum HeaderType { MODULE_GROUP, MODULE, PARAMETERG_ROUP };
 
     /********** Class **********/
 
@@ -307,15 +308,31 @@ namespace gui {
         /*
          * Draw collapsing group header.
          */
-        static bool GroupHeader(
-            const std::string& name, std::string& inout_search, ImGuiID override_header_state = GUI_INVALID_ID) {
+        static bool GroupHeader(megamol::gui::HeaderType type, const std::string& name, std::string& inout_search,
+            ImGuiID override_header_state = GUI_INVALID_ID) {
             if (ImGui::GetCurrentContext() == nullptr) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[GUI] No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
                 return false;
             }
+
+            std::string header_label = name;
+            switch (type) {
+            case (megamol::gui::HeaderType::MODULE_GROUP): {
+                header_label = "[Module Group] " + header_label;
+            } break;
+            case (megamol::gui::HeaderType::MODULE): {
+                header_label = "[Module] " + header_label;
+            } break;
+            case (megamol::gui::HeaderType::PARAMETERG_ROUP): {
+                header_label = "[Parameter Group] " + header_label;
+            } break;
+            default:
+                break;
+            }
+
             // Determine header state and change color depending on active parameter search
-            auto headerId = ImGui::GetID(name.c_str());
+            auto headerId = ImGui::GetID(header_label.c_str());
             auto headerState = override_header_state;
             if (headerState == GUI_INVALID_ID) {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
@@ -337,7 +354,7 @@ namespace gui {
                 }
             }
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
-            bool header_open = ImGui::CollapsingHeader(name.c_str(), nullptr);
+            bool header_open = ImGui::CollapsingHeader(header_label.c_str(), nullptr);
             if (!inout_search.empty() && !searched) {
                 ImGui::PopStyleColor(2);
             }

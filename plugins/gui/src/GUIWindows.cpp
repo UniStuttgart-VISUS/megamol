@@ -529,9 +529,19 @@ bool GUIWindows::PostDraw(void) {
 
     // Apply new gui size -----------------------------------------------------
     if (this->state.gui_size != this->state.new_gui_size) {
-        style.ScaleAllSizes(this->state.new_gui_size / this->state.gui_size);
+        const float scaling_factor = this->state.new_gui_size / this->state.gui_size;
+
+        style.ScaleAllSizes(scaling_factor);
+
+        /// TODO:
+        // - scale window sizes -> reset positions: this->window_sizing_and_positioning(wc, collapsing_changed);
+
+
         this->state.gui_size = this->state.new_gui_size;
-        this->load_default_fonts(true); // uses this->state.gui_size
+        this->load_default_fonts(true); // requires new this->state.gui_size
+
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[GUI] DEBUG: WindowBorderSize: %f", style.ScrollbarSize);
     }
 
     // Loading new font -------------------------------------------------------
@@ -1438,7 +1448,8 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
             bool indent = false;
             bool group_header_open = group.first.empty();
             if (!group_header_open) {
-                group_header_open = GUIUtils::GroupHeader(group.first, search_string, override_header_state);
+                group_header_open = GUIUtils::GroupHeader(
+                    megamol::gui::HeaderType::MODULE_GROUP, group.first, search_string, override_header_state);
                 indent = true;
                 ImGui::Indent();
             }
@@ -1453,7 +1464,8 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                     }
 
                     // Draw module header
-                    bool module_header_open = GUIUtils::GroupHeader(module_label, search_string, override_header_state);
+                    bool module_header_open = GUIUtils::GroupHeader(
+                        megamol::gui::HeaderType::MODULE, module_label, search_string, override_header_state);
                     // Module description as hover tooltip
                     this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
 

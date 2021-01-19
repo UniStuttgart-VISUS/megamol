@@ -290,8 +290,8 @@ void megamol::gui::ParameterGroupsPresentation::draw_grouped_parameters(const st
 
     // Open namespace header when parameter search is active.
     auto search_string = in_search;
-    bool param_group_header_open =
-        megamol::gui::GUIUtils::GroupHeader(in_group_name, search_string, in_override_header_state);
+    bool param_group_header_open = megamol::gui::GUIUtils::GroupHeader(
+        megamol::gui::HeaderType::PARAMETERG_ROUP, in_group_name, search_string, in_override_header_state);
 
     if (param_group_header_open) {
         ImGui::Indent();
