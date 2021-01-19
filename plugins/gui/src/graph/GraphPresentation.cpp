@@ -1229,7 +1229,8 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
             bool indent = false;
             bool group_header_open = group.first.empty();
             if (!group_header_open) {
-                group_header_open = GUIUtils::GroupHeader(group.first, search_string);
+                group_header_open =
+                    GUIUtils::GroupHeader(megamol::gui::HeaderType::MODULE_GROUP, group.first, search_string);
                 indent = true;
                 ImGui::Indent();
             }
@@ -1239,7 +1240,8 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
                     std::string module_label = module_ptr->FullName();
 
                     // Draw module header
-                    bool module_header_open = GUIUtils::GroupHeader(module_label, search_string);
+                    bool module_header_open =
+                        GUIUtils::GroupHeader(megamol::gui::HeaderType::MODULE, module_label, search_string);
                     // Module description as hover tooltip
                     this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
 
