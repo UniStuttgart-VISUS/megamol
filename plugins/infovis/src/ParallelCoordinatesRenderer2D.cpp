@@ -1148,7 +1148,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     int approach = this->approachSlot.Param<core::param::IntParam>()->Value();
 
-
+    glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+    glClear(GL_COLOR_BUFFER_BIT);
     // Intel MSAA 2 frame restoration
     if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         framesNeeded = 2;
@@ -1184,20 +1185,24 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glm::mat4 inversePMVM = glm::inverse(pmvm);
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * inversePMVM;
+            //moveMatrices[i] = glm::mat4(1.0);
 
         pm = jit * pm;
 
         for (int i = 0; i < 16; i++)
-            projMatrix_column[i] = glm::value_ptr(pm)[i];
+            //projMatrix_column[i] = glm::value_ptr(pm)[i];
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
         glActiveTexture(GL_TEXTURE11);
         glEnable(GL_MULTISAMPLE);
-
+        
         if (frametype == 0) {
-
             glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
             glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 2, GL_RGBA8, w, h, 2, GL_TRUE);
             glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, msImageArray, 0, 0);
+
+            glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_PROGRAMMABLE_SAMPLE_LOCATIONS_ARB, 1);
+            const float tbl[4] = {0.25, 0.25, 0.75, 0.75};
+            glFramebufferSampleLocationsfvARB(GL_FRAMEBUFFER, 0u, 2, tbl);
 
             // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
             glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
@@ -1206,8 +1211,16 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
             glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 2, GL_RGBA8, w, h, 2, GL_TRUE);
             glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, msImageArray, 0, 1);
-            glClearColor(0.2, 0, 0, 1);
+
+            glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_PROGRAMMABLE_SAMPLE_LOCATIONS_ARB, 1);
+            const float tblb[4] = {0.75, 0.25, 0.25, 0.75};
+            glFramebufferSampleLocationsfvARB(GL_FRAMEBUFFER, 0u, 2, tblb);
+
+            glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
         }
+        if (glGetError() == GL_INVALID_ENUM)
+            megamol::core::utility::log::Log::DefaultLog.WriteError("%i", glGetError());
+
         glClear(GL_COLOR_BUFFER_BIT);
 
 
@@ -1260,6 +1273,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
+            //moveMatrices[i] = glm::mat4(1.0);
 
 
         pm = jit * pm;
@@ -1333,6 +1347,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         invMatrices[frametype] = jit * pmvm;
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
+            //moveMatrices[i] = glm::mat4(1.0);
+        
 
 
         pm = jit * pm;
@@ -1421,6 +1437,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glm::mat4 invM = glm::inverse(pmvm);
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * invM;
+            //moveMatrices[i] = glm::mat4(1.0);
 
         pm = jit * pm;
         for (int i = 0; i < 16; i++)
@@ -1693,7 +1710,6 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         pc_reconstruction0_shdr->Enable();
 
-
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tex2D"), 11);
 
         glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
@@ -1702,8 +1718,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("frametype"), frametype);
 
-        glUniformMatrix4fv(
-            pc_reconstruction0_shdr->ParameterLocation("moveMatrices"), 2, GL_FALSE, &moveMatrices[0][0][0]);
+        //glUniformMatrix4fv(
+        //    pc_reconstruction0_shdr->ParameterLocation("moveMatrices"), 2, GL_FALSE, &moveMatrices[0][0][0]);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction0_shdr->Disable();
