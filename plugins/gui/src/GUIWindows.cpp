@@ -460,7 +460,7 @@ bool GUIWindows::PostDraw(void) {
             }
 
             // Omit updating size and position of window from imgui for current frame when reset
-            bool update_size_position_from_imgui = !wc.win_set_pos_size;
+            bool update_window_by_imgui = !wc.win_set_pos_size;
             // wc.win_set_pos_size |= this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE].is_pressed;
             bool collapsing_changed = false;
             this->window_sizing_and_positioning(wc, collapsing_changed);
@@ -476,7 +476,7 @@ bool GUIWindows::PostDraw(void) {
             }
 
             // Saving some of the current window state.
-            if (update_size_position_from_imgui) {
+            if (update_window_by_imgui) {
                 wc.win_position = ImGui::GetWindowPos();
                 wc.win_size = ImGui::GetWindowSize();
                 if (!collapsing_changed) {
@@ -530,25 +530,26 @@ bool GUIWindows::PostDraw(void) {
         h.is_pressed = false;
     }
 
-    // Apply new gui size -----------------------------------------------------
-    if (this->state.gui_size != this->state.new_gui_size) {
-        const float scaling_factor = this->state.new_gui_size / this->state.gui_size;
+    // Apply new gui scale -----------------------------------------------------
+    if (this->state.gui_scale != this->state.new_gui_scale) {
+        const float scaling_factor = this->state.new_gui_scale / this->state.gui_scale;
 
         style.ScaleAllSizes(scaling_factor);
 
-        bool collapsing_changed;
-        const auto size_func = [&, this](WindowCollection::WindowConfiguration& wc) {
-            wc.win_reset_size *= scaling_factor;
-            wc.win_size *= scaling_factor;
-            wc.win_set_pos_size = true;
-        };
-        this->window_collection.EnumWindows(size_func);
+        if (this->state.rescale_windows) {
+            // Do not adjust window scale after loading from project file (window size is already fine)
+            bool collapsing_changed;
+            const auto size_func = [&, this](WindowCollection::WindowConfiguration& wc) {
+                wc.win_reset_size *= scaling_factor;
+                wc.win_size *= scaling_factor;
+                wc.win_set_pos_size = true;
+            };
+            this->window_collection.EnumWindows(size_func);
+        }
 
-        this->state.gui_size = this->state.new_gui_size;
-        this->load_default_fonts(true); // requires new this->state.gui_size
+        this->state.gui_scale = this->state.new_gui_scale;
 
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[GUI] DEBUG: WindowBorderSize: %f", style.ScrollbarSize);
+        this->load_default_fonts(true); /// requires new value for this->state.gui_scale
     }
 
     // Loading new font -------------------------------------------------------
@@ -1303,7 +1304,7 @@ void megamol::gui::GUIWindows::load_default_fonts(bool reload_font_api) {
     const auto graph_font_scalings = this->configurator.GetGraphFontScalings();
     this->state.graph_fonts_reserved = graph_font_scalings.size();
 
-    const float default_font_size = 12.0f * this->state.gui_size;
+    const float default_font_size = 12.0f * this->state.gui_scale;
     ImFontConfig config;
     config.OversampleH = 4;
     config.OversampleV = 4;
@@ -1913,28 +1914,32 @@ void GUIWindows::drawMenu(void) {
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Size")) {
-            this->state.new_gui_size = this->state.gui_size;
-            if (ImGui::RadioButton("100%", (this->state.gui_size == 1.0f))) {
-                this->state.new_gui_size = 1.0f;
+        if (ImGui::BeginMenu("Scale")) {
+            this->state.new_gui_scale = this->state.gui_scale;
+            if (ImGui::RadioButton("100%", (this->state.gui_scale == 1.0f))) {
+                this->state.new_gui_scale = 1.0f;
             }
-            if (ImGui::RadioButton("150%", (this->state.gui_size == 1.5f))) {
-                this->state.new_gui_size = 1.5f;
+            if (ImGui::RadioButton("150%", (this->state.gui_scale == 1.5f))) {
+                this->state.new_gui_scale = 1.5f;
             }
-            if (ImGui::RadioButton("200%", (this->state.gui_size == 2.0f))) {
-                this->state.new_gui_size = 2.0f;
+            if (ImGui::RadioButton("200%", (this->state.gui_scale == 2.0f))) {
+                this->state.new_gui_scale = 2.0f;
             }
-            if (ImGui::RadioButton("250%", (this->state.gui_size == 2.5f))) {
-                this->state.new_gui_size = 2.5f;
+            if (ImGui::RadioButton("250%", (this->state.gui_scale == 2.5f))) {
+                this->state.new_gui_scale = 2.5f;
             }
-            if (ImGui::RadioButton("300%", (this->state.gui_size == 3.0f))) {
-                this->state.new_gui_size = 3.0f;
+            if (ImGui::RadioButton("300%", (this->state.gui_scale == 3.0f))) {
+                this->state.new_gui_scale = 3.0f;
             }
-            // Additionally trigger reload of currently used font
-            if (this->state.gui_size != this->state.new_gui_size) {
+
+            if (this->state.gui_scale != this->state.new_gui_scale) {
+                // Additionally trigger reload of currently used font
                 this->state.font_apply = true;
                 this->state.font_size = static_cast<int>(
-                    static_cast<float>(this->state.font_size) * (this->state.new_gui_size / this->state.gui_size));
+                    static_cast<float>(this->state.font_size) * (this->state.new_gui_scale / this->state.gui_scale));
+
+                // Additionally load resizing of windows
+                this->state.rescale_windows = true;
             }
 
             ImGui::EndMenu();
@@ -2356,8 +2361,9 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
                     gui_state, {"font_file_name"}, &this->state.font_file_name);
                 megamol::core::utility::get_json_value<int>(gui_state, {"font_size"}, &this->state.font_size);
                 this->state.font_apply = true;
-                this->state.new_gui_size = this->state.gui_size;
-                megamol::core::utility::get_json_value<float>(gui_state, {"size"}, &this->state.new_gui_size);
+                this->state.new_gui_scale = this->state.gui_scale;
+                megamol::core::utility::get_json_value<float>(gui_state, {"scale"}, &this->state.new_gui_scale);
+                /// Font and windows are already loaded in correct scale
             }
         }
 
@@ -2406,7 +2412,7 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
         inout_json[GUI_JSON_TAG_GUI]["font_file_name"] = this->state.font_file_name;
         GUIUtils::Utf8Decode(this->state.font_file_name);
         inout_json[GUI_JSON_TAG_GUI]["font_size"] = this->state.font_size;
-        inout_json[GUI_JSON_TAG_GUI]["size"] = this->state.gui_size;
+        inout_json[GUI_JSON_TAG_GUI]["scale"] = this->state.gui_scale;
 
         // Write window configuration
         this->window_collection.StateToJSON(inout_json);
@@ -2448,8 +2454,9 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.gui_enabled = true;
     this->state.enable_gui_post = true;
     this->state.style = GUIWindows::Styles::DarkColors;
-    this->state.gui_size = 1.0f;
-    this->state.new_gui_size = this->state.gui_size;
+    this->state.gui_scale = 1.0f;
+    this->state.new_gui_scale = this->state.gui_scale;
+    this->state.rescale_windows = false;
     this->state.style_changed = true;
     this->state.autosave_gui_state = false;
     this->state.project_script_paths.clear();
