@@ -451,8 +451,6 @@ bool GUIWindows::PostDraw(void) {
             ImGui::SetNextWindowBgAlpha(1.0f);
             ImGui::SetNextWindowCollapsed(wc.win_collapsed, ImGuiCond_Always);
 
-            // wc.win_set_pos_size |= this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE].is_pressed;
-
             // Begin Window
             auto window_title = wc.win_name + "     " + wc.win_hotkey.ToString();
             if (!ImGui::Begin(window_title.c_str(), &wc.win_show, wc.win_flags)) {
@@ -461,6 +459,9 @@ bool GUIWindows::PostDraw(void) {
                 return;
             }
 
+            // Omit updating size and position of window from imgui for current frame when reset
+            bool update_size_position_from_imgui = !wc.win_set_pos_size;
+            // wc.win_set_pos_size |= this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE].is_pressed;
             bool collapsing_changed = false;
             this->window_sizing_and_positioning(wc, collapsing_changed);
 
@@ -475,10 +476,12 @@ bool GUIWindows::PostDraw(void) {
             }
 
             // Saving some of the current window state.
-            wc.win_position = ImGui::GetWindowPos();
-            wc.win_size = ImGui::GetWindowSize();
-            if (!collapsing_changed) {
-                wc.win_collapsed = ImGui::IsWindowCollapsed();
+            if (update_size_position_from_imgui) {
+                wc.win_position = ImGui::GetWindowPos();
+                wc.win_size = ImGui::GetWindowSize();
+                if (!collapsing_changed) {
+                    wc.win_collapsed = ImGui::IsWindowCollapsed();
+                }
             }
 
             ImGui::End();
@@ -534,12 +537,12 @@ bool GUIWindows::PostDraw(void) {
         style.ScaleAllSizes(scaling_factor);
 
         bool collapsing_changed;
-        const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
+        const auto size_func = [&, this](WindowCollection::WindowConfiguration& wc) {
             wc.win_reset_size *= scaling_factor;
             wc.win_size *= scaling_factor;
             wc.win_set_pos_size = true;
         };
-        this->window_collection.EnumWindows(func);
+        this->window_collection.EnumWindows(size_func);
 
         this->state.gui_size = this->state.new_gui_size;
         this->load_default_fonts(true); // requires new this->state.gui_size
@@ -1755,6 +1758,7 @@ void GUIWindows::drawMenu(void) {
             }
         };
         this->window_collection.EnumWindows(func);
+
         // ImGui::Separator();
         // if (ImGui::MenuItem("Reset Size and Position",
         //        this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE].keycode.ToString().c_str(),
@@ -1762,7 +1766,8 @@ void GUIWindows::drawMenu(void) {
         //        {
         //    this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE].is_pressed = true;
         //}
-        this->tooltip.ToolTip("Reset size and position of all windows to lie within the current viewport.");
+        // this->tooltip.ToolTip("Reset size and position of all windows to lie within the current viewport.");
+
         ImGui::EndMenu();
     }
 
