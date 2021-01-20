@@ -1,5 +1,5 @@
 /*
-* OSPRayTriangleMesh.h
+* OSPRayMeshGeometry.h
 * Copyright (C) 2009-2017 by MegaMol Team
 * Alle Rechte vorbehalten.
 */
@@ -12,7 +12,7 @@
 namespace megamol {
 namespace ospray {
 
-class OSPRayTriangleMesh : public AbstractOSPRayStructure {
+class OSPRayMeshGeometry : public AbstractOSPRayStructure {
 
 public:
 
@@ -22,7 +22,7 @@ public:
     * @return The name of this module.
     */
     static const char *ClassName(void) {
-        return "OSPRayTriangleMesh";
+        return "OSPRayMeshGeometry";
     }
 
     /**
@@ -31,7 +31,7 @@ public:
     * @return A human readable description of this module.
     */
     static const char *Description(void) {
-        return "Creator for OSPRay triangle mesh geometries.";
+        return "Creator for OSPRay mesh geometries.";
     }
 
     /**
@@ -44,10 +44,10 @@ public:
     }
 
     /** Dtor. */
-    virtual ~OSPRayTriangleMesh(void);
+    virtual ~OSPRayMeshGeometry(void);
 
     /** Ctor. */
-    OSPRayTriangleMesh(void);
+    OSPRayMeshGeometry(void);
 
 protected:
 

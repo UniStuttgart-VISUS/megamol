@@ -130,8 +130,8 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
     }
 
     // clipPlane setup
-    std::vector<float> clipDat(4);
-    std::vector<float> clipCol(4);
+    std::array<float,4> clipDat;
+    std::array<float,4> clipCol;
     this->getClipData(clipDat.data(), clipCol.data());
 
 

@@ -100,7 +100,7 @@ bool OSPRayRenderer::create() {
 
     // this->initOSPRay(device);
     this->setupTextureScreen();
-    // this->setupOSPRay(renderer, camera, world, "scivis");
+    // this->setupOSPRay(renderer, camera, world, "scivis");#
 
     return true;
 }
@@ -111,6 +111,7 @@ ospray::OSPRayRenderer::release
 void OSPRayRenderer::release() {
 
     ospShutdown();
+
     releaseTextureScreen();
 
 }
@@ -250,7 +251,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
                     // Enable Lights
             
             this->fillLightArray(eyeDir);
-            _world->setParam("light", ::ospray::cpp::SharedData(_lightArray));
+            _world->setParam("light", ::ospray::cpp::CopiedData(_lightArray));
 
             // Commiting world and measuring time
             auto t1 = std::chrono::high_resolution_clock::now();
@@ -265,10 +266,14 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         }
         if (_transformation_has_changed  || _material_has_changed && !_data_has_changed) {
             this->changeTransformation();
+            std::vector<::ospray::cpp::Instance> instanceArray;
+            std::transform(_instances.begin(), _instances.end(), std::back_inserter(instanceArray), second(_instances));
+            _world->setParam("instance", ::ospray::cpp::CopiedData(instanceArray));
+            _world->commit();
         }
         if (_light_has_changed && !_data_has_changed) {
             this->fillLightArray(eyeDir);
-            _world->setParam("light", ::ospray::cpp::SharedData(_lightArray));
+            _world->setParam("light", ::ospray::cpp::CopiedData(_lightArray));
             _world->commit();
         }
 
@@ -286,7 +291,8 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         */
         RendererSettings(cr.BackgroundColor());
         // far distance
-        std::vector<float> far_dist(_imgSize[0] * _imgSize[1], _cam.far_clipping_plane());
+        float far_clip = _cam.far_clipping_plane();
+        std::vector<float> far_dist(_imgSize[0] * _imgSize[1], far_clip);
         rkcommon::math::vec2i imgSize = {
             _imgSize[0],
             _imgSize[1]
@@ -310,6 +316,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
 
         // get the texture from the framebuffer
         _fb = reinterpret_cast<uint32_t*>(_framebuffer->map(OSP_FB_COLOR));
+
         auto t2 = std::chrono::high_resolution_clock::now();
         const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
@@ -324,9 +331,11 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
 
         auto db = static_cast<float*>(_framebuffer->map(OSP_FB_DEPTH));
         _db = std::vector<float>(db, db + _imgSize[0] * _imgSize[1]);
-        //if (this->_useDB.Param<core::param::BoolParam>()->Value()) {
-        //    getOpenGLDepthFromOSPPerspective(_db.data());
-        //}
+
+
+        if (this->_useDB.Param<core::param::BoolParam>()->Value()) {
+            getOpenGLDepthFromOSPPerspective(_db.data());
+        }
 
         // write a sequence of single pictures while the screenshooter is running
         // only for debugging
@@ -342,12 +351,19 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         //    this->number++;
         //}
 
+        //std::string fname("blub.ppm");
+        //writePPM(fname, _imgSize, _fb);
+        
+
         this->renderTexture2D(_osprayShader, _fb, _db.data(), _imgSize[0], _imgSize[1], cr);
 
         // clear stuff
          _framebuffer->unmap(_fb);
         _framebuffer->unmap(db);
 
+        //auto dvce_ = ospGetCurrentDevice();
+        //auto error_ = std::string(ospDeviceGetLastErrorMsg(dvce_));
+        //megamol::core::utility::log::Log::DefaultLog.WriteError(std::string("OSPRAY last ERROR: " + error_).c_str());
 
         this->releaseOSPRayStuff();
 

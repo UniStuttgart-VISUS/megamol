@@ -13,6 +13,7 @@
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/view/light/CallLight.h"
+#include "openvkl/openvkl.h"
 #include "ospray/ospray_cpp.h"
 #include "ospray/ospray_cpp/ext/rkcommon.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
@@ -54,6 +55,13 @@ inline rkcommon::math::vec3f convertToVec3f(glm::vec3 inp) {
 inline rkcommon::math::vec4f convertToVec4f(glm::vec4 inp) {
     return rkcommon::math::vec4f(inp[0], inp[1], inp[2], inp[3]);
 }
+
+inline rkcommon::math::vec3f convertToVec3f(glm::vec4 inp) {
+    return rkcommon::math::vec3f(inp[0], inp[1], inp[2]);
+}
+
+
+
 
 
 class AbstractOSPRayRenderer : public core::view::Renderer3DModule_2 {
@@ -128,8 +136,6 @@ protected:
     bool AbstractIsDirty();
     void AbstractResetDirty();
     void RendererSettings(glm::vec4 bg_color);
-    ::ospray::cpp::FrameBuffer newFrameBuffer(std::array<int,2> imgSize, const OSPFrameBufferFormat format = OSP_FB_RGBA8,
-        const uint32_t frameBufferChannels = OSP_FB_COLOR);
 
     // vertex array, vertex buffer object, texture
     unsigned int _vaScreen, _vbo, _tex, _depth;
@@ -155,12 +161,10 @@ protected:
     void releaseOSPRayStuff();
 
     // Interface Variables
-    core::param::ParamSlot _AOtransparencyEnabled;
     core::param::ParamSlot _AOsamples;
     core::param::ParamSlot _AOdistance;
     core::param::ParamSlot _accumulateSlot;
 
-    core::param::ParamSlot _rd_epsilon;
     core::param::ParamSlot _rd_spp;
     core::param::ParamSlot _rd_maxRecursion;
     core::param::ParamSlot _rd_type;
@@ -182,9 +186,6 @@ protected:
 
     // light
     std::vector<::ospray::cpp::Light> _lightArray;
-
-    // framebuffer dirtyness
-    bool _framebufferIsDirty;
 
     // OSP objects
     std::shared_ptr<::ospray::cpp::FrameBuffer> _framebuffer;

@@ -157,7 +157,7 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
     }
 
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
-    this->structureContainer.geometryType = geometryTypeEnum::STREAMLINES;
+    this->structureContainer.geometryType = geometryTypeEnum::LINES;
     this->structureContainer.globalRadius = globalRadiusSlot.Param<core::param::FloatParam>()->Value();
 
     return true;

@@ -31,13 +31,11 @@ namespace ospray {
             : core::view::Renderer3DModule_2()
             , _accumulateSlot("accumulate", "Activates the accumulation buffer")
             // general renderer parameters
-            , _rd_epsilon("Epsilon", "Ray epsilon to avoid self-intersections")
             , _rd_spp("SamplesPerPixel", "Samples per pixel")
             , _rd_maxRecursion("maxRecursion", "Maximum ray recursion depth")
             , _rd_type("Type", "Select between SciVis and PathTracer")
             , _shadows("SciVis::Shadows", "Enables/Disables computation of hard shadows (scivis)")
             // scivis renderer parameters
-            , _AOtransparencyEnabled("SciVis::AOtransparencyEnabled", "Enables or disables AO transparency")
             , _AOsamples("SciVis::AOsamples", "Number of rays per sample to compute ambient occlusion")
             , _AOdistance("SciVis::AOdistance", "Maximum distance to consider for ambient occlusion")
             // pathtracer renderer parameters
@@ -49,30 +47,24 @@ namespace ospray {
             , _numThreads("numThreads", "Number of threads used for rendering") {
 
 
-        _framebufferIsDirty = true;
-
         core::param::EnumParam* rdt = new core::param::EnumParam(SCIVIS);
         rdt->SetTypePair(SCIVIS, "SciVis");
         rdt->SetTypePair(PATHTRACER, "PathTracer");
         rdt->SetTypePair(MPI_RAYCAST, "MPI_Raycast");
 
         // Ambient parameters
-        this->_AOtransparencyEnabled << new core::param::BoolParam(false);
         this->_AOsamples << new core::param::IntParam(1);
         this->_AOdistance << new core::param::FloatParam(1e20f);
         this->_accumulateSlot << new core::param::BoolParam(true);
-        this->MakeSlotAvailable(&this->_AOtransparencyEnabled);
         this->MakeSlotAvailable(&this->_AOsamples);
         this->MakeSlotAvailable(&this->_AOdistance);
         this->MakeSlotAvailable(&this->_accumulateSlot);
 
 
         // General Renderer
-        this->_rd_epsilon << new core::param::FloatParam(1e-4f);
         this->_rd_spp << new core::param::IntParam(1);
         this->_rd_maxRecursion << new core::param::IntParam(10);
         this->_rd_type << rdt;
-        this->MakeSlotAvailable(&this->_rd_epsilon);
         this->MakeSlotAvailable(&this->_rd_spp);
         this->MakeSlotAvailable(&this->_rd_maxRecursion);
         this->MakeSlotAvailable(&this->_rd_type);
@@ -90,12 +82,12 @@ namespace ospray {
         this->MakeSlotAvailable(&this->_numThreads);
 
         // Depth
-        this->_useDB << new core::param::BoolParam(false);
+        this->_useDB << new core::param::BoolParam(true);
         this->MakeSlotAvailable(&this->_useDB);
 
         // Device
         auto deviceEp = new megamol::core::param::EnumParam(deviceType::DEFAULT);
-        deviceEp->SetTypePair(deviceType::DEFAULT, "default");
+        deviceEp->SetTypePair(deviceType::DEFAULT, "cpu");
         deviceEp->SetTypePair(deviceType::MPI_DISTRIBUTED, "mpi_distributed");
         this->_deviceTypeSlot << deviceEp;
         this->MakeSlotAvailable(&this->_deviceTypeSlot);
@@ -233,18 +225,18 @@ namespace ospray {
             switch (this->_deviceTypeSlot.Param<megamol::core::param::EnumParam>()->Value()) {
             case deviceType::MPI_DISTRIBUTED: {
                 ospLoadModule("mpi");
-                _device = std::make_shared<::ospray::cpp::Device>(::ospray::cpp::Device("mpi_distributed"));
+                _device = std::make_shared<::ospray::cpp::Device>("mpi_distributed");
                 _device->setParam("masterRank", 0);
                 if (this->_numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
                     _device->setParam("numThreads", this->_numThreads.Param<megamol::core::param::IntParam>()->Value());
                 }
             } break;
             default: {
-                _device = std::make_shared<::ospray::cpp::Device>("default");
+                _device = std::make_shared<::ospray::cpp::Device>("cpu");
                 if (this->_numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
                     _device->setParam("numThreads", this->_numThreads.Param<megamol::core::param::IntParam>()->Value());
                 } else {
-                    _device->setParam("numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
+                    //_device->setParam("numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
                 }
             }
             }
@@ -341,10 +333,10 @@ namespace ospray {
     }
 
     bool AbstractOSPRayRenderer::AbstractIsDirty() {
-        if (this->_AOsamples.IsDirty() || this->_AOtransparencyEnabled.IsDirty() || this->_AOdistance.IsDirty() ||
+        if (this->_AOsamples.IsDirty() || this->_AOdistance.IsDirty() ||
             this->_accumulateSlot.IsDirty() || this->_shadows.IsDirty() || this->_rd_type.IsDirty() ||
-            this->_rd_epsilon.IsDirty() || this->_rd_spp.IsDirty() || this->_rd_maxRecursion.IsDirty() ||
-            this->_rd_ptBackground.IsDirty() || this->_useDB.IsDirty() || this->_framebufferIsDirty) {
+            this->_rd_spp.IsDirty() || this->_rd_maxRecursion.IsDirty() ||
+            this->_rd_ptBackground.IsDirty() || this->_useDB.IsDirty()) {
             return true;
         } else {
             return false;
@@ -353,17 +345,14 @@ namespace ospray {
 
     void AbstractOSPRayRenderer::AbstractResetDirty() {
         this->_AOsamples.ResetDirty();
-        this->_AOtransparencyEnabled.ResetDirty();
         this->_AOdistance.ResetDirty();
         this->_accumulateSlot.ResetDirty();
         this->_shadows.ResetDirty();
         this->_rd_type.ResetDirty();
-        this->_rd_epsilon.ResetDirty();
         this->_rd_spp.ResetDirty();
         this->_rd_maxRecursion.ResetDirty();
         this->_rd_ptBackground.ResetDirty();
         this->_useDB.ResetDirty();
-        this->_framebufferIsDirty = false;
     }
 
 
@@ -434,32 +423,27 @@ namespace ospray {
 
     void AbstractOSPRayRenderer::RendererSettings(glm::vec4 bg_color) {
         // general renderer settings
-        _renderer->setParam("epsilon", this->_rd_epsilon.Param<core::param::FloatParam>()->Value());
-        _renderer->setParam("spp", this->_rd_spp.Param<core::param::IntParam>()->Value());
-        _renderer->setParam("maxDepthTexture", this->_maxDepthTexture);
+        _renderer->setParam("pixelSamples", this->_rd_spp.Param<core::param::IntParam>()->Value());
+        _renderer->setParam("maxPathLength", this->_rd_maxRecursion.Param<core::param::IntParam>()->Value());
+
+         if (this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value() != vislib::TString("")) {
+            ::ospray::cpp::Texture bkgnd_tex =
+                this->TextureFromFile(this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value());
+            _renderer->setParam("map_backplate", bkgnd_tex);
+        } else {
+            _renderer->setParam("backgroundColor", convertToVec4f(bg_color));
+        }
 
         switch (this->_rd_type.Param<core::param::EnumParam>()->Value()) {
         case SCIVIS:
             // scivis renderer settings
-            _renderer->setParam("aoTransparencyEnabled", this->_AOtransparencyEnabled.Param<core::param::BoolParam>()->Value());
             _renderer->setParam("aoSamples", this->_AOsamples.Param<core::param::IntParam>()->Value());
-            _renderer->setParam("shadowsEnabled", this->_shadows.Param<core::param::BoolParam>()->Value());
+            _renderer->setParam("shadows", this->_shadows.Param<core::param::BoolParam>()->Value());
             _renderer->setParam("aoDistance", this->_AOdistance.Param<core::param::FloatParam>()->Value());
-
-            _renderer->setParam("bgColor", convertToVec4f(bg_color));
-            _renderer->setParam("oneSidedLighting", true);
-
             break;
         case PATHTRACER:
-            if (this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value() != vislib::TString("")) {
-                ::ospray::cpp::Texture bkgnd_tex =
-                    this->TextureFromFile(this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value());
-                _renderer->setParam("map_backplate", bkgnd_tex);
-                _renderer->setParam("backgroundRefraction", true);
-            } else {
-                _renderer->setParam("backgroundRefraction", false);
-            }
-            _renderer->setParam("roulettePathLength", this->_rd_maxRecursion.Param<core::param::IntParam>()->Value());
+            _renderer->setParam("backgroundRefraction", true);
+            // TODO: _renderer->setParam("roulettePathLength", );
             break;
         }
     }
@@ -483,25 +467,19 @@ namespace ospray {
         _camera->setParam("imageStart", convertToVec2f(imgStart));
         _camera->setParam("imageEnd", convertToVec2f(imgEnd));
         _camera->setParam("aspect", static_cast<float>(mmcam.resolution_gate_aspect()));
+        _camera->setParam("nearClip", static_cast<float>(mmcam.near_clipping_plane()));
 
         glm::vec4 eye_pos = mmcam.eye_position();
         glm::vec4 view_vec = mmcam.view_vector();
         glm::vec4 up_vec = mmcam.up_vector();
-        _camera->setParam("position", convertToVec4f(eye_pos));
-        _camera->setParam("direction", convertToVec4f(view_vec));
-        _camera->setParam("up", convertToVec4f(up_vec));
+        _camera->setParam("position", convertToVec3f(eye_pos));
+        _camera->setParam("direction", convertToVec3f(view_vec));
+        _camera->setParam("up", convertToVec3f(up_vec));
         _camera->setParam("fovy", static_cast<float>(mmcam.aperture_angle()));
 
         // ospSet1i(_camera, "architectural", 1);
-        _camera->setParam("nearClip", static_cast<float>(mmcam.near_clipping_plane()));
-        // TODO: ospSet1f(_camera, "apertureRadius", );
+         // TODO: ospSet1f(_camera, "apertureRadius", );
         // TODO: ospSet1f(_camera, "focalDistance", cr->GetCameraParameters()->FocalDistance());
-    }
-
-    ::ospray::cpp::FrameBuffer AbstractOSPRayRenderer::newFrameBuffer(
-        std::array<int,2> imgSize, const OSPFrameBufferFormat format, const uint32_t frameBufferChannels) {
-        this->_framebufferIsDirty = true;
-        return ::ospray::cpp::FrameBuffer(imgSize[0], imgSize[1], format, frameBufferChannels);
     }
 
 
@@ -532,7 +510,7 @@ namespace ospray {
     void AbstractOSPRayRenderer::fillMaterialContainer(CallOSPRayStructure* entry_first, const OSPRayStructureContainer& element) {
         switch (element.materialContainer->materialType) {
         case OBJMATERIAL:
-            _materials[entry_first] = ::ospray::cpp::Material(this->_rd_type_string.c_str(), "OBJMaterial");
+            _materials[entry_first] = ::ospray::cpp::Material(this->_rd_type_string.c_str(), "obj");
             _materials[entry_first].setParam("Kd", convertToVec3f(element.materialContainer->Kd));
             _materials[entry_first].setParam("Ks", convertToVec3f(element.materialContainer->Ks));
             _materials[entry_first].setParam("Ns", element.materialContainer->Ns);
@@ -540,13 +518,13 @@ namespace ospray {
             _materials[entry_first].setParam("Tf", convertToVec3f(element.materialContainer->Tf));
             break;
         case LUMINOUS:
-            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "Luminous");
+            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "luminous");
             _materials[entry_first].setParam("color", convertToVec3f(element.materialContainer->lumColor));
             _materials[entry_first].setParam("intensity", element.materialContainer->lumIntensity);
             _materials[entry_first].setParam("transparency", element.materialContainer->lumTransparency);
             break;
         case GLASS:
-            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "Glass");
+            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "glass");
             _materials[entry_first].setParam("etaInside", element.materialContainer->glassEtaInside);
             _materials[entry_first].setParam("etaOutside", element.materialContainer->glassEtaOutside);
             _materials[entry_first].setParam(
@@ -562,7 +540,7 @@ namespace ospray {
                 "reflectance", convertToVec3f(element.materialContainer->matteReflectance));
             break;
         case METAL:
-            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "Metal");
+            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "metal");
             _materials[entry_first].setParam(
                 "reflectance", convertToVec3f(element.materialContainer->metalReflectance));
             _materials[entry_first].setParam("eta", convertToVec3f(element.materialContainer->metalEta));
@@ -570,7 +548,7 @@ namespace ospray {
             _materials[entry_first].setParam("roughness", element.materialContainer->metalRoughness);
             break;
         case METALLICPAINT:
-            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "MetallicPaint");
+            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "metallicPaint");
             _materials[entry_first].setParam(
                 "shadeColor", convertToVec3f(element.materialContainer->metallicShadeColor));
             _materials[entry_first].setParam(
@@ -587,7 +565,7 @@ namespace ospray {
             _materials[entry_first].setParam("thickness", element.materialContainer->plasticThickness);
             break;
         case THINGLASS:
-            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "ThinGlass");
+            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "thinGlass");
             _materials[entry_first].setParam(
                 "transmission", convertToVec3f(element.materialContainer->thinglassTransmission));
             _materials[entry_first].setParam("eta", element.materialContainer->thinglassEta);
@@ -623,7 +601,7 @@ namespace ospray {
 
             if (this->_materials[entry.first] != NULL) {
                 if (element.type == structureTypeEnum::GEOMETRY) {
-                    _geometricModels[entry.first].back().setParam("material", ::ospray::cpp::SharedData(_materials[entry.first]));
+                    _geometricModels[entry.first].back().setParam("material", ::ospray::cpp::CopiedData(_materials[entry.first]));
                     _geometricModels[entry.first].back().commit();
                 }
             }
@@ -728,21 +706,50 @@ namespace ospray {
                 for (unsigned int i = 0; i < element.ospStructures.first.size(); i++) {
                     auto idx = _baseStructures[entry.first].size() - 1 - i;
                     if (_materials[entry.first] != NULL && _baseStructures[entry.first].size() > 0) {
-                        _geometricModels[entry.first][idx].setParam("material", ::ospray::cpp::SharedData(_materials[entry.first]));
+                        _geometricModels[entry.first][idx].setParam("material", ::ospray::cpp::CopiedData(_materials[entry.first]));
                         _geometricModels[entry.first][idx].commit();
                     }
                 }
 
                 _groups[entry.first] = ::ospray::cpp::Group();
                 if (!_geometricModels[entry.first].empty()) {
-                    _groups[entry.first].setParam("geometry", ::ospray::cpp::SharedData(_geometricModels[entry.first]));
+                    _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
                 }
                 if (!_volumetricModels[entry.first].empty()) {
-                    _groups[entry.first].setParam("volume", ::ospray::cpp::SharedData(_volumetricModels[entry.first]));
+                    _groups[entry.first].setParam("volume", ::ospray::cpp::CopiedData(_volumetricModels[entry.first]));
                 }
+                _groups[entry.first].commit();
                 break;
             case structureTypeEnum::GEOMETRY:
                 switch (element.geometryType) {
+                case geometryTypeEnum::TEST:
+
+                    using namespace rkcommon::math;
+                    using namespace ::ospray::cpp;
+                    {
+                    // triangle mesh data
+                    std::vector<vec3f> vertex = {vec3f(-1.0f, -1.0f, 3.0f), vec3f(-1.0f, 1.0f, 3.0f),
+                        vec3f(1.0f, -1.0f, 3.0f), vec3f(0.1f, 0.1f, 0.3f)};
+
+                    std::vector<vec4f> color = {vec4f(0.9f, 0.5f, 0.5f, 1.0f), vec4f(0.8f, 0.8f, 0.8f, 1.0f),
+                        vec4f(0.8f, 0.8f, 0.8f, 1.0f), vec4f(0.5f, 0.9f, 0.5f, 1.0f)};
+
+                    std::vector<vec3ui> index = {vec3ui(0, 1, 2), vec3ui(1, 2, 3)};
+
+                        // create and setup model and mesh
+                    _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("mesh"));
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("vertex.position", CopiedData(vertex));
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("vertex.color", CopiedData(color));
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("index", CopiedData(index));
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).commit();
+
+                    // put the mesh into a model
+                    _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back())));
+                    _geometricModels[entry.first].back().commit();
+                    }
+
+                    break;
                 case geometryTypeEnum::SPHERES:
                     if (element.vertexData == NULL) {
                         // returnValue = false;
@@ -752,22 +759,22 @@ namespace ospray {
                     _numCreateGeo = element.partCount * element.vertexLength * sizeof(float) / _ispcLimit + 1;
 
                     for (unsigned int i = 0; i < _numCreateGeo; i++) {
-                        _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("spheres"));
+                        _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("sphere"));
 
                         unsigned long long vertexFloatsToRead = element.partCount * element.vertexLength / _numCreateGeo;
                         vertexFloatsToRead -= vertexFloatsToRead % element.vertexLength;
 
                         unsigned long long bytes_per_sphere = element.vertexLength * sizeof(float);
-                        auto vertexData = ::ospray::cpp::SharedData(&element.vertexData->operator[](i* vertexFloatsToRead), OSP_FLOAT,
-                                vertexFloatsToRead, bytes_per_sphere);
+                        auto vertexData = ::ospray::cpp::SharedData(&element.vertexData->operator[](i* vertexFloatsToRead), OSP_VEC3F, vertexFloatsToRead/element.vertexLength, bytes_per_sphere);
+
                         vertexData.commit();
                         std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back())
-                            .setParam("spheres.position", vertexData);
+                            .setParam("sphere.position", vertexData);
 
                         if (element.vertexLength > 3) {
                             auto radiusData =
                                 ::ospray::cpp::SharedData(&element.vertexData->operator[](i* vertexFloatsToRead + 3),
-                                    OSP_FLOAT, vertexFloatsToRead, bytes_per_sphere);
+                                    OSP_FLOAT, vertexFloatsToRead / element.vertexLength, bytes_per_sphere);
                             radiusData.commit();
                             std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("sphere.radius", radiusData);
                         } else {
@@ -775,14 +782,16 @@ namespace ospray {
                         }
 
                         std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).commit();
+
                         _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back())));
 
                         if (element.colorLength == 4) {
                             unsigned long long colorFloatsToRead = element.partCount * element.colorLength / _numCreateGeo;
                             colorFloatsToRead -= colorFloatsToRead % element.colorLength;
 
-                            auto colorData = ::ospray::cpp::SharedData(
-                                &element.colorData->operator[](i* colorFloatsToRead), OSP_FLOAT, colorFloatsToRead);
+                            auto colorData =
+                                ::ospray::cpp::SharedData(&element.colorData->operator[](i* colorFloatsToRead),
+                                    OSP_VEC4F, colorFloatsToRead / element.colorLength);
                             colorData.commit();
                             _geometricModels[entry.first].back().setParam("color", colorData);
                         }
@@ -795,28 +804,28 @@ namespace ospray {
                         break;
                     }
 
-                    _numCreateGeo = element.partCount * element.vertexStride / _ispcLimit + 1;
+                    _numCreateGeo = element.partCount * element.dataStride / _ispcLimit + 1;
 
                     for (unsigned int i = 0; i < _numCreateGeo; i++) {
-                        _baseStructures[entry.first].push_back(::ospray::cpp::Geometry("spheres"));
+                        _baseStructures[entry.first].push_back(::ospray::cpp::Geometry("sphere"));
 
 
                         unsigned long long floatsToRead =
-                            element.partCount * element.vertexStride / (_numCreateGeo * sizeof(float));
-                        floatsToRead -= floatsToRead % (element.vertexStride / sizeof(float));
-                        unsigned long long bytes_per_sphere = element.vertexStride;
+                            element.partCount * element.dataStride / (_numCreateGeo * sizeof(float));
+                        floatsToRead -= floatsToRead % (element.dataStride / sizeof(float));
+                        unsigned long long bytes_per_sphere = element.dataStride;
+                        unsigned long long floats_per_sphere = element.dataStride / sizeof(float);
 
                         auto vertexData =
                             ::ospray::cpp::SharedData(&static_cast<const float*>(element.raw)[i * floatsToRead],
-                                OSP_FLOAT, floatsToRead, bytes_per_sphere);
+                                OSP_VEC3F, floatsToRead / floats_per_sphere, bytes_per_sphere);
                         vertexData.commit();
 
                         std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("sphere.position", vertexData);
 
                         if (element.vertexLength > 3) {
-                            auto radiusData =
-                                ::ospray::cpp::SharedData(&element.vertexData->operator[](i* floatsToRead + 3),
-                                    OSP_FLOAT, floatsToRead, bytes_per_sphere);
+                            auto radiusData = ::ospray::cpp::SharedData(&static_cast<const float*>(element.raw)[i * floatsToRead + 3],
+                                    OSP_FLOAT, floatsToRead / floats_per_sphere, bytes_per_sphere);
                             radiusData.commit();
                             std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("sphere.radius",
                                 radiusData);
@@ -829,30 +838,27 @@ namespace ospray {
                         _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
                             std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back())));
                         if (element.mmpldColor ==
-                                core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
-                            element.mmpldColor ==
                                 core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
 
                             auto colorData = ::ospray::cpp::SharedData(
-                                &element.vertexData->operator[](i* floatsToRead + element.vertexLength),
-                                    OSP_FLOAT, floatsToRead, bytes_per_sphere);
+                                &static_cast<const float*>(element.raw)[i * floatsToRead + element.vertexLength],
+                                OSP_VEC4F, floatsToRead / floats_per_sphere, bytes_per_sphere);
                             colorData.commit();
                             _geometricModels[entry.first].back().setParam("color", colorData);
-                            if (element.mmpldColor ==
-                                core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
-                                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "OSPRAY_NHSPERES: RGB not supported.");
-                            }
+                        } else if (element.mmpldColor ==
+                            core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
+                            megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRAY_NHSPERES: RGB not supported.");
+                            rkcommon::math::vec4f gcol = {0.8, 0.8, 0.8, 1.0};
+                            _geometricModels[entry.first].back().setParam("color", gcol);
                         } else if (element.mmpldColor ==
                                    core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_NONE) {
                             // TODO: get global color
                             rkcommon::math::vec4f gcol = {0.8, 0.8, 0.8, 1.0};
                             _geometricModels[entry.first].back().setParam("color", gcol);
-                        }
-                    }
+                        } // end if color type
+                    } // end for num geometies
                     break;
-                case geometryTypeEnum::QUADS:
-                case geometryTypeEnum::TRIANGLES:
+                case geometryTypeEnum::MESH:
                     if (element.mesh == NULL) {
                         // returnValue = false;
                         break;
@@ -870,6 +876,8 @@ namespace ospray {
 
                             this->_baseStructures[entry.first].emplace_back(ospNewGeometry("mesh"));
 
+                            auto mesh_type = mesh.second.primitive_type;
+
                             for (auto& attrib : mesh.second.attributes) {
 
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
@@ -878,7 +886,7 @@ namespace ospray {
                                                      attrib.component_cnt);
 
                                     auto vertexData =
-                                        ::ospray::cpp::SharedData(attrib.data, OSP_FLOAT, count, attrib.stride);
+                                        ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
                                     vertexData.commit();
                                     std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("vertex.position", vertexData);
                                 }
@@ -887,7 +895,7 @@ namespace ospray {
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::NORMAL) {
                                     auto count = attrib.byte_size / attrib.stride;
                                     auto normalData =
-                                        ::ospray::cpp::SharedData(attrib.data, OSP_FLOAT, count, attrib.stride);
+                                        ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
                                     normalData.commit();
                                     std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("vertex.normal", normalData);
                                 }
@@ -895,21 +903,25 @@ namespace ospray {
                                 // check colorpointer and convert to rgba
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
                                     ::ospray::cpp::SharedData colorData;
-                                    if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT)
-                                        colorData = ::ospray::cpp::SharedData(
-                                            attrib.data, OSP_FLOAT, attrib.byte_size /
-                                                (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
-                                                    attrib.component_cnt), attrib.stride);
-                                    else
-                                        colorData = ::ospray::cpp::SharedData(attrib.data, OSP_UCHAR, attrib.byte_size);
+                                    if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT) {
+                                        auto count = attrib.byte_size / (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) * attrib.component_cnt);
+                                        auto osp_type = OSP_VEC3F;
+                                        if (attrib.component_cnt == 4) osp_type = OSP_VEC4F;
+                                        colorData =
+                                            ::ospray::cpp::SharedData(attrib.data, osp_type, count, attrib.stride);
+                                    } else {
+                                        core::utility::log::Log::DefaultLog.WriteError("[OSPRayRenderer][MESH] Color type not supported.");
+                                    }
                                     colorData.commit();
                                     std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("vertex.color", colorData);
                                 }
 
                                 // check texture array
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::TEXCOORD) {
-                                    auto texData = ::ospray::cpp::SharedData(attrib.data,
-                                        OSP_FLOAT, attrib.byte_size / (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) * attrib.component_cnt), attrib.stride);
+                                    auto count = attrib.byte_size /
+                                                 (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
+                                                     attrib.component_cnt);
+                                    auto texData = ::ospray::cpp::SharedData(attrib.data, OSP_VEC2F, count, attrib.stride);
                                     texData.commit();
                                     std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("vertex.texcoord", texData);
                                 }
@@ -919,15 +931,16 @@ namespace ospray {
                                 auto count = mesh.second.indices.byte_size /
                                              mesh::MeshDataAccessCollection::getByteSize(mesh.second.indices.type);
 
-                                unsigned long long stride;
-                                if (element.geometryType == TRIANGLES) {
-                                    stride = 3 * sizeof(unsigned int);
-                                } else if (element.geometryType == QUADS) {
+                                unsigned long long stride = 3 * sizeof(unsigned int);
+                                auto osp_type = OSP_VEC3UI;
+
+                                if (mesh_type == mesh::MeshDataAccessCollection::QUADS) {
                                     stride = 4 * sizeof(unsigned int);
+                                    osp_type = OSP_VEC4UI;
                                 }
                                 
-                                
-                                auto indexData = ::ospray::cpp::SharedData(mesh.second.indices.data, OSP_UINT, count, stride);
+                                auto indexData =
+                                    ::ospray::cpp::SharedData(mesh.second.indices.data, osp_type, count, stride);
                                 indexData.commit();
                                 std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("index", indexData);
                             } else {
@@ -974,7 +987,7 @@ namespace ospray {
                                 ospTexture.setParam("data", textureData);
                                 ospTexture.commit();
 
-                                auto ospMat = ::ospray::cpp::Material(_rd_type_string.c_str(), "OBJMaterial");
+                                auto ospMat = ::ospray::cpp::Material(_rd_type_string.c_str(), "obj");
                                 ospMat.setParam("map_Kd", ospTexture);
                                 // ospSetObject(ospMat, "map_Ks", ospTexture);
                                 // ospSetObject(ospMat, "map_d", ospTexture);
@@ -985,7 +998,7 @@ namespace ospray {
                         }
                     }
                     break;
-                case geometryTypeEnum::STREAMLINES:
+                case geometryTypeEnum::LINES:
                 case geometryTypeEnum::CURVES:
                     if (element.vertexData == nullptr && element.mesh == nullptr) {
                         // returnValue = false;
@@ -1003,7 +1016,7 @@ namespace ospray {
 
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
                                     const auto count = attrib.byte_size / attrib.stride;
-                                    auto vertexData = ::ospray::cpp::SharedData(attrib.data, OSP_FLOAT, count, attrib.stride);
+                                    auto vertexData = ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
                                     vertexData.commit();
                                     std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("vertex.position", vertexData);
                                 }
@@ -1011,12 +1024,13 @@ namespace ospray {
                                 // check colorpointer and convert to rgba
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
                                     ::ospray::cpp::SharedData colorData;
-                                    if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT)
+                                    if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT) {
+                                        auto count = attrib.byte_size / attrib.stride;
                                         colorData = ::ospray::cpp::SharedData(
-                                            attrib.data, OSP_FLOAT, attrib.byte_size / attrib.stride, attrib.stride);
-                                    else
-                                        colorData = ::ospray::cpp::SharedData(
-                                            attrib.data, OSP_UCHAR, attrib.byte_size, attrib.stride);
+                                            attrib.data, OSP_VEC3F, count, attrib.stride);
+                                    } else {
+                                        core::utility::log::Log::DefaultLog.WriteError("[OSPRayRenderer][CURVE] Color type not supported.");
+                                    }
                                     colorData.commit();
                                     std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("vertex.color", colorData);
                                 }
@@ -1046,10 +1060,10 @@ namespace ospray {
 
                         } // end for geometry
                     } else {
-                        _baseStructures[entry.first].emplace_back(ospNewGeometry("streamlines"));
+                        _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("curve"));
                         this->_numCreateGeo = 1;
 
-                        auto vertexData = ::ospray::cpp::SharedData(element.vertexData->data(), OSP_FLOAT, (element.vertexData->size()/3));
+                        auto vertexData = ::ospray::cpp::SharedData(element.vertexData->data(), OSP_VEC3F, element.vertexData->size() / 3);
                         vertexData.commit();
                         std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("vertex.position", vertexData);
 
@@ -1058,8 +1072,7 @@ namespace ospray {
                         std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("index", indexData);
 
                         if (element.colorData->size() > 0) {
-                            auto colorData = ::ospray::cpp::SharedData(
-                                element.colorData->data(), OSP_FLOAT, element.colorData->size() / element.colorLength);
+                            auto colorData = ::ospray::cpp::SharedData(element.colorData->data(), OSP_VEC4F, element.colorData->size()/4);
                             colorData.commit();
                             std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("vertex.color", colorData);
                         }
@@ -1081,14 +1094,15 @@ namespace ospray {
                 // General geometry execution
                 for (unsigned int i = 0; i < this->_numCreateGeo; i++) {
                     if (_materials[entry.first] != NULL && _geometricModels[entry.first].size() > 0) {
-                        _geometricModels[entry.first].rbegin()[i].setParam("material", ::ospray::cpp::SharedData(_materials[entry.first]));
+                        _geometricModels[entry.first].rbegin()[i].setParam("material", ::ospray::cpp::CopiedData(_materials[entry.first]));
                     }
 
                     if (_geometricModels[entry.first].size() > 0) {
                         _geometricModels[entry.first].rbegin()[i].commit();
                     }
                     _groups[entry.first] = ::ospray::cpp::Group();
-                    _groups[entry.first].setParam("geometry", ::ospray::cpp::SharedData(_geometricModels[entry.first]));
+                    _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
+                    _groups[entry.first].commit();
                 }
                 break;
 
@@ -1166,10 +1180,12 @@ namespace ospray {
                 switch (element.volRepType) {
                 case volumeRepresentationType::VOLUMEREP:
                     _groups[entry.first] = ::ospray::cpp::Group();
-                    _groups[entry.first].setParam("volume", ::ospray::cpp::SharedData(_volumetricModels[entry.first]));
+                    _groups[entry.first].setParam("volume", ::ospray::cpp::CopiedData(_volumetricModels[entry.first]));
                     if (element.clippingBoxActive) {
-                        _groups[entry.first].setParam("clippingGeometry", ::ospray::cpp::SharedData(_clippingModels[entry.first]));
+                        _groups[entry.first].setParam(
+                            "clippingGeometry", ::ospray::cpp::CopiedData(_clippingModels[entry.first]));
                     }
+                    _groups[entry.first].commit();
                     break;
 
                 case volumeRepresentationType::ISOSURFACE:
@@ -1185,15 +1201,17 @@ namespace ospray {
 
 
                     if (_materials[entry.first] != NULL) {
-                        _geometricModels[entry.first].back().setParam("material", ::ospray::cpp::SharedData(_materials[entry.first]));
+                        _geometricModels[entry.first].back().setParam(
+                            "material", ::ospray::cpp::CopiedData(_materials[entry.first]));
                     }
 
                     _groups[entry.first] = ::ospray::cpp::Group();
-                    _groups[entry.first].setParam("geometry", ::ospray::cpp::SharedData(_geometricModels[entry.first]));
+                    _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
                     if (element.clippingBoxActive) {
-                        _groups[entry.first].setParam("clippingGeometry", ::ospray::cpp::SharedData(_clippingModels[entry.first]));
+                        _groups[entry.first].setParam(
+                            "clippingGeometry", ::ospray::cpp::CopiedData(_clippingModels[entry.first]));
                     }
-
+                    _groups[entry.first].commit();
                     break;
 
                 }

@@ -25,11 +25,11 @@ enum structureTypeEnum { UNINITIALIZED, GEOMETRY, VOLUME, OSPRAY_API_STRUCTURES 
 enum geometryTypeEnum {
     SPHERES,
     NHSPHERES,
-    TRIANGLES,
-    STREAMLINES,
+    MESH,
+    LINES,
     CURVES,
     CYLINDERS,
-    QUADS
+    TEST
 };
 
 enum volumeTypeEnum { STRUCTUREDVOLUME, BLOCKBRICKEDVOLUME, GHOSTBLOCKBRICKEDVOLUME };
@@ -94,9 +94,8 @@ public:
     unsigned int maxDim;
     unsigned int vertexCount;
     unsigned int vertexLength;
-    unsigned int vertexStride;
+    unsigned int dataStride;
     unsigned int colorLength;
-    unsigned int colorStride;
     int colorType;
     long long int partCount;
     float globalRadius;
