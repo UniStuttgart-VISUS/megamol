@@ -1171,13 +1171,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                 mvm[j][i] = modelViewMatrix_column[i + j * 4];
             }
         }
-        auto pmvm = pm * mvm;
-        if (frametype == 0) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.0, 0));
-        }
-        if (frametype == 1) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0 / call.GetViewport().Width(), 0, 0));
-        }
+        auto pmvm = pm * mvm;       
+
         invMatrices[frametype] = pmvm;
 
         // moveMatrixA = invTexA * glm::inverse(pmvm);
@@ -1187,10 +1182,6 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             moveMatrices[i] = invMatrices[i] * inversePMVM;
             //moveMatrices[i] = glm::mat4(1.0);
 
-        pm = jit * pm;
-
-        for (int i = 0; i < 16; i++)
-            //projMatrix_column[i] = glm::value_ptr(pm)[i];
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
         glActiveTexture(GL_TEXTURE11);
         glEnable(GL_MULTISAMPLE);
@@ -1718,8 +1709,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction0_shdr->ParameterLocation("frametype"), frametype);
 
-        //glUniformMatrix4fv(
-        //    pc_reconstruction0_shdr->ParameterLocation("moveMatrices"), 2, GL_FALSE, &moveMatrices[0][0][0]);
+        glUniformMatrix4fv(
+            pc_reconstruction0_shdr->ParameterLocation("moveMatrices"), 2, GL_FALSE, &moveMatrices[0][0][0]);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction0_shdr->Disable();
