@@ -1522,9 +1522,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
     ImGuiStyle& style = ImGui::GetStyle();
 
     if (this->use_external_tf_editor) {
-        if (this->tf_editor_external_ptr == nullptr) {
-            this->use_external_tf_editor = false;
-        } else {
+        if (this->tf_editor_external_ptr != nullptr) {
             isActive = !(this->tf_editor_external_ptr->GetConnectedParameterName().empty());
         }
     }
@@ -1556,13 +1554,17 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
         }
 
         // Toggle inplace and external editor, if available
-        if (this->tf_editor_external_ptr != nullptr) {
-            if (ImGui::RadioButton("External Editor", this->use_external_tf_editor)) {
-                this->use_external_tf_editor = true;
-                this->show_tf_editor = false;
-            }
-            ImGui::SameLine();
+        if (this->tf_editor_external_ptr == nullptr) {
+            GUIUtils::ReadOnlyWigetStyle(true);
         }
+        if (ImGui::RadioButton("External Editor", this->use_external_tf_editor)) {
+            this->use_external_tf_editor = true;
+            this->show_tf_editor = false;
+        }
+        if (this->tf_editor_external_ptr == nullptr) {
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+        ImGui::SameLine();
         if (ImGui::RadioButton("Inplace", !this->use_external_tf_editor)) {
             this->use_external_tf_editor = false;
             if (this->tf_editor_external_ptr != nullptr) {

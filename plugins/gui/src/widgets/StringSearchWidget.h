@@ -36,6 +36,10 @@ namespace gui {
             return this->search_string;
         }
 
+        inline void ClearSearchString(void) {
+            this->search_string.clear();
+        }
+
     private:
         // VARIABLES --------------------------------------------------------------
 

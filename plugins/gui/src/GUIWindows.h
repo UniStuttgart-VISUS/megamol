@@ -177,8 +177,6 @@ namespace gui {
         struct StateBuffer {
             bool gui_enabled;        // Flag indicating whether GUI is completely disabled
             bool enable_gui_post;    // Required to prevent changes to 'gui_enabled' between pre and post drawing
-            float gui_scale;         /// TEST: GUI scale (used for high DPI displays - default is 96 DPI)
-            float new_gui_scale;     // Indicates new gui scale
             bool rescale_windows;    // Indicates resizing of windows for new gui zoom
             Styles style;            // Predefined GUI style
             bool style_changed;      // Flag indicating changed style

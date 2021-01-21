@@ -87,10 +87,7 @@ namespace gui {
 
         inline void ConnectExternalTransferFunctionEditor(
             std::shared_ptr<megamol::gui::TransferFunctionEditor> tfe_ptr) {
-            if (this->tf_editor_external_ptr != tfe_ptr) {
-                this->tf_editor_external_ptr = tfe_ptr;
-                this->use_external_tf_editor = true;
-            }
+            this->tf_editor_external_ptr = tfe_ptr;
         }
 
         void LoadTransferFunctionTexture(

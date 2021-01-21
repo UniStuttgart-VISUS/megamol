@@ -48,6 +48,8 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
             this->validate_file(this->file_name_str, extension, flag);
             this->path_changed = true;
 
+            this->search_widget.ClearSearchString();
+
             ImGui::OpenPopup(label_id.c_str());
             // Set initial window size of pop up
             ImGui::SetNextWindowSize(ImVec2(400.0f, 500.0f));
@@ -354,11 +356,8 @@ std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string
     if ((in_path_str == "..") || (in_path_str == ".")) {
         stdfs::path return_path = static_cast<stdfs::path>(in_path_str);
         return_path = stdfs::absolute(return_path);
-        if (return_path.has_parent_path()) {
+        if ((in_path_str == "..") && return_path.has_parent_path()) {
             return_path = return_path.parent_path();
-            if ((in_path_str == "..") && return_path.has_parent_path()) {
-                return_path = return_path.parent_path();
-            }
         }
         return_path_str = return_path.generic_u8string();
         GUIUtils::Utf8Decode(return_path_str);
