@@ -27,6 +27,8 @@ void WindowCollection::SetWindowSizePosition(WindowConfiguration& window_config)
     if (window_config.win_flags & ImGuiWindowFlags_AlwaysAutoResize) {
         win_size = ImGui::GetWindowSize();
     }
+
+    // Fit max window size to viewport
     if (win_size.x > io.DisplaySize.x) {
         win_size.x = io.DisplaySize.x;
     }
@@ -34,21 +36,23 @@ void WindowCollection::SetWindowSizePosition(WindowConfiguration& window_config)
         win_size.y = (io.DisplaySize.y - y_offset);
     }
 
-    float win_width = io.DisplaySize.x - (win_pos.x);
-    if (win_width < win_size.x) {
-        win_pos.x = io.DisplaySize.x - (win_size.x);
-    }
-    float win_height = io.DisplaySize.y - (win_pos.y);
-    if (win_height < win_size.y) {
-        win_pos.y = io.DisplaySize.y - (win_size.y);
-    }
-    if (win_pos.x < 0) {
-        win_pos.x = 0.0f;
-    }
+    // Snap to viewport
+    // float win_width = io.DisplaySize.x - (win_pos.x);
+    // if (win_width < win_size.x) {
+    //    win_pos.x = io.DisplaySize.x - (win_size.x);
+    //}
+    // float win_height = io.DisplaySize.y - (win_pos.y);
+    // if (win_height < win_size.y) {
+    //    win_pos.y = io.DisplaySize.y - (win_size.y);
+    //}
+    // if (win_pos.x < 0) {
+    //    win_pos.x = 0.0f;
+    //}
+
+    // Snap window below menu bar
     if (win_pos.y < y_offset) {
         win_pos.y = y_offset;
     }
-
 
     window_config.win_position = win_pos;
     // window_config.win_reset_position = win_pos;

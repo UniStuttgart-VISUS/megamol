@@ -29,8 +29,8 @@ megamol::gui::Configurator::Configurator()
         , selected_list_module_uid(GUI_INVALID_ID)
         , add_project_graph_uid(GUI_INVALID_ID)
         , module_list_popup_hovered_group_uid(GUI_INVALID_ID)
-        , show_module_list_sidebar(false)
-        , show_module_list_child(false)
+        , show_module_list_sidebar(true)
+        , show_module_list_popup(false)
         , module_list_popup_pos()
         , last_selected_callslot_uid(GUI_INVALID_ID)
         , graph_state()
@@ -165,7 +165,7 @@ bool megamol::gui::Configurator::Draw(
                 this->graph_state.graph_width);
 
             // Module List
-            this->draw_window_module_list(this->module_list_sidebar_width, 0.0f);
+            this->draw_window_module_list(this->module_list_sidebar_width, 0.0f, !this->show_module_list_popup);
             ImGui::SameLine();
         }
         // Graphs
@@ -177,9 +177,7 @@ bool megamol::gui::Configurator::Draw(
         // Reset state --------------------------------------------------------
 
         // Only reset 'externally' processed hotkeys
-        /// PARAMETER_SEARCH
         this->graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH].is_pressed = false;
-        /// DELETE_GRAPH_ITEM
         this->graph_state.hotkeys[megamol::gui::HotkeyIndex::DELETE_GRAPH_ITEM].is_pressed = false;
     }
 
@@ -265,17 +263,15 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 }
 
 
-void megamol::gui::Configurator::draw_window_module_list(float width, float height) {
+void megamol::gui::Configurator::draw_window_module_list(float width, float height, bool apply_focus) {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
     ImGui::BeginGroup();
-    const float group_height = std::max(0.0f, (height - (2.0f * style.WindowPadding.y)));
-    const float group_width = std::max(0.0f, (width - (2.0f * style.WindowPadding.x)));
 
     const float search_child_height = ImGui::GetFrameHeightWithSpacing() * 2.5f;
     auto child_flags = ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar;
-    ImGui::BeginChild("module_search_child_window", ImVec2(group_width, search_child_height), false, child_flags);
+    ImGui::BeginChild("module_search_child_window", ImVec2(width, search_child_height), false, child_flags);
 
     ImGui::TextUnformatted("Available Modules");
     ImGui::Separator();
@@ -284,7 +280,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                             this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].keycode.ToString() +
                             "] Set keyboard focus to search input field.\n"
                             "Case insensitive substring search in module names.";
-    this->search_widget.Widget("configurator_module_search", help_text);
+    this->search_widget.Widget("configurator_module_search", help_text, apply_focus);
     auto search_string = this->search_widget.GetSearchString();
 
     ImGui::EndChild();
@@ -292,8 +288,8 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
     // ------------------------------------------------------------------------
 
     child_flags = ImGuiWindowFlags_None;
-    ImGui::BeginChild("module_list_child_window",
-        ImVec2(group_width, std::max(0.0f, group_height - search_child_height)), true, child_flags);
+    ImGui::BeginChild(
+        "module_list_child_window", ImVec2(width, std::max(0.0f, height - search_child_height)), true, child_flags);
 
     bool search_filter = true;
     bool compat_filter = true;
@@ -397,7 +393,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                             }
                         }
                         // Place new module at mouse pos if added via separate module list child window.
-                        else if (this->show_module_list_child) {
+                        else if (this->show_module_list_popup) {
                             module_ptr->present.SetScreenPosition(ImGui::GetMousePos());
                         }
 
@@ -430,8 +426,8 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                             }
                         }
                     }
-                    if (this->show_module_list_child) {
-                        this->show_module_list_child = false;
+                    if (this->show_module_list_popup) {
+                        this->show_module_list_popup = false;
                         // ImGui::CloseCurrentPopup();
                     }
                 } else {
@@ -586,11 +582,11 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
         ImGuiID selected_group_uid = selected_graph_ptr->present.GetSelectedGroup();
 
         bool valid_double_click = (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->present.IsCanvasHoverd() &&
-                                   (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_child));
+                                   (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_popup));
         bool valid_double_click_callslot =
             (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->present.IsCanvasHoverd() &&
                 (selected_callslot_uid != GUI_INVALID_ID) &&
-                ((!this->show_module_list_child) || (this->last_selected_callslot_uid != selected_callslot_uid)));
+                ((!this->show_module_list_popup) || (this->last_selected_callslot_uid != selected_callslot_uid)));
 
         if (valid_double_click || valid_double_click_callslot) {
             this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed = true;
@@ -599,27 +595,31 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
             ImGui::GetIO().MouseDoubleClicked[0] = false;
         }
     }
-    if (!this->show_module_list_sidebar &&
+    if ( // !this->show_module_list_sidebar &&
         this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
-        this->show_module_list_child = true;
+        this->show_module_list_popup = true;
         this->module_list_popup_pos = ImGui::GetMousePos();
         this->module_list_popup_hovered_group_uid = selected_graph_ptr->present.GetHoveredGroup();
     }
-    if (this->show_module_list_child) {
-        const float popup_width = 250.0f;
-        const float popup_height = 350.0f;
+    if (this->show_module_list_popup) {
+
+        ImGuiStyle& style = ImGui::GetStyle();
+        float offset_x = 2.0f * style.WindowPadding.x;
+        float offset_y = 2.0f * style.WindowPadding.y;
+        float popup_width = 250.0f + offset_x;
+        float popup_height = 350.0f + offset_y;
         std::string pop_up_id = "module_list_child";
         if (!ImGui::IsPopupOpen(pop_up_id.c_str())) {
             ImGui::OpenPopup(pop_up_id.c_str(), ImGuiPopupFlags_None);
-            ImGuiStyle& style = ImGui::GetStyle();
+
             float diff_width = (ImGui::GetWindowPos().x + ImGui::GetWindowSize().x - this->module_list_popup_pos.x);
             float diff_height = (ImGui::GetWindowPos().y + ImGui::GetWindowSize().y - this->module_list_popup_pos.y);
             if (diff_width < popup_width) {
-                this->module_list_popup_pos.x -= ((popup_width - diff_width) + 2.0f * style.WindowPadding.x);
+                this->module_list_popup_pos.x -= ((popup_width - diff_width) + offset_x);
             }
             this->module_list_popup_pos.x = std::max(this->module_list_popup_pos.x, ImGui::GetWindowPos().x);
             if (diff_height < popup_height) {
-                this->module_list_popup_pos.y -= ((popup_height - diff_height) + 2.5f * style.WindowPadding.y);
+                this->module_list_popup_pos.y -= ((popup_height - diff_height) + offset_y);
             }
             this->module_list_popup_pos.y = std::max(this->module_list_popup_pos.y, ImGui::GetWindowPos().y);
             ImGui::SetNextWindowPos(this->module_list_popup_pos);
@@ -629,7 +629,8 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
                            ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove;
         if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
 
-            this->draw_window_module_list(popup_width, popup_height);
+            this->draw_window_module_list(
+                std::max(0.0f, (popup_width - offset_x)), std::max(0.0f, (popup_height - offset_y)), true);
 
             bool module_list_popup_hovered = false;
             if ((ImGui::GetMousePos().x >= this->module_list_popup_pos.x) &&
@@ -640,7 +641,7 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
             }
             if ((ImGui::IsMouseClicked(0) && !module_list_popup_hovered) ||
                 ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
-                this->show_module_list_child = false;
+                this->show_module_list_popup = false;
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
