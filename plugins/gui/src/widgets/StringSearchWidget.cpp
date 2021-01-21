@@ -16,7 +16,7 @@ using namespace megamol::gui;
 StringSearchWidget::StringSearchWidget(void) : search_focus(false), search_string(), tooltip() {}
 
 
-bool megamol::gui::StringSearchWidget::Widget(const std::string& id, const std::string& help) {
+bool megamol::gui::StringSearchWidget::Widget(const std::string& id, const std::string& help, bool apply_focus) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -32,7 +32,7 @@ bool megamol::gui::StringSearchWidget::Widget(const std::string& id, const std::
     ImGui::SameLine();
 
     // Set keyboard focus when hotkey is pressed
-    if (this->search_focus) {
+    if (apply_focus && this->search_focus) {
         ImGui::SetKeyboardFocusHere();
         this->search_string = "";
         this->search_focus = false;

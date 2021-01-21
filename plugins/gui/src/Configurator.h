@@ -101,7 +101,7 @@ namespace gui {
         ImGuiID add_project_graph_uid;
         ImGuiID module_list_popup_hovered_group_uid;
         bool show_module_list_sidebar;
-        bool show_module_list_child;
+        bool show_module_list_popup;
         ImVec2 module_list_popup_pos;
         ImGuiID last_selected_callslot_uid;
         megamol::gui::GraphState_t graph_state;
@@ -117,7 +117,7 @@ namespace gui {
         // FUNCTIONS --------------------------------------------------------------
 
         void draw_window_menu(megamol::core::CoreInstance* core_instance);
-        void draw_window_module_list(float width, float height);
+        void draw_window_module_list(float width, float height, bool apply_focus);
 
         void drawPopUps(megamol::core::CoreInstance* core_instance);
 

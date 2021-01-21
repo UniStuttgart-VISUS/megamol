@@ -146,7 +146,7 @@ namespace gui {
          *
          * @param window_config  The window configuration.
          */
-        void SetWindowSizePosition(WindowConfiguration& window_config);
+        void SetWindowSizePosition(WindowConfiguration& window_config, bool consider_menu);
 
         // --------------------------------------------------------------------
         // CONFIGURATIONs

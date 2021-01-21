@@ -26,7 +26,7 @@ namespace gui {
 
         ~StringSearchWidget(void) = default;
 
-        bool Widget(const std::string& label, const std::string& help);
+        bool Widget(const std::string& label, const std::string& help, bool apply_focus = true);
 
         inline void SetSearchFocus(bool focus) {
             this->search_focus = focus;

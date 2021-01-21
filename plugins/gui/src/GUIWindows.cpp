@@ -10,7 +10,6 @@
  *
  * - Trigger Screenshot:        F2
  * - Toggle Main View:          F3
- * - Reset Windows Positions:   Ctrl + r
  * - Show/hide Windows:         F7-F11
  * - Show/hide Menu:            F12
  * - Search Parameter:          Ctrl  + p
@@ -30,7 +29,7 @@ GUIWindows::GUIWindows(void)
         : core_instance(nullptr)
         , hotkeys()
         , context(nullptr)
-        , initialized_api(GUIImGuiAPI::NONE)
+        , initialized_api(megamol::gui::GUIImGuiAPI::NONE)
         , window_collection()
         , configurator()
         , console()
@@ -48,8 +47,6 @@ GUIWindows::GUIWindows(void)
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F3, core::view::Modifier::NONE), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false};
-    // this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE] = {
-    //    megamol::core::view::KeyCode(megamol::core::view::Key::KEY_R, core::view::Modifier::CTRL), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F12, core::view::Modifier::NONE), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::PARAMETER_SEARCH] = {
@@ -175,7 +172,7 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
 
 bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time) {
 
-    /// [DEPRECATED USAGE] ///
+    /// [DEPRECATED USAGE - only mmconsole] ///
     // Disable GUI drawing if GUIView module is chained
     if (this->state.gui_enabled && ImGui::GetCurrentContext()->WithinFrameScope) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -461,7 +458,6 @@ bool GUIWindows::PostDraw(void) {
 
             // Omit updating size and position of window from imgui for current frame when reset
             bool update_window_by_imgui = !wc.win_set_pos_size;
-            // wc.win_set_pos_size |= this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE].is_pressed;
             bool collapsing_changed = false;
             this->window_sizing_and_positioning(wc, collapsing_changed);
 
@@ -1076,7 +1072,7 @@ bool GUIWindows::createContext(void) {
     bool other_context_exists = (ImGui::GetCurrentContext() != nullptr);
     ImFontAtlas* font_atlas = nullptr;
     ImFont* default_font = nullptr;
-    /// [DEPRECATED USAGE] ///
+    /// [DEPRECATED USAGE - only mmconsole] ///
     if (other_context_exists) {
         ImGuiIO& current_io = ImGui::GetIO();
         font_atlas = current_io.Fonts;
@@ -1262,7 +1258,7 @@ bool GUIWindows::destroyContext(void) {
     if (this->initialized_api != GUIImGuiAPI::NONE) {
         if (this->context != nullptr) {
 
-            /// [DEPRECATED USAGE] ///
+            /// [DEPRECATED USAGE - only mmconsole] ///
             // Shutdown API only if one context is left
             if (megamol::gui::imgui_context_count < 2) {
                 ImGui::SetCurrentContext(this->context);
@@ -1760,15 +1756,6 @@ void GUIWindows::drawMenu(void) {
         };
         this->window_collection.EnumWindows(func);
 
-        // ImGui::Separator();
-        // if (ImGui::MenuItem("Reset Size and Position",
-        //        this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE].keycode.ToString().c_str(),
-        //        nullptr))
-        //        {
-        //    this->hotkeys[GUIWindows::GuiHotkeyIndex::FIT_WINDOWS_POS_SIZE].is_pressed = true;
-        //}
-        // this->tooltip.ToolTip("Reset size and position of all windows to lie within the current viewport.");
-
         ImGui::EndMenu();
     }
 
@@ -2194,8 +2181,9 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
     }
 
     // Apply window position and size
-    if (wc.win_set_pos_size || (this->state.menu_visible && ImGui::IsMouseReleased(0) && ImGui::IsWindowFocused())) {
-        this->window_collection.SetWindowSizePosition(wc);
+    if (wc.win_set_pos_size || (this->state.menu_visible && ImGui::IsMouseReleased(0) &&
+                                   ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))) {
+        this->window_collection.SetWindowSizePosition(wc, this->state.menu_visible);
         wc.win_set_pos_size = false;
     }
 }
