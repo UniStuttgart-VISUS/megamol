@@ -3,6 +3,8 @@
 //#include "owl/common/math/vec.h"
 #include "glm/glm.hpp"
 
+#include "optix.h"
+
 namespace megamol {
 namespace hpg {
     namespace optix {
@@ -25,6 +27,10 @@ namespace hpg {
                 glm::vec3 wo;
                 glm::vec3 beta;
                 float pdf;
+
+                glm::vec3 lpos;
+
+                OptixTraversableHandle world;
             };
         } // namespace device
     }     // namespace optix

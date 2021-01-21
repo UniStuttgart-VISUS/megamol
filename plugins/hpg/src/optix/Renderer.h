@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <limits>
 
 #include "mmcore/Call.h"
@@ -60,7 +61,7 @@ private:
 
     SBTRecord<device::RayGenData> _sbt_raygen_record;
 
-    SBTRecord<device::MissData> _sbt_miss_record;
+    std::array<SBTRecord<device::MissData>, 2> sbt_miss_records_;
 
     MMOptixSBT sbt_;
 
@@ -69,6 +70,8 @@ private:
     MMOptixModule raygen_module_;
 
     MMOptixModule miss_module_;
+
+    MMOptixModule miss_occlusion_module_;
 
     CUdeviceptr _frame_state_buffer;
 

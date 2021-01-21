@@ -14,6 +14,10 @@ namespace hpg {
 
                 prd.radiance = glm::vec3(self.bg);*/
             }
+
+            MM_OPTIX_MISS_KERNEL(miss_program_occlusion)() {
+
+            }
         } // namespace device
     }     // namespace optix
 } // namespace hpg

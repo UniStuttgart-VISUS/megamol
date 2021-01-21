@@ -38,9 +38,12 @@ void megamol::hpg::optix::Renderer::setup(CallContext& ctx) {
         ctx.get_pipeline_options(), OPTIX_PROGRAM_GROUP_KIND_RAYGEN, {"raygen_program"});
     miss_module_ = MMOptixModule(embedded_miss_programs, ctx.get_ctx(), ctx.get_module_options(),
         ctx.get_pipeline_options(), OPTIX_PROGRAM_GROUP_KIND_MISS, {"miss_program"});
+    miss_occlusion_module_ = MMOptixModule(embedded_miss_programs, ctx.get_ctx(), ctx.get_module_options(),
+        ctx.get_pipeline_options(), OPTIX_PROGRAM_GROUP_KIND_MISS, {"miss_program_occlusion"});
 
     OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(raygen_module_, &_sbt_raygen_record));
-    OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(miss_module_, &_sbt_miss_record));
+    OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(miss_module_, &sbt_miss_records_[0]));
+    OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(miss_occlusion_module_, &sbt_miss_records_[1]));
 
     CUDA_CHECK_ERROR(cuMemAlloc(&_frame_state_buffer, sizeof(device::FrameState)));
 
@@ -162,7 +165,7 @@ bool megamol::hpg::optix::Renderer::Render(core::view::CallRender3D_2& call) {
 
     auto bg_col = call.BackgroundColor();
     _frame_state.background = glm::vec4(bg_col.x, bg_col.y, bg_col.z, bg_col.w);
-    _sbt_miss_record.data.bg = _frame_state.background; // TODO proper update
+    sbt_miss_records_[0].data.bg = _frame_state.background; // TODO proper update
 
     CUDA_CHECK_ERROR(
         cuMemcpyHtoDAsync(_frame_state_buffer, &_frame_state, sizeof(_frame_state), in_ctx->get_exec_stream()));
@@ -205,9 +208,9 @@ bool megamol::hpg::optix::Renderer::Render(core::view::CallRender3D_2& call) {
     }
 
     if (rebuild_sbt) {
-        sbt_.SetSBT(&_sbt_raygen_record, sizeof(_sbt_raygen_record), nullptr, 0, &_sbt_miss_record,
-            sizeof(_sbt_miss_record), 1, in_geo->get_record(), in_geo->get_record_stride(), in_geo->get_num_records(),
-            nullptr, 0, 0, in_ctx->get_exec_stream());
+        sbt_.SetSBT(&_sbt_raygen_record, sizeof(_sbt_raygen_record), nullptr, 0, sbt_miss_records_.data(),
+            sizeof(SBTRecord<device::MissData>), sbt_miss_records_.size(), in_geo->get_record(),
+            in_geo->get_record_stride(), in_geo->get_num_records(), nullptr, 0, 0, in_ctx->get_exec_stream());
     }
 
     OPTIX_CHECK_ERROR(

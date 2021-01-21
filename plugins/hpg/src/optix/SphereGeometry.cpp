@@ -63,6 +63,8 @@ void megamol::hpg::optix::SphereGeometry::release() {
 void megamol::hpg::optix::SphereGeometry::init(CallContext& ctx) {
     sphere_module_ = MMOptixModule(embedded_sphere_programs, ctx.get_ctx(), ctx.get_module_options(),
         ctx.get_pipeline_options(), OPTIX_PROGRAM_GROUP_KIND_HITGROUP, {"sphere_intersect", "sphere_closesthit"});
+    sphere_occlusion_module_ = MMOptixModule(embedded_sphere_programs, ctx.get_ctx(), ctx.get_module_options(),
+        ctx.get_pipeline_options(), OPTIX_PROGRAM_GROUP_KIND_HITGROUP, {"sphere_intersect", "sphere_closesthit_occlusion"});
 
     // OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(sphere_module_, &_sbt_record));
 }
@@ -176,6 +178,12 @@ bool megamol::hpg::optix::SphereGeometry::assertData(core::moldyn::MultiParticle
             sbt_record.data.colorBufferPtr = (glm::vec4*) color_data_[pl_idx];
         }
         sbt_records_.push_back(sbt_record);
+
+        // occlusion stuff
+        SBTRecord<device::SphereGeoData> sbt_record_occlusion;
+        OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(sphere_occlusion_module_, &sbt_record_occlusion));
+        sbt_record_occlusion.data = sbt_record.data;
+        sbt_records_.push_back(sbt_record_occlusion);
     }
 
     OptixAccelBuildOptions accelOptions = {};

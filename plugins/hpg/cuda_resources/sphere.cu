@@ -8,7 +8,7 @@
 
 #include "hpg/optix/random.h"
 
-//using namespace owl;
+// using namespace owl;
 
 #define MMO_PI 3.14159265358979323f
 
@@ -45,7 +45,7 @@ namespace hpg {
             }
 
             MM_OPTIX_INTERSECTION_KERNEL(sphere_intersect)() {
-                //printf("ISEC\n");
+                // printf("ISEC\n");
 
                 const int primID = optixGetPrimitiveIndex();
 
@@ -60,8 +60,6 @@ namespace hpg {
                     optixReportIntersection(tmp_hit_t, 0);
                 }
             }
-
-
 
 
             // Optix SDK
@@ -93,7 +91,8 @@ namespace hpg {
                 glm::vec3 m_normal;
             };
 
-            static __forceinline__ __device__ void cosine_sample_hemisphere(const float u1, const float u2, glm::vec3& p) {
+            static __forceinline__ __device__ void cosine_sample_hemisphere(
+                const float u1, const float u2, glm::vec3& p) {
                 // Uniformly sample disk.
                 const float r = sqrtf(u1);
                 const float phi = 2.0f * MMO_PI * u2;
@@ -105,11 +104,10 @@ namespace hpg {
             }
 
 
-
             // https://github.com/knightcrawler25/Optix-PathTracer
 
             inline __device__ void Pdf(glm::vec3 const& n, PerRayData& prd) {
-                //float3 n = state.ffnormal;
+                // float3 n = state.ffnormal;
                 auto L = prd.bsdfDir;
 
                 float pdfDiff = abs(dot(L, n)) * (1.0f / MMO_PI);
@@ -118,7 +116,7 @@ namespace hpg {
             }
 
             inline __device__ void Sample(glm::vec3 const& N, glm::vec3 const& hp, PerRayData& prd) {
-                //float3 N = state.ffnormal;
+                // float3 N = state.ffnormal;
                 prd.origin = hp;
 
                 glm::vec3 dir;
@@ -136,7 +134,7 @@ namespace hpg {
 
 
             inline __device__ glm::vec3 Eval(glm::vec3 const& N, glm::vec4 const& col, PerRayData& prd) {
-                //float3 N = state.ffnormal;
+                // float3 N = state.ffnormal;
                 auto V = prd.wo;
                 auto L = prd.bsdfDir;
 
@@ -151,6 +149,36 @@ namespace hpg {
             }
 
 
+            inline __device__ float powerHeuristic(float fpdf, float gpdf) {
+                return (fpdf * fpdf) / (fpdf * fpdf + gpdf * gpdf);
+            }
+
+
+            inline __device__ glm::vec3 DirectLight(
+                glm::vec3 const& light_pos, glm::vec3 const& P, glm::vec3 const& N, PerRayData& prd) {
+                const float Ldist = length(light_pos - P);
+                const glm::vec3 L = normalize(light_pos - P);
+                const float nDl = dot(N, L);
+
+                float3 org = make_float3(P.x, P.y, P.z);
+                float3 dir = make_float3(L.x, L.y, L.z);
+
+                if (nDl > 0.0f) {
+                    unsigned int occluded = 0;
+                    optixTrace(prd.world, org, dir, 0.01f, Ldist - 0.01f, 0.0f, (OptixVisibilityMask) -1,
+                        OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT, 1, 2, 1, occluded);
+                    if (!occluded) {
+                        float lightPdf = (Ldist * Ldist) / (nDl);
+                        prd.bsdfDir = L;
+                        auto f = Eval(-L, glm::vec4(1.0f), prd);
+
+                        return powerHeuristic(lightPdf, prd.pdf) * prd.beta * f * glm::vec3(1.0f) / lightPdf;
+                    }
+                }
+
+                return glm::vec3(0.0f);
+            }
+
 
             MM_OPTIX_CLOSESTHIT_KERNEL(sphere_closesthit)() {
                 const int primID = optixGetPrimitiveIndex();
@@ -160,16 +188,17 @@ namespace hpg {
 
                 const auto& self = getProgramData<SphereGeoData>();
 
-                Ray ray(
-                    optixGetWorldRayOrigin(), optixGetWorldRayDirection(), optixGetRayTmin(), optixGetRayTmax());
+                Ray ray(optixGetWorldRayOrigin(), optixGetWorldRayDirection(), optixGetRayTmin(), optixGetRayTmax());
 
 
                 const Particle& particle = self.particleBufferPtr[primID];
                 glm::vec3 hp = ray.origin + prd.t * ray.direction;
                 glm::vec3 N = hp - glm::vec3(particle.pos);
 
-                prd.radiance += glm::vec3(0.1f) * prd.beta;
-                
+                prd.radiance += glm::vec3(0.2f) * prd.beta;
+
+                prd.radiance += DirectLight(prd.lpos, hp, N, prd);
+
                 Sample(N, hp, prd);
                 Pdf(N, prd);
 
@@ -194,6 +223,14 @@ namespace hpg {
                     prd.albedo = self.globalColor;
                 }*/
             }
+
+
+            MM_OPTIX_CLOSESTHIT_KERNEL(sphere_closesthit_occlusion)() {
+                /*PerRayData& prd = getPerRayData<PerRayData>();
+                prd.inShadow = true;*/
+                optixSetPayload_0(1);
+            }
+
 
             MM_OPTIX_BOUNDS_KERNEL(sphere_bounds)(const void* geomData, box3f& primBounds, const unsigned int primID) {
                 /*const SphereGeoData& self = *(const SphereGeoData*) geomData;

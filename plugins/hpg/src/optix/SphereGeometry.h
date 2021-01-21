@@ -57,6 +57,8 @@ private:
 
     MMOptixModule sphere_module_;
 
+    MMOptixModule sphere_occlusion_module_;
+
     std::vector<SBTRecord<device::SphereGeoData>> sbt_records_;
 
     CUdeviceptr _geo_buffer = 0;

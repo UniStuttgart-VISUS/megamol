@@ -37,10 +37,10 @@ namespace hpg {
                         ray.tmax, 0, (OptixVisibilityMask) -1,
                         /*rayFlags     */ OPTIX_RAY_FLAG_DISABLE_ANYHIT,
                         /*SBToffset    */ 0,
-                        /*SBTstride    */ 1,
+                        /*SBTstride    */ 2,
                         /*missSBTIndex */ 0, p0, p1);
 
-                    if (prd.done || prd.depth >= 2)
+                    if (prd.done || prd.depth >= 4)
                         break;
 
                     ++prd.depth;
@@ -52,16 +52,16 @@ namespace hpg {
                 return glm::vec4(prd.radiance, 1.0f);
 
 
-                if (prd.primID == -1) {
-                    // miss...
-                    // return attenuation * ambientLight;
-                    return bg;
-                }
+                //if (prd.primID == -1) {
+                //    // miss...
+                //    // return attenuation * ambientLight;
+                //    return bg;
+                //}
 
-                // const glm::vec4 albedo(0.f, 1.f, 0.f, 1.f);
-                const glm::vec4 albedo = prd.albedo;
-                auto const factor = (.2f + .6f * fabsf(glm::dot(prd.N, ray.direction)));
-                return albedo * glm::vec4(factor, factor, factor, 1.f);
+                //// const glm::vec4 albedo(0.f, 1.f, 0.f, 1.f);
+                //const glm::vec4 albedo = prd.albedo;
+                //auto const factor = (.2f + .6f * fabsf(glm::dot(prd.N, ray.direction)));
+                //return albedo * glm::vec4(factor, factor, factor, 1.f);
             }
 
             MM_OPTIX_RAYGEN_KERNEL(raygen_program)() {
@@ -98,6 +98,8 @@ namespace hpg {
                 prd.origin = glm::vec3(0.0f);
                 prd.bsdfDir = glm::vec3(0.0f);
 
+                 prd.world = self.world;
+
 
                 // Random rnd(pixelIdx, 0);
 
@@ -106,6 +108,8 @@ namespace hpg {
                 /*float u = -fs->rw + (fs->rw + fs->rw) * float(pixelID.x) / self.fbSize.x;
                 float v = -(fs->th + (-fs->th - fs->th) * float(pixelID.y) / self.fbSize.y);*/
                 auto ray = generateRay(*fs, u, v);
+
+                prd.lpos = ray.origin;
 
                 col = traceRay(self, ray /*, rnd*/, prd, bg);
 
