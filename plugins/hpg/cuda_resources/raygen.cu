@@ -4,17 +4,17 @@
 #include "camera.h"
 #include "raygen.h"
 
-#include "hpg/optix/utils_device.h"
 #include "hpg/optix/random.h"
+#include "hpg/optix/utils_device.h"
 
 namespace megamol {
 namespace hpg {
     namespace optix {
         namespace device {
-            //using Random = owl::common::LCG<>;
+            // using Random = owl::common::LCG<>;
 
             inline __device__ glm::vec4 traceRay(
-                const RayGenData& self, Ray& ray/*, Random& rnd*/, PerRayData& prd, glm::vec4& bg) {
+                const RayGenData& self, Ray& ray /*, Random& rnd*/, PerRayData& prd, glm::vec4& bg) {
                 glm::vec4 attenuation = glm::vec4(1.f);
                 glm::vec4 ambientLight(.8f, .8f, .8f, 1.f);
 
@@ -22,8 +22,8 @@ namespace hpg {
 
                 // printf("TRACE: ray %f %f %f %f %f %f\n", ray.origin.x, ray.origin.y, ray.origin.z, ray.direction.x,
                 // ray.direction.y, ray.direction.z);
-                
-                //owl::traceRay(/*accel to trace against*/ self.world,
+
+                // owl::traceRay(/*accel to trace against*/ self.world,
                 //    /*the ray to trace*/ ray,
                 //    /*prd*/ prd, OPTIX_RAY_FLAG_DISABLE_ANYHIT);
 
@@ -31,12 +31,26 @@ namespace hpg {
                 unsigned int p1 = 0;
                 packPointer(&prd, p0, p1);
 
-                optixTrace(self.world, (const float3&) ray.origin, (const float3&) ray.direction, ray.tmin, ray.tmax,
-                    0, (OptixVisibilityMask) -1,
-                    /*rayFlags     */ OPTIX_RAY_FLAG_DISABLE_ANYHIT,
-                    /*SBToffset    */ 0,
-                    /*SBTstride    */ 1,
-                    /*missSBTIndex */ 0, p0, p1);
+                for (;;) {
+                    prd.wo = -ray.direction;
+                    optixTrace(self.world, (const float3&) ray.origin, (const float3&) ray.direction, ray.tmin,
+                        ray.tmax, 0, (OptixVisibilityMask) -1,
+                        /*rayFlags     */ OPTIX_RAY_FLAG_DISABLE_ANYHIT,
+                        /*SBToffset    */ 0,
+                        /*SBTstride    */ 1,
+                        /*missSBTIndex */ 0, p0, p1);
+
+                    if (prd.done || prd.depth >= 2)
+                        break;
+
+                    ++prd.depth;
+
+                    ray.origin = prd.origin;
+                    ray.direction = prd.bsdfDir;
+                }
+
+                return glm::vec4(prd.radiance, 1.0f);
+
 
                 if (prd.primID == -1) {
                     // miss...
@@ -44,20 +58,19 @@ namespace hpg {
                     return bg;
                 }
 
-                //const glm::vec4 albedo(0.f, 1.f, 0.f, 1.f);
+                // const glm::vec4 albedo(0.f, 1.f, 0.f, 1.f);
                 const glm::vec4 albedo = prd.albedo;
-                auto const factor =
-                    (.2f + .6f * fabsf(glm::dot(prd.N, ray.direction)));
+                auto const factor = (.2f + .6f * fabsf(glm::dot(prd.N, ray.direction)));
                 return albedo * glm::vec4(factor, factor, factor, 1.f);
             }
 
             MM_OPTIX_RAYGEN_KERNEL(raygen_program)() {
-                //printf("RAYGEN1\n");
+                // printf("RAYGEN1\n");
                 const RayGenData& self = getProgramData<RayGenData>();
                 auto const index = optixGetLaunchIndex();
                 glm::ivec2 pixelID = glm::ivec2(index.x, index.y);
-                //const owl::vec2i pixelID = owl::getLaunchIndex();
-                //const owl::vec2i launchDim = owl::getLaunchDims();
+                // const owl::vec2i pixelID = owl::getLaunchIndex();
+                // const owl::vec2i launchDim = owl::getLaunchDims();
 
                 unsigned int seed = tea<4>(pixelID.y * 42 + pixelID.x, 42);
 
@@ -71,19 +84,32 @@ namespace hpg {
                 glm::vec4 col(0.f);
                 glm::vec4 bg = fs->background;
 
-                //printf("RAYGEN FS %f\n", fs->near);
+                // printf("RAYGEN FS %f\n", fs->near);
 
                 PerRayData prd;
+                prd.seed = seed;
+                prd.depth = 0;
+                prd.done = false;
+                prd.pdf = 0.0f;
 
-                //Random rnd(pixelIdx, 0);
+                prd.beta = glm::vec3(1.0f);
+                prd.radiance = glm::vec3(0.0f);
+
+                prd.origin = glm::vec3(0.0f);
+                prd.bsdfDir = glm::vec3(0.0f);
+
+
+                // Random rnd(pixelIdx, 0);
 
                 float u = -fs->rw + (fs->rw + fs->rw) * float(pixelID.x + rnd(seed)) / self.fbSize.x;
                 float v = -(fs->th + (-fs->th - fs->th) * float(pixelID.y + rnd(seed)) / self.fbSize.y);
                 /*float u = -fs->rw + (fs->rw + fs->rw) * float(pixelID.x) / self.fbSize.x;
                 float v = -(fs->th + (-fs->th - fs->th) * float(pixelID.y) / self.fbSize.y);*/
                 auto ray = generateRay(*fs, u, v);
-                col = traceRay(self, ray/*, rnd*/, prd, bg);
-                //printf("RAYGEN2\n");
+
+                col = traceRay(self, ray /*, rnd*/, prd, bg);
+
+                // printf("RAYGEN2\n");
 
                 // for (int s = 0; s < fs->samplesPerPixel; ++s) {
                 //     float u = -fs->rw + (fs->rw+fs->rw)*float(pixelID.x + rnd())/self.fbSize.x;

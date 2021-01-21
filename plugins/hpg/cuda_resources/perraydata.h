@@ -12,6 +12,19 @@ namespace hpg {
                 float t;
                 glm::vec3 N;
                 glm::vec4 albedo;
+
+                int depth;
+                unsigned int seed;
+
+                bool done;
+                bool inShadow;
+
+                glm::vec3 radiance;
+                glm::vec3 origin;
+                glm::vec3 bsdfDir;
+                glm::vec3 wo;
+                glm::vec3 beta;
+                float pdf;
             };
         } // namespace device
     }     // namespace optix

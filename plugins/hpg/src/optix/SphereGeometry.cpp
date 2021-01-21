@@ -51,6 +51,12 @@ void megamol::hpg::optix::SphereGeometry::release() {
     if (color_data_ != 0) {
         CUDA_CHECK_ERROR(cuMemFree(color_data_));
     }*/
+    for (auto const& el : particle_data_) {
+        CUDA_CHECK_ERROR(cuMemFree(el));
+    }
+    for (auto const& el : color_data_) {
+        CUDA_CHECK_ERROR(cuMemFree(el));
+    }
 }
 
 

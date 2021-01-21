@@ -162,6 +162,7 @@ bool megamol::hpg::optix::Renderer::Render(core::view::CallRender3D_2& call) {
 
     auto bg_col = call.BackgroundColor();
     _frame_state.background = glm::vec4(bg_col.x, bg_col.y, bg_col.z, bg_col.w);
+    _sbt_miss_record.data.bg = _frame_state.background; // TODO proper update
 
     CUDA_CHECK_ERROR(
         cuMemcpyHtoDAsync(_frame_state_buffer, &_frame_state, sizeof(_frame_state), in_ctx->get_exec_stream()));

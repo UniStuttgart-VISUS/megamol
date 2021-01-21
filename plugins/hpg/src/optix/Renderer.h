@@ -17,6 +17,7 @@
 #include "hpg/optix/CallContext.h"
 
 #include "raygen.h"
+#include "miss.h"
 
 #include "SBT.h"
 
@@ -59,7 +60,7 @@ private:
 
     SBTRecord<device::RayGenData> _sbt_raygen_record;
 
-    SBTNullRecord _sbt_miss_record;
+    SBTRecord<device::MissData> _sbt_miss_record;
 
     MMOptixSBT sbt_;
 
