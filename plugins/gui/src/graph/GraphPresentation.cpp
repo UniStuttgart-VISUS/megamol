@@ -223,6 +223,9 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             // Draw -----------------------------
             this->present_menu(inout_graph);
 
+            if (megamol::gui::gui_scaling.PendingChange()) {
+                this->parameter_sidebar_width *= megamol::gui::gui_scaling.TransitonFactor();
+            }
             float graph_width_auto = 0.0f;
             if (this->show_parameter_sidebar) {
                 this->splitter_widget.Widget(
