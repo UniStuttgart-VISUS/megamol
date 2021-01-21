@@ -116,7 +116,7 @@ namespace gui {
     typedef std::shared_ptr<megamol::gui::InterfaceSlot> InterfaceSlotPtr_t;
 
     /** Available ImGui APIs */
-    enum GUIImGuiAPI { NONE, OPEN_GL };
+    enum class GUIImGuiAPI { NONE, OPEN_GL };
 
     /** Hotkey Data Types (exclusively for configurator) */
     enum HotkeyIndex : size_t {
@@ -227,7 +227,7 @@ namespace gui {
         bool global_graph_save;              // out
     } GraphState_t;
 
-    enum HeaderType { MODULE_GROUP, MODULE, PARAMETERG_ROUP };
+    enum class HeaderType { MODULE_GROUP, MODULE, PARAMETERG_ROUP };
 
     /********** Class **********/
 

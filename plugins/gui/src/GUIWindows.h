@@ -217,7 +217,6 @@ namespace gui {
             MENU = 4,
             TOGGLE_MAIN_VIEWS = 5,
             TRIGGER_SCREENSHOT = 6,
-            // FIT_WINDOWS_POS_SIZE = 7,
             INDEX_COUNT = 7
         };
 

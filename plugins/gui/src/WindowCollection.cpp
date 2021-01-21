@@ -13,7 +13,7 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-void WindowCollection::SetWindowSizePosition(WindowConfiguration& window_config) {
+void WindowCollection::SetWindowSizePosition(WindowConfiguration& window_config, bool consider_menu) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
 
@@ -37,6 +37,7 @@ void WindowCollection::SetWindowSizePosition(WindowConfiguration& window_config)
     }
 
     // Snap to viewport
+    /// ImGui automatically moves windows lying outside viewport
     // float win_width = io.DisplaySize.x - (win_pos.x);
     // if (win_width < win_size.x) {
     //    win_pos.x = io.DisplaySize.x - (win_size.x);
@@ -50,7 +51,7 @@ void WindowCollection::SetWindowSizePosition(WindowConfiguration& window_config)
     //}
 
     // Snap window below menu bar
-    if (win_pos.y < y_offset) {
+    if (consider_menu && (win_pos.y < y_offset)) {
         win_pos.y = y_offset;
     }
 
