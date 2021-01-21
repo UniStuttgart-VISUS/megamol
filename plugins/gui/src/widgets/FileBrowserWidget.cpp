@@ -356,9 +356,14 @@ std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string
     if ((in_path_str == "..") || (in_path_str == ".")) {
         stdfs::path return_path = static_cast<stdfs::path>(in_path_str);
         return_path = stdfs::absolute(return_path);
-        if ((in_path_str == "..") && return_path.has_parent_path()) {
+#if (_MSC_VER > 1916) /// XXX Fixed/No more required since VS 2019
+        if (return_path.has_parent_path()) {
             return_path = return_path.parent_path();
+            if ((in_path_str == "..") && return_path.has_parent_path()) {
+                return_path = return_path.parent_path();
+            }
         }
+#endif // _MSC_VER > 1916
         return_path_str = return_path.generic_u8string();
         GUIUtils::Utf8Decode(return_path_str);
     }
