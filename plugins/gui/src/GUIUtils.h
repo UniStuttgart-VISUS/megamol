@@ -104,7 +104,54 @@ namespace gui {
 
     /********** Global ImGui Context Pointer Counter **********/
 
-    extern unsigned int imgui_context_count;
+    // Only accessed by possible multiple instances of GUIWindows
+    extern unsigned int gui_context_count;
+
+
+    /********** Global GUI Scaling Factor **********/
+
+    class GUIWindows;
+
+    class GUIScaling {
+    public:
+        friend class GUIWindows;
+
+        GUIScaling() = default;
+        ~GUIScaling() = default;
+
+        float Get(void) const {
+            return this->scale;
+        }
+
+        float TransitonFactor(void) const {
+            return (this->scale / this->last_scale);
+        }
+
+        bool PendingChange(void) const {
+            return this->pending_change;
+        }
+
+    private:
+        bool ConsumePendingChange(void) {
+            bool current_pending_change = this->pending_change;
+            this->pending_change = false;
+            return current_pending_change;
+        }
+
+        void Set(float s) {
+            this->last_scale = this->scale;
+            this->scale = std::max(1.0f, s);
+            if (this->scale != this->last_scale) {
+                this->pending_change = true;
+            }
+        }
+
+        bool pending_change = false;
+        float scale = 1.0f;
+        float last_scale = 1.0f;
+    };
+
+    extern GUIScaling gui_scaling;
 
 
     /********** Types **********/
@@ -319,13 +366,13 @@ namespace gui {
             std::string header_label = name;
             switch (type) {
             case (megamol::gui::HeaderType::MODULE_GROUP): {
-                header_label = "[Module Group] " + header_label;
+                header_label = "[GROUP] " + header_label;
             } break;
             case (megamol::gui::HeaderType::MODULE): {
-                header_label = "[Module] " + header_label;
+                header_label = "[MODULE] " + header_label;
             } break;
             case (megamol::gui::HeaderType::PARAMETERG_ROUP): {
-                header_label = "[Parameter Group] " + header_label;
+                header_label = "[GROUP] " + header_label;
             } break;
             default:
                 break;

@@ -10,4 +10,6 @@
 
 ImGuiID megamol::gui::gui_generated_uid = 0;
 
-unsigned int megamol::gui::imgui_context_count = 0;
+unsigned int megamol::gui::gui_context_count = 0;
+
+megamol::gui::GUIScaling megamol::gui::gui_scaling;
