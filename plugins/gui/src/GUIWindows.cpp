@@ -1897,7 +1897,7 @@ void GUIWindows::drawMenu(void) {
                 ImGui::PopItemFlag();
                 megamol::gui::GUIUtils::ReadOnlyWigetStyle(false);
                 ImGui::SameLine();
-                ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font filename.");
+                ImGui::TextColored(GUI_COLOR_TEXT_ERROR, "Please enter valid font file name.");
             }
             ImGui::EndGroup();
 

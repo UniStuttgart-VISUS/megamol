@@ -1576,13 +1576,13 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
         if (this->use_external_tf_editor) {
 
             // Editor
-            if (isActive) {
+            if (isActive || (this->tf_editor_external_ptr == nullptr)) {
                 GUIUtils::ReadOnlyWigetStyle(true);
             }
             if (ImGui::Button("Connect")) {
                 retval = true;
             }
-            if (isActive) {
+            if (isActive || (this->tf_editor_external_ptr == nullptr)) {
                 GUIUtils::ReadOnlyWigetStyle(false);
             }
 
@@ -1703,8 +1703,7 @@ bool megamol::gui::ParameterPresentation::widget_knob(
     if (scope == ParameterPresentation::WidgetScope::LOCAL) {
 
         // Draw knob
-        const float knob_size =
-            (1.0f * ImGui::GetTextLineHeightWithSpacing()) + (1.0f * ImGui::GetFrameHeightWithSpacing());
+        const float knob_size = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetFrameHeightWithSpacing();
         if (ParameterPresentation::KnobButton("param_knob", knob_size, value, minval, maxval)) {
             retval = true;
         }

@@ -44,8 +44,8 @@
 /// #define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
-#define GUI_SLOT_RADIUS (8.0f)
-#define GUI_LINE_THICKNESS (3.0f)
+#define GUI_SLOT_RADIUS (8.0f * megamol::gui::gui_scaling.Get())
+#define GUI_LINE_THICKNESS (3.0f * megamol::gui::gui_scaling.Get())
 #define GUI_RECT_CORNER_RADIUS (0.0f)
 #define GUI_MAX_MULITLINE (8)
 #define GUI_DND_CALLSLOT_UID_TYPE ("DND_CALL")

@@ -52,7 +52,8 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
 
             ImGui::OpenPopup(label_id.c_str());
             // Set initial window size of pop up
-            ImGui::SetNextWindowSize(ImVec2(400.0f, 500.0f));
+            ImGui::SetNextWindowSize(
+                ImVec2((400.0f * megamol::gui::gui_scaling.Get()), (500.0f * megamol::gui::gui_scaling.Get())));
         }
 
         bool open = true;
