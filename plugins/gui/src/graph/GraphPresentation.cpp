@@ -735,11 +735,13 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 
 void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_graph) {
 
+    ImGuiStyle& style = ImGui::GetStyle();
     const std::string delimiter("|");
 
     float child_height = ImGui::GetFrameHeightWithSpacing();
     if (this->add_menu_scrollbar_height) {
-        child_height += static_cast<float>(ImGuiStyleVar_ScrollbarSize) * 1.1f; // add small offset
+        child_height += static_cast<float>(ImGuiStyleVar_ScrollbarSize) +
+                        (style.ItemInnerSpacing.y * megamol::gui::gui_scaling.Get()); // why?
     }
     auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_HorizontalScrollbar;
     ImGui::BeginChild("graph_menu", ImVec2(0.0f, child_height), false, child_flags);
@@ -755,7 +757,6 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         }
     }
     // Main View Checkbox
-    ImGuiStyle& style = ImGui::GetStyle();
     const float min_text_width = 3.0f * ImGui::GetFrameHeightWithSpacing();
     if (selected_mod_ptr == nullptr) {
         GUIUtils::ReadOnlyWigetStyle(true);
