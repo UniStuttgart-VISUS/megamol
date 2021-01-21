@@ -606,8 +606,8 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
         ImGuiStyle& style = ImGui::GetStyle();
         float offset_x = 2.0f * style.WindowPadding.x;
         float offset_y = 2.0f * style.WindowPadding.y;
-        float popup_width = 250.0f + offset_x;
-        float popup_height = 350.0f + offset_y;
+        float popup_width = (250.0f * megamol::gui::gui_scaling.Get()) + offset_x;
+        float popup_height = (350.0f * megamol::gui::gui_scaling.Get()) + offset_y;
         std::string pop_up_id = "module_list_child";
         if (!ImGui::IsPopupOpen(pop_up_id.c_str())) {
             ImGui::OpenPopup(pop_up_id.c_str(), ImGuiPopupFlags_None);

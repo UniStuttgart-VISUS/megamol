@@ -249,7 +249,7 @@ void megamol::gui::CallSlotPresentation::Present(
                     tmpcol = ImVec4(tmpcol.x * brightness, tmpcol.y * brightness, tmpcol.z * brightness, tmpcol.w);
                     slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
                 }
-                const float segment_numer = 20.0f;
+                const float segment_numer = (20.0f * megamol::gui::gui_scaling.Get());
                 draw_list->AddCircleFilled(slot_position, radius, slot_background_color, segment_numer);
                 draw_list->AddCircle(slot_position, radius, slot_border_color, segment_numer);
 

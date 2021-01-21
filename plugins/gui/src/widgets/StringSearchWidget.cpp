@@ -41,7 +41,7 @@ bool megamol::gui::StringSearchWidget::Widget(const std::string& id, const std::
     std::string complete_label("Search (?)");
     auto width = ImGui::GetContentRegionAvail().x - ImGui::GetCursorPosX() + 4.0f * style.ItemInnerSpacing.x -
                  ImGui::CalcTextSize(complete_label.c_str()).x;
-    const float min_width = 50.0f;
+    const float min_width = (50.0f * megamol::gui::gui_scaling.Get());
     width = (width < min_width) ? (min_width) : width;
     ImGui::PushItemWidth(width);
     /// XXX: UTF8 conversion and allocation every frame is horrific inefficient.

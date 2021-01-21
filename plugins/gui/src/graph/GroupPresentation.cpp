@@ -349,7 +349,8 @@ void megamol::gui::GroupPresentation::UpdatePositionSize(
         group_height = std::max(group_height, (pos_maxY + GUI_GRAPH_BORDER) - pos_minY);
     }
     // Clamp to minimum size
-    this->size = ImVec2(std::max(group_width, 100.0f), std::max(group_height, 50.0f));
+    this->size = ImVec2(std::max(group_width, (100.0f * megamol::gui::gui_scaling.Get())),
+        std::max(group_height, (50.0f * megamol::gui::gui_scaling.Get())));
 
 
     // Set group interface position of call slots --------------------------

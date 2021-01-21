@@ -739,7 +739,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
 
     float child_height = ImGui::GetFrameHeightWithSpacing();
     if (this->add_menu_scrollbar_height) {
-        child_height += static_cast<float>(ImGuiStyleVar_ScrollbarSize);
+        child_height += static_cast<float>(ImGuiStyleVar_ScrollbarSize) * 1.1f; // add small offset
     }
     auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_HorizontalScrollbar;
     ImGui::BeginChild("graph_menu", ImVec2(0.0f, child_height), false, child_flags);
@@ -1276,7 +1276,7 @@ void megamol::gui::GraphPresentation::present_canvas_grid(void) {
     // Color
     const ImU32 COLOR_GRID = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
 
-    const float GRID_SIZE = 64.0f * this->graph_state.canvas.zooming;
+    const float GRID_SIZE = (64.0f * megamol::gui::gui_scaling.Get()) * this->graph_state.canvas.zooming;
     ImVec2 relative_offset = this->graph_state.canvas.offset - this->graph_state.canvas.position;
 
     for (float x = fmodf(relative_offset.x, GRID_SIZE); x < this->graph_state.canvas.size.x; x += GRID_SIZE) {
@@ -1390,7 +1390,7 @@ void megamol::gui::GraphPresentation::present_canvas_multiselection(Graph& inout
         draw_list->AddRectFilled(multiselect_start_pos, multiselect_end_pos, COLOR_MULTISELECT_BACKGROUND,
             GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All);
 
-        float border = 1.0f;
+        float border = (1.0f * megamol::gui::gui_scaling.Get());
         draw_list->AddRect(multiselect_start_pos, multiselect_end_pos, COLOR_MULTISELECT_BORDER, GUI_RECT_CORNER_RADIUS,
             ImDrawCornerFlags_All, border);
     } else if (this->multiselect_done && ImGui::IsWindowHovered() && ImGui::IsMouseReleased(0)) {
@@ -1656,7 +1656,7 @@ void megamol::gui::GraphPresentation::layout(
 
     // Calculate new position of graph elements
     ImVec2 pos = init_position;
-    float max_call_width = 25.0f;
+    float max_call_width = (25.0f * megamol::gui::gui_scaling.Get());
     float max_graph_element_width = 0.0f;
 
     size_t layer_count = layers.size();
