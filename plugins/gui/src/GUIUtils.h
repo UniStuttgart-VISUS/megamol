@@ -80,11 +80,11 @@ namespace {
 
 bool operator==(const ImVec2& left, const ImVec2& right) {
     return ((left.x == right.x) && (left.y == right.y));
-};
+}
 
 bool operator!=(const ImVec2& left, const ImVec2& right) {
     return !(left == right);
-};
+}
 
 } // namespace
 

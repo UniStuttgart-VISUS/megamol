@@ -159,6 +159,9 @@ bool megamol::gui::Configurator::Draw(
         this->draw_window_menu(core_instance);
 
         // Splitter
+        if (megamol::gui::gui_scaling.PendingChange()) {
+            this->module_list_sidebar_width *= megamol::gui::gui_scaling.TransitonFactor();
+        }
         this->graph_state.graph_width = 0.0f;
         if (this->show_module_list_sidebar) {
             this->splitter_widget.Widget(SplitterWidget::FixedSplitterSide::LEFT, this->module_list_sidebar_width,
