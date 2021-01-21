@@ -4,6 +4,7 @@ uniform int frametype;
 uniform int h;
 uniform int w;
 uniform int approach;
+uniform int ssLevel;
 
 uniform mat4 mMatrices[100];
 
@@ -13,6 +14,7 @@ out vec4 frag_out;
 
 void main()
 {
+    int sSquare = ssLevel * ssLevel;
     int line = int(uv_coord.y * h);
     int col = int(uv_coord.x * w);
     int t = 0;
@@ -31,8 +33,8 @@ void main()
         }  
     }
     vec4 r;
-    for (int i = 0; i < 25; i++){
+    for (int i = 0; i < sSquare; i++){
         r = mMatrices[t + (i * 4)] * p;
-        frag_out += texture(tx2D_array, vec3(0.5 *  r.xy + vec2(0.5), t + (i*4))) / 25;
+        frag_out += texture(tx2D_array, vec3(0.5 *  r.xy + vec2(0.5), t + (i*4))) / sSquare;
     }
 }

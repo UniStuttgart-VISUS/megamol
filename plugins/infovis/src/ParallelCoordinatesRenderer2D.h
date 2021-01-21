@@ -293,6 +293,7 @@ namespace infovis {
         core::param::ParamSlot halveRes;
 
         core::param::ParamSlot approachSlot;
+        core::param::ParamSlot superSamplingLevelSlot;
         core::param::ParamSlot testingFloat;
         core::param::ParamSlot thicknessFloatP;
         core::param::ParamSlot legacyMode;

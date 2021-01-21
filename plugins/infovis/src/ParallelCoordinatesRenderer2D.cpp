@@ -65,6 +65,7 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
         , filterStateSlot("filterState", "stores filter state for serialization")
         , halveRes("halve Resolution", "halve Resolution for FPS test")
         , approachSlot("Approach", "Numerical Value assigned to each temporal reconstruction approach")
+        , superSamplingLevelSlot("SupersamplingLevel", "Level of Supersampling Quality")
         , testingFloat("testingFloat", "Float for passing Test Values")
         , thicknessFloatP("thickness", "Float value to incease line thickness")
         , legacyMode("LegacyMode", "Enables old Line Rendering mode with Bresenham Algorithm")
@@ -180,6 +181,9 @@ ParallelCoordinatesRenderer2D::ParallelCoordinatesRenderer2D(void)
 
     this->approachSlot << new core::param::IntParam(0);
     this->MakeSlotAvailable(&approachSlot);
+
+    this->superSamplingLevelSlot << new core::param::IntParam(1);
+    this->MakeSlotAvailable(&superSamplingLevelSlot);
 
     this->testingFloat << new core::param::FloatParam(1.0);
     this->MakeSlotAvailable(&testingFloat);
@@ -1130,6 +1134,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     int h = call.GetViewport().Height();
     res[0] = 1.0 * w;
     res[1] = 1.0 * h;
+    int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
+
 
     windowWidth = call.GetViewport().Width();
     windowHeight = call.GetViewport().Height();
@@ -1171,7 +1177,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                 mvm[j][i] = modelViewMatrix_column[i + j * 4];
             }
         }
-        auto pmvm = pm * mvm;       
+        auto pmvm = pm * mvm;
 
         invMatrices[frametype] = pmvm;
 
@@ -1180,12 +1186,12 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glm::mat4 inversePMVM = glm::inverse(pmvm);
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * inversePMVM;
-            //moveMatrices[i] = glm::mat4(1.0);
+        // moveMatrices[i] = glm::mat4(1.0);
 
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
         glActiveTexture(GL_TEXTURE11);
         glEnable(GL_MULTISAMPLE);
-        
+
         if (frametype == 0) {
             glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
             glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 2, GL_RGBA8, w, h, 2, GL_TRUE);
@@ -1264,7 +1270,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
-            //moveMatrices[i] = glm::mat4(1.0);
+        // moveMatrices[i] = glm::mat4(1.0);
 
 
         pm = jit * pm;
@@ -1338,8 +1344,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         invMatrices[frametype] = jit * pmvm;
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
-            //moveMatrices[i] = glm::mat4(1.0);
-        
+        // moveMatrices[i] = glm::mat4(1.0);
 
 
         pm = jit * pm;
@@ -1370,7 +1375,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     }
 
     if (approach == 3 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
-        framesNeeded = 100;
+        framesNeeded = 4 * ssLevel * ssLevel;
         w = w / 2;
         h = h / 2;
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
@@ -1378,7 +1383,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
         glActiveTexture(GL_TEXTURE10);
         glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4 * 25, 0, GL_RGB, GL_FLOAT, 0);
+        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4 * ssLevel * ssLevel, 0, GL_RGB, GL_FLOAT, 0);
 
         glm::mat4 pm;
         for (int i = 0; i < 4; i++) {
@@ -1398,29 +1403,33 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glm::mat4 pmvm = pm * mvm;
         int f = floor(frametype / 4);
         if (frametype % 4 == 0) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2) / 5 - 1.0) / call.GetViewport().Width(),
-                                                      ((floor(f / 5) - 2) / 5 + 1.0) / call.GetViewport().Height(), 0));
+            jit = glm::translate(glm::mat4(1.0f),
+                glm::vec3((((f % ssLevel) - ssLevel / 2) / ssLevel - 1.0) / call.GetViewport().Width(),
+                    ((floor(f / ssLevel) - ssLevel / 2) / ssLevel + 1.0) / call.GetViewport().Height(), 0));
             invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(),
                                                                          1.0 / call.GetViewport().Height(), 0)) *
                                      pmvm;
         }
         if (frametype % 4 == 1) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2) / 5 + 1.0) / call.GetViewport().Width(),
-                                                      ((floor(f / 5) - 2) / 5 + 1.0) / call.GetViewport().Height(), 0));
+            jit = glm::translate(glm::mat4(1.0f),
+                glm::vec3((((f % ssLevel) - ssLevel / 2) / ssLevel + 1.0) / call.GetViewport().Width(),
+                    ((floor(f / ssLevel) - ssLevel / 2) / ssLevel + 1.0) / call.GetViewport().Height(), 0));
             invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(),
                                                                          1.0 / call.GetViewport().Height(), 0)) *
                                      pmvm;
         }
         if (frametype % 4 == 2) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2) / 5 - 1.0) / call.GetViewport().Width(),
-                                                      ((floor(f / 5) - 2) / 5 - 1.0) / call.GetViewport().Height(), 0));
+            jit = glm::translate(glm::mat4(1.0f),
+                glm::vec3((((f % ssLevel) - ssLevel / 2) / ssLevel - 1.0) / call.GetViewport().Width(),
+                    ((floor(f / ssLevel) - ssLevel / 2) / ssLevel - 1.0) / call.GetViewport().Height(), 0));
             invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(),
                                                                          -1.0 / call.GetViewport().Height(), 0)) *
                                      pmvm;
         }
         if (frametype % 4 == 3) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3((((f % 5) - 2) / 5 + 1.0) / call.GetViewport().Width(),
-                                                      ((floor(f / 5) - 2) / 5 - 1.0) / call.GetViewport().Height(), 0));
+            jit = glm::translate(glm::mat4(1.0f),
+                glm::vec3((((f % ssLevel) - ssLevel / 2) / ssLevel + 1.0) / call.GetViewport().Width(),
+                    ((floor(f / ssLevel) - ssLevel / 2) / ssLevel - 1.0) / call.GetViewport().Height(), 0));
             invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(),
                                                                          -1.0 / call.GetViewport().Height(), 0)) *
                                      pmvm;
@@ -1428,7 +1437,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glm::mat4 invM = glm::inverse(pmvm);
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * invM;
-            //moveMatrices[i] = glm::mat4(1.0);
+        // moveMatrices[i] = glm::mat4(1.0);
 
         pm = jit * pm;
         for (int i = 0; i < 16; i++)
@@ -1778,9 +1787,10 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(pc_reconstruction3_shdr->ParameterLocation("w"), call.GetViewport().Width());
         glUniform1i(pc_reconstruction3_shdr->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction3_shdr->ParameterLocation("frametype"), frametype);
+        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("ssLevel"), ssLevel);
 
         glUniformMatrix4fv(
-            pc_reconstruction3_shdr->ParameterLocation("mMatrices"), 100, GL_FALSE, &moveMatrices[0][0][0]);
+            pc_reconstruction3_shdr->ParameterLocation("mMatrices"), framesNeeded, GL_FALSE, &moveMatrices[0][0][0]);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction3_shdr->Disable();
