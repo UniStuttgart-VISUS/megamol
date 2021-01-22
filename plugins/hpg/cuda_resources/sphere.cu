@@ -8,18 +8,18 @@
 
 #include "hpg/optix/random.h"
 
-// using namespace owl;
+#include "glm/gtx/component_wise.hpp"
 
-#define MMO_PI 3.14159265358979323f
+// using namespace owl;
 
 namespace megamol {
 namespace hpg {
     namespace optix {
         namespace device {
-            inline __device__ bool intersectSphere(
-                const Particle& particle, const float particleRadius, const Ray& ray, float& hit_t) {
+            inline __device__ void intersectSphere(
+                const Particle& particle, const float particleRadius, const Ray& ray) {
                 // Raytracing Gems Intersection Code (Chapter 7)
-                glm::vec3 pos = glm::vec3(particle.pos);
+                const glm::vec3 pos = glm::vec3(particle.pos);
                 const glm::vec3 oc = ray.origin - pos;
                 const float sqrRad = particleRadius * particleRadius;
 
@@ -29,17 +29,15 @@ namespace hpg {
                 const float delta = sqrRad - glm::dot(temp, temp);
 
                 if (delta < 0.0f)
-                    return false;
+                    return;
 
                 const float c = glm::dot(oc, oc) - sqrRad;
-                const float sign = signbit(b) ? 1.0f : -1.0f;
-                const float q = b + sign * sqrtf(delta);
+                const float q = b + copysignf(sqrtf(delta), b);
 
                 {
-                    float temp = fminf(c / q, q);
-                    if (temp < hit_t && temp > ray.tmin) {
-                        hit_t = temp;
-                        return true;
+                    const float t = fminf(c / q, q);
+                    if (t > ray.tmin && t < ray.tmax) {
+                        optixReportIntersection(t, 0);
                     }
                 }
             }
@@ -51,14 +49,15 @@ namespace hpg {
 
                 const auto& self = getProgramData<SphereGeoData>();
 
-                auto ray =
+                auto const ray =
                     Ray(optixGetWorldRayOrigin(), optixGetWorldRayDirection(), optixGetRayTmin(), optixGetRayTmax());
 
                 const Particle& particle = self.particleBufferPtr[primID];
-                float tmp_hit_t = ray.tmax;
-                if (intersectSphere(particle, particle.pos.w, ray, tmp_hit_t)) {
+                // float tmp_hit_t = ray.tmax;
+                /*if (intersectSphere(particle, particle.pos.w, ray, tmp_hit_t)) {
                     optixReportIntersection(tmp_hit_t, 0);
-                }
+                }*/
+                intersectSphere(particle, particle.pos.w, ray);
             }
 
 
@@ -104,87 +103,153 @@ namespace hpg {
             }
 
 
-            // https://github.com/knightcrawler25/Optix-PathTracer
+            //// https://github.com/knightcrawler25/Optix-PathTracer
 
-            inline __device__ void Pdf(glm::vec3 const& n, PerRayData& prd) {
-                // float3 n = state.ffnormal;
-                auto L = prd.bsdfDir;
+            // inline __device__ void Pdf(glm::vec3 const& n, PerRayData& prd) {
+            //    // float3 n = state.ffnormal;
+            //    auto L = prd.bsdfDir;
 
-                float pdfDiff = abs(dot(L, n)) * (1.0f / MMO_PI);
+            //    float pdfDiff = abs(dot(L, n)) * (1.0f / MMO_PI);
 
-                prd.pdf = pdfDiff;
-            }
+            //    prd.pdf = pdfDiff;
+            //}
 
-            inline __device__ void Sample(glm::vec3 const& N, glm::vec3 const& hp, PerRayData& prd) {
-                // float3 N = state.ffnormal;
-                prd.origin = hp;
+            // inline __device__ void Sample(glm::vec3 const& N, glm::vec3 const& hp, PerRayData& prd) {
+            //    // float3 N = state.ffnormal;
+            //    prd.origin = hp;
 
-                glm::vec3 dir;
+            //    glm::vec3 dir;
 
-                float r1 = rnd(prd.seed);
-                float r2 = rnd(prd.seed);
+            //    float r1 = rnd(prd.seed);
+            //    float r2 = rnd(prd.seed);
 
-                Onb onb(N);
+            //    Onb onb(N);
 
-                cosine_sample_hemisphere(r1, r2, dir);
-                onb.inverse_transform(dir);
+            //    cosine_sample_hemisphere(r1, r2, dir);
+            //    onb.inverse_transform(dir);
 
-                prd.bsdfDir = dir;
-            }
-
-
-            inline __device__ glm::vec3 Eval(glm::vec3 const& N, glm::vec4 const& col, PerRayData& prd) {
-                // float3 N = state.ffnormal;
-                auto V = prd.wo;
-                auto L = prd.bsdfDir;
-
-                float NDotL = dot(N, L);
-                float NDotV = dot(N, V);
-                if (NDotL <= 0.0f || NDotV <= 0.0f)
-                    return glm::vec3(0.0f);
-
-                glm::vec3 out = (1.0f / MMO_PI) * glm::vec3(col);
-
-                return out * glm::clamp(glm::dot(N, L), 0.0f, 1.0f);
-            }
+            //    prd.bsdfDir = dir;
+            //}
 
 
-            inline __device__ float powerHeuristic(float fpdf, float gpdf) {
-                return (fpdf * fpdf) / (fpdf * fpdf + gpdf * gpdf);
-            }
+            // inline __device__ glm::vec3 Eval(glm::vec3 const& N, glm::vec4 const& col, PerRayData& prd) {
+            //    // float3 N = state.ffnormal;
+            //    auto V = prd.wo;
+            //    auto L = prd.bsdfDir;
+
+            //    float NDotL = dot(N, L);
+            //    float NDotV = dot(N, V);
+            //    if (NDotL <= 0.0f || NDotV <= 0.0f)
+            //        return glm::vec3(0.0f);
+
+            //    glm::vec3 out = (1.0f / MMO_PI) * glm::vec3(col);
+
+            //    return out * glm::clamp(glm::dot(N, L), 0.0f, 1.0f);
+            //}
 
 
-            inline __device__ glm::vec3 DirectLight(
-                glm::vec3 const& light_pos, glm::vec3 const& P, glm::vec3 const& N, PerRayData& prd) {
-                const float Ldist = length(light_pos - P);
-                const glm::vec3 L = normalize(light_pos - P);
-                const float nDl = dot(N, L);
+            // inline __device__ float powerHeuristic(float fpdf, float gpdf) {
+            //    return (fpdf * fpdf) / (fpdf * fpdf + gpdf * gpdf);
+            //}
 
-                float3 org = make_float3(P.x, P.y, P.z);
-                float3 dir = make_float3(L.x, L.y, L.z);
 
+            // inline __device__ glm::vec3 DirectLight(
+            //    glm::vec3 const& light_pos, glm::vec3 const& P, glm::vec3 const& N, PerRayData& prd) {
+            //    const float Ldist = length(light_pos - P);
+            //    const glm::vec3 L = normalize(light_pos - P);
+            //    const float nDl = dot(N, L);
+
+            //    float3 org = make_float3(P.x, P.y, P.z);
+            //    float3 dir = make_float3(L.x, L.y, L.z);
+
+            //    if (nDl > 0.0f) {
+            //        unsigned int occluded = 0;
+            //        optixTrace(prd.world, org, dir, 0.01f, Ldist - 0.01f, 0.0f, (OptixVisibilityMask) -1,
+            //            OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT, 1, 2, 1, occluded);
+            //        if (!occluded) {
+            //            float lightPdf = (Ldist * Ldist) / (nDl);
+            //            prd.bsdfDir = L;
+            //            auto f = Eval(-L, glm::vec4(1.0f), prd);
+
+            //            return powerHeuristic(lightPdf, prd.pdf) * prd.beta * f * glm::vec3(1.0f) / lightPdf;
+            //        }
+            //    }
+
+            //    return glm::vec3(0.0f);
+            //}
+
+
+            inline __device__ void phong(glm::vec3 const& Kd, glm::vec3 const& Ka, glm::vec3 const& Ks,
+                glm::vec3 const& Kr, float exp, glm::vec3 const& N, Ray const& ray, PerRayData& prd) {
+                glm::vec3 P = ray.origin + ray.tmax * ray.direction;
+
+                // ambient contribution
+                glm::vec3 result = Ka * glm::vec3(0.1f);
+
+                // compute direct lighting
+                auto const lpos = prd.lpos;
+                float Ldist = length(lpos - P);
+                glm::vec3 L = normalize(lpos - P);
+                float nDl = dot(N, L);
+
+                /*printf("TEST1 %f %f %f\n", lpos.x, lpos.y, lpos.z);
+                printf("TEST2 %f %f %f\n", P.x, P.y, P.z);*/
+
+                // cast shadow ray
+                glm::vec3 light_attenuation = glm::vec3(static_cast<float>(nDl > 0.0f));
+                unsigned int occluded = 0;
                 if (nDl > 0.0f) {
-                    unsigned int occluded = 0;
-                    optixTrace(prd.world, org, dir, 0.01f, Ldist - 0.01f, 0.0f, (OptixVisibilityMask) -1,
+                    float3 Pn = make_float3(P.x, P.y, P.z);
+                    float3 Ln = make_float3(L.x, L.y, L.z);
+                    optixTrace(prd.world, Pn, Ln, 0.01f, Ldist - 0.01f, 0.0f, OptixVisibilityMask(-1),
                         OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT, 1, 2, 1, occluded);
-                    if (!occluded) {
-                        float lightPdf = (Ldist * Ldist) / (nDl);
-                        prd.bsdfDir = L;
-                        auto f = Eval(-L, glm::vec4(1.0f), prd);
-
-                        return powerHeuristic(lightPdf, prd.pdf) * prd.beta * f * glm::vec3(1.0f) / lightPdf;
+                    if (occluded) {
+                        light_attenuation = glm::vec3(0.f);
                     }
                 }
 
-                return glm::vec3(0.0f);
+                // If not completely shadowed, light the hit point
+                if (glm::compMax(light_attenuation) > 0.f) {
+                    glm::vec3 Lc = glm::vec3(0.4f) * light_attenuation;
+
+                    result += Kd * nDl * Lc;
+
+                    glm::vec3 H = normalize(L - ray.direction);
+                    float nDh = dot(N, H);
+                    if (nDh > 0) {
+                        float power = pow(nDh, exp);
+                        result += Ks * power * Lc;
+                    }
+                }
+
+                /*if (!occluded) {
+                    result = glm::vec3(1.f, 0.0f, 0.f);
+                }*/
+                prd.done = true;
+                if (glm::compMax(Kr) > 0.f) {
+                    // ray tree attenuation
+                    float new_importance = prd.importance * luminance(Kr);
+
+                    // reflection ray
+                    // compare new_depth to max_depth - 1 to leave room for a potential shadow ray trace
+                    if (new_importance >= 0.01f) {
+                        prd.origin = P;
+                        prd.direction = reflect(ray.direction, N);
+
+                        prd.attenuation = Kr;
+                        prd.done = false;
+                    }
+                }
+
+                prd.result = result;
             }
 
 
             MM_OPTIX_CLOSESTHIT_KERNEL(sphere_closesthit)() {
                 const int primID = optixGetPrimitiveIndex();
                 PerRayData& prd = getPerRayData<PerRayData>();
-                prd.primID = primID;
-                prd.t = optixGetRayTmax();
+                /*prd.primID = primID;
+                prd.t = optixGetRayTmax();*/
 
                 const auto& self = getProgramData<SphereGeoData>();
 
@@ -192,36 +257,18 @@ namespace hpg {
 
 
                 const Particle& particle = self.particleBufferPtr[primID];
-                glm::vec3 hp = ray.origin + prd.t * ray.direction;
-                glm::vec3 N = hp - glm::vec3(particle.pos);
+                glm::vec3 P = ray.origin + ray.tmax * ray.direction;
+                glm::vec3 N = glm::normalize(P - glm::vec3(particle.pos));
 
-                prd.radiance += glm::vec3(0.2f) * prd.beta;
+                glm::vec3 ffN = faceforward(N, -ray.direction, N);
+                // glm::vec3 ffN = N;
 
-                prd.radiance += DirectLight(prd.lpos, hp, N, prd);
-
-                Sample(N, hp, prd);
-                Pdf(N, prd);
-
-                glm::vec4 col = self.globalColor;
+                glm::vec3 Kd = glm::vec3(self.globalColor);
                 if (self.hasColorData) {
-                    col = self.colorBufferPtr[primID];
+                    Kd = glm::vec3(self.colorBufferPtr[primID]);
                 }
-                auto f = Eval(N, col, prd);
 
-                if (prd.pdf > 0.0f)
-                    prd.beta *= f / prd.pdf;
-                else
-                    prd.done = true;
-
-                /*if (glm::dot(N, ray.direction) > 0.f)
-                    N = -N;
-                prd.N = glm::normalize(N);
-
-                if (self.hasColorData) {
-                    prd.albedo = self.colorBufferPtr[primID];
-                } else {
-                    prd.albedo = self.globalColor;
-                }*/
+                phong(Kd, Kd, glm::vec3(0.f), glm::vec3(0.1f), 0.f, ffN, ray, prd);
             }
 
 

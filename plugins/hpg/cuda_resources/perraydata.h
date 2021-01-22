@@ -10,23 +10,23 @@ namespace hpg {
     namespace optix {
         namespace device {
             struct PerRayData {
-                unsigned int primID;
+                /*unsigned int primID;
                 float t;
                 glm::vec3 N;
-                glm::vec4 albedo;
+                glm::vec4 albedo;*/
 
                 int depth;
-                unsigned int seed;
 
-                bool done;
-                bool inShadow;
+                glm::vec3 result;
+                float importance;
 
-                glm::vec3 radiance;
                 glm::vec3 origin;
-                glm::vec3 bsdfDir;
-                glm::vec3 wo;
-                glm::vec3 beta;
-                float pdf;
+                glm::vec3 direction;
+
+                glm::vec3 attenuation;
+
+                unsigned int seed;
+                int done;
 
                 glm::vec3 lpos;
 

@@ -9,10 +9,11 @@ namespace hpg {
     namespace optix {
         namespace device {
             MM_OPTIX_MISS_KERNEL(miss_program)() {
-                /*PerRayData& prd = getPerRayData<PerRayData>();
+                PerRayData& prd = getPerRayData<PerRayData>();
                 const auto& self = getProgramData<MissData>();
 
-                prd.radiance = glm::vec3(self.bg);*/
+                prd.result = glm::vec3(self.bg);
+                prd.done = true;
             }
 
             MM_OPTIX_MISS_KERNEL(miss_program_occlusion)() {

@@ -11,6 +11,11 @@
 #error "CUDA device-only include"
 #endif
 
+#define MMO_INV_PI 0.318309886183f
+#define MMO_PI     3.141592653589f
+#define MMO_PI_2   9.869604401084f
+#define MMO_PI_4  97.409091033904f
+
 #define MM_OPTIX_RAYGEN_KERNEL(name) extern "C" __global__ void __raygen__##name
 
 #define MM_OPTIX_INTERSECTION_KERNEL(name) extern "C" __global__ void __intersection__##name
@@ -87,6 +92,52 @@ namespace hpg {
             template<typename T>
             inline __device__ T& getPerRayData() {
                 return *(T*) getPerRayDataPointer();
+            }
+
+
+            // pbrt
+            inline __device__ glm::vec2 ConcentricSampleDisk(glm::vec2 const& u) {
+                auto const uOffset = 2.f * u - glm::vec2(1.f);
+                if (uOffset.x == 0.f && uOffset.y == 0.f) {
+                    return glm::vec2(0.f);
+                }
+                float theta, r;
+                if (fabsf(uOffset.x) > fabsf(uOffset.y)) {
+                    r = uOffset.x;
+                    theta = MMO_PI_4 * (uOffset.y / uOffset.x);
+                } else {
+                    r = uOffset.y;
+                    theta = MMO_PI_2 - MMO_PI_4 * (uOffset.x / uOffset.y);
+                }
+                return r * glm::vec2(cosf(theta), sinf(theta));
+            }
+
+            inline __device__ glm::vec3 CosineSampleHemisphere(glm::vec2 const& u) {
+                auto const d = ConcentricSampleDisk(u);
+                float const z = sqrtf(fmaxf(0.f, 1.f - d.x * d.x - d.y * d.y));
+                return glm::vec3(d.x, d.y, z);
+            }
+
+            inline __device__ float CosineHemispherePdf(float cosTheta) {
+                return cosTheta * MMO_INV_PI;
+            }
+
+            // optix sdk
+            /** Faceforward
+             * Returns N if dot(i, nref) > 0; else -N;
+             * Typical usage is N = faceforward(N, -ray.dir, N);
+             * Note that this is opposite of what faceforward does in Cg and GLSL */
+            inline __device__ glm::vec3 faceforward(const glm::vec3& n, const glm::vec3& i, const glm::vec3& nref) {
+                return n * copysignf(1.0f, dot(i, nref));
+            }
+
+            inline __device__ glm::vec3 reflect(const glm::vec3& i, const glm::vec3& n) {
+                return i - 2.0f * n * dot(n, i);
+            }
+
+            inline __device__ float luminance(const glm::vec3& rgb) {
+                const glm::vec3 ntsc_luminance = glm::vec3(0.30f, 0.59f, 0.11f);
+                return dot(rgb, ntsc_luminance);
             }
         } // namespace device
     }     // namespace optix
