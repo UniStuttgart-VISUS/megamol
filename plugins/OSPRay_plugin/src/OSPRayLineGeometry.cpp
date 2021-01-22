@@ -64,8 +64,8 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
         if (!(*cm)(1)) return false;
         if (!(*cm)(0)) return false;
         meta_data = cm->getMetaData();
-
-        if (cm->hasUpdate() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+        auto interface_dirty = this->InterfaceIsDirty(); 
+        if (cm->hasUpdate() || this->time != os->getTime() || interface_dirty) {
             this->time = os->getTime();
             this->structureContainer.dataChanged = true;
             this->extendContainer.boundingBox = std::make_shared<core::BoundingBoxes_2>(meta_data.m_bboxs);
@@ -79,7 +79,12 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
         if (cd == NULL) return false;
         cd->SetTime(os->getTime());
         cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-        if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+        auto interface_dirty = this->InterfaceIsDirty();
+
+        if (!(*cd)(1)) return false;
+        if (!(*cd)(0)) return false;
+
+        if (this->datahash != cd->DataHash() || this->time != os->getTime() || interface_dirty) {
             this->datahash = cd->DataHash();
             this->time = os->getTime();
             this->structureContainer.dataChanged = true;
@@ -87,8 +92,7 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
             return true;
         }
 
-        if (!(*cd)(1)) return false;
-        if (!(*cd)(0)) return false;
+
 
         unsigned int lineCount = cd->Count();
 

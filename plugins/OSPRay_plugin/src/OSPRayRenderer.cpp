@@ -290,22 +290,27 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
             this->maxDepthTexture = getOSPDepthTextureFromOpenGLPerspective(*cr);
         */
         RendererSettings(cr.BackgroundColor());
-        // far distance
-        float far_clip = _cam.far_clipping_plane();
-        std::vector<float> far_dist(_imgSize[0] * _imgSize[1], far_clip);
-        rkcommon::math::vec2i imgSize = {
-            _imgSize[0],
-            _imgSize[1]
-        };
-        auto depth_texture_data = ::ospray::cpp::CopiedData(far_dist.data(), OSP_FLOAT, imgSize);
-        depth_texture_data.commit();
-        auto depth_texture = ::ospray::cpp::Texture("texture2d");
-        depth_texture.setParam("format", OSP_TEXTURE_R32F);
-        depth_texture.setParam("filter", OSP_TEXTURE_FILTER_NEAREST);
-        depth_texture.setParam("data", depth_texture_data);
-        depth_texture.commit();
 
-        _renderer->setParam("map_maxDepth", depth_texture);
+
+        if (this->_useDB.Param<core::param::BoolParam>()->Value()) {
+            // far distance
+            float far_clip = _cam.far_clipping_plane();
+            std::vector<float> far_dist(_imgSize[0] * _imgSize[1], far_clip);
+            rkcommon::math::vec2i imgSize = {
+                _imgSize[0],
+                _imgSize[1]
+            };
+
+            auto depth_texture_data = ::ospray::cpp::CopiedData(far_dist.data(), OSP_FLOAT, imgSize);
+            depth_texture_data.commit();
+            auto depth_texture = ::ospray::cpp::Texture("texture2d");
+            depth_texture.setParam("format", OSP_TEXTURE_R32F);
+            depth_texture.setParam("filter", OSP_TEXTURE_FILTER_NEAREST);
+            depth_texture.setParam("data", depth_texture_data);
+            depth_texture.commit();
+
+            _renderer->setParam("map_maxDepth", depth_texture);
+        }
         _renderer->commit();
 
         // setup framebuffer and measure time
@@ -329,11 +334,12 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
             _accum_time.amount = 0;
         }
 
-        auto db = static_cast<float*>(_framebuffer->map(OSP_FB_DEPTH));
-        _db = std::vector<float>(db, db + _imgSize[0] * _imgSize[1]);
 
-
+        float* db;
         if (this->_useDB.Param<core::param::BoolParam>()->Value()) {
+             db = static_cast<float*>(_framebuffer->map(OSP_FB_DEPTH));
+            _db = std::vector<float>(db, db + _imgSize[0] * _imgSize[1]);
+        
             getOpenGLDepthFromOSPPerspective(_db.data());
         }
 
@@ -351,15 +357,17 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         //    this->number++;
         //}
 
-        //std::string fname("blub.ppm");
-        //writePPM(fname, _imgSize, _fb);
+        std::string fname("blub.ppm");
+        writePPM(fname, _imgSize, _fb);
         
 
         this->renderTexture2D(_osprayShader, _fb, _db.data(), _imgSize[0], _imgSize[1], cr);
 
         // clear stuff
          _framebuffer->unmap(_fb);
-        _framebuffer->unmap(db);
+        if (this->_useDB.Param<core::param::BoolParam>()->Value()) {
+            _framebuffer->unmap(db);
+        }
 
         //auto dvce_ = ospGetCurrentDevice();
         //auto error_ = std::string(ospDeviceGetLastErrorMsg(dvce_));

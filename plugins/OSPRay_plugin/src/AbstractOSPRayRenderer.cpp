@@ -82,7 +82,7 @@ namespace ospray {
         this->MakeSlotAvailable(&this->_numThreads);
 
         // Depth
-        this->_useDB << new core::param::BoolParam(true);
+        this->_useDB << new core::param::BoolParam(false);
         this->MakeSlotAvailable(&this->_useDB);
 
         // Device
@@ -358,12 +358,18 @@ namespace ospray {
 
     void AbstractOSPRayRenderer::fillLightArray(std::array<float,4> eyeDir) {
 
+         if (!_lightArray.empty()) {
+             for (auto& l : _lightArray) {
+                 ospRelease(l.handle());
+             }
+         }
+        _lightArray.clear();
+
         // create custom ospray light
         ::ospray::cpp::Light light;
 
-        this->_lightArray.clear();
+        for (auto const& entry : lightMap) {
 
-        for (auto const& entry : this->lightMap) {
             auto const& lc = entry.second;
 
             switch (lc.lightType) {
@@ -650,16 +656,34 @@ namespace ospray {
 
             // check if structure should be released first
             if (element.dataChanged) {
-                //for (auto& stru : this->_baseStructures[entry.first]) {
-                //    if (element.type == structureTypeEnum::GEOMETRY) {
-                //        ospRemoveParam(this->_world, std::get<::ospray::cpp::Geometry>(stru));
-                //        // ospRelease(std::get<::ospray::cpp::Geometry>(stru));
-                //    } else if (element.type == structureTypeEnum::VOLUME) {
-                //        ospRemoveVolume(this->_world, std::get<::ospray::cpp::Volume>(stru));
-                //        // ospRelease(std::get<::ospray::cpp::Volume>(stru));
-                //    }
-                //}
-                this->_baseStructures.erase(entry.first);
+                for (auto& stru : _baseStructures[entry.first]) {
+                    if (element.type == structureTypeEnum::GEOMETRY) {
+                        ospRelease(std::get<::ospray::cpp::Geometry>(stru).handle());
+                    } else if (element.type == structureTypeEnum::VOLUME) {
+                        ospRelease(std::get<::ospray::cpp::Volume>(stru).handle());
+                    }
+                }
+                _baseStructures.erase(entry.first);
+                for (auto& georep : _geometricModels[entry.first]) {
+                    ospRelease(georep.handle());
+                }
+                _geometricModels.erase(entry.first);
+
+                for (auto& volrep : _volumetricModels[entry.first]) {
+                    ospRelease(volrep.handle());
+                }
+                _volumetricModels.erase(entry.first);
+
+                for (auto& cliprep : _clippingModels[entry.first]) {
+                    ospRelease(cliprep.handle());
+                }
+                _clippingModels.erase(entry.first);
+
+                if (_groups[entry.first]) {
+                    ospRelease(_groups[entry.first].handle());
+                }
+                _groups.erase(entry.first);
+
             } else {
                 continue;
             }
@@ -1115,12 +1139,12 @@ namespace ospray {
 
                 _baseStructures[entry.first].emplace_back(::ospray::cpp::Volume("structuredRegular"));
 
-                auto type = static_cast<uint8_t>(element.voxelDType);
+                auto type = static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(element.voxelDType)]);
 
                  // add data
                 rkcommon::math::vec3i dims = { element.dimensions[0], element.dimensions[1], element.dimensions[2]};
                 auto voxelData = ::ospray::cpp::SharedData(element.voxels,
-                    static_cast<OSPDataType>(voxelDataTypeOSP[type]), dims);
+                    type, dims);
                 voxelData.commit();
 
 
@@ -1145,37 +1169,42 @@ namespace ospray {
                 //    element.adaptiveMaxRate);
                 //ospSet1f(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "samplingRate", element.samplingRate);
 
-
-
-                // ClippingBox
-                auto clipping_box_geometry = ::ospray::cpp::Geometry("box");
-                ::rkcommon::math::box3f box;
-                box.lower = {element.clippingBoxLower[0], element.clippingBoxLower[1], element.clippingBoxLower[2]};
-                box.upper = { element.clippingBoxUpper[0], element.clippingBoxUpper[1], element.clippingBoxUpper[2]};
-                clipping_box_geometry.setParam("box", box);
-                clipping_box_geometry.commit();
-                
-                if (element.clippingBoxActive) {
-                    _clippingModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(clipping_box_geometry));
+                if (_transferfunction) {
+                    ospRelease(_transferfunction.handle());
+                    _transferfunction = nullptr;
                 }
 
-                auto tf = ::ospray::cpp::TransferFunction("piecewiseLinear");
+                _transferfunction = ::ospray::cpp::TransferFunction("piecewiseLinear");
 
-                auto tf_rgb = ::ospray::cpp::SharedData(element.tfRGB->data(), OSP_FLOAT, element.tfRGB->size() / 3);
-                auto tf_opa = ::ospray::cpp::SharedData(*(element.tfA));
-                tf.setParam("color", tf_rgb);
-                tf.setParam("opacity", tf_opa);
+                auto tf_rgb = ::ospray::cpp::SharedData(element.tfRGB->data(), OSP_VEC3F, element.tfRGB->size() / 3);
+                auto tf_opa = ::ospray::cpp::SharedData(element.tfA->data(), OSP_FLOAT, element.tfA->size());
+                _transferfunction.setParam("color", tf_rgb);
+                _transferfunction.setParam("opacity", tf_opa);
                 rkcommon::math::vec2f valrange = {element.valueRange[0], element.valueRange[1]};
-                tf.setParam("valueRange", valrange);
+                _transferfunction.setParam("valueRange", valrange);
 
-                tf.commit();
+                _transferfunction.commit();
 
                 std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()).commit();
                 _volumetricModels[entry.first].emplace_back(::ospray::cpp::VolumetricModel(
                     std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back())));
 
-                _volumetricModels[entry.first].back().setParam("transferFunction", tf);
+                _volumetricModels[entry.first].back().setParam("transferFunction", _transferfunction);
                 _volumetricModels[entry.first].back().commit();
+
+                // ClippingBox
+                if (element.clippingBoxActive) {
+                    _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("box"));
+                    ::rkcommon::math::box3f box;
+                    box.lower = {element.clippingBoxLower[0], element.clippingBoxLower[1], element.clippingBoxLower[2]};
+                    box.upper = {element.clippingBoxUpper[0], element.clippingBoxUpper[1], element.clippingBoxUpper[2]};
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("box", ::ospray::cpp::CopiedData(box));
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).commit();
+
+                    _clippingModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back())));
+                    _clippingModels[entry.first].back().commit();
+                }
  
                 switch (element.volRepType) {
                 case volumeRepresentationType::VOLUMEREP:
@@ -1193,7 +1222,8 @@ namespace ospray {
                     _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("isosurface"));
                     std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("isovalue", element.isoValue);
  
-                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).setParam("volume", ::ospray::cpp::SharedData(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].front())));
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back())
+                        .setParam("volume", std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].front()));
 
                     std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].back()).commit();
                     _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
@@ -1204,6 +1234,7 @@ namespace ospray {
                         _geometricModels[entry.first].back().setParam(
                             "material", ::ospray::cpp::CopiedData(_materials[entry.first]));
                     }
+                    _geometricModels[entry.first].back().commit();
 
                     _groups[entry.first] = ::ospray::cpp::Group();
                     _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
@@ -1239,6 +1270,11 @@ namespace ospray {
     void AbstractOSPRayRenderer::createInstances() {
 
         for (auto& entry : this->_structureMap) {
+
+            if (_instances[entry.first]) {
+                ospRelease(_instances[entry.first].handle());
+            }
+            _instances.erase(entry.first);
 
             auto const& element = entry.second;
 

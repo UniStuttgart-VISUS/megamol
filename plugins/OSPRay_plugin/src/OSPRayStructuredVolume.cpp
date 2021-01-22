@@ -72,7 +72,7 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void)
     this->MakeSlotAvailable(&this->sliceNormal);
     this->MakeSlotAvailable(&this->sliceDist);
 
-    this->IsoValue << new core::param::FloatParam(0.0f);
+    this->IsoValue << new core::param::FloatParam(0.1f);
     this->MakeSlotAvailable(&this->IsoValue);
 
     /*this->getDataSlot.SetCompatibleCall<megamol::core::moldyn::VolumeDataCallDescription>();

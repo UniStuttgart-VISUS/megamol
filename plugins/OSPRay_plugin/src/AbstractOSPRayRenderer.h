@@ -13,7 +13,6 @@
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/view/light/CallLight.h"
-#include "openvkl/openvkl.h"
 #include "ospray/ospray_cpp.h"
 #include "ospray/ospray_cpp/ext/rkcommon.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
@@ -202,6 +201,7 @@ protected:
     std::map<CallOSPRayStructure*, std::vector<::ospray::cpp::VolumetricModel>> _volumetricModels;
     std::map<CallOSPRayStructure*, std::vector<::ospray::cpp::GeometricModel>>  _geometricModels;
     std::map<CallOSPRayStructure*, std::vector<::ospray::cpp::GeometricModel>> _clippingModels;
+    ::ospray::cpp::TransferFunction _transferfunction;
 
     std::map<CallOSPRayStructure*, ::ospray::cpp::Group> _groups;
     std::map<CallOSPRayStructure*, ::ospray::cpp::Instance> _instances;
