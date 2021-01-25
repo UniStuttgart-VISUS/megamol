@@ -321,6 +321,7 @@ namespace infovis {
         GLuint depthStore;
         GLuint stenStore;
         GLuint depthStore2;
+        GLuint ssboMatrices;
         std::shared_ptr<glowl::FramebufferObject> nuFB;
         GLuint amortizedFboA;
         GLuint amortizedFboB;
@@ -341,16 +342,17 @@ namespace infovis {
         std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction3h_shdr;
 
         int frametype = 0;
-        int framesNeeded;
+        int framesNeeded = 1;
 
         glm::mat4 invTexA = glm::mat4(1.0);
         glm::mat4 invTexB = glm::mat4(1.0);
         glm::mat4 invTexC = glm::mat4(1.0);
         glm::mat4 invTexD = glm::mat4(1.0);
 
-        glm::mat4 invMatrices[100];
-        glm::mat4 moveMatrices[100];
-
+        //glm::mat4 invMatrices[100];
+        //glm::mat4 moveMatrices[100];
+        std::vector<glm::mat4> invMatrices;
+        std::vector<glm::mat4> moveMatrices;
 
         glm::vec4 sA;
         glm::vec4 sB;

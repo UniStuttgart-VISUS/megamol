@@ -263,6 +263,7 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGenTextures(1, &depthStore);
     glGenTextures(1, &stenStore);
     glGenTextures(1, &depthStore2);
+    glGenBuffers(1, &ssboMatrices);
     glGenRenderbuffers(1, &nuDRB);
     glGenRenderbuffers(1, &nuSRB);
 
@@ -1157,27 +1158,43 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
     glClear(GL_COLOR_BUFFER_BIT);
     // Intel MSAA 2 frame restoration
+
+    glm::mat4 pm;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            pm[j][i] = projMatrix_column[i + j * 4];
+        }
+    }
+    glm::mat4 mvm;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            mvm[j][i] = modelViewMatrix_column[i + j * 4];
+        }
+    }
+    auto pmvm = pm * mvm;
+
+    //if all Camera matrices are the same, no rendering needed
+    //bool ab = true;
+    for (int n = 0; n < framesNeeded; n++) {
+        for (int v = 0; v < 16; v++) {
+            if (pmvm[v / 4][v % 4] != invMatrices[n][v / 4][v % 4]) {
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo("False");
+            }
+        }
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("True");
+    }
+
     if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         framesNeeded = 2;
+        if (invMatrices.size() != framesNeeded) {
+            invMatrices.resize(framesNeeded);
+            moveMatrices.resize(framesNeeded);
+        }
         w = w / 2;
         h = h / 2;
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
         float factor = this->testingFloat.Param<core::param::FloatParam>()->Value();
-
-        glm::mat4 pm;
-        glm::mat4 jit;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                pm[j][i] = projMatrix_column[i + j * 4];
-            }
-        }
-        glm::mat4 mvm;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                mvm[j][i] = modelViewMatrix_column[i + j * 4];
-            }
-        }
-        auto pmvm = pm * mvm;
+        glm::mat4 jit;        
 
         invMatrices[frametype] = pmvm;
 
@@ -1227,22 +1244,13 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     // non cbr quarter res 4 frame restoration
     if (approach == 1 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         framesNeeded = 4;
+        if (invMatrices.size() != framesNeeded) {
+            invMatrices.resize(framesNeeded);
+            moveMatrices.resize(framesNeeded);
+        }
         w = w / 2;
         h = h / 2;
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-
-        glm::mat4 pm;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                pm[j][i] = projMatrix_column[i + j * 4];
-            }
-        }
-        glm::mat4 mvm;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                mvm[j][i] = modelViewMatrix_column[i + j * 4];
-            }
-        }
 
         float factor = this->testingFloat.Param<core::param::FloatParam>()->Value();
         glm::mat4 jit;
@@ -1304,23 +1312,13 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     if (approach == 2 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         framesNeeded = 4;
+        if (invMatrices.size() != framesNeeded) {
+            invMatrices.resize(framesNeeded);
+            moveMatrices.resize(framesNeeded);
+        }
         w = w / 2;
         h = h / 2;
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-
-        glm::mat4 pm;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                pm[j][i] = projMatrix_column[i + j * 4];
-            }
-        }
-        glm::mat4 mvm;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                mvm[j][i] = modelViewMatrix_column[i + j * 4];
-            }
-        }
-        // mvm = glm::transpose(mvm);
 
         float factor = this->testingFloat.Param<core::param::FloatParam>()->Value();
         glm::mat4 jit;
@@ -1376,6 +1374,10 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     if (approach == 3 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         framesNeeded = 4 * ssLevel * ssLevel;
+        if (invMatrices.size() != framesNeeded) {
+            invMatrices.resize(framesNeeded);
+            moveMatrices.resize(framesNeeded);
+        }
         w = w / 2;
         h = h / 2;
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
@@ -1384,19 +1386,6 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glActiveTexture(GL_TEXTURE10);
         glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
         glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4 * ssLevel * ssLevel, 0, GL_RGB, GL_FLOAT, 0);
-
-        glm::mat4 pm;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                pm[j][i] = projMatrix_column[i + j * 4];
-            }
-        }
-        glm::mat4 mvm;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                mvm[j][i] = modelViewMatrix_column[i + j * 4];
-            }
-        }
 
         float factor = this->testingFloat.Param<core::param::FloatParam>()->Value();
         glm::mat4 jit;
@@ -1789,8 +1778,13 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glUniform1i(pc_reconstruction3_shdr->ParameterLocation("frametype"), frametype);
         glUniform1i(pc_reconstruction3_shdr->ParameterLocation("ssLevel"), ssLevel);
 
-        glUniformMatrix4fv(
-            pc_reconstruction3_shdr->ParameterLocation("mMatrices"), framesNeeded, GL_FALSE, &moveMatrices[0][0][0]);
+        //glUniformMatrix4fv(
+        //    pc_reconstruction3_shdr->ParameterLocation("mMatrices"), framesNeeded, GL_FALSE, &moveMatrices[0][0][0]);
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0], GL_STATIC_READ);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction3_shdr->Disable();

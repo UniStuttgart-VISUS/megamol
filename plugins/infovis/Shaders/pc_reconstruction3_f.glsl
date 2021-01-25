@@ -6,7 +6,11 @@ uniform int w;
 uniform int approach;
 uniform int ssLevel;
 
-uniform mat4 mMatrices[100];
+//uniform mat4 mMatrices[100];
+
+layout (std430, binding = 7) buffer ssboMatrices{
+    mat4 mMatrices[];
+};
 
 in vec2 uv_coord;
 //layout(early_fragment_tests) in;
