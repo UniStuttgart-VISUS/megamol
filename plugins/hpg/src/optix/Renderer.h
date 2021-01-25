@@ -90,5 +90,7 @@ private:
     unsigned int _frame_id = std::numeric_limits<unsigned int>::max();
 
     std::size_t _in_data_hash = std::numeric_limits<std::size_t>::max();
+
+   cam_type::snapshot_type old_cam_snap;
 };
 } // namespace megamol::hpg::optix

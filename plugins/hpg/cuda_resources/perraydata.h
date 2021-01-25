@@ -17,18 +17,24 @@ namespace hpg {
 
                 int depth;
 
-                glm::vec3 result;
-                float importance;
+                glm::vec3 radiance;
+                float pdf;
 
                 glm::vec3 origin;
                 glm::vec3 direction;
 
-                glm::vec3 attenuation;
+                glm::vec3 wo;
+
+                glm::vec3 beta;
 
                 unsigned int seed;
                 int done;
 
                 glm::vec3 lpos;
+                glm::vec3 ldir;
+
+                bool countEmitted;
+                glm::vec3 emitted;
 
                 OptixTraversableHandle world;
             };

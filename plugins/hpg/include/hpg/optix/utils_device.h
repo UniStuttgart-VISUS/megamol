@@ -139,6 +139,10 @@ namespace hpg {
                 const glm::vec3 ntsc_luminance = glm::vec3(0.30f, 0.59f, 0.11f);
                 return dot(rgb, ntsc_luminance);
             }
+
+            inline __device__ glm::vec3 lerp(const glm::vec3& a, const glm::vec3& b, const float t) {
+                return a + t * (b - a);
+            }
         } // namespace device
     }     // namespace optix
 } // namespace hpg

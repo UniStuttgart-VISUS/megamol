@@ -23,6 +23,8 @@ namespace hpg {
                 int samplesPerPixel{1};
 
                 glm::vec4 background;
+
+                bool changed;
             };
         } // namespace device
     }     // namespace optix

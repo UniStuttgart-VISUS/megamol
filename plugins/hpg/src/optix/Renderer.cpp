@@ -154,14 +154,20 @@ bool megamol::hpg::optix::Renderer::Render(core::view::CallRender3D_2& call) {
     auto rw = th * curCamAspect;
 
     _frame_state.camera_lens_center = glm::vec3(curCamPos.x(), curCamPos.y(), curCamPos.z());
-    _frame_state.camera_screen_00 =   glm::vec3(curCamView.x(), curCamView.y(), curCamView.z());
-    _frame_state.camera_screen_du =   glm::vec3(curCamRight.x(), curCamRight.y(), curCamRight.z());
-    _frame_state.camera_screen_dv =   glm::vec3(curCamUp.x(), curCamUp.y(), curCamUp.z());
-
+    _frame_state.camera_screen_00 = glm::vec3(curCamView.x(), curCamView.y(), curCamView.z());
+    _frame_state.camera_screen_du = glm::vec3(curCamRight.x(), curCamRight.y(), curCamRight.z());
+    _frame_state.camera_screen_dv = glm::vec3(curCamUp.x(), curCamUp.y(), curCamUp.z());
 
     _frame_state.rw = rw;
     _frame_state.th = th;
     _frame_state.near = curCamNearClip;
+
+    _frame_state.changed = false;
+    if (old_cam_snap.position != snapshot.position || old_cam_snap.view_vector != snapshot.view_vector ||
+        old_cam_snap.right_vector != snapshot.right_vector || old_cam_snap.up_vector != snapshot.up_vector) {
+        _frame_state.changed = true;
+        old_cam_snap = snapshot;
+    }
 
     auto bg_col = call.BackgroundColor();
     _frame_state.background = glm::vec4(bg_col.x, bg_col.y, bg_col.z, bg_col.w);
@@ -188,8 +194,8 @@ bool megamol::hpg::optix::Renderer::Render(core::view::CallRender3D_2& call) {
         std::string log;
         log.resize(log_size);
 
-        OPTIX_CHECK_ERROR(optixPipelineCreate(in_ctx->get_ctx(), in_ctx->get_pipeline_options(), in_ctx->get_pipeline_link_options(),
-            groups.data(), groups.size(), log.data(), &log_size, &_pipeline));
+        OPTIX_CHECK_ERROR(optixPipelineCreate(in_ctx->get_ctx(), in_ctx->get_pipeline_options(),
+            in_ctx->get_pipeline_link_options(), groups.data(), groups.size(), log.data(), &log_size, &_pipeline));
 
 
         _frame_id = in_geo->FrameID();

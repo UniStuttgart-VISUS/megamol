@@ -34,7 +34,7 @@ namespace hpg {
                 glm::vec3 col(0.f);
 
                 for (;;) {
-                    //prd.wo = -ray.direction;
+                    prd.wo = -ray.direction;
                     optixTrace(self.world, (const float3&) ray.origin, (const float3&) ray.direction, ray.tmin,
                         ray.tmax, 0, (OptixVisibilityMask) -1,
                         /*rayFlags     */ OPTIX_RAY_FLAG_DISABLE_ANYHIT,
@@ -43,13 +43,16 @@ namespace hpg {
                         /*missSBTIndex */ 0, p0, p1);
 
                     
-                    if (prd.depth > 0) {
+                    /*if (prd.depth > 0) {
                         col += prd.attenuation * prd.result;
                     } else {
                         col += prd.result;
-                    }   
+                    }*/   
 
-                    if (prd.done || prd.depth >= 3)
+                    col += prd.emitted;
+                    col += prd.radiance * prd.beta;
+
+                    if (prd.done || prd.depth >= 2)
                         break;
 
                     ++prd.depth;
@@ -59,6 +62,7 @@ namespace hpg {
                 }
                 //col += prd.emitted;
                 return glm::vec4(col.x, col.y, col.z, 1.0f);
+                //return glm::vec4(prd.radiance, 1.0f);
 
 
                 // if (prd.primID == -1) {
@@ -89,10 +93,14 @@ namespace hpg {
 
                 const FrameState* fs = &self.frameStateBuffer[0];
 
-                auto const frame_idx = self.colorBufferPtr[pixelIdx].w;
+                auto frame_idx = self.colorBufferPtr[pixelIdx].w;
+                if (fs->changed) {
+                    frame_idx = 0.0f;
+                    self.colorBufferPtr[pixelIdx].w = 0.0f;
+                }
                 auto const old_col = self.colorBufferPtr[pixelIdx];
 
-                unsigned int seed = tea<4>(pixelID.y * 42 + pixelID.x, frame_idx);
+                unsigned int seed = tea<16>(pixelID.y * 4200 + pixelID.x, frame_idx);
 
                 
 
@@ -102,20 +110,25 @@ namespace hpg {
 
                 // printf("RAYGEN FS %f\n", fs->near);
 
-                auto i = 1;
+                auto i = 4;
 
                 do {
 
                     PerRayData prd;
                     prd.depth = 0;
 
-                    prd.result = glm::vec3(0.f);
-                    prd.importance = 1.0f;
+                    prd.radiance = glm::vec3(0.f);
+                    prd.pdf = 1.0f;
+
+                    prd.beta = glm::vec3(1.f);
 
                     prd.seed = seed;
                     prd.done = false;
 
                     prd.world = self.world;
+
+                    prd.countEmitted = true;
+                    prd.emitted = glm::vec3(0.f);
 
 
                     // Random rnd(pixelIdx, 0);
@@ -130,11 +143,13 @@ namespace hpg {
                     prd.direction = ray.direction;
 
                     prd.lpos = ray.origin;
+                    prd.ldir = fs->camera_screen_00;
 
                     col += traceRay(self, ray /*, rnd*/, prd, bg);
                 } while (--i);
-                col /= 1.0f;
-                col.w = 1.0f;
+                col /= 4.0f;
+                col.w = frame_idx + 1;
+                //++col.w;
 
                 // printf("RAYGEN2\n");
 
@@ -151,11 +166,11 @@ namespace hpg {
                 // uint32_t rgba = owl::make_rgba(col);
                 // self.colorBufferPtr[pixelIdx] = rgba;
 
-                /*if (frame_idx > 0) {
+                if (frame_idx > 0) {
                     const float a = 1.0f / static_cast<float>(frame_idx + 1);
-                    col = glm::mix(old_col, col, a);
-                    col.w = frame_idx + 1;
-                }*/
+                    col = glm::vec4(lerp(glm::vec3(old_col), glm::vec3(col), a), col.w);
+                    //col.w = frame_idx + 1;
+                }
                 self.colorBufferPtr[pixelIdx] = col;
             }
         } // namespace device
