@@ -37,8 +37,8 @@ void main()
         }  
     }
     vec4 r;
-    for (int i = 0; i < sSquare; i++){
+    for (int i = 0; i < ssLevel; i++){
         r = mMatrices[t + (i * 4)] * p;
-        frag_out += texture(tx2D_array, vec3(0.5 *  r.xy + vec2(0.5), t + (i*4))) / sSquare;
+        frag_out += texture(tx2D_array, vec3(0.5 *  r.xy + vec2(0.5), t + (i*4))) / ssLevel;
     }
 }

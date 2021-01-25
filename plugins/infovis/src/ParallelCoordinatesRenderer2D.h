@@ -353,6 +353,7 @@ namespace infovis {
         //glm::mat4 moveMatrices[100];
         std::vector<glm::mat4> invMatrices;
         std::vector<glm::mat4> moveMatrices;
+        std::vector<glm::fvec2> hammerPositions;
 
         glm::vec4 sA;
         glm::vec4 sB;

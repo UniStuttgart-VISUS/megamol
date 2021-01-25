@@ -1175,14 +1175,6 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
     //if all Camera matrices are the same, no rendering needed
     //bool ab = true;
-    for (int n = 0; n < framesNeeded; n++) {
-        for (int v = 0; v < 16; v++) {
-            if (pmvm[v / 4][v % 4] != invMatrices[n][v / 4][v % 4]) {
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("False");
-            }
-        }
-        megamol::core::utility::log::Log::DefaultLog.WriteInfo("True");
-    }
 
     if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         framesNeeded = 2;
@@ -1373,10 +1365,30 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     }
 
     if (approach == 3 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
-        framesNeeded = 4 * ssLevel * ssLevel;
-        if (invMatrices.size() != framesNeeded) {
+        framesNeeded = 4 * ssLevel;
+        if (invMatrices.size() != framesNeeded || hammerPositions.size() != ssLevel) {
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
+            hammerPositions.resize(ssLevel);
+            //calculation of Positions according to hammersley sequence
+            //https://www.researchgate.net/publication/244441430_Sampling_with_Hammersley_and_Halton_Points
+            float p = 0;
+            float u;
+            float v = 0;
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("yes");
+            for (int k = 0; k < ssLevel; k++) {
+                u = 0;
+                p = (float) 0.5;
+                for (int kk = k; kk > 0; p *= 0.5, kk >>= 1) {
+                    if (kk % 2 == 1) {
+                        u += p;
+                    }
+                    v = (float) ((k + 0.5) / ssLevel);
+                }
+                hammerPositions[k] = glm::vec2(u - floor(2*u), v - floor(2*v));
+                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+                    "x: %f, y: %f", hammerPositions[k].x, hammerPositions[k].y);
+            }
         }
         w = w / 2;
         h = h / 2;
@@ -1392,33 +1404,29 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glm::mat4 pmvm = pm * mvm;
         int f = floor(frametype / 4);
         if (frametype % 4 == 0) {
-            jit = glm::translate(glm::mat4(1.0f),
-                glm::vec3((((f % ssLevel) - ssLevel / 2) / ssLevel - 1.0) / call.GetViewport().Width(),
-                    ((floor(f / ssLevel) - ssLevel / 2) / ssLevel + 1.0) / call.GetViewport().Height(), 0));
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x - 1) / call.GetViewport().Width(),
+                                                      (hammerPositions[f].y + 1) / call.GetViewport().Height(), 0));
             invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(),
                                                                          1.0 / call.GetViewport().Height(), 0)) *
                                      pmvm;
         }
         if (frametype % 4 == 1) {
-            jit = glm::translate(glm::mat4(1.0f),
-                glm::vec3((((f % ssLevel) - ssLevel / 2) / ssLevel + 1.0) / call.GetViewport().Width(),
-                    ((floor(f / ssLevel) - ssLevel / 2) / ssLevel + 1.0) / call.GetViewport().Height(), 0));
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x + 1) / call.GetViewport().Width(),
+                                                      (hammerPositions[f].y + 1) / call.GetViewport().Height(), 0));
             invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(),
                                                                          1.0 / call.GetViewport().Height(), 0)) *
                                      pmvm;
         }
         if (frametype % 4 == 2) {
-            jit = glm::translate(glm::mat4(1.0f),
-                glm::vec3((((f % ssLevel) - ssLevel / 2) / ssLevel - 1.0) / call.GetViewport().Width(),
-                    ((floor(f / ssLevel) - ssLevel / 2) / ssLevel - 1.0) / call.GetViewport().Height(), 0));
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x - 1) / call.GetViewport().Width(),
+                                                      (hammerPositions[f].y - 1) / call.GetViewport().Height(), 0));
             invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(),
                                                                          -1.0 / call.GetViewport().Height(), 0)) *
                                      pmvm;
         }
         if (frametype % 4 == 3) {
-            jit = glm::translate(glm::mat4(1.0f),
-                glm::vec3((((f % ssLevel) - ssLevel / 2) / ssLevel + 1.0) / call.GetViewport().Width(),
-                    ((floor(f / ssLevel) - ssLevel / 2) / ssLevel - 1.0) / call.GetViewport().Height(), 0));
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x + 1) / call.GetViewport().Width(),
+                                                      (hammerPositions[f].y - 1) / call.GetViewport().Height(), 0));
             invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(),
                                                                          -1.0 / call.GetViewport().Height(), 0)) *
                                      pmvm;
