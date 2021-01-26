@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2008  Martin Falk <falk@visus.uni-stuttgart.de>
  *                     Visualization Research Center (VISUS), 
- *                     Universit‰t Stuttgart, Germany
+ *                     Universit√§t Stuttgart, Germany
  *
  * This source code is distributed as part of the publication 
  * "Output-Sensitive 3D Line Integral Convolution". 
@@ -30,6 +30,8 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 //#include "mmath.h"
 
+namespace megamol {
+namespace protein_cuda {
 
 #define VS_EPS      1.0e-8
 
@@ -84,5 +86,8 @@ private:
     int _numSlices;
     int _maxSlices;
 };
+
+} /* end namespace protein_cuda */
+} /* end namespace megamol */
 
 #endif // _SLICING_H_

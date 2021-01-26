@@ -9,7 +9,6 @@
 #ifndef ABSTRACT_MESH_DATA_SOURCE_H_INCLUDED
 #define ABSTRACT_MESH_DATA_SOURCE_H_INCLUDED
 
-#include "mesh.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -18,7 +17,7 @@
 namespace megamol {
 namespace mesh {
 
-    class MESH_API AbstractMeshDataSource : public core::Module {
+    class AbstractMeshDataSource : public core::Module {
     public:
         AbstractMeshDataSource();
         virtual ~AbstractMeshDataSource();

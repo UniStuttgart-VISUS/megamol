@@ -12,17 +12,15 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "GPURenderTaskCollection.h"
-#include "mesh.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-
 #include "mmcore/view/light/CallLight.h"
 
 namespace megamol {
 namespace mesh {
 
-    class MESH_API AbstractGPURenderTaskDataSource : public core::Module {
+class AbstractGPURenderTaskDataSource : public core::Module {
     public:
         AbstractGPURenderTaskDataSource();
         virtual ~AbstractGPURenderTaskDataSource();

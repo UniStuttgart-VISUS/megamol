@@ -38,8 +38,10 @@ struct CLIConfig {
     std::string program_invocation_string = "";
     std::vector<std::string> project_files = {};
     std::string lua_host_address = "tcp://127.0.0.1:33333";
+    bool lua_host_port_retry = true;
     bool load_example_project = false;
     bool opengl_khr_debug = false;
+    bool opengl_vsync = false;
     std::vector<unsigned int> window_size = {}; // if not set, GLFW service will open window with 3/4 of monitor resolution 
     std::vector<unsigned int> window_position = {};
     enum WindowMode {
@@ -79,6 +81,7 @@ int main(int argc, char* argv[]) {
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 5;
     openglConfig.enableKHRDebug = config.opengl_khr_debug;
+    openglConfig.enableVsync = config.opengl_vsync;
     // pass window size and position
     if (!config.window_size.empty()) {
         assert(config.window_size.size() == 2);
@@ -125,6 +128,7 @@ int main(int argc, char* argv[]) {
     megamol::frontend::Lua_Service_Wrapper::Config luaConfig;
     luaConfig.lua_api_ptr = &lua_api;
     luaConfig.host_address = config.lua_host_address;
+    luaConfig.retry_socket_port = config.lua_host_port_retry;
     lua_service_wrapper.setPriority(0);
 
     // clang-format off
@@ -287,6 +291,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         ("host", "address of lua host server, default: "+config.lua_host_address, cxxopts::value<std::string>())
         ("example", "load minimal test spheres example project", cxxopts::value<bool>())
         ("khrdebug", "enable OpenGL KHR debug messages", cxxopts::value<bool>())
+        ("vsync", "enable VSync in OpenGL window", cxxopts::value<bool>())
         ("window", "set the window size and position, accepted format: WIDTHxHEIGHT[+POSX+POSY]", cxxopts::value<std::string>())
         ("fullscreen", "open maximized window", cxxopts::value<bool>())
         ("nodecoration", "open window without decorations", cxxopts::value<bool>())
@@ -328,6 +333,7 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
         config.load_example_project = parsed_options["example"].as<bool>();
 
         config.opengl_khr_debug = parsed_options["khrdebug"].as<bool>();
+        config.opengl_vsync = parsed_options["vsync"].as<bool>();
 
         config.window_mode |= parsed_options["fullscreen"].as<bool>()   * CLIConfig::WindowMode::fullscreen;
         config.window_mode |= parsed_options["nodecoration"].as<bool>() * CLIConfig::WindowMode::nodecoration;

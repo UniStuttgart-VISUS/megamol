@@ -11,12 +11,11 @@
 
 #include <vector>
 #include "mmcore/AbstractGetData3DCall.h"
-#include "protein_calls/Protein_Calls.h"
 
 namespace megamol {
 namespace protein_calls {
 
-class PROTEIN_CALLS_API TunnelResidueDataCall : public core::AbstractGetData3DCall {
+class TunnelResidueDataCall : public core::AbstractGetData3DCall {
 public:
     /** Struct representing a single tunnel */
     struct Tunnel {

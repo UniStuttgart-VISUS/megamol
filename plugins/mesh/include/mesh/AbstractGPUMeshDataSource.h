@@ -13,16 +13,16 @@
 
 #include <array>
 
-#include "mesh.h"
 #include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/utility/plugins/Plugin200Instance.h"
 
 #include "GPUMeshCollection.h"
 
 namespace megamol {
 namespace mesh {
-    class MESH_API AbstractGPUMeshDataSource : public core::Module {
+class AbstractGPUMeshDataSource : public core::Module {
     public:
         AbstractGPUMeshDataSource();
         virtual ~AbstractGPUMeshDataSource();
