@@ -4,36 +4,36 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
 
 #include "hpg/optix/CallContext.h"
+#include "mesh/MeshCalls.h"
 
 #include "cuda.h"
 
 #include "SBT.h"
 
-#include "sphere.h"
+#include "mesh.h"
 
 #include "MMOptixModule.h"
 
 namespace megamol::hpg::optix {
-class SphereGeometry : public core::Module {
+class MeshGeometry : public core::Module {
 public:
     static const char* ClassName(void) {
-        return "SphereGeometry";
+        return "MeshGeometry";
     }
 
     static const char* Description(void) {
-        return "Sphere Geometry for OptiX";
+        return "Mesh Geometry for OptiX";
     }
 
     static bool IsAvailable(void) {
         return true;
     }
 
-    SphereGeometry();
+    MeshGeometry();
 
-    virtual ~SphereGeometry();
+    virtual ~MeshGeometry();
 
 protected:
     bool create() override;
@@ -41,9 +41,9 @@ protected:
     void release() override;
 
 private:
-    void init(CallContext &ctx);
+    void init(CallContext& ctx);
 
-    bool assertData(core::moldyn::MultiParticleDataCall& call, CallContext& ctx);
+    bool assertData(mesh::CallMesh& call, CallContext& ctx);
 
     bool get_data_cb(core::Call& c);
 
@@ -55,19 +55,21 @@ private:
 
     core::CallerSlot _in_ctx_slot;
 
-    MMOptixModule sphere_module_;
+    MMOptixModule mesh_module_;
 
-    MMOptixModule sphere_occlusion_module_;
+    MMOptixModule mesh_occlusion_module_;
 
-    std::vector<SBTRecord<device::SphereGeoData>> sbt_records_;
+    OptixModule triangle_intersector_;
+
+    std::vector<SBTRecord<device::MeshGeoData>> sbt_records_;
 
     std::array<OptixProgramGroup, 2> program_groups_;
 
     CUdeviceptr _geo_buffer = 0;
 
-    std::vector<CUdeviceptr> particle_data_;
+    std::vector<CUdeviceptr> mesh_pos_data_;
 
-    std::vector<CUdeviceptr> color_data_;
+    std::vector<CUdeviceptr> mesh_idx_data_;
 
     OptixTraversableHandle _geo_handle;
 

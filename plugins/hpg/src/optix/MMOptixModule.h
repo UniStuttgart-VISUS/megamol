@@ -18,6 +18,10 @@ public:
         OptixPipelineCompileOptions const* pipeline_options, OptixProgramGroupKind kind,
         std::vector<std::string> const& names);
 
+    MMOptixModule(const char* ptx_code, OptixDeviceContext ctx, OptixModuleCompileOptions const* module_options,
+        OptixPipelineCompileOptions const* pipeline_options, OptixProgramGroupKind kind,
+        OptixModule build_in_intersector, std::vector<std::string> const& names);
+
     MMOptixModule(MMOptixModule const& rhs) = delete;
 
     MMOptixModule& operator=(MMOptixModule const& rhs) = delete;

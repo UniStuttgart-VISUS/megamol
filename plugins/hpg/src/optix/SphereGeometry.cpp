@@ -252,9 +252,12 @@ bool megamol::hpg::optix::SphereGeometry::get_data_cb(core::Call& c) {
         _data_hash = in_data->DataHash();
     }
 
+    program_groups_[0] = sphere_module_;
+    program_groups_[1] = sphere_occlusion_module_;
+
     out_geo->set_handle(&_geo_handle);
-    out_geo->set_program_groups(sphere_module_);
-    out_geo->set_num_programs(1);
+    out_geo->set_program_groups(program_groups_.data());
+    out_geo->set_num_programs(2);
     out_geo->set_record(sbt_records_.data());
     out_geo->set_record_stride(sizeof(SBTRecord<device::SphereGeoData>));
     out_geo->set_num_records(sbt_records_.size());

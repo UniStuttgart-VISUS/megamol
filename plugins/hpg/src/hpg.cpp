@@ -18,6 +18,7 @@
 #include "optix/Renderer.h"
 #include "optix/SphereGeometry.h"
 #include "optix/Context.h"
+#include "optix/MeshGeometry.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -48,6 +49,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::hpg::optix::Renderer>();
             this->module_descriptions.RegisterAutoDescription<megamol::hpg::optix::SphereGeometry>();
             this->module_descriptions.RegisterAutoDescription<megamol::hpg::optix::Context>();
+            this->module_descriptions.RegisterAutoDescription<megamol::hpg::optix::MeshGeometry>();
             //
             // TODO: Register your plugin's modules here
             // like:

@@ -105,6 +105,104 @@ megamol::hpg::optix::MMOptixModule::MMOptixModule(const char* ptx_code, OptixDev
 #endif
 }
 
+megamol::hpg::optix::MMOptixModule::MMOptixModule(const char* ptx_code, OptixDeviceContext ctx,
+    OptixModuleCompileOptions const* module_options, OptixPipelineCompileOptions const* pipeline_options,
+    OptixProgramGroupKind kind, OptixModule build_in_intersector, std::vector<std::string> const& names) {
+    char log[2048];
+    std::size_t log_size = 2048;
+
+    OPTIX_CHECK_ERROR(optixModuleCreateFromPTX(
+        ctx, module_options, pipeline_options, ptx_code, std::strlen(ptx_code), log, &log_size, &module_));
+#if DEBUG
+    if (log_size > 1) {
+        core::utility::log::Log::DefaultLog.WriteInfo("[MMOptixModule] Optix Module creation info: %s", log);
+    }
+#endif
+
+    std::istringstream ptx_in = std::istringstream(std::string(ptx_code));
+    std::ostringstream ptx_out;
+    for (std::string line; std::getline(ptx_in, line);) {
+        if (line.find(" _optix_") != std::string::npos) {
+            ptx_out << "// skipped: " << line << '\n';
+        } else {
+            ptx_out << line << '\n';
+        }
+    }
+
+    log_size = 2048;
+
+    /*if (kind == OPTIX_PROGRAM_GROUP_KIND_HITGROUP) {
+        CUjit_option options[] = {
+            CU_JIT_TARGET_FROM_CUCONTEXT,
+            CU_JIT_ERROR_LOG_BUFFER,
+            CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,
+        };
+        void* optionValues[] = {(void*) 0, (void*) log, (void*) log_size};
+        CUDA_CHECK_ERROR(cuModuleLoadDataEx(&bounds_module_, ptx_out.str().c_str(), 3, options, optionValues));
+#if DEBUG
+        if (log_size > 1) {
+            core::utility::log::Log::DefaultLog.WriteInfo("[MMOptixModule] Bounds Module creation info: %s", log);
+        }
+#endif
+
+        CUDA_CHECK_ERROR(
+            cuModuleGetFunction(&bounds_function_, bounds_module_, MM_OPTIX_BOUNDS_ANNOTATION_STRING "sphere_bounds"));
+    }*/
+
+    std::vector<std::string> cb_names;
+
+    OptixProgramGroupDesc pgDesc = {};
+    pgDesc.kind = kind;
+    switch (kind) {
+    case OPTIX_PROGRAM_GROUP_KIND_RAYGEN: {
+        pgDesc.raygen.module = module_;
+        cb_names.push_back(std::string(MM_OPTIX_RAYGEN_ANNOTATION_STRING) + names[0]);
+        pgDesc.raygen.entryFunctionName = cb_names.back().c_str();
+    } break;
+    case OPTIX_PROGRAM_GROUP_KIND_MISS: {
+        pgDesc.miss.module = module_;
+        cb_names.push_back(std::string(MM_OPTIX_MISS_ANNOTATION_STRING) + names[0]);
+        pgDesc.miss.entryFunctionName = cb_names.back().c_str();
+    } break;
+    case OPTIX_PROGRAM_GROUP_KIND_EXCEPTION: {
+        pgDesc.exception.module = module_;
+        cb_names.push_back(std::string(MM_OPTIX_EXCEPTION_ANNOTATION_STRING) + names[0]);
+        pgDesc.exception.entryFunctionName = cb_names.back().c_str();
+    } break;
+    case OPTIX_PROGRAM_GROUP_KIND_CALLABLES: {
+        pgDesc.callables.moduleDC = module_;
+        cb_names.push_back(std::string(MM_OPTIX_DIRECT_CALLABLE_ANNOTATION_STRING) + names[0]);
+        pgDesc.callables.entryFunctionNameDC = cb_names.back().c_str();
+    } break;
+    case OPTIX_PROGRAM_GROUP_KIND_HITGROUP: {
+        if (build_in_intersector != nullptr) {
+            pgDesc.hitgroup.moduleIS = build_in_intersector;
+            cb_names.push_back(std::string(MM_OPTIX_INTERSECTION_ANNOTATION_STRING) + names[0]);
+            pgDesc.hitgroup.entryFunctionNameIS = nullptr;
+        } else {
+            pgDesc.hitgroup.moduleIS = module_;
+            cb_names.push_back(std::string(MM_OPTIX_INTERSECTION_ANNOTATION_STRING) + names[0]);
+            pgDesc.hitgroup.entryFunctionNameIS = cb_names.back().c_str();
+        }
+        pgDesc.hitgroup.moduleCH = module_;
+        cb_names.push_back(std::string(MM_OPTIX_CLOSESTHIT_ANNOTATION_STRING) + names[1]);
+        pgDesc.hitgroup.entryFunctionNameCH = cb_names.back().c_str();
+        pgDesc.hitgroup.moduleAH = nullptr;
+    } break;
+    }
+
+    OptixProgramGroupOptions pgOptions = {};
+
+    log_size = 2048;
+
+    OPTIX_CHECK_ERROR(optixProgramGroupCreate(ctx, &pgDesc, 1, &pgOptions, log, &log_size, &program_));
+#if DEBUG
+    if (log_size > 1) {
+        core::utility::log::Log::DefaultLog.WriteError("[MMOptixModule] Program group creation info: %s", log);
+    }
+#endif
+}
+
 
 megamol::hpg::optix::MMOptixModule::MMOptixModule(MMOptixModule&& rhs) noexcept
         : module_(rhs.module_)
