@@ -49,6 +49,16 @@ namespace view {
 class MEGAMOLCORE_API View3D_2 : public view::AbstractRenderingView /*, public view::AbstractCamParamSync*/ {
 
 public:
+    /** Enum for default views from the respective direction */
+    enum defaultview {
+        DEFAULTVIEW_FRONT,
+        DEFAULTVIEW_BACK,
+        DEFAULTVIEW_RIGHT,
+        DEFAULTVIEW_LEFT,
+        DEFAULTVIEW_TOP,
+        DEFAULTVIEW_BOTTOM,
+    };
+
     /**
      * Answer the name of this module.
      *
@@ -378,6 +388,9 @@ protected:
     param::ParamSlot cameraOvrUpParam;
     param::ParamSlot cameraOvrLookatParam;
     param::ParamSlot cameraOvrParam;
+
+    /** standard views */
+    param::ParamSlot cameraSetViewChooserParam;
 
     bool cameraOvrCallback(param::ParamSlot& p);
 
