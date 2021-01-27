@@ -9,6 +9,7 @@
 #include "QuartzCrystalDataCall.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/light/PointLight.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/utility/log/Log.h"
@@ -21,10 +22,14 @@ namespace demos {
  */
 CrystalRenderer::CrystalRenderer(void) : core::view::Renderer3DModule_2(),
 dataInSlot("datain", "slot to get the data"),
+lightsSlot("lights", "Lights are retrieved over this slot."),
 crystalIdx("idx", "The index of the selected crystal") {
 
     this->dataInSlot.SetCompatibleCall<core::factories::CallAutoDescription<CrystalDataCall> >();
     this->MakeSlotAvailable(&this->dataInSlot);
+
+    this->lightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->lightsSlot);
 
     this->crystalIdx << new core::param::IntParam(0, 0);
     this->MakeSlotAvailable(&this->crystalIdx);
@@ -135,26 +140,32 @@ bool CrystalRenderer::Render(core::view::CallRender3D_2& call) {
 
 
 	// determine position of point light
-	this->GetLights();
-    glm::vec4 lightPos = {0.0f, 0.0f, 0.0f, 1.0f};
-    if (this->lightMap.size() != 1) {
-		megamol::core::utility::log::Log::DefaultLog.WriteWarn("[BezierCPUMeshRenderer] Only one single point light source is supported by this renderer");
-    }
-    for (auto light : this->lightMap) {
-        if (light.second.lightType != core::view::light::POINTLIGHT) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[BezierCPUMeshRenderer] Only single point light source is supported by this renderer");
-        } else {
-            auto lPos = light.second.pl_position;
-            //light.second.lightColor;
-            //light.second.lightIntensity;
-            if (lPos.size() == 3) {
-                lightPos[0] = lPos[0];
-                lightPos[1] = lPos[1];
-                lightPos[2] = lPos[2];
-            }
-            if (lPos.size() == 4) {
-                lightPos[4] = lPos[4];
-            }
+    std::array<float, 3> lightPos = {0.0f, 0.0f, 0.0f};
+
+    auto call_light = lightsSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
+        }
+
+        auto lights = call_light->getData();
+        auto point_lights = lights.get<core::view::light::PointLightType>();
+
+        if (point_lights.size() > 1) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[CartoonTessellationRenderer2000GT] Only one single 'Point Light' source is supported by this "
+                "renderer");
+        } else if (point_lights.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[CartoonTessellationRenderer2000GT] No 'Point Light' found");
+        }
+
+        for (auto const& light : point_lights) {
+            // light.second.lightColor;
+            // light.second.lightIntensity;
+            lightPos[0] = light.position[0];
+            lightPos[1] = light.position[1];
+            lightPos[2] = light.position[2];
             break;
         }
     }

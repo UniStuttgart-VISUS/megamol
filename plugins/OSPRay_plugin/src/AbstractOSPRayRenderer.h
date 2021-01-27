@@ -188,6 +188,9 @@ protected:
      */
     void releaseOSPRayStuff();
 
+    // Call slots
+    megamol::core::CallerSlot _lightSlot;
+
     // Interface Variables
     core::param::ParamSlot _AOsamples;
     core::param::ParamSlot _AOdistance;

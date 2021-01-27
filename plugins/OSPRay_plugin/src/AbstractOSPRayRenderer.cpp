@@ -16,6 +16,12 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
+#include "mmcore/view/light/AmbientLight.h"
+#include "mmcore/view/light/DistantLight.h"
+#include "mmcore/view/light/HDRILight.h"
+#include "mmcore/view/light/PointLight.h"
+#include "mmcore/view/light/QuadLight.h"
+#include "mmcore/view/light/SpotLight.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/sys/Path.h"
 #include <stdio.h>
@@ -29,6 +35,8 @@ namespace ospray {
 
     AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
             : core::view::Renderer3DModule_2()
+            , _lightSlot("lights",
+                  "Lights are retrieved over this slot. If no light is connected") 
             , _accumulateSlot("accumulate", "Activates the accumulation buffer")
             // general renderer parameters
             , _rd_spp("SamplesPerPixel", "Samples per pixel")
@@ -46,6 +54,9 @@ namespace ospray {
             , _deviceTypeSlot("device", "Set the type of the OSPRay device")
             , _numThreads("numThreads", "Number of threads used for rendering") {
 
+
+        this->_lightSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+        this->MakeSlotAvailable(&this->_lightSlot);
 
         core::param::EnumParam* rdt = new core::param::EnumParam(SCIVIS);
         rdt->SetTypePair(SCIVIS, "SciVis");
@@ -357,72 +368,98 @@ namespace ospray {
 
 
     void AbstractOSPRayRenderer::fillLightArray(std::array<float,4> eyeDir) {
-
-         if (!_lightArray.empty()) {
-             for (auto& l : _lightArray) {
-                 ospRelease(l.handle());
-             }
-         }
+        // clear current lights
+        if (!_lightArray.empty()) {
+            for (auto& l : _lightArray) {
+                ospRelease(l.handle());
+            }
+        }
         _lightArray.clear();
 
         // create custom ospray light
         ::ospray::cpp::Light light;
+        auto lights = core::view::light::LightCollection();
 
-        for (auto const& entry : lightMap) {
+        auto call_light = _lightSlot.CallAs<core::view::light::CallLight>();
+        if (call_light != nullptr) {
+            lights = call_light->getData();
+        }
 
-            auto const& lc = entry.second;
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
+        auto point_lights = lights.get<core::view::light::PointLightType>();
+        auto spot_lights = lights.get<core::view::light::SpotLightType>();
+        auto quad_lights = lights.get<core::view::light::QuadLightType>();
+        auto hdri_lights = lights.get<core::view::light::HDRILightType>();
+        auto ambient_lights = lights.get<core::view::light::AmbientLightType>();
 
-            switch (lc.lightType) {
-            case core::view::light::lightenum::NONE:
-                light = NULL;
-                break;
-            case core::view::light::lightenum::DISTANTLIGHT:
-                light = ::ospray::cpp::Light("distant");
-                if (lc.dl_eye_direction == true) {
+        for (auto dl : distant_lights) {
+            light = ::ospray::cpp::Light("distant");
+                if (dl.eye_direction == true) {
                     light.setParam("direction", convertToVec4f(eyeDir));
                 } else {
-                    light.setParam("direction", convertToVec3f(lc.dl_direction));
+                    light.setParam("direction", convertToVec3f(dl.direction));
                 }
-                light.setParam("angularDiameter", lc.dl_angularDiameter);
-                break;
-            case core::view::light::lightenum::POINTLIGHT:
-                light = ::ospray::cpp::Light("point");
-                light.setParam("position", convertToVec3f(lc.pl_position));
-                light.setParam("radius", lc.pl_radius);
-                break;
-            case core::view::light::lightenum::SPOTLIGHT:
-                light = ::ospray::cpp::Light("spot");
-                light.setParam("position", convertToVec3f(lc.sl_position));
-                light.setParam("direction", convertToVec3f(lc.sl_direction));
-                light.setParam("openingAngle", lc.sl_openingAngle);
-                light.setParam("penumbraAngle", lc.sl_penumbraAngle);
-                light.setParam("radius", lc.sl_radius);
-                break;
-            case core::view::light::lightenum::QUADLIGHT:
-                light = ::ospray::cpp::Light("quad");
-                light.setParam("position", convertToVec3f(lc.ql_position));
-                light.setParam("edge1", convertToVec3f(lc.ql_edgeOne));
-                light.setParam("edge2", convertToVec3f(lc.ql_edgeTwo));
-                break;
-            case core::view::light::lightenum::HDRILIGHT:
-                light = ::ospray::cpp::Light("hdri");
-                light.setParam("up", convertToVec3f(lc.hdri_up));
-                light.setParam("dir", convertToVec3f(lc.hdri_direction));
-                if (lc.hdri_evnfile != vislib::TString("")) {
-                    ::ospray::cpp::Texture hdri_tex = this->TextureFromFile(lc.hdri_evnfile);
-                    _renderer->setParam("map_backplate", hdri_tex);
-                }
-                break;
-            case core::view::light::lightenum::AMBIENTLIGHT:
-                light =::ospray::cpp::Light("ambient");
-                break;
+            light.setParam("angularDiameter", dl.angularDiameter);
+            light.setParam("intensity", dl.intensity);
+            light.setParam("color", convertToVec4f(dl.colour));
+            light.commit();
+            _lightArray.emplace_back(light);
+        }
+
+        for (auto pl : point_lights) {
+            light = ::ospray::cpp::Light("point");
+            light.setParam("position", convertToVec3f(pl.position));
+            light.setParam("radius", pl.radius);
+            light.setParam("intensity", pl.intensity);
+            light.setParam("color", convertToVec4f(pl.colour));
+            light.commit();
+            _lightArray.emplace_back(light);
+        }
+
+        for (auto sl : spot_lights) {
+            light = ::ospray::cpp::Light("spot");
+            light.setParam("position", convertToVec3f(sl.position));
+            light.setParam("direction", convertToVec3f(sl.direction));
+            light.setParam("openingAngle", sl.openingAngle);
+            light.setParam("penumbraAngle", sl.penumbraAngle);
+            light.setParam("radius", sl.radius);
+            light.setParam("intensity", sl.intensity);
+            light.setParam("color", convertToVec4f(sl.colour));
+            light.commit();
+            _lightArray.emplace_back(light);
+        }
+
+        for (auto ql : quad_lights) {
+            light = ::ospray::cpp::Light("quad");
+            light.setParam("position", convertToVec3f(ql.position));
+            light.setParam("edge1", convertToVec3f(ql.edgeOne));
+            light.setParam("edge2", convertToVec3f(ql.edgeTwo));
+            light.setParam("intensity", ql.intensity);
+            light.setParam("color", convertToVec4f(ql.colour));
+            light.commit();
+            _lightArray.emplace_back(light);
+        }
+
+        for (auto hl : hdri_lights) {
+            light = ::ospray::cpp::Light("hdri");
+            light.setParam("up", convertToVec3f(hl.up));
+            light.setParam("dir", convertToVec3f(hl.direction));
+            if (hl.evnfile != vislib::TString("")) {
+                ::ospray::cpp::Texture hdri_tex = this->TextureFromFile(hl.evnfile);
+                _renderer->setParam("map_backplate", hdri_tex);
             }
-            if (lc.isValid && light != NULL) {
-                light.setParam("intensity", lc.lightIntensity);
-                light.setParam("color", convertToVec4f(lc.lightColor));
-                light.commit();
-                _lightArray.emplace_back(light);
-            }
+            light.setParam("intensity", hl.intensity);
+            light.setParam("color", convertToVec4f(hl.colour));
+            light.commit();
+            _lightArray.emplace_back(light);
+        }
+
+        for (auto al : ambient_lights) {
+            light =::ospray::cpp::Light("ambient");
+            light.setParam("intensity", al.intensity);
+            light.setParam("color", convertToVec4f(al.colour));
+            light.commit();
+            _lightArray.emplace_back(light);
         }
     }
 
