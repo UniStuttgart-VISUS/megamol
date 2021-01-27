@@ -10,12 +10,11 @@
 #define IMAGE_DATA_ACCESS_COLLECTION_H_INCLUDED
 
 #include <vector>
-#include "mesh.h"
 
 namespace megamol {
 namespace mesh {
 
-class MESH_API ImageDataAccessCollection {
+class ImageDataAccessCollection {
 public:
     enum TextureFormat { R32F, RGB32F, RGBA32F, R8, RGB8, RGBA8 };
 

@@ -9,7 +9,6 @@
 #include <map>
 #include <vector>
 #include "OSPRay_plugin/CallOSPRayMaterial.h"
-#include "OSPRay_plugin/OSPRay_plugin.h"
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -139,12 +138,12 @@ public:
 };
 
 
-class OSPRAY_PLUGIN_API CallOSPRayStructure;
+class CallOSPRayStructure;
 typedef std::map<CallOSPRayStructure*, OSPRayStructureContainer> OSPRayStrcutrureMap;
 typedef std::map<CallOSPRayStructure*, OSPRayExtendContainer> OSPRayExtendMap;
 
 
-class OSPRAY_PLUGIN_API CallOSPRayStructure : public megamol::core::Call {
+class CallOSPRayStructure : public megamol::core::Call {
 public:
     /**
      * Answer the name of the objects of this description.
