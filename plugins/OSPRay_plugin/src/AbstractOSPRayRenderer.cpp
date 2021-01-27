@@ -16,6 +16,12 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
+#include "mmcore/view/light/AmbientLight.h"
+#include "mmcore/view/light/DistantLight.h"
+#include "mmcore/view/light/HDRILight.h"
+#include "mmcore/view/light/PointLight.h"
+#include "mmcore/view/light/QuadLight.h"
+#include "mmcore/view/light/SpotLight.h"
 #include "ospcommon/box.h"
 #include "ospray/ospray.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
@@ -34,6 +40,8 @@ namespace ospray {
 
     AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
             : core::view::Renderer3DModule_2()
+            , lightSlot("lights",
+                  "Lights are retrieved over this slot. If no light is connected") 
             , accumulateSlot("accumulate", "Activates the accumulation buffer")
             ,
             // general renderer parameters
@@ -63,6 +71,9 @@ namespace ospray {
         device = NULL;
         framebufferIsDirty = true;
         maxDepthTexture = NULL;
+
+        this->lightSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+        this->MakeSlotAvailable(&this->lightSlot);
 
         core::param::EnumParam* rdt = new core::param::EnumParam(SCIVIS);
         rdt->SetTypePair(SCIVIS, "SciVis");
@@ -459,66 +470,93 @@ namespace ospray {
 
 
     void AbstractOSPRayRenderer::fillLightArray(glm::vec4& eyeDir) {
+        // clear current lights
+        this->lightArray.clear();
 
         // create custom ospray light
         OSPLight light;
+        auto lights = core::view::light::LightCollection();
 
-        this->lightArray.clear();
+        auto call_light = lightSlot.CallAs<core::view::light::CallLight>();
+        if (call_light != nullptr) {
+            lights = call_light->getData();
+        }
 
-        for (auto const& entry : this->lightMap) {
-            auto const& lc = entry.second;
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
+        auto point_lights = lights.get<core::view::light::PointLightType>();
+        auto spot_lights = lights.get<core::view::light::SpotLightType>();
+        auto quad_lights = lights.get<core::view::light::QuadLightType>();
+        auto hdri_lights = lights.get<core::view::light::HDRILightType>();
+        auto ambient_lights = lights.get<core::view::light::AmbientLightType>();
 
-            switch (lc.lightType) {
-            case core::view::light::lightenum::NONE:
-                light = NULL;
-                break;
-            case core::view::light::lightenum::DISTANTLIGHT:
-                light = ospNewLight(this->renderer, "distant");
-                if (lc.dl_eye_direction == true) {
-                    ospSet3f(light, "direction", eyeDir.x, eyeDir.y, eyeDir.z);
-                } else {
-                    ospSet3fv(light, "direction", lc.dl_direction.data());
-                }
-                ospSet1f(light, "angularDiameter", lc.dl_angularDiameter);
-                break;
-            case core::view::light::lightenum::POINTLIGHT:
-                light = ospNewLight(this->renderer, "point");
-                ospSet3fv(light, "position", lc.pl_position.data());
-                ospSet1f(light, "radius", lc.pl_radius);
-                break;
-            case core::view::light::lightenum::SPOTLIGHT:
-                light = ospNewLight(this->renderer, "spot");
-                ospSet3fv(light, "position", lc.sl_position.data());
-                ospSet3fv(light, "direction", lc.sl_direction.data());
-                ospSet1f(light, "openingAngle", lc.sl_openingAngle);
-                ospSet1f(light, "penumbraAngle", lc.sl_penumbraAngle);
-                ospSet1f(light, "radius", lc.sl_radius);
-                break;
-            case core::view::light::lightenum::QUADLIGHT:
-                light = ospNewLight(this->renderer, "quad");
-                ospSet3fv(light, "position", lc.ql_position.data());
-                ospSet3fv(light, "edge1", lc.ql_edgeOne.data());
-                ospSet3fv(light, "edge2", lc.ql_edgeTwo.data());
-                break;
-            case core::view::light::lightenum::HDRILIGHT:
-                light = ospNewLight(this->renderer, "hdri");
-                ospSet3fv(light, "up", lc.hdri_up.data());
-                ospSet3fv(light, "dir", lc.hdri_direction.data());
-                if (lc.hdri_evnfile != vislib::TString("")) {
-                    OSPTexture2D hdri_tex = this->TextureFromFile(lc.hdri_evnfile);
-                    ospSetObject(this->renderer, "backplate", hdri_tex);
-                }
-                break;
-            case core::view::light::lightenum::AMBIENTLIGHT:
-                light = ospNewLight(this->renderer, "ambient");
-                break;
+        for (auto dl : distant_lights) {
+            light = ospNewLight(this->renderer, "distant");
+            if (dl.eye_direction == true) {
+                ospSet3f(light, "direction", eyeDir.x, eyeDir.y, eyeDir.z);
+            } else {
+                ospSet3fv(light, "direction", dl.direction.data());
             }
-            if (lc.isValid && light != NULL) {
-                ospSet1f(light, "intensity", lc.lightIntensity);
-                ospSet3fv(light, "color", lc.lightColor.data());
-                ospCommit(light);
-                this->lightArray.push_back(light);
+            ospSet1f(light, "angularDiameter", dl.angularDiameter);
+            ospSet1f(light, "intensity", dl.intensity);
+            ospSet3fv(light, "color", dl.colour.data());
+            ospCommit(light);
+            this->lightArray.push_back(light);
+        }
+
+        for (auto pl : point_lights) {
+            light = ospNewLight(this->renderer, "point");
+            ospSet3fv(light, "position", pl.position.data());
+            ospSet1f(light, "radius", pl.radius);
+            ospSet1f(light, "intensity", pl.intensity);
+            ospSet3fv(light, "color", pl.colour.data());
+            ospCommit(light);
+            this->lightArray.push_back(light);
+        }
+
+        for (auto sl : spot_lights) {
+            light = ospNewLight(this->renderer, "spot");
+            ospSet3fv(light, "position", sl.position.data());
+            ospSet3fv(light, "direction", sl.direction.data());
+            ospSet1f(light, "openingAngle", sl.openingAngle);
+            ospSet1f(light, "penumbraAngle", sl.penumbraAngle);
+            ospSet1f(light, "radius", sl.radius);
+            ospSet1f(light, "intensity", sl.intensity);
+            ospSet3fv(light, "color", sl.colour.data());
+            ospCommit(light);
+            this->lightArray.push_back(light);
+        }
+
+        for (auto ql : quad_lights) {
+            light = ospNewLight(this->renderer, "quad");
+            ospSet3fv(light, "position", ql.position.data());
+            ospSet3fv(light, "edge1", ql.edgeOne.data());
+            ospSet3fv(light, "edge2", ql.edgeTwo.data());
+            ospSet1f(light, "intensity", ql.intensity);
+            ospSet3fv(light, "color", ql.colour.data());
+            ospCommit(light);
+            this->lightArray.push_back(light);
+        }
+
+        for (auto hl : hdri_lights) {
+            light = ospNewLight(this->renderer, "hdri");
+            ospSet3fv(light, "up", hl.up.data());
+            ospSet3fv(light, "dir", hl.direction.data());
+            if (hl.evnfile != vislib::TString("")) {
+                OSPTexture2D hdri_tex = this->TextureFromFile(hl.evnfile);
+                ospSetObject(this->renderer, "backplate", hdri_tex);
             }
+            ospSet1f(light, "intensity", hl.intensity);
+            ospSet3fv(light, "color", hl.colour.data());
+            ospCommit(light);
+            this->lightArray.push_back(light);
+        }
+
+        for (auto al : ambient_lights) {
+            light = ospNewLight(this->renderer, "ambient");
+            ospSet1f(light, "intensity", al.intensity);
+            ospSet3fv(light, "color", al.colour.data());
+            ospCommit(light);
+            this->lightArray.push_back(light);
         }
     }
 

@@ -75,13 +75,6 @@ protected:
      */
     bool getMetaDataCallback(core::Call& caller);
 
-    /**
-     * Receives the current lights from the light call and writes them to the lightMap
-     *
-     * @return True if any light has changed, false otherwise.
-     */
-    bool GetLights(void);
-
 private:
     typedef vislib::graphics::gl::GLSLComputeShader GLSLComputeShader;
 
@@ -98,9 +91,6 @@ private:
 
     /** GPU buffer object for making active (distant)lights available in during shading pass */
     std::unique_ptr<glowl::BufferObject> m_distant_lights_buffer;
-
-    /** map to store the called lights */
-    core::view::light::LightMap m_light_map;
 
     /** buffered light information */
     std::vector<LightParams> m_point_lights, m_distant_lights;

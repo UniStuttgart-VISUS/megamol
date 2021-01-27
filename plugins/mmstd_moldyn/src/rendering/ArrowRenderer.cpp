@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "ArrowRenderer.h"
 
+#include "mmcore/view/light/DistantLight.h"
 
 using namespace megamol::core;
 using namespace megamol::core::moldyn;
@@ -21,7 +22,8 @@ ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModule_2()
     , getClipPlaneSlot("getclipplane", "Connects to a clipping plane module")
     , lengthScaleSlot("lengthScale", ""), lengthFilterSlot("lengthFilter", "Filters the arrows by length")
     , arrowShader()
-    , greyTF(0) {
+    , greyTF(0) 
+    , getLightsSlot("lights", "Lights are retrieved over this slot.") {
 
     this->getDataSlot.SetCompatibleCall<MultiParticleDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
@@ -34,6 +36,9 @@ ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModule_2()
 
     this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->getClipPlaneSlot);
+
+    this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->getLightsSlot);
     
     this->lengthScaleSlot << new param::FloatParam(1.0f);
     this->MakeSlotAvailable(&this->lengthScaleSlot);
@@ -196,22 +201,30 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
     // Lights
-    this->GetLights();
-    glm::vec4 curlightDir = { 0.0f, 0.0f, 0.0f, 1.0f };
-    if (this->lightMap.size() > 1) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("ArrowRenderer: Only one single 'Distant Light' source is supported by this renderer");
-    }
-    for (auto light : this->lightMap) {
-        if (light.second.lightType != core::view::light::DISTANTLIGHT) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("ArrowRenderer: Only single 'Distant Light' source is supported by this renderer");
+    glm::vec4 curlightDir = {0.0f, 0.0f, 0.0f, 1.0f};
+
+    auto call_light = getLightsSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
         }
-        else {
-            auto use_eyedir = light.second.dl_eye_direction;
+
+        auto lights = call_light->getData();
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
+
+        if (distant_lights.size() > 1) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[ArrowRenderer] Only one single 'Distant Light' source is supported by this renderer");
+        } else if (distant_lights.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[ArrowRenderer] No 'Distant Light' found");
+        }
+
+        for (auto const& light : distant_lights) {
+            auto use_eyedir = light.eye_direction;
             if (use_eyedir) {
                 curlightDir = -cam_view;
-            }
-            else {
-                auto lightDir = light.second.dl_direction;
+            } else {
+                auto lightDir = light.direction;
                 if (lightDir.size() == 3) {
                     curlightDir[0] = lightDir[0];
                     curlightDir[1] = lightDir[1];
@@ -221,12 +234,12 @@ bool ArrowRenderer::Render(view::CallRender3D_2& call) {
                     curlightDir[3] = lightDir[3];
                 }
                 /// View Space Lighting. Comment line to change to Object Space Lighting.
-                //curlightDir = MVtransp * curlightDir;
+                // this->curlightDir = this->curMVtransp * this->curlightDir;
             }
-/// TODO Implement missing distant light parameters:
-            //light.second.dl_angularDiameter;
-            //light.second.lightColor;
-            //light.second.lightIntensity;
+            /// TODO Implement missing distant light parameters:
+            // light.second.dl_angularDiameter;
+            // light.second.lightColor;
+            // light.second.lightIntensity;
         }
     }
 
