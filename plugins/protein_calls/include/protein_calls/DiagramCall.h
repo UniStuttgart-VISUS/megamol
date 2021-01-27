@@ -21,7 +21,6 @@
 #include "vislib/math/Vector.h"
 #include "vislib/String.h"
 #include "vislib/forceinline.h"
-#include "protein_calls/Protein_Calls.h"
 
 
 namespace megamol {
@@ -36,7 +35,7 @@ namespace protein_calls {
 	 * allows for that as well.
 	 */
 
-	class PROTEIN_CALLS_API DiagramCall : public megamol::core::Call {
+	class DiagramCall : public megamol::core::Call {
 	public:
 
 		/**
@@ -47,7 +46,7 @@ namespace protein_calls {
 			DIAGRAM_GUIDE_HORIZONTAL = 1
 		};
 
-		class PROTEIN_CALLS_API DiagramGuide {
+		class DiagramGuide {
 		public:
 
 			/** Ctor. */
@@ -131,7 +130,7 @@ namespace protein_calls {
 		 * implementing diagram. userData must NOT be an array. The userdata
 		 * ownership is passed to the marker and destroyed alongside it.
 		 */
-		class PROTEIN_CALLS_API DiagramMarker {
+		class DiagramMarker {
 		public:
 
 			/** Ctor. */
@@ -343,7 +342,7 @@ namespace protein_calls {
 		 * data source proper is encapsulated in mappable, while the 'data space'
 		 * markers and parameters are set here.
 		 */
-		class PROTEIN_CALLS_API DiagramSeries {
+		class DiagramSeries {
 		public:
 			/** Ctor. */
 			DiagramSeries(vislib::StringA name, DiagramMappable *mappable) : mappable(mappable)

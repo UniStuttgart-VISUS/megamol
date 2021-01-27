@@ -37,6 +37,7 @@
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/utility/LogEchoTarget.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore/utility/plugins/PluginDescriptor.h"
 
 #include "vislib/Array.h"
 #include "vislib/IllegalStateException.h"
@@ -1091,7 +1092,7 @@ private:
      *
      * @param filename The plugin to load
      */
-    void loadPlugin(const vislib::TString& filename);
+    void loadPlugin(const std::shared_ptr<utility::plugins::AbstractPluginDescriptor>& plugin);
 
     #    ifdef REMOVE_GRAPH
     /**

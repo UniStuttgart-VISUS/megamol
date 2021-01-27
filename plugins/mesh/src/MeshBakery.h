@@ -14,7 +14,6 @@
 #include "mesh/AbstractMeshDataSource.h"
 #include "mesh/MeshCalls.h"
 #include "mesh/MeshDataAccessCollection.h"
-#include "mesh/mesh.h"
 
 namespace megamol {
 namespace mesh {

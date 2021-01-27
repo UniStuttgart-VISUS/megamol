@@ -16,12 +16,12 @@ megamol::stdplugin::datatools::AddParticleColors::~AddParticleColors(void) {
 }
 
 
-float lerp(float a, float b, float inter) {
+float megamol::stdplugin::datatools::AddParticleColors::lerp(float a, float b, float inter) {
     return a * (1.0f - inter) + b * inter;
 }
 
 
-glm::vec4 sample_tf(float const* tf, unsigned int tf_size, int base, float rest) {
+glm::vec4 megamol::stdplugin::datatools::AddParticleColors::sample_tf(float const* tf, unsigned int tf_size, int base, float rest) {
     if (base < 0 || tf_size == 0)
         return glm::vec4(0);
     auto const last_el = tf_size - 1;
