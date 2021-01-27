@@ -51,7 +51,7 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
     CallOSPRayStructure* os = dynamic_cast<CallOSPRayStructure*>(&call);
 
     mesh::CallMesh* cm = this->getLineDataSlot.CallAs<mesh::CallMesh>();
-
+    curveStructure cs;
     if (cm != nullptr) {
         auto meta_data = cm->getMetaData();
         this->structureContainer.dataChanged = false;
@@ -69,7 +69,8 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
             this->time = os->getTime();
             this->structureContainer.dataChanged = true;
             this->extendContainer.boundingBox = std::make_shared<core::BoundingBoxes_2>(meta_data.m_bboxs);
-            this->structureContainer.mesh = cm->getData();
+            cs.mesh = cm->getData();
+            structureContainer.structure = cs;
         }
 
     } else {
@@ -153,16 +154,17 @@ bool OSPRayLineGeometry::readData(core::Call& call) {
 
         // Write stuff into the structureContainer
 
-        this->structureContainer.vertexData = std::make_shared<std::vector<float>>(std::move(vd));
-        this->structureContainer.colorData = std::make_shared<std::vector<float>>(std::move(cd_rgba));
-        this->structureContainer.vertexLength = 3;
-        this->structureContainer.colorLength = 4;
-        this->structureContainer.indexData = std::make_shared<std::vector<unsigned int>>(std::move(index));
+        cs.vertexData = std::make_shared<std::vector<float>>(std::move(vd));
+        cs.colorData = std::make_shared<std::vector<float>>(std::move(cd_rgba));
+        cs.vertexLength = 3;
+        cs.colorLength = 4;
+        cs.indexData = std::make_shared<std::vector<unsigned int>>(std::move(index));
     }
 
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
     this->structureContainer.geometryType = geometryTypeEnum::LINES;
-    this->structureContainer.globalRadius = globalRadiusSlot.Param<core::param::FloatParam>()->Value();
+    cs.globalRadius = globalRadiusSlot.Param<core::param::FloatParam>()->Value();
+    structureContainer.structure = cs;
 
     return true;
 }

@@ -115,12 +115,16 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
             }
         }
 
-        this->structureContainer.vertexData = std::make_shared<std::vector<float>>(std::move(vd));
-        this->structureContainer.colorData = std::make_shared<std::vector<float>>(std::move(cd_rgba));
-        this->structureContainer.vertexLength = 3;
-        this->structureContainer.colorLength = 4;
-        this->structureContainer.partCount = partCount;
-        this->structureContainer.globalRadius = globalRadius;
+        sphereStructure ss;
+
+        ss.vertexData = std::make_shared<std::vector<float>>(std::move(vd));
+        ss.colorData = std::make_shared<std::vector<float>>(std::move(cd_rgba));
+        ss.vertexLength = 3;
+        ss.colorLength = 4;
+        ss.partCount = partCount;
+        ss.globalRadius = globalRadius;
+
+        this->structureContainer.structure = ss;
 
         this->datahash = cd->DataHash();
         this->time = cd->FrameID();

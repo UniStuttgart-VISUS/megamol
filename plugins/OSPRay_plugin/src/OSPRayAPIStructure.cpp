@@ -55,18 +55,21 @@ bool OSPRayAPIStructure::readData(megamol::core::Call &call) {
 
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::OSPRAY_API_STRUCTURES;
-
+    apiStructure apis;
     switch (cd->getStructureType()) {
     case structureTypeEnum::GEOMETRY:
-        this->structureContainer.ospStructures = std::make_pair<std::vector<void*>, structureTypeEnum>(cd->getAPIObjects(), structureTypeEnum::GEOMETRY);
+        apis.ospStructures =
+            std::make_pair<std::vector<void*>, structureTypeEnum>(cd->getAPIObjects(), structureTypeEnum::GEOMETRY);
         break;
     case structureTypeEnum::VOLUME:
-        this->structureContainer.ospStructures = std::make_pair<std::vector<void*>, structureTypeEnum>(cd->getAPIObjects(), structureTypeEnum::VOLUME);
+        apis.ospStructures =
+            std::make_pair<std::vector<void*>, structureTypeEnum>(cd->getAPIObjects(), structureTypeEnum::VOLUME);
         break;
     case structureTypeEnum::UNINITIALIZED:
         megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRay API structure type is not set.");
         return false;
     }
+    structureContainer.structure = apis;
 
     return true;
 }

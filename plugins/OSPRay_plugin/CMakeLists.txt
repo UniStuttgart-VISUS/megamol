@@ -15,7 +15,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   find_package(ospray CONFIG REQUIRED)
   find_package(rkcommon CONFIG REQUIRED)
-  find_package(openvkl CONFIG REQUIRED)
  
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
@@ -29,7 +28,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
   target_link_libraries(${PROJECT_NAME} 
     PRIVATE core geometry_calls mmstd_datatools protein_calls mesh
-    PUBLIC ospray::ospray ospray::ospray_module_ispc rkcommon::rkcommon openvkl::openvkl)
+    PUBLIC ospray::ospray ospray::ospray_module_ispc rkcommon::rkcommon)
 
   # Installation rules for generated files
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

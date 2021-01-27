@@ -59,7 +59,36 @@ inline rkcommon::math::vec3f convertToVec3f(glm::vec4 inp) {
     return rkcommon::math::vec3f(inp[0], inp[1], inp[2]);
 }
 
+struct baseStructureData {
+    void emplace_back(::ospray::cpp::Geometry geo, structureTypeEnum type) {
+        structures.emplace_back(geo);
+        types.emplace_back(type);
+    }
+    void emplace_back(::ospray::cpp::Volume vol, structureTypeEnum type) {
+        structures.emplace_back(vol);
+        types.emplace_back(type);
+    }
+    void emplace_back(OSPGeometry geo, structureTypeEnum type) {
+        structures.emplace_back(geo);
+        types.emplace_back(type);
+    }
+    void emplace_back(OSPVolume vol, structureTypeEnum type) {
+        structures.emplace_back(vol);
+        types.emplace_back(type);
+    }
+    void clear() {
+        structures.clear();
+        types.clear();
+    }
+    size_t size() {
+        assert(types.size() == structures.size());
+        return structures.size();
+    }
 
+
+    std::vector<structureTypeEnum> types;
+    std::vector<std::variant<::ospray::cpp::Geometry, ::ospray::cpp::Volume>> structures;
+};
 
 
 
@@ -197,11 +226,11 @@ protected:
     ::ospray::cpp::Texture _maxDepthTexture;
 
     // structure vectors
-    std::map<CallOSPRayStructure*, std::vector<std::variant<::ospray::cpp::Geometry, ::ospray::cpp::Volume>>> _baseStructures;
+    std::map<CallOSPRayStructure*, baseStructureData>
+        _baseStructures;
     std::map<CallOSPRayStructure*, std::vector<::ospray::cpp::VolumetricModel>> _volumetricModels;
     std::map<CallOSPRayStructure*, std::vector<::ospray::cpp::GeometricModel>>  _geometricModels;
     std::map<CallOSPRayStructure*, std::vector<::ospray::cpp::GeometricModel>> _clippingModels;
-    ::ospray::cpp::TransferFunction _transferfunction;
 
     std::map<CallOSPRayStructure*, ::ospray::cpp::Group> _groups;
     std::map<CallOSPRayStructure*, ::ospray::cpp::Instance> _instances;

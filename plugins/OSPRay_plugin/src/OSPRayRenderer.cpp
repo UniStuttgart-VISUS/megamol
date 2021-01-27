@@ -248,8 +248,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
             std::transform(_instances.begin(), _instances.end(), std::back_inserter(instanceArray), second(_instances));
             _world->setParam("instance", ::ospray::cpp::CopiedData(instanceArray));
 
-                    // Enable Lights
-            
+            // Enable Lights
             this->fillLightArray(eyeDir);
             _world->setParam("light", ::ospray::cpp::CopiedData(_lightArray));
 
@@ -357,8 +356,8 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         //    this->number++;
         //}
 
-        std::string fname("blub.ppm");
-        writePPM(fname, _imgSize, _fb);
+        //std::string fname("blub.ppm");
+        //writePPM(fname, _imgSize, _fb);
         
 
         this->renderTexture2D(_osprayShader, _fb, _db.data(), _imgSize[0], _imgSize[1], cr);

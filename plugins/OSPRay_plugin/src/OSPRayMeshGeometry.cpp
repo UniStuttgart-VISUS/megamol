@@ -66,7 +66,7 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
             this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>(meta_data.m_bboxs);
             this->extendContainer.timeFramesCount = meta_data.m_frame_cnt;
             this->extendContainer.isValid = true;
-            this->structureContainer.mesh = cm->getData();
+            std::get<meshStrucutre>(this->structureContainer.structure).mesh = cm->getData();
         }
     } else {
 
@@ -94,7 +94,9 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
         if (!(*cd)(0))
             return false;
 
-        this->structureContainer.mesh = std::make_shared<mesh::MeshDataAccessCollection>();
+        meshStrucutre ms;
+        ms.mesh = std::make_shared<mesh::MeshDataAccessCollection>();
+
 
 
         unsigned int triangleCount = 0;
@@ -226,9 +228,11 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
                 }
             }
             std::string identifier = std::string(FullName()) + "_object_" + std::to_string(i);
-            this->structureContainer.mesh->addMesh(identifier, attrib, index);
+            ms.mesh->addMesh(identifier, attrib, index);
 
         } // end for
+
+        structureContainer.structure = ms;
     }
 
 
