@@ -13,7 +13,6 @@
 
 #include "GPUMaterialCollection.h"
 #include "mesh/MeshCalls.h"
-#include "mesh/mesh.h"
 #include "mmcore/CalleeSlot.h"
 
 namespace megamol {
