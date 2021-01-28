@@ -1,26 +1,26 @@
 /*
- * AbstractCallRender3D_2.cpp
+ * AbstractCallRender3DGL.cpp
  *
  * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmcore/view/AbstractCallRender3D_2.h"
+#include "mmcore/view/AbstractCallRender3DGL.h"
 
 using namespace megamol::core;
 
 /*
- * view::AbstractCallRender3D::~AbstractCallRender3D_2
+ * view::AbstractCallRender3D::~AbstractCallRender3DGL
  */
-view::AbstractCallRender3D_2::~AbstractCallRender3D_2(void) {
+view::AbstractCallRender3DGL::~AbstractCallRender3DGL(void) {
     // intentionally empty
 }
 
 /*
  * view::AbstractCallRender3D::operator=
  */
-view::AbstractCallRender3D_2& view::AbstractCallRender3D_2::operator=(const view::AbstractCallRender3D_2& rhs) {
+view::AbstractCallRender3DGL& view::AbstractCallRender3DGL::operator=(const view::AbstractCallRender3DGL& rhs) {
 	view::AbstractCallRenderGL::operator=(rhs);
     this->minCamState = rhs.minCamState;
     this->bboxs = rhs.bboxs;
@@ -29,9 +29,9 @@ view::AbstractCallRender3D_2& view::AbstractCallRender3D_2::operator=(const view
 }
 
 /*
- * view::AbstractCallRender3D::AbstractCallRender3D_2
+ * view::AbstractCallRender3D::AbstractCallRender3DGL
  */
-view::AbstractCallRender3D_2::AbstractCallRender3D_2(void) : AbstractCallRenderGL(), bboxs(), lastFrameTime(0.0) {
+view::AbstractCallRender3DGL::AbstractCallRender3DGL(void) : AbstractCallRenderGL(), bboxs(), lastFrameTime(0.0) {
     // intentionally empty
     // TODO init camera parameters
 }

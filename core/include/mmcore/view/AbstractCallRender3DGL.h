@@ -1,5 +1,5 @@
 /*
- * AbstractCallRender3D_2.h
+ * AbstractCallRender3DGL.h
  *
  * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -36,9 +36,9 @@ namespace view {
  * Function "GetCapabilities" asks the callee to set the capabilities
  * flags of the call.
  */
-class MEGAMOLCORE_API AbstractCallRender3D_2 : public view::AbstractCallRenderGL {
+class MEGAMOLCORE_API AbstractCallRender3DGL : public view::AbstractCallRenderGL {
 public:
-    virtual ~AbstractCallRender3D_2(void);
+    virtual ~AbstractCallRender3DGL(void);
 
     /**
      * Accesses the bounding boxes of the output of the callee. This can
@@ -114,11 +114,11 @@ public:
      *
      * @return A reference to this
      */
-    AbstractCallRender3D_2& operator=(const AbstractCallRender3D_2& rhs);
+    AbstractCallRender3DGL& operator=(const AbstractCallRender3DGL& rhs);
 
 protected:
     /** Ctor. */
-    AbstractCallRender3D_2(void);
+    AbstractCallRender3DGL(void);
 
 private:
 #ifdef _WIN32

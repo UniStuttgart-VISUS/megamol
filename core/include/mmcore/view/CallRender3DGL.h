@@ -14,7 +14,7 @@
 #include <glm/glm.hpp>
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/AbstractCallRender3D_2.h"
+#include "mmcore/view/AbstractCallRender3DGL.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/RenderOutputOpenGL.h"
 
@@ -33,7 +33,7 @@ namespace view {
  * Function "GetExtents" asks the callee to fill the extents member of the
  * call (bounding boxes, temporal extents).
  */
-class MEGAMOLCORE_API CallRender3DGL : public AbstractCallRender3D_2, public view::RenderOutputOpenGL {
+class MEGAMOLCORE_API CallRender3DGL : public AbstractCallRender3DGL, public view::RenderOutputOpenGL {
 public:
     /**
      * Answer the name of the objects of this description.
@@ -54,7 +54,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return AbstractCallRender3D_2::FunctionCount(); }
+    static unsigned int FunctionCount(void) { return AbstractCallRender3DGL::FunctionCount(); }
 
     /**
      * Answer the name of the function used for this call.
@@ -63,7 +63,7 @@ public:
      *
      * @return The name of the requested function.
      */
-    static const char* FunctionName(unsigned int idx) { return AbstractCallRender3D_2::FunctionName(idx); }
+    static const char* FunctionName(unsigned int idx) { return AbstractCallRender3DGL::FunctionName(idx); }
 
     /** Ctor. */
     CallRender3DGL(void);
