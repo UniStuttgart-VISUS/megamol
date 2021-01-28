@@ -14,7 +14,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/RendererModule.h"
 #include "mmcore/view/light/CallLight.h"
@@ -27,7 +27,7 @@ namespace view {
 /**
  * New and improved base class of rendering graph 3D renderer modules.
  */
-class MEGAMOLCORE_API Renderer3DModule_2 : public view::RendererModule<CallRender3D_2> {
+class MEGAMOLCORE_API Renderer3DModule_2 : public view::RendererModule<CallRender3DGL> {
 public:
     /** Ctor. */
     Renderer3DModule_2(void);
@@ -45,7 +45,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(CallRender3D_2& call) = 0;
+    virtual bool GetExtents(CallRender3DGL& call) = 0;
 
     /**
      * The render callback.
@@ -54,14 +54,14 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(CallRender3D_2& call) = 0;
+    virtual bool Render(CallRender3DGL& call) = 0;
 
     /**
      * Method that gets called before the rendering is started for all changed modules
      *
      * @param call The rendering call that contains the camera
      */
-    virtual void PreRender(CallRender3D_2& call);
+    virtual void PreRender(CallRender3DGL& call);
 
 private:
     /**
@@ -73,7 +73,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtentsChain(CallRender3D_2& call) override final;
+    virtual bool GetExtentsChain(CallRender3DGL& call) override final;
 
     /**
      * The callback that triggers the rendering of all chained render modules
@@ -83,7 +83,7 @@ private:
      *
      * @return True on success, false otherwise
      */
-    virtual bool RenderChain(CallRender3D_2& call) override final;
+    virtual bool RenderChain(CallRender3DGL& call) override final;
 
     // TODO events
 };

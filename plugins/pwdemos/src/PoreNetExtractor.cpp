@@ -9,7 +9,7 @@
 #include "PoreNetExtractor.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -114,7 +114,7 @@ PoreNetExtractor::~PoreNetExtractor(void) {
 /*
  * PoreNetExtractor::GetExtents
  */
-bool PoreNetExtractor::GetExtents(core::view::CallRender3D_2& call) {
+bool PoreNetExtractor::GetExtents(core::view::CallRender3DGL& call) {
     call.AccessBoundingBoxes().SetBoundingBox(this->bbox);
     call.AccessBoundingBoxes().SetClipBox(this->cbox);
     call.SetTimeFramesCount(1);
@@ -126,7 +126,7 @@ bool PoreNetExtractor::GetExtents(core::view::CallRender3D_2& call) {
 /*
  * PoreNetExtractor::Render
  */
-bool PoreNetExtractor::Render(core::view::CallRender3D_2& call) {
+bool PoreNetExtractor::Render(core::view::CallRender3DGL& call) {
     if (this->isExtractionRunning()) {
         this->performExtraction();
     }

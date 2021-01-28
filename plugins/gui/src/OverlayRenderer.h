@@ -27,7 +27,7 @@
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/RendererModule.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -45,7 +45,7 @@ namespace gui {
     /**
      * Renders various kinds of overlays.
      */
-    class OverlayRenderer : public megamol::core::view::RendererModule<megamol::core::view::CallRender3D_2> {
+    class OverlayRenderer : public megamol::core::view::RendererModule<megamol::core::view::CallRender3DGL> {
     public:
         /**
          * Answer the name of this module.
@@ -102,7 +102,7 @@ namespace gui {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
+        virtual bool GetExtents(megamol::core::view::CallRender3DGL& call);
 
         /**
          * The render callback.
@@ -111,7 +111,7 @@ namespace gui {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::view::CallRender3D_2& call);
+        virtual bool Render(megamol::core::view::CallRender3DGL& call);
 
     private:
         struct TextureData {

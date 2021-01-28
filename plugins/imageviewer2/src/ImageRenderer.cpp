@@ -22,7 +22,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/AbstractRenderingView.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
 //#include <cmath>
@@ -176,7 +176,7 @@ bool imageviewer2::ImageRenderer::create(void) {
 /*
  * imageviewer2::ImageRenderer::GetExtents
  */
-bool imageviewer2::ImageRenderer::GetExtents(view::CallRender3D_2& call) {
+bool imageviewer2::ImageRenderer::GetExtents(view::CallRender3DGL& call) {
 
     view::Camera_2 cam;
     call.GetCamera(cam);
@@ -497,7 +497,7 @@ bool imageviewer2::ImageRenderer::initMPI() {
 /*
  * imageviewer2::ImageRenderer::Render
  */
-bool imageviewer2::ImageRenderer::Render(view::CallRender3D_2& call) {
+bool imageviewer2::ImageRenderer::Render(view::CallRender3DGL& call) {
 
     view::Camera_2 cam;
     call.GetCamera(cam);

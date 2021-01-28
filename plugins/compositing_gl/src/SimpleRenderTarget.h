@@ -10,7 +10,7 @@
 
 
 #include "mmcore/CalleeSlot.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
@@ -76,7 +76,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender3D_2& call);
+    bool GetExtents(core::view::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -85,14 +85,14 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender3D_2& call);
+    bool Render(core::view::CallRender3DGL& call);
 
     /**
      * Method that gets called before the rendering is started for all changed modules
      *
      * @param call The rendering call that contains the camera
      */
-    void PreRender(core::view::CallRender3D_2& call);
+    void PreRender(core::view::CallRender3DGL& call);
 
     /**
      *

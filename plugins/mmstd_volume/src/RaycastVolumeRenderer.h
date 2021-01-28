@@ -87,7 +87,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender3D_2& call) override;
+    bool GetExtents(core::view::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -96,7 +96,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender3D_2& call) override;
+    bool Render(core::view::CallRender3DGL& call) override;
 
     bool updateVolumeData(const unsigned int frameID);
 

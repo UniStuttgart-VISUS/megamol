@@ -12,7 +12,7 @@
 #include "QuartzParticleGridDataCall.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
@@ -64,7 +64,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::view::CallRender3D_2& call);
+    virtual bool GetExtents(core::view::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -73,7 +73,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core::view::CallRender3D_2& call);
+    virtual bool Render(core::view::CallRender3DGL& call);
 
     /**
      * Implementation of 'Create'.

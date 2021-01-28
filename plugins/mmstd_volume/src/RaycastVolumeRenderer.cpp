@@ -189,9 +189,9 @@ bool RaycastVolumeRenderer::create() {
 
 void RaycastVolumeRenderer::release() {}
 
-bool RaycastVolumeRenderer::GetExtents(megamol::core::view::CallRender3D_2& cr) {
+bool RaycastVolumeRenderer::GetExtents(megamol::core::view::CallRender3DGL& cr) {
     auto cd = m_volumetricData_callerSlot.CallAs<megamol::core::misc::VolumetricDataCall>();
-    auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3D_2>();
+    auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3DGL>();
 
     if (cd == nullptr) return false;
 
@@ -212,7 +212,7 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::view::CallRender3D_2& cr) 
     if (ci != nullptr) {
         *ci = cr;
 
-        if (!(*ci)(core::view::CallRender3D_2::FnGetExtents)) return false;
+        if (!(*ci)(core::view::CallRender3DGL::FnGetExtents)) return false;
 
         bbox.Union(ci->AccessBoundingBoxes().BoundingBox());
         cbox.Union(ci->AccessBoundingBoxes().ClipBox());
@@ -224,9 +224,9 @@ bool RaycastVolumeRenderer::GetExtents(megamol::core::view::CallRender3D_2& cr) 
     return true;
 }
 
-bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
+bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     // Chain renderer
-    auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3D_2>();
+    auto ci = m_renderer_callerSlot.CallAs<megamol::core::view::CallRender3DGL>();
 
     if (ci != nullptr) {
         auto cam = cr.GetCamera();
@@ -243,7 +243,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ci->SetTime(cr.Time());
-        if (!(*ci)(core::view::CallRender3D_2::FnRender)) return false;
+        if (!(*ci)(core::view::CallRender3DGL::FnRender)) return false;
 
         if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
             this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {

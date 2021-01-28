@@ -8,7 +8,7 @@
 #include "stdafx.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/InputCall.h"
 
 using namespace megamol::core;
@@ -19,7 +19,7 @@ using namespace megamol::core::view;
  * Renderer3DModule_2::Renderer3DModule_2
  */
 Renderer3DModule_2::Renderer3DModule_2(void)
-    : RendererModule<CallRender3D_2>() {
+    : RendererModule<CallRender3DGL>() {
     // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->chainRenderSlot);
 
@@ -37,8 +37,8 @@ Renderer3DModule_2::~Renderer3DModule_2(void) {
 /*
  * Renderer3DModule_2::GetExtentsChain
  */
-bool Renderer3DModule_2::GetExtentsChain(CallRender3D_2& call) {
-    CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
+bool Renderer3DModule_2::GetExtentsChain(CallRender3DGL& call) {
+    CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<CallRender3DGL>();
     if (chainedCall != nullptr) {
         // copy the incoming call to the output
         *chainedCall = call;
@@ -71,7 +71,7 @@ bool Renderer3DModule_2::GetExtentsChain(CallRender3D_2& call) {
 /*
  * Renderer3DModule_2::RenderChain
  */
-bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
+bool Renderer3DModule_2::RenderChain(CallRender3DGL& call) {
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
     std::shared_ptr<const view::AbstractView> viewptr =
         std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
@@ -87,7 +87,7 @@ bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
 
     this->PreRender(call);
 
-    CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
+    CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<CallRender3DGL>();
 
     if (chainedCall != nullptr) {
         // copy the incoming call to the output
@@ -108,6 +108,6 @@ bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
 /*
  * Renderer3DModule_2::PreRender
  */
-void Renderer3DModule_2::PreRender(CallRender3D_2& call) {
+void Renderer3DModule_2::PreRender(CallRender3DGL& call) {
     // intentionally empty
 }

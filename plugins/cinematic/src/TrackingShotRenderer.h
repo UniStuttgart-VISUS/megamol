@@ -19,7 +19,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/view/Renderer3DModule_2.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/Input.h"
 
@@ -113,7 +113,7 @@ namespace cinematic {
 		*
 		* @return The return value of the function.
 		*/
-		virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
+		virtual bool GetExtents(megamol::core::view::CallRender3DGL& call);
 
 		/**
 		* The render callback.
@@ -122,7 +122,7 @@ namespace cinematic {
 		*
 		* @return The return value of the function.
 		*/
-		virtual bool Render(megamol::core::view::CallRender3D_2& call);
+		virtual bool Render(megamol::core::view::CallRender3DGL& call);
 
         /** 
         * The mouse button pressed/released callback. 

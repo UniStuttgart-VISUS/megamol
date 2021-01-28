@@ -58,7 +58,7 @@ QuartzTexRenderer::~QuartzTexRenderer(void) {
 /*
  * QuartzTexRenderer::GetExtents
  */
-bool QuartzTexRenderer::GetExtents(core::view::CallRender3D_2& call) {
+bool QuartzTexRenderer::GetExtents(core::view::CallRender3DGL& call) {
     ParticleGridDataCall *pgdc = this->dataInSlot.CallAs<ParticleGridDataCall>();
     if ((pgdc != NULL) && ((*pgdc)(ParticleGridDataCall::CallForGetExtent))) {
         call.AccessBoundingBoxes() = pgdc->AccessBoundingBoxes();
@@ -77,7 +77,7 @@ bool QuartzTexRenderer::GetExtents(core::view::CallRender3D_2& call) {
 /*
  * QuartzTexRenderer::Render
  */
-bool QuartzTexRenderer::Render(core::view::CallRender3D_2& call) {
+bool QuartzTexRenderer::Render(core::view::CallRender3DGL& call) {
     ParticleGridDataCall *pgdc = this->getParticleData();
     if (pgdc == NULL) return false;
     CrystalDataCall *tdc = this->getCrystaliteData();

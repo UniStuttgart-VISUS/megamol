@@ -81,7 +81,7 @@ namespace trisoup {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender3D_2& call);
+        virtual bool GetExtents(core::view::CallRender3DGL& call);
 
         /**
          * Implementation of 'Release'.
@@ -95,7 +95,7 @@ namespace trisoup {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender3D_2& call);
+        virtual bool Render(core::view::CallRender3DGL& call);
 
     private:
 

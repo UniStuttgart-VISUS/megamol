@@ -10,7 +10,7 @@
 
 #include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
 
@@ -47,7 +47,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender3D_2& call);
+        virtual bool GetExtents(core::view::CallRender3DGL& call);
 
         /**
          * Implementation of 'Release'.
@@ -61,7 +61,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender3D_2& call);
+        virtual bool Render(core::view::CallRender3DGL& call);
 
         /**
          * The implementation of the render callback
@@ -70,7 +70,7 @@ namespace demos {
          *
          * @return The return value of the function
          */
-        virtual bool render(core::view::CallRender3D_2& call) = 0;
+        virtual bool render(core::view::CallRender3DGL& call) = 0;
 
         /**
          * Informs the class if the shader is required

@@ -20,7 +20,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallRender2D.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "vislib/Trace.h"
 #include "mmcore/utility/sys/SystemInformation.h"
 
@@ -435,8 +435,8 @@ bool megamol::remote::FBOTransmitter2::extractMetaData(float bbox[6], float fram
     // this->ModuleGraphLock().LockExclusive();
     const auto retBbox =
         this->GetCoreInstance()
-            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D_2>(
-                mvn, [bbox](megamol::core::view::CallRender3D_2& cr3d) {
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3DGL>(
+                mvn, [bbox](megamol::core::view::CallRender3DGL& cr3d) {
                     bbox[0] = cr3d.AccessBoundingBoxes().BoundingBox().GetLeft();
                     bbox[1] = cr3d.AccessBoundingBoxes().BoundingBox().GetBottom();
                     bbox[2] = cr3d.AccessBoundingBoxes().BoundingBox().GetBack();
@@ -447,16 +447,16 @@ bool megamol::remote::FBOTransmitter2::extractMetaData(float bbox[6], float fram
 
     const auto retTimes =
         this->GetCoreInstance()
-            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D_2>(
-                mvn, [frame_times](megamol::core::view::CallRender3D_2& cr3d) {
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3DGL>(
+                mvn, [frame_times](megamol::core::view::CallRender3DGL& cr3d) {
                     frame_times[0] = cr3d.Time();
                     frame_times[1] = static_cast<float>(cr3d.TimeFramesCount());
                 });
 
     const auto retCam =
         this->GetCoreInstance()
-            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D_2>(
-                mvn, [cam_params](megamol::core::view::CallRender3D_2& cr3d) {
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3DGL>(
+                mvn, [cam_params](megamol::core::view::CallRender3DGL& cr3d) {
                     core::view::Camera_2 cam;
                     cr3d.GetCamera(cam);
                     core::view::Camera_2::snapshot_type cam_snap;
@@ -499,8 +499,8 @@ bool megamol::remote::FBOTransmitter2::extractViewport(int vvpt[6]) {
     // this->ModuleGraphLock().LockExclusive();
     auto const ret =
         this->GetCoreInstance()
-            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3D_2>(
-                mvn, [vvpt](megamol::core::view::CallRender3D_2& cr3d) {
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3DGL>(
+                mvn, [vvpt](megamol::core::view::CallRender3DGL& cr3d) {
                     core::view::Camera_2 cam;
                     cr3d.GetCamera(cam);
                     auto tile_rect = cam.image_tile();

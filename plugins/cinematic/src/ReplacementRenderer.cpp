@@ -16,7 +16,7 @@ using namespace megamol::cinematic;
 using namespace vislib;
 
 
-ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererModule<megamol::core::view::CallRender3D_2>(),
+ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererModule<megamol::core::view::CallRender3DGL>(),
     alphaParam("alpha", "The alpha value of the replacement rendering."),
     replacementRenderingParam("replacement", "Show/hide replacement rendering for chained renderer."),
     replacementKeyParam("hotkeyAssignment", "Choose hotkey for replacement rendering button."),
@@ -80,9 +80,9 @@ bool ReplacementRenderer::create(void) {
 }
 
 
-bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
+bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) {
 
-    auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
 
     bool retVal = true;
     if (cr3d_out != nullptr) {
@@ -102,7 +102,7 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) 
 }
 
 
-bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
+bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
     std::shared_ptr<const view::AbstractView> viewptr =
@@ -200,7 +200,7 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     }
     else {
 
-        auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+        auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
         if (cr3d_out != nullptr) {
             *cr3d_out = call;
             return (*cr3d_out)(core::view::AbstractCallRenderGL::FnRender);

@@ -28,7 +28,7 @@
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/AbstractCallRenderGL.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/CameraParamOverride.h"
 #include "vislib/Exception.h"
@@ -376,7 +376,7 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     }
 
     glm::ivec4 currentViewport;
-    CallRender3D_2* cr3d = this->rendererSlot.CallAs<CallRender3D_2>();
+    CallRender3DGL* cr3d = this->rendererSlot.CallAs<CallRender3DGL>();
     if (cr3d != nullptr) {
         cr3d->SetMouseSelection(this->toggleMouseSelection);
     }
@@ -664,7 +664,7 @@ void View3D_2::UpdateFreeze(bool freeze) {
  * View3D_2::OnKey
  */
 bool view::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) {
-    auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
+    auto* cr = this->rendererSlot.CallAs<CallRender3DGL>();
     if (cr != nullptr) {
         view::InputEvent evt;
         evt.tag = view::InputEvent::Tag::Key;
@@ -672,7 +672,7 @@ bool view::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifier
         evt.keyData.action = action;
         evt.keyData.mods = mods;
         cr->SetInputEvent(evt);
-        if ((*cr)(CallRender3D_2::FnOnKey)) return true;
+        if ((*cr)(CallRender3DGL::FnOnKey)) return true;
     }
 
     if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
@@ -737,14 +737,14 @@ bool view::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifier
  * View3D_2::OnChar
  */
 bool view::View3D_2::OnChar(unsigned int codePoint) {
-    auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3DGL>();
     if (cr == NULL) return false;
 
     view::InputEvent evt;
     evt.tag = view::InputEvent::Tag::Char;
     evt.charData.codePoint = codePoint;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender3D_2::FnOnChar)) return false;
+    if (!(*cr)(view::CallRender3DGL::FnOnChar)) return false;
 
     return true;
 }
@@ -759,7 +759,7 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
                                 orbitAltitudeManipulator.manipulating();
 
     if (!cameraControlOverrideActive && !anyManipulatorActive) {
-        auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
+        auto* cr = this->rendererSlot.CallAs<CallRender3DGL>();
         if (cr != nullptr) {
             view::InputEvent evt;
             evt.tag = view::InputEvent::Tag::MouseButton;
@@ -767,7 +767,7 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
             evt.mouseButtonData.action = action;
             evt.mouseButtonData.mods = mods;
             cr->SetInputEvent(evt);
-            if ((*cr)(CallRender3D_2::FnOnMouseButton)) return true;
+            if ((*cr)(CallRender3DGL::FnOnMouseButton)) return true;
         }
     }
 
@@ -862,14 +862,14 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
                                 orbitAltitudeManipulator.manipulating();
 
     if (!anyManipulatorActive) {
-        auto* cr = this->rendererSlot.CallAs<CallRender3D_2>();
+        auto* cr = this->rendererSlot.CallAs<CallRender3DGL>();
         if (cr != nullptr) {
             view::InputEvent evt;
             evt.tag = view::InputEvent::Tag::MouseMove;
             evt.mouseMoveData.x = x;
             evt.mouseMoveData.y = y;
             cr->SetInputEvent(evt);
-            if ((*cr)(CallRender3D_2::FnOnMouseMove)) return true;
+            if ((*cr)(CallRender3DGL::FnOnMouseMove)) return true;
         }
     }
 
@@ -919,14 +919,14 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
  * View3D_2::OnMouseScroll
  */
 bool view::View3D_2::OnMouseScroll(double dx, double dy) {
-    auto* cr = this->rendererSlot.CallAs<view::CallRender3D_2>();
+    auto* cr = this->rendererSlot.CallAs<view::CallRender3DGL>();
     if (cr != NULL) {
         view::InputEvent evt;
         evt.tag = view::InputEvent::Tag::MouseScroll;
         evt.mouseScrollData.dx = dx;
         evt.mouseScrollData.dy = dy;
         cr->SetInputEvent(evt);
-        if ((*cr)(view::CallRender3D_2::FnOnMouseScroll)) return true;
+        if ((*cr)(view::CallRender3DGL::FnOnMouseScroll)) return true;
     }
 
 

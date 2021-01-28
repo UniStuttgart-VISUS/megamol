@@ -1,5 +1,5 @@
 /*
- * CallRender3D_2.h
+ * CallRender3DGL.h
  *
  * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -33,14 +33,14 @@ namespace view {
  * Function "GetExtents" asks the callee to fill the extents member of the
  * call (bounding boxes, temporal extents).
  */
-class MEGAMOLCORE_API CallRender3D_2 : public AbstractCallRender3D_2, public view::RenderOutputOpenGL {
+class MEGAMOLCORE_API CallRender3DGL : public AbstractCallRender3D_2, public view::RenderOutputOpenGL {
 public:
     /**
      * Answer the name of the objects of this description.
      *
      * @return The name of the objects of this description.
      */
-    static const char* ClassName(void) { return "CallRender3D_2"; }
+    static const char* ClassName(void) { return "CallRender3DGL"; }
 
     /**
      * Gets a human readable description of the module.
@@ -66,10 +66,10 @@ public:
     static const char* FunctionName(unsigned int idx) { return AbstractCallRender3D_2::FunctionName(idx); }
 
     /** Ctor. */
-    CallRender3D_2(void);
+    CallRender3DGL(void);
 
     /** Dtor. */
-    virtual ~CallRender3D_2(void);
+    virtual ~CallRender3DGL(void);
 
     /**
      * Answer the mouse flags
@@ -140,7 +140,7 @@ public:
      *
      * @return A reference to this
      */
-    CallRender3D_2& operator=(const CallRender3D_2& rhs);
+    CallRender3DGL& operator=(const CallRender3DGL& rhs);
 
 private:
     /** x-coordinate of the mouse pointer */
@@ -163,7 +163,7 @@ private:
 #endif /* _WIN32 */
 
 /** Description class typedef */
-typedef factories::CallAutoDescription<CallRender3D_2> CallRender3D_2Description;
+typedef factories::CallAutoDescription<CallRender3DGL> CallRender3D_2Description;
 
 } // namespace view
 } /* end namespace core */

@@ -9,7 +9,7 @@
 #define MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/RendererModule.h"
 #include "mmcore/view/AbstractCallRender3D_2.h"
 #include "mmcore/view/Input.h"
@@ -32,7 +32,7 @@ namespace cinematic {
     /*
      * Replacement rendering.
      */
-    class ReplacementRenderer : public megamol::core::view::RendererModule<megamol::core::view::CallRender3D_2>
+    class ReplacementRenderer : public megamol::core::view::RendererModule<megamol::core::view::CallRender3DGL>
     {
     public:
 
@@ -96,7 +96,7 @@ namespace cinematic {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
+        virtual bool GetExtents(megamol::core::view::CallRender3DGL& call);
 
         /**
          * The Open GL Render callback.
@@ -104,7 +104,7 @@ namespace cinematic {
          * @param call The calling call.
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::view::CallRender3D_2& call);
+        virtual bool Render(megamol::core::view::CallRender3DGL& call);
 
     private:
 

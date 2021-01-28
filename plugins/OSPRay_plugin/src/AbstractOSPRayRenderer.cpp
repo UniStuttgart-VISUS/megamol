@@ -126,7 +126,7 @@ namespace ospray {
     }
 
     void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& shader, const uint32_t* fb,
-        const float* db, int& width, int& height, megamol::core::view::CallRender3D_2& cr) {
+        const float* db, int& width, int& height, megamol::core::view::CallRender3DGL& cr) {
 
         auto fbo = cr.FrameBufferObject();
         // if (fbo != NULL) {

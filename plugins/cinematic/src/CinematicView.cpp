@@ -131,7 +131,7 @@ CinematicView::~CinematicView(void) {
 
 void CinematicView::Render(const mmcRenderViewContext& context) {
 
-    auto cr3d = this->rendererSlot.CallAs<core::view::CallRender3D_2>();
+    auto cr3d = this->rendererSlot.CallAs<core::view::CallRender3DGL>();
     if (cr3d == nullptr) return;
     if (!(*cr3d)(view::AbstractCallRenderGL::FnGetExtents)) return;
 

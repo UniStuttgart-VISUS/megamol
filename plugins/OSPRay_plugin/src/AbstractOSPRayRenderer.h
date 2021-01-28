@@ -10,7 +10,7 @@
 #include "OSPRay_plugin/CallOSPRayStructure.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/view/light/CallLight.h"
 #include "ospray/ospray.h"
@@ -45,7 +45,7 @@ protected:
      * @param image/window heigth
      */
     void renderTexture2D(vislib::graphics::gl::GLSLShader& shader, const uint32_t* fb, const float* db, int& width,
-        int& height, core::view::CallRender3D_2& cr);
+        int& height, core::view::CallRender3DGL& cr);
 
     /**
      * helper function for setting up the OSPRay screen

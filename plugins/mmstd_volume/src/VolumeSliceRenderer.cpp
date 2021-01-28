@@ -13,7 +13,7 @@
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -106,7 +106,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::create(void) {
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool megamol::stdplugin::volume::VolumeSliceRenderer::GetExtents(core::view::CallRender3D_2& cr) {
+bool megamol::stdplugin::volume::VolumeSliceRenderer::GetExtents(core::view::CallRender3DGL& cr) {
     auto *vdc = this->getVolSlot.CallAs<core::misc::VolumetricDataCall>();
 
 	vdc->SetFrameID(static_cast<unsigned int>(cr.Time()));
@@ -131,7 +131,7 @@ void megamol::stdplugin::volume::VolumeSliceRenderer::release(void) {
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRender3D_2& cr) {
+bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRender3DGL& cr) {
     // get volume data
     auto *vdc = this->getVolSlot.CallAs<core::misc::VolumetricDataCall>();
 	if (vdc == nullptr || !(*vdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;

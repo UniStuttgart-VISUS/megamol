@@ -57,9 +57,9 @@ protected:
     void release(void) override;
 
 private:
-    bool GetExtents(core::view::CallRender3D_2& call) override;
+    bool GetExtents(core::view::CallRender3DGL& call) override;
 
-    bool Render(core::view::CallRender3D_2& call) override;
+    bool Render(core::view::CallRender3DGL& call) override;
 
     void swapBuffers(void) {
         std::scoped_lock<std::mutex, std::mutex> guard{buffer_write_guard_, buffer_recv_guard_};

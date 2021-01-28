@@ -266,7 +266,7 @@ bool GrimRenderer::create(void) {
 }
 
 
-bool GrimRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
+bool GrimRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) {
 
     auto cr = &call;
     if (cr == NULL) return false;
@@ -316,7 +316,7 @@ void GrimRenderer::set_cam_uniforms(vislib::graphics::gl::GLSLShader& shader, gl
 }
 
 
-bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
+bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     auto cr = &call;
     if (cr == NULL) return false;

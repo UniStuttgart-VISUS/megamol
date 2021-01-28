@@ -60,13 +60,13 @@ void megamol::compositing::DrawToScreen::release() {
     m_drawToScreen_prgm.reset(); 
 }
 
-bool megamol::compositing::DrawToScreen::GetExtents(core::view::CallRender3D_2& call) { 
+bool megamol::compositing::DrawToScreen::GetExtents(core::view::CallRender3DGL& call) { 
     return true; 
 }
 
-bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call) { 
+bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call) { 
     // get lhs render call
-    megamol::core::view::CallRender3D_2* cr = &call;
+    megamol::core::view::CallRender3DGL* cr = &call;
     if (cr == NULL) return false;
 
     // Restore framebuffer that was bound on the way in
@@ -109,7 +109,7 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3D_2& call
     return true; 
 }
 
-void megamol::compositing::DrawToScreen::PreRender(core::view::CallRender3D_2& call) {
+void megamol::compositing::DrawToScreen::PreRender(core::view::CallRender3DGL& call) {
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_screenRestoreFBO);
 

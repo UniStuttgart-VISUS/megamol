@@ -71,9 +71,9 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(megamol::core::view::CallRender3D_2& call) override;
+    bool Render(megamol::core::view::CallRender3DGL& call) override;
 
-    bool GetExtents(core::view::CallRender3D_2& call) override;
+    bool GetExtents(core::view::CallRender3DGL& call) override;
 
 private:
     std::pair<std::vector<float>, std::vector<float>> drawData;

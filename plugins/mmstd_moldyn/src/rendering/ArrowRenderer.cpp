@@ -109,7 +109,7 @@ bool ArrowRenderer::create(void) {
 }
 
 
-bool ArrowRenderer::GetExtents(view::CallRender3D_2& call) {
+bool ArrowRenderer::GetExtents(view::CallRender3DGL& call) {
 
     MultiParticleDataCall* c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if ((c2 != nullptr) && ((*c2)(1))) {
@@ -132,7 +132,7 @@ void ArrowRenderer::release(void) {
 }
 
 
-bool ArrowRenderer::Render(view::CallRender3D_2& call) {
+bool ArrowRenderer::Render(view::CallRender3DGL& call) {
 
     MultiParticleDataCall *c2 = this->getDataSlot.CallAs<MultiParticleDataCall>();
     if (c2 != nullptr) {

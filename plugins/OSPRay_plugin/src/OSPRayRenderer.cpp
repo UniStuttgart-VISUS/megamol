@@ -140,7 +140,7 @@ void OSPRayRenderer::release() {
 /*
 ospray::OSPRayRenderer::Render
 */
-bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
+bool OSPRayRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     this->initOSPRay(device);
 
     if (device != ospGetCurrentDevice()) {
@@ -390,7 +390,7 @@ void OSPRayRenderer::InterfaceResetDirty() { this->AbstractResetDirty(); }
 /*
  * ospray::OSPRayRenderer::GetExtents
  */
-bool OSPRayRenderer::GetExtents(megamol::core::view::CallRender3D_2& cr) {
+bool OSPRayRenderer::GetExtents(megamol::core::view::CallRender3DGL& cr) {
 
     if (&cr == NULL) return false;
     CallOSPRayStructure* os = this->getStructureSlot.CallAs<CallOSPRayStructure>();

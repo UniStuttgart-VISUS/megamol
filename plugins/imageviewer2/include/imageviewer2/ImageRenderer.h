@@ -85,7 +85,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(view::CallRender3D_2& call);
+    virtual bool GetExtents(view::CallRender3DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -99,7 +99,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(view::CallRender3D_2& call);
+    virtual bool Render(view::CallRender3DGL& call);
 
 private:
     /**

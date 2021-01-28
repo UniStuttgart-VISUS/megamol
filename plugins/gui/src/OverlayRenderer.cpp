@@ -15,7 +15,7 @@ using namespace megamol::gui;
 
 
 OverlayRenderer::OverlayRenderer(void)
-        : view::RendererModule<view::CallRender3D_2>()
+        : view::RendererModule<view::CallRender3DGL>()
         , paramMode("mode", "Overlay mode.")
         , paramAnchor("anchor", "Anchor of overlay.")
         , paramCustomPosition("position_offset", "Custom relative position offset in respect to selected anchor.")
@@ -390,9 +390,9 @@ void OverlayRenderer::setParameterGUIVisibility(void) {
 }
 
 
-bool OverlayRenderer::GetExtents(view::CallRender3D_2& call) {
+bool OverlayRenderer::GetExtents(view::CallRender3DGL& call) {
 
-    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (chainedCall != nullptr) {
         *chainedCall = call;
         bool retVal = (*chainedCall)(view::AbstractCallRenderGL::FnGetExtents);
@@ -403,7 +403,7 @@ bool OverlayRenderer::GetExtents(view::CallRender3D_2& call) {
 }
 
 
-bool OverlayRenderer::Render(view::CallRender3D_2& call) {
+bool OverlayRenderer::Render(view::CallRender3DGL& call) {
 
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
     std::shared_ptr<const view::AbstractView> viewptr =
@@ -417,7 +417,7 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
     }
 
     // First call chained renderer
-    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (chainedCall != nullptr) {
         *chainedCall = call;
         if (!(*chainedCall)(view::AbstractCallRenderGL::FnRender)) {

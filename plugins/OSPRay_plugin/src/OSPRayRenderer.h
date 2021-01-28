@@ -73,7 +73,7 @@ protected:
     *
     * @return The return value of the function.
     */
-    virtual bool Render(megamol::core::view::CallRender3D_2& call);
+    virtual bool Render(megamol::core::view::CallRender3DGL& call);
 
 private:
 
@@ -86,7 +86,7 @@ private:
     *
     * @return The return value of the function.
     */
-    virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
+    virtual bool GetExtents(megamol::core::view::CallRender3DGL& call);
 
     /** The call for data */
     core::CallerSlot getStructureSlot;

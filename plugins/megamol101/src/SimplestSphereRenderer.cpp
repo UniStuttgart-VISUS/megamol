@@ -9,7 +9,7 @@
 #include "SimplestSphereRenderer.h"
 #include "CallSpheres.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Camera_2.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -126,8 +126,8 @@ bool SimplestSphereRenderer::create(void) {
 /*
  * SimplestSphereRenderer::GetExtents
  */
-bool SimplestSphereRenderer::GetExtents(core::view::CallRender3D_2& call) {
-    core::view::CallRender3D_2* cr3d = dynamic_cast<core::view::CallRender3D_2*>(&call);
+bool SimplestSphereRenderer::GetExtents(core::view::CallRender3DGL& call) {
+    core::view::CallRender3DGL* cr3d = dynamic_cast<core::view::CallRender3DGL*>(&call);
     if (cr3d == nullptr) return false;
 
     CallSpheres* cs = this->sphereDataSlot.CallAs<CallSpheres>();
@@ -155,8 +155,8 @@ void SimplestSphereRenderer::release(void) {
 /*
  * SimplestSphereRenderer::Render
  */
-bool SimplestSphereRenderer::Render(core::view::CallRender3D_2& call) {
-    core::view::CallRender3D_2* cr3d = dynamic_cast<core::view::CallRender3D_2*>(&call);
+bool SimplestSphereRenderer::Render(core::view::CallRender3DGL& call) {
+    core::view::CallRender3DGL* cr3d = dynamic_cast<core::view::CallRender3DGL*>(&call);
     if (cr3d == nullptr) return false;
 
     // before rendering, call all necessary data

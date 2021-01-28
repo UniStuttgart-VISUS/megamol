@@ -10,7 +10,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/View3D_2.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/param/BoolParam.h"
