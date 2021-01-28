@@ -15,7 +15,7 @@ namespace megamol {
 namespace demos {
 
     /**
-     * Mesh-based renderer for bézier curve tubes
+     * Mesh-based renderer for bÃ©zier curve tubes
      */
     class BezierCPUMeshRenderer : public AbstractBezierRenderer {
     public:
@@ -35,7 +35,7 @@ namespace demos {
          * @return A human readable description of this module.
          */
         static const char *Description(void) {
-            return "Renderer for bézier curve";
+            return "Renderer for bÃ©zier curve";
         }
 
         /**
@@ -94,6 +94,9 @@ namespace demos {
             float const *p3, float const *r3, unsigned char const *c3,
             float const *p4, float const *r4, unsigned char const *c4,
             bool hasRad, bool hasCol, int curSeg, int proSeg, int capSeg);
+
+        /** The call for light sources */
+        core::CallerSlot lightsSlot;
 
         /** The number of linear sections along the curve */
         core::param::ParamSlot curveSectionsSlot;

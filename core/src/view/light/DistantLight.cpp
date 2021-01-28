@@ -15,26 +15,30 @@
 
 using namespace megamol::core::view::light;
 
+void megamol::core::view::light::DistantLight::addLight(LightCollection& light_collection) {
+    light_collection.add<DistantLightType>(std::static_pointer_cast<DistantLightType>(lightsource));
+}
+
 /*
  * megamol::core::view::light::DistantLight::DistantLight
  */
 DistantLight::DistantLight(void)
     : AbstractLight()
-    ,
-    // Distant light parameters
-    dl_direction("Direction", "Direction of the Light")
-    , dl_angularDiameter("AngularDiameter", "If greater than zero results in soft shadows")
-    , dl_eye_direction("EyeDirection", "Sets the light direction as view direction") {
+    , direction("Direction", "Direction of the Light")
+    , angularDiameter("AngularDiameter", "If greater than zero results in soft shadows")
+    , eye_direction("EyeDirection", "Sets the light direction as view direction") {
 
     // distant light
-    this->dl_angularDiameter << new core::param::FloatParam(0.0f);
-    this->dl_direction << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, -1.0f, 0.0f));
-    this->dl_eye_direction << new core::param::BoolParam(0);
-    this->MakeSlotAvailable(&this->dl_direction);
-    this->MakeSlotAvailable(&this->dl_angularDiameter);
-    this->MakeSlotAvailable(&this->dl_eye_direction);
+    lightsource = std::make_shared<DistantLightType>();
 
-    this->dl_direction.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Direction);
+    this->angularDiameter << new core::param::FloatParam(0.0f);
+    this->direction << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, -1.0f, 0.0f));
+    this->eye_direction << new core::param::BoolParam(0);
+    this->MakeSlotAvailable(&this->direction);
+    this->MakeSlotAvailable(&this->angularDiameter);
+    this->MakeSlotAvailable(&this->eye_direction);
+
+    this->direction.Parameter()->SetGUIPresentation(core::param::AbstractParamPresentation::Presentation::Direction);
 }
 
 /*
@@ -46,26 +50,29 @@ DistantLight::~DistantLight(void) { this->Release(); }
  * megamol::core::view::light::DistantLight::readParams
  */
 void DistantLight::readParams() {
-    lightContainer.lightType = lightenum::DISTANTLIGHT;
-	lightContainer.lightColor = this->lightColor.Param<core::param::ColorParam>()->Value();
-    lightContainer.lightIntensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
-    lightContainer.dl_eye_direction = this->dl_eye_direction.Param<core::param::BoolParam>()->Value();
-    auto& dl_dir = this->dl_direction.Param<core::param::Vector3fParam>()->Value();
+    auto light = std::static_pointer_cast<DistantLightType>(lightsource);
+
+    light->colour = this->lightColor.Param<core::param::ColorParam>()->Value();
+    light->intensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
+
+    light->eye_direction = this->eye_direction.Param<core::param::BoolParam>()->Value();
+    if (light->eye_direction) { ++version; } // force update every frame is eye direction is used
+    auto& dl_dir = this->direction.Param<core::param::Vector3fParam>()->Value();
     glm::vec3 dl_dir_normalized(dl_dir.X(), dl_dir.Y(), dl_dir.Z());
     dl_dir_normalized = glm::normalize(dl_dir_normalized);
-    std::copy(glm::value_ptr(dl_dir_normalized), glm::value_ptr(dl_dir_normalized) + 3, lightContainer.dl_direction.begin());
-    lightContainer.dl_angularDiameter = this->dl_angularDiameter.Param<core::param::FloatParam>()->Value();
+    std::copy(glm::value_ptr(dl_dir_normalized), glm::value_ptr(dl_dir_normalized) + 3, light->direction.begin());
+    light->angularDiameter = this->angularDiameter.Param<core::param::FloatParam>()->Value();
 }
 
 /*
  * megamol::core::view::light::DistantLight::InterfaceIsDirty
  */
 bool DistantLight::InterfaceIsDirty() {
-    if (this->AbstractIsDirty() || this->dl_angularDiameter.IsDirty() || this->dl_direction.IsDirty() ||
-        this->dl_eye_direction.IsDirty()) {
-        this->dl_angularDiameter.ResetDirty();
-        this->dl_direction.ResetDirty();
-        this->dl_eye_direction.ResetDirty();
+    if (this->AbstractIsDirty() || this->angularDiameter.IsDirty() || this->direction.IsDirty() ||
+        this->eye_direction.IsDirty()) {
+        this->angularDiameter.ResetDirty();
+        this->direction.ResetDirty();
+        this->eye_direction.ResetDirty();
         return true;
     } else {
         return false;

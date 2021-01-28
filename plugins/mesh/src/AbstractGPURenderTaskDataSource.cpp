@@ -101,24 +101,6 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::C
     return true;
 }
 
-bool megamol::mesh::AbstractGPURenderTaskDataSource::GetLights(void) {
-    core::view::light::CallLight* cl = this->m_light_slot.CallAs<core::view::light::CallLight>();
-    if (cl == nullptr) {
-        // TODO add local light
-        return false;
-    }
-    cl->setLightMap(&this->lightMap);
-    cl->fillLightMap();
-    bool lightDirty = false;
-    for (const auto element : this->lightMap) {
-        auto light = element.second;
-        if (light.dataChanged) {
-            lightDirty = true;
-        }
-    }
-    return lightDirty;
-}
-
 void megamol::mesh::AbstractGPURenderTaskDataSource::syncRenderTaskCollection(CallGPURenderTaskData* lhs_call) {
     if (lhs_call->getData() == nullptr) {
         // no incoming material -> use your own material storage

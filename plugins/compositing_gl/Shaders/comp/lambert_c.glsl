@@ -73,7 +73,7 @@ void main() {
 
         for(int i=0; i<distant_light_cnt; ++i)
         {
-            vec3 light_dir = vec3(distant_light_params[i].x,distant_light_params[i].y,distant_light_params[i].z);
+            vec3 light_dir = -vec3(distant_light_params[i].x,distant_light_params[i].y,distant_light_params[i].z);
             reflected_light += lambert(light_dir,normal) * distant_light_params[i].intensity;
         }
 

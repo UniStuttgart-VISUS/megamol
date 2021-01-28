@@ -57,21 +57,11 @@ protected:
     virtual bool Render(CallRender3D_2& call) = 0;
 
     /**
-     * Receives the current lights from the light call and writes them to the lightMap
-     *
-     * @return True if any light has changed, false otherwise.
-     */
-    bool GetLights(void);
-
-    /**
      * Method that gets called before the rendering is started for all changed modules
      *
      * @param call The rendering call that contains the camera
      */
     virtual void PreRender(CallRender3D_2& call);
-
-    /** map to store the called lights */
-    core::view::light::LightMap lightMap;
 
 private:
     /**
@@ -96,9 +86,6 @@ private:
     virtual bool RenderChain(CallRender3D_2& call) override final;
 
     // TODO events
-
-    /** Slot to retrieve the light information */
-    CallerSlot lightSlot;
 };
 
 } // namespace view

@@ -116,6 +116,9 @@ protected:
      */
     void releaseOSPRayStuff();
 
+    // Call slots
+    megamol::core::CallerSlot lightSlot;
+
     // Interface Variables
     core::param::ParamSlot AOtransparencyEnabled;
     core::param::ParamSlot AOsamples;

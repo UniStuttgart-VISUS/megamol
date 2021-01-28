@@ -49,6 +49,9 @@ namespace demos {
         /** Slot connecting to the clipping plane provider */
         core::CallerSlot clipPlaneSlot;
 
+        /** The call for light sources */
+        core::CallerSlot lightsSlot;
+
         /** Shows/Hides the bounding box polygon of the clipping plane */
         core::param::ParamSlot showClipPlanePolySlot;
 

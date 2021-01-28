@@ -84,21 +84,27 @@ endif()
 # Within this function we need to define every binary which should include plugins.
 function(megamol_register_plugin TARGET)
   if (WIN32)
-    target_link_libraries(mmconsole PRIVATE ${TARGET})
-    target_link_options(mmconsole PRIVATE "/WHOLEARCHIVE:${TARGET}")
-
-    target_link_libraries(megamol PRIVATE ${TARGET})
-    target_link_options(megamol PRIVATE "/WHOLEARCHIVE:${TARGET}")
+    if (BUILD_CONSOLE)
+      target_link_libraries(mmconsole PRIVATE ${TARGET})
+      target_link_options(mmconsole PRIVATE "/WHOLEARCHIVE:${TARGET}")
+    endif()
+    if (BUILD_FRONTEND)
+      target_link_libraries(megamol PRIVATE ${TARGET})
+      target_link_options(megamol PRIVATE "/WHOLEARCHIVE:${TARGET}")
+    endif()
   else ()
-    target_link_libraries(mmconsole PRIVATE
-      -Wl,--whole-archive
-      ${TARGET}
-      -Wl,--no-whole-archive)
-
-    target_link_libraries(megamol PRIVATE
-      -Wl,--whole-archive
-      ${TARGET}
-      -Wl,--no-whole-archive)
+    if (BUILD_CONSOLE)
+      target_link_libraries(mmconsole PRIVATE
+        -Wl,--whole-archive
+        ${TARGET}
+        -Wl,--no-whole-archive)
+    endif()
+    if (BUILD_FRONTEND)
+      target_link_libraries(megamol PRIVATE
+        -Wl,--whole-archive
+        ${TARGET}
+        -Wl,--no-whole-archive)
+    endif()
   endif ()
 endfunction(megamol_register_plugin)
 

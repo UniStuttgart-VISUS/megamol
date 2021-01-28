@@ -2,6 +2,9 @@
 #include "LocalLighting.h"
 
 #include "mmcore/CoreInstance.h"
+#include "mmcore/view/light/CallLight.h"
+#include "mmcore/view/light/PointLight.h"
+#include "mmcore/view/light/DistantLight.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
 
@@ -18,7 +21,7 @@ megamol::compositing::LocalLighting::LocalLighting()
     , m_normal_tex_slot("NormalTexture", "Connects to the normals render target texture")
     , m_depth_tex_slot("DepthTexture", "Connects to the depth render target texture")
     , m_roughness_metalness_tex_slot("RoughMetalTexture","Connects to the roughness/metalness render target texture")
-    , m_lightSlot("lights", "Lights are retrieved over this slot. If no light is connected, a default camera light is used") 
+    , m_lightSlot("lights", "Lights are retrieved over this slot") 
     , m_camera_slot("Camera", "Connects a (copy of) camera state")
 {
     this->m_output_tex_slot.SetCallback(CallTexture2D::ClassName(), "GetData", &LocalLighting::getDataCallback);
@@ -91,23 +94,45 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
     auto call_normal = m_normal_tex_slot.CallAs<CallTexture2D>();
     auto call_depth = m_depth_tex_slot.CallAs<CallTexture2D>();
     auto call_camera = m_camera_slot.CallAs<CallCamera>();
+    auto call_light = m_lightSlot.CallAs<core::view::light::CallLight>();
 
-    if (lhs_tc == NULL) return false;
-    if (call_albedo == NULL) return false;
-    if (call_normal == NULL) return false;
-    if (call_depth == NULL) return false;
-    if (call_camera == NULL) return false;
+    if (lhs_tc == nullptr) {
+        return false;
+    }
+    if (call_albedo != nullptr) {
+        if (!(*call_albedo)(0)) {
+            return false;
+        }
+    }
+    if (call_normal != nullptr) {
+        if (!(*call_normal)(0)) {
+            return false;
+        }
+    }
+    if (call_depth != nullptr) {
+        if (!(*call_depth)(0)) {
+            return false;
+        }
+    }
+    if (call_camera != nullptr) {
+        if (!(*call_camera)(0)) {
+            return false;
+        }
+    }
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
+        }
+    }
 
-    if (!(*call_albedo)(0)) return false;
-    if (!(*call_normal)(0)) return false;
-    if (!(*call_depth)(0)) return false;
-    if (!(*call_camera)(0)) return false;
+    bool all_calls_valid = (call_albedo != nullptr) && (call_normal != nullptr) &&
+                           (call_depth != nullptr) && (call_camera != nullptr) && (call_light != nullptr);
 
     // something has changed in the neath...
     bool something_has_changed =
         call_albedo->hasUpdate() || call_normal->hasUpdate() || call_depth->hasUpdate() || call_camera->hasUpdate();
 
-    if (something_has_changed) {
+    if (something_has_changed && all_calls_valid) {
         ++m_version;
 
         // set output texture size to primary input texture
@@ -132,24 +157,28 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
         glm::mat4 view_mx = view_tmp;
         glm::mat4 proj_mx = proj_tmp;
 
-        auto light_update = this->GetLights();
+        if (call_light->hasUpdate()) {
+            auto lights = call_light->getData();
 
-        this->m_point_lights.clear();
-        this->m_distant_lights.clear();
-        for (const auto element : this->m_light_map) {
-            auto light = element.second;
-            if (light.lightType == core::view::light::POINTLIGHT) {
+            this->m_point_lights.clear();
+            this->m_distant_lights.clear();
+
+            auto point_lights = lights.get<core::view::light::PointLightType>();
+            auto distant_lights = lights.get<core::view::light::DistantLightType>();
+
+            for(auto pl : point_lights) {
                 m_point_lights.push_back(
-                    {light.pl_position[0], light.pl_position[1], light.pl_position[2], light.lightIntensity});
-            } else if (light.lightType == core::view::light::DISTANTLIGHT) {
-                if (light.dl_eye_direction) {
-                    glm::vec3 camPos(snapshot.view_vector.x(), snapshot.view_vector.y(), snapshot.view_vector.z());
-                    camPos = glm::normalize(-camPos);
-                    m_distant_lights.push_back(
-                        {camPos.x, camPos.y, camPos.z, light.lightIntensity});
+                    {pl.position[0], pl.position[1], pl.position[2], pl.intensity});
+            }
+
+            for (auto dl : distant_lights) {
+                if (dl.eye_direction) {
+                    glm::vec3 cam_dir(snapshot.view_vector.x(), snapshot.view_vector.y(), snapshot.view_vector.z());
+                    cam_dir = glm::normalize(cam_dir);
+                    m_distant_lights.push_back({cam_dir.x, cam_dir.y, cam_dir.z, dl.intensity});
                 } else {
                     m_distant_lights.push_back(
-                        {light.dl_direction[0], light.dl_direction[1], light.dl_direction[2], light.lightIntensity});
+                        {dl.direction[0], dl.direction[1], dl.direction[2], dl.intensity});
                 }
             }
         }
@@ -191,29 +220,9 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
         }
     }
 
-    if (lhs_tc->version() < m_version) {
-        lhs_tc->setData(m_output_texture, m_version);
-    }
+    lhs_tc->setData(m_output_texture, m_version);
 
     return true; 
 }
 
 bool megamol::compositing::LocalLighting::getMetaDataCallback(core::Call& caller) { return true; }
-
-bool megamol::compositing::LocalLighting::GetLights() {
-    core::view::light::CallLight* cl = this->m_lightSlot.CallAs<core::view::light::CallLight>();
-    if (cl == nullptr) {
-        // TODO add local light
-        return false;
-    }
-    cl->setLightMap(&this->m_light_map);
-    cl->fillLightMap();
-    bool lightDirty = false;
-    for (const auto element : this->m_light_map) {
-        auto light = element.second;
-        if (light.dataChanged) {
-            lightDirty = true;
-        }
-    }
-    return lightDirty;
-}

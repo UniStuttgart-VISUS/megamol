@@ -115,6 +115,9 @@ private:
      */
     std::unique_ptr<glowl::BufferObject> m_lights_buffer;
 
+    /** The call for light sources */
+    core::CallerSlot getLightsSlot;
+
     /** The btf file name */
     core::param::ParamSlot m_btf_filename_slot;
 };
