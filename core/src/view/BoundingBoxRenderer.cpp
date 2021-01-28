@@ -169,7 +169,7 @@ bool BoundingBoxRenderer::GetExtents(CallRender3D_2& call) {
         return false;
     }
     *chainedCall = call;
-    bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
+    bool retVal = (*chainedCall)(view::AbstractCallRenderGL::FnGetExtents);
     call = *chainedCall;
     return retVal;
 }
@@ -198,7 +198,7 @@ bool BoundingBoxRenderer::Render(CallRender3D_2& call) {
         return false;
     }
     *chainedCall = call;
-    bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
+    bool retVal = (*chainedCall)(view::AbstractCallRenderGL::FnGetExtents);
     call = *chainedCall;
 
     Camera_2 cam;
@@ -220,7 +220,7 @@ bool BoundingBoxRenderer::Render(CallRender3D_2& call) {
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderBoundingBoxBack(mvp, boundingBoxes, smoothLines);
     }
-    renderRes &= (*chainedCall)(view::AbstractCallRender::FnRender);
+    renderRes &= (*chainedCall)(view::AbstractCallRenderGL::FnRender);
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderBoundingBoxFront(mvp, boundingBoxes, smoothLines);
     }

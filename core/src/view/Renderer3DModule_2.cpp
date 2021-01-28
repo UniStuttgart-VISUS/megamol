@@ -44,7 +44,7 @@ bool Renderer3DModule_2::GetExtentsChain(CallRender3D_2& call) {
         *chainedCall = call;
 
         // chain through the get extents call
-        (*chainedCall)(view::AbstractCallRender::FnGetExtents);
+        (*chainedCall)(view::AbstractCallRenderGL::FnGetExtents);
     }
 
     // TODO extents magic
@@ -94,7 +94,7 @@ bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
         *chainedCall = call;
 
         // chain through the render call
-        (*chainedCall)(view::AbstractCallRender::FnRender);
+        (*chainedCall)(view::AbstractCallRenderGL::FnRender);
 
         call = *chainedCall;
     }

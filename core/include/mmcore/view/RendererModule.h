@@ -15,7 +15,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/AbstractCallRenderGL.h"
 #include "mmcore/view/InputCall.h"
 #include "mmcore/view/MouseFlags.h"
 #include <AbstractInputScope.h>
@@ -50,10 +50,10 @@ public:
             &RendererModule::OnMouseMoveChainCallback);
         this->renderSlot.SetCallback(C::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
             &RendererModule::OnMouseScrollChainCallback);
-        // AbstractCallRender
-        this->renderSlot.SetCallback(C::ClassName(), AbstractCallRender::FunctionName(AbstractCallRender::FnRender),
+        // AbstractCallRenderGL
+        this->renderSlot.SetCallback(C::ClassName(), AbstractCallRenderGL::FunctionName(AbstractCallRenderGL::FnRender),
             &RendererModule::RenderChainCallback);
-        this->renderSlot.SetCallback(C::ClassName(), AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents),
+        this->renderSlot.SetCallback(C::ClassName(), AbstractCallRenderGL::FunctionName(AbstractCallRenderGL::FnGetExtents),
             &RendererModule::GetExtentsChainCallback);
         // Do not make it available yet (extensibility).
     }

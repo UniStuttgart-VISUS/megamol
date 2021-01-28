@@ -1,28 +1,28 @@
 /*
- * AbstractCallRender.cpp
+ * AbstractCallRenderGL.cpp
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/AbstractCallRenderGL.h"
 #include "vislib/assert.h"
 
 using namespace megamol::core;
 
 
 /*
- * view::AbstractCallRender::NO_GPU_AFFINITY
+ * view::AbstractCallRenderGL::NO_GPU_AFFINITY
  */
-const view::AbstractCallRender::GpuHandleType
-view::AbstractCallRender::NO_GPU_AFFINITY = nullptr;
+const view::AbstractCallRenderGL::GpuHandleType
+view::AbstractCallRenderGL::NO_GPU_AFFINITY = nullptr;
 
 /*
- * view::AbstractCallRender::operator=
+ * view::AbstractCallRenderGL::operator=
  */
-view::AbstractCallRender& view::AbstractCallRender::operator=(
-        const view::AbstractCallRender& rhs) {
+view::AbstractCallRenderGL& view::AbstractCallRenderGL::operator=(
+        const view::AbstractCallRenderGL& rhs) {
     this->cntTimeFrames = rhs.cntTimeFrames;
     this->gpuAffinity = rhs.gpuAffinity;
     this->time = rhs.time;
@@ -35,9 +35,9 @@ view::AbstractCallRender& view::AbstractCallRender::operator=(
 
 
 /*
- * view::AbstractCallRender::AbstractCallRender
+ * view::AbstractCallRenderGL::AbstractCallRenderGL
  */
-view::AbstractCallRender::AbstractCallRender(void) : InputCall(), cntTimeFrames(1),
+view::AbstractCallRenderGL::AbstractCallRenderGL(void) : InputCall(), cntTimeFrames(1),
         gpuAffinity(NO_GPU_AFFINITY), time(0.0f), instTime(0.0f), isInSituTime(false), lastFrameTime(0.0) {
     // intentionally empty
 }

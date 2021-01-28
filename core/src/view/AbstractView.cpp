@@ -13,7 +13,7 @@
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRenderView.h"
-#include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/AbstractCallRenderGL.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
 #include "vislib/UnsupportedOperationException.h"
@@ -39,11 +39,11 @@ view::AbstractView::AbstractView(void) : Module(),
         &AbstractView::OnMouseMoveCallback);
     this->renderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
         &AbstractView::OnMouseScrollCallback);
-    // AbstractCallRender
+    // AbstractCallRenderGL
     this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
-        AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
+        AbstractCallRenderGL::FunctionName(AbstractCallRenderGL::FnRender), &AbstractView::OnRenderView);
     this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
-        AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
+        AbstractCallRenderGL::FunctionName(AbstractCallRenderGL::FnGetExtents), &AbstractView::GetExtents);
     // CallRenderView
     this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_FREEZE), &AbstractView::OnFreezeView);

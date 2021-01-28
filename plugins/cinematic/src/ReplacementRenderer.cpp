@@ -87,7 +87,7 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) 
     bool retVal = true;
     if (cr3d_out != nullptr) {
         *cr3d_out = call;
-        retVal = (*cr3d_out)(view::AbstractCallRender::FnGetExtents);
+        retVal = (*cr3d_out)(view::AbstractCallRenderGL::FnGetExtents);
         call = *cr3d_out;
         this->bbox = call.AccessBoundingBoxes().BoundingBox();
     }
@@ -203,7 +203,7 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
         if (cr3d_out != nullptr) {
             *cr3d_out = call;
-            return (*cr3d_out)(core::view::AbstractCallRender::FnRender);
+            return (*cr3d_out)(core::view::AbstractCallRenderGL::FnRender);
         }
     }
 

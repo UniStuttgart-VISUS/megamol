@@ -101,7 +101,7 @@ void GUIView::Render(const mmcRenderViewContext& context) {
         auto viewport =
             glm::vec2(static_cast<float>(viewport_rect.Width()), static_cast<float>(viewport_rect.Height()));
         this->gui.PreDraw(viewport, viewport, crv->InstanceTime());
-        (*crv)(core::view::AbstractCallRender::FnRender);
+        (*crv)(core::view::AbstractCallRenderGL::FnRender);
         this->gui.PostDraw();
     } else {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

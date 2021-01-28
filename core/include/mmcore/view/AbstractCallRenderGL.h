@@ -1,5 +1,5 @@
 /*
- * AbstractCallRender.h
+ * AbstractCallRenderGL.h
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
@@ -31,7 +31,7 @@ namespace view {
      *
      * Handles the output buffer control.
      */
-    class MEGAMOLCORE_API AbstractCallRender : public InputCall, public virtual AbstractRenderOutput {
+    class MEGAMOLCORE_API AbstractCallRenderGL : public InputCall, public virtual AbstractRenderOutput {
     public:
         static const unsigned int FnRender = 5;
         static const unsigned int FnGetExtents = 6;
@@ -71,7 +71,7 @@ namespace view {
         static const GpuHandleType NO_GPU_AFFINITY;
 
         /** Dtor. */
-        virtual ~AbstractCallRender(void) = default;
+        virtual ~AbstractCallRenderGL(void) = default;
 
         /**
          * Get the GPU affinity handle and convert it to its native type in
@@ -218,12 +218,12 @@ namespace view {
          *
          * @return A reference to this
          */
-        AbstractCallRender& operator=(const AbstractCallRender& rhs);
+        AbstractCallRenderGL& operator=(const AbstractCallRenderGL& rhs);
 
     protected:
 
         /** Ctor. */
-        AbstractCallRender(void);
+        AbstractCallRenderGL(void);
 
     private:
 

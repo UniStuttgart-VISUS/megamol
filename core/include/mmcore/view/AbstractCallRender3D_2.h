@@ -14,7 +14,7 @@
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/AbstractCallRenderGL.h"
 #include "mmcore/view/Camera_2.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/assert.h"
@@ -36,7 +36,7 @@ namespace view {
  * Function "GetCapabilities" asks the callee to set the capabilities
  * flags of the call.
  */
-class MEGAMOLCORE_API AbstractCallRender3D_2 : public view::AbstractCallRender {
+class MEGAMOLCORE_API AbstractCallRender3D_2 : public view::AbstractCallRenderGL {
 public:
     virtual ~AbstractCallRender3D_2(void);
 

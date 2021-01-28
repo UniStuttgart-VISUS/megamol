@@ -15,7 +15,7 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/types.h"
-#include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/AbstractCallRenderGL.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/RenderOutputOpenGL.h"
 
@@ -40,7 +40,7 @@ namespace view {
      * call (bounding boxes).
      * The renderer should not draw anything outside the bounding box
      */
-    class MEGAMOLCORE_API CallRender2D : public AbstractCallRender, public RenderOutputOpenGL {
+    class MEGAMOLCORE_API CallRender2D : public AbstractCallRenderGL, public RenderOutputOpenGL {
     public:
 
         /**
@@ -67,7 +67,7 @@ namespace view {
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-            return AbstractCallRender::FunctionCount();
+            return AbstractCallRenderGL::FunctionCount();
         }
 
         /**
@@ -78,7 +78,7 @@ namespace view {
          * @return The name of the requested function.
          */
         static const char * FunctionName(unsigned int idx) {
-            return AbstractCallRender::FunctionName(idx);
+            return AbstractCallRenderGL::FunctionName(idx);
         }
 
         /** Ctor. */
@@ -163,7 +163,7 @@ namespace view {
          * @return A reference to this
          */
         CallRender2D& operator=(const CallRender2D& rhs) {
-            AbstractCallRender::operator=(rhs);
+            AbstractCallRenderGL::operator=(rhs);
             RenderOutputOpenGL::operator=(rhs);
             this->bbox = rhs.bbox;
             this->bkgndCol[0] = rhs.bkgndCol[0];

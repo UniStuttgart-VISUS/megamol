@@ -133,7 +133,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     auto cr3d = this->rendererSlot.CallAs<core::view::CallRender3D_2>();
     if (cr3d == nullptr) return;
-    if (!(*cr3d)(view::AbstractCallRender::FnGetExtents)) return;
+    if (!(*cr3d)(view::AbstractCallRenderGL::FnGetExtents)) return;
 
     // Get update data from keyframe keeper -----------------------------------
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();

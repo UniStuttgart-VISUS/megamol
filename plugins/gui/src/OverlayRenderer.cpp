@@ -395,7 +395,7 @@ bool OverlayRenderer::GetExtents(view::CallRender3D_2& call) {
     auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
     if (chainedCall != nullptr) {
         *chainedCall = call;
-        bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
+        bool retVal = (*chainedCall)(view::AbstractCallRenderGL::FnGetExtents);
         call = *chainedCall;
         return retVal;
     }
@@ -420,7 +420,7 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
     auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
     if (chainedCall != nullptr) {
         *chainedCall = call;
-        if (!(*chainedCall)(view::AbstractCallRender::FnRender)) {
+        if (!(*chainedCall)(view::AbstractCallRenderGL::FnRender)) {
             return false;
         }
     }

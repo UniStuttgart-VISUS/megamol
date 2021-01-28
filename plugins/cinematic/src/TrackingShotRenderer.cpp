@@ -81,7 +81,7 @@ bool TrackingShotRenderer::GetExtents(megamol::core::view::CallRender3D_2& call)
     // Propagate changes made in GetExtents() from outgoing CallRender3D_2 (cr3d_out) to incoming CallRender3D_2 (cr3d_in).
     auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
 
-    if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRender::FnGetExtents)) {
+    if ((cr3d_out != nullptr) && (*cr3d_out)(core::view::AbstractCallRenderGL::FnGetExtents)) {
         CallKeyframeKeeper *ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
         if (ccc == nullptr) return false;
         if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData)) return false;

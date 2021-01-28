@@ -19,7 +19,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/AbstractCallRenderGL.h"
 #include "mmcore/view/AbstractCamParamSync.h"
 #include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/CameraSerializer.h"
@@ -329,7 +329,7 @@ protected:
     param::ParamSlot stereoEyeDistSlot;
 
     /** The incoming call */
-    view::AbstractCallRender* overrideCall;
+    view::AbstractCallRenderGL* overrideCall;
 
     /** The move step size in world coordinates */
     param::ParamSlot viewKeyMoveStepSlot;

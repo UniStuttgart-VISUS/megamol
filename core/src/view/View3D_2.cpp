@@ -27,7 +27,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/AbstractCallRenderGL.h"
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/CameraParamOverride.h"
@@ -461,7 +461,7 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     }
 
     if (cr3d != nullptr) {
-        (*cr3d)(view::AbstractCallRender::FnGetExtents);
+        (*cr3d)(view::AbstractCallRenderGL::FnGetExtents);
         this->valuesFromOutside = this->adaptCameraValues(this->cam);
         if (this->firstImg || (!(cr3d->AccessBoundingBoxes() == this->bboxs) &&
                                   !(!cr3d->AccessBoundingBoxes().IsAnyValid() && !this->bboxs.IsBoundingBoxValid() &&
@@ -527,7 +527,7 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
 
     if (cr3d != nullptr) {
         cr3d->SetCameraState(this->cam);
-        (*cr3d)(view::AbstractCallRender::FnRender);
+        (*cr3d)(view::AbstractCallRenderGL::FnRender);
     }
 
     this->setCameraValues(this->cam);
@@ -625,7 +625,7 @@ bool View3D_2::OnRenderView(Call& call) {
         this->overrideBkgndCol = overBC.data(); // hurk
     }
 
-    this->overrideCall = dynamic_cast<view::AbstractCallRender*>(&call);
+    this->overrideCall = dynamic_cast<view::AbstractCallRenderGL*>(&call);
 
     float time = crv->Time();
     if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());

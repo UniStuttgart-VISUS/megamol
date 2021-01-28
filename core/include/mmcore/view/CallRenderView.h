@@ -13,7 +13,7 @@
 
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/AbstractCallRenderGL.h"
 #include "mmcore/view/RenderOutputOpenGL.h" 
 #include "mmcore/view/Input.h"
 #include "vislib/graphics/CameraParameters.h"
@@ -31,7 +31,7 @@ namespace view {
      * Call for rendering visual elements (from separate sources) into a single target, i.e.,
 	 * FBO-based compositing and cluster display.
      */
-    class MEGAMOLCORE_API CallRenderView : public AbstractCallRender, public RenderOutputOpenGL {
+    class MEGAMOLCORE_API CallRenderView : public AbstractCallRenderGL, public RenderOutputOpenGL {
     public:
 
         /**
@@ -53,10 +53,10 @@ namespace view {
         }
 
 		/** Function index of 'render' */
-        static const unsigned int CALL_RENDER = AbstractCallRender::FnRender;
+        static const unsigned int CALL_RENDER = AbstractCallRenderGL::FnRender;
 
         /** Function index of 'getExtents' */
-        static const unsigned int CALL_EXTENTS = AbstractCallRender::FnGetExtents;
+        static const unsigned int CALL_EXTENTS = AbstractCallRenderGL::FnGetExtents;
 
         /** Function index of 'freeze' */
         static const unsigned int CALL_FREEZE = 7;
@@ -73,13 +73,13 @@ namespace view {
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-			ASSERT(CALL_FREEZE == AbstractCallRender::FunctionCount()
+			ASSERT(CALL_FREEZE == AbstractCallRenderGL::FunctionCount()
 				&& "Enum has bad magic number");
-			ASSERT(CALL_UNFREEZE == AbstractCallRender::FunctionCount() + 1
+			ASSERT(CALL_UNFREEZE == AbstractCallRenderGL::FunctionCount() + 1
 				&& "Enum has bad magic number");
-			ASSERT(CALL_RESETVIEW  == AbstractCallRender::FunctionCount() + 2
+			ASSERT(CALL_RESETVIEW  == AbstractCallRenderGL::FunctionCount() + 2
 				&& "Enum has bad magic number");
-            return AbstractCallRender::FunctionCount() + 3;
+            return AbstractCallRenderGL::FunctionCount() + 3;
         }
 
         /**
@@ -97,7 +97,7 @@ namespace view {
             } else if (idx == CALL_RESETVIEW) {
                 return "ResetView";
             } 
-            return AbstractCallRender::FunctionName(idx);
+            return AbstractCallRenderGL::FunctionName(idx);
 		}
 
         /**
