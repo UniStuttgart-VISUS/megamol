@@ -36,6 +36,8 @@ namespace table {
         virtual bool create(void);
         virtual void release(void);
 
+        bool reloadCallback(core::param::ParamSlot &caller);
+
     private:
 
         inline void assertData(void);
@@ -43,14 +45,16 @@ namespace table {
         bool getHashCallback(core::Call& caller);
 
         core::param::ParamSlot filenameSlot;
+        core::param::ParamSlot reloadSlot;
 
         core::CalleeSlot getDataSlot;
 
         SIZE_T dataHash;
 
+        bool reload;
+
         std::vector<TableDataCall::ColumnInfo> columns;
         std::vector<float> values;
-
     };
 
 } /* end namespace table */

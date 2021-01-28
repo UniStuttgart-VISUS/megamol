@@ -8,6 +8,7 @@
 #include "stdafx.h"
 #include "MMFTDataSource.h"
 
+#include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/CoreInstance.h"
 
@@ -20,11 +21,15 @@ using namespace megamol;
 
 MMFTDataSource::MMFTDataSource(void) : core::Module(),
         filenameSlot("filename", "The file name"),
+        reloadSlot("reload", "Reload file"),
         getDataSlot("getData", "Slot providing the data"),
-        dataHash(0), columns(), values() {
+        dataHash(0), columns(), values(), reload(false) {
 
     this->filenameSlot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->filenameSlot);
+    this->reloadSlot << new core::param::ButtonParam();
+    this->reloadSlot.SetUpdateCallback(this, &MMFTDataSource::reloadCallback);
+    this->MakeSlotAvailable(&this->reloadSlot);
 
     this->getDataSlot.SetCallback(TableDataCall::ClassName(), "GetData", &MMFTDataSource::getDataCallback);
     this->getDataSlot.SetCallback(TableDataCall::ClassName(), "GetHash", &MMFTDataSource::getHashCallback);
@@ -47,11 +52,12 @@ void MMFTDataSource::release(void) {
 }
 
 void MMFTDataSource::assertData(void) {
-    if (!this->filenameSlot.IsDirty()) {
+    if (!this->filenameSlot.IsDirty() && !reload) {
         return; // nothing to do
     }
     
     this->filenameSlot.ResetDirty();
+    this->reload = false;
 
     this->columns.clear();
     this->values.clear();
@@ -141,5 +147,10 @@ bool MMFTDataSource::getHashCallback(core::Call& caller) {
     tfd->SetDataHash(this->dataHash);
     tfd->SetUnlocker(nullptr);
 
+    return true;
+}
+
+bool MMFTDataSource::reloadCallback(core::param::ParamSlot &caller) {
+    this->reload = true;
     return true;
 }
