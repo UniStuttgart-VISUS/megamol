@@ -21,7 +21,7 @@ using namespace megamol::cinematic;
 using namespace vislib;
 
 
-CinematicView::CinematicView(void) : View3D_2()
+CinematicView::CinematicView(void) : View3DGL()
     , keyframeKeeperSlot("keyframeData", "Connects to the Keyframe Keeper.")
     , renderParam("cinematic::renderAnim", "Toggle rendering of complete animation to PNG files.")
     , toggleAnimPlayParam("cinematic::playPreview", "Toggle playing animation as preview")
@@ -450,7 +450,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     Base::overrideViewport = fboVp;
     
     //ALTERNATIVE
-    /// XXX Requires View3D_2 line 394 to be deleted/commented! 
+    /// XXX Requires View3DGL line 394 to be deleted/commented! 
         //this->overrideCall->EnableOutputBuffer();
     /// XXX Requires view::RenderOutputOpenGL::GetViewport() to get viewport always from:
         /// GLint vp[4];
@@ -464,7 +464,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     /// ! Set override call for using currrent fbo and current viewport
     Base::overrideCall = cr3d;
 
-    // Call Render-Function of parent View3D_2
+    // Call Render-Function of parent View3DGL
     Base::Render(context);
 
     // Reset override render call

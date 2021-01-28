@@ -1,12 +1,12 @@
 /*
- * View3D_2.cpp
+ * View3DGL.cpp
  *
  * Copyright (C) 2018, 2020 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmcore/view/View3D_2.h"
+#include "mmcore/view/View3DGL.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #ifdef _WIN32
 #    include <windows.h>
@@ -52,9 +52,9 @@ using namespace megamol::core;
 using namespace megamol::core::view;
 
 /*
- * View3D_2::View3D_2
+ * View3DGL::View3DGL
  */
-View3D_2::View3D_2(void)
+View3DGL::View3DGL(void)
     : view::AbstractRenderingView()
     /*, view::AbstractCamParamSync()*/
     , cursor2d()
@@ -143,11 +143,11 @@ View3D_2::View3D_2(void)
 
     this->storeCameraSettingsSlot.SetParameter(
         new param::ButtonParam(view::Key::KEY_C, (view::Modifier::SHIFT | view::Modifier::ALT)));
-    this->storeCameraSettingsSlot.SetUpdateCallback(&View3D_2::onStoreCamera);
+    this->storeCameraSettingsSlot.SetUpdateCallback(&View3DGL::onStoreCamera);
     this->MakeSlotAvailable(&this->storeCameraSettingsSlot);
 
     this->restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(view::Key::KEY_C, view::Modifier::ALT));
-    this->restoreCameraSettingsSlot.SetUpdateCallback(&View3D_2::onRestoreCamera);
+    this->restoreCameraSettingsSlot.SetUpdateCallback(&View3DGL::onRestoreCamera);
     this->MakeSlotAvailable(&this->restoreCameraSettingsSlot);
 
     this->overrideCamSettingsSlot.SetParameter(new param::BoolParam(false));
@@ -160,7 +160,7 @@ View3D_2::View3D_2(void)
     this->MakeSlotAvailable(&this->autoLoadCamSettingsSlot);
 
     this->resetViewSlot.SetParameter(new param::ButtonParam(view::Key::KEY_HOME));
-    this->resetViewSlot.SetUpdateCallback(&View3D_2::onResetView);
+    this->resetViewSlot.SetUpdateCallback(&View3DGL::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
 
     this->ResetView();
@@ -186,7 +186,7 @@ View3D_2::View3D_2(void)
     this->MakeSlotAvailable(&this->viewKeyFixToWorldUpSlot);
 
     this->mouseSensitivitySlot.SetParameter(new param::FloatParam(3.0f, 0.001f, 10.0f));
-    this->mouseSensitivitySlot.SetUpdateCallback(&View3D_2::mouseSensitivityChanged);
+    this->mouseSensitivitySlot.SetUpdateCallback(&View3DGL::mouseSensitivityChanged);
     this->MakeSlotAvailable(&this->mouseSensitivitySlot);
 
     // TODO clean up vrpsev memory after use
@@ -197,7 +197,7 @@ View3D_2::View3D_2(void)
     this->MakeSlotAvailable(&this->viewKeyRotPointSlot);
 
     this->enableMouseSelectionSlot.SetParameter(new param::ButtonParam(view::Key::KEY_TAB));
-    this->enableMouseSelectionSlot.SetUpdateCallback(&View3D_2::onToggleButton);
+    this->enableMouseSelectionSlot.SetUpdateCallback(&View3DGL::onToggleButton);
     this->MakeSlotAvailable(&this->enableMouseSelectionSlot);
 
     this->resetViewOnBBoxChangeSlot.SetParameter(new param::BoolParam(false));
@@ -306,7 +306,7 @@ View3D_2::View3D_2(void)
     this->MakeSlotAvailable(&this->cameraOvrLookatParam);
 
     this->cameraOvrParam << new param::ButtonParam();
-    this->cameraOvrParam.SetUpdateCallback(&View3D_2::cameraOvrCallback);
+    this->cameraOvrParam.SetUpdateCallback(&View3DGL::cameraOvrCallback);
     this->MakeSlotAvailable(&this->cameraOvrParam);
 
     this->translateManipulator.set_target(this->cam);
@@ -333,41 +333,41 @@ View3D_2::View3D_2(void)
 }
 
 /*
- * View3D_2::~View3D_2
+ * View3DGL::~View3DGL
  */
-View3D_2::~View3D_2(void) {
+View3DGL::~View3DGL(void) {
     this->Release();
     this->overrideCall = nullptr; // DO NOT DELETE
 }
 
 /*
- * View3D_2::GetCameraSyncNumber
+ * View3DGL::GetCameraSyncNumber
  */
-unsigned int view::View3D_2::GetCameraSyncNumber(void) const {
+unsigned int view::View3DGL::GetCameraSyncNumber(void) const {
     // TODO implement
     return 0;
 }
 
 
 /*
- * View3D_2::SerialiseCamera
+ * View3DGL::SerialiseCamera
  */
-void view::View3D_2::SerialiseCamera(vislib::Serialiser& serialiser) const {
+void view::View3DGL::SerialiseCamera(vislib::Serialiser& serialiser) const {
     // TODO currently emtpy because the old serialization sucks
 }
 
 
 /*
- * View3D_2::DeserialiseCamera
+ * View3DGL::DeserialiseCamera
  */
-void view::View3D_2::DeserialiseCamera(vislib::Serialiser& serialiser) {
+void view::View3DGL::DeserialiseCamera(vislib::Serialiser& serialiser) {
     // TODO currently empty because the old serialization sucks
 }
 
 /*
- * View3D_2::Render
+ * View3DGL::Render
  */
-void View3D_2::Render(const mmcRenderViewContext& context) {
+void View3DGL::Render(const mmcRenderViewContext& context) {
     float time = static_cast<float>(context.Time);
     float instTime = static_cast<float>(context.InstanceTime);
 
@@ -542,9 +542,9 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
 }
 
 /*
- * View3D_2::ResetView
+ * View3DGL::ResetView
  */
-void View3D_2::ResetView(void) {
+void View3DGL::ResetView(void) {
     if (!this->valuesFromOutside) {
         this->cam.near_clipping_plane(0.1f);
         this->cam.far_clipping_plane(100.0f);
@@ -589,9 +589,9 @@ void View3D_2::ResetView(void) {
 }
 
 /*
- * View3D_2::Resize
+ * View3DGL::Resize
  */
-void View3D_2::Resize(unsigned int width, unsigned int height) {
+void View3DGL::Resize(unsigned int width, unsigned int height) {
     if (this->cam.resolution_gate().width() != width || this->cam.resolution_gate().height() != height) {
         this->cam.resolution_gate(cam_type::screen_size_type(static_cast<LONG>(width), static_cast<LONG>(height)));
     }
@@ -602,9 +602,9 @@ void View3D_2::Resize(unsigned int width, unsigned int height) {
 }
 
 /*
- * View3D_2::OnRenderView
+ * View3DGL::OnRenderView
  */
-bool View3D_2::OnRenderView(Call& call) {
+bool View3DGL::OnRenderView(Call& call) {
     std::array<float, 3> overBC;
     // std::array<int, 4> overVP = {0, 0, 0, 0};
     view::CallRenderViewGL* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
@@ -654,16 +654,16 @@ bool View3D_2::OnRenderView(Call& call) {
 }
 
 /*
- * View3D_2::UpdateFreeze
+ * View3DGL::UpdateFreeze
  */
-void View3D_2::UpdateFreeze(bool freeze) {
+void View3DGL::UpdateFreeze(bool freeze) {
     // intentionally empty?
 }
 
 /*
- * View3D_2::OnKey
+ * View3DGL::OnKey
  */
-bool view::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) {
+bool view::View3DGL::OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) {
     auto* cr = this->rendererSlot.CallAs<CallRender3DGL>();
     if (cr != nullptr) {
         view::InputEvent evt;
@@ -734,9 +734,9 @@ bool view::View3D_2::OnKey(view::Key key, view::KeyAction action, view::Modifier
 }
 
 /*
- * View3D_2::OnChar
+ * View3DGL::OnChar
  */
-bool view::View3D_2::OnChar(unsigned int codePoint) {
+bool view::View3DGL::OnChar(unsigned int codePoint) {
     auto* cr = this->rendererSlot.CallAs<view::CallRender3DGL>();
     if (cr == NULL) return false;
 
@@ -750,9 +750,9 @@ bool view::View3D_2::OnChar(unsigned int codePoint) {
 }
 
 /*
- * View3D_2::OnMouseButton
+ * View3DGL::OnMouseButton
  */
-bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
+bool view::View3DGL::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
 
     bool anyManipulatorActive = arcballManipulator.manipulating() || translateManipulator.manipulating() ||
                                 rotateManipulator.manipulating() || turntableManipulator.manipulating() ||
@@ -851,9 +851,9 @@ bool view::View3D_2::OnMouseButton(view::MouseButton button, view::MouseButtonAc
 }
 
 /*
- * View3D_2::OnMouseMove
+ * View3DGL::OnMouseMove
  */
-bool view::View3D_2::OnMouseMove(double x, double y) {
+bool view::View3DGL::OnMouseMove(double x, double y) {
     this->mouseX = (float)static_cast<int>(x);
     this->mouseY = (float)static_cast<int>(y);
 
@@ -916,9 +916,9 @@ bool view::View3D_2::OnMouseMove(double x, double y) {
 }
 
 /*
- * View3D_2::OnMouseScroll
+ * View3DGL::OnMouseScroll
  */
-bool view::View3D_2::OnMouseScroll(double dx, double dy) {
+bool view::View3DGL::OnMouseScroll(double dx, double dy) {
     auto* cr = this->rendererSlot.CallAs<view::CallRender3DGL>();
     if (cr != NULL) {
         view::InputEvent evt;
@@ -955,9 +955,9 @@ bool view::View3D_2::OnMouseScroll(double dx, double dy) {
 }
 
 /*
- * View3D_2::unpackMouseCoordinates
+ * View3DGL::unpackMouseCoordinates
  */
-void View3D_2::unpackMouseCoordinates(float& x, float& y) {
+void View3DGL::unpackMouseCoordinates(float& x, float& y) {
     // TODO is this correct?
     x *= static_cast<float>(this->cam.resolution_gate().width());
     y *= static_cast<float>(this->cam.resolution_gate().height());
@@ -965,9 +965,9 @@ void View3D_2::unpackMouseCoordinates(float& x, float& y) {
 }
 
 /*
- * View3D_2::create
+ * View3DGL::create
  */
-bool View3D_2::create(void) {
+bool View3DGL::create(void) {
     mmcValueType wpType;
     this->arcballDefault = false;
     auto value = this->GetCoreInstance()->Configuration().GetValue(MMC_CFGID_VARIABLE, _T("arcball"), &wpType);
@@ -1000,27 +1000,27 @@ bool View3D_2::create(void) {
 }
 
 /*
- * View3D_2::release
+ * View3DGL::release
  */
-void View3D_2::release(void) { this->removeTitleRenderer(); }
+void View3DGL::release(void) { this->removeTitleRenderer(); }
 
 /*
- * View3D_2::mouseSensitivityChanged
+ * View3DGL::mouseSensitivityChanged
  */
-bool View3D_2::mouseSensitivityChanged(param::ParamSlot& p) { return true; }
+bool View3DGL::mouseSensitivityChanged(param::ParamSlot& p) { return true; }
 
 /*
- * View3D_2::OnGetCamParams
+ * View3DGL::OnGetCamParams
  */
-// bool View3D_2::OnGetCamParams(view::CallCamParamSync& c) {
+// bool View3DGL::OnGetCamParams(view::CallCamParamSync& c) {
 //    // TODO implement
 //    return true;
 //}
 
 /*
- * View3D_2::onStoreCamera
+ * View3DGL::onStoreCamera
  */
-bool View3D_2::onStoreCamera(param::ParamSlot& p) {
+bool View3DGL::onStoreCamera(param::ParamSlot& p) {
     // save the current camera, too
     Camera_2::minimal_state_type minstate;
     this->cam.get_minimal_state(minstate);
@@ -1070,9 +1070,9 @@ bool View3D_2::onStoreCamera(param::ParamSlot& p) {
 }
 
 /*
- * View3D_2::onRestoreCamera
+ * View3DGL::onRestoreCamera
  */
-bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
+bool View3DGL::onRestoreCamera(param::ParamSlot& p) {
     if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
         std::string camstring(this->cameraSettingsSlot.Param<param::StringParam>()->Value());
         cam_type::minimal_state_type minstate;
@@ -1118,25 +1118,25 @@ bool View3D_2::onRestoreCamera(param::ParamSlot& p) {
 }
 
 /*
- * View3D_2::onResetView
+ * View3DGL::onResetView
  */
-bool View3D_2::onResetView(param::ParamSlot& p) {
+bool View3DGL::onResetView(param::ParamSlot& p) {
     this->ResetView();
     return true;
 }
 
 /*
- * View3D_2::onToggleButton
+ * View3DGL::onToggleButton
  */
-bool View3D_2::onToggleButton(param::ParamSlot& p) {
+bool View3DGL::onToggleButton(param::ParamSlot& p) {
     // TODO implement
     return true;
 }
 
 /*
- * View3D_2::determineCameraFilePath
+ * View3DGL::determineCameraFilePath
  */
-std::string View3D_2::determineCameraFilePath(void) const {
+std::string View3DGL::determineCameraFilePath(void) const {
     auto path = this->GetCoreInstance()->GetLuaState()->GetScriptPath();
     if (path.empty()) return path; // early exit for mmprj projects
     auto dotpos = path.find_last_of('.');
@@ -1146,9 +1146,9 @@ std::string View3D_2::determineCameraFilePath(void) const {
 }
 
 /*
- * View3D_2::handleCameraMovement
+ * View3DGL::handleCameraMovement
  */
-void View3D_2::handleCameraMovement(void) {
+void View3DGL::handleCameraMovement(void) {
     float step = this->viewKeyMoveStepSlot.Param<param::FloatParam>()->Value();
     float dt = std::chrono::duration<float>(this->lastFrameDuration).count();
     step *= dt;
@@ -1225,9 +1225,9 @@ void View3D_2::handleCameraMovement(void) {
 }
 
 /*
- * View3D_2::setCameraValues
+ * View3DGL::setCameraValues
  */
-void View3D_2::setCameraValues(const view::Camera_2& cam) {
+void View3DGL::setCameraValues(const view::Camera_2& cam) {
     glm::vec4 pos = cam.position();
     const bool makeDirty = false;
     this->cameraPositionParam.Param<param::Vector3fParam>()->SetValue(
@@ -1267,9 +1267,9 @@ void View3D_2::setCameraValues(const view::Camera_2& cam) {
 }
 
 /*
- * View3D_2::adaptCameraValues
+ * View3DGL::adaptCameraValues
  */
-bool View3D_2::adaptCameraValues(view::Camera_2& cam) {
+bool View3DGL::adaptCameraValues(view::Camera_2& cam) {
     bool result = false;
     if (this->cameraPositionParam.IsDirty()) {
         auto val = this->cameraPositionParam.Param<param::Vector3fParam>()->Value();
@@ -1361,7 +1361,7 @@ bool View3D_2::adaptCameraValues(view::Camera_2& cam) {
 }
 
 
-bool View3D_2::cameraOvrCallback(param::ParamSlot& p) {
+bool View3DGL::cameraOvrCallback(param::ParamSlot& p) {
     auto up_vis = this->cameraOvrUpParam.Param<param::Vector3fParam>()->Value();
     auto lookat_vis = this->cameraOvrLookatParam.Param<param::Vector3fParam>()->Value();
 

@@ -22,7 +22,7 @@ megamol::gui::ParameterGroupsPresentation::ParameterGroupsPresentation(void)
         , image_buttons() {
 
     // Add group widget data for animation widget group
-    /// View3D_2::anim
+    /// View3DGL::anim
     GroupWidgetData animation;
     animation.active = false;
     animation.type.emplace(Param_t::BOOL, 1);

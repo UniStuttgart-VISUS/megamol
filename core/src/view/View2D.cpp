@@ -540,7 +540,7 @@ void view::View2D::unpackMouseCoordinates(float &x, float &y) {
 }
 
 bool view::View2D::onStoreCamera(param::ParamSlot &p) {
-    // TODO: multiple saved views, like View3D_2
+    // TODO: multiple saved views, like View3DGL
     nlohmann::json out;
     out["viewX"] = this->viewX;
     out["viewY"] = this->viewY;
@@ -574,7 +574,7 @@ bool view::View2D::tryRestoringCamera(float &outViewX, float &outViewY, float &o
 }
 
 bool view::View2D::onRestoreCamera(param::ParamSlot &p) {
-    // TODO: multiple saved views, like View3D_2
+    // TODO: multiple saved views, like View3DGL
     tryRestoringCamera(this->viewX, this->viewY, this->viewZoom);
     return true;
 }

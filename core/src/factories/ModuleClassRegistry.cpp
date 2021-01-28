@@ -38,7 +38,7 @@
 #include "mmcore/view/special/ScreenShooter.h"
 #include "mmcore/view/TileView.h"
 #include "mmcore/view/View2D.h"
-#include "mmcore/view/View3D_2.h"
+#include "mmcore/view/View3DGL.h"
 #include "mmcore/view/BoundingBoxRenderer.h"
 #include "mmcore/view/SplitView.h"
 #include "mmcore/view/HeadView.h"
@@ -101,7 +101,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::special::ScreenShooter>();
     instance.RegisterAutoDescription<view::TileView>();
     instance.RegisterAutoDescription<view::View2D>();
-    instance.RegisterAutoDescription<view::View3D_2>();
+    instance.RegisterAutoDescription<view::View3DGL>();
     instance.RegisterAutoDescription<view::BoundingBoxRenderer>();
     instance.RegisterAutoDescription<view::SplitView>();
     instance.RegisterAutoDescription<view::HeadView>();

@@ -1,5 +1,5 @@
 /*
- * View3D_2.h
+ * View3DGL.h
  *
  * Copyright (C) 2018, 2020 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
@@ -46,7 +46,7 @@ namespace megamol {
 namespace core {
 namespace view {
 
-class MEGAMOLCORE_API View3D_2 : public view::AbstractRenderingView /*, public view::AbstractCamParamSync*/ {
+class MEGAMOLCORE_API View3DGL : public view::AbstractRenderingView /*, public view::AbstractCamParamSync*/ {
 
 public:
     /**
@@ -54,7 +54,7 @@ public:
      *
      * @return The name of this module.
      */
-    static const char* ClassName(void) { return "View3D_2"; }
+    static const char* ClassName(void) { return "View3DGL"; }
 
     /**
      * Answer a human readable description of this module.
@@ -71,10 +71,10 @@ public:
     static bool IsAvailable(void) { return true; }
 
     /** Ctor. */
-    View3D_2(void);
+    View3DGL(void);
 
     /** Dtor. */
-    virtual ~View3D_2(void);
+    virtual ~View3DGL(void);
 
     /**
      * Answer the default time for this view
