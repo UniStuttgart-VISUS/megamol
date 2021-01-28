@@ -10,12 +10,41 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FilePathParam.h"
 
-#include "vislib/String.h"
-#include "vislib/sys/FastFile.h"
-
-using namespace megamol::stdplugin::datatools;
 using namespace megamol::stdplugin::datatools::table;
 using namespace megamol;
+
+namespace {
+template<typename T>
+T read(std::istream& stream) {
+    T value;
+    stream.read(reinterpret_cast<char*>(&value), sizeof(T));
+    if (!stream.good()) {
+        throw std::runtime_error("Error reading from stream!");
+    }
+    return value;
+}
+
+template<typename T>
+std::vector<T> read_vector(std::istream& stream, std::size_t size) {
+    std::vector<T> vec(size);
+    stream.read(reinterpret_cast<char*>(vec.data()), size * sizeof(T));
+    if (!stream.good()) {
+        throw std::runtime_error("Error reading from stream!");
+    }
+    return vec;
+}
+
+std::string read_string(std::istream& stream, std::size_t size) {
+    std::string str(size, '\0');
+    stream.read(str.data(), size * sizeof(std::string::value_type));
+    if (!stream.good()) {
+        throw std::runtime_error("Error reading from stream!");
+    }
+    str.erase(std::find(str.begin(), str.end(), '\0'), str.end());
+    return str;
+}
+
+} // namespace
 
 MMFTDataSource::MMFTDataSource()
         : core::Module()
@@ -63,80 +92,65 @@ void MMFTDataSource::assertData(void) {
     columns_.clear();
     values_.clear();
 
-
-    vislib::sys::FastFile file;
-    if (!file.Open(filenameSlot_.Param<core::param::FilePathParam>()->Value(), vislib::sys::File::READ_ONLY,
-            vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open file \"%s\". Abort.",
-            vislib::StringA(filenameSlot_.Param<core::param::FilePathParam>()->Value()).PeekBuffer());
+    std::string filename(filenameSlot_.Param<core::param::FilePathParam>()->Value().PeekBuffer());
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("Unable to open file \"%s\". Abort.", filename.c_str());
         return;
     }
 
-#define ABORT_ERROR(...)                                                      \
-    {                                                                         \
-        megamol::core::utility::log::Log::DefaultLog.WriteError(__VA_ARGS__); \
-        file.Close();                                                         \
-        columns_.clear();                                                     \
-        values_.clear();                                                      \
-        return;                                                               \
+    try {
+        std::string magicId = read_string(file, 6);
+        if (magicId != "MMFTD") {
+            throw std::runtime_error("Wrong file format magic ID!");
+        }
+
+        auto version = read<uint16_t>(file);
+        if (version != 0) {
+            throw std::runtime_error("Wrong file format version number");
+        }
+
+        auto colCount = read<uint32_t>(file);
+        columns_.resize(colCount);
+
+        for (uint32_t c = 0; c < colCount; ++c) {
+            TableDataCall::ColumnInfo& ci = columns_[c];
+            auto nameLen = read<uint16_t>(file);
+            ci.SetName(read_string(file, nameLen));
+            auto type = read<uint8_t>(file);
+            ci.SetType((type == 1) ? TableDataCall::ColumnType::CATEGORICAL : TableDataCall::ColumnType::QUANTITATIVE);
+            ci.SetMinimumValue(read<float>(file));
+            ci.SetMaximumValue(read<float>(file));
+        }
+
+        auto rowCount = read<uint64_t>(file);
+
+        values_ = read_vector<float>(file, rowCount * colCount);
+
+        dataHash_++;
+
+    } catch (std::exception& ex) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(ex.what());
+        columns_.clear();
+        values_.clear();
+        return;
     }
-#define ASSERT_READ(A, S)           \
-    if (file.Read((A), (S)) != (S)) \
-    ABORT_ERROR("Read error %d", __LINE__)
-
-    vislib::StringA magicID;
-    ASSERT_READ(magicID.AllocateBuffer(6), 6);
-    if (!magicID.Equals("MMFTD"))
-        ABORT_ERROR("Wrong file format magic ID");
-    uint16_t version;
-    ASSERT_READ(&version, 2);
-    if (version != 0)
-        ABORT_ERROR("Wrong file format version number");
-
-    uint32_t colCnt;
-    ASSERT_READ(&colCnt, 4);
-    columns_.resize(colCnt);
-
-    for (uint32_t c = 0; c < colCnt; ++c) {
-        TableDataCall::ColumnInfo& ci = columns_[c];
-        uint16_t nameLen;
-        ASSERT_READ(&nameLen, 2);
-        vislib::StringA name;
-        ASSERT_READ(name.AllocateBuffer(nameLen), nameLen);
-        ci.SetName(name.PeekBuffer());
-        uint8_t type;
-        ASSERT_READ(&type, 1);
-        ci.SetType((type == 1) ? TableDataCall::ColumnType::CATEGORICAL : TableDataCall::ColumnType::QUANTITATIVE);
-        float f;
-        ASSERT_READ(&f, 4);
-        ci.SetMinimumValue(f);
-        ASSERT_READ(&f, 4);
-        ci.SetMaximumValue(f);
-    }
-
-    uint64_t rowCnt;
-    ASSERT_READ(&rowCnt, 8);
-
-    values_.resize(static_cast<std::vector<float>::size_type>(rowCnt * colCnt));
-
-    ASSERT_READ(values_.data(), rowCnt * colCnt * 4);
-
-    dataHash_++;
 }
 
 bool MMFTDataSource::getDataCallback(core::Call& caller) {
     TableDataCall* tfd = dynamic_cast<TableDataCall*>(&caller);
-    if (tfd == nullptr)
+    if (tfd == nullptr) {
         return false;
+    }
 
     assertData();
 
     tfd->SetDataHash(dataHash_);
     tfd->SetFrameCount(1);
-    if (values_.size() == 0) {
+    if (values_.empty()) {
         tfd->Set(0, 0, nullptr, nullptr);
     } else {
-        assert((values.size() % columns.size()) == 0);
+        assert((values_.size() % columns_.size()) == 0);
         tfd->Set(columns_.size(), values_.size() / columns_.size(), columns_.data(), values_.data());
     }
     tfd->SetUnlocker(nullptr);
@@ -146,8 +160,9 @@ bool MMFTDataSource::getDataCallback(core::Call& caller) {
 
 bool MMFTDataSource::getHashCallback(core::Call& caller) {
     TableDataCall* tfd = dynamic_cast<TableDataCall*>(&caller);
-    if (tfd == nullptr)
+    if (tfd == nullptr) {
         return false;
+    }
 
     assertData();
 
