@@ -11,10 +11,16 @@
 
 using namespace megamol::core::view::light;
 
+void megamol::core::view::light::AmbientLight::addLight(LightCollection& light_collection) {
+    light_collection.add<AmbientLightType>(std::static_pointer_cast<AmbientLightType>(lightsource));
+}
+
 /*
  * megamol::core::view::light::AmbientLight::AmbientLight
  */
-AmbientLight::AmbientLight(void) : AbstractLight() {}
+AmbientLight::AmbientLight(void) : AbstractLight() {
+    lightsource = std::make_shared<AmbientLightType>();
+}
 
 /*
  * megamol::core::view::light::AmbientLight::AmbientLight
@@ -25,9 +31,10 @@ AmbientLight::~AmbientLight(void) { this->Release(); }
  * megamol::core::view::light::AmbientLight::readParams
  */
 void AmbientLight::readParams() {
-    lightContainer.lightType = lightenum::AMBIENTLIGHT;
-    lightContainer.lightColor = this->lightColor.Param<core::param::ColorParam>()->Value();
-    lightContainer.lightIntensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
+    auto light = std::static_pointer_cast<AmbientLightType>(lightsource);
+
+    light->colour = this->lightColor.Param<core::param::ColorParam>()->Value();
+    light->intensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
 }
 
 /*
