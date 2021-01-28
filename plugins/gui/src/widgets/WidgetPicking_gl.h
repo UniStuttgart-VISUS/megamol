@@ -13,6 +13,7 @@
 
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
+#include "mmcore/view/View3D_2.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <queue>
@@ -157,7 +158,7 @@ namespace gui {
         PickableCube(void);
         ~PickableCube(void) = default;
 
-        void Draw(unsigned int id, glm::vec3& inout_pos3d, const glm::mat4& mvp, const glm::vec2& vp_dim,
+        void Draw(unsigned int id, int& inout_defaultview, const glm::vec4& view_orientation, const glm::vec2& vp_dim,
             ManipVector& pending_manipulations);
 
         InteractVector GetInteractions(unsigned int id) const;

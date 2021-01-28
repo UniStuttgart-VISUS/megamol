@@ -264,6 +264,8 @@ protected:
 
     bool onToggleButton(param::ParamSlot& p);
 
+    bool onSetView(param::ParamSlot &p);
+
     /*
      * Performs the actual camera movement based on the pressed keys
      */
@@ -390,15 +392,10 @@ protected:
     param::ParamSlot cameraOvrParam;
 
     /** standard views */
-    param::ParamSlot cameraSetViewChooserParam;
-
     /// XXX TEST
-    param::ParamSlot mvp_column0_param;
-    param::ParamSlot mvp_column1_param;
-    param::ParamSlot mvp_column2_param;
-    param::ParamSlot mvp_column3_param;
-    param::ParamSlot vec3d_param;
+    param::ParamSlot cameraViewOrientation;
     /// XXX
+    param::ParamSlot cameraSetViewChooserParam;
 
     bool cameraOvrCallback(param::ParamSlot& p);
 

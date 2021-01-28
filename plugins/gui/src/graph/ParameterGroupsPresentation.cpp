@@ -294,6 +294,12 @@ void megamol::gui::ParameterGroupsPresentation::draw_grouped_parameters(const st
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
     ImGuiID in_override_header_state) {
 
+    if (in_scope != ParameterPresentation::WidgetScope::LOCAL) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Parameter groups are only available in LOCAL scope. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
+    }
+
     // Skip if no parameter is visible and extended mode is not set.
     bool visible = false;
     bool extended = false;
@@ -476,8 +482,13 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(ParamPtrV
     param_time->SetValue(time);
     param_speed->SetValue(speed);
 
+    if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
+        // GLOBAL
+
+        ImGui::End();
+    }
     /*
-    if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+    else if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
         /// LOCAL
         ImGui::EndChild();
     }
@@ -487,6 +498,66 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(ParamPtrV
 }
 
 
+bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(ParamPtrVector_t& params,
+    megamol::core::param::AbstractParamPresentation::Presentation presentation,
+    megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
+
+    if (presentation != param::AbstractParamPresentation::Presentation::Group_3D_Cube)
+        return false;
+
+    // Check required parameters ----------------------------------------------
+    Parameter* param_viewOrientation = nullptr;
+    Parameter* param_defaultView = nullptr;
+    /// Find specific parameters of group by name because parameter type can occure multiple times.
+    for (auto& param_ptr : params) {
+        if ((param_ptr->GetName() == "viewOrientation") && (param_ptr->type == Param_t::VECTOR4F)) {
+            param_viewOrientation = param_ptr;
+        } else if ((param_ptr->GetName() == "defaultView") && (param_ptr->type == Param_t::ENUM)) {
+            param_defaultView = param_ptr;
+        }
+    }
+    if ((param_viewOrientation == nullptr) || (param_defaultView == nullptr)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Unable to find all required parameters by name "
+                                                                "for 3d manipulation group widget. [%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+        // LOCAL
+
+        const std::string group_label("3D Cube");
+        // ImGui::TextDisabled(group_label.c_str());
+        this->draw_grouped_parameters(group_label, params, "", "", in_scope, nullptr, nullptr, GUI_INVALID_ID);
+
+    } else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
+
+        if (inout_picking_buffer == nullptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Pointer to required picking buffer is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
+            return false;
+        }
+
+        // DRAW -------------------------------------------------------------------
+
+        auto id = param_defaultView->uid;
+        inout_picking_buffer->AddInteractionObject(id, this->cube_widget.GetInteractions(id));
+
+        ImGuiIO& io = ImGui::GetIO();
+        auto default_view = std::get<int>(param_defaultView->GetValue());
+        auto view_orientation = std::get<glm::vec4>(param_viewOrientation->GetValue());
+        auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
+        this->cube_widget.Draw(
+            id, default_view, view_orientation, viewport_dim, inout_picking_buffer->GetPendingManipulations());
+
+        param_defaultView->SetValue(default_view);
+    }
+    return true;
+}
+
+
+/*
 bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(ParamPtrVector_t& params,
     megamol::core::param::AbstractParamPresentation::Presentation presentation,
     megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
@@ -558,3 +629,4 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(ParamPtrVec
 
     return true;
 }
+*/

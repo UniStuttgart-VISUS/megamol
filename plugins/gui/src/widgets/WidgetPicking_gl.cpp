@@ -362,32 +362,55 @@ glm::vec3 megamol::gui::PickingBuffer::Screenspace2Worldspace(
 megamol::gui::PickableCube::PickableCube(void) : shader(nullptr), selected(false) {}
 
 
-void megamol::gui::PickableCube::Draw(unsigned int id, glm::vec3& inout_pos3d, const glm::mat4& mvp,
+void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview, const glm::vec4& view_orientation,
     const glm::vec2& vp_dim, ManipVector& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiIO& io = ImGui::GetIO();
 
+    auto default_view = static_cast<megamol::core::view::View3D_2::defaultview>(inout_defaultview);
+
     // Create shader once -----------------------------------------------------
     if (this->shader == nullptr) {
         std::string vertex_src =
             "#version 130 \n"
-            "uniform mat4 ortho; \n"
-            "uniform vec3 dir0; \n"
-            "uniform vec3 dir1; \n"
-            "uniform vec3 dir2; \n"
-            "uniform vec4 vertex_color; \n"
+            "uniform mat4 rot_mx; \n"
+            "uniform mat4 model_mx; \n"
+            "uniform mat4 proj_mx; \n"
+            "uniform int selected; \n"
+            "uniform vec4 selected_color; \n"
             "out vec4 frag_color; \n"
-            "void main(void) {  \n"
-            "    vec3 dir_pos = dir0; \n"
-            "    frag_color = vertex_color; \n"
-            "    if (gl_VertexID == 1) { dir_pos = dir1; frag_color = vec4(1.0, 0.0, 0.0, 1.0); } \n"
-            "    else if (gl_VertexID == 2)  { dir_pos = dir2; frag_color = vec4(0.0, 1.0, 0.0, 1.0);  } \n"
-            "    vec4 pos = ortho * vec4(dir_pos.xyz, 1.0); \n"
-            "    pos /= pos.w; \n"
-            "    gl_Position = pos; \n"
-            "} ";
+            "void main() { \n"
+            "    const vec4 vertices[36] = vec4[36]( \n"
+            "        // front \n"
+            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), \n"
+            "        // back \n"
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), \n"
+            "        // top \n"
+            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), \n"
+            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), \n"
+            "        // bottom \n"
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), \n"
+            "        // right \n"
+            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), \n"
+            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), \n"
+            "        // left \n"
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), \n"
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0)); \n"
+            "    const vec4 colors[6] = vec4[6](vec4(0.0, 0.0, 1.0, 1.0), vec4(0.0, 0.0, 0.5, 1.0), \n"
+            "        vec4(0.0, 1.0, 0.0, 1.0),  vec4(0.0, 0.5, 0.0, 1.0), \n"
+            "        vec4(1.0, 0.0, 0.0, 1.0), vec4(0.5, 0.0, 0.0, 1.0)); \n"
+            "    if (selected == 1) { \n"
+            "        frag_color = selected_color; \n"
+            "    } else { \n"
+            "        frag_color = colors[gl_VertexID / 6]; \n"
+            "    } \n"
+            "    gl_Position = proj_mx * model_mx * rot_mx * vertices[gl_VertexID]; \n"
+            "}";
 
         std::string fragment_src = "#version 130  \n"
                                    "#extension GL_ARB_explicit_attrib_location : require \n"
@@ -401,72 +424,83 @@ void megamol::gui::PickableCube::Draw(unsigned int id, glm::vec3& inout_pos3d, c
                                    "    outFragInfo  = vec2(float(id), depth); \n"
                                    "} ";
 
-        if (!PickingBuffer::CreatShader(this->shader, vertex_src, fragment_src))
+        if (!PickingBuffer::CreatShader(this->shader, vertex_src, fragment_src)) {
             return;
+        }
     }
-    this->shader->use();
-
-
-    // Calculate cube data ------------------------------------------------
-
-    glm::vec3 screen_pos = megamol::gui::PickingBuffer::Worldspace2Screenspace(inout_pos3d, mvp, vp_dim);
-    glm::vec2 pixel_direction(50.0f, 100.0f);
-    glm::vec3 dir0 = glm::vec3(pixel_direction.x, pixel_direction.y, 0.0f);
-    glm::vec3 dir1 = glm::vec3(dir0.y / 2.0f, -dir0.x / 2.0f, 0.0f);
-    glm::vec3 dir2 = glm::vec3(-dir0.y / 2.0f, dir0.x / 2.0f, 0.0f);
-    dir0 = screen_pos + dir0;
-    dir1 = screen_pos + dir1;
-    dir2 = screen_pos + dir2;
-    glm::vec4 vertex_color = glm::vec4(0.0f, 0.0f, 1.0, 1.0f);
 
     // Process pending manipulations ------------------------------------------
+    bool highlighted = false;
+    glm::vec4 selected_color = glm::vec4(0.0f, 0.0f, 0.0, 0.0f);
     for (auto& manip : pending_manipulations) {
         if (id == manip.obj_id) {
-            if (manip.type == InteractionType::MOVE_ALONG_AXIS_SCREEN) {
-                screen_pos += glm::vec3(manip.axis_x, manip.axis_y, 0.0) * manip.value;
-                screen_pos.z = manip.axis_z;
-                inout_pos3d = megamol::gui::PickingBuffer::Screenspace2Worldspace(screen_pos, mvp, vp_dim);
-            } else if (manip.type == InteractionType::SELECT) {
+            if (manip.type == InteractionType::SELECT) {
                 this->selected = true;
             } else if (manip.type == InteractionType::DESELECT) {
                 this->selected = false;
             } else if (manip.type == InteractionType::HIGHLIGHT) {
-                vertex_color = glm::vec4(1.0f, 0.0f, 1.0, 1.0f);
+                selected_color = glm::vec4(1.0f, 0.0f, 1.0, 1.0f);
+                highlighted = true;
             }
         }
     }
-    if (selected) {
-        vertex_color = glm::vec4(0.0f, 1.0f, 1.0, 1.0f);
+    if (this->selected) {
+        selected_color = glm::vec4(0.0f, 1.0f, 1.0, 1.0f);
     }
 
     // Draw -------------------------------------------------------------------
 
-    // Create 2D orthographic mvp matrix
-    glm::mat4 ortho = glm::ortho(0.0f, vp_dim.x, 0.0f, vp_dim.y, -1.0f, 1.0f);
+    // Create view/model and projection matrices
+    const auto rotation = glm::inverse(
+        glm::mat4_cast(glm::quat(view_orientation.w, view_orientation.x, view_orientation.y, view_orientation.z)));
+    const float dist = 2.0f / std::tan(megamol::core::thecam::math::angle_deg2rad(30.0f) / 2.0f);
+    glm::mat4 model(1.0f);
+    model[3][2] = -dist;
+    const auto proj = glm::perspective(megamol::core::thecam::math::angle_deg2rad(30.0f), 1.0f, 0.1f, 100.0f);
 
-    // Vertex
-    this->shader->setUniform("ortho", ortho);
-    this->shader->setUniform("dir0", dir0);
-    this->shader->setUniform("dir1", dir1);
-    this->shader->setUniform("dir2", dir2);
+    // Set state
+    const auto depth_test = glIsEnabled(GL_DEPTH_TEST);
+    if (depth_test) {
+        // glDisable(GL_DEPTH_TEST);
+    }
+    const auto culling = glIsEnabled(GL_CULL_FACE);
+    if (!culling) {
+        glEnable(GL_CULL_FACE);
+    }
+    std::array<GLint, 4> viewport;
+    glGetIntegerv(GL_VIEWPORT, viewport.data());
+    int size = 100;
+    int x = viewport[2] - size;
+    int y = viewport[3] - size;
+    glViewport(x, y, size, size);
 
-    // Fragment
-    this->shader->setUniform("vertex_color", vertex_color);
+    this->shader->use();
+
+    this->shader->setUniform("rot_mx", rotation);
+    this->shader->setUniform("model_mx", model);
+    this->shader->setUniform("proj_mx", proj);
+
+    this->shader->setUniform("selected_color", selected_color);
+    this->shader->setUniform("selected", ((this->selected || highlighted) ? (1) : (0)));
     this->shader->setUniform("id", static_cast<int>(id));
 
-    // Vertex position is only given via uniforms.
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
 
     glUseProgram(0);
+
+    // Restore
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+    if (depth_test) {
+        // glEnable(GL_DEPTH_TEST);
+    }
+    if (!culling) {
+        glDisable(GL_CULL_FACE);
+    }
 }
 
 
 InteractVector megamol::gui::PickableCube::GetInteractions(unsigned int id) const {
     InteractVector interactions;
-    interactions.emplace_back(
-        Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<int>(id), 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-    interactions.emplace_back(
-        Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<int>(id), 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}));
     interactions.emplace_back(
         Interaction({InteractionType::SELECT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     interactions.emplace_back(
@@ -497,13 +531,17 @@ void megamol::gui::PickableTriangle::Draw(unsigned int id, glm::vec3& inout_pos3
             "uniform vec3 dir0; \n"
             "uniform vec3 dir1; \n"
             "uniform vec3 dir2; \n"
-            "uniform vec4 vertex_color; \n"
+            "uniform int selected; \n"
+            "uniform vec4 selected_color; \n"
             "out vec4 frag_color; \n"
             "void main(void) {  \n"
             "    vec3 dir_pos = dir0; \n"
-            "    frag_color = vertex_color; \n"
+            "    frag_color = vec4(0.0, 0.0, 1.0, 1.0); \n"
             "    if (gl_VertexID == 1) { dir_pos = dir1; frag_color = vec4(1.0, 0.0, 0.0, 1.0); } \n"
             "    else if (gl_VertexID == 2)  { dir_pos = dir2; frag_color = vec4(0.0, 1.0, 0.0, 1.0);  } \n"
+            "    if (selected == 1) { \n"
+            "        frag_color = selected_color; \n"
+            "    } \n"
             "    vec4 pos = ortho * vec4(dir_pos.xyz, 1.0); \n"
             "    pos /= pos.w; \n"
             "    gl_Position = pos; \n"
@@ -521,11 +559,10 @@ void megamol::gui::PickableTriangle::Draw(unsigned int id, glm::vec3& inout_pos3
                                    "    outFragInfo  = vec2(float(id), depth); \n"
                                    "} ";
 
-        if (!PickingBuffer::CreatShader(this->shader, vertex_src, fragment_src))
+        if (!PickingBuffer::CreatShader(this->shader, vertex_src, fragment_src)) {
             return;
+        }
     }
-    this->shader->use();
-
 
     // Calculate triangle data ------------------------------------------------
 
@@ -537,26 +574,26 @@ void megamol::gui::PickableTriangle::Draw(unsigned int id, glm::vec3& inout_pos3
     dir0 = screen_pos + dir0;
     dir1 = screen_pos + dir1;
     dir2 = screen_pos + dir2;
-    glm::vec4 vertex_color = glm::vec4(0.0f, 0.0f, 1.0, 1.0f);
 
     // Process pending manipulations ------------------------------------------
+    bool highlighted = false;
+    glm::vec4 selected_color = glm::vec4(0.0f, 0.0f, 0.0, 0.0f);
     for (auto& manip : pending_manipulations) {
         if (id == manip.obj_id) {
             if (manip.type == InteractionType::MOVE_ALONG_AXIS_SCREEN) {
-                screen_pos += glm::vec3(manip.axis_x, manip.axis_y, 0.0) * manip.value;
-                screen_pos.z = manip.axis_z;
-                inout_pos3d = megamol::gui::PickingBuffer::Screenspace2Worldspace(screen_pos, mvp, vp_dim);
+                /// XXX TODO
             } else if (manip.type == InteractionType::SELECT) {
                 this->selected = true;
             } else if (manip.type == InteractionType::DESELECT) {
                 this->selected = false;
             } else if (manip.type == InteractionType::HIGHLIGHT) {
-                vertex_color = glm::vec4(1.0f, 0.0f, 1.0, 1.0f);
+                selected_color = glm::vec4(1.0f, 0.0f, 1.0, 1.0f);
+                highlighted = true;
             }
         }
     }
-    if (selected) {
-        vertex_color = glm::vec4(0.0f, 1.0f, 1.0, 1.0f);
+    if (this->selected) {
+        selected_color = glm::vec4(0.0f, 1.0f, 1.0, 1.0f);
     }
 
     // Draw -------------------------------------------------------------------
@@ -564,14 +601,15 @@ void megamol::gui::PickableTriangle::Draw(unsigned int id, glm::vec3& inout_pos3
     // Create 2D orthographic mvp matrix
     glm::mat4 ortho = glm::ortho(0.0f, vp_dim.x, 0.0f, vp_dim.y, -1.0f, 1.0f);
 
-    // Vertex
+    this->shader->use();
+
     this->shader->setUniform("ortho", ortho);
     this->shader->setUniform("dir0", dir0);
     this->shader->setUniform("dir1", dir1);
     this->shader->setUniform("dir2", dir2);
 
-    // Fragment
-    this->shader->setUniform("vertex_color", vertex_color);
+    this->shader->setUniform("selected_color", selected_color);
+    this->shader->setUniform("selected", ((this->selected || highlighted) ? (1) : (0)));
     this->shader->setUniform("id", static_cast<int>(id));
 
     // Vertex position is only given via uniforms.
