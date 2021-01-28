@@ -90,6 +90,13 @@ View3D_2::View3D_2(void)
     , showViewCubeSlot("viewcube::show", "Shows the view cube helper")
     , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
     , cameraSetViewChooserParam("defaultView", "choose a default view to look from")
+        /// XXX TEST
+        , mvp_column0_param("3DCube::mvp_column0", "...")
+        , mvp_column1_param("3DCube::mvp_column1", "...")
+        , mvp_column2_param("3DCube::mvp_column2", "...")
+        , mvp_column3_param("3DCube::mvp_column3", "...")
+        , vec3d_param("3DCube::vec3d", "...")
+        /// XXX
     , mouseX(0.0f)
     , mouseY(0.0f)
     , mouseFlags(0)
@@ -319,6 +326,23 @@ View3D_2::View3D_2(void)
     this->cameraSetViewChooserParam.SetParameter(defaultViewParam),
     this->MakeSlotAvailable(&this->cameraSetViewChooserParam);
 
+    /// XXX TEST
+    this->mvp_column1_param.SetParameter(
+        new param::Vector4fParam(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 0.0f)));
+    this->MakeSlotAvailable(&this->mvp_column1_param);
+    this->mvp_column2_param.SetParameter(
+        new param::Vector4fParam(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 0.0f)));
+    this->MakeSlotAvailable(&this->mvp_column2_param);
+    this->mvp_column3_param.SetParameter(
+        new param::Vector4fParam(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 0.0f)));
+    this->MakeSlotAvailable(&this->mvp_column3_param);
+    this->mvp_column0_param.SetParameter(
+        new param::Vector4fParam(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 0.0f)));
+    this->MakeSlotAvailable(&this->mvp_column0_param);
+    this->vec3d_param.SetParameter(new param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f)));
+    this->MakeSlotAvailable(&this->vec3d_param);
+    /// XXX
+
     this->translateManipulator.set_target(this->cam);
     this->translateManipulator.enable();
 
@@ -529,6 +553,37 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     glm::mat4 view = viewCam;
     glm::mat4 proj = projCam;
     glm::mat4 mvp = projCam * viewCam;
+
+    /// XXX TEST
+    this->mvp_column0_param.Param<param::Vector4fParam>()->SetValue(
+        vislib::math::Vector<float, 4>(mvp[0][0], mvp[0][1], mvp[1][2], mvp[0][3]));
+    this->mvp_column1_param.Param<param::Vector4fParam>()->SetValue(
+        vislib::math::Vector<float, 4>(mvp[1][0], mvp[1][1], mvp[1][2], mvp[1][3]));
+    this->mvp_column2_param.Param<param::Vector4fParam>()->SetValue(
+        vislib::math::Vector<float, 4>(mvp[2][0], mvp[2][1], mvp[2][2], mvp[2][3]));
+    this->mvp_column3_param.Param<param::Vector4fParam>()->SetValue(
+        vislib::math::Vector<float, 4>(mvp[3][0], mvp[3][1], mvp[3][2], mvp[3][3]));
+
+    auto boundingBoxes = cr3d->AccessBoundingBoxes();
+    auto bbox_center = boundingBoxes.BoundingBox().CalcCenter();
+    if (false) { // this->vec3d_param.IsDirty()) {
+        auto vec3d = this->vec3d_param.Param<param::Vector3fParam>()->Value();
+        vec3d = bbox_center - vec3d;
+
+        auto bbox_left = boundingBoxes.BoundingBox().Left() + vec3d.X();
+        auto bbox_right = boundingBoxes.BoundingBox().Right() + vec3d.X();
+        auto bbox_bottom = boundingBoxes.BoundingBox().Bottom() + vec3d.Y();
+        auto bbox_top = boundingBoxes.BoundingBox().Top() + vec3d.Y();
+        auto bbox_front = boundingBoxes.BoundingBox().Front() + vec3d.Z();
+        auto bbox_back = boundingBoxes.BoundingBox().Back() + vec3d.Z();
+        boundingBoxes.SetBoundingBox(bbox_left, bbox_bottom, bbox_back, bbox_right, bbox_top, bbox_front);
+        bbox_center = boundingBoxes.BoundingBox().CalcCenter();
+
+        this->vec3d_param.ResetDirty();
+    }
+    this->vec3d_param.Param<param::Vector3fParam>()->SetValue(
+        vislib::math::Vector<float, 3>(bbox_center.X(), bbox_center.Y(), bbox_center.Z()));
+    /// XXX
 
     /*glm::vec3 eyepos(cam.eye_position().x(), cam.eye_position().y(), cam.eye_position().z());
     glm::vec3 snappos(camsnap.position.x(), camsnap.position.y(), camsnap.position.z());

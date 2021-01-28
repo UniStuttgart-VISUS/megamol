@@ -159,11 +159,21 @@ bool megamol::gui::PickingBuffer::ProcessMouseClick(megamol::core::view::MouseBu
 
 bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
 
+    if (this->enabled) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Disable interaction before enabling again. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return true;
+    }
+
+    // Enable interaction only if interactions have been added in previous frame
+    if (this->available_interactions.empty()) {
+        return false;
+    }
+
+    // Interactions are processed in ProcessMouseMove() and should be cleared each frame
+    this->available_interactions.clear();
     this->enabled = false;
     this->viewport_dim = vp_dim;
-
-    // Clear available interactions
-    this->available_interactions.clear();
 
     if (this->fbo == nullptr) {
         try {
@@ -196,38 +206,16 @@ bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
 bool megamol::gui::PickingBuffer::DisableInteraction(void) {
 
     if (!this->enabled) {
+        // megamol::core::utility::log::Log::DefaultLog.WriteError(
+        //    "[GUI] Enable interaction before disabling it. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     this->enabled = false;
-    GUI_GL_CHECK_ERROR
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Clear pending manipulations
     this->pending_manipulations.clear();
 
-    // Bind fbo to read buffer for retrieving pixel data
-    GLfloat pixel_data[2] = {-1.0f, FLT_MAX};
-    this->fbo->bindToRead(1);
-    GUI_GL_CHECK_ERROR
-    // Get object id and depth at cursor location from framebuffer's second color attachment
-    /// TODO Check if cursor position is within framebuffer pixel range?
-    glReadPixels(static_cast<GLint>(this->cursor_x), this->fbo->getHeight() - static_cast<GLint>(this->cursor_y), 1, 1,
-        GL_RG, GL_FLOAT, pixel_data);
-    GUI_GL_CHECK_ERROR
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    auto id = static_cast<int>(pixel_data[0]);
-    auto depth = pixel_data[1];
-
-    if (id > 0) {
-        this->cursor_on_interaction_obj = {true, id, depth};
-        this->pending_manipulations.emplace_back(Manipulation{InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f});
-        /// megamol::core::utility::log::Log::DefaultLog.WriteError("[[[DEBUG]]] ID = %i | Depth = %f", id, depth);
-    } else {
-        this->cursor_on_interaction_obj = GUI_INTERACTION_TUPLE_INIT;
-    }
-
-    // Draw fbo color buffer as texture because blending is required
+    // Create FBO sahders if required -----------------------------------------
     if (this->fbo_shader == nullptr) {
         std::string vertex_src = "#version 130 \n"
                                  "out vec2 uv_coord; \n"
@@ -261,6 +249,32 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
             return false;
     }
 
+    GUI_GL_CHECK_ERROR
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Bind fbo to read buffer for retrieving pixel data
+    GLfloat pixel_data[2] = {-1.0f, FLT_MAX};
+    this->fbo->bindToRead(1);
+    GUI_GL_CHECK_ERROR
+    // Get object id and depth at cursor location from framebuffer's second color attachment
+    /// TODO Check if cursor position is within framebuffer pixel range -> ensured by GLFW?
+    glReadPixels(static_cast<GLint>(this->cursor_x), this->fbo->getHeight() - static_cast<GLint>(this->cursor_y), 1, 1,
+        GL_RG, GL_FLOAT, pixel_data);
+    GUI_GL_CHECK_ERROR
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    auto id = static_cast<int>(pixel_data[0]);
+    auto depth = pixel_data[1];
+
+    if (id > 0) {
+        this->cursor_on_interaction_obj = {true, id, depth};
+        this->pending_manipulations.emplace_back(Manipulation{InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f});
+        /// megamol::core::utility::log::Log::DefaultLog.WriteError("[[[DEBUG]]] ID = %i | Depth = %f", id, depth);
+    } else {
+        this->cursor_on_interaction_obj = GUI_INTERACTION_TUPLE_INIT;
+    }
+
+    // Draw fbo color buffer as texture because blending is required
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -313,47 +327,49 @@ bool megamol::gui::PickingBuffer::CreatShader(
 }
 
 
-// Pickable Triangle ##########################################################
+glm::vec3 megamol::gui::PickingBuffer::Worldspace2Screenspace(
+    const glm::vec3& vec_world, const glm::mat4& mvp, const glm::vec2& viewport) {
 
-megamol::gui::PickableTriangle::PickableTriangle(void)
-        : shader(nullptr), pixel_direction(100.0f, 200.0f), selected(false) {}
+    glm::vec4 world = {vec_world.x, vec_world.y, vec_world.z, 1.0f};
+    world = mvp * world;
+    world = world / world.w;
+    glm::vec3 screen;
+    screen.x = (world.x + 1.0f) / 2.0f * viewport.x;
+    screen.y = (world.y + 1.0f) / 2.0f * viewport.y; // flipped y-axis: glm::abs(world.y - 1.0f)
+    screen.z = -1.0f * (world.z + 1.0f) / 2.0f;
+    return screen;
+}
 
 
-void megamol::gui::PickableTriangle::Draw(
-    unsigned int id, glm::vec2 pixel_dir, glm::vec2 vp_dim, ManipVector& pending_manipulations) {
+glm::vec3 megamol::gui::PickingBuffer::Screenspace2Worldspace(
+    const glm::vec3& vec_screen, const glm::mat4& mvp, const glm::vec2& viewport) {
 
-    // Shader data
-    float depth = -0.9996f; /// <=== DEBUG !!!
-    glm::mat4 ortho = glm::ortho(0.0f, vp_dim.x, 0.0f, vp_dim.y, -1.0f, 1.0f);
-    glm::vec3 dir0 = glm::vec3(this->pixel_direction.x, this->pixel_direction.y, depth);
-    glm::vec3 dir1 = glm::vec3(dir0.y / 2.0f, -dir0.x / 2.0f, depth);
-    glm::vec3 dir2 = glm::vec3(-dir0.y / 2.0f, dir0.x / 2.0f, -0.9999f);
+    glm::vec3 screen;
+    screen.x = (vec_screen.x * 2.0f / viewport.x) - 1.0f;
+    screen.y = (vec_screen.y * 2.0f / viewport.y) - 1.0f;
+    screen.z = ((vec_screen.z * 2.0f * -1.0f) - 1.0f);
+    glm::vec4 world = {screen.x, screen.y, screen.z, 1.0f};
+    glm::mat4 mvp_inverse = glm::inverse(mvp);
+    world = mvp_inverse * world;
+    world = world / world.w;
+    glm::vec3 vec3d = glm::vec3(world.x, world.y, world.z);
+    return vec3d;
+}
 
-    glm::vec3 vp_vec = glm::vec3(vp_dim.x, vp_dim.y, 0.0f);
-    dir0 = vp_vec / 2.0f + dir0;
-    dir1 = vp_vec / 2.0f + dir1;
-    dir2 = vp_vec / 2.0f + dir2;
-    glm::vec4 color = glm::vec4(0.0f, 0.0f, 1.0, 1.0f);
 
-    // Process pending manipulations
-    for (auto& manip : pending_manipulations) {
-        if (id == manip.obj_id) {
-            if (manip.type == InteractionType::MOVE_ALONG_AXIS_SCREEN) {
-                this->pixel_direction += glm::vec2(manip.axis_x, manip.axis_y) * manip.value;
-            } else if (manip.type == InteractionType::SELECT) {
-                this->selected = true;
-            } else if (manip.type == InteractionType::DESELECT) {
-                this->selected = false;
-            } else if (manip.type == InteractionType::HIGHLIGHT) {
-                color = glm::vec4(1.0f, 0.0f, 1.0, 1.0f);
-            }
-        }
-    }
-    if (selected) {
-        color = glm::vec4(0.0f, 1.0f, 1.0, 1.0f);
-    }
+// Pickable Cube ##########################################################
 
-    // Create shader once
+megamol::gui::PickableCube::PickableCube(void) : shader(nullptr), selected(false) {}
+
+
+void megamol::gui::PickableCube::Draw(unsigned int id, glm::vec3& inout_pos3d, const glm::mat4& mvp,
+    const glm::vec2& vp_dim, ManipVector& pending_manipulations) {
+
+    assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiIO& io = ImGui::GetIO();
+
+    // Create shader once -----------------------------------------------------
     if (this->shader == nullptr) {
         std::string vertex_src =
             "#version 130 \n"
@@ -361,11 +377,11 @@ void megamol::gui::PickableTriangle::Draw(
             "uniform vec3 dir0; \n"
             "uniform vec3 dir1; \n"
             "uniform vec3 dir2; \n"
-            "uniform vec4 color; \n"
+            "uniform vec4 vertex_color; \n"
             "out vec4 frag_color; \n"
             "void main(void) {  \n"
             "    vec3 dir_pos = dir0; \n"
-            "    frag_color = color; \n"
+            "    frag_color = vertex_color; \n"
             "    if (gl_VertexID == 1) { dir_pos = dir1; frag_color = vec4(1.0, 0.0, 0.0, 1.0); } \n"
             "    else if (gl_VertexID == 2)  { dir_pos = dir2; frag_color = vec4(0.0, 1.0, 0.0, 1.0);  } \n"
             "    vec4 pos = ortho * vec4(dir_pos.xyz, 1.0); \n"
@@ -390,7 +406,44 @@ void megamol::gui::PickableTriangle::Draw(
     }
     this->shader->use();
 
+
+    // Calculate cube data ------------------------------------------------
+
+    glm::vec3 screen_pos = megamol::gui::PickingBuffer::Worldspace2Screenspace(inout_pos3d, mvp, vp_dim);
+    glm::vec2 pixel_direction(50.0f, 100.0f);
+    glm::vec3 dir0 = glm::vec3(pixel_direction.x, pixel_direction.y, 0.0f);
+    glm::vec3 dir1 = glm::vec3(dir0.y / 2.0f, -dir0.x / 2.0f, 0.0f);
+    glm::vec3 dir2 = glm::vec3(-dir0.y / 2.0f, dir0.x / 2.0f, 0.0f);
+    dir0 = screen_pos + dir0;
+    dir1 = screen_pos + dir1;
+    dir2 = screen_pos + dir2;
+    glm::vec4 vertex_color = glm::vec4(0.0f, 0.0f, 1.0, 1.0f);
+
+    // Process pending manipulations ------------------------------------------
+    for (auto& manip : pending_manipulations) {
+        if (id == manip.obj_id) {
+            if (manip.type == InteractionType::MOVE_ALONG_AXIS_SCREEN) {
+                screen_pos += glm::vec3(manip.axis_x, manip.axis_y, 0.0) * manip.value;
+                screen_pos.z = manip.axis_z;
+                inout_pos3d = megamol::gui::PickingBuffer::Screenspace2Worldspace(screen_pos, mvp, vp_dim);
+            } else if (manip.type == InteractionType::SELECT) {
+                this->selected = true;
+            } else if (manip.type == InteractionType::DESELECT) {
+                this->selected = false;
+            } else if (manip.type == InteractionType::HIGHLIGHT) {
+                vertex_color = glm::vec4(1.0f, 0.0f, 1.0, 1.0f);
+            }
+        }
+    }
+    if (selected) {
+        vertex_color = glm::vec4(0.0f, 1.0f, 1.0, 1.0f);
+    }
+
+    // Draw -------------------------------------------------------------------
+
     // Create 2D orthographic mvp matrix
+    glm::mat4 ortho = glm::ortho(0.0f, vp_dim.x, 0.0f, vp_dim.y, -1.0f, 1.0f);
+
     // Vertex
     this->shader->setUniform("ortho", ortho);
     this->shader->setUniform("dir0", dir0);
@@ -398,11 +451,147 @@ void megamol::gui::PickableTriangle::Draw(
     this->shader->setUniform("dir2", dir2);
 
     // Fragment
-    this->shader->setUniform("color", color);
+    this->shader->setUniform("vertex_color", vertex_color);
     this->shader->setUniform("id", static_cast<int>(id));
 
     // Vertex position is only given via uniforms.
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
 
     glUseProgram(0);
+}
+
+
+InteractVector megamol::gui::PickableCube::GetInteractions(unsigned int id) const {
+    InteractVector interactions;
+    interactions.emplace_back(
+        Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<int>(id), 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(
+        Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<int>(id), 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(
+        Interaction({InteractionType::SELECT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(
+        Interaction({InteractionType::DESELECT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(
+        Interaction({InteractionType::HIGHLIGHT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    return interactions;
+}
+
+
+// Pickable Triangle ##########################################################
+
+megamol::gui::PickableTriangle::PickableTriangle(void) : shader(nullptr), selected(false) {}
+
+
+void megamol::gui::PickableTriangle::Draw(unsigned int id, glm::vec3& inout_pos3d, const glm::mat4& mvp,
+    const glm::vec2& vp_dim, ManipVector& pending_manipulations) {
+
+    assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiIO& io = ImGui::GetIO();
+
+    // Create shader once -----------------------------------------------------
+    if (this->shader == nullptr) {
+        std::string vertex_src =
+            "#version 130 \n"
+            "uniform mat4 ortho; \n"
+            "uniform vec3 dir0; \n"
+            "uniform vec3 dir1; \n"
+            "uniform vec3 dir2; \n"
+            "uniform vec4 vertex_color; \n"
+            "out vec4 frag_color; \n"
+            "void main(void) {  \n"
+            "    vec3 dir_pos = dir0; \n"
+            "    frag_color = vertex_color; \n"
+            "    if (gl_VertexID == 1) { dir_pos = dir1; frag_color = vec4(1.0, 0.0, 0.0, 1.0); } \n"
+            "    else if (gl_VertexID == 2)  { dir_pos = dir2; frag_color = vec4(0.0, 1.0, 0.0, 1.0);  } \n"
+            "    vec4 pos = ortho * vec4(dir_pos.xyz, 1.0); \n"
+            "    pos /= pos.w; \n"
+            "    gl_Position = pos; \n"
+            "} ";
+
+        std::string fragment_src = "#version 130  \n"
+                                   "#extension GL_ARB_explicit_attrib_location : require \n"
+                                   "in vec4 frag_color; \n"
+                                   "uniform int id; \n"
+                                   "layout(location = 0) out vec4 outFragColor; \n"
+                                   "layout(location = 1) out vec2 outFragInfo; \n"
+                                   "void main(void) { \n"
+                                   "    float depth  = gl_FragCoord.z; \n"
+                                   "    outFragColor = frag_color; \n"
+                                   "    outFragInfo  = vec2(float(id), depth); \n"
+                                   "} ";
+
+        if (!PickingBuffer::CreatShader(this->shader, vertex_src, fragment_src))
+            return;
+    }
+    this->shader->use();
+
+
+    // Calculate triangle data ------------------------------------------------
+
+    glm::vec3 screen_pos = megamol::gui::PickingBuffer::Worldspace2Screenspace(inout_pos3d, mvp, vp_dim);
+    glm::vec2 pixel_direction(50.0f, 100.0f);
+    glm::vec3 dir0 = glm::vec3(pixel_direction.x, pixel_direction.y, 0.0f);
+    glm::vec3 dir1 = glm::vec3(dir0.y / 2.0f, -dir0.x / 2.0f, 0.0f);
+    glm::vec3 dir2 = glm::vec3(-dir0.y / 2.0f, dir0.x / 2.0f, 0.0f);
+    dir0 = screen_pos + dir0;
+    dir1 = screen_pos + dir1;
+    dir2 = screen_pos + dir2;
+    glm::vec4 vertex_color = glm::vec4(0.0f, 0.0f, 1.0, 1.0f);
+
+    // Process pending manipulations ------------------------------------------
+    for (auto& manip : pending_manipulations) {
+        if (id == manip.obj_id) {
+            if (manip.type == InteractionType::MOVE_ALONG_AXIS_SCREEN) {
+                screen_pos += glm::vec3(manip.axis_x, manip.axis_y, 0.0) * manip.value;
+                screen_pos.z = manip.axis_z;
+                inout_pos3d = megamol::gui::PickingBuffer::Screenspace2Worldspace(screen_pos, mvp, vp_dim);
+            } else if (manip.type == InteractionType::SELECT) {
+                this->selected = true;
+            } else if (manip.type == InteractionType::DESELECT) {
+                this->selected = false;
+            } else if (manip.type == InteractionType::HIGHLIGHT) {
+                vertex_color = glm::vec4(1.0f, 0.0f, 1.0, 1.0f);
+            }
+        }
+    }
+    if (selected) {
+        vertex_color = glm::vec4(0.0f, 1.0f, 1.0, 1.0f);
+    }
+
+    // Draw -------------------------------------------------------------------
+
+    // Create 2D orthographic mvp matrix
+    glm::mat4 ortho = glm::ortho(0.0f, vp_dim.x, 0.0f, vp_dim.y, -1.0f, 1.0f);
+
+    // Vertex
+    this->shader->setUniform("ortho", ortho);
+    this->shader->setUniform("dir0", dir0);
+    this->shader->setUniform("dir1", dir1);
+    this->shader->setUniform("dir2", dir2);
+
+    // Fragment
+    this->shader->setUniform("vertex_color", vertex_color);
+    this->shader->setUniform("id", static_cast<int>(id));
+
+    // Vertex position is only given via uniforms.
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
+
+    glUseProgram(0);
+}
+
+
+InteractVector megamol::gui::PickableTriangle::GetInteractions(unsigned int id) const {
+    InteractVector interactions;
+    interactions.emplace_back(
+        Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<int>(id), 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(
+        Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<int>(id), 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(
+        Interaction({InteractionType::SELECT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(
+        Interaction({InteractionType::DESELECT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(
+        Interaction({InteractionType::HIGHLIGHT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    return interactions;
 }

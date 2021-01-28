@@ -17,23 +17,33 @@ using namespace megamol::gui;
 megamol::gui::ParameterGroupsPresentation::ParameterGroupsPresentation(void)
         : group_widget_ids()
         , tooltip()
+        , cube_widget()
         , speed_knob_pos(ImVec2(0.0f, 0.0f))
         , time_knob_pos(ImVec2(0.0f, 0.0f))
         , image_buttons() {
 
     // Add group widget data for animation widget group
     /// View3D_2::anim
-    GroupWidgetData animation;
+    GroupWidgetData animation(Param_t::GROUP_ANIMATION);
     animation.active = false;
-    animation.type.emplace(Param_t::BOOL, 1);
-    animation.type.emplace(Param_t::BUTTON, 3);
-    animation.type.emplace(Param_t::FLOAT, 2);
-    animation.callback = [&, this](ParamPtrVector_t& params,
-                             megamol::core::param::AbstractParamPresentation::Presentation presentation,
-                             megamol::gui::ParameterPresentation::WidgetScope in_scope) -> bool {
+    animation.callback =
+        [&, this](ParamPtrVector_t& params, megamol::core::param::AbstractParamPresentation::Presentation presentation,
+            megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) -> bool {
         return this->group_widget_animation(params, presentation, in_scope);
     };
-    group_widget_ids["anim"] = animation;
+    /// ID string must equal parameter group name, which is used for identification
+    this->group_widget_ids["anim"] = animation;
+
+    /// BoundingBoxRenderer::3d_cube
+    GroupWidgetData threedmanip(Param_t::GROUP_3D_CUBE);
+    threedmanip.active = false;
+    threedmanip.callback =
+        [&, this](ParamPtrVector_t& params, megamol::core::param::AbstractParamPresentation::Presentation presentation,
+            megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) -> bool {
+        return this->group_widget_3d_cube(params, presentation, in_scope, inout_picking_buffer);
+    };
+    /// ID string must equal parameter group name, which is used for identification
+    this->group_widget_ids["3DCube"] = threedmanip;
 }
 
 
@@ -44,7 +54,9 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
     const std::string& in_module_fullname, const std::string& in_search, vislib::math::Ternary in_extended,
     bool in_indent, megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
-    ImGuiID in_override_header_state) {
+    ImGuiID in_override_header_state, PickingBuffer* inout_picking_buffer) {
+
+    assert(ImGui::GetCurrentContext() != nullptr);
 
     if (out_open_external_tf_editor != nullptr)
         (*out_open_external_tf_editor) = false;
@@ -71,8 +83,7 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
 
         if (!param_namespace.empty()) {
             // Sort parameters with namespace to group
-            group_map[param_namespace].first.emplace_back(&param);
-            group_map[param_namespace].second[param.type]++;
+            group_map[param_namespace].emplace_back(&param);
         } else {
             // Draw parameters without namespace directly at the beginning
             this->draw_parameter(
@@ -87,8 +98,9 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
 
         // Draw group widget (if defined) ...
         for (auto& group_widget_id : this->group_widget_ids) {
-            // Check for same group name and count of different parameter types
-            if ((group_widget_id.second.type == group.second.second) && (group_widget_id.first == group_name)) {
+
+            // Check for same group name
+            if (group_widget_id.first == group_name) {
 
                 found_group_widget = true;
                 group_widget_id.second.active = true;
@@ -113,6 +125,7 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
                         this->tooltip.ToolTip("Read-Only", ImGui::GetItemID(), 0.5f);
                         ImGui::SameLine();
 
+                        // Presentation option
                         ParameterPresentation::OptionButton(
                             "param_groups", "", (group_widget_id.second.GetGUIPresentation() != Present_t::Basic));
                         if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) {
@@ -135,14 +148,17 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
                         if (group_widget_id.second.IsGUIReadOnly()) {
                             GUIUtils::ReadOnlyWigetStyle(true);
                         }
+
                         if (group_widget_id.second.GetGUIPresentation() ==
                             param::AbstractParamPresentation::Presentation::Basic) {
+                            // Basic presentation
 
-                            this->draw_grouped_parameters(group_name, group.second.first, in_module_fullname, in_search,
+                            this->draw_grouped_parameters(group_name, group.second, in_module_fullname, in_search,
                                 in_scope, in_external_tf_editor, out_open_external_tf_editor, in_override_header_state);
                         } else {
-                            if (!group_widget_id.second.callback(
-                                    group.second.first, group_widget_id.second.GetGUIPresentation(), in_scope)) {
+                            if (!group_widget_id.second.callback(group.second,
+                                    group_widget_id.second.GetGUIPresentation(), in_scope, inout_picking_buffer)) {
+                                // Specific presentation
 
                                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                                     "[GUI] No widget presentation '%s' available for group widget '%s'. [%s, %s, line "
@@ -162,7 +178,7 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
                     // GLOBAL
 
                     group_widget_id.second.callback(
-                        group.second.first, group_widget_id.second.GetGUIPresentation(), in_scope);
+                        group.second, group_widget_id.second.GetGUIPresentation(), in_scope, inout_picking_buffer);
                 }
 
                 ImGui::PopID();
@@ -175,12 +191,12 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
             if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
                 /// LOCAL
 
-                this->draw_grouped_parameters(group_name, group.second.first, in_module_fullname, in_search, in_scope,
+                this->draw_grouped_parameters(group_name, group.second, in_module_fullname, in_search, in_scope,
                     in_external_tf_editor, out_open_external_tf_editor, in_override_header_state);
             } else {
                 /// GLOBAL
 
-                for (auto& param : group.second.first) {
+                for (auto& param : group.second) {
                     this->draw_parameter((*param), in_module_fullname, in_search, in_scope, in_external_tf_editor,
                         out_open_external_tf_editor);
                 }
@@ -311,32 +327,28 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(ParamPtrV
     if (presentation != param::AbstractParamPresentation::Presentation::Group_Animation)
         return false;
 
-    ImGuiStyle& style = ImGui::GetStyle();
     const std::string group_label("Animation");
-    const ImVec2 button_size =
-        ImVec2(1.5f * ImGui::GetFrameHeightWithSpacing(), 1.5f * ImGui::GetFrameHeightWithSpacing());
-    const float knob_size = 2.5f * ImGui::GetFrameHeightWithSpacing();
 
+    // Early exit for LOCAL widget presentation
     if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
         // LOCAL
 
         ImGui::TextDisabled(group_label.c_str());
         return true;
     }
+    /// if (in_scope == ParameterPresentation::WidgetScope::GLOBAL):
 
-    // Check required parameters
-    /// Find specific parameters of group by name because of parameter type can occure multiple times.
+    // Check required parameters ----------------------------------------------
     Parameter* param_play = nullptr;
     Parameter* param_time = nullptr;
     Parameter* param_speed = nullptr;
+    /// Find specific parameters of group by name because parameter type can occure multiple times.
     for (auto& param_ptr : params) {
         if ((param_ptr->GetName() == "play") && (param_ptr->type == Param_t::BOOL)) {
             param_play = param_ptr;
-        }
-        if ((param_ptr->GetName() == "time") && (param_ptr->type == Param_t::FLOAT)) {
+        } else if ((param_ptr->GetName() == "time") && (param_ptr->type == Param_t::FLOAT)) {
             param_time = param_ptr;
-        }
-        if ((param_ptr->GetName() == "speed") && (param_ptr->type == Param_t::FLOAT)) {
+        } else if ((param_ptr->GetName() == "speed") && (param_ptr->type == Param_t::FLOAT)) {
             param_speed = param_ptr;
         }
     }
@@ -347,7 +359,7 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(ParamPtrV
         return false;
     }
 
-    // Load button textures (once)
+    // Load button textures (once) --------------------------------------------
     if (!this->image_buttons.play.IsLoaded()) {
         this->image_buttons.play.LoadTextureFromFile("../share/resources/transport_ctrl_play.png");
     }
@@ -368,7 +380,12 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(ParamPtrV
         return false;
     }
 
-    // ------------------------------------------------------------------------
+    // DRAW -------------------------------------------------------------------
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    const ImVec2 button_size =
+        ImVec2(1.5f * ImGui::GetFrameHeightWithSpacing(), 1.5f * ImGui::GetFrameHeightWithSpacing());
+    const float knob_size = 2.5f * ImGui::GetFrameHeightWithSpacing();
 
     if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
         // GLOBAL
@@ -376,18 +393,19 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(ParamPtrV
         ImGui::Begin(group_label.c_str(), nullptr,
             ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
                 ImGuiWindowFlags_NoCollapse);
-
-    } else { // if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+    }
+    /*
+    else { // if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
         /// LOCAL
-        /*
+
         float child_height = frame_height * 4.5f;
         auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration;
         ImGui::BeginChild("group_widget_animation", ImVec2(0.0f, child_height), true, child_flags);
 
         // Caption
         ImGui::TextUnformatted(group_label.c_str());
-        */
     }
+    */
 
     // Transport Buttons ------------------------------------------------------
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.Colors[ImGuiCol_ButtonActive]);
@@ -458,16 +476,85 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(ParamPtrV
     param_time->SetValue(time);
     param_speed->SetValue(speed);
 
-    if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
-        /// GLOBAL
-
-        ImGui::End();
-    } else { // if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+    /*
+    if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
         /// LOCAL
-        /*
         ImGui::EndChild();
-        */
     }
+    */
+
+    return true;
+}
+
+
+bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(ParamPtrVector_t& params,
+    megamol::core::param::AbstractParamPresentation::Presentation presentation,
+    megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
+
+    if (presentation != param::AbstractParamPresentation::Presentation::Group_3D_Cube)
+        return false;
+
+    // Early exit for LOCAL widget presentation
+    if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+        // LOCAL
+        /// const std::string group_label("3D Cube");
+        /// ImGui::TextDisabled(group_label.c_str());
+        return true;
+    }
+    /// if (in_scope == ParameterPresentation::WidgetScope::GLOBAL):
+
+    if (inout_picking_buffer == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Pointer to required picking buffer is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
+        return false;
+    }
+
+    // Check required parameters ----------------------------------------------
+    Parameter* param_mvp_column0 = nullptr;
+    Parameter* param_mvp_column1 = nullptr;
+    Parameter* param_mvp_column2 = nullptr;
+    Parameter* param_mvp_column3 = nullptr;
+    Parameter* param_vec3d = nullptr;
+    /// Find specific parameters of group by name because parameter type can occure multiple times.
+    for (auto& param_ptr : params) {
+        if ((param_ptr->GetName() == "mvp_column0") && (param_ptr->type == Param_t::VECTOR4F)) {
+            param_mvp_column0 = param_ptr;
+        } else if ((param_ptr->GetName() == "mvp_column1") && (param_ptr->type == Param_t::VECTOR4F)) {
+            param_mvp_column1 = param_ptr;
+        } else if ((param_ptr->GetName() == "mvp_column2") && (param_ptr->type == Param_t::VECTOR4F)) {
+            param_mvp_column2 = param_ptr;
+        } else if ((param_ptr->GetName() == "mvp_column3") && (param_ptr->type == Param_t::VECTOR4F)) {
+            param_mvp_column3 = param_ptr;
+        } else if ((param_ptr->GetName() == "vec3d") && (param_ptr->type == Param_t::VECTOR3F)) {
+            param_vec3d = param_ptr;
+        }
+    }
+    if ((param_mvp_column0 == nullptr) || (param_mvp_column1 == nullptr) || (param_mvp_column2 == nullptr) ||
+        (param_mvp_column3 == nullptr) || (param_vec3d == nullptr)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Unable to find all required parameters by name "
+                                                                "for 3d manipulation group widget. [%s, %s, line %d]\n",
+            __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    // DRAW -------------------------------------------------------------------
+
+    auto id = param_vec3d->uid;
+    inout_picking_buffer->AddInteractionObject(id, this->cube_widget.GetInteractions(id));
+
+    ImGuiIO& io = ImGui::GetIO();
+    auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
+    glm::vec3 vec3d = std::get<glm::vec3>(param_vec3d->GetValue());
+    glm::mat4 mvp;
+    mvp[0] = std::get<glm::vec4>(param_mvp_column0->GetValue());
+    mvp[1] = std::get<glm::vec4>(param_mvp_column1->GetValue());
+    mvp[2] = std::get<glm::vec4>(param_mvp_column2->GetValue());
+    mvp[3] = std::get<glm::vec4>(param_mvp_column3->GetValue());
+
+    this->cube_widget.Draw(id, vec3d, mvp, viewport_dim, inout_picking_buffer->GetPendingManipulations());
+
+    param_vec3d->SetValue(vec3d);
 
     return true;
 }

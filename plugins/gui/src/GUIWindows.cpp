@@ -38,8 +38,7 @@ GUIWindows::GUIWindows(void)
         , search_widget()
         , tf_editor_ptr(nullptr)
         , tooltip()
-        , picking_buffer()
-        , triangle_widget() {
+        , picking_buffer() {
 
     this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F2, core::view::Modifier::NONE), false};
@@ -487,29 +486,22 @@ bool GUIWindows::PostDraw(void) {
 
     // Draw global parameter widgets -------------------------------------------
 
-    /// DEBUG TEST OpenGL Picking
-    // auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
-    // this->picking_buffer.EnableInteraction(viewport_dim);
+    // Enable OpenGL picking
+    /// ! Is only enabled in second frame if interaction objects are added during first frame !
+    this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
 
     GraphPtr_t graph_ptr;
     if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
 
-            /// DEBUG TEST OpenGL Picking
-            /// TODO Pass picked UID to parameters
-
             module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "",
-                vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN), false,
-                ParameterPresentation::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr, GUI_INVALID_ID);
+                vislib::math::Ternary::TRI_UNKNOWN, false, ParameterPresentation::WidgetScope::GLOBAL,
+                this->tf_editor_ptr, nullptr, GUI_INVALID_ID, &this->picking_buffer);
         }
     }
 
-    /// DEBUG TEST OpenGL Picking
-    // unsigned int id = 5;
-    // this->picking_buffer.AddInteractionObject(id, this->triangle_widget.GetInteractions(id));
-    // this->triangle_widget.Draw(
-    //    id, glm::vec2(0.0f, 200.0f), viewport_dim, this->picking_buffer.GetPendingManipulations());
-    // this->picking_buffer.DisableInteraction();
+    // Disable OpenGL picking
+    this->picking_buffer.DisableInteraction();
 
     // Draw pop-ups ------------------------------------------------------------
     this->drawPopUps();
@@ -1525,7 +1517,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                         module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, search_string,
                             vislib::math::Ternary(wc.param_extended_mode), true,
                             ParameterPresentation::WidgetScope::LOCAL, this->tf_editor_ptr,
-                            &out_open_external_tf_editor, override_header_state);
+                            &out_open_external_tf_editor, override_header_state, nullptr);
                         if (out_open_external_tf_editor) {
                             const auto func = [](WindowCollection::WindowConfiguration& wc) {
                                 if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {
