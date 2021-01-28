@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModule_2.h"
 #include "ArxelBuffer.h"
 #include "AbstractQuartzModule.h"
 #include "BufferMTPConnection.h"
@@ -31,7 +31,7 @@ namespace demos {
     /**
      * Module for extracting and rendering PoreNetwork
      */
-    class PoreNetExtractor : public core::view::Renderer3DModule, public AbstractQuartzModule {
+    class PoreNetExtractor : public core::view::Renderer3DModule_2, public AbstractQuartzModule {
     public:
 
         /**
@@ -84,7 +84,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::Call& call);
+        virtual bool GetExtents(core::view::CallRender3D_2& call);
 
         /**
          * The render callback.
@@ -93,7 +93,7 @@ namespace demos {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::Call& call);
+        virtual bool Render(core::view::CallRender3D_2& call);
 
         /**
          * Implementation of 'Create'.
