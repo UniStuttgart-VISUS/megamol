@@ -18,7 +18,6 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"

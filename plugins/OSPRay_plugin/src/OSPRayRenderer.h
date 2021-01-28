@@ -7,7 +7,6 @@
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "AbstractOSPRayRenderer.h"
-#include "mmcore/view/CallRender3D.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"

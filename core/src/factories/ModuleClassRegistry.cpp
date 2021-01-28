@@ -22,10 +22,8 @@
 #include "mmcore/cluster/simple/View.h"
 #include "mmcore/misc/SiffCSplineFitter.h"
 #include "mmcore/misc/TestSpheresDataSource.h"
-#include "mmcore/moldyn/MipDepthSphereRenderer.h"
 #include "mmcore/moldyn/MMPLDDataSource.h"
 #include "mmcore/moldyn/MMPLDWriter.h"
-#include "mmcore/moldyn/OracleSphereRenderer.h"
 #include "mmcore/moldyn/DirPartColModulate.h"
 #include "mmcore/moldyn/DirPartFilter.h"
 #include "mmcore/moldyn/ParticleListFilter.h"
@@ -33,28 +31,18 @@
 #include "mmcore/special/StubModule.h"
 #include "mmcore/view/ClipPlane.h"
 #include "mmcore/view/TransferFunction.h"
-#include "mmcore/view/MuxRenderer3D.h"
 #include "mmcore/view/special/AnaglyphStereoView.h"
 #include "mmcore/view/special/ChronoGraph.h"
 #include "mmcore/view/special/DemoRenderer2D.h"
 #include "mmcore/view/special/QuadBufferStereoView.h"
 #include "mmcore/view/special/ScreenShooter.h"
-#include "mmcore/view/SwitchRenderer3D.h"
 #include "mmcore/view/TileView.h"
 #include "mmcore/view/View2D.h"
-#include "mmcore/view/View3D.h"
 #include "mmcore/view/View3D_2.h"
 #include "mmcore/view/BoundingBoxRenderer.h"
-#include "mmcore/view/RendererRegistration.h"
-#ifdef MEGAMOLCORE_WITH_DIRECT3D11
-#include "mmcore/view/ViewDirect3D.h"
-#include "mmcore/moldyn/D3D11SimpleSphereRenderer.h"
-#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
-#include "mmcore/view/BlinnPhongRendererDeferred.h"
 #include "mmcore/view/SplitView.h"
 #include "mmcore/view/HeadView.h"
 #include "mmcore/view/SharedCameraParameters.h"
-#include "mmcore/view/LinkedView3D.h"
 #include "mmcore/job/DataWriterJob.h"
 #include "mmcore/job/JobThread.h"
 #include "mmcore/moldyn/VolumeDataCall.h"
@@ -97,10 +85,8 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<cluster::mpi::View>();
     instance.RegisterAutoDescription<misc::SiffCSplineFitter>();
     instance.RegisterAutoDescription<misc::TestSpheresDataSource>();
-    instance.RegisterAutoDescription<moldyn::MipDepthSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::MMPLDDataSource>();
     instance.RegisterAutoDescription<moldyn::MMPLDWriter>();
-    instance.RegisterAutoDescription<moldyn::OracleSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::DirPartColModulate>();
     instance.RegisterAutoDescription<moldyn::ParticleListFilter>();
     instance.RegisterAutoDescription<moldyn::DirPartFilter>();
@@ -108,28 +94,18 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<special::StubModule>();
     instance.RegisterAutoDescription<view::ClipPlane>();
     instance.RegisterAutoDescription<view::TransferFunction>();
-    instance.RegisterAutoDescription<view::MuxRenderer3D<2> >();
-    instance.RegisterAutoDescription<view::MuxRenderer3D<3> >();
-    instance.RegisterAutoDescription<view::MuxRenderer3D<4> >();
-    instance.RegisterAutoDescription<view::MuxRenderer3D<5> >();
-    instance.RegisterAutoDescription<view::MuxRenderer3D<10> >();
     instance.RegisterAutoDescription<view::special::AnaglyphStereoView>();
     instance.RegisterAutoDescription<view::special::ChronoGraph>();
     instance.RegisterAutoDescription<view::special::DemoRenderer2D>();
     instance.RegisterAutoDescription<view::special::QuadBufferStereoView>();
     instance.RegisterAutoDescription<view::special::ScreenShooter>();
-    instance.RegisterAutoDescription<view::SwitchRenderer3D>();
     instance.RegisterAutoDescription<view::TileView>();
     instance.RegisterAutoDescription<view::View2D>();
-    instance.RegisterAutoDescription<view::View3D>();
     instance.RegisterAutoDescription<view::View3D_2>();
     instance.RegisterAutoDescription<view::BoundingBoxRenderer>();
-    instance.RegisterAutoDescription<view::BlinnPhongRendererDeferred>();
     instance.RegisterAutoDescription<view::SplitView>();
     instance.RegisterAutoDescription<view::HeadView>();
     instance.RegisterAutoDescription<view::SharedCameraParameters>();
-    instance.RegisterAutoDescription<view::LinkedView3D>();
-    instance.RegisterAutoDescription<view::RendererRegistration>();
     instance.RegisterAutoDescription<job::DataWriterJob>();
     instance.RegisterAutoDescription<job::JobThread>();
     instance.RegisterAutoDescription<moldyn::AddClusterColours>();

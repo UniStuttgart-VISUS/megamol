@@ -21,7 +21,6 @@
 #include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/CallRenderView.h"
-#include "mmcore/view/View3D.h"
 #include "mmcore/view/Input.h"
 
 #include "vislib/Trace.h"

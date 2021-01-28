@@ -21,7 +21,6 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/View3D.h"
 #include "vislib/Trace.h"
 #include "mmcore/utility/sys/SystemInformation.h"
 
