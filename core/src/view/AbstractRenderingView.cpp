@@ -14,7 +14,6 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/special/TitleRenderer.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/sysfunctions.h"
 #include "mmcore/utility/sys/Thread.h"
@@ -199,17 +198,17 @@ bool view::AbstractRenderingView::showSoftCursor(void) const {
 void view::AbstractRenderingView::renderTitle(
         float tileX, float tileY, float tileW, float tileH,
         float virtW, float virtH, bool stereo, bool leftEye, double instTime) const {
-    if (!this->titleRenderer) {
-        this->titleRenderer = new special::TitleRenderer();
-        if (!this->titleRenderer->Create()) {
-            delete this->titleRenderer;
-            this->titleRenderer = new EmptyTitleRenderer();
-            ASSERT(this->titleRenderer->Create());
-        }
-    }
+    //if (!this->titleRenderer) {
+    //    this->titleRenderer = new special::TitleRenderer();
+    //    if (!this->titleRenderer->Create()) {
+    //        delete this->titleRenderer;
+    //        this->titleRenderer = new EmptyTitleRenderer();
+    //        ASSERT(this->titleRenderer->Create());
+    //    }
+    //}
 
-    this->titleRenderer->Render(tileX, tileY, tileW, tileH,
-        virtW, virtH, stereo, leftEye, instTime, this->GetCoreInstance());
+    //this->titleRenderer->Render(tileX, tileY, tileW, tileH,
+    //    virtW, virtH, stereo, leftEye, instTime, this->GetCoreInstance());
 
 }
 

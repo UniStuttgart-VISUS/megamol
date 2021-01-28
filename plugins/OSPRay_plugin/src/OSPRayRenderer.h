@@ -106,7 +106,7 @@ private:
     bool cam_has_changed;
     bool transformation_has_changed;
 
-	core::view::Camera_2 cam;
+    core::view::Camera_2 cam;
     float time;
     size_t frameID;
 

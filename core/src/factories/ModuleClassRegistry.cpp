@@ -42,7 +42,6 @@
 #include "mmcore/view/BoundingBoxRenderer.h"
 #include "mmcore/view/SplitView.h"
 #include "mmcore/view/HeadView.h"
-#include "mmcore/view/SharedCameraParameters.h"
 #include "mmcore/job/DataWriterJob.h"
 #include "mmcore/job/JobThread.h"
 #include "mmcore/moldyn/VolumeDataCall.h"
@@ -105,7 +104,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::BoundingBoxRenderer>();
     instance.RegisterAutoDescription<view::SplitView>();
     instance.RegisterAutoDescription<view::HeadView>();
-    instance.RegisterAutoDescription<view::SharedCameraParameters>();
     instance.RegisterAutoDescription<job::DataWriterJob>();
     instance.RegisterAutoDescription<job::JobThread>();
     instance.RegisterAutoDescription<moldyn::AddClusterColours>();

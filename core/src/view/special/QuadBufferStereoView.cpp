@@ -41,19 +41,19 @@ void view::special::QuadBufferStereoView::Render(const mmcRenderViewContext& con
     crv->SetGpuAffinity(context.GpuAffinity);
 
     if (this->hasQuadBuffer) {
-        vislib::graphics::CameraParameters::ProjectionType proj = this->getProjectionType();
+        thecam::Projection_type proj = this->getProjectionType();
         bool switchEyes = this->getSwitchEyes();
 
         crv->SetProjection(proj,switchEyes
-            ? vislib::graphics::CameraParameters::LEFT_EYE
-            : vislib::graphics::CameraParameters::RIGHT_EYE);
+            ? thecam::Eye::left
+            : thecam::Eye::right);
         crv->SetOutputBuffer(GL_BACK_RIGHT, this->getViewportWidth(), this->getViewportHeight());
         ::glDrawBuffer(GL_BACK_RIGHT);
         (*crv)(view::CallRenderViewGL::CALL_RENDER);
 
         crv->SetProjection(proj, switchEyes
-            ? vislib::graphics::CameraParameters::RIGHT_EYE
-            : vislib::graphics::CameraParameters::LEFT_EYE);
+            ? thecam::Eye::right
+            : thecam::Eye::left);
         crv->SetOutputBuffer(GL_BACK_LEFT, this->getViewportWidth(), this->getViewportHeight());
         ::glDrawBuffer(GL_BACK_LEFT);
         (*crv)(view::CallRenderViewGL::CALL_RENDER);

@@ -38,8 +38,6 @@
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/CameraOpenGL.h"
-#include "vislib/graphics/CameraParameters.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/Cuboid.h"
 

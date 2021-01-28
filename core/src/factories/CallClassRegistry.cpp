@@ -21,11 +21,6 @@
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/CallTimeControl.h"
-#ifdef MEGAMOLCORE_WITH_DIRECT3D11
-#include "mmcore/view/CallUpdateDirect3D.h"
-#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
-#include "mmcore/view/CallCamParams.h"
-#include "mmcore/view/CallCamParamSync.h"
 #include "mmcore/CallVolumeData.h"
 #include "mmcore/moldyn/VolumeDataCall.h"
 #include "mmcore/misc/BezierCurvesListDataCall.h"
@@ -68,11 +63,6 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<moldyn::VolumeDataCall>();
     instance.RegisterAutoDescription<misc::BezierCurvesListDataCall>();
     instance.RegisterAutoDescription<misc::VolumetricDataCall>();
-#ifdef MEGAMOLCORE_WITH_DIRECT3D11
-    instance.RegisterAutoDescription<view::CallUpdateDirect3D>();
-#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
-    instance.RegisterAutoDescription<view::CallCamParams>();
-    instance.RegisterAutoDescription<view::CallCamParamSync>();
     instance.RegisterAutoDescription<misc::QRCodeDataCall>();
     instance.RegisterAutoDescription<misc::CalloutImageCall>();
     instance.RegisterAutoDescription<view::Call6DofInteraction>();

@@ -21,15 +21,13 @@ view::special::AbstractStereoView::AbstractStereoView(void) : AbstractOverrideVi
         switchEyesSlot("switchEyes", "Flag to switch the images for the right eye and the left eye") {
 
     param::EnumParam *ep = new param::EnumParam(
-        static_cast<int>(vislib::graphics::CameraParameters::STEREO_OFF_AXIS));
+        static_cast<int>(thecam::Projection_type::off_axis));
     ep->SetTypePair(
-        static_cast<int>(vislib::graphics::CameraParameters::STEREO_OFF_AXIS),
+        static_cast<int>(thecam::Projection_type::off_axis),
         "Off Axis");
-    ep->SetTypePair(
-        static_cast<int>(vislib::graphics::CameraParameters::STEREO_PARALLEL),
+    ep->SetTypePair(static_cast<int>(thecam::Projection_type::parallel),
         "Parallel");
-    ep->SetTypePair(
-        static_cast<int>(vislib::graphics::CameraParameters::STEREO_TOE_IN),
+    ep->SetTypePair(static_cast<int>(thecam::Projection_type::toe_in),
         "Toe In");
     this->projTypeSlot << ep;
     this->MakeSlotAvailable(&this->projTypeSlot);
@@ -59,8 +57,8 @@ void view::special::AbstractStereoView::packMouseCoordinates(float &x, float &y)
 /*
  * view::special::AbstractStereoView::getProjectionType
  */
-vislib::graphics::CameraParameters::ProjectionType view::special::AbstractStereoView::getProjectionType(void) const {
-    return static_cast<vislib::graphics::CameraParameters::ProjectionType>(
+thecam::Projection_type view::special::AbstractStereoView::getProjectionType(void) const {
+    return static_cast<thecam::Projection_type>(
         this->projTypeSlot.Param<param::EnumParam>()->Value());
 }
 

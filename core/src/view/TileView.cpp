@@ -10,7 +10,6 @@
 #include "vislib/memutils.h"
 
 using namespace megamol::core;
-using vislib::graphics::CameraParameters;
 
 
 /*

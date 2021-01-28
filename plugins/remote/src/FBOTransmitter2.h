@@ -14,7 +14,6 @@
 #include "FBOCommFabric.h"
 #include "FBOProto.h"
 #include "mmcore/CallerSlot.h"
-#include "vislib/graphics/gl/CameraOpenGL.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
 #ifdef WITH_MPI

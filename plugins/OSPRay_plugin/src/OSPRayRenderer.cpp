@@ -8,7 +8,6 @@
 #include "OSPRayRenderer.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "vislib/graphics/CameraParamsStore.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Vector.h"

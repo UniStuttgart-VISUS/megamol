@@ -30,13 +30,11 @@
 #include "mmcore/view/AbstractCallRenderGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
-#include "mmcore/view/CameraParamOverride.h"
 #include "vislib/Exception.h"
 #include "vislib/String.h"
 #include "vislib/StringSerialiser.h"
 #include "vislib/Trace.h"
 #include "vislib/graphics/BitmapImage.h"
-#include "vislib/graphics/CameraParamsStore.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Vector.h"
@@ -875,11 +873,12 @@ bool view::View3DGL::OnMouseMove(double x, double y) {
 
     // This mouse handling/mapping is so utterly weird and should die!
     if (!this->toggleMouseSelection) {
-        this->cursor2d.SetPosition(x, y, true);
-
-        glm::vec3 newPos;
 
         auto wndSize = this->cam.resolution_gate();
+
+        this->cursor2d.SetPosition(x, y, true, wndSize.height());
+
+        glm::vec3 newPos;
 
         if (this->turntableManipulator.manipulating()) {
             this->turntableManipulator.on_drag(wndSize.width() - static_cast<int>(this->mouseX),

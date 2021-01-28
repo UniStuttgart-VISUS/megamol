@@ -16,7 +16,7 @@
 #include "mmcore/view/AbstractCallRenderGL.h"
 #include "mmcore/view/RenderOutputOpenGL.h" 
 #include "mmcore/view/Input.h"
-#include "vislib/graphics/CameraParameters.h"
+#include "mmcore/thecam/camera.h"
 #include "vislib/graphics/graphicstypes.h"
 
 
@@ -149,7 +149,7 @@ namespace view {
          *
          * @return the stereo projection eye
          */
-        inline vislib::graphics::CameraParameters::StereoEye GetEye(void) const {
+        inline thecam::Eye GetEye(void) const {
             return this->eye;
         }
 
@@ -158,7 +158,7 @@ namespace view {
          *
          * @return the stereo projection type
          */
-        inline vislib::graphics::CameraParameters::ProjectionType GetProjectionType(void) const {
+        inline thecam::Projection_type GetProjectionType(void) const {
             return this->projType;
         }
 
@@ -317,8 +317,8 @@ namespace view {
          * @param p The type of projection
          * @param e The eye used for stereo projections
          */
-        inline void SetProjection(vislib::graphics::CameraParameters::ProjectionType p,
-                vislib::graphics::CameraParameters::StereoEye e = vislib::graphics::CameraParameters::RIGHT_EYE) {
+        inline void SetProjection(thecam::Projection_type p,
+                thecam::Eye e = thecam::Eye::right) {
             this->flagProj = true;
             this->projType = p;
             this->eye = e;
@@ -461,7 +461,7 @@ namespace view {
         unsigned char bkgndR;
 
         /** The stereo projection eye */
-        vislib::graphics::CameraParameters::StereoEye eye;
+        thecam::Eye eye;
 
         /** Flag indicating that the background colour information has been set */
         bool flagBkgnd : 1;
@@ -476,7 +476,7 @@ namespace view {
         float height;
 
         /** The stereo projection type */
-        vislib::graphics::CameraParameters::ProjectionType projType;
+        thecam::Projection_type projType;
 
         /** The height of the rendering tile */
         float tileH;

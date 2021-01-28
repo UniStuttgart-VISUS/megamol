@@ -21,7 +21,6 @@
 #include "mmcore/view/Renderer3DModule_2.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/CameraParameters.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/forceinline.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
@@ -31,7 +30,6 @@
 #include "vislib/SmartPtr.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/Camera.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/mathtypes.h"
 #include "vislib/Pair.h"

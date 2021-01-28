@@ -14,7 +14,6 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderViewGL.h"
-#include "vislib/graphics/CameraParameters.h"
 #include "vislib/forceinline.h"
 
 

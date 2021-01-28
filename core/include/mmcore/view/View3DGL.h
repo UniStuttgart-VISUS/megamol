@@ -13,34 +13,18 @@
 
 #include <array>
 #include <map>
-#include <memory>
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractCallRenderGL.h"
-#include "mmcore/view/AbstractCamParamSync.h"
 #include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/CameraSerializer.h"
 #include "mmcore/view/Camera_2.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/TimeControl.h"
-#include "vislib/graphics/CameraLookAtDist.h"
-#include "vislib/graphics/CameraMove2D.h"
-#include "vislib/graphics/CameraParamsStore.h"
-#include "vislib/graphics/CameraRotate2D.h"
-#include "vislib/graphics/CameraRotate2DLookAt.h"
-#include "vislib/graphics/CameraZoom2DAngle.h"
-#include "vislib/graphics/CameraZoom2DMove.h"
 #include "vislib/graphics/Cursor2D.h"
-#include "vislib/graphics/InputModifiers.h"
-#include "vislib/graphics/gl/CameraOpenGL.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/graphics/graphicstypes.h"
-#include "vislib/math/Cuboid.h"
-#include "vislib/sys/PerformanceCounter.h"
 
 namespace megamol {
 namespace core {

@@ -16,9 +16,9 @@ using namespace megamol::core;
  */
 view::CallRenderViewGL::CallRenderViewGL(void) : AbstractCallRenderGL(), RenderOutputOpenGL(),
         bkgndB(0), bkgndG(0), bkgndR(0),
-        eye(vislib::graphics::CameraParameters::RIGHT_EYE), flagBkgnd(false),
+        eye(thecam::Eye::right), flagBkgnd(false),
         flagProj(false), flagTile(false), height(1.0f),
-        projType(vislib::graphics::CameraParameters::MONO_PERSPECTIVE),
+        projType(thecam::Projection_type::perspective),
         tileH(1.0f), tileW(1.0f), tileX(0.0f), tileY(0.0f), width(1.0f),
         btn(0), down(false), x(0.0f), y(0.0f), mod(Modifier::SHIFT) {
     // intentionally empty

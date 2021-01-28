@@ -144,23 +144,23 @@ void view::special::AnaglyphStereoView::Render(const mmcRenderViewContext& conte
         this->colourPresetsSlot.Param<param::EnumParam>()->SetValue(0);
     }
 
-    vislib::graphics::CameraParameters::ProjectionType proj = this->getProjectionType();
+    thecam::Projection_type proj = this->getProjectionType();
     bool switchEyes = this->getSwitchEyes();
 
     UINT oldLevel = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(0);
 
     crv->SetProjection(proj,switchEyes
-        ? vislib::graphics::CameraParameters::LEFT_EYE
-        : vislib::graphics::CameraParameters::RIGHT_EYE);
+        ? thecam::Eye::left
+        : thecam::Eye::right);
     this->rightBuffer.Enable();
     crv->SetOutputBuffer(&this->rightBuffer);
     (*crv)(view::CallRenderViewGL::CALL_RENDER);
     this->rightBuffer.Disable();
 
     crv->SetProjection(proj, switchEyes
-        ? vislib::graphics::CameraParameters::RIGHT_EYE
-        : vislib::graphics::CameraParameters::LEFT_EYE);
+        ? thecam::Eye::right
+        : thecam::Eye::left);
     this->leftBuffer.Enable();
     crv->SetOutputBuffer(&this->leftBuffer);
     (*crv)(view::CallRenderViewGL::CALL_RENDER);
