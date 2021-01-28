@@ -324,7 +324,7 @@ View3D_2::View3D_2(void)
     this->cameraSetViewChooserParam.SetUpdateCallback(&View3D_2::onSetView);
 
     /// XXX TEST
-    this->cameraViewOrientation.SetParameter(new param::Vector4fParam(vislib::math::Vector<float, 4>(0.0f, 1.0f, 0.0f, 0.0f)));
+    this->cameraViewOrientation.SetParameter(new param::Vector4fParam(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 1.0f)));
     this->MakeSlotAvailable(&this->cameraViewOrientation);
     this->cameraViewOrientation.Parameter()->SetGUIReadOnly(true);
     /// XXX
@@ -556,7 +556,6 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
 
     /// XXX TEST
     auto cam_orientation = static_cast<glm::quat>(this->cam.orientation());
-    cam_orientation = glm::normalize(cam_orientation);
     this->cameraViewOrientation.Param<param::Vector4fParam>()->SetValue(vislib::math::Vector<float, 4>(
         cam_orientation.x, cam_orientation.y, cam_orientation.z, cam_orientation.w));
     /// XXX

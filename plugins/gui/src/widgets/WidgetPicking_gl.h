@@ -158,38 +158,13 @@ namespace gui {
         PickableCube(void);
         ~PickableCube(void) = default;
 
-        void Draw(unsigned int id, int& inout_defaultview, const glm::vec4& view_orientation, const glm::vec2& vp_dim,
-            ManipVector& pending_manipulations);
+        void Draw(unsigned int id, int& inout_defaultview, int& out_hovered_view, const glm::vec4& view_orientation,
+            const glm::vec2& vp_dim, ManipVector& pending_manipulations);
 
         InteractVector GetInteractions(unsigned int id) const;
 
     private:
-        // VARIABLES --------------------------------------------------------------
-
         std::shared_ptr<glowl::GLSLProgram> shader;
-
-        bool selected;
-    };
-
-
-    // Pickable Triangle ##########################################################
-
-    class PickableTriangle {
-    public:
-        PickableTriangle(void);
-        ~PickableTriangle(void) = default;
-
-        void Draw(unsigned int id, glm::vec3& inout_pos3d, const glm::mat4& mvp, const glm::vec2& vp_dim,
-            ManipVector& pending_manipulations);
-
-        InteractVector GetInteractions(unsigned int id) const;
-
-    private:
-        // VARIABLES --------------------------------------------------------------
-
-        std::shared_ptr<glowl::GLSLProgram> shader;
-
-        bool selected;
     };
 
 

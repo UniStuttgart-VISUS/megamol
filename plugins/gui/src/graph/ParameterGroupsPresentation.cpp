@@ -527,10 +527,11 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(ParamPtrVec
         // LOCAL
 
         const std::string group_label("3D Cube");
-        // ImGui::TextDisabled(group_label.c_str());
-        this->draw_grouped_parameters(group_label, params, "", "", in_scope, nullptr, nullptr, GUI_INVALID_ID);
+        ImGui::TextDisabled(group_label.c_str());
+        /// this->draw_grouped_parameters(group_label, params, "", "", in_scope, nullptr, nullptr, GUI_INVALID_ID);
 
     } else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
+        // GLOBAL
 
         if (inout_picking_buffer == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -548,85 +549,40 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(ParamPtrVec
         auto default_view = std::get<int>(param_defaultView->GetValue());
         auto view_orientation = std::get<glm::vec4>(param_viewOrientation->GetValue());
         auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
-        this->cube_widget.Draw(
-            id, default_view, view_orientation, viewport_dim, inout_picking_buffer->GetPendingManipulations());
+        int hovered_view = -1;
+        this->cube_widget.Draw(id, default_view, hovered_view, view_orientation, viewport_dim,
+            inout_picking_buffer->GetPendingManipulations());
+
+        std::string tooltip_text;
+        switch (static_cast<megamol::core::view::View3D_2::defaultview>(hovered_view)) {
+        case (megamol::core::view::View3D_2::defaultview::DEFAULTVIEW_BACK):
+            tooltip_text = "Back";
+            break;
+        case (megamol::core::view::View3D_2::defaultview::DEFAULTVIEW_FRONT):
+            tooltip_text = "Front";
+            break;
+        case (megamol::core::view::View3D_2::defaultview::DEFAULTVIEW_TOP):
+            tooltip_text = "Top";
+            break;
+        case (megamol::core::view::View3D_2::defaultview::DEFAULTVIEW_LEFT):
+            tooltip_text = "Left";
+            break;
+        case (megamol::core::view::View3D_2::defaultview::DEFAULTVIEW_RIGHT):
+            tooltip_text = "Right";
+            break;
+        case (megamol::core::view::View3D_2::defaultview::DEFAULTVIEW_BOTTOM):
+            tooltip_text = "Bottom";
+            break;
+        default:
+            break;
+        }
+        if (!tooltip_text.empty()) {
+            ImGui::BeginTooltip();
+            ImGui::TextUnformatted(tooltip_text.c_str());
+            ImGui::EndTooltip();
+        }
 
         param_defaultView->SetValue(default_view);
     }
     return true;
 }
-
-
-/*
-bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(ParamPtrVector_t& params,
-    megamol::core::param::AbstractParamPresentation::Presentation presentation,
-    megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
-
-    if (presentation != param::AbstractParamPresentation::Presentation::Group_3D_Cube)
-        return false;
-
-    // Early exit for LOCAL widget presentation
-    if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
-        // LOCAL
-        /// const std::string group_label("3D Cube");
-        /// ImGui::TextDisabled(group_label.c_str());
-        return true;
-    }
-    /// if (in_scope == ParameterPresentation::WidgetScope::GLOBAL):
-
-    if (inout_picking_buffer == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Pointer to required picking buffer is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
-        return false;
-    }
-
-    // Check required parameters ----------------------------------------------
-    Parameter* param_mvp_column0 = nullptr;
-    Parameter* param_mvp_column1 = nullptr;
-    Parameter* param_mvp_column2 = nullptr;
-    Parameter* param_mvp_column3 = nullptr;
-    Parameter* param_vec3d = nullptr;
-    /// Find specific parameters of group by name because parameter type can occure multiple times.
-    for (auto& param_ptr : params) {
-        if ((param_ptr->GetName() == "mvp_column0") && (param_ptr->type == Param_t::VECTOR4F)) {
-            param_mvp_column0 = param_ptr;
-        } else if ((param_ptr->GetName() == "mvp_column1") && (param_ptr->type == Param_t::VECTOR4F)) {
-            param_mvp_column1 = param_ptr;
-        } else if ((param_ptr->GetName() == "mvp_column2") && (param_ptr->type == Param_t::VECTOR4F)) {
-            param_mvp_column2 = param_ptr;
-        } else if ((param_ptr->GetName() == "mvp_column3") && (param_ptr->type == Param_t::VECTOR4F)) {
-            param_mvp_column3 = param_ptr;
-        } else if ((param_ptr->GetName() == "vec3d") && (param_ptr->type == Param_t::VECTOR3F)) {
-            param_vec3d = param_ptr;
-        }
-    }
-    if ((param_mvp_column0 == nullptr) || (param_mvp_column1 == nullptr) || (param_mvp_column2 == nullptr) ||
-        (param_mvp_column3 == nullptr) || (param_vec3d == nullptr)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Unable to find all required parameters by name "
-                                                                "for 3d manipulation group widget. [%s, %s, line %d]\n",
-            __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    // DRAW -------------------------------------------------------------------
-
-    auto id = param_vec3d->uid;
-    inout_picking_buffer->AddInteractionObject(id, this->cube_widget.GetInteractions(id));
-
-    ImGuiIO& io = ImGui::GetIO();
-    auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
-    glm::vec3 vec3d = std::get<glm::vec3>(param_vec3d->GetValue());
-    glm::mat4 mvp;
-    mvp[0] = std::get<glm::vec4>(param_mvp_column0->GetValue());
-    mvp[1] = std::get<glm::vec4>(param_mvp_column1->GetValue());
-    mvp[2] = std::get<glm::vec4>(param_mvp_column2->GetValue());
-    mvp[3] = std::get<glm::vec4>(param_mvp_column3->GetValue());
-
-    this->cube_widget.Draw(id, vec3d, mvp, viewport_dim, inout_picking_buffer->GetPendingManipulations());
-
-    param_vec3d->SetValue(vec3d);
-
-    return true;
-}
-*/
