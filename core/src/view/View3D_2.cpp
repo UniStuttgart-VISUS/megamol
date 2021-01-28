@@ -29,7 +29,7 @@
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/view/AbstractCallRenderGL.h"
 #include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/CameraParamOverride.h"
 #include "vislib/Exception.h"
 #include "vislib/String.h"
@@ -607,7 +607,7 @@ void View3D_2::Resize(unsigned int width, unsigned int height) {
 bool View3D_2::OnRenderView(Call& call) {
     std::array<float, 3> overBC;
     // std::array<int, 4> overVP = {0, 0, 0, 0};
-    view::CallRenderView* crv = dynamic_cast<view::CallRenderView*>(&call);
+    view::CallRenderViewGL* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
     if (crv == nullptr) return false;
 
     // this->overrideViewport = overVP.data();

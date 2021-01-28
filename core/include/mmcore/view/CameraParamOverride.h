@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/graphics/CameraParamsOverride.h"
 #include "vislib/SmartPtr.h"
@@ -54,7 +54,7 @@ namespace view {
          *
          * @param call The call holding the override values
          */
-        void SetOverrides(const view::CallRenderView& call);
+        void SetOverrides(const view::CallRenderViewGL& call);
 
         /**
          * Answer the eye for stereo projections.

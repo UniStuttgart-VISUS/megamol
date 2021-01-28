@@ -10,7 +10,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/Trace.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
@@ -77,7 +77,7 @@ void view::special::AnaglyphStereoView::Resize(unsigned int width, unsigned int 
  * view::special::AnaglyphStereoView::Render
  */
 void view::special::AnaglyphStereoView::Render(const mmcRenderViewContext& context) {
-    CallRenderView *crv = this->getCallRenderView();
+    CallRenderViewGL *crv = this->getCallRenderView();
     if (crv == NULL) return;
     crv->SetTime(static_cast<float>(context.Time));
     crv->SetInstanceTime(context.InstanceTime);
@@ -155,7 +155,7 @@ void view::special::AnaglyphStereoView::Render(const mmcRenderViewContext& conte
         : vislib::graphics::CameraParameters::RIGHT_EYE);
     this->rightBuffer.Enable();
     crv->SetOutputBuffer(&this->rightBuffer);
-    (*crv)(view::CallRenderView::CALL_RENDER);
+    (*crv)(view::CallRenderViewGL::CALL_RENDER);
     this->rightBuffer.Disable();
 
     crv->SetProjection(proj, switchEyes
@@ -163,7 +163,7 @@ void view::special::AnaglyphStereoView::Render(const mmcRenderViewContext& conte
         : vislib::graphics::CameraParameters::LEFT_EYE);
     this->leftBuffer.Enable();
     crv->SetOutputBuffer(&this->leftBuffer);
-    (*crv)(view::CallRenderView::CALL_RENDER);
+    (*crv)(view::CallRenderViewGL::CALL_RENDER);
     this->leftBuffer.Disable();
 
     vislib::Trace::GetInstance().SetLevel(oldLevel);

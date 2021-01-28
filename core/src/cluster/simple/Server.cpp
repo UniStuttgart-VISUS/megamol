@@ -18,7 +18,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageSerialiser.h"
 #include "vislib/Trace.h"
@@ -559,7 +559,7 @@ bool cluster::simple::Server::onViewNameUpdated(param::ParamSlot& slot) {
     }
     if (av != NULL) {
         if (this->instance()->InstantiateCall(this->viewSlot.FullName(), av->FullName() + "::render",
-                this->GetCoreInstance()->GetCallDescriptionManager().Find(view::CallRenderView::ClassName())) != NULL) {
+                this->GetCoreInstance()->GetCallDescriptionManager().Find(view::CallRenderViewGL::ClassName())) != NULL) {
             this->newViewConnected();
         } else {
             av = NULL; // DO NOT DELETE
@@ -597,11 +597,11 @@ void cluster::simple::Server::disconnectView(void) {
  */
 void cluster::simple::Server::newViewConnected(void) {
     ASSERT(this->viewConStatus != 1);
-    ASSERT(this->viewSlot.CallAs<view::CallRenderView>() != NULL);
-    ASSERT(this->viewSlot.CallAs<view::CallRenderView>()->PeekCalleeSlot() != NULL);
-    ASSERT(this->viewSlot.CallAs<view::CallRenderView>()->PeekCalleeSlot()->Parent() != NULL);
+    ASSERT(this->viewSlot.CallAs<view::CallRenderViewGL>() != NULL);
+    ASSERT(this->viewSlot.CallAs<view::CallRenderViewGL>()->PeekCalleeSlot() != NULL);
+    ASSERT(this->viewSlot.CallAs<view::CallRenderViewGL>()->PeekCalleeSlot()->Parent() != NULL);
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("SCS: View \"%s\" Connected",
-        this->viewSlot.CallAs<view::CallRenderView>()->PeekCalleeSlot()->Parent()->FullName().PeekBuffer());
+        this->viewSlot.CallAs<view::CallRenderViewGL>()->PeekCalleeSlot()->Parent()->FullName().PeekBuffer());
     this->viewConStatus = 1;
     this->onServerReconnectClicked(this->serverReconnectSlot);
     this->camUpdateThread.Start(this);

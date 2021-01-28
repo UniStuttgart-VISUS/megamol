@@ -18,7 +18,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/Configuration.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageSerialiser.h"
 #include "vislib/StringTokeniser.h"
@@ -203,30 +203,30 @@ bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
     }
 
     factories::CallDescription::ptr cd =
-        this->GetCoreInstance()->GetCallDescriptionManager().Find(view::CallRenderView::ClassName());
+        this->GetCoreInstance()->GetCallDescriptionManager().Find(view::CallRenderViewGL::ClassName());
     if (cd == NULL) {
         Log::DefaultLog.WriteMsg(
-            Log::LEVEL_ERROR, "Cannot find description for call \"%s\"\n", view::CallRenderView::ClassName());
+            Log::LEVEL_ERROR, "Cannot find description for call \"%s\"\n", view::CallRenderViewGL::ClassName());
         return true; // this is just for diryt flag reset
     }
 
     Call* c = cd->CreateCall();
     if (c == NULL) {
-        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot create call \"%s\"\n", view::CallRenderView::ClassName());
+        Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot create call \"%s\"\n", view::CallRenderViewGL::ClassName());
         return true; // this is just for diryt flag reset
     }
 
     if (!viewModSlot->ConnectCall(c)) {
         delete c;
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot connect call \"%s\" to inbound-slot \"%s\"\n",
-            view::CallRenderView::ClassName(), viewModSlot->FullName().PeekBuffer());
+            view::CallRenderViewGL::ClassName(), viewModSlot->FullName().PeekBuffer());
         return true; // this is just for diryt flag reset
     }
 
     if (!this->viewSlot.ConnectCall(c)) {
         delete c;
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "Cannot connect call \"%s\" to outbound-slot \"%s\"\n",
-            view::CallRenderView::ClassName(), this->viewSlot.FullName().PeekBuffer());
+            view::CallRenderViewGL::ClassName(), this->viewSlot.FullName().PeekBuffer());
         return true; // this is just for diryt flag reset
     }
 

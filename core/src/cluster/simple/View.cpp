@@ -148,7 +148,7 @@ void cluster::simple::View::Render(const mmcRenderViewContext& context) {
         doSecondHeartbeat = true;
     }
 
-    view::CallRenderView *crv = this->getCallRenderView();
+    view::CallRenderViewGL *crv = this->getCallRenderView();
     this->checkParameters();
 
     if (!this->frozen) {
@@ -190,7 +190,7 @@ void cluster::simple::View::Render(const mmcRenderViewContext& context) {
         {
             vislib::sys::AutoLock lock(renderLock);
 
-            if (!(*crv)(view::CallRenderView::CALL_RENDER)) {
+            if (!(*crv)(view::CallRenderViewGL::CALL_RENDER)) {
                 this->renderFallbackView();
             }
 
@@ -285,7 +285,7 @@ void cluster::simple::View::SetCamIniMessage(void) {
  */
 void cluster::simple::View::ConnectView(const vislib::StringA& toName) {
     this->GetCoreInstance()->InstantiateCall(this->FullName() + "::renderView", toName,
-        this->GetCoreInstance()->GetCallDescriptionManager().Find("CallRenderView"));
+        this->GetCoreInstance()->GetCallDescriptionManager().Find("CallRenderViewGL"));
 }
 
 

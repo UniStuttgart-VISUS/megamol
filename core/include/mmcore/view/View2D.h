@@ -25,7 +25,7 @@ namespace view {
     /*
      * Forward declaration of incoming render calls
      */
-    class CallRenderView;
+    class CallRenderViewGL;
 
 
     /**
@@ -270,7 +270,7 @@ namespace view {
         float width;
 
         /** the incoming rendering call */
-        class CallRenderView *incomingCall;
+        class CallRenderViewGL *incomingCall;
 
         /**
          * 6 floats holding the override information for the viewing tile:

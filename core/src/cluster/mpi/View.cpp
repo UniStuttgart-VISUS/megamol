@@ -176,7 +176,7 @@ bool megamol::core::cluster::mpi::View::OnMessageReceived(
  */
 void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& context) {
     int canRender = 0;
-    view::CallRenderView* crv = nullptr;
+    view::CallRenderViewGL* crv = nullptr;
     FrameState state;
 
     /* Perform some lazy initialisation (copied from simple::View). */
@@ -436,7 +436,7 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
         //{
         //    vislib::sys::AutoLock lock(renderLock);
 
-        if (!(*crv)(view::CallRenderView::CALL_RENDER)) {
+        if (!(*crv)(view::CallRenderViewGL::CALL_RENDER)) {
             this->renderFallbackView();
         }
 

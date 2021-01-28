@@ -243,7 +243,7 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
 
         crv->SetOutputBuffer(GL_BACK, this->getViewportWidth(), this->getViewportHeight());
 
-        if (!crv->operator()(core::view::CallRenderView::CALL_RENDER)) {
+        if (!crv->operator()(core::view::CallRenderViewGL::CALL_RENDER)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("RendernodeView: Failed to call render on dependend view.");
         }
 
@@ -261,7 +261,7 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
 
 
 bool megamol::remote::RendernodeView::OnRenderView(core::Call& call) {
-    auto crv = dynamic_cast<core::view::CallRenderView*>(&call);
+    auto crv = dynamic_cast<core::view::CallRenderViewGL*>(&call);
     if (crv == nullptr) return false;
     auto overrideCall = dynamic_cast<core::view::AbstractCallRenderGL*>(&call);
 

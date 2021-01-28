@@ -33,7 +33,7 @@ view::TileView::~TileView(void) {
  * view::TileView::Render
  */
 void view::TileView::Render(const mmcRenderViewContext& context) {
-    view::CallRenderView *crv = this->getCallRenderView();
+    view::CallRenderViewGL *crv = this->getCallRenderView();
     if (crv == NULL) return; // false ?
     if (this->firstFrame) {
         this->initTileViewParameters();
@@ -56,7 +56,7 @@ void view::TileView::Render(const mmcRenderViewContext& context) {
     } else {
         crv->SetOutputBuffer(*this->outCtrl);
     }
-    (*crv)(view::CallRenderView::CALL_RENDER);
+    (*crv)(view::CallRenderViewGL::CALL_RENDER);
 }
 
 
@@ -81,7 +81,7 @@ void view::TileView::release(void) {
  * view::TileView::OnRenderView
  */
 bool view::TileView::OnRenderView(Call& call) {
-    view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
+    view::CallRenderViewGL *crv = dynamic_cast<view::CallRenderViewGL *>(&call);
     if (crv == NULL) return false;
 
     this->outCtrl = crv;

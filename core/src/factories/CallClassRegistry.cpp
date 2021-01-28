@@ -19,7 +19,7 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/CallTimeControl.h"
 #ifdef MEGAMOLCORE_WITH_DIRECT3D11
 #include "mmcore/view/CallUpdateDirect3D.h"
@@ -61,7 +61,7 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<view::CallGetTransferFunction>();
     instance.RegisterAutoDescription<view::CallRender2D>();
     instance.RegisterAutoDescription<view::CallRender3D_2>();
-    instance.RegisterAutoDescription<view::CallRenderView>();
+    instance.RegisterAutoDescription<view::CallRenderViewGL>();
     instance.RegisterAutoDescription<view::CallTimeControl>();
     instance.RegisterAutoDescription<DataWriterCtrlCall>();
     instance.RegisterAutoDescription<CallVolumeData>();

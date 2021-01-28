@@ -13,7 +13,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 
 
 namespace megamol {
@@ -108,7 +108,7 @@ namespace gui {
         // VARIABLES --------------------------------------------------------------
 
         /** The override call */
-        megamol::core::view::CallRenderView* overrideCall;
+        megamol::core::view::CallRenderViewGL* overrideCall;
 
         /** The input renderview slot */
         megamol::core::CallerSlot render_view_slot;

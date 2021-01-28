@@ -13,7 +13,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "vislib/RawStorageSerialiser.h"
 
 //#include "mmcore/param/Vector4fParam.h"

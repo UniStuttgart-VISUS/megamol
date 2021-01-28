@@ -1,20 +1,20 @@
 /*
- * CallRenderView.cpp
+ * CallRenderViewGL.cpp
  *
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 
 using namespace megamol::core;
 
 
 /*
- * view::CallRenderView::CallRenderView
+ * view::CallRenderViewGL::CallRenderViewGL
  */
-view::CallRenderView::CallRenderView(void) : AbstractCallRenderGL(), RenderOutputOpenGL(),
+view::CallRenderViewGL::CallRenderViewGL(void) : AbstractCallRenderGL(), RenderOutputOpenGL(),
         bkgndB(0), bkgndG(0), bkgndR(0),
         eye(vislib::graphics::CameraParameters::RIGHT_EYE), flagBkgnd(false),
         flagProj(false), flagTile(false), height(1.0f),
@@ -26,26 +26,26 @@ view::CallRenderView::CallRenderView(void) : AbstractCallRenderGL(), RenderOutpu
 
 
 /*
- * view::CallRenderView::CallRenderView
+ * view::CallRenderViewGL::CallRenderViewGL
  */
-view::CallRenderView::CallRenderView(const CallRenderView& src)
+view::CallRenderViewGL::CallRenderViewGL(const CallRenderViewGL& src)
         : AbstractCallRenderGL(), RenderOutputOpenGL() {
     *this = src;
 }
 
 
 /*
- * view::CallRenderView::~CallRenderView
+ * view::CallRenderViewGL::~CallRenderViewGL
  */
-view::CallRenderView::~CallRenderView(void) {
+view::CallRenderViewGL::~CallRenderViewGL(void) {
     // intentionally empty
 }
 
 
 /*
- * view::CallRenderView::operator=
+ * view::CallRenderViewGL::operator=
  */
-view::CallRenderView& view::CallRenderView::operator=(const view::CallRenderView& rhs) {
+view::CallRenderViewGL& view::CallRenderViewGL::operator=(const view::CallRenderViewGL& rhs) {
     view::AbstractCallRenderGL::operator=(rhs);
     view::RenderOutputOpenGL::operator=(rhs);
     this->bkgndB = rhs.bkgndB;

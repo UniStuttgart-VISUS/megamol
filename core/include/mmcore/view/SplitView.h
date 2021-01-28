@@ -15,7 +15,7 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/TimeControl.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
@@ -176,19 +176,19 @@ private:
      *
      * @return The renderer 1 call
      */
-    inline CallRenderView* render1() const { return this->render1Slot.CallAs<CallRenderView>(); }
+    inline CallRenderViewGL* render1() const { return this->render1Slot.CallAs<CallRenderViewGL>(); }
 
     /**
      * Answer the renderer 2 call
      *
      * @return The renderer 2 call
      */
-    inline CallRenderView* render2() const { return this->render2Slot.CallAs<CallRenderView>(); }
+    inline CallRenderViewGL* render2() const { return this->render2Slot.CallAs<CallRenderViewGL>(); }
 
     /**
      * Returns the focused (keyboard input) renderer.
      */
-    inline CallRenderView* renderFocused() const {
+    inline CallRenderViewGL* renderFocused() const {
         if (this->focus == 1) {
             return this->render1();
         } else if (this->focus == 2) {
@@ -201,7 +201,7 @@ private:
     /**
      * Returns the hovered (mouse input) renderer.
      */
-    inline CallRenderView* renderHovered() const {
+    inline CallRenderViewGL* renderHovered() const {
         auto mousePos = vislib::math::Point<float, 2>(this->mouseX, this->mouseY);
         if (this->clientArea1.Contains(mousePos)) {
             return this->render1();
@@ -247,7 +247,7 @@ private:
     TimeControl timeCtrl;
 
     /** The override call */
-    CallRenderView* overrideCall;
+    CallRenderViewGL* overrideCall;
 
     vislib::math::Rectangle<float> clientArea;
 

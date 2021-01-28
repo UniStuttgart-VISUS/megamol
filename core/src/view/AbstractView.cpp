@@ -12,7 +12,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/AbstractCallRenderGL.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
@@ -30,27 +30,27 @@ view::AbstractView::AbstractView(void) : Module(),
         hooks() {
     // InputCall
     this->renderSlot.SetCallback(
-        view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
+        view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
     this->renderSlot.SetCallback(
-        view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnChar), &AbstractView::OnCharCallback);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseButton),
+        view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnChar), &AbstractView::OnCharCallback);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseButton),
         &AbstractView::OnMouseButtonCallback);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
         &AbstractView::OnMouseMoveCallback);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
         &AbstractView::OnMouseScrollCallback);
     // AbstractCallRenderGL
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         AbstractCallRenderGL::FunctionName(AbstractCallRenderGL::FnRender), &AbstractView::OnRenderView);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         AbstractCallRenderGL::FunctionName(AbstractCallRenderGL::FnGetExtents), &AbstractView::GetExtents);
-    // CallRenderView
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
-        view::CallRenderView::FunctionName(view::CallRenderView::CALL_FREEZE), &AbstractView::OnFreezeView);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
-        view::CallRenderView::FunctionName(view::CallRenderView::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
-        view::CallRenderView::FunctionName(view::CallRenderView::CALL_RESETVIEW), &AbstractView::onResetView);
+    // CallRenderViewGL
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_FREEZE), &AbstractView::OnFreezeView);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::onResetView);
     this->MakeSlotAvailable(&this->renderSlot);
 }
 
@@ -261,7 +261,7 @@ bool view::AbstractView::GetExtents(Call& call) {
 
 bool view::AbstractView::OnKeyCallback(Call& call) {
     try {
-        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        view::CallRenderViewGL& cr = dynamic_cast<view::CallRenderViewGL&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Key && "Callback invocation mismatched input event");
         return this->OnKey(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
@@ -273,7 +273,7 @@ bool view::AbstractView::OnKeyCallback(Call& call) {
 
 bool view::AbstractView::OnCharCallback(Call& call) {
     try {
-        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        view::CallRenderViewGL& cr = dynamic_cast<view::CallRenderViewGL&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Char && "Callback invocation mismatched input event");
         return this->OnChar(evt.charData.codePoint);
@@ -285,7 +285,7 @@ bool view::AbstractView::OnCharCallback(Call& call) {
 
 bool view::AbstractView::OnMouseButtonCallback(Call& call) {
     try {
-        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        view::CallRenderViewGL& cr = dynamic_cast<view::CallRenderViewGL&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseButton && "Callback invocation mismatched input event");
         return this->OnMouseButton(evt.mouseButtonData.button, evt.mouseButtonData.action, evt.mouseButtonData.mods);
@@ -297,7 +297,7 @@ bool view::AbstractView::OnMouseButtonCallback(Call& call) {
 
 bool view::AbstractView::OnMouseMoveCallback(Call& call) {
     try {
-        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        view::CallRenderViewGL& cr = dynamic_cast<view::CallRenderViewGL&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
         return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
@@ -309,7 +309,7 @@ bool view::AbstractView::OnMouseMoveCallback(Call& call) {
 
 bool view::AbstractView::OnMouseScrollCallback(Call& call) {
     try {
-        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        view::CallRenderViewGL& cr = dynamic_cast<view::CallRenderViewGL&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
         return this->OnMouseScroll(evt.mouseScrollData.dx, evt.mouseScrollData.dy);

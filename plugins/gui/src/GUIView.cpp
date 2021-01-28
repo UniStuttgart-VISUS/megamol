@@ -88,7 +88,7 @@ void GUIView::DeserialiseCamera(vislib::Serialiser& serialiser) {
 
 
 void GUIView::Render(const mmcRenderViewContext& context) {
-    auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
+    auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
@@ -129,15 +129,15 @@ void GUIView::Render(const mmcRenderViewContext& context) {
 
 
 void GUIView::ResetView(void) {
-    auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
+    auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
     if (crv) {
-        (*crv)(core::view::CallRenderView::CALL_RESETVIEW);
+        (*crv)(core::view::CallRenderViewGL::CALL_RESETVIEW);
     }
 }
 
 
 void GUIView::Resize(unsigned int width, unsigned int height) {
-    auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
+    auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
     if (crv) {
         // der ganz ganz dicke "because-i-know"-Knueppel
         AbstractView* view = const_cast<AbstractView*>(
@@ -150,9 +150,9 @@ void GUIView::Resize(unsigned int width, unsigned int height) {
 
 
 void GUIView::UpdateFreeze(bool freeze) {
-    auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
+    auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
     if (crv) {
-        auto callType = freeze ? core::view::CallRenderView::CALL_FREEZE : core::view::CallRenderView::CALL_UNFREEZE;
+        auto callType = freeze ? core::view::CallRenderViewGL::CALL_FREEZE : core::view::CallRenderViewGL::CALL_UNFREEZE;
         (*crv)(callType);
     }
 }
@@ -163,7 +163,7 @@ bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::vie
     bool input_consumed = this->gui.OnKey(key, action, mods);
 
     if (!input_consumed) {
-        auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
+        auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
         if (crv == nullptr)
             return false;
 
@@ -184,7 +184,7 @@ bool GUIView::OnChar(unsigned int codePoint) {
 
     this->gui.OnChar(codePoint);
 
-    auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
+    auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
     if (crv) {
         core::view::InputEvent evt;
         evt.tag = core::view::InputEvent::Tag::Char;
@@ -202,7 +202,7 @@ bool GUIView::OnMouseMove(double x, double y) {
     bool input_consumed = this->gui.OnMouseMove(x, y);
 
     if (!input_consumed) {
-        auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
+        auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
         if (crv == nullptr)
             return false;
 
@@ -224,7 +224,7 @@ bool GUIView::OnMouseButton(
     bool input_consumed = this->gui.OnMouseButton(button, action, mods);
 
     if (!input_consumed) {
-        auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
+        auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
         if (crv == nullptr)
             return false;
 
@@ -246,7 +246,7 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
     bool input_consumed = this->gui.OnMouseScroll(dx, dy);
 
     if (!input_consumed) {
-        auto* crv = this->render_view_slot.CallAs<core::view::CallRenderView>();
+        auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
         if (crv == nullptr)
             return false;
 
@@ -263,7 +263,7 @@ bool GUIView::OnMouseScroll(double dx, double dy) {
 
 
 bool GUIView::OnRenderView(megamol::core::Call& call) {
-    megamol::core::view::CallRenderView* crv = dynamic_cast<megamol::core::view::CallRenderView*>(&call);
+    megamol::core::view::CallRenderViewGL* crv = dynamic_cast<megamol::core::view::CallRenderViewGL*>(&call);
     if (crv == nullptr)
         return false;
 

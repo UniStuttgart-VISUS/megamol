@@ -1,5 +1,5 @@
 /*
- * CallRenderView.h
+ * CallRenderViewGL.h
  *
  * Copyright (C) 2009 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
@@ -31,7 +31,7 @@ namespace view {
      * Call for rendering visual elements (from separate sources) into a single target, i.e.,
 	 * FBO-based compositing and cluster display.
      */
-    class MEGAMOLCORE_API CallRenderView : public AbstractCallRenderGL, public RenderOutputOpenGL {
+    class MEGAMOLCORE_API CallRenderViewGL : public AbstractCallRenderGL, public RenderOutputOpenGL {
     public:
 
         /**
@@ -40,7 +40,7 @@ namespace view {
          * @return The name of the objects of this description.
          */
         static const char *ClassName(void) {
-            return "CallRenderView";
+            return "CallRenderViewGL";
         }
 
         /**
@@ -103,19 +103,19 @@ namespace view {
         /**
          * Ctor.
          */
-        CallRenderView(void);
+        CallRenderViewGL(void);
 
         /**
          * Copy ctor.
          *
          * @param src Object to clone
          */
-        CallRenderView(const CallRenderView& src);
+        CallRenderViewGL(const CallRenderViewGL& src);
 
         /**
          * ~Dtor.
          */
-        virtual ~CallRenderView(void);
+        virtual ~CallRenderViewGL(void);
 
         /**
          * Answer the blue colour component of the background
@@ -447,7 +447,7 @@ namespace view {
          *
          * @return A reference to 'this'
          */
-        CallRenderView& operator=(const CallRenderView& rhs);
+        CallRenderViewGL& operator=(const CallRenderViewGL& rhs);
 
     private:
 
@@ -518,7 +518,7 @@ namespace view {
 
 
     /** Description class typedef */
-    typedef factories::CallAutoDescription<CallRenderView>
+    typedef factories::CallAutoDescription<CallRenderViewGL>
         CallRenderViewDescription;
 
 

@@ -9,7 +9,7 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/view/View2D.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/CallRender2D.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -351,7 +351,7 @@ bool view::View2D::OnRenderView(Call& call) {
     float overBC[3];
     int overVP[4] = {0, 0, 0, 0};
     float overTile[6];
-    view::CallRenderView *crv = dynamic_cast<view::CallRenderView *>(&call);
+    view::CallRenderViewGL *crv = dynamic_cast<view::CallRenderViewGL *>(&call);
     if (crv == NULL) return false;
 
     this->incomingCall = crv;
@@ -612,7 +612,7 @@ bool view::View2D::onResetView(param::ParamSlot& p) {
  * view::View2D::GetExtents
  */
 bool view::View2D::GetExtents(Call& call) {
-    view::CallRenderView* crv = dynamic_cast<view::CallRenderView*>(&call);
+    view::CallRenderViewGL* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
     if (crv == nullptr) return false;
 
     CallRender2D* cr2d = this->rendererSlot.CallAs<CallRender2D>();

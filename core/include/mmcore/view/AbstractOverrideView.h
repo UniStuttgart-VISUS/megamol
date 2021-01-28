@@ -13,7 +13,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "vislib/graphics/CameraParameters.h"
 #include "vislib/forceinline.h"
 
@@ -105,8 +105,8 @@ namespace view {
          *
          * @return The call connected to the render view slot.
          */
-        inline CallRenderView *getCallRenderView(void) {
-            return this->renderViewSlot.CallAs<CallRenderView>();
+        inline CallRenderViewGL *getCallRenderView(void) {
+            return this->renderViewSlot.CallAs<CallRenderViewGL>();
         }
 
         /**

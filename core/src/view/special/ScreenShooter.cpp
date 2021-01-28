@@ -23,7 +23,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "png.h"
 #include "mmcore/versioninfo.h"
 #include "vislib/Trace.h"
@@ -417,7 +417,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         return;
     }
 
-    view::CallRenderView crv;
+    view::CallRenderViewGL crv;
     BYTE* buffer = NULL;
     vislib::sys::FastFile file;
     bool rollback = false;

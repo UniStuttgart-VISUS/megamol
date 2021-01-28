@@ -49,7 +49,7 @@ view::CameraParamOverride::~CameraParamOverride(void) {
  * view::CameraParamOverride::SetOverrides
  */
 void view::CameraParamOverride::SetOverrides(
-        const view::CallRenderView& call) {
+        const view::CallRenderViewGL& call) {
     assign_and_sync(this->projOverridden, call.IsProjectionSet());
     assign_and_sync(this->eye, call.GetEye());
     assign_and_sync(this->pj, call.GetProjectionType());

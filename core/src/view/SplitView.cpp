@@ -11,7 +11,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 
 #include "vislib/Trace.h"
 #include "mmcore/utility/log/Log.h"
@@ -117,11 +117,11 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
 
     if (this->enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
         auto cr = this->render1();
-        (*cr)(CallRenderView::CALL_EXTENTS);
+        (*cr)(CallRenderViewGL::CALL_EXTENTS);
         auto fcount = cr->TimeFramesCount();
         auto insitu = cr->IsInSituTime();
         cr = this->render2();
-        (*cr)(CallRenderView::CALL_EXTENTS);
+        (*cr)(CallRenderViewGL::CALL_EXTENTS);
         fcount = std::min(fcount, cr->TimeFramesCount());
         insitu = insitu && cr->IsInSituTime();
 
@@ -173,7 +173,7 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
     // Propagate viewport changes to connected views.
     // this cannot be done in a smart way currently since reconnects and early initialization
     // would skip propagating the data when called in updateSize
-    auto propagateViewport = [](CallRenderView* crv, vislib::math::Rectangle<float>& clientArea) {
+    auto propagateViewport = [](CallRenderViewGL* crv, vislib::math::Rectangle<float>& clientArea) {
         if (crv == nullptr) {
             return;
         }
@@ -188,7 +188,7 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
     propagateViewport(this->render1(), this->clientArea1);
     propagateViewport(this->render2(), this->clientArea2);
 
-    auto renderAndBlit = [&](vislib::graphics::gl::FramebufferObject& fbo, CallRenderView* crv,
+    auto renderAndBlit = [&](vislib::graphics::gl::FramebufferObject& fbo, CallRenderViewGL* crv,
                              const vislib::math::Rectangle<float>& ca) {
         if (crv == nullptr) {
             return;
@@ -212,7 +212,7 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
 
         // Defer render call to subview that should clear (if it does not,
         // non-splitview rendering will be broken as well).
-        (*crv)(CallRenderView::CALL_RENDER);
+        (*crv)(CallRenderViewGL::CALL_RENDER);
 
 #if defined(DEBUG) || defined(_DEBUG)
         vislib::Trace::GetInstance().SetLevel(0);
@@ -252,15 +252,15 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
 bool view::SplitView::GetExtents(core::Call& call) {
     if (this->enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
         auto cr = this->render1();
-        if (!(*cr)(CallRenderView::CALL_EXTENTS)) return false;
+        if (!(*cr)(CallRenderViewGL::CALL_EXTENTS)) return false;
         auto time = cr->TimeFramesCount();
         auto insitu = cr->IsInSituTime();
         cr = this->render2();
-        if (!(*cr)(CallRenderView::CALL_EXTENTS)) return false;
+        if (!(*cr)(CallRenderViewGL::CALL_EXTENTS)) return false;
         time = std::min(time, cr->TimeFramesCount());
         insitu = insitu && cr->IsInSituTime();
 
-        CallRenderView* crv = dynamic_cast<CallRenderView*>(&call);
+        CallRenderViewGL* crv = dynamic_cast<CallRenderViewGL*>(&call);
         if (crv == nullptr) return false;
         crv->SetTimeFramesCount(time);
         crv->SetIsInSituTime(insitu);
@@ -270,7 +270,7 @@ bool view::SplitView::GetExtents(core::Call& call) {
 
 void view::SplitView::ResetView() {
     for (auto crv : {this->render1(), this->render2()}) {
-        if (crv != nullptr) (*crv)(CallRenderView::CALL_RESETVIEW);
+        if (crv != nullptr) (*crv)(CallRenderViewGL::CALL_RESETVIEW);
     }
 }
 
@@ -282,7 +282,7 @@ void view::SplitView::Resize(unsigned int width, unsigned int height) {
 }
 
 bool view::SplitView::OnRenderView(Call& call) {
-    auto* crv = dynamic_cast<view::CallRenderView*>(&call);
+    auto* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
     if (crv == nullptr) return false;
 
     this->overrideCall = crv;
@@ -303,7 +303,7 @@ bool view::SplitView::OnRenderView(Call& call) {
 
 void view::SplitView::UpdateFreeze(bool freeze) {
     for (auto crv : {this->render1(), this->render2()}) {
-        if (crv != nullptr) (*crv)(freeze ? CallRenderView::CALL_FREEZE : CallRenderView::CALL_UNFREEZE);
+        if (crv != nullptr) (*crv)(freeze ? CallRenderViewGL::CALL_FREEZE : CallRenderViewGL::CALL_UNFREEZE);
     }
 }
 
@@ -321,15 +321,15 @@ bool view::SplitView::OnKey(Key key, KeyAction action, Modifiers mods) {
 
         if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
-            auto consumed = (*crv1)(view::CallRenderView::FnOnKey);
+            auto consumed = (*crv1)(view::CallRenderViewGL::FnOnKey);
 
             crv2->SetInputEvent(evt);
-            consumed |= (*crv2)(view::CallRenderView::FnOnKey);
+            consumed |= (*crv2)(view::CallRenderViewGL::FnOnKey);
 
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderView::FnOnKey)) return false;
+            if (!(*crv)(view::CallRenderViewGL::FnOnKey)) return false;
         }
     }
 
@@ -348,15 +348,15 @@ bool view::SplitView::OnChar(unsigned int codePoint) {
 
         if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
-            auto consumed = (*crv1)(view::CallRenderView::FnOnChar);
+            auto consumed = (*crv1)(view::CallRenderViewGL::FnOnChar);
 
             crv2->SetInputEvent(evt);
-            consumed |= (*crv2)(view::CallRenderView::FnOnChar);
+            consumed |= (*crv2)(view::CallRenderViewGL::FnOnChar);
 
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderView::FnOnChar)) return false;
+            if (!(*crv)(view::CallRenderViewGL::FnOnChar)) return false;
         }
     }
 
@@ -384,15 +384,15 @@ bool view::SplitView::OnMouseButton(MouseButton button, MouseButtonAction action
 
         if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
-            auto consumed = (*crv1)(view::CallRenderView::FnOnMouseButton);
+            auto consumed = (*crv1)(view::CallRenderViewGL::FnOnMouseButton);
 
             crv2->SetInputEvent(evt);
-            consumed |= (*crv2)(view::CallRenderView::FnOnMouseButton);
+            consumed |= (*crv2)(view::CallRenderViewGL::FnOnMouseButton);
 
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderView::FnOnMouseButton)) return false;
+            if (!(*crv)(view::CallRenderViewGL::FnOnMouseButton)) return false;
         }
     }
 
@@ -438,15 +438,15 @@ bool view::SplitView::OnMouseMove(double x, double y) {
 
         if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
-            auto consumed = (*crv1)(view::CallRenderView::FnOnMouseMove);
+            auto consumed = (*crv1)(view::CallRenderViewGL::FnOnMouseMove);
 
             crv2->SetInputEvent(evt);
-            consumed |= (*crv2)(view::CallRenderView::FnOnMouseMove);
+            consumed |= (*crv2)(view::CallRenderViewGL::FnOnMouseMove);
 
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderView::FnOnMouseMove)) return false;
+            if (!(*crv)(view::CallRenderViewGL::FnOnMouseMove)) return false;
         }
     }
 
@@ -467,15 +467,15 @@ bool view::SplitView::OnMouseScroll(double dx, double dy) {
 
         if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
-            auto consumed = (*crv1)(view::CallRenderView::FnOnMouseScroll);
+            auto consumed = (*crv1)(view::CallRenderViewGL::FnOnMouseScroll);
 
             crv2->SetInputEvent(evt);
-            consumed |= (*crv2)(view::CallRenderView::FnOnMouseScroll);
+            consumed |= (*crv2)(view::CallRenderViewGL::FnOnMouseScroll);
 
             return consumed;
         } else {
             crv->SetInputEvent(evt);
-            if (!(*crv)(view::CallRenderView::FnOnMouseScroll)) return false;
+            if (!(*crv)(view::CallRenderViewGL::FnOnMouseScroll)) return false;
         }
     }
 
