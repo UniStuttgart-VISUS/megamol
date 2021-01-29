@@ -116,6 +116,7 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 
     `$ mkdir build; cd build`
 
+<<<<<<< HEAD
 5. Check for required dependencies:
     
     `$ cmake ..`
@@ -123,11 +124,20 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 6. Start the ncurses gui for cmake:
 
     `$ ccmake .`
+=======
+    $ ccmake .
+
+Configure by hitting `c` a couple of times until the screen does not change, then hit `g` to generate build files.
+On the console prompt, start the building:
+
+    $ make && make install
+>>>>>>> ba7df3ade (manual update)
 
     - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
     - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
     - Then hit `g` to generate the build files.
 
+<<<<<<< HEAD
 7. On the console prompt, start the building:
 
     `$ make && make install`
@@ -178,6 +188,21 @@ In the `bin` directory, you can find the default configuration file `megamolconf
     mmSetLogLevel("*") -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=*
     mmSetEchoLevel("*")
     -- mmSetLogFile("") 
+=======
+After successfully installing or compiling MegaMol you should have all executable files inside your bin folder. Some setup still needs to be done.
+Create a file `megamolconfig.lua` in this bin directory, with the following content (it may already exist). 
+YOU WILL NEED TO ADJUST THE PATHS ACCORDINGLY:
+
+```lua
+    -- Standard MegaMol Configuration File --
+
+    print("I am the Standard MegaMol configuration!")
+
+    basePath = "C:/megamol/build/install/"
+
+    mmSetLogLevel(0)
+    mmSetEchoLevel("*")
+>>>>>>> ba7df3ade (manual update)
     mmSetAppDir(basePath .. "bin")
     mmAddShaderDir(basePath .. "share/shaders")
     mmAddResourceDir(basePath .. "share/shaders")
@@ -200,11 +225,18 @@ The following paragraphs explain the essential steps of configuring MegaMol in m
 <!-- ---------------------------------------------------------------------- -->
 #### General Settings
 
+<<<<<<< HEAD
 Locate line 3 containing the variable `basePath`. 
 Both relative and absolute path should work here fine. 
 This path is set automatically and always has to fit the currently used execution path!
 ```lua
     basePath = "C:/megamol/build/install/"  
+=======
+Locate line 3 containing the variable `basePath`. Both relative and absolute path should work here fine, it is recommended to change the path in this line to the global path to the MegaMol application directory, e.g.:
+
+```lua
+    basePath = "C:/megamol/build/install/"
+>>>>>>> ba7df3ade (manual update)
 ```
 
 <!-- ---------------------------------------------------------------------- -->
@@ -227,10 +259,15 @@ The asterisk `*` stands for the highest numeric value, thus printing all message
 
 Line 7-10 define the application, shader and resource directories:
 ```lua
+<<<<<<< HEAD
     mmSetAppDir(basePath .. "bin")  
     mmAddShaderDir(basePath .. "share/shaders")
     mmAddResourceDir(basePath .. "share/shaders")
     mmAddResourceDir(basePath .. "share/resources")
+=======
+    mmAddShaderDir("C:/megamol/build/install/share/shaders")
+    mmAddResourceDir("C:/megamol/build/install/share/resources")
+>>>>>>> ba7df3ade (manual update)
 ```
 The *Add...Dir* commands set the paths for the respective resources.
 
