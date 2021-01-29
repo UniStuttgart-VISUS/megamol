@@ -70,12 +70,11 @@
 #define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.0f, 1.0f))
 #define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.6f, 0.0f, 0.3f, 1.0f))
 #define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.45f, 1.0f))
-#define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 1.0f, 0.75f, 1.0f))
-#define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
-#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.75f, 1.0f, 0.25f, 1.0f))
-
-#define GUI_COLOR_GROUP_HEADER (ImVec4(0.1f, 0.5f, 0.5f, 1.0f))
-#define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.25f, 0.75f, 0.75f, 1.0f))
+#define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 0.5f, 1.0f, 1.0f))
+#define GUI_COLOR_SLOT_CALLEE (ImVec4(0.5f, 0.0f, 1.0f, 1.0f))
+#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.4f, 0.8f, 0.0f, 1.0f))
+#define GUI_COLOR_GROUP_HEADER (ImVec4(0.0f, 0.4f, 0.3f, 1.0f))
+#define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.8f, 0.6f, 1.0f))
 
 
 namespace {
@@ -393,7 +392,10 @@ namespace gui {
             if (type == megamol::gui::HeaderType::MODULE_GROUP) {
                 ImGui::PushStyleColor(ImGuiCol_Header, GUI_COLOR_GROUP_HEADER);
                 ImGui::PushStyleColor(ImGuiCol_HeaderHovered, GUI_COLOR_GROUP_HEADER_HIGHLIGHT);
-                pop_style_color += 2;
+                auto header_active_color = GUI_COLOR_GROUP_HEADER_HIGHLIGHT;
+                header_active_color.w *= 0.75f;
+                ImGui::PushStyleColor(ImGuiCol_HeaderActive, header_active_color);
+                pop_style_color += 3;
             }
 
             bool searched = true;
