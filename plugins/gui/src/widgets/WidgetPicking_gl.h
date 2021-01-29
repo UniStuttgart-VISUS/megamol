@@ -41,7 +41,7 @@ namespace gui {
 
     struct Interaction {
         InteractionType type;
-        int obj_id;
+        unsigned int obj_id;
         float axis_x;
         float axis_y;
         float axis_z;
@@ -52,7 +52,7 @@ namespace gui {
 
     struct Manipulation {
         InteractionType type;
-        int obj_id;
+        unsigned int obj_id;
         float axis_x;
         float axis_y;
         float axis_z;
@@ -75,7 +75,7 @@ namespace gui {
     public:
         friend class GUIWindows;
 
-        void AddInteractionObject(int obj_id, std::vector<Interaction> const& interactions) {
+        void AddInteractionObject(unsigned int obj_id, std::vector<Interaction> const& interactions) {
             this->available_interactions.insert({obj_id, interactions});
         }
 
@@ -127,7 +127,7 @@ namespace gui {
          * respective obj id as second value Set to fale if cursor is on "background" during current frame with -1 as
          * second value
          */
-        std::tuple<bool, int, float> active_interaction_obj;
+        std::tuple<bool, unsigned int, float> active_interaction_obj;
 
         std::map<int, std::vector<Interaction>> available_interactions;
         ManipVector pending_manipulations;
@@ -140,7 +140,7 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        std::vector<Interaction> get_available_interactions(int obj_id) {
+        std::vector<Interaction> get_available_interactions(unsigned int obj_id) {
             std::vector<Interaction> retval;
             auto query = this->available_interactions.find(obj_id);
             if (query != this->available_interactions.end()) {

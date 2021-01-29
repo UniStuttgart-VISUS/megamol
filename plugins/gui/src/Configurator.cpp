@@ -268,8 +268,6 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 
 void megamol::gui::Configurator::draw_window_module_list(float width, float height, bool apply_focus) {
 
-    ImGuiStyle& style = ImGui::GetStyle();
-
     ImGui::BeginGroup();
 
     const float search_child_height = ImGui::GetFrameHeightWithSpacing() * 2.5f;

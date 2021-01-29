@@ -86,8 +86,8 @@ namespace gui {
                     , win_size(ImVec2(0.0f, 0.0f))
                     , win_reset_size(ImVec2(0.0f, 0.0f))
                     , win_reset_position(ImVec2(0.0f, 0.0f))
-                    , win_set_pos_size(true)
                     , win_collapsed(false)
+                    , win_set_pos_size(true)                    
                     // Window specific configurations
                     , param_show_hotkeys(false)
                     , param_modules_list()

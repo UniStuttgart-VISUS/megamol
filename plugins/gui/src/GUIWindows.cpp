@@ -226,7 +226,6 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     // IO
     ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
 
     io.DisplaySize = ImVec2(window_size.x, window_size.y);
     if ((window_size.x > 0.0f) && (window_size.y > 0.0f)) {
@@ -527,7 +526,6 @@ bool GUIWindows::PostDraw(void) {
         // Scale all windows
         if (this->state.rescale_windows) {
             // Do not adjust window scale after loading from project file (window size is already fine)
-            bool collapsing_changed;
             const auto size_func = [&, this](WindowCollection::WindowConfiguration& wc) {
                 wc.win_reset_size *= megamol::gui::gui_scaling.TransitonFactor();
                 wc.win_size *= megamol::gui::gui_scaling.TransitonFactor();

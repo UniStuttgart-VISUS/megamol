@@ -179,7 +179,7 @@ bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
         try {
             this->fbo = std::make_unique<glowl::FramebufferObject>(
                 this->viewport_dim.x, this->viewport_dim.y, glowl::FramebufferObject::DepthStencilType::NONE);
-        } catch (glowl::FramebufferObjectException e) {
+        } catch (glowl::FramebufferObjectException &e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Error during framebuffer object creation: '%s'. [%s, %s, line %d]\n ", e.what(), __FILE__,
                 __FUNCTION__, __LINE__);
@@ -263,7 +263,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
     GUI_GL_CHECK_ERROR
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    auto id = static_cast<int>(pixel_data[0]);
+    auto id = static_cast<unsigned int>(pixel_data[0]);
     auto depth = pixel_data[1];
 
     if (id > 0) {
@@ -370,8 +370,6 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
     const glm::vec4& view_orientation, const glm::vec2& vp_dim, ManipVector& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
-    ImGuiStyle& style = ImGui::GetStyle();
-    ImGuiIO& io = ImGui::GetIO();
 
     // Info: IDs of the six cube faces are encoded via bit shift by face index of given parameter id.
 
@@ -437,11 +435,11 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
     }
 
     // Process pending manipulations ------------------------------------------
-    int view_index = inout_defaultview_index;
-    bool highlighted = false;
+    int shader_view_index = inout_defaultview_index;
     for (auto& manip : pending_manipulations) {
 
         /// Indices must fit enum order in megamol::core::view::View3D_2::defaultview
+        int view_index;
         if (id == (manip.obj_id >> 0)) // DEFAULTVIEW_FRONT
             view_index = 0;
         if (id == (manip.obj_id >> 1)) // DEFAULTVIEW_BACK
@@ -458,9 +456,10 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
         if (view_index >= 0) {
             if (manip.type == InteractionType::SELECT) {
                 inout_defaultview_index = view_index;
+                shader_view_index = view_index;
             } else if (manip.type == InteractionType::HIGHLIGHT) {
-                highlighted = true;
                 out_hovered_view_index = view_index;
+                shader_view_index = view_index;
             }
         }
     }
@@ -482,7 +481,7 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
     }
     std::array<GLint, 4> viewport;
     glGetIntegerv(GL_VIEWPORT, viewport.data());
-    int size = 100;
+    int size = 100 * static_cast<int>(megamol::gui::gui_scaling.Get());
     int x = viewport[2] - size;
     int y = viewport[3] - size - ImGui::GetFrameHeightWithSpacing();
     glViewport(x, y, size, size);
@@ -492,8 +491,8 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
     this->shader->setUniform("rot_mx", rotation);
     this->shader->setUniform("model_mx", model);
     this->shader->setUniform("proj_mx", proj);
-    this->shader->setUniform("view_index", view_index);
 
+    this->shader->setUniform("view_index", shader_view_index);
     this->shader->setUniform("id", static_cast<int>(id));
 
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -510,15 +509,15 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
 
 InteractVector megamol::gui::PickableCube::GetInteractions(unsigned int id) const {
     InteractVector interactions;
-    // interactions.emplace_back(
-    //    Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<int>(id), 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-    // interactions.emplace_back(
-    //    Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<int>(id), 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}));
     interactions.emplace_back(
-        Interaction({InteractionType::SELECT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-    // interactions.emplace_back(
-    //    Interaction({InteractionType::DESELECT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+        Interaction({InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     interactions.emplace_back(
-        Interaction({InteractionType::HIGHLIGHT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+        Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    // interactions.emplace_back(
+    //    Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, id, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    // interactions.emplace_back(
+    //    Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, id, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}));
+    // interactions.emplace_back(
+    //    Interaction({InteractionType::DESELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
 }
