@@ -12,6 +12,13 @@ namespace core {
 namespace view {
 namespace light {
 
+    struct HDRILightType : public BaseLightType {
+        std::array<float, 3> up;
+        std::array<float, 3> direction;
+        vislib::TString evnfile;
+    };
+
+
 class MEGAMOLCORE_API HDRILight : public AbstractLight {
 public:
     /**
@@ -35,6 +42,11 @@ public:
      */
     static bool IsAvailable(void) { return true; }
 
+    /**
+     * Add the lightsource of this module to a given collection
+     */
+    void addLight(LightCollection& light_collection);
+
     /** Ctor. */
     HDRILight(void);
 
@@ -42,9 +54,9 @@ public:
     virtual ~HDRILight(void);
 
 private:
-    core::param::ParamSlot hdri_up;
-    core::param::ParamSlot hdri_direction;
-    core::param::ParamSlot hdri_evnfile;
+    core::param::ParamSlot up;
+    core::param::ParamSlot direction;
+    core::param::ParamSlot evnfile;
 
     virtual bool InterfaceIsDirty();
     virtual void readParams();

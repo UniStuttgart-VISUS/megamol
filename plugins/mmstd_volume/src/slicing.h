@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2008  Martin Falk <falk@visus.uni-stuttgart.de>
  *                     Visualization Research Center (VISUS), 
- *                     Universit‰t Stuttgart, Germany
+ *                     Universit√§t Stuttgart, Germany
  *
  * This source code is distributed as part of the publication 
  * "Output-Sensitive 3D Line Integral Convolution". 

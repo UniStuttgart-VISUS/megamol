@@ -11,6 +11,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallClipPlane.h"
+#include "mmcore/view/light/PointLight.h"
 #include "mmcore/utility/log/Log.h"
 #include "vislib/memutils.h"
 #include "vislib/graphics/gl/ShaderSource.h"
@@ -35,6 +36,7 @@ showClipAxesSlot("showClipAxes", "Shows/Hides the axes (x and y) of the clipping
     this->MakeSlotAvailable(&this->dataInSlot);
     this->MakeSlotAvailable(&this->typesInSlot);
     this->MakeSlotAvailable(&this->clipPlaneSlot);
+    this->MakeSlotAvailable(&this->lightsSlot);
     this->MakeSlotAvailable(&this->grainColSlot);
     this->MakeSlotAvailable(&this->showClipPlanePolySlot);
     this->MakeSlotAvailable(&this->showClipAxesSlot);
@@ -120,43 +122,43 @@ bool QuartzTexRenderer::Render(core::view::CallRender3D_2& call) {
     glm::vec4 specular = glm::vec4(1.f);
 
     // light setup
-    this->GetLights();
-    std::vector<float> lights;
+    std::vector<float> light_data;
     int numLights = 0;
 
     float lightIntensity = 1.f;
     std::array<float, 4> lightPos = {0.f, 0.f, 0.f, 1.f};
     std::array<float, 4> lightCol = {0.f, 0.f, 0.f, 1.f};
 
-    if (this->lightMap.size() < 1) { // #lights added in configurator
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("No lights available in lightmap");
-    } else {
-        for (auto light : this->lightMap) {
-            lightCol = light.second.lightColor;
-            lightIntensity = light.second.lightIntensity;
+    auto call_light = lightsSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
+        }
 
-            auto lightPosTemp = light.second.pl_position;
-            if (lightPosTemp.size() == 3) {
-                lightPos[0] = lightPosTemp[0];
-                lightPos[1] = lightPosTemp[1];
-                lightPos[2] = lightPosTemp[2];
-            }
-            if (lightPosTemp.size() == 4) {
-                lightPos[0] = lightPosTemp[0];
-                lightPos[1] = lightPosTemp[1];
-                lightPos[2] = lightPosTemp[2];
-                lightPos[3] = lightPosTemp[3];
-            }
+        auto lights = call_light->getData();
+        auto point_lights = lights.get<core::view::light::PointLightType>();
 
-            lights.insert(lights.end(), std::begin(lightPos), std::end(lightPos));
-            lights.insert(lights.end(), std::begin(lightCol), std::end(lightCol));
-            lights.push_back(lightIntensity);
+        if (point_lights.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[QuartzTexRenderer] No 'Point Light' found");
+        }
+
+        for (auto const& light : point_lights) {
+            lightCol = light.colour;
+            lightIntensity = light.intensity;
+
+            lightPos[0] = light.position[0];
+            lightPos[1] = light.position[1];
+            lightPos[2] = light.position[2];
+
+            light_data.insert(light_data.end(), std::begin(lightPos), std::end(lightPos));
+            light_data.insert(light_data.end(), std::begin(lightCol), std::end(lightCol));
+            light_data.push_back(lightIntensity);
             ++numLights;
         }
     }
 
     ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboLights);
-    ::glBufferData(GL_SHADER_STORAGE_BUFFER, lights.size() * sizeof(float), lights.data(), GL_STATIC_READ);
+    ::glBufferData(GL_SHADER_STORAGE_BUFFER, light_data.size() * sizeof(float), light_data.data(), GL_STATIC_READ);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, ssboLights);
     ::glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 

@@ -259,24 +259,6 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
 
         ImGui::SameLine();
 
-        if (ImGui::BeginMenu("Help")) {
-            const std::string docu_link =
-                "https://github.com/UniStuttgart-VISUS/megamol/tree/master/plugins/gui#configurator";
-            if (ImGui::Button("Readme on GitHub (Copy Link)")) {
-#ifdef GUI_USE_GLFW
-                auto glfw_win = ::glfwGetCurrentContext();
-                ::glfwSetClipboardString(glfw_win, docu_link.c_str());
-#elif _WIN32
-                ImGui::SetClipboardText(docu_link.c_str());
-#else // LINUX
-                megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Readme Link:\n%s", docu_link.c_str());
-#endif
-            }
-            ImGui::EndMenu();
-        }
-
         ImGui::EndMenuBar();
     }
     ImGui::PopID();

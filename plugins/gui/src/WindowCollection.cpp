@@ -122,7 +122,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                     tmp_config.win_name = config_item.key();
                     tmp_config.win_reset = true;
                     tmp_config.buf_font_reset = false;
-                    tmp_config.buf_tfe_reset = false;
+                    tmp_config.buf_tfe_reset = true;
                     auto config_values = config_item.value();
 
                     // Window Configuration -----------------------------------

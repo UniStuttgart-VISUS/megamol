@@ -10,6 +10,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
+#include "mmcore/view/light/CallLight.h"
 
 namespace megamol {
 namespace demos {
@@ -19,11 +20,14 @@ namespace demos {
  */
 AbstractQuartzRenderer::AbstractQuartzRenderer(void) : AbstractQuartzModule(),
         clipPlaneSlot("clipplane", "Slot connecting to the clipping plane provider"),
+        lightsSlot("lights", "Lights are retrieved over this slot."),
         showClipPlanePolySlot("showClipPlanePoly", "Shows/Hides the bounding box polygon of the clipping plane"),
         grainColSlot("grainCol", "The colour used for the crystalites"),
         correctPBCSlot("correctPBC", "Activate correct handling of periodic boundary conditions") {
 
     this->clipPlaneSlot.SetCompatibleCall<core::view::CallClipPlaneDescription>();
+
+    this->lightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
 
     this->grainCol[0] = this->grainCol[1] = this->grainCol[2] = 192.0f / 255.0f;
     this->grainColSlot << new core::param::StringParam(

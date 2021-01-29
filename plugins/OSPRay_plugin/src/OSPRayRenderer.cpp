@@ -195,7 +195,13 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     }
 
     // Light setup
-	this->light_has_changed = this->GetLights();
+    auto call_light = lightSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
+        }
+        this->light_has_changed = call_light->hasUpdate();
+    }
 
 	core::view::Camera_2 tmp_newcam;
 	cr.GetCamera(tmp_newcam);
