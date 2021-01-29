@@ -70,9 +70,12 @@
 #define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.0f, 1.0f))
 #define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.6f, 0.0f, 0.3f, 1.0f))
 #define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.45f, 1.0f))
-#define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 1.0f, 0.75f, 1.0f))
-#define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
-#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.75f, 1.0f, 0.25f, 1.0f))
+#define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 0.5f, 1.0f, 1.0f))
+#define GUI_COLOR_SLOT_CALLEE (ImVec4(0.5f, 0.0f, 1.0f, 1.0f))
+#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.4f, 0.8f, 0.0f, 1.0f))
+#define GUI_COLOR_GROUP_HEADER (ImVec4(0.0f, 0.4f, 0.3f, 1.0f))
+#define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.8f, 0.6f, 1.0f))
+
 
 namespace {
 
@@ -364,19 +367,19 @@ namespace gui {
             }
 
             std::string header_label = name;
-            switch (type) {
-            case (megamol::gui::HeaderType::MODULE_GROUP): {
-                header_label = "[GROUP] " + header_label;
-            } break;
-            case (megamol::gui::HeaderType::MODULE): {
-                header_label = "[MODULE] " + header_label;
-            } break;
-            case (megamol::gui::HeaderType::PARAMETERG_ROUP): {
-                header_label = "[GROUP] " + header_label;
-            } break;
-            default:
-                break;
-            }
+            // switch (type) {
+            // case (megamol::gui::HeaderType::MODULE_GROUP): {
+            //    header_label = "[GROUP] " + header_label;
+            //} break;
+            // case (megamol::gui::HeaderType::MODULE): {
+            //    // header_label = "[MODULE] " + header_label;
+            //} break;
+            // case (megamol::gui::HeaderType::PARAMETERG_ROUP): {
+            //    // header_label = "[GROUP] " + header_label;
+            //} break;
+            // default:
+            //    break;
+            //}
 
             // Determine header state and change color depending on active parameter search
             auto headerId = ImGui::GetID(header_label.c_str());
@@ -384,6 +387,17 @@ namespace gui {
             if (headerState == GUI_INVALID_ID) {
                 headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
             }
+
+            int pop_style_color = 0;
+            if (type == megamol::gui::HeaderType::MODULE_GROUP) {
+                ImGui::PushStyleColor(ImGuiCol_Header, GUI_COLOR_GROUP_HEADER);
+                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, GUI_COLOR_GROUP_HEADER_HIGHLIGHT);
+                auto header_active_color = GUI_COLOR_GROUP_HEADER_HIGHLIGHT;
+                header_active_color.w *= 0.75f;
+                ImGui::PushStyleColor(ImGuiCol_HeaderActive, header_active_color);
+                pop_style_color += 3;
+            }
+
             bool searched = true;
             if (!inout_search.empty()) {
                 headerState = 1;
@@ -392,9 +406,13 @@ namespace gui {
                     auto header_col = ImGui::GetStyleColorVec4(ImGuiCol_Header);
                     header_col.w *= 0.25;
                     ImGui::PushStyleColor(ImGuiCol_Header, header_col);
+                    auto header_hovered_col = ImGui::GetStyleColorVec4(ImGuiCol_HeaderHovered);
+                    header_hovered_col.w *= 0.25;
+                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, header_hovered_col);
                     auto text_col = ImGui::GetStyleColorVec4(ImGuiCol_Text);
                     text_col.w *= 0.25;
                     ImGui::PushStyleColor(ImGuiCol_Text, text_col);
+                    pop_style_color += 3;
                 } else {
                     // Show all below when given name is part of the search
                     inout_search.clear();
@@ -402,9 +420,8 @@ namespace gui {
             }
             ImGui::GetStateStorage()->SetInt(headerId, headerState);
             bool header_open = ImGui::CollapsingHeader(header_label.c_str(), nullptr);
-            if (!inout_search.empty() && !searched) {
-                ImGui::PopStyleColor(2);
-            }
+            ImGui::PopStyleColor(pop_style_color);
+
             // Keep following elements open for one more frame to propagate override changes to headers below.
             if (override_header_state == 0) {
                 header_open = true;

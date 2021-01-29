@@ -373,6 +373,8 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiIO& io = ImGui::GetIO();
 
+    // Info: IDs of the six cube faces are encoded via bit shift by face index of given parameter id.
+
     // Create shader once -----------------------------------------------------
     if (this->shader == nullptr) {
         std::string vertex_src =
@@ -384,7 +386,7 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
             "out vec4 vertex_color; \n "
             "flat out int face_index; \n "
             "void main() { \n "
-            "    // Indices must fit enum order in megamol::core::view::View3D_2::defaultview \n "
+            "    // Vertex indices must fit enum order in megamol::core::view::View3D_2::defaultview \n "
             "    const vec4 vertices[36] = vec4[36]( \n "
             "        // DEFAULTVIEW_FRONT = 0 \n "
             "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), \n "
@@ -438,6 +440,7 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
     int view_index = inout_defaultview_index;
     bool highlighted = false;
     for (auto& manip : pending_manipulations) {
+
         /// Indices must fit enum order in megamol::core::view::View3D_2::defaultview
         if (id == (manip.obj_id >> 0)) // DEFAULTVIEW_FRONT
             view_index = 0;

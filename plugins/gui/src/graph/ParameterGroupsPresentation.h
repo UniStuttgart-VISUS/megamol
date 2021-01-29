@@ -47,7 +47,7 @@ namespace gui {
     private:
         typedef std::vector<megamol::gui::Parameter*> ParamPtrVector_t;
         typedef std::map<std::string, ParamPtrVector_t> ParamGroup_t;
-        typedef std::function<bool(ParamPtrVector_t& params,
+        typedef std::function<bool(ParamPtrVector_t& params, const std::string& in_search,
             megamol::core::param::AbstractParamPresentation::Presentation presentation,
             megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer)>
             GroupWidgetCallbackFunc_t;
@@ -95,11 +95,11 @@ namespace gui {
             const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
             ImGuiID in_override_header_state);
 
-        bool group_widget_animation(ParamPtrVector_t& params,
+        bool group_widget_animation(ParamPtrVector_t& params, const std::string& in_search,
             megamol::core::param::AbstractParamPresentation::Presentation presentation,
             megamol::gui::ParameterPresentation::WidgetScope in_scope);
 
-        bool group_widget_3d_cube(ParamPtrVector_t& params,
+        bool group_widget_3d_cube(ParamPtrVector_t& params, const std::string& in_search,
             megamol::core::param::AbstractParamPresentation::Presentation presentation,
             megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer);
     };
