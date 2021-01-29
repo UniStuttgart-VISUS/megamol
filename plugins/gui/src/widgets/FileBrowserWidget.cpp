@@ -24,12 +24,13 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget()
         , file_error()
         , file_warning()
         , child_paths()
-        , additional_lines(0) {}
+        , additional_lines(0)
+        , check_option(false) {}
 
 
 bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
     megamol::gui::FileBrowserWidget::FileBrowserFlag flag, const std::string& label, bool open_popup,
-    const std::string& extension) {
+    const std::string& extension, const std::string& check_option_label, bool& inout_check_option) {
 
     bool retval = false;
 
@@ -49,6 +50,8 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
             this->path_changed = true;
 
             this->search_widget.ClearSearchString();
+
+            this->check_option = inout_check_option;
 
             ImGui::OpenPopup(label_id.c_str());
             // Set initial window size of pop up
@@ -91,9 +94,10 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
 
             // File browser selectables ---------------------------------------
             auto select_flags = ImGuiSelectableFlags_DontClosePopups;
+            float footer_height = ImGui::GetFrameHeightWithSpacing() * ((check_option_label.empty()) ? (2.0f) : (3.0f));
             float child_select_height =
                 (ImGui::GetContentRegionAvail().y - (ImGui::GetTextLineHeightWithSpacing() * this->additional_lines) -
-                    ImGui::GetFrameHeightWithSpacing() * 2.0f);
+                    footer_height);
             ImGui::BeginChild(
                 "files_list_child_window", ImVec2(0.0f, child_select_height), true, ImGuiWindowFlags_None);
 
@@ -225,7 +229,12 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
                 this->validate_file(this->file_name_str, extension, flag);
             }
 
-            // Buttons ------------------------------
+            // Optional check option ------------
+            if (!check_option_label.empty()) {
+                ImGui::Checkbox(check_option_label.c_str(), &this->check_option);
+            }
+
+            // Buttons --------------------------
             std::string button_label;
             if (flag == FileBrowserFlag::SAVE) {
                 button_label = "Save";
@@ -264,6 +273,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
                     static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(this->file_name_str);
                 inout_filename = tmp_file_path.generic_u8string();
                 GUIUtils::Utf8Decode(inout_filename);
+                inout_check_option = this->check_option;
                 ImGui::CloseCurrentPopup();
                 retval = true;
             }

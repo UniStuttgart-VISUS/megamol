@@ -179,7 +179,7 @@ bool megamol::gui::PickingBuffer::EnableInteraction(glm::vec2 vp_dim) {
         try {
             this->fbo = std::make_unique<glowl::FramebufferObject>(
                 this->viewport_dim.x, this->viewport_dim.y, glowl::FramebufferObject::DepthStencilType::NONE);
-        } catch (glowl::FramebufferObjectException &e) {
+        } catch (glowl::FramebufferObjectException& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Error during framebuffer object creation: '%s'. [%s, %s, line %d]\n ", e.what(), __FILE__,
                 __FUNCTION__, __LINE__);
@@ -481,7 +481,7 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
     }
     std::array<GLint, 4> viewport;
     glGetIntegerv(GL_VIEWPORT, viewport.data());
-    int size = 100 * static_cast<int>(megamol::gui::gui_scaling.Get());
+    int size = (100 * static_cast<int>(megamol::gui::gui_scaling.Get()));
     int x = viewport[2] - size;
     int y = viewport[3] - size - ImGui::GetFrameHeightWithSpacing();
     glViewport(x, y, size, size);
@@ -509,10 +509,8 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
 
 InteractVector megamol::gui::PickableCube::GetInteractions(unsigned int id) const {
     InteractVector interactions;
-    interactions.emplace_back(
-        Interaction({InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-    interactions.emplace_back(
-        Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(Interaction({InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
+    interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     // interactions.emplace_back(
     //    Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, id, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     // interactions.emplace_back(

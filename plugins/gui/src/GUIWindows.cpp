@@ -2050,13 +2050,21 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         filename = graph_ptr->GetFilename();
     }
     if (graph_ptr != nullptr) {
+        bool check_option = true; // Default for option asking for saving gui state
         this->state.open_popup_save |= this->configurator.ConsumeTriggeredGlobalProjectSave();
+
         if (this->file_browser.PopUp(filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
-                this->state.open_popup_save, "lua")) {
+                this->state.open_popup_save, "lua", "Save GUI State?", check_option)) {
 
             graph_ptr->SetFilename(filename);
-            popup_failed |= !this->configurator.GetGraphCollection().SaveProjectToFile(
-                this->state.graph_uid, filename, this->dump_state_to_file(filename));
+
+            std::string gui_state;
+            if (check_option) {
+                gui_state = this->dump_state_to_file(filename);
+            }
+
+            popup_failed |=
+                !this->configurator.GetGraphCollection().SaveProjectToFile(this->state.graph_uid, filename, gui_state);
         }
         MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
             confirmed, "Cancel", aborted);

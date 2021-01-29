@@ -41,7 +41,13 @@ namespace gui {
          * @return True on success, false otherwise.
          */
         bool PopUp(std::string& inout_filename, FileBrowserFlag flag, const std::string& label, bool open_popup,
-            const std::string& extension);
+            const std::string& extension, const std::string& check_option_label, bool& inout_check_option);
+
+        bool PopUp(std::string& inout_filename, FileBrowserFlag flag, const std::string& label, bool open_popup,
+            const std::string& extension) {
+            bool check_option = false;
+            return this->PopUp(inout_filename, flag, label, open_popup, extension, "", check_option);
+        }
 
         /**
          * ImGui file browser button opening this file browser pop-up.
@@ -69,6 +75,7 @@ namespace gui {
         // Keeps child path and flag whether child is director or not
         std::vector<ChildData_t> child_paths;
         size_t additional_lines;
+        bool check_option;
 
         // FUNCTIONS --------------------------------------------------------------
 
