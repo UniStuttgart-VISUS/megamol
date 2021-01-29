@@ -38,6 +38,7 @@
 #include "mmcore/view/special/CallbackScreenShooter.h"
 #include "mmcore/FlagCall.h"
 #include "mmcore/FlagCall_GL.h"
+#include "mmcore/view/CallRender3D.h"
 
 using namespace megamol::core;
 
@@ -77,4 +78,5 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<FlagCall>();
     instance.RegisterAutoDescription<FlagCallRead_GL>();
     instance.RegisterAutoDescription<FlagCallWrite_GL>();
+    instance.RegisterAutoDescription<view::CallRender3D>();
 }

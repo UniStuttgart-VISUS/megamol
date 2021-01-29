@@ -27,7 +27,6 @@
 #include "mmcore/moldyn/DirPartColModulate.h"
 #include "mmcore/moldyn/DirPartFilter.h"
 #include "mmcore/moldyn/ParticleListFilter.h"
-//#include "mmcore/special/ColStereoDisplay.h"
 #include "mmcore/special/StubModule.h"
 #include "mmcore/view/ClipPlane.h"
 #include "mmcore/view/TransferFunction.h"
@@ -44,7 +43,6 @@
 #include "mmcore/view/HeadView.h"
 #include "mmcore/job/DataWriterJob.h"
 #include "mmcore/job/JobThread.h"
-#include "mmcore/moldyn/VolumeDataCall.h"
 #include "mmcore/moldyn/AddClusterColours.h"
 #include "mmcore/moldyn/DynDensityGradientEstimator.h"
 #include "job/PluginsStateFileGeneratorJob.h"
@@ -55,12 +53,13 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/view/light/QuadLight.h"
 #include "mmcore/view/light/SpotLight.h"
-#include "../job/TickSwitch.h"
+#include "job/TickSwitch.h"
 #include "mmcore/FileStreamProvider.h"
 #include "mmcore/view/special/CallbackScreenShooter.h"
 #include "mmcore/FlagStorage.h"
 #include "mmcore/FlagStorage_GL.h"
 #include "mmcore/DeferredShading.h"
+#include "mmcore/view/View3D.h"
 
 using namespace megamol::core;
 
@@ -89,7 +88,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<moldyn::DirPartColModulate>();
     instance.RegisterAutoDescription<moldyn::ParticleListFilter>();
     instance.RegisterAutoDescription<moldyn::DirPartFilter>();
-    //instance.RegisterAutoDescription<special::ColStereoDisplay>();
     instance.RegisterAutoDescription<special::StubModule>();
     instance.RegisterAutoDescription<view::ClipPlane>();
     instance.RegisterAutoDescription<view::TransferFunction>();
@@ -108,10 +106,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<job::JobThread>();
     instance.RegisterAutoDescription<moldyn::AddClusterColours>();
     instance.RegisterAutoDescription<moldyn::DynDensityGradientEstimator>();
-#ifdef MEGAMOLCORE_WITH_DIRECT3D11
-    instance.RegisterAutoDescription<view::ViewDirect3D>();
-    instance.RegisterAutoDescription<moldyn::D3D11SimpleSphereRenderer>();
-#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
     instance.RegisterAutoDescription<job::PluginsStateFileGeneratorJob>();
     instance.RegisterAutoDescription<core::utility::LuaHostSettingsModule>();
     instance.RegisterAutoDescription<core::job::TickSwitch>();
@@ -126,4 +120,5 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<FlagStorage>();
     instance.RegisterAutoDescription<FlagStorage_GL>();
     instance.RegisterAutoDescription<DeferredShading>();
+    instance.RegisterAutoDescription<view::View3D>();
 }
