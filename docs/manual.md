@@ -70,7 +70,7 @@ Screenshot of `cmake-gui` after generating build files.
 Tested with:
 
     $ cat /proc/version
-    Linux version 4.4.0-93-generic (buildd@lgw01-03) (gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.4) ) #116-Ubuntu SMP Fri Aug 11 21:17:51 UTC 2017
+    Linux version 5.8.0-41-generic (buildd@lgw01-amd64-003) (gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #46~20.04.1-Ubuntu SMP Mon Jan 18 17:52:23 UTC 2021
 
 As prerequisites, following packages from the repository are required:
 
@@ -89,48 +89,53 @@ Create a build folder and switch to it:
 
 Start the ncurses gui for cmake:
 
-    $ ccmake ../
+    $ ccmake .
 
-Hit `c` a couple of times until the screen does not change, then hit `g` to generate build files.
-On the console prompt, start `make`:
+Configure by hitting `c` a couple of times until the screen does not change, then hit `g` to generate build files.
+On the console prompt, start the building:
 
-    $ make
+    $ make && make install
 
 ### Configuration
 
 After successfully installing or compiling MegaMol you should have all executable files inside your bin folder. Some setup still needs to be done.
-Create a file `megamolconfig.lua` in this bin directory, with the following content (it may already exist). You will need to adjust the paths accordingly:
+Create a file `megamolconfig.lua` in this bin directory, with the following content (it may already exist). 
+YOU WILL NEED TO ADJUST THE PATHS ACCORDINGLY:
 
 ```lua
-    print('Hi, I am the megamolconfig.lua!')
+    -- Standard MegaMol Configuration File --
 
-    mmSetAppDir(".")
+    print("I am the Standard MegaMol configuration!")
 
-    mmSetLogFile("")
+    basePath = "C:/megamol/build/install/"
+
     mmSetLogLevel(0)
-    mmSetEchoLevel('*')
+    mmSetEchoLevel("*")
+    mmSetAppDir(basePath .. "bin")
+    mmAddShaderDir(basePath .. "share/shaders")
+    mmAddResourceDir(basePath .. "share/shaders")
+    mmAddResourceDir(basePath .. "share/resources")
+    mmPluginLoaderInfo(basePath .. "bin", "*.mmplg", "include")
 
-    mmAddShaderDir("U:/home/user/src/megamol-dev/share/shaders")
-    mmAddResourceDir("U:/home/user/src/megamol-dev/share/resources")
+    computer = mmGetMachineName()
 
-    mmPluginLoaderInfo("U:/home/user/src/megamol-dev/bin", "*.mmplg", "include")
-
-    mmSetConfigValue("*-window", "w720h720")
-    mmSetConfigValue("consolegui", "on")
-
-    mmSetConfigValue("LRHostEnable", "true")
-
-    return "Done with megamolconfig.lua. Bye!"
+    mmSetConfigValue("*-window",    "x5y35w1280h720")
+    mmSetConfigValue("consolegui",  "on")
+    mmSetConfigValue("topmost",     "off")
+    mmSetConfigValue("fullscreen",  "off")
+    mmSetConfigValue("vsync",       "off")
+    mmSetConfigValue("useKHRdebug", "off")
+    mmSetConfigValue("arcball",     "off")
 ```
 
 The following paragraphs explain the essential steps of preparing a script in more detail.
 
 #### General Settings
 
-Locate line 3 containing the tag `mmSetAppDir`. Both relative and absolute path should work here fine, it is recommended to change the path in this line to the global path to the MegaMol application bin directory, e.g.:
+Locate line 3 containing the variable `basePath`. Both relative and absolute path should work here fine, it is recommended to change the path in this line to the global path to the MegaMol application directory, e.g.:
 
 ```lua
-    mmSetAppDir("U:/home/user/src/megamol-dev/bin")
+    basePath = "C:/megamol/build/install/"
 ```
 #### Logging
 
@@ -147,8 +152,8 @@ Line 6-8 configures the logging mechanism of MegaMol . Adjusting the value of *E
 Line 9+10 show how to set your shader and resource directories.
 
 ```lua
-    mmAddShaderDir("U:/home/user/src/megamol-dev/share/shaders")
-    mmAddResourceDir("U:/home/user/src/megamol-dev/share/resources")
+    mmAddShaderDir("C:/megamol/build/install/share/shaders")
+    mmAddResourceDir("C:/megamol/build/install/share/resources")
 ```
 
 The *AddDir* commands set the paths for the respective resources.

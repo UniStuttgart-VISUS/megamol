@@ -14,10 +14,13 @@ MegaMol succeeds ​MolCloud, which has been developed at the University of Stut
 
 
 ## Building MegaMol
+See the [manual](docs/manual.md) for more detailed isntructions.
+
+
 ### Linux
 1. Clone the MegaMol repository
 2. Create a build folder
-3. Invoke `cmake` inside the build folder
+3. Invoke `ccmake .` inside the build folder
 4. Execute `make` to build MegaMol
 5. Run `make install` to create your MegaMol installation
 6. Test Megamol with
