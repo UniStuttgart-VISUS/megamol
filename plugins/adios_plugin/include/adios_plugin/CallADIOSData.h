@@ -13,7 +13,6 @@
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/utility/log/Log.h"
-#include "adios_plugin.h"
 
 namespace megamol {
 namespace adios {
@@ -254,7 +253,7 @@ private:
 
 typedef std::map<std::string, std::shared_ptr<abstractContainer>> adiosDataMap;
 
-class ADIOS_PLUGIN_API CallADIOSData : public megamol::core::Call {
+class CallADIOSData : public megamol::core::Call {
 public:
     /**
      * Answer the name of the objects of this description.

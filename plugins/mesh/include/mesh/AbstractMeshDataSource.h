@@ -11,14 +11,13 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mesh.h"
 #include "mesh/MeshCalls.h"
 
 
 namespace megamol {
 namespace mesh {
 
-    class MESH_API AbstractMeshDataSource : public core::Module {
+    class AbstractMeshDataSource : public core::Module {
     public:
         AbstractMeshDataSource();
         virtual ~AbstractMeshDataSource();

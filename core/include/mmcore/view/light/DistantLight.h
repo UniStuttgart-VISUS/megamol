@@ -12,6 +12,12 @@ namespace core {
 namespace view {
 namespace light {
 
+    struct DistantLightType : public BaseLightType {
+        std::array<float, 3> direction;
+        float angularDiameter;
+        bool eye_direction;
+    };
+
 class MEGAMOLCORE_API DistantLight : public AbstractLight {
 public:
     /**
@@ -35,6 +41,11 @@ public:
      */
     static bool IsAvailable(void) { return true; }
 
+    /**
+     * Add the lightsource of this module to a given collection
+     */
+    void addLight(LightCollection& light_collection);
+
     /** Ctor. */
     DistantLight(void);
 
@@ -42,9 +53,9 @@ public:
     virtual ~DistantLight(void);
 
 private:
-    core::param::ParamSlot dl_angularDiameter;
-    core::param::ParamSlot dl_direction;
-    core::param::ParamSlot dl_eye_direction;
+    core::param::ParamSlot angularDiameter;
+    core::param::ParamSlot direction;
+    core::param::ParamSlot eye_direction;
 
     virtual bool InterfaceIsDirty();
     virtual void readParams();

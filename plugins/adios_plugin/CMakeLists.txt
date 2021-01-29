@@ -26,8 +26,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
 
   # Target definition
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
+  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
@@ -43,17 +42,17 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   endif()
 
   # Installation rules for generated files
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
+  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   if(USE_EXTERNAL_ADIOS)
     include(GNUInstallDirs)
     install(DIRECTORY ${ADIOS2_DIR}/../../ DESTINATION ${CMAKE_INSTALL_LIBDIR})
   endif()
   
   if(WIN32)
-    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
-    install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+    #install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
+    #install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
   else()
-    install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
+    #install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
 
   # Grouping in Visual Studio
@@ -77,4 +76,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   endforeach()
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
+
+  # Register plugin
+  megamol_register_plugin(${PROJECT_NAME})
 endif(BUILD_${EXPORT_NAME}_PLUGIN)

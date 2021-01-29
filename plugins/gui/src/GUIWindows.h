@@ -144,7 +144,7 @@ namespace gui {
          * Enable or disable GUI drawing
          */
         void SetEnableDisable(bool enable) {
-            this->state.gui_pre_drawing_enabled = enable;
+            this->state.gui_enabled = enable;
         }
 
         /**
@@ -175,11 +175,12 @@ namespace gui {
 
         /** The global state (for settings to be applied before ImGui::Begin). */
         struct StateBuffer {
-            bool gui_pre_drawing_enabled;                  // Flag indicating whether GUI should be drawn
-            bool gui_post_drawing_enabled;                 // Prevent gui drwing change between pre and post draw
-            Styles style;                                  // Predefined GUI style
-            bool style_changed;                            // Flag indicating changed style
-            bool autosave_gui_state;                       // Automatically save state after gui has been changed
+            bool gui_enabled;        // Flag indicating whether GUI is completely disabled
+            bool enable_gui_post;    // Required to prevent changes to 'gui_enabled' being applied between pre and post
+                                     // drawing
+            Styles style;            // Predefined GUI style
+            bool style_changed;      // Flag indicating changed style
+            bool autosave_gui_state; // Automatically save state after gui has been changed
             std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
             ImGuiID graph_uid;                             // UID of currently running graph
             std::string font_file;                         // Apply changed font file name.
@@ -201,6 +202,7 @@ namespace gui {
             bool screenshot_triggered;         // Trigger and file name for screenshot
             std::string screenshot_filepath;   // Filename the screenshot should be saved to
             int screenshot_filepath_id;        // Last unique id for screenshot filename
+            std::string last_script_filename;  // Last script filename provided from lua
             bool hotkeys_check_once;           // WORKAROUND: Check multiple hotkey assignments once
         };
 
@@ -229,7 +231,7 @@ namespace gui {
         ImGuiContext* context;
 
         /** The currently initialized ImGui API */
-        GUIImGuiAPI api;
+        GUIImGuiAPI initialized_api;
 
         /** The window collection. */
         WindowCollection window_collection;
@@ -253,7 +255,7 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        bool createContext(void);
+        bool createContext(GUIImGuiAPI imgui_api);
         bool destroyContext(void);
 
         // Window Draw Callbacks

@@ -13,24 +13,28 @@
 
 using namespace megamol::core::view::light;
 
+void megamol::core::view::light::QuadLight::addLight(LightCollection& light_collection) {
+    light_collection.add<QuadLightType>(std::static_pointer_cast<QuadLightType>(lightsource));
+}
+
 /*
  * megamol::core::view::light::QuadLight::QuadLight
  */
 QuadLight::QuadLight(void)
     : AbstractLight()
-    ,
-    // quad light parameters
-    ql_position("Position", "")
-    , ql_edgeOne("Edge1", "")
-    , ql_edgeTwo("Edge2", "") {
+    , position("Position", "")
+    , edgeOne("Edge1", "")
+    , edgeTwo("Edge2", "") {
 
     // quad light
-    this->ql_position << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f));
-    this->ql_edgeOne << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f));
-    this->ql_edgeTwo << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
-    this->MakeSlotAvailable(&this->ql_position);
-    this->MakeSlotAvailable(&this->ql_edgeOne);
-    this->MakeSlotAvailable(&this->ql_edgeTwo);
+    lightsource = std::make_shared<QuadLightType>();
+
+    this->position << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(1.0f, 0.0f, 0.0f));
+    this->edgeOne << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f));
+    this->edgeTwo << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
+    this->MakeSlotAvailable(&this->position);
+    this->MakeSlotAvailable(&this->edgeOne);
+    this->MakeSlotAvailable(&this->edgeTwo);
 }
 
 /*
@@ -42,27 +46,28 @@ QuadLight::~QuadLight(void) { this->Release(); }
  * megamol::core::view::light::QuadLight::readParams
  */
 void QuadLight::readParams() {
-    lightContainer.lightType = lightenum::QUADLIGHT;
-	lightContainer.lightColor = this->lightColor.Param<core::param::ColorParam>()->Value();
-    lightContainer.lightIntensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
+    auto light = std::static_pointer_cast<QuadLightType>(lightsource);
 
-    auto ql_pos = this->ql_position.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-	std::copy(ql_pos, ql_pos + 3, lightContainer.ql_position.begin());
-    auto ql_e1 = this->ql_edgeOne.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-	std::copy(ql_e1, ql_e1 + 3, lightContainer.ql_edgeOne.begin());
-    auto ql_e2 = this->ql_edgeTwo.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-	std::copy(ql_e2, ql_e2 + 3, lightContainer.ql_edgeTwo.begin());
+    light->colour = this->lightColor.Param<core::param::ColorParam>()->Value();
+    light->intensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
+
+    auto ql_pos = this->position.Param<core::param::Vector3fParam>()->Value().PeekComponents();
+    std::copy(ql_pos, ql_pos + 3, light->position.begin());
+    auto ql_e1 = this->edgeOne.Param<core::param::Vector3fParam>()->Value().PeekComponents();
+    std::copy(ql_e1, ql_e1 + 3, light->edgeOne.begin());
+    auto ql_e2 = this->edgeTwo.Param<core::param::Vector3fParam>()->Value().PeekComponents();
+    std::copy(ql_e2, ql_e2 + 3, light->edgeTwo.begin());
 }
 
 /*
  * megamol::core::view::light::QuadLight::InterfaceIsDirty
  */
 bool QuadLight::InterfaceIsDirty() {
-    if (this->AbstractIsDirty() || this->ql_position.IsDirty() || this->ql_edgeOne.IsDirty() ||
-        this->ql_edgeTwo.IsDirty()) {
-        this->ql_position.ResetDirty();
-        this->ql_edgeOne.ResetDirty();
-        this->ql_edgeTwo.ResetDirty();
+    if (this->AbstractIsDirty() || this->position.IsDirty() || this->edgeOne.IsDirty() ||
+        this->edgeTwo.IsDirty()) {
+        this->position.ResetDirty();
+        this->edgeOne.ResetDirty();
+        this->edgeTwo.ResetDirty();
         return true;
     } else {
         return false;
