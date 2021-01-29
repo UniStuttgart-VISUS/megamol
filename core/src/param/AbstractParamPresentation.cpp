@@ -136,7 +136,7 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
         } break;
         case (ParamType::GROUP_3D_CUBE): {
             this->compatible = Presentation::Basic | Presentation::Group_3D_Cube;
-            this->SetGUIPresentation(Presentation::Group_3D_Cube);
+            this->SetGUIPresentation(Presentation::Basic);
         } break;
         default:
             break;
