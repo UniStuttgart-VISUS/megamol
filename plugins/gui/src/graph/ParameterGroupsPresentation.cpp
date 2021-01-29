@@ -26,10 +26,11 @@ megamol::gui::ParameterGroupsPresentation::ParameterGroupsPresentation(void)
     /// View3D_2::anim
     GroupWidgetData animation(Param_t::GROUP_ANIMATION);
     animation.active = false;
-    animation.callback =
-        [&, this](ParamPtrVector_t& params, megamol::core::param::AbstractParamPresentation::Presentation presentation,
-            megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) -> bool {
-        return this->group_widget_animation(params, presentation, in_scope);
+    animation.callback = [&, this](ParamPtrVector_t& params, const std::string& in_search,
+                             megamol::core::param::AbstractParamPresentation::Presentation presentation,
+                             megamol::gui::ParameterPresentation::WidgetScope in_scope,
+                             PickingBuffer* inout_picking_buffer) -> bool {
+        return this->group_widget_animation(params, in_search, presentation, in_scope);
     };
     /// ID string must equal parameter group name, which is used for identification
     this->group_widget_ids["anim"] = animation;
@@ -37,10 +38,11 @@ megamol::gui::ParameterGroupsPresentation::ParameterGroupsPresentation(void)
     /// View3D_2::reset
     GroupWidgetData reset(Param_t::GROUP_3D_CUBE);
     reset.active = false;
-    reset.callback =
-        [&, this](ParamPtrVector_t& params, megamol::core::param::AbstractParamPresentation::Presentation presentation,
-            megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) -> bool {
-        return this->group_widget_3d_cube(params, presentation, in_scope, inout_picking_buffer);
+    reset.callback = [&, this](ParamPtrVector_t& params, const std::string& in_search,
+                         megamol::core::param::AbstractParamPresentation::Presentation presentation,
+                         megamol::gui::ParameterPresentation::WidgetScope in_scope,
+                         PickingBuffer* inout_picking_buffer) -> bool {
+        return this->group_widget_3d_cube(params, in_search, presentation, in_scope, inout_picking_buffer);
     };
     /// ID string must equal parameter group name, which is used for identification
     this->group_widget_ids["reset"] = reset;
@@ -156,7 +158,7 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
                             this->draw_grouped_parameters(group_name, group.second, in_module_fullname, in_search,
                                 in_scope, in_external_tf_editor, out_open_external_tf_editor, in_override_header_state);
                         } else {
-                            if (!group_widget_id.second.callback(group.second,
+                            if (!group_widget_id.second.callback(group.second, in_search,
                                     group_widget_id.second.GetGUIPresentation(), in_scope, inout_picking_buffer)) {
                                 // Specific presentation
 
@@ -177,8 +179,8 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
                 } else {
                     // GLOBAL
 
-                    group_widget_id.second.callback(
-                        group.second, group_widget_id.second.GetGUIPresentation(), in_scope, inout_picking_buffer);
+                    group_widget_id.second.callback(group.second, in_search,
+                        group_widget_id.second.GetGUIPresentation(), in_scope, inout_picking_buffer);
                 }
 
                 ImGui::PopID();
@@ -327,7 +329,7 @@ void megamol::gui::ParameterGroupsPresentation::draw_grouped_parameters(const st
 
 
 bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(ParamPtrVector_t& params,
-    megamol::core::param::AbstractParamPresentation::Presentation presentation,
+    const std::string& in_search, megamol::core::param::AbstractParamPresentation::Presentation presentation,
     megamol::gui::ParameterPresentation::WidgetScope in_scope) {
 
     if (presentation != param::AbstractParamPresentation::Presentation::Group_Animation)
@@ -499,7 +501,7 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(ParamPtrV
 
 
 bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(ParamPtrVector_t& params,
-    megamol::core::param::AbstractParamPresentation::Presentation presentation,
+    const std::string& in_search, megamol::core::param::AbstractParamPresentation::Presentation presentation,
     megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
 
     if (presentation != param::AbstractParamPresentation::Presentation::Group_3D_Cube)
@@ -528,8 +530,8 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(ParamPtrVec
     if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
         // LOCAL
 
-        /// ImGui::TextDisabled(group_label.c_str());
-        this->draw_grouped_parameters(group_label, params, "", "", in_scope, nullptr, nullptr, GUI_INVALID_ID);
+        // ImGui::TextDisabled(group_label.c_str());
+        this->draw_grouped_parameters(group_label, params, "", in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
 
     } else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
         // GLOBAL
