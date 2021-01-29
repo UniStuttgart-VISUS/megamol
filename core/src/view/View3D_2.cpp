@@ -320,6 +320,7 @@ View3D_2::View3D_2(void)
     this->cameraViewOrientation.SetParameter(new param::Vector4fParam(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 1.0f)));
     this->MakeSlotAvailable(&this->cameraViewOrientation);
     this->cameraViewOrientation.Parameter()->SetGUIReadOnly(true);
+    this->cameraViewOrientation.Parameter()->SetGUIVisible(false);
 
     this->translateManipulator.set_target(this->cam);
     this->translateManipulator.enable();
