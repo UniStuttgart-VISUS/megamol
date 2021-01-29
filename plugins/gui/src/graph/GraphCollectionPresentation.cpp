@@ -78,7 +78,7 @@ void megamol::gui::GraphCollectionPresentation::Present(
                 project_filename = graph_ptr->GetFilename();
             }
         }
-        bool check_option = true; // Default for option asking for saving gui state
+        bool check_option = false; // Default for option asking for saving gui state
         if (this->file_browser.PopUp(project_filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
                 state.configurator_graph_save, "lua", "Save GUI State?", check_option)) {
 

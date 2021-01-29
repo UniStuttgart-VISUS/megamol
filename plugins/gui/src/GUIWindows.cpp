@@ -2050,7 +2050,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         filename = graph_ptr->GetFilename();
     }
     if (graph_ptr != nullptr) {
-        bool check_option = true; // Default for option asking for saving gui state
+        bool check_option = false; // Default for option asking for saving gui state
         this->state.open_popup_save |= this->configurator.ConsumeTriggeredGlobalProjectSave();
 
         if (this->file_browser.PopUp(filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
