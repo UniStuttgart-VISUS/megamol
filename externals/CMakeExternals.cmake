@@ -556,7 +556,7 @@ function(require_external NAME)
 
       add_external_project(megamol-shader-factory STATIC
         GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/megamol-shader-factory.git
-        GIT_TAG 2dae25bbeb5395a1711bff0e58c91dee08fc272f
+        GIT_TAG 16849959c277db2e8821e647310b104b17811fc0
         BUILD_BYPRODUCTS 
         "<INSTALL_DIR>/${MEGAMOL_SHADER_FACTORY_LIB}"
         "<INSTALL_DIR>/${GLSLANG_LIB}"
@@ -574,7 +574,7 @@ function(require_external NAME)
 
       add_external_library(megamol-shader-factory
         LIBRARY ${MEGAMOL_SHADER_FACTORY_LIB}
-        INTERFACE_LIBRARIES glad ${INSTALL_DIR}/$<CONFIG>/${GLSLANG_LIB} ${INSTALL_DIR}/$<CONFIG>/${GENERICCODEGEN_LIB} ${INSTALL_DIR}/$<CONFIG>/${MACHINEINDEPENDENT_LIB} ${INSTALL_DIR}/$<CONFIG>/${OSDEPENDENT_LIB} ${INSTALL_DIR}/$<CONFIG>/${OGLCOMPILER_LIB} ${INSTALL_DIR}/$<CONFIG>/${SPIRV_LIB})
+        INTERFACE_LIBRARIES glad ${INSTALL_DIR}/$<CONFIG>/${GLSLANG_LIB} ${INSTALL_DIR}/$<CONFIG>/${SPIRV_LIB} ${INSTALL_DIR}/$<CONFIG>/${MACHINEINDEPENDENT_LIB} ${INSTALL_DIR}/$<CONFIG>/${OGLCOMPILER_LIB} ${INSTALL_DIR}/$<CONFIG>/${OSDEPENDENT_LIB} ${INSTALL_DIR}/$<CONFIG>/${GENERICCODEGEN_LIB})
       if(UNIX)
         target_link_libraries(megamol-shader-factory INTERFACE "stdc++fs")
       endif()
