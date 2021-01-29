@@ -14,7 +14,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmcore/view/AbstractViewGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/TimeControl.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
@@ -27,7 +27,7 @@ namespace view {
 /**
  * Abstract base class of rendering views
  */
-class SplitView : public AbstractView {
+class SplitView : public AbstractViewGL {
 public:
     /**
      * Answer the name of this module.

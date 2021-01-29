@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "mmcore/view/Renderer3DModule_2.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmcore/view/AbstractViewGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/InputCall.h"
 
@@ -73,8 +73,8 @@ bool Renderer3DModule_2::GetExtentsChain(CallRender3DGL& call) {
  */
 bool Renderer3DModule_2::RenderChain(CallRender3DGL& call) {
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractView> viewptr =
-        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
+    std::shared_ptr<const view::AbstractViewGL> viewptr =
+        std::dynamic_pointer_cast<const view::AbstractViewGL>(leftSlotParent);
 
     if (viewptr != nullptr) {
         auto vp = call.GetViewport();

@@ -12,7 +12,7 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmcore/view/AbstractViewGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "vislib/RawStorageSerialiser.h"
 
@@ -140,7 +140,7 @@ void megamol::remote::HeadnodeServer::BatchParamUpdated(param_updates_vec_t cons
 bool megamol::remote::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
 
     AbstractNamedObject::const_ptr_type avp;
-    const core::view::AbstractView* av = nullptr;
+    const core::view::AbstractViewGL* av = nullptr;
     core::Call* call = nullptr;
     unsigned int csn = 0;
 
@@ -148,7 +148,7 @@ bool megamol::remote::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
     call = this->view_slot_.CallAs<core::Call>();
     if ((call != nullptr) && (call->PeekCalleeSlot() != nullptr) && (call->PeekCalleeSlot()->Parent() != nullptr)) {
         avp = call->PeekCalleeSlot()->Parent();
-        av = dynamic_cast<const core::view::AbstractView*>(avp.get());
+        av = dynamic_cast<const core::view::AbstractViewGL*>(avp.get());
     }
     if (av == nullptr) return false;
 

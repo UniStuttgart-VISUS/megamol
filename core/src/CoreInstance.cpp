@@ -1444,7 +1444,7 @@ megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePe
 
     std::shared_ptr<ModuleNamespace> preViewInst = NULL;
     bool hasErrors = false;
-    view::AbstractView *view = NULL, *fallbackView = NULL;
+    view::AbstractViewGL *view = NULL, *fallbackView = NULL;
     vislib::StringA viewFullPath =
         this->namespaceRoot->FullNamespace(request.Name(), request.Description()->ViewModuleID());
 
@@ -1490,7 +1490,7 @@ megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePe
             continue;
 
         } else {
-            view::AbstractView* av = dynamic_cast<view::AbstractView*>(mod.get());
+            view::AbstractViewGL* av = dynamic_cast<view::AbstractViewGL*>(mod.get());
             if (av != NULL) {
                 // view module instantiated.
                 if (fullName.Equals(viewFullPath)) {
@@ -1569,12 +1569,12 @@ megamol::core::ViewInstance::ptr_type megamol::core::CoreInstance::InstantiatePe
 /*
  * megamol::core::CoreInstance::instantiateSubView
  */
-megamol::core::view::AbstractView* megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription* vd) {
+megamol::core::view::AbstractViewGL* megamol::core::CoreInstance::instantiateSubView(megamol::core::ViewDescription* vd) {
     using megamol::core::utility::log::Log;
     vislib::sys::AutoLock lock(this->namespaceRoot->ModuleGraphLock());
 
     bool hasErrors = false;
-    view::AbstractView *view = NULL, *fallbackView = NULL;
+    view::AbstractViewGL *view = NULL, *fallbackView = NULL;
 
     // instantiate modules
     for (unsigned int idx = 0; idx < vd->ModuleCount(); idx++) {
@@ -1597,7 +1597,7 @@ megamol::core::view::AbstractView* megamol::core::CoreInstance::instantiateSubVi
             continue;
 
         } else {
-            view::AbstractView* av = dynamic_cast<view::AbstractView*>(mod.get());
+            view::AbstractViewGL* av = dynamic_cast<view::AbstractViewGL*>(mod.get());
             if (av != NULL) {
                 // view module instantiated.
                 if (fullName.Equals(vd->ViewModuleID())) {

@@ -85,7 +85,7 @@ void view::AbstractRenderingView::EmptyTitleRenderer::Release(void){
 /*
  * view::AbstractRenderingView::AbstractRenderingView
  */
-view::AbstractRenderingView::AbstractRenderingView(void) : AbstractView(),
+view::AbstractRenderingView::AbstractRenderingView(void) : AbstractViewGL(),
         overrideBkgndCol(NULL), overrideViewport(NULL),
         bkgndColSlot("backCol", "The views background colour"),
         softCursor(false), softCursorSlot("softCursor", "Bool flag to activate software cursor rendering"),

@@ -105,8 +105,8 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) 
 bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractView> viewptr =
-        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
+    std::shared_ptr<const view::AbstractViewGL> viewptr =
+        std::dynamic_pointer_cast<const view::AbstractViewGL>(leftSlotParent);
     if (viewptr != nullptr) { // TODO move this behind the fbo magic?
         auto vp = call.GetViewport();
         glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());

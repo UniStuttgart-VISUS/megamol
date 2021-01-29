@@ -139,7 +139,7 @@ void cluster::simple::View::Render(const mmcRenderViewContext& context) {
         doSecondHeartbeat = ((c & 0x01) == 0x01);
         instTime = *this->heartbeatPayload.AsAt<double>(1);
         time = *this->heartbeatPayload.AsAt<float>(1 + sizeof(double));
-        view::AbstractView *view = this->GetConnectedView();
+        view::AbstractViewGL *view = this->GetConnectedView();
         if ((this->heartbeatPayload.GetSize() > 13) && (view != NULL)) {
             vislib::RawStorageSerialiser ser(&this->heartbeatPayload, 1 + sizeof(double) + sizeof(float));
             view->DeserialiseCamera(ser);
@@ -175,10 +175,10 @@ void cluster::simple::View::Render(const mmcRenderViewContext& context) {
         //        this->netVSyncBarrier->GetDataSize() - 4);
         //}
         AbstractNamedObject::const_ptr_type view_p;
-        view::AbstractView *view = NULL;
+        view::AbstractViewGL *view = NULL;
         if (crv->PeekCalleeSlot() != NULL) {
             view_p = crv->PeekCalleeSlot()->Parent();
-            view = dynamic_cast<view::AbstractView*>(
+            view = dynamic_cast<view::AbstractViewGL*>(
                 const_cast<AbstractNamedObject*>(view_p.get()));
         }
         if (view != NULL){
@@ -223,7 +223,7 @@ void cluster::simple::View::Render(const mmcRenderViewContext& context) {
         ASSERT(this->heartbeatPayload.GetSize() >= 12);
         instTime = *this->heartbeatPayload.As<double>();
         time = *this->heartbeatPayload.AsAt<float>(sizeof(double));
-        view::AbstractView *view = this->GetConnectedView();
+        view::AbstractViewGL *view = this->GetConnectedView();
         if ((this->heartbeatPayload.GetSize() > 12) && (view != NULL)) {
             vislib::RawStorageSerialiser ser(&this->heartbeatPayload, sizeof(double) + sizeof(float));
             view->DeserialiseCamera(ser);

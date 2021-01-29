@@ -110,7 +110,7 @@ bool megamol::remote::FBOTransmitter2::create() {
 void megamol::remote::FBOTransmitter2::release() { shutdownThreads(); }
 
 
-void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::AbstractView* view) {
+void megamol::remote::FBOTransmitter2::AfterRender(megamol::core::view::AbstractViewGL* view) {
 
 #ifdef WITH_MPI
     if (!this->render_comp_img_slot_.Param<core::param::BoolParam>()->Value()) {
@@ -413,8 +413,8 @@ bool megamol::remote::FBOTransmitter2::triggerButtonClicked(megamol::core::param
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "Transmission of \"%s\" requested", mvn.c_str());
 
     // this->ModuleGraphLock().LockExclusive();
-    const auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::view::AbstractView>(
-        mvn, [this](megamol::core::view::AbstractView* vi) { vi->RegisterHook(this); });
+    const auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::view::AbstractViewGL>(
+        mvn, [this](megamol::core::view::AbstractViewGL* vi) { vi->RegisterHook(this); });
     if (!ret) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "FBOTransmitter2: Unable to find VIEW \"%s\" for transmission", mvn.c_str());
@@ -435,7 +435,7 @@ bool megamol::remote::FBOTransmitter2::extractMetaData(float bbox[6], float fram
     // this->ModuleGraphLock().LockExclusive();
     const auto retBbox =
         this->GetCoreInstance()
-            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3DGL>(
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractViewGL, megamol::core::view::CallRender3DGL>(
                 mvn, [bbox](megamol::core::view::CallRender3DGL& cr3d) {
                     bbox[0] = cr3d.AccessBoundingBoxes().BoundingBox().GetLeft();
                     bbox[1] = cr3d.AccessBoundingBoxes().BoundingBox().GetBottom();
@@ -447,7 +447,7 @@ bool megamol::remote::FBOTransmitter2::extractMetaData(float bbox[6], float fram
 
     const auto retTimes =
         this->GetCoreInstance()
-            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3DGL>(
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractViewGL, megamol::core::view::CallRender3DGL>(
                 mvn, [frame_times](megamol::core::view::CallRender3DGL& cr3d) {
                     frame_times[0] = cr3d.Time();
                     frame_times[1] = static_cast<float>(cr3d.TimeFramesCount());
@@ -455,7 +455,7 @@ bool megamol::remote::FBOTransmitter2::extractMetaData(float bbox[6], float fram
 
     const auto retCam =
         this->GetCoreInstance()
-            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3DGL>(
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractViewGL, megamol::core::view::CallRender3DGL>(
                 mvn, [cam_params](megamol::core::view::CallRender3DGL& cr3d) {
                     core::view::Camera_2 cam;
                     cr3d.GetCamera(cam);
@@ -499,7 +499,7 @@ bool megamol::remote::FBOTransmitter2::extractViewport(int vvpt[6]) {
     // this->ModuleGraphLock().LockExclusive();
     auto const ret =
         this->GetCoreInstance()
-            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractView, megamol::core::view::CallRender3DGL>(
+            ->EnumerateCallerSlotsNoLock<megamol::core::view::AbstractViewGL, megamol::core::view::CallRender3DGL>(
                 mvn, [vvpt](megamol::core::view::CallRender3DGL& cr3d) {
                     core::view::Camera_2 cam;
                     cr3d.GetCamera(cam);
@@ -745,8 +745,8 @@ bool megamol::remote::FBOTransmitter2::renderCompChanged(core::param::ParamSlot&
 
     Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "FBOTransmitter2: Rendering to of \"%s\" requested", mvn.c_str());
 
-    const auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::view::AbstractView>(
-        mvn, [this](megamol::core::view::AbstractView* vi) { vi->RegisterHook(this); });
+    const auto ret = this->GetCoreInstance()->FindModuleNoLock<megamol::core::view::AbstractViewGL>(
+        mvn, [this](megamol::core::view::AbstractViewGL* vi) { vi->RegisterHook(this); });
     if (!ret) {
         Log::DefaultLog.WriteMsg(
             Log::LEVEL_ERROR, "FBOTransmitter2: Unable to find VIEW \"%s\" for transmission", mvn.c_str());

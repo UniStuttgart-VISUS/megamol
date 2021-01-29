@@ -12,7 +12,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmcore/view/AbstractViewGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "vislib/forceinline.h"
 
@@ -25,7 +25,7 @@ namespace view {
     /**
      * Abstract base class of override rendering views
      */
-    class MEGAMOLCORE_API AbstractOverrideView : public AbstractView {
+    class MEGAMOLCORE_API AbstractOverrideView : public AbstractViewGL {
     public:
 
         /** Ctor. */
@@ -145,7 +145,7 @@ namespace view {
          *
          * @return The connected view or NULL if no view is connected
          */
-        view::AbstractView *getConnectedView(void) const;
+        view::AbstractViewGL *getConnectedView(void) const;
 
     private:
 

@@ -15,7 +15,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/special/ClusterDisplayPlane.h"
 #include "mmcore/special/ClusterDisplayTile.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmcore/view/AbstractViewGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 
 
@@ -26,7 +26,7 @@ namespace special {
     /**
      * Special view module used for column based stereo displays
      */
-    class AbstractStereoDisplay : public view::AbstractView, public Module {
+    class AbstractStereoDisplay : public view::AbstractViewGL, public Module {
     public:
 
         /** Dtor. */

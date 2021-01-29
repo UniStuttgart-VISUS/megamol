@@ -24,7 +24,7 @@
 namespace megamol {
 namespace remote {
 
-class FBOTransmitter2 : public megamol::core::Module, public megamol::core::view::AbstractView::Hooks {
+class FBOTransmitter2 : public megamol::core::Module, public megamol::core::view::AbstractViewGL::Hooks {
 public:
     /**
      * Answer the name of this module.
@@ -64,7 +64,7 @@ public:
      */
     virtual ~FBOTransmitter2(void);
 
-    void AfterRender(megamol::core::view::AbstractView* view) override;
+    void AfterRender(megamol::core::view::AbstractViewGL* view) override;
 
 protected:
     bool create() override;

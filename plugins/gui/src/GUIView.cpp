@@ -14,7 +14,7 @@ using namespace megamol::gui;
 
 
 GUIView::GUIView()
-        : core::view::AbstractView()
+        : core::view::AbstractViewGL()
         , overrideCall(nullptr)
         , render_view_slot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
         , gui() {
@@ -140,8 +140,8 @@ void GUIView::Resize(unsigned int width, unsigned int height) {
     auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
     if (crv) {
         // der ganz ganz dicke "because-i-know"-Knueppel
-        AbstractView* view = const_cast<AbstractView*>(
-            dynamic_cast<const AbstractView*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
+        AbstractViewGL* view = const_cast<AbstractViewGL*>(
+            dynamic_cast<const AbstractViewGL*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
         if (view != nullptr) {
             view->Resize(width, height);
         }

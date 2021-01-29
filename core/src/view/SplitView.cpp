@@ -24,7 +24,7 @@ using megamol::core::utility::log::Log;
 enum Orientation { HORIZONTAL = 0, VERTICAL = 1 };
 
 view::SplitView::SplitView()
-    : AbstractView()
+    : AbstractViewGL()
     , render1Slot("render1", "Connects to the view 1 (left or top)")
     , render2Slot("render2", "Connects to the view 2 (right or bottom)")
     , splitOrientationSlot("split.orientation", "Splitter orientation")
@@ -178,8 +178,8 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
             return;
         }
         // der ganz ganz dicke "because-i-know"-Knueppel
-        auto* crvView = const_cast<AbstractView*>(
-            dynamic_cast<const AbstractView*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
+        auto* crvView = const_cast<AbstractViewGL*>(
+            dynamic_cast<const AbstractViewGL*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
         if (crvView != nullptr) {
             crvView->Resize(
                 static_cast<unsigned int>(clientArea.Width()), static_cast<unsigned int>(clientArea.Height()));

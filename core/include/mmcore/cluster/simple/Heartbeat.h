@@ -384,7 +384,7 @@ namespace simple {
         // *
         // * @return The connected view or NULL if no view is connected
         // */
-        //inline view::AbstractView *GetConnectedView(void) const {
+        //inline view::AbstractViewGL *GetConnectedView(void) const {
         //    return this->getConnectedView();
         //}
 

@@ -24,7 +24,7 @@
 #include "mmcore/ViewDescription.h"
 #include "mmcore/ViewInstance.h"
 #include "mmcore/view/AbstractTileView.h"
-#include "mmcore/view/AbstractView.h"
+#include "mmcore/view/AbstractViewGL.h"
 #include "mmcore/job/AbstractJob.h"
 #include "mmcore/factories/ModuleDescriptionManager.h"
 #include "mmcore/factories/CallDescriptionManager.h"
