@@ -46,7 +46,7 @@ megamol::remote::HeadnodeServer::HeadnodeServer()
     this->MakeSlotAvailable(&this->start_server_slot_);
 
 
-    this->view_slot_.SetCompatibleCall<core::view::CallRenderViewDescription>();
+    this->view_slot_.SetCompatibleCall<core::view::CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->view_slot_);
 
     buffer_has_changed_.store(false);

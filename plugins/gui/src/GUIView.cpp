@@ -19,7 +19,7 @@ GUIView::GUIView()
         , render_view_slot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
         , gui() {
 
-    this->render_view_slot.SetCompatibleCall<core::view::CallRenderViewDescription>();
+    this->render_view_slot.SetCompatibleCall<core::view::CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->render_view_slot);
 }
 

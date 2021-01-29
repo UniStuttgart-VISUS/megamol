@@ -63,7 +63,7 @@ cluster::ClusterViewMaster::ClusterViewMaster(void)
     this->viewNameSlot.SetUpdateCallback(&ClusterViewMaster::onViewNameChanged);
     this->MakeSlotAvailable(&this->viewNameSlot);
 
-    this->viewSlot.SetCompatibleCall<view::CallRenderViewDescription>();
+    this->viewSlot.SetCompatibleCall<view::CallRenderViewGLDescription>();
     // TODO: this->viewSlot.SetVisibility(false);
     this->MakeSlotAvailable(&this->viewSlot);
 

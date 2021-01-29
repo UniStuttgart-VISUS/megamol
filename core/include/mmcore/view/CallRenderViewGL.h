@@ -519,7 +519,7 @@ namespace view {
 
     /** Description class typedef */
     typedef factories::CallAutoDescription<CallRenderViewGL>
-        CallRenderViewDescription;
+        CallRenderViewGLDescription;
 
 
 } /* end namespace view */

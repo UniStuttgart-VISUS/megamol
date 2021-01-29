@@ -19,7 +19,7 @@ view::AbstractOverrideView::AbstractOverrideView(void) : AbstractViewGL(),
         renderViewSlot("renderView", "Slot for outgoing rendering requests to other views"),
         viewportWidth(1), viewportHeight(1) {
 
-    this->renderViewSlot.SetCompatibleCall<view::CallRenderViewDescription>();
+    this->renderViewSlot.SetCompatibleCall<view::CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->renderViewSlot);
 
 }

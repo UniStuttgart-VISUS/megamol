@@ -24,7 +24,7 @@ megamol::stdplugin::datatools::DataFileSequenceStepper::DataFileSequenceStepper(
         nextFileSlot("nextFile", "Button parameter to switch to the next file"),
         prevFileSlot("prevFile", "Button parameter to switch to the previous file") {
 
-    this->conSlot.SetCompatibleCall<core::view::CallRenderViewDescription>();
+    this->conSlot.SetCompatibleCall<core::view::CallRenderViewGLDescription>();
     // TODO: Connection to a job would also be nice
     this->MakeSlotAvailable(&this->conSlot);
 

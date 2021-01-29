@@ -318,7 +318,7 @@ cluster::simple::Server::Server(void)
     this->viewnameSlot.SetUpdateCallback(&Server::onViewNameUpdated);
     this->MakeSlotAvailable(&this->viewnameSlot);
 
-    this->viewSlot.SetCompatibleCall<view::CallRenderViewDescription>();
+    this->viewSlot.SetCompatibleCall<view::CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->viewSlot);
 
     this->udpTargetSlot << new param::StringParam("");

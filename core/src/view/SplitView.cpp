@@ -44,10 +44,10 @@ view::SplitView::SplitView()
     , mouseX(0.0f)
     , mouseY(0.0f)
     , dragSplitter(false) {
-    this->render1Slot.SetCompatibleCall<CallRenderViewDescription>();
+    this->render1Slot.SetCompatibleCall<CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->render1Slot);
 
-    this->render2Slot.SetCompatibleCall<CallRenderViewDescription>();
+    this->render2Slot.SetCompatibleCall<CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->render2Slot);
 
     auto* orientations = new param::EnumParam(0);

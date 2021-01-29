@@ -27,7 +27,7 @@ viewSlot("view", "Connects to a view"),
 tickSlot("tick", "Connects to a module that needs a tick"),
 override_view_call(nullptr) {
 
-    this->viewSlot.SetCompatibleCall<view::CallRenderViewDescription>();
+    this->viewSlot.SetCompatibleCall<view::CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->viewSlot);
 
     this->tickSlot.SetCompatibleCall<job::TickCall::TickCallDescription>();
