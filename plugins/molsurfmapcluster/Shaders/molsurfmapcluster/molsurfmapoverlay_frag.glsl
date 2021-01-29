@@ -30,17 +30,26 @@ void main()
     vec3 defview = vec3(0.0, 0.0, -1.0);
     vec2 point = vec2(0.5, 0.5); // dummy 
 
-    vec3 v = -viewvec;
-    float theta = acos(v.z); // we assume that r = 1
-    float phi = atan(v.y / v.x);
+    vec3 v = -normalize(viewvec);
+    //float theta = acos(v.z); // we assume that r = 1
+    //float phi = atan(v.x / v.z);
 
-    point.x = theta / pi;
-    point.y = sin(phi);
+    //point.x = theta / pi;
+    //point.y = sin(phi);
 
     vec2 ntexCoord = vec2(texCoord.x, 1.0 - texCoord.y);
     vec4 color = texture(tex, ntexCoord);
 
-    if(distance(ntexCoord, point) > 0.25) {
+    float xangle = -(texCoord.x * 2.0 * pi + 0.5 * pi);
+    float yval = texCoord.y * 2.0 - 1.0;
+    vec3 pos;
+    pos.x = cos(xangle);
+    pos.z = sin(xangle);
+    pos.y = yval;
+    pos = normalize(pos);
+    //v = vec3(1.0, 0.0, 0.0);
+//    if(distance(ntexCoord, point) > 0.25) {
+    if(dot(pos, v) < 0.05) {
         vec3 c = rgb2hsv(color.xyz);
         c.z = c.z * 0.5;
         c = hsv2rgb(c);
