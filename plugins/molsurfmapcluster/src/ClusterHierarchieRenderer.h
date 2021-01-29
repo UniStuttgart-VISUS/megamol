@@ -30,7 +30,7 @@ namespace megamol {
 namespace molsurfmapcluster {
 
 /**
- * Mesh-based renderer for bézier curve tubes
+ * Mesh-based renderer for bÃ©zier curve tubes
  */
 class ClusterHierarchieRenderer : public core::view::Renderer2DModule {
 public:
@@ -168,6 +168,8 @@ private:
 
     // Popup
     HierarchicalClustering::CLUSTERNODE* popup;
+    HierarchicalClustering::CLUSTERNODE* leftmarked;
+    HierarchicalClustering::CLUSTERNODE* rightmarked;
     int x;
     int y;
 

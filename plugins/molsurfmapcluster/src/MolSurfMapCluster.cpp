@@ -26,6 +26,7 @@
 #include "ClusteringLoader.h"
 #include "Clustering_2.h"
 #include "PNGPicLoader.h"
+#include "ProteinViewRenderer.h"
 
 /* anonymous namespace hides this type from any other object files */
 namespace {
@@ -40,7 +41,7 @@ public:
               "MolecularSurfaceMapCluster", // TODO: Change this!
 
               /* human-readable plugin description */
-              "Vergleichende Visualisierung von Moleküloberflächen durch ähnlichkeitsbasiertes Clustering (Comparative "
+              "Vergleichende Visualisierung von MolekÃ¼loberflÃ¤chen durch Ã¤hnlichkeitsbasiertes Clustering (Comparative "
               "Visualization of Molecular Surfaces using Similarity-based Clustering)"){
 
               // here we could perform addition initialization
@@ -61,6 +62,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::Clustering_2>();
         this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusterMapRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ClusterGraphRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::ProteinViewRenderer>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::molsurfmapcluster::CallPNGPics>();

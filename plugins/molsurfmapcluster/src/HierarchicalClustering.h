@@ -63,6 +63,8 @@ public:
         std::vector<double>* pca2d;
 
         float height;
+
+        int marking;
     };
 
     /** Constructor */

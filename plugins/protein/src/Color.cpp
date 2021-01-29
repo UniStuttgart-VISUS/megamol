@@ -20,6 +20,7 @@
 #include "mmcore/CoreInstance.h"
 #include <string>
 #include <iostream>
+#include "glm/glm.hpp"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -742,6 +743,7 @@ std::pair<float, float> Color::MakeColorTable(const megamol::protein_calls::Mole
             }
         } // ... END coloring mode CHARGE
         else if (currentColoringMode == OCCUPANCY) {
+        #if 0
             float r, g, b;
             // get min color
             utility::ColourParser::FromString(minGradColor, r, g, b);
@@ -792,6 +794,52 @@ std::pair<float, float> Color::MakeColorTable(const megamol::protein_calls::Mole
                     atomColorTable.Add(colMid.GetZ());
                 }
             }
+            #else
+            float r, g, b;
+            utility::ColourParser::FromString("#ffffbf", r, g, b);
+            glm::vec3 colpyr(r, g, b);
+            utility::ColourParser::FromString("#ef8a62", r, g, b);
+            glm::vec3 colpp(r, g, b);
+            utility::ColourParser::FromString("#67a9cf", r, g, b);
+            glm::vec3 coltkc(r, g, b);
+            utility::ColourParser::FromString("#000000", r, g, b);
+            glm::vec3 colcofac(r, g, b);
+            glm::vec3 col;
+
+            float min_val(mol->MinimumOccupancy());
+            float max_val(mol->MaximumOccupancy());
+            float val;
+            result = std::make_pair(min_val, max_val);
+
+            for (cnt = 0; cnt < mol->AtomCount(); ++cnt) {
+                if (min_val == max_val) {
+                    atomColorTable.Add(colpyr.r);
+                    atomColorTable.Add(colpyr.g);
+                    atomColorTable.Add(colpyr.b);
+                    continue;
+                }
+
+                val = mol->AtomOccupancies()[cnt];
+                int intval = static_cast<int>(val + 0.25f);
+                if (intval == 0) {
+                    atomColorTable.Add(colpyr.r);
+                    atomColorTable.Add(colpyr.g);
+                    atomColorTable.Add(colpyr.b);
+                } else if (intval == 1) {
+                    atomColorTable.Add(colpp.r);
+                    atomColorTable.Add(colpp.g);
+                    atomColorTable.Add(colpp.b);
+                } else if (intval == 2) {
+                    atomColorTable.Add(coltkc.r);
+                    atomColorTable.Add(coltkc.g);
+                    atomColorTable.Add(coltkc.b);
+                } else if (intval == 3) {
+                    atomColorTable.Add(colcofac.r);
+                    atomColorTable.Add(colcofac.g);
+                    atomColorTable.Add(colcofac.b);
+                }
+            }
+            #endif
         } // ... END coloring mode OCCUPANCY
         else if (currentColoringMode == CHAIN) {
             // get the last atom of the last res of the last mol of the first chain

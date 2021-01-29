@@ -133,6 +133,8 @@ ClusterHierarchieRenderer::ClusterHierarchieRenderer(void)
     this->newposition = false;
     this->position = nullptr;
     this->root = nullptr;
+    this->leftmarked = nullptr;
+    this->rightmarked = nullptr;
 
     this->newcolor = false;
     this->hashoffset = 0;
@@ -477,13 +479,27 @@ double ClusterHierarchieRenderer::drawTree(HierarchicalClustering::CLUSTERNODE* 
 
         if (this->addIdParam.Param<param::BoolParam>()->Value()) {
             auto substr = node->pic->pdbid.substr(0, 4);
+            std::string leftsubstr = "", rightsubstr = "";
             auto stringToDraw = substr.c_str();
             auto lineWidth = theFont.LineWidth(height, stringToDraw);
 
-            std::array<float, 4> color = {0.1f, 0.1f, 0.1f, 1.0f};
-            this->theFont.DrawString(color.data(), posx, yp, height, false, stringToDraw,
-                core::utility::AbstractFont::Alignment::ALIGN_CENTER_MIDDLE);
+            std::array<float, 4> black = {0.1f, 0.1f, 0.1f, 1.0f};
+            std::array<float, 4> red = {1.0f, 0.0f, 0.0f, 1.0f};
 
+            if (this->leftmarked) {
+                leftsubstr = leftmarked->pic->pdbid.substr(0, 4);
+            }
+            if (this->rightmarked) {
+                rightsubstr = rightmarked->pic->pdbid.substr(0, 4);
+            }
+            
+            if (substr.compare(leftsubstr) && substr.compare(rightsubstr)) {
+                this->theFont.DrawString(black.data(), posx, yp, height, false, stringToDraw,
+                    core::utility::AbstractFont::Alignment::ALIGN_CENTER_MIDDLE);
+            } else {
+                this->theFont.DrawString(red.data(), posx, yp, height, false, stringToDraw,
+                    core::utility::AbstractFont::Alignment::ALIGN_CENTER_MIDDLE);
+            }
             yp -= height * 1.05f;
         }
 
@@ -588,10 +604,19 @@ bool ClusterHierarchieRenderer::Render(view::CallRender2D& call) {
             double spacey = height / (this->root->level);
             double spacex = width / (this->clustering->getLeaves()->size() - 1);
 
+            GLboolean blend, depth;
+            glGetBooleanv(GL_BLEND, &blend);
+            glGetBooleanv(GL_DEPTH_TEST, &depth);
+            glDisable(GL_BLEND);
+            glDisable(GL_DEPTH_TEST);
             drawTree(this->root, mvp, minheight, minwidth, spacey, spacex, colors);
-
-            // Render Popup
             renderPopup(mvp);
+            if (blend == GL_TRUE) {
+                glEnable(GL_BLEND);
+            }
+            if (depth) {
+                glEnable(GL_DEPTH_TEST);
+            }
         }
     }
     return true;
@@ -676,13 +701,15 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
 
         if (checkposition(this->root, this->mouseX, this->mouseY, minheight, minwidth, spacey, spacex, distanceX,
                 distanceY) == -1) {
+            if (this->popup == nullptr)
+                return false;
             auto pdbid = this->popup->pic->pdbid;
 
             if (action == core::view::MouseButtonAction::PRESS) {
                 auto ci = this->GetCoreInstance();
                 auto istart = ci->ModuleGraphRoot()->ChildList_Begin();
                 auto iend = ci->ModuleGraphRoot()->ChildList_End();
-                std::string instname = "inst";
+                std::string instname = "";
                 for (auto it = istart; it != iend; ++it) {
                     core::AbstractNamedObject::ptr_type ptr = *it;
                     if (ptr != nullptr)
@@ -690,15 +717,17 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
                 }
 
                 auto left =
-                    ci->FindParameter((std::string("::") + instname + std::string("::left::pdbFilename")).c_str());
+                    ci->FindParameter((std::string("::") + instname + std::string("::leftpdb::pdbFilename")).c_str());
                 auto right =
-                    ci->FindParameter((std::string("::") + instname + std::string("::right::pdbFilename")).c_str());
+                    ci->FindParameter((std::string("::") + instname + std::string("::rightpdb::pdbFilename")).c_str());
                 vislib::SmartPtr<core::param::AbstractParam> curparam = nullptr;
 
                 if (button == core::view::MouseButton::BUTTON_LEFT) {
                     curparam = left;
+                    this->leftmarked = this->popup;
                 } else if (button == core::view::MouseButton::BUTTON_RIGHT) {
                     curparam = right;
+                    this->rightmarked = this->popup;
                 }
 
                 if (!curparam.IsNull()) {
@@ -710,6 +739,12 @@ bool ClusterHierarchieRenderer::OnMouseButton(megamol::core::view::MouseButton b
                     if (!res)
                         std::cout << "Could not change parameter" << std::endl;
                 }
+            }
+        } else {
+            if (button == core::view::MouseButton::BUTTON_LEFT) {
+                this->leftmarked = nullptr;
+            } else if (button == core::view::MouseButton::BUTTON_RIGHT) {
+                this->rightmarked = nullptr;
             }
         }
     }
@@ -871,6 +906,7 @@ double ClusterHierarchieRenderer::checkposition(HierarchicalClustering::CLUSTERN
         }
 
     } else {
+        
         posLeft = checkposition(node->left, x, y, minheight, minwidth, spacey, spacex, distanceX, distanceY);
         posRight = checkposition(node->right, x, y, minheight, minwidth, spacey, spacex, distanceX, distanceY);
 

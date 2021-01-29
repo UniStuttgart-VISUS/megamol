@@ -134,6 +134,7 @@ bool ImageLoader::GetMetaData(core::Call& call) {
         this->imageData->clear();
         auto tpath = this->filenameSlot.Param<param::FilePathParam>()->Value();
         std::filesystem::path path(tpath.PeekBuffer());
+        std::cout << path << std::endl;
 
         this->availableFiles->clear();
 
@@ -165,7 +166,7 @@ bool ImageLoader::GetMetaData(core::Call& call) {
                 }
             } else {
                 core::utility::log::Log::DefaultLog.WriteError(
-                    "ImageLoader: The file \"%s\" could not be opened", path);
+                    "ImageLoader: The file \"%s\" could not be opened", path.string());
                 return false;
             }
         }

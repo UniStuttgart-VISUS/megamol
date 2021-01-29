@@ -170,7 +170,6 @@ void OverlayRenderer::release(void) {
 bool OverlayRenderer::create(void) {
 
     return this->onToggleMode(this->paramMode);
-    ;
 }
 
 
