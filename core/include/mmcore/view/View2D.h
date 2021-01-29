@@ -13,7 +13,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractRenderingView.h"
+#include "mmcore/view/AbstractRenderingViewGL.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/TimeControl.h"
 #include "vislib/math/Rectangle.h"
@@ -31,7 +31,7 @@ namespace view {
     /**
      * Base class of rendering graph calls
      */
-    class View2D: public AbstractRenderingView {
+    class View2D: public AbstractRenderingViewGL {
     public:
 
         /**

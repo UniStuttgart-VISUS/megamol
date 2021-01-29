@@ -29,7 +29,7 @@ using namespace megamol::core;
  * view::View2D::View2D
  */
 view::View2D::View2D(void)
-    : view::AbstractRenderingView()
+    : view::AbstractRenderingViewGL()
     , firstImg(false)
     , height(1.0f)
     , mouseMode(MouseMode::Propagate)
@@ -141,7 +141,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
 
     CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
 
-    AbstractRenderingView::beginFrame();
+    AbstractRenderingViewGL::beginFrame();
 
     // clear viewport
     int vpx = 0, vpy = 0;
@@ -169,7 +169,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     if (cr2d == NULL) {
         this->renderTitle(0.0f, 0.0f, this->width, this->height,
             this->width, this->height, false, false, instTime);
-        AbstractRenderingView::endFrame(true);
+        AbstractRenderingViewGL::endFrame(true);
         return;
     } else {
         this->removeTitleRenderer();
@@ -195,7 +195,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     cr2d->SetTime(time);
     cr2d->SetInstanceTime(instTime);
     cr2d->SetGpuAffinity(context.GpuAffinity);
-    cr2d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
+    cr2d->SetLastFrameTime(AbstractRenderingViewGL::lastFrameTime());
 
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
@@ -302,7 +302,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
         ::glEnd();
     }
 
-    AbstractRenderingView::endFrame();
+    AbstractRenderingViewGL::endFrame();
 
 }
 

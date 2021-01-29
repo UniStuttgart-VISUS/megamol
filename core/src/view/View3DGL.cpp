@@ -53,7 +53,7 @@ using namespace megamol::core::view;
  * View3DGL::View3DGL
  */
 View3DGL::View3DGL(void)
-    : view::AbstractRenderingView()
+    : view::AbstractRenderingViewGL()
     /*, view::AbstractCamParamSync()*/
     , cursor2d()
     , rendererSlot("rendering", "Connects the view to a Renderer")
@@ -381,7 +381,7 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
 
     this->handleCameraMovement();
 
-    AbstractRenderingView::beginFrame();
+    AbstractRenderingViewGL::beginFrame();
 
     // TODO Conditionally synchronise camera from somewhere else.
     // this->SyncCamParams(this->cam.Parameters());
@@ -489,7 +489,7 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
 
         // TODO
         // cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
-        cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
+        cr3d->SetLastFrameTime(AbstractRenderingViewGL::lastFrameTime());
 
         auto currentTime = std::chrono::high_resolution_clock::now();
         this->lastFrameDuration =
@@ -530,7 +530,7 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
 
     this->setCameraValues(this->cam);
 
-    AbstractRenderingView::endFrame();
+    AbstractRenderingViewGL::endFrame();
 
     // this->lastFrameParams->CopyFrom(this->OnGetCamParams, false);
 

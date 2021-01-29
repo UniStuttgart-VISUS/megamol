@@ -1,5 +1,5 @@
 /*
- * AbstractRenderingView.h
+ * AbstractRenderingViewGL.h
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart). 
  * Alle Rechte vorbehalten.
@@ -26,7 +26,7 @@ namespace view {
     /**
      * Abstract base class of rendering views
      */
-    class MEGAMOLCORE_API AbstractRenderingView : public AbstractViewGL {
+    class MEGAMOLCORE_API AbstractRenderingViewGL : public AbstractViewGL {
     public:
 
         /**
@@ -74,10 +74,10 @@ namespace view {
         };
 
         /** Ctor. */
-        AbstractRenderingView(void);
+        AbstractRenderingViewGL(void);
 
         /** Dtor. */
-        virtual ~AbstractRenderingView(void);
+        virtual ~AbstractRenderingViewGL(void);
 
         /**
         * Answer the background colour for the view

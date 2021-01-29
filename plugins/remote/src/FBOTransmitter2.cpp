@@ -535,8 +535,8 @@ bool megamol::remote::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& b
     std::string mvn(view_name_slot_.Param<megamol::core::param::StringParam>()->Value());
 
     // this->ModuleGraphLock().LockExclusive();
-    const auto ret = this->GetCoreInstance()->FindModuleNoLock<core::view::AbstractRenderingView>(
-        mvn, [&bkgnd_color](core::view::AbstractRenderingView* arv) {
+    const auto ret = this->GetCoreInstance()->FindModuleNoLock<core::view::AbstractRenderingViewGL>(
+        mvn, [&bkgnd_color](core::view::AbstractRenderingViewGL* arv) {
             const float* bkgndCol = arv->BkgndColour();
             if (bkgndCol != nullptr) {
                 bkgnd_color[0] = bkgndCol[0];

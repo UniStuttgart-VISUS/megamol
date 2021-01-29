@@ -13,7 +13,7 @@
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/view/AbstractRenderingView.h"
+#include "mmcore/view/AbstractRenderingViewGL.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 
 #include "vislib/graphics/gl/ShaderSource.h"
@@ -408,7 +408,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     glUniform3fv(compute_shdr->ParameterLocation("material_col"), 1,
         this->m_material_color.Param<core::param::ColorParam>()->Value().data());
 
-    auto const arv = std::dynamic_pointer_cast<core::view::AbstractRenderingView const>(cr.PeekCallerSlot()->Parent());
+    auto const arv = std::dynamic_pointer_cast<core::view::AbstractRenderingViewGL const>(cr.PeekCallerSlot()->Parent());
     std::array<float, 4> bkgndCol = {1.0f, 1.0f, 1.0f, 1.0f};
     if (arv != nullptr) {
         auto const ptr = arv->BkgndColour();

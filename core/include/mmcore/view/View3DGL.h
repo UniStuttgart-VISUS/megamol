@@ -19,7 +19,7 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractCallRenderGL.h"
-#include "mmcore/view/AbstractRenderingView.h"
+#include "mmcore/view/AbstractRenderingViewGL.h"
 #include "mmcore/view/CameraSerializer.h"
 #include "mmcore/view/Camera_2.h"
 #include "mmcore/view/MouseFlags.h"
@@ -30,7 +30,7 @@ namespace megamol {
 namespace core {
 namespace view {
 
-class MEGAMOLCORE_API View3DGL : public view::AbstractRenderingView /*, public view::AbstractCamParamSync*/ {
+class MEGAMOLCORE_API View3DGL : public view::AbstractRenderingViewGL /*, public view::AbstractCamParamSync*/ {
 
 public:
     /**

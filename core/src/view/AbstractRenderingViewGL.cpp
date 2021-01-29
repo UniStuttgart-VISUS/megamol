@@ -1,5 +1,5 @@
 /*
- * AbstractRenderingView.cpp
+ * AbstractRenderingViewGL.cpp
  *
  * Copyright (C) 2010 by VISUS (Universitaet Stuttgart). 
  * Alle Rechte vorbehalten.
@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "mmcore/view/AbstractRenderingView.h"
+#include "mmcore/view/AbstractRenderingViewGL.h"
 #include "mmcore/AbstractNamedObject.h"
 #include "vislib/String.h"
 #include "mmcore/param/BoolParam.h"
@@ -22,50 +22,50 @@ using namespace megamol::core;
 
 
 /*
- * view::AbstractRenderingView::AbstractTitleRenderer::AbstractTitleRenderer
+ * view::AbstractRenderingViewGL::AbstractTitleRenderer::AbstractTitleRenderer
  */
-view::AbstractRenderingView::AbstractTitleRenderer::AbstractTitleRenderer(void) {
+view::AbstractRenderingViewGL::AbstractTitleRenderer::AbstractTitleRenderer(void) {
     // intentionally empty
 }
 
 
 /*
- * view::AbstractRenderingView::AbstractTitleRenderer::~AbstractTitleRenderer
+ * view::AbstractRenderingViewGL::AbstractTitleRenderer::~AbstractTitleRenderer
  */
-view::AbstractRenderingView::AbstractTitleRenderer::~AbstractTitleRenderer(void) {
+view::AbstractRenderingViewGL::AbstractTitleRenderer::~AbstractTitleRenderer(void) {
     // intentionally empty
 }
 
 
 /*
- * view::AbstractRenderingView::EmptyTitleRenderer::EmptyTitleRenderer
+ * view::AbstractRenderingViewGL::EmptyTitleRenderer::EmptyTitleRenderer
  */
-view::AbstractRenderingView::EmptyTitleRenderer::EmptyTitleRenderer(void) {
+view::AbstractRenderingViewGL::EmptyTitleRenderer::EmptyTitleRenderer(void) {
     // intentionally empty
 }
 
 
 /*
- * view::AbstractRenderingView::EmptyTitleRenderer::~EmptyTitleRenderer
+ * view::AbstractRenderingViewGL::EmptyTitleRenderer::~EmptyTitleRenderer
  */
-view::AbstractRenderingView::EmptyTitleRenderer::~EmptyTitleRenderer(void) {
+view::AbstractRenderingViewGL::EmptyTitleRenderer::~EmptyTitleRenderer(void) {
     // intentionally empty
 }
 
 
 /*
- * view::AbstractRenderingView::EmptyTitleRenderer::Create
+ * view::AbstractRenderingViewGL::EmptyTitleRenderer::Create
  */
-bool view::AbstractRenderingView::EmptyTitleRenderer::Create(void) {
+bool view::AbstractRenderingViewGL::EmptyTitleRenderer::Create(void) {
     // intentionally empty
     return true;
 }
 
 
 /*
- * view::AbstractRenderingView::EmptyTitleRenderer::Render
+ * view::AbstractRenderingViewGL::EmptyTitleRenderer::Render
  */
-void view::AbstractRenderingView::EmptyTitleRenderer::Render(
+void view::AbstractRenderingViewGL::EmptyTitleRenderer::Render(
         float tileX, float tileY, float tileW, float tileH,
         float virtW, float virtH, bool stereo, bool leftEye, double instTime,
         class ::megamol::core::CoreInstance *core) {
@@ -75,17 +75,17 @@ void view::AbstractRenderingView::EmptyTitleRenderer::Render(
 
 
 /*
- * view::AbstractRenderingView::EmptyTitleRenderer::Release
+ * view::AbstractRenderingViewGL::EmptyTitleRenderer::Release
  */
-void view::AbstractRenderingView::EmptyTitleRenderer::Release(void){
+void view::AbstractRenderingViewGL::EmptyTitleRenderer::Release(void){
     // intentionally empty
 }
 
 
 /*
- * view::AbstractRenderingView::AbstractRenderingView
+ * view::AbstractRenderingViewGL::AbstractRenderingViewGL
  */
-view::AbstractRenderingView::AbstractRenderingView(void) : AbstractViewGL(),
+view::AbstractRenderingViewGL::AbstractRenderingViewGL(void) : AbstractViewGL(),
         overrideBkgndCol(NULL), overrideViewport(NULL),
         bkgndColSlot("backCol", "The views background colour"),
         softCursor(false), softCursorSlot("softCursor", "Bool flag to activate software cursor rendering"),
@@ -105,9 +105,9 @@ view::AbstractRenderingView::AbstractRenderingView(void) : AbstractViewGL(),
 
 
 /*
- * view::AbstractRenderingView::~AbstractRenderingView
+ * view::AbstractRenderingViewGL::~AbstractRenderingViewGL
  */
-view::AbstractRenderingView::~AbstractRenderingView(void) {
+view::AbstractRenderingViewGL::~AbstractRenderingViewGL(void) {
     this->removeTitleRenderer();
     this->overrideBkgndCol = NULL; // DO NOT DELETE
     this->overrideViewport = NULL; // DO NOT DELETE
@@ -115,9 +115,9 @@ view::AbstractRenderingView::~AbstractRenderingView(void) {
 
 
 /*
-* view::AbstractRenderingView::bkgndColour
+* view::AbstractRenderingViewGL::bkgndColour
 */
-const float *view::AbstractRenderingView::BkgndColour(void) const {
+const float *view::AbstractRenderingViewGL::BkgndColour(void) const {
     if (this->bkgndColSlot.IsDirty()) {
         this->bkgndColSlot.ResetDirty();
         this->bkgndColSlot.Param<param::ColorParam>()->Value(this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]);
@@ -127,9 +127,9 @@ const float *view::AbstractRenderingView::BkgndColour(void) const {
 
 
 /*
- * view::AbstractRenderingView::beginFrame
+ * view::AbstractRenderingViewGL::beginFrame
  */
-void view::AbstractRenderingView::beginFrame(void) {
+void view::AbstractRenderingViewGL::beginFrame(void) {
     vislib::sys::AutoLock(this->fpsLock);
 
     // The first thread that ever draws with this view will count the FPS
@@ -145,9 +145,9 @@ void view::AbstractRenderingView::beginFrame(void) {
 
 
 /*
- * view::AbstractRenderingView::endFrame
+ * view::AbstractRenderingViewGL::endFrame
  */
-void view::AbstractRenderingView::endFrame(bool abort) {
+void view::AbstractRenderingViewGL::endFrame(bool abort) {
     vislib::sys::AutoLock(this->fpsLock);
 
     if (!abort) {
@@ -173,17 +173,17 @@ void view::AbstractRenderingView::endFrame(bool abort) {
 
 
 /*
- * view::AbstractRenderingView::lastFrameTime
+ * view::AbstractRenderingViewGL::lastFrameTime
  */
-double view::AbstractRenderingView::lastFrameTime(void) const {
+double view::AbstractRenderingViewGL::lastFrameTime(void) const {
     return this->fpsCounter.LastFrameTime();
 }
 
 
 /*
- * view::AbstractRenderingView::showSoftCursor
+ * view::AbstractRenderingViewGL::showSoftCursor
  */
-bool view::AbstractRenderingView::showSoftCursor(void) const {
+bool view::AbstractRenderingViewGL::showSoftCursor(void) const {
     if (this->softCursorSlot.IsDirty()) {
         this->softCursorSlot.ResetDirty();
         this->softCursor = this->softCursorSlot.Param<param::BoolParam>()->Value();
@@ -193,9 +193,9 @@ bool view::AbstractRenderingView::showSoftCursor(void) const {
 
 
 /*
- * view::AbstractRenderingView::renderTitle
+ * view::AbstractRenderingViewGL::renderTitle
  */
-void view::AbstractRenderingView::renderTitle(
+void view::AbstractRenderingViewGL::renderTitle(
         float tileX, float tileY, float tileW, float tileH,
         float virtW, float virtH, bool stereo, bool leftEye, double instTime) const {
     //if (!this->titleRenderer) {
@@ -214,9 +214,9 @@ void view::AbstractRenderingView::renderTitle(
 
 
 /*
- * view::AbstractRenderingView::removeTitleRenderer
+ * view::AbstractRenderingViewGL::removeTitleRenderer
  */
-void view::AbstractRenderingView::removeTitleRenderer(void) const {
+void view::AbstractRenderingViewGL::removeTitleRenderer(void) const {
     if (this->titleRenderer) {
         this->titleRenderer->Release();
         delete this->titleRenderer;
@@ -226,8 +226,8 @@ void view::AbstractRenderingView::removeTitleRenderer(void) const {
 
 
 /*
- * view::AbstractRenderingView::toggleSoftCurse
+ * view::AbstractRenderingViewGL::toggleSoftCurse
  */
-void view::AbstractRenderingView::toggleSoftCurse(void) {
+void view::AbstractRenderingViewGL::toggleSoftCurse(void) {
     this->softCursorSlot.Param<param::BoolParam>()->SetValue(!this->softCursor);
 }

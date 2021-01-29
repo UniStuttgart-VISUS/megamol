@@ -9,7 +9,7 @@
 
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractRenderingView.h"
+#include "mmcore/view/AbstractRenderingViewGL.h"
 
 #include "FBOCommFabric.h"
 #include "FBOProto.h"
