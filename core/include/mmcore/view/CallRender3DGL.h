@@ -5,11 +5,7 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CallRender3D_2_H_INCLUDED
-#define MEGAMOLCORE_CallRender3D_2_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
+#pragma once
 
 #include <glm/glm.hpp>
 #include "mmcore/api/MegaMolCore.std.h"
@@ -163,10 +159,8 @@ private:
 #endif /* _WIN32 */
 
 /** Description class typedef */
-typedef factories::CallAutoDescription<CallRender3DGL> CallRender3D_2Description;
+typedef factories::CallAutoDescription<CallRender3DGL> CallRender3DGLDescription;
 
 } // namespace view
 } /* end namespace core */
 } /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_CallRender3D_2_H_INCLUDED */
