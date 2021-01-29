@@ -43,15 +43,21 @@ namespace gui {
         bool StateFromJSON(const nlohmann::json& in_json, const std::string& module_fullname);
         bool StateToJSON(nlohmann::json& inout_json, const std::string& module_fullname);
 
-
     private:
+        class GroupWidgetData;
+
+        typedef std::map<std::string, GroupWidgetData> GroupWidgets_t;
+        typedef std::pair<const std::string, GroupWidgetData> GroupWidgetData_t;
+
         typedef std::vector<megamol::gui::Parameter*> ParamPtrVector_t;
         typedef std::map<std::string, ParamPtrVector_t> ParamGroup_t;
-        typedef std::function<bool(ParamPtrVector_t& params, const std::string& in_search,
-            megamol::core::param::AbstractParamPresentation::Presentation presentation,
-            megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer)>
-            GroupWidgetCallbackFunc_t;
 
+        typedef std::function<bool(GroupWidgetData_t& group_widget_data, ParamPtrVector_t params,
+            const std::string& in_module_fullname, const std::string& in_search,
+            megamol::gui::ParameterPresentation::WidgetScope in_scope,
+            const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
+            ImGuiID in_override_header_state, PickingBuffer* inout_picking_buffer)>
+            GroupWidgetCallbackFunc_t;
 
         // Data needed for group widgets
         class GroupWidgetData : public megamol::core::param::AbstractParamPresentation {
@@ -65,9 +71,10 @@ namespace gui {
             GroupWidgetCallbackFunc_t callback;
         };
 
+
         // VARIABLES --------------------------------------------------------------
 
-        std::map<std::string, GroupWidgetData> group_widget_ids;
+        GroupWidgets_t group_widgets;
 
         // Widgets
         HoverToolTip tooltip;
@@ -95,13 +102,17 @@ namespace gui {
             const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
             ImGuiID in_override_header_state);
 
-        bool group_widget_animation(ParamPtrVector_t& params, const std::string& in_search,
-            megamol::core::param::AbstractParamPresentation::Presentation presentation,
-            megamol::gui::ParameterPresentation::WidgetScope in_scope);
+        bool group_widget_animation(GroupWidgetData_t& group_widget_data, ParamPtrVector_t params,
+            const std::string& in_module_fullname, const std::string& in_search,
+            megamol::gui::ParameterPresentation::WidgetScope in_scope,
+            const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
+            ImGuiID in_override_header_state, PickingBuffer* inout_picking_buffer);
 
-        bool group_widget_3d_cube(ParamPtrVector_t& params, const std::string& in_search,
-            megamol::core::param::AbstractParamPresentation::Presentation presentation,
-            megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer);
+        bool group_widget_3d_cube(GroupWidgetData_t& group_widget_data, ParamPtrVector_t params,
+            const std::string& in_module_fullname, const std::string& in_search,
+            megamol::gui::ParameterPresentation::WidgetScope in_scope,
+            const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
+            ImGuiID in_override_header_state, PickingBuffer* inout_picking_buffer);
     };
 
 

@@ -387,9 +387,8 @@ protected:
     param::ParamSlot cameraOvrParam;
 
     /** standard views */
-    /// XXX TEST
-    param::ParamSlot cameraViewOrientation;
-    /// XXX
+    param::ParamSlot showViewCubeParam;
+    param::ParamSlot cameraViewOrientationParam;
     param::ParamSlot cameraSetViewChooserParam;
 
     bool cameraOvrCallback(param::ParamSlot& p);
