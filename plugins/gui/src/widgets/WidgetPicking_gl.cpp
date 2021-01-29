@@ -410,7 +410,7 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
             "    face_index = int(gl_VertexID / 6); \n "
             "    vertex_color = colors[face_index]; \n "
             "    if (view_index != face_index) { \n "
-            "        vertex_color *= 0.5; \n "
+            "        vertex_color *= 0.25; \n "
             "        vertex_color.w = 1.0; \n "
             "    } \n "
             "    gl_Position = proj_mx * model_mx * rot_mx * vertices[gl_VertexID]; \n "
@@ -481,7 +481,7 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
     glGetIntegerv(GL_VIEWPORT, viewport.data());
     int size = 100;
     int x = viewport[2] - size;
-    int y = viewport[3] - size;
+    int y = viewport[3] - size - ImGui::GetFrameHeightWithSpacing();
     glViewport(x, y, size, size);
 
     this->shader->use();

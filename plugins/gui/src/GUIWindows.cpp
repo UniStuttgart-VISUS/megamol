@@ -584,12 +584,12 @@ bool GUIWindows::PostDraw(void) {
                 }
             }
         }
-        if (!load_success) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] Unable to load font '%s' with size %d (NB: ImGui default font ProggyClean.ttf can only be "
-                "loaded with predefined size 13). [%s, %s, line %d]\n",
-                this->state.font_file_name.c_str(), this->state.font_size, __FILE__, __FUNCTION__, __LINE__);
-        }
+        // if (!load_success) {
+        //    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        //        "[GUI] Unable to load font '%s' with size %d (NB: ImGui default font ProggyClean.ttf can only be "
+        //        "loaded with predefined size 13). [%s, %s, line %d]\n",
+        //        this->state.font_file_name.c_str(), this->state.font_size, __FILE__, __FUNCTION__, __LINE__);
+        //}
         this->state.font_apply = false;
     }
 
