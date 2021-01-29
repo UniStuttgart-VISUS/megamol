@@ -13,6 +13,7 @@
 #include "graph/Parameter.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ImageWidget_gl.h"
+#include "widgets/WidgetPicking_gl.h"
 
 #include "mmcore/param/AbstractParamPresentation.h"
 
@@ -37,7 +38,7 @@ namespace gui {
             const std::string& in_search, vislib::math::Ternary in_extended, bool in_indent,
             megamol::gui::ParameterPresentation::WidgetScope in_scope,
             const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
-            ImGuiID in_override_header_state);
+            ImGuiID in_override_header_state, PickingBuffer* inout_picking_buffer);
 
         bool StateFromJSON(const nlohmann::json& in_json, const std::string& module_fullname);
         bool StateToJSON(nlohmann::json& inout_json, const std::string& module_fullname);
@@ -45,23 +46,22 @@ namespace gui {
 
     private:
         typedef std::vector<megamol::gui::Parameter*> ParamPtrVector_t;
-        typedef std::map<megamol::gui::Param_t, unsigned int> GroupWidget_t;
-        typedef std::map<std::string, std::pair<ParamPtrVector_t, GroupWidget_t>> ParamGroup_t;
+        typedef std::map<std::string, ParamPtrVector_t> ParamGroup_t;
         typedef std::function<bool(ParamPtrVector_t& params,
             megamol::core::param::AbstractParamPresentation::Presentation presentation,
-            megamol::gui::ParameterPresentation::WidgetScope in_scope)>
+            megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer)>
             GroupWidgetCallbackFunc_t;
 
 
         // Data needed for group widgets
         class GroupWidgetData : public megamol::core::param::AbstractParamPresentation {
         public:
-            GroupWidgetData(void) {
-                this->InitPresentation(AbstractParamPresentation::ParamType::GROUP_ANIMATION);
+            GroupWidgetData(void) : megamol::core::param::AbstractParamPresentation(){};
+            GroupWidgetData(Param_t pt) : megamol::core::param::AbstractParamPresentation() {
+                this->InitPresentation(pt);
             }
-            ~GroupWidgetData(void) {}
+            ~GroupWidgetData(void) = default;
             bool active;
-            GroupWidget_t type;
             GroupWidgetCallbackFunc_t callback;
         };
 
@@ -71,6 +71,7 @@ namespace gui {
 
         // Widgets
         HoverToolTip tooltip;
+        PickableCube cube_widget;
 
         // ANIM group widget
         ImVec2 speed_knob_pos;
@@ -97,6 +98,10 @@ namespace gui {
         bool group_widget_animation(ParamPtrVector_t& params,
             megamol::core::param::AbstractParamPresentation::Presentation presentation,
             megamol::gui::ParameterPresentation::WidgetScope in_scope);
+
+        bool group_widget_3d_cube(ParamPtrVector_t& params,
+            megamol::core::param::AbstractParamPresentation::Presentation presentation,
+            megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer);
     };
 
 

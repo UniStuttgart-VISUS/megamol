@@ -49,6 +49,16 @@ namespace view {
 class MEGAMOLCORE_API View3D_2 : public view::AbstractRenderingView /*, public view::AbstractCamParamSync*/ {
 
 public:
+    /** Enum for default views from the respective direction */
+    enum defaultview {
+        DEFAULTVIEW_FRONT,
+        DEFAULTVIEW_BACK,
+        DEFAULTVIEW_RIGHT,
+        DEFAULTVIEW_LEFT,
+        DEFAULTVIEW_TOP,
+        DEFAULTVIEW_BOTTOM,
+    };
+
     /**
      * Answer the name of this module.
      *
@@ -352,9 +362,6 @@ protected:
     /** Enable selecting mode of mouse (disables camera movement) */
     param::ParamSlot enableMouseSelectionSlot;
 
-    /** Shows the view cube helper */
-    param::ParamSlot showViewCubeSlot;
-
     /** whether to reset the view when the object bounding box changes */
     param::ParamSlot resetViewOnBBoxChangeSlot;
 
@@ -378,6 +385,12 @@ protected:
     param::ParamSlot cameraOvrUpParam;
     param::ParamSlot cameraOvrLookatParam;
     param::ParamSlot cameraOvrParam;
+
+    /** standard views */
+    /// XXX TEST
+    param::ParamSlot cameraViewOrientation;
+    /// XXX
+    param::ParamSlot cameraSetViewChooserParam;
 
     bool cameraOvrCallback(param::ParamSlot& p);
 

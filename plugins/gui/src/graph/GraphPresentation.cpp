@@ -689,8 +689,8 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                     if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
                         // Draw parameters
                         selected_mod_ptr->present.param_groups.PresentGUI(selected_mod_ptr->parameters,
-                            selected_mod_ptr->FullName(), "", vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN),
-                            false, ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr, GUI_INVALID_ID);
+                            selected_mod_ptr->FullName(), "", vislib::math::Ternary::TRI_UNKNOWN, false,
+                            ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr, GUI_INVALID_ID, nullptr);
 
                         ImVec2 popup_size = ImGui::GetWindowSize();
                         bool param_popup_open = ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId);
@@ -1253,7 +1253,7 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
                     if (module_header_open) {
                         module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(),
                             search_string, vislib::math::Ternary(this->param_extended_mode), true,
-                            ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr, GUI_INVALID_ID);
+                            ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr, GUI_INVALID_ID, nullptr);
                     }
 
                     ImGui::PopID();

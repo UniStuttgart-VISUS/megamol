@@ -250,7 +250,6 @@ namespace gui {
         std::shared_ptr<TransferFunctionEditor> tf_editor_ptr;
         HoverToolTip tooltip;
         PickingBuffer picking_buffer;
-        PickableTriangle triangle_widget;
 
         // FUNCTIONS --------------------------------------------------------------
 
