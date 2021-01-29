@@ -12,6 +12,14 @@ namespace core {
 namespace view {
 namespace light {
 
+    struct SpotLightType : public BaseLightType {
+        std::array<float, 3> position;
+        std::array<float, 3> direction;
+        float openingAngle;
+        float penumbraAngle;
+        float radius;
+    };
+
 class MEGAMOLCORE_API SpotLight : public AbstractLight {
 public:
     /**
@@ -35,6 +43,11 @@ public:
      */
     static bool IsAvailable(void) { return true; }
 
+    /**
+     * Add the lightsource of this module to a given collection
+     */
+    void addLight(LightCollection& light_collection);
+
     /** Ctor. */
     SpotLight(void);
 
@@ -42,11 +55,11 @@ public:
     virtual ~SpotLight(void);
 
 private:
-    core::param::ParamSlot sl_position;
-    core::param::ParamSlot sl_direction;
-    core::param::ParamSlot sl_openingAngle;
-    core::param::ParamSlot sl_penumbraAngle;
-    core::param::ParamSlot sl_radius;
+    core::param::ParamSlot position;
+    core::param::ParamSlot direction;
+    core::param::ParamSlot openingAngle;
+    core::param::ParamSlot penumbraAngle;
+    core::param::ParamSlot radius;
 
     virtual bool InterfaceIsDirty();
     virtual void readParams();

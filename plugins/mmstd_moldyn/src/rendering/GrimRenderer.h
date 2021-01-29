@@ -260,6 +260,9 @@ namespace rendering {
         /** The call for Transfer function */
         core::CallerSlot getTFSlot;
 
+        /** The call for light sources */
+        core::CallerSlot getLightsSlot;
+
         /** Flag to activate per cell culling */
         core::param::ParamSlot useCellCullSlot;
 

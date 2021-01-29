@@ -120,6 +120,9 @@ namespace rendering {
         /** The call for clipping plane */
         CallerSlot getClipPlaneSlot;
 
+        /** The call for light sources */
+        core::CallerSlot getLightsSlot;
+
         /** The arrow shader */
         vislib::graphics::gl::GLSLShader arrowShader;
 

@@ -65,6 +65,8 @@ public:
 
     MetaDataType const& getMetaData() { return m_meta_data; }
 
+    //TODO move setters?
+
     uint32_t version() { return m_set_version; }
 
     bool hasUpdate() { return (m_set_version > m_get_version); }

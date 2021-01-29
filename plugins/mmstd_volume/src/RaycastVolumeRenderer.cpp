@@ -30,6 +30,8 @@
 #include <memory>
 #include <vector>
 
+#include "mmcore/view/light/DistantLight.h"
+
 using namespace megamol::stdplugin::volume;
 
 RaycastVolumeRenderer::RaycastVolumeRenderer()
@@ -43,7 +45,6 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     , m_shininess_slot("lighting::shininess", "Shininess for Phong lighting")
     , m_ambient_color("lighting::ambient color", "Ambient color")
     , m_specular_color("lighting::specular color", "Specular color")
-    , m_light_color("lighting::light color", "Light color")
     , m_material_color("lighting::material color", "Material color")
     , m_opacity_threshold("opacity threshold", "Opacity threshold for integrative rendering")
     , m_iso_value("isovalue", "Isovalue for isosurface rendering")
@@ -53,6 +54,7 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     , paramMaxOverride("override::max", "Override the maximum value provided by the data set")
     , m_renderer_callerSlot("Renderer", "Renderer for chaining")
     , m_volumetricData_callerSlot("getData", "Connects the volume renderer with a voluemtric data source")
+    , m_lights_callerSlot("lights", "Lights are retrieved over this slot.")
     , m_transferFunction_callerSlot("getTranfserFunction", "Connects the volume renderer with a transfer function") {
 
     this->m_renderer_callerSlot.SetCompatibleCall<megamol::core::view::CallRender3D_2Description>();
@@ -60,6 +62,9 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
 
     this->m_volumetricData_callerSlot.SetCompatibleCall<megamol::core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->m_volumetricData_callerSlot);
+
+    this->m_lights_callerSlot.SetCompatibleCall<megamol::core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->m_lights_callerSlot);
 
     this->m_transferFunction_callerSlot.SetCompatibleCall<megamol::core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->m_transferFunction_callerSlot);
@@ -102,9 +107,6 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
 
     this->m_specular_color << new core::param::ColorParam(1.0f, 1.0f, 1.0f, 1.0f);
     this->MakeSlotAvailable(&this->m_specular_color);
-
-    this->m_light_color << new core::param::ColorParam(1.0f, 1.0f, 1.0f, 1.0f);
-    this->MakeSlotAvailable(&this->m_light_color);
 
     this->m_material_color << new core::param::ColorParam(0.95f, 0.67f, 0.47f, 1.0f);
     this->MakeSlotAvailable(&this->m_material_color);
@@ -283,8 +285,8 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     }
 
     // this is the apex of suck and must die
-    std::array<float, 4> light = {0.0f, 0.0f, 1.0f, 1.0f};
-    glGetLightfv(GL_LIGHT0, GL_POSITION, light.data());
+    //std::array<float, 4> light = {0.0f, 0.0f, 1.0f, 1.0f};
+    //glGetLightfv(GL_LIGHT0, GL_POSITION, light.data());
     // end suck
 
     if (!updateVolumeData(cr.Time())) return false;
@@ -312,6 +314,37 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Unknown raycast mode.");
         return false;
+    }
+
+    // Lights
+    auto curlight = core::view::light::DistantLightType{{{1.0f, 1.0f, 1.0f}, 1.0f}, {1.0f, 0.0f, 0.0f}, 0.0f, true};
+    auto call_light = m_lights_callerSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
+        }
+
+        auto lights = call_light->getData();
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
+
+        if (distant_lights.size() > 1) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[RaycastVolumeRenderer] Only one single 'Distant Light' source is supported by this renderer");
+        } else if (distant_lights.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[RaycastVolumeRenderer] No 'Distant Light' found");
+        }
+
+        for (auto& l : distant_lights) {
+            const auto use_eyedir = l.eye_direction;
+            if (use_eyedir) {
+                auto view_vec = cam.view_vector();
+                l.direction[0] = view_vec[0];
+                l.direction[1] = view_vec[1];
+                l.direction[2] = view_vec[2];
+            }
+        }
+
+        curlight = distant_lights[0];
     }
 
     // setup
@@ -365,13 +398,13 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
     glUniform1f(compute_shdr->ParameterLocation("ks"), this->m_ks_slot.Param<core::param::FloatParam>()->Value());
     glUniform1f(
         compute_shdr->ParameterLocation("shininess"), this->m_shininess_slot.Param<core::param::FloatParam>()->Value());
-    glUniform3fv(compute_shdr->ParameterLocation("light"), 1, light.data());
+    glUniform3fv(compute_shdr->ParameterLocation("light"), 1, curlight.direction.data());
     glUniform3fv(compute_shdr->ParameterLocation("ambient_col"), 1,
         this->m_ambient_color.Param<core::param::ColorParam>()->Value().data());
     glUniform3fv(compute_shdr->ParameterLocation("specular_col"), 1,
         this->m_specular_color.Param<core::param::ColorParam>()->Value().data());
     glUniform3fv(compute_shdr->ParameterLocation("light_col"), 1,
-        this->m_light_color.Param<core::param::ColorParam>()->Value().data());
+        curlight.colour.data());
     glUniform3fv(compute_shdr->ParameterLocation("material_col"), 1,
         this->m_material_color.Param<core::param::ColorParam>()->Value().data());
 
