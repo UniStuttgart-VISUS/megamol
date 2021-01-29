@@ -127,7 +127,7 @@ View3DGL::View3DGL(void)
     this->cam.resolution_gate(cam_type::screen_size_type(100, 100));
     this->cam.image_tile(cam_type::screen_rectangle_type(std::array<int, 4>{0, 100, 100, 0}));
 
-    this->rendererSlot.SetCompatibleCall<CallRender3D_2Description>();
+    this->rendererSlot.SetCompatibleCall<CallRender3DGLDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
 
     // this triggers the initialization
