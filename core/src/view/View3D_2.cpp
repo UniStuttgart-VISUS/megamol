@@ -75,7 +75,6 @@ View3D_2::View3D_2(void)
     , autoLoadCamSettingsSlot("camstore::autoLoadSettings",
           "When activated, the view will load the camera settings from disk at startup. "
           "This only works if you use .lua project files")
-    , resetViewSlot("resetView", "Triggers the reset of the view")
     , firstImg(false)
     , stereoFocusDistSlot("stereo::focusDist", "focus distance for stereo projection")
     , stereoEyeDistSlot("stereo::eyeDist", "eye distance for stereo projection")
@@ -87,12 +86,10 @@ View3D_2::View3D_2(void)
     , mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode")
     , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be rotated")
     , enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
-    , showViewCubeSlot("viewcube::show", "Shows the view cube helper")
-    , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
-    , cameraSetViewChooserParam("3DCube::defaultView", "choose a default view to look from")
-        /// XXX TEST
-        , cameraViewOrientation("3DCube::viewOrientation", "...")
-        /// XXX
+    , resetViewOnBBoxChangeSlot("reset::resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
+    , cameraSetViewChooserParam("reset::defaultView", "choose a default view to look from")
+    , cameraViewOrientation("reset::cubeOrientation", "Current camera orientation used for view cube.")
+    , resetViewSlot("reset::resetView", "Triggers the reset of the view")
     , mouseX(0.0f)
     , mouseY(0.0f)
     , mouseFlags(0)
@@ -163,10 +160,6 @@ View3D_2::View3D_2(void)
     this->autoLoadCamSettingsSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->autoLoadCamSettingsSlot);
 
-    this->resetViewSlot.SetParameter(new param::ButtonParam(view::Key::KEY_HOME));
-    this->resetViewSlot.SetUpdateCallback(&View3D_2::onResetView);
-    this->MakeSlotAvailable(&this->resetViewSlot);
-
     // TODO
     // this->stereoEyeDistSlot << new param::FloatParam(this->camParams->StereoDisparity(), 0.0f);
     // this->MakeSlotAvailable(&this->stereoEyeDistSlot);
@@ -201,12 +194,6 @@ View3D_2::View3D_2(void)
     this->enableMouseSelectionSlot.SetParameter(new param::ButtonParam(view::Key::KEY_TAB));
     this->enableMouseSelectionSlot.SetUpdateCallback(&View3D_2::onToggleButton);
     this->MakeSlotAvailable(&this->enableMouseSelectionSlot);
-
-    this->resetViewOnBBoxChangeSlot.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
-
-    this->showViewCubeSlot.SetParameter(new param::BoolParam(true));
-    this->MakeSlotAvailable(&this->showViewCubeSlot);
 
     for (unsigned int i = 0; this->timeCtrl.GetSlot(i) != NULL; i++) {
         this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
@@ -311,6 +298,13 @@ View3D_2::View3D_2(void)
     this->cameraOvrParam.SetUpdateCallback(&View3D_2::cameraOvrCallback);
     this->MakeSlotAvailable(&this->cameraOvrParam);
 
+    this->resetViewSlot.SetParameter(new param::ButtonParam(view::Key::KEY_HOME));
+    this->resetViewSlot.SetUpdateCallback(&View3D_2::onResetView);
+    this->MakeSlotAvailable(&this->resetViewSlot);
+
+    this->resetViewOnBBoxChangeSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
+
     auto defaultViewParam = new param::EnumParam(0);
     defaultViewParam->SetTypePair(defaultview::DEFAULTVIEW_FRONT, "Front");
     defaultViewParam->SetTypePair(defaultview::DEFAULTVIEW_BACK, "Back");
@@ -321,13 +315,11 @@ View3D_2::View3D_2(void)
     defaultViewParam->SetGUIVisible(camparamvisibility);
     this->cameraSetViewChooserParam.SetParameter(defaultViewParam),
     this->MakeSlotAvailable(&this->cameraSetViewChooserParam);
-    this->cameraSetViewChooserParam.SetUpdateCallback(&View3D_2::onSetView);
+    this->cameraSetViewChooserParam.SetUpdateCallback(&View3D_2::onResetView);
 
-    /// XXX TEST
     this->cameraViewOrientation.SetParameter(new param::Vector4fParam(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 1.0f)));
     this->MakeSlotAvailable(&this->cameraViewOrientation);
     this->cameraViewOrientation.Parameter()->SetGUIReadOnly(true);
-    /// XXX
 
     this->translateManipulator.set_target(this->cam);
     this->translateManipulator.enable();
@@ -404,6 +396,10 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     }
 
     this->handleCameraMovement();
+
+    auto cam_orientation = static_cast<glm::quat>(this->cam.orientation());
+    this->cameraViewOrientation.Param<param::Vector4fParam>()->SetValue(
+        vislib::math::Vector<float, 4>(cam_orientation.x, cam_orientation.y, cam_orientation.z, cam_orientation.w));
 
     AbstractRenderingView::beginFrame();
 
@@ -553,12 +549,6 @@ void View3D_2::Render(const mmcRenderViewContext& context) {
     }
 
     this->setCameraValues(this->cam);
-
-    /// XXX TEST
-    auto cam_orientation = static_cast<glm::quat>(this->cam.orientation());
-    this->cameraViewOrientation.Param<param::Vector4fParam>()->SetValue(vislib::math::Vector<float, 4>(
-        cam_orientation.x, cam_orientation.y, cam_orientation.z, cam_orientation.w));
-    /// XXX
 
     AbstractRenderingView::endFrame();
 
@@ -1201,14 +1191,6 @@ bool View3D_2::onResetView(param::ParamSlot& p) {
  */
 bool View3D_2::onToggleButton(param::ParamSlot& p) {
     // TODO implement
-    return true;
-}
-
-/*
- * View3D_2::onSetView
- */
-bool megamol::core::view::View3D_2::onSetView(param::ParamSlot& p) {
-    this->ResetView();
     return true;
 }
 

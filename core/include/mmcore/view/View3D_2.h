@@ -264,8 +264,6 @@ protected:
 
     bool onToggleButton(param::ParamSlot& p);
 
-    bool onSetView(param::ParamSlot &p);
-
     /*
      * Performs the actual camera movement based on the pressed keys
      */
@@ -363,9 +361,6 @@ protected:
 
     /** Enable selecting mode of mouse (disables camera movement) */
     param::ParamSlot enableMouseSelectionSlot;
-
-    /** Shows the view cube helper */
-    param::ParamSlot showViewCubeSlot;
 
     /** whether to reset the view when the object bounding box changes */
     param::ParamSlot resetViewOnBBoxChangeSlot;

@@ -34,16 +34,16 @@ megamol::gui::ParameterGroupsPresentation::ParameterGroupsPresentation(void)
     /// ID string must equal parameter group name, which is used for identification
     this->group_widget_ids["anim"] = animation;
 
-    /// BoundingBoxRenderer::3d_cube
-    GroupWidgetData threedmanip(Param_t::GROUP_3D_CUBE);
-    threedmanip.active = false;
-    threedmanip.callback =
+    /// View3D_2::reset
+    GroupWidgetData reset(Param_t::GROUP_3D_CUBE);
+    reset.active = false;
+    reset.callback =
         [&, this](ParamPtrVector_t& params, megamol::core::param::AbstractParamPresentation::Presentation presentation,
             megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) -> bool {
         return this->group_widget_3d_cube(params, presentation, in_scope, inout_picking_buffer);
     };
     /// ID string must equal parameter group name, which is used for identification
-    this->group_widget_ids["3DCube"] = threedmanip;
+    this->group_widget_ids["reset"] = reset;
 }
 
 
@@ -505,30 +505,31 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(ParamPtrVec
     if (presentation != param::AbstractParamPresentation::Presentation::Group_3D_Cube)
         return false;
 
+    const std::string group_label("reset");
+
     // Check required parameters ----------------------------------------------
-    Parameter* param_viewOrientation = nullptr;
+    Parameter* param_cubeOrientation = nullptr;
     Parameter* param_defaultView = nullptr;
     /// Find specific parameters of group by name because parameter type can occure multiple times.
     for (auto& param_ptr : params) {
-        if ((param_ptr->GetName() == "viewOrientation") && (param_ptr->type == Param_t::VECTOR4F)) {
-            param_viewOrientation = param_ptr;
+        if ((param_ptr->GetName() == "cubeOrientation") && (param_ptr->type == Param_t::VECTOR4F)) {
+            param_cubeOrientation = param_ptr;
         } else if ((param_ptr->GetName() == "defaultView") && (param_ptr->type == Param_t::ENUM)) {
             param_defaultView = param_ptr;
         }
     }
-    if ((param_viewOrientation == nullptr) || (param_defaultView == nullptr)) {
+    if ((param_cubeOrientation == nullptr) || (param_defaultView == nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[GUI] Unable to find all required parameters by name "
-                                                                "for 3d manipulation group widget. [%s, %s, line %d]\n",
-            __FILE__, __FUNCTION__, __LINE__);
+                                                                "for '%s' group widget. [%s, %s, line %d]\n",
+            group_label.c_str(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
     if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
         // LOCAL
 
-        const std::string group_label("3D Cube");
-        ImGui::TextDisabled(group_label.c_str());
-        /// this->draw_grouped_parameters(group_label, params, "", "", in_scope, nullptr, nullptr, GUI_INVALID_ID);
+        /// ImGui::TextDisabled(group_label.c_str());
+        this->draw_grouped_parameters(group_label, params, "", "", in_scope, nullptr, nullptr, GUI_INVALID_ID);
 
     } else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
         // GLOBAL
@@ -547,30 +548,31 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(ParamPtrVec
 
         ImGuiIO& io = ImGui::GetIO();
         auto default_view = std::get<int>(param_defaultView->GetValue());
-        auto view_orientation = std::get<glm::vec4>(param_viewOrientation->GetValue());
+        auto view_orientation = std::get<glm::vec4>(param_cubeOrientation->GetValue());
         auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
         int hovered_view = -1;
         this->cube_widget.Draw(id, default_view, hovered_view, view_orientation, viewport_dim,
             inout_picking_buffer->GetPendingManipulations());
 
         std::string tooltip_text;
-        switch (static_cast<megamol::core::view::View3D_2::defaultview>(hovered_view)) {
-        case (megamol::core::view::View3D_2::defaultview::DEFAULTVIEW_BACK):
-            tooltip_text = "Back";
-            break;
-        case (megamol::core::view::View3D_2::defaultview::DEFAULTVIEW_FRONT):
+        /// Indices must fit enum order in megamol::core::view::View3D_2::defaultview
+        switch (hovered_view) {
+        case (0): // DEFAULTVIEW_FRONT
             tooltip_text = "Front";
             break;
-        case (megamol::core::view::View3D_2::defaultview::DEFAULTVIEW_TOP):
-            tooltip_text = "Top";
+        case (1): // DEFAULTVIEW_BACK
+            tooltip_text = "Back";
             break;
-        case (megamol::core::view::View3D_2::defaultview::DEFAULTVIEW_LEFT):
-            tooltip_text = "Left";
-            break;
-        case (megamol::core::view::View3D_2::defaultview::DEFAULTVIEW_RIGHT):
+        case (2): // DEFAULTVIEW_RIGHT
             tooltip_text = "Right";
             break;
-        case (megamol::core::view::View3D_2::defaultview::DEFAULTVIEW_BOTTOM):
+        case (3): // DEFAULTVIEW_LEFT
+            tooltip_text = "Left";
+            break;
+        case (4): // DEFAULTVIEW_TOP
+            tooltip_text = "Top";
+            break;
+        case (5): // DEFAULTVIEW_BOTTOM
             tooltip_text = "Bottom";
             break;
         default:

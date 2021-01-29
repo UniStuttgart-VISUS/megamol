@@ -366,7 +366,7 @@ glm::vec3 megamol::gui::PickingBuffer::Screenspace2Worldspace(
 megamol::gui::PickableCube::PickableCube(void) : shader(nullptr) {}
 
 
-void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview, int& out_hovered_view,
+void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_index, int& out_hovered_view_index,
     const glm::vec4& view_orientation, const glm::vec2& vp_dim, ManipVector& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
@@ -435,7 +435,7 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview, i
     }
 
     // Process pending manipulations ------------------------------------------
-    int view_index = inout_defaultview;
+    int view_index = inout_defaultview_index;
     bool highlighted = false;
     for (auto& manip : pending_manipulations) {
         /// Indices must fit enum order in megamol::core::view::View3D_2::defaultview
@@ -454,10 +454,10 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview, i
 
         if (view_index >= 0) {
             if (manip.type == InteractionType::SELECT) {
-                inout_defaultview = static_cast<megamol::core::view::View3D_2::defaultview>(view_index);
+                inout_defaultview_index = view_index;
             } else if (manip.type == InteractionType::HIGHLIGHT) {
                 highlighted = true;
-                out_hovered_view = view_index;
+                out_hovered_view_index = view_index;
             }
         }
     }
