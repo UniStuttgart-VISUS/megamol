@@ -239,54 +239,8 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     nuFB->createColorAttachment(GL_RGB32F, GL_RGB, GL_FLOAT);
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
-    glGenFramebuffers(1, &amortizedFboA);
-    glGenFramebuffers(1, &amortizedFboB);
-    glGenFramebuffers(1, &amortizedMsaaFboA);
-    glGenFramebuffers(1, &amortizedMsaaFboB);
-    glGenTextures(1, &msImageStorageA);
-    glGenTextures(1, &imageArrayA);
-    glGenTextures(1, &imageArrayB);
-    glGenTextures(1, &msImageArray);
-    glGenBuffers(1, &ssboMatrices);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
-    // glBindTexture(GL_TEXTURE_2D, imStoreI);
-    glEnable(GL_MULTISAMPLE);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msImageStorageA);
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 1, GL_RGB, 1, 1, GL_TRUE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-    // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msImageStorageA, 0);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
-    glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 2, GL_RGB, 1, 1, 2, GL_TRUE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-
-    glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, 1, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-
-    glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayB);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, 1, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+    setupBuffers();
 
     glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
 
@@ -1090,6 +1044,57 @@ void ParallelCoordinatesRenderer2D::load_filters() {
             "ParallelCoordinatesRenderer2D: could not parse serialized filters (exception %i)!", e.id);
         return;
     }
+}
+
+void ParallelCoordinatesRenderer2D::setupBuffers() {
+    glGenFramebuffers(1, &amortizedFboA);
+    glGenFramebuffers(1, &amortizedFboB);
+    glGenFramebuffers(1, &amortizedMsaaFboA);
+    glGenFramebuffers(1, &amortizedMsaaFboB);
+    glGenTextures(1, &msImageStorageA);
+    glGenTextures(1, &imageArrayA);
+    glGenTextures(1, &imageArrayB);
+    glGenTextures(1, &msImageArray);
+    glGenBuffers(1, &ssboMatrices);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
+    // glBindTexture(GL_TEXTURE_2D, imStoreI);
+    glEnable(GL_MULTISAMPLE);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msImageStorageA);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 1, GL_RGB, 1, 1, GL_TRUE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+    // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msImageStorageA, 0);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
+    glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 2, GL_RGB, 1, 1, 2, GL_TRUE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+
+    glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, 1, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+
+    glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayB);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, 1, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
 }
 
 void ParallelCoordinatesRenderer2D::setupAccel(int approach, int ow, int oh, int ssLevel) {

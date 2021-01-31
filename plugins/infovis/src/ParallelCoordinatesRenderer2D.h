@@ -162,6 +162,8 @@ namespace infovis {
 
         void setupAccel(int approach, int w, int h, int ssLevel);
 
+        void setupBuffers();
+
         void doReconstruction(int approach, int w, int h, int ssLevel);
 
         int mouseXtoAxis(float x);
