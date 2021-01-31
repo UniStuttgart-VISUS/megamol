@@ -541,7 +541,10 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(GroupWidget
         return false;
     }
 
-    // Switch presentation via parameter
+
+    // Parameter presentation -------------------------------------------------
+    auto presentation = group_widget_data.second.GetGUIPresentation();
+        // Switch presentation via parameter
     if (param_showCube->IsValueDirty()) {
         if (std::get<bool>(param_showCube->GetValue())) {
             group_widget_data.second.SetGUIPresentation(param::AbstractParamPresentation::Presentation::Group_3D_Cube);
@@ -549,14 +552,15 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(GroupWidget
             group_widget_data.second.SetGUIPresentation(param::AbstractParamPresentation::Presentation::Basic);
         }
     }
+    param_showCube->SetValue((presentation == param::AbstractParamPresentation::Presentation::Group_3D_Cube));
 
-    // Parameter presentation -------------------------------------------------
-    auto presentation = group_widget_data.second.GetGUIPresentation();
     if (presentation == param::AbstractParamPresentation::Presentation::Basic) {
 
         if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+            // LOCAL
+
             this->draw_grouped_parameters(group_widget_data.first, params, in_module_fullname, in_search, in_scope,
-                in_external_tf_editor, out_open_external_tf_editor, in_override_header_state);
+            in_external_tf_editor, out_open_external_tf_editor, in_override_header_state);
         }
 
     } else if (presentation == param::AbstractParamPresentation::Presentation::Group_3D_Cube) {
