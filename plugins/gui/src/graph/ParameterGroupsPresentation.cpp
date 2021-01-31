@@ -542,10 +542,12 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(GroupWidget
     }
 
     // Switch presentation via parameter
-    if (std::get<bool>(param_showCube->GetValue())) {
-        group_widget_data.second.SetGUIPresentation(param::AbstractParamPresentation::Presentation::Group_3D_Cube);
-    } else {
-        group_widget_data.second.SetGUIPresentation(param::AbstractParamPresentation::Presentation::Basic);
+    if (param_showCube->IsValueDirty()) {
+        if (std::get<bool>(param_showCube->GetValue())) {
+            group_widget_data.second.SetGUIPresentation(param::AbstractParamPresentation::Presentation::Group_3D_Cube);
+        } else {
+            group_widget_data.second.SetGUIPresentation(param::AbstractParamPresentation::Presentation::Basic);
+        }
     }
 
     // Parameter presentation -------------------------------------------------
