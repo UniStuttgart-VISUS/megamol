@@ -1129,35 +1129,13 @@ void ParallelCoordinatesRenderer2D::load_filters() {
     }
 }
 
-
-bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
-    int w = call.GetViewport().Width();
-    int h = call.GetViewport().Height();
-    res[0] = 1.0 * w;
-    res[1] = 1.0 * h;
-    int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
-
-
-    windowWidth = call.GetViewport().Width();
-    windowHeight = call.GetViewport().Height();
-    auto bg = call.GetBackgroundColour();
-    backgroundColor[0] = bg[0] / 255.0f;
-    backgroundColor[1] = bg[1] / 255.0f;
-    backgroundColor[2] = bg[2] / 255.0f;
-    backgroundColor[3] = bg[3] / 255.0f;
-
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
-    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &origFBOr);
-    // this is the apex of suck and must die
-    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
-    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
-    // end suck
-
-    int approach = this->approachSlot.Param<core::param::IntParam>()->Value();
-
-    glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-    glClear(GL_COLOR_BUFFER_BIT);
-    // Intel MSAA 2 frame restoration
+void ParallelCoordinatesRenderer2D::setupAccel(int papproach, int pw, int ph, int pssLevel) {
+    int ssLevel = pssLevel;
+    int approach = papproach;
+    int ow = pw;
+    int oh = ph;
+    int w = pw / 2;
+    int h = ph / 2;
 
     glm::mat4 pm;
     for (int i = 0; i < 4; i++) {
@@ -1173,29 +1151,22 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     }
     auto pmvm = pm * mvm;
 
-    //if all Camera matrices are the same, no rendering needed
-    //bool ab = true;
-
     if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         framesNeeded = 2;
         if (invMatrices.size() != framesNeeded) {
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
         }
-        w = w / 2;
-        h = h / 2;
+
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
         float factor = this->testingFloat.Param<core::param::FloatParam>()->Value();
-        glm::mat4 jit;        
+        glm::mat4 jit;
 
         invMatrices[frametype] = pmvm;
 
-        // moveMatrixA = invTexA * glm::inverse(pmvm);
-        // moveMatrixB = invTexB * glm::inverse(pmvm);
         glm::mat4 inversePMVM = glm::inverse(pmvm);
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * inversePMVM;
-        // moveMatrices[i] = glm::mat4(1.0);
 
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
         glActiveTexture(GL_TEXTURE11);
@@ -1229,7 +1200,6 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         glClear(GL_COLOR_BUFFER_BIT);
 
-
         glViewport(0, 0, w, h);
     }
 
@@ -1240,8 +1210,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
         }
-        w = w / 2;
-        h = h / 2;
+        
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
 
         float factor = this->testingFloat.Param<core::param::FloatParam>()->Value();
@@ -1249,22 +1218,22 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glm::mat4 pmvm = pm * mvm;
         if (frametype == 0) {
             jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(), 1.0 / call.GetViewport().Height(), 0));
+                glm::mat4(1.0f), glm::vec3(-1.0 / ow, 1.0 / oh, 0));
             invMatrices[frametype] = jit * pmvm;
         }
         if (frametype == 1) {
             jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), 1.0 / call.GetViewport().Height(), 0));
+                glm::mat4(1.0f), glm::vec3(1.0 / ow, 1.0 / oh, 0));
             invMatrices[frametype] = jit * pmvm;
         }
         if (frametype == 2) {
             jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
+                glm::mat4(1.0f), glm::vec3(-1.0 / ow, -1.0 / oh, 0));
             invMatrices[frametype] = jit * pmvm;
         }
         if (frametype == 3) {
             jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(), -1.0 / call.GetViewport().Height(), 0));
+                glm::mat4(1.0f), glm::vec3(1.0 / ow, -1.0 / oh, 0));
             invMatrices[frametype] = jit * pmvm;
         }
 
@@ -1308,8 +1277,6 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
         }
-        w = w / 2;
-        h = h / 2;
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
 
         float factor = this->testingFloat.Param<core::param::FloatParam>()->Value();
@@ -1317,19 +1284,19 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glm::mat4 pmvm = pm * mvm;
         if (frametype == 0) {
             jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(-2.0 / call.GetViewport().Width(), 2.0 / call.GetViewport().Height(), 0));
+                glm::mat4(1.0f), glm::vec3(-2.0 / ow, 2.0 / oh, 0));
         }
         if (frametype == 1) {
             jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(0 / call.GetViewport().Width(), 2.0 / call.GetViewport().Height(), 0));
+                glm::mat4(1.0f), glm::vec3(0 / ow, 2.0 / oh, 0));
         }
         if (frametype == 2) {
             jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(-2.0 / call.GetViewport().Width(), 0 / call.GetViewport().Height(), 0));
+                glm::mat4(1.0f), glm::vec3(-2.0 / ow, 0 / oh, 0));
         }
         if (frametype == 3) {
             jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(0.0 / call.GetViewport().Width(), 0 / call.GetViewport().Height(), 0));
+                glm::mat4(1.0f), glm::vec3(0.0 / ow, 0 / oh, 0));
         }
         invMatrices[frametype] = jit * pmvm;
         for (int i = 0; i < framesNeeded; i++)
@@ -1370,8 +1337,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
             hammerPositions.resize(ssLevel);
-            //calculation of Positions according to hammersley sequence
-            //https://www.researchgate.net/publication/244441430_Sampling_with_Hammersley_and_Halton_Points
+            // calculation of Positions according to hammersley sequence
+            // https://www.researchgate.net/publication/244441430_Sampling_with_Hammersley_and_Halton_Points
             float p = 0;
             float u;
             float v = 0;
@@ -1385,13 +1352,11 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
                     }
                     v = (float) ((k + 0.5) / ssLevel);
                 }
-                hammerPositions[k] = glm::vec2(u - floor(2*u), v - floor(2*v));
+                hammerPositions[k] = glm::vec2(u - floor(2 * u), v - floor(2 * v));
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "x: %f, y: %f", hammerPositions[k].x, hammerPositions[k].y);
             }
         }
-        w = w / 2;
-        h = h / 2;
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
 
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
@@ -1404,31 +1369,31 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         glm::mat4 pmvm = pm * mvm;
         int f = floor(frametype / 4);
         if (frametype % 4 == 0) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x - 1) / call.GetViewport().Width(),
-                                                      (hammerPositions[f].y + 1) / call.GetViewport().Height(), 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(),
-                                                                         1.0 / call.GetViewport().Height(), 0)) *
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x - 1) / ow,
+                                                      (hammerPositions[f].y + 1) / oh, 0));
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / ow,
+                                                                         1.0 / oh, 0)) *
                                      pmvm;
         }
         if (frametype % 4 == 1) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x + 1) / call.GetViewport().Width(),
-                                                      (hammerPositions[f].y + 1) / call.GetViewport().Height(), 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(),
-                                                                         1.0 / call.GetViewport().Height(), 0)) *
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x + 1) / ow,
+                                                      (hammerPositions[f].y + 1) / oh, 0));
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / ow,
+                                                                         1.0 / oh, 0)) *
                                      pmvm;
         }
         if (frametype % 4 == 2) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x - 1) / call.GetViewport().Width(),
-                                                      (hammerPositions[f].y - 1) / call.GetViewport().Height(), 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / call.GetViewport().Width(),
-                                                                         -1.0 / call.GetViewport().Height(), 0)) *
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x - 1) / ow,
+                                                      (hammerPositions[f].y - 1) / oh, 0));
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / ow,
+                                                                         -1.0 / oh, 0)) *
                                      pmvm;
         }
         if (frametype % 4 == 3) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x + 1) / call.GetViewport().Width(),
-                                                      (hammerPositions[f].y - 1) / call.GetViewport().Height(), 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / call.GetViewport().Width(),
-                                                                         -1.0 / call.GetViewport().Height(), 0)) *
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x + 1) / ow,
+                                                      (hammerPositions[f].y - 1) / oh, 0));
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / ow,
+                                                                         -1.0 / oh, 0)) *
                                      pmvm;
         }
         glm::mat4 invM = glm::inverse(pmvm);
@@ -1445,157 +1410,38 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
 
         glViewport(0, 0, w, h);
     }
+}
 
-    if (false && this->halveRes.Param<core::param::BoolParam>()->Value()) {
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
+    int w = call.GetViewport().Width();
+    int h = call.GetViewport().Height();
+    res[0] = 1.0 * w;
+    res[1] = 1.0 * h;
+    int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
 
-        if (tex.size() != w * h) {
-            // glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
+    windowWidth = call.GetViewport().Width();
+    windowHeight = call.GetViewport().Height();
+    auto bg = call.GetBackgroundColour();
+    backgroundColor[0] = bg[0] / 255.0f;
+    backgroundColor[1] = bg[1] / 255.0f;
+    backgroundColor[2] = bg[2] / 255.0f;
+    backgroundColor[3] = bg[3] / 255.0f;
 
-            tex.clear();
-            tex.resize(w * h);
-            tex2.clear();
-            tex2.resize(w * h);
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &origFBOr);
+    // this is the apex of suck and must die
+    glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
+    glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
+    // end suck
 
-            bool test = true;
-            for (int i = 0; i < call.GetViewport().Height(); i++) {
-                for (int j = 0; j < call.GetViewport().Width(); j++) {
-                    test = !test;
-                    if (test) {
-                        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("N");
-                        tex[i * w + j] = 1.0;
-                        tex2[i * w + j] = 0u;
-                    } else {
-                        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("J");
-                        tex[i * w + j] = 0.0;
-                        tex2[i * w + j] = 1u;
-                    }
-                }
-            }
-            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
-            if (glGetError() == GL_INVALID_OPERATION)
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+    int approach = this->approachSlot.Param<core::param::IntParam>()->Value();
 
-            glActiveTexture(GL_TEXTURE10);
-            if (glGetError() == GL_INVALID_OPERATION)
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
+    glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+    glClear(GL_COLOR_BUFFER_BIT);
+    // Intel MSAA 2 frame restoration
+    setupAccel(approach, w, h, ssLevel);
 
-            glBindTexture(GL_TEXTURE_2D, imageStorageA);
-            if (glGetError() == GL_INVALID_OPERATION)
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-            if (glGetError() == GL_INVALID_OPERATION)
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
-
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
-            if (glGetError() == GL_INVALID_OPERATION)
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
-
-            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageA, 0);
-            if (glGetError() == GL_INVALID_OPERATION)
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-            glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            glBindTexture(GL_TEXTURE_2D, depthStore);
-            if (glGetError() == GL_INVALID_OPERATION)
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-            if (glGetError() == GL_INVALID_OPERATION)
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
-
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_DEPTH_COMPONENT, GL_FLOAT, &tex[0]);
-            if (glGetError() != GL_NO_ERROR)
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR1");
-
-            // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE,
-            // &tex2[0]);
-            if (glGetError() == GL_INVALID_OPERATION)
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR2");
-
-            glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_STENCIL_TEXTURE_MODE, GL_STENCIL_INDEX);
-            if (glGetError() == GL_INVALID_OPERATION)
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR3");
-
-            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
-            if (glGetError() == GL_INVALID_OPERATION)
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR6");
-
-
-            glDrawPixels(w, h, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, &tex2[0]);
-            if (glGetError() == GL_INVALID_ENUM)
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo("THERE WAS AN ERROR3");
-
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("size of Array tex2: %i", tex2.size());
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("w: %i", w);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("h: %i", h);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("dsID: %i", depthStore);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("tex2.0: %i", tex2[0]);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("tex2.1; %i", tex2[1]);
-        }
-        // glDisable(GL_STENCIL_TEST);
-
-        if (call.frametype == 1 || call.frametype == 0) {
-            glDepthMask(GL_FALSE);
-            // glClear(GL_STENCIL_BUFFER_BIT);
-
-            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
-
-            glActiveTexture(GL_TEXTURE10);
-            glBindTexture(GL_TEXTURE_2D, imageStorageA);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
-            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageA, 0);
-            glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-            glClear(GL_COLOR_BUFFER_BIT);
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            glEnable(GL_STENCIL_TEST);
-            glStencilMask(0xFF);
-            glStencilFunc(GL_EQUAL, 1, 0xFF);
-
-            glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, depthStore, 0);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-            // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, w, h, 0, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE,
-            // &tex2[0]);
-            glBindTexture(GL_TEXTURE_2D, imageStorageA);
-        }
-        if (call.frametype == 2) {
-            glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboB);
-            glBindTexture(GL_TEXTURE_2D, imageStorageB);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
-            glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageStorageB, 0);
-            glClearColor(0.2, 0, 0, 1);
-            glClear(GL_COLOR_BUFFER_BIT);
-        }
-
-        //^^COLOR ATTACHMENT
-
-        glDisable(GL_DEPTH_TEST);
-
-        // glViewport(0, 0, w, h);
-    }
     windowAspect = static_cast<float>(call.GetViewport().AspectRatio());
-
 
     this->assertData(call);
 
@@ -1798,51 +1644,6 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
         pc_reconstruction3_shdr->Disable();
 
         frametype = (frametype + 1) % framesNeeded;
-    }
-
-    //  Method for DepthTest
-    if (false && this->halveRes.Param<core::param::BoolParam>()->Value()) {
-        glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
-
-        pc_reconstruction0_shdr->Enable();
-
-        if (call.frametype == 0 || call.frametype == 1) {
-            glActiveTexture(GL_TEXTURE10);
-            glBindTexture(GL_TEXTURE_2D, imageStorageA);
-            // glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-            // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w,h,0, GL_RGB, GL_FLOAT, 0);
-            // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_GREEN, GL_UNSIGNED_BYTE, &tex2[0]);
-            glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tx2D"), 10);
-        }
-        if (call.frametype == 2) {
-            glActiveTexture(GL_TEXTURE11);
-            glBindTexture(GL_TEXTURE_2D, imageStorageB);
-            // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, &tex2);
-            glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tx2Db"), 11);
-        }
-
-
-        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
-        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("h"), call.GetViewport().Width());
-
-        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("frametype"), call.frametype);
-
-
-        // glStencilMask(0x00);
-        glBindTexture(GL_TEXTURE_2D, imageStorageA);
-        glDepthFunc(GL_ALWAYS);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-
-        glDisable(GL_STENCIL_TEST);
-        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("h %i", glIsEnabled(GL_DEPTH_TEST));
-        pc_reconstruction0_shdr->Disable();
-        // glDeleteTextures(1, &imStoreI);
-        // glDeleteTextures(1, &imStoreI2);
-        // glDeleteFramebuffers(1, &nuFB);
-        // glDeleteFramebuffers(1, &nuDRB);
-        // megamol::core::utility::log::Log::DefaultLog.WriteInfo("x: %d , y: %d , xM: %d , yM: %d ",
-        // call.GetBoundingBox().GetLeft(),
-        //    call.GetBoundingBox().GetTop(), call.GetBoundingBox().GetRight(), call.GetBoundingBox().GetBottom());
     }
 
     return true;
