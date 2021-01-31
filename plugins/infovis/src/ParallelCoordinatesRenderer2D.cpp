@@ -237,35 +237,17 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("GENERATED");
     nuFB = std::make_shared<glowl::FramebufferObject>(1, 1);
     nuFB->createColorAttachment(GL_RGB32F, GL_RGB, GL_FLOAT);
-    //  megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-    //      "WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED WORKED ");
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
     glGenFramebuffers(1, &amortizedFboA);
     glGenFramebuffers(1, &amortizedFboB);
-    glGenFramebuffers(1, &amortizedFboC);
-    glGenFramebuffers(1, &amortizedFboD);
     glGenFramebuffers(1, &amortizedMsaaFboA);
     glGenFramebuffers(1, &amortizedMsaaFboB);
-    glGenFramebuffers(1, &arrayTestFBO);
-    glGenTextures(1, &imageStorageA);
     glGenTextures(1, &msImageStorageA);
-    glGenTextures(1, &imageStorageB);
-    glGenTextures(1, &msImageStorageB);
-    glGenTextures(1, &imageStorageC);
-    glGenTextures(1, &msImageStorageC);
-    glGenTextures(1, &imageStorageD);
-    glGenTextures(1, &msImageStorageD);
     glGenTextures(1, &imageArrayA);
     glGenTextures(1, &imageArrayB);
     glGenTextures(1, &msImageArray);
-    glGenTextures(1, &historyBuffer);
-    glGenTextures(1, &depthStore);
-    glGenTextures(1, &stenStore);
-    glGenTextures(1, &depthStore2);
     glGenBuffers(1, &ssboMatrices);
-    glGenRenderbuffers(1, &nuDRB);
-    glGenRenderbuffers(1, &nuSRB);
 
     glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
     // glBindTexture(GL_TEXTURE_2D, imStoreI);
@@ -280,17 +262,6 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
     // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msImageStorageA, 0);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msImageStorageB);
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 1, GL_RGB, 1, 1, GL_TRUE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-    // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI2, 0);
     glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
@@ -311,14 +282,6 @@ bool ParallelCoordinatesRenderer2D::create(void) {
 
     glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayB);
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, 1, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-
-    glBindTexture(GL_TEXTURE_2D_ARRAY, historyBuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -1129,13 +1092,9 @@ void ParallelCoordinatesRenderer2D::load_filters() {
     }
 }
 
-void ParallelCoordinatesRenderer2D::setupAccel(int papproach, int pw, int ph, int pssLevel) {
-    int ssLevel = pssLevel;
-    int approach = papproach;
-    int ow = pw;
-    int oh = ph;
-    int w = pw / 2;
-    int h = ph / 2;
+void ParallelCoordinatesRenderer2D::setupAccel(int approach, int ow, int oh, int ssLevel) {
+    int w = ow / 2;
+    int h = oh / 2;
 
     glm::mat4 pm;
     for (int i = 0; i < 4; i++) {
@@ -1412,11 +1371,7 @@ void ParallelCoordinatesRenderer2D::setupAccel(int papproach, int pw, int ph, in
     }
 }
 
-void ParallelCoordinatesRenderer2D::doReconstruction(int papproach, int pw, int ph, int pssLevel) {
-    int approach = papproach;
-    int w = pw;
-    int h = ph;
-    int ssLevel = pssLevel;
+void ParallelCoordinatesRenderer2D::doReconstruction(int approach, int w, int h, int ssLevel) {
 
     if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         glViewport(0, 0, w, h);
