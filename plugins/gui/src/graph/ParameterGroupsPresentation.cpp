@@ -23,7 +23,7 @@ megamol::gui::ParameterGroupsPresentation::ParameterGroupsPresentation(void)
         , image_buttons() {
 
     // Add group widget data for animation widget group
-    /// View3D_2::anim
+    /// Paramter namespace: View3D_2::anim
     GroupWidgetData animation(Param_t::GROUP_ANIMATION);
     animation.active = false;
     animation.callback =
@@ -37,7 +37,7 @@ megamol::gui::ParameterGroupsPresentation::ParameterGroupsPresentation(void)
     /// ID string must equal parameter group name, which is used for identification
     this->group_widgets["anim"] = animation;
 
-    /// View3D_2::reset
+    /// Paramter namespace: View3D_2::view
     GroupWidgetData reset(Param_t::GROUP_3D_CUBE);
     reset.active = false;
     reset.callback =
@@ -49,7 +49,7 @@ megamol::gui::ParameterGroupsPresentation::ParameterGroupsPresentation(void)
             in_external_tf_editor, out_open_external_tf_editor, in_override_header_state, inout_picking_buffer);
     };
     /// ID string must equal parameter group name, which is used for identification
-    this->group_widgets["reset"] = reset;
+    this->group_widgets["view"] = reset;
 }
 
 
