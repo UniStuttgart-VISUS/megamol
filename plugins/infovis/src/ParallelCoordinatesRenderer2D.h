@@ -162,6 +162,8 @@ namespace infovis {
 
         void setupAccel(int approach, int w, int h, int ssLevel);
 
+        void doReconstruction(int approach, int w, int h, int ssLevel);
+
         int mouseXtoAxis(float x);
 
         bool enableProgramAndBind(vislib::graphics::gl::GLSLShader& program);

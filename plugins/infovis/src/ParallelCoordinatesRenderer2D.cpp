@@ -865,8 +865,8 @@ void ParallelCoordinatesRenderer2D::drawItemsDiscrete(
     tf->BindConvenience(prog, GL_TEXTURE5, 5);
     glUniform4fv(prog.ParameterLocation("color"), 1, color);
     glUniform1f(prog.ParameterLocation("tfColorFactor"), tfColorFactor);
-    glUniform1f(prog.ParameterLocation("widthR"), res[0]);
-    glUniform1f(prog.ParameterLocation("heightR"), res[1]);
+    glUniform1f(prog.ParameterLocation("widthR"), this->windowWidth);
+    glUniform1f(prog.ParameterLocation("heightR"), this->windowHeight);
     try {
         auto colcol = this->columnIndex.at(this->otherItemsAttribSlot.Param<core::param::FlexEnumParam>()->Value());
         glUniform1i(prog.ParameterLocation("colorColumn"), colcol);
@@ -1412,11 +1412,115 @@ void ParallelCoordinatesRenderer2D::setupAccel(int papproach, int pw, int ph, in
     }
 }
 
+void ParallelCoordinatesRenderer2D::doReconstruction(int papproach, int pw, int ph, int pssLevel) {
+    int approach = papproach;
+    int w = pw;
+    int h = ph;
+    int ssLevel = pssLevel;
+
+    if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        glViewport(0, 0, w, h);
+
+        pc_reconstruction0_shdr->Enable();
+
+        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tex2D"), 11);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
+        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("h"), h);
+        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("w"), w);
+        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("approach"), approach);
+        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("frametype"), frametype);
+
+        glUniformMatrix4fv(
+            pc_reconstruction0_shdr->ParameterLocation("moveMatrices"), 2, GL_FALSE, &moveMatrices[0][0][0]);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        pc_reconstruction0_shdr->Disable();
+        frametype = (frametype + 1) % framesNeeded;
+    }
+
+    if (approach == 1 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        glViewport(0, 0, w, h);
+
+        pc_reconstruction1_shdr->Enable();
+
+        glActiveTexture(GL_TEXTURE10);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
+        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("tx2D_array"), 10);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
+        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("h"), h);
+        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("w"), w);
+        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("approach"), approach);
+        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("frametype"), frametype);
+
+        glUniformMatrix4fv(
+            pc_reconstruction1_shdr->ParameterLocation("mMatrices"), 4, GL_FALSE, &moveMatrices[0][0][0]);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        pc_reconstruction1_shdr->Disable();
+        frametype = (frametype + 1) % framesNeeded;
+    }
+
+    if (approach == 2 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        glViewport(0, 0, w, h);
+
+        pc_reconstruction2_shdr->Enable();
+
+        glActiveTexture(GL_TEXTURE11);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayB);
+        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("src_tx2Da"), 11);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
+        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("h"), h);
+        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("w"), w);
+        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("approach"), approach);
+        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("frametype"), frametype);
+
+        glUniformMatrix4fv(
+            pc_reconstruction2_shdr->ParameterLocation("mMatrices"), framesNeeded, GL_FALSE, &moveMatrices[0][0][0]);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        pc_reconstruction2_shdr->Disable();
+        frametype = (frametype + 1) % framesNeeded;
+    }
+
+    if (approach == 3 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        glViewport(0, 0, w, h);
+
+        pc_reconstruction3_shdr->Enable();
+
+        glActiveTexture(GL_TEXTURE10);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
+        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("tx2D_array"), 10);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
+
+        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("h"), h);
+        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("w"), w);
+        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("approach"), approach);
+        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("frametype"), frametype);
+        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("ssLevel"), ssLevel);
+
+        // glUniformMatrix4fv(
+        //    pc_reconstruction3_shdr->ParameterLocation("mMatrices"), framesNeeded, GL_FALSE, &moveMatrices[0][0][0]);
+
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER, framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0], GL_STATIC_READ);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        pc_reconstruction3_shdr->Disable();
+
+        frametype = (frametype + 1) % framesNeeded;
+    }
+}
+
 bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     int w = call.GetViewport().Width();
     int h = call.GetViewport().Height();
-    res[0] = 1.0 * w;
-    res[1] = 1.0 * h;
     int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
 
     windowWidth = call.GetViewport().Width();
@@ -1548,103 +1652,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glDepthMask(GL_TRUE);
 
-    if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
-        glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
-
-        pc_reconstruction0_shdr->Enable();
-
-        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tex2D"), 11);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
-        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("h"), call.GetViewport().Height());
-        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("w"), call.GetViewport().Width());
-        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("approach"), approach);
-        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("frametype"), frametype);
-
-        glUniformMatrix4fv(
-            pc_reconstruction0_shdr->ParameterLocation("moveMatrices"), 2, GL_FALSE, &moveMatrices[0][0][0]);
-
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        pc_reconstruction0_shdr->Disable();
-        frametype = (frametype + 1) % framesNeeded;
-    }
-
-    if (approach == 1 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
-        glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
-
-        pc_reconstruction1_shdr->Enable();
-
-        glActiveTexture(GL_TEXTURE10);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
-        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("tx2D_array"), 10);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
-        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("h"), call.GetViewport().Height());
-        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("w"), call.GetViewport().Width());
-        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("approach"), approach);
-        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("frametype"), frametype);
-
-        glUniformMatrix4fv(
-            pc_reconstruction1_shdr->ParameterLocation("mMatrices"), 4, GL_FALSE, &moveMatrices[0][0][0]);
-
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        pc_reconstruction1_shdr->Disable();
-        frametype = (frametype + 1) % framesNeeded;
-    }
-
-    if (approach == 2 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
-        glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
-
-        pc_reconstruction2_shdr->Enable();
-
-        glActiveTexture(GL_TEXTURE11);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayB);
-        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("src_tx2Da"), 11);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
-        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("h"), call.GetViewport().Height());
-        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("w"), call.GetViewport().Width());
-        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("approach"), approach);
-        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("frametype"), frametype);
-
-        glUniformMatrix4fv(
-            pc_reconstruction2_shdr->ParameterLocation("mMatrices"), framesNeeded, GL_FALSE, &moveMatrices[0][0][0]);
-
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        pc_reconstruction2_shdr->Disable();
-        frametype = (frametype + 1) % framesNeeded;
-    }
-
-    if (approach == 3 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
-        glViewport(0, 0, call.GetViewport().Width(), call.GetViewport().Height());
-
-        pc_reconstruction3_shdr->Enable();
-
-        glActiveTexture(GL_TEXTURE10);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
-        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("tx2D_array"), 10);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
-
-        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("h"), call.GetViewport().Height());
-        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("w"), call.GetViewport().Width());
-        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("approach"), approach);
-        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("frametype"), frametype);
-        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("ssLevel"), ssLevel);
-
-        //glUniformMatrix4fv(
-        //    pc_reconstruction3_shdr->ParameterLocation("mMatrices"), framesNeeded, GL_FALSE, &moveMatrices[0][0][0]);
-
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0], GL_STATIC_READ);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        pc_reconstruction3_shdr->Disable();
-
-        frametype = (frametype + 1) % framesNeeded;
-    }
+   doReconstruction(approach, w, h, ssLevel);
 
     return true;
 }
