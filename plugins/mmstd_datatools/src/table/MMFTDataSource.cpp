@@ -34,13 +34,15 @@ std::vector<T> read_vector(std::istream& stream, std::size_t size) {
     return vec;
 }
 
-std::string read_string(std::istream& stream, std::size_t size) {
+std::string read_string(std::istream& stream, std::size_t size, bool trim_null = true) {
     std::string str(size, '\0');
     stream.read(str.data(), size * sizeof(std::string::value_type));
     if (!stream.good()) {
         throw std::runtime_error("Error reading from stream!");
     }
-    str.erase(std::find(str.begin(), str.end(), '\0'), str.end());
+    if (trim_null) {
+        str.erase(std::find(str.begin(), str.end(), '\0'), str.end());
+    }
     return str;
 }
 
@@ -81,7 +83,9 @@ void MMFTDataSource::release() {
     values_.clear();
 }
 
-void MMFTDataSource::assertData(void) {
+void MMFTDataSource::assertData() {
+    using namespace std::string_literals;
+
     if (!filenameSlot_.IsDirty() && !reload_) {
         return; // nothing to do
     }
@@ -100,8 +104,7 @@ void MMFTDataSource::assertData(void) {
     }
 
     try {
-        std::string magicId = read_string(file, 6);
-        if (magicId != "MMFTD") {
+        if (!(read_string(file, 6, false) == "MMFTD\0"s)) {
             throw std::runtime_error("Wrong file format magic ID!");
         }
 
