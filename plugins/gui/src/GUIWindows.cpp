@@ -1131,9 +1131,11 @@ bool GUIWindows::createContext(void) {
     float param_win_height = buf_win.win_size.y;
 
     // LOG CONSOLE Window -----------------------------------------------------
+    const float default_font_size = (12.0f * megamol::gui::gui_scaling.Get() + ImGui::GetFrameHeightWithSpacing());
     buf_win.win_name = "Log Console";
     buf_win.win_show = false;
-    buf_win.win_size = ImVec2(vp[2], vp[3] - param_win_height);
+    buf_win.win_size =
+        ImVec2(vp[2], std::min((vp[3] - param_win_height - default_font_size), (8.0f * default_font_size)));
     buf_win.win_reset_size = buf_win.win_size;
     buf_win.win_position = ImVec2(0.0f, vp[3] - buf_win.win_size.y);
     buf_win.win_reset_position = buf_win.win_position;
