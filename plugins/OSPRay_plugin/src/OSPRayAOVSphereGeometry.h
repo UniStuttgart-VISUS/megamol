@@ -92,13 +92,13 @@ private:
 
     size_t time;
 
-    std::pair<float, float> valuerange;
+    std::array<float,2> valuerange;
 
-    std::vector<float> gridorigin;
+    std::array<float,3> gridorigin;
 
-    std::vector<float> gridspacing;
+    std::array<float,3> gridspacing;
 
-    std::vector<int> dimensions;
+    std::array<int,3> dimensions;
 
     long long int ispcLimit = 1ULL << 30;
 };

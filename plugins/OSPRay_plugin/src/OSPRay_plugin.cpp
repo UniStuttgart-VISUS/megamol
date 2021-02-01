@@ -18,11 +18,9 @@
 #include "OSPRayAPIStructure.h"
 #include "OSPRayLineGeometry.h"
 #include "OSPRayNHSphereGeometry.h"
-#include "OSPRayCylinderGeometry.h"
 #include "OSPRaySphereGeometry.h"
 #include "OSPRayStructuredVolume.h"
-#include "OSPRayTriangleMesh.h"
-#include "OSPRayQuadMesh.h"
+#include "OSPRayMeshGeometry.h"
 #include "OSPRay_plugin/CallOSPRayAPIObject.h"
 #include "OSPRay_plugin/CallOSPRayStructure.h"
 #include "OSPRayAOVSphereGeometry.h"
@@ -39,6 +37,7 @@
 #include "OSPRayVelvetMaterial.h"
 #include "OSPRay_plugin/CallOSPRayMaterial.h"
 #include "Pkd.h"
+#include "OSPRayGeometryTest.h"
 
 namespace megamol::ospray {
 /** Implementing the instance class of this plugin */
@@ -70,12 +69,11 @@ public:
 
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRaySphereGeometry>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayNHSphereGeometry>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayTriangleMesh>();
+        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayMeshGeometry>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayStructuredVolume>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayAPIStructure>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayLineGeometry>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayQuadMesh>();
-        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayCylinderGeometry>();
+        this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayGeometryTest>();
 
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayOBJMaterial>();
         this->module_descriptions.RegisterAutoDescription<megamol::ospray::OSPRayLuminousMaterial>();
