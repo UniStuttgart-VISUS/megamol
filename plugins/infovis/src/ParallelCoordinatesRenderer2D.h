@@ -162,6 +162,8 @@ namespace infovis {
 
         void setupAccel(int approach, int w, int h, int ssLevel);
 
+        std::vector<glm::fvec2> calculateHammersley(int until);
+
         void setupBuffers();
 
         void doReconstruction(int approach, int w, int h, int ssLevel);

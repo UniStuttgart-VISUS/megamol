@@ -1097,6 +1097,27 @@ void ParallelCoordinatesRenderer2D::setupBuffers() {
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
 }
 
+std::vector<glm::fvec2> ParallelCoordinatesRenderer2D::calculateHammersley(int until) {
+    // calculation of Positions according to hammersley sequence
+    // https://www.researchgate.net/publication/244441430_Sampling_with_Hammersley_and_Halton_Points
+    std::vector<glm::fvec2> outputArray(until);
+    float p = 0;
+    float u;
+    float v = 0;
+    for (int k = 0; k < until; k++) {
+        u = 0;
+        p = (float) 0.5;
+        for (int kk = k; kk > 0; p *= 0.5, kk >>= 1) {
+            if (kk % 2 == 1) {
+                u += p;
+            }
+            v = (float) ((k + 0.5) / until);
+        }
+        outputArray[k] = glm::vec2(u - floor(2 * u), v - floor(2 * v));
+    }
+    return outputArray;
+}
+
 void ParallelCoordinatesRenderer2D::setupAccel(int approach, int ow, int oh, int ssLevel) {
     int w = ow / 2;
     int h = oh / 2;
@@ -1301,32 +1322,14 @@ void ParallelCoordinatesRenderer2D::setupAccel(int approach, int ow, int oh, int
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
             hammerPositions.resize(ssLevel);
-            // calculation of Positions according to hammersley sequence
-            // https://www.researchgate.net/publication/244441430_Sampling_with_Hammersley_and_Halton_Points
-            float p = 0;
-            float u;
-            float v = 0;
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("yes");
-            for (int k = 0; k < ssLevel; k++) {
-                u = 0;
-                p = (float) 0.5;
-                for (int kk = k; kk > 0; p *= 0.5, kk >>= 1) {
-                    if (kk % 2 == 1) {
-                        u += p;
-                    }
-                    v = (float) ((k + 0.5) / ssLevel);
-                }
-                hammerPositions[k] = glm::vec2(u - floor(2 * u), v - floor(2 * v));
-                megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "x: %f, y: %f", hammerPositions[k].x, hammerPositions[k].y);
-            }
+            hammerPositions = calculateHammersley(ssLevel);
         }
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
 
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
         glActiveTexture(GL_TEXTURE10);
         glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4 * ssLevel * ssLevel, 0, GL_RGB, GL_FLOAT, 0);
+        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4 * ssLevel, 0, GL_RGB, GL_FLOAT, 0);
 
         float factor = this->testingFloat.Param<core::param::FloatParam>()->Value();
         glm::mat4 jit;
