@@ -359,8 +359,13 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(GroupWidg
     if (presentation == param::AbstractParamPresentation::Presentation::Basic) {
 
         if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+
             this->draw_grouped_parameters(group_widget_data.first, params, in_module_fullname, in_search, in_scope,
                 in_external_tf_editor, out_open_external_tf_editor, in_override_header_state);
+
+        } else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
+
+            // no global implementation ...
         }
 
     } else if (presentation == param::AbstractParamPresentation::Presentation::Group_Animation) {
@@ -371,138 +376,131 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(GroupWidg
 
             ImGui::TextDisabled(group_widget_data.first.c_str());
             return true;
-        } else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
+        }
+        /// else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
+
+        // Load button textures (once) --------------------------------------------
+        if (!this->image_buttons.play.IsLoaded()) {
+            this->image_buttons.play.LoadTextureFromFile("../share/resources/transport_ctrl_play.png");
+        }
+        if (!this->image_buttons.pause.IsLoaded()) {
+            this->image_buttons.pause.LoadTextureFromFile("../share/resources/transport_ctrl_pause.png");
+        }
+        if (!this->image_buttons.fastforward.IsLoaded()) {
+            this->image_buttons.fastforward.LoadTextureFromFile("../share/resources/transport_ctrl_fast-forward.png");
+        }
+        if (!this->image_buttons.fastrewind.IsLoaded()) {
+            this->image_buttons.fastrewind.LoadTextureFromFile("../share/resources/transport_ctrl_fast-rewind.png");
+        }
+        if ((!this->image_buttons.play.IsLoaded()) || (!this->image_buttons.pause.IsLoaded()) ||
+            (!this->image_buttons.fastforward.IsLoaded()) || (!this->image_buttons.fastrewind.IsLoaded())) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] Unable to load all required button textures for animation group widget. [%s, %s, line %d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
+            return false;
+        }
+
+        // DRAW -------------------------------------------------------------------
+        const ImVec2 button_size =
+            ImVec2(1.5f * ImGui::GetFrameHeightWithSpacing(), 1.5f * ImGui::GetFrameHeightWithSpacing());
+        const float knob_size = 2.5f * ImGui::GetFrameHeightWithSpacing();
+
+        ImGuiStyle& style = ImGui::GetStyle();
+        if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
             // GLOBAL
 
-            // Load button textures (once) --------------------------------------------
-            if (!this->image_buttons.play.IsLoaded()) {
-                this->image_buttons.play.LoadTextureFromFile("../share/resources/transport_ctrl_play.png");
+            ImGui::Begin(group_widget_data.first.c_str(), nullptr,
+                ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
+                    ImGuiWindowFlags_NoCollapse);
+        } else { // if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+            /// LOCAL
+            // Alternative LOCAL presentation
+
+            // ImGui::BeginGroup();
+            // ImGui::TextUnformatted(group_widget_data.first.c_str());
+            // ImGui::Separator();
+        }
+
+        // Transport Buttons ------------------------------------------------------
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.Colors[ImGuiCol_ButtonActive]);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonHovered]);
+
+        bool play = std::get<bool>(param_play->GetValue());
+        float time = std::get<float>(param_time->GetValue());
+        float speed = std::get<float>(param_speed->GetValue());
+        std::string button_label;
+
+        /// PLAY - PAUSE
+        if (!play) {
+            if (this->image_buttons.play.Button("Play", button_size)) {
+                play = !play;
             }
-            if (!this->image_buttons.pause.IsLoaded()) {
-                this->image_buttons.pause.LoadTextureFromFile("../share/resources/transport_ctrl_pause.png");
+        } else {
+            if (this->image_buttons.pause.Button("Pause", button_size)) {
+                play = !play;
             }
-            if (!this->image_buttons.fastforward.IsLoaded()) {
-                this->image_buttons.fastforward.LoadTextureFromFile(
-                    "../share/resources/transport_ctrl_fast-forward.png");
-            }
-            if (!this->image_buttons.fastrewind.IsLoaded()) {
-                this->image_buttons.fastrewind.LoadTextureFromFile("../share/resources/transport_ctrl_fast-rewind.png");
-            }
-            if ((!this->image_buttons.play.IsLoaded()) || (!this->image_buttons.pause.IsLoaded()) ||
-                (!this->image_buttons.fastforward.IsLoaded()) || (!this->image_buttons.fastrewind.IsLoaded())) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Unable to load all required button textures for animation group widget. [%s, %s, line %d]\n",
-                    __FILE__, __FUNCTION__, __LINE__);
-                return false;
-            }
+        }
+        ImGui::SameLine();
 
-            // DRAW -------------------------------------------------------------------
+        /// SLOWER
+        if (this->image_buttons.fastrewind.Button("Slower", button_size)) {
+            // play = true;
+            speed /= 1.5f;
+        }
+        this->tooltip.ToolTip(button_label, ImGui::GetItemID(), 1.0f, 5.0f);
+        ImGui::SameLine();
 
-            ImGuiStyle& style = ImGui::GetStyle();
-            const ImVec2 button_size =
-                ImVec2(1.5f * ImGui::GetFrameHeightWithSpacing(), 1.5f * ImGui::GetFrameHeightWithSpacing());
-            const float knob_size = 2.5f * ImGui::GetFrameHeightWithSpacing();
+        /// FASTER
+        if (this->image_buttons.fastforward.Button("Faster", button_size)) {
+            // play = true;
+            speed *= 1.5f;
+        }
 
-            if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
-                // GLOBAL
+        ImGui::PopStyleColor(2);
 
-                ImGui::Begin(group_widget_data.first.c_str(), nullptr,
-                    ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
-                        ImGuiWindowFlags_NoCollapse);
-            }
-            /*
-            else { // if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
-                /// LOCAL
+        // ImGui::SameLine();
+        ImVec2 cursor_pos = ImGui::GetCursorPos();
 
-                float child_height = frame_height * 4.5f;
-                auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration;
-                ImGui::BeginChild("group_widget_animation", ImVec2(0.0f, child_height), true, child_flags);
+        // Time -------------------------------------------------------------------
+        ImGui::BeginGroup();
+        std::string label("time");
+        float font_size = ImGui::CalcTextSize(label.c_str()).x;
+        ImGui::SetCursorPosX(cursor_pos.x + (knob_size - font_size) / 2.0f);
+        ImGui::TextUnformatted(label.c_str());
+        ParameterPresentation::KnobButton(
+            label, knob_size, time, param_time->GetMinValue<float>(), param_time->GetMaxValue<float>());
+        ImGui::Text(param_time->present.float_format.c_str(), time);
+        ImGui::EndGroup();
+        ImGui::SameLine();
 
-                // Caption
-                ImGui::TextUnformatted(group_label.c_str());
-            }
-            */
+        // Speed -------------------------------------------------------------------
+        ImGui::BeginGroup();
+        label = "speed";
+        font_size = ImGui::CalcTextSize(label.c_str()).x;
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (knob_size - font_size) / 2.0f);
+        ImGui::TextUnformatted(label.c_str());
+        ParameterPresentation::KnobButton(
+            label, knob_size, speed, param_speed->GetMinValue<float>(), param_speed->GetMaxValue<float>());
+        ImGui::Text(param_speed->present.float_format.c_str(), speed);
+        ImGui::EndGroup();
 
-            // Transport Buttons ------------------------------------------------------
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, style.Colors[ImGuiCol_ButtonActive]);
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonHovered]);
+        // ------------------------------------------------------------------------
 
-            bool play = std::get<bool>(param_play->GetValue());
-            float time = std::get<float>(param_time->GetValue());
-            float speed = std::get<float>(param_speed->GetValue());
-            std::string button_label;
+        param_play->SetValue(play);
+        param_time->SetValue(time);
+        param_speed->SetValue(speed);
 
-            /// PLAY - PAUSE
-            if (!play) {
-                if (this->image_buttons.play.Button("Play", button_size)) {
-                    play = !play;
-                }
-            } else {
-                if (this->image_buttons.pause.Button("Pause", button_size)) {
-                    play = !play;
-                }
-            }
-            ImGui::SameLine();
+        if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
+            // GLOBAL
 
-            /// SLOWER
-            if (this->image_buttons.fastrewind.Button("Slower", button_size)) {
-                // play = true;
-                speed /= 1.5f;
-            }
-            this->tooltip.ToolTip(button_label, ImGui::GetItemID(), 1.0f, 5.0f);
-            ImGui::SameLine();
+            ImGui::End();
+        }
 
-            /// FASTER
-            if (this->image_buttons.fastforward.Button("Faster", button_size)) {
-                // play = true;
-                speed *= 1.5f;
-            }
+        else if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+            /// LOCAL
+            // Alternative LOCAL presentation
 
-            ImGui::PopStyleColor(2);
-
-            // ImGui::SameLine();
-            ImVec2 cursor_pos = ImGui::GetCursorPos();
-
-            // Time -------------------------------------------------------------------
-            ImGui::BeginGroup();
-            std::string label("time");
-            float font_size = ImGui::CalcTextSize(label.c_str()).x;
-            ImGui::SetCursorPosX(cursor_pos.x + (knob_size - font_size) / 2.0f);
-            ImGui::TextUnformatted(label.c_str());
-            ParameterPresentation::KnobButton(
-                label, knob_size, time, param_time->GetMinValue<float>(), param_time->GetMaxValue<float>());
-            ImGui::Text(param_time->present.float_format.c_str(), time);
-            ImGui::EndGroup();
-            ImGui::SameLine();
-
-            // Speed -------------------------------------------------------------------
-            ImGui::BeginGroup();
-            label = "speed";
-            font_size = ImGui::CalcTextSize(label.c_str()).x;
-            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (knob_size - font_size) / 2.0f);
-            ImGui::TextUnformatted(label.c_str());
-            ParameterPresentation::KnobButton(
-                label, knob_size, speed, param_speed->GetMinValue<float>(), param_speed->GetMaxValue<float>());
-            ImGui::Text(param_speed->present.float_format.c_str(), speed);
-            ImGui::EndGroup();
-
-            // ------------------------------------------------------------------------
-
-            param_play->SetValue(play);
-            param_time->SetValue(time);
-            param_speed->SetValue(speed);
-
-            if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
-                // GLOBAL
-
-                ImGui::End();
-            }
-            /*
-            else if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
-                /// LOCAL
-                ImGui::EndChild();
-            }
-            */
+            // ImGui::EndGroup();
         }
 
     } else {
@@ -541,10 +539,9 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(GroupWidget
         return false;
     }
 
-
     // Parameter presentation -------------------------------------------------
     auto presentation = group_widget_data.second.GetGUIPresentation();
-        // Switch presentation via parameter
+    // Switch presentation via parameter
     if (param_showCube->IsValueDirty()) {
         if (std::get<bool>(param_showCube->GetValue())) {
             group_widget_data.second.SetGUIPresentation(param::AbstractParamPresentation::Presentation::Group_3D_Cube);
@@ -560,7 +557,11 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(GroupWidget
             // LOCAL
 
             this->draw_grouped_parameters(group_widget_data.first, params, in_module_fullname, in_search, in_scope,
-            in_external_tf_editor, out_open_external_tf_editor, in_override_header_state);
+                in_external_tf_editor, out_open_external_tf_editor, in_override_header_state);
+
+        } else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
+
+            // no global implementation ...
         }
 
     } else if (presentation == param::AbstractParamPresentation::Presentation::Group_3D_Cube) {
@@ -580,8 +581,6 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(GroupWidget
                     __LINE__);
                 return false;
             }
-
-            // DRAW -------------------------------------------------------------------
 
             auto id = param_defaultView->uid;
             inout_picking_buffer->AddInteractionObject(id, this->cube_widget.GetInteractions(id));
@@ -628,6 +627,7 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(GroupWidget
         }
 
     } else {
+
         // No supported presentation
         return false;
     }
