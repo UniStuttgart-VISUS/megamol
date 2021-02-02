@@ -74,17 +74,15 @@ For Windows, you have to install [CMake](https://cmake.org/), and load the `CMak
 Next, click `Configure` a few times (until all red entries disappear).
 Then click `Generate` to generate the build files.
 
-<center>
-<a name="cmake_windows"></a>
-<img src="pics/cmake_windows.png" alt="CMake Windows" style="width: 768px;"/>
-</center>
+![CMake Windows](pics/cmake_windows.png)
+Screenshot of `cmake-gui` after generating build files.
 
 <!-- ---------------------------------------------------------------------- -->
 #### Linux (Ubuntu)
 
-Since the full support of some C++17 functionality is required (e.g. std::filesystem) a `gcc`version equal or greater than **8** is required (with `CMAKE_CXX_FLAGS` apended by `--std=c++17`).
+Since the full support of some C++17 functionality is required (e.g. std::filesystem) a `gcc`version equal or greater than **8** is required (with `CMAKE_CXX_FLAGS` appended by `--std=c++17`).
 
-Latest Test:
+Latest tested version:
 
     $ cat /proc/version
     Linux version 5.8.0-41-generic (buildd@lgw01-amd64-003) (gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #46~20.04.1-Ubuntu SMP Mon Jan 18 17:52:23 UTC 2021
@@ -149,7 +147,7 @@ In the `bin` directory, you can find the default configuration file for MegaMol:
     mmSetConfigValue("arcball",     "off")
 ```
 
-The following paragraphs explain the essential steps of preparing a script in more detail.
+The following paragraphs explain the essential steps of configuring MegaMol in more detail.
 
 <!-- ---------------------------------------------------------------------- -->
 #### General Settings
@@ -188,6 +186,8 @@ The *Add...Dir* commands set the paths for the respective resources.
 <!-- ---------------------------------------------------------------------- -->
 #### Plugins
 
+*DEPRECATED*
+
 Extend the configuration if you introduce new plugins into your installation. Although there are different ways to specify the plugins to be loaded, the tags in the example configuration file are the most secure way. Each `mmPluginLoaderInfo` tag requires three attributes:
 
 - `path` should be the path to find the plugin. The example configuration file assumes
@@ -219,7 +219,6 @@ The value itself contains five variables:
 This variable allows us to create borderless windows filling the complete screen for full-screen rendering.
 
 The last settings variable, activates (or deactivates) the the arcball camera behaviour. Set this option to `on` in order to use the arcball camera navigation.
-<!-- TODO: Needs more explanation of the available hotkeys! -->
 
 ```lua
     mmSetConfigValue("arcball",     "off")
@@ -244,53 +243,6 @@ Windows:
 
     > megamol.exe
 
-<!-- ???
-The resulting output should look something like this:
-
-    0200|MegaMol� Console
-    0200|Console: (Ver.: 1.2.cef9ff221ce4-dirty) 64 Bit Linux
-    0300|MegaMol Core API "cef9ff221ce4-dirty"; 
-    0200|Core "MegaMol Core (Evolution Chamber)" (Ver.: 1.2.cef9ff221ce4-dirty) 64 Bit Linux
-    0300|
-    0200|Started Fri Sep 29 14:31:38 2017
-
-        MegaMol� Console
-        Copyright (c) 2006 - 2017 by MegaMol Team: VISUS (Universitaet Stuttgart, Germany), TU Dresden (Dresden, Germany)
-        Alle Rechte vorbehalten.
-        All rights reserved.
-        
-    0200|Called: /nethome/user/software/megamol/bin/mmconsole
-    250|Path "/nethome/user/software/megamol/share/shaders" added as shader search path.
-    250|Configuration value "*-window" set to "w1280h720".
-    250|Configuration value "consolegui" set to "on".
-    350|Directory "application" is "/nethome/user/software/megamol/bin"
-    200|Configuration sucessfully loaded from "/nethome/user/software/megamol/bin/megamol.cfg"
-    200|Default LRHostAddress = "tcp://*:33333"
-    200|Default LRHostEnable = "true"
-    200|Installed service "LuaRemote" [1]
-    200|LRH Server socket opened on "tcp://*:33333"
-    200|Auto-enabled service "LuaRemote" [1]
-    200|Plugin CinematicCamera loaded: 4 Modules, 1 Calls
-    200|Plugin "CinematicCamera" (/nethome/user/software/megamol/lib/libcinematiccamera.mmplg) loaded: 4 Modules, 1 Calls registered
-    200|Plugin infovis loaded: 3 Modules, 2 Calls
-    200|Plugin "infovis" (/nethome/user/software/megamol/lib/libinfovis.mmplg) loaded: 3 Modules, 2 Calls registered
-    200|Plugin mdao2 loaded: 1 Modules, 0 Calls
-    200|Plugin "mdao2" (/nethome/user/software/megamol/lib/libmdao2.mmplg) loaded: 1 Modules, 0 Calls registered
-    200|Plugin mmstd_datatools loaded: 43 Modules, 4 Calls
-    200|Plugin "mmstd_datatools" (/nethome/user/software/megamol/lib/libmmstd_datatools.mmplg) loaded: 43 Modules, 4 Calls registered
-    200|Plugin mmstd_moldyn loaded: 16 Modules, 1 Calls
-    200|Plugin "mmstd_moldyn" (/nethome/user/software/megamol/lib/libmmstd_moldyn.mmplg) loaded: 16 Modules, 1 Calls registered
-    200|Plugin mmstd_trisoup loaded: 12 Modules, 4 Calls
-    200|Plugin "mmstd_trisoup" (/nethome/user/software/megamol/lib/libmmstd_trisoup.mmplg) loaded: 12 Modules, 4 Calls registered
-    200|Plugin "mmstd.volume" (/nethome/user/software/megamol/lib/libmmstd_volume.mmplg) loaded: 7 Modules, 0 Calls registered
-    200|Plugin Protein loaded: 55 Modules, 9 Calls
-    200|Plugin "Protein" (/nethome/user/software/megamol/lib/libprotein.mmplg) loaded: 55 Modules, 9 Calls registered
-    200|Plugin Protein_Calls loaded: 0 Modules, 10 Calls
-    200|Plugin "Protein_Calls" (/nethome/user/software/megamol/lib/libprotein_calls.mmplg) loaded: 0 Modules, 10 Calls registered
-    200|Core Instance destroyed
-    200|LRH Server socket closed
--->
-
 Alternatively, you can descend into the bin directory and start the frontend directly. Doing so, you must ensure that the additional shared objects can be found and loaded. Enter the commands. To test this, try:
 
     cd bin
@@ -306,16 +258,12 @@ Windows:
 
     > megamol.exe ..\examples\testspheres_megamol.lua
 
-<center>
-<a name="testrunpic"></a>
-<img src="pics/testspheres.png" alt="First test results" style="width: 768px;"/>
-<p style="text-align: left; width: 768px;">
+![Test Project](pics/testspheres.png)
 Screenshot MegaMol running the test spheres instance. 
 The highlighted option in the AntTweak-Bar on the right side of the window adjusts the animation speed.
-</p>
-</center>
 
 <!-- XXX Do not mind the `Ignoring Xlib error: error code n request code m` messages. -->
+
 MegaMol should now open a rendering window showing a generated dataset with several colored spheres. Hitting the `space` key starts and stops the animation playback. In the *AntTweakBar*, on the left side of the window, you can adjust all parameters of the running MegaMol instance. For example, you can find the parameter `Speed` in the group `inst::view::anim` (cf. [test run figure](#testrunpic)). With this parameter, you can adjust the playback speed of the animation.
 
 
@@ -324,14 +272,15 @@ MegaMol should now open a rendering window showing a generated dataset with seve
 
 ## Load and Create Projects
 
+*TODO*
 <!--  A detailed description of the GUI and the configurator can be found [here](https://github.com/UniStuttgart-VISUS/megamol/blob/master/plugins/gui/README.md) -->
-
 
 
 <!-- ###################################################################### -->
 <a name="viewing-data-sets"></a>
 
 ## Viewing Data Sets
+<!-- XXX More suitable caption name? -->
 
 In this chapter, we discuss the principle usage of the prepared project files for data set viewing. 
 <!-- DEPRECATED This project script files are available in the *script and example* package from the MegaMol project website. -->
@@ -343,13 +292,8 @@ In this chapter, we discuss the principle usage of the prepared project files fo
 
 The runtime functionality of MegaMol is constructed by *modules* and *calls*. These two type of objects are instantiated at runtime, interconnected and build the *module graph*. The figure [Example Graph](#examplegraph) shows an example module graph containing a rendering content of a window *view*, a *renderer*, a *data source*, and two modules providing additional information for the renderer. The modules, shown as blue boxes, are interconnected by *call* objects, shown as gray boxes. The connection endpoints at the modules are *CallerSlots* (outgoing, located on the right of modules) or *CalleeSlots* (incoming, located on the left side of modules) shown as circles.
 
-<center>
-<a name="examplegraph"></a>
-<img src="pics/example_graph.png" alt="Example graph" style="width: 1024px;"/>
-<p style="text-align: left; width: 1024px;">
+![Example Graph](pics/example_graph.png)
 An example module graph. Left-most module view of class View3D represents the rendering content of a window. The center module renderer of class SphererRenderer is called by the window using the corresponding call of type CallRenderer3D. The right modules provide data and additional information for the renderer, namely a color map function and a clip plane.An example module graph.
-</p>
-</center>
 
 The module graph follows the pull pattern. This means that modules request function invocation by other modules. For example, the *view* module needs to update the window content. The *view* module thus invokes the *renderer* module to provide a new rendering. The *renderer* calls the data source if new data is available or to provide the old cached data.
 
@@ -385,6 +329,8 @@ MegaMol provides some internal description of views which can be instantiated wi
 <a name="project-files"></a>
 
 ### Project Files
+
+*TODO*
 
 <!-- COMPLETE REWORK / DEPRECTED => lua
 
@@ -510,26 +456,25 @@ To connect the `ScreenShooter` with your view, you need to set the instance name
 
 The parameters `imgWidth` and `imgHeight` specify the size of the screenshot to be rendered. These values are not limited to the window size and can be, in theory, arbitrarily large. If these values are getting large, the image can be rendered in several tiles, i.e., sub-images. The size for these tiles is specified by `tileWidth` and `tileHeight`. However, many renderers have problems with producing these tiled images. It is, thus, recommended to set `tileWidth` and `tileHeight` to be at least as large as `imgWidth` and `imgHeight`. The values for `tileWidth` and `tileHeight` are limited by the maximum texture size, maximum frame buffer object size and graphics memory size of your graphics card. Thus, these values are often limited.
 
-<center>
-<a name="screenshooter"></a>
-<img src="pics/screenshooter.png" alt="Screenshooter" style="width: 512px;"/>
-<p style="text-align: left; width: 512px;">
+<!-- DEPERCATED 
+![ScreenShooter](pics/screenshooter.png)
 The parameter filename specifies the path to the image file to be created. MegaMol only creates PNG files. Hit the button trigger to have MegaMol create the requested screenshot.
-</p>
-</center>
+-->
 
 <!-- ---------------------------------------------------------------------- -->
 ### Reproducibility
 
-MegaMol stores the active project and all parameter settings in the EXIF field of the saved screenshots. Please note that this field currently contains a simple zero-terminated string with the LUA code required to reproduce the state when the screenshot is taken, and **not** valid EXIF data. Such a project can be restored by just loading the PNG:
-```
-$ mmconsole -p something.png
-```
-Also note that only Views with direct access to camera parameters (like View3D2, but unlike the original View3D, which requires explicit serialization of camera parameters) can be properly restored.
+MegaMol stores the active project and all parameter settings in the EXIF field of the saved screenshots. Please note that this field currently contains a simple zero-terminated string with the LUA code required to reproduce the state when the screenshot is taken, and **not** valid EXIF data. Such a project can be restored by just loading the PNG file:
 
-<a name="makevideo"></a>
+```
+    $ mmconsole -p something.png
+```
+
+Also note that only Views with direct access to camera parameters (like View3D_2, but unlike the original View3D, which requires explicit serialization of camera parameters) can be properly restored.
 
 <!-- ---------------------------------------------------------------------- -->
+<a name="makevideo"></a>
+
 ### Making Simple Videos
 
 <!-- ADD Cinematic plugin: [cinematic plugin](https://github.com/UniStuttgart-VISUS/megamol/blob/master/plugins/cinematic/README.md) -->
@@ -544,6 +489,7 @@ This sequence of image files can then be merged to produce a video file, e.g. us
     $ avconv -r 30 -i test.%05d.png test.mp4
 
 <b>KNOWN BUG</b>: several renderers will request the best data they can get. As usually data is loaded asynchronously, the correct data is often not available yet, and the best data is the data from a slightly wrong time. While this is not a big deal for viewing data, it is fatal when rendering images for videos. Many renderers thus expose a parameter `forceTime`, or with a similar name. Set this parameter to `true` and the renderer will always show the correct data. It will need to wait if the correct data is not available, yet, which can reduce the overall performance.
+
 
 <!-- ###################################################################### -->
 <a name="jobs"></a>
