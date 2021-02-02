@@ -37,7 +37,7 @@ using namespace megamol::core;
 /*
  * TriSoupRenderer::TriSoupRenderer
  */
-TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModule_2(),
+TriSoupRenderer::TriSoupRenderer(void) : Renderer3DModuleGL(),
         getDataSlot("getData", "The slot to fetch the tri-mesh data"),
         getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)"),
         getLightsSlot("lights", "Lights are retrieved over this slot."),

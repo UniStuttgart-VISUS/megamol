@@ -13,7 +13,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "vislib/graphics/gl/GLSLComputeShader.h"
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -25,7 +25,7 @@ namespace volume {
     /**
      * Renders one slice of a volume (slow)
      */
-    class VolumeSliceRenderer : public core::view::Renderer3DModule_2 {
+    class VolumeSliceRenderer : public core::view::Renderer3DModuleGL {
     public:
         /**
          * Answer the name of this module.

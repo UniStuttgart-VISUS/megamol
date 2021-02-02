@@ -13,7 +13,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
 
@@ -23,7 +23,7 @@ namespace demos {
 /**
  * Module rendering gridded quarts particle data
  */
-class QuartzRenderer : public core::view::Renderer3DModule_2, public AbstractMultiShaderQuartzRenderer {
+class QuartzRenderer : public core::view::Renderer3DModuleGL, public AbstractMultiShaderQuartzRenderer {
 public:
     /**
      * Answer the name of this module.

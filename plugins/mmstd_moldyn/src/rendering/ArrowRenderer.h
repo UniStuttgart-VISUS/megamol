@@ -18,7 +18,7 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/FlagCall.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "vislib/assert.h"
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -36,7 +36,7 @@ namespace rendering {
     /**
      * Renderer for simple sphere glyphs
      */
-    class ArrowRenderer : public view::Renderer3DModule_2 {
+    class ArrowRenderer : public view::Renderer3DModuleGL {
     public:
 
         /**

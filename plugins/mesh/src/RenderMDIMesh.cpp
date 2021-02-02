@@ -19,7 +19,7 @@ using namespace megamol;
 using namespace megamol::mesh;
 
 RenderMDIMesh::RenderMDIMesh()
-	: Renderer3DModule_2()
+	: Renderer3DModuleGL()
     , m_render_task_callerSlot("renderTasks", "Connects the renderer with a render task data source")
     , m_framebuffer_slot("framebuffer", "Connects the renderer to an (optional) framebuffer render target from the calling module") 
 {

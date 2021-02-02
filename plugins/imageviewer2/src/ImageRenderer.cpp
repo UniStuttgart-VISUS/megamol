@@ -36,7 +36,7 @@ const unsigned int TILE_SIZE = 2 * 1024;
  * misc::ImageRenderer::ImageRenderer
  */
 imageviewer2::ImageRenderer::ImageRenderer(void)
-    : Renderer3DModule_2()
+    : Renderer3DModuleGL()
     , leftFilenameSlot("leftImg", "The image file name")
     , rightFilenameSlot("rightImg", "The image file name")
     , pasteFilenamesSlot("pasteFiles", "Slot to paste both file names at once (semicolon-separated)")

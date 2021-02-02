@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "AbstractTexQuartzRenderer.h"
 #include "mmcore/CallerSlot.h"
 #include "QuartzCrystalDataCall.h"
@@ -24,7 +24,7 @@ namespace demos {
     /**
      * Module rendering gridded quarts particle data
      */
-    class QuartzTexRenderer : public core::view::Renderer3DModule_2, public AbstractTexQuartzRenderer {
+    class QuartzTexRenderer : public core::view::Renderer3DModuleGL, public AbstractTexQuartzRenderer {
     public:
 
         /**

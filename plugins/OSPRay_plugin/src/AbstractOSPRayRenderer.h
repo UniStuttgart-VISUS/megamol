@@ -11,7 +11,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/view/light/CallLight.h"
 #include "ospray/ospray.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
@@ -21,7 +21,7 @@
 namespace megamol {
 namespace ospray {
 
-class AbstractOSPRayRenderer : public core::view::Renderer3DModule_2 {
+class AbstractOSPRayRenderer : public core::view::Renderer3DModuleGL {
 protected:
     // Ctor
     AbstractOSPRayRenderer(void);

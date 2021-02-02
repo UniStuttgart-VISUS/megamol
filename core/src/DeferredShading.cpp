@@ -6,7 +6,7 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 
 megamol::core::DeferredShading::DeferredShading() 
-    : Renderer3DModule_2()
+    : Renderer3DModuleGL()
     , m_GBuffer(nullptr)
     , m_deferred_shading_prgm(nullptr)
     , m_lights_buffer(nullptr)

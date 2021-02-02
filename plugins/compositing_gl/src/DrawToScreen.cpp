@@ -8,7 +8,7 @@
 #include "compositing/CompositingCalls.h"
 
 megamol::compositing::DrawToScreen::DrawToScreen() 
-    : Renderer3DModule_2()
+    : Renderer3DModuleGL()
     , m_drawToScreen_prgm(nullptr)
     , m_input_texture_call("InputTexture","Access texture that is drawn to output screen")
 {

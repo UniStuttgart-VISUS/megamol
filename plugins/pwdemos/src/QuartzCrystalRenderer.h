@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 
@@ -18,7 +18,7 @@ namespace demos {
     /**
      * Module rendering quarts crystals frames
      */
-    class CrystalRenderer : public core::view::Renderer3DModule_2 {
+    class CrystalRenderer : public core::view::Renderer3DModuleGL {
     public:
 
         /**

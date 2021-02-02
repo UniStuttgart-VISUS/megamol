@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "ArxelBuffer.h"
 #include "AbstractQuartzModule.h"
 #include "BufferMTPConnection.h"
@@ -31,7 +31,7 @@ namespace demos {
     /**
      * Module for extracting and rendering PoreNetwork
      */
-    class PoreNetExtractor : public core::view::Renderer3DModule_2, public AbstractQuartzModule {
+    class PoreNetExtractor : public core::view::Renderer3DModuleGL, public AbstractQuartzModule {
     public:
 
         /**

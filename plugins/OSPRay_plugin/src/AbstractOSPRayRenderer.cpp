@@ -39,7 +39,7 @@ namespace ospray {
     }
 
     AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
-            : core::view::Renderer3DModule_2()
+            : core::view::Renderer3DModuleGL()
             , lightSlot("lights",
                   "Lights are retrieved over this slot. If no light is connected") 
             , accumulateSlot("accumulate", "Activates the accumulation buffer")

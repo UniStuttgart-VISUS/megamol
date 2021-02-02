@@ -27,7 +27,7 @@ const GLuint SSBOflagsBindingPoint = 2;
 const GLuint SSBOvertexBindingPoint = 3;
 const GLuint SSBOcolorBindingPoint = 4;
 
-SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
+SphereRenderer::SphereRenderer(void) : view::Renderer3DModuleGL()
 , getDataSlot("getdata", "Connects to the data source")
 , getTFSlot("gettransferfunction", "The slot for the transfer function module")
 , getClipPlaneSlot("getclipplane", "The slot for the clipping plane module")

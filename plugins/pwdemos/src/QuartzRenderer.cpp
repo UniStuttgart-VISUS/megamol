@@ -27,7 +27,7 @@ namespace demos {
  * QuartzRenderer::QuartzRenderer
  */
 QuartzRenderer::QuartzRenderer(void)
-    : core::view::Renderer3DModule_2()
+    : core::view::Renderer3DModuleGL()
     , AbstractMultiShaderQuartzRenderer()
     , showClipAxesSlot("showClipAxes", "Shows/Hides the axes (x and y) of the clipping plane") {
 

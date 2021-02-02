@@ -5,7 +5,7 @@
 #include "compositing/CompositingCalls.h"
 
 megamol::compositing::SimpleRenderTarget::SimpleRenderTarget() 
-    : Renderer3DModule_2()
+    : Renderer3DModuleGL()
     , m_version(0)
     , m_GBuffer(nullptr)
     , m_color_render_target("Color", "Access the color render target texture")

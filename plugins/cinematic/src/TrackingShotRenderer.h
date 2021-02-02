@@ -18,7 +18,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/FilePathParam.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/Input.h"
@@ -45,7 +45,7 @@ namespace cinematic {
 	/**
 	* Tracking shot rendering.
 	*/
-	class TrackingShotRenderer : public core::view::Renderer3DModule_2 {
+	class TrackingShotRenderer : public core::view::Renderer3DModuleGL {
 	public:
 
 		/**

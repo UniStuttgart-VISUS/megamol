@@ -18,7 +18,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Cuboid.h"
@@ -53,7 +53,7 @@ namespace rendering {
     /**
         * Renderer for gridded imposters
         */
-    class GrimRenderer : public core::view::Renderer3DModule_2 {
+    class GrimRenderer : public core::view::Renderer3DModuleGL {
     public:
 
         /**

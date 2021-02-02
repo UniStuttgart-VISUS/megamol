@@ -19,7 +19,7 @@ namespace demos {
 /*
  * AbstractBezierRenderer::AbstractBezierRenderer
  */
-AbstractBezierRenderer::AbstractBezierRenderer(void) : Renderer3DModule_2(),
+AbstractBezierRenderer::AbstractBezierRenderer(void) : Renderer3DModuleGL(),
         getDataSlot("getdata", "Connects to the data source"),
         objsHash(0), shader(NULL) {
     // intentionally empty

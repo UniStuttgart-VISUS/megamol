@@ -14,7 +14,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
@@ -27,7 +27,7 @@ namespace megamol101 {
  * Renders incoming spheres to the screen, either using GL_POINTS or more
  * sophisticated shaders.
  */
-class SimplestSphereRenderer : public core::view::Renderer3DModule_2 {
+class SimplestSphereRenderer : public core::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.

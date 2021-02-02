@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
@@ -24,7 +24,7 @@ namespace demos {
     /**
      * Renderer for simple sphere glyphs
      */
-    class AOSphereRenderer : public megamol::core::view::Renderer3DModule_2 {
+    class AOSphereRenderer : public megamol::core::view::Renderer3DModuleGL {
     public:
 
         /**

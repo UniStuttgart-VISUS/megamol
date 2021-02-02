@@ -23,7 +23,7 @@ namespace view {
 /**
  * Renderer responsible for the rendering of the currently active bounding box as well as the view cube etc.
  * This is a special renderer without the typical structure of other renderers, since it does not inherit from
- * Renderer3DModule_2.
+ * Renderer3DModuleGL.
  */
 class MEGAMOLCORE_API BoundingBoxRenderer : public view::RendererModule<CallRender3DGL> {
 public:

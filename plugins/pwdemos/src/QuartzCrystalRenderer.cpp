@@ -20,7 +20,7 @@ namespace demos {
 /*
  * CrystalRenderer::CrystalRenderer
  */
-CrystalRenderer::CrystalRenderer(void) : core::view::Renderer3DModule_2(),
+CrystalRenderer::CrystalRenderer(void) : core::view::Renderer3DModuleGL(),
 dataInSlot("datain", "slot to get the data"),
 lightsSlot("lights", "Lights are retrieved over this slot."),
 crystalIdx("idx", "The index of the selected crystal") {

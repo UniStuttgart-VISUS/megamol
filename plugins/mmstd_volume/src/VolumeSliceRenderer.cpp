@@ -14,7 +14,7 @@
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/ShaderSource.h"
@@ -33,7 +33,7 @@
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
 megamol::stdplugin::volume::VolumeSliceRenderer::VolumeSliceRenderer(void)
-	: Renderer3DModule_2()
+	: Renderer3DModuleGL()
 	, getVolSlot("getVol", "The call for data")
 	, getTFSlot("gettransferfunction", "The call for Transfer function")
 	, getClipPlaneSlot("getclipplane", "The call for clipping plane") {

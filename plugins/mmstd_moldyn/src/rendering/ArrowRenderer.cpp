@@ -15,7 +15,7 @@ using namespace megamol::core::moldyn;
 using namespace megamol::stdplugin::moldyn::rendering;
 
 
-ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModule_2()
+ArrowRenderer::ArrowRenderer(void) : view::Renderer3DModuleGL()
     , getDataSlot("getdata", "Connects to the data source")
     , getTFSlot("gettransferfunction", "Connects to the transfer function module")
     , getFlagsSlot("getflags", "connects to a FlagStorage")

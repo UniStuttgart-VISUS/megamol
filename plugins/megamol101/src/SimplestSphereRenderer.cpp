@@ -24,7 +24,7 @@ using namespace megamol::megamol101;
  * SimplestSphereRenderer::SimplestSphereRenderer
  */
 SimplestSphereRenderer::SimplestSphereRenderer(void)
-    : core::view::Renderer3DModule_2()
+    : core::view::Renderer3DModuleGL()
     , sphereDataSlot("inData", "The input data slot for sphere data.")
     , sphereModeSlot("sphere rendering", "Switch for the pretty sphere rendering mode")
     , sizeScalingSlot("scaling factor", "Scaling factor for the size of the rendered GL_POINTS") {

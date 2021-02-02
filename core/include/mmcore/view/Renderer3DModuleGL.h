@@ -1,24 +1,19 @@
 /*
- * Renderer3DModule_2.h
+ * Renderer3DModuleGL.h
  *
  * Copyright (C) 2018, 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_Renderer3DModule_2_H_INCLUDED
-#define MEGAMOLCORE_Renderer3DModule_2_H_INCLUDED
+#ifndef MEGAMOLCORE_Renderer3DModuleGL_H_INCLUDED
+#define MEGAMOLCORE_Renderer3DModuleGL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/CalleeSlot.h"
-#include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/RendererModule.h"
-#include "mmcore/view/light/CallLight.h"
-#include "vislib/graphics/graphicstypes.h"
 
 namespace megamol {
 namespace core {
@@ -27,13 +22,13 @@ namespace view {
 /**
  * New and improved base class of rendering graph 3D renderer modules.
  */
-class MEGAMOLCORE_API Renderer3DModule_2 : public view::RendererModule<CallRender3DGL> {
+class MEGAMOLCORE_API Renderer3DModuleGL : public view::RendererModule<CallRender3DGL> {
 public:
     /** Ctor. */
-    Renderer3DModule_2(void);
+    Renderer3DModuleGL(void);
 
     /** Dtor. */
-    virtual ~Renderer3DModule_2(void);
+    virtual ~Renderer3DModuleGL(void);
 
 protected:
     /**
@@ -92,4 +87,4 @@ private:
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /** MEGAMOLCORE_Renderer3DModule_2_H_INCLUDED */
+#endif /** MEGAMOLCORE_Renderer3DModuleGL_H_INCLUDED */

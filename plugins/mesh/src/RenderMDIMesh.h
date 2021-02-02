@@ -16,7 +16,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "compositing/CompositingCalls.h"
 
@@ -39,7 +39,7 @@ namespace mesh {
  * Per render batch, a single call of glMultiDrawElementsIndirect is made. The data
  * for the indirect draw call is stored and accessed via SSBOs.
  */
-class RenderMDIMesh : public megamol::core::view::Renderer3DModule_2 {
+class RenderMDIMesh : public megamol::core::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.

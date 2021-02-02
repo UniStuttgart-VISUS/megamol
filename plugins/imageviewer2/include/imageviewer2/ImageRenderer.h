@@ -13,7 +13,7 @@
 
 #include <memory>
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "vislib/Pair.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -39,7 +39,7 @@ namespace imageviewer2 {
 /**
  * Mesh-based renderer for bézier curve tubes
  */
-class ImageRenderer : public view::Renderer3DModule_2 {
+class ImageRenderer : public view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.

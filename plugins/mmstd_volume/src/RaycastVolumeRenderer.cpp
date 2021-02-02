@@ -35,7 +35,7 @@
 using namespace megamol::stdplugin::volume;
 
 RaycastVolumeRenderer::RaycastVolumeRenderer()
-    : Renderer3DModule_2()
+    : Renderer3DModuleGL()
     , m_mode("mode", "Mode changing the behavior for the raycaster")
     , m_ray_step_ratio_param("ray step ratio", "Adjust sampling rate")
     , m_use_lighting_slot("lighting::use lighting", "Enable simple volumetric illumination")

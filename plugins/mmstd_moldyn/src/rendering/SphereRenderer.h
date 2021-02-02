@@ -30,7 +30,7 @@
 #include "mmcore/utility/SSBOBufferArray.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "vislib/types.h"
 #include "vislib/assert.h"
@@ -104,7 +104,7 @@ namespace rendering {
     /**
      * Renderer for simple sphere glyphs.
      */
-    class SphereRenderer : public megamol::core::view::Renderer3DModule_2 {
+    class SphereRenderer : public megamol::core::view::Renderer3DModuleGL {
     public:
        
         /**

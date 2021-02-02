@@ -12,7 +12,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -27,7 +27,7 @@ namespace trisoup {
     /**
      * Renderer for tri-mesh data
      */
-    class TriSoupRenderer : public core::view::Renderer3DModule_2 {
+    class TriSoupRenderer : public core::view::Renderer3DModuleGL {
     public:
 
         /**

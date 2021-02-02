@@ -13,7 +13,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/BufferObject.hpp"
@@ -24,7 +24,7 @@ namespace compositing {
 /**
  * TODO
  */
-class DrawToScreen : public megamol::core::view::Renderer3DModule_2 {
+class DrawToScreen : public megamol::core::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.

@@ -37,7 +37,7 @@ namespace demos {
 /*
  * PoreNetExtractor::PoreNetExtractor
  */
-PoreNetExtractor::PoreNetExtractor(void) : core::view::Renderer3DModule_2(), AbstractQuartzModule(),
+PoreNetExtractor::PoreNetExtractor(void) : core::view::Renderer3DModuleGL(), AbstractQuartzModule(),
 typeTexture(0), bbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0), cbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0),
 filenameSlot("filename", "The file name of the pore network data file"),
 streamSaveSlot("streamSave", "Saves the data to the pore network data file while extracting"),

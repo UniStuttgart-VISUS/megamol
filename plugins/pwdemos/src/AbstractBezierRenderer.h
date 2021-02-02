@@ -8,7 +8,7 @@
 #pragma once
 
 
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -20,7 +20,7 @@ namespace demos {
     /**
      * Raycasting-based renderer for bézier curve tubes
      */
-    class AbstractBezierRenderer : public core::view::Renderer3DModule_2 {
+    class AbstractBezierRenderer : public core::view::Renderer3DModuleGL {
     public:
 
     protected:

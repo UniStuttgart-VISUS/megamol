@@ -1,24 +1,21 @@
 /*
- * Renderer3DModule_2.cpp
+ * Renderer3DModuleGL.cpp
  *
  * Copyright (C) 2018, 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/view/AbstractViewGL.h"
 #include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/InputCall.h"
 
-using namespace megamol::core;
-using namespace megamol::core::view;
 using namespace megamol::core::view;
 
 /*
- * Renderer3DModule_2::Renderer3DModule_2
+ * Renderer3DModuleGL::Renderer3DModuleGL
  */
-Renderer3DModule_2::Renderer3DModule_2(void)
+Renderer3DModuleGL::Renderer3DModuleGL(void)
     : RendererModule<CallRender3DGL>() {
     // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->chainRenderSlot);
@@ -28,16 +25,16 @@ Renderer3DModule_2::Renderer3DModule_2(void)
 }
 
 /*
- * Renderer3DModule_2::~Renderer3DModule_2
+ * Renderer3DModuleGL::~Renderer3DModuleGL
  */
-Renderer3DModule_2::~Renderer3DModule_2(void) {
+Renderer3DModuleGL::~Renderer3DModuleGL(void) {
     // intentionally empty
 }
 
 /*
- * Renderer3DModule_2::GetExtentsChain
+ * Renderer3DModuleGL::GetExtentsChain
  */
-bool Renderer3DModule_2::GetExtentsChain(CallRender3DGL& call) {
+bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
     CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<CallRender3DGL>();
     if (chainedCall != nullptr) {
         // copy the incoming call to the output
@@ -69,9 +66,9 @@ bool Renderer3DModule_2::GetExtentsChain(CallRender3DGL& call) {
 }
 
 /*
- * Renderer3DModule_2::RenderChain
+ * Renderer3DModuleGL::RenderChain
  */
-bool Renderer3DModule_2::RenderChain(CallRender3DGL& call) {
+bool Renderer3DModuleGL::RenderChain(CallRender3DGL& call) {
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
     std::shared_ptr<const view::AbstractViewGL> viewptr =
         std::dynamic_pointer_cast<const view::AbstractViewGL>(leftSlotParent);
@@ -106,8 +103,8 @@ bool Renderer3DModule_2::RenderChain(CallRender3DGL& call) {
 }
 
 /*
- * Renderer3DModule_2::PreRender
+ * Renderer3DModuleGL::PreRender
  */
-void Renderer3DModule_2::PreRender(CallRender3DGL& call) {
+void Renderer3DModuleGL::PreRender(CallRender3DGL& call) {
     // intentionally empty
 }

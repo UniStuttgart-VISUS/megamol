@@ -40,7 +40,7 @@ namespace demos {
 /*
  * AOSphereRenderer::AOSphereRenderer
  */
-AOSphereRenderer::AOSphereRenderer(void) : megamol::core::view::Renderer3DModule_2(),
+AOSphereRenderer::AOSphereRenderer(void) : megamol::core::view::Renderer3DModuleGL(),
         sphereShaderAOMainAxes(), sphereShaderAONormals(),
         getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),

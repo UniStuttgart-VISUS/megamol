@@ -27,7 +27,7 @@ namespace demos {
 /*
  * QuartzTexRenderer::QuartzTexRenderer
  */
-QuartzTexRenderer::QuartzTexRenderer(void) : core::view::Renderer3DModule_2(),
+QuartzTexRenderer::QuartzTexRenderer(void) : core::view::Renderer3DModuleGL(),
 AbstractTexQuartzRenderer(), cryShader(),
 showClipAxesSlot("showClipAxes", "Shows/Hides the axes (x and y) of the clipping plane") {
 
