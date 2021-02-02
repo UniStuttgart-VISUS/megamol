@@ -148,6 +148,7 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 ![CMake Windows](pics/cmake_windows.png)
 *Screenshot of `cmake-gui` after generating build files.*
 
+<<<<<<< HEAD
 <!-- ---------------------------------------------------------------------- -->
 #### Linux (Ubuntu)
 
@@ -158,14 +159,22 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 <a name="cmake_windows"></a>
 <img src="pics/cmake_windows.png" alt="CMake Windows" style="width: 768px;"/>
 </center>
+=======
+![CMake Windows](pics/cmake_windows.png)
+Screenshot of `cmake-gui` after generating build files.
+>>>>>>> f5eec258f (manual update ....)
 
 <!-- ---------------------------------------------------------------------- -->
 #### Linux (Ubuntu)
 
-Since the full support of some C++17 functionality is required (e.g. std::filesystem) a `gcc`version equal or greater than **8** is required (with `CMAKE_CXX_FLAGS` apended by `--std=c++17`).
+Since the full support of some C++17 functionality is required (e.g. std::filesystem) a `gcc`version equal or greater than **8** is required (with `CMAKE_CXX_FLAGS` appended by `--std=c++17`).
 
+<<<<<<< HEAD
 Latest Test:
 >>>>>>> 800f17d5c (manual update)
+=======
+Latest tested version:
+>>>>>>> f5eec258f (manual update ....)
 
     $ cat /proc/version
     Linux version 5.8.0-41-generic (buildd@lgw01-amd64-003) (gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #46~20.04.1-Ubuntu SMP Mon Jan 18 17:52:23 UTC 2021
@@ -404,7 +413,13 @@ The *Add...Dir* commands set the paths for the respective resources.
 <!-- ---------------------------------------------------------------------- -->
 #### Plugins
 
+<<<<<<< HEAD
 Since we switched to static linking of plugin libraries into the MegaMol binary, the configuration of `mmPluginLoaderInfo` is ***DEPRECATED*** and no longer required.
+=======
+*DEPRECATED*
+
+Extend the configuration if you introduce new plugins into your installation. Although there are different ways to specify the plugins to be loaded, the tags in the example configuration file are the most secure way. Each `mmPluginLoaderInfo` tag requires three attributes:
+>>>>>>> f5eec258f (manual update ....)
 
 <!--
 *DEPRECATED:*
@@ -464,8 +479,11 @@ All other configuration options are ***DEPRECATED*** and have currently no effec
 *DEPRECATED:*
 =======
 The last settings variable, activates (or deactivates) the the arcball camera behaviour. Set this option to `on` in order to use the arcball camera navigation.
+<<<<<<< HEAD
 <!-- TODO: Needs more explanation of the available hotkeys! -->
 >>>>>>> 800f17d5c (manual update)
+=======
+>>>>>>> f5eec258f (manual update ....)
 
 - This variable defines whether the GUI is show or not.
 ```lua
@@ -521,6 +539,7 @@ Test your installation following the description in the following section.
 =======
     > megamol.exe
 
+<<<<<<< HEAD
 <!-- ???
 The resulting output should look something like this:
 >>>>>>> 800f17d5c (manual update)
@@ -571,6 +590,8 @@ Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your wo
     200|LRH Server socket closed
 -->
 
+=======
+>>>>>>> f5eec258f (manual update ....)
 Alternatively, you can descend into the bin directory and start the frontend directly. Doing so, you must ensure that the additional shared objects can be found and loaded. Enter the commands. To test this, try:
 >>>>>>> 800f17d5c (manual update)
 
@@ -606,8 +627,14 @@ This script adds the required library path:
     > megamol.exe ..\examples\testspheres_megamol.lua
 >>>>>>> 800f17d5c (manual update)
 
+<<<<<<< HEAD
     LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH ./megamol "$@"
 ```
+=======
+![Test Project](pics/testspheres.png)
+Screenshot MegaMol running the test spheres instance. 
+The highlighted option in the AntTweak-Bar on the right side of the window adjusts the animation speed.
+>>>>>>> f5eec258f (manual update ....)
 
 <<<<<<< HEAD
 MegaMol should start and print several messages to the console and an empty rendering window should appear.
@@ -620,6 +647,7 @@ Some warnings (log level **100**) might occur but are *normal* and indicate no f
 ### Examples
 =======
 <!-- XXX Do not mind the `Ignoring Xlib error: error code n request code m` messages. -->
+
 MegaMol should now open a rendering window showing a generated dataset with several colored spheres. Hitting the `space` key starts and stops the animation playback. In the *AntTweakBar*, on the left side of the window, you can adjust all parameters of the running MegaMol instance. For example, you can find the parameter `Speed` in the group `inst::view::anim` (cf. [test run figure](#testrunpic)). With this parameter, you can adjust the playback speed of the animation.
 
 
@@ -628,8 +656,8 @@ MegaMol should now open a rendering window showing a generated dataset with seve
 
 ## Load and Create Projects
 
+*TODO*
 <!--  A detailed description of the GUI and the configurator can be found [here](https://github.com/UniStuttgart-VISUS/megamol/blob/master/plugins/gui/README.md) -->
-
 
 
 <!-- ###################################################################### -->
@@ -639,9 +667,14 @@ MegaMol should now open a rendering window showing a generated dataset with seve
 The [example project script files](https://github.com/UniStuttgart-VISUS/megamol-examples) are automatically available in the `examples` directory, which is installed next to the `bin` directory.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 For a better test, you should invoke MegaMol loading an example project script requesting a simple rendering. 
 Then you can be sure that the graphics drivers, graphics libraries, and shader codes are correctly found and are working. 
 To do this, try: 
+=======
+## Viewing Data Sets
+<!-- XXX More suitable caption name? -->
+>>>>>>> f5eec258f (manual update ....)
 
 **Linux:**
 =======
@@ -660,7 +693,12 @@ In this chapter, we discuss the principle usage of the prepared project files fo
 The runtime functionality of MegaMol is constructed by *modules* and *calls*. These two type of objects are instantiated at runtime, interconnected and build the *module graph*. The figure [Example Graph](#examplegraph) shows an example module graph containing a rendering content of a window *view*, a *renderer*, a *data source*, and two modules providing additional information for the renderer. The modules, shown as blue boxes, are interconnected by *call* objects, shown as gray boxes. The connection endpoints at the modules are *CallerSlots* (outgoing, located on the right of modules) or *CalleeSlots* (incoming, located on the left side of modules) shown as circles.
 >>>>>>> 800f17d5c (manual update)
 
+<<<<<<< HEAD
     > megamol.exe ..\examples\testspheres_megamol.lua
+=======
+![Example Graph](pics/example_graph.png)
+An example module graph. Left-most module view of class View3D represents the rendering content of a window. The center module renderer of class SphererRenderer is called by the window using the corresponding call of type CallRenderer3D. The right modules provide data and additional information for the renderer, namely a color map function and a clip plane.An example module graph.
+>>>>>>> f5eec258f (manual update ....)
 
 MegaMol should now open a rendering window showing a generated dataset with several colored spheres and the outline of the bounding box. 
 Hitting the `space` key starts and stops the animation playback.
@@ -725,9 +763,14 @@ The right modules provide data and additional information for the renderer, name
 *Example module call graph.*
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 <!-- ---------------------------------------------------------------------- -->
 #### Modules and Calls
 =======
+=======
+*TODO*
+
+>>>>>>> f5eec258f (manual update ....)
 <!-- COMPLETE REWORK / DEPRECTED => lua
 
 Project files are the primary method to start up MegaMol. The snippets below show the content of the project file `simple_siff.mmprj` and `pdbcartoonview.mmprj` which can be used to view the sample particle datasets.
@@ -949,7 +992,14 @@ It can be opened via the menu `Windows / Configurator`.
 You can either edit the currently running MegaMol graph (which might be empty) or you can create a new project starting a module graph by adding the main view module `View3D_2`.
 A detailed description of the configurator can be found in the readme file of the [GUI plugin](../plugins/gui#configurator).
 
+<<<<<<< HEAD
 <!-- TODO 
+=======
+<!-- DEPERCATED 
+![ScreenShooter](pics/screenshooter.png)
+The parameter filename specifies the path to the image file to be created. MegaMol only creates PNG files. Hit the button trigger to have MegaMol create the requested screenshot.
+-->
+>>>>>>> f5eec258f (manual update ....)
 
 <<<<<<< HEAD
 Add more ... ?
@@ -958,6 +1008,7 @@ Add more ... ?
 ### Reproducibility
 >>>>>>> 800f17d5c (manual update)
 
+<<<<<<< HEAD
 -->
 
 <!-- ###################################################################### -->
@@ -969,12 +1020,23 @@ If screenshots are taken consecutively, the given file name is prepended by an i
 This way, no new file name has to be set after each screenshot.  
 
 <!-- DEPRECATED/UPDATE - MegaMol is not accessible for modules and therefore the required view instance can not be found
+=======
+MegaMol stores the active project and all parameter settings in the EXIF field of the saved screenshots. Please note that this field currently contains a simple zero-terminated string with the LUA code required to reproduce the state when the screenshot is taken, and **not** valid EXIF data. Such a project can be restored by just loading the PNG file:
+
+```
+    $ mmconsole -p something.png
+```
+
+Also note that only Views with direct access to camera parameters (like View3D_2, but unlike the original View3D, which requires explicit serialization of camera parameters) can be properly restored.
+>>>>>>> f5eec258f (manual update ....)
 
 <<<<<<< HEAD
 Offering more flexible options and special functions to create high-resolution screenshots of any rendering, you can add the `ScreenShooter` module to you project.
 The corresponding settings can be found in the modules parameters provided in the GUI (see figure of `ScreenShooter` parameters below).
 =======
 <!-- ---------------------------------------------------------------------- -->
+<a name="makevideo"></a>
+
 ### Making Simple Videos
 
 <!-- ADD Cinematic plugin: [cinematic plugin](https://github.com/UniStuttgart-VISUS/megamol/blob/master/plugins/cinematic/README.md) -->
@@ -1032,8 +1094,12 @@ Set this parameter to `true` and the renderer will always show the correct data.
 It will need to wait if the correct data is not available, yet, which can reduce the overall performance.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 -->
 =======
+=======
+
+>>>>>>> f5eec258f (manual update ....)
 <!-- ###################################################################### -->
 <a name="jobs"></a>
 >>>>>>> 800f17d5c (manual update)
