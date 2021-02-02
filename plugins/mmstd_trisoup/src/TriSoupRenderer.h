@@ -105,6 +105,9 @@ namespace trisoup {
         /** The slot to fetch the volume data */
         core::CallerSlot getVolDataSlot;
 
+        /** The call for light sources */
+        core::CallerSlot getLightsSlot;
+
         /** Flag whether or not to show vertices */
         core::param::ParamSlot showVertices;
 

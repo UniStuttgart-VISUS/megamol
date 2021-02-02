@@ -44,13 +44,13 @@
 namespace megamol {
 namespace gui {
 
-/// #define GUI_VERBOSE
+    /// #define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f)
 #define GUI_LINE_THICKNESS (3.0f)
 #define GUI_RECT_CORNER_RADIUS (0.0f)
-#define GUI_MAX_MULITLINE (7)
+#define GUI_MAX_MULITLINE (8)
 #define GUI_DND_CALLSLOT_UID_TYPE ("DND_CALL")
 #define GUI_GRAPH_BORDER (GUI_SLOT_RADIUS * 4.0f)
 #define GUI_MULTISELECT_MODIFIER (ImGui::GetIO().KeyShift)
@@ -70,7 +70,7 @@ namespace gui {
 
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))
-#define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.f, 1.0f))
+#define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.0f, 1.0f))
 #define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.6f, 0.0f, 0.3f, 1.0f))
 #define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.45f, 1.0f))
 #define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 1.0f, 0.75f, 1.0f))
@@ -86,7 +86,7 @@ namespace gui {
     typedef std::shared_ptr<megamol::gui::InterfaceSlot> InterfaceSlotPtr_t;
 
     /** Available ImGui APIs */
-    enum GUIImGuiAPI { NO_API, OPEN_GL };
+    enum GUIImGuiAPI { NONE, OPEN_GL };
 
     /** Hotkey Data Types (exclusively for configurator) */
     enum HotkeyIndex : size_t {
@@ -156,6 +156,7 @@ namespace gui {
         bool modules_layout;                           // out
         StrPairVector_t module_rename;                 // out
         vislib::math::Ternary module_mainview_changed; // out
+        ImVec2 module_param_child_position;            // out
 
         ImGuiID call_selected_uid; // in out
         ImGuiID call_hovered_uid;  // in out
@@ -202,6 +203,10 @@ namespace gui {
     inline ImGuiID GenerateUniqueID(void) {
         return (++megamol::gui::gui_generated_uid);
     }
+
+    /********** Global Context Pointer Counter **********/
+
+    extern unsigned int imgui_context_count;
 
     /********** Class **********/
 

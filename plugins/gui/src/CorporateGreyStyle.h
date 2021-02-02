@@ -9,6 +9,7 @@
 #define MEGAMOL_GUI_CORPORATEGREYSTYLE_INCLUDED
 
 #include <imgui.h>
+#include "DefaultStyle.h"
 
 
 /**
@@ -17,9 +18,30 @@
  * 0 = FLAT APPEARENCE, 1 = MORE "3D" LOOK
  */
 inline void CorporateGreyStyle(int is3D = 0) {
+
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4* colors = style.Colors;
 
+    // Geometry
+    DefaultStyle();
+    style.PopupRounding = 3.0f;
+    style.WindowPadding = ImVec2(4.0f, 4.0f);
+    style.FramePadding = ImVec2(6.0f, 4.0f);
+    style.ItemSpacing = ImVec2(6.0f, 2.0f);
+    style.ScrollbarSize = 18.0f;
+    style.WindowBorderSize = 1.0f;
+    style.ChildBorderSize = 1.0f;
+    style.PopupBorderSize = 1.0f;
+    style.FrameBorderSize = static_cast<float>(is3D);
+    style.WindowRounding = 0.0f; // 3;
+    style.ChildRounding = 3.0f;
+    style.FrameRounding = 3.0f;
+    style.ScrollbarRounding = 2.0f;
+    style.GrabRounding = 3.0f;
+    style.TabBorderSize = static_cast<float>(is3D);
+    style.TabRounding = 3.0f;
+
+    // Colors
     colors[ImGuiCol_Text] = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
     colors[ImGuiCol_TextDisabled] = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
     colors[ImGuiCol_WindowBg] = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);
@@ -68,33 +90,9 @@ inline void CorporateGreyStyle(int is3D = 0) {
     colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
     colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
     colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
-
-    style.PopupRounding = 3;
-
-    style.WindowPadding = ImVec2(4, 4);
-    style.FramePadding = ImVec2(6, 4);
-    style.ItemSpacing = ImVec2(6, 2);
-
-    style.ScrollbarSize = 18;
-
-    style.WindowBorderSize = 1;
-    style.ChildBorderSize = 1;
-    style.PopupBorderSize = 1;
-    style.FrameBorderSize = static_cast<float>(is3D);
-
-    style.WindowRounding = 0; // 3;
-    style.ChildRounding = 3;
-    style.FrameRounding = 3;
-    style.ScrollbarRounding = 2;
-    style.GrabRounding = 3;
-
-    style.TabBorderSize = static_cast<float>(is3D);
-    style.TabRounding = 3;
-
 #ifdef IMGUI_HAS_DOCK
     colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
     colors[ImGuiCol_DockingPreview] = ImVec4(0.85f, 0.85f, 0.85f, 0.28f);
-
     if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
         style.WindowRounding = 0.0f;
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;

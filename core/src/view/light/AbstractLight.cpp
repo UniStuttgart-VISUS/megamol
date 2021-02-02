@@ -22,20 +22,22 @@ using namespace megamol::core::view::light;
  */
 AbstractLight::AbstractLight(void)
     : core::Module()
-    , lightContainer()
+    , version(0)
+    , lightsource(nullptr)
+    , rhs_connected(false)
     , getLightSlot("getLightSlot", "Connects to another light")
     , deployLightSlot("deployLightSlot", "Connects to a renderer module or another light")
     // General light parameters
     , lightColor("Color", "Sets the color of the Light")
     , lightIntensity("Intensity", "Intensity of the Light") {
 
-    this->lightContainer.isValid = true;
-
     this->getLightSlot.SetCompatibleCall<CallLightDescription>();
     this->MakeSlotAvailable(&this->getLightSlot);
 
     this->deployLightSlot.SetCallback(
         CallLight::ClassName(), CallLight::FunctionName(0), &AbstractLight::getLightCallback);
+    this->deployLightSlot.SetCallback(
+        CallLight::ClassName(), CallLight::FunctionName(1), &AbstractLight::getMetaDataCallback);
     this->MakeSlotAvailable(&this->deployLightSlot);
 
     // general light
@@ -49,7 +51,6 @@ AbstractLight::AbstractLight(void)
  * megamol::core::view::light::AbstractLight::~AbstractLight
  */
 AbstractLight::~AbstractLight(void) {
-    lightContainer.isValid = false;
     this->Release();
 }
 
@@ -75,21 +76,45 @@ bool AbstractLight::getLightCallback(megamol::core::Call& call) {
     CallLight* lc_in = dynamic_cast<CallLight*>(&call);
     CallLight* lc_out = this->getLightSlot.CallAs<CallLight>();
 
-    this->lightContainer.dataChanged = false;
+    LightCollection light_collection;
+
+    if (lc_out != nullptr) {
+        if (!(*lc_out)(0)) {
+            return false;
+        }
+
+        // signal update if rhs connection changed
+        if (!rhs_connected) {
+            ++version;
+        }
+        rhs_connected = true;
+
+        // signal update if rhs connection has an update
+        if (lc_out->hasUpdate()) {
+            ++version;
+        }
+
+        light_collection = lc_out->getData();
+    } else {
+        if (rhs_connected) {
+            ++version;
+        }
+        rhs_connected = false;
+    }
+
     if (this->InterfaceIsDirty()) {
-        this->lightContainer.dataChanged = true;
+        ++version;
     }
     if (lc_in != NULL) {
         this->readParams();
-        lc_in->addLight(lightContainer);
+        this->addLight(light_collection);
+        lc_in->setData(light_collection, version);
     }
 
-    if (lc_out != NULL) {
-        *lc_out = *lc_in;
-        // lc_out->fillLightMap();
-        if (!(*lc_out)(0)) return false;
-    }
+    return true;
+}
 
+bool megamol::core::view::light::AbstractLight::getMetaDataCallback(core::Call& call) {
     return true;
 }
 

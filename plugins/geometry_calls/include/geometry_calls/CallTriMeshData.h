@@ -10,7 +10,6 @@
 #define MEGAMOL_GEOMETRY_CALLS_CALLTRIMESHDATA_H_INCLUDED
 #pragma once
 
-#include "geometry_calls/geometry_calls.h"
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/assert.h"
@@ -27,13 +26,13 @@ namespace geocalls {
     /**
      * Call transporting tri soup mesh data
      */
-    class GEOMETRY_CALLS_API CallTriMeshData : public core::AbstractGetData3DCall {
+    class CallTriMeshData : public core::AbstractGetData3DCall {
     public:
 
         /**
          * Subclass storing material information
          */
-        class GEOMETRY_CALLS_API Material {
+        class Material {
         public:
 
             /** Possible values for the illumination modell */
@@ -396,7 +395,7 @@ namespace geocalls {
         /**
          * Subclass storing the pointers to the mesh data
          */
-        class GEOMETRY_CALLS_API Mesh {
+        class Mesh {
         public:
 
             /** Possible data types */

@@ -597,7 +597,7 @@ bool KeyframeKeeper::addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf
     // Remove all already undone actions in list
     if (!this->undoQueue.empty() && (this->undoQueueIndex >= -1)) {
         if (this->undoQueueIndex < (int)(this->undoQueue.size() - 1)) {
-            this->undoQueue.erase(this->undoQueue.begin() + (this->undoQueueIndex + 1), this->undoQueue.begin() + ((this->undoQueue.size() + 1) - (SIZE_T)(this->undoQueueIndex + 1)));
+            this->undoQueue.erase(this->undoQueue.begin() + (this->undoQueueIndex + 1), this->undoQueue.end());
         }
     }
 
@@ -1029,7 +1029,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         kf.SetAnimTime(t);
         kf.SetSimTime(0.0f);
         auto state = this->cameraState;
-        state.half_aperture_angle_radians = glm::radians(30.0f); // = 60° aperture angle
+        state.half_aperture_angle_radians = glm::radians(30.0f); // = 60Â° aperture angle
         kf.SetCameraState(state);
         return kf;
     }

@@ -8,8 +8,6 @@
 #ifndef MEGAMOL_CINEMATIC_TRACKINGSHOTRENDERER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_TRACKINGSHOTRENDERER_H_INCLUDED
 
-#include "Cinematic/Cinematic.h"
-
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/SDFFont.h"

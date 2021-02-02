@@ -23,6 +23,7 @@
 #include "Configurator.h"
 #include "CorporateGreyStyle.h"
 #include "CorporateWhiteStyle.h"
+#include "DefaultStyle.h"
 #include "FileUtils.h"
 #include "LogConsole.h"
 #include "WindowCollection.h"
@@ -115,13 +116,6 @@ namespace gui {
         bool OnMouseScroll(double dx, double dy);
 
         /**
-         * Return list of parameter slots provided by this class. Make available in module which uses this class.
-         */
-        inline const std::vector<megamol::core::param::ParamSlot*> GetParams(void) const {
-            return this->param_slots;
-        }
-
-        /**
          * Triggered Shutdown.
          */
         inline bool ConsumeTriggeredShutdown(void) {
@@ -143,7 +137,14 @@ namespace gui {
          * Set Project Script Paths.
          */
         void SetProjectScriptPaths(const std::vector<std::string>& script_paths) {
-            this->project_script_paths = script_paths;
+            this->state.project_script_paths = script_paths;
+        }
+
+        /**
+         * Enable or disable GUI drawing
+         */
+        void SetEnableDisable(bool enable) {
+            this->state.gui_enabled = enable;
         }
 
         /**
@@ -153,8 +154,8 @@ namespace gui {
          *                                 This way, graph changes will be applied next frame (and not 2 frames later).
          *                                 In this case in PreDraw() a gui graph is created once.
          * - 'New' megamol graph:          Call this function in GUI_Service::digestChangedRequestedResources() as
-         * pre-rendering step. In this case a new gui graph is created before first call of PreDraw() and a gui graph
-         * already exists.
+         *                                 pre-rendering step. In this case a new gui graph is created before first
+         *                                 call of PreDraw() and a gui graph already exists.
          *
          * @param megamol_graph    If no megamol_graph is given, 'old' graph is synchronised via core_instance.
          */
@@ -174,12 +175,19 @@ namespace gui {
 
         /** The global state (for settings to be applied before ImGui::Begin). */
         struct StateBuffer {
-            ImGuiID graph_uid;                     // UID of currently running graph
-            std::string font_file;                 // Apply changed font file name.
-            float font_size;                       // Apply changed font size.
-            unsigned int font_index;               // Apply cahnged font by index.
-            std::vector<ImWchar> font_utf8_ranges; // Additional UTF-8 glyph ranges for all ImGui fonts.
-            bool win_save_state;                   // Flag indicating that window state should be written to parameter.
+            bool gui_enabled;        // Flag indicating whether GUI is completely disabled
+            bool enable_gui_post;    // Required to prevent changes to 'gui_enabled' being applied between pre and post
+                                     // drawing
+            Styles style;            // Predefined GUI style
+            bool style_changed;      // Flag indicating changed style
+            bool autosave_gui_state; // Automatically save state after gui has been changed
+            std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
+            ImGuiID graph_uid;                             // UID of currently running graph
+            std::string font_file;                         // Apply changed font file name.
+            float font_size;                               // Apply changed font size.
+            unsigned int font_index;                       // Apply cahnged font by index.
+            std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.
+            bool win_save_state;    // Flag indicating that window state should be written to parameter.
             float win_save_delay;   // Flag indicating how long to wait for saving window state since last user action.
             std::string win_delete; // Name of the window to delete.
             double last_instance_time;         // Last instance time.
@@ -194,6 +202,7 @@ namespace gui {
             bool screenshot_triggered;         // Trigger and file name for screenshot
             std::string screenshot_filepath;   // Filename the screenshot should be saved to
             int screenshot_filepath_id;        // Last unique id for screenshot filename
+            std::string last_script_filename;  // Last script filename provided from lua
             bool hotkeys_check_once;           // WORKAROUND: Check multiple hotkey assignments once
         };
 
@@ -215,18 +224,6 @@ namespace gui {
         /** Pointer to core instance. */
         megamol::core::CoreInstance* core_instance;
 
-        /** List of pointers to all paramters. */
-        std::vector<megamol::core::param::ParamSlot*> param_slots;
-
-        /** A parameter to select the style */
-        megamol::core::param::ParamSlot style_param;
-        /** A parameter to store the profile */
-        megamol::core::param::ParamSlot state_param;
-        /** A parameter for automatically saving gui state to file */
-        megamol::core::param::ParamSlot autosave_state_param;
-        /** A parameter for automatically start the configurator at start up */
-        megamol::core::param::ParamSlot autostart_configurator_param;
-
         /** Hotkeys */
         std::array<megamol::gui::HotkeyData_t, GuiHotkeyIndex::INDEX_COUNT> hotkeys;
 
@@ -234,7 +231,7 @@ namespace gui {
         ImGuiContext* context;
 
         /** The currently initialized ImGui API */
-        GUIImGuiAPI api;
+        GUIImGuiAPI initialized_api;
 
         /** The window collection. */
         WindowCollection window_collection;
@@ -248,9 +245,6 @@ namespace gui {
         /** The current local state of the gui. */
         StateBuffer state;
 
-        /** Project Script Path provided by Lua */
-        std::vector<std::string> project_script_paths;
-
         // Widgets
         FileBrowserWidget file_browser;
         StringSearchWidget search_widget;
@@ -261,10 +255,8 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        bool createContext(void);
+        bool createContext(GUIImGuiAPI imgui_api);
         bool destroyContext(void);
-
-        void validateParameters();
 
         // Window Draw Callbacks
         void drawParamWindowCallback(WindowCollection::WindowConfiguration& wc);

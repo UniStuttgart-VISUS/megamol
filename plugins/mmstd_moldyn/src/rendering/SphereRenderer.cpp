@@ -9,6 +9,8 @@
 #include "stdafx.h"
 #include "SphereRenderer.h"
 
+#include "mmcore/view/light/DistantLight.h"
+
 
 using namespace megamol::core;
 using namespace megamol::core::moldyn;
@@ -30,6 +32,7 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
 , getTFSlot("gettransferfunction", "The slot for the transfer function module")
 , getClipPlaneSlot("getclipplane", "The slot for the clipping plane module")
 , readFlagsSlot("readFlags", "The slot for reading the selection flags")
+, getLightsSlot("lights", "Lights are retrieved over this slot.")
 , curViewAttrib()
 , curClipDat()
 , oldClipDat()
@@ -114,6 +117,9 @@ SphereRenderer::SphereRenderer(void) : view::Renderer3DModule_2()
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
+
+    this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->getLightsSlot);
 
     this->getClipPlaneSlot.SetCompatibleCall<view::CallClipPlaneDescription>();
     this->MakeSlotAvailable(&this->getClipPlaneSlot);
@@ -1048,7 +1054,7 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     // Update current state variables -----------------------------------------
 
     // Update data set range (only if new data set was loaded, not on frame loading)
-    if (hash != this->oldHash) {
+    if (hash != this->oldHash) { // or (this->stateInvalid) {
         this->range[0] = std::numeric_limits<float>::max(); // min
         this->range[1] = std::numeric_limits<float>::min(); // max
         for (unsigned int i = 0; i < mpdc->GetParticleListCount(); i++) {
@@ -1090,37 +1096,45 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     this->curMVPtransp = glm::transpose(this->curMVP);
 
     // Lights
-    this->GetLights();
-    this->curlightDir = { 0.0f, 0.0f, 0.0f, 1.0f };
-    if (this->lightMap.size() > 1) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SphereRenderer] Only one single 'Distant Light' source is supported by this renderer");
-    }
-    for (auto light : this->lightMap) {
-        if (light.second.lightType != core::view::light::DISTANTLIGHT) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SphereRenderer] Only single 'Distant Light' source is supported by this renderer");
+    this->curlightDir = {0.0f, 0.0f, 0.0f, 1.0f};
+
+    auto call_light = getLightsSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
         }
-        else {
-            auto use_eyedir = light.second.dl_eye_direction;
+
+        auto lights = call_light->getData();
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
+
+        if (distant_lights.size() > 1) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[SphereRenderer] Only one single 'Distant Light' source is supported by this renderer");
+        } else if (distant_lights.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SphereRenderer] No 'Distant Light' found");
+        }
+
+        for (auto const& light : distant_lights) {
+            auto use_eyedir = light.eye_direction;
             if (use_eyedir) {
-                this->curlightDir = -this->curCamView;
-            }
-            else {
-                auto lightDir = light.second.dl_direction;
+                curlightDir = curCamView;
+            } else {
+                auto lightDir = light.direction;
                 if (lightDir.size() == 3) {
-                    this->curlightDir[0] = lightDir[0];
-                    this->curlightDir[1] = lightDir[1];
-                    this->curlightDir[2] = lightDir[2];
+                    curlightDir[0] = lightDir[0];
+                    curlightDir[1] = lightDir[1];
+                    curlightDir[2] = lightDir[2];
                 }
                 if (lightDir.size() == 4) {
-                    this->curlightDir[3] = lightDir[3];
+                    curlightDir[3] = lightDir[3];
                 }
                 /// View Space Lighting. Comment line to change to Object Space Lighting.
-                //this->curlightDir = this->curMVtransp * this->curlightDir;
+                // this->curlightDir = this->curMVtransp * this->curlightDir;
             }
             /// TODO Implement missing distant light parameters:
-                        //light.second.dl_angularDiameter;
-                        //light.second.lightColor;
-                        //light.second.lightIntensity;
+            // light.second.dl_angularDiameter;
+            // light.second.lightColor;
+            // light.second.lightIntensity;
         }
     }
 
@@ -1177,10 +1191,10 @@ bool SphereRenderer::Render(view::CallRender3D_2& call) {
     // Reset default OpenGL state ---------------------------------------------
     glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
     glDisable(GL_CLIP_DISTANCE0);
-    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glDisable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_ONE, GL_ZERO);
     glDisable(GL_POINT_SPRITE);
 
     // Save some current data
@@ -2700,8 +2714,14 @@ void SphereRenderer::renderDeferredPass(view::CallRender3D_2& call) {
 
     this->lightingShader.Disable();
 
+    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_3D, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_TEXTURE_3D);

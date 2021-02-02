@@ -133,6 +133,9 @@ namespace protein {
         /** The call for data */
         CallerSlot getDataSlot;
 
+        /** The call for light sources */
+        core::CallerSlot getLightsSlot;
+
         void setPointers(MolecularDataCall &mol, GLuint vertBuf, const void *vertPtr, GLuint colBuf, const void *colPtr);
 		void getBytesAndStride(MolecularDataCall &mol, unsigned int &colBytes, unsigned int &vertBytes,
 			unsigned int &colStride, unsigned int &vertStride);

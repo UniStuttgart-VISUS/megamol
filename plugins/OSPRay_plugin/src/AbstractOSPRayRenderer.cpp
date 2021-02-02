@@ -16,14 +16,15 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
-#include "ospcommon/box.h"
-#include "ospray/ospray.h"
+#include "mmcore/view/light/AmbientLight.h"
+#include "mmcore/view/light/DistantLight.h"
+#include "mmcore/view/light/HDRILight.h"
+#include "mmcore/view/light/PointLight.h"
+#include "mmcore/view/light/QuadLight.h"
+#include "mmcore/view/light/SpotLight.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/sys/Path.h"
-
-
 #include <stdio.h>
-
 
 namespace megamol {
 namespace ospray {
@@ -34,35 +35,28 @@ namespace ospray {
 
     AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
             : core::view::Renderer3DModule_2()
-            , accumulateSlot("accumulate", "Activates the accumulation buffer")
-            ,
+            , _lightSlot("lights",
+                  "Lights are retrieved over this slot. If no light is connected") 
+            , _accumulateSlot("accumulate", "Activates the accumulation buffer")
             // general renderer parameters
-            rd_epsilon("Epsilon", "Ray epsilon to avoid self-intersections")
-            , rd_spp("SamplesPerPixel", "Samples per pixel")
-            , rd_maxRecursion("maxRecursion", "Maximum ray recursion depth")
-            , rd_type("Type", "Select between SciVis and PathTracer")
-            , shadows("SciVis::Shadows", "Enables/Disables computation of hard shadows (scivis)")
-            ,
+            , _rd_spp("SamplesPerPixel", "Samples per pixel")
+            , _rd_maxRecursion("maxRecursion", "Maximum ray recursion depth")
+            , _rd_type("Type", "Select between SciVis and PathTracer")
+            , _shadows("SciVis::Shadows", "Enables/Disables computation of hard shadows (scivis)")
             // scivis renderer parameters
-            AOtransparencyEnabled("SciVis::AOtransparencyEnabled", "Enables or disables AO transparency")
-            , AOsamples("SciVis::AOsamples", "Number of rays per sample to compute ambient occlusion")
-            , AOdistance("SciVis::AOdistance", "Maximum distance to consider for ambient occlusion")
-            ,
+            , _AOsamples("SciVis::AOsamples", "Number of rays per sample to compute ambient occlusion")
+            , _AOdistance("SciVis::AOdistance", "Maximum distance to consider for ambient occlusion")
             // pathtracer renderer parameters
-            rd_ptBackground("PathTracer::BackgroundTexture",
+            , _rd_ptBackground("PathTracer::BackgroundTexture",
                 "Texture image used as background, replacing visible lights in infinity")
-            ,
             // Use depth buffer component
-            useDB("useDBcomponent", "activates depth composition with OpenGL content")
-            , deviceTypeSlot("device", "Set the type of the OSPRay device")
-            , numThreads("numThreads", "Number of threads used for rendering") {
+            , _useDB("useDBcomponent", "activates depth composition with OpenGL content")
+            , _deviceTypeSlot("device", "Set the type of the OSPRay device")
+            , _numThreads("numThreads", "Number of threads used for rendering") {
 
-        // ospray lights
-        lightsToRender = NULL;
-        // ospray device and framebuffer
-        device = NULL;
-        framebufferIsDirty = true;
-        maxDepthTexture = NULL;
+
+        this->_lightSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+        this->MakeSlotAvailable(&this->_lightSlot);
 
         core::param::EnumParam* rdt = new core::param::EnumParam(SCIVIS);
         rdt->SetTypePair(SCIVIS, "SciVis");
@@ -70,48 +64,44 @@ namespace ospray {
         rdt->SetTypePair(MPI_RAYCAST, "MPI_Raycast");
 
         // Ambient parameters
-        this->AOtransparencyEnabled << new core::param::BoolParam(false);
-        this->AOsamples << new core::param::IntParam(1);
-        this->AOdistance << new core::param::FloatParam(1e20f);
-        this->accumulateSlot << new core::param::BoolParam(true);
-        this->MakeSlotAvailable(&this->AOtransparencyEnabled);
-        this->MakeSlotAvailable(&this->AOsamples);
-        this->MakeSlotAvailable(&this->AOdistance);
-        this->MakeSlotAvailable(&this->accumulateSlot);
+        this->_AOsamples << new core::param::IntParam(1);
+        this->_AOdistance << new core::param::FloatParam(1e20f);
+        this->_accumulateSlot << new core::param::BoolParam(true);
+        this->MakeSlotAvailable(&this->_AOsamples);
+        this->MakeSlotAvailable(&this->_AOdistance);
+        this->MakeSlotAvailable(&this->_accumulateSlot);
 
 
         // General Renderer
-        this->rd_epsilon << new core::param::FloatParam(1e-4f);
-        this->rd_spp << new core::param::IntParam(1);
-        this->rd_maxRecursion << new core::param::IntParam(10);
-        this->rd_type << rdt;
-        this->MakeSlotAvailable(&this->rd_epsilon);
-        this->MakeSlotAvailable(&this->rd_spp);
-        this->MakeSlotAvailable(&this->rd_maxRecursion);
-        this->MakeSlotAvailable(&this->rd_type);
-        this->shadows << new core::param::BoolParam(0);
-        this->MakeSlotAvailable(&this->shadows);
+        this->_rd_spp << new core::param::IntParam(1);
+        this->_rd_maxRecursion << new core::param::IntParam(10);
+        this->_rd_type << rdt;
+        this->MakeSlotAvailable(&this->_rd_spp);
+        this->MakeSlotAvailable(&this->_rd_maxRecursion);
+        this->MakeSlotAvailable(&this->_rd_type);
+        this->_shadows << new core::param::BoolParam(0);
+        this->MakeSlotAvailable(&this->_shadows);
 
-        this->rd_type.ForceSetDirty(); //< TODO HAZARD Dirty hack
+        this->_rd_type.ForceSetDirty(); //< TODO HAZARD Dirty hack
 
         // PathTracer
-        this->rd_ptBackground << new core::param::FilePathParam("");
-        this->MakeSlotAvailable(&this->rd_ptBackground);
+        this->_rd_ptBackground << new core::param::FilePathParam("");
+        this->MakeSlotAvailable(&this->_rd_ptBackground);
 
         // Number of threads
-        this->numThreads << new core::param::IntParam(0);
-        this->MakeSlotAvailable(&this->numThreads);
+        this->_numThreads << new core::param::IntParam(0);
+        this->MakeSlotAvailable(&this->_numThreads);
 
         // Depth
-        this->useDB << new core::param::BoolParam(false);
-        this->MakeSlotAvailable(&this->useDB);
+        this->_useDB << new core::param::BoolParam(false);
+        this->MakeSlotAvailable(&this->_useDB);
 
         // Device
         auto deviceEp = new megamol::core::param::EnumParam(deviceType::DEFAULT);
-        deviceEp->SetTypePair(deviceType::DEFAULT, "default");
+        deviceEp->SetTypePair(deviceType::DEFAULT, "cpu");
         deviceEp->SetTypePair(deviceType::MPI_DISTRIBUTED, "mpi_distributed");
-        this->deviceTypeSlot << deviceEp;
-        this->MakeSlotAvailable(&this->deviceTypeSlot);
+        this->_deviceTypeSlot << deviceEp;
+        this->MakeSlotAvailable(&this->_deviceTypeSlot);
     }
 
     void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& shader, const uint32_t* fb,
@@ -180,11 +170,11 @@ namespace ospray {
         this->new_fbo.Disable();
         */
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, this->tex);
+        glBindTexture(GL_TEXTURE_2D, this->_tex);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
 
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, this->depth);
+        glBindTexture(GL_TEXTURE_2D, this->_depth);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
         glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -193,12 +183,12 @@ namespace ospray {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, this->tex);
+        glBindTexture(GL_TEXTURE_2D, this->_tex);
         glUniform1i(shader.ParameterLocation("tex"), 0);
 
 
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, this->depth);
+        glBindTexture(GL_TEXTURE_2D, this->_depth);
         glUniform1i(shader.ParameterLocation("depth"), 1);
 
 
@@ -215,17 +205,17 @@ namespace ospray {
     void AbstractOSPRayRenderer::setupTextureScreen() {
         // setup color texture
         glEnable(GL_TEXTURE_2D);
-        glGenTextures(1, &this->tex);
-        glBindTexture(GL_TEXTURE_2D, this->tex);
+        glGenTextures(1, &this->_tex);
+        glBindTexture(GL_TEXTURE_2D, this->_tex);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, 0);
-
+        
         //// setup depth texture
-        glGenTextures(1, &this->depth);
-        glBindTexture(GL_TEXTURE_2D, this->depth);
+        glGenTextures(1, &this->_depth);
+        glBindTexture(GL_TEXTURE_2D, this->_depth);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -235,54 +225,48 @@ namespace ospray {
     }
 
     void AbstractOSPRayRenderer::releaseTextureScreen() {
-        glDeleteTextures(1, &this->tex);
-        glDeleteTextures(1, &this->depth);
+        glDeleteTextures(1, &this->_tex);
+        glDeleteTextures(1, &this->_depth);
     }
 
 
-    void AbstractOSPRayRenderer::initOSPRay(OSPDevice& dvce) {
-        if (dvce == nullptr) {
+    void AbstractOSPRayRenderer::initOSPRay() {
+        if (!_device) {
             ospLoadModule("ispc");
-            switch (this->deviceTypeSlot.Param<megamol::core::param::EnumParam>()->Value()) {
+            switch (this->_deviceTypeSlot.Param<megamol::core::param::EnumParam>()->Value()) {
             case deviceType::MPI_DISTRIBUTED: {
                 ospLoadModule("mpi");
-                dvce = ospNewDevice("mpi_distributed");
-                ospDeviceSet1i(dvce, "masterRank", 0);
-                if (this->numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
-                    ospDeviceSet1i(
-                        dvce, "numThreads", this->numThreads.Param<megamol::core::param::IntParam>()->Value());
+                _device = std::make_shared<::ospray::cpp::Device>("mpi_distributed");
+                _device->setParam("masterRank", 0);
+                if (this->_numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
+                    _device->setParam("numThreads", this->_numThreads.Param<megamol::core::param::IntParam>()->Value());
                 }
             } break;
             default: {
-                dvce = ospNewDevice("default");
-                if (this->numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
-                    ospDeviceSet1i(
-                        dvce, "numThreads", this->numThreads.Param<megamol::core::param::IntParam>()->Value());
+                _device = std::make_shared<::ospray::cpp::Device>("cpu");
+                if (this->_numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
+                    _device->setParam("numThreads", this->_numThreads.Param<megamol::core::param::IntParam>()->Value());
                 } else {
-                    ospDeviceSet1i(dvce, "numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
+                    //_device->setParam("numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
                 }
             }
             }
-            ospDeviceSetErrorFunc(dvce, ospErrorCallback);
-            ospDeviceCommit(dvce);
-            ospSetCurrentDevice(dvce);
+            _device->commit();
+            _device->setCurrent();
         }
         // this->deviceTypeSlot.MakeUnavailable(); //< TODO: Make sure you can set a device only once
     }
 
 
-    void AbstractOSPRayRenderer::setupOSPRay(
-        OSPRenderer& renderer, OSPCamera& camera, OSPModel& world, const char* renderer_name) {
+    void AbstractOSPRayRenderer::setupOSPRay(const char* renderer_name) {
         // create and setup renderer
-        renderer = ospNewRenderer(renderer_name);
-        camera = ospNewCamera("perspective");
-        world = ospNewModel();
-        ospSetObject(renderer, "model", world);
-        ospSetObject(renderer, "camera", camera);
+        _renderer = std::make_shared<::ospray::cpp::Renderer>(renderer_name);
+        _camera = std::make_shared<::ospray::cpp::Camera>("perspective");
+        _world = std::make_shared<::ospray::cpp::World>();
     }
 
 
-    OSPTexture2D AbstractOSPRayRenderer::TextureFromFile(vislib::TString fileName) {
+    ::ospray::cpp::Texture AbstractOSPRayRenderer::TextureFromFile(vislib::TString fileName) {
 
         fileName = vislib::sys::Path::Resolve(fileName);
 
@@ -347,95 +331,23 @@ namespace ospray {
                     for (int x = 0; x < width * 3; x++)
                         std::swap(texels[y * width * 3 + x], texels[(height - 1 - y) * width * 3 + x]);
 
-                OSPTexture2D ret_tex = ospNewTexture2D({width, height}, OSP_TEXTURE_RGB8, texels);
+                ::ospray::cpp::Texture ret_tex("texture2d");
+                ret_tex.setParam("format", OSP_TEXTURE_RGB8);
+                ::ospray::cpp::Data<false> texel_data(texels, OSP_UCHAR,width*height);
+
                 return ret_tex;
-            } catch (std::runtime_error e) { std::cerr << e.what() << std::endl; }
 
-        } else if (ext == vislib::TString("pfm")) {
-            try {
-                // Note: the PFM file specification does not support comments thus we don't skip any
-                // http://netpbm.sourceforge.net/doc/pfm.html
-                int rc = 0;
-
-
-                // read format specifier:
-                // PF: color floating point image
-                // Pf: grayscae floating point image
-                char format[2] = {0};
-                if (fscanf(file, "%c%c\n", &format[0], &format[1]) != 2)
-                    throw std::runtime_error("could not fscanf");
-
-                if (format[0] != 'P' || (format[1] != 'F' && format[1] != 'f')) {
-                    throw std::runtime_error("Invalid pfm texture file, header is not PF or Pf");
-                }
-                int numChannels = 3;
-                if (format[1] == 'f') {
-                    numChannels = 1;
-                }
-
-                // read width and height
-                int width = -1;
-                int height = -1;
-                rc = fscanf(file, "%i %i\n", &width, &height);
-                if (rc != 2) {
-                    throw std::runtime_error("Could not parse width and height in PF PFM file");
-                }
-
-                // read scale factor/endiannes
-                float scaleEndian = 0.0;
-                rc = fscanf(file, "%f\n", &scaleEndian);
-
-                if (rc != 1) {
-                    throw std::runtime_error("Could not parse scale factor/endianness in PF PFM file");
-                }
-                if (scaleEndian == 0.0) {
-                    throw std::runtime_error("Scale factor/endianness in PF PFM file can not be 0");
-                }
-                if (scaleEndian > 0.0) {
-                    throw std::runtime_error("Could not parse PF PFM file");
-                }
-                float scaleFactor = std::abs(scaleEndian);
-
-                int depth = sizeof(float);
-                float* data;
-                data = new float[width * height * numChannels];
-                if (fread(data, sizeof(float), width * height * numChannels, file) != width * height * numChannels) {
-                    throw std::runtime_error("could not fread");
-                }
-                // flip in y, because OSPRay's textures have the origin at the lower left corner
-                float* texels = (float*) data;
-                for (int y = 0; y < height / 2; ++y) {
-                    for (int x = 0; x < width * numChannels; ++x) {
-                        // Scale the pixels by the scale factor
-                        texels[y * width * numChannels + x] = texels[y * width * numChannels + x] * scaleFactor;
-                        texels[(height - 1 - y) * width * numChannels + x] =
-                            texels[(height - 1 - y) * width * numChannels + x] * scaleFactor;
-                        std::swap(
-                            texels[y * width * numChannels + x], texels[(height - 1 - y) * width * numChannels + x]);
-                    }
-                }
-                OSPTextureFormat type = OSP_TEXTURE_R8;
-
-                if (numChannels == 1)
-                    type = OSP_TEXTURE_R32F;
-                if (numChannels == 3)
-                    type = OSP_TEXTURE_RGB32F;
-                if (numChannels == 4)
-                    type = OSP_TEXTURE_RGBA32F;
-
-                OSPTexture2D ret_tex = ospNewTexture2D({width, height}, type, texels);
-                return ret_tex;
             } catch (std::runtime_error e) { std::cerr << e.what() << std::endl; }
         } else {
-            std::cerr << "File type not supported. Only PPM and PFM file formats allowed." << std::endl;
+            std::cerr << "File type not supported. Only PPM file format allowed." << std::endl;
         }
     }
 
     bool AbstractOSPRayRenderer::AbstractIsDirty() {
-        if (this->AOsamples.IsDirty() || this->AOtransparencyEnabled.IsDirty() || this->AOdistance.IsDirty() ||
-            this->accumulateSlot.IsDirty() || this->shadows.IsDirty() || this->rd_type.IsDirty() ||
-            this->rd_epsilon.IsDirty() || this->rd_spp.IsDirty() || this->rd_maxRecursion.IsDirty() ||
-            this->rd_ptBackground.IsDirty() || this->useDB.IsDirty() || this->framebufferIsDirty) {
+        if (this->_AOsamples.IsDirty() || this->_AOdistance.IsDirty() ||
+            this->_accumulateSlot.IsDirty() || this->_shadows.IsDirty() || this->_rd_type.IsDirty() ||
+            this->_rd_spp.IsDirty() || this->_rd_maxRecursion.IsDirty() ||
+            this->_rd_ptBackground.IsDirty() || this->_useDB.IsDirty()) {
             return true;
         } else {
             return false;
@@ -443,128 +355,149 @@ namespace ospray {
     }
 
     void AbstractOSPRayRenderer::AbstractResetDirty() {
-        this->AOsamples.ResetDirty();
-        this->AOtransparencyEnabled.ResetDirty();
-        this->AOdistance.ResetDirty();
-        this->accumulateSlot.ResetDirty();
-        this->shadows.ResetDirty();
-        this->rd_type.ResetDirty();
-        this->rd_epsilon.ResetDirty();
-        this->rd_spp.ResetDirty();
-        this->rd_maxRecursion.ResetDirty();
-        this->rd_ptBackground.ResetDirty();
-        this->useDB.ResetDirty();
-        this->framebufferIsDirty = false;
+        this->_AOsamples.ResetDirty();
+        this->_AOdistance.ResetDirty();
+        this->_accumulateSlot.ResetDirty();
+        this->_shadows.ResetDirty();
+        this->_rd_type.ResetDirty();
+        this->_rd_spp.ResetDirty();
+        this->_rd_maxRecursion.ResetDirty();
+        this->_rd_ptBackground.ResetDirty();
+        this->_useDB.ResetDirty();
     }
 
 
-    void AbstractOSPRayRenderer::fillLightArray(glm::vec4& eyeDir) {
+    void AbstractOSPRayRenderer::fillLightArray(std::array<float,4> eyeDir) {
+        // clear current lights
+        if (!_lightArray.empty()) {
+            for (auto& l : _lightArray) {
+                ospRelease(l.handle());
+            }
+        }
+        _lightArray.clear();
 
         // create custom ospray light
-        OSPLight light;
+        ::ospray::cpp::Light light;
+        auto lights = core::view::light::LightCollection();
 
-        this->lightArray.clear();
+        auto call_light = _lightSlot.CallAs<core::view::light::CallLight>();
+        if (call_light != nullptr) {
+            lights = call_light->getData();
+        }
 
-        for (auto const& entry : this->lightMap) {
-            auto const& lc = entry.second;
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
+        auto point_lights = lights.get<core::view::light::PointLightType>();
+        auto spot_lights = lights.get<core::view::light::SpotLightType>();
+        auto quad_lights = lights.get<core::view::light::QuadLightType>();
+        auto hdri_lights = lights.get<core::view::light::HDRILightType>();
+        auto ambient_lights = lights.get<core::view::light::AmbientLightType>();
 
-            switch (lc.lightType) {
-            case core::view::light::lightenum::NONE:
-                light = NULL;
-                break;
-            case core::view::light::lightenum::DISTANTLIGHT:
-                light = ospNewLight(this->renderer, "distant");
-                if (lc.dl_eye_direction == true) {
-                    ospSet3f(light, "direction", eyeDir.x, eyeDir.y, eyeDir.z);
+        for (auto dl : distant_lights) {
+            light = ::ospray::cpp::Light("distant");
+                if (dl.eye_direction == true) {
+                    light.setParam("direction", convertToVec4f(eyeDir));
                 } else {
-                    ospSet3fv(light, "direction", lc.dl_direction.data());
+                    light.setParam("direction", convertToVec3f(dl.direction));
                 }
-                ospSet1f(light, "angularDiameter", lc.dl_angularDiameter);
-                break;
-            case core::view::light::lightenum::POINTLIGHT:
-                light = ospNewLight(this->renderer, "point");
-                ospSet3fv(light, "position", lc.pl_position.data());
-                ospSet1f(light, "radius", lc.pl_radius);
-                break;
-            case core::view::light::lightenum::SPOTLIGHT:
-                light = ospNewLight(this->renderer, "spot");
-                ospSet3fv(light, "position", lc.sl_position.data());
-                ospSet3fv(light, "direction", lc.sl_direction.data());
-                ospSet1f(light, "openingAngle", lc.sl_openingAngle);
-                ospSet1f(light, "penumbraAngle", lc.sl_penumbraAngle);
-                ospSet1f(light, "radius", lc.sl_radius);
-                break;
-            case core::view::light::lightenum::QUADLIGHT:
-                light = ospNewLight(this->renderer, "quad");
-                ospSet3fv(light, "position", lc.ql_position.data());
-                ospSet3fv(light, "edge1", lc.ql_edgeOne.data());
-                ospSet3fv(light, "edge2", lc.ql_edgeTwo.data());
-                break;
-            case core::view::light::lightenum::HDRILIGHT:
-                light = ospNewLight(this->renderer, "hdri");
-                ospSet3fv(light, "up", lc.hdri_up.data());
-                ospSet3fv(light, "dir", lc.hdri_direction.data());
-                if (lc.hdri_evnfile != vislib::TString("")) {
-                    OSPTexture2D hdri_tex = this->TextureFromFile(lc.hdri_evnfile);
-                    ospSetObject(this->renderer, "backplate", hdri_tex);
-                }
-                break;
-            case core::view::light::lightenum::AMBIENTLIGHT:
-                light = ospNewLight(this->renderer, "ambient");
-                break;
+            light.setParam("angularDiameter", dl.angularDiameter);
+            light.setParam("intensity", dl.intensity);
+            light.setParam("color", convertToVec4f(dl.colour));
+            light.commit();
+            _lightArray.emplace_back(light);
+        }
+
+        for (auto pl : point_lights) {
+            light = ::ospray::cpp::Light("point");
+            light.setParam("position", convertToVec3f(pl.position));
+            light.setParam("radius", pl.radius);
+            light.setParam("intensity", pl.intensity);
+            light.setParam("color", convertToVec4f(pl.colour));
+            light.commit();
+            _lightArray.emplace_back(light);
+        }
+
+        for (auto sl : spot_lights) {
+            light = ::ospray::cpp::Light("spot");
+            light.setParam("position", convertToVec3f(sl.position));
+            light.setParam("direction", convertToVec3f(sl.direction));
+            light.setParam("openingAngle", sl.openingAngle);
+            light.setParam("penumbraAngle", sl.penumbraAngle);
+            light.setParam("radius", sl.radius);
+            light.setParam("intensity", sl.intensity);
+            light.setParam("color", convertToVec4f(sl.colour));
+            light.commit();
+            _lightArray.emplace_back(light);
+        }
+
+        for (auto ql : quad_lights) {
+            light = ::ospray::cpp::Light("quad");
+            light.setParam("position", convertToVec3f(ql.position));
+            light.setParam("edge1", convertToVec3f(ql.edgeOne));
+            light.setParam("edge2", convertToVec3f(ql.edgeTwo));
+            light.setParam("intensity", ql.intensity);
+            light.setParam("color", convertToVec4f(ql.colour));
+            light.commit();
+            _lightArray.emplace_back(light);
+        }
+
+        for (auto hl : hdri_lights) {
+            light = ::ospray::cpp::Light("hdri");
+            light.setParam("up", convertToVec3f(hl.up));
+            light.setParam("dir", convertToVec3f(hl.direction));
+            if (hl.evnfile != vislib::TString("")) {
+                ::ospray::cpp::Texture hdri_tex = this->TextureFromFile(hl.evnfile);
+                _renderer->setParam("map_backplate", hdri_tex);
             }
-            if (lc.isValid && light != NULL) {
-                ospSet1f(light, "intensity", lc.lightIntensity);
-                ospSet3fv(light, "color", lc.lightColor.data());
-                ospCommit(light);
-                this->lightArray.push_back(light);
-            }
+            light.setParam("intensity", hl.intensity);
+            light.setParam("color", convertToVec4f(hl.colour));
+            light.commit();
+            _lightArray.emplace_back(light);
+        }
+
+        for (auto al : ambient_lights) {
+            light =::ospray::cpp::Light("ambient");
+            light.setParam("intensity", al.intensity);
+            light.setParam("color", convertToVec4f(al.colour));
+            light.commit();
+            _lightArray.emplace_back(light);
         }
     }
 
 
-    void AbstractOSPRayRenderer::RendererSettings(OSPRenderer& renderer) {
+    void AbstractOSPRayRenderer::RendererSettings(glm::vec4 bg_color) {
         // general renderer settings
-        ospSet1f(renderer, "epsilon", this->rd_epsilon.Param<core::param::FloatParam>()->Value());
-        ospSet1i(renderer, "spp", this->rd_spp.Param<core::param::IntParam>()->Value());
-        ospSet1i(renderer, "maxDepth", this->rd_maxRecursion.Param<core::param::IntParam>()->Value());
-        ospSetObject(renderer, "maxDepthTexture", this->maxDepthTexture);
+        _renderer->setParam("pixelSamples", this->_rd_spp.Param<core::param::IntParam>()->Value());
+        _renderer->setParam("maxPathLength", this->_rd_maxRecursion.Param<core::param::IntParam>()->Value());
 
-        switch (this->rd_type.Param<core::param::EnumParam>()->Value()) {
+         if (this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value() != vislib::TString("")) {
+            ::ospray::cpp::Texture bkgnd_tex =
+                this->TextureFromFile(this->_rd_ptBackground.Param<core::param::FilePathParam>()->Value());
+            _renderer->setParam("map_backplate", bkgnd_tex);
+        } else {
+            _renderer->setParam("backgroundColor", convertToVec4f(bg_color));
+        }
+
+        switch (this->_rd_type.Param<core::param::EnumParam>()->Value()) {
         case SCIVIS:
             // scivis renderer settings
-            ospSet1i(renderer, "aoTransparencyEnabled",
-                this->AOtransparencyEnabled.Param<core::param::BoolParam>()->Value());
-            ospSet1i(renderer, "aoSamples", this->AOsamples.Param<core::param::IntParam>()->Value());
-            ospSet1i(renderer, "shadowsEnabled", this->shadows.Param<core::param::BoolParam>()->Value());
-            ospSet1f(renderer, "aoDistance", this->AOdistance.Param<core::param::FloatParam>()->Value());
-            // ospSet1i(renderer, "backgroundEnabled", 0);
-
-            GLfloat bgcolor[4];
-            glGetFloatv(GL_COLOR_CLEAR_VALUE, bgcolor);
-            ospSet3fv(renderer, "bgColor", bgcolor);
-            ospSet1i(renderer, "oneSidedLighting", true);
-
+            _renderer->setParam("aoSamples", this->_AOsamples.Param<core::param::IntParam>()->Value());
+            _renderer->setParam("shadows", this->_shadows.Param<core::param::BoolParam>()->Value());
+            _renderer->setParam("aoDistance", this->_AOdistance.Param<core::param::FloatParam>()->Value());
             break;
         case PATHTRACER:
-            if (this->rd_ptBackground.Param<core::param::FilePathParam>()->Value() != vislib::TString("")) {
-                OSPTexture2D bkgnd_tex =
-                    this->TextureFromFile(this->rd_ptBackground.Param<core::param::FilePathParam>()->Value());
-                ospSetObject(renderer, "backplate", bkgnd_tex);
-            } else {
-                ospSet1i(renderer, "backgroundEnabled", 0);
-            }
+            _renderer->setParam("backgroundRefraction", true);
+            // TODO: _renderer->setParam("roulettePathLength", );
             break;
         }
     }
 
 
-    void AbstractOSPRayRenderer::setupOSPRayCamera(OSPCamera& ospcam, megamol::core::view::Camera_2& mmcam) {
+    void AbstractOSPRayRenderer::setupOSPRayCamera(megamol::core::view::Camera_2& mmcam) {
 
 
         // calculate image parts for e.g. screenshooter
-        std::vector<float> imgStart(2, 0);
-        std::vector<float> imgEnd(2, 0);
+        std::array<float, 2> imgStart = {0, 0};
+        std::array<float, 2> imgEnd = {0, 0};
         imgStart[0] = mmcam.image_tile().left() / static_cast<float>(mmcam.resolution_gate().width());
         imgStart[1] = mmcam.image_tile().bottom() / static_cast<float>(mmcam.resolution_gate().height());
 
@@ -574,153 +507,169 @@ namespace ospray {
                     static_cast<float>(mmcam.resolution_gate().height());
 
         // setup ospcam
-        ospSet2fv(ospcam, "imageStart", imgStart.data());
-        ospSet2fv(ospcam, "imageEnd", imgEnd.data());
-        ospSetf(ospcam, "aspect", mmcam.resolution_gate_aspect());
+        _camera->setParam("imageStart", convertToVec2f(imgStart));
+        _camera->setParam("imageEnd", convertToVec2f(imgEnd));
+        _camera->setParam("aspect", static_cast<float>(mmcam.resolution_gate_aspect()));
+        _camera->setParam("nearClip", static_cast<float>(mmcam.near_clipping_plane()));
 
+        glm::vec4 eye_pos = mmcam.eye_position();
+        glm::vec4 view_vec = mmcam.view_vector();
+        glm::vec4 up_vec = mmcam.up_vector();
+        _camera->setParam("position", convertToVec3f(eye_pos));
+        _camera->setParam("direction", convertToVec3f(view_vec));
+        _camera->setParam("up", convertToVec3f(up_vec));
+        _camera->setParam("fovy", static_cast<float>(mmcam.aperture_angle()));
 
-        ospSet3f(ospcam, "pos", mmcam.eye_position().x(), mmcam.eye_position().y(), mmcam.eye_position().z());
-        ospSet3f(ospcam, "dir", mmcam.view_vector().x(), mmcam.view_vector().y(), mmcam.view_vector().z());
-        ospSet3f(ospcam, "up", mmcam.up_vector().x(), mmcam.up_vector().y(), mmcam.up_vector().z());
-        ospSet1f(ospcam, "fovy", mmcam.aperture_angle());
-
-        // ospSet1i(ospcam, "architectural", 1);
-        ospSet1f(ospcam, "nearClip", mmcam.near_clipping_plane());
-        ospSet1f(ospcam, "farClip", mmcam.far_clipping_plane());
-        // ospSet1f(ospcam, "apertureRadius", );
-        // ospSet1f(ospcam, "focalDistance", cr->GetCameraParameters()->FocalDistance());
-    }
-
-    OSPFrameBuffer AbstractOSPRayRenderer::newFrameBuffer(
-        osp::vec2i& imgSize, const OSPFrameBufferFormat format, const uint32_t frameBufferChannels) {
-        OSPFrameBuffer frmbuff = ospNewFrameBuffer(imgSize, format, frameBufferChannels);
-        this->framebufferIsDirty = true;
-        return frmbuff;
+        // ospSet1i(_camera, "architectural", 1);
+         // TODO: ospSet1f(_camera, "apertureRadius", );
+        // TODO: ospSet1f(_camera, "focalDistance", cr->GetCameraParameters()->FocalDistance());
     }
 
 
     AbstractOSPRayRenderer::~AbstractOSPRayRenderer(void) {
-        if (lightsToRender != NULL)
-            ospRelease(lightsToRender);
         this->Release();
     }
 
     // helper function to write the rendered image as PPM file
-    void AbstractOSPRayRenderer::writePPM(const char* fileName, const osp::vec2i& size, const uint32_t* pixel) {
+    void AbstractOSPRayRenderer::writePPM(std::string fileName, const std::array<int,2>& size, const uint32_t* pixel) {
         // std::ofstream file;
         // file << "P6\n" << size.x << " " << size.y << "\n255\n";
-        FILE* file = fopen(fileName, "wb");
-        fprintf(file, "P6\n%i %i\n255\n", size.x, size.y);
-        unsigned char* out = (unsigned char*) alloca(3 * size.x);
-        for (int y = 0; y < size.y; y++) {
-            const unsigned char* in = (const unsigned char*) &pixel[(size.y - 1 - y) * size.x];
-            for (int x = 0; x < size.x; x++) {
+        FILE* file = fopen(fileName.c_str(), "wb");
+        fprintf(file, "P6\n%i %i\n255\n", size[0], size[1]);
+        unsigned char* out = (unsigned char*) alloca(3 * size[0]);
+        for (int y = 0; y < size[1]; y++) {
+            const unsigned char* in = (const unsigned char*) &pixel[(size[1] - 1 - y) * size[1]];
+            for (int x = 0; x < size[0]; x++) {
                 out[3 * x + 0] = in[4 * x + 0];
                 out[3 * x + 1] = in[4 * x + 1];
                 out[3 * x + 2] = in[4 * x + 2];
             }
-            fwrite(out, 3 * size.x, sizeof(char), file);
+            fwrite(out, 3 * size[0], sizeof(char), file);
         }
         fprintf(file, "\n");
         fclose(file);
     }
 
+    void AbstractOSPRayRenderer::fillMaterialContainer(CallOSPRayStructure* entry_first, const OSPRayStructureContainer& element) {
+        switch (element.materialContainer->materialType) {
+        case OBJMATERIAL:
+            {
+            auto& container = std::get<objMaterial>(element.materialContainer->material);
+            _materials[entry_first] = ::ospray::cpp::Material(this->_rd_type_string.c_str(), "obj");
+            _materials[entry_first].setParam("Kd", convertToVec3f(container.Kd));
+            _materials[entry_first].setParam("Ks", convertToVec3f(container.Ks));
+            _materials[entry_first].setParam("Ns", container.Ns);
+            _materials[entry_first].setParam("d", container.d);
+            _materials[entry_first].setParam("Tf", convertToVec3f(container.Tf));
+            }
+            break;
+        case LUMINOUS:
+            {
+            auto& container = std::get<luminousMaterial>(element.materialContainer->material);
+            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "luminous");
+            _materials[entry_first].setParam("color", convertToVec3f(container.lumColor));
+            _materials[entry_first].setParam("intensity", container.lumIntensity);
+            _materials[entry_first].setParam("transparency", container.lumTransparency);
+            }
+            break;
+        case GLASS:
+            {
+            auto& container = std::get<glassMaterial>(element.materialContainer->material);
+            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "glass");
+            _materials[entry_first].setParam("etaInside", container.glassEtaInside);
+            _materials[entry_first].setParam("etaOutside", container.glassEtaOutside);
+            _materials[entry_first].setParam(
+                "attenuationColorInside", convertToVec3f(container.glassAttenuationColorInside));
+            _materials[entry_first].setParam(
+                "attenuationColorOutside", convertToVec3f(container.glassAttenuationColorOutside));
+            _materials[entry_first].setParam("attenuationDistance", container.glassAttenuationDistance);
+            }
+            break;
+        case MATTE:
+            {
+            auto& container = std::get<matteMaterial>(element.materialContainer->material);
+            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "Matte");
+            _materials[entry_first].setParam("reflectance", convertToVec3f(container.matteReflectance));
+            }
+            break;
+        case METAL:
+            {
+            auto& container = std::get<metalMaterial>(element.materialContainer->material);
+            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "metal");
+            _materials[entry_first].setParam("reflectance", convertToVec3f(container.metalReflectance));
+            _materials[entry_first].setParam("eta", convertToVec3f(container.metalEta));
+            _materials[entry_first].setParam("k", convertToVec3f(container.metalK));
+            _materials[entry_first].setParam("roughness", container.metalRoughness);
+            }
+            break;
+        case METALLICPAINT:
+            {
+            auto& container = std::get<metallicpaintMaterial>(element.materialContainer->material);
+            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "metallicPaint");
+            _materials[entry_first].setParam(
+                "shadeColor", convertToVec3f(container.metallicShadeColor));
+            _materials[entry_first].setParam(
+                "glitterColor", convertToVec3f(container.metallicGlitterColor));
+            _materials[entry_first].setParam("glitterSpread", container.metallicGlitterSpread);
+            _materials[entry_first].setParam("eta", container.metallicEta);
+            }
+            break;
+        case PLASTIC:
+            {
+            auto& container = std::get<plasticMaterial>(element.materialContainer->material);
+            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "Plastic");
+            _materials[entry_first].setParam(
+                "pigmentColor", convertToVec3f(container.plasticPigmentColor));
+            _materials[entry_first].setParam("eta", container.plasticEta);
+            _materials[entry_first].setParam("roughness", container.plasticRoughness);
+            _materials[entry_first].setParam("thickness", container.plasticThickness);
+            }
+            break;
+        case THINGLASS:
+            {
+            auto& container = std::get<thinglassMaterial>(element.materialContainer->material);
+            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "thinGlass");
+            _materials[entry_first].setParam(
+                "transmission", convertToVec3f(container.thinglassTransmission));
+            _materials[entry_first].setParam("eta", container.thinglassEta);
+            _materials[entry_first].setParam("thickness", container.thinglassThickness);
+            }
+            break;
+        case VELVET:
+            {
+            auto& container = std::get<velvetMaterial>(element.materialContainer->material);
+            _materials[entry_first] = ::ospray::cpp::Material(_rd_type_string.c_str(), "Velvet");
+            _materials[entry_first].setParam(
+                "reflectance", convertToVec3f(container.velvetReflectance));
+            _materials[entry_first].setParam(
+                "horizonScatteringColor", convertToVec3f(container.velvetHorizonScatteringColor));
+            _materials[entry_first].setParam("backScattering", container.velvetBackScattering);
+            _materials[entry_first].setParam(
+                "horizonScatteringFallOff", container.velvetHorizonScatteringFallOff);
+            }
+            break;
+        }        
+    }
 
     void AbstractOSPRayRenderer::changeMaterial() {
 
-        for (auto entry : this->structureMap) {
+        for (auto entry : this->_structureMap) {
             auto const& element = entry.second;
 
             // custom material settings
-            if (this->materials[entry.first] != nullptr) {
-                ospRelease(this->materials[entry.first]);
-                this->materials.erase(entry.first);
+            if (this->_materials[entry.first] != NULL) {
+                //ospRelease(this->_materials[entry.first]);
+                this->_materials.erase(entry.first);
             }
             if (element.materialContainer != NULL) {
-                switch (element.materialContainer->materialType) {
-                case OBJMATERIAL:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "OBJMaterial");
-                    ospSet3fv(this->materials[entry.first], "Kd", element.materialContainer->Kd.data());
-                    ospSet3fv(this->materials[entry.first], "Ks", element.materialContainer->Ks.data());
-                    ospSet1f(this->materials[entry.first], "Ns", element.materialContainer->Ns);
-                    ospSet1f(this->materials[entry.first], "d", element.materialContainer->d);
-                    ospSet3fv(this->materials[entry.first], "Tf", element.materialContainer->Tf.data());
-                    break;
-                case LUMINOUS:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "Luminous");
-                    ospSet3fv(this->materials[entry.first], "color", element.materialContainer->lumColor.data());
-                    ospSet1f(this->materials[entry.first], "intensity", element.materialContainer->lumIntensity);
-                    ospSet1f(this->materials[entry.first], "transparency", element.materialContainer->lumTransparency);
-                    break;
-                case GLASS:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "Glass");
-                    ospSet1f(this->materials[entry.first], "etaInside", element.materialContainer->glassEtaInside);
-                    ospSet1f(this->materials[entry.first], "etaOutside", element.materialContainer->glassEtaOutside);
-                    ospSet3fv(this->materials[entry.first], "attenuationColorInside",
-                        element.materialContainer->glassAttenuationColorInside.data());
-                    ospSet3fv(this->materials[entry.first], "attenuationColorOutside",
-                        element.materialContainer->glassAttenuationColorOutside.data());
-                    ospSet1f(this->materials[entry.first], "attenuationDistance",
-                        element.materialContainer->glassAttenuationDistance);
-                    break;
-                case MATTE:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "Matte");
-                    ospSet3fv(this->materials[entry.first], "reflectance",
-                        element.materialContainer->matteReflectance.data());
-                    break;
-                case METAL:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "Metal");
-                    ospSet3fv(this->materials[entry.first], "reflectance",
-                        element.materialContainer->metalReflectance.data());
-                    ospSet3fv(this->materials[entry.first], "eta", element.materialContainer->metalEta.data());
-                    ospSet3fv(this->materials[entry.first], "k", element.materialContainer->metalK.data());
-                    ospSet1f(this->materials[entry.first], "roughness", element.materialContainer->metalRoughness);
-                    break;
-                case METALLICPAINT:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "MetallicPaint");
-                    ospSet3fv(this->materials[entry.first], "shadeColor",
-                        element.materialContainer->metallicShadeColor.data());
-                    ospSet3fv(this->materials[entry.first], "glitterColor",
-                        element.materialContainer->metallicGlitterColor.data());
-                    ospSet1f(this->materials[entry.first], "glitterSpread",
-                        element.materialContainer->metallicGlitterSpread);
-                    ospSet1f(this->materials[entry.first], "eta", element.materialContainer->metallicEta);
-                    break;
-                case PLASTIC:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "Plastic");
-                    ospSet3fv(this->materials[entry.first], "pigmentColor",
-                        element.materialContainer->plasticPigmentColor.data());
-                    ospSet1f(this->materials[entry.first], "eta", element.materialContainer->plasticEta);
-                    ospSet1f(this->materials[entry.first], "roughness", element.materialContainer->plasticRoughness);
-                    ospSet1f(this->materials[entry.first], "thickness", element.materialContainer->plasticThickness);
-                    break;
-                case THINGLASS:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "ThinGlass");
-                    ospSet3fv(this->materials[entry.first], "transmission",
-                        element.materialContainer->thinglassTransmission.data());
-                    ospSet1f(this->materials[entry.first], "eta", element.materialContainer->thinglassEta);
-                    ospSet1f(this->materials[entry.first], "thickness", element.materialContainer->thinglassThickness);
-                    break;
-                case VELVET:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "Velvet");
-                    ospSet3fv(this->materials[entry.first], "reflectance",
-                        element.materialContainer->velvetReflectance.data());
-                    ospSet3fv(this->materials[entry.first], "horizonScatteringColor",
-                        element.materialContainer->velvetHorizonScatteringColor.data());
-                    ospSet1f(this->materials[entry.first], "backScattering",
-                        element.materialContainer->velvetBackScattering);
-                    ospSet1f(this->materials[entry.first], "horizonScatteringFallOff",
-                        element.materialContainer->velvetHorizonScatteringFallOff);
-                    break;
-                }
-                ospCommit(this->materials[entry.first]);
+                fillMaterialContainer(entry.first, element);
+                _materials[entry.first].commit();
             }
 
-            if (this->materials[entry.first] != NULL) {
+            if (this->_materials[entry.first] != NULL) {
                 if (element.type == structureTypeEnum::GEOMETRY) {
-                    ospSetMaterial(
-                        std::get<OSPGeometry>(this->baseStructures[entry.first].back()), this->materials[entry.first]);
-                    ospCommit(std::get<OSPGeometry>(this->baseStructures[entry.first].back()));
+                    _geometricModels[entry.first].back().setParam("material", ::ospray::cpp::CopiedData(_materials[entry.first]));
+                    _geometricModels[entry.first].back().commit();
                 }
             }
         }
@@ -728,11 +677,11 @@ namespace ospray {
 
     void AbstractOSPRayRenderer::changeTransformation() {
 
-        for (auto& entry : this->baseStructures) {
-            if (this->structureMap[entry.first].transformationContainer == nullptr)
+        for (auto& entry : this->_baseStructures) {
+            if (this->_structureMap[entry.first].transformationContainer == nullptr)
                 continue;
-            auto trafo = this->structureMap[entry.first].transformationContainer;
-            osp::affine3f xfm;
+            auto trafo = this->_structureMap[entry.first].transformationContainer;
+            ::rkcommon::math::affine3f xfm;
             xfm.p.x = trafo->pos[0];
             xfm.p.y = trafo->pos[1];
             xfm.p.z = trafo->pos[2];
@@ -746,350 +695,302 @@ namespace ospray {
             xfm.l.vz.y = trafo->MX[2][1];
             xfm.l.vz.z = trafo->MX[2][2];
 
-            if (this->structureMap[entry.first].dataChanged) {
-                if (instancedModels[entry.first] != nullptr) {
-                    ospRelease(instancedModels[entry.first]);
-                    instancedModels.erase(entry.first);
-                }
-                instancedModels[entry.first] = ospNewModel();
-                if (this->structureMap[entry.first].type == structureTypeEnum::GEOMETRY) {
-                    for (int i = 0; i < entry.second.size(); i++) {
-                        ospAddGeometry(instancedModels[entry.first], std::get<OSPGeometry>(entry.second[i]));
-                    }
-                } else {
-                    for (int i = 0; i < entry.second.size(); i++) {
-                        ospAddVolume(instancedModels[entry.first], std::get<OSPVolume>(entry.second[i]));
-                    }
-                }
-            }
-            ospCommit(instancedModels[entry.first]);
-            if (this->instances[entry.first] != nullptr) {
-                ospRemoveGeometry(world, this->instances[entry.first]);
-                // ospRelease(this->instances[entry.first]);
-                this->instances.erase(entry.first);
-            }
-            this->instances[entry.first] = ospNewInstance(instancedModels[entry.first], xfm);
-            if (this->materials[entry.first] != nullptr) {
-                ospSetMaterial(this->instances[entry.first], this->materials[entry.first]);
-            }
-            ospCommit(this->instances[entry.first]);
-            ospAddGeometry(world, this->instances[entry.first]);
-            ospCommit(world);
+            _instances[entry.first].setParam("xfm", xfm);
+            _instances[entry.first].commit();
         }
     }
 
 
-    bool AbstractOSPRayRenderer::fillWorld() {
+    bool AbstractOSPRayRenderer::generateRepresentations() {
 
         bool returnValue = true;
-        bool applyTransformation = false;
 
-        ospcommon::box3f worldBounds;
-        std::vector<ospcommon::box3f> ghostRegions;
-        std::vector<ospcommon::box3f> regions;
+        ::rkcommon::math::box3f _worldBounds;
+        std::vector<::rkcommon::math::box3f> ghostRegions;
+        std::vector<::rkcommon::math::box3f> regions;
 
-        for (auto& entry : this->structureMap) {
+        for (auto& entry : this->_structureMap) {
 
-            numCreateGeo = 1;
+            _numCreateGeo = 1;
             auto const& element = entry.second;
 
             // check if structure should be released first
             if (element.dataChanged) {
-                for (auto& stru : this->baseStructures[entry.first]) {
-                    if (element.type == structureTypeEnum::GEOMETRY) {
-                        ospRemoveGeometry(this->world, std::get<OSPGeometry>(stru));
-                        // ospRelease(std::get<OSPGeometry>(stru));
-                    } else if (element.type == structureTypeEnum::VOLUME) {
-                        ospRemoveVolume(this->world, std::get<OSPVolume>(stru));
-                        // ospRelease(std::get<OSPVolume>(stru));
+                for (int i = 0; i < _baseStructures[entry.first].size(); ++i) {
+                    if (_baseStructures[entry.first].types[i] == structureTypeEnum::GEOMETRY) {
+                        ospRelease(std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures[i]).handle());
+                    } else {
+                        ospRelease(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures[i]).handle());
                     }
                 }
-                this->baseStructures.erase(entry.first);
+                _baseStructures[entry.first].clear();
+                _baseStructures.erase(entry.first);
+
+                for (auto& georep : _geometricModels[entry.first]) {
+                    ospRelease(georep.handle());
+                }
+                _geometricModels[entry.first].clear();
+                _geometricModels.erase(entry.first);
+
+                for (auto& volrep : _volumetricModels[entry.first]) {
+                    ospRelease(volrep.handle());
+                }
+                _volumetricModels[entry.first].clear();
+                _volumetricModels.erase(entry.first);
+
+                for (auto& cliprep : _clippingModels[entry.first]) {
+                    ospRelease(cliprep.handle());
+                }
+                _clippingModels[entry.first].clear();
+                _clippingModels.erase(entry.first);
+
+                if (_groups[entry.first]) {
+                    ospRelease(_groups[entry.first].handle());
+                }
+                _groups[entry.first] = nullptr;
+                _groups.erase(entry.first);
+
             } else {
                 continue;
             }
 
 
             // custom material settings
-            if (this->materials[entry.first] != nullptr) {
-                ospRelease(this->materials[entry.first]);
-                this->materials.erase(entry.first);
+            if (_materials[entry.first]) {
+                _materials.erase(entry.first);
             }
-            if (element.materialContainer != NULL &&
-                this->rd_type.Param<megamol::core::param::EnumParam>()->Value() != MPI_RAYCAST) {
-                switch (element.materialContainer->materialType) {
-                case OBJMATERIAL:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "OBJMaterial");
-                    ospSet3fv(this->materials[entry.first], "Kd", element.materialContainer->Kd.data());
-                    ospSet3fv(this->materials[entry.first], "Ks", element.materialContainer->Ks.data());
-                    ospSet1f(this->materials[entry.first], "Ns", element.materialContainer->Ns);
-                    ospSet1f(this->materials[entry.first], "d", element.materialContainer->d);
-                    ospSet3fv(this->materials[entry.first], "Tf", element.materialContainer->Tf.data());
-                    break;
-                case LUMINOUS:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "Luminous");
-                    ospSet3fv(this->materials[entry.first], "color", element.materialContainer->lumColor.data());
-                    ospSet1f(this->materials[entry.first], "intensity", element.materialContainer->lumIntensity);
-                    ospSet1f(this->materials[entry.first], "transparency", element.materialContainer->lumTransparency);
-                    break;
-                case GLASS:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "Glass");
-                    ospSet1f(this->materials[entry.first], "etaInside", element.materialContainer->glassEtaInside);
-                    ospSet1f(this->materials[entry.first], "etaOutside", element.materialContainer->glassEtaOutside);
-                    ospSet3fv(this->materials[entry.first], "attenuationColorInside",
-                        element.materialContainer->glassAttenuationColorInside.data());
-                    ospSet3fv(this->materials[entry.first], "attenuationColorOutside",
-                        element.materialContainer->glassAttenuationColorOutside.data());
-                    ospSet1f(this->materials[entry.first], "attenuationDistance",
-                        element.materialContainer->glassAttenuationDistance);
-                    break;
-                case MATTE:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "Matte");
-                    ospSet3fv(this->materials[entry.first], "reflectance",
-                        element.materialContainer->matteReflectance.data());
-                    break;
-                case METAL:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "Metal");
-                    ospSet3fv(this->materials[entry.first], "reflectance",
-                        element.materialContainer->metalReflectance.data());
-                    ospSet3fv(this->materials[entry.first], "eta", element.materialContainer->metalEta.data());
-                    ospSet3fv(this->materials[entry.first], "k", element.materialContainer->metalK.data());
-                    ospSet1f(this->materials[entry.first], "roughness", element.materialContainer->metalRoughness);
-                    break;
-                case METALLICPAINT:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "MetallicPaint");
-                    ospSet3fv(this->materials[entry.first], "shadeColor",
-                        element.materialContainer->metallicShadeColor.data());
-                    ospSet3fv(this->materials[entry.first], "glitterColor",
-                        element.materialContainer->metallicGlitterColor.data());
-                    ospSet1f(this->materials[entry.first], "glitterSpread",
-                        element.materialContainer->metallicGlitterSpread);
-                    ospSet1f(this->materials[entry.first], "eta", element.materialContainer->metallicEta);
-                    break;
-                case PLASTIC:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "Plastic");
-                    ospSet3fv(this->materials[entry.first], "pigmentColor",
-                        element.materialContainer->plasticPigmentColor.data());
-                    ospSet1f(this->materials[entry.first], "eta", element.materialContainer->plasticEta);
-                    ospSet1f(this->materials[entry.first], "roughness", element.materialContainer->plasticRoughness);
-                    ospSet1f(this->materials[entry.first], "thickness", element.materialContainer->plasticThickness);
-                    break;
-                case THINGLASS:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "ThinGlass");
-                    ospSet3fv(this->materials[entry.first], "transmission",
-                        element.materialContainer->thinglassTransmission.data());
-                    ospSet1f(this->materials[entry.first], "eta", element.materialContainer->thinglassEta);
-                    ospSet1f(this->materials[entry.first], "thickness", element.materialContainer->thinglassThickness);
-                    break;
-                case VELVET:
-                    this->materials[entry.first] = ospNewMaterial2(this->rd_type_string.c_str(), "Velvet");
-                    ospSet3fv(this->materials[entry.first], "reflectance",
-                        element.materialContainer->velvetReflectance.data());
-                    ospSet3fv(this->materials[entry.first], "horizonScatteringColor",
-                        element.materialContainer->velvetHorizonScatteringColor.data());
-                    ospSet1f(this->materials[entry.first], "backScattering",
-                        element.materialContainer->velvetBackScattering);
-                    ospSet1f(this->materials[entry.first], "horizonScatteringFallOff",
-                        element.materialContainer->velvetHorizonScatteringFallOff);
-                    break;
-                }
-                ospCommit(this->materials[entry.first]);
+            if (element.materialContainer &&
+                this->_rd_type.Param<megamol::core::param::EnumParam>()->Value() != MPI_RAYCAST) {
+                fillMaterialContainer(entry.first, element);
+                _materials[entry.first].commit();
             }
 
-            OSPData vertexData = NULL;
-            OSPData colorData = NULL;
-            OSPData normalData = NULL;
-            OSPData texData = NULL;
-            OSPData indexData = NULL;
-            OSPData voxels = NULL;
-            OSPData isovalues = NULL;
-            OSPData planes = NULL;
-            OSPData xData = NULL;
-            OSPData yData = NULL;
-            OSPData zData = NULL;
-            OSPData bboxData = NULL;
-            OSPVolume aovol = NULL;
-            OSPError error;
-
-            // OSPPlane pln       = NULL; //TEMPORARILY DISABLED
             switch (element.type) {
             case structureTypeEnum::UNINITIALIZED:
                 break;
 
             case structureTypeEnum::OSPRAY_API_STRUCTURES:
-                if (element.ospStructures.first.empty()) {
+                {
+                auto& container = std::get<apiStructure>(element.structure);
+                if (container.ospStructures.first.empty()) {
                     // returnValue = false;
                     break;
                 }
-                for (auto structure : element.ospStructures.first) {
-                    if (element.ospStructures.second == structureTypeEnum::GEOMETRY) {
-                        baseStructures[entry.first].push_back(reinterpret_cast<OSPGeometry>(structure));
-                    } else if (element.ospStructures.second == structureTypeEnum::VOLUME) {
-                        baseStructures[entry.first].push_back(reinterpret_cast<OSPVolume>(structure));
+
+                for (auto structure : container.ospStructures.first) {
+                    if (container.ospStructures.second == structureTypeEnum::GEOMETRY) {
+                        _baseStructures[entry.first].emplace_back(
+                            reinterpret_cast<OSPGeometry>(structure), structureTypeEnum::GEOMETRY);
+                        _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+                        //_geometricModels[entry.first].back().commit();
+                    } else if (container.ospStructures.second == structureTypeEnum::VOLUME) {
+                        _baseStructures[entry.first].emplace_back(
+                            reinterpret_cast<OSPVolume>(structure), structureTypeEnum::VOLUME);
+                        _volumetricModels[entry.first].emplace_back(::ospray::cpp::VolumetricModel(
+                            std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures.back())));
+                        _volumetricModels[entry.first].back().commit();
                     } else {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "OSPRAY_API_STRUCTURE: Something went wrong.");
+                        break;
                     }
                 }
-                // General geometry execution
-                for (unsigned int i = 0; i < element.ospStructures.first.size(); i++) {
-                    auto idx = baseStructures[entry.first].size() - 1 - i;
-                    if (this->materials[entry.first] != NULL && baseStructures[entry.first].size() > 0) {
-                        ospSetMaterial(
-                            std::get<OSPGeometry>(baseStructures[entry.first][idx]), this->materials[entry.first]);
-                    }
 
-                    if (baseStructures[entry.first].size() > 0) {
-                        ospCommit(std::get<OSPGeometry>(baseStructures[entry.first][idx]));
-                        ospAddGeometry(world, std::get<OSPGeometry>(baseStructures[entry.first][idx]));
+                // General geometry execution
+                for (unsigned int i = 0; i < container.ospStructures.first.size(); i++) {
+                    auto idx = _baseStructures[entry.first].size() - 1 - i;
+                    if (_materials[entry.first] != NULL && _baseStructures[entry.first].size() > 0) {
+                        _geometricModels[entry.first][idx].setParam("material", ::ospray::cpp::CopiedData(_materials[entry.first]));
+                        _geometricModels[entry.first][idx].commit();
                     }
+                }
+
+                _groups[entry.first] = ::ospray::cpp::Group();
+                if (!_geometricModels[entry.first].empty()) {
+                    _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
+                }
+                if (!_volumetricModels[entry.first].empty()) {
+                    _groups[entry.first].setParam("volume", ::ospray::cpp::CopiedData(_volumetricModels[entry.first]));
+                }
+                _groups[entry.first].commit();
                 }
                 break;
             case structureTypeEnum::GEOMETRY:
                 switch (element.geometryType) {
+                case geometryTypeEnum::TEST:
+
+                    using namespace rkcommon::math;
+                    using namespace ::ospray::cpp;
+                    {
+                    // triangle mesh data
+                    std::vector<vec3f> vertex = {vec3f(-1.0f, -1.0f, 3.0f), vec3f(-1.0f, 1.0f, 3.0f),
+                        vec3f(1.0f, -1.0f, 3.0f), vec3f(0.1f, 0.1f, 0.3f)};
+
+                    std::vector<vec4f> color = {vec4f(0.9f, 0.5f, 0.5f, 1.0f), vec4f(0.8f, 0.8f, 0.8f, 1.0f),
+                        vec4f(0.8f, 0.8f, 0.8f, 1.0f), vec4f(0.5f, 0.9f, 0.5f, 1.0f)};
+
+                    std::vector<vec3ui> index = {vec3ui(0, 1, 2), vec3ui(1, 2, 3)};
+
+                        // create and setup model and mesh
+                    _baseStructures[entry.first].emplace_back(
+                        ::ospray::cpp::Geometry("mesh"), structureTypeEnum::GEOMETRY);
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).setParam("vertex.position", CopiedData(vertex));
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).setParam("vertex.color", CopiedData(color));
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).setParam("index", CopiedData(index));
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
+
+                    // put the mesh into a model
+                    _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+                    _geometricModels[entry.first].back().commit();
+                    }
+
+                    break;
                 case geometryTypeEnum::SPHERES:
-                    if (element.vertexData == NULL) {
+                    {
+                    auto& container = std::get<sphereStructure>(element.structure);
+
+                    if (container.vertexData == NULL) {
                         // returnValue = false;
                         break;
                     }
 
-                    numCreateGeo = element.partCount * element.vertexLength * sizeof(float) / ispcLimit + 1;
+                    _numCreateGeo = container.partCount * container.vertexLength * sizeof(float) / _ispcLimit + 1;
 
-                    for (unsigned int i = 0; i < numCreateGeo; i++) {
-                        baseStructures[entry.first].push_back(ospNewGeometry("spheres"));
+                    for (unsigned int i = 0; i < _numCreateGeo; i++) {
+                        _baseStructures[entry.first].emplace_back(
+                            ::ospray::cpp::Geometry("sphere"), structureTypeEnum::GEOMETRY);
 
-                        long long int vertexFloatsToRead = element.partCount * element.vertexLength / numCreateGeo;
-                        vertexFloatsToRead -= vertexFloatsToRead % element.vertexLength;
-                        if (vertexData != NULL)
-                            ospRelease(vertexData);
-                        vertexData = ospNewData(vertexFloatsToRead, OSP_FLOAT,
-                            &element.vertexData->operator[](i* vertexFloatsToRead), OSP_DATA_SHARED_BUFFER);
+                        unsigned long long vertexFloatsToRead =
+                            container.partCount * container.vertexLength / _numCreateGeo;
+                        vertexFloatsToRead -= vertexFloatsToRead % container.vertexLength;
 
-                        ospSet1i(std::get<OSPGeometry>(baseStructures[entry.first].back()), "bytes_per_sphere",
-                            element.vertexLength * sizeof(float));
+                        unsigned long long bytes_per_sphere = container.vertexLength * sizeof(float);
+                        auto vertexData =
+                            ::ospray::cpp::SharedData(&container.vertexData->operator[](i* vertexFloatsToRead),
+                                OSP_VEC3F, vertexFloatsToRead / container.vertexLength, bytes_per_sphere);
 
-                        if (element.vertexLength > 3) {
-                            // ospRemoveParam(geo.back(), "radius");
-                            ospSet1f(std::get<OSPGeometry>(baseStructures[entry.first].back()), "offset_radius",
-                                3 * sizeof(float));
-                            // TODO: HACK
-                            ospSet1f(std::get<OSPGeometry>(baseStructures[entry.first].back()), "radius", 1);
+                        vertexData.commit();
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                            .setParam("sphere.position", vertexData);
+
+                        if (container.vertexLength > 3) {
+                            auto radiusData =
+                                ::ospray::cpp::SharedData(&container.vertexData->operator[](i* vertexFloatsToRead + 3),
+                                    OSP_FLOAT, vertexFloatsToRead / container.vertexLength, bytes_per_sphere);
+                            radiusData.commit();
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).setParam("sphere.radius", radiusData);
                         } else {
-                            ospSet1f(std::get<OSPGeometry>(baseStructures[entry.first].back()), "radius",
-                                element.globalRadius);
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                .setParam("radius", container.globalRadius);
                         }
-                        ospCommit(vertexData);
-                        ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "spheres", vertexData);
 
-                        if (element.colorLength == 4) {
-                            long long int colorFloatsToRead = element.partCount * element.colorLength / numCreateGeo;
-                            colorFloatsToRead -= colorFloatsToRead % element.colorLength;
-                            if (colorData != NULL)
-                                ospRelease(colorData);
-                            colorData = ospNewData(colorFloatsToRead, OSP_FLOAT,
-                                &element.colorData->operator[](i* colorFloatsToRead), OSP_DATA_SHARED_BUFFER);
-                            ospCommit(colorData);
-                            ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "color", colorData);
-                            // ospSet1i(geo.back(), "color_components", 4);
-                            ospSet1i(
-                                std::get<OSPGeometry>(baseStructures[entry.first].back()), "color_format", OSP_FLOAT4);
-                            // ospSet1i(geo.back(), "color_offset", 0);
-                            // ospSet1i(geo.back(), "color_stride", 4 * sizeof(float));
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
+
+                        _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+
+                        if (container.colorLength == 4) {
+                            unsigned long long colorFloatsToRead =
+                                container.partCount * container.colorLength / _numCreateGeo;
+                            colorFloatsToRead -= colorFloatsToRead % container.colorLength;
+
+                            auto colorData =
+                                ::ospray::cpp::SharedData(&container.colorData->operator[](i* colorFloatsToRead),
+                                    OSP_VEC4F, colorFloatsToRead / container.colorLength);
+                            colorData.commit();
+                            _geometricModels[entry.first].back().setParam("color", colorData);
                         }
                     }
-                    // clipPlane setup
-                    /* TEMPORARILY DISABLED
-                    if (!std::all_of(element.clipPlaneData->begin(), element.clipPlaneData->end() - 1, [](float i) {
-                    return i == 0; })) { pln = ospNewPlane("clipPlane"); ospSet1f(pln, "dist",
-                    element.clipPlaneData->data()[3]); ospSet3fv(pln, "normal", element.clipPlaneData->data());
-                    ospSet4fv(pln, "color", element.clipPlaneColor->data());
-                    ospCommit(pln);
-                    ospSetObject(geo, "clipPlane", pln);
-                    } else {
-                    ospSetObject(geo, "clipPlane", NULL);
                     }
-                    */
                     break;
 
                 case geometryTypeEnum::NHSPHERES:
-                    if (element.raw == NULL) {
+                    {
+                    auto& container = std::get<sphereStructure>(element.structure);
+                    if (container.raw == NULL) {
                         // returnValue = false;
                         break;
                     }
 
-                    numCreateGeo = element.partCount * element.vertexStride / ispcLimit + 1;
+                    _numCreateGeo = container.partCount * container.dataStride / _ispcLimit + 1;
 
-                    for (unsigned int i = 0; i < numCreateGeo; i++) {
-                        baseStructures[entry.first].push_back(ospNewGeometry("spheres"));
+                    for (unsigned int i = 0; i < _numCreateGeo; i++) {
+                        _baseStructures[entry.first].emplace_back(
+                            ::ospray::cpp::Geometry("sphere"), structureTypeEnum::GEOMETRY);
 
+                        unsigned long long floatsToRead =
+                            container.partCount * container.dataStride / (_numCreateGeo * sizeof(float));
+                        floatsToRead -= floatsToRead % (container.dataStride / sizeof(float));
+                        unsigned long long bytes_per_sphere = container.dataStride;
+                        unsigned long long floats_per_sphere = container.dataStride / sizeof(float);
 
-                        long long int floatsToRead =
-                            element.partCount * element.vertexStride / (numCreateGeo * sizeof(float));
-                        floatsToRead -= floatsToRead % (element.vertexStride / sizeof(float));
+                        auto vertexData = ::ospray::cpp::SharedData(&static_cast<const float*>(container.raw)[i * floatsToRead],
+                                OSP_VEC3F, floatsToRead / floats_per_sphere, bytes_per_sphere);
+                        vertexData.commit();
 
-                        if (vertexData != NULL)
-                            ospRelease(vertexData);
-                        vertexData = ospNewData(floatsToRead, OSP_FLOAT,
-                            &static_cast<const float*>(element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
-                        ospCommit(vertexData);
-                        ospSet1i(std::get<OSPGeometry>(baseStructures[entry.first].back()), "bytes_per_sphere",
-                            element.vertexStride);
-                        ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "spheres", vertexData);
-                        ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "color", NULL);
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).setParam("sphere.position", vertexData);
 
-                        if (element.vertexLength > 3) {
-                            ospSet1f(std::get<OSPGeometry>(baseStructures[entry.first].back()), "offset_radius",
-                                3 * sizeof(float));
+                        if (container.vertexLength > 3) {
+                            auto radiusData = ::ospray::cpp::SharedData(
+                                &static_cast<const float*>(container.raw)[i * floatsToRead + 3],
+                                    OSP_FLOAT, floatsToRead / floats_per_sphere, bytes_per_sphere);
+                            radiusData.commit();
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                .setParam("sphere.radius",
+                                radiusData);
                         } else {
-                            ospSet1f(std::get<OSPGeometry>(baseStructures[entry.first].back()), "radius",
-                                element.globalRadius);
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                .setParam("radius", container.globalRadius);
                         }
-                        if (element.mmpldColor ==
-                                core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB ||
-                            element.mmpldColor ==
+
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
+                        _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+                        if (container.mmpldColor ==
                                 core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGBA) {
 
-                            ospSet1i(std::get<OSPGeometry>(baseStructures[entry.first].back()), "color_offset",
-                                element.vertexLength *
-                                    sizeof(float)); // TODO: This won't work if there are radii in the array
-                            ospSet1i(std::get<OSPGeometry>(baseStructures[entry.first].back()), "color_stride",
-                                element.colorStride);
-                            ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "color", vertexData);
-                            if (element.mmpldColor ==
-                                core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
-                                // ospSet1i(geo.back(), "color_components", 3);
-                                ospSet1i(std::get<OSPGeometry>(baseStructures[entry.first].back()), "color_format",
-                                    OSP_FLOAT3);
-                            } else {
-                                // ospSet1i(geo.back(), "color_components", 4);
-                                ospSet1i(std::get<OSPGeometry>(baseStructures[entry.first].back()), "color_format",
-                                    OSP_FLOAT4);
-                            }
-                        }
+                            auto colorData = ::ospray::cpp::SharedData(
+                                &static_cast<const float*>(container.raw)[i * floatsToRead + container.vertexLength],
+                                OSP_VEC4F, floatsToRead / floats_per_sphere, bytes_per_sphere);
+                            colorData.commit();
+                            _geometricModels[entry.first].back().setParam("color", colorData);
+                        } else if (container.mmpldColor ==
+                            core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_FLOAT_RGB) {
+                            megamol::core::utility::log::Log::DefaultLog.WriteError("OSPRAY_NHSPERES: RGB not supported.");
+                            rkcommon::math::vec4f gcol = {0.8, 0.8, 0.8, 1.0};
+                            _geometricModels[entry.first].back().setParam("color", gcol);
+                        } else if (container.mmpldColor ==
+                                   core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_NONE) {
+                            // TODO: get global color
+                            rkcommon::math::vec4f gcol = {0.8, 0.8, 0.8, 1.0};
+                            _geometricModels[entry.first].back().setParam("color", gcol);
+                        } // end if color type
+                    } // end for num geometies
                     }
                     break;
-                case geometryTypeEnum::QUADS:
-                case geometryTypeEnum::TRIANGLES:
-                    if (element.mesh == NULL) {
+                case geometryTypeEnum::MESH:
+                    {
+                    auto& container = std::get<meshStrucutre>(element.structure);
+                    if (container.mesh == NULL) {
                         // returnValue = false;
                         break;
                     }
                     {
                         std::vector<mesh::ImageDataAccessCollection::Image> tex_vec;
-                        if (element.mesh_textures != nullptr) {
-                            assert(element.mesh->accessMeshes().size() == element.mesh_textures->accessImages().size());
-                            tex_vec = element.mesh_textures->accessImages();
+                        if (container.mesh_textures != nullptr) {
+                            assert(container.mesh->accessMeshes().size() ==
+                                   container.mesh_textures->accessImages().size());
+                            tex_vec = container.mesh_textures->accessImages();
                         }
-                        this->numCreateGeo = element.mesh->accessMeshes().size();
+                        _numCreateGeo = container.mesh->accessMeshes().size();
 
                         uint32_t mesh_index = 0;
-                        for (auto& mesh : element.mesh->accessMeshes()) {
+                        for (auto& mesh : container.mesh->accessMeshes()) {
 
-                            if (element.geometryType == TRIANGLES) {
-                                this->baseStructures[entry.first].push_back(ospNewGeometry("triangles"));
-                            } else if (element.geometryType == QUADS) {
-                                this->baseStructures[entry.first].push_back(ospNewGeometry("quads"));
-                            }
+                            _baseStructures[entry.first].emplace_back(ospNewGeometry("mesh"), structureTypeEnum::GEOMETRY);
+
+                            auto mesh_type = mesh.second.primitive_type;
 
                             for (auto& attrib : mesh.second.attributes) {
 
@@ -1097,139 +998,164 @@ namespace ospray {
                                     auto count = attrib.byte_size /
                                                  (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
                                                      attrib.component_cnt);
-                                    auto ospType = OSP_FLOAT3;
-                                    if (attrib.stride == 4 * sizeof(float))
-                                        ospType = OSP_FLOAT3A;
-                                    vertexData = ospNewData(count, ospType, attrib.data, OSP_DATA_SHARED_BUFFER);
-                                    ospCommit(vertexData);
-                                    ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "vertex",
-                                        vertexData);
+
+                                    auto vertexData =
+                                        ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
+                                    vertexData.commit();
+                                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).setParam("vertex.position", vertexData);
                                 }
 
                                 // check normal pointer
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::NORMAL) {
                                     auto count = attrib.byte_size / attrib.stride;
-                                    auto ospType = OSP_FLOAT3;
-                                    if (attrib.stride == 4 * sizeof(float))
-                                        ospType = OSP_FLOAT3A;
-                                    normalData = ospNewData(count, ospType, attrib.data);
-                                    ospCommit(normalData);
-                                    ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()),
-                                        "vertex.normal", normalData);
+                                    auto normalData =
+                                        ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
+                                    normalData.commit();
+                                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).setParam("vertex.normal", normalData);
                                 }
 
                                 // check colorpointer and convert to rgba
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
-                                    if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT)
-                                        colorData = ospNewData(
-                                            attrib.byte_size /
-                                                (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
-                                                    attrib.component_cnt),
-                                            OSP_FLOAT4, attrib.data);
-                                    else
-                                        colorData = ospNewData(
-                                            attrib.byte_size, OSP_UCHAR, attrib.data, OSP_DATA_SHARED_BUFFER);
-                                    ospCommit(colorData);
-                                    ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()),
-                                        "vertex.color", colorData);
+                                    ::ospray::cpp::SharedData colorData;
+                                    if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT) {
+                                        auto count = attrib.byte_size / (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) * attrib.component_cnt);
+                                        auto osp_type = OSP_VEC3F;
+                                        if (attrib.component_cnt == 4) osp_type = OSP_VEC4F;
+                                        colorData =
+                                            ::ospray::cpp::SharedData(attrib.data, osp_type, count, attrib.stride);
+                                    } else {
+                                        core::utility::log::Log::DefaultLog.WriteError("[OSPRayRenderer][MESH] Color type not supported.");
+                                    }
+                                    colorData.commit();
+                                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                        .setParam("vertex.color", colorData);
                                 }
 
                                 // check texture array
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::TEXCOORD) {
-                                    texData = ospNewData(
-                                        attrib.byte_size /
-                                            (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
-                                                attrib.component_cnt),
-                                        OSP_FLOAT2, attrib.data, OSP_DATA_SHARED_BUFFER);
-                                    ospCommit(texData);
-                                    ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()),
-                                        "vertex.texcoord", texData);
+                                    auto count = attrib.byte_size /
+                                                 (mesh::MeshDataAccessCollection::getByteSize(attrib.component_type) *
+                                                     attrib.component_cnt);
+                                    auto texData = ::ospray::cpp::SharedData(attrib.data, OSP_VEC2F, count, attrib.stride);
+                                    texData.commit();
+                                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                        .setParam("vertex.texcoord", texData);
                                 }
                             }
                             // check index pointer
                             if (mesh.second.indices.data != nullptr) {
                                 auto count = mesh.second.indices.byte_size /
                                              mesh::MeshDataAccessCollection::getByteSize(mesh.second.indices.type);
-                                indexData =
-                                    ospNewData(count, OSP_UINT, mesh.second.indices.data, OSP_DATA_SHARED_BUFFER);
-                                ospCommit(indexData);
-                                ospSetData(
-                                    std::get<OSPGeometry>(baseStructures[entry.first].back()), "index", indexData);
+
+                                unsigned long long stride = 3 * sizeof(unsigned int);
+                                auto osp_type = OSP_VEC3UI;
+
+                                if (mesh_type == mesh::MeshDataAccessCollection::QUADS) {
+                                    stride = 4 * sizeof(unsigned int);
+                                    osp_type = OSP_VEC4UI;
+                                }
+                                
+                                auto indexData =
+                                    ::ospray::cpp::SharedData(mesh.second.indices.data, osp_type, count, stride);
+                                indexData.commit();
+                                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                    .setParam("index", indexData);
                             } else {
                                 megamol::core::utility::log::Log::DefaultLog.WriteError(
                                     "OSPRay cannot render meshes without index array");
                                 returnValue = false;
                             }
-                            if (element.mesh_textures != nullptr) {
-                                OSPTextureFormat osp_tex_format = OSP_TEXTURE_FORMAT_INVALID;
+
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
+                            _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+
+                            if (container.mesh_textures != nullptr) {
+                                auto osp_tex_format = OSP_TEXTURE_FORMAT_INVALID;
+                                auto osp_data_format = OSP_BYTE;
                                 switch (tex_vec[mesh_index].format) {
                                 case mesh::ImageDataAccessCollection::TextureFormat::RGBA8:
                                     osp_tex_format = OSP_TEXTURE_RGBA8;
                                     break;
                                 case mesh::ImageDataAccessCollection::TextureFormat::RGB32F:
                                     osp_tex_format = OSP_TEXTURE_RGB32F;
+                                    osp_data_format = OSP_FLOAT;
                                     break;
                                 case mesh::ImageDataAccessCollection::TextureFormat::RGB8:
                                     osp_tex_format = OSP_TEXTURE_RGB8;
                                     break;
                                 case mesh::ImageDataAccessCollection::TextureFormat::RGBA32F:
                                     osp_tex_format = OSP_TEXTURE_RGBA32F;
+                                    osp_data_format = OSP_FLOAT;
                                     break;
                                 default:
                                     osp_tex_format = OSP_TEXTURE_RGB8;
                                     break;
                                 }
 
-                                auto ospTexture =
-                                    ospNewTexture2D({tex_vec[mesh_index].width, tex_vec[mesh_index].height},
-                                        osp_tex_format, tex_vec[mesh_index].data, OSP_DATA_SHARED_BUFFER);
-                                auto ospMat = ospNewMaterial2(this->rd_type_string.c_str(), "OBJMaterial");
-                                ospCommit(ospTexture);
-                                ospSetObject(ospMat, "map_Kd", ospTexture);
+                                auto ospTexture = ::ospray::cpp::Texture("texture2d");
+                                rkcommon::math::vec2i width_height = {tex_vec[mesh_index].width, tex_vec[mesh_index].height};
+
+                                auto textureData = ::ospray::cpp::SharedData(
+                                        tex_vec[mesh_index].data, osp_data_format, width_height);
+                                textureData.commit();
+
+                                ospTexture.setParam("format", osp_tex_format);
+                                ospTexture.setParam("data", textureData);
+                                ospTexture.commit();
+
+                                auto ospMat = ::ospray::cpp::Material(_rd_type_string.c_str(), "obj");
+                                ospMat.setParam("map_Kd", ospTexture);
                                 // ospSetObject(ospMat, "map_Ks", ospTexture);
                                 // ospSetObject(ospMat, "map_d", ospTexture);
-                                ospCommit(ospMat);
-                                ospSetMaterial(std::get<OSPGeometry>(baseStructures[entry.first].back()), ospMat);
+                                ospMat.commit();
+                                _geometricModels[entry.first].back().setParam("material", ::ospray::cpp::CopiedData(ospMat));
                             }
                             mesh_index++;
                         }
                     }
+                    }
                     break;
-                case geometryTypeEnum::STREAMLINES:
-                    if (element.vertexData == nullptr && element.mesh == nullptr) {
+                case geometryTypeEnum::LINES:
+                case geometryTypeEnum::CURVES:
+                    {
+                    auto& container = std::get<curveStructure>(element.structure);
+                    if (container.vertexData == nullptr && container.mesh == nullptr) {
                         // returnValue = false;
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[AbstractOSPRayRenderer]Streamline geometry detected but no data found.");
                         break;
                     }
-                    if (element.mesh != nullptr) {
-                        this->numCreateGeo = element.mesh->accessMeshes().size();
-                        for (auto& mesh : element.mesh->accessMeshes()) {
+                    if (container.mesh != nullptr) {
+                        this->_numCreateGeo = container.mesh->accessMeshes().size();
+                        for (auto& mesh : container.mesh->accessMeshes()) {
 
-                            baseStructures[entry.first].push_back(ospNewGeometry("streamlines"));
+                            _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("curve"), structureTypeEnum::GEOMETRY);
+
 
                             for (auto& attrib : mesh.second.attributes) {
 
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
                                     const auto count = attrib.byte_size / attrib.stride;
-                                    assert(attrib.stride == 4 * sizeof(float));
-                                    vertexData = ospNewData(count, OSP_FLOAT3A, attrib.data, OSP_DATA_SHARED_BUFFER);
-                                    ospCommit(vertexData);
-                                    ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "vertex",
-                                        vertexData);
+                                    auto vertexData = ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
+                                    vertexData.commit();
+                                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                        .setParam("vertex.position", vertexData);
                                 }
 
                                 // check colorpointer and convert to rgba
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
-                                    if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT)
-                                        colorData =
-                                            ospNewData(attrib.byte_size / attrib.stride, OSP_FLOAT4, attrib.data);
-                                    else
-                                        colorData = ospNewData(
-                                            attrib.byte_size, OSP_UCHAR, attrib.data, OSP_DATA_SHARED_BUFFER);
-                                    ospCommit(colorData);
-                                    ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()),
-                                        "vertex.color", colorData);
+                                    ::ospray::cpp::SharedData colorData;
+                                    if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT) {
+                                        auto count = attrib.byte_size / attrib.stride;
+                                        colorData = ::ospray::cpp::SharedData(
+                                            attrib.data, OSP_VEC3F, count, attrib.stride);
+                                    } else {
+                                        core::utility::log::Log::DefaultLog.WriteError("[OSPRayRenderer][CURVE] Color type not supported.");
+                                    }
+                                    colorData.commit();
+                                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                        .setParam("vertex.color", colorData);
                                 }
                             }
                             // check index pointer
@@ -1237,287 +1163,262 @@ namespace ospray {
                                 const auto count =
                                     mesh.second.indices.byte_size /
                                     mesh::MeshDataAccessCollection::getByteSize(mesh.second.indices.type);
-                                indexData =
-                                    ospNewData(count, OSP_INT, mesh.second.indices.data, OSP_DATA_SHARED_BUFFER);
-                                ospCommit(indexData);
-                                ospSetData(
-                                    std::get<OSPGeometry>(baseStructures[entry.first].back()), "index", indexData);
+                                auto indexData = ::ospray::cpp::SharedData(mesh.second.indices.data, OSP_UINT, count);
+                                indexData.commit();
+                                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                    .setParam("index", indexData);
                             } else {
                                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                                    "OSPRay cannot render meshes without index array");
+                                    "OSPRay cannot render curves without index array");
                                 returnValue = false;
                             }
 
-                            ospSet1f(std::get<OSPGeometry>(baseStructures[entry.first].back()), "radius",
-                                element.globalRadius);
-                            ospSet1i(
-                                std::get<OSPGeometry>(baseStructures[entry.first].back()), "smooth", element.smooth);
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                .setParam("radius", container.globalRadius);
+                            // TODO: Add user input support for this
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                .setParam("type", OSP_ROUND);
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                .setParam("basis", OSP_LINEAR);
+
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
+                            _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                                std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+
                         } // end for geometry
                     } else {
-                        baseStructures[entry.first].push_back(ospNewGeometry("streamlines"));
-                        this->numCreateGeo = 1;
-                        osp::vec3fa* data = new osp::vec3fa[element.vertexData->size() / 3];
+                        _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("curve"), structureTypeEnum::GEOMETRY);
 
-                        // fill aligned array with vertex data
-                        for (unsigned int i = 0; i < element.vertexData->size() / 3; i++) {
-                            data[i].x = element.vertexData->data()[3 * i + 0];
-                            data[i].y = element.vertexData->data()[3 * i + 1];
-                            data[i].z = element.vertexData->data()[3 * i + 2];
+                        this->_numCreateGeo = 1;
+
+                        auto vertexData = ::ospray::cpp::SharedData(
+                            container.vertexData->data(), OSP_VEC3F, container.vertexData->size() / 3);
+                        vertexData.commit();
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).setParam("vertex.position", vertexData);
+
+                        auto indexData = ::ospray::cpp::SharedData(*container.indexData);
+                        indexData.commit();
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                            .setParam("index", indexData);
+
+                        if (container.colorData->size() > 0) {
+                            auto colorData = ::ospray::cpp::SharedData(
+                                container.colorData->data(), OSP_VEC4F, container.colorData->size() / 4);
+                            colorData.commit();
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                                .setParam("vertex.color", colorData);
                         }
 
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                            .setParam("radius", container.globalRadius);
+                        // TODO: Add user input support for this
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                            .setParam("type", OSP_ROUND);
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                            .setParam("basis", OSP_LINEAR);
 
-                        vertexData =
-                            ospNewData(element.vertexData->size() / 3, OSP_FLOAT3A, data, OSP_DATA_SHARED_BUFFER);
-                        ospCommit(vertexData);
-                        ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "vertex", vertexData);
-
-                        indexData = ospNewData(
-                            element.indexData->size(), OSP_UINT, element.indexData->data(), OSP_DATA_SHARED_BUFFER);
-                        ospCommit(indexData);
-                        ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "index", indexData);
-
-                        if (element.colorData->size() > 0) {
-                            colorData = ospNewData(element.colorData->size() / element.colorLength, OSP_FLOAT4,
-                                element.colorData->data(), OSP_DATA_SHARED_BUFFER);
-                            ospCommit(colorData);
-                            ospSetData(
-                                std::get<OSPGeometry>(baseStructures[entry.first].back()), "vertex.color", colorData);
-                        }
-
-                        ospSet1f(
-                            std::get<OSPGeometry>(baseStructures[entry.first].back()), "radius", element.globalRadius);
-                        ospSet1i(std::get<OSPGeometry>(baseStructures[entry.first].back()), "smooth", element.smooth);
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
+                        _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                            std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
                     }
-                    break;
-                case geometryTypeEnum::CYLINDERS:
-                    if (element.raw == NULL) {
-                        // returnValue = false;
-                        break;
-                    }
-
-                    numCreateGeo = element.partCount * element.vertexStride / ispcLimit + 1;
-
-                    for (unsigned int i = 0; i < numCreateGeo; i++) {
-                        baseStructures[entry.first].push_back(ospNewGeometry("cylinders"));
-
-
-                        long long int floatsToRead =
-                            element.partCount * element.vertexStride / (numCreateGeo * sizeof(float));
-                        floatsToRead -= floatsToRead % (element.vertexStride / sizeof(float));
-
-                        if (vertexData != NULL)
-                            ospRelease(vertexData);
-                        vertexData = ospNewData(floatsToRead, OSP_FLOAT,
-                            &static_cast<const float*>(element.raw)[i * floatsToRead], OSP_DATA_SHARED_BUFFER);
-                        ospCommit(vertexData);
-                        ospSet1i(std::get<OSPGeometry>(baseStructures[entry.first].back()), "bytes_per_cylinder",
-                            2 * element.vertexStride);
-                        ospSet1i(std::get<OSPGeometry>(baseStructures[entry.first].back()), "offset_v1",
-                            element.vertexStride);
-                        ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "cylinders", vertexData);
-                        ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "color", NULL);
-
-                        if (element.vertexLength > 3) {
-                            ospSet1f(std::get<OSPGeometry>(baseStructures[entry.first].back()), "offset_radius",
-                                3 * sizeof(float));
-                        } else {
-                            ospSet1f(std::get<OSPGeometry>(baseStructures[entry.first].back()), "radius",
-                                element.globalRadius);
-                        }
                     }
                     break;
                 }
 
                 // General geometry execution
-                for (unsigned int i = 0; i < this->numCreateGeo; i++) {
-                    if (this->materials[entry.first] != NULL && baseStructures[entry.first].size() > 0) {
-                        ospSetMaterial(std::get<OSPGeometry>(baseStructures[entry.first].rbegin()[i]),
-                            this->materials[entry.first]);
+                for (unsigned int i = 0; i < this->_numCreateGeo; i++) {
+                    if (_materials[entry.first] != NULL && _geometricModels[entry.first].size() > 0) {
+                        _geometricModels[entry.first].rbegin()[i].setParam("material", ::ospray::cpp::CopiedData(_materials[entry.first]));
                     }
 
-                    if (baseStructures[entry.first].size() > 0) {
-                        ospCommit(std::get<OSPGeometry>(baseStructures[entry.first].rbegin()[i]));
-                        if (element.transformationContainer == nullptr) {
-                            ospAddGeometry(world, std::get<OSPGeometry>(baseStructures[entry.first].rbegin()[i]));
-                        } else {
-                            applyTransformation = true;
-                        }
+                    if (_geometricModels[entry.first].size() > 0) {
+                        _geometricModels[entry.first].rbegin()[i].commit();
                     }
+                    _groups[entry.first] = ::ospray::cpp::Group();
+                    _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
+                    _groups[entry.first].commit();
                 }
-
-                // if (vertexData != NULL) ospRelease(vertexData);
-                // if (colorData != NULL) ospRelease(colorData);
-                // if (normalData != NULL) ospRelease(normalData);
-                // if (texData != NULL) ospRelease(texData);
-                // if (indexData != NULL) ospRelease(indexData);
-                // if (xData != NULL) ospRelease(xData);
-                // if (yData != NULL) ospRelease(yData);
-                // if (zData != NULL) ospRelease(zData);
-                // if (bboxData != NULL) ospRelease(bboxData);
-                // if (aovol != NULL) ospRelease(aovol);
-                // if (voxels != NULL) ospRelease(voxels);
-
                 break;
 
             case structureTypeEnum::VOLUME:
-
-                if (element.voxels == NULL) {
+                {
+                auto& container = std::get<structuredVolumeStructure>(element.structure);
+                if (container.voxels == NULL) {
                     // returnValue = false;
                     break;
                 }
 
-                baseStructures[entry.first].push_back(ospNewVolume("shared_structured_volume"));
+                _baseStructures[entry.first].emplace_back(::ospray::cpp::Volume("structuredRegular"), structureTypeEnum::VOLUME);
 
-                auto type = static_cast<uint8_t>(element.voxelDType);
+                auto type = static_cast<OSPDataType>(voxelDataTypeOSP[static_cast<uint8_t>(container.voxelDType)]);
 
-                ospSetString(
-                    std::get<OSPVolume>(baseStructures[entry.first].back()), "voxelType", voxelDataTypeS[type].c_str());
-                // float fixedSpacing[3];
-                // for (auto x = 0; x < 3; ++x) {
-                //    fixedSpacing[x] = element.gridSpacing->at(x) / (element.dimensions->at(x) - 1) +
-                //    element.gridSpacing->at(x);
-                //}
-                // scaling properties of the volume
-                ospSet3iv(
-                    std::get<OSPVolume>(baseStructures[entry.first].back()), "dimensions", element.dimensions->data());
-                ospSet3fv(
-                    std::get<OSPVolume>(baseStructures[entry.first].back()), "gridOrigin", element.gridOrigin->data());
-                ospSet3fv(std::get<OSPVolume>(baseStructures[entry.first].back()), "gridSpacing",
-                    element.gridSpacing->data());
-                ospSet2f(std::get<OSPVolume>(baseStructures[entry.first].back()), "voxelRange",
-                    element.valueRange->first, element.valueRange->second);
+                 // add data
+                rkcommon::math::vec3i dims = {
+                    container.dimensions[0], container.dimensions[1], container.dimensions[2]};
+                auto voxelData = ::ospray::cpp::SharedData(container.voxels,
+                    type, dims);
+                voxelData.commit();
 
-                ospSet1b(std::get<OSPVolume>(baseStructures[entry.first].back()), "singleShade", element.useMIP);
-                ospSet1b(std::get<OSPVolume>(baseStructures[entry.first].back()), "gradientShadingEnables",
-                    element.useGradient);
-                ospSet1b(std::get<OSPVolume>(baseStructures[entry.first].back()), "preIntegration",
-                    element.usePreIntegration);
-                ospSet1b(std::get<OSPVolume>(baseStructures[entry.first].back()), "adaptiveSampling",
-                    element.useAdaptiveSampling);
-                ospSet1f(
-                    std::get<OSPVolume>(baseStructures[entry.first].back()), "adaptiveScalar", element.adaptiveFactor);
-                ospSet1f(std::get<OSPVolume>(baseStructures[entry.first].back()), "adaptiveMaxSamplingRate",
-                    element.adaptiveMaxRate);
-                ospSet1f(std::get<OSPVolume>(baseStructures[entry.first].back()), "samplingRate", element.samplingRate);
 
-                // add data
-                voxels = ospNewData(element.voxelCount, static_cast<OSPDataType>(voxelDataTypeOSP[type]),
-                    element.voxels, OSP_DATA_SHARED_BUFFER);
-                ospCommit(voxels);
-                ospSetData(std::get<OSPVolume>(baseStructures[entry.first].back()), "voxelData", voxels);
+                std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures.back())
+                    .setParam("data", voxelData);
+
+                //ospSet3iv(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "dimensions",element.dimensions->data());
+                std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures.back())
+                    .setParam("gridOrigin", convertToVec3f(container.gridOrigin));
+                std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures.back())
+                    .setParam("gridSpacing", convertToVec3f(container.gridSpacing));
+
+
+                //std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()).setParam("voxelRange", element.valueRange);
+                //ospSet1b(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "singleShade", element.useMIP);
+                //ospSet1b(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "gradientShadingEnables",
+                //    element.useGradient);
+                //ospSet1b(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "preIntegration",
+                //    element.usePreIntegration);
+                //ospSet1b(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "adaptiveSampling",
+                //    element.useAdaptiveSampling);
+                //ospSet1f(
+                //    std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "adaptiveScalar", element.adaptiveFactor);
+                //ospSet1f(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "adaptiveMaxSamplingRate",
+                //    element.adaptiveMaxRate);
+                //ospSet1f(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].back()), "samplingRate", element.samplingRate);
+
+                auto tf = ::ospray::cpp::TransferFunction("piecewiseLinear");
+
+                auto tf_rgb =
+                    ::ospray::cpp::SharedData(container.tfRGB->data(), OSP_VEC3F, container.tfRGB->size() / 3);
+                auto tf_opa = ::ospray::cpp::SharedData(container.tfA->data(), OSP_FLOAT, container.tfA->size());
+                tf.setParam("color", tf_rgb);
+                tf.setParam("opacity", tf_opa);
+                rkcommon::math::vec2f valrange = {container.valueRange[0], container.valueRange[1]};
+                tf.setParam("valueRange", valrange);
+
+                tf.commit();
+
+                std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures.back()).commit();
+                _volumetricModels[entry.first].emplace_back(::ospray::cpp::VolumetricModel(
+                    std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures.back())));
+
+                _volumetricModels[entry.first].back().setParam("transferFunction", tf);
+                _volumetricModels[entry.first].back().commit();
 
                 // ClippingBox
+                if (container.clippingBoxActive) {
+                    _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("box"), GEOMETRY);
 
-                if (element.clippingBoxActive) {
-                    ospSet3fv(std::get<OSPVolume>(baseStructures[entry.first].back()), "volumeClippingBoxLower",
-                        element.clippingBoxLower->data());
-                    ospSet3fv(std::get<OSPVolume>(baseStructures[entry.first].back()), "volumeClippingBoxUpper",
-                        element.clippingBoxUpper->data());
-                } else {
-                    ospSetVec3f(std::get<OSPVolume>(baseStructures[entry.first].back()), "volumeClippingBoxLower",
-                        {0.0f, 0.0f, 0.0f});
-                    ospSetVec3f(std::get<OSPVolume>(baseStructures[entry.first].back()), "volumeClippingBoxUpper",
-                        {0.0f, 0.0f, 0.0f});
+                    ::rkcommon::math::box3f box;
+                    box.lower = {
+                        container.clippingBoxLower[0], container.clippingBoxLower[1], container.clippingBoxLower[2]};
+                    box.upper = {
+                        container.clippingBoxUpper[0], container.clippingBoxUpper[1], container.clippingBoxUpper[2]};
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                        .setParam("box", ::ospray::cpp::CopiedData(box));
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
+
+                    _clippingModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+                    _clippingModels[entry.first].back().commit();
                 }
-
-                OSPTransferFunction tf = ospNewTransferFunction("piecewise_linear");
-
-                OSPData tf_rgb = ospNewData(element.tfRGB->size() / 3, OSP_FLOAT3, element.tfRGB->data());
-                OSPData tf_opa = ospNewData(element.tfA->size(), OSP_FLOAT, element.tfA->data());
-                ospSetData(tf, "colors", tf_rgb);
-                ospSetData(tf, "opacities", tf_opa);
-                ospSet2f(tf, "valueRange", element.valueRange->first, element.valueRange->second);
-
-                ospCommit(tf);
-
-                ospSetObject(std::get<OSPVolume>(baseStructures[entry.first].back()), "transferFunction", tf);
-                ospCommit(std::get<OSPVolume>(baseStructures[entry.first].back()));
-                // ospRelease(tf);
-
-                switch (element.volRepType) {
+ 
+                switch (container.volRepType) {
                 case volumeRepresentationType::VOLUMEREP:
-                    if (element.transformationContainer == nullptr) {
-                        ospAddVolume(world, std::get<OSPVolume>(baseStructures[entry.first].back()));
-                    } else {
-                        applyTransformation = true;
+                    _groups[entry.first] = ::ospray::cpp::Group();
+                    _groups[entry.first].setParam("volume", ::ospray::cpp::CopiedData(_volumetricModels[entry.first]));
+                    if (container.clippingBoxActive) {
+                        _groups[entry.first].setParam(
+                            "clippingGeometry", ::ospray::cpp::CopiedData(_clippingModels[entry.first]));
                     }
+                    _groups[entry.first].commit();
                     break;
 
                 case volumeRepresentationType::ISOSURFACE:
                     // isosurface
-                    baseStructures[entry.first].push_back(ospNewGeometry("isosurfaces"));
-                    isovalues = ospNewData(1, OSP_FLOAT, element.isoValue->data());
-                    ospCommit(isovalues);
-                    ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "isovalues", isovalues);
-                    ospSetObject(std::get<OSPGeometry>(baseStructures[entry.first].back()), "volume",
-                        std::get<OSPVolume>(baseStructures[entry.first].front()));
+                    _baseStructures[entry.first].emplace_back(::ospray::cpp::Geometry("isosurface"), GEOMETRY);
 
-                    if (this->materials[entry.first] != NULL) {
-                        ospSetMaterial(
-                            std::get<OSPGeometry>(baseStructures[entry.first].back()), this->materials[entry.first]);
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                        .setParam("isovalue", container.isoValue);
+ 
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
+                        .setParam(
+                            "volume", std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures.front()));
+
+                    std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back()).commit();
+                    _geometricModels[entry.first].emplace_back(::ospray::cpp::GeometricModel(
+                        std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())));
+
+
+                    if (_materials[entry.first] != NULL) {
+                        _geometricModels[entry.first].back().setParam(
+                            "material", ::ospray::cpp::CopiedData(_materials[entry.first]));
                     }
+                    _geometricModels[entry.first].back().commit();
 
-                    ospCommit(std::get<OSPGeometry>(baseStructures[entry.first].back()));
-
-                    if (element.transformationContainer == nullptr) {
-                        ospAddGeometry(
-                            world, std::get<OSPGeometry>(baseStructures[entry.first].back())); // Show isosurface
-                    } else {
-                        applyTransformation = true;
+                    _groups[entry.first] = ::ospray::cpp::Group();
+                    _groups[entry.first].setParam("geometry", ::ospray::cpp::CopiedData(_geometricModels[entry.first]));
+                    if (container.clippingBoxActive) {
+                        _groups[entry.first].setParam("clippingGeometry", ::ospray::cpp::CopiedData(_clippingModels[entry.first]));
                     }
-                    break;
-
-                case volumeRepresentationType::SLICE:
-                    baseStructures[entry.first].push_back(ospNewGeometry("slices"));
-                    planes = ospNewData(1, OSP_FLOAT4, element.sliceData->data());
-                    ospCommit(planes);
-                    ospSetData(std::get<OSPGeometry>(baseStructures[entry.first].back()), "planes", planes);
-                    ospSetObject(std::get<OSPGeometry>(baseStructures[entry.first].back()), "volume",
-                        std::get<OSPVolume>(baseStructures[entry.first].front()));
-
-                    if (this->materials[entry.first] != NULL) {
-                        ospSetMaterial(
-                            std::get<OSPGeometry>(baseStructures[entry.first].back()), this->materials[entry.first]);
-                    }
-
-                    ospCommit(std::get<OSPGeometry>(baseStructures[entry.first].back()));
-
-                    if (element.transformationContainer == nullptr) {
-                        ospAddGeometry(world, std::get<OSPGeometry>(baseStructures[entry.first].back())); // Show slice
-                    } else {
-                        applyTransformation = true;
-                    }
-
+                    _groups[entry.first].commit();
                     break;
                 }
-
-                // if (voxels != NULL) ospRelease(voxels);
-                // if (planes != NULL) ospRelease(planes);
-                // if (isovalues != NULL) ospRelease(isovalues);
-
+                }
                 break;
             }
 
         } // for element loop
 
-        if (this->rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST && ghostRegions.size() > 0 &&
-            regions.size() > 0) {
-            for (auto const& el : regions) {
-                ghostRegions.push_back(worldBounds);
-            }
-            auto ghostRegionData = ospNewData(2 * ghostRegions.size(), OSP_FLOAT3, ghostRegions.data());
-            auto regionData = ospNewData(2 * regions.size(), OSP_FLOAT3, ghostRegions.data());
-            ospCommit(ghostRegionData);
-            ospCommit(regionData);
-            ospSetData(world, "ghostRegions", ghostRegionData);
-            ospSetData(world, "regions", ghostRegionData);
-        }
-
-        if (applyTransformation)
-            this->changeTransformation();
-
+        //if (this->_rd_type.Param<megamol::core::param::EnumParam>()->Value() == MPI_RAYCAST && ghostRegions.size() > 0 &&
+        //    regions.size() > 0) {
+        //    for (auto const& el : regions) {
+        //        ghostRegions.push_back(_worldBounds);
+        //    }
+        //    auto ghostRegionData = ospNewData(2 * ghostRegions.size(), OSP_FLOAT3, ghostRegions.data());
+        //    auto regionData = ospNewData(2 * regions.size(), OSP_FLOAT3, ghostRegions.data());
+        //    ospCommit(ghostRegionData);
+        //    ospCommit(regionData);
+        //    ospSetData(_world, "ghostRegions", ghostRegionData);
+        //    ospSetData(_world, "regions", ghostRegionData);
+        //}
 
         return returnValue;
+    }
+
+    void AbstractOSPRayRenderer::createInstances() {
+
+        for (auto& entry : this->_structureMap) {
+
+            if (_instances[entry.first]) {
+                ospRelease(_instances[entry.first].handle());
+            }
+            _instances.erase(entry.first);
+
+            auto const& element = entry.second;
+
+            _instances[entry.first] = ::ospray::cpp::Instance(_groups[entry.first]);
+
+            if (element.transformationContainer) {
+
+                auto trafo = element.transformationContainer;
+                ::rkcommon::math::affine3f xfm;
+                xfm.p.x = trafo->pos[0];
+                xfm.p.y = trafo->pos[1];
+                xfm.p.z = trafo->pos[2];
+                xfm.l.vx.x = trafo->MX[0][0];
+                xfm.l.vx.y = trafo->MX[0][1];
+                xfm.l.vx.z = trafo->MX[0][2];
+                xfm.l.vy.x = trafo->MX[1][0];
+                xfm.l.vy.y = trafo->MX[1][1];
+                xfm.l.vy.z = trafo->MX[1][2];
+                xfm.l.vz.x = trafo->MX[2][0];
+                xfm.l.vz.y = trafo->MX[2][1];
+                xfm.l.vz.z = trafo->MX[2][2];
+
+                _instances[entry.first].setParam("xfm", xfm);
+            }
+
+            _instances[entry.first].commit();
+        }
     }
 
     void AbstractOSPRayRenderer::releaseOSPRayStuff() {}

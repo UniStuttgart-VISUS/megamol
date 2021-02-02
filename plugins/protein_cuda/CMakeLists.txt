@@ -56,21 +56,21 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   endif()
 
   # Target definition
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files} ${cuda_header_files} ${cuda_source_files} ${cuda_helpers})
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg" CUDA_STANDARD 14)
+  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files} ${cuda_header_files} ${cuda_source_files} ${cuda_helpers})
+  set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_STANDARD 14)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src" "src/helper_includes" "${CUDA_BIN_DIR}/../include")
   target_link_libraries(${PROJECT_NAME} PRIVATE core geometry_calls protein_calls cufft)
 
   # Installation rules for generated files
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
+  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
   if(WIN32)
-    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
-    install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+    #install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
+    #install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
   else()
-    install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
+    #install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
 
   # Install cufft (this seems to be necessary for every needed extra CUDA library)
@@ -85,4 +85,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("CUDA Source Files" FILES ${cuda_source_files})
   source_group("Source Files" FILES ${source_files})
   source_group("Shaders" FILES ${shader_files})
+
+  # Register plugin
+  megamol_register_plugin(${PROJECT_NAME})
 endif()

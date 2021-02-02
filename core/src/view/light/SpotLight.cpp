@@ -13,31 +13,34 @@
 
 using namespace megamol::core::view::light;
 
+void megamol::core::view::light::SpotLight::addLight(LightCollection& light_collection) {
+    light_collection.add<SpotLightType>(std::static_pointer_cast<SpotLightType>(lightsource));
+}
+
 /*
  * megamol::core::view::light::SpotLight::SpotLight
  */
 SpotLight::SpotLight(void)
     : AbstractLight()
-    ,
-    // Distant light parameters
-    // spot light parameters
-    sl_position("Position", "")
-    , sl_direction("Direction", "")
-    , sl_openingAngle("openingAngle", "")
-    , sl_penumbraAngle("penumbraAngle", "")
-    , sl_radius("Radius", "") {
+    , position("Position", "")
+    , direction("Direction", "")
+    , openingAngle("openingAngle", "")
+    , penumbraAngle("penumbraAngle", "")
+    , radius("Radius", "") {
 
     // spot light
-    this->sl_position << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
-    this->sl_direction << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f));
-    this->sl_openingAngle << new core::param::FloatParam(0.0f);
-    this->sl_penumbraAngle << new core::param::FloatParam(0.0f);
-    this->sl_radius << new core::param::FloatParam(0.0f);
-    this->MakeSlotAvailable(&this->sl_position);
-    this->MakeSlotAvailable(&this->sl_direction);
-    this->MakeSlotAvailable(&this->sl_openingAngle);
-    this->MakeSlotAvailable(&this->sl_penumbraAngle);
-    this->MakeSlotAvailable(&this->sl_radius);
+    lightsource = std::make_shared<SpotLightType>();
+
+    this->position << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
+    this->direction << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f));
+    this->openingAngle << new core::param::FloatParam(0.0f);
+    this->penumbraAngle << new core::param::FloatParam(0.0f);
+    this->radius << new core::param::FloatParam(0.0f);
+    this->MakeSlotAvailable(&this->position);
+    this->MakeSlotAvailable(&this->direction);
+    this->MakeSlotAvailable(&this->openingAngle);
+    this->MakeSlotAvailable(&this->penumbraAngle);
+    this->MakeSlotAvailable(&this->radius);
 }
 
 /*
@@ -49,30 +52,31 @@ SpotLight::~SpotLight(void) { this->Release(); }
  * megamol::core::view::light::SpotLight::readParams
  */
 void SpotLight::readParams() {
-    lightContainer.lightType = lightenum::SPOTLIGHT;
-	lightContainer.lightColor = this->lightColor.Param<core::param::ColorParam>()->Value();
-    lightContainer.lightIntensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
+    auto light = std::static_pointer_cast<SpotLightType>(lightsource);
 
-    auto sl_pos = this->sl_position.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-	std::copy(sl_pos, sl_pos + 3, lightContainer.sl_position.begin());
-    auto sl_dir = this->sl_direction.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-	std::copy(sl_dir, sl_dir + 3, lightContainer.sl_direction.begin());
-    lightContainer.sl_openingAngle = this->sl_openingAngle.Param<core::param::FloatParam>()->Value();
-    lightContainer.sl_penumbraAngle = this->sl_penumbraAngle.Param<core::param::FloatParam>()->Value();
-    lightContainer.sl_radius = this->sl_radius.Param<core::param::FloatParam>()->Value();
+    light->colour = this->lightColor.Param<core::param::ColorParam>()->Value();
+    light->intensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
+
+    auto sl_pos = this->position.Param<core::param::Vector3fParam>()->Value().PeekComponents();
+    std::copy(sl_pos, sl_pos + 3, light->position.begin());
+    auto sl_dir = this->direction.Param<core::param::Vector3fParam>()->Value().PeekComponents();
+    std::copy(sl_dir, sl_dir + 3, light->direction.begin());
+    light->openingAngle = this->openingAngle.Param<core::param::FloatParam>()->Value();
+    light->penumbraAngle = this->penumbraAngle.Param<core::param::FloatParam>()->Value();
+    light->radius = this->radius.Param<core::param::FloatParam>()->Value();
 }
 
 /*
  * megamol::core::view::light::SpotLight::InterfaceIsDirty
  */
 bool SpotLight::InterfaceIsDirty() {
-    if (this->AbstractIsDirty() || this->sl_position.IsDirty() || this->sl_direction.IsDirty() ||
-        this->sl_openingAngle.IsDirty() || this->sl_penumbraAngle.IsDirty() || this->sl_radius.IsDirty()) {
-        this->sl_position.ResetDirty();
-        this->sl_direction.ResetDirty();
-        this->sl_openingAngle.ResetDirty();
-        this->sl_penumbraAngle.ResetDirty();
-        this->sl_radius.ResetDirty();
+    if (this->AbstractIsDirty() || this->position.IsDirty() || this->direction.IsDirty() ||
+        this->openingAngle.IsDirty() || this->penumbraAngle.IsDirty() || this->radius.IsDirty()) {
+        this->position.ResetDirty();
+        this->direction.ResetDirty();
+        this->openingAngle.ResetDirty();
+        this->penumbraAngle.ResetDirty();
+        this->radius.ResetDirty();
         return true;
     } else {
         return false;
