@@ -9,62 +9,16 @@ MegaMol is a visualization middleware used to visualize point-based molecular da
 MegaMol succeeds ​MolCloud, which has been developed at the University of Stuttgart in order to visualize point-based data sets. MegaMol is written in C++, and uses an OpenGL as Rendering-API and GLSL-Shader. It supports the operating systems Microsoft Windows and Linux, each in 32-bit and 64-bit versions. In large parts, MegaMol is based on VISlib, a C++-class library for scientific visualization, which has also been developed at the University of Stuttgart. 
 
 
+## Building and Using MegaMol
+See the [manual](docs/manual.md) for more detailed instructions.
+
+
 ## Changelog
 ​See [changelog](https://github.com/UniStuttgart-VISUS/megamol/wiki/Changelog) for newly available features in the current version of MegaMol. 
 
 
-## Building MegaMol
-See the [manual](docs/manual.md) for more detailed isntructions.
-
-
-### Linux
-1. Clone the MegaMol repository
-2. Create a build folder
-3. Invoke `ccmake .` inside the build folder
-4. Execute `make` to build MegaMol
-5. Run `make install` to create your MegaMol installation
-6. Test Megamol with
-
-        $ ./megamol.sh -p ../examples/testspheres.lua
-
-
-### Windows
-1. Clone the MegaMol repository
-2. Use the cmake GUI to configure MegaMol
-    1. The configuration creates a `sln` file inside the build folder
-3. Open the `sln` file with *Visual Studio*
-4. Use the `ALL_BUILD` target to build MegaMol
-5. Use the `INSTALL` target to create your MegaMol installation
-6. Test Megamol with
-
-        > mmconsole.exe -p ..\examples\testspheres.lua
-
-
-## MegaMol Configurator
-MegaMol offers a configurator GUI (C#) that runs with .Net Framework 4.
-It runs also on Linux with Mono 3.2.8 (except for the analysis function and indirect-start functions).  
-
-
-## How to use MegaMol
-For a detailed description have a look at the [manual](docs/manual.md).
-
-
-## Using the plugin template
-1. Copy the template folder
-2. Rename the copied folder to the intended plugin name
-3. Execute the instawiz.pl script inside the new folder
-    1. The script detects the plugin name
-    2. Autogenerate the GUID
-4. Remove instawiz.pl
-5. Add libraries/dependencies to `CMakeLists.txt` (optional)
-6. Implement the content of your plugin
-7. Write a `Readme.md` for your plugin (mandatory)
-8. Add the folder to your local git
-
-
 ## Citing MegaMol
 Please use one of the following methods to reference the MegaMol project.
-
 
 **MegaMol – A Comprehensive Prototyping Framework for Visualizations**  
 P. Gralka, M. Becher, M. Braun, F. Frieß, C. Müller, T. Rau, K. Schatz, C. Schulz, M. Krone, G. Reina, T. Ertl  
@@ -143,7 +97,7 @@ In Proceedings of IEEE Pacific Visualization Symposium 2009: 65 - 72, 2009
     }
 
 #
-**MegaMol™ project website**  
+**MegaMol project website**  
 [https://megamol.org](https://megamol.org)
 
     @misc{megamol,
