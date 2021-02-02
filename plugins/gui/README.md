@@ -2,7 +2,7 @@
 
 This is the plugin providing the GUI for MegaMol.
 
-**!!! The following description ONLY refers to the use of the new MegaMol frontend provided via megamol.exe / megamol.sh !!!**
+**DISCLAIMER: The following description only refers to the use of the new MegaMol frontend provided via the binary called megamol!**
 
 See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol/issues/539) for current work in progress.
 
@@ -28,28 +28,29 @@ The main menu provides the following options:
     * `Save Project` (`Ctrl + s`) Save the current project to file (lua).
     * `Exit` (`Alt + F4`) End the program.
 * `Windows` 
-    * `Menu` (`F12`) Show/Hide the configurator window.
-    * `All Parameters` (`F11`) Show/Hide the main window.
-    * `Performance Metrics` (`F10`) Show/Hide the performance metrics window showing the fps or ms.
-    * `Font Settings` (`F9`) Show/Hide the font settings window.    
-    * `Transfer Function Editor` (`F8`)Show/Hide the transfer function editor.
-    * `Configurator` (`F7`) Show/Hide the configurator window.
-    * `Log Console` (`F6`) Show/Hide the log console window.  
-    --
-    * `Reset Size and Position` (`F4`) Reset size and position of windows to lie within current viewport.
+    * `Menu` (`F12`) Show/Hide the menu.
+    * `Configurator` (`F11`) Show/Hide the configurator window. See detailed description below.
+    * `Parameters` (`F10`) Show/Hide the parameter window. In order to enable more options to change the parameters appearance (widget presentation), you can switch the `Mode` from `Basic`to `Expert`.
+    * `Log Console` (`F9`) Show/Hide the log console window. In order to prevent automatically showing the log console on errors and warning, disable the `Force Open` option.
+    * `Transfer Function Editor` (`F8`)Show/Hide the transfer function editor. You have to `Apply` changes in order to take effect.
+    * `Performance Metrics` (`F7`) Show/Hide the performance metrics window showing the fps or ms. 
 * `Screenshot` 
     * `Select Filename` (`megamol_screenshot.png`) Open file dialog for choosing filename for screenshot. Current filename is shown in menu.
     * `Trigger` (`F2`) Trigger screenshot.
 * `Render`  
     * `Toggle Main Views` (`F3`) Toggle between available main views. After toggling last main view intermediate state disables all mai views.
 * `Settings`    
-    * `Style` Select predefined GUI Style.
+    * `Style` Select predefined GUI Style (ImGui Dark Colors, ImGui Light Colors, Corporate Gray, Corporate White).
+    * `Font` Select predefined GUI Style.
+        * `Select Available Font` Choose among preloaded fonts.
+        * `Load font from file` Load new font from TTF-file (se provided fonts in /share/resources/fonts/) in any desired size.  
+    * `Scale` Select fixed GUI scaling (100%, 150%, 200%, 250%, 300%). Support for high DPI displays.
 * `Help`
     * `About`: Some information and links concerning the currently running MegaMol.
 
 ### [2] Configurator
 
-The configurator is part of the GUI and can be opened via the main menu: `Windows`/`Configurator`.  
+The project configurator is part of the GUI and can be opened via the main menu: `Windows`/`Configurator`.  
 
 ![configurator demo picture](configurator.png)
 
