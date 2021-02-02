@@ -10,6 +10,7 @@ MegaMol succeeds MolCloud, which has been developed at the University of Stuttga
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 ## Manual
 =======
 ## Changelog
@@ -42,12 +43,23 @@ See the [manual](docs/manual.md) for detailed instructions on how to build and u
 ## License
 
 See the [license](LICENSE) file.
+=======
+## Building and Using MegaMol
+See the [manual](docs/manual.md) for more detailed instructions.
+
+
+## Changelog
+​See [changelog](https://github.com/UniStuttgart-VISUS/megamol/wiki/Changelog) for newly available features in the current version of MegaMol. 
+>>>>>>> 800f17d5c (manual update)
 
 
 ## Citing MegaMol
 
+<<<<<<< HEAD
 Please use one of the following methods to reference the MegaMol project.
 
+=======
+>>>>>>> 800f17d5c (manual update)
 **MegaMol – A Comprehensive Prototyping Framework for Visualizations**  
 P. Gralka, M. Becher, M. Braun, F. Frieß, C. Müller, T. Rau, K. Schatz, C. Schulz, M. Krone, G. Reina, T. Ertl  
 The European Physical Journal Special Topics, vol. 227, no. 14, pp. 1817--1829, 2019  
