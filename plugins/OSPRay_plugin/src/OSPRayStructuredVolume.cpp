@@ -12,6 +12,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -27,38 +28,13 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void)
     , clippingBoxUpper("ClippingBox::Right", "Right corner of the clipping Box")
     , clippingBoxActive("ClippingBox::Active", "Activates the clipping Box")
     , repType("Representation", "Activates one of the three different volume representations: Volume, Isosurfae, Slice")
-    , useMIP("shading::useMIP", "toggle maximum intensity projection")
-    , useGradient("shading::useGradient", "compute gradient for shading")
-    , usePreIntegration("shading::usePreintegration", "toggle preintegration")
-    , useAdaptiveSampling("adaptive::enable", "toggle adaptive sampling")
-    , adaptiveFactor("adaptive::factor", "modifier for adaptive step size")
-    , adaptiveMaxRate("adaptive::maxRate", "maximum sampling rate")
-    , samplingRate("adaptive::minRate", "minimum sampling rate")
     , IsoValue("Isosurface::Isovalue", "Sets the isovalue of the isosurface")
-    , sliceNormal("Slice::sliceNormal", "Direction of the slice normal")
-    , sliceDist("Slice::sliceDist", "Distance of the slice in the direction of the normal vector") {
+    , showBoundingBox("showBoundingBox", "Bounding box of the volume data set") {
     core::param::EnumParam* rt = new core::param::EnumParam(VOLUMEREP);
     rt->SetTypePair(VOLUMEREP, "Volume");
     rt->SetTypePair(ISOSURFACE, "Isosurface");
-    rt->SetTypePair(SLICE, "Slice");
     this->repType << rt;
     this->MakeSlotAvailable(&this->repType);
-
-    this->useMIP << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->useMIP);
-    this->useGradient << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->useGradient);
-    this->usePreIntegration << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->usePreIntegration);
-
-    this->useAdaptiveSampling << new core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->useAdaptiveSampling);
-    this->adaptiveFactor << new core::param::FloatParam(15.0f, std::numeric_limits<float>::min());
-    this->MakeSlotAvailable(&this->adaptiveFactor);
-    this->adaptiveMaxRate << new core::param::FloatParam(2.0f, std::numeric_limits<float>::min());
-    this->MakeSlotAvailable(&this->adaptiveMaxRate);
-    this->samplingRate << new core::param::FloatParam(0.125f, std::numeric_limits<float>::min());
-    this->MakeSlotAvailable(&this->samplingRate);
 
     this->clippingBoxActive << new core::param::BoolParam(false);
     this->clippingBoxLower << new core::param::Vector3fParam({-5.0f, -5.0f, -5.0f});
@@ -67,21 +43,18 @@ OSPRayStructuredVolume::OSPRayStructuredVolume(void)
     this->MakeSlotAvailable(&this->clippingBoxLower);
     this->MakeSlotAvailable(&this->clippingBoxUpper);
 
-    this->sliceNormal << new core::param::Vector3fParam({1.0f, 0.0f, 0.0f});
-    this->sliceDist << new core::param::FloatParam(0.0f);
-    this->MakeSlotAvailable(&this->sliceNormal);
-    this->MakeSlotAvailable(&this->sliceDist);
-
-    this->IsoValue << new core::param::FloatParam(0.0f);
+    this->IsoValue << new core::param::FloatParam(0.1f);
     this->MakeSlotAvailable(&this->IsoValue);
 
-    /*this->getDataSlot.SetCompatibleCall<megamol::core::moldyn::VolumeDataCallDescription>();
-    this->MakeSlotAvailable(&this->getDataSlot);*/
     this->getDataSlot.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
     this->MakeSlotAvailable(&this->getDataSlot);
 
     this->getTFSlot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
+    
+    this->showBoundingBox << new core::param::StringParam("");
+    this->showBoundingBox.Parameter()->SetGUIReadOnly(true);
+    this->MakeSlotAvailable(&this->showBoundingBox);
 
     // this->SetSlotUnavailable(&this->getMaterialSlot);
 }
@@ -137,23 +110,11 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
         return false;
     }
 
-    /*unsigned int voxelCount =
-        cd->VolumeDimension().GetDepth() * cd->VolumeDimension().GetHeight() * cd->VolumeDimension().GetWidth();*/
     unsigned int const voxelCount = metadata->Resolution[0] * metadata->Resolution[1] * metadata->Resolution[2];
-
-    /*unsigned int maxDim = vislib::math::Max<unsigned int>(cd->VolumeDimension().Depth(),
-        vislib::math::Max<unsigned int>(cd->VolumeDimension().Height(), cd->VolumeDimension().Width()));*/
-
-    // float scale = 2.0f;
-    /*std::vector<float> gridOrigin = {-0.5f * scale, -0.5f * scale, -0.5f * scale};
-    std::vector<float> gridSpacing = {scale / (float)maxDim, scale / (float)maxDim, scale / (float)maxDim};
-    std::vector<int> dimensions = {(int)cd->VolumeDimension().GetWidth(), (int)cd->VolumeDimension().GetHeight(),
-        (int)cd->VolumeDimension().GetDepth()};*/
-
-    std::vector<float> gridOrigin = {metadata->Origin[0], metadata->Origin[1], metadata->Origin[2]};
-    std::vector<float> gridSpacing = {
+    std::array<float,3> gridOrigin = {metadata->Origin[0], metadata->Origin[1], metadata->Origin[2]};
+    std::array<float,3> gridSpacing = {
         metadata->SliceDists[0][0], metadata->SliceDists[1][0], metadata->SliceDists[2][0]};
-    std::vector<int> dimensions = {static_cast<int>(metadata->Resolution[0]), static_cast<int>(metadata->Resolution[1]),
+    std::array<int, 3> dimensions = {static_cast<int>(metadata->Resolution[0]), static_cast<int>(metadata->Resolution[1]),
         static_cast<int>(metadata->Resolution[2])}; //< TODO HAZARD explicit narrowing
 
     unsigned int const maxDim =
@@ -236,46 +197,34 @@ bool OSPRayStructuredVolume::readData(megamol::core::Call& call) {
 
     this->structureContainer.type = structureTypeEnum::VOLUME;
     this->structureContainer.volumeType = volumeTypeEnum::STRUCTUREDVOLUME;
-    this->structureContainer.volRepType =
-        (volumeRepresentationType)this->repType.Param<core::param::EnumParam>()->Value();
-    this->structureContainer.voxels = cd->GetData();
-    this->structureContainer.gridOrigin = std::make_shared<std::vector<float>>(std::move(gridOrigin));
-    this->structureContainer.gridSpacing = std::make_shared<std::vector<float>>(std::move(gridSpacing));
-    this->structureContainer.dimensions = std::make_shared<std::vector<int>>(std::move(dimensions));
-    this->structureContainer.voxelCount = voxelCount;
-    this->structureContainer.maxDim = maxDim;
-    this->structureContainer.valueRange =
-        std::make_shared<std::pair<float, float>>(metadata->MinValues[0], metadata->MaxValues[0]);
-    this->structureContainer.tfRGB = std::make_shared<std::vector<float>>(std::move(rgb));
-    this->structureContainer.tfA = std::make_shared<std::vector<float>>(std::move(a));
-    this->structureContainer.voxelDType = voxelType;
+    structuredVolumeStructure svs;
 
-    this->structureContainer.clippingBoxActive = this->clippingBoxActive.Param<core::param::BoolParam>()->Value();
-    std::vector<float> cbl = {this->clippingBoxLower.Param<core::param::Vector3fParam>()->Value().GetX(),
+    svs.volRepType =
+        (volumeRepresentationType)this->repType.Param<core::param::EnumParam>()->Value();
+    svs.voxels = cd->GetData();
+    svs.gridOrigin = gridOrigin;
+    svs.gridSpacing = gridSpacing;
+    svs.dimensions = dimensions;
+    svs.voxelCount = voxelCount;
+    svs.maxDim = maxDim;
+    svs.valueRange = {static_cast<float>(metadata->MinValues[0]), static_cast<float>(metadata->MaxValues[0])};
+    svs.tfRGB = std::make_shared<std::vector<float>>(std::move(rgb));
+    svs.tfA = std::make_shared<std::vector<float>>(std::move(a));
+    svs.voxelDType = voxelType;
+
+    svs.clippingBoxActive = this->clippingBoxActive.Param<core::param::BoolParam>()->Value();
+    std::array<float,3> cbl = {this->clippingBoxLower.Param<core::param::Vector3fParam>()->Value().GetX(),
         this->clippingBoxLower.Param<core::param::Vector3fParam>()->Value().GetY(),
         this->clippingBoxLower.Param<core::param::Vector3fParam>()->Value().GetZ()};
-    this->structureContainer.clippingBoxLower = std::make_shared<std::vector<float>>(std::move(cbl));
-    std::vector<float> cbu = {this->clippingBoxUpper.Param<core::param::Vector3fParam>()->Value().GetX(),
+    svs.clippingBoxLower = cbl;
+    std::array<float,3> cbu = {this->clippingBoxUpper.Param<core::param::Vector3fParam>()->Value().GetX(),
         this->clippingBoxUpper.Param<core::param::Vector3fParam>()->Value().GetY(),
         this->clippingBoxUpper.Param<core::param::Vector3fParam>()->Value().GetZ()};
-    this->structureContainer.clippingBoxUpper = std::make_shared<std::vector<float>>(std::move(cbu));
+    svs.clippingBoxUpper = cbu;
 
-    std::vector<float> sData = {this->sliceNormal.Param<core::param::Vector3fParam>()->Value().GetX(),
-        this->sliceNormal.Param<core::param::Vector3fParam>()->Value().GetY(),
-        this->sliceNormal.Param<core::param::Vector3fParam>()->Value().GetZ(),
-        this->sliceDist.Param<core::param::FloatParam>()->Value()};
-    this->structureContainer.sliceData = std::make_shared<std::vector<float>>(std::move(sData));
+    svs.isoValue = this->IsoValue.Param<core::param::FloatParam>()->Value();
 
-    std::vector<float> iValue = {this->IsoValue.Param<core::param::FloatParam>()->Value()};
-    this->structureContainer.isoValue = std::make_shared<std::vector<float>>(std::move(iValue));
-
-    this->structureContainer.useMIP = this->useMIP.Param<core::param::BoolParam>()->Value();
-    this->structureContainer.useAdaptiveSampling = this->useAdaptiveSampling.Param<core::param::BoolParam>()->Value();
-    this->structureContainer.useGradient = this->useGradient.Param<core::param::BoolParam>()->Value();
-    this->structureContainer.usePreIntegration = this->usePreIntegration.Param<core::param::BoolParam>()->Value();
-    this->structureContainer.adaptiveFactor = this->adaptiveFactor.Param<core::param::FloatParam>()->Value();
-    this->structureContainer.adaptiveMaxRate = this->adaptiveMaxRate.Param<core::param::FloatParam>()->Value();
-    this->structureContainer.samplingRate = this->samplingRate.Param<core::param::FloatParam>()->Value();
+    this->structureContainer.structure = svs;
 
     return true;
 }
@@ -292,13 +241,11 @@ ospray::OSPRaySphereGeometry::InterfaceIsDirty()
 */
 bool OSPRayStructuredVolume::InterfaceIsDirty() {
     if (this->clippingBoxActive.IsDirty() || this->clippingBoxLower.IsDirty() || this->clippingBoxUpper.IsDirty() ||
-        this->sliceDist.IsDirty() || this->sliceNormal.IsDirty() || this->IsoValue.IsDirty() ||
+        this->IsoValue.IsDirty() ||
         this->repType.IsDirty()) {
         this->clippingBoxActive.ResetDirty();
         this->clippingBoxLower.ResetDirty();
         this->clippingBoxUpper.ResetDirty();
-        this->sliceDist.ResetDirty();
-        this->sliceNormal.ResetDirty();
         this->IsoValue.ResetDirty();
         this->repType.ResetDirty();
         return true;
@@ -324,6 +271,14 @@ bool OSPRayStructuredVolume::getExtends(megamol::core::Call& call) {
 
     this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>();
     this->extendContainer.boundingBox->SetBoundingBox(cd->AccessBoundingBoxes().ObjectSpaceBBox());
+    std::string bbox_string =
+                              "LEFT: " + std::to_string(extendContainer.boundingBox->BoundingBox().Left()) +
+                              ";\nBOTTOM: " + std::to_string(extendContainer.boundingBox->BoundingBox().Bottom()) +
+                              ";\nBACK: " + std::to_string(extendContainer.boundingBox->BoundingBox().Back()) +
+                              ";\nRIGHT: " + std::to_string(extendContainer.boundingBox->BoundingBox().Right()) +
+                              ";\nTOP: " + std::to_string(extendContainer.boundingBox->BoundingBox().Top()) +
+                              ";\nFRONT: " + std::to_string(extendContainer.boundingBox->BoundingBox().Bottom());
+    this->showBoundingBox.Param<core::param::StringParam>()->SetValue(bbox_string.c_str());
     this->extendContainer.timeFramesCount = cd->FrameCount();
     this->extendContainer.isValid = true;
 
