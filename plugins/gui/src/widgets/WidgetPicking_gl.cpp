@@ -143,7 +143,8 @@ bool megamol::gui::PickingBuffer::ProcessMouseClick(megamol::core::view::MouseBu
             this->pending_manipulations.emplace_back(
                 Manipulation{InteractionType::SELECT, active_id, 0.0f, 0.0f, 0.0f, 0.0f});
 
-            /// return true;
+            // Consume when interaction is started
+            return true;
         }
     } else if ((button == megamol::core::view::MouseButton::BUTTON_LEFT) &&
                (action == megamol::core::view::MouseButtonAction::RELEASE)) {
