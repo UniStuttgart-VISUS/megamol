@@ -15,9 +15,9 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/view/AbstractCallRenderGL.h"
 #include "mmcore/view/InputCall.h"
 #include "mmcore/view/MouseFlags.h"
+#include "mmcore/view/AbstractCallRender.h"
 #include <AbstractInputScope.h>
 
 namespace megamol {
@@ -51,9 +51,9 @@ public:
         this->renderSlot.SetCallback(C::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
             &RendererModule::OnMouseScrollChainCallback);
         // AbstractCallRenderGL
-        this->renderSlot.SetCallback(C::ClassName(), AbstractCallRenderGL::FunctionName(AbstractCallRenderGL::FnRender),
+        this->renderSlot.SetCallback(C::ClassName(), AbstractCallRender::FunctionName(AbstractCallRender::FnRender),
             &RendererModule::RenderChainCallback);
-        this->renderSlot.SetCallback(C::ClassName(), AbstractCallRenderGL::FunctionName(AbstractCallRenderGL::FnGetExtents),
+        this->renderSlot.SetCallback(C::ClassName(), AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents),
             &RendererModule::GetExtentsChainCallback);
         // Do not make it available yet (extensibility).
     }

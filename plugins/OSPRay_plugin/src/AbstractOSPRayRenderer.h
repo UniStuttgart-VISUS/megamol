@@ -10,13 +10,11 @@
 #include "OSPRay_plugin/CallOSPRayStructure.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3DGL.h"
-#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/Renderer3DModule.h"
 #include "mmcore/view/light/CallLight.h"
 #include "ospray/ospray_cpp.h"
 #include "ospray/ospray_cpp/ext/rkcommon.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace ospray {
@@ -91,7 +89,7 @@ struct baseStructureData {
 
 
 
-class AbstractOSPRayRenderer : public core::view::Renderer3DModuleGL {
+class AbstractOSPRayRenderer : public core::view::Renderer3DModule {
 protected:
     // Ctor
     AbstractOSPRayRenderer(void);
@@ -103,32 +101,6 @@ protected:
      * initializes OSPRay
      */
     void initOSPRay();
-
-    /**
-     * helper function for rendering the OSPRay texture
-     * @param GLSL shader
-     * @param GL texture object
-     * @param OSPRay color texture
-     * @param OSPRay depth texture
-     * @param GL vertex array object
-     * @param image/window width
-     * @param image/window heigth
-     */
-    void renderTexture2D(vislib::graphics::gl::GLSLShader& shader, const uint32_t* fb, const float* db, int& width,
-        int& height, core::view::CallRender3DGL& cr);
-
-    /**
-     * helper function for setting up the OSPRay screen
-     * @param GL vertex array
-     * @param GL vertex buffer object
-     * @param GL texture object
-     */
-    void setupTextureScreen();
-
-    /**
-     * Releases the OGL content created by setupTextureScreen
-     */
-    void releaseTextureScreen();
 
     /**
      * helper function for initializing OSPRay
@@ -163,10 +135,6 @@ protected:
     bool AbstractIsDirty();
     void AbstractResetDirty();
     void RendererSettings(glm::vec4 bg_color);
-
-    // vertex array, vertex buffer object, texture
-    unsigned int _vaScreen, _vbo, _tex, _depth;
-    vislib::graphics::gl::FramebufferObject _new_fbo;
 
     /**
      * Reads the structure map and uses its parameteres to

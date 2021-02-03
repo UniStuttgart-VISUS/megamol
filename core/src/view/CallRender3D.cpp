@@ -33,7 +33,6 @@ view::CallRender3D& view::CallRender3D::operator=(const view::CallRender3D& rhs)
     _backgroundCol = rhs._backgroundCol;
     _minCamState = rhs._minCamState;
     _bboxs = rhs._bboxs;
-    _backgroundCol = rhs._backgroundCol;
     _framebuffer = rhs._framebuffer;
     return *this;
 }
