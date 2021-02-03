@@ -53,7 +53,7 @@ bool GUI_Service::init(const Config& config) {
             this->m_gui = std::make_shared<megamol::gui::GUIWrapper>();
 
             if (check_gui_not_nullptr) {
-                if (this->m_gui->Get()->CreateContext_GL(config.core_instance)) {
+                if (this->m_gui->Get()->CreateContext(megamol::gui::GUIImGuiAPI::OPEN_GL, config.core_instance)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully.");
                     return true;
                 }

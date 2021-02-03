@@ -32,15 +32,22 @@ namespace gui {
         /**
          * Draw file browser pop-up.
          *
+         * @param inout_filename      The file name of the file.
          * @param flag                Flag inidicating intention of file browser dialog.
          * @param label               File browser label.
          * @param open_popup          Flag once(!) indicates opening of pop-up.
-         * @param inout_filename      The file name of the file.
+         * @param extension           The file name extension.
          *
          * @return True on success, false otherwise.
          */
-        bool PopUp(FileBrowserFlag flag, const std::string& label_id, bool open_popup, std::string& inout_filename,
-            const std::string& extension = ".lua");
+        bool PopUp(std::string& inout_filename, FileBrowserFlag flag, const std::string& label, bool open_popup,
+            const std::string& extension, const std::string& check_option_label, bool& inout_check_option);
+
+        bool PopUp(std::string& inout_filename, FileBrowserFlag flag, const std::string& label, bool open_popup,
+            const std::string& extension) {
+            bool check_option = false;
+            return this->PopUp(inout_filename, flag, label, open_popup, extension, "", check_option);
+        }
 
         /**
          * ImGui file browser button opening this file browser pop-up.
@@ -49,7 +56,7 @@ namespace gui {
          *
          * @return True on success, false otherwise.
          */
-        bool Button(std::string& inout_filename);
+        bool Button(std::string& inout_filename, FileBrowserFlag flag, const std::string& extension);
 
     private:
         typedef std::pair<stdfs::path, bool> ChildData_t;
@@ -68,6 +75,7 @@ namespace gui {
         // Keeps child path and flag whether child is director or not
         std::vector<ChildData_t> child_paths;
         size_t additional_lines;
+        bool check_option;
 
         // FUNCTIONS --------------------------------------------------------------
 
