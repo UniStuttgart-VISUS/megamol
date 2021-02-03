@@ -8,6 +8,32 @@ See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol
 
 ![gui](gui.png)
 
+<!-- TOC -->
+## Contents
+- [1) Graphical User Interface (GUI)](#1-graphical-user-interface-gui) 
+    - [[1] Main Menu](#1-main-menu) 
+    - [[2] Configurator](#2-configurator) 
+        - [Main Menu](#main-menu) 
+        - [*Module Stock List* Sidebar](#module-stock-list-sidebar) 
+        - [*Module Parameters* Sidebar](#module-parameters-sidebar) 
+        - [Project Tab ](#project-tab) 
+            - [Menu Bar](#menu-bar) 
+            - [Graph](#graph) 
+            - [Module Groups](#module-groups) 
+            - [Module Group Interface Slots](#module-group-interface-slots) 
+- [2) Modules](#2-modules) 
+    - [[1] GUIView](#1-guiview) 
+    - [[2] OverlayRenderer](#2-overlayrenderer) 
+        - [Parameters](#parameters) 
+- [3) Information for Developers](#3-information-for-developers) 
+    - [[1] New Parameter Widgets](#1-new-parameter-widgets) 
+        - [How to add a new parameter widget](#how-to-add-a-new-parameter-widget) 
+        - [How to add a new parameter group widget](#how-to-add-a-new-parameter-group-widget) 
+    - [[2] Default GUI State ](#2-default-gui-state) 
+    - [[3] Graph Data Structure](#3-graph-data-structure) 
+    - [[4] Class Dependencies](#4-class-dependencies) 
+<!-- /TOC -->
+
 ---
 
 ## 1) Graphical User Interface (GUI)
