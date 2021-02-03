@@ -1180,6 +1180,13 @@ bool GUIWindows::createContext(void) {
     io.LogFilename = nullptr;                             // "imgui_log.txt" - disabled
     io.FontAllowUserScaling = false;                      // disable font scaling using ctrl + mouse wheel
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
+
+#ifdef GUI_USE_GLFW
+    io.SetClipboardTextFn = ImGui_ImplGlfw_SetClipboardText;
+    io.GetClipboardTextFn = ImGui_ImplGlfw_GetClipboardText;
+    io.ClipboardUserData = ::glfwGetCurrentContext();
+#endif // GUI_USE_GLFW
+
 /// DOCKING
 #if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // enable window docking
@@ -1663,7 +1670,7 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
                 "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[GUI] Current Performance Monitor Value:\n%s", overlay.c_str());
-#endif
+#endif // GUI_USE_GLFW
         }
         ImGui::SameLine();
 
@@ -1684,7 +1691,7 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
                 "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[GUI] All Performance Monitor Values:\n%s", stream.str().c_str());
-#endif
+#endif // GUI_USE_GLFW
         }
         ImGui::SameLine();
         ImGui::TextUnformatted("Copy to Clipborad");
