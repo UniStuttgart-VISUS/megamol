@@ -62,7 +62,6 @@ provided that the following conditions are met:
 THIS SOFTWARE IS PROVIDED BY THE MEGAMOL TEAM "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE MEGAMOL TEAM BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-
 <!-- ###################################################################### -->
 -----
 ## Installation and Setup
@@ -116,30 +115,30 @@ Latest tested version:
 
 - As prerequisites, following packages from the repository are required:
 
-    $ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev
+    `$ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev`
 
 - First, download the software package from GitHub:
 
-    $ mkdir megamol; git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/
+    `$ mkdir megamol; git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/`
 
 - Create a build directory and switch to it:
 
-    $ cd megamol; mkdir build; cd build
+    `$ cd megamol; mkdir build; cd build`
 
 - Check for required dependencies:
     
-    $ cmake ..
+    `$ cmake ..`
 
 - Start the ncurses gui for cmake:
 
-    $ ccmake .
+    `$ ccmake .`
 
 - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
 - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
 - Then hit `g` to generate the build files.
 - On the console prompt, start the building:
 
-    $ make && make install
+    $ make && make install`
 
   Use the `-j` option of `make` to run the build in parallel threads.
 
