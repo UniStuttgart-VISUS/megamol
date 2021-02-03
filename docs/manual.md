@@ -44,17 +44,17 @@ THIS SOFTWARE IS PROVIDED BY THE MEGAMOL TEAM "AS IS" AND ANY EXPRESS OR IMPLIED
 
 <!-- ###################################################################### -->
 ## Installation and Setup
-(Effective: 02.02.2021)
 
-This chapter discusses installation and setup of MegaMol, either from the pre-built binary packages or the source code.
-The latter is, however, meant for experienced users. MegaMol targets Microsoft Windows (Windows 7 or newer, x86 and x64) and Linux (x64) as supported environments.
+This chapter discusses installation and setup of MegaMol from source code.
+MegaMol targets Microsoft Windows (Windows 7 or newer, x64) and Linux (x64) as supported environments.
 Currently, Ubuntu is used as Linux distribution for development.
-Further platforms are not considered during the development. While MegaMol might work on further platforms, the development team will currently not grant any support for problems with these environments.
+Further platforms are not considered during the development. 
+While MegaMol might work on further platforms, the development team will currently not grant any support for problems with these environments.
 
 <!-- ---------------------------------------------------------------------- -->
 ### Building from Source
 
-Download a local copy of the latest [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3). 
+The latest release [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3). 
 (Using the current main [branch](https://github.com/UniStuttgart-VISUS/megamol.git) is not recommended, since there is a lot of more or less untested bleeding edge stuff going on.)
 
 **Note**: 
@@ -66,19 +66,20 @@ However, if you want to compile OSPRay yourself, you need to install [ISPC](http
 <!-- ---------------------------------------------------------------------- -->
 #### Microsoft Windows
 
-- For Windows, you have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository. 
+- Download and unzip the source code of the latest [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) into a new folder (e.g. `megamol`).
+- You have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository.
+- Create a new `build` folder.
+- AS generator, it is recommended to use the latest version of [Visual Stuido](https://visualstudio.microsoft.com/downloads/) with default native compilers and for the platform x64.
 - Next, click `Configure` a few times (until all red entries disappear).
 - Then click `Generate` to generate the build files.
-- It is recommended to use **Visual Studio 16 2019 (platform x64)** with default native compilers as generator.
+- The configuration creates a `megamol.sln` file inside the build folder.
+- Open the `sln` file with *Visual Studio*. 
+- Use the `ALL_BUILD` target to build MegaMol.
+- Afterwards, use the `INSTALL` target to create your MegaMol installation.
+- The binary `megamol.exe` is located in the default installation path `../megamol/build/install/bin`
 
 ![CMake Windows](pics/cmake_windows.png)
 Screenshot of `cmake-gui` after generating build files.
-
-- The configuration creates a `sln` file inside the build folder
-- Open the `sln` file with *Visual Studio*
-- Use the `ALL_BUILD` target to build MegaMol
-- Use the `INSTALL` target to create your MegaMol installation
-- The default installation path is `../megamol/build/install/`
 
 <!-- ---------------------------------------------------------------------- -->
 #### Linux (Ubuntu)
@@ -89,33 +90,38 @@ Latest tested version:
     $ cat /proc/version
     Linux version 5.8.0-41-generic (buildd@lgw01-amd64-003) (gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #46~20.04.1-Ubuntu SMP Mon Jan 18 17:52:23 UTC 2021
 
-As prerequisites, following packages from the repository are required:
+- As prerequisites, following packages from the repository are required:
 
     $ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev \
                        uuid-dev libexpat-dev libunwind-dev libxrandr-dev \
                        libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev
 
-First, download the software package from GitHub:
+- First, download the software package from GitHub:
 
     $ mkdir megamol; git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/
 
-Create a build folder and switch to it:
+- Create a build folder and switch to it:
 
     $ cd megamol; mkdir build; cd build
 
-Start the ncurses gui for cmake:
+- Check for required dependencies:
+    
+    $ cmake ..
+
+- Start the ncurses gui for cmake:
 
     $ ccmake .
 
-- Check for unmet dependencies.
-- Configure the project repeatedly using `c` until no more changes are marked. 
+- Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
 - Then hit `g` to generate the build files.
 - On the console prompt, start the building:
 
     $ make && make install
 
-- Use the `-j` option of `make` to run the build in parallel threads.
-- The default installation path is `../megamol/build/install/`
+  Use the `-j` option of `make` to run the build in parallel threads.
+
+- The default installation path for the binary `megamol` is `../megamol/build/install/bin`
+    <!-- TODO Reference shell scipt for use with external libraries like ospray -->
 
 <!-- ---------------------------------------------------------------------- -->
 ### Configuration
