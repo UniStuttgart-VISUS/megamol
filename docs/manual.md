@@ -5,24 +5,39 @@
 ## Contents
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 - [Overview](#overview)
+=======
+- [Overview](#overview)
+    - [License](#license)
+>>>>>>> d6e034ef9 (docu toc fix)
 - [Installation and Setup](#installation-and-setup)
     - [Building from Source](#building-from-source)
         - [Microsoft Windows](#microsoft-windows)
         - [Linux (Ubuntu)](#linux-ubuntu)
+<<<<<<< HEAD
     - [Command Line Arguments](#command-line-arguments)        
     - [Configuration File](#configuration-file)
+=======
+    - [Configuration](#configuration)
+>>>>>>> d6e034ef9 (docu toc fix)
         - [General Settings](#general-settings)
         - [Logging](#logging)
         - [Application, Shaders and Resources](#application-shaders-and-resources) 
         - [Plugins](#plugins) 
         - [Global Settings](#global-settings) 
+<<<<<<< HEAD
     - [Test Installation](#test-installation) 
         - [Examples](#examples) 
+=======
+        - [Tests](#tests) 
+- [Load and Create Projects](#load-and-create-projects)
+>>>>>>> d6e034ef9 (docu toc fix)
 - [Viewing Data Sets](#viewing-data-sets)
     - [Modules, Views and Calls](#modules-views-and-calls) 
         - [Modules and Calls](#modules-and-calls) 
         - [Views](#views) 
+<<<<<<< HEAD
     - [View Interaction](#view-interaction) 
 - [Project Files](#project-files)     
 - [Making High-Resolution Screenshots](#making-high-resolution-screenshots) 
@@ -65,6 +80,17 @@
         - [Job Instance](#job-instance) 
         - [Converting to MMPLD](#converting-to-mmpld) 
     <!-- - [Advanced Usage](#advanced-usage) -->
+=======
+    - [Project Files](#project-files) 
+    - [View Interaction](#view-interaction) 
+    - [Making High-Resolution Screenshots](#making-high-resolution-screenshots) 
+    - [Reproducibility](#reproducibility) 
+    - [Making Simple Videos](#making-simple-videos) 
+- [Jobs: Converting Data](#jobs)
+    - [Job Instance](#job-instance) 
+    - [Converting to MMPLD](#converting-to-mmpld) 
+<!-- - [Advanced Usage](#advanced-usage) -->
+>>>>>>> d6e034ef9 (docu toc fix)
 
 <!-- /TOC -->
 
