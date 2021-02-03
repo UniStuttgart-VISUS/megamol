@@ -133,14 +133,14 @@ Latest tested version:
 
     `$ ccmake .`
 
-- Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
-- Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
-- Then hit `g` to generate the build files.
-- On the console prompt, start the building:
+    - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
+    - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
+    - Then hit `g` to generate the build files.
+    - On the console prompt, start the building:
 
     $ make && make install`
 
-  Use the `-j` option of `make` to run the build in parallel threads.
+    Use the `-j` option of `make` to run the build in parallel threads.
 
 - The binary `megamol` is located in the default installation path `../megamol/build/install/bin`.
   If you use additional external libraries (e.g. when using OSPRay), you have have to use the shell script `megamol.sh` instead. 
