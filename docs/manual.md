@@ -172,7 +172,7 @@ In the `bin` directory, you can find the default configuration file `megamolconf
 
     mmSetLogLevel("*") -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=*
     mmSetEchoLevel("*")
-    mmSetLogFile("")    
+    -- mmSetLogFile("") 
     mmSetAppDir(basePath .. "bin")
     mmAddShaderDir(basePath .. "share/shaders")
     mmAddResourceDir(basePath .. "share/shaders")
@@ -216,7 +216,7 @@ The asterisk `*` stands for the highest numeric value, thus printing all message
 ```lua
     mmSetLogLevel('*') -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=*
     mmSetEchoLevel('*')
-    mmSetLogFile("") 
+    -- mmSetLogFile("") 
 ```
 
 <!-- ---------------------------------------------------------------------- -->
