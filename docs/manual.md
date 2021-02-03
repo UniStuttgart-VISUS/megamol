@@ -158,6 +158,7 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 <!-- ---------------------------------------------------------------------- -->
 #### Microsoft Windows
 
+<<<<<<< HEAD
 1. Download and unzip the source code of the latest [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) into a new directory (e.g. `megamol`).
 2. You have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository.
 3. Create a new `build` directory.
@@ -170,6 +171,12 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 10. Use the `ALL_BUILD` target to build MegaMol.
 11. Afterwards, use the `INSTALL` target to create your MegaMol installation.
 12. The binary `megamol.exe` is located in the default installation path `../megamol/build/install/bin`.
+=======
+- For Windows, you have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository. 
+- Next, click `Configure` a few times (until all red entries disappear).
+- Then click `Generate` to generate the build files.
+- It is recommended to use **Visual Studio 16 2019 (platform x64)** with default native compilers as generator.
+>>>>>>> d85984bb9 (docu)
 
 ![CMake Windows](pics/cmake_windows.png)
 *Screenshot of `cmake-gui` after generating build files.*
@@ -190,15 +197,25 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 Screenshot of `cmake-gui` after generating build files.
 >>>>>>> f5eec258f (manual update ....)
 
+- The configuration creates a `sln` file inside the build folder
+- Open the `sln` file with *Visual Studio*
+- Use the `ALL_BUILD` target to build MegaMol
+- Use the `INSTALL` target to create your MegaMol installation
+- The default installation path is `../megamol/build/install/`
+
 <!-- ---------------------------------------------------------------------- -->
 #### Linux (Ubuntu)
 
+<<<<<<< HEAD
 Since the full support of some C++17 functionality is required (e.g. std::filesystem) a `gcc` version equal or greater than **8** is required (with `CMAKE_CXX_FLAGS` appended by `--std=c++17`).
 
 <<<<<<< HEAD
 Latest Test:
 >>>>>>> 800f17d5c (manual update)
 =======
+=======
+Since the full support of some C++17 functionality is required (e.g. std::filesystem), a `gcc` version equal or greater than **8** is required (with `CMAKE_CXX_FLAGS` appended by `--std=c++17`).
+>>>>>>> d85984bb9 (docu)
 Latest tested version:
 >>>>>>> f5eec258f (manual update ....)
 
@@ -248,10 +265,10 @@ First, download the software package from GitHub:
 =======
     $ ccmake .
 
-Check for unmet dependencies.
-Configure the project repeatedly using `c` until no more changes are marked. 
-Then hit `g` to generate the build files.
-On the console prompt, start the building:
+- Check for unmet dependencies.
+- Configure the project repeatedly using `c` until no more changes are marked. 
+- Then hit `g` to generate the build files.
+- On the console prompt, start the building:
 
     $ make && make install
 >>>>>>> ba7df3ade (manual update)
@@ -269,6 +286,7 @@ On the console prompt, start the building:
 
 8. The binary `megamol` is located in the default installation path `../megamol/build/install/bin`.
 
+<<<<<<< HEAD
 <!-- ---------------------------------------------------------------------- -->
 ### Command Line Arguments
 
@@ -318,14 +336,22 @@ Create a file `megamolconfig.lua` in this bin directory, with the following cont
 YOU WILL NEED TO ADJUST THE PATHS ACCORDINGLY:
 =======
 You can append the option `-j 4` to the make command to run the build in 4 parallel threads.
+=======
+- Use the `-j` option of `make` to run the build in parallel threads.
+- The default installation path is `../megamol/build/install/`
+>>>>>>> d85984bb9 (docu)
 
 <!-- ---------------------------------------------------------------------- -->
 ### Configuration
 
 After successfully compiling and installing MegaMol, you should have all executable files inside your bin folder (default: `../megamol/build/install/`). 
 Some setup still needs to be done.
+<<<<<<< HEAD
 In the `bin` directory, you can find the default configuration file for MegaMol: `megamolconfig.lua`:
 >>>>>>> 800f17d5c (manual update)
+=======
+In the `bin` directory, you can find the default configuration file for MegaMol `megamolconfig.lua`:
+>>>>>>> d85984bb9 (docu)
 
 ```lua
     -- Standard MegaMol Configuration File --
@@ -713,7 +739,7 @@ In the highlighted parameter group `anim` in the ImGui on the left side of the w
 <!-- XXX Do not mind the `Ignoring Xlib error: error code n request code m` messages. -->
 >>>>>>> 0ae2f4429 (manual update ...)
 
-MegaMol should now open a rendering window showing a generated dataset with several colored spheres. Hitting the `space` key starts and stops the animation playback. In the *ImGui*, on the left side of the window, you can adjust all parameters of the running MegaMol instance. For example, you can find the parameter `Speed` in the group `inst::view::anim` (cf. [test run figure](#testrunpic)). With this parameter, you can adjust the playback speed of the animation.
+MegaMol should now open a rendering window showing a generated dataset with several colored spheres. Hitting the `space` key starts and stops the animation playback. In the *ImGui*, on the left side of the window, you can adjust all parameters of the running MegaMol instance. For example, you can find the parameter `Speed` in the group `inst::view::anim`. With this parameter, you can adjust the playback speed of the animation.
 
 
 <!-- ###################################################################### -->
