@@ -7,7 +7,11 @@ By defining fixed keyframes for desired camera positions and specific animation 
 
 <!-- TOC -->
 ## Contents
+<<<<<<< HEAD
 - [Module Descriptions](#module-descriptions) 
+=======
+- [Module Descriptions](#module -descriptions) 
+>>>>>>> 9f08ae8ac (updted cineamtic and ospray docu)
    - [KeyframeKeeper](#keyframekeeper)  
    - [TrackingShotRenderer](#trackingshotrenderer)  
    - [CinematicView](#cinematicview)  
@@ -122,11 +126,18 @@ The module `ReplacementRenderer` exposes the following parameters:
 ---
 
 ## Usage
+<<<<<<< HEAD
 
 The modules for a complete cinematic editor should be connected as shown in the *Cinematic Editor* module group below. 
 The renderer module and the data source module in the *External Project* group can be replaced by any other suitable modules. 
 
 **Note:** The renderer module has to be connected to the `TrackingShotRenderer` as well as to the `CinematicView`.
+=======
+
+The modules for a complete cinematic editor should be connected as shown in the *Cinematic Editor* module group below. 
+The renderer module and the data source module in the *External Project* group can be replaced by any other suitable modules. 
+Note: The renderer module has to be connected to the `TrackingShotRenderer` as well as to the `CinematicView`.
+>>>>>>> 9f08ae8ac (updted cineamtic and ospray docu)
 For simplification the preferred way of adding the cinematic graph to a new project is to use the predefined cinematic editor project `examples/cinematic/cinematic_editor_megamol.lua` project (see example below).
 
 ![megamol example module call graph](graph.png)
@@ -134,9 +145,13 @@ For simplification the preferred way of adding the cinematic graph to a new proj
 ### Example
 
 In order to run the example change to the `bin` folder of the megamol executable in a (bash/powershell) shell and start the program with the following command:
+<<<<<<< HEAD
 
 *Under Windows:* `.\megamol.exe ../examples/cinematic/cinematic_editor_megamol.lua`
 
+=======
+*Under Windows:* `.\megamol.exe ../examples/cinematic/cinematic_editor_megamol.lua`   
+>>>>>>> 9f08ae8ac (updted cineamtic and ospray docu)
 *Under Linux:* `./megamol.sh ../examples/cinematic/cinematic_editor_megamol.lua`
 
 ### How to use the cinematic editor

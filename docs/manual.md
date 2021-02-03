@@ -27,10 +27,14 @@
         - [Plugins](#plugins) 
         - [Global Settings](#global-settings) 
 <<<<<<< HEAD
+<<<<<<< HEAD
     - [Test Installation](#test-installation) 
         - [Examples](#examples) 
 =======
         - [Tests](#tests) 
+=======
+        - [Test Installation](#test-installation) 
+>>>>>>> 9f08ae8ac (updted cineamtic and ospray docu)
 - [Load and Create Projects](#load-and-create-projects)
 >>>>>>> d6e034ef9 (docu toc fix)
 - [Viewing Data Sets](#viewing-data-sets)
@@ -209,11 +213,8 @@ It is recommende to use the latest [release](https://github.com/UniStuttgart-VIS
 >>>>>>> 8b2342edf (docu)
 
 **Note**: 
-The *OSPRay plugin* is currently disabled by default, since you need to install its dependencies manually and locate them manually as well. 
-Ideally, you just download [OSPRay](https://www.ospray.org/downloads.html) and adjust `ospray_DIR` in cmake. 
-Give the absolute path to the directory containing the `.cmake` files of OSPRay.
-They are usually located in the `/lib/cmake` sub directory. 
-However, if you want to compile OSPRay yourself, you need to install [ISPC](https://ispc.github.io/), [TBB](https://www.threadingbuildingblocks.org/), and [Embree](https://embree.github.io/) first (binary versions are okay).
+The *OSPRay plugin* is currently disabled by default. 
+See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/master/plugins/OSPRay_plugin/Readme.md) for additional instructions on how to enable it.
 
 <!-- ---------------------------------------------------------------------- -->
 #### Microsoft Windows
@@ -829,9 +830,13 @@ This concludes the building and configuring of MegaMol.
 Test your installation following the description in the following section.
 
 <!-- ---------------------------------------------------------------------- -->
+<<<<<<< HEAD
 >>>>>>> 0ae2f4429 (manual update ...)
 ### Tests
 >>>>>>> 4fa438626 (manual update ...)
+=======
+### Test Installation
+>>>>>>> 9f08ae8ac (updted cineamtic and ospray docu)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -846,7 +851,7 @@ the MegaMol start script:
 =======
 *REWORK*
 
-To test MegaMol, simply start the frontend executable. 
+In order to test the installtion, simply start the frontend executable. 
 Open a console and change your working directory to the MegaMol install directory. 
 Execute the MegaMol binary:
 >>>>>>> 06b190844 (docu)

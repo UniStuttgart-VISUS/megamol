@@ -6,10 +6,14 @@ basePath = "${CMAKE_INSTALL_PREFIX}/"
 mmSetLogLevel("*") -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=*
 mmSetEchoLevel("*")
 <<<<<<< HEAD
+<<<<<<< HEAD
 -- mmSetLogFile("") 
 =======
 mmSetLogFile("") 
 >>>>>>> 88e3119f9 (docu)
+=======
+-- mmSetLogFile("") 
+>>>>>>> 9f08ae8ac (updted cineamtic and ospray docu)
 mmSetAppDir(basePath .. "${MMPLG_DIR}")
 mmAddShaderDir(basePath .. "share/shaders")
 mmAddResourceDir(basePath .. "share/shaders")
