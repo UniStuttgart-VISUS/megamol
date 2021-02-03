@@ -6,18 +6,38 @@
 
 - [Contents](#contents)
     - [Overview](#overview)
-    - [Installation and Setup](#installation-and-setup)>
-        - [Microsoft Windows](#microsoft-windows)>
-        - [Linux (Ubuntu)](#linux-ubunut)>
+        - [License](#license)
+    - [Installation and Setup](#installation-and-setup)
+        - [Building from Source](#building-from-source)
+            - [Microsoft Windows](#microsoft-windows)
+            - [Linux (Ubuntu)](#linux-ubunut)
+        - [Configuration](#configuration)
+            - [General Settings](#general-settings)
+            - [Logging](#logging)
+            - [Application, Shaders and Resources](#application-shaders-and-resources) 
+            - [Plugins](#plugins) 
+            - [Global Settings](#global-settings) 
+            - [Tests](#tests) 
     - [Load and Create Projects](#load-create-projects)
     - [Viewing Data Sets](#viewing-data-sets)
+        - [Modules, Views and Calls](#modules-views-and-calls) 
+            - [Modules and Calls](#modules-and-calls) 
+            - [Views](#views) 
+        - [Project Files](#project-files) 
+        - [View Interaction](#view-interaction) 
+        - [Making High-Resolution Screenshots](#making-high-resolution-screenshots) 
+        - [Reproducibility](#reproducibility) 
+        - [Making Simple Videos](#making-simple-videos) 
     - [Jobs: Converting Data](#jobs)
-    - [Advanced Usage](#advanced-usage)
+        - [Job Instance](#job-instance) 
+        - [Converting to MMPLD](#converting-to-mmpld) 
+    <!-- - [Advanced Usage](#advanced-usage) -->
 
 <!-- /TOC -->
 
 
 <!-- ###################################################################### -->
+-----
 ## Overview
 
 MegaMol is a visualization middleware used to visualize point-based molecular datasets.
@@ -45,6 +65,7 @@ THIS SOFTWARE IS PROVIDED BY THE MEGAMOL TEAM "AS IS" AND ANY EXPRESS OR IMPLIED
 
 
 <!-- ###################################################################### -->
+-----
 ## Installation and Setup
 
 This chapter discusses installation and setup of MegaMol from source code.
@@ -323,6 +344,7 @@ Screenshot of MegaMol running the test spheres instance.
 
 
 <!-- ###################################################################### -->
+-----
 ## Load and Create Projects
 
 *TODO*
@@ -331,6 +353,7 @@ A detailed description of the GUI and the configurator can be found in the readm
 
 
 <!-- ###################################################################### -->
+-----
 ## Viewing Data Sets
 <!-- XXX More suitable caption name? -->
 
@@ -359,7 +382,7 @@ The center module renderer of class `SphererRenderer` is called by the window us
 The right modules provide data and additional information for the renderer, namely a color map function and a clip plane. 
 
 <!-- ---------------------------------------------------------------------- -->
-#### Modules and calls
+#### Modules and Calls
 
 *Modules* are the functional entities of MegaMol. 
 They provide several programmatic access points, the *slots*. 
@@ -593,7 +616,7 @@ This sequence of image files can then be merged to produce a video file, e.g. us
 This chapter discusses the job concept available in MegaMol. Especially, how jobs can be used for data conversion. Examples are based on the project script files available in the *script and example* package from the MegaMol project website.
 
 <!-- ---------------------------------------------------------------------- -->
-### Job instance
+### Job Instance
 
 Jobs are the second type of instances available at the MegaMol runtime (compare view instances in section [Views](#views)). The primary difference is the `<job>` tag as primary instance tag. Similarly, to the viewmod attribute, the `<job>` tag specifies a jobmod module as entry module.
 
