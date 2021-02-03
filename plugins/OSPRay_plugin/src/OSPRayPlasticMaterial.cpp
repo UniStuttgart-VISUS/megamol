@@ -38,14 +38,21 @@ OSPRayPlasticMaterial::~OSPRayPlasticMaterial(void) {
 void OSPRayPlasticMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::PLASTIC;
 
-    auto pcolor = this->plasticPigmentColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.plasticPigmentColor.assign(pcolor, pcolor + 3);
+    plasticMaterial pm;
 
-    materialContainer.plasticEta = this->plasticEta.Param<core::param::FloatParam>()->Value();
+    auto pcolor = this->plasticPigmentColor.Param<core::param::Vector3fParam>();
+    pm.plasticPigmentColor = pcolor->getArray();
 
-    materialContainer.plasticRoughness = this->plasticRoughness.Param<core::param::FloatParam>()->Value();
+    pm.plasticEta =
+        this->plasticEta.Param<core::param::FloatParam>()->Value();
 
-    materialContainer.plasticThickness = this->plasticThickness.Param<core::param::FloatParam>()->Value();
+    pm.plasticRoughness =
+        this->plasticRoughness.Param<core::param::FloatParam>()->Value();
+
+    pm.plasticThickness =
+        this->plasticThickness.Param<core::param::FloatParam>()->Value();
+
+    materialContainer.material = pm;
 }
 
 bool OSPRayPlasticMaterial::InterfaceIsDirty() {

@@ -13,9 +13,10 @@
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
 #    include "mmcore/view/Renderer2DModule.h"
 #    include "mmcore/view/Renderer3DModule.h"
+#    include "mmcore/view/Renderer3DModule_2.h"
 #    include "vislib/graphics/gl/IncludeAllGL.h"
 #endif
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol::core;
 
@@ -40,6 +41,7 @@ Call::~Call(void) {
         this->callee->ConnectCall(nullptr);
         this->callee = nullptr; // DO NOT DELETE
     }
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO + 350, "destructed call \"%s\"\n", typeid(*this).name());
     ARY_SAFE_DELETE(this->funcMap);
 }
 
@@ -52,29 +54,24 @@ bool Call::operator()(unsigned int func) {
     if (this->callee != nullptr) {
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
         auto f = this->callee->GetCallbackFuncName(func);
-        auto p3 = dynamic_cast<core::view::Renderer3DModule*>(callee->Parent().get());
-        auto p2 = dynamic_cast<core::view::Renderer2DModule*>(callee->Parent().get());
-        if (p3) {
-            std::string output = p3->ClassName();
+        auto parent = callee->Parent().get();
+        auto p3 = dynamic_cast<core::view::Renderer3DModule*>(parent);
+        auto p3_2 = dynamic_cast<core::view::Renderer3DModule_2*>(parent);
+        auto p2 = dynamic_cast<core::view::Renderer2DModule*>(parent);
+        if (p3 || p3_2 || p2) {
+            std::string output = dynamic_cast<core::Module*>(parent)->ClassName();
             output += "::";
             output += f;
             glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
-            // vislib::sys::Log::DefaultLog.WriteInfo("called %s::%s", p3->ClassName(), f);
-        }
-        if (p2) {
-            std::string output = p2->ClassName();
-            output += "::";
-            output += f;
-            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1234, -1, output.c_str());
-            // vislib::sys::Log::DefaultLog.WriteInfo("called %s::%s", p2->ClassName(), f);
+            // megamol::core::utility::log::Log::DefaultLog.WriteInfo("called %s::%s", p3->ClassName(), f);
         }
 #endif
         res = this->callee->InCall(this->funcMap[func], *this);
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
-        if (p2 || p3) glPopDebugGroup();
+        if (p2 || p3 || p3_2) glPopDebugGroup();
 #endif
     }
-    // vislib::sys::Log::DefaultLog.WriteInfo("calling %s, idx %i, result %s (%s)", this->ClassName(), func,
+    // megamol::core::utility::log::Log::DefaultLog.WriteInfo("calling %s, idx %i, result %s (%s)", this->ClassName(), func,
     //    res ? "true" : "false", this->callee == nullptr ? "no callee" : "from callee");
     return res;
 }

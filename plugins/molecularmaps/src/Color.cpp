@@ -13,7 +13,7 @@
 #include "Color.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/ColourParser.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 
 using namespace megamol;
 using namespace megamol::core;

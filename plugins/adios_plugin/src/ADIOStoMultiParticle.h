@@ -11,6 +11,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/moldyn/SimpleSphericalParticles.h"
+#include <variant>
 
 namespace megamol {
 namespace adios {
@@ -73,7 +74,7 @@ private:
     core::CalleeSlot mpSlot;
     core::CallerSlot adiosSlot;
 
-    std::vector<std::vector<char>> mix;
+    std::vector<std::vector<unsigned char>> mix;
 
     size_t currentFrame = -1;
 
@@ -83,9 +84,9 @@ private:
 
     size_t stride = 0;
 
-    std::vector<unsigned long long int> plist_offset;
+    std::vector<uint64_t> plist_offset;
     std::vector<float> list_box;
-    std::vector<unsigned long long int> plist_count;
+    std::vector<uint64_t> plist_count;
 
 };
 

@@ -45,9 +45,10 @@ public:
     ~MSMConvexHullDataSource();
 
 protected:
-    virtual bool create();
 
     virtual bool getDataCallback(core::Call& caller);
+
+    virtual bool getMetaDataCallback(core::Call& caller);
 
 private:
     megamol::core::CallerSlot m_MSM_callerSlot;

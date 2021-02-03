@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "protein/RMSF.h"
 #include <cmath>
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/Array.h"
 #include "vislib/math/ShallowVector.h"
 #include <fstream>
@@ -13,7 +13,7 @@ using namespace megamol;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
 
-PROTEIN_API bool megamol::protein::computeRMSF(protein_calls::MolecularDataCall *mol) {
+bool megamol::protein::computeRMSF(protein_calls::MolecularDataCall *mol) {
 	if (mol == NULL) return false;
 
 	// store current frame and calltime

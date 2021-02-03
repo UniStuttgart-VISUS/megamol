@@ -36,6 +36,7 @@
 using namespace megamol;
 using namespace megamol::protein_cuda;
 using namespace megamol::core;
+using namespace megamol::core::utility::log;
 
 typedef vislib::math::Vector<float, 3> Vec3f;
 const Vec3f StreamlineRenderer::uniformColor = Vec3f(0.88f, 0.86f, 0.39f);
@@ -140,7 +141,6 @@ StreamlineRenderer::~StreamlineRenderer(void) {
  */
 bool StreamlineRenderer::create(void) {
 
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     // Init extensions

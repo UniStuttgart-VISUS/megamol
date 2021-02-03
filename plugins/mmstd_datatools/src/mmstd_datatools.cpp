@@ -6,10 +6,10 @@
  */
 
 #include "stdafx.h"
-#include "mmstd_datatools/mmstd_datatools.h"
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mmcore/utility/plugins/PluginRegister.h"
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
@@ -29,6 +29,7 @@
 #include "IColSelectClassify.h"
 #include "IColToIdentity.h"
 #include "IndexListIndexColor.h"
+#include "LocalBoundingBoxExtractor.h"
 #include "MPDCListsConcatenate.h"
 #include "MPIParticleCollector.h"
 #include "MPIVolumeAggregator.h"
@@ -61,6 +62,7 @@
 #include "ParticleVelocities.h"
 #include "ParticleVisibilityFromVolume.h"
 #include "ParticlesToDensity.h"
+#include "ParticleInstantiator.h"
 #include "RemapIColValues.h"
 #include "SphereDataUnifier.h"
 #include "StaticMMPLDProvider.h"
@@ -81,70 +83,25 @@
 #include "table/MMFTDataWriter.h"
 #include "table/TableColumnFilter.h"
 #include "table/TableColumnScaler.h"
+#include "table/TableFlagFilter.h"
 #include "table/TableJoin.h"
 #include "table/TableObserverPlane.h"
+#include "table/TableSampler.h"
+#include "table/TableSelectionTx.h"
+#include "table/TableSort.h"
+#include "table/TableWhere.h"
 #include "table/TableToLines.h"
 #include "table/TableToParticles.h"
+#include "MPDCGrid.h"
+#include "table/TableSplit.h"
+#include "CSVWriter.h"
+#include "clustering/ParticleIColClustering.h"
+#include "AddParticleColors.h"
 
-/*
- * mmplgPluginAPIVersion
- */
-MMSTD_DATATOOLS_API int mmplgPluginAPIVersion(void){MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgPluginAPIVersion}
-
-
-/*
- * mmplgGetPluginCompatibilityInfo
- */
-MMSTD_DATATOOLS_API megamol::core::utility::plugins::PluginCompatibilityInfo* mmplgGetPluginCompatibilityInfo(
-    megamol::core::utility::plugins::ErrorCallback onError) {
-    // compatibility information with core and vislib
-    using megamol::core::utility::plugins::LibraryVersionInfo;
-    using megamol::core::utility::plugins::PluginCompatibilityInfo;
-
-    PluginCompatibilityInfo* ci = new PluginCompatibilityInfo;
-    ci->libs_cnt = 2;
-    ci->libs = new LibraryVersionInfo[2];
-
-    SetLibraryVersionInfo(
-        ci->libs[0], "MegaMolCore", MEGAMOL_CORE_MAJOR_VER, MEGAMOL_CORE_MINOR_VER, MEGAMOL_CORE_COMP_REV,
-        0
-#if defined(DEBUG) || defined(_DEBUG)
-            | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
-#endif
-#if defined(MEGAMOL_CORE_DIRTY) && (MEGAMOL_CORE_DIRTY != 0)
-            | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DIRTY_BUILD
-#endif
-    );
-
-    SetLibraryVersionInfo(ci->libs[1], "vislib", vislib::VISLIB_VERSION_MAJOR, vislib::VISLIB_VERSION_MINOR,
-        vislib::VISLIB_VERSION_REVISION,
-        0
-#if defined(DEBUG) || defined(_DEBUG)
-            | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DEBUG_BUILD
-#endif
-#if defined(VISLIB_DIRTY_BUILD) && (VISLIB_DIRTY_BUILD != 0)
-            | MEGAMOLCORE_PLUGIN200UTIL_FLAGS_DIRTY_BUILD
-#endif
-    );
-
-    return ci;
-}
-
-
-/*
- * mmplgReleasePluginCompatibilityInfo
- */
-MMSTD_DATATOOLS_API void mmplgReleasePluginCompatibilityInfo(
-    megamol::core::utility::plugins::PluginCompatibilityInfo* ci) {
-    // release compatiblity data on the correct heap
-    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginCompatibilityInfo(ci)
-}
-
-
-/* anonymous namespace hides this type from any other object files */
-namespace {
+namespace megamol::stdplugin::datatools {
 /** Implementing the instance class of this plugin */
 class plugin_instance : public megamol::core::utility::plugins::Plugin200Instance {
+    REGISTERPLUGIN(plugin_instance)
 public:
     /** ctor */
     plugin_instance(void)
@@ -213,6 +170,11 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableObserverPlane>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableJoin>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableColumnFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSampler>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableFlagFilter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSelectionTx>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSort>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableWhere>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleVelocities>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleNeighborhood>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleThermodyn>();
@@ -237,6 +199,13 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::SyncedMMPLDProvider>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableManipulator>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::io::CPERAWDataSource>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::LocalBoundingBoxExtractor>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ParticleInstantiator>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MPDCGrid>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableSplit>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CSVWriter>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::clustering::ParticleIColClustering>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::AddParticleColors>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
@@ -244,23 +213,5 @@ public:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::GraphDataCall>();
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::MultiIndexListDataCall>();
     }
-    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_plugininstance_connectStatics
 };
-} // namespace
-
-
-/*
- * mmplgGetPluginInstance
- */
-MMSTD_DATATOOLS_API
-megamol::core::utility::plugins::AbstractPluginInstance* mmplgGetPluginInstance(
-    megamol::core::utility::plugins::ErrorCallback onError){
-    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgGetPluginInstance(plugin_instance, onError)}
-
-
-/*
- * mmplgReleasePluginInstance
- */
-MMSTD_DATATOOLS_API void mmplgReleasePluginInstance(megamol::core::utility::plugins::AbstractPluginInstance* pi) {
-    MEGAMOLCORE_PLUGIN200UTIL_IMPLEMENT_mmplgReleasePluginInstance(pi)
-}
+} // namespace megamol::stdplugin::datatools

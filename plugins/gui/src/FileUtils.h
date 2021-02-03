@@ -8,118 +8,166 @@
 #ifndef MEGAMOL_GUI_FILEUTILS_INCLUDED
 #define MEGAMOL_GUI_FILEUTILS_INCLUDED
 
-#if _HAS_CXX17
-#    include <filesystem> // directory_iterator
-namespace fsns = std::filesystem;
+#if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
+#include <filesystem>
+namespace stdfs = std::filesystem;
 #else
 // WINDOWS
-#    ifdef _WIN32
-#        include <filesystem>
-#    else
+#ifdef _WIN32
+#include <filesystem>
+namespace stdfs = std::experimental::filesystem;
+#else
 // LINUX
-#        include <experimental/filesystem>
-#    endif
-namespace fsns = std::experimental::filesystem;
+#include <experimental/filesystem>
+namespace stdfs = std::experimental::filesystem;
 #endif
+#endif
+
+#include "GUIUtils.h"
 
 #include <fstream>
 #include <iostream>
-#include <string>
 
-#include "mmcore/AbstractNamedObject.h"
-#include "mmcore/CoreInstance.h"
-#include "mmcore/Module.h"
-
-#include "vislib/sys/AbstractReaderWriterLock.h"
+#include "vislib/sys/FastFile.h"
 
 
 namespace megamol {
 namespace gui {
 
-/** Type for filesystem paths. */
-typedef fsns::path PathType;
+    /**
+     * File utility functions.
+     */
+    class FileUtils {
+    public:
+        /**
+         * Load raw data from file (e.g. texture data)
+         */
+        static size_t LoadRawFile(std::string name, void** outData);
 
-/**
- * Check if given file or directory exists.
- *
- * @param path  The file or directory path.
- */
-inline bool PathExists(PathType path) { return fsns::exists(path); }
+        /**
+         * Check if file exists.
+         *
+         * @param path  The file or directory path.
+         */
+        template<typename T>
+        static bool FileExists(const T& path_str);
 
-/**
- * Check if file exists and has specified file extension.
- *
- * @param path  The file or directory path.
- * @param ext   The extension the given file should have.
- */
-inline bool HasExistingFileExtension(PathType path, std::string ext) {
-    if (!fsns::exists(static_cast<PathType>(path))) {
+        /**
+         * Check if any file exists and has specified file extension.
+         *
+         * @param path  The file or directory path.
+         * @param ext   The extension the given file should have.
+         */
+        template<typename T>
+        static bool FileWithExtensionExists(const T& path_str, const std::string& ext);
+
+        /**
+         * Check if any file exists and has specified file extension.
+         *
+         * @param path  The file or directory path.
+         * @param ext   The extension the given file should have.
+         */
+        template<typename T>
+        static bool FileHasExtension(const T& path_str, const std::string& ext);
+
+        /**
+         * Get stem of filename (filename without leading path and extension).
+         *
+         * @param path  The file or directory path.
+         */
+        template<typename T>
+        static std::string GetFilenameStem(const T& path_str);
+
+        /**
+         * Search recursively for file or path beginning at given directory.
+         *
+         * @param file          The file to search for.
+         * @param searchPath    The path of a directory as start for recursive search.
+         *
+         * @return              The complete path of the found file, empty string otherwise.
+         */
+        template<typename T, typename S>
+        static std::string SearchFileRecursive(const T& search_path_str, const S& search_file_str);
+
+        /**
+         * Writes content to file.
+         *
+         * @param filename      The file name of the file.
+         * @param in_content    The content to wirte to the file.
+         * @param silent        Disable log output.
+         *
+         * @return True on success, false otherwise.
+         */
+        static bool WriteFile(const std::string& filename, const std::string& in_content, bool silent = false);
+
+        /**
+         * Read content from file.
+         *
+         * @param filename      The file name of the file.
+         * @param out_content   The content to read from file.
+         * @param silent        Disable log output.
+         *
+         * @return True on success, false otherwise.
+         */
+        static bool ReadFile(const std::string& filename, std::string& out_content, bool silent = false);
+
+    private:
+        FileUtils(void);
+        ~FileUtils(void) = default;
+    };
+
+
+    template<typename T>
+    bool megamol::gui::FileUtils::FileExists(const T& path_str) {
+        auto path = static_cast<stdfs::path>(path_str);
+        if (stdfs::exists(path) && stdfs::is_regular_file(path)) {
+            return true;
+        }
         return false;
     }
-    return (path.extension().generic_string() == ext);
-}
 
-/**
- * Check if file has specified file extension.
- *
- * @param path  The file or directory path.
- * @param ext   The extension the given file should have.
- */
-inline bool HasFileExtension(PathType path, std::string ext) { return (path.extension().generic_string() == ext); }
 
-/**
- * Search recursively for file or path beginning at given directory.
- *
- * @param file          The file to search for.
- * @param searchPath    The path of a directory as start for recursive search.
- *
- * @return              The complete path of the found file, empty string otherwise.
- */
-inline std::string SearchFileRecursive(std::string file, PathType searchPath) {
-    std::string foundPath;
-    for (const auto& entry : fsns::recursive_directory_iterator(searchPath)) {
-        if (entry.path().filename().generic_string() == file) {
-            foundPath = entry.path().generic_string();
-            break;
+    template<typename T>
+    bool megamol::gui::FileUtils::FileWithExtensionExists(const T& path_str, const std::string& ext) {
+        if (FileUtils::FileExists<T>(path_str)) {
+            auto path = static_cast<stdfs::path>(path_str);
+            return (path.extension().generic_u8string() == ext);
         }
-    }
-    return foundPath;
-}
-
-/**
- * Save project to file.
- *
- * @param projectFilename The file name for the project.
- * @param coreInstance    The pointer to the core instance.
- *
- * @return True on success, false otherwise.
- */
-inline bool SaveProjectFile(std::string projectFilename, megamol::core::CoreInstance* coreInstance) {
-
-    if (coreInstance == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("[SaveProjectFile] Pointer to CoreInstance is nullptr.");
         return false;
     }
-    std::string serInstances, serModules, serCalls, serParams;
-    coreInstance->SerializeGraph(serInstances, serModules, serCalls, serParams);
-    auto confstr = serInstances + "\n" + serModules + "\n" + serCalls + "\n" + serParams + "\n";
 
-    try {
-        std::ofstream file;
-        file.open(projectFilename);
-        if (file.good()) {
-            file << confstr.c_str();
-            file.close();
-        } else {
-            vislib::sys::Log::DefaultLog.WriteError("[SaveProjectFile] Couldn't create project file.");
-            file.close();
-            return false;
-        }
-    } catch (...) {
+
+    template<typename T>
+    bool megamol::gui::FileUtils::FileHasExtension(const T& path_str, const std::string& ext) {
+        auto path = static_cast<stdfs::path>(path_str);
+        return (path.extension().generic_u8string() == ext);
     }
 
-    return true;
-}
+
+    template<typename T>
+    std::string megamol::gui::FileUtils::GetFilenameStem(const T& path_str) {
+        auto path = static_cast<stdfs::path>(path_str);
+        std::string filename;
+        if (path.has_stem()) {
+            filename = path.stem().generic_u8string();
+        }
+        return filename;
+    }
+
+
+    template<typename T, typename S>
+    std::string megamol::gui::FileUtils::SearchFileRecursive(const T& search_path_str, const S& search_file_str) {
+        auto search_path = static_cast<stdfs::path>(search_path_str);
+        auto file_path = static_cast<stdfs::path>(search_file_str);
+        std::string found_path;
+        for (const auto& entry : stdfs::recursive_directory_iterator(search_path)) {
+            if (entry.path().filename() == file_path) {
+                found_path = entry.path().generic_u8string();
+                break;
+            }
+        }
+        return found_path;
+    }
 
 
 } // namespace gui

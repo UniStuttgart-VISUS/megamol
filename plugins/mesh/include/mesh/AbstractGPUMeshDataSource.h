@@ -15,13 +15,14 @@
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mesh.h"
+#include "mmcore/utility/plugins/Plugin200Instance.h"
+#include "mesh/MeshCalls.h"
 
 #include "GPUMeshCollection.h"
 
 namespace megamol {
 namespace mesh {
-class MESH_API AbstractGPUMeshDataSource : public core::Module {
+class AbstractGPUMeshDataSource : public core::Module {
 public:
     AbstractGPUMeshDataSource();
     virtual ~AbstractGPUMeshDataSource();
@@ -50,27 +51,26 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    virtual bool getExtentCallback(core::Call& caller);
+    virtual bool getMetaDataCallback(core::Call& caller) = 0;
 
     /**
      * Implementation of 'Release'.
      */
     virtual void release();
 
+    void syncMeshCollection(CallGPUMeshData* lhs_call);
+
     /**
-     * The bounding box stored as left,bottom,back,right,top,front
+     * Mesh collection that is used with a list of identifier strings of all GPU submeshes that this module added to the mesh collection.
+     * Needed to delete/update submeshes if the collection is shared across a chain of data sources modules.
      */
-    std::array<float, 6> m_bbox;
-
-
-    std::shared_ptr<GPUMeshCollection> m_gpu_meshes;
+    std::pair<std::shared_ptr<GPUMeshCollection>, std::vector<std::string>> m_mesh_collection;
 
     /** The slot for querying additional mesh data, i.e. a rhs chaining connection */
-    megamol::core::CallerSlot m_mesh_callerSlot;
+    megamol::core::CallerSlot m_mesh_rhs_slot;
 
-private:
     /** The slot for requesting data */
-    megamol::core::CalleeSlot m_getData_slot;
+    megamol::core::CalleeSlot m_mesh_lhs_slot;
 };
 
 } // namespace mesh

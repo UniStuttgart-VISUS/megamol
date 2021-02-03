@@ -108,9 +108,6 @@ namespace rendering {
 
     private:
 
-        /** The arrow shader */
-        vislib::graphics::gl::GLSLShader arrowShader;
-
         /** The call for data */
         CallerSlot getDataSlot;
 
@@ -120,8 +117,14 @@ namespace rendering {
         /** The call for selection flags */
         CallerSlot getFlagsSlot;
 
-        ///** The call for clipping plane */
-        //CallerSlot getClipPlaneSlot;
+        /** The call for clipping plane */
+        CallerSlot getClipPlaneSlot;
+
+        /** The call for light sources */
+        core::CallerSlot getLightsSlot;
+
+        /** The arrow shader */
+        vislib::graphics::gl::GLSLShader arrowShader;
 
         /** A simple black-to-white transfer function texture as fallback */
         unsigned int greyTF;

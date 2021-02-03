@@ -18,10 +18,12 @@ using namespace megamol::core::param;
 TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : AbstractParam() {
     if (this->CheckTransferFunctionString(initVal)) {
         this->val = initVal;
+        this->hash = std::hash<std::string>()(this->val);
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[TransferFunctionParam] No valid parameter value for constructor given.");
     }
+    this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
 }
 
 
@@ -31,10 +33,12 @@ TransferFunctionParam::TransferFunctionParam(const std::string& initVal) : Abstr
 TransferFunctionParam::TransferFunctionParam(const char* initVal) : AbstractParam() {
     if (this->CheckTransferFunctionString(std::string(initVal))) {
         this->val = std::string(initVal);
+        this->hash = std::hash<std::string>()(this->val);
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[TransferFunctionParam] No valid parameter value for constructor given.");
     }
+    this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
 }
 
 
@@ -44,10 +48,12 @@ TransferFunctionParam::TransferFunctionParam(const char* initVal) : AbstractPara
 TransferFunctionParam::TransferFunctionParam(const vislib::StringA& initVal) : AbstractParam() {
     if (this->CheckTransferFunctionString(std::string(initVal.PeekBuffer()))) {
         this->val = std::string(initVal.PeekBuffer());
+        this->hash = std::hash<std::string>()(this->val);
     } else {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[TransferFunctionParam] No valid parameter value for constructor given.");
     }
+    this->InitPresentation(AbstractParamPresentation::ParamType::TRANSFERFUNCTION);
 }
 
 
@@ -73,6 +79,7 @@ bool TransferFunctionParam::ParseValue(vislib::TString const& v) {
 
     if (this->CheckTransferFunctionString(std::string(v.PeekBuffer()))) {
         this->val = std::string(v.PeekBuffer());
+        this->hash = std::hash<std::string>()(this->val);
         return true;
     }
 
@@ -88,6 +95,8 @@ void TransferFunctionParam::SetValue(const std::string& v, bool setDirty) {
     if (v != this->val) {
         if (this->CheckTransferFunctionString(v)) {
             this->val = v;
+            this->hash = std::hash<std::string>()(this->val);
+            this->indicateChange();
             if (setDirty) this->setDirty();
         }
     }
@@ -104,7 +113,7 @@ vislib::TString TransferFunctionParam::ValueString(void) const { return vislib::
  * TransferFunctionParam::TransferFunctionTexture
  */
 bool TransferFunctionParam::TransferFunctionTexture(
-    const std::string& in_tfs, std::vector<float>& out_nodes, UINT& out_texsize, std::array<float, 2>& out_range) {
+    const std::string& in_tfs, std::vector<float>& out_nodes, unsigned int& out_texsize, std::array<float, 2>& out_range) {
 
     TFNodeType nodes;
     InterpolationMode mode;
@@ -129,12 +138,12 @@ bool TransferFunctionParam::TransferFunctionTexture(
  * TransferFunctionParam::ParseTransferFunction
  */
 bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFNodeType& out_nodes,
-    InterpolationMode& out_interpolmode, UINT& out_texsize, std::array<float, 2>& out_range) {
+    InterpolationMode& out_interpolmode, unsigned int& out_texsize, std::array<float, 2>& out_range) {
 
     TFNodeType tmp_nodes;
     std::string tmp_interpolmode_str;
     InterpolationMode tmp_interpolmode;
-    UINT tmp_texsize;
+    unsigned int tmp_texsize;
     std::array<float, 2> tmp_range;
 
     if (!in_tfs.empty()) {
@@ -158,9 +167,9 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFN
             }
 
             // Get nodes data
-            UINT tf_size = (UINT)json.at("Nodes").size();
+            unsigned int tf_size = (unsigned int)json.at("Nodes").size();
             tmp_nodes.resize(tf_size);
-            for (UINT i = 0; i < tf_size; ++i) {
+            for (unsigned int i = 0; i < tf_size; ++i) {
                 json.at("Nodes")[i].get_to(tmp_nodes[i]);
             }
 
@@ -170,31 +179,23 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFN
 
         }
         catch (nlohmann::json::type_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::exception& e) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::parse_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::invalid_iterator& e) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::out_of_range& e) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::other_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (...) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[ParseTransferFunction] Unknown Error - Unable to read transfer function from JSON string.");
             return false;
         }
@@ -227,7 +228,7 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFN
  * TransferFunctionParam::DumpTransferFunction
  */
 bool TransferFunctionParam::DumpTransferFunction(std::string& out_tfs, const TFNodeType& in_nodes,
-    const InterpolationMode in_interpolmode, const UINT in_texsize, std::array<float, 2> in_range) {
+    const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range) {
 
     try {
         nlohmann::json json;
@@ -254,31 +255,23 @@ bool TransferFunctionParam::DumpTransferFunction(std::string& out_tfs, const TFN
         out_tfs = json.dump(2); // Dump with indent of 2 spaces and new lines.
     }
     catch (nlohmann::json::type_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (nlohmann::json::exception& e) {
-        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (nlohmann::json::parse_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::invalid_iterator& e) {
-        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::out_of_range& e) {
-        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (nlohmann::json::other_error& e) {
-        vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
     catch (...) {
-        vislib::sys::Log::DefaultLog.WriteError(
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[DumpTransferFunction] Unknown Error - Unable to write transfer function to JSON string.");
         return false;
     }
@@ -291,25 +284,25 @@ bool TransferFunctionParam::DumpTransferFunction(std::string& out_tfs, const TFN
  * TransferFunctionParam::CheckTransferFunctionData
  */
 bool TransferFunctionParam::CheckTransferFunctionData(const TFNodeType& nodes, const InterpolationMode interpolmode,
-    const UINT texsize, const std::array<float, 2> range) {
+    const unsigned int texsize, const std::array<float, 2> range) {
 
     bool check = true;
 
     // Range
     if (range[0] == range[1]) {
-        vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionData] Range values should not be equal.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[CheckTransferFunctionData] Range values should not be equal.");
         check = false;
     }
 
     // Texture Size
     if (texsize < 1) {
-        vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionData] Texture size should be greater than 0.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[CheckTransferFunctionData] Texture size should be greater than 0.");
         check = false;
     }
 
     // Dat Size
     if (nodes.size() < 2) {
-        vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionData] There should be at least two nodes.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[CheckTransferFunctionData] There should be at least two nodes.");
         check = false;
     }
 
@@ -318,33 +311,33 @@ bool TransferFunctionParam::CheckTransferFunctionData(const TFNodeType& nodes, c
     for (auto& a : nodes) {
         for (int i = 0; i < 5; ++i) {
             if (a[i] < 0.0f) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[CheckTransferFunctionData] Values must be greater than or equal to 0.");
                 check = false;
             } else if (a[i] > 1.0f) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[CheckTransferFunctionData] Values must be less than or equal to 1.");
                 check = false;
             }
         }
         if (last_value > a[4]) {
-            vislib::sys::Log::DefaultLog.WriteError(
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[TransferFunction] 'Values' should be sorted from 0 to 1.");
             return false;
         } else {
             last_value = a[4];
         }
         if (a[5] <= 0.0f) {
-            vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionData] Sigma value must be greater than 0.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[CheckTransferFunctionData] Sigma value must be greater than 0.");
             check = false;
         }
     }
     if (nodes.front()[4] != 0.0f) {
-        vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionData] First node should have 'Value' = 0.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[CheckTransferFunctionData] First node should have 'Value' = 0.");
         check = false;
     }
     if (nodes.back()[4] != 1.0f) {
-        vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionData] Last node should have 'Value' = 1.");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[CheckTransferFunctionData] Last node should have 'Value' = 1.");
         check = false;
     }
 
@@ -366,14 +359,14 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
 
             // Check for valid JSON object
             if (!json.is_object()) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[CheckTransferFunctionString] Given string is no valid JSON object.");
                 return false;
             }
 
             // Check texture size
             if (!json.at("TextureSize").is_number_integer()) {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[CheckTransferFunctionString] Couldn't read 'TextureSize' as integer value.");
                 check = false;
             }
@@ -383,39 +376,39 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
                 std::string tmp_str;
                 json.at("Interpolation").get_to(tmp_str);
                 if ((tmp_str != "LINEAR") && (tmp_str != "GAUSS")) {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[CheckTransferFunctionString] Couldn't find 'Interpolation' mode.");
                     check = false;
                 }
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[CheckTransferFunctionString] Couldn't read 'Interpolation' as string value.");
                 check = false;
             }
 
             // Check transfer function node data
             if (json.at("Nodes").is_array()) {
-                UINT tmp_size = (UINT)json.at("Nodes").size();
+                unsigned int tmp_size = (unsigned int)json.at("Nodes").size();
                 if (tmp_size < 2) {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[CheckTransferFunctionString] There should be at least two entries in 'Nodes' array.");
                     check = false;
                 }
-                for (UINT i = 0; i < tmp_size; ++i) {
+                for (unsigned int i = 0; i < tmp_size; ++i) {
                     if (!json.at("Nodes")[i].is_array()) {
-                        vislib::sys::Log::DefaultLog.WriteError(
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[CheckTransferFunctionString] Entries of 'Nodes' should be arrays.");
                         check = false;
                     } else {
                         if (json.at("Nodes")[i].size() != TFP_VAL_CNT) {
-                            vislib::sys::Log::DefaultLog.WriteError(
+                            megamol::core::utility::log::Log::DefaultLog.WriteError(
                                 "[CheckTransferFunctionString] Entries of 'Nodes' should be arrays of size %d.",
                                 TFP_VAL_CNT);
                             check = false;
                         } else {
-                            for (UINT k = 0; k < TFP_VAL_CNT; ++k) {
+                            for (unsigned int k = 0; k < TFP_VAL_CNT; ++k) {
                                 if (!json.at("Nodes")[i][k].is_number()) {
-                                    vislib::sys::Log::DefaultLog.WriteError(
+                                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                                         "[CheckTransferFunctionString] Values in 'Nodes' arrays should be numbers.");
                                     check = false;
                                 }
@@ -424,57 +417,49 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
                     }
                 }
             } else {
-                vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionString] Couldn't read 'Nodes' as array.");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("[CheckTransferFunctionString] Couldn't read 'Nodes' as array.");
                 check = false;
             }
 
             // Check value range
             if (json.at("ValueRange").is_array()) {
-                UINT tmp_size = (UINT)json.at("ValueRange").size();
+                unsigned int tmp_size = (unsigned int)json.at("ValueRange").size();
                 if (tmp_size != 2) {
-                    vislib::sys::Log::DefaultLog.WriteError(
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[CheckTransferFunctionString] There should be at two entries in 'ValueRange' array.");
                     check = false;
                 }
-                for (UINT i = 0; i < tmp_size; ++i) {
+                for (unsigned int i = 0; i < tmp_size; ++i) {
                     if (!json.at("ValueRange")[i].is_number()) {
-                        vislib::sys::Log::DefaultLog.WriteError(
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[CheckTransferFunctionString] Values in 'ValueRange' array should be numbers.");
                         check = false;
                     }
                 }
             } else {
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "[CheckTransferFunctionString] Couldn't read 'ValueRange' as array.");
                 check = false;
             }
         }
         catch (nlohmann::json::type_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::exception& e) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::parse_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::invalid_iterator& e) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::out_of_range& e) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (nlohmann::json::other_error& e) {
-            vislib::sys::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
         catch (...) {
-            vislib::sys::Log::DefaultLog.WriteError("[CheckTransferFunctionString] Unknown Error - Unable to parse JSON string.");
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[CheckTransferFunctionString] Unknown Error - Unable to parse JSON string.");
             return false;
         }
     }
@@ -556,3 +541,31 @@ void TransferFunctionParam::GaussInterpolation(
         }
     }
 }
+
+
+ bool megamol::core::param::TransferFunctionParam::GetTextureData(const std::string & in_tfs, std::vector<float>& out_tex_data, int & out_width, int & out_height)  {
+
+    out_tex_data.clear();
+    unsigned int tmp_texture_size;
+    megamol::core::param::TransferFunctionParam::TFNodeType tmp_nodes;
+    std::array<float, 2> tmp_range;
+    megamol::core::param::TransferFunctionParam::InterpolationMode tmp_mode;
+
+    bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
+        in_tfs, tmp_nodes, tmp_mode, tmp_texture_size, tmp_range);
+    if (!ok) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("Could not parse transfer function.");
+        return false;
+    }
+    if (tmp_mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
+        param::TransferFunctionParam::LinearInterpolation(out_tex_data, tmp_texture_size, tmp_nodes);
+    }
+    else if (tmp_mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
+        param::TransferFunctionParam::GaussInterpolation(out_tex_data, tmp_texture_size, tmp_nodes);
+    }
+
+    out_width = tmp_texture_size;
+    out_height = 1;
+
+    return true;
+ }

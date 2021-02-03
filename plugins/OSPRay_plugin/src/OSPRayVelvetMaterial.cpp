@@ -37,15 +37,17 @@ OSPRayVelvetMaterial::~OSPRayVelvetMaterial(void) {
 void OSPRayVelvetMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::VELVET;
 
-    auto reflect = this->velvetReflectance.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.velvetReflectance.assign(reflect, reflect + 3);
+    auto reflect = this->velvetReflectance.Param<core::param::Vector3fParam>();
+    std::get<velvetMaterial>(materialContainer.material).velvetReflectance = reflect->getArray();
 
-    auto color = this->velvetHorizonScatteringColor.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.velvetHorizonScatteringColor.assign(color, color + 3);
+    auto color = this->velvetHorizonScatteringColor.Param<core::param::Vector3fParam>();
+    std::get<velvetMaterial>(materialContainer.material).velvetHorizonScatteringColor = color->getArray();
 
-    materialContainer.velvetBackScattering = this->velvetBackScattering.Param<core::param::FloatParam>()->Value();
+    std::get<velvetMaterial>(materialContainer.material).velvetBackScattering =
+        this->velvetBackScattering.Param<core::param::FloatParam>()->Value();
 
-    materialContainer.velvetHorizonScatteringFallOff = this->velvetHorizonScatteringFallOff.Param<core::param::FloatParam>()->Value();
+    std::get<velvetMaterial>(materialContainer.material).velvetHorizonScatteringFallOff =
+        this->velvetHorizonScatteringFallOff.Param<core::param::FloatParam>()->Value();
 }
 
 bool OSPRayVelvetMaterial::InterfaceIsDirty() {

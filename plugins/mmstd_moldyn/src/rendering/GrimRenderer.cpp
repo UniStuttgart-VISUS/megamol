@@ -8,16 +8,19 @@
 #include "stdafx.h"
 #include "GrimRenderer.h"
 
+#include "mmcore/view/light/DistantLight.h"
+
 
 using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn::rendering;
 
 
 // #define SPEAK_CELL_USAGE 1
-//#define SPEAK_VRAM_CACHE_USAGE 1
-#define VRAM_UPLOAD_QUOTA 0
-//#define VRAM_UPLOAD_QUOTA 25
+#define SPEAK_VRAM_CACHE_USAGE 1
+//#define VRAM_UPLOAD_QUOTA 0
+#define VRAM_UPLOAD_QUOTA 25
 //#define VRAM_UPLOAD_QUOTA 100
+
 //#define SUPSAMP_LOOP 1
 //#define SUPSAMP_LOOPCNT 1
 //#define SUPSAMP_LOOPCNT 2
@@ -44,12 +47,13 @@ GrimRenderer::CellInfo::~CellInfo(void) {
 /****************************************************************************/
 // GrimRenderer
 
-GrimRenderer::GrimRenderer(void) : view::Renderer3DModule(),
+GrimRenderer::GrimRenderer(void) : view::Renderer3DModule_2(),
         sphereShader(), vanillaSphereShader(), initDepthShader(),
         initDepthMapShader(), depthMipShader(), pointShader(),
         initDepthPointShader(), vertCntShader(), vertCntShade2r(), fbo(),
         getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
+        getLightsSlot("lights", "Lights are retrieved over this slot."),
         useCellCullSlot("useCellCull", "Flag to activate per cell culling"),
         useVertCullSlot("useVertCull", "Flag to activate per vertex culling"),
         speakCellPercSlot("speakCellPerc", "Flag to activate output of percentage of culled cells"),
@@ -64,6 +68,9 @@ GrimRenderer::GrimRenderer(void) : view::Renderer3DModule(),
 
     this->getTFSlot.SetCompatibleCall<view::CallGetTransferFunctionDescription>();
     this->MakeSlotAvailable(&this->getTFSlot);
+
+    this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->getLightsSlot);
 
     this->useCellCullSlot << new param::BoolParam(true);
     this->MakeSlotAvailable(&this->useCellCullSlot);
@@ -81,7 +88,8 @@ GrimRenderer::GrimRenderer(void) : view::Renderer3DModule(),
     this->MakeSlotAvailable(&this->deferredShadingSlot);
     this->deferredShadingSlot.ForceSetDirty();
 
-    this->cacheSize = 256 * 1024 * 1024; // TODO: Any way to get this better?
+    this->cacheSize = 6 * 1024 * 1024 * 1024; // TODO: Any way to get this better?
+    //this->cacheSize = 256 * 1024 * 1024; // TODO: Any way to get this better?
     //this->cacheSize = 256 * 1024; // TODO: Any way to get this better?
     //this->cacheSize = 1; // TODO: Any way to get this better?
 }
@@ -109,7 +117,7 @@ bool GrimRenderer::create(void) {
         //    vert.WholeCode().PeekBuffer(),
         //    frag.WholeCode().PeekBuffer());
         if (!this->sphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -118,7 +126,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::simplesphere::vertex", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::simplesphere::fragment", frag)) { return false; }
         if (!this->vanillaSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -127,7 +135,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::init::vertex", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::init::fragment", frag)) { return false; }
         if (!this->initDepthShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -136,7 +144,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::depthmap::initvert", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::depthmap::initfrag", frag)) { return false; }
         if (!this->initDepthMapShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -145,7 +153,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::depthmap::initvert", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::depthmap::mipfrag", frag)) { return false; }
         if (!this->depthMipShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -154,7 +162,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::vert", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::frag", frag)) { return false; }
         if (!this->pointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -163,7 +171,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplevert", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplefrag", frag)) { return false; }
         if (!this->initDepthPointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -172,7 +180,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplevert", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplefrag", frag)) { return false; }
         if (!this->vertCntShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -181,7 +189,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point2::lesssimplevert", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::point::simplefrag", frag)) { return false; }
         if (!this->vertCntShade2r.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -191,7 +199,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::otherSphereVertex", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::spherefragment", frag)) { return false; }
         if (!this->deferredSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -200,7 +208,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::spherevertex", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::spherefragment", frag)) { return false; }
         if (!this->deferredVanillaSphereShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -209,7 +217,7 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth6::pointvertex", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth::deferred::pointfragment", frag)) { return false; }
         if (!this->deferredPointShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
@@ -218,41 +226,37 @@ bool GrimRenderer::create(void) {
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth6::deferredShader::vert", vert)) { return false; }
         if (!instance()->ShaderSourceFactory().MakeShaderSource("mipdepth6::deferredShader::frag", frag)) { return false; }
         if (!this->deferredShader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                 "Unable to compile %s: Unknown error\n", shaderName);
             return false;
         }
 
 
     } catch(vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile %s shader (@%s): %s\n", shaderName,
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
             ce.FailedAction()) ,ce.GetMsgA());
         return false;
     } catch(vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile %s shader: %s\n", shaderName, e.GetMsgA());
         return false;
     } catch(...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to compile %s shader: Unknown exception\n", shaderName);
         return false;
     }
 
-    glEnable(GL_TEXTURE_1D);
+    // Fallback transfer function texture
     glGenTextures(1, &this->greyTF);
-    unsigned char tex[6] = {
-        0, 0, 0,  255, 255, 255
-    };
+    unsigned char tex[6] = { 0, 0, 0, 255, 255, 255 };
     glBindTexture(GL_TEXTURE_1D, this->greyTF);
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, tex);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glBindTexture(GL_TEXTURE_1D, 0);
-
-    glDisable(GL_TEXTURE_1D);
 
     this->fbo.Create(1, 1); // year, right.
     this->depthmap[0].Create(1, 1);
@@ -262,7 +266,7 @@ bool GrimRenderer::create(void) {
 }
 
 
-bool GrimRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
+bool GrimRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
 
     auto cr = &call;
     if (cr == NULL) return false;
@@ -273,16 +277,6 @@ bool GrimRenderer::GetExtents(megamol::core::view::CallRender3D& call) {
 
     cr->SetTimeFramesCount(pgdc->FrameCount());
     cr->AccessBoundingBoxes() = pgdc->AccessBoundingBoxes();
-
-    ///XXX REMOVE for new camera usage
-    float scaling = cr->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    if (scaling > 0.0000001) {
-        scaling = 10.0f / scaling;
-    }
-    else {
-        scaling = 1.0f;
-    }
-    cr->AccessBoundingBoxes().MakeScaledWorld(scaling);
 
     return true;
 }
@@ -308,7 +302,21 @@ void GrimRenderer::release(void) {
 }
 
 
-bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
+void GrimRenderer::set_cam_uniforms(vislib::graphics::gl::GLSLShader& shader, glm::mat4 view_matrix_inv,
+    glm::mat4 view_matrix_inv_transp, glm::mat4 mvp_matrix, glm::mat4 mvp_matrix_transp, glm::mat4 mvp_matrix_inv,
+    glm::vec4 camPos, glm::vec4 curlightDir) {
+
+    glUniformMatrix4fv(shader.ParameterLocation("mv_inv"), 1, GL_FALSE, glm::value_ptr(view_matrix_inv));
+    glUniformMatrix4fv(shader.ParameterLocation("mv_inv_transp"), 1, GL_FALSE, glm::value_ptr(view_matrix_inv_transp));
+    glUniformMatrix4fv(shader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(shader.ParameterLocation("mvp_transp"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_transp));
+    glUniformMatrix4fv(shader.ParameterLocation("mvp_inv"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_inv));
+    glUniform4fv(shader.ParameterLocation("light_dir"), 1, glm::value_ptr(curlightDir));
+    glUniform4fv(shader.ParameterLocation("cam_pos"), 1, glm::value_ptr(camPos));
+}
+
+
+bool GrimRenderer::Render(megamol::core::view::CallRender3D_2& call) {
 
     auto cr = &call;
     if (cr == NULL) return false;
@@ -343,12 +351,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
     // ask for extend to calculate the data scaling
     pgdc->SetFrameID(static_cast<unsigned int>(cr->Time()));
     if (!(*pgdc)(1)) return false;
-    float scaling = pgdc->AccessBoundingBoxes().ObjectSpaceBBox().LongestEdge();
-    if (scaling > 0.0000001) {
-        scaling = 10.0f / scaling;
-    } else {
-        scaling = 1.0f;
-    }
+
+    const float scaling = 1.0f;
 
     // fetch real data
     pgdc->SetFrameID(static_cast<unsigned int>(cr->Time()));
@@ -371,43 +375,85 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
     unsigned int cellcnt = pgdc->CellsCount();
     unsigned int typecnt = pgdc->TypesCount();
 
-    ///XXX Use this for new camera usage
-    //// Camera 
-    //view::Camera_2 cam;
-    //cr->GetCamera(cam);
-    //cam_type::snapshot_type snapshot;
-    //cam_type::matrix_type viewTemp, projTemp;
-    //cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    //glm::vec4 camPos = snapshot.position;
-    //glm::vec4 camView = snapshot.view_vector;
-    //glm::vec4 camRight = snapshot.right_vector;
-    //glm::vec4 camUp = snapshot.up_vector;
-    //float half_aperture_angle = cam.half_aperture_angle_radians();
-    //// Viewport
-    //glm::vec4 viewport;
-    //if (!cam.image_tile().empty()) {
-    //    viewport = glm::vec4(cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height());
-    //}
-    //else {
-    //    viewport = glm::vec4(0.0f, 0.0f, cam.resolution_gate().width(), cam.resolution_gate().height());
-    //}
+    // Camera 
+    view::Camera_2 cam;
+    cr->GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    glm::mat4 view_matrix = viewTemp;
+    glm::mat4 proj_matrix = projTemp;
+    glm::mat4 view_matrix_inv = glm::inverse(view_matrix);
+    glm::mat4 view_matrix_inv_transp = glm::transpose(view_matrix_inv);
+    glm::mat4 mvp_matrix = proj_matrix * view_matrix;
+    glm::mat4 mvp_matrix_transp = glm::transpose(mvp_matrix);
+    glm::mat4 mvp_matrix_inv = glm::inverse(mvp_matrix);
+    glm::vec4 camPos = snapshot.position;
+    glm::vec4 camView = snapshot.view_vector;
+    glm::vec4 camRight = snapshot.right_vector;
+    glm::vec4 camUp = snapshot.up_vector;
+    float half_aperture_angle = cam.half_aperture_angle_radians();
 
-    // update fbo size, if required
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    if ((this->fbo.GetWidth() != static_cast<UINT>(viewport[2]))
-            || (this->fbo.GetHeight() != static_cast<UINT>(viewport[3]))
+    // Lights
+    glm::vec4 curlightDir = {0.0f, 0.0f, 0.0f, 1.0f};
+
+    auto call_light = getLightsSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
+        }
+
+        auto lights = call_light->getData();
+        auto distant_lights = lights.get<core::view::light::DistantLightType>();
+
+        if (distant_lights.size() > 1) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GrimRenderer] Only one single 'Distant Light' source is supported by this renderer");
+        } else if (distant_lights.empty()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GrimRenderer] No 'Distant Light' found");
+        }
+
+        for (auto const& light : distant_lights) {
+            auto use_eyedir = light.eye_direction;
+            if (use_eyedir) {
+                curlightDir = -camView;
+            } else {
+                auto lightDir = light.direction;
+                if (lightDir.size() == 3) {
+                    curlightDir[0] = lightDir[0];
+                    curlightDir[1] = lightDir[1];
+                    curlightDir[2] = lightDir[2];
+                }
+                if (lightDir.size() == 4) {
+                    curlightDir[3] = lightDir[3];
+                }
+                /// View Space Lighting. Comment line to change to Object Space Lighting.
+                // this->curlightDir = this->curMVtransp * this->curlightDir;
+            }
+            /// TODO Implement missing distant light parameters:
+            // light.second.dl_angularDiameter;
+            // light.second.lightColor;
+            // light.second.lightIntensity;
+        }
+    }
+
+    // update fbo size, if required ///////////////////////////////////////////
+    auto viewport = call.GetViewport();
+    if ((this->fbo.GetWidth() != viewport.Width())
+            || (this->fbo.GetHeight() != viewport.Height())
             || this->deferredShadingSlot.IsDirty()) {
         this->deferredShadingSlot.ResetDirty();
 
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "grim-fbo-resize");
         this->fbo.Release();
-        this->fbo.Create(viewport[2], viewport[3],
+        this->fbo.Create(viewport.Width(), viewport.Height(),
                 GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, // colour buffer
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
                 GL_DEPTH_COMPONENT24); // depth buffer
 
-        unsigned int dmw = vislib::math::NextPowerOfTwo(viewport[2]);
-        unsigned int dmh = vislib::math::NextPowerOfTwo(viewport[3]);
+        unsigned int dmw = vislib::math::NextPowerOfTwo(viewport.Width());
+        unsigned int dmh = vislib::math::NextPowerOfTwo(viewport.Height());
         dmh += dmh / 2;
         if ((this->depthmap[0].GetWidth() != dmw) || (this->depthmap[0].GetHeight() != dmh)) {
             for (int i = 0; i < 2; i++) {
@@ -442,14 +488,15 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
             sap.format = GL_STENCIL_INDEX;
 
             try {
-                if (!this->dsFBO.Create(viewport[2], viewport[3], 3, cap, dap, sap)) {
+                if (!this->dsFBO.Create(viewport.Width(), viewport.Height(), 3, cap, dap, sap)) {
                     throw vislib::Exception("dsFBO.Create failed\n", __FILE__, __LINE__);
                 }
             } catch(vislib::Exception ex) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                     "Failed to created dsFBO: %s", ex.GetMsgA());
             }
         }
+        glPopDebugGroup();
     }
 
     if (this->cellDists.size() != cellcnt) {
@@ -469,18 +516,13 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         this->cacheSizeUsed = 0;
     }
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glLineWidth(5.0f);
+    // depth-sort of cells ////////////////////////////////////////////////////
 
-    float viewDist = 
-        0.5f * cr->GetCameraParameters()->VirtualViewSize().Height() /
-        tanf(cr->GetCameraParameters()->HalfApertureAngle());
+    float viewDist = 0.5f * cam.resolution_gate().height() / tanf(half_aperture_angle);
 
-    // depth-sort of cells
     std::vector<vislib::Pair<unsigned int, float> > &dists = this->cellDists;
     std::vector<CellInfo> &infos = this->cellInfos;
-    // The usage of these references is required in order to get performance !!! WTF !!!
+    // -> The usage of these references is required in order to get performance !!! WTF !!!
 
     for (unsigned int i = 0; i < cellcnt; i++) {
         unsigned int idx = dists[i].First();
@@ -488,13 +530,13 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         CellInfo& info = infos[idx];
         const vislib::math::Cuboid<float> &bbox = cell.GetBoundingBox();
 
-        vislib::math::Point<float, 3> cellPos(
+        glm::vec3 cellPos(
             (bbox.Left() + bbox.Right()) * 0.5f * scaling,
             (bbox.Bottom() + bbox.Top()) * 0.5f * scaling,
             (bbox.Back() + bbox.Front()) * 0.5f * scaling);
 
-        vislib::math::Vector<float, 3> cellDistV = cellPos - cr->GetCameraParameters()->Position();
-        float cellDist = cr->GetCameraParameters()->Front().Dot(cellDistV);
+        glm::vec3 cellDistV = cellPos - glm::vec3(camPos);
+        float cellDist = glm::dot(glm::vec3(camView),cellDistV);
 
         dists[i].Second() = cellDist;
 
@@ -508,30 +550,35 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
     }
     std::sort(dists.begin(), dists.end(), GrimRenderer::depthSort);
 
+    // init depth points //////////////////////////////////////////////////////
+#ifdef _WIN32
+#pragma region Depthbuffer initialization
+#endif // _WIN32 
+
+    glLineWidth(5.0f);
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
     // upload to gpu-cache
     int vramUploadQuota = VRAM_UPLOAD_QUOTA; // upload no more then X VBO per frame
 
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 2, -1, "grim-init-depth-points");
     // z-buffer-filling
 #if defined(DEBUG) || defined(_DEBUG)
     UINT oldlevel = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(vislib::Trace::LEVEL_NONE);
 #endif
+
     this->fbo.Enable();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glScalef(scaling, scaling, scaling);
-
-    // initialize depth buffer
-#ifdef _WIN32
-#pragma region Depthbuffer initialization
-#endif /* _WIN32 */
 #ifdef SPEAK_CELL_USAGE
     printf("[initd1");
 #endif
     this->initDepthPointShader.Enable();
+    set_cam_uniforms(this->initDepthPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
+        mvp_matrix_inv, camPos, curlightDir);
     glPointSize(1.0f);
     for (int i = cellcnt - 1; i >= 0; i--) { // front to back
         unsigned int idx = dists[i].First();
@@ -544,7 +591,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 #ifdef SPEAK_CELL_USAGE
         printf("-%d", i);
 #endif
-
         for (unsigned int j = 0; j < typecnt; j++) {
             const ParticleGridDataCall::Particles &parts = cell->AccessParticleLists()[j];
             const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
@@ -588,7 +634,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 glGetError();
                 glGenBuffersARB(2, ci.data);
                 if (glGetError() != GL_NO_ERROR) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "glGenBuffersARB failed");
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "glGenBuffersARB failed");
                     throw vislib::Exception("glGenBuffersARB failed", __FILE__, __LINE__);
                 }
                 vramUploadQuota--;
@@ -598,11 +644,11 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, vbpp * parts.GetCount(), parts.GetVertexData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                         "Currently only data without stride is supported for caching");
                     throw vislib::Exception("Currently only data without stride is supported for caching", __FILE__, __LINE__);
                 }
@@ -612,22 +658,21 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, cbpp * parts.GetCount(), parts.GetColourData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                         "Currently only data without stride is supported for caching");
                     throw vislib::Exception("Currently only data without stride is supported for caching", __FILE__, __LINE__);
                 }
                 this->cacheSizeUsed += cbpp * parts.GetCount();
 #ifdef SPEAK_VRAM_CACHE_USAGE
                 printf("VRAM-Cache: Add[%d; %u] %u/%u\n", i, j, this->cacheSizeUsed, this->cacheSize);
-#endif /* SPEAK_VRAM_CACHE_USAGE */
+#endif // SPEAK_VRAM_CACHE_USAGE
             }
 
             // radius and position
-            bool matrixpooper = false;
             switch (ptype.GetVertexDataType()) {
                 case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                     continue;
@@ -652,22 +697,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                     }
                     break;
                 case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
-                    float skale = cell->GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
-                    glEnableClientState(GL_VERTEX_ARRAY);
-                    if (ci.data[0] != 0) {
-                        glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
-                        glVertexPointer(3, GL_SHORT, 0, NULL);
-                    } else {
-                        glVertexPointer(3, GL_SHORT, /* unsigned short is not supported! */
-                            parts.GetVertexDataStride(), parts.GetVertexData());
-                    }
-                    matrixpooper = true;
-                    glMatrixMode(GL_MODELVIEW);
-                    glPushMatrix();
-                    glTranslatef(cell->GetBoundingBox().Left(),
-                        cell->GetBoundingBox().Bottom(),
-                        cell->GetBoundingBox().Back());
-                    glScalef(skale, skale, skale);
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "GrimRenderer: vertices with short coords are deprecated!");
                 } break;
 
                 default:
@@ -676,37 +707,35 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
             glBindBufferARB(GL_ARRAY_BUFFER, 0);
             glDisableClientState(GL_VERTEX_ARRAY);
-            if (matrixpooper) {
-                glPopMatrix();
-            }
         }
     }
 #ifdef SPEAK_CELL_USAGE
     printf("]\n");
 #endif
     this->initDepthPointShader.Disable();
+    glPopDebugGroup();
 
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    // init depth disks ///////////////////////////////////////////////////////
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "grim-init-depth-disks");
 
-    float viewportStuff[4] = {
-        0.0f, 0.0f,
-        //cr->GetCameraParameters()->TileRect().Left(),
-        //cr->GetCameraParameters()->TileRect().Bottom(),
-        cr->GetCameraParameters()->TileRect().Width(),
-        cr->GetCameraParameters()->TileRect().Height()};
+    float viewportStuff[4] = { 0.0f, 0.0f, viewport.Width(), viewport.Height() };
     float defaultPointSize = glm::max(viewportStuff[2], viewportStuff[3]);
-    glPointSize(defaultPointSize);
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
     viewportStuff[3] = 2.0f / viewportStuff[3];
 
+    glPointSize(defaultPointSize);
+
     this->initDepthShader.Enable();
+    set_cam_uniforms(this->initDepthShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
+        mvp_matrix_inv, camPos, curlightDir);
 
     glUniform4fv(this->initDepthShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-    glUniform3fv(this->initDepthShader.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-    glUniform3fv(this->initDepthShader.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-    glUniform3fv(this->initDepthShader.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+    glUniform3fv(this->initDepthShader.ParameterLocation("camIn"), 1, glm::value_ptr(camView));
+    glUniform3fv(this->initDepthShader.ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
+    glUniform3fv(this->initDepthShader.ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
+
     // no clipping plane for now
     glColor4ub(192, 192, 192, 255);
     glDisableClientState(GL_COLOR_ARRAY);
@@ -733,7 +762,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 #ifdef SPEAK_CELL_USAGE
         printf("-%d", i);
 #endif
-
         for (unsigned int j = 0; j < typecnt; j++) {
             const ParticleGridDataCall::Particles &parts = cell->AccessParticleLists()[j];
             const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
@@ -777,7 +805,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 glGetError();
                 glGenBuffersARB(2, ci.data);
                 if (glGetError() != GL_NO_ERROR) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "glGenBuffersARB failed");
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "glGenBuffersARB failed");
                     throw vislib::Exception("glGenBuffersARB failed", __FILE__, __LINE__);
                 }
                 vramUploadQuota--;
@@ -787,11 +815,11 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, vbpp * parts.GetCount(), parts.GetVertexData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                         "Currently only data without stride is supported for caching");
                     throw vislib::Exception("Currently only data without stride is supported for caching", __FILE__, __LINE__);
                 }
@@ -801,22 +829,21 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                     GLenum err;
                     glBufferDataARB(GL_ARRAY_BUFFER, cbpp * parts.GetCount(), parts.GetColourData(), GL_STATIC_DRAW);
                     if ((err = glGetError()) != GL_NO_ERROR) {
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
+                        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "glBufferDataARB failed: %u", err);
                         throw vislib::Exception("glBufferDataARB failed", __FILE__, __LINE__);
                     }
                 } else {
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+                    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
                         "Currently only data without stride is supported for caching");
                     throw vislib::Exception("Currently only data without stride is supported for caching", __FILE__, __LINE__);
                 }
                 this->cacheSizeUsed += cbpp * parts.GetCount();
 #ifdef SPEAK_VRAM_CACHE_USAGE
                 printf("VRAM-Cache: Add[%d; %u] %u/%u\n", i, j, this->cacheSizeUsed, this->cacheSize);
-#endif /* SPEAK_VRAM_CACHE_USAGE */
+#endif // SPEAK_VRAM_CACHE_USAGE 
             }
 
             // radius and position
-            bool matrixpooper = false;
             switch (ptype.GetVertexDataType()) {
                 case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                     continue;
@@ -841,24 +868,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                     }
                     break;
                 case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
-                    float skale = cell->GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
-                    glEnableClientState(GL_VERTEX_ARRAY);
-                    glUniform4f(this->initDepthShader.ParameterLocation("inConsts1"),
-                        ptype.GetGlobalRadius() / skale, 0.0f, 0.0f, 0.0f);
-                    if (ci.data[0] != 0) {
-                        glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
-                        glVertexPointer(3, GL_SHORT, 0, NULL);
-                    } else {
-                        glVertexPointer(3, GL_SHORT, /* unsigned short is not supported! */
-                            parts.GetVertexDataStride(), parts.GetVertexData());
-                    }
-                    matrixpooper = true;
-                    glMatrixMode(GL_MODELVIEW);
-                    glPushMatrix();
-                    glTranslatef(cell->GetBoundingBox().Left(),
-                        cell->GetBoundingBox().Bottom(),
-                        cell->GetBoundingBox().Back());
-                    glScalef(skale, skale, skale);
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "GrimRenderer: vertices with short coords are deprecated!");
                 } break;
 
                 default:
@@ -867,10 +878,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
             glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(parts.GetCount()));
             glBindBufferARB(GL_ARRAY_BUFFER, 0);
             glDisableClientState(GL_VERTEX_ARRAY);
-
-            if (matrixpooper) {
-                glPopMatrix();
-            }
         }
 
         //glBegin(GL_LINES);
@@ -890,18 +897,29 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 #endif
 
     this->initDepthShader.Disable();
-#ifdef _WIN32
-#pragma endregion Depthbuffer initialization
-#endif /* _WIN32 */
+    glPopDebugGroup();
 
 #ifdef _WIN32
+#pragma endregion Depthbuffer initialization
+#endif // _WIN32
+
+        // issue queries //////////////////////////////////////////////////////
+#ifdef _WIN32
 #pragma region issue occlusion queries for all cells to find hidden ones
-#endif /* _WIN32 */
+#endif // _WIN32
+
     if (useCellCull) {
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 4, -1, "grim-issue-queries");
+
         // occlusion queries ftw
         glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
         glDepthMask(GL_FALSE);
         glDisable(GL_CULL_FACE);
+
+        // this shader is so simple it should also work for the boxes.
+        this->initDepthPointShader.Enable();
+        set_cam_uniforms(this->initDepthPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+            mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
 
         // also disable texturing and any fancy shading features
         for (int i = cellcnt - 1; i >= 0; i--) { // front to back
@@ -952,20 +970,26 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         glDepthMask(GL_TRUE);
-        glEnable(GL_CULL_FACE);
         // reenable other state
+        glPopDebugGroup();
     }
 #ifdef _WIN32
 #pragma endregion issue occlusion queries
-#endif /* _WIN32 */
+#endif // _WIN32
+
     this->fbo.Disable();
     // END Depth buffer initialized
 
+    glEnable(GL_CULL_FACE);
+
+    // depth mipmap ///////////////////////////////////////////////////////////
 #ifdef _WIN32
 #pragma region depth buffer mipmaping
-#endif /* _WIN32 */
+#endif // _WIN32
+
     int maxLevel = 0;
     if (useVertCull) {
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 5, -1, "grim-depth-mipmap");
         // create depth mipmap
         this->depthmap[0].Enable();
 
@@ -974,7 +998,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         glEnable(GL_TEXTURE_2D);
-        glEnable(GL_DEPTH_TEST);
         glDisable(GL_LIGHTING);
         glDisable(GL_DEPTH_TEST);
         glActiveTextureARB(GL_TEXTURE0_ARB);
@@ -988,6 +1011,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         glLoadIdentity();
 
         this->initDepthMapShader.Enable();
+        set_cam_uniforms(this->initDepthMapShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+            mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
         this->initDepthMapShader.SetParameter("datex", 0);
 
         glBegin(GL_QUADS);
@@ -1007,6 +1032,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         int ls = vislib::math::Min(lh, lw);
 
         this->depthMipShader.Enable();
+        set_cam_uniforms(this->depthMipShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+            mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
         this->depthMipShader.SetParameter("datex", 0);
         this->depthMipShader.SetParameter("src", 0, 0);
         this->depthMipShader.SetParameter("dst", 0, ly);
@@ -1062,6 +1089,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 
         this->depthmap[0].Enable();
         this->initDepthMapShader.Enable();
+        set_cam_uniforms(this->initDepthMapShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+            mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
         this->initDepthMapShader.SetParameter("datex", 0);
         this->depthmap[1].BindColourTexture();
 
@@ -1108,17 +1137,20 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         glPopMatrix();
 
         glBindTexture(GL_TEXTURE_2D, 0);
+        glPopDebugGroup();
         // END generation of depth-max mipmap
     }
 #ifdef _WIN32
 #pragma endregion depth buffer mipmaping
-#endif /* _WIN32 */
+#endif // _WIN32
 
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(oldlevel);
 #endif
 
+    // image output ///////////////////////////////////////////////////////////
     unsigned int visCnt = 0;
+    unsigned int visPart = 0;
 
     if (speakVertCount) {
         //
@@ -1129,8 +1161,9 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         //
 #ifdef _WIN32
 #pragma region speakVertCount
-#endif /* _WIN32 */
+#endif // _WIN32
 
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 5, -1, "grim-count-visible-points");
         GLuint allQuery;
         glGenOcclusionQueriesNV(1, &allQuery);
         glBeginOcclusionQueryNV(allQuery);
@@ -1140,11 +1173,13 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         glPointSize(1.0f);
         if (useVertCull) {
             this->vertCntShade2r.Enable();
+            set_cam_uniforms(this->vertCntShade2r, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+                mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
 
             glUniform4fv(this->vertCntShade2r.ParameterLocation("viewAttr"), 1, viewportStuff);
-            glUniform3fv(this->vertCntShade2r.ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-            glUniform3fv(this->vertCntShade2r.ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-            glUniform3fv(this->vertCntShade2r.ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+            glUniform3fv(this->vertCntShade2r.ParameterLocation("camIn"), 1, glm::value_ptr(camView));
+            glUniform3fv(this->vertCntShade2r.ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
+            glUniform3fv(this->vertCntShade2r.ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
             this->vertCntShade2r.SetParameter("depthTexParams", this->depthmap[0].GetWidth(),
                 this->depthmap[0].GetHeight() * 2 / 3, maxLevel);
 
@@ -1158,6 +1193,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
             glDisableClientState(GL_COLOR_ARRAY);
         } else {
             this->vertCntShader.Enable();
+            set_cam_uniforms(this->vertCntShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+                mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
         }
 
 #ifdef SPEAK_CELL_USAGE
@@ -1182,16 +1219,15 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 #ifdef SPEAK_CELL_USAGE
             printf("-%d", i);
 #endif
-
             for (unsigned int j = 0; j < typecnt; j++) {
                 const ParticleGridDataCall::Particles &parts = cell.AccessParticleLists()[j];
                 const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
                 CellInfo::CacheItem &ci = info.cache[j];
                 float minC = 0.0f, maxC = 0.0f;
                 unsigned int colTabSize = 0;
+                visPart += parts.GetCount();
 
                 // radius and position
-                bool matrixpooper = false;
                 switch (ptype.GetVertexDataType()) {
                     case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue;
@@ -1222,26 +1258,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                         }
                         break;
                     case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
-                        float skale = cell.GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
-                        glEnableClientState(GL_VERTEX_ARRAY);
-                        if (useVertCull) {
-                            glUniform4f(this->vertCntShade2r.ParameterLocation("inConsts1"),
-                                ptype.GetGlobalRadius() / skale, minC, maxC, float(colTabSize));
-                        }
-                        if (ci.data[0] != 0) {
-                            glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
-                            glVertexPointer(3, GL_SHORT, 0, NULL);
-                        } else {
-                            glVertexPointer(3, GL_SHORT, /* unsigned short is not supported! */
-                                parts.GetVertexDataStride(), parts.GetVertexData());
-                        }
-                        matrixpooper = true;
-                        glMatrixMode(GL_MODELVIEW);
-                        glPushMatrix();
-                        glTranslatef(cell.GetBoundingBox().Left(),
-                            cell.GetBoundingBox().Bottom(),
-                            cell.GetBoundingBox().Back());
-                        glScalef(skale, skale, skale);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "GrimRenderer: vertices with short coords are deprecated!");
                     } break;
 
                     default:
@@ -1252,10 +1270,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 glBindBufferARB(GL_ARRAY_BUFFER, 0);
                 //glDisableClientState(GL_COLOR_ARRAY);
                 glDisableClientState(GL_VERTEX_ARRAY);
-
-                if (matrixpooper) {
-                    glPopMatrix();
-                }
             }
 
         }
@@ -1271,18 +1285,25 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         glDeleteOcclusionQueriesNV(1, &allQuery);
 
         if (speak && speakVertCount) {
-            printf("VERTEX COUNT: %u\n", static_cast<unsigned int>(totalSchnitzels));
+            unsigned int totalSpheres = 0;
+            for (int i = 0; i < static_cast<int>(cellcnt); i++) {
+                const ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
+                for (unsigned int j = 0; j < typecnt; j++) {
+                    const ParticleGridDataCall::Particles& parts = cell.AccessParticleLists()[j];
+                    totalSpheres += parts.GetCount();
+                }
+            }
+            printf("VERTEX COUNT: %u (%f%%)\n", static_cast<unsigned int>(totalSchnitzels), static_cast<float>(totalSchnitzels) / static_cast<float>(totalSpheres) * 100.0f);
         }
+        glPopDebugGroup();
 #ifdef _WIN32
 #pragma endregion speakVertCount
-#endif /* _WIN32 */
+#endif // _WIN32 
 
     } else {
-
         //
         // GENERATE VISIBLE IMAGE OUTPUT
         //
-
         if (deferredShading) {
 #if defined(DEBUG) || defined(_DEBUG)
             UINT oldlevel = vislib::Trace::GetInstance().GetLevel();
@@ -1300,17 +1321,21 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 
             // REACTIVATE TARGET FBO
             cr->EnableOutputBuffer();
-
         }
 
-#ifdef SPEAK_CELL_USAGE
-        printf("[drawd");
-#endif
-        // draw visible data (dots)
         glEnable(GL_DEPTH_TEST);
         glPointSize(1.0f);
         glDisableClientState(GL_COLOR_ARRAY);
+
+        // draw points ///////////////////////////////////////////////////////
+#ifdef SPEAK_CELL_USAGE
+        printf("[drawd");
+#endif
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 6, -1, "grim-draw-dots");
+        // draw visible data (dots)
         daPointShader->Enable();
+        set_cam_uniforms(*daPointShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+            mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
         for (int i = cellcnt - 1; i >= 0; i--) { // front to back
             const ParticleGridDataCall::GridCell& cell = pgdc->Cells()[i];
             CellInfo& info = infos[i];
@@ -1331,13 +1356,13 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 #ifdef SPEAK_CELL_USAGE
             printf("-%d", i);
 #endif
-
             for (unsigned int j = 0; j < typecnt; j++) {
                 const ParticleGridDataCall::Particles &parts = cell.AccessParticleLists()[j];
                 const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
                 CellInfo::CacheItem &ci = info.cache[j];
                 float minC = 0.0f, maxC = 0.0f;
                 unsigned int colTabSize = 0;
+                visPart += parts.GetCount();
 
                 // colour
                 switch (ptype.GetColourDataType()) {
@@ -1394,8 +1419,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
 
+                        // Bind transfer function texture
                         glEnable(GL_TEXTURE_1D);
-
                         view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
                         if ((cgtf != NULL) && ((*cgtf)())) {
                             glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
@@ -1416,7 +1441,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 }
 
                 // radius and position
-                bool matrixpooper = false;
                 switch (ptype.GetVertexDataType()) {
                     case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue;
@@ -1445,24 +1469,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                         }
                         break;
                     case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
-                        float skale = cell.GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
-                        glEnableClientState(GL_VERTEX_ARRAY);
-                        glUniform4f(daPointShader->ParameterLocation("inConsts1"),
-                            ptype.GetGlobalRadius() / skale, minC, maxC, float(colTabSize));
-                        if (ci.data[0] != 0) {
-                            glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
-                            glVertexPointer(3, GL_SHORT, 0, NULL);
-                        } else {
-                            glVertexPointer(3, GL_SHORT, /* unsigned short is not supported! */
-                                parts.GetVertexDataStride(), parts.GetVertexData());
-                        }
-                        matrixpooper = true;
-                        glMatrixMode(GL_MODELVIEW);
-                        glPushMatrix();
-                        glTranslatef(cell.GetBoundingBox().Left(),
-                            cell.GetBoundingBox().Bottom(),
-                            cell.GetBoundingBox().Back());
-                        glScalef(skale, skale, skale);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "GrimRenderer: vertices with short coords are deprecated!");
                     } break;
 
                     default:
@@ -1474,10 +1482,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 glDisableClientState(GL_VERTEX_ARRAY);
                 glDisableVertexAttribArrayARB(cial2);
                 glDisable(GL_TEXTURE_1D);
-
-                if (matrixpooper) {
-                    glPopMatrix();
-                }
             }
 
         }
@@ -1485,24 +1489,29 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         printf("]\n");
 #endif
         daPointShader->Disable();
+        glPopDebugGroup();
 
+        // draw spheres ///////////////////////////////////////////////////////
 #ifdef SPEAK_CELL_USAGE
         printf("[draws");
 #endif
         // draw visible data (spheres)
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 7, -1, "grim-draw-spheres");
         daSphereShader->Enable();
-
+        set_cam_uniforms(*daSphereShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix, mvp_matrix_transp,
+            mvp_matrix_inv, camPos, curlightDir);
 #ifdef SUPSAMP_LOOP
         for (int supsamppass = 0; supsamppass < SUPSAMP_LOOPCNT; supsamppass++) {
-#endif /* SUPSAMP_LOOP */
+#endif // SUPSAMP_LOOP
 
         glUniform4fv(daSphereShader->ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fv(daSphereShader->ParameterLocation("camIn"), 1, cr->GetCameraParameters()->Front().PeekComponents());
-        glUniform3fv(daSphereShader->ParameterLocation("camRight"), 1, cr->GetCameraParameters()->Right().PeekComponents());
-        glUniform3fv(daSphereShader->ParameterLocation("camUp"), 1, cr->GetCameraParameters()->Up().PeekComponents());
+        glUniform3fv(daSphereShader->ParameterLocation("camIn"), 1, glm::value_ptr(camView));
+        glUniform3fv(daSphereShader->ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
+        glUniform3fv(daSphereShader->ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
+        glUniform1i(daSphereShader->ParameterLocation("use_shading"), static_cast<int>(!deferredShading));
+
         if (useVertCull) {
             daSphereShader->SetParameter("depthTexParams", this->depthmap[0].GetWidth(), this->depthmap[0].GetHeight() * 2 / 3, maxLevel);
-
             glEnable(GL_TEXTURE_2D);
             glActiveTextureARB(GL_TEXTURE2_ARB);
             this->depthmap[0].BindColourTexture();
@@ -1536,13 +1545,13 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 #ifdef SPEAK_CELL_USAGE
             printf("-%d", i);
 #endif
-
             for (unsigned int j = 0; j < typecnt; j++) {
                 const ParticleGridDataCall::Particles &parts = cell.AccessParticleLists()[j];
                 const ParticleGridDataCall::ParticleType &ptype = pgdc->Types()[j];
                 CellInfo::CacheItem &ci = info.cache[j];
                 float minC = 0.0f, maxC = 0.0f;
                 unsigned int colTabSize = 0;
+                visPart += parts.GetCount();
 
                 // colour
                 switch (ptype.GetColourDataType()) {
@@ -1599,8 +1608,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                                 parts.GetColourDataStride(), parts.GetColourData());
                         }
 
+                        // Bind transfer function texture
                         glEnable(GL_TEXTURE_1D);
-
                         view::CallGetTransferFunction *cgtf = this->getTFSlot.CallAs<view::CallGetTransferFunction>();
                         if ((cgtf != NULL) && ((*cgtf)())) {
                             glBindTexture(GL_TEXTURE_1D, cgtf->OpenGLTexture());
@@ -1621,7 +1630,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 }
 
                 // radius and position
-                bool matrixpooper = false;
                 switch (ptype.GetVertexDataType()) {
                     case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_NONE:
                         continue;
@@ -1648,24 +1656,8 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                         }
                         break;
                     case core::moldyn::MultiParticleDataCall::Particles::VERTDATA_SHORT_XYZ: {
-                        float skale = cell.GetBoundingBox().LongestEdge() / static_cast<float>(SHRT_MAX);
-                        glEnableClientState(GL_VERTEX_ARRAY);
-                        glUniform4f(daSphereShader->ParameterLocation("inConsts1"),
-                            ptype.GetGlobalRadius() / skale, minC, maxC, float(colTabSize));
-                        if (ci.data[0] != 0) {
-                            glBindBufferARB(GL_ARRAY_BUFFER, ci.data[0]);
-                            glVertexPointer(3, GL_SHORT, 0, NULL);
-                        } else {
-                            glVertexPointer(3, GL_SHORT, /* unsigned short is not supported! */
-                                parts.GetVertexDataStride(), parts.GetVertexData());
-                        }
-                        matrixpooper = true;
-                        glMatrixMode(GL_MODELVIEW);
-                        glPushMatrix();
-                        glTranslatef(cell.GetBoundingBox().Left(),
-                            cell.GetBoundingBox().Bottom(),
-                            cell.GetBoundingBox().Back());
-                        glScalef(skale, skale, skale);
+                        megamol::core::utility::log::Log::DefaultLog.WriteError(
+                            "GrimRenderer: vertices with short coords are deprecated!");
                     } break;
 
                     default:
@@ -1678,10 +1670,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 glDisableClientState(GL_VERTEX_ARRAY);
                 glDisableVertexAttribArrayARB(cial);
                 glDisable(GL_TEXTURE_1D);
-
-                if (matrixpooper) {
-                    glPopMatrix();
-                }
             }
 
         }
@@ -1691,22 +1679,25 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
 
 #ifdef SUPSAMP_LOOP
         }
-#endif /* SUPSAMP_LOOP */
+#endif // SUPSAMP_LOOP
 
         if (deferredShading) {
             this->dsFBO.Disable();
         }
+
+        daSphereShader->Disable();
+        glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+        glDisable(GL_TEXTURE_2D);
+
+        glPopDebugGroup();
     }
 
     if (speakCellPerc) {
         printf("CELLS VISIBLE: %f%%\n", float(visCnt * 100) / float(cellcnt));
+        printf("PARTICLES IN VISIBLE CELLS: %u\n", visPart);
     }
 
-    daSphereShader->Disable();
-    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-    glDisable(GL_TEXTURE_2D);
-
-    // remove unused cache item
+    // remove unused cache item ///////////////////////////////////////////////
     if ((this->cacheSizeUsed * 5 / 4) > this->cacheSize) {
         for (int i = cellcnt - 1; i >= 0; i--) { // front to back
             unsigned int idx = dists[i].First();
@@ -1762,20 +1753,25 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
                 this->cacheSizeUsed -= (vbpp + cbpp) * parts.GetCount();
 #ifdef SPEAK_VRAM_CACHE_USAGE
                 printf("VRAM-Cache: Del[%d; %u] %u/%u\n", i, j, this->cacheSizeUsed, this->cacheSize);
-#endif /* SPEAK_VRAM_CACHE_USAGE */
+#endif // SPEAK_VRAM_CACHE_USAGE
             }
         }
     }
 
+    // deferred shading ///////////////////////////////////////////////////////
     if (deferredShading) {
-
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 8, -1, "grim-deferred-shading");
         cr->EnableOutputBuffer();
 
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
         glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
 
         this->deferredShader.Enable();
+        // useless, everything is identity here
+        //set_cam_uniforms(this->deferredShader, view_matrix_inv, view_matrix_inv_transp, mvp_matrix,
+        //    mvp_matrix_transp, mvp_matrix_inv, camPos, curlightDir);
 
         glActiveTextureARB(GL_TEXTURE0_ARB);
         this->dsFBO.BindColourTexture(0);
@@ -1788,24 +1784,26 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         this->deferredShader.SetParameter("normal", 1);
         this->deferredShader.SetParameter("pos", 2);
 
-        vislib::math::Vector<float, 4> lightPos;
-        vislib::math::ShallowVector<float, 3> lp(lightPos.PeekComponents());
-        vislib::math::Vector<float, 3> ray(cr->GetCameraParameters()->Front());
-        vislib::math::Vector<float, 3> up(cr->GetCameraParameters()->Up());
-        vislib::math::Vector<float, 3> right(cr->GetCameraParameters()->Right());
 
-        lp = right;
-        lp *= -0.5f;
-        lp -= ray;
-        lp += up;
-        lightPos[3] = 0.0f;
+        vislib::math::Vector<float, 3> ray(glm::value_ptr(camView));
+        vislib::math::Vector<float, 3> up(glm::value_ptr(camUp));
+        vislib::math::Vector<float, 3> right(glm::value_ptr(camRight));
 
-        up *= sinf(cr->GetCameraParameters()->HalfApertureAngle());
-        right *= sinf(cr->GetCameraParameters()->HalfApertureAngle())
-            * static_cast<float>(viewport[2]) / static_cast<float>(viewport[3]);
+        //vislib::math::Vector<float, 4> lightDir;
+        //vislib::math::ShallowVector<float, 3> lp(lightDir.PeekComponents());
+        //lp = right;
+        //lp *= -0.5f;
+        //lp -= ray;
+        //lp += up;
+        //lightDir[3] = 0.0f;
+        //this->deferredShader.SetParameterArray3("lightDir", 1, lightDir.PeekComponents());
+        this->deferredShader.SetParameterArray4("lightDir", 1, glm::value_ptr(curlightDir));
 
-        this->deferredShader.SetParameterArray3("ray", 1, cr->GetCameraParameters()->Front().PeekComponents());
-        this->deferredShader.SetParameterArray3("lightPos", 1, lightPos.PeekComponents());
+        up *= sinf(half_aperture_angle);
+        right *= sinf(half_aperture_angle)
+            * static_cast<float>(viewport.Width()) / static_cast<float>(viewport.Height());
+
+        this->deferredShader.SetParameterArray3("ray", 1, glm::value_ptr(camView));
 
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
@@ -1843,10 +1841,10 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         glActiveTextureARB(GL_TEXTURE0_ARB);
 
         this->deferredShader.Disable();
-
+        glPopDebugGroup();
     }
 
-    //// DEBUG OUTPUT OF FBO
+    //// DEBUG OUTPUT OF FBO --------------------------------------------------
     //cr->EnableOutputBuffer();
     //glEnable(GL_TEXTURE_2D);
     //glDisable(GL_LIGHTING);
@@ -1891,6 +1889,23 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3D& call) {
         CellInfo& info = infos[i];
         info.wasvisible = info.isvisible;
     }
+
+    // Reset default OpenGL state ---------------------------------------------
+    glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    glDisable(GL_CLIP_DISTANCE0);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glDisable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_POINT_SPRITE);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_1D);
+    glDisable(GL_LIGHTING);
+    glPointSize(1.0f);
+    glLineWidth(1.0f);
 
     return true;
 }

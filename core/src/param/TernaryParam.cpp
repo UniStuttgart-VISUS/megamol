@@ -16,7 +16,7 @@ using namespace megamol::core::param;
  */
 TernaryParam::TernaryParam(const vislib::math::Ternary& initVal)
         : AbstractParam(), val(initVal) {
-    // intentionally empty
+    this->InitPresentation(AbstractParamPresentation::ParamType::TERNARY);
 }
 
 
@@ -51,6 +51,7 @@ bool TernaryParam::ParseValue(const vislib::TString& v) {
 void TernaryParam::SetValue(vislib::math::Ternary v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
+        this->indicateChange();
         if (setDirty) this->setDirty();
     }
 }

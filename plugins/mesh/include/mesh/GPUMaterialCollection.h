@@ -7,54 +7,63 @@
 
 #ifndef GPU_MATERIAL_COLLECTION_H_INCLUDED
 #define GPU_MATERIAL_COLLECTION_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 //#include "vislib/graphics/gl/GLSLShader.h"
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 
 #include <memory>
+#include <unordered_map>
+#include <variant>
 #include <vector>
 
-#include "mesh.h"
-
+#define GLOWL_OPENGL_INCLUDE_GLAD
+#include "glowl/GLSLProgram.hpp"
+#include "glowl/Texture.hpp"
 #include "glowl/Texture2D.hpp"
+#include "glowl/Texture2DArray.hpp"
+#include "glowl/Texture3D.hpp"
+#include "glowl/TextureCubemapArray.hpp"
 
 namespace megamol {
 namespace mesh {
 
-typedef vislib::graphics::gl::GLSLGeometryShader Shader;
+typedef glowl::GLSLProgram Shader;
 
-class MESH_API GPUMaterialCollecton {
+class GPUMaterialCollection {
 public:
+    using TexturePtrType = std::variant<std::shared_ptr<glowl::Texture>, std::shared_ptr<glowl::Texture2D>,
+        std::shared_ptr<glowl::Texture2DArray>, std::shared_ptr<glowl::Texture3D>,
+        std::shared_ptr<glowl::TextureCubemapArray>>;
+
     struct Material {
         std::shared_ptr<Shader> shader_program;
-        std::vector<GLuint> textures_names;
+        std::vector<std::shared_ptr<glowl::Texture>> textures;
     };
 
-    void addMaterial(
-        megamol::core::CoreInstance* mm_core_inst, std::string shader_btf_name, std::vector<GLuint> texture_names = {});
+    void addMaterial(megamol::core::CoreInstance* mm_core_inst, std::string const& identifier,
+        std::string const& shader_btf_name, std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
 
-    void addMaterial(std::shared_ptr<Shader> const& shader, std::vector<GLuint> texture_names);
+    void addMaterial(std::string const& identifier, std::shared_ptr<Shader> const& shader,
+        std::vector<std::shared_ptr<glowl::Texture>> const& textures = {});
 
-    void updateMaterialTexture(size_t mtl_idx, size_t tex_idx, GLuint texture_name);
+    void addMaterial(std::string const& identifier, Material const& material);
 
-    void clearMaterials();
+    void updateMaterialTexture(std::string const& identifier, size_t tex_idx, std::shared_ptr<glowl::Texture> const& texture);
 
-    inline std::vector<Material> const& getMaterials();
+    void deleteMaterial(std::string const& identifier);
+
+    void clear();
+
+    Material const& getMaterial(std::string const& identifier);
+
+    inline std::unordered_map<std::string, GPUMaterialCollection::Material> const& getMaterials() {
+        return m_materials;
+    }
 
 private:
-    std::vector<Material> m_materials;
-
-    /**
-     * Storage for textures created and managed by this class
-     */
-    std::vector<std::shared_ptr<glowl::Texture2D>> m_texture;
+    std::unordered_map<std::string,Material> m_materials;
 };
-
-inline std::vector<GPUMaterialCollecton::Material> const& GPUMaterialCollecton::getMaterials() { return m_materials; }
 
 } // namespace mesh
 } // namespace megamol

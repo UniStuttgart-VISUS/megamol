@@ -27,7 +27,8 @@ namespace MegaMolConf.Data {
                     || Name.Equals("TileView3D")
                     || Name.Equals("RemoteTileView")
                     || Name.Equals("HeadView")
-                    || Name.Equals("View3D_2");
+                    || Name.Equals("View3D_2")
+                    || Name.Equals("CinematicView");
             }
         }
     }

@@ -13,8 +13,8 @@
 #include "mmcore/param/FilePathParam.h"
 #include "vislib/String.h"
 #include "vislib/sys/FastFile.h"
-#include "vislib/sys/Log.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/sys/Thread.h"
 
 using namespace megamol::core;
 
@@ -69,7 +69,7 @@ void moldyn::MMPLDWriter::release(void) {}
  * moldyn::MMPLDWriter::`
  */
 bool moldyn::MMPLDWriter::run(void) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     vislib::TString filename(this->filenameSlot.Param<param::FilePathParam>()->Value());
     if (filename.IsEmpty()) {
         Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");
@@ -234,11 +234,13 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
         file.Close();                                                                                                  \
         return false;                                                                                                  \
     }
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
     uint8_t const alpha = 255;
     int ver = this->versionSlot.Param<param::EnumParam>()->Value();
 
-    if (ver == 102) {
+    // HAZARD for megamol up to fc4e784dae531953ad4cd3180f424605474dd18b this reads == 102
+    // which means that many MMPLDs out there with version 103 are written wrongly (no timestamp)!
+    if (ver >= 102) {
         float ts = data.GetTimeStamp();
         ASSERT_WRITEOUT(&ts, 4);
     }
@@ -361,7 +363,7 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
         if (vt == 0) cnt = 0;
         ASSERT_WRITEOUT(&cnt, 8);
 
-        if (ver == 103) {
+        if (ver >= 103) {
             ASSERT_WRITEOUT(points.GetBBox().PeekBounds(), 24);
         }
 
@@ -436,7 +438,7 @@ bool moldyn::MMPLDWriter::writeFrame(vislib::sys::File& file, moldyn::MultiParti
                 }
             } break;
             default:
-                vislib::sys::Log::DefaultLog.WriteError(
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
                     "MMPLDWriter: incoming unknown color type %u", points.GetColourDataType());
                 break;
             }

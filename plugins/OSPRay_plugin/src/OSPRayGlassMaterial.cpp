@@ -40,17 +40,18 @@ OSPRayGlassMaterial::~OSPRayGlassMaterial(void) {
 void OSPRayGlassMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::GLASS;
 
-    auto colori = this->glassAttenuationColorInside.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.glassAttenuationColorInside.assign(colori, colori + 3);
+    glassMaterial gm;
+    auto colori = this->glassAttenuationColorInside.Param<core::param::Vector3fParam>();
+    gm.glassAttenuationColorInside = colori->getArray();
+    auto coloro = this->glassAttenuationColorOutside.Param<core::param::Vector3fParam>();
+    gm.glassAttenuationColorOutside = coloro->getArray();
+    gm.glassEtaInside = this->glassEtaInside.Param<core::param::FloatParam>()->Value();
+    gm.glassEtaOutside =
+        this->glassEtaOutside.Param<core::param::FloatParam>()->Value();
+    gm.glassAttenuationDistance =
+        this->glassAttenuationDistance.Param<core::param::FloatParam>()->Value();
 
-    auto coloro = this->glassAttenuationColorOutside.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.glassAttenuationColorOutside.assign(coloro, coloro + 3);
-
-    materialContainer.glassEtaInside = this->glassEtaInside.Param<core::param::FloatParam>()->Value();
-
-    materialContainer.glassEtaOutside = this->glassEtaOutside.Param<core::param::FloatParam>()->Value();
-
-    materialContainer.glassAttenuationDistance = this->glassAttenuationDistance.Param<core::param::FloatParam>()->Value();
+    materialContainer.material = gm;
 }
 
 bool OSPRayGlassMaterial::InterfaceIsDirty() {

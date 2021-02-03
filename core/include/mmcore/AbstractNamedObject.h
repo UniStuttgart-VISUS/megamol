@@ -276,10 +276,7 @@ namespace core {
          */
         static bool isNameValid(const vislib::StringA& name);
 
-        /**
-         * Ctor.
-         */
-        AbstractNamedObject(void);
+	public: // for new MegaMolGraph, make this public:
 
         /**
          * Sets the name for the object.
@@ -287,6 +284,11 @@ namespace core {
          * @param name The new name for the object.
          */
         void setName(const vislib::StringA& name);
+
+        /**
+         * Ctor.
+         */
+        AbstractNamedObject(void);
 
         /**
          * Sets the parent for the object.

@@ -43,8 +43,12 @@ namespace MegaMolConf.Io {
 
             string ext = Path.GetExtension(filename);
             if (ext == ".lua") {
-                MessageBox.Show("Loading Lua projects is not implemented yet!");
-                return null;
+                // TODO: check for various elements. see various checks a few lines below for xmldocument
+                ProjectFileLua l = new ProjectFileLua();
+                l.LoadFromLua(filename);
+                
+                //MessageBox.Show("Loading Lua projects is not implemented yet!");
+                return l;
             } else {
 
                 // Load as ProjectFile1

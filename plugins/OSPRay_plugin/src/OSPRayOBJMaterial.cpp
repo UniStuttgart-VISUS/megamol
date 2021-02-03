@@ -42,18 +42,18 @@ OSPRayOBJMaterial::~OSPRayOBJMaterial(void) {
 void OSPRayOBJMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::OBJMATERIAL;
 
-    auto kd = this->Kd.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.Kd.assign(kd, kd + 3);
+    objMaterial obj;
 
-    auto ks = this->Ks.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.Ks.assign(ks, ks + 3);
+    auto kd = this->Kd.Param<core::param::Vector3fParam>();
+    obj.Kd = kd->getArray();
+    auto ks = this->Ks.Param<core::param::Vector3fParam>();
+    obj.Ks = ks->getArray();
+    auto tf = this->Tf.Param<core::param::Vector3fParam>();
+    obj.Tf = tf->getArray();
+    obj.Ns = this->Ns.Param<core::param::FloatParam>()->Value();
+    obj.d = this->d.Param<core::param::FloatParam>()->Value();
 
-    auto tf = this->Tf.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.Tf.assign(tf, tf + 3);
-
-    materialContainer.Ns = this->Ns.Param<core::param::FloatParam>()->Value();
-
-    materialContainer.d = this->d.Param<core::param::FloatParam>()->Value();
+    materialContainer.material = obj;
 }
 
 bool OSPRayOBJMaterial::InterfaceIsDirty() {

@@ -17,7 +17,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/Vector.h"
 
 using namespace megamol;
@@ -27,6 +27,7 @@ using namespace megamol;
 
 #define HACK
 
+using namespace megamol::core::utility::log;
 
 /*
  * protein::CrystalStructureDataSource::CrystalStructureDataSource
@@ -167,7 +168,7 @@ bool protein::CrystalStructureDataSource::create(void) {
  * protein::CrystalStructureDataSource::getData
  */
 bool protein::CrystalStructureDataSource::getData(core::Call& call) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
 	protein_calls::CrystalStructureDataCall *dc =
 			dynamic_cast<protein_calls::CrystalStructureDataCall*>(&call);
@@ -242,7 +243,7 @@ bool protein::CrystalStructureDataSource::getData(core::Call& call) {
  * protein::CrystalStructureDataSource::getExtend
  */
 bool protein::CrystalStructureDataSource::getExtent(core::Call& call) {
-    using vislib::sys::Log;
+    using megamol::core::utility::log::Log;
 
     // Update parameters
     updateParams();
@@ -317,7 +318,6 @@ bool protein::CrystalStructureDataSource::loadFiles() {
 
     //printf("Start loading files...\n"); // DEBUG
 
-    using namespace vislib::sys;
 
     std::fstream fileFrames, fileCells, fileAtoms;
     std::string line;
@@ -477,8 +477,6 @@ core::view::AnimDataModule::Frame* protein::CrystalStructureDataSource::construc
  * protein::CrystalStructureDataSource::loadFrame
  */
 void protein::CrystalStructureDataSource::loadFrame (core::view::AnimDataModule::Frame *frame, unsigned int idx) {
-    using namespace vislib::sys;
-
     CrystalStructureDataSource::Frame *fr = dynamic_cast<CrystalStructureDataSource::Frame*>(frame);
     fr->SetFrameIdx(idx);
     if (!this->WriteFrameData(fr)) {
@@ -495,7 +493,6 @@ void protein::CrystalStructureDataSource::updateParams () {
 
     //printf("Updating params ...\n"); // DEBUG
 
-    using namespace vislib::sys;
     // Filename params
     if (this->fileAtomsSlot.IsDirty()||this->fileFramesSlot.IsDirty()||this->fileCellsSlot.IsDirty()) {
         this->fileAtomsSlot.ResetDirty();
@@ -617,7 +614,6 @@ void protein::CrystalStructureDataSource::updateParams () {
 bool protein::CrystalStructureDataSource::WriteFrameData(
         CrystalStructureDataSource::Frame *fr) {
 
-    using namespace vislib::sys;
     std::fstream file;
     int displFrameIdx;
 

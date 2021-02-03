@@ -1,7 +1,7 @@
 /*
  * Renderer3DModule_2.cpp
  *
- * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2018, 2020 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
@@ -19,15 +19,9 @@ using namespace megamol::core::view;
  * Renderer3DModule_2::Renderer3DModule_2
  */
 Renderer3DModule_2::Renderer3DModule_2(void)
-    : RendererModule<CallRender3D_2>()
-    , lightSlot(
-          "lights", "Lights are retrieved over this slot. If no light is connected, a default camera light is used") {
-
+    : RendererModule<CallRender3D_2>() {
     // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->chainRenderSlot);
-
-    this->lightSlot.SetCompatibleCall<light::CallLightDescription>();
-    this->MakeSlotAvailable(&this->lightSlot);
 
     // Callback should already be set by RendererModule
     this->MakeSlotAvailable(&this->renderSlot);
@@ -87,10 +81,11 @@ bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
         glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
         auto backCol = call.BackgroundColor();
         glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
+        glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-	this->PreRender(call);
+    this->PreRender(call);
 
     CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
 
@@ -111,29 +106,8 @@ bool Renderer3DModule_2::RenderChain(CallRender3D_2& call) {
 }
 
 /*
- * Renderer3DModule_2::GetLights
- */
-bool Renderer3DModule_2::GetLights(void) {
-    core::view::light::CallLight* cl = this->lightSlot.CallAs<core::view::light::CallLight>();
-    if (cl == nullptr) {
-        // TODO add local light
-        return false;
-    }
-    cl->setLightMap(&this->lightMap);
-    cl->fillLightMap();
-    bool lightDirty = false;
-    for (const auto element : this->lightMap) {
-        auto light = element.second;
-        if (light.dataChanged) {
-            lightDirty = true;
-        }
-    }
-    return lightDirty;
-}
-
-/*
  * Renderer3DModule_2::PreRender
  */
 void Renderer3DModule_2::PreRender(CallRender3D_2& call) {
-	//intentionally empty
+    // intentionally empty
 }

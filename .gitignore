@@ -10,14 +10,13 @@ stage/**/*
 lib/**/*
 issues/**/*
 mmprjs/**/*
-.vscode/ipch/**/*
 configurator/.vs/
 configurator/bin/
 configurator/MegaMolConf/obj/
 configurator/packages/
 configurator/MegaMolConf/Properties/AssemblyInfo\.cs
 configurator/MegaMolConf/Resources/mmconfig\.res
-.vscode/**/*.bat
+.vscode/**/*
 .idea/**/*
 .gitmodules
 *.orig
@@ -28,3 +27,5 @@ utils/MMPLD/test*.lua
 utils/MMPLD/test*.png
 utils/MMPLD/SphereTest.bat
 examples/
+solution/**/*
+deploy/**/*

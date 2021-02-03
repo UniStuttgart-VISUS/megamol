@@ -8,13 +8,12 @@
 #pragma once
 
 #include "mmcore/factories/CallAutoDescription.h"
-#include "OSPRay_plugin/OSPRay_plugin.h"
 #include "OSPRay_plugin/CallOSPRayStructure.h"
 
 namespace megamol {
 namespace ospray {
 
-class OSPRAY_PLUGIN_API CallOSPRayAPIObject : public core::Call{
+class CallOSPRayAPIObject : public core::Call{
 public:
 
     /**
@@ -89,7 +88,7 @@ public:
     *
     * @return The bounding box of the data set
     */
-    inline core::BoundingBoxes& AccessBoundingBoxes(void) {
+    inline core::BoundingBoxes_2& AccessBoundingBoxes(void) {
         return this->bboxs;
     }
 
@@ -116,7 +115,7 @@ public:
     *
     * @return The bounding box of the data set
     */
-    inline const core::BoundingBoxes& GetBoundingBoxes(void) const {
+    inline const core::BoundingBoxes_2& GetBoundingBoxes(void) const {
         return this->bboxs;
     }
 
@@ -150,8 +149,8 @@ public:
         float maxX, float maxY, float maxZ) {
         this->frameCnt = frameCnt;
         this->bboxs.Clear();
-        this->bboxs.SetObjectSpaceBBox(minX, minY, minZ, maxX, maxY, maxZ);
-        this->bboxs.SetObjectSpaceClipBox(minX, minY, minZ, maxX, maxY, maxZ);
+        this->bboxs.SetBoundingBox(minX, minY, minZ, maxX, maxY, maxZ);
+        this->bboxs.SetClipBox(minX, minY, minZ, maxX, maxY, maxZ);
     }
 
     /**
@@ -162,7 +161,7 @@ public:
     * @param bboxs The bounding boxes of the data
     */
     inline void SetExtent(unsigned int frameCnt,
-        const core::BoundingBoxes& bboxs) {
+        const core::BoundingBoxes_2& bboxs) {
         this->frameCnt = frameCnt;
         this->bboxs = bboxs;
     }
@@ -310,7 +309,7 @@ private:
     unsigned int frameID;
 
     /** the coordinate extents */
-    core::BoundingBoxes bboxs;
+    core::BoundingBoxes_2 bboxs;
 
     /**
     * A unique hash number of the returned data, or zero if such a number

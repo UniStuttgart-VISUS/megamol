@@ -17,30 +17,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   if (USE_EXTERNAL_ADIOS)
     find_package(ADIOS2 REQUIRED)
   else()
-    if(WIN32)
-      set(ADIOS2_IMPORT_LIB "lib/adios2.lib")
-      set(ADIOS2_LIB "bin/adios2.dll")
-    else()
-      include(GNUInstallDirs)
-      set(ADIOS2_IMPORT_LIB "${CMAKE_INSTALL_LIBDIR}/libadios2.so")
-      set(ADIOS2_LIB "${CMAKE_INSTALL_LIBDIR}/libadios2.so")
-    endif()
-
-    add_external_project(adios2_ext
-      GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
-      GIT_TAG "v2.3.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_IMPORT_LIB}"
-      CMAKE_ARGS 
-        -DBUILD_TESTING=OFF -DADIOS2_USE_BZip2=OFF 
-        -DADIOS2_USE_Fortran=OFF -DADIOS2_USE_HDF5=OFF 
-        -DADIOS2_USE_Python=OFF -DADIOS2_USE_SST=OFF 
-        -DADIOS2_USE_SZ=OFF -DADIOS2_USE_SysVShMem=OFF 
-        -DADIOS2_USE_ZFP=OFF -DADIOS2_USE_ZeroMQ=OFF 
-        -DMPI_GUESS_LIBRARY_NAME=${MPI_GUESS_LIBRARY_NAME})
-    add_external_library(adios2 SHARED
-      DEPENDS adios2_ext
-      IMPORT_LIBRARY ${ADIOS2_IMPORT_LIB}
-      LIBRARY ${ADIOS2_LIB})
+    require_external(adios2)
   endif()
 
   # Collect source files
@@ -49,8 +26,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
 
   # Target definition
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files})
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
+  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_link_libraries(${PROJECT_NAME} PRIVATE core mmstd_datatools)
   target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> "include" "src")
@@ -66,15 +42,17 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   endif()
 
   # Installation rules for generated files
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-  if(NOT USE_EXTERNAL_ADIOS)
-    install_external(TARGETS adios2)
+  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
+  if(USE_EXTERNAL_ADIOS)
+    include(GNUInstallDirs)
+    install(DIRECTORY ${ADIOS2_DIR}/../../ DESTINATION ${CMAKE_INSTALL_LIBDIR})
   endif()
+  
   if(WIN32)
-    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
-    install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+    #install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
+    #install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
   else()
-    install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
+    #install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
 
   # Grouping in Visual Studio
@@ -98,4 +76,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   endforeach()
 
   set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER plugins)
+
+  # Register plugin
+  megamol_register_plugin(${PROJECT_NAME})
 endif(BUILD_${EXPORT_NAME}_PLUGIN)

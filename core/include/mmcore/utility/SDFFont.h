@@ -32,9 +32,9 @@
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Matrix.h"
 
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/sys/FastFile.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/File.h"
 #include "vislib/Trace.h"
 
@@ -472,7 +472,7 @@ namespace utility {
         * (Facing in direction of positive z-Axis)
         */
         inline void ResetRotation(void) {
-            this->rotation.Set(0.0f, vislib::math::Vector<float, 3>(0.0f, 0.0f, 0.0f));
+            this->rotation.Set(0.0f, vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
         }
 
         /**

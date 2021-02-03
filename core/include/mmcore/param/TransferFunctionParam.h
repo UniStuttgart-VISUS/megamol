@@ -14,7 +14,7 @@
 #include "AbstractParam.h"
 
 #include "vislib/String.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "json.hpp"
 
@@ -80,7 +80,7 @@ public:
     *
     * @return True if JSON string was successfully converted into transfer function texture, false otherwise.
     */
-    static bool TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_nodes, UINT &out_texsize, std::array<float, 2> &out_range);
+    static bool TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_nodes, unsigned int &out_texsize, std::array<float, 2> &out_range);
 
     /**
     * Set transfer function data from JSON string.
@@ -92,7 +92,7 @@ public:
     *
     * @return True if JSON string was successfully converted into transfer function data, false otherwise.
     */
-    static bool ParseTransferFunction(const std::string &in_tfs, TFNodeType &out_nodes, InterpolationMode &out_interpolmode, UINT &out_texsize, std::array<float, 2> &out_range);
+    static bool ParseTransferFunction(const std::string &in_tfs, TFNodeType &out_nodes, InterpolationMode &out_interpolmode, unsigned int &out_texsize, std::array<float, 2> &out_range);
 
     /**
      * Get transfer function JSON string from data.
@@ -104,7 +104,7 @@ public:
      *
      * @return True if transfer function data was successfully converted into JSON string, false otherwise.
      */
-    static bool DumpTransferFunction(std::string &out_tfs, const TFNodeType &in_nodes, const InterpolationMode in_interpolmode, const UINT in_texsize, std::array<float, 2> in_range);
+    static bool DumpTransferFunction(std::string &out_tfs, const TFNodeType &in_nodes, const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range);
 
     /**
      * Check given transfer function data.
@@ -115,7 +115,7 @@ public:
      *
      * @return True if given data is valid, false otherwise.
      */
-    static bool CheckTransferFunctionData(const TFNodeType &nodes, const InterpolationMode interpolmode, const UINT texsize, const std::array<float, 2> range);
+    static bool CheckTransferFunctionData(const TFNodeType &nodes, const InterpolationMode interpolmode, const unsigned int texsize, const std::array<float, 2> range);
 
     /**
      * Check given transfer function JSON string.
@@ -143,6 +143,18 @@ public:
     * @param in_nodes    The transfer function node data input.
     */
     static void GaussInterpolation(std::vector<float> &out_texdata, unsigned int in_texsize, const TFNodeType &in_nodes);
+
+    /**
+     * Return texture data for given transfer function JSON string.
+     * 
+     * @param in_tfs          The transfer function JSON string as input.
+     * @param out_tex_data    The returned texture data.
+     * @param out_width       The returned texture width.
+     * @param out_height      The returned texture height.
+     *
+     * @return True on success, false otherwise.
+     */
+    static bool GetTextureData(const std::string& in_tfs, std::vector<float>& out_tex_data, int& out_width, int& out_height);
 
     /** Calculates gauss function value. 
     *
@@ -240,6 +252,15 @@ public:
         return this->val;
     }
 
+    /**
+     * Gets the hash of the current value
+     *
+     * @return The hash of the parameter value
+     */
+    inline const size_t ValueHash(void) const {
+        return this->hash;
+    }
+
 private:
 
 #ifdef _WIN32
@@ -248,6 +269,9 @@ private:
 
     /** The value of the parameter */
     std::string val;
+
+    /** Has of current parameter value. */
+    size_t hash;
 
 #ifdef _WIN32
 #pragma warning (disable: 4251)

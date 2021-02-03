@@ -164,11 +164,10 @@ void AmbientOcclusionCalculator::calcLevels(float aoWidthX, float aoWidthY, floa
 /*
  * AmbientOcclusionCalculator::calculateVertexShadows
  */
-const std::vector<float>* AmbientOcclusionCalculator::calculateVertexShadows(
-    AmbientOcclusionCalculator::AOSettings settings) {
-    if (this->vertices == nullptr) return nullptr;
-    if (this->vertex_normals == nullptr) return false;
-    if (this->mdc == nullptr) return nullptr;
+const std::vector<float> * AmbientOcclusionCalculator::calculateVertexShadows(AmbientOcclusionCalculator::AOSettings settings) {
+	if (this->vertices == nullptr) return nullptr;
+	if (this->vertex_normals == nullptr) return nullptr;
+	if (this->mdc == nullptr) return nullptr;
 
     // allocate enough space for the result
     if (this->settings.isDirty(settings) || this->resultVector.size() == 0 || this->shaderChanged) {
@@ -403,29 +402,32 @@ bool AmbientOcclusionCalculator::loadShaders(core::CoreInstance* instance) {
         return false;
     }
 
-    try {
-        if (!this->aoComputeShader.Compile(compute.Code(), compute.Count())) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to compile aocompute shader: Unknown error\n");
-            return false;
-        }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-            "Unable to compile aocompute shader (@%s): %s\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA());
-        return false;
-    } catch (vislib::Exception e) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile aocompute shader: %s\n", e.GetMsgA());
-        return false;
-    } catch (...) {
-        vislib::sys::Log::DefaultLog.WriteMsg(
-            vislib::sys::Log::LEVEL_ERROR, "Unable to compile aocompute shader: Unknown exception\n");
-        return false;
-    }
-    this->shaderChanged = true;
-    return true;
+	try {
+		if (!this->aoComputeShader.Compile(compute.Code(), compute.Count())) {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+				"Unable to compile aocompute shader: Unknown error\n");
+			return false;
+		}
+	}
+	catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+			"Unable to compile aocompute shader (@%s): %s\n",
+			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+				ce.FailedAction()), ce.GetMsgA());
+		return false;
+	}
+	catch (vislib::Exception e) {
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+			"Unable to compile aocompute shader: %s\n", e.GetMsgA());
+		return false;
+	}
+	catch (...) {
+		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+			"Unable to compile aocompute shader: Unknown exception\n");
+		return false;
+	}
+	this->shaderChanged = true;
+	return true;
 }
 
 /*

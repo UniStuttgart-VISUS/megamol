@@ -14,7 +14,7 @@ if(BUILD_CONSOLE)
   set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
   # Collect source files
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h" "src/*.hpp")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
 
   # Add target
@@ -31,39 +31,14 @@ if(BUILD_CONSOLE)
 
   # GLFW
   if(USE_GLFW)
-    if (MSVC)
-        set(GLFW_IMPORT_LIBRARY "lib/glfw3dll.lib")
-        set(GLFW_LIBRARY "lib/glfw3.dll")
-    else()
-        set(GLFW_IMPORT_LIBRARY "")
-        set(GLFW_LIBRARY "lib/libglfw.so")
-    endif()
-    add_external_project(glfw_ext
-      GIT_REPOSITORY https://github.com/glfw/glfw.git
-      GIT_TAG "3.2.1"
-      BUILD_BYPRODUCTS "<INSTALL_DIR>/${GLFW_IMPORT_LIBRARY}"
-      CMAKE_ARGS
-        -DBUILD_SHARED_LIBS=ON
-        -DGLFW_BUILD_EXAMPLES=OFF
-        -DGLFW_BUILD_TESTS=OFF
-        -DGLFW_BUILD_DOCS=OFF)
-    add_external_library(glfw3 SHARED
-      DEPENDS glfw_ext
-      INCLUDE_DIR "include"
-      IMPORT_LIBRARY ${GLFW_IMPORT_LIBRARY}
-      LIBRARY ${GLFW_LIBRARY})
+    require_external(glfw3)
     target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
-    ExternalProject_Get_property(glfw_ext SOURCE_DIR)
-    target_include_directories(${PROJECT_NAME} PRIVATE "${SOURCE_DIR}/include")
   endif()
 
   target_link_libraries(${PROJECT_NAME} PRIVATE ${VERSION_LIBRARY} ${CMAKE_DL_LIBS})
 
    # Installation rules for generated files
   install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin" ARCHIVE DESTINATION "lib")
-  if(USE_GLFW)
-    install_external(TARGETS glfw3)
-  endif()
   if (WIN32)
     if(MSVC)
       install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
@@ -71,14 +46,12 @@ if(BUILD_CONSOLE)
   endif ()
 
   # Configuration of the megamol.cfg megamol.sh remoteconsole.sh files
-  set(cfg_LIB_PATH "${CMAKE_INSTALL_PREFIX}/lib")
-  set(cfg_MEGAMOLCON "${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}")
 
   if(UNIX)
     include(GNUInstallDirs)
-    set(cfg_EXTERNAL_LIB_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
-    set(MEGAMOL_SHELL_START_SCRIPT "megamol.sh")
-    configure_file(extra/megamol.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
+    set(cfg_LIB_PATH "../lib") # relative path from bin to lib dir
+    set(MEGAMOL_SHELL_START_SCRIPT "mmconsole.sh")
+    configure_file(extra/mmconsole.sh.in ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} @ONLY)
     install(PROGRAMS ${CMAKE_BINARY_DIR}/${MEGAMOL_SHELL_START_SCRIPT} DESTINATION "bin")
   endif()
 

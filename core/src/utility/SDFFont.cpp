@@ -634,6 +634,8 @@ float SDFFont::LineWidth(float size, const wchar_t *txt) const {
  */
 void SDFFont::BatchDrawString(const float col[4]) const {
 
+    if (this->posBatchCache.empty()) return;
+
     // Bind glyph data in batch cache
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
         glBindBuffer(GL_ARRAY_BUFFER, this->vbos[i].handle);
@@ -656,6 +658,8 @@ void SDFFont::BatchDrawString(const float col[4]) const {
  * SDFFont::BatchDrawString
  */
 void SDFFont::BatchDrawString() const {
+
+    if (this->posBatchCache.empty()) return;
 
     // Bind glyph data in batch cache
     for (unsigned int i = 0; i < (unsigned int)this->vbos.size(); i++) {
@@ -881,11 +885,11 @@ int *SDFFont::buildUpGlyphRun(const char *txtutf8, float maxWidth) const {
 
         // Check if glyph info is available
         if (idx > (unsigned int)this->glyphIdcs.size()) {
-            //vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [buildUpGlyphRun] Glyph index greater than available: \"%i\" > max. Index = \"%i\".\n", idx, this->idxCnt);
+            //megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [buildUpGlyphRun] Glyph index greater than available: \"%i\" > max. Index = \"%i\".\n", idx, this->idxCnt);
             continue;
         }
         if (this->glyphIdcs[idx] == nullptr) {
-            //vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [buildUpGlyphRun] Glyph info not available for: \"%i\".\n", idx);
+            //megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [buildUpGlyphRun] Glyph info not available for: \"%i\".\n", idx);
             continue;
         }
 
@@ -1062,37 +1066,49 @@ void SDFFont::drawGlyphs(const float col[4], int* run, float x, float y, float z
         float tmpP03y = sy * (glyph->yoffset) + gy;
         float tmpP12y = tmpP03y + (sy * glyph->height);
 
+        vislib::math::Vector<float, 3> p0(tmpP01x, tmpP03y, gz);
+        vislib::math::Vector<float, 3> p1(tmpP01x, tmpP12y, gz);
+        vislib::math::Vector<float, 3> p2(tmpP23x, tmpP12y, gz);
+        vislib::math::Vector<float, 3> p3(tmpP23x, tmpP03y, gz);
+
+        /// Apply rotation
+        auto rotMat = static_cast<vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR>>(this->rotation);
+        p0 = rotMat * p0;
+        p1 = rotMat * p1;
+        p2 = rotMat * p2;
+        p3 = rotMat * p3;
+
         // Set position data:
-        posData[glyphIter * 18 + 0]  = tmpP01x;   // p0-x
-        posData[glyphIter * 18 + 1]  = tmpP03y;   // p0-y
-        posData[glyphIter * 18 + 2]  = gz;        // p0-z
+        posData[glyphIter * 18 + 0]  = p0.X(); 
+        posData[glyphIter * 18 + 1]  = p0.Y();  
+        posData[glyphIter * 18 + 2]  = p0.Z();
 
-        posData[glyphIter * 18 + 3] = tmpP01x;    // p1-x
-        posData[glyphIter * 18 + 4] = tmpP12y;    // p1-y
-        posData[glyphIter * 18 + 5] = gz;         // p1-z
+        posData[glyphIter * 18 + 3] = p1.X(); 
+        posData[glyphIter * 18 + 4] = p1.Y(); 
+        posData[glyphIter * 18 + 5] = p1.Z();  
 
-        posData[glyphIter * 18 + 6] = tmpP23x;    // p2-x
-        posData[glyphIter * 18 + 7] = tmpP12y;    // p2-y
-        posData[glyphIter * 18 + 8] = gz;         // p2-z
+        posData[glyphIter * 18 + 6] = p2.X();
+        posData[glyphIter * 18 + 7] = p2.Y();  
+        posData[glyphIter * 18 + 8] = p2.Z();  
 
-        posData[glyphIter * 18 + 9]  = tmpP01x;   // p0-x
-        posData[glyphIter * 18 + 10] = tmpP03y;   // p0-y
-        posData[glyphIter * 18 + 11] = gz;        // p0-z
+        posData[glyphIter * 18 + 9]  = p0.X(); 
+        posData[glyphIter * 18 + 10] = p0.Y();  
+        posData[glyphIter * 18 + 11] = p0.Z(); 
 
-        posData[glyphIter * 18 + 12] = tmpP23x;   // p2-x
-        posData[glyphIter * 18 + 13] = tmpP12y;   // p2-y
-        posData[glyphIter * 18 + 14] = gz;        // p2-z
+        posData[glyphIter * 18 + 12] = p2.X(); 
+        posData[glyphIter * 18 + 13] = p2.Y(); 
+        posData[glyphIter * 18 + 14] = p2.Z();
 
-        posData[glyphIter * 18 + 15] = tmpP23x;   // p3-x
-        posData[glyphIter * 18 + 16] = tmpP03y;   // p3-y
-        posData[glyphIter * 18 + 17] = gz;        // p3-z
+        posData[glyphIter * 18 + 15] = p3.X(); 
+        posData[glyphIter * 18 + 16] = p3.Y(); 
+        posData[glyphIter * 18 + 17] = p3.Z(); 
 
         // Change rotation of quad positions for flipped y axis from CCW to CW.
         if (flipY) {
-            posData[glyphIter * 18 + 3] = tmpP23x;   // p2-x
-            posData[glyphIter * 18 + 6] = tmpP01x;   // p1-x
-            posData[glyphIter * 18 + 13] = tmpP03y;  // p3-y
-            posData[glyphIter * 18 + 16] = tmpP12y;  // p2-y
+            posData[glyphIter * 18 + 3] = p2.X();   // p2-x
+            posData[glyphIter * 18 + 6] = p1.X();   // p1-x
+            posData[glyphIter * 18 + 13] = p3.Y();  // p3-y
+            posData[glyphIter * 18 + 16] = p2.Y();  // p2-y
         }
         
         // Set texture data
@@ -1173,7 +1189,7 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
 
     // Check texture
     if (!this->texture.IsValid()) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [render] Texture is not valid. \n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [render] Texture is not valid. \n");
         return;
     }
 
@@ -1185,7 +1201,7 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
 
     // Check shaders
     if (!usedShader->IsValidHandle(usedShader->ProgramHandle())) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [render] Shader handle is not valid. \n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [render] Shader handle is not valid. \n");
         return;
     }
 
@@ -1205,29 +1221,22 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
         glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
         vislib::math::ShallowMatrix<GLfloat, 4, vislib::math::COLUMN_MAJOR> modelViewMatrix(&modelViewMatrix_column[0]);
 
-        // Calculate model view projection matrix and apply rotation
-        modelViewProjMatrix = projMatrix * modelViewMatrix * static_cast<vislib::math::Matrix<float, 4, vislib::math::COLUMN_MAJOR>>(this->rotation);
+        // Calculate model view projection matrix 
+        modelViewProjMatrix = projMatrix * modelViewMatrix; 
     }
 
-    // Store/Set blending
-    GLint blendSrc;
-    GLint blendDst;
-    glGetIntegerv(GL_BLEND_SRC, &blendSrc);
-    glGetIntegerv(GL_BLEND_DST, &blendDst);
-    bool blendEnabled = glIsEnabled(GL_BLEND);
-    if (!blendEnabled) {
-        glEnable(GL_BLEND);
-    }
+    // Set blending
+    glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // dFdx()/dFdx() in fragment shader:
     glHint(GL_FRAGMENT_SHADER_DERIVATIVE_HINT, GL_NICEST);
 
-    glBindVertexArray(this->vaoHandle);
-
     glEnable(GL_TEXTURE_2D);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->texture.GetId()); // instead of this->texture.Bind() => because draw() is CONST
+
+    glBindVertexArray(this->vaoHandle);
 
     glUseProgram(usedShader->ProgramHandle()); // instead of usedShader->Enable() => because draw() is CONST
 
@@ -1249,13 +1258,7 @@ void SDFFont::render(unsigned int gc, const float *col[4]) const {
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_TEXTURE_2D);
-    glDisable(GL_DEPTH_TEST);
-
-    // Reset blending
-    if (!blendEnabled) {
-        glDisable(GL_BLEND);
-    }
-    glBlendFunc(blendSrc, blendDst);
+    glDisable(GL_BLEND);
 }
 
 
@@ -1272,39 +1275,39 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     this->SetBillboardMode(false);
 
     if (core == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Pointer to MegaMol CoreInstance is NULL. \n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadFont] Pointer to MegaMol CoreInstance is NULL. \n");
         return false;
     }
 
     // (1) Load buffers --------------------------------------------------------
-    ///vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading OGL BUFFERS ... \n");
+    ///megamol::core::utility::log::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading OGL BUFFERS ... \n");
     if (!this->loadFontBuffers()) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load buffers. \n");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load buffers. \n");
         return false;
     }
 
     // (2) Load font information -----------------------------------------------
     vislib::StringA infoFile = this->fontFileName;
     infoFile.Append(".fnt");
-    ///vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading FONT INFO ... \n");
+    ///megamol::core::utility::log::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading FONT INFO ... \n");
     if (!this->loadFontInfo(ResourceWrapper::getFileName(core->Configuration(), infoFile))) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font info file: \"%s\". \n", infoFile.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font info file: \"%s\". \n", infoFile.PeekBuffer());
         return false;
     }
 
     // (3) Load font texture --------------------------------------------------------
     vislib::StringA textureFile = this->fontFileName;
     textureFile.Append(".png");
-    ///vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading FONT TEXTURE ... \n");
+    ///megamol::core::utility::log::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading FONT TEXTURE ... \n");
     if (!this->loadFontTexture(ResourceWrapper::getFileName(core->Configuration(), textureFile))) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font texture: \"%s\". \n", textureFile.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font texture: \"%s\". \n", textureFile.PeekBuffer());
         return false;
     }
 
     // (4) Load shaders --------------------------------------------------------
-    ///vislib::sys::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading SHADERS ... \n");
+    ///megamol::core::utility::log::Log::DefaultLog.WriteInfo("[SDFFont] [loadFont] Loading SHADERS ... \n");
     if (!this->loadFontShader(core)) {
-        vislib::sys::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font shaders. \n");
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font shaders. \n");
         return false;
     }
 
@@ -1417,7 +1420,7 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
     // Load file
     vislib::sys::ASCIIFileBuffer file;
     if (!file.LoadFile(filename)) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadfontCharacters] Could not load file as ascii buffer: \"%s\". \n", filename.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadfontCharacters] Could not load file as ascii buffer: \"%s\". \n", filename.PeekBuffer());
         return false;
     }
 
@@ -1524,7 +1527,7 @@ bool SDFFont::loadFontInfo(vislib::StringA filename) {
     for (unsigned int i = 0; i < (unsigned int)this->glyphs.size(); i++) {
         // Filling character index array --------------------------------------
         if (this->glyphs[i].id > (unsigned int)this->glyphIdcs.size()) {
-            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFontInfo] Character is out of range: \"%i\". \n", this->glyphs[i].id);
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadFontInfo] Character is out of range: \"%i\". \n", this->glyphs[i].id);
             return false;
         }
         this->glyphIdcs[this->glyphs[i].id] = &this->glyphs[i];
@@ -1565,7 +1568,7 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
     size_t size = 0;
 
     if ((size = this->loadFile(filename, &buf)) <= 0) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not find texture: \"%s\". \n", filename.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not find texture: \"%s\". \n", filename.PeekBuffer());
         ARY_SAFE_DELETE(buf);
         return false;
     }
@@ -1575,19 +1578,22 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
         img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
 
         if (this->texture.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
-            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not load texture: \"%s\". \n", filename.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not load texture: \"%s\". \n", filename.PeekBuffer());
             ARY_SAFE_DELETE(buf);
             return false;
         }
-
         this->texture.Bind();
+
+        //glGenerateMipmap(GL_TEXTURE_2D);
+        //this->texture.SetFilter(GL_LINEAR, GL_LINEAR_MIPMAP_LINEAR);
         this->texture.SetFilter(GL_LINEAR, GL_LINEAR);
+
         this->texture.SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
         glBindTexture(GL_TEXTURE_2D, 0);
         ARY_SAFE_DELETE(buf);
     }
     else {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not read texture: \"%s\". \n", filename.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadTexture] Could not read texture: \"%s\". \n", filename.PeekBuffer());
         ARY_SAFE_DELETE(buf);
         return false;
     }
@@ -1603,7 +1609,7 @@ bool SDFFont::loadFontTexture(vislib::StringA filename) {
 bool SDFFont::loadFontShader(megamol::core::CoreInstance *core) {
 
     if (core == nullptr) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFontShader] Pointer to MegaMol CoreInstance is NULL. \n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadFontShader] Pointer to MegaMol CoreInstance is NULL. \n");
         return false;
     }
 
@@ -1655,13 +1661,13 @@ bool SDFFont::loadFontShader(megamol::core::CoreInstance *core) {
 
             vs.Clear();
             if (!core->ShaderSourceFactory().MakeShaderSource(vertShaderName, vs)) {
-                vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to make shader source for vertex shader. \n");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to make shader source for vertex shader. \n");
                 return false;
             }
 
             fs.Clear();
             if (!core->ShaderSourceFactory().MakeShaderSource(fragShaderName, fs)) {
-                vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to make shader source for fragment shader. \n");
+                megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to make shader source for fragment shader. \n");
                 return false;
             }
 
@@ -1683,7 +1689,7 @@ bool SDFFont::loadFontShader(megamol::core::CoreInstance *core) {
 
             // Compiling shaders
             if (!shaderPtr[i]->Compile(vs.Code(), vs.Count(), fs.Code(), fs.Count())) {
-                vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown error. \n", shaderNamespace.PeekBuffer());
+                megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown error. \n", shaderNamespace.PeekBuffer());
                 return false;
             }
 
@@ -1694,21 +1700,21 @@ bool SDFFont::loadFontShader(megamol::core::CoreInstance *core) {
 
             // Linking shaders
             if (!shaderPtr[i]->Link()) {
-                vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to link \"%s\"-shader: Unknown error. \n", shaderNamespace.PeekBuffer());
+                megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to link \"%s\"-shader: Unknown error. \n", shaderNamespace.PeekBuffer());
                 return false;
             }
         }
         catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader (@%s): %s. \n", shaderNamespace.PeekBuffer(),
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader (@%s): %s. \n", shaderNamespace.PeekBuffer(),
                 vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()), ce.GetMsgA());
             return false;
         }
         catch (vislib::Exception e) {
-            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: %s. \n", shaderNamespace.PeekBuffer(), e.GetMsgA());
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: %s. \n", shaderNamespace.PeekBuffer(), e.GetMsgA());
             return false;
         }
         catch (...) {
-            vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown exception. \n", shaderNamespace.PeekBuffer());
+            megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadShader] Unable to compile \"%s\"-shader: Unknown exception. \n", shaderNamespace.PeekBuffer());
             return false;
         }
     }
@@ -1727,30 +1733,30 @@ size_t SDFFont::loadFile(vislib::StringA filename, BYTE **outData) {
 
     vislib::StringW name = static_cast<vislib::StringW>(filename);
     if (name.IsEmpty()) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load file: No name given. \n");
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load file: No name given. \n");
         return false;
     }
     if (!vislib::sys::File::Exists(name)) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load not existing file: \"%s\". \n", filename.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load not existing file: \"%s\". \n", filename.PeekBuffer());
         return false;
     }
 
     size_t size = static_cast<size_t>(vislib::sys::File::GetSize(name));
     if (size < 1) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load empty file: \"%s\". \n", filename.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to load empty file: \"%s\". \n", filename.PeekBuffer());
         return false;
     }
 
     vislib::sys::FastFile f;
     if (!f.Open(name, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to open file: \"%s\". \n", filename.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to open file: \"%s\". \n", filename.PeekBuffer());
         return false;
     }
 
     *outData = new BYTE[size];
     size_t num = static_cast<size_t>(f.Read(*outData, size));
     if (num != size) {
-        vislib::sys::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to read whole file: \"%s\". \n", filename.PeekBuffer());
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [loadFile] Unable to read whole file: \"%s\". \n", filename.PeekBuffer());
         ARY_SAFE_DELETE(*outData);
         return false;
     }

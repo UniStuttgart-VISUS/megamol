@@ -107,10 +107,10 @@ namespace vislib {
         virtual void Deserialise(UINT16& outValue, 
             const wchar_t *name);
 
-        virtual void Deserialise(INT32& outValue, 
+        virtual void Deserialise(VL_INT32& outValue, 
             const char *name = NULL);
 
-        virtual void Deserialise(INT32& outValue, 
+        virtual void Deserialise(VL_INT32& outValue, 
             const wchar_t *name);
 
         virtual void Deserialise(UINT32& outValue, 
@@ -209,10 +209,10 @@ namespace vislib {
         virtual void Serialise(const UINT16 value,
             const wchar_t *name);
 
-        virtual void Serialise(const INT32 value,
+        virtual void Serialise(const VL_INT32 value,
             const char *name = NULL);
 
-        virtual void Serialise(const INT32 value,
+        virtual void Serialise(const VL_INT32 value,
             const wchar_t *name);
 
         virtual void Serialise(const UINT32 value,

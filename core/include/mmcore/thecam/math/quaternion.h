@@ -280,7 +280,7 @@ public:
      * @return A quaternion representing the specified rotation.
      */
     template <class Y> static inline quaternion from_angle_axis(const value_type angle, const Y& axis) {
-        quaternion retval(megamol::core::thecam::utility::do_not_initialise);
+        quaternion retval(thecam::utility::do_not_initialise);
         set_from_angle_axis(retval, angle, axis);
         return retval;
     }

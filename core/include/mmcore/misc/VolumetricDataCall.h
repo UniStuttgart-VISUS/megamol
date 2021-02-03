@@ -1,7 +1,7 @@
 /*
  * VolumetricDataCall.h
  *
- * Copyright (C) 2014 by Visualisierungsinstitut der Universität Stuttgart.
+ * Copyright (C) 2014 by Visualisierungsinstitut der UniversitÃ¤t Stuttgart.
  * Alle rechte vorbehalten.
  */
 
@@ -17,7 +17,7 @@
 #include "mmcore/misc/VolumetricDataCallTypes.h"
 
 #include "vislib/Array.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 
 namespace megamol {
@@ -74,6 +74,19 @@ namespace misc {
          */
         static const char *FunctionName(unsigned int idx);
 
+        /**
+         * Invoke the metadata call and possibly the data call if the metadata
+         * call does not provide meaningful data.
+         *
+         * Consider using this convenience method if your sink is connected to
+         * a live source that cannot implement the metadata call.
+         *
+         * @param call Teh call to be invoked.
+         *
+         * @return true if the call succeeded, false otherwise.
+         */
+        static bool GetMetadata(core::misc::VolumetricDataCall& call);
+
         /** Index of the function retrieving the data. */
         static const unsigned int IDX_GET_DATA;
 
@@ -115,7 +128,7 @@ namespace misc {
          * @return The number of frames loaded.
          */
         inline size_t GetAvailableFrames(void) const {
-            return this->cntFrames;
+            return this->FrameCount();
         }
 
         /**
@@ -135,7 +148,7 @@ namespace misc {
 				return this->data;
 			}
 			else {
-				vislib::sys::Log::DefaultLog.WriteError("Trying to get volume data from VRAM: Volume data location set to RAM.");
+				megamol::core::utility::log::Log::DefaultLog.WriteError("Trying to get volume data from VRAM: Volume data location set to RAM.");
 				return nullptr;
 			}
         }
@@ -150,7 +163,7 @@ namespace misc {
 				return this->data;
 			}
 			else {
-				vislib::sys::Log::DefaultLog.WriteError("Trying to get volume data from VRAM: Volume data location set to RAM.");
+				megamol::core::utility::log::Log::DefaultLog.WriteError("Trying to get volume data from VRAM: Volume data location set to RAM.");
 				return nullptr;
 			}
         }
@@ -160,7 +173,7 @@ namespace misc {
 				return vram_volume_name;
 			}
 			else {
-				vislib::sys::Log::DefaultLog.WriteError("Trying to get volume data from RAM: Volume data location set to VRAM.");
+				megamol::core::utility::log::Log::DefaultLog.WriteError("Trying to get volume data from RAM: Volume data location set to VRAM.");
 				return 0;
 			}
 		}
@@ -282,7 +295,7 @@ namespace misc {
          */
         void SetData(void *data, const size_t cntFrames = 1) {
             this->data = data;
-            this->cntFrames = cntFrames;
+            this->SetFrameCount(cntFrames);
         }
 
 		void SetData(uint32_t texture_name)	{
@@ -313,9 +326,6 @@ namespace misc {
 
         /** The functions that are provided by the call. */
         static const char *FUNCTIONS[6];
-
-        /** The number of frames that 'data' designates. */
-        size_t cntFrames;
 
         /** The pointer to the raw data. The call does not own this memory! */
         void *data;

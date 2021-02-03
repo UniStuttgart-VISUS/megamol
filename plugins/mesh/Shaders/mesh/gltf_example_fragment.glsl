@@ -5,9 +5,9 @@ struct LightParams
 
 layout(std430, binding = 1) readonly buffer LightParamsBuffer { LightParams light_params[]; };
 
-in vec3 worldPos;
-in vec3 normal;
-in vec3 colour;
+layout(location = 0) in vec3 worldPos;
+layout(location = 1) in vec3 normal;
+layout(location = 2) in vec3 colour;
 
 out layout(location = 0) vec4 frag_colour;
 

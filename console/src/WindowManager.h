@@ -38,7 +38,11 @@ namespace gl {
         ~WindowManager(void);
 
         bool IsAlive(void) const;
-        void Update(void);
+
+        /**
+         * frameID is the number of the rendered frame.
+         */
+        void Update(uint32_t frameID);
         void Shutdown(void);
 
         bool InstantiatePendingView(void *hCore);

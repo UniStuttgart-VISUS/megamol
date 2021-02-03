@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="glyph">
+    <include file="common"/>
+    <include file="core_utils"/>
+    <include file="bitflags"/>
+    <include file="sphere_flags"/>
+
+    <shader name="ellipsoid_vertex">
+        <snippet type="version">430</snippet>
+        <snippet type="file">glyph/uniforms.glsl</snippet>
+        <snippet type="file">glyph/options.glsl</snippet>
+        <snippet type="file">glyph/ssbo_data.glsl</snippet>
+        <snippet name="core_utils::tflookup"/>
+        <snippet type="file">glyph/flags.glsl</snippet>
+        <snippet name="bitflags::main"/>
+        <snippet type="file">glyph/quaternion_to_matrix.glsl</snippet>
+        <snippet type="file">glyph/cube_geometry.glsl</snippet>
+        <snippet type="file">glyph/compute_color.glsl</snippet>
+        <snippet type="file">glyph/ellipsoid.vert</snippet>
+    </shader>
+
+    <shader name="ellipsoid_fragment">
+        <snippet type="version">430</snippet>
+        <snippet type="file">glyph/uniforms.glsl</snippet>
+        <snippet type="file">glyph/options.glsl</snippet>
+        <snippet type="file">glyph/ellipsoid.frag</snippet>
+    </shader>
+
+    <shader name="box_vertex">
+        <snippet type="version">430</snippet>
+        <snippet type="file">glyph/uniforms.glsl</snippet>
+        <snippet type="file">glyph/options.glsl</snippet>
+        <snippet type="file">glyph/ssbo_data.glsl</snippet>
+        <snippet name="core_utils::tflookup"/>
+        <snippet type="file">glyph/flags.glsl</snippet>
+        <snippet name="bitflags::main"/>
+        <snippet type="file">glyph/quaternion_to_matrix.glsl</snippet>
+        <snippet type="file">glyph/cube_geometry.glsl</snippet>
+        <snippet type="file">glyph/compute_color.glsl</snippet>
+        <snippet type="file">glyph/box.vert</snippet>
+    </shader>
+
+    <shader name="box_fragment">
+        <snippet type="version">430</snippet>
+        <snippet type="file">glyph/uniforms.glsl</snippet>
+        <snippet type="file">glyph/options.glsl</snippet>
+        <snippet type="file">glyph/box.frag</snippet>
+    </shader>
+
+</btf>

@@ -119,8 +119,8 @@ GLuint SSBOStreamer::SetDataWithItems(const void *data, GLuint srcStride, GLuint
     return this->bufferSize;
 }
 
-void SSBOStreamer::UploadChunk(unsigned int idx, GLuint& numItems, unsigned int& sync,
-        GLsizeiptr& dstOffset, GLsizeiptr& dstLength) {
+void SSBOStreamer::UploadChunk(unsigned int idx, GLuint& numItems, unsigned int& sync, GLsizeiptr& dstOffset,
+    GLsizeiptr& dstLength, const std::function<void(void*, const void*)>& copyOp) {
     if (theData == nullptr || idx > this->numChunks - 1) return;
     
     // we did not succeed doing anything yet
@@ -128,8 +128,8 @@ void SSBOStreamer::UploadChunk(unsigned int idx, GLuint& numItems, unsigned int&
 
     dstOffset = this->bufferSize * this->currIdx;
     GLsizeiptr srcOffset = this->numItemsPerChunk * this->srcStride * idx;
-    void *dst = static_cast<char*>(this->mappedMem) + dstOffset;
-    const void *src = static_cast<const char*>(this->theData) + srcOffset;
+    char *dst = static_cast<char*>(this->mappedMem) + dstOffset;
+    const char *src = static_cast<const char*>(this->theData) + srcOffset;
     const size_t itemsThisTime = std::min<unsigned int>(
         this->numItems - idx * this->numItemsPerChunk, this->numItemsPerChunk);
     dstLength = itemsThisTime * this->dstStride;
@@ -139,8 +139,17 @@ void SSBOStreamer::UploadChunk(unsigned int idx, GLuint& numItems, unsigned int&
 
     waitSignal(this->fences[currIdx]);
 
-    ASSERT(this->srcStride == this->dstStride);
-    memcpy(dst, src, itemsThisTime * this->srcStride);
+    // either we can grab all the data at once or we need the copyOp to re-arrange stuff for us
+    ASSERT(this->srcStride == this->dstStride || copyOp);
+
+    if (copyOp) {
+#pragma omp parallel for
+        for (int64_t i = 0; i < itemsThisTime; ++i) {
+            copyOp(dst + i * this->dstStride, src + i * this->srcStride);
+        }
+    } else {
+        memcpy(dst, src, itemsThisTime * this->srcStride);
+    }
 
     glFlushMappedNamedBufferRange(this->theSSBO, 
         dstOffset, itemsThisTime * this->dstStride);

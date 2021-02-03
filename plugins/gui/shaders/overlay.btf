@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="overlay">
+    <include file="common"/>
+
+    <shader name="vertex">
+        <snippet type="version">130</snippet>
+        <snippet name="main" type="string">
+        <![CDATA[
+
+uniform mat4 ortho;
+uniform float left;
+uniform float right;
+uniform float top;
+uniform float bottom;
+out vec2 tex_coord;
+
+void main() {
+
+    vec2 pos, tex;
+    float half_tex = 0.0;
+    
+    tex.x = (gl_VertexID / 2 == 0) ? half_tex : (1.0 - half_tex);
+    tex.y = (gl_VertexID % 2 == 0) ? half_tex : (1.0 - half_tex);
+    tex_coord = tex;
+    
+    pos.x = (gl_VertexID / 2 == 0) ? left : right; 
+    pos.y = (gl_VertexID % 2 == 0) ? top : bottom; 
+    gl_Position = ortho * vec4(pos.xy, -1.0, 1.0);
+}
+
+        ]]>
+        </snippet>
+    </shader>
+
+    <shader name="fragment">
+        <snippet type="version">130</snippet>
+        <snippet name="main" type="string">
+        <![CDATA[
+        
+#extension GL_ARB_explicit_attrib_location : require // glsl version 130       
+
+in vec2 tex_coord;
+uniform sampler2D tex;
+uniform vec4 overwrite_color;
+layout(location = 0) out vec4 outFragColor;
+
+void main(void) {
+
+    vec4 color = texture(tex, tex_coord);
+    if (color.a <= 0.0) {
+        discard;
+    }
+    if (overwrite_color.a > 0.0) {
+        color = overwrite_color;
+    }
+    outFragColor = color;
+}
+
+        ]]>
+        </snippet>
+    </shader>
+
+</btf>

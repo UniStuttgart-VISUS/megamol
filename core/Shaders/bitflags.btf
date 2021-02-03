@@ -38,7 +38,11 @@ void bitflag_flip(inout uint flags, uint flag)
 bool bitflag_isVisible(uint flags)
 {
   return bitflag_test(flags, FLAG_ENABLED | FLAG_FILTERED, FLAG_ENABLED);
-  //return bitflag_test(flags, FLAG_ENABLED, FLAG_ENABLED);
+}
+
+bool bitflag_isVisibleSelected(uint flags)
+{
+  return bitflag_test(flags, FLAG_ENABLED | FLAG_FILTERED | FLAG_SELECTED, FLAG_ENABLED | FLAG_SELECTED);
 }
 
     ]]>

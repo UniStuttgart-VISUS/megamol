@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<btf type="MegaMolGLSLShader" version="1.0" namespace="viewcube">
+  <include file="common"/>
+  <shader name="vertex">
+    <snippet type="version">330</snippet>
+    <snippet type="string">
+<!--
+uniform mat4 rot_mx;
+uniform mat4 model_mx;
+uniform mat4 proj_mx;
+
+out vec4 vertex_color;
+
+void main() {
+    const vec4 vertices[36] = vec4[36](
+        // front
+        vec4(-1.0, -1.0,  1.0, 1.0),
+        vec4( 1.0, -1.0,  1.0, 1.0),
+        vec4( 1.0,  1.0,  1.0, 1.0),
+        vec4(-1.0, -1.0,  1.0, 1.0),
+        vec4( 1.0,  1.0,  1.0, 1.0),
+        vec4(-1.0,  1.0,  1.0, 1.0),
+        // back
+        vec4(-1.0, -1.0, -1.0, 1.0),
+        vec4( 1.0,  1.0, -1.0, 1.0),
+        vec4( 1.0, -1.0, -1.0, 1.0),
+        vec4(-1.0, -1.0, -1.0, 1.0),
+        vec4(-1.0,  1.0, -1.0, 1.0),
+        vec4( 1.0,  1.0, -1.0, 1.0),
+        // top
+        vec4(-1.0,  1.0, -1.0, 1.0),
+        vec4( 1.0,  1.0,  1.0, 1.0),
+        vec4( 1.0,  1.0, -1.0, 1.0),
+        vec4(-1.0,  1.0, -1.0, 1.0),
+        vec4(-1.0,  1.0,  1.0, 1.0),
+        vec4( 1.0,  1.0,  1.0, 1.0),
+        // bottom
+        vec4(-1.0, -1.0, -1.0, 1.0),
+        vec4( 1.0, -1.0, -1.0, 1.0),
+        vec4( 1.0, -1.0,  1.0, 1.0),
+        vec4(-1.0, -1.0, -1.0, 1.0),
+        vec4( 1.0, -1.0,  1.0, 1.0),
+        vec4(-1.0, -1.0,  1.0, 1.0),
+        // right
+        vec4( 1.0, -1.0, -1.0, 1.0),
+        vec4( 1.0,  1.0, -1.0, 1.0),
+        vec4( 1.0,  1.0,  1.0, 1.0),
+        vec4( 1.0, -1.0, -1.0, 1.0),
+        vec4( 1.0,  1.0,  1.0, 1.0),
+        vec4( 1.0, -1.0,  1.0, 1.0),
+        // left
+        vec4(-1.0, -1.0, -1.0, 1.0),
+        vec4(-1.0,  1.0,  1.0, 1.0),
+        vec4(-1.0,  1.0, -1.0, 1.0),
+        vec4(-1.0, -1.0, -1.0, 1.0),
+        vec4(-1.0, -1.0,  1.0, 1.0),
+        vec4(-1.0,  1.0,  1.0, 1.0) 
+    );
+
+    const vec4 colors[6] = vec4[6](
+        vec4(0.0, 0.0, 1.0, 1.0),
+        vec4(0.0, 0.0, 0.5, 1.0),
+        vec4(0.0, 1.0, 0.0, 1.0),
+        vec4(0.0, 0.5, 0.0, 1.0),
+        vec4(1.0, 0.0, 0.0, 1.0),
+        vec4(0.5, 0.0, 0.0, 1.0) 
+    );
+
+    vertex_color = colors[gl_VertexID / 6];
+    gl_Position = proj_mx * model_mx * rot_mx * vertices[gl_VertexID];
+}
+-->
+    </snippet>
+  </shader>
+  <shader name="fragment">
+    <snippet type="version">330</snippet>
+    <snippet type="string">
+<!--
+in vec4 vertex_color;
+
+out vec4 fragColor;
+
+void main() {
+    fragColor = vertex_color;
+}
+-->
+    </snippet>
+  </shader>
+</btf>

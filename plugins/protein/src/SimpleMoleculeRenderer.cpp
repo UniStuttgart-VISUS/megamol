@@ -37,6 +37,7 @@ using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
+using namespace megamol::core::utility::log;
 
 /*
  * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
@@ -2001,9 +2002,9 @@ void SimpleMoleculeRenderer::RenderLinesFilter(const MolecularDataCall* mol, con
  */
 void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, const float* atomPos) {
 
-    // int n;
-    // glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n);
-    // vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+    //int n;
+    //glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n);
+    //megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
     //  "Maximum num of generic vertex attributes: %i\n", n);
 
     // ----- prepare stick raycasting -----
@@ -2120,6 +2121,7 @@ void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, con
      */
 
     // ---------- actual rendering ----------
+
 
     // enable sphere shader
     if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
@@ -2273,6 +2275,8 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter(const MolecularDataCall* m
 
     // ---------- actual rendering ----------
 
+
+
     // Enable sphere shader
     if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
         this->filterSphereShader.Enable();
@@ -2343,14 +2347,17 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
             static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
 
         // Mix two coloring modes
-        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
-            cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
-            1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
-            this->minGradColorParam.Param<param::StringParam>()->Value(),
-            this->midGradColorParam.Param<param::StringParam>()->Value(),
-            this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs,
-            this->useNeighborColors.Param<param::BoolParam>()->Value());
+        Color::MakeColorTable(mol, this->currentColoringMode0,
+                this->currentColoringMode1,
+                cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the first cm
+                1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+                this->atomColorTable, this->colorLookupTable,
+                this->rainbowColors,
+                this->minGradColorParam.Param<param::StringParam>()->Value(),
+                this->midGradColorParam.Param<param::StringParam>()->Value(),
+                this->maxGradColorParam.Param<param::StringParam>()->Value(),
+                true, bs,
+				this->useNeighborColors.Param<param::BoolParam>()->Value());
 
         // Use one coloring mode
         /*Color::MakeColorTable( mol,

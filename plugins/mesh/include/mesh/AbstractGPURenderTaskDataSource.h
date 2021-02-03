@@ -14,14 +14,14 @@
 #include "GPURenderTaskCollection.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mesh.h"
+#include "mesh/MeshCalls.h"
 
 #include "mmcore/view/light/CallLight.h"
 
 namespace megamol {
 namespace mesh {
 
-class MESH_API AbstractGPURenderTaskDataSource : public core::Module {
+class AbstractGPURenderTaskDataSource : public core::Module {
 public:
     AbstractGPURenderTaskDataSource();
     virtual ~AbstractGPURenderTaskDataSource();
@@ -50,50 +50,36 @@ protected:
      *
      * @return 'true' on success, 'false' on failure.
      */
-    virtual bool getExtentCallback(core::Call& caller);
+    virtual bool getMetaDataCallback(core::Call& caller);
 
     /**
      * Implementation of 'Release'.
      */
     virtual void release();
 
-    /**
-     * Receives the current lights from the light call and writes them to the lightMap
-     *
-     * @return True if any light has changed, false otherwise.
-     */
-    bool GetLights(void);
+    void syncRenderTaskCollection(CallGPURenderTaskData* lhs_call);
 
     /**
-     * This modules storage class for Render Tasks.
-     * If connected within a chain of rts (but not the first rt module), the storage should remain unused
-     * and instead the collection provided by the left-hand-side rt is used.
-     */
-    std::shared_ptr<GPURenderTaskCollection> m_gpu_render_tasks;
-
-    /**
-     * List of indices of all RenderTasks that this module added to the used rt collection.
+     * Render task collection that is used with a list of indices of all RenderTasks that this module added to the used rt collection.
      * Needed to delete/update RenderTasks if the rt collection is shared across a chain of rt data sources.
      */
-    std::vector<size_t> m_rt_collection_indices;
-
-    /** map to store the called lights */
-    core::view::light::LightMap lightMap;
+    std::pair<std::shared_ptr<GPURenderTaskCollection>, std::vector<std::string>> m_rendertask_collection;
 
     /** The slot for requesting data from this module, i.e. lhs connection */
-    megamol::core::CalleeSlot m_getData_slot;
+    megamol::core::CalleeSlot m_renderTask_lhs_slot;
 
     /** The slot for querying chained render tasks, i.e. a rhs connection */
-    megamol::core::CallerSlot m_renderTask_callerSlot;
+    megamol::core::CallerSlot m_renderTask_rhs_slot;
 
     /** The slot for querying material data, i.e. a rhs connection */
-    megamol::core::CallerSlot m_material_callerSlot;
+    megamol::core::CallerSlot m_material_slot;
 
     /** The slot for querying mesh data, i.e. a rhs connection */
-    megamol::core::CallerSlot m_mesh_callerSlot;
+    megamol::core::CallerSlot m_mesh_slot;
 
     /** Slot to retrieve the light information */
     megamol::core::CallerSlot m_light_slot;
+    size_t m_light_cached_hash;
 };
 
 } // namespace mesh

@@ -59,6 +59,7 @@
             this.btnDelete = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
             this.btnEyeDrop = new System.Windows.Forms.ToolStripButton();
+            this.btnLua = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -76,6 +77,7 @@
             this.websiteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.btnHideCallNames = new System.Windows.Forms.ToolStripButton();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.cmdResetFilter = new System.Windows.Forms.Button();
@@ -156,11 +158,13 @@
             this.btnDelete,
             this.toolStripSeparator6,
             this.btnEyeDrop,
+            this.btnLua,
             this.toolStripSeparator3,
             this.toolStripDropDownButton1,
             this.btnCloseProject,
             this.toolStripSeparator4,
-            this.toolStripDropDownButton2});
+            this.toolStripDropDownButton2,
+            this.btnHideCallNames});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(1063, 25);
@@ -377,6 +381,15 @@
             this.btnEyeDrop.Text = "EyeDrop";
             this.btnEyeDrop.Click += new System.EventHandler(this.btnEyeDrop_Click);
             // 
+            // btnLua
+            // 
+            this.btnLua.Image = global::MegaMolConf.Properties.Resources.lines_Text_code_16xMD;
+            this.btnLua.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnLua.Name = "btnLua";
+            this.btnLua.Size = new System.Drawing.Size(46, 22);
+            this.btnLua.Text = "Lua";
+            this.btnLua.Click += new System.EventHandler(this.ToolStripButton1_Click_1);
+            // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
@@ -510,6 +523,19 @@
             this.aboutToolStripMenuItem.Text = "About ...";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
+            // btnHideCallNames
+            // 
+            this.btnHideCallNames.Checked = true;
+            this.btnHideCallNames.CheckOnClick = true;
+            this.btnHideCallNames.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.btnHideCallNames.Image = ((System.Drawing.Image)(resources.GetObject("btnHideCallNames.Image")));
+            this.btnHideCallNames.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnHideCallNames.Name = "btnHideCallNames";
+            this.btnHideCallNames.Size = new System.Drawing.Size(89, 22);
+            this.btnHideCallNames.Text = "HideNames";
+            this.btnHideCallNames.ToolTipText = "Hides the names and rectangles of the calls";
+            this.btnHideCallNames.Click += new System.EventHandler(this.btnHideCallNames_Click);
+            // 
             // splitContainer1
             // 
             this.splitContainer1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -599,6 +625,7 @@
             this.lbModules.TabIndex = 2;
             this.lbModules.SelectedIndexChanged += new System.EventHandler(this.lbModules_SelectedIndexChanged);
             this.lbModules.DoubleClick += new System.EventHandler(this.lbModules_DoubleClick);
+            this.lbModules.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.lbModules_EnterKeyPress);
             // 
             // moduleText
             // 
@@ -751,14 +778,14 @@
             // saveFileDialog1
             // 
             this.saveFileDialog1.DefaultExt = "mmprj";
-            this.saveFileDialog1.Filter = "MegaMol Project Files|*.mmprj|MegaMol LUA project files|*.lua|All Files|*.*";
+            this.saveFileDialog1.Filter = "MegaMol LUA project files|*.lua|MegaMol Project Files|*.mmprj|All Files|*.*";
             this.saveFileDialog1.Title = "Save MegaMol™ Project ...";
             // 
             // openFileDialog1
             // 
             this.openFileDialog1.DefaultExt = "mmprj";
             this.openFileDialog1.FileName = "openFileDialog1";
-            this.openFileDialog1.Filter = "MegaMol™ Project Files|*.mmprj|All Files|*.*";
+            this.openFileDialog1.Filter = "Lua Project Files|*.lua|MegaMol™ Project Files|*.mmprj|All Files|*.*";
             this.openFileDialog1.Title = "Load MegaMol™-Project ...";
             // 
             // printDialog1
@@ -786,6 +813,7 @@
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.statusStrip1);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            this.KeyPreview = true;
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.WindowsDefaultBounds;
             this.Text = "MegaMol™ - Configurator";
@@ -891,6 +919,8 @@
         private System.Windows.Forms.ToolStripMenuItem attachToMegaMolToolStripMenuItem;
         private System.Windows.Forms.ToolStripTextBox hostToolStripTextBox;
         private System.Windows.Forms.ToolStripTextBox portToolStripTextBox;
+        private System.Windows.Forms.ToolStripButton btnLua;
+        private System.Windows.Forms.ToolStripButton btnHideCallNames;
     }
 }
 

@@ -64,12 +64,12 @@ public:
      *
      * @param angle The angle to rotate in degrees.
      */
-    void yaw(const world_type angle);
+    void yaw(const world_type angle, bool fixToWorldUp);
 
     /**
      * Rotates the camera around the up vector using the internally stored rotation angle.
      */
-    inline void yaw(void) { this->yaw(this->rotationAngle); }
+    inline void yaw(bool fixToWorldUp) { this->yaw(this->rotationAngle, fixToWorldUp); }
 
     /**
      * Rotates the camera around the view vector.
@@ -96,6 +96,17 @@ public:
      * @return The default rotation angle in degrees.
      */
     inline world_type rotation_angle(void) const { return this->rotationAngle; }
+
+    void setActive() {
+        if (!this->manipulating() && this->enabled()) {
+            this->begin_manipulation();
+        }
+    }
+
+    /**
+     * Set manipulator to inactive (usually on mouse button release).
+     */
+    inline void setInactive(void) { this->end_manipulation(); }
 
 private:
     /** The angle that is used for rotation */

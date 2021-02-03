@@ -12,6 +12,8 @@ namespace core {
 namespace view {
 namespace light {
 
+    struct AmbientLightType : public BaseLightType {};
+
 class MEGAMOLCORE_API AmbientLight : public AbstractLight {
 public:
     /**
@@ -34,6 +36,11 @@ public:
      * @return 'true' if the module is available, 'false' otherwise.
      */
     static bool IsAvailable(void) { return true; }
+
+    /**
+     * Add the lightsource of this module to a given collection
+     */
+    void addLight(LightCollection& light_collection);
 
     /** Ctor. */
     AmbientLight(void);

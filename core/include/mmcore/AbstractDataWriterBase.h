@@ -16,9 +16,9 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/ParamSlot.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/FastFile.h"
-#include "vislib/sys/Thread.h"
+#include "mmcore/utility/sys/Thread.h"
 #include <climits>
 
 
@@ -76,7 +76,7 @@ namespace core {
          * @return True on success
          */
         virtual bool run(void) {
-            using vislib::sys::Log;
+            using megamol::core::utility::log::Log;
             vislib::TString filename(this->filenameSlot.template Param<param::FilePathParam>()->Value());
             if (filename.IsEmpty()) {
                 Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR, "No file name specified. Abort.");

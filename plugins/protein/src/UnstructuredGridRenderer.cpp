@@ -31,6 +31,7 @@
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
+using namespace megamol::core::utility::log;
 
 
 /*
@@ -82,7 +83,6 @@ bool protein::UnstructuredGridRenderer::create(void)
     glEnable(GL_VERTEX_PROGRAM_TWO_SIDE);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     ShaderSource vertSrc;

@@ -14,7 +14,6 @@
 
 #include "mmcore/cluster/ClusterController.h"
 #include "mmcore/cluster/ClusterViewMaster.h"
-#include "mmcore/cluster/PowerwallView.h"
 #include "mmcore/cluster/mpi/MpiProvider.h"
 #include "mmcore/cluster/mpi/View.h"
 #include "mmcore/cluster/simple/Client.h"
@@ -23,7 +22,6 @@
 #include "mmcore/cluster/simple/View.h"
 #include "mmcore/misc/SiffCSplineFitter.h"
 #include "mmcore/misc/TestSpheresDataSource.h"
-#include "mmcore/moldyn/AddParticleColours.h"
 #include "mmcore/moldyn/MipDepthSphereRenderer.h"
 #include "mmcore/moldyn/MMPLDDataSource.h"
 #include "mmcore/moldyn/MMPLDWriter.h"
@@ -74,6 +72,7 @@
 #include "mmcore/FileStreamProvider.h"
 #include "mmcore/view/special/CallbackScreenShooter.h"
 #include "mmcore/FlagStorage.h"
+#include "mmcore/FlagStorage_GL.h"
 #include "mmcore/DeferredShading.h"
 
 using namespace megamol::core;
@@ -90,7 +89,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
 
     instance.RegisterAutoDescription<cluster::ClusterController>();
     instance.RegisterAutoDescription<cluster::ClusterViewMaster>();
-    instance.RegisterAutoDescription<cluster::PowerwallView>();
     instance.RegisterAutoDescription<cluster::simple::Client>();
     instance.RegisterAutoDescription<cluster::simple::Heartbeat>();
     instance.RegisterAutoDescription<cluster::simple::Server>();
@@ -99,7 +97,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<cluster::mpi::View>();
     instance.RegisterAutoDescription<misc::SiffCSplineFitter>();
     instance.RegisterAutoDescription<misc::TestSpheresDataSource>();
-    instance.RegisterAutoDescription<moldyn::AddParticleColours>();
     instance.RegisterAutoDescription<moldyn::MipDepthSphereRenderer>();
     instance.RegisterAutoDescription<moldyn::MMPLDDataSource>();
     instance.RegisterAutoDescription<moldyn::MMPLDWriter>();
@@ -125,7 +122,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::TileView>();
     instance.RegisterAutoDescription<view::View2D>();
     instance.RegisterAutoDescription<view::View3D>();
-	instance.RegisterAutoDescription<view::View3D_2>();
+    instance.RegisterAutoDescription<view::View3D_2>();
     instance.RegisterAutoDescription<view::BoundingBoxRenderer>();
     instance.RegisterAutoDescription<view::BlinnPhongRendererDeferred>();
     instance.RegisterAutoDescription<view::SplitView>();
@@ -153,5 +150,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::light::QuadLight>();
     instance.RegisterAutoDescription<view::light::SpotLight>();
     instance.RegisterAutoDescription<FlagStorage>();
+    instance.RegisterAutoDescription<FlagStorage_GL>();
     instance.RegisterAutoDescription<DeferredShading>();
 }

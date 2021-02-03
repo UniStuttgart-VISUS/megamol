@@ -18,6 +18,9 @@
 #include "mmcore/utility/ColourParser.h"
 #include "vislib/Trace.h"
 #include "vislib/math/Matrix4.h"
+#include "json.hpp"
+#include "mmcore/utility/log/Log.h"
+
 
 using namespace megamol::core;
 
@@ -25,22 +28,49 @@ using namespace megamol::core;
 /*
  * view::View2D::View2D
  */
-view::View2D::View2D(void) : view::AbstractRenderingView(),
-        firstImg(false), height(1.0f),
-        mouseMode(MouseMode::Propagate), mouseX(0.0f), mouseY(0.0f),
-        rendererSlot("rendering", "Connects the view to a Renderer"),
-        resetViewSlot("resetView", "Triggers the reset of the view"),
-        showBBoxSlot("showBBox", "Shows/hides the bounding box"), 
-		bboxCol{1.0f, 1.0f, 1.0f, 0.625f},
-		bboxColSlot("bboxCol", "Sets the colour for the bounding box"),
-        resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change"),
-        viewX(0.0f), viewY(0.0f), viewZoom(1.0f), viewUpdateCnt(0),
-        width(1.0f), incomingCall(NULL), overrideViewTile(NULL), timeCtrl() {
+view::View2D::View2D(void)
+    : view::AbstractRenderingView()
+    , firstImg(false)
+    , height(1.0f)
+    , mouseMode(MouseMode::Propagate)
+    , mouseX(0.0f)
+    , mouseY(0.0f)
+    , rendererSlot("rendering", "Connects the view to a Renderer")
+    , cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")
+    , storeCameraSettingsSlot("camstore::storecam", "Triggers the storage of the camera settings. This only works for "
+                                                    "multiple cameras if you use .lua project files")
+    , restoreCameraSettingsSlot("camstore::restorecam", "Triggers the restore of the camera settings. This only works "
+                                                        "for multiple cameras if you use .lua project files")
+    , resetViewSlot("resetView", "Triggers the reset of the view")
+    , showBBoxSlot("showBBox", "Shows/hides the bounding box")
+    , bboxCol{1.0f, 1.0f, 1.0f, 0.625f}
+    , bboxColSlot("bboxCol", "Sets the colour for the bounding box")
+    , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
+    , viewX(0.0f)
+    , viewY(0.0f)
+    , viewZoom(1.0f)
+    , viewUpdateCnt(0)
+    , width(1.0f)
+    , incomingCall(NULL)
+    , overrideViewTile(NULL)
+    , timeCtrl() {
 
     this->rendererSlot.SetCompatibleCall<CallRender2DDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
 
-    this->resetViewSlot << new param::ButtonParam(core::view::Key::KEY_HOME);
+    this->cameraSettingsSlot.SetParameter(new param::StringParam(""));
+    this->MakeSlotAvailable(&this->cameraSettingsSlot);
+
+    this->storeCameraSettingsSlot.SetParameter(
+        new param::ButtonParam(view::Key::KEY_C, (view::Modifier::SHIFT | view::Modifier::ALT)));
+    this->storeCameraSettingsSlot.SetUpdateCallback(&View2D::onStoreCamera);
+    this->MakeSlotAvailable(&this->storeCameraSettingsSlot);
+
+    this->restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(view::Key::KEY_C, view::Modifier::ALT));
+    this->restoreCameraSettingsSlot.SetUpdateCallback(&View2D::onRestoreCamera);
+    this->MakeSlotAvailable(&this->restoreCameraSettingsSlot);
+
+    this->resetViewSlot << new param::ButtonParam();
     this->resetViewSlot.SetUpdateCallback(&View2D::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
 
@@ -147,6 +177,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     if (this->firstImg) {
         this->firstImg = false;
         this->ResetView();
+        tryRestoringCamera(this->viewX, this->viewY, this->viewZoom);
     }
 
     if ((*cr2d)(AbstractCallRender::FnGetExtents)) {
@@ -375,6 +406,10 @@ bool view::View2D::OnKey(Key key, KeyAction action, Modifiers mods) {
     auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
     if (cr == NULL) return false;
 
+    if (key == Key::KEY_HOME) {
+        onResetView(this->resetViewSlot);
+    }
+
     InputEvent evt;
     evt.tag = InputEvent::Tag::Key;
     evt.keyData.key = key;
@@ -504,6 +539,46 @@ void view::View2D::unpackMouseCoordinates(float &x, float &y) {
     y -= 1.0f;
 }
 
+bool view::View2D::onStoreCamera(param::ParamSlot &p) {
+    // TODO: multiple saved views, like View3D_2
+    nlohmann::json out;
+    out["viewX"] = this->viewX;
+    out["viewY"] = this->viewY;
+    out["viewZoom"] = this->viewZoom;
+    this->cameraSettingsSlot.Param<param::StringParam>()->SetValue(out.dump().c_str());
+    return true;
+}
+
+bool view::View2D::tryRestoringCamera(float &outViewX, float &outViewY, float &outViewZoom) {
+    if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
+        nlohmann::json obj = nlohmann::json::parse(
+            this->cameraSettingsSlot.Param<param::StringParam>()->Value().PeekBuffer(), nullptr, false);
+        if (!obj.is_object()) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "View2D: Camera state invalid. Cannot deserialize.");
+            return false;
+        } else {
+            if (obj.count("viewX") == 1 && obj.count("viewY") == 1 && obj.count("viewZoom") == 1 &&
+                obj["viewX"].is_number() && obj["viewY"].is_number() && obj["viewZoom"].is_number()) {
+                outViewX = obj["viewX"];
+                outViewY = obj["viewY"];
+                outViewZoom = obj["viewZoom"];
+            } else {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "View2D: Camera state invalid. Cannot deserialize.");
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool view::View2D::onRestoreCamera(param::ParamSlot &p) {
+    // TODO: multiple saved views, like View3D_2
+    tryRestoringCamera(this->viewX, this->viewY, this->viewZoom);
+    return true;
+}
+
 
 /*
  * view::View2D::create
@@ -530,5 +605,22 @@ void view::View2D::release(void) {
  */
 bool view::View2D::onResetView(param::ParamSlot& p) {
     this->ResetView();
+    return true;
+}
+
+/*
+ * view::View2D::GetExtents
+ */
+bool view::View2D::GetExtents(Call& call) {
+    view::CallRenderView* crv = dynamic_cast<view::CallRenderView*>(&call);
+    if (crv == nullptr) return false;
+
+    CallRender2D* cr2d = this->rendererSlot.CallAs<CallRender2D>();
+    if (cr2d == nullptr) return false;
+
+    if (!(*cr2d)(CallRender2D::FnGetExtents)) return false;
+
+    crv->SetTimeFramesCount(cr2d->TimeFramesCount());
+    crv->SetIsInSituTime(cr2d->IsInSituTime());
     return true;
 }

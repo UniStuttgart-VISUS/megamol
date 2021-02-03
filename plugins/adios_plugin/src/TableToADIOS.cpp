@@ -8,11 +8,13 @@
 #include "stdafx.h"
 #include "TableToADIOS.h"
 
-#include "CallADIOSData.h"
-#include "mmstd_datatools/table/TableDataCall.h"
+#include "adios_plugin/CallADIOSData.h"
 #include "mmcore/param/EnumParam.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
+
+#include "vislib/StringConverter.h"
 
 namespace megamol {
 namespace adios {

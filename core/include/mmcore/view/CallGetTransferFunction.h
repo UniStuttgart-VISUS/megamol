@@ -138,13 +138,21 @@ public:
      *
      * @return dirty flag
      */
-    inline bool IsDirty() { return this->usedTFVersion != this->availableTFVersion;
-    }
+    inline bool IsDirty() { return this->usedTFVersion != this->availableTFVersion; }
 
     /**
      * Sets the transferfunction dirtiness
      */
     inline void ResetDirty() { this->usedTFVersion = availableTFVersion; }
+
+    /**
+     * Sets the value range (domain) of this transfer function. Values 
+	 * outside of min/max are to be clamped.
+     */
+    inline void SetRange(std::array<float, 2> range) {
+        this->range_updated = true;
+        this->range = range; 
+    }
 
     /**
      * Sets the 1D texture information
@@ -178,8 +186,17 @@ public:
      */
     inline void CopyColor(size_t index, float* color, size_t colorSize) {
         assert(index > 0 && index < this->texSize && "Invalid index");
-        assert(colorSize == 3 * sizeof(float) || colorSize == 4 * sizeof(float) && "Not a RGB(A) color");
+        assert((colorSize == 3 * sizeof(float) || colorSize == 4 * sizeof(float)) && "Not a RGB(A) color");
         memcpy(color, &this->texData[index * 4], colorSize);
+    }
+
+    /** 
+     * Check for updated range value and consume triggered update.
+     */
+    bool ConsumeRangeUpdate(void) {
+        bool consume = this->range_updated;
+        this->range_updated = false;
+        return consume;
     }
 
 private:
@@ -197,6 +214,9 @@ private:
 
     /** The range the texture lies within */
     std::array<float, 2> range;
+
+    /** Flag indicating changed range value. */
+    bool range_updated;
 
     uint32_t availableTFVersion = 1;
     uint32_t usedTFVersion = 0;

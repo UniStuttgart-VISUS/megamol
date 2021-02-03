@@ -13,19 +13,21 @@
 #include "mmcore/CoreInstance.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
-#include "mesh/CallGPUMeshData.h"
-#include "mesh/CallGPUMaterialData.h"
-#include "mesh/CallGPURenderTaskData.h"
+#include "mesh/MeshCalls.h"
 
 using namespace megamol;
 using namespace megamol::mesh;
 
 RenderMDIMesh::RenderMDIMesh()
-	: Renderer3DModule_2(),
-	m_render_task_callerSlot("getRenderTaskData", "Connects the renderer with a render task data source")
+	: Renderer3DModule_2()
+    , m_render_task_callerSlot("renderTasks", "Connects the renderer with a render task data source")
+    , m_framebuffer_slot("framebuffer", "Connects the renderer to an (optional) framebuffer render target from the calling module") 
 {
 	this->m_render_task_callerSlot.SetCompatibleCall<GPURenderTasksDataCallDescription>();
 	this->MakeSlotAvailable(&this->m_render_task_callerSlot);
+
+    this->m_framebuffer_slot.SetCompatibleCall<compositing::CallFramebufferGLDescription>();
+    this->MakeSlotAvailable(&this->m_framebuffer_slot);
 }
 
 RenderMDIMesh::~RenderMDIMesh()
@@ -137,12 +139,18 @@ bool RenderMDIMesh::GetExtents(core::view::CallRender3D_2& call) {
 	
 	if (rtc == NULL)
 		return false;
-	
+
+    auto meta_data = rtc->getMetaData();
+    meta_data.m_frame_ID = static_cast<int>(cr->Time());
+    rtc->setMetaData(meta_data);
+
 	if (!(*rtc)(1))
 		return false;
 
-	cr->SetTimeFramesCount(rtc->FrameCount());
-	cr->AccessBoundingBoxes() = rtc->GetBoundingBoxes();
+    meta_data = rtc->getMetaData();
+
+	cr->SetTimeFramesCount(meta_data.m_frame_cnt);
+    cr->AccessBoundingBoxes() = meta_data.m_bboxs;
 
 	return true;
 }
@@ -168,16 +176,18 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	if ((!(*task_call)(0)) )
 		return false;
 	
-	//vislib::sys::Log::DefaultLog.WriteError("Hey listen!");
+	//megamol::core::utility::log::Log::DefaultLog.WriteError("Hey listen!");
 	
 	// Set GL state (otherwise bounding box or view cube rendering state is used)
-	//glDisable(GL_BLEND);
+	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
     glDisable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
 
-	auto gpu_render_tasks = task_call->getRenderTaskData();
+	auto gpu_render_tasks = task_call->getData();
+
+    // TODO yet another nullptr check for gpu render tasks
 
 	auto const& per_frame_buffers = gpu_render_tasks->getPerFrameBuffers();
 
@@ -189,21 +199,26 @@ bool RenderMDIMesh::Render(core::view::CallRender3D_2& call) {
 	// loop through "registered" render batches
 	for (auto const& render_task : gpu_render_tasks->getRenderTasks())
 	{
-		render_task.shader_program->Enable();
+        render_task->shader_program->use();
 		
 		// TODO introduce per frame "global" data buffer to store information like camera matrices?
-		glUniformMatrix4fv(render_task.shader_program->ParameterLocation("view_mx"), 1, GL_FALSE, glm::value_ptr(view_mx));
-		glUniformMatrix4fv(render_task.shader_program->ParameterLocation("proj_mx"), 1, GL_FALSE, glm::value_ptr(proj_mx));
+        render_task->shader_program->setUniform("view_mx", view_mx);
+        render_task->shader_program->setUniform("proj_mx", proj_mx);
 		
-		render_task.per_draw_data->bind(0);
+		render_task->per_draw_data->bind(0);
 		
-		render_task.draw_commands->bind();
-		render_task.mesh->bindVertexArray();
+		render_task->draw_commands->bind();
+		render_task->mesh->bindVertexArray();
+
+        if (render_task->mesh->getPrimitiveType() == GL_PATCHES) {
+            glPatchParameteri(GL_PATCH_VERTICES, 4);
+            //TODO add generic patch vertex count to render tasks....
+        }
 		
-		glMultiDrawElementsIndirect(render_task.mesh->getPrimitiveType(),
-			render_task.mesh->getIndexType(),
+		glMultiDrawElementsIndirect(render_task->mesh->getPrimitiveType(),
+			render_task->mesh->getIndexType(),
 			(GLvoid*)0,
-			render_task.draw_cnt,
+			render_task->draw_cnt,
 			0);
 
 		//CallmeshRenderBatches::RenderBatchesData::DrawCommandData::glowl::DrawElementsCommand command_buffer;

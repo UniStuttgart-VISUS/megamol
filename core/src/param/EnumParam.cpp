@@ -19,7 +19,7 @@ using namespace megamol::core::param;
  */
 EnumParam::EnumParam(int initVal)
         : AbstractParam(), val(initVal), typepairs() {
-    // intentionally empty
+    this->InitPresentation(AbstractParamPresentation::ParamType::ENUM);
 }
 
 
@@ -134,6 +134,7 @@ EnumParam* EnumParam::SetTypePair(int value, const wchar_t *name) {
 void EnumParam::SetValue(int v, bool setDirty) {
     if (this->val != v) {
         this->val = v;
+        this->indicateChange();
         if (setDirty) this->setDirty();
     }
 }

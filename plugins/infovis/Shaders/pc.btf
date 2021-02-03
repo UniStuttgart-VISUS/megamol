@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <btf namespace="pc" type="MegaMolGLSLShader" version="1.0">
 
   <include file="bitflags" />
@@ -81,6 +81,7 @@ uniform float pc_item_defaultDepth = 0.0;
 
 uniform vec4 color = vec4(1.0, 0.0, 1.0, 1.0);
 uniform float tfColorFactor = 1.0;
+uniform int colorColumn = -1;
 uniform vec2 margin = vec2(0.0, 0.0);
 uniform float axisDistance = 0.0;
 uniform float axisHeight = 0.0;
@@ -132,6 +133,10 @@ uint pc_item_dataID(uint itemID, uint dimension)
 float pc_item_dataValue(uint dataID, uint dimension)
 {
   return (data[dataID] - dataMinimum[dimension]) / (dataMaximum[dimension] - dataMinimum[dimension]);
+}
+
+float pc_item_dataValue_unscaled(uint dataID) {
+  return data[dataID];
 }
 
 vec4 pc_item_vertex(uint itemID, uint dataID, uint dimension, uint worldSpaceAxis)

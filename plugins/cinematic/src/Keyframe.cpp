@@ -6,79 +6,82 @@
 */
 
 #include "stdafx.h"
-
 #include "Keyframe.h"
 
 
 using namespace megamol::cinematic;
 
 
-Keyframe::Keyframe() :
-    animTime(0.0f),
-    simTime(0.0f),
-    camera() {
+Keyframe::Keyframe(void)
+    : anim_time(0.0f)
+    , sim_time(0.0f)
+    , camera_state() {
 
-    this->camera.position      = glm::vec3(1.0f, 0.0f, 0.0f);
-    this->camera.lookat        = glm::vec3(0.0f, 0.0f, 0.0f);
-    this->camera.up            = glm::vec3(0.0f, 1.0f, 0.0f);
-    this->camera.apertureangle = 30.0f;
+    camera_state.half_aperture_angle_radians = glm::radians(30.0f);
 }
 
 
-Keyframe::Keyframe(float at, float st, glm::vec3 pos, glm::vec3 up, glm::vec3 lookat, float aperture) : 
-    animTime(at),
-    simTime(st),
-    camera() 
-{
-    this->camera.position       = pos;
-    this->camera.lookat         = lookat;
-    this->camera.up             = up;
-    this->camera.apertureangle  = aperture;
+Keyframe::Keyframe(float anim_time, float sim_time, camera_state_type cam_state)
+    : anim_time(anim_time)
+    , sim_time(sim_time)
+    , camera_state(cam_state) {
+
 }
 
 
-Keyframe::~Keyframe() {
-
-    // nothing to do here ...
+Keyframe::~Keyframe(void) {
 }
 
 
-void Keyframe::Serialise(vislib::Serialiser& serialiser) {
+bool Keyframe::Serialise(nlohmann::json& inout_json, size_t index) {
 
-    serialiser.Serialise((float)this->animTime, "AnimationTime");
-    serialiser.Serialise((float)this->simTime, "SimulationTime");
-    serialiser.Serialise((float)this->camera.apertureangle, "ApertureAngle");
-    serialiser.Serialise((float)this->camera.position.x, "PositionX");
-    serialiser.Serialise((float)this->camera.position.y, "PositionY");
-    serialiser.Serialise((float)this->camera.position.z, "PositionZ");
-    serialiser.Serialise((float)this->camera.lookat.x, "LookAtX");
-    serialiser.Serialise((float)this->camera.lookat.y, "LookAtY");
-    serialiser.Serialise((float)this->camera.lookat.z, "LookAtZ");
-    serialiser.Serialise((float)this->camera.up.x, "UpX");
-    serialiser.Serialise((float)this->camera.up.y, "UpY");
-    serialiser.Serialise((float)this->camera.up.z, "UpZ");
+    // Append to given json
+    inout_json["keyframes"][index]["animation_time"]                              = this->anim_time;
+    inout_json["keyframes"][index]["simulation_time"]                             = this->sim_time;
+    inout_json["keyframes"][index]["camera_state"]["centre_offset"]               = this->camera_state.centre_offset;
+    inout_json["keyframes"][index]["camera_state"]["convergence_plane"]           = this->camera_state.convergence_plane;
+    inout_json["keyframes"][index]["camera_state"]["eye"]                         = static_cast<int>(this->camera_state.eye);
+    inout_json["keyframes"][index]["camera_state"]["far_clipping_plane"]          = this->camera_state.far_clipping_plane;
+    inout_json["keyframes"][index]["camera_state"]["film_gate"]                   = this->camera_state.film_gate;
+    inout_json["keyframes"][index]["camera_state"]["gate_scaling"]                = static_cast<int>(this->camera_state.gate_scaling);
+    inout_json["keyframes"][index]["camera_state"]["half_aperture_angle_radians"] = this->camera_state.half_aperture_angle_radians;
+    inout_json["keyframes"][index]["camera_state"]["half_disparity"]              = this->camera_state.half_disparity;
+    inout_json["keyframes"][index]["camera_state"]["image_tile"]                  = this->camera_state.image_tile;
+    inout_json["keyframes"][index]["camera_state"]["near_clipping_plane"]         = this->camera_state.near_clipping_plane;
+    inout_json["keyframes"][index]["camera_state"]["orientation"]                 = this->camera_state.orientation;
+    inout_json["keyframes"][index]["camera_state"]["position"]                    = this->camera_state.position;
+    inout_json["keyframes"][index]["camera_state"]["projection_type"]             = static_cast<int>(this->camera_state.projection_type);
+    inout_json["keyframes"][index]["camera_state"]["resolution_gate"]             = this->camera_state.resolution_gate;
+
+    return true;
 }
 
 
-void Keyframe::Deserialise(vislib::Serialiser& serialiser) {
+bool Keyframe::Deserialise(const nlohmann::json& in_json) {
 
-    float f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11;
-    serialiser.Deserialise(f0, "AnimationTime");
-    serialiser.Deserialise(f1, "SimulationTime");
-    serialiser.Deserialise(f2, "ApertureAngle");
-    serialiser.Deserialise(f3, "PositionX");
-    serialiser.Deserialise(f4, "PositionY");
-    serialiser.Deserialise(f5, "PositionZ");
-    serialiser.Deserialise(f6, "LookAtX");
-    serialiser.Deserialise(f7, "LookAtY");
-    serialiser.Deserialise(f8, "LookAtZ");
-    serialiser.Deserialise(f9, "UpX");
-    serialiser.Deserialise(f10, "UpY");
-    serialiser.Deserialise(f11, "UpZ");
-    this->animTime = f0;
-    this->simTime = f1;
-    this->camera.apertureangle = f2;
-    this->camera.position = glm::vec3(f3, f4, f5);
-    this->camera.lookat = glm::vec3(f6, f7, f8);
-    this->camera.up = glm::vec3(f9, f10, f11);
+    bool valid = true;
+    valid &= megamol::core::utility::get_json_value<float>(in_json, { "animation_time" }, &this->anim_time);
+    valid &= megamol::core::utility::get_json_value<float>(in_json, { "simulation_time" }, &this->sim_time);
+    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "centre_offset" }, this->camera_state.centre_offset.data(), this->camera_state.centre_offset.size());
+    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "convergence_plane" }, &this->camera_state.convergence_plane);
+    int eye = 0;
+    valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "eye" }, &eye);
+    this->camera_state.eye = static_cast<megamol::core::thecam::Eye>(eye);
+    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "far_clipping_plane" }, &this->camera_state.far_clipping_plane);
+    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "film_gate" }, this->camera_state.film_gate.data(), this->camera_state.film_gate.size());
+    int gate_scaling = 0;
+    valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "gate_scaling" }, &gate_scaling);
+    this->camera_state.gate_scaling = static_cast<megamol::core::thecam::Gate_scaling>(gate_scaling);
+    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "half_aperture_angle_radians" }, &this->camera_state.half_aperture_angle_radians);
+    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "half_disparity" }, &this->camera_state.half_disparity);
+    valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "image_tile" }, this->camera_state.image_tile.data(), this->camera_state.image_tile.size());
+    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "near_clipping_plane" }, &this->camera_state.near_clipping_plane);
+    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "orientation" }, this->camera_state.orientation.data(), this->camera_state.orientation.size());
+    valid &= megamol::core::utility::get_json_value<float>(in_json, { "camera_state", "position" }, this->camera_state.position.data(), this->camera_state.position.size());
+    int projection_type = 0;
+    valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "projection_type" }, &projection_type);
+    this->camera_state.projection_type = static_cast<megamol::core::thecam::Projection_type>(projection_type);
+    valid &= megamol::core::utility::get_json_value<int>(in_json, { "camera_state", "resolution_gate" }, this->camera_state.resolution_gate.data(), this->camera_state.resolution_gate.size());
+
+    return valid;
 }

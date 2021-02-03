@@ -1,7 +1,17 @@
 # Change Log
-All notable changes to the "btf-peek" extension will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+### 0.0.4
+* updated deps and switched to split vscode-test
+* file name searching also done via workspace
 
-## [Unreleased]
-- Initial release
+### 0.0.3
+* force-updated minimist in deps, no idea how dangerous this is
+
+### 0.0.2
+
+* Added snippet reference support
+* provideDefinition is now asynchronous
+
+### 0.0.1
+
+* Initial release of btf-peek

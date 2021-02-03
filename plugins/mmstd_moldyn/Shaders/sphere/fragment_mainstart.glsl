@@ -24,11 +24,12 @@ void main(void) {
     //vec4 color = vec4(uplParams.xyz, 1.0);
 
     // calculate the geometry-ray-intersection
-    float d1 = -dot(camPos.xyz, ray);                       // projected length of the cam-sphere-vector onto the ray
-    float d2s = dot(camPos.xyz, camPos.xyz) - d1 * d1;      // off axis of cam-sphere-vector and ray
-    float radicand = squarRad - d2s;                        // square of difference of projected length and lambda
+    float b = -dot(camPos.xyz, ray);           // projected length of the cam-sphere-vector onto the ray
+    vec3 temp = camPos.xyz + b*ray;
+    float delta = squarRad - dot(temp, temp);  // Raytracing Gem Magic (http://www.realtimerendering.com/raytracinggems/)
+
 #ifdef CLIP
-    if (radicand < 0.0) { 
+    if (delta < 0.0) { 
 #ifdef DISCARD_COLOR_MARKER
         color = vec4(1.0, 0.0, 0.0, 1.0);       
 #else // DISCARD_COLOR_MARKER
@@ -37,12 +38,11 @@ void main(void) {
     }
 #endif // CLIP
 
-    float sqrtRadicand = sqrt(radicand);
-#ifdef BACKSIDE_ENABLED
-    lambda = d1 - sqrtRadicand * hitsideFlag;             // lambda
-#else // BACKSIDE_ENABLED
-    lambda = d1 - sqrtRadicand;                           // lambda
-#endif // BACKSIDE_ENABLED
+    float c = dot(camPos.xyz, camPos.xyz)-squarRad;
+
+    float s = b < 0.0f ? -1.0f : 1.0f;
+    float q = b + s*sqrt(delta);
+    lambda = min(c/q, q);
 
     vec3 sphereintersection = lambda * ray + camPos.xyz;    // intersection point
     vec3 normal = sphereintersection / rad;

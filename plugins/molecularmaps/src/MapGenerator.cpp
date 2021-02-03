@@ -2534,112 +2534,113 @@ bool MapGenerator::initialiseMapShader(bool shaderReload) {
 
         vislib::graphics::gl::ShaderSource vert, frag, geom;
 
-        // Create shader for map and build the programme.
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mapShader::vertex", vert)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to load vertex shader source for map shader");
-            return false;
-        }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mapShader::geometry", geom)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to load geometry shader source for map shader");
-            return false;
-        }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("mapShader::fragment", frag)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to load fragment shader source for map shader");
-            return false;
-        }
+		// Create shader for map and build the programme.
+		if (!instance()->ShaderSourceFactory().MakeShaderSource("mapShader::vertex", vert)) {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+				"Unable to load vertex shader source for map shader");
+			return false;
+		}
+		if (!instance()->ShaderSourceFactory().MakeShaderSource("mapShader::geometry", geom)) {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+				"Unable to load geometry shader source for map shader");
+			return false;
+		}
+		if (!instance()->ShaderSourceFactory().MakeShaderSource("mapShader::fragment", frag)) {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+				"Unable to load fragment shader source for map shader");
+			return false;
+		}
 
-        const char* buildState = "compile";
-        try {
-            if (!this->map_shader.Compile(
-                    vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile map shader: Unknown error\n");
-                return false;
-            }
-            buildState = "setup";
-            this->map_shader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES);
-            this->map_shader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-            this->map_shader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 6);
-            buildState = "link";
-            if (!this->map_shader.Link()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Unable to link map shader: Unknown error\n");
-                return false;
-            }
+		const char* buildState = "compile";
+		try {
+			if (!this->map_shader.Compile(vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+					"Unable to compile map shader: Unknown error\n");
+				return false;
+			}
+			buildState = "setup";
+			this->map_shader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES);
+			this->map_shader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+			this->map_shader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 6);
+			buildState = "link";
+			if (!this->map_shader.Link()) {
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+					"Unable to link map shader: Unknown error\n");
+				return false;
+			}
 
-        } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "Unable to %s map shader (@%s): %s\n",
-                buildState,
-                vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-                ce.GetMsgA());
-            return false;
+		} catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+				"Unable to %s map shader (@%s): %s\n", buildState,
+				vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+					ce.FailedAction()), ce.GetMsgA());
+			return false;
 
-        } catch (vislib::Exception e) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to %s map shader: %s\n", buildState, e.GetMsgA());
-            return false;
+		} catch (vislib::Exception e) {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+				"Unable to %s map shader: %s\n", buildState, e.GetMsgA());
+			return false;
 
-        } catch (...) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to %s map shader: Unknown exception\n", buildState);
-            return false;
-        }
+		} catch (...) {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+				"Unable to %s map shader: Unknown exception\n", buildState);
+			return false;
+		}
 
-        // Create shader for geodesic lines and build the programme.
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("geolinesShader::vertex", vert)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to load vertex shader source for geodesic lines shader");
-            return false;
-        }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("geolinesShader::geometry", geom)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to load geometry shader source for geodesic lines shader");
-            return false;
-        }
-        if (!instance()->ShaderSourceFactory().MakeShaderSource("geolinesShader::fragment", frag)) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to load vertex shader source for geodesic lines shader");
-            return false;
-        }
+		// Create shader for geodesic lines and build the programme.
+		if (!instance()->ShaderSourceFactory().MakeShaderSource("geolinesShader::vertex", vert)) {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+				"Unable to load vertex shader source for geodesic lines shader");
+			return false;
+		}
+		if (!instance()->ShaderSourceFactory().MakeShaderSource("geolinesShader::geometry", geom)) {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+				"Unable to load geometry shader source for geodesic lines shader");
+			return false;
+		}
+		if (!instance()->ShaderSourceFactory().MakeShaderSource("geolinesShader::fragment", frag)) {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+				"Unable to load vertex shader source for geodesic lines shader");
+			return false;
+		}
 
-        buildState = "compile";
-        try {
-            if (!this->geodesic_shader.Compile(
-                    vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Unable to compile geodesic lines shader: Unknown error\n");
-                return false;
-            }
-            buildState = "setup";
-            this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES);
-            this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
-            this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 4);
-            buildState = "link";
-            if (!this->geodesic_shader.Link()) {
-                vislib::sys::Log::DefaultLog.WriteMsg(
-                    vislib::sys::Log::LEVEL_ERROR, "Unable to link geodesic lines shader: Unknown error\n");
-                return false;
-            }
+		buildState = "compile";
+		try {
+			if (!this->geodesic_shader.Compile(vert.Code(), vert.Count(), geom.Code(), geom.Count(),
+				frag.Code(), frag.Count()))
+			{
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+					"Unable to compile geodesic lines shader: Unknown error\n");
+				return false;
+			}
+			buildState = "setup";
+			this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES);
+			this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
+			this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 4);
+			buildState = "link";
+			if (!this->geodesic_shader.Link())
+			{
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+					"Unable to link geodesic lines shader: Unknown error\n");
+				return false;
+			}
 
-        } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                "Unable to %s geodesic lines shader (@%s): %s\n", buildState,
-                vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-                ce.GetMsgA());
-            return false;
-        } catch (vislib::Exception e) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to %s geodesic lines shader: %s\n", buildState, e.GetMsgA());
-            return false;
-        } catch (...) {
-            vislib::sys::Log::DefaultLog.WriteMsg(
-                vislib::sys::Log::LEVEL_ERROR, "Unable to %s geodesic lines shader: Unknown exception\n", buildState);
-            return false;
-        }
-    }
+		} catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+				"Unable to %s geodesic lines shader (@%s): %s\n", buildState,
+				vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
+					ce.FailedAction()), ce.GetMsgA());
+			return false;
+		} catch (vislib::Exception e) {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+				"Unable to %s geodesic lines shader: %s\n", buildState, e.GetMsgA());
+			return false;
+		} catch (...) {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+				"Unable to %s geodesic lines shader: Unknown exception\n", buildState);
+			return false;
+		}
+	}
 
     if (!this->map_fbo.IsValid() && !shaderReload) {
         uint pxW = 1570 * 4;
@@ -2854,14 +2855,14 @@ uint MapGenerator::processAOOutput(const std::vector<float>* p_ao_vals, std::vec
 /*
  * MapGenerator::processTopologyOutput
  */
-void MapGenerator::processTopologyOutput(std::vector<Cut>& p_cuts, uint& p_tunnel_id, std::vector<bool>& p_tunnels,
-    const std::vector<VoronoiVertex>& p_voronoi_vertices, const std::vector<VoronoiEdge>& p_voronoi_edges,
-    const vislib::math::Cuboid<float>& bbox) {
-    // Create the Octree of the current faces.
-    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Creating the Voronoi Cut Octree...");
-    Octree voronoiOctree;
-    voronoiOctree.CreateOctreeRootNode(this->faces_rebuild, make_float3(bbox.Right(), bbox.Top(), bbox.Front()),
-        make_float3(bbox.Left(), bbox.Bottom(), bbox.Back()), make_float3(2.0f), this->vertices_rebuild);
+void MapGenerator::processTopologyOutput(std::vector<Cut>& p_cuts, uint& p_tunnel_id,
+		std::vector<bool>& p_tunnels, const std::vector<VoronoiVertex>& p_voronoi_vertices,
+		const std::vector<VoronoiEdge>& p_voronoi_edges, const vislib::math::Cuboid<float>& bbox) {
+	// Create the Octree of the current faces.
+	megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Creating the Voronoi Cut Octree...");
+	Octree voronoiOctree;
+	voronoiOctree.CreateOctreeRootNode(this->faces_rebuild, make_float3(bbox.Right(), bbox.Top(), bbox.Front()),
+		make_float3(bbox.Left(), bbox.Bottom(), bbox.Back()), make_float3(2.0f), this->vertices_rebuild);
 
     // Compute the AO value for every voronoi vertex. Remember the faces that where intersected
     // by the rays. Also mark the voronoi vertices that have an AO value higher than the
@@ -3680,83 +3681,79 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
         glm::vec3 eye_dir = static_cast<glm::vec4>(snapshot.view_vector);
         glm::vec3 up_dir = static_cast<glm::vec4>(snapshot.up_vector);
 
-        if (ctmd->Count() > 0 && ctmd->Objects()[0].GetVertexCount() > 0) {
-            // Create local copy of the mesh.
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Copying the mesh...");
-            if (!fillLocalMesh(ctmd->Objects()[0])) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR, "The mesh data is malformed!");
-                return false;
-            }
+		if (ctmd->Count() > 0 && ctmd->Objects()[0].GetVertexCount() > 0 ) {
+			// Create local copy of the mesh.
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Copying the mesh...");
+			if (!fillLocalMesh(ctmd->Objects()[0])) {
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "The mesh data is malformed!");
+				return false;
+			}
 
-            // Create mesh topology information.
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Creating the topology information...");
-            if (!this->cuda_kernels->CreateMeshTopology(this->faces, this->vertex_edge_offset, this->face_edge_offset,
-                    this->vertex_edge_offset_depth, this->face_edge_offset_depth)) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                    "Unable to create the Mesh Topology!"
-                    "\nPlease contact the developer to fix this.\n");
-                return false;
-            }
+			// Create mesh topology information.
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Creating the topology information...");
+			if (!this->cuda_kernels->CreateMeshTopology(this->faces, this->vertex_edge_offset,
+					this->face_edge_offset, this->vertex_edge_offset_depth, this->face_edge_offset_depth)) {
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+					"Unable to create the Mesh Topology!"
+					"\nPlease contact the developer to fix this.\n");
+				return false;
+			}
 
-            // Check if we have a genus > 0.
-            uint genus;
-            if (isGenusN(
-                    static_cast<uint>(this->vertices.size() / 3), static_cast<uint>(this->faces.size() / 3), genus)) {
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "The mesh has genus %d.", genus);
+			// Check if we have a genus > 0.
+			uint genus;
+			if (isGenusN(static_cast<uint>(this->vertices.size() / 3), static_cast<uint>(this->faces.size() / 3), genus)) {
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "The mesh has genus %d.", genus);
 
-                // Check if we want to use AO (default is false, i.e. we do not want to use AO).
-                uint tunnel_id = 0;
-                if (this->aoActive.Param<param::BoolParam>()->Value()) {
-                    this->aoCalculator.clearStoredShadowData();
-                    AmbientOcclusionCalculator::AOSettings settings;
-                    settings.angleFactor = this->aoAngleFactorParam.Param<param::FloatParam>()->Value();
-                    settings.evalFactor = this->aoEvalParam.Param<param::FloatParam>()->Value();
-                    settings.falloffFactor = this->aoFalloffParam.Param<param::FloatParam>()->Value();
-                    settings.genFac = this->aoGenFactorParam.Param<param::FloatParam>()->Value();
-                    settings.maxDist = this->aoMaxDistSample.Param<param::FloatParam>()->Value();
-                    settings.minDist = this->aoMinDistSample.Param<param::FloatParam>()->Value();
-                    settings.numSampleDirections = this->aoNumSampleDirectionsParam.Param<param::IntParam>()->Value();
-                    settings.scaling = this->aoScalingFactorParam.Param<param::FloatParam>()->Value();
-                    settings.volSizeX = this->aoVolSizeXParam.Param<param::IntParam>()->Value();
-                    settings.volSizeY = this->aoVolSizeYParam.Param<param::IntParam>()->Value();
-                    settings.volSizeZ = this->aoVolSizeZParam.Param<param::IntParam>()->Value();
-                    this->aoCalculator.initilialize(instance(), &this->vertices, &this->normals, mdc);
-                    auto result = this->aoCalculator.calculateVertexShadows(settings);
-                    if (result != nullptr) {
-                        // Process the output to identify tunnels and create the cuts.
-                        vislib::sys::Log::DefaultLog.WriteMsg(
-                            vislib::sys::Log::LEVEL_INFO, "Processing the AO output...");
-                        std::vector<Cut> cuts;
-                        std::vector<bool> tunnels = std::vector<bool>(this->faces.size() / 3, false);
-                        tunnel_id = processAOOutput(
-                            result, cuts, this->aoThresholdParam.Param<param::FloatParam>()->Value(), tunnels);
+				// Check if we want to use AO (default is false, i.e. we do not want to use AO).
+				uint tunnel_id = 0;
+				if (this->aoActive.Param<param::BoolParam>()->Value()) {
+					this->aoCalculator.clearStoredShadowData();
+					AmbientOcclusionCalculator::AOSettings settings;
+					settings.angleFactor = this->aoAngleFactorParam.Param<param::FloatParam>()->Value();
+					settings.evalFactor = this->aoEvalParam.Param<param::FloatParam>()->Value();
+					settings.falloffFactor = this->aoFalloffParam.Param<param::FloatParam>()->Value();
+					settings.genFac = this->aoGenFactorParam.Param<param::FloatParam>()->Value();
+					settings.maxDist = this->aoMaxDistSample.Param<param::FloatParam>()->Value();
+					settings.minDist = this->aoMinDistSample.Param<param::FloatParam>()->Value();
+					settings.numSampleDirections = this->aoNumSampleDirectionsParam.Param<param::IntParam>()->Value();
+					settings.scaling = this->aoScalingFactorParam.Param<param::FloatParam>()->Value();
+					settings.volSizeX = this->aoVolSizeXParam.Param<param::IntParam>()->Value();
+					settings.volSizeY = this->aoVolSizeYParam.Param<param::IntParam>()->Value();
+					settings.volSizeZ = this->aoVolSizeZParam.Param<param::IntParam>()->Value();
+					this->aoCalculator.initilialize(instance(), &this->vertices, &this->normals, mdc);
+					auto result = this->aoCalculator.calculateVertexShadows(settings);
+					if (result != nullptr) {
+						// Process the output to identify tunnels and create the cuts.
+						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Processing the AO output...");
+						std::vector<Cut> cuts;
+						std::vector<bool> tunnels = std::vector<bool>(this->faces.size() / 3, false);
+						tunnel_id = processAOOutput(result, cuts, this->aoThresholdParam.Param<param::FloatParam>()->Value(),
+							tunnels);
 
-                        // Rebuild the local copy with the new cuts and the tunnels removed.
-                        vislib::sys::Log::DefaultLog.WriteMsg(
-                            vislib::sys::Log::LEVEL_INFO, "Rebuilding the surface...");
-                        rebuildSurface(cuts, false, tunnels);
+						// Rebuild the local copy with the new cuts and the tunnels removed.
+						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Rebuilding the surface...");
+						rebuildSurface(cuts, false, tunnels);
 
-                        // Create mesh topology information after the cuts have been placed.
-                        vislib::sys::Log::DefaultLog.WriteMsg(
-                            vislib::sys::Log::LEVEL_INFO, "Creating the topology information...");
-                        if (!this->cuda_kernels->CreateMeshTopology(this->faces_rebuild, this->vertex_edge_offset,
-                                this->face_edge_offset, this->vertex_edge_offset_depth, this->face_edge_offset_depth)) {
-                            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                                "Unable to create the Mesh Topology!"
-                                "\nPlease contact the developer to fix this.\n");
-                            return false;
-                        }
+						// Create mesh topology information after the cuts have been placed.
+						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Creating the topology information...");
+						if (!this->cuda_kernels->CreateMeshTopology(this->faces_rebuild, this->vertex_edge_offset, 
+								this->face_edge_offset, this->vertex_edge_offset_depth, 
+								this->face_edge_offset_depth)) {
+							megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+								"Unable to create the Mesh Topology!"
+								"\nPlease contact the developer to fix this.\n");
+							return false;
+						}
 
-                    } else {
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                            "Unable to compute the Ambient Occlusion!"
-                            "\nPlease contact the developer to fix this.\n");
-                        return false;
-                    }
+					} else {
+						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+							"Unable to compute the Ambient Occlusion!"
+							"\nPlease contact the developer to fix this.\n");
+						return false;
+					}
 
-                } else {
-                    vislib::sys::Log::DefaultLog.WriteMsg(
-                        vislib::sys::Log::LEVEL_INFO, "Not computing the Ambient Occlusion.");
+				} else {
+					megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Not computing the Ambient Occlusion.");
 
                     // The rebuild mesh is equal to the local copy because AO was not used.
                     this->faces_rebuild = this->faces;
@@ -3778,56 +3775,52 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
                     this->vertexColors_cuts = std::vector<float>(this->vertexColors.size(), 193.0f / 255.0f);
                 }
 
-                // Only perfrom the topology based algorithm if we have a mesh of genus n after the AO.
-                auto vertex_cnt = static_cast<uint>(this->vertices_rebuild.size() / 3);
-                auto face_cnt = static_cast<uint>(this->faces_rebuild.size() / 3);
-                if (isGenusN(vertex_cnt, face_cnt, genus)) {
-                    vislib::sys::Log::DefaultLog.WriteMsg(
-                        vislib::sys::Log::LEVEL_INFO, "The mesh has genus %d.", genus);
-                    // Compute the voronoi vertices and edges.
-                    vislib::sys::Log::DefaultLog.WriteMsg(
-                        vislib::sys::Log::LEVEL_INFO, "Computing the Voronoi diagram...");
-                    std::vector<VoronoiVertex> new_voronoi_vertices;
-                    std::vector<VoronoiEdge> new_voronoi_edges;
-                    if (!this->voronoiCalc.Update(mdc, new_voronoi_vertices, new_voronoi_edges,
-                            this->probeRadiusSlot.Param<param::FloatParam>()->Value())) {
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                            "Unable to compute/update the Voronoi Diagram!"
-                            "\nPlease contact the developer to fix this.\n");
-                        return false;
-                    }
+				// Only perfrom the topology based algorithm if we have a mesh of genus n after the AO.
+				auto vertex_cnt = static_cast<uint>(this->vertices_rebuild.size() / 3);
+				auto face_cnt = static_cast<uint>(this->faces_rebuild.size() / 3);
+				if (isGenusN(vertex_cnt, face_cnt, genus)) {
+					megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "The mesh has genus %d.", genus);
+					// Compute the voronoi vertices and edges.
+					megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Computing the Voronoi diagram...");
+					std::vector<VoronoiVertex> new_voronoi_vertices;
+					std::vector<VoronoiEdge> new_voronoi_edges;
+					if (!this->voronoiCalc.Update(mdc, new_voronoi_vertices, new_voronoi_edges, 
+							this->probeRadiusSlot.Param<param::FloatParam>()->Value())) {
+						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
+							"Unable to compute/update the Voronoi Diagram!"
+							"\nPlease contact the developer to fix this.\n");
+						return false;
+					}
 
-                    // Process the output of the topology based algorithm.
-                    vislib::sys::Log::DefaultLog.WriteMsg(
-                        vislib::sys::Log::LEVEL_INFO, "Processing the topology output...");
-                    std::vector<Cut> cuts;
-                    std::vector<bool> tunnels = std::vector<bool>(this->faces_rebuild.size() / 3, false);
-                    this->processTopologyOutput(
-                        cuts, tunnel_id, tunnels, new_voronoi_vertices, new_voronoi_edges, bbox);
+					// Process the output of the topology based algorithm.
+					megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Processing the topology output...");
+					std::vector<Cut> cuts;
+					std::vector<bool> tunnels = std::vector<bool>(this->faces_rebuild.size() / 3, false);
+					this->processTopologyOutput(cuts, tunnel_id, tunnels, new_voronoi_vertices, new_voronoi_edges, bbox);
 
-                    // Rebuild the local copy with the new cuts and the tunnels removed.
-                    vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Rebuilding the surface...");
-                    rebuildSurface(cuts, true, tunnels);
+					// Rebuild the local copy with the new cuts and the tunnels removed.
+					megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Rebuilding the surface...");
+					rebuildSurface(cuts, true, tunnels);
 
-                    // Create mesh topology information after the last cuts have been placed.
-                    vislib::sys::Log::DefaultLog.WriteMsg(
-                        vislib::sys::Log::LEVEL_INFO, "Creating the topology information...");
-                    if (!this->cuda_kernels->CreateMeshTopology(this->faces_rebuild, this->vertex_edge_offset,
-                            this->face_edge_offset, this->vertex_edge_offset_depth, this->face_edge_offset_depth)) {
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                            "Unable to create the Mesh Topology!"
-                            "\nPlease contact the developer to fix this.\n");
-                        return false;
-                    }
-                }
+					// Create mesh topology information after the last cuts have been placed.
+					megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Creating the topology information...");
+					if (!this->cuda_kernels->CreateMeshTopology(this->faces_rebuild, this->vertex_edge_offset, 
+							this->face_edge_offset, this->vertex_edge_offset_depth, 
+							this->face_edge_offset_depth)) {
+						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+							"Unable to create the Mesh Topology!"
+							"\nPlease contact the developer to fix this.\n");
+						return false;
+					}
+				}
 
-            } else {
-                // The rebuild mesh is equal to the local copy.
-                vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "The mesh has genus %d.", 0);
-                this->faces_rebuild = this->faces;
-                this->normals_rebuild = this->normals;
-                this->vertexColors_rebuild = this->vertexColors;
-                this->vertices_rebuild = this->vertices;
+			} else {
+				// The rebuild mesh is equal to the local copy.
+				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "The mesh has genus %d.", 0);
+				this->faces_rebuild = this->faces;
+				this->normals_rebuild = this->normals;
+				this->vertexColors_rebuild = this->vertexColors;
+				this->vertices_rebuild = this->vertices;
 
                 // Copy the colour for the tunnel rendering.
                 auto colour_cnt = this->vertexColors_rebuild.size() / 3;
@@ -3844,16 +3837,16 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
                 this->vertexColors_voronoi = std::vector<float>(this->vertexColors.size(), 193.0f / 255.0f);
             }
 
-            // Print the genus of the mesh after the voronoi tunnel detection is finished.
-            auto vertex_cnt = static_cast<uint>(this->vertices_rebuild.size() / 3);
-            auto face_cnt = static_cast<uint>(this->faces_rebuild.size() / 3);
-            isGenusN(vertex_cnt, face_cnt, genus);
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "The mesh has genus %d.", genus);
+			// Print the genus of the mesh after the voronoi tunnel detection is finished.
+			auto vertex_cnt = static_cast<uint>(this->vertices_rebuild.size() / 3);
+			auto face_cnt = static_cast<uint>(this->faces_rebuild.size() / 3);
+			isGenusN(vertex_cnt, face_cnt, genus);
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "The mesh has genus %d.", genus);
 
-            // Create Octree.
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Creating the Octree...");
-            this->octree.CreateOctreeRootNode(this->faces_rebuild, make_float3(bbox.Right(), bbox.Top(), bbox.Front()),
-                make_float3(bbox.Left(), bbox.Bottom(), bbox.Back()), make_float3(2.0f), this->vertices_rebuild);
+			// Create Octree.
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Creating the Octree...");
+			this->octree.CreateOctreeRootNode(this->faces_rebuild, make_float3(bbox.Right(), bbox.Top(), bbox.Front()),
+				make_float3(bbox.Left(), bbox.Bottom(), bbox.Back()), make_float3(2.0f), this->vertices_rebuild);
 
             // Color the selected binding site
             if (this->bindingSiteColoring.Param<param::BoolParam>()->Value()) {
@@ -3864,46 +3857,50 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
                 vec3f bsColor;
                 utility::ColourParser::FromString(bsColorString, 3, bsColor.PeekComponents());
 
-                protein_calls::BindingSiteCall* bs = this->zeBindingSiteSlot.CallAs<protein_calls::BindingSiteCall>();
+				protein_calls::BindingSiteCall * bs = this->zeBindingSiteSlot.CallAs<protein_calls::BindingSiteCall>();
+				
+				if (bs != nullptr) {
+					(*bs)(protein_calls::BindingSiteCall::CallForGetData);
+					if (!this->colourBindingSite(bs, bsColor, mdc, radius, radiusOffset, ignoreRadius)) {
+						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+							"Unable to create the binding site sphere!"
+							"\nPlease contact the developer to fix this.\n");
+						return false;
+					}
+				}
+			}
 
-                if (bs != nullptr) {
-                    (*bs)(protein_calls::BindingSiteCall::CallForGetData);
-                    if (!this->colourBindingSite(bs, bsColor, mdc, radius, radiusOffset, ignoreRadius)) {
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                            "Unable to create the binding site sphere!"
-                            "\nPlease contact the developer to fix this.\n");
-                        return false;
-                    }
-                }
-            }
+			// Color the vertices that are shadowed by the cap.
+			if (cctmd != nullptr) {
+				protein_calls::BindingSiteCall* bs = this->zeBindingSiteSlot.CallAs<protein_calls::BindingSiteCall>();
+				if (bs != nullptr) {
+					(*bs)(protein_calls::BindingSiteCall::CallForGetData);
+					if (!this->capColouring(cctmd, cr3d, bs)) {
+						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+							"Unable to show the shadow of the cap!"
+							"\nPlease contact the developer to fix this.\n");
+						return false;
+					}
+				}
+			}
 
-            // Color the vertices that are shadowed by the cap.
-            if (cctmd != nullptr) {
-                protein_calls::BindingSiteCall* bs = this->zeBindingSiteSlot.CallAs<protein_calls::BindingSiteCall>();
-                if (bs != nullptr) {
-                    (*bs)(protein_calls::BindingSiteCall::CallForGetData);
-                    if (!this->capColouring(cctmd, &call, bs)) {
-                        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
-                            "Unable to show the shadow of the cap!"
-                            "\nPlease contact the developer to fix this.\n");
-                        return false;
-                    }
-                }
-            }
+			// Create sphere.
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Creating the sphere...");
+			if (!createSphere(cr3d->GetCameraParameters()->EyeDirection(), cr3d->GetCameraParameters()->EyeUpVector())) {
+				return false;
+			}
+			this->computed_sphere = true;
 
-            // Create sphere.
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Creating the sphere...");
-            vec3f eyevislib(glm::value_ptr(eye_dir));
-            vec3f upvislib(glm::value_ptr(up_dir));
-            if (!createSphere(eyevislib, upvislib)) {
-                return false;
-            }
-            this->computed_sphere = true;
+			// Initialise map shader
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Initialising the map shader...");
+			if (!initialiseMapShader()) return false;
+			this->computed_map = true;
 
-            // Initialise map shader
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO, "Initialising the map shader...");
-            if (!initialiseMapShader()) return false;
-            this->computed_map = true;
+		} else {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "The mesh input data is empty!");
+			return false;
+		}
+	}
 
         } else {
             vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "The mesh input data is empty!");
@@ -3951,24 +3948,35 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
             this->renderLatLonLines(numLat, numLon, 120, 120, true);
         }
 
-        if (this->store_png_font.Initialise()) {
-            // Generate the text to be rendered based on the length of the equator in Angstr�m.
-            vislib::StringA text = "Equator length: ";
-            float equator_length = 2.0f * static_cast<float>(vislib::math::PI_DOUBLE) * this->sphere_data.GetW();
-            text.Append(std::to_string(equator_length).c_str());
-            // Note:
-            // The vislib font renderer is unable to render the Angst�rm symbol. Therefore we render a
-            // simple A instead of the symbol. If at any time in the future the vislib is able to render
-            // the symbol simply change the A with the Anstr�m symbol and all is well.
-            // char32_t angstrom = U'\U000000c5';
-            // text.Append(angstrom);
-            text.Append("A");
+			// Render the text.
+			glColor3f(1.0f, 0.0f, 0.0f);
+			float font_size = static_cast<float>(this->store_png_fbo.GetWidth() - 1200) / 100.0f * 3.0f;
+			float text_len = this->store_png_font.LineWidth(font_size, text) + font_size;
+			float x = this->store_png_fbo.GetWidth() - text_len;
+			float y = this->store_png_fbo.GetHeight() - font_size;
+			this->store_png_font.DrawString(x, y, text_len, -1.0f, font_size, false, text,
+				vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
+		}
+		this->store_png_fbo.Disable();
+		this->store_png_fbo.DrawColourTexture(0, GL_LINEAR, GL_LINEAR, 0.9f);
+		this->store_png_data.SetCount(this->store_png_fbo.GetWidth() * this->store_png_fbo.GetHeight() * 3);
+		this->store_png_fbo.GetColourTexture(&this->store_png_data[0], 0, GL_RGB, GL_UNSIGNED_BYTE);
+		this->store_png_image.Image() = new vislib::graphics::BitmapImage(this->store_png_fbo.GetWidth(),
+			this->store_png_fbo.GetHeight(), 3U, vislib::graphics::BitmapImage::CHANNELTYPE_BYTE,
+			static_cast<const void*>(&this->store_png_data[0]));
+		this->store_png_image.Image()->FlipVertical();
+		if (this->store_png_image.Save(T2A(this->store_png_path.Param<param::FilePathParam>()->Value()))) {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
+				"%s: Stored molecular surface map to file: %s",
+				this->ClassName(), T2A(this->store_png_path.Param<param::FilePathParam>()->Value()));
 
-            // Disable the depth test, culling, texture and ligthing
-            glDisable(GL_DEPTH_TEST);
-            glDisable(GL_CULL_FACE);
-            glDisable(GL_TEXTURE_2D);
-            glDisable(GL_LIGHTING);
+		} else {
+			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+				"%s: Could not store molecular surface map to file: %s",
+				this->ClassName(), T2A(this->store_png_path.Param<param::FilePathParam>()->Value()));
+		}
+		delete this->store_png_image.Image();
+	}
 
             // Set the 2D orthographic projection.
             glMatrixMode(GL_PROJECTION);

@@ -67,7 +67,7 @@ public:
     typedef typename maths_type::vector_type vector_type;
     typedef typename maths_type::world_type world_type;
 
-    arcball_manipulator(const point_type& rotCentre = point_type(), const world_type radius = 1);
+    arcball_manipulator() = default;
 
     /**
      * Finalises the instance.
@@ -81,7 +81,7 @@ public:
      * @param x
      * @param y
      */
-    void on_drag(const screen_type x, const screen_type y);
+    void on_drag(const screen_type x, const screen_type y, const point_type& rotCentre);
 
     /**
      * Report that dragging begun (mouse for dragging button is down)
@@ -90,84 +90,15 @@ public:
      * @param x
      * @param y
      */
-    void on_drag_start(const screen_type x, const screen_type y);
+    void setActive(const screen_type x, const screen_type y);
 
     /**
      * Report that dragging ended (mouse button was released).
      */
-    inline void on_drag_stop(void) { this->end_manipulation(); }
-
-    /**
-     * Answer the radius of the arcball.
-     *
-     * @return The radius of the arcball.
-     */
-    inline world_type radius(void) const { return this->ballRadius; }
-
-    /**
-     * Gets the centre of rotation (usually the centre of the object to
-     * rotate the camera around).
-     *
-     * @returns The centre of rotation.
-     */
-    inline const point_type& rotation_centre(void) const { return this->rotCentre; }
-
-    /**
-     * Changes the radius of the arcball.
-     *
-     * This method must not be called while the arcball is begin dragged.
-     *
-     * @param radius The new radius of the arcball.
-     */
-    inline void set_radius(const world_type radius) {
-        THE_ASSERT(!this->manipulating());
-        this->ballRadius = radius;
-    }
-
-    /**
-     * Changes the centre of rotation.
-     *
-     * This method must not be called while the arcball is begin dragged.
-     *
-     * @param rotCentre The new centre of rotation.
-     */
-    inline void set_rotation_centre(const point_type& rotCentre) {
-        THE_ASSERT(!this->manipulating());
-        this->rotCentre = rotCentre;
-    }
+    inline void setInactive(void) { this->end_manipulation(); }
 
 private:
-    /**
-     * Convert screen point to a point on the arcball.
-     *
-     * @param sx The absicssa of the current mouse position.
-     * @param sy The ordinate of the current mouse position.
-     *
-     * @return The normalised vector from the centre of the arcball to the
-     *         point on the arcball represented by the given screen
-     *         coordinates.
-     */
-    vector_type mapToSphere(const screen_type sx, const screen_type sy) const;
-
-    /** The radius of the arcball .*/
-    world_type ballRadius;
-
-    /** The latest point on the arcball. */
-    vector_type currentVector;
-
-    /** The centre of rotation (target point of the camera). */
-    point_type rotCentre;
-
-    vector_type startPos;
-
-    /** The camera rotation quaterion when the drag interaction started. */
-    quaternion_type invStartRot;
-
-    quaternion_type startRot;
-
-    /** The point on the arcball when the drag interaction started. */
-    vector_type startVector;
-
+    
     /** The x-coordinate of the last clicked screen position */
     screen_type lastSx;
 

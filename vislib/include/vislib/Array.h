@@ -744,17 +744,16 @@ namespace vislib {
     void Array<T, L, C>::Erase(const SIZE_T idx) {
         this->Lock();
         if (idx < this->count) {
-            /* Destruct element to erase. */
-            C::Dtor(this->elements + idx);
-
             /* Move elements forward. */
             for (SIZE_T i = idx + 1; i < this->count; i++) {
                 this->elements[i - 1] = this->elements[i];
             }
             this->count--;
 
-            /* Element after valid range must now be reconstructed. */
-            C::Ctor(this->elements + this->count);
+            /* Recreate last element with default constructor to overwrite old
+             * object. Assume that default constructed object is smaller to
+             * save memory in case the old object was big. */
+            this->elements[this->count] = T();
         }
         this->Unlock();
     }

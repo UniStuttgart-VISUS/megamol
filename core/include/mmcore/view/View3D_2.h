@@ -1,7 +1,7 @@
 /*
  * View3D_2.h
  *
- * Copyright (C) 2018 by VISUS (Universitaet Stuttgart).
+ * Copyright (C) 2018, 2020 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
@@ -183,7 +183,7 @@ protected:
      * Adapts camera values set by the user if necessary
      *
      * @param cam The camera the newly set parameters will be stored in
-	 * @return True if a camera value had to be adapted, false otherwise
+     * @return True if a camera value had to be adapted, false otherwise
      */
     bool adaptCameraValues(core::view::Camera_2& cam);
 
@@ -265,7 +265,7 @@ protected:
     /** The camera */
     Camera_2 cam;
 
-    /** The arcball manipulator for the camera */
+    /** The orbital arcball manipulator for the camera */
     arcball_type arcballManipulator;
 
     /** The translation manipulator for the camera */
@@ -273,6 +273,12 @@ protected:
 
     /** The rotation manipulator for the camera */
     rotate_type rotateManipulator;
+
+    /** The orbital manipulator turntable for the camera */
+    turntable_type turntableManipulator;
+
+    /** The manipulator for changing the orbital altitude */
+    orbit_altitude_type orbitAltitudeManipulator;
 
     /** the 2d cursor of this view */
     vislib::graphics::Cursor2D cursor2d;
@@ -333,6 +339,8 @@ protected:
     /** The angle rotate step in degrees */
     param::ParamSlot viewKeyAngleStepSlot;
 
+    param::ParamSlot viewKeyFixToWorldUpSlot;
+
     /** sensitivity for mouse rotation in WASD mode */
     param::ParamSlot mouseSensitivitySlot;
 
@@ -360,9 +368,18 @@ protected:
     param::ParamSlot cameraEyeParam;
     param::ParamSlot cameraGateScalingParam;
     param::ParamSlot cameraFilmGateParam;
+    param::ParamSlot cameraResolutionXParam;
+    param::ParamSlot cameraResolutionYParam;
     param::ParamSlot cameraCenterOffsetParam;
-    param::ParamSlot cameraHalfApertureRadiansParam;
+    param::ParamSlot cameraHalfApertureDegreesParam;
     param::ParamSlot cameraHalfDisparityParam;
+
+    /** Camara override parameters */
+    param::ParamSlot cameraOvrUpParam;
+    param::ParamSlot cameraOvrLookatParam;
+    param::ParamSlot cameraOvrParam;
+
+    bool cameraOvrCallback(param::ParamSlot& p);
 
     /** The mouse x coordinate */
     float mouseX;
@@ -391,16 +408,18 @@ protected:
     /** Flag determining whether the arcball is the default steering method of the camera */
     bool arcballDefault;
 
-    /** Distance from the camera to the arcball center */
-    float arcballCenterDistance;
+    /** Center of rotation for orbital manipulators */
+    glm::vec3 rotCenter;
 
-	/** Value storing whether there have been read parameter values that came from outside */
-	bool valuesFromOutside;
+    /** Value storing whether there have been read parameter values that came from outside */
+    bool valuesFromOutside;
 
     /**  */
     std::chrono::time_point<std::chrono::high_resolution_clock> lastFrameTime;
 
     std::chrono::microseconds lastFrameDuration;
+
+    bool cameraControlOverrideActive;
 };
 
 } // namespace view

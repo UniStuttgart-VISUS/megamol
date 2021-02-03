@@ -34,12 +34,18 @@ OSPRayThinGlassMaterial::~OSPRayThinGlassMaterial(void) {
 void OSPRayThinGlassMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::THINGLASS;
 
-    auto transmission = this->thinglassTransmission.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-    materialContainer.thinglassTransmission.assign(transmission, transmission + 3);
+    thinglassMaterial tgm;
 
-    materialContainer.thinglassEta = this->thinglassEta.Param<core::param::FloatParam>()->Value();
+    auto transmission = this->thinglassTransmission.Param<core::param::Vector3fParam>();
+    tgm.thinglassTransmission = transmission->getArray();
 
-    materialContainer.thinglassThickness = this->thinglassThickness.Param<core::param::FloatParam>()->Value();
+    tgm.thinglassEta =
+        this->thinglassEta.Param<core::param::FloatParam>()->Value();
+
+    tgm.thinglassThickness =
+        this->thinglassThickness.Param<core::param::FloatParam>()->Value();
+
+    materialContainer.material = tgm;
 }
 
 bool OSPRayThinGlassMaterial::InterfaceIsDirty() {

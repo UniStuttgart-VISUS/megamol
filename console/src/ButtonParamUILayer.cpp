@@ -15,8 +15,7 @@ using namespace megamol;
 using namespace megamol::console;
 
 ButtonParamUILayer::ButtonParamUILayer(void * coreHandle, void * viewHandle)
-        : hCore(coreHandle), hView(viewHandle), last_update(), hotkeys(), maskingLayer(nullptr){
-    last_update = std::chrono::system_clock::now() - std::chrono::hours(1);
+    : hCore(coreHandle), hView(viewHandle), last_param_hash(0), hotkeys(), maskingLayer(nullptr) {
 }
 
 ButtonParamUILayer::~ButtonParamUILayer() {
@@ -31,10 +30,10 @@ bool ButtonParamUILayer::Enabled() {
 
 bool ButtonParamUILayer::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
 
-    if ((std::chrono::system_clock::now() - last_update) > std::chrono::seconds(1)) {
-        // update list periodically
+	auto param_hash = ::mmcGetGlobalParameterHash(hCore);
+    if (param_hash != last_param_hash) {
         updateHotkeyList();
-        last_update = std::chrono::system_clock::now();
+        last_param_hash = param_hash;
     }
 
     if (action == core::view::KeyAction::RELEASE) return false;

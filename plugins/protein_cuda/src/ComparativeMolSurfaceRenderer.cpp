@@ -36,11 +36,12 @@
 #include <cmath>
 #include <sstream>
 
-#include "vislib/sys/ASCIIFileBuffer.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 
 using namespace megamol;
 using namespace megamol::protein_cuda;
 using namespace megamol::protein_calls;
+using namespace megamol::core::utility::log;
 
 // 99 75 0
 Vec3f dark_brown = Vec3f(0.388235294f, 0.294117647f, 0.0f);
@@ -631,7 +632,6 @@ ComparativeMolSurfaceRenderer::~ComparativeMolSurfaceRenderer(void) {
 bool ComparativeMolSurfaceRenderer::computeDensityMap(const float *atomPos,
         const MolecularDataCall *mol, CUDAQuickSurf *cqs) {
 
-    using namespace vislib::sys;
     using namespace vislib::math;
 
     float gridXAxisLen, gridYAxisLen, gridZAxisLen;
@@ -782,7 +782,6 @@ bool ComparativeMolSurfaceRenderer::computeDensityMap(const float *atomPos,
  * ComparativeMolSurfaceRenderer::create
  */
 bool ComparativeMolSurfaceRenderer::create(void) {
-    using namespace vislib::sys;
     using namespace vislib::graphics::gl;
 
     // Create quicksurf objects
@@ -940,7 +939,6 @@ bool ComparativeMolSurfaceRenderer::create(void) {
  */
 bool ComparativeMolSurfaceRenderer::fitMoleculeRMS(MolecularDataCall *mol1,
         MolecularDataCall *mol2) {
-    using namespace vislib::sys;
 
     // Extract positions to be fitted
     vislib::Array<float> atomWeights;
@@ -1878,7 +1876,6 @@ void ComparativeMolSurfaceRenderer::release(void) {
  *  ComparativeMolSurfaceRenderer::Render
  */
 bool ComparativeMolSurfaceRenderer::Render(core::Call& call) {
-    using namespace vislib::sys;
     using namespace vislib::math;
 
 #ifdef USE_TIMER

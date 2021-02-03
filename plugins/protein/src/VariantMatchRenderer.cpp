@@ -20,7 +20,7 @@
 #include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/graphics/gl/OutlineFont.h"
 #include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 
 using namespace megamol;
 using namespace megamol::protein;
@@ -89,12 +89,12 @@ bool VariantMatchRenderer::create(void) {
 
     // Try to load the ssao shader
     if(!ci->ShaderSourceFactory().MakeShaderSource("2dplot::variantMatrix::vertex", vertSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load variant matrix vertex shader source", this->ClassName() );
         return false;
     }
     if(!ci->ShaderSourceFactory().MakeShaderSource("2dplot::variantMatrix::fragment", fragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load variant matrix fragment shader source", this->ClassName() );
         return false;
     }
@@ -103,19 +103,19 @@ bool VariantMatchRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
     catch(vislib::Exception &e){
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }
 
     // Try to load the ssao shader
     if(!ci->ShaderSourceFactory().MakeShaderSource("2dplot::variantMatrix::vertexCM", vertSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load variant matrix vertex shader source", this->ClassName() );
         return false;
     }
     if(!ci->ShaderSourceFactory().MakeShaderSource("2dplot::variantMatrix::fragmentCM", fragSrc)) {
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to load variant matrix fragment shader source", this->ClassName() );
         return false;
     }
@@ -124,7 +124,7 @@ bool VariantMatchRenderer::create(void) {
             throw vislib::Exception("Generic creation failure", __FILE__, __LINE__);
     }
     catch(vislib::Exception &e){
-        vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "%s: Unable to create shader: %s\n", this->ClassName(), e.GetMsgA());
         return false;
     }

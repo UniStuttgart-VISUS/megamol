@@ -8,8 +8,6 @@
 #ifndef MEGAMOL_CINEMATIC_TRACKINGSHOTRENDERER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_TRACKINGSHOTRENDERER_H_INCLUDED
 
-#include "Cinematic/Cinematic.h"
-
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/utility/SDFFont.h"
@@ -31,18 +29,15 @@
 #include "vislib/Array.h"
 #include "vislib/memutils.h"
 #include "vislib/StringSerialiser.h"
-#include "vislib/sys/Log.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/FastFile.h"
 #include "vislib/sys/CriticalSection.h"
-#include "vislib/sys/Thread.h"
-#include "vislib/graphics/gl/CameraOpenGL.h"
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/CameraParameters.h"
-#include "vislib/graphics/CameraParamsStore.h"
+#include "mmcore/utility/sys/Thread.h"
 
 #include "CallKeyframeKeeper.h"
 #include "ReplacementRenderer.h"
-#include "KeyframeManipulator.h"
+#include "KeyframeManipulators.h"
+#include "CinematicUtils.h"
 
 
 namespace megamol {
@@ -133,12 +128,12 @@ namespace cinematic {
         /** 
         * The mouse button pressed/released callback. 
         */
-        virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) override;
+        virtual bool OnMouseButton(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action, megamol::core::view::Modifiers mods) final override;
 
         /** 
         * The mouse movement callback. 
         */
-        virtual bool OnMouseMove(double x, double y) override;
+        virtual bool OnMouseMove(double x, double y) final override;
 
 	private:
 
@@ -146,49 +141,28 @@ namespace cinematic {
         * variables
         **********************************************************************/
 
-        // font rendering
-        megamol::core::utility::SDFFont theFont;
-
-        unsigned int                     interpolSteps;
-        unsigned int                     toggleManipulator;
-        bool                             manipOutsideModel;
-        bool                             showHelpText;
-
-        KeyframeManipulator              manipulator;
-        bool                             manipulatorGrabbed;
-
-        vislib::graphics::gl::FramebufferObject fbo;
-
-        /** The render to texture shader */
-        vislib::graphics::gl::GLSLShader textureShader;
-
-        bool isSelecting;
-
-        /*** INPUT ***/
-
-        /** The mouse coordinates */
-        float                            mouseX;
-        float                            mouseY;
+        KeyframeManipulators    manipulators;
+        CinematicUtils          utils;
+        float                   mouseX;
+        float                   mouseY;
+        GLuint                  texture;
+        bool                    manipulatorGrabbed;
+        unsigned int            interpolSteps;
+        bool                    showHelpText;
+        float                   lineWidth;
 
         /**********************************************************************
-        * callback stuff
+        * callbacks
         **********************************************************************/
 
-		/** The renderer caller slot */
-		core::CallerSlot rendererCallerSlot;
-
-		/** The keyframe keeper caller slot */
 		core::CallerSlot keyframeKeeperSlot;
 
         /**********************************************************************
         * parameters
         **********************************************************************/
 			
-        /** Amount of interpolation steps between keyframes */
-        core::param::ParamSlot stepsParam;
-        core::param::ParamSlot toggleManipulateParam;
+        core::param::ParamSlot stepsParam; // Amount of interpolation steps between keyframes
         core::param::ParamSlot toggleHelpTextParam;
-        core::param::ParamSlot toggleManipOusideBboxParam;
 
 	};
 

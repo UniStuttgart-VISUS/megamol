@@ -102,7 +102,7 @@ void Stride::GetChains(MolecularDataCall *mol) {
     int ChainCnt;
     int cntCha, cntRes, cntAtm, idx, cnt, chain;
     int atomCount, firstAtom;
-    register int i;
+    int i;
     RESIDUE *r = 0;
     CHAIN *c = 0;
     char PdbIdent[5];
@@ -194,7 +194,7 @@ void Stride::GetChains(MolecularDataCall *mol) {
 bool Stride::ComputeSecondaryStructure() {
     int Cn, ValidChain = 0;
     float **PhiPsiMapHelix, **PhiPsiMapSheet;
-    register int i;
+    int i;
 
     // check if at least one chain is valid
     for( Cn = 0; Cn < ProteinChainCnt; ++Cn )
@@ -255,7 +255,7 @@ bool Stride::ComputeSecondaryStructure() {
 
 bool Stride::WriteToInterface( MolecularDataCall *mol) {
     if( mol ) {
-        register int Cn, i;
+        int Cn, i;
         char type;
         int firstRes;
         int resCnt;
@@ -466,7 +466,7 @@ int Stride::CheckChain( CHAIN *Chain, COMMAND *Cmd) {
 }
 
 void Stride::BackboneAngles( CHAIN **Chain, int NChain ) {
-    register int Res, Cn;
+    int Res, Cn;
 
     for ( Cn=0; Cn<NChain; Cn++ )
     {
@@ -480,7 +480,7 @@ void Stride::BackboneAngles( CHAIN **Chain, int NChain ) {
 }
 
 float** Stride::DefaultHelixMap( COMMAND *Cmd) {
-    register int i;
+    int i;
     
     float **Map;
     static float Data[DEFNUMPIXEL][DEFNUMPIXEL] = {{
@@ -552,7 +552,7 @@ float** Stride::DefaultHelixMap( COMMAND *Cmd) {
 }
 
 float** Stride::DefaultSheetMap( COMMAND *Cmd) {
-    register int i;
+    int i;
     
     float **Map;
     static float Data[DEFNUMPIXEL][DEFNUMPIXEL] = {{
@@ -929,7 +929,7 @@ int Stride::NoDoubleHBond( HBOND **HBond, int NHBond ) {
 }
 
 void Stride::DiscrPhiPsi( CHAIN **Chain, int NChain, COMMAND *Cmd ) {
-    register int i, Res, Cn;
+    int i, Res, Cn;
     RESIDUE *r;
 
     for ( Cn=0; Cn<NChain; Cn++ )
@@ -1080,7 +1080,7 @@ void Stride::Sheet( CHAIN **Chain, int Cn1, int Cn2, HBOND **HBond, COMMAND *Cmd
     RESIDUE *Res1, *Res3, *Res2, *Res4, *ResA, *ResB, *Res1m1, *Res3p1;
     int R1, R3, R2, R4, RA, RB, PatCntN = 0, PatCntP = 0, Beg;
     char *AntiPar1, *Par1, *AntiPar2, *Par2;
-    register int i;
+    int i;
 
     PatN = ( PATTERN ** ) ckalloc ( MAXHYDRBOND*sizeof ( PATTERN * ) );
     PatP = ( PATTERN ** ) ckalloc ( MAXHYDRBOND*sizeof ( PATTERN * ) );
@@ -1245,7 +1245,7 @@ void Stride::Sheet( CHAIN **Chain, int Cn1, int Cn2, HBOND **HBond, COMMAND *Cmd
 
 void Stride::BetaTurn( CHAIN **Chain, int Cn )
 {
-    register int i;
+    int i;
     RESIDUE **r;
     TURN *t;
     int CA1, CA4, Tn;
@@ -1319,7 +1319,7 @@ void Stride::BetaTurn( CHAIN **Chain, int Cn )
 
 void Stride::GammaTurn( CHAIN **Chain, int Cn, HBOND **HBond )
 {
-    register int i;
+    int i;
     RESIDUE **r;
     TURN *t;
     int Tn;
@@ -1394,7 +1394,7 @@ int Stride::TurnCondition( float Phi2,float Phi2S,float Psi2,float Psi2S,
 
 int Stride::SSBond( CHAIN **Chain, int NChain )
 {
-    register int Res1, Res2, Cn1, Cn2;
+    int Res1, Res2, Cn1, Cn2;
     int S1, S2, Bn, Cnt=0;
 
     for ( Cn1=0; Cn1<NChain; Cn1++ )
@@ -1433,7 +1433,7 @@ int Stride::SSBond( CHAIN **Chain, int NChain )
 
 Stride::BOOLEAN Stride::ExistSSBond( CHAIN **Chain,int NChain, int Cn1,int Cn2,char *Res1,char *Res2 )
 {
-    register int i;
+    int i;
     SSBOND *ptr;
 
     for ( i=0; i<Chain[0]->NBond; i++ )
@@ -1474,7 +1474,7 @@ void Stride::Report( CHAIN **Chain, int NChain, HBOND **HBond, COMMAND *Cmd )
 
 void Stride::ReportSSBonds( CHAIN **Chain, FILE *Out )
 {
-    register int i;
+    int i;
     BUFFER Bf, Tmp;
     SSBOND *s;
 
@@ -1499,7 +1499,7 @@ void Stride::ReportSSBonds( CHAIN **Chain, FILE *Out )
 
 void Stride::ReportTurnTypes( CHAIN **Chain, int NChain, FILE *Out, COMMAND *Cmd )
 {
-    register int Cn, Tn;
+    int Cn, Tn;
     BUFFER Bf, Tmp;
     TURN *t;
 
@@ -1535,7 +1535,7 @@ void Stride::ReportTurnTypes( CHAIN **Chain, int NChain, FILE *Out, COMMAND *Cmd
 
 void Stride::ReportShort( CHAIN **Chain, int NChain, FILE *Out, COMMAND *Cmd )
 {
-    register int Cn, i;
+    int Cn, i;
     BUFFER Bf, Tmp;
     char *Asn;
     const char *StrTypes = "HGIE";
@@ -1602,7 +1602,7 @@ void Stride::Glue( const char *String1, const char *String2, FILE *Out )
 
 void* Stride::ckalloc(size_t bytes)
 {
-  register void *ret;
+  void *ret;
   
   if( !(ret = malloc(bytes)) ) die("Out of  memory\n");
 
@@ -1887,7 +1887,7 @@ float Stride::Torsion( float *Coord1, float *Coord2, float *Coord3, float *Coord
 
 float Stride::Dist( float *Coord1, float *Coord2 )
 {
-    register int i;
+    int i;
     float Dist=0;
 
     for ( i=0; i<3; i++ )
@@ -2303,7 +2303,7 @@ float Stride::Ang( float *Coord1, float *Coord2, float *Coord3 )
 
 int Stride::FindChain( CHAIN **Chain, int NChain, char ChainId)
 {
-  register int i;
+  int i;
 
   for( i=0; i<NChain; i++ )
     if( Chain[i]->Id == ChainId )
@@ -2314,7 +2314,7 @@ int Stride::FindChain( CHAIN **Chain, int NChain, char ChainId)
 
 int Stride::FindPolInt( HBOND **HBond, RESIDUE *Res1, RESIDUE *Res2 )
 {
-    register int i, j, hb;
+    int i, j, hb;
     INVOLVED *p1, *p2;
 
     p1 = Res1->Inv;
@@ -2336,7 +2336,7 @@ int Stride::FindPolInt( HBOND **HBond, RESIDUE *Res1, RESIDUE *Res2 )
 
 int Stride::FindBnd( HBOND **HBond, RESIDUE *Res1, RESIDUE *Res2 )
 {
-    register int i, j, hb;
+    int i, j, hb;
     INVOLVED *p1, *p2;
 
     p1 = Res1->Inv;
@@ -2418,7 +2418,7 @@ int Stride::Link( HBOND **HBond, CHAIN **Chain, int Cn1, int Cn2, RESIDUE *Res1_
 
 void Stride::FilterAntiPar( PATTERN **Pat, int NPat )
 {
-    register int i, j;
+    int i, j;
     int I1A, I1D, I2A, I2D, J1A, J1D, J2A, J2D;
     char I1ACn, I1DCn, I2ACn, I2DCn, J1ACn, J1DCn, J2ACn, J2DCn;
 
@@ -2459,7 +2459,7 @@ void Stride::FilterAntiPar( PATTERN **Pat, int NPat )
 
 void Stride::FilterPar( PATTERN **Pat, int NPat )
 {
-    register int i, j;
+    int i, j;
     int I1A, I1D, I2A, I2D, J1A, J1D, J2A, J2D;
     char I1ACn, I1DCn, I2ACn, I2DCn, J1ACn, J1DCn, J2ACn, J2DCn;
 
@@ -2498,7 +2498,7 @@ void Stride::FilterPar( PATTERN **Pat, int NPat )
 
 void Stride::MergePatternsAntiPar( PATTERN **Pat, int NPat )
 {
-    register int i, j;
+    int i, j;
     int DB, DW, MinDB1, MinDB2, MinDW1, MinDW2, Min, Lnk1A, Lnk1D;
     int I1A, I1D, I2A, I2D, J1A, J1D, J2A, J2D;
     char I1ACn, I1DCn, I2ACn, I2DCn, J1ACn, J1DCn, J2ACn, J2DCn;
@@ -2615,7 +2615,7 @@ void Stride::MergePatternsAntiPar( PATTERN **Pat, int NPat )
 
 void Stride::MergePatternsPar( PATTERN **Pat, int NPat )
 {
-    register int i, j;
+    int i, j;
     int DB, DW, MinDB1, MinDB2, MinDW1, MinDW2, Min, Lnk1A, Lnk1D;
     int I1A, I1D, I2A, I2D, J1A, J1D, J2A, J2D;
     char I1ACn, I1DCn, I2ACn, I2DCn, J1ACn, J1DCn, J2ACn, J2DCn;
@@ -2961,7 +2961,7 @@ int Stride::Near( int Res1, int Res2, int Res3, int Res4, int Res5, int Res6, in
 void Stride::FillAsnAntiPar ( char *Asn1, char *Asn2, CHAIN **Chain, int Cn1, int Cn2,
                       PATTERN **Pat, int NPat, COMMAND *Cmd )
 {
-    register int i, j;
+    int i, j;
     int Beg1, Beg2, End1, End2;
     int B1D, B1A, B2D, B2A, E1D, E1A, E2D, E2A;
     char B1DCn, B1ACn, B2DCn, B2ACn, E1DCn, E1ACn, E2DCn, E2ACn, Beg1Cn, Beg2Cn;
@@ -3093,7 +3093,7 @@ void Stride::FillAsnAntiPar ( char *Asn1, char *Asn2, CHAIN **Chain, int Cn1, in
 void Stride::FillAsnPar( char *Asn1, char *Asn2, CHAIN **Chain, int Cn1, int Cn2,
                   PATTERN **Pat, int NPat, COMMAND *Cmd )
 {
-    register int i, j;
+    int i, j;
     int Beg1, Beg2, End1, End2;
     int B1D, B1A, B2D, B2A, E1D, E1A, E2D, E2A;
     char B1DCn, B1ACn, B2DCn, B2ACn, E1DCn, E1ACn, E2DCn, E2ACn, Beg1Cn, Beg2Cn;
@@ -3225,7 +3225,7 @@ void Stride::Alias( int *D1,int *A1,int *D2,int *A2,char *D1Cn,char *A1Cn,char *
 
 void Stride::Bridge( char *Asn1, char *Asn2, CHAIN **Chain, int Cn1, int Cn2, PATTERN **Pat, int NPat )
 {
-    register int i;
+    int i;
     int B_Res;
 
     for ( i=0; i<NPat; i++ )
@@ -3418,7 +3418,7 @@ const char* Stride::Translate( char Code )
 
 Stride::BOOLEAN Stride::ExistsSecStr( CHAIN **Chain, int NChain )
 {
-    register int i, Cn;
+    int i, Cn;
 
     for ( Cn=0; Cn<NChain; Cn++ )
         for ( i=0; i<Chain[Cn]->NRes; i++ )
@@ -3430,7 +3430,7 @@ Stride::BOOLEAN Stride::ExistsSecStr( CHAIN **Chain, int NChain )
 
 void Stride::ExtractAsn( CHAIN **Chain, int Cn, char *Asn )
 {
-    register int Res;
+    int Res;
 
     for ( Res=0; Res<Chain[Cn]->NRes; Res++ )
         Asn[Res] = Chain[Cn]->Rsd[Res]->Prop->Asn;
@@ -3438,7 +3438,7 @@ void Stride::ExtractAsn( CHAIN **Chain, int Cn, char *Asn )
 
 int Stride::Boundaries( char *Asn, int L, char SecondStr, int ( *Bound ) [2] )
 {
-    register int Res;
+    int Res;
     int NStr = 0, Flag = 0;
 
     for ( Res=0; Res<L; Res++ )
@@ -3591,7 +3591,7 @@ int Stride::MakeEnds( int *Beg1, int ResBeg1, int NeiBeg1, char *Beg1Cn, char Re
                              int ResBeg2, int NeiBeg2, char *Beg2Cn, char ResBeg2Cn, int *End2,
                              int ResEnd2, int NeiEnd2, char ResEnd2Cn, PATTERN **Pat, int NPat )
 {
-    register int i;
+    int i;
     int Flag1 = 0, Flag2 = 0;
 
 

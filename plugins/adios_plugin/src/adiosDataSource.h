@@ -7,7 +7,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AnimDataModule.h"
 #include "vislib/math/Cuboid.h"
-#include "CallADIOSData.h"
+#include "adios_plugin/CallADIOSData.h"
 #include "vislib/String.h"
 #ifdef WITH_MPI
 #    include <mpi.h>
@@ -75,7 +75,6 @@ private:
 
 #ifdef WITH_MPI
     MPI_Comm mpi_comm_ = MPI_COMM_NULL;
-    bool useMpi = false;
     int mpiRank = -1, mpiSize = -1;
     bool MpiInitialized = false;
 #endif
@@ -90,24 +89,25 @@ private:
     //std::vector<UINT64> frameIdx;
 
     /** Data file load id counter */
-    size_t data_hash;
+    size_t data_hash = 0;
 	bool dataHashChanged = false;
+    bool inquireChanged = false;
 
     /** The file name */
-    core::param::ParamSlot filename;
+    core::param::ParamSlot filenameSlot;
 
-    int step = 0;
-    int particleCount = 0;
-    size_t frameCount;
-    size_t loadedFrameID;
-
+    size_t frameCount = 0;
+    long long int loadedFrameID = -1;
 
     // ADIOS Stuff
-    adios2::ADIOS adiosInst;
+    std::shared_ptr<adios2::ADIOS> adiosInst;
     std::shared_ptr<adios2::IO> io;
-    adios2::Engine reader;
+    std::shared_ptr<adios2::Engine> reader;
     std::map<std::string, adios2::Params> variables;
     adiosDataMap dataMap;
+
+    std::vector<std::size_t> timesteps;
+    std::vector<std::string> availVars;
 };
 } /* end namespace adios */
 } /* end namespace megamol */
