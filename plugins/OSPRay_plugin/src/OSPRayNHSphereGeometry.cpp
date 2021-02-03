@@ -113,14 +113,14 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
     this->structureContainer.geometryType = geometryTypeEnum::NHSPHERES;
-    this->structureContainer.raw = parts.GetVertexData();
-    this->structureContainer.vertexLength = vertexLength;
-    this->structureContainer.vertexStride = vstride;
-    this->structureContainer.colorLength = colorLength;
-    this->structureContainer.colorStride = parts.GetColourDataStride();
-    this->structureContainer.partCount = partCount;
-    this->structureContainer.globalRadius = globalRadius;
-    this->structureContainer.mmpldColor = parts.GetColourDataType();
+    sphereStructure ss;
+    ss.raw = parts.GetVertexData();
+    ss.vertexLength = vertexLength;
+    ss.dataStride = vstride;
+    ss.colorLength = colorLength;
+    ss.partCount = partCount;
+    ss.globalRadius = globalRadius;
+    ss.mmpldColor = parts.GetColourDataType();
 
     return true;
 }

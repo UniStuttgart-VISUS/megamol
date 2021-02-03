@@ -90,40 +90,40 @@ private:
     virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
 
     /** The call for data */
-    core::CallerSlot getStructureSlot;
+    core::CallerSlot _getStructureSlot;
 
 
     /** The texture shader */
-    vislib::graphics::gl::GLSLShader osprayShader;
+    vislib::graphics::gl::GLSLShader _osprayShader;
 
     // Interface dirty flag
     bool InterfaceIsDirty();
     void InterfaceResetDirty();
 
     // rendering conditions
-    bool data_has_changed;
-    bool material_has_changed;
-    bool light_has_changed;
-    bool cam_has_changed;
-    bool transformation_has_changed;
+    bool _data_has_changed;
+    bool _material_has_changed;
+    bool _light_has_changed;
+    bool _cam_has_changed;
+    bool _transformation_has_changed;
 
-	core::view::Camera_2 cam;
-    float time;
-    size_t frameID;
+    core::view::Camera_2 _cam;
+    float _time;
+    size_t _frameID;
 
-    osp::vec2i imgSize;
+    std::array<int,2> _imgSize;
 
     // OSPRay textures
-    const uint32_t* fb;
-    std::vector<float> db;
+    uint32_t* _fb;
+    std::vector<float> _db;
     void getOpenGLDepthFromOSPPerspective(float* db);
 
-    bool renderer_has_changed;
+    bool _renderer_has_changed;
 
     struct {
         unsigned long long int count;
         unsigned long long int amount;
-    } accum_time;
+    } _accum_time;
 };
 
 } /*end namespace ospray*/

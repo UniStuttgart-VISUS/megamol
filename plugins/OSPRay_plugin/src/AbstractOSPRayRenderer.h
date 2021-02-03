@@ -13,13 +13,84 @@
 #include "mmcore/view/CallRender3D_2.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 #include "mmcore/view/light/CallLight.h"
-#include "ospray/ospray.h"
+#include "ospray/ospray_cpp.h"
+#include "ospray/ospray_cpp/ext/rkcommon.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
-
 namespace megamol {
 namespace ospray {
+
+
+template<typename tPair>
+    struct second_t {
+        typename tPair::second_type operator()(const tPair& p) const {
+            return p.second;
+        }
+    };
+
+template<typename tMap>
+    second_t<typename tMap::value_type> second(const tMap& m) {
+        return second_t<typename tMap::value_type>();
+    }
+
+
+inline rkcommon::math::vec2f convertToVec2f(std::array<float, 2> inp) {
+        return rkcommon::math::vec2f(inp[0], inp[1]);
+    }
+
+inline rkcommon::math::vec3f convertToVec3f(std::array<float, 3> inp) {
+        return rkcommon::math::vec3f(inp[0], inp[1], inp[2]);
+}
+
+inline rkcommon::math::vec4f convertToVec4f(std::array<float, 4> inp) {
+    return rkcommon::math::vec4f(inp[0], inp[1], inp[2], inp[3]);
+}
+
+inline rkcommon::math::vec3f convertToVec3f(glm::vec3 inp) {
+    return rkcommon::math::vec3f(inp[0], inp[1], inp[2]);
+}
+
+inline rkcommon::math::vec4f convertToVec4f(glm::vec4 inp) {
+    return rkcommon::math::vec4f(inp[0], inp[1], inp[2], inp[3]);
+}
+
+inline rkcommon::math::vec3f convertToVec3f(glm::vec4 inp) {
+    return rkcommon::math::vec3f(inp[0], inp[1], inp[2]);
+}
+
+struct baseStructureData {
+    void emplace_back(::ospray::cpp::Geometry geo, structureTypeEnum type) {
+        structures.emplace_back(geo);
+        types.emplace_back(type);
+    }
+    void emplace_back(::ospray::cpp::Volume vol, structureTypeEnum type) {
+        structures.emplace_back(vol);
+        types.emplace_back(type);
+    }
+    void emplace_back(OSPGeometry geo, structureTypeEnum type) {
+        structures.emplace_back(geo);
+        types.emplace_back(type);
+    }
+    void emplace_back(OSPVolume vol, structureTypeEnum type) {
+        structures.emplace_back(vol);
+        types.emplace_back(type);
+    }
+    void clear() {
+        structures.clear();
+        types.clear();
+    }
+    size_t size() {
+        assert(types.size() == structures.size());
+        return structures.size();
+    }
+
+
+    std::vector<structureTypeEnum> types;
+    std::vector<std::variant<::ospray::cpp::Geometry, ::ospray::cpp::Volume>> structures;
+};
+
+
 
 class AbstractOSPRayRenderer : public core::view::Renderer3DModule_2 {
 protected:
@@ -32,7 +103,7 @@ protected:
     /**
      * initializes OSPRay
      */
-    void initOSPRay(OSPDevice& dvce);
+    void initOSPRay();
 
     /**
      * helper function for rendering the OSPRay texture
@@ -68,14 +139,14 @@ protected:
      * @param volume name/type
      * @param renderer type
      */
-    void setupOSPRay(OSPRenderer& renderer, OSPCamera& camera, OSPModel& world, const char* renderer_name);
+    void setupOSPRay(const char* renderer_name);
 
     /**
      * helper function for initializing OSPRays Camera
      * @param OSPRay camera object
      * @param CallRenderer3D object
      */
-    void setupOSPRayCamera(OSPCamera& ospcam, megamol::core::view::Camera_2& mmcam);
+    void setupOSPRayCamera(megamol::core::view::Camera_2& mmcam);
 
 
     /**
@@ -83,28 +154,29 @@ protected:
      * @param file path
      * @return 2
      */
-    OSPTexture2D TextureFromFile(vislib::TString fileName);
+    ::ospray::cpp::Texture TextureFromFile(vislib::TString fileName);
     // helper function to write the rendered image as PPM file
-    void writePPM(const char* fileName, const osp::vec2i& size, const uint32_t* pixel);
+    void writePPM(std::string fileName, const std::array<int,2>& size, const uint32_t* pixel);
+    void fillMaterialContainer(CallOSPRayStructure* entry_first, const OSPRayStructureContainer& element);
 
     // TODO: Documentation
 
     bool AbstractIsDirty();
     void AbstractResetDirty();
-    void RendererSettings(OSPRenderer& renderer);
-    OSPFrameBuffer newFrameBuffer(osp::vec2i& imgSize, const OSPFrameBufferFormat format = OSP_FB_RGBA8,
-        const uint32_t frameBufferChannels = OSP_FB_COLOR);
+    void RendererSettings(glm::vec4 bg_color);
 
     // vertex array, vertex buffer object, texture
-    GLuint vaScreen, vbo, tex, depth;
-    vislib::graphics::gl::FramebufferObject new_fbo;
+    unsigned int _vaScreen, _vbo, _tex, _depth;
+    vislib::graphics::gl::FramebufferObject _new_fbo;
 
     /**
      * Reads the structure map and uses its parameteres to
      * create geometries and volumes.
      *
      */
-    bool fillWorld();
+    bool generateRepresentations();
+
+    void createInstances();
 
     void changeMaterial();
 
@@ -117,27 +189,25 @@ protected:
     void releaseOSPRayStuff();
 
     // Call slots
-    megamol::core::CallerSlot lightSlot;
+    megamol::core::CallerSlot _lightSlot;
 
     // Interface Variables
-    core::param::ParamSlot AOtransparencyEnabled;
-    core::param::ParamSlot AOsamples;
-    core::param::ParamSlot AOdistance;
-    core::param::ParamSlot accumulateSlot;
+    core::param::ParamSlot _AOsamples;
+    core::param::ParamSlot _AOdistance;
+    core::param::ParamSlot _accumulateSlot;
 
-    core::param::ParamSlot rd_epsilon;
-    core::param::ParamSlot rd_spp;
-    core::param::ParamSlot rd_maxRecursion;
-    core::param::ParamSlot rd_type;
-    core::param::ParamSlot rd_ptBackground;
-    core::param::ParamSlot shadows;
-    core::param::ParamSlot useDB;
-    core::param::ParamSlot numThreads;
+    core::param::ParamSlot _rd_spp;
+    core::param::ParamSlot _rd_maxRecursion;
+    core::param::ParamSlot _rd_type;
+    core::param::ParamSlot _rd_ptBackground;
+    core::param::ParamSlot _shadows;
+    core::param::ParamSlot _useDB;
+    core::param::ParamSlot _numThreads;
 
     // Fix for deprecated material (ospNewMaterial2 now)
-    std::string rd_type_string;
+    std::string _rd_type_string;
 
-    megamol::core::param::ParamSlot deviceTypeSlot;
+    megamol::core::param::ParamSlot _deviceTypeSlot;
 
     // device type
     enum deviceType { DEFAULT, MPI_DISTRIBUTED };
@@ -146,38 +216,39 @@ protected:
     enum rdenum { SCIVIS, PATHTRACER, MPI_RAYCAST };
 
     // light
-    std::vector<OSPLight> lightArray;
-    OSPData lightsToRender;
-
-    // framebuffer dirtyness
-    bool framebufferIsDirty;
+    std::vector<::ospray::cpp::Light> _lightArray;
 
     // OSP objects
-    OSPFrameBuffer framebuffer;
-    OSPCamera camera;
-    OSPModel world;
+    std::shared_ptr<::ospray::cpp::FrameBuffer> _framebuffer;
+    std::shared_ptr<::ospray::cpp::Camera> _camera;
+    std::shared_ptr<::ospray::cpp::World> _world;
     // device
-    OSPDevice device;
+    std::shared_ptr<::ospray::cpp::Device> _device;
     // renderer
-    OSPRenderer renderer;
-    OSPTexture2D maxDepthTexture;
+    std::shared_ptr<::ospray::cpp::Renderer> _renderer;
+    ::ospray::cpp::Texture _maxDepthTexture;
 
     // structure vectors
-    std::map<CallOSPRayStructure*, std::vector<std::variant<OSPGeometry,OSPVolume>>> baseStructures;
-    std::map<CallOSPRayStructure*, OSPModel> instancedModels;
-    std::map<CallOSPRayStructure*, OSPGeometry> instances;
-    std::map<CallOSPRayStructure*, OSPMaterial> materials;
+    std::map<CallOSPRayStructure*, baseStructureData>
+        _baseStructures;
+    std::map<CallOSPRayStructure*, std::vector<::ospray::cpp::VolumetricModel>> _volumetricModels;
+    std::map<CallOSPRayStructure*, std::vector<::ospray::cpp::GeometricModel>>  _geometricModels;
+    std::map<CallOSPRayStructure*, std::vector<::ospray::cpp::GeometricModel>> _clippingModels;
+
+    std::map<CallOSPRayStructure*, ::ospray::cpp::Group> _groups;
+    std::map<CallOSPRayStructure*, ::ospray::cpp::Instance> _instances;
+    std::map<CallOSPRayStructure*, ::ospray::cpp::Material> _materials;
 
 
     // Structure map
-    OSPRayStrcutrureMap structureMap;
+    OSPRayStrcutrureMap _structureMap;
     // extend map
-    OSPRayExtendMap extendMap;
+    OSPRayExtendMap _extendMap;
 
-    void fillLightArray(glm::vec4& eyeDir);
+    void fillLightArray(std::array<float,4> eyeDir);
 
-    long long int ispcLimit = 1ULL << 30;
-    long long int numCreateGeo;
+    long long int _ispcLimit = 1ULL << 30;
+    long long int _numCreateGeo;
 };
 
 } // end namespace ospray

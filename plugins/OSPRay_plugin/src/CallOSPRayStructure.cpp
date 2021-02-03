@@ -12,41 +12,6 @@
 using namespace megamol::ospray;
 
 
-OSPRayStructureContainer::OSPRayStructureContainer() :
-    isValid(false),
- vertexData(NULL),
- colorData(NULL),
- indexData(NULL),
- voxels(NULL),
- gridOrigin(NULL),
- gridSpacing(NULL),
- dimensions(NULL),
- clippingBoxLower(NULL),
- clippingBoxUpper(NULL),
- isoValue(NULL),
- sliceData(NULL),
- clipPlaneData(NULL),
- clipPlaneColor(NULL),
- raw(NULL),
- mmpldColor(core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_NONE),
- xData(NULL),
- yData(NULL),
- zData(NULL),
- type(structureTypeEnum::UNINITIALIZED) { }
-
-OSPRayStructureContainer::~OSPRayStructureContainer() {
-    //
-}
-
-OSPRayExtendContainer::OSPRayExtendContainer() :
-    isValid(false) {
-}
-
-OSPRayExtendContainer::~OSPRayExtendContainer() {
-    //
-}
-
-
 // #################################
 // ###### CallOSPRayStructure ######
 // #################################
