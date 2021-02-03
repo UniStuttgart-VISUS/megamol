@@ -66,18 +66,24 @@ However, if you want to compile OSPRay yourself, you need to install [ISPC](http
 <!-- ---------------------------------------------------------------------- -->
 #### Microsoft Windows
 
-For Windows, you have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository. 
-Next, click `Configure` a few times (until all red entries disappear).
-Then click `Generate` to generate the build files.
+- For Windows, you have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository. 
+- Next, click `Configure` a few times (until all red entries disappear).
+- Then click `Generate` to generate the build files.
+- It is recommended to use **Visual Studio 16 2019 (platform x64)** with default native compilers as generator.
 
 ![CMake Windows](pics/cmake_windows.png)
 Screenshot of `cmake-gui` after generating build files.
 
+- The configuration creates a `sln` file inside the build folder
+- Open the `sln` file with *Visual Studio*
+- Use the `ALL_BUILD` target to build MegaMol
+- Use the `INSTALL` target to create your MegaMol installation
+- The default installation path is `../megamol/build/install/`
+
 <!-- ---------------------------------------------------------------------- -->
 #### Linux (Ubuntu)
 
-Since the full support of some C++17 functionality is required (e.g. std::filesystem) a `gcc` version equal or greater than **8** is required (with `CMAKE_CXX_FLAGS` appended by `--std=c++17`).
-
+Since the full support of some C++17 functionality is required (e.g. std::filesystem), a `gcc` version equal or greater than **8** is required (with `CMAKE_CXX_FLAGS` appended by `--std=c++17`).
 Latest tested version:
 
     $ cat /proc/version
@@ -101,21 +107,22 @@ Start the ncurses gui for cmake:
 
     $ ccmake .
 
-Check for unmet dependencies.
-Configure the project repeatedly using `c` until no more changes are marked. 
-Then hit `g` to generate the build files.
-On the console prompt, start the building:
+- Check for unmet dependencies.
+- Configure the project repeatedly using `c` until no more changes are marked. 
+- Then hit `g` to generate the build files.
+- On the console prompt, start the building:
 
     $ make && make install
 
-You can append the option `-j 4` to the make command to run the build in 4 parallel threads.
+- Use the `-j` option of `make` to run the build in parallel threads.
+- The default installation path is `../megamol/build/install/`
 
 <!-- ---------------------------------------------------------------------- -->
 ### Configuration
 
 After successfully compiling and installing MegaMol, you should have all executable files inside your bin folder (default: `../megamol/build/install/`). 
 Some setup still needs to be done.
-In the `bin` directory, you can find the default configuration file for MegaMol: `megamolconfig.lua`:
+In the `bin` directory, you can find the default configuration file for MegaMol `megamolconfig.lua`:
 
 ```lua
     -- Standard MegaMol Configuration File --
@@ -258,7 +265,7 @@ In the highlighted parameter group `anim` in the ImGui on the left side of the w
 
 <!-- XXX Do not mind the `Ignoring Xlib error: error code n request code m` messages. -->
 
-MegaMol should now open a rendering window showing a generated dataset with several colored spheres. Hitting the `space` key starts and stops the animation playback. In the *ImGui*, on the left side of the window, you can adjust all parameters of the running MegaMol instance. For example, you can find the parameter `Speed` in the group `inst::view::anim` (cf. [test run figure](#testrunpic)). With this parameter, you can adjust the playback speed of the animation.
+MegaMol should now open a rendering window showing a generated dataset with several colored spheres. Hitting the `space` key starts and stops the animation playback. In the *ImGui*, on the left side of the window, you can adjust all parameters of the running MegaMol instance. For example, you can find the parameter `Speed` in the group `inst::view::anim`. With this parameter, you can adjust the playback speed of the animation.
 
 
 <!-- ###################################################################### -->
