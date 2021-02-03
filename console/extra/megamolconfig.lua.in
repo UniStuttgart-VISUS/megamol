@@ -5,7 +5,7 @@ basePath = "${CMAKE_INSTALL_PREFIX}/"
 
 mmSetLogLevel("*") -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=*
 mmSetEchoLevel("*")
-mmSetLogFile("") 
+-- mmSetLogFile("") 
 mmSetAppDir(basePath .. "${MMPLG_DIR}")
 mmAddShaderDir(basePath .. "share/shaders")
 mmAddResourceDir(basePath .. "share/shaders")

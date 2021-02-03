@@ -16,7 +16,7 @@
         - [Application, Shaders and Resources](#application-shaders-and-resources) 
         - [Plugins](#plugins) 
         - [Global Settings](#global-settings) 
-        - [Tests](#tests) 
+        - [Test Installation](#test-installation) 
 - [Load and Create Projects](#load-and-create-projects)
 - [Viewing Data Sets](#viewing-data-sets)
     - [Modules, Views and Calls](#modules-views-and-calls) 
@@ -78,11 +78,8 @@ While MegaMol might work on further platforms, the development team will current
 It is recommende to use the latest [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) version of the source code. 
 
 **Note**: 
-The *OSPRay plugin* is currently disabled by default, since you need to install its dependencies manually and locate them manually as well. 
-Ideally, you just download [OSPRay](https://www.ospray.org/downloads.html) and adjust `ospray_DIR` in cmake. 
-Give the absolute path to the directory containing the `.cmake` files of OSPRay.
-They are usually located in the `/lib/cmake` sub directory. 
-However, if you want to compile OSPRay yourself, you need to install [ISPC](https://ispc.github.io/), [TBB](https://www.threadingbuildingblocks.org/), and [Embree](https://embree.github.io/) first (binary versions are okay).
+The *OSPRay plugin* is currently disabled by default. 
+See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/master/plugins/OSPRay_plugin/Readme.md) for additional instructions on how to enable it.
 
 <!-- ---------------------------------------------------------------------- -->
 #### Microsoft Windows
@@ -290,11 +287,11 @@ This concludes the building and configuring of MegaMol.
 Test your installation following the description in the following section.
 
 <!-- ---------------------------------------------------------------------- -->
-### Tests
+### Test Installation
 
 *REWORK*
 
-To test MegaMol, simply start the frontend executable. 
+In order to test the installtion, simply start the frontend executable. 
 Open a console and change your working directory to the MegaMol install directory. 
 Execute the MegaMol binary:
 
