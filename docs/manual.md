@@ -39,13 +39,32 @@
 =======
 - [Contents](#contents)
     - [Overview](#overview)
-    - [Installation and Setup](#installation-and-setup)>
-        - [Microsoft Windows](#microsoft-windows)>
-        - [Linux (Ubuntu)](#linux-ubunut)>
+        - [License](#license)
+    - [Installation and Setup](#installation-and-setup)
+        - [Building from Source](#building-from-source)
+            - [Microsoft Windows](#microsoft-windows)
+            - [Linux (Ubuntu)](#linux-ubunut)
+        - [Configuration](#configuration)
+            - [General Settings](#general-settings)
+            - [Logging](#logging)
+            - [Application, Shaders and Resources](#application-shaders-and-resources) 
+            - [Plugins](#plugins) 
+            - [Global Settings](#global-settings) 
+            - [Tests](#tests) 
     - [Load and Create Projects](#load-create-projects)
     - [Viewing Data Sets](#viewing-data-sets)
+        - [Modules, Views and Calls](#modules-views-and-calls) 
+            - [Modules and Calls](#modules-and-calls) 
+            - [Views](#views) 
+        - [Project Files](#project-files) 
+        - [View Interaction](#view-interaction) 
+        - [Making High-Resolution Screenshots](#making-high-resolution-screenshots) 
+        - [Reproducibility](#reproducibility) 
+        - [Making Simple Videos](#making-simple-videos) 
     - [Jobs: Converting Data](#jobs)
-    - [Advanced Usage](#advanced-usage)
+        - [Job Instance](#job-instance) 
+        - [Converting to MMPLD](#converting-to-mmpld) 
+    <!-- - [Advanced Usage](#advanced-usage) -->
 
 <!-- /TOC -->
 
@@ -58,12 +77,15 @@
 
 <!-- ###################################################################### -->
 -----
+<<<<<<< HEAD
 =======
 [//]: # (######################################################################)
 >>>>>>> 4fa438626 (manual update ...)
 =======
 <!-- ###################################################################### -->
 >>>>>>> 0ae2f4429 (manual update ...)
+=======
+>>>>>>> 6668c26ff (docu toc)
 ## Overview
 
 MegaMol is a visualization middleware used to visualize point-based molecular datasets.
@@ -112,12 +134,15 @@ THIS SOFTWARE IS PROVIDED BY THE MEGAMOL TEAM "AS IS" AND ANY EXPRESS OR IMPLIED
 
 <!-- ###################################################################### -->
 -----
+<<<<<<< HEAD
 =======
 [//]: # (######################################################################) 
 >>>>>>> 4fa438626 (manual update ...)
 =======
 <!-- ###################################################################### -->
 >>>>>>> 0ae2f4429 (manual update ...)
+=======
+>>>>>>> 6668c26ff (docu toc)
 ## Installation and Setup
 
 <<<<<<< HEAD
@@ -941,6 +966,7 @@ Screenshot of MegaMol running the test spheres instance.
 
 
 <!-- ###################################################################### -->
+-----
 ## Load and Create Projects
 
 *TODO*
@@ -972,6 +998,7 @@ To do this, try:
 >>>>>>> 4fa438626 (manual update ...)
 =======
 <!-- ###################################################################### -->
+-----
 ## Viewing Data Sets
 <!-- XXX More suitable caption name? -->
 >>>>>>> 0ae2f4429 (manual update ...)
@@ -1058,11 +1085,15 @@ The center module renderer of class `SphererRenderer` is called by the window us
 The right modules provide data and additional information for the renderer, namely a color map function and a clip plane. 
 
 <!-- ---------------------------------------------------------------------- -->
+<<<<<<< HEAD
 >>>>>>> 0ae2f4429 (manual update ...)
 #### Modules and calls
 >>>>>>> 800f17d5c (manual update)
 
 All available options provided via the graphical user interface are described separately in the readme file of the [GUI plugin](../plugins/gui).
+=======
+#### Modules and Calls
+>>>>>>> 6668c26ff (docu toc)
 
 ![Test Project](pics/testspheres.png)
 *Screenshot of MegaMol running the test spheres instance.*
@@ -1680,11 +1711,14 @@ Examples are based on the project script files available in the installed `examp
 This chapter discusses the job concept available in MegaMol. Especially, how jobs can be used for data conversion. Examples are based on the project script files available in the *script and example* package from the MegaMol project website.
 
 <!-- ---------------------------------------------------------------------- -->
+<<<<<<< HEAD
 >>>>>>> 0ae2f4429 (manual update ...)
 ### Job instance
 >>>>>>> 800f17d5c (manual update)
 
 <<<<<<< HEAD
+=======
+>>>>>>> 6668c26ff (docu toc)
 ### Job Instance
 
 Jobs are the second type of instances available at the MegaMol runtime (compare view instances in section [Views](#views)). 
