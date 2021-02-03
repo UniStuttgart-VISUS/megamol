@@ -42,18 +42,18 @@ OSPRayOBJMaterial::~OSPRayOBJMaterial(void) {
 void OSPRayOBJMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::OBJMATERIAL;
 
+    objMaterial obj;
+
     auto kd = this->Kd.Param<core::param::Vector3fParam>();
-    materialContainer.Kd = kd->getArray();
-
+    obj.Kd = kd->getArray();
     auto ks = this->Ks.Param<core::param::Vector3fParam>();
-    materialContainer.Ks = ks->getArray();
-
+    obj.Ks = ks->getArray();
     auto tf = this->Tf.Param<core::param::Vector3fParam>();
-    materialContainer.Tf = tf->getArray();
+    obj.Tf = tf->getArray();
+    obj.Ns = this->Ns.Param<core::param::FloatParam>()->Value();
+    obj.d = this->d.Param<core::param::FloatParam>()->Value();
 
-    materialContainer.Ns = this->Ns.Param<core::param::FloatParam>()->Value();
-
-    materialContainer.d = this->d.Param<core::param::FloatParam>()->Value();
+    materialContainer.material = obj;
 }
 
 bool OSPRayOBJMaterial::InterfaceIsDirty() {

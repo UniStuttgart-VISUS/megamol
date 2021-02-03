@@ -115,12 +115,16 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
             }
         }
 
-        this->structureContainer.vertexData = std::make_shared<std::vector<float>>(std::move(vd));
-        this->structureContainer.colorData = std::make_shared<std::vector<float>>(std::move(cd_rgba));
-        this->structureContainer.vertexLength = 3;
-        this->structureContainer.colorLength = 4;
-        this->structureContainer.partCount = partCount;
-        this->structureContainer.globalRadius = globalRadius;
+        sphereStructure ss;
+
+        ss.vertexData = std::make_shared<std::vector<float>>(std::move(vd));
+        ss.colorData = std::make_shared<std::vector<float>>(std::move(cd_rgba));
+        ss.vertexLength = 3;
+        ss.colorLength = 4;
+        ss.partCount = partCount;
+        ss.globalRadius = globalRadius;
+
+        this->structureContainer.structure = ss;
 
         this->datahash = cd->DataHash();
         this->time = cd->FrameID();
@@ -130,16 +134,16 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
     }
 
     // clipPlane setup
-    std::vector<float> clipDat(4);
-    std::vector<float> clipCol(4);
+    std::array<float,4> clipDat;
+    std::array<float,4> clipCol;
     this->getClipData(clipDat.data(), clipCol.data());
 
 
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
     this->structureContainer.geometryType = geometryTypeEnum::SPHERES;
-    this->structureContainer.clipPlaneData = std::make_shared<std::vector<float>>(std::move(clipDat));
-    this->structureContainer.clipPlaneColor = std::make_shared<std::vector<float>>(std::move(clipCol));
+    //this->structureContainer.clipPlaneData = std::make_shared<std::vector<float>>(std::move(clipDat));
+    //this->structureContainer.clipPlaneColor = std::make_shared<std::vector<float>>(std::move(clipCol));
 
     return true;
 }
