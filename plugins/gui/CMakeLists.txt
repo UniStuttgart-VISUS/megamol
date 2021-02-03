@@ -28,16 +28,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
   # imguizmoquat
   require_external(imguizmoquat)
+  # glfw
+  require_external(glfw3)
 
   # target definition
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${imgui_files} ${shader_files} ${resource_files})
-
-  # glfw
-  if(USE_GLFW)
-    require_external(glfw3)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE GUI_USE_GLFW)
-  endif()
 
   # Add C++ filesystem support.
   if(UNIX)

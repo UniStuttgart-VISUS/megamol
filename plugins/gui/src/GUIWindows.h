@@ -47,11 +47,6 @@
 #include <iomanip>
 #include <sstream>
 
-// Used for platform independent clipboard (ImGui so far only provides windows implementation)
-#ifdef GUI_USE_GLFW
-#include "GLFW/glfw3.h"
-#endif // GUI_USE_GLFW
-
 
 namespace megamol {
 namespace gui {
@@ -148,6 +143,12 @@ namespace gui {
         }
 
         /**
+         * Set externally provided clipboard function and user data
+         */
+        void SetClipboardFunc(const char* (*get_clipboard_func)(void* user_data),
+            void (*set_clipboard_func)(void* user_data, const char* string), void* user_data);
+
+        /**
          * Synchronise changes between core graph <-> gui graph.
          *
          * - 'Old' core instance graph:    Call this function after(!) rendering of current frame.
@@ -160,16 +161,6 @@ namespace gui {
          * @param megamol_graph    If no megamol_graph is given, 'old' graph is synchronised via core_instance.
          */
         bool SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph = nullptr);
-
-#ifdef GUI_USE_GLFW
-        // Enable platform independant clipboard support using glfw
-        static const char* ImGui_ImplGlfw_GetClipboardText(void* user_data) {
-            return glfwGetClipboardString((GLFWwindow*) user_data);
-        }
-        static void ImGui_ImplGlfw_SetClipboardText(void* user_data, const char* text) {
-            glfwSetClipboardString((GLFWwindow*) user_data, text);
-        }
-#endif // GUI_USE_GLFW
 
     private:
         /** Available GUI styles. */
