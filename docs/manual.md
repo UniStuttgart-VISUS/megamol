@@ -151,6 +151,7 @@ provided that the following conditions are met:
 THIS SOFTWARE IS PROVIDED BY THE MEGAMOL TEAM "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE MEGAMOL TEAM BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -158,6 +159,8 @@ THIS SOFTWARE IS PROVIDED BY THE MEGAMOL TEAM "AS IS" AND ANY EXPRESS OR IMPLIED
 <a name="installation-and-setup"></a>
 >>>>>>> 800f17d5c (manual update)
 
+=======
+>>>>>>> 8e58073aa (...)
 <!-- ###################################################################### -->
 -----
 <<<<<<< HEAD
@@ -318,6 +321,7 @@ Latest tested version:
     `$ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev`
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 2. First, download the source code from GitHub:
 
 <<<<<<< HEAD
@@ -330,6 +334,9 @@ Latest tested version:
 >>>>>>> 8b2342edf (docu)
 
 3. Checkout the latest release:
+=======
+    `$ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev`
+>>>>>>> 8e58073aa (...)
 
     `$ git checkout tags/v1.3 -b latest_release`
 =======
@@ -338,6 +345,7 @@ First, download the software package from GitHub:
 - First, download the software package from GitHub:
 >>>>>>> 88e3119f9 (docu)
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     $ mkdir megamol; git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol
 >>>>>>> 800f17d5c (manual update)
@@ -352,14 +360,22 @@ First, download the software package from GitHub:
 - Create a build folder and switch to it:
 >>>>>>> 88e3119f9 (docu)
 =======
+=======
+    `$ mkdir megamol; git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/`
+
+>>>>>>> 8e58073aa (...)
 - Create a build directory and switch to it:
 >>>>>>> 8b2342edf (docu)
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     `$ mkdir build; cd build`
 =======
     $ cd megamol; mkdir build; cd build
 >>>>>>> 800f17d5c (manual update)
+=======
+    `$ cd megamol; mkdir build; cd build`
+>>>>>>> 8e58073aa (...)
 
 <<<<<<< HEAD
 5. Check for required dependencies:
@@ -371,20 +387,24 @@ First, download the software package from GitHub:
 =======
 - Check for required dependencies:
     
-    $ cmake ..
+    `$ cmake ..`
 
 - Start the ncurses gui for cmake:
 >>>>>>> 88e3119f9 (docu)
 
     `$ ccmake .`
+<<<<<<< HEAD
 =======
     $ ccmake .
+=======
+>>>>>>> 8e58073aa (...)
 
 - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
 - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
 - Then hit `g` to generate the build files.
 - On the console prompt, start the building:
 
+<<<<<<< HEAD
     $ make && make install
 >>>>>>> ba7df3ade (manual update)
 
@@ -428,6 +448,9 @@ The following command line arguments are available:
       --nocursor      do not show mouse cursor inside window
       --help          print help
 ```
+=======
+    $ make && make install`
+>>>>>>> 8e58073aa (...)
 
 <!-- ---------------------------------------------------------------------- -->
 ### Configuration File
