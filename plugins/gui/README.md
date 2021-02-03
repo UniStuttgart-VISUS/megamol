@@ -124,7 +124,7 @@ The project configurator is part of the GUI and can be opened via the main menu:
 * Call Creation
     * Drag and Drop from Call Slot to another highlighted compatible Call Slot.
 * Add Call Slot to existing Interface Slot
-    * Drag and Drop from Call Slot to other highlighted compatible Interface Slot. 
+    * Drag and Drop from Call Slot to another highlighted compatible Interface Slot. 
 * Spawn *Module Stock List* in pop-up window at mouse position.
     * `Ctrl + Shift + m`
     * `Double Left Click`    
@@ -246,10 +246,12 @@ In order to add a new custom widget for a group of parameters sharing the same n
 * Add a new `ParamType` for new widget group in `core/include/mmcore/param/AbstractParamPresentation.h`.
 * Add a new `Presentation` for new widget group in `core/include/mmcore/param/AbstractParamPresentation.h` and add a human readable name to the `presentation_name_map` in the ctor.
 * Add a new case for the `ParamType`  in `AbstractParamPresentation::InitPresentation()` and add the new `Presentation` to its `compatible` presentation.
-* Add a new function implementing the new group widget in `local` and/or `global` scope to the class `ParameterGroups`. The function must have the following signature:
-    `void group_widget_<NEW_WIDGET_NAME>(ParamPtrVectorType& params, param::AbstractParamPresentation::Presentation presentation)`
-* Add a new group widget data set of the type `GroupWidgetData` in the ctor and register above function as callback. 
-* (WIP: Identification of parameter widget groups. Currently by name of namespace and number of parameter types of group.)
+* Add a new function implementing the new group widget in `LOCAL` and/or `GLOBAL` scope to the class `ParameterGroups`. 
+The function should be named like: `void draw_group_widget_<NEW_WIDGET_NAME>(...)`. See existing functions for the required signature.
+* Add a new function checking for the expected and required parameters. 
+The function should be named like: `bool check_group_widget_<NEW_WIDGET_NAME>(..)`. See existing functions for the required signature.
+* Add a new group widget data set of the type `GroupWidgetData` in the ctor and register above functions as callbacks. 
+* Identification of parameter widget groups. Currently by name of namespace and name and type of expected parameters.
 
 ### [2] Default GUI State 
 

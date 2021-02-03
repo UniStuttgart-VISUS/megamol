@@ -24,32 +24,44 @@ megamol::gui::ParameterGroupsPresentation::ParameterGroupsPresentation(void)
 
     // Add group widget data for animation widget group
     /// Paramter namespace: View3D_2::anim
-    GroupWidgetData animation(Param_t::GROUP_ANIMATION);
-    animation.active = false;
-    animation.callback =
+    GroupWidgetData anim_group_widget_data(Param_t::GROUP_ANIMATION);
+    anim_group_widget_data.active = false;
+
+    anim_group_widget_data.check_callback = [&, this](bool only_check, ParamPtrVector_t& params) -> bool {
+        return this->check_group_widget_animation(only_check, params);
+    };
+
+    anim_group_widget_data.draw_callback =
         [&, this](GroupWidgetData_t& group_widget_data, ParamPtrVector_t params, const std::string& in_module_fullname,
             const std::string& in_search, megamol::gui::ParameterPresentation::WidgetScope in_scope,
             const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
             ImGuiID in_override_header_state, PickingBuffer* inout_picking_buffer) -> bool {
-        return this->group_widget_animation(group_widget_data, params, in_module_fullname, in_search, in_scope,
+        return this->draw_group_widget_animation(group_widget_data, params, in_module_fullname, in_search, in_scope,
             in_external_tf_editor, out_open_external_tf_editor, in_override_header_state, inout_picking_buffer);
     };
+
     /// ID string must equal parameter group name, which is used for identification
-    this->group_widgets["anim"] = animation;
+    this->group_widgets["anim"] = anim_group_widget_data;
 
     /// Paramter namespace: View3D_2::view
-    GroupWidgetData reset(Param_t::GROUP_3D_CUBE);
-    reset.active = false;
-    reset.callback =
+    GroupWidgetData view_group_widget_data(Param_t::GROUP_3D_CUBE);
+    view_group_widget_data.active = false;
+
+    view_group_widget_data.check_callback = [&, this](bool only_check, ParamPtrVector_t& params) -> bool {
+        return this->check_group_widget_3d_cube(only_check, params);
+    };
+
+    view_group_widget_data.draw_callback =
         [&, this](GroupWidgetData_t& group_widget_data, ParamPtrVector_t params, const std::string& in_module_fullname,
             const std::string& in_search, megamol::gui::ParameterPresentation::WidgetScope in_scope,
             const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
             ImGuiID in_override_header_state, PickingBuffer* inout_picking_buffer) -> bool {
-        return this->group_widget_3d_cube(group_widget_data, params, in_module_fullname, in_search, in_scope,
+        return this->draw_group_widget_3d_cube(group_widget_data, params, in_module_fullname, in_search, in_scope,
             in_external_tf_editor, out_open_external_tf_editor, in_override_header_state, inout_picking_buffer);
     };
+
     /// ID string must equal parameter group name, which is used for identification
-    this->group_widgets["view"] = reset;
+    this->group_widgets["view"] = view_group_widget_data;
 }
 
 
@@ -106,7 +118,8 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
         for (auto& group_widget_data : this->group_widgets) {
 
             // Check for same group name
-            if (group_widget_data.first == group_name) {
+            if ((group_widget_data.first == group_name) &&
+                (group_widget_data.second.check_callback(true, group.second))) {
 
                 found_group_widget = true;
                 group_widget_data.second.active = true;
@@ -156,7 +169,7 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
                             GUIUtils::ReadOnlyWigetStyle(true);
                         }
 
-                        if (!group_widget_data.second.callback(group_widget_data, group.second, in_module_fullname,
+                        if (!group_widget_data.second.draw_callback(group_widget_data, group.second, in_module_fullname,
                                 in_search, in_scope, in_external_tf_editor, out_open_external_tf_editor,
                                 in_override_header_state, inout_picking_buffer)) {
 
@@ -177,9 +190,9 @@ bool megamol::gui::ParameterGroupsPresentation::PresentGUI(megamol::gui::ParamVe
                 } else {
                     // GLOBAL
 
-                    group_widget_data.second.callback(group_widget_data, group.second, in_module_fullname, in_search,
-                        in_scope, in_external_tf_editor, out_open_external_tf_editor, in_override_header_state,
-                        inout_picking_buffer);
+                    group_widget_data.second.draw_callback(group_widget_data, group.second, in_module_fullname,
+                        in_search, in_scope, in_external_tf_editor, out_open_external_tf_editor,
+                        in_override_header_state, inout_picking_buffer);
                 }
 
                 ImGui::PopID();
@@ -327,7 +340,25 @@ void megamol::gui::ParameterGroupsPresentation::draw_grouped_parameters(const st
 }
 
 
-bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(GroupWidgetData_t& group_widget_data,
+bool megamol::gui::ParameterGroupsPresentation::check_group_widget_animation(
+    bool only_check, ParamPtrVector_t& params) {
+
+    bool param_play = false;
+    bool param_time = false;
+    bool param_speed = false;
+    for (auto& param_ptr : params) {
+        if ((param_ptr->GetName() == "play") && (param_ptr->type == Param_t::BOOL)) {
+            param_play = true;
+        } else if ((param_ptr->GetName() == "time") && (param_ptr->type == Param_t::FLOAT)) {
+            param_time = true;
+        } else if ((param_ptr->GetName() == "speed") && (param_ptr->type == Param_t::FLOAT)) {
+            param_speed = true;
+        }
+    }
+    return (param_play && param_time && param_speed);
+}
+
+bool megamol::gui::ParameterGroupsPresentation::draw_group_widget_animation(GroupWidgetData_t& group_widget_data,
     ParamPtrVector_t params, const std::string& in_module_fullname, const std::string& in_search,
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
@@ -363,9 +394,12 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(GroupWidg
             this->draw_grouped_parameters(group_widget_data.first, params, in_module_fullname, in_search, in_scope,
                 in_external_tf_editor, out_open_external_tf_editor, in_override_header_state);
 
+            return true;
+
         } else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
 
             // no global implementation ...
+            return true;
         }
 
     } else if (presentation == param::AbstractParamPresentation::Presentation::Group_Animation) {
@@ -503,16 +537,33 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_animation(GroupWidg
             // ImGui::EndGroup();
         }
 
-    } else {
-        // No supported presentation
-        return false;
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 
-bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(GroupWidgetData_t& group_widget_data,
+bool megamol::gui::ParameterGroupsPresentation::check_group_widget_3d_cube(bool only_check, ParamPtrVector_t& params) {
+
+    bool param_cubeOrientation = false;
+    bool param_defaultView = false;
+    bool param_showCube = false;
+    for (auto& param_ptr : params) {
+        if ((param_ptr->GetName() == "cubeOrientation") && (param_ptr->type == Param_t::VECTOR4F)) {
+            param_cubeOrientation = true;
+        } else if ((param_ptr->GetName() == "defaultView") && (param_ptr->type == Param_t::ENUM)) {
+            param_defaultView = true;
+        } else if ((param_ptr->GetName() == "showViewCube") && (param_ptr->type == Param_t::BOOL)) {
+            param_showCube = true;
+        }
+    }
+
+    return (param_cubeOrientation && param_defaultView && param_showCube);
+}
+
+
+bool megamol::gui::ParameterGroupsPresentation::draw_group_widget_3d_cube(GroupWidgetData_t& group_widget_data,
     ParamPtrVector_t params, const std::string& in_module_fullname, const std::string& in_search,
     megamol::gui::ParameterPresentation::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
@@ -559,9 +610,12 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(GroupWidget
             this->draw_grouped_parameters(group_widget_data.first, params, in_module_fullname, in_search, in_scope,
                 in_external_tf_editor, out_open_external_tf_editor, in_override_header_state);
 
+            return true;
+
         } else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
 
             // no global implementation ...
+            return true;
         }
 
     } else if (presentation == param::AbstractParamPresentation::Presentation::Group_3D_Cube) {
@@ -571,6 +625,8 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(GroupWidget
 
             this->draw_grouped_parameters(
                 group_widget_data.first, params, "", in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
+
+            return true;
 
         } else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
             // GLOBAL
@@ -624,13 +680,10 @@ bool megamol::gui::ParameterGroupsPresentation::group_widget_3d_cube(GroupWidget
             }
 
             param_defaultView->SetValue(default_view);
+
+            return true;
         }
-
-    } else {
-
-        // No supported presentation
-        return false;
     }
 
-    return true;
+    return false;
 }
