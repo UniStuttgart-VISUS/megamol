@@ -552,10 +552,14 @@ In the `bin` directory, you can find the default configuration file `megamolconf
     mmSetLogLevel("*") -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=*
     mmSetEchoLevel("*")
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> ba7df3ade (manual update)
 =======
     mmSetLogFile("")    
 >>>>>>> 06b190844 (docu)
+=======
+    -- mmSetLogFile("") 
+>>>>>>> 2e3d465a0 (...)
     mmSetAppDir(basePath .. "bin")
     mmAddShaderDir(basePath .. "share/shaders")
     mmAddResourceDir(basePath .. "share/shaders")
@@ -631,6 +635,7 @@ The asterisk `*` stands for the highest numeric value, thus printing all message
     mmSetLogLevel('*') -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=*
     mmSetEchoLevel('*')
 <<<<<<< HEAD
+<<<<<<< HEAD
     -- mmSetLogFile("") 
 ```
 
@@ -638,6 +643,9 @@ The asterisk `*` stands for the highest numeric value, thus printing all message
 #### Application, Shaders and Resources
 =======
     mmSetLogFile("") 
+=======
+    -- mmSetLogFile("") 
+>>>>>>> 2e3d465a0 (...)
 ```
 
 <!-- ---------------------------------------------------------------------- -->
