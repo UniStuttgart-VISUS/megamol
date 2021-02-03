@@ -399,10 +399,10 @@ First, download the software package from GitHub:
 =======
 >>>>>>> 8e58073aa (...)
 
-- Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
-- Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
-- Then hit `g` to generate the build files.
-- On the console prompt, start the building:
+    - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
+    - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
+    - Then hit `g` to generate the build files.
+    - On the console prompt, start the building:
 
 <<<<<<< HEAD
     $ make && make install
@@ -455,6 +455,7 @@ The following command line arguments are available:
 <!-- ---------------------------------------------------------------------- -->
 ### Configuration File
 
+<<<<<<< HEAD
 After successfully compiling and installing MegaMol, you should have all executable files inside your `bin` directory (default: `../megamol/build/install/bin`). 
 <!-- (The configuration file is only read and interpreted by the MegaMol `core`.) -->
 In the `bin` directory, you can find the default configuration file `megamolconfig.lua`:  
@@ -481,6 +482,9 @@ You can append the option `-j 4` to the make command to run the build in 4 paral
 >>>>>>> d85984bb9 (docu)
 =======
   Use the `-j` option of `make` to run the build in parallel threads.
+=======
+    Use the `-j` option of `make` to run the build in parallel threads.
+>>>>>>> c571ca9c6 (...)
 
 <<<<<<< HEAD
 - The default installation path for the binary `megamol` is `../megamol/build/install/bin`
