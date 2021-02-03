@@ -71,12 +71,13 @@ However, if you want to compile OSPRay yourself, you need to install [ISPC](http
 - Create a new `build` folder.
 - AS generator, it is recommended to use the latest version of [Visual Stuido](https://visualstudio.microsoft.com/downloads/) with default native compilers and for the platform x64.
 - Next, click `Configure` a few times (until all red entries disappear).
+- Change the `CMAKE_INSTALL_PREFIX` in order to change the destination folder of the installed files.
 - Then click `Generate` to generate the build files.
 - The configuration creates a `megamol.sln` file inside the build folder.
 - Open the `sln` file with *Visual Studio*. 
 - Use the `ALL_BUILD` target to build MegaMol.
 - Afterwards, use the `INSTALL` target to create your MegaMol installation.
-- The binary `megamol.exe` is located in the default installation path `../megamol/build/install/bin`
+- The binary `megamol.exe` is located in the default installation path `../megamol/build/install/bin`.
 
 ![CMake Windows](pics/cmake_windows.png)
 Screenshot of `cmake-gui` after generating build files.
@@ -113,6 +114,7 @@ Latest tested version:
     $ ccmake .
 
 - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
+- Change the `CMAKE_INSTALL_PREFIX` in order to change the destination folder of the installed files.
 - Then hit `g` to generate the build files.
 - On the console prompt, start the building:
 
@@ -120,25 +122,38 @@ Latest tested version:
 
   Use the `-j` option of `make` to run the build in parallel threads.
 
-- The default installation path for the binary `megamol` is `../megamol/build/install/bin`
-    <!-- TODO Reference shell scipt for use with external libraries like ospray -->
+- The binary `megamol` is located in the default installation path `../megamol/build/install/bin`.
+  If you use additional external libraries (e.g. when using OSPRay), you have have to use the shell script `megamol.sh` instead. 
+  This script sets up the required library path:
+
+  ```bash
+    #!/bin/bash
+    #
+    # MegaMol startup script
+    # Copyright 2020, https://megamol.org/
+    #
+
+    BIN_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+    cd "$BIN_DIR"
+
+    LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH ./megamol "$@"
+  ```
 
 <!-- ---------------------------------------------------------------------- -->
 ### Configuration
 
-After successfully compiling and installing MegaMol, you should have all executable files inside your bin folder (default: `../megamol/build/install/`). 
-Some setup still needs to be done.
-In the `bin` directory, you can find the default configuration file for MegaMol `megamolconfig.lua`:
+After successfully compiling and installing MegaMol, you should have all executable files inside your bin folder (default: `../megamol/build/install/bin`). 
+In the `bin` directory, you can find the default configuration file `megamolconfig.lua`:
 
 ```lua
     -- Standard MegaMol Configuration File --
-
-    print("I am the Standard MegaMol configuration!")
+    print("Standard MegaMol configuration:")
 
     basePath = "C:/megamol/build/install/"
 
     mmSetLogLevel("*") -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=*
     mmSetEchoLevel("*")
+    mmSetLogFile("")    
     mmSetAppDir(basePath .. "bin")
     mmAddShaderDir(basePath .. "share/shaders")
     mmAddResourceDir(basePath .. "share/shaders")
@@ -161,7 +176,9 @@ The following paragraphs explain the essential steps of configuring MegaMol in m
 <!-- ---------------------------------------------------------------------- -->
 #### General Settings
 
-Locate line 3 containing the variable `basePath`. Both relative and absolute path should work here fine, **it is necessary to change the path in this line to the global path to the MegaMol application directory**, e.g.:
+Locate line 3 containing the variable `basePath`. 
+Both relative and absolute path should work here fine. 
+This path is set automatically and always has to fit the currently used execution path.
 
 ```lua
     basePath = "C:/megamol/build/install/"
@@ -171,7 +188,12 @@ Locate line 3 containing the variable `basePath`. Both relative and absolute pat
 <!-- ---------------------------------------------------------------------- -->
 #### Logging
 
-Line 4-6 configures the logging mechanism of MegaMol . Adjusting the value of *EchoLevel* changes the amount of log information printed on the console. Specifying a log file and the level informs MegaMol to write a log file and print the messages of the requested level into that file. The *LogLevel* is a numeric value. All messages with lower numeric values will be printed (or saved). The asterisk `*` stands for the highest numeric value, thus printing all messages.
+Line 4-6 configures the logging mechanism of MegaMol. 
+Adjusting the value of *EchoLevel* changes the amount of log information printed on the console. 
+Specifying a log file and the level informs MegaMol to write a log file and print the messages of the requested level into that file. 
+The *LogLevel* is a numeric value. 
+All messages with lower numeric values will be printed (or saved). 
+The asterisk `*` stands for the highest numeric value, thus printing all messages.
 
 ```lua
     mmSetLogLevel('*') -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=*
@@ -182,7 +204,7 @@ Line 4-6 configures the logging mechanism of MegaMol . Adjusting the value of *E
 <!-- ---------------------------------------------------------------------- -->
 #### Shaders and Resources
 
-Line 9+10 define the shader and resource directories:
+Line 9-11 define the shader and resource directories:
 
 ```lua
     mmAddShaderDir(basePath .. "share/shaders")
@@ -197,15 +219,19 @@ The *Add...Dir* commands set the paths for the respective resources.
 
 *DEPRECATED*
 
-Extend the configuration if you introduce new plugins into your installation. Although there are different ways to specify the plugins to be loaded, the tags in the example configuration file are the most secure way. Each `mmPluginLoaderInfo` tag requires three attributes:
+Extend the configuration if you introduce new plugins into your installation. 
+Although there are different ways to specify the plugins to be loaded, the tags in the example configuration file are the most secure way. 
+Each `mmPluginLoaderInfo` tag requires three attributes:
 
-- `path` should be the path to find the plugin. The example configuration file assumes
-to find the plugins in the same directory as the MegaMol executable (which is the
-case for Windows installations. On Linux systems, you need to change this path, e.g., to `../../lib/megamol`.
+- `path` should be the path to find the plugin. The example configuration file assumes to find the plugins in the same directory as the MegaMol executable (which is the
+case for Windows installations. 
+  On Linux systems, you need to change this path, e.g. to `../../lib/megamol`.
 - `name` is the file name of the plugin.
-- `action` refers to an internal parameter of MegaMol and should always be included.
+- `action` refers to an internal parameter of MegaMol and should always be `include`.
 
-Rendering modules from plugins require shader codes to function. MegaMol searches these codes in all registered shader directories. To register a shader directory, add a corresponding tag to the configuration file.
+Rendering modules from plugins require shader codes to function. 
+MegaMol searches these codes in all registered shader directories. 
+To register a shader directory, add a corresponding tag to the configuration file.
 
 ```lua
     mmPluginLoaderInfo(basePath .. "bin", "*.mmplg", "include")
@@ -214,8 +240,13 @@ Rendering modules from plugins require shader codes to function. MegaMol searche
 <!-- ---------------------------------------------------------------------- -->
 #### Global Settings
 
-The configuration file also specifies global settings variables which can modify the behavior of different modules. Two such variables are set in the example configuration file.
-In line 14 the variable `*-window` is set. This variable specifies the default position and size for all rendering windows MegaMol will create. The asterisk represents any window name. If you set a variable with a specific name, windows with exactly this name will respect the settings variable. For example, `test-window` will specify the value for the window created by the view instance test.
+The configuration file also specifies global settings variables which can modify the behavior of different modules. 
+Two such variables are set in the example configuration file.
+In line 14 the variable `*-window` is set. 
+This variable specifies the default position and size for all rendering windows MegaMol will create. 
+The asterisk represents any window name. 
+If you set a variable with a specific name, windows with exactly this name will respect the settings variable. 
+For example, `test-window` will specify the value for the window created by the view instance test.
 
 ```lua
     mmSetConfigValue("*-window",    "x5y35w1280h720")
@@ -227,7 +258,7 @@ The value itself contains five variables:
 - The last variable `nd` (stands for no decorations) will remove all window decorations, buttons, and border from the created window. 
 This variable allows us to create borderless windows filling the complete screen for full-screen rendering.
 
-The last settings variable, activates (or deactivates) the arcball camera behavior. Set this option to `on` in order to use the arcball camera navigation.
+The last settings variable activates (or deactivates) the arcball camera behavior. Set this option to `on` in order to use the arcball camera navigation.
 
 ```lua
     mmSetConfigValue("arcball",     "off")
@@ -239,8 +270,11 @@ Test your installation following the description in the following section.
 <!-- ---------------------------------------------------------------------- -->
 ### Tests
 
-To test MegaMol, simply start the frontend executable. Open a console and change your working directory to the MegaMol install directory. Start
-the MegaMol start script:
+*REWORK*
+
+To test MegaMol, simply start the frontend executable. 
+Open a console and change your working directory to the MegaMol install directory. 
+Execute the MegaMol binary:
 
 Linux:
 
@@ -250,12 +284,23 @@ Windows:
 
     > megamol.exe
 
-Alternatively, you can descend into the bin directory and start the frontend directly. Doing so, you must ensure that the additional shared objects can be found and loaded. Enter the commands. To test this, try:
+Alternatively, you can descend into the bin directory and start the frontend directly. 
+Doing so, you must ensure that the additional shared objects can be found and loaded. 
+Enter the commands. 
+To test this, try:
 
     cd bin
-    LD_LIBRARY_PATH=../lib ./mmconsole
+    LD_LIBRARY_PATH=../lib ./megamol
 
-This direct invocation is not recommended. Thus, the remaining examples in this manual will assume that you use the start shell script. MegaMol should start and print several messages to the console. The leading number of each line is the log level. There should be no output of warnings (log level of 100 or less) or errors (log level 1). The output should match the one above. For a better test, you should invoke MegaMol requesting a simple rendering. Then you can be sure that the graphics drivers, graphics libraries, and shader codes are correctly found and are working. To do this, try: 
+This direct invocation is not recommended. 
+Thus, the remaining examples in this manual will assume that you use the start shell script. 
+MegaMol should start and print several messages to the console. 
+The leading number of each line is the log level. 
+There should be no output of warnings (log level of 100 or less) or errors (log level 1). 
+The output should match the one above. 
+For a better test, you should invoke MegaMol requesting a simple rendering. 
+Then you can be sure that the graphics drivers, graphics libraries, and shader codes are correctly found and are working. 
+To do this, try: 
 
 Linux: 
 
@@ -267,11 +312,15 @@ Windows:
 
 ![Test Project](pics/testspheres.png)
 Screenshot of MegaMol running the test spheres instance. 
-In the highlighted parameter group `anim` in the ImGui on the left side of the window you can adjust the animation speed.
+In the highlighted parameter group `anim` in the *ImGui* on the left side of the window you can adjust the animation speed.
 
 <!-- XXX Do not mind the `Ignoring Xlib error: error code n request code m` messages. -->
 
-MegaMol should now open a rendering window showing a generated dataset with several colored spheres. Hitting the `space` key starts and stops the animation playback. In the *ImGui*, on the left side of the window, you can adjust all parameters of the running MegaMol instance. For example, you can find the parameter `Speed` in the group `inst::view::anim`. With this parameter, you can adjust the playback speed of the animation.
+MegaMol should now open a rendering window showing a generated dataset with several colored spheres. 
+Hitting the `space` key starts and stops the animation playback. 
+In the *ImGui*, on the left side of the window, you can adjust all parameters of the running MegaMol instance. 
+For example, you can find the parameter `Speed` in the group `inst::view::anim`. 
+With this parameter, you can adjust the playback speed of the animation.
 
 
 <!-- ###################################################################### -->
@@ -461,9 +510,7 @@ The parameter filename specifies the path to the image file to be created. MegaM
 
 MegaMol stores the active project and all parameter settings in the EXIF field of the saved screenshots. Please note that this field currently contains a simple zero-terminated string with the LUA code required to reproduce the state when the screenshot is taken, and **not** valid EXIF data. Such a project can be restored by just loading the PNG file:
 
-```
-    $ mmconsole -p something.png
-```
+    $ megamol.exe -p something.png
 
 Also note that only Views with direct access to camera parameters (like View3D_2, but unlike the original View3D, which requires explicit serialization of camera parameters) can be properly restored.
 
