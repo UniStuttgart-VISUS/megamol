@@ -101,7 +101,7 @@ However, if you want to compile OSPRay yourself, you need to install [ISPC](http
 - The binary `megamol.exe` is located in the default installation path `../megamol/build/install/bin`.
 
 ![CMake Windows](pics/cmake_windows.png)
-Screenshot of `cmake-gui` after generating build files.
+*Screenshot of `cmake-gui` after generating build files.*
 
 <!-- ---------------------------------------------------------------------- -->
 #### Linux (Ubuntu)
@@ -135,14 +135,16 @@ Latest tested version:
 
     - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
     - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
+
     - Then hit `g` to generate the build files.
-    - On the console prompt, start the building:
+- On the console prompt, start the building:
 
-    $ make && make install`
+    `$ make && make install`
 
-    Use the `-j` option of `make` to run the build in parallel threads.
+    Hint: Use the `-j` option for `make` to run the build in parallel threads.
 
 - The binary `megamol` is located in the default installation path `../megamol/build/install/bin`.
+
   If you use additional external libraries (e.g. when using OSPRay), you have have to use the shell script `megamol.sh` instead. 
   This script adds the required library path:
 
@@ -338,7 +340,7 @@ For example, you can find the parameter `Speed` in the group `inst::view::anim`.
 With this parameter, you can adjust the playback speed of the animation.
 
 ![Test Project](pics/testspheres.png)
-Screenshot of MegaMol running the test spheres instance. 
+*Screenshot of MegaMol running the test spheres instance.*
 
 
 <!-- ###################################################################### -->
@@ -373,11 +375,12 @@ For example, the *view* module needs to update the window content.
 The *view* module thus invokes the *renderer* module to provide a new rendering. 
 The *renderer* calls the data source if new data is available or to provide the old cached data.
 
-![Example Graph](pics/example_graph.png)
-An example module graph. 
 Left-most module view of class `View3D_2` represents the rendering content of a window. 
 The center module renderer of class `SphererRenderer` is called by the window using the corresponding call of type `CallRenderer3D`. 
 The right modules provide data and additional information for the renderer, namely a color map function and a clip plane. 
+
+![Example Graph](pics/example_graph.png)
+*An example module graph.*
 
 <!-- ---------------------------------------------------------------------- -->
 #### Modules and Calls
