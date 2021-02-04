@@ -21,10 +21,12 @@ namespace hpg {
                 float near;
 
                 int samplesPerPixel{1};
+                int maxBounces{0};
+                bool accumulate;
 
                 glm::vec4 background;
 
-                bool changed;
+                int frameIdx;
             };
         } // namespace device
     }     // namespace optix

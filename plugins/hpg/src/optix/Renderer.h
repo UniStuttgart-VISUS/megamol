@@ -5,6 +5,7 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Renderer3DModule_2.h"
 
 #include "cuda.h"
@@ -17,8 +18,8 @@
 
 #include "hpg/optix/CallContext.h"
 
-#include "raygen.h"
 #include "miss.h"
+#include "raygen.h"
 
 #include "SBT.h"
 
@@ -55,9 +56,25 @@ protected:
 private:
     void setup(CallContext& ctx);
 
+    bool is_dirty() {
+        return spp_slot_.IsDirty() || max_bounces_slot_.IsDirty() || accumulate_slot_.IsDirty();
+    }
+
+    void reset_dirty() {
+        spp_slot_.ResetDirty();
+        max_bounces_slot_.ResetDirty();
+        accumulate_slot_.ResetDirty();
+    }
+
     core::CallerSlot _in_geo_slot;
 
     core::CallerSlot _in_ctx_slot;
+
+    core::param::ParamSlot spp_slot_;
+
+    core::param::ParamSlot max_bounces_slot_;
+
+    core::param::ParamSlot accumulate_slot_;
 
     SBTRecord<device::RayGenData> _sbt_raygen_record;
 
@@ -91,6 +108,8 @@ private:
 
     std::size_t _in_data_hash = std::numeric_limits<std::size_t>::max();
 
-   cam_type::snapshot_type old_cam_snap;
+    cam_type::snapshot_type old_cam_snap;
+
+    glm::vec4 old_bg = glm::vec4(-1);
 };
 } // namespace megamol::hpg::optix

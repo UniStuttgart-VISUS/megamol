@@ -1,7 +1,9 @@
 #include "stdafx.h"
 #include "Renderer.h"
 
+#include "mmcore/param/IntParam.h"
 #include "mmcore/view/Camera_2.h"
+#include "mmcore/param/BoolParam.h"
 
 #include "raygen.h"
 
@@ -19,12 +21,26 @@ extern "C" const char embedded_miss_programs[];
 } // namespace megamol::hpg::optix
 
 
-megamol::hpg::optix::Renderer::Renderer() : _in_geo_slot("inGeo", ""), _in_ctx_slot("inCtx", "") {
+megamol::hpg::optix::Renderer::Renderer()
+        : _in_geo_slot("inGeo", "")
+        , _in_ctx_slot("inCtx", "")
+        , spp_slot_("spp", "")
+        , max_bounces_slot_("max bounces", "")
+        , accumulate_slot_("accumulate", "") {
     _in_geo_slot.SetCompatibleCall<CallGeometryDescription>();
     MakeSlotAvailable(&_in_geo_slot);
 
     _in_ctx_slot.SetCompatibleCall<CallContextDescription>();
     MakeSlotAvailable(&_in_ctx_slot);
+
+    spp_slot_ << new core::param::IntParam(1, 1);
+    MakeSlotAvailable(&spp_slot_);
+
+    max_bounces_slot_ << new core::param::IntParam(0, 0);
+    MakeSlotAvailable(&max_bounces_slot_);
+
+    accumulate_slot_ << new core::param::BoolParam(true);
+    MakeSlotAvailable(&accumulate_slot_);
 }
 
 
@@ -162,16 +178,26 @@ bool megamol::hpg::optix::Renderer::Render(core::view::CallRender3D_2& call) {
     _frame_state.th = th;
     _frame_state.near = curCamNearClip;
 
-    _frame_state.changed = false;
+    _frame_state.samplesPerPixel = spp_slot_.Param<core::param::IntParam>()->Value();
+    _frame_state.maxBounces = max_bounces_slot_.Param<core::param::IntParam>()->Value();
+    _frame_state.accumulate = accumulate_slot_.Param<core::param::BoolParam>()->Value();
+
     if (old_cam_snap.position != snapshot.position || old_cam_snap.view_vector != snapshot.view_vector ||
-        old_cam_snap.right_vector != snapshot.right_vector || old_cam_snap.up_vector != snapshot.up_vector) {
-        _frame_state.changed = true;
+        old_cam_snap.right_vector != snapshot.right_vector || old_cam_snap.up_vector != snapshot.up_vector || is_dirty()) {
+        _frame_state.frameIdx = 0;
         old_cam_snap = snapshot;
+        reset_dirty();
+    } else {
+        ++_frame_state.frameIdx;
     }
 
-    auto bg_col = call.BackgroundColor();
-    _frame_state.background = glm::vec4(bg_col.x, bg_col.y, bg_col.z, bg_col.w);
-    sbt_miss_records_[0].data.bg = _frame_state.background; // TODO proper update
+    if (old_bg != call.BackgroundColor()) {
+        _frame_state.background = call.BackgroundColor();
+        sbt_miss_records_[0].data.bg = _frame_state.background;
+        old_bg = call.BackgroundColor();
+        _frame_state.frameIdx = 0;
+        rebuild_sbt = true;
+    }
 
     CUDA_CHECK_ERROR(
         cuMemcpyHtoDAsync(_frame_state_buffer, &_frame_state, sizeof(_frame_state), in_ctx->get_exec_stream()));

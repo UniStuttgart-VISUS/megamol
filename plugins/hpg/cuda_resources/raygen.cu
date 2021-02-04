@@ -14,7 +14,7 @@ namespace hpg {
             // using Random = owl::common::LCG<>;
 
             inline __device__ glm::vec4 traceRay(
-                const RayGenData& self, Ray& ray /*, Random& rnd*/, PerRayData& prd, glm::vec4& bg) {
+                const RayGenData& self, Ray& ray /*, Random& rnd*/, PerRayData& prd, glm::vec4& bg, int maxBounces) {
                 /*glm::vec4 attenuation = glm::vec4(1.f);
                 glm::vec4 ambientLight(.8f, .8f, .8f, 1.f);
 
@@ -52,7 +52,7 @@ namespace hpg {
                     col += prd.emitted;
                     col += prd.radiance * prd.beta;
 
-                    if (prd.done || prd.depth >= 2)
+                    if (prd.done || prd.depth >= maxBounces)
                         break;
 
                     ++prd.depth;
@@ -93,14 +93,14 @@ namespace hpg {
 
                 const FrameState* fs = &self.frameStateBuffer[0];
 
-                auto frame_idx = self.colorBufferPtr[pixelIdx].w;
+                /*auto frame_idx = self.colorBufferPtr[pixelIdx].w;
                 if (fs->changed) {
                     frame_idx = 0.0f;
                     self.colorBufferPtr[pixelIdx].w = 0.0f;
-                }
+                }*/
                 auto const old_col = self.colorBufferPtr[pixelIdx];
 
-                unsigned int seed = tea<16>(pixelID.y * 4200 + pixelID.x, frame_idx);
+                unsigned int seed = tea<16>(pixelID.y * self.fbSize.x + pixelID.x, fs->frameIdx);
 
                 
 
@@ -110,7 +110,7 @@ namespace hpg {
 
                 // printf("RAYGEN FS %f\n", fs->near);
 
-                auto i = 4;
+                auto i = fs->samplesPerPixel;
 
                 do {
 
@@ -145,10 +145,10 @@ namespace hpg {
                     prd.lpos = ray.origin;
                     prd.ldir = fs->camera_screen_00;
 
-                    col += traceRay(self, ray /*, rnd*/, prd, bg);
+                    col += traceRay(self, ray /*, rnd*/, prd, bg, fs->maxBounces);
                 } while (--i);
-                col /= 4.0f;
-                col.w = frame_idx + 1;
+                col /= (float) fs->samplesPerPixel;
+                //col.w = frame_idx + 1;
                 //++col.w;
 
                 // printf("RAYGEN2\n");
@@ -166,9 +166,9 @@ namespace hpg {
                 // uint32_t rgba = owl::make_rgba(col);
                 // self.colorBufferPtr[pixelIdx] = rgba;
 
-                if (frame_idx > 0) {
-                    const float a = 1.0f / static_cast<float>(frame_idx + 1);
-                    col = glm::vec4(lerp(glm::vec3(old_col), glm::vec3(col), a), col.w);
+                if (fs->frameIdx > 0) {
+                    const float a = 1.0f / static_cast<float>(fs->frameIdx + 1);
+                    col = lerp(old_col, col, a);
                     //col.w = frame_idx + 1;
                 }
                 self.colorBufferPtr[pixelIdx] = col;
