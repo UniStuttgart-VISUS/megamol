@@ -73,7 +73,6 @@ View3DGL::View3DGL(void)
     , autoLoadCamSettingsSlot("camstore::autoLoadSettings",
           "When activated, the view will load the camera settings from disk at startup. "
           "This only works if you use .lua project files")
-    , resetViewSlot("resetView", "Triggers the reset of the view")
     , firstImg(false)
     , stereoFocusDistSlot("stereo::focusDist", "focus distance for stereo projection")
     , stereoEyeDistSlot("stereo::eyeDist", "eye distance for stereo projection")
@@ -85,8 +84,11 @@ View3DGL::View3DGL(void)
     , mouseSensitivitySlot("viewKey::MouseSensitivity", "used for WASD mode")
     , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be rotated")
     , enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
-    , showViewCubeSlot("viewcube::show", "Shows the view cube helper")
-    , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
+    , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "Whether to reset the view when the bounding boxes change")
+    , cameraSetViewChooserParam("view::defaultView", "Choose a default view to look from")
+    , cameraViewOrientationParam("view::cubeOrientation", "Current camera orientation used for view cube.")
+    , showViewCubeParam("view::showViewCube", "Shows view cube.")
+    , resetViewSlot("resetView", "Triggers the reset of the view")
     , mouseX(0.0f)
     , mouseY(0.0f)
     , mouseFlags(0)
@@ -157,12 +159,6 @@ View3DGL::View3DGL(void)
     this->autoLoadCamSettingsSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->autoLoadCamSettingsSlot);
 
-    this->resetViewSlot.SetParameter(new param::ButtonParam(view::Key::KEY_HOME));
-    this->resetViewSlot.SetUpdateCallback(&View3DGL::onResetView);
-    this->MakeSlotAvailable(&this->resetViewSlot);
-
-    this->ResetView();
-
     // TODO
     // this->stereoEyeDistSlot << new param::FloatParam(this->camParams->StereoDisparity(), 0.0f);
     // this->MakeSlotAvailable(&this->stereoEyeDistSlot);
@@ -197,12 +193,6 @@ View3DGL::View3DGL(void)
     this->enableMouseSelectionSlot.SetParameter(new param::ButtonParam(view::Key::KEY_TAB));
     this->enableMouseSelectionSlot.SetUpdateCallback(&View3DGL::onToggleButton);
     this->MakeSlotAvailable(&this->enableMouseSelectionSlot);
-
-    this->resetViewOnBBoxChangeSlot.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
-
-    this->showViewCubeSlot.SetParameter(new param::BoolParam(true));
-    this->MakeSlotAvailable(&this->showViewCubeSlot);
 
     for (unsigned int i = 0; this->timeCtrl.GetSlot(i) != NULL; i++) {
         this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
@@ -307,6 +297,33 @@ View3DGL::View3DGL(void)
     this->cameraOvrParam.SetUpdateCallback(&View3DGL::cameraOvrCallback);
     this->MakeSlotAvailable(&this->cameraOvrParam);
 
+    this->resetViewSlot.SetParameter(new param::ButtonParam(view::Key::KEY_HOME));
+    this->resetViewSlot.SetUpdateCallback(&View3D_2::onResetView);
+    this->MakeSlotAvailable(&this->resetViewSlot);
+
+    this->resetViewOnBBoxChangeSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
+
+    auto defaultViewParam = new param::EnumParam(0);
+    defaultViewParam->SetTypePair(defaultview::DEFAULTVIEW_FRONT, "Front");
+    defaultViewParam->SetTypePair(defaultview::DEFAULTVIEW_BACK, "Back");
+    defaultViewParam->SetTypePair(defaultview::DEFAULTVIEW_RIGHT, "Right");
+    defaultViewParam->SetTypePair(defaultview::DEFAULTVIEW_LEFT, "Left");
+    defaultViewParam->SetTypePair(defaultview::DEFAULTVIEW_TOP, "Top");
+    defaultViewParam->SetTypePair(defaultview::DEFAULTVIEW_BOTTOM, "Bottom");
+    defaultViewParam->SetGUIVisible(camparamvisibility);
+    this->cameraSetViewChooserParam.SetParameter(defaultViewParam),
+    this->MakeSlotAvailable(&this->cameraSetViewChooserParam);
+    this->cameraSetViewChooserParam.SetUpdateCallback(&View3D_2::onResetView);
+
+    this->cameraViewOrientationParam.SetParameter(new param::Vector4fParam(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 1.0f)));
+    this->MakeSlotAvailable(&this->cameraViewOrientationParam);
+    this->cameraViewOrientationParam.Parameter()->SetGUIReadOnly(true);
+    this->cameraViewOrientationParam.Parameter()->SetGUIVisible(false);
+
+    this->showViewCubeParam.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->showViewCubeParam);
+
     this->translateManipulator.set_target(this->cam);
     this->translateManipulator.enable();
 
@@ -323,6 +340,8 @@ View3DGL::View3DGL(void)
     this->orbitAltitudeManipulator.set_target(this->cam);
     this->orbitAltitudeManipulator.enable();
 
+
+    this->ResetView();
 
     // none of the saved camera states are valid right now
     for (auto& e : this->savedCameras) {
@@ -381,7 +400,11 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
 
     this->handleCameraMovement();
 
-    AbstractRenderingViewGL::beginFrame();
+    auto cam_orientation = static_cast<glm::quat>(this->cam.orientation());
+    this->cameraViewOrientationParam.Param<param::Vector4fParam>()->SetValue(
+        vislib::math::Vector<float, 4>(cam_orientation.x, cam_orientation.y, cam_orientation.z, cam_orientation.w));
+
+    AbstractRenderingView::beginFrame();
 
     // TODO Conditionally synchronise camera from somewhere else.
     // this->SyncCamParams(this->cam.Parameters());
@@ -601,32 +624,75 @@ void View3DGL::ResetView(void) {
     if (!this->bboxs.IsBoundingBoxValid()) {
         this->bboxs.SetBoundingBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
     }
-    float dist = (0.5f * sqrtf((this->bboxs.BoundingBox().Width() * this->bboxs.BoundingBox().Width()) +
-                               (this->bboxs.BoundingBox().Depth() * this->bboxs.BoundingBox().Depth()) +
-                               (this->bboxs.BoundingBox().Height() * this->bboxs.BoundingBox().Height()))) /
-                 tanf(this->cam.aperture_angle_radians() / 2.0f);
+    double pseudoWidth = this->bboxs.BoundingBox().Width();
+    double pseudoHeight = this->bboxs.BoundingBox().Height();
+    double pseudoDepth = this->bboxs.BoundingBox().Depth();
+    defaultview dv = static_cast<defaultview>(this->cameraSetViewChooserParam.Param<param::EnumParam>()->Value());
+    switch (dv) {
+    case DEFAULTVIEW_FRONT :
+    case DEFAULTVIEW_BACK : // this is the init case above or equivalent
+    break;
+    case DEFAULTVIEW_RIGHT :
+    case DEFAULTVIEW_LEFT : pseudoWidth = this->bboxs.BoundingBox().Depth();
+    pseudoHeight = this->bboxs.BoundingBox().Height();
+    pseudoDepth = this->bboxs.BoundingBox().Width();
+    break;
+    case DEFAULTVIEW_TOP :
+    case DEFAULTVIEW_BOTTOM : pseudoWidth = this->bboxs.BoundingBox().Width();
+    pseudoHeight = this->bboxs.BoundingBox().Depth();
+    pseudoDepth = this->bboxs.BoundingBox().Height();
+    break;
+    default:;
+      
+    }
     auto dim = this->cam.resolution_gate();
     double halfFovX =
         (static_cast<double>(dim.width()) * static_cast<double>(this->cam.aperture_angle_radians() / 2.0f)) /
         static_cast<double>(dim.height());
-    double distX = static_cast<double>(this->bboxs.BoundingBox().Width()) / (2.0 * tan(halfFovX));
-    double distY = static_cast<double>(this->bboxs.BoundingBox().Height()) /
+    double distX = pseudoWidth / (2.0 * tan(halfFovX));
+    double distY = pseudoHeight /
                    (2.0 * tan(static_cast<double>(this->cam.aperture_angle_radians() / 2.0f)));
-    dist = static_cast<float>((distX > distY) ? distX : distY);
-    dist = dist + (this->bboxs.BoundingBox().Depth() / 2.0f);
+    float dist = static_cast<float>((distX > distY) ? distX : distY);
+    dist = dist + (pseudoDepth / 2.0f);
     auto bbc = this->bboxs.BoundingBox().CalcCenter();
-
     auto bbcglm = glm::vec4(bbc.GetX(), bbc.GetY(), bbc.GetZ(), 1.0f);
-
+    const double cos0 = 0.0;
+    const double cos45 = sqrt(2.0) / 2.0;
+    const double cos90 = 1.0;
+    const double sin0 = 1.0;
+    const double sin45 = cos45;
+    const double sin90 = 0.0;
     if (!this->valuesFromOutside) {
-        this->cam.position(bbcglm + glm::vec4(0.0f, 0.0f, dist, 0.0f));
-        this->cam.orientation(cam_type::quaternion_type::create_identity());
+        // quat rot(theta) around axis(x,y,z) -> q = (sin(theta/2)*x, sin(theta/2)*y, sin(theta/2)*z, cos(theta/2))
+        switch (dv) {
+            case DEFAULTVIEW_FRONT : this->cam.orientation(cam_type::quaternion_type::create_identity());
+            this->cam.position(bbcglm + glm::vec4(0.0f, 0.0f, dist, 0.0f));
+            break;
+            case DEFAULTVIEW_BACK : // 180 deg around y axis
+            this->cam.orientation(cam_type::quaternion_type(0, 1.0, 0, 0.0f));
+            this->cam.position(bbcglm + glm::vec4(0.0f, 0.0f, -dist, 0.0f));
+            break;
+            case DEFAULTVIEW_RIGHT : // 90 deg around y axis
+            this->cam.orientation(cam_type::quaternion_type(0, sin45 * 1.0, 0, cos45));
+            this->cam.position(bbcglm + glm::vec4(dist, 0.0f, 0.0f, 0.0f));
+            break;
+            case DEFAULTVIEW_LEFT : // 90 deg reverse around y axis
+            this->cam.orientation(cam_type::quaternion_type(0, -sin45 * 1.0, 0, cos45));
+            this->cam.position(bbcglm + glm::vec4(-dist, 0.0f, 0.0f, 0.0f));
+            break;
+            case DEFAULTVIEW_TOP : // 90 deg around x axis
+            this->cam.orientation(cam_type::quaternion_type(-sin45 * 1.0, 0, 0, cos45));
+            this->cam.position(bbcglm + glm::vec4(0.0f, dist, 0.0f, 0.0f));
+            break;
+            case DEFAULTVIEW_BOTTOM : // 90 deg reverse around x axis
+            this->cam.orientation(cam_type::quaternion_type(sin45 * 1.0, 0, 0, cos45));
+            this->cam.position(bbcglm + glm::vec4(0.0f, -dist, 0.0f, 0.0f));
+            break;
+            default:;
+        }
     }
 
     this->rotCenter = glm::vec3(bbc.GetX(), bbc.GetY(), bbc.GetZ());
-
-    glm::mat4 vm = this->cam.view_matrix();
-    glm::mat4 pm = this->cam.projection_matrix();
 
     // TODO Further manipulators? better value?
     this->valuesFromOutside = false;

@@ -34,7 +34,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
         , show_slot_names(false)
         , show_module_names(true)
         , show_parameter_sidebar(true)
-        , change_show_parameter_sidebar(false)
+        , change_show_parameter_sidebar(true)
         , graph_layout(0)
         , parameter_sidebar_width(300.0f)
         , reset_zooming(true)
@@ -47,6 +47,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
         , multiselect_done(false)
         , canvas_hovered(false)
         , current_font_scaling(1.0f)
+        , add_menu_scrollbar_height(false)
         , graph_state()
         , search_widget()
         , splitter_widget()
@@ -222,6 +223,9 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
             // Draw -----------------------------
             this->present_menu(inout_graph);
 
+            if (megamol::gui::gui_scaling.PendingChange()) {
+                this->parameter_sidebar_width *= megamol::gui::gui_scaling.TransitonFactor();
+            }
             float graph_width_auto = 0.0f;
             if (this->show_parameter_sidebar) {
                 this->splitter_widget.Widget(
@@ -685,8 +689,8 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                     if (ImGui::BeginPopup(pop_up_id.c_str(), popup_flags)) {
                         // Draw parameters
                         selected_mod_ptr->present.param_groups.PresentGUI(selected_mod_ptr->parameters,
-                            selected_mod_ptr->FullName(), "", vislib::math::Ternary(vislib::math::Ternary::TRI_UNKNOWN),
-                            false, ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
+                            selected_mod_ptr->FullName(), "", vislib::math::Ternary::TRI_UNKNOWN, false,
+                            ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr, GUI_INVALID_ID, nullptr);
 
                         ImVec2 popup_size = ImGui::GetWindowSize();
                         bool param_popup_open = ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId);
@@ -734,11 +738,17 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 
 void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_graph) {
 
+    ImGuiStyle& style = ImGui::GetStyle();
     const std::string delimiter("|");
 
-    const float child_height = ImGui::GetFrameHeightWithSpacing() * 1.0f;
-    auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened;
+    float child_height = ImGui::GetFrameHeightWithSpacing();
+    if (this->add_menu_scrollbar_height) {
+        child_height += static_cast<float>(ImGuiStyleVar_ScrollbarSize) +
+                        (style.ItemInnerSpacing.y * megamol::gui::gui_scaling.Get()); // why?
+    }
+    auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_HorizontalScrollbar;
     ImGui::BeginChild("graph_menu", ImVec2(0.0f, child_height), false, child_flags);
+    float content_region_avail_x = ImGui::GetContentRegionAvail().x;
 
     // Choose single selected view module
     ModulePtr_t selected_mod_ptr;
@@ -750,7 +760,6 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         }
     }
     // Main View Checkbox
-    ImGuiStyle& style = ImGui::GetStyle();
     const float min_text_width = 3.0f * ImGui::GetFrameHeightWithSpacing();
     if (selected_mod_ptr == nullptr) {
         GUIUtils::ReadOnlyWigetStyle(true);
@@ -918,6 +927,14 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         this->graph_layout = 1;
     }
 
+    // --------------------------------------------------
+    ImGui::SameLine();
+    float cursor_pos_x = ImGui::GetCursorPosX() - style.ItemSpacing.x;
+    this->add_menu_scrollbar_height = false;
+    if (content_region_avail_x < cursor_pos_x) {
+        this->add_menu_scrollbar_height = true;
+    }
+
     ImGui::EndChild();
 }
 
@@ -938,21 +955,20 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
 
     // Update canvas position
     ImVec2 new_position = ImGui::GetWindowPos();
-    if ((this->graph_state.canvas.position.x != new_position.x) ||
-        (this->graph_state.canvas.position.y != new_position.y)) {
+    if (this->graph_state.canvas.position != new_position) {
         this->update = true;
     }
     this->graph_state.canvas.position = new_position;
     // Update canvas size
     ImVec2 new_size = ImGui::GetWindowSize();
-    if ((this->graph_state.canvas.size.x != new_size.x) || (this->graph_state.canvas.size.y != new_size.y)) {
+    if (this->graph_state.canvas.size != new_size) {
         this->update = true;
     }
     this->graph_state.canvas.size = new_size;
     // Update canvas offset
     ImVec2 new_offset =
         this->graph_state.canvas.position + (this->graph_state.canvas.scrolling * this->graph_state.canvas.zooming);
-    if ((this->graph_state.canvas.offset.x != new_offset.x) || (this->graph_state.canvas.offset.y != new_offset.y)) {
+    if (this->graph_state.canvas.offset != new_offset) {
         this->update = true;
     }
     this->graph_state.canvas.offset = new_offset;
@@ -1146,7 +1162,8 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
     ImGui::Separator();
 
     // Mode
-    if (megamol::gui::ParameterPresentation::ParameterExtendedModeButton(this->param_extended_mode)) {
+    if (megamol::gui::ParameterPresentation::ParameterExtendedModeButton(
+            "parameter_search_child", this->param_extended_mode)) {
         for (auto& module_ptr : inout_graph.GetModules()) {
             for (auto& parameter : module_ptr->parameters) {
                 parameter.present.extended = this->param_extended_mode;
@@ -1186,7 +1203,7 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
                             "] Set keyboard focus to search input field.\n"
                             "Case insensitive substring search in module and parameter names.";
     this->search_widget.Widget("graph_parameter_search", help_text);
-    auto search_string = this->search_widget.GetSearchString();
+
 
     ImGui::EndChild();
 
@@ -1197,28 +1214,53 @@ void megamol::gui::GraphPresentation::present_parameters(megamol::gui::Graph& in
     ImGui::BeginChild("parameter_param_frame_child", ImVec2(graph_width, 0.0f), false, child_flags);
 
     if (!this->graph_state.interact.modules_selected_uids.empty()) {
-        // Loop over all selected modules
+        // Get module groups
+        std::map<std::string, std::vector<ModulePtr_t>> group_map;
         for (auto& module_uid : this->graph_state.interact.modules_selected_uids) {
             ModulePtr_t module_ptr;
             // Get pointer to currently selected module(s)
             if (inout_graph.GetModule(module_uid, module_ptr)) {
-                ImGui::PushID(module_ptr->uid);
+                auto group_name = module_ptr->present.group.name;
+                if (!group_name.empty()) {
+                    group_map["::" + group_name].emplace_back(module_ptr);
+                } else {
+                    group_map[""].emplace_back(module_ptr);
+                }
+            }
+        }
+        for (auto& group : group_map) {
+            std::string search_string = this->search_widget.GetSearchString();
+            bool indent = false;
+            bool group_header_open = group.first.empty();
+            if (!group_header_open) {
+                group_header_open =
+                    GUIUtils::GroupHeader(megamol::gui::HeaderType::MODULE_GROUP, group.first, search_string);
+                indent = true;
+                ImGui::Indent();
+            }
+            if (group_header_open) {
+                for (auto& module_ptr : group.second) {
+                    ImGui::PushID(module_ptr->uid);
+                    std::string module_label = module_ptr->FullName();
 
-                // Set default state of header
-                /// XXX Utf8 encode not required(?)
-                auto headerId = ImGui::GetID(module_ptr->name.c_str());
-                auto headerState = ImGui::GetStateStorage()->GetInt(headerId, 1); // 0=close 1=open
-                ImGui::GetStateStorage()->SetInt(headerId, headerState);
-                if (ImGui::CollapsingHeader(module_ptr->name.c_str(), nullptr, ImGuiTreeNodeFlags_None)) {
+                    // Draw module header
+                    bool module_header_open =
+                        GUIUtils::GroupHeader(megamol::gui::HeaderType::MODULE, module_label, search_string);
+                    // Module description as hover tooltip
+                    this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
 
                     // Draw parameters
-                    module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(),
-                        search_string, vislib::math::Ternary(this->param_extended_mode), true,
-                        ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr);
-                }
-                this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_ptr->name.c_str()), 0.75f, 5.0f);
+                    if (module_header_open) {
+                        module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(),
+                            search_string, vislib::math::Ternary(this->param_extended_mode), true,
+                            ParameterPresentation::WidgetScope::LOCAL, nullptr, nullptr, GUI_INVALID_ID, nullptr);
+                    }
 
-                ImGui::PopID();
+                    ImGui::PopID();
+                }
+            }
+            if (indent) {
+                ImGui::Unindent();
             }
         }
     }
@@ -1238,7 +1280,7 @@ void megamol::gui::GraphPresentation::present_canvas_grid(void) {
     // Color
     const ImU32 COLOR_GRID = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
 
-    const float GRID_SIZE = 64.0f * this->graph_state.canvas.zooming;
+    const float GRID_SIZE = (64.0f * megamol::gui::gui_scaling.Get()) * this->graph_state.canvas.zooming;
     ImVec2 relative_offset = this->graph_state.canvas.offset - this->graph_state.canvas.position;
 
     for (float x = fmodf(relative_offset.x, GRID_SIZE); x < this->graph_state.canvas.size.x; x += GRID_SIZE) {
@@ -1352,7 +1394,7 @@ void megamol::gui::GraphPresentation::present_canvas_multiselection(Graph& inout
         draw_list->AddRectFilled(multiselect_start_pos, multiselect_end_pos, COLOR_MULTISELECT_BACKGROUND,
             GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All);
 
-        float border = 1.0f;
+        float border = (1.0f * megamol::gui::gui_scaling.Get());
         draw_list->AddRect(multiselect_start_pos, multiselect_end_pos, COLOR_MULTISELECT_BORDER, GUI_RECT_CORNER_RADIUS,
             ImDrawCornerFlags_All, border);
     } else if (this->multiselect_done && ImGui::IsWindowHovered() && ImGui::IsMouseReleased(0)) {
@@ -1618,7 +1660,7 @@ void megamol::gui::GraphPresentation::layout(
 
     // Calculate new position of graph elements
     ImVec2 pos = init_position;
-    float max_call_width = 25.0f;
+    float max_call_width = (25.0f * megamol::gui::gui_scaling.Get());
     float max_graph_element_width = 0.0f;
 
     size_t layer_count = layers.size();

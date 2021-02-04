@@ -74,7 +74,7 @@ static inline glm::quat quaternion_from_vectors(glm::vec3 view_vector, glm::vec3
 
 // ##################################################################### //
 /*
- * Utility class providing simple primitive rendering for the cinematic plugin (using non legacy opengl).
+ * Utility class providing simple primitive rendering (using non legacy opengl).
  */
 class RenderUtils {
 
@@ -137,6 +137,10 @@ public:
         this->smooth = s;
     }
 
+<<<<<<< HEAD
+=======
+protected:
+>>>>>>> origin/master
     RenderUtils();
 
     ~RenderUtils();
