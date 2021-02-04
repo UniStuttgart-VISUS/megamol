@@ -53,7 +53,7 @@ using namespace megamol::core::view;
  * View3DGL::View3DGL
  */
 View3DGL::View3DGL(void)
-    : view::AbstractRenderingViewGL()
+    : view::AbstractRenderingView()
     /*, view::AbstractCamParamSync()*/
     , cursor2d()
     , rendererSlot("rendering", "Connects the view to a Renderer")
@@ -298,7 +298,7 @@ View3DGL::View3DGL(void)
     this->MakeSlotAvailable(&this->cameraOvrParam);
 
     this->resetViewSlot.SetParameter(new param::ButtonParam(view::Key::KEY_HOME));
-    this->resetViewSlot.SetUpdateCallback(&View3D_2::onResetView);
+    this->resetViewSlot.SetUpdateCallback(&View3DGL::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
 
     this->resetViewOnBBoxChangeSlot.SetParameter(new param::BoolParam(false));
@@ -314,7 +314,7 @@ View3DGL::View3DGL(void)
     defaultViewParam->SetGUIVisible(camparamvisibility);
     this->cameraSetViewChooserParam.SetParameter(defaultViewParam),
     this->MakeSlotAvailable(&this->cameraSetViewChooserParam);
-    this->cameraSetViewChooserParam.SetUpdateCallback(&View3D_2::onResetView);
+    this->cameraSetViewChooserParam.SetUpdateCallback(&View3DGL::onResetView);
 
     this->cameraViewOrientationParam.SetParameter(new param::Vector4fParam(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 1.0f)));
     this->MakeSlotAvailable(&this->cameraViewOrientationParam);
@@ -512,7 +512,7 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
 
         // TODO
         // cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
-        cr3d->SetLastFrameTime(AbstractRenderingViewGL::lastFrameTime());
+        cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
 
         auto currentTime = std::chrono::high_resolution_clock::now();
         this->lastFrameDuration =
@@ -581,11 +581,7 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
     }
 
     // Init rendering ---------------------------------------------------------
-    // Initialise rendering
-    if (!this->utils.InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[View3DGL] Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-    }
+
     glm::vec3 pos_bottom_left = {0.0f, 0.0f, 0.0f};
     glm::vec3 pos_upper_left = {0.0f, 1.0f, 0.0f};
     glm::vec3 pos_upper_right = {1.0f, 1.0f, 0.0f};
@@ -599,7 +595,7 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
 
     this->setCameraValues(this->cam);
 
-    AbstractRenderingViewGL::endFrame();
+    AbstractRenderingView::endFrame();
 
     // this->lastFrameParams->CopyFrom(this->OnGetCamParams, false);
 
@@ -1106,6 +1102,13 @@ bool View3DGL::create(void) {
     this->cursor2d.SetButtonCount(3);
 
     this->firstImg = true;
+
+    // Initialise utils
+    if (!this->utils.InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[View3DGL] Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
+    }
 
     return true;
 }

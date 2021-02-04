@@ -137,10 +137,6 @@ public:
         this->smooth = s;
     }
 
-<<<<<<< HEAD
-=======
-protected:
->>>>>>> origin/master
     RenderUtils();
 
     ~RenderUtils();
