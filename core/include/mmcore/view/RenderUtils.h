@@ -137,6 +137,10 @@ public:
         this->smooth = s;
     }
 
+    inline bool isInitialized() {
+        return this->init_once;
+    }
+
     RenderUtils();
 
     ~RenderUtils();

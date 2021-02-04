@@ -1104,10 +1104,12 @@ bool View3DGL::create(void) {
     this->firstImg = true;
 
     // Initialise utils
-    if (!this->utils.InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[View3DGL] Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
+    if (!this->utils.isInitialized()){
+        if (!this->utils.InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[View3DGL] Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+                __LINE__);
+        }
     }
 
     return true;
