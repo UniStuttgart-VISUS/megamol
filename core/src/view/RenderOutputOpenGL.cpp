@@ -138,6 +138,7 @@ void view::RenderOutputOpenGL::SetOutputBuffer(
  */
 view::RenderOutputOpenGL& view::RenderOutputOpenGL::operator=(
         const view::RenderOutputOpenGL& rhs) {
+    RenderOutput::operator=(rhs);
     this->outputBuffer = rhs.outputBuffer;
     this->outputFBO = rhs.outputFBO;
     this->outputFBOTargets = rhs.outputFBOTargets;
@@ -149,7 +150,7 @@ view::RenderOutputOpenGL& view::RenderOutputOpenGL::operator=(
 /*
  * view::RenderOutputOpenGL::RenderOutput
  */
-view::RenderOutputOpenGL::RenderOutputOpenGL(void) : AbstractRenderOutput(),
+view::RenderOutputOpenGL::RenderOutputOpenGL(void) : RenderOutput(),
         outputBuffer(GL_BACK), outputFBO(NULL), outputFBOTargets(),
         outputViewport(0, 0, 0, 0) {
     // intentionally empty

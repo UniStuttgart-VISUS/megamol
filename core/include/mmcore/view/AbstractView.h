@@ -1,21 +1,26 @@
 /*
  * AbstractView.h
  *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2008 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
  */
 
+#ifndef MEGAMOLCORE_ABSTRACTVIEW_H_INCLUDED
+#define MEGAMOLCORE_ABSTRACTVIEW_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #    pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/Module.h"
 #include "mmcore/api/MegaMolCore.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/AbstractParam.h"
+#include "vislib/Array.h"
 #include "vislib/Serialiser.h"
 #include "vislib/SingleLinkedList.h"
-#include "vislib/String.h"
 #include "vislib/SmartPtr.h"
+#include "vislib/String.h"
 #include <AbstractInputScope.h>
 
 namespace megamol {
@@ -327,3 +332,5 @@ private:
 } /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */
+
+#endif /* MEGAMOLCORE_ABSTRACTVIEW_H_INCLUDED */

@@ -169,7 +169,7 @@ bool BoundingBoxRenderer::GetExtents(CallRender3DGL& call) {
         return false;
     }
     *chainedCall = call;
-    bool retVal = (*chainedCall)(view::AbstractCallRenderGL::FnGetExtents);
+    bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
     call = *chainedCall;
     return retVal;
 }
@@ -179,8 +179,8 @@ bool BoundingBoxRenderer::GetExtents(CallRender3DGL& call) {
  */
 bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractViewGL> viewptr =
-        std::dynamic_pointer_cast<const view::AbstractViewGL>(leftSlotParent);
+    std::shared_ptr<const view::AbstractView> viewptr =
+        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
 
     if (viewptr != nullptr) {
         // TODO move this behind the fbo magic?
@@ -198,7 +198,7 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
         return false;
     }
     *chainedCall = call;
-    bool retVal = (*chainedCall)(view::AbstractCallRenderGL::FnGetExtents);
+    bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
     call = *chainedCall;
 
     Camera_2 cam;
@@ -220,7 +220,7 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderBoundingBoxBack(mvp, boundingBoxes, smoothLines);
     }
-    renderRes &= (*chainedCall)(view::AbstractCallRenderGL::FnRender);
+    renderRes &= (*chainedCall)(view::AbstractCallRender::FnRender);
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderBoundingBoxFront(mvp, boundingBoxes, smoothLines);
     }

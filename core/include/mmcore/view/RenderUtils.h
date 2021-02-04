@@ -137,7 +137,6 @@ public:
         this->smooth = s;
     }
 
-protected:
     RenderUtils();
 
     ~RenderUtils();

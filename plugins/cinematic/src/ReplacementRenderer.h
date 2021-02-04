@@ -11,7 +11,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/RendererModule.h"
-#include "mmcore/view/AbstractCallRender3DGL.h"
+#include "mmcore/view/AbstractCallRender3D.h"
 #include "mmcore/view/Input.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/param/BoolParam.h"

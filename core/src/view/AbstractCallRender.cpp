@@ -1,30 +1,42 @@
 /*
  * AbstractCallRender.cpp
  *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
 #include "mmcore/view/AbstractCallRender.h"
+#include "vislib/assert.h"
 
-namespace megamol::core::view {
+using namespace megamol::core;
 
 
-AbstractCallRender& view::AbstractCallRender::operator=(
+/*
+ * view::AbstractCallRender::NO_GPU_AFFINITY
+ */
+
+
+/*
+ * view::AbstractCallRender::operator=
+ */
+view::AbstractCallRender& view::AbstractCallRender::operator=(
         const view::AbstractCallRender& rhs) {
     this->cntTimeFrames = rhs.cntTimeFrames;
+
     this->time = rhs.time;
     this->instTime = rhs.instTime;
+    this->isInSituTime = rhs.isInSituTime;
     this->lastFrameTime = rhs.lastFrameTime;
 
     return *this;
 }
 
 
-AbstractCallRender::AbstractCallRender(void) : InputCall(), cntTimeFrames(1),
-        time(0.0f), instTime(0.0f), lastFrameTime(0.0) {
+/*
+ * view::AbstractCallRender::AbstractCallRender
+ */
+view::AbstractCallRender::AbstractCallRender(void) : InputCall(), cntTimeFrames(1),
+        time(0.0f), instTime(0.0f), isInSituTime(false), lastFrameTime(0.0) {
     // intentionally empty
-}
-
 }

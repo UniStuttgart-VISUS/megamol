@@ -347,7 +347,7 @@ public:
      *
      * @return The instantiated view module
      */
-    view::AbstractViewGL* instantiateSubView(ViewDescription* vd);
+    view::AbstractView* instantiateSubView(ViewDescription* vd);
 
     /**
      * Instantiates the next pending job, if there is one.

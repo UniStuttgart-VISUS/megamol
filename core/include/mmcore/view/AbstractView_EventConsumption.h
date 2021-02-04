@@ -7,23 +7,23 @@
 
 #pragma once
 
-#include "AbstractViewGL.h"
+#include "AbstractView.h"
 #include "FrontendResource.h"
 
 namespace megamol {
 namespace core {
 namespace view {
 
-    // these functions implement passing rendering resources or events from the frontend to the AbstractViewGL
+    // these functions implement passing rendering resources or events from the frontend to the AbstractView
     // they get called by the MegaMolGraph when a View module got spawned in the graph
     // note that starting the actual rendering of a frame is handled via a callback to 'view_poke_rendering'
     // and from the perspective of the MegaMolGreaph does not look different from consumption of rendering resources or input events
 
-    MEGAMOLCORE_API void view_consume_keyboard_events(AbstractViewGL& view, megamol::frontend::FrontendResource const& resource);
-    MEGAMOLCORE_API void view_consume_mouse_events(AbstractViewGL& view, megamol::frontend::FrontendResource const& resource);
-    MEGAMOLCORE_API void view_consume_window_events(AbstractViewGL& view, megamol::frontend::FrontendResource const& resource);
-    MEGAMOLCORE_API void view_consume_framebuffer_events(AbstractViewGL & view, megamol::frontend::FrontendResource const& resource);
-    MEGAMOLCORE_API void view_poke_rendering(AbstractViewGL& view);//, megamol::frontend::FrontendResource const& resource);
+    MEGAMOLCORE_API void view_consume_keyboard_events(AbstractView& view, megamol::frontend::FrontendResource const& resource);
+    MEGAMOLCORE_API void view_consume_mouse_events(AbstractView& view, megamol::frontend::FrontendResource const& resource);
+    MEGAMOLCORE_API void view_consume_window_events(AbstractView& view, megamol::frontend::FrontendResource const& resource);
+    MEGAMOLCORE_API void view_consume_framebuffer_events(AbstractView & view, megamol::frontend::FrontendResource const& resource);
+    MEGAMOLCORE_API void view_poke_rendering(AbstractView& view);//, megamol::frontend::FrontendResource const& resource);
 
     // to do this right we should be able to as a view object which runtime resources it expects (keyboard inputs, gl context)
     // and just pass those resources to the view when rendering a frame

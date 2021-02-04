@@ -18,13 +18,15 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractCallRenderGL.h"
+#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/AbstractRenderingViewGL.h"
 #include "mmcore/view/CameraSerializer.h"
 #include "mmcore/view/Camera_2.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/TimeControl.h"
 #include "vislib/graphics/Cursor2D.h"
+#include "RenderUtils.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 namespace megamol {
 namespace core {
@@ -313,7 +315,7 @@ protected:
     param::ParamSlot stereoEyeDistSlot;
 
     /** The incoming call */
-    view::AbstractCallRenderGL* overrideCall;
+    view::AbstractCallRender* overrideCall;
 
     /** The move step size in world coordinates */
     param::ParamSlot viewKeyMoveStepSlot;
@@ -404,6 +406,9 @@ protected:
     std::chrono::microseconds lastFrameDuration;
 
     bool cameraControlOverrideActive;
+
+    vislib::graphics::gl::FramebufferObject fbo;
+    RenderUtils utils;
 };
 
 } // namespace view

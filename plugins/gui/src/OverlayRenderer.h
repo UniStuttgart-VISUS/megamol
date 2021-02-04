@@ -26,7 +26,7 @@
 #include "mmcore/utility/ResourceWrapper.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/AbstractViewGL.h"
+#include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/RendererModule.h"
 

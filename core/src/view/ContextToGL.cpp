@@ -51,7 +51,7 @@ bool ContextToGL::GetExtents(CallRender3DGL& call) {
     if (!_framebuffer) {
         _framebuffer = std::make_shared<CPUFramebuffer>();
     }
-    cr->SetFramebuffer(_framebuffer);
+    cr->setGenericFramebuffer(_framebuffer);
 
     (*cr)(view::CallRender3D::FnGetExtents);
 
@@ -75,7 +75,7 @@ bool ContextToGL::Render(CallRender3DGL& call) {
     if (!_framebuffer) {
         _framebuffer = std::make_shared<CPUFramebuffer>();
     }
-    cr->SetFramebuffer(_framebuffer);
+    cr->setGenericFramebuffer(_framebuffer);
 
     (*cr)(view::CallRender3D::FnRender);
 

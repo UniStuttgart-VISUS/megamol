@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "GraphCollection.h"
+#include "mmcore/view/AbstractView.h"
 
 
 using namespace megamol;
@@ -451,7 +452,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                         }
                     }
                     new_module_ptr->plugin_name = "[n/a]";
-                    core::view::AbstractViewGL* viewptr = dynamic_cast<core::view::AbstractViewGL*>(module_ptr);
+                    core::view::AbstractView* viewptr = dynamic_cast<core::view::AbstractView*>(module_ptr);
                     new_module_ptr->is_view = (viewptr != nullptr);
                     new_module_ptr->present.label_visible = graph_ptr->present.GetModuleLabelVisibility();
                 }
@@ -1307,8 +1308,9 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         //    "[GUI] [DEBUG] Created temporary module '%s'.", mod_desc->ClassName());
 
-        std::shared_ptr<const core::view::AbstractViewGL> viewptr =
-            std::dynamic_pointer_cast<const core::view::AbstractViewGL>(new_mod);
+        std::shared_ptr<const core::view::AbstractView> viewptr =
+            std::dynamic_pointer_cast<const core::view::AbstractView>(new_mod);
+
         mod.is_view = (viewptr != nullptr);
 
         std::vector<std::shared_ptr<core::param::ParamSlot>> paramSlots;

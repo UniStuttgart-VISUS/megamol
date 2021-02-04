@@ -22,7 +22,7 @@ using megamol::core::utility::log::Log;
 /*
  * view::HeadView::HeadView
  */
-view::HeadView::HeadView(void) : AbstractViewGL(),
+view::HeadView::HeadView(void) : AbstractView(),
 viewSlot("view", "Connects to a view"),
 tickSlot("tick", "Connects to a module that needs a tick"),
 override_view_call(nullptr) {
@@ -141,7 +141,7 @@ void view::HeadView::Resize(unsigned int width, unsigned int height) {
     this->height = height;
 
     if (view != nullptr) {
-        AbstractViewGL *abstract_view = const_cast<AbstractViewGL*>(dynamic_cast<const AbstractViewGL *>(static_cast<const Module*>(view->PeekCalleeSlot()->Owner())));
+        AbstractView *abstract_view = const_cast<AbstractView*>(dynamic_cast<const AbstractView *>(static_cast<const Module*>(view->PeekCalleeSlot()->Owner())));
 
         if (abstract_view != nullptr) {
             abstract_view->Resize(width, height);

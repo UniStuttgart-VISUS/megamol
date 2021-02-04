@@ -15,7 +15,7 @@
 #include "mmcore/Module.h"
 #include "mmcore/ViewInstance.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractViewGL.h"
+#include "mmcore/view/AbstractView.h"
 
 
 namespace megamol {
@@ -28,7 +28,7 @@ namespace special {
      * Class implementing the screen shooter job module
      */
     class ScreenShooter : public job::AbstractJob, public Module,
-        public view::AbstractViewGL::Hooks {
+        public view::AbstractView::Hooks {
     public:
 
         /**
@@ -119,7 +119,7 @@ namespace special {
          *
          * @param view The calling view
          */
-        virtual void BeforeRender(view::AbstractViewGL *view);
+        virtual void BeforeRender(view::AbstractView *view);
 
         /*
          * Create the screenshot.
@@ -137,7 +137,7 @@ namespace special {
          */
         bool triggerButtonClicked(param::ParamSlot& slot);
 
-        param::ParamSlot* findTimeParam(view::AbstractViewGL* view);
+        param::ParamSlot* findTimeParam(view::AbstractView* view);
 
         /** The name of the view instance to be shot */
         param::ParamSlot viewNameSlot;

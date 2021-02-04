@@ -14,7 +14,7 @@
 #include "mmcore/ModuleNamespace.h"
 #include "mmcore/ApiHandle.h"
 #include "mmcore/api/MegaMolCore.h"
-#include "mmcore/view/AbstractViewGL.h"
+#include "mmcore/view/AbstractView.h"
 #include "vislib/assert.h"
 #include "vislib/forceinline.h"
 
@@ -47,14 +47,14 @@ namespace core {
          *
          * @return 'true' on success, 'false' on failure.
          */
-        bool Initialize(ModuleNamespace::ptr_type ns, view::AbstractViewGL *view);
+        bool Initialize(ModuleNamespace::ptr_type ns, view::AbstractView *view);
 
         /**
          * Gets the view object encapsuled by this instance.
          *
          * @return The view object.
          */
-        VISLIB_FORCEINLINE view::AbstractViewGL *View(void) {
+        VISLIB_FORCEINLINE view::AbstractView *View(void) {
             return this->view;
         }
 
@@ -100,7 +100,7 @@ namespace core {
     private:
 
         /** The view module */
-        view::AbstractViewGL *view;
+        view::AbstractView *view;
 
         /** The close request callback function pointer */
         mmcViewCloseRequestFunction closeRequestCallback;

@@ -15,7 +15,7 @@ using namespace megamol::frontend_resources;
 /*
  * view::AbstractOverrideView::AbstractOverrideView
  */
-view::AbstractOverrideView::AbstractOverrideView(void) : AbstractViewGL(),
+view::AbstractOverrideView::AbstractOverrideView(void) : AbstractView(),
         renderViewSlot("renderView", "Slot for outgoing rendering requests to other views"),
         viewportWidth(1), viewportHeight(1) {
 
@@ -45,7 +45,7 @@ float view::AbstractOverrideView::DefaultTime(double instTime) const {
     if (s == NULL) return 0.0f;
     const Module *m = static_cast<const Module*>(s->Owner());
     if (m == NULL) return 0.0f;
-    const AbstractViewGL *v = dynamic_cast<const AbstractViewGL *>(m);
+    const AbstractView *v = dynamic_cast<const AbstractView *>(m);
     if (v == NULL) return 0.0f;
     return v->DefaultTime(instTime);
 }
@@ -235,11 +235,11 @@ void view::AbstractOverrideView::disconnectOutgoingRenderCall(void) {
 /*
  * view::AbstractOverrideView::getConnectedView
  */
-view::AbstractViewGL *view::AbstractOverrideView::getConnectedView(void) const {
+view::AbstractView *view::AbstractOverrideView::getConnectedView(void) const {
     Call* c = const_cast<CallerSlot*>(&this->renderViewSlot)->CallAs<Call>();
     if ((c == NULL) || (c->PeekCalleeSlot() == NULL)) return NULL;
-    return const_cast<view::AbstractViewGL*>(
-        dynamic_cast<const view::AbstractViewGL*>(c->PeekCalleeSlot()->Parent().get()));
+    return const_cast<view::AbstractView*>(
+        dynamic_cast<const view::AbstractView*>(c->PeekCalleeSlot()->Parent().get()));
 }
 
 

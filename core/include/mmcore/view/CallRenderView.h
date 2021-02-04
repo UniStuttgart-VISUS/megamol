@@ -245,6 +245,7 @@ namespace view {
          * @param context The context to get the data from.
          */
         inline void PropagateContext(const mmcRenderViewContext& context) {
+            //this->SetGpuAffinity(context.GpuAffinity);
             this->SetInstanceTime(context.InstanceTime);
             this->SetTime(static_cast<float>(context.Time));
         }

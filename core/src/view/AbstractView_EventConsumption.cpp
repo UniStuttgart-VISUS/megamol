@@ -28,7 +28,7 @@ using namespace megamol::frontend_resources;
         TYPENAME const& events = resource.getResource<TYPENAME>();
 
 
-void view_consume_keyboard_events(AbstractViewGL& view, megamol::frontend::FrontendResource const& resource) {
+void view_consume_keyboard_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
     GET_RESOURCE(KeyboardEvents)//{
         for (auto& e : events.key_events)
             view.OnKey(std::get<0>(e), std::get<1>(e), std::get<2>(e));
@@ -38,7 +38,7 @@ void view_consume_keyboard_events(AbstractViewGL& view, megamol::frontend::Front
     }
 }
 
-void view_consume_mouse_events(AbstractViewGL& view, megamol::frontend::FrontendResource const& resource) {
+void view_consume_mouse_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
     GET_RESOURCE(MouseEvents)//{
         for (auto& e : events.buttons_events) 
             view.OnMouseButton(std::get<0>(e), std::get<1>(e), std::get<2>(e));
@@ -53,13 +53,13 @@ void view_consume_mouse_events(AbstractViewGL& view, megamol::frontend::Frontend
     }
 }
 
-void view_consume_window_events(AbstractViewGL& view, megamol::frontend::FrontendResource const& resource) {
+void view_consume_window_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
     GET_RESOURCE(WindowEvents)//{
         events.is_focused_events;
     }
 }
 
-void view_consume_framebuffer_events(AbstractViewGL& view, megamol::frontend::FrontendResource const& resource) {
+void view_consume_framebuffer_events(AbstractView& view, megamol::frontend::FrontendResource const& resource) {
     GET_RESOURCE(FramebufferEvents)//{
         for (auto& e: events.size_events)
             view.Resize(static_cast<unsigned int>(e.width), static_cast<unsigned int>(e.height));
@@ -69,7 +69,7 @@ void view_consume_framebuffer_events(AbstractViewGL& view, megamol::frontend::Fr
 // this is a weird place to measure passed program time, but we do it here so we satisfy _mmcRenderViewContext and nobody else needs to know
 static std::chrono::high_resolution_clock::time_point render_view_context_timer_start;
 
-void view_poke_rendering(AbstractViewGL& view) { // , megamol::frontend::FrontendResource const& resource) {
+void view_poke_rendering(AbstractView& view) { // , megamol::frontend::FrontendResource const& resource) {
     static bool started_timer = false;
     if (!started_timer) {
         render_view_context_timer_start = std::chrono::high_resolution_clock::now();
@@ -100,8 +100,8 @@ std::vector<std::string> get_gl_view_runtime_resources_requests() {
 }
 
 bool view_rendering_execution(megamol::core::Module::ptr_type module_ptr, std::vector<megamol::frontend::FrontendResource> const& resources) {
-    megamol::core::view::AbstractViewGL* view_ptr =
-        dynamic_cast<megamol::core::view::AbstractViewGL*>(module_ptr.get());
+    megamol::core::view::AbstractView* view_ptr =
+        dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
 
     megamol::frontend_resources::IOpenGL_Context const * maybe_opengl = nullptr;
 
@@ -119,7 +119,7 @@ bool view_rendering_execution(megamol::core::Module::ptr_type module_ptr, std::v
         return false;
     }
     
-    megamol::core::view::AbstractViewGL& view = *view_ptr;
+    megamol::core::view::AbstractView& view = *view_ptr;
     
     // resources are in order of initial requests from get_gl_view_runtime_resources_requests()
     megamol::core::view::view_consume_keyboard_events(view, resources[0]);
@@ -135,8 +135,8 @@ bool view_rendering_execution(megamol::core::Module::ptr_type module_ptr, std::v
 }
 
 bool view_init_rendering_state(megamol::core::Module::ptr_type module_ptr, std::vector<megamol::frontend::FrontendResource> const& resources) {
-    megamol::core::view::AbstractViewGL* view_ptr =
-        dynamic_cast<megamol::core::view::AbstractViewGL*>(module_ptr.get());
+    megamol::core::view::AbstractView* view_ptr =
+        dynamic_cast<megamol::core::view::AbstractView*>(module_ptr.get());
 
     megamol::frontend_resources::IOpenGL_Context const * maybe_opengl = nullptr;
 
@@ -154,7 +154,7 @@ bool view_init_rendering_state(megamol::core::Module::ptr_type module_ptr, std::
         return false;
     }
     
-    megamol::core::view::AbstractViewGL& view = *view_ptr;
+    megamol::core::view::AbstractView& view = *view_ptr;
 
     // fake resize events for view to consume
     auto& framebuffer_events = const_cast<megamol::frontend_resources::FramebufferEvents&>(resources[3].getResource<megamol::frontend_resources::FramebufferEvents>());

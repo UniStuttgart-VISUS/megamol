@@ -17,7 +17,7 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/AbstractViewGL.h"
+#include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageSerialiser.h"
@@ -174,7 +174,7 @@ bool cluster::simple::Server::Client::OnMessageReceived(
         this->parent.camUpdateThreadForce = true;
 
         /*          ** does not really work
-                    const view::AbstractViewGL *av = NULL;
+                    const view::AbstractView *av = NULL;
                     Call *call = NULL;
                     vislib::RawStorage mem;
                     mem.AssertSize(sizeof(vislib::net::SimpleMessageHeaderData));
@@ -183,7 +183,7 @@ bool cluster::simple::Server::Client::OnMessageReceived(
 
                     call = this->parent.viewSlot.CallAs<Call>();
                     if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() !=
-           NULL)) { av = dynamic_cast<const view::AbstractViewGL*>(call->PeekCalleeSlot()->Parent());
+           NULL)) { av = dynamic_cast<const view::AbstractView*>(call->PeekCalleeSlot()->Parent());
                     }
                     if (av != NULL) {
 
@@ -215,7 +215,7 @@ bool cluster::simple::Server::Client::OnMessageReceived(
         double instTime = this->parent.GetCoreInstance()->GetCoreInstanceTime();
         float time = 0.0f;
         AbstractNamedObject::const_ptr_type avp;
-        const view::AbstractViewGL* av = NULL;
+        const view::AbstractView* av = NULL;
         vislib::RawStorage mem;
         mem.AssertSize(sizeof(vislib::net::SimpleMessageHeaderData) + sizeof(double) + sizeof(float));
         vislib::RawStorageSerialiser serialiser(&mem, sizeof(vislib::net::SimpleMessageHeaderData));
@@ -226,7 +226,7 @@ bool cluster::simple::Server::Client::OnMessageReceived(
             Call* call = this->parent.viewSlot.CallAs<Call>();
             if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
                 avp = call->PeekCalleeSlot()->Parent();
-                av = dynamic_cast<const view::AbstractViewGL*>(avp.get());
+                av = dynamic_cast<const view::AbstractView*>(avp.get());
             }
         }
 
@@ -551,11 +551,11 @@ bool cluster::simple::Server::onViewNameUpdated(param::ParamSlot& slot) {
     ASSERT(&slot == &this->viewnameSlot);
     this->disconnectView();
     vislib::StringA viewmodname(this->viewnameSlot.Param<param::StringParam>()->Value());
-    megamol::core::view::AbstractViewGL* av = nullptr;
+    megamol::core::view::AbstractView* av = nullptr;
     {
         vislib::sys::AutoLock lock(this->ModuleGraphLock());
         AbstractNamedObject::ptr_type avp = this->FindNamedObject(viewmodname, true);
-        av = dynamic_cast<megamol::core::view::AbstractViewGL*>(avp.get());
+        av = dynamic_cast<megamol::core::view::AbstractView*>(avp.get());
     }
     if (av != NULL) {
         if (this->instance()->InstantiateCall(this->viewSlot.FullName(), av->FullName() + "::render",
@@ -781,7 +781,7 @@ bool cluster::simple::Server::onServerStartStopClicked(param::ParamSlot& slot) {
  */
 DWORD cluster::simple::Server::cameraUpdateThread(void* userData) {
     AbstractNamedObject::const_ptr_type avp;
-    const view::AbstractViewGL* av = NULL;
+    const view::AbstractView* av = NULL;
     Server* This = static_cast<Server*>(userData);
     unsigned int syncnumber = static_cast<unsigned int>(-1);
     Call* call = NULL;
@@ -798,7 +798,7 @@ DWORD cluster::simple::Server::cameraUpdateThread(void* userData) {
             call = This->viewSlot.CallAs<Call>();
             if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
                 avp = call->PeekCalleeSlot()->Parent();
-                av = dynamic_cast<const view::AbstractViewGL*>(avp.get());
+                av = dynamic_cast<const view::AbstractView*>(avp.get());
             }
         }
         if (av == NULL) break;

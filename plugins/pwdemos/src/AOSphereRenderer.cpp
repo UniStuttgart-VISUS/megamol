@@ -18,7 +18,7 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/AbstractCallRender3DGL.h"
+#include "mmcore/view/AbstractCallRender3D.h"
 #include "vislib/assert.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"

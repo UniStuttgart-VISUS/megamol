@@ -14,7 +14,7 @@ using namespace megamol::gui;
 
 
 GUIView::GUIView()
-        : core::view::AbstractViewGL()
+        : core::view::AbstractView()
         , overrideCall(nullptr)
         , render_view_slot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
         , gui() {
@@ -101,7 +101,7 @@ void GUIView::Render(const mmcRenderViewContext& context) {
         auto viewport =
             glm::vec2(static_cast<float>(viewport_rect.Width()), static_cast<float>(viewport_rect.Height()));
         this->gui.PreDraw(viewport, viewport, crv->InstanceTime());
-        (*crv)(core::view::AbstractCallRenderGL::FnRender);
+        (*crv)(core::view::AbstractCallRender::FnRender);
         this->gui.PostDraw();
     } else {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -140,8 +140,8 @@ void GUIView::Resize(unsigned int width, unsigned int height) {
     auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
     if (crv) {
         // der ganz ganz dicke "because-i-know"-Knueppel
-        AbstractViewGL* view = const_cast<AbstractViewGL*>(
-            dynamic_cast<const AbstractViewGL*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
+        AbstractView* view = const_cast<AbstractView*>(
+            dynamic_cast<const AbstractView*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
         if (view != nullptr) {
             view->Resize(width, height);
         }

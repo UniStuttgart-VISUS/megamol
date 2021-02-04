@@ -365,7 +365,7 @@ bool cluster::simple::Client::OnMessageReceived(vislib::net::SimpleMessageDispat
                 vislib::RawStorageSerialiser ser(msg.GetBodyAs<BYTE>(), msg.GetHeader().GetBodySize());
                 ser.SetOffset(0);
                 // it is sufficient to only inform view[0] because all other views reference the same ConnectedView!
-                view::AbstractViewGL *v = this->views[0]->GetConnectedView();
+                view::AbstractView *v = this->views[0]->GetConnectedView();
                 if (v != NULL) {
                     v->DeserialiseCamera(ser);
                 }

@@ -15,9 +15,10 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/math/Rectangle.h"
 #include "vislib/types.h"
-#include "mmcore/view/AbstractCallRenderGL.h"
+#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/RenderOutputOpenGL.h"
+#include "mmcore/view/GPUAffinity.h"
 
 
 namespace megamol {
@@ -40,7 +41,7 @@ namespace view {
      * call (bounding boxes).
      * The renderer should not draw anything outside the bounding box
      */
-    class MEGAMOLCORE_API CallRender2D : public AbstractCallRenderGL, public RenderOutputOpenGL {
+    class MEGAMOLCORE_API CallRender2D : public AbstractCallRender, public RenderOutputOpenGL, public GPUAffinity {
     public:
 
         /**
@@ -67,7 +68,7 @@ namespace view {
          * @return The number of functions used for this call.
          */
         static unsigned int FunctionCount(void) {
-            return AbstractCallRenderGL::FunctionCount();
+            return AbstractCallRender::FunctionCount();
         }
 
         /**
@@ -78,7 +79,7 @@ namespace view {
          * @return The name of the requested function.
          */
         static const char * FunctionName(unsigned int idx) {
-            return AbstractCallRenderGL::FunctionName(idx);
+            return AbstractCallRender::FunctionName(idx);
         }
 
         /** Ctor. */
@@ -163,8 +164,9 @@ namespace view {
          * @return A reference to this
          */
         CallRender2D& operator=(const CallRender2D& rhs) {
-            AbstractCallRenderGL::operator=(rhs);
+            AbstractCallRender::operator=(rhs);
             RenderOutputOpenGL::operator=(rhs);
+            GPUAffinity::operator=(rhs);
             this->bbox = rhs.bbox;
             this->bkgndCol[0] = rhs.bkgndCol[0];
             return *this;

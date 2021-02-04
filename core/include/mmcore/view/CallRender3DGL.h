@@ -10,9 +10,10 @@
 #include <glm/glm.hpp>
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/AbstractCallRender3DGL.h"
+#include "mmcore/view/CallRender3D.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/RenderOutputOpenGL.h"
+#include "mmcore/view/GPUAffinity.h"
 
 namespace megamol {
 namespace core {
@@ -29,7 +30,7 @@ namespace view {
  * Function "GetExtents" asks the callee to fill the extents member of the
  * call (bounding boxes, temporal extents).
  */
-class MEGAMOLCORE_API CallRender3DGL : public AbstractCallRender3DGL, public view::RenderOutputOpenGL {
+class MEGAMOLCORE_API CallRender3DGL : public CallRender3D, public view::RenderOutputOpenGL, public GPUAffinity {
 public:
     /**
      * Answer the name of the objects of this description.
@@ -50,7 +51,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return AbstractCallRender3DGL::FunctionCount(); }
+    static unsigned int FunctionCount(void) { return AbstractCallRender3D::FunctionCount(); }
 
     /**
      * Answer the name of the function used for this call.
@@ -59,7 +60,7 @@ public:
      *
      * @return The name of the requested function.
      */
-    static const char* FunctionName(unsigned int idx) { return AbstractCallRender3DGL::FunctionName(idx); }
+    static const char* FunctionName(unsigned int idx) { return AbstractCallRender3D::FunctionName(idx); }
 
     /** Ctor. */
     CallRender3DGL(void);
@@ -116,20 +117,6 @@ public:
     inline void SetMouseSelection(bool selection) { this->mouseSelection = selection; }
 
     /**
-     * Sets the background color
-     *
-     * @param backCol The new background color
-     */
-    inline void SetBackgroundColor(glm::vec4 backCol) { this->backgroundCol = backCol; }
-
-    /**
-     * Gets the background color
-     *
-     * @return The stored background color
-     */
-    inline glm::vec4 BackgroundColor(void) const { return this->backgroundCol; }
-
-    /**
      * Assignment operator
      *
      * @param rhs The right hand side operand
@@ -137,6 +124,9 @@ public:
      * @return A reference to this
      */
     CallRender3DGL& operator=(const CallRender3DGL& rhs);
+
+    using RenderOutputOpenGL::DisableOutputBuffer;
+    using RenderOutputOpenGL::EnableOutputBuffer;
 
 private:
     /** x-coordinate of the mouse pointer */
@@ -147,9 +137,6 @@ private:
 
     /** The mouse flags for the mouse event */
     view::MouseFlags mouseFlags;
-
-    /** The background color */
-    glm::vec4 backgroundCol;
 
     /** The current state of the mouse toggle selection */
     bool mouseSelection;

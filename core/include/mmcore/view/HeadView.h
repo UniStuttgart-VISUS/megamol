@@ -10,7 +10,7 @@
 
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/AbstractViewGL.h"
+#include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderViewGL.h"
 
 #include "vislib/Serialiser.h"
@@ -22,7 +22,7 @@ namespace view {
 /**
  * Abstract base class of rendering views
  */
-class HeadView : public AbstractViewGL {
+class HeadView : public AbstractView {
 public:
     /**
      * Answer the name of this module.

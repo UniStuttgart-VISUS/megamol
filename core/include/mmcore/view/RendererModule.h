@@ -50,7 +50,7 @@ public:
             &RendererModule::OnMouseMoveChainCallback);
         this->renderSlot.SetCallback(C::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
             &RendererModule::OnMouseScrollChainCallback);
-        // AbstractCallRenderGL
+        // AbstractCallRender
         this->renderSlot.SetCallback(C::ClassName(), AbstractCallRender::FunctionName(AbstractCallRender::FnRender),
             &RendererModule::RenderChainCallback);
         this->renderSlot.SetCallback(C::ClassName(), AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents),

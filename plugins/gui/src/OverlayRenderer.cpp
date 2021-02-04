@@ -395,7 +395,7 @@ bool OverlayRenderer::GetExtents(view::CallRender3DGL& call) {
     auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (chainedCall != nullptr) {
         *chainedCall = call;
-        bool retVal = (*chainedCall)(view::AbstractCallRenderGL::FnGetExtents);
+        bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
         call = *chainedCall;
         return retVal;
     }
@@ -406,8 +406,8 @@ bool OverlayRenderer::GetExtents(view::CallRender3DGL& call) {
 bool OverlayRenderer::Render(view::CallRender3DGL& call) {
 
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractViewGL> viewptr =
-        std::dynamic_pointer_cast<const view::AbstractViewGL>(leftSlotParent);
+    std::shared_ptr<const view::AbstractView> viewptr =
+        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
     if (viewptr != nullptr) { // XXX Move this behind the fbo magic?
         auto vp = call.GetViewport();
         glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
@@ -420,7 +420,7 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (chainedCall != nullptr) {
         *chainedCall = call;
-        if (!(*chainedCall)(view::AbstractCallRenderGL::FnRender)) {
+        if (!(*chainedCall)(view::AbstractCallRender::FnRender)) {
             return false;
         }
     }

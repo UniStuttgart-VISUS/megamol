@@ -1,5 +1,5 @@
 /*
- * AbstractCallRender3DGL.h
+ * AbstractCallRender3D.h
  *
  * Copyright (C) 2018 by Universitaet Stuttgart (VIS).
  * Alle Rechte vorbehalten.
@@ -13,12 +13,8 @@
 
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/AbstractCallRenderGL.h"
+#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/Camera_2.h"
-#include "vislib/SmartPtr.h"
-#include "vislib/assert.h"
-#include "vislib/types.h"
 
 namespace megamol {
 namespace core {
@@ -36,9 +32,9 @@ namespace view {
  * Function "GetCapabilities" asks the callee to set the capabilities
  * flags of the call.
  */
-class MEGAMOLCORE_API AbstractCallRender3DGL : public view::AbstractCallRenderGL {
+class MEGAMOLCORE_API AbstractCallRender3D : public view::AbstractCallRender {
 public:
-    virtual ~AbstractCallRender3DGL(void);
+    virtual ~AbstractCallRender3D(void);
 
     /**
      * Accesses the bounding boxes of the output of the callee. This can
@@ -114,11 +110,11 @@ public:
      *
      * @return A reference to this
      */
-    AbstractCallRender3DGL& operator=(const AbstractCallRender3DGL& rhs);
+    AbstractCallRender3D& operator=(const AbstractCallRender3D& rhs);
 
 protected:
     /** Ctor. */
-    AbstractCallRender3DGL(void);
+    AbstractCallRender3D(void);
 
 private:
 #ifdef _WIN32

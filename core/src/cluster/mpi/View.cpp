@@ -424,8 +424,8 @@ void megamol::core::cluster::mpi::View::Render(const mmcRenderViewContext& conte
 
         crv->SetOutputBuffer(GL_BACK, this->getViewportWidth(), this->getViewportHeight());
 
-        // view::AbstractViewGL *view = NULL;
-        // if (crv->PeekCalleeSlot() != NULL) view = dynamic_cast<view::AbstractViewGL*>(
+        // view::AbstractView *view = NULL;
+        // if (crv->PeekCalleeSlot() != NULL) view = dynamic_cast<view::AbstractView*>(
         //        const_cast<AbstractNamedObject*>(crv->PeekCalleeSlot()->Parent()));
         // if (view != NULL){
         //    if (this->frozenCam != NULL) view->DeserialiseCamera(*this->frozenCam);

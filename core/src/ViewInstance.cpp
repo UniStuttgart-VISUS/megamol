@@ -37,7 +37,7 @@ ViewInstance::~ViewInstance(void) {
 /*
  * ViewInstance::Initialize
  */
-bool ViewInstance::Initialize(ModuleNamespace::ptr_type ns, view::AbstractViewGL *view) {
+bool ViewInstance::Initialize(ModuleNamespace::ptr_type ns, view::AbstractView *view) {
     if ((this->view != NULL) || (ns == NULL) || (view == NULL)) {
         return false;
     }

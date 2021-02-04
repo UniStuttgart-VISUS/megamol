@@ -328,7 +328,7 @@ void view::special::ScreenShooter::release(void) {
 /*
  * view::special::ScreenShooter::BeforeRender
  */
-void view::special::ScreenShooter::BeforeRender(view::AbstractViewGL* view) {
+void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
     using megamol::core::utility::log::Log;
     vislib::graphics::gl::FramebufferObject fbo;
     ShooterData data;
@@ -928,7 +928,7 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
             AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
         AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
         ViewInstance* vi = dynamic_cast<ViewInstance*>(ano.get());
-        auto av = dynamic_cast<AbstractViewGL*>(ano.get());
+        auto av = dynamic_cast<AbstractView*>(ano.get());
         if (vi != nullptr) {
             if (vi->View() != nullptr) {
                 av = vi->View();
@@ -956,18 +956,18 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
         } else {
             // suppose a view was actually intended!
             bool found = false;
-            const auto fun = [this, &found](AbstractViewGL* v) {
+            const auto fun = [this, &found](AbstractView* v) {
                 v->RegisterHook(this);
                 found = true;
             };
-            this->GetCoreInstance()->FindModuleNoLock<AbstractViewGL>(mvn.PeekBuffer(), fun);
+            this->GetCoreInstance()->FindModuleNoLock<AbstractView>(mvn.PeekBuffer(), fun);
             if (!found) {
                 if (vi == nullptr) {
                     Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
                         "Unable to find view or viewInstance \"%s\" for ScreenShot", mvn.PeekBuffer());
                 } else if (av == nullptr) {
                     Log::DefaultLog.WriteMsg(Log::LEVEL_ERROR,
-                        "ViewInstance \"%s\" is not usable for ScreenShot (Not initialized) and AbstractViewGL \"%s\" "
+                        "ViewInstance \"%s\" is not usable for ScreenShot (Not initialized) and AbstractView \"%s\" "
                         "does not exist either",
                         vi->FullName().PeekBuffer(), mvn.PeekBuffer());
                 }
@@ -982,7 +982,7 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
 /*
  * view::special::ScreenShooter::findTimeParam
  */
-param::ParamSlot* view::special::ScreenShooter::findTimeParam(view::AbstractViewGL* view) {
+param::ParamSlot* view::special::ScreenShooter::findTimeParam(view::AbstractView* view) {
     vislib::TString name(this->animTimeParamNameSlot.Param<param::StringParam>()->Value());
     param::ParamSlot* timeSlot = nullptr;
 

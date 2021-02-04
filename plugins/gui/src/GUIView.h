@@ -12,14 +12,14 @@
 #include "GUIWindows.h"
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/AbstractViewGL.h"
+#include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderViewGL.h"
 
 
 namespace megamol {
 namespace gui {
 
-    class GUIView : public megamol::core::view::AbstractViewGL {
+    class GUIView : public megamol::core::view::AbstractView {
     public:
         /**
          * Answer the name of this module.

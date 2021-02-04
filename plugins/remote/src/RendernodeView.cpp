@@ -263,7 +263,7 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
 bool megamol::remote::RendernodeView::OnRenderView(core::Call& call) {
     auto crv = dynamic_cast<core::view::CallRenderViewGL*>(&call);
     if (crv == nullptr) return false;
-    auto overrideCall = dynamic_cast<core::view::AbstractCallRenderGL*>(&call);
+    auto overrideCall = dynamic_cast<core::view::AbstractCallRender*>(&call);
 
     float time = crv->Time();
     if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());

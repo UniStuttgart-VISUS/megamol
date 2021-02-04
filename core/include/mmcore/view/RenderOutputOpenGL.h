@@ -11,12 +11,11 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/AbstractRenderOutput.h"
+#include "mmcore/view/RenderOutput.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/Array.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/math/Rectangle.h"
-#include "vislib/types.h"
 
 
 namespace megamol {
@@ -29,18 +28,18 @@ namespace view {
      *
      * Handles the output buffer control.
      */
-    class MEGAMOLCORE_API RenderOutputOpenGL : public virtual AbstractRenderOutput {
+    class MEGAMOLCORE_API RenderOutputOpenGL : public RenderOutput {
     public:
 
         /**
          * Deactivates the output buffer
          */
-        virtual void DisableOutputBuffer(void);
+        virtual void DisableOutputBuffer(void) override;
 
         /**
          * Activates the output buffer
          */
-        virtual void EnableOutputBuffer(void);
+        virtual void EnableOutputBuffer(void) override;
 
         /**
          * Answer the framebuffer object to be used.

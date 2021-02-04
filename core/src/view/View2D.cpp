@@ -180,7 +180,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
         tryRestoringCamera(this->viewX, this->viewY, this->viewZoom);
     }
 
-    if ((*cr2d)(AbstractCallRenderGL::FnGetExtents)) {
+    if ((*cr2d)(AbstractCallRender::FnGetExtents)) {
         if (this->bbox != cr2d->GetBoundingBox()
             && resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
             this->ResetView();
@@ -286,7 +286,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
         ::glLineWidth(1.0f);
     }
 
-    (*cr2d)(AbstractCallRenderGL::FnRender);
+    (*cr2d)(AbstractCallRender::FnRender);
 
     if (this->showSoftCursor()) {
         ::glMatrixMode(GL_PROJECTION);
@@ -315,7 +315,7 @@ void view::View2D::ResetView(void) {
     VLTRACE(VISLIB_TRCELVL_INFO, "View2D::ResetView\n");
 
     CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
-    if ((cr2d != NULL) && ((*cr2d)(AbstractCallRenderGL::FnGetExtents))) {
+    if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
         this->viewX = -0.5f * (cr2d->GetBoundingBox().Left() + cr2d->GetBoundingBox().Right());
         this->viewY = -0.5f * (cr2d->GetBoundingBox().Bottom() + cr2d->GetBoundingBox().Top());
         if ((this->width / this->height) > static_cast<float>(cr2d->GetBoundingBox().AspectRatio())) {
@@ -493,7 +493,7 @@ bool view::View2D::OnMouseMove(double x, double y) {
         float base = 1.0f;
 
         CallRender2D* cr2d = this->rendererSlot.CallAs<CallRender2D>();
-        if ((cr2d != NULL) && ((*cr2d)(AbstractCallRenderGL::FnGetExtents))) {
+        if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
             base = cr2d->GetBoundingBox().Height();
         }
 

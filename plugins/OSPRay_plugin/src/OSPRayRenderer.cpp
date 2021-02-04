@@ -319,10 +319,10 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         //    this->number++;
         //}
 
-        //std::string fname("blub.ppm");
-        //writePPM(fname, _imgSize, _fb);
+        std::string fname("blub.ppm");
+        writePPM(fname, _imgSize, fb);
         
-        auto frmbuffer = cr.GetFramebuffer();
+        auto frmbuffer = cr.getGenericFramebuffer();
         frmbuffer->width = _imgSize[0];
         frmbuffer->height = _imgSize[1];
         frmbuffer->depthBuffer = _db;
@@ -346,7 +346,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         auto fb = reinterpret_cast<uint32_t*>(_framebuffer->map(OSP_FB_COLOR));
         _fb = std::vector<uint32_t>(fb, fb + _imgSize[0] * _imgSize[1]);
 
-        auto frmbuffer = cr.GetFramebuffer();
+        auto frmbuffer = cr.getGenericFramebuffer();
         frmbuffer->width = _imgSize[0];
         frmbuffer->height = _imgSize[1];
         frmbuffer->depthBuffer = _db;

@@ -17,7 +17,7 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/Configuration.h"
-#include "mmcore/view/AbstractViewGL.h"
+#include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "vislib/RawStorage.h"
 #include "vislib/RawStorageSerialiser.h"
@@ -171,16 +171,16 @@ bool cluster::ClusterViewMaster::onViewNameChanged(param::ParamSlot& slot) {
     {
         vislib::sys::AutoLock lock(this->ModuleGraphLock());
         AbstractNamedObject::ptr_type ano = this->FindNamedObject(viewName);
-        view::AbstractViewGL* av = dynamic_cast<view::AbstractViewGL*>(ano.get());
+        view::AbstractView* av = dynamic_cast<view::AbstractView*>(ano.get());
         if (av == NULL) {
             ModuleNamespace* mn = dynamic_cast<ModuleNamespace*>(ano.get());
             if (mn != NULL) {
-                view::AbstractViewGL* av2;
+                view::AbstractView* av2;
                 child_list_type::iterator ci, cie;
                 ci = mn->ChildList_Begin();
                 cie = mn->ChildList_End();
                 for (; ci != cie; ++ci) {
-                    av2 = dynamic_cast<view::AbstractViewGL*>((*ci).get());
+                    av2 = dynamic_cast<view::AbstractView*>((*ci).get());
                     if (av2 != NULL) {
                         if (av != NULL) {
                             av = NULL;
@@ -384,13 +384,13 @@ void cluster::ClusterViewMaster::OnCommChannelMessage(
 
     case cluster::netmessages::MSG_REQUEST_CAMERAVALUES: {
         Call* call = this->viewSlot.CallAs<Call>();
-        const view::AbstractViewGL* av = NULL;
+        const view::AbstractView* av = NULL;
         {
             vislib::sys::AutoLock lock(this->ModuleGraphLock());
             AbstractNamedObject::const_ptr_type avp;
             if ((call != NULL) && (call->PeekCalleeSlot() != NULL)) {
                 avp = call->PeekCalleeSlot()->Parent();
-                av = dynamic_cast<const view::AbstractViewGL*>(avp.get());
+                av = dynamic_cast<const view::AbstractView*>(avp.get());
             }
         }
         if (av != NULL) {
@@ -451,7 +451,7 @@ void cluster::ClusterViewMaster::ParamUpdated(param::ParamSlot& slot) {
  */
 DWORD cluster::ClusterViewMaster::cameraUpdateThread(void* userData) {
     AbstractNamedObject::const_ptr_type avp;
-    const view::AbstractViewGL* av = NULL;
+    const view::AbstractView* av = NULL;
     ClusterViewMaster* This = static_cast<ClusterViewMaster*>(userData);
     unsigned int syncnumber = static_cast<unsigned int>(-1);
     Call* call = NULL;
@@ -468,7 +468,7 @@ DWORD cluster::ClusterViewMaster::cameraUpdateThread(void* userData) {
             call = This->viewSlot.CallAs<Call>();
             if ((call != NULL) && (call->PeekCalleeSlot() != NULL) && (call->PeekCalleeSlot()->Parent() != NULL)) {
                 avp = call->PeekCalleeSlot()->Parent();
-                av = dynamic_cast<const view::AbstractViewGL*>(avp.get());
+                av = dynamic_cast<const view::AbstractView*>(avp.get());
             }
         }
         if (av == NULL) break;

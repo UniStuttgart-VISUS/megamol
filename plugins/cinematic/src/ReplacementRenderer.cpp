@@ -87,7 +87,7 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) 
     bool retVal = true;
     if (cr3d_out != nullptr) {
         *cr3d_out = call;
-        retVal = (*cr3d_out)(view::AbstractCallRenderGL::FnGetExtents);
+        retVal = (*cr3d_out)(view::AbstractCallRender::FnGetExtents);
         call = *cr3d_out;
         this->bbox = call.AccessBoundingBoxes().BoundingBox();
     }
@@ -105,8 +105,8 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) 
 bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractViewGL> viewptr =
-        std::dynamic_pointer_cast<const view::AbstractViewGL>(leftSlotParent);
+    std::shared_ptr<const view::AbstractView> viewptr =
+        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
     if (viewptr != nullptr) { // TODO move this behind the fbo magic?
         auto vp = call.GetViewport();
         glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
@@ -203,7 +203,7 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
         if (cr3d_out != nullptr) {
             *cr3d_out = call;
-            return (*cr3d_out)(core::view::AbstractCallRenderGL::FnRender);
+            return (*cr3d_out)(core::view::AbstractCallRender::FnRender);
         }
     }
 

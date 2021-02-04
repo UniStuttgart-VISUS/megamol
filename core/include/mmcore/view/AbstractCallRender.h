@@ -1,15 +1,20 @@
 /*
  * AbstractCallRender.h
  *
- * Copyright (C) 2021 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2010 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
+#ifndef MEGAMOLCORE_ABSTRACTCALLRENDER_H_INCLUDED
+#define MEGAMOLCORE_ABSTRACTCALLRENDER_H_INCLUDED
+#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
+#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/view/AbstractRenderOutput.h"
 #include "mmcore/view/InputCall.h"
 #include "vislib/Array.h"
+
 
 namespace megamol {
 namespace core {
@@ -21,7 +26,7 @@ namespace view {
      *
      * Handles the output buffer control.
      */
-    class MEGAMOLCORE_API AbstractCallRender : public InputCall {
+    class MEGAMOLCORE_API AbstractCallRender : public InputCall, public virtual AbstractRenderOutput {
     public:
         static const unsigned int FnRender = 5;
         static const unsigned int FnGetExtents = 6;
@@ -57,6 +62,28 @@ namespace view {
         /** Dtor. */
         virtual ~AbstractCallRender(void) = default;
 
+
+
+        /**
+         * Gets the instance time code
+         *
+         * @return The instance time code
+         */
+        inline double InstanceTime(void) const {
+            return this->instTime;
+        }
+
+        /**
+         * Answer the flag for in situ timing.
+         * If true 'TimeFramesCount' returns the number of the data frame
+         * currently available from the in situ source.
+         *
+         * @return The flag for in situ timing
+         */
+        inline bool IsInSituTime(void) const {
+            return this->isInSituTime;
+        }
+
         /**
          * Sets the instance time code
          *
@@ -66,13 +93,15 @@ namespace view {
             this->instTime = time;
         }
 
-         /**
-         * Gets the instance time code
+        /**
+         * Sets the flag for in situ timing.
+         * If set to true 'TimeFramesCount' returns the number of the data
+         * frame currently available from the in situ source.
          *
-         * @return The time frame code of instance time code
+         * @param v The new value for the flag for in situ timing
          */
-        inline float InstanceTime(void) const {
-            return instTime;
+        inline void SetIsInSituTime(bool v) {
+            this->isInSituTime = v;
         }
 
         /**
@@ -148,13 +177,29 @@ namespace view {
 
     private:
 
+        /** The number of time frames available to render */
         unsigned int cntTimeFrames;
+
+        /** The time code requested to render */
         float time;
+
+        /** The instance time code */
         double instTime;
+
+        /**
+         * Flag marking that 'cntTimeFrames' store the number of the currently
+         * available time frame when doing in situ visualization
+         */
+        bool isInSituTime;
+
+        /** The number of milliseconds required to render the last frame */
         double lastFrameTime;
 
     };
 
+
 } /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */
+
+#endif /* MEGAMOLCORE_ABSTRACTCALLRENDER_H_INCLUDED */

@@ -27,7 +27,7 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/AbstractCallRenderGL.h"
+#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "vislib/Exception.h"
@@ -459,7 +459,7 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
     }
 
     if (cr3d != nullptr) {
-        (*cr3d)(view::AbstractCallRenderGL::FnGetExtents);
+        (*cr3d)(view::AbstractCallRender::FnGetExtents);
         this->valuesFromOutside = this->adaptCameraValues(this->cam);
         if (this->firstImg || (!(cr3d->AccessBoundingBoxes() == this->bboxs) &&
                                   !(!cr3d->AccessBoundingBoxes().IsAnyValid() && !this->bboxs.IsBoundingBoxValid() &&
@@ -497,6 +497,31 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
         this->lastFrameTime = currentTime;
     }
 
+    // Generate FBO
+    auto wndSize = this->cam.resolution_gate();
+    float window_width = wndSize.width();
+    float window_height = wndSize.height();
+
+    if (this->fbo.IsValid()) {
+        if ((this->fbo.GetWidth() != window_width) || (this->fbo.GetHeight() != window_height)) {
+            this->fbo.Release();
+        }
+    }
+    if (!this->fbo.IsValid()) {
+        if (!this->fbo.Create(window_width, window_height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
+            throw vislib::Exception(
+                "[CINEMATIC VIEW] [Render] Unable to create image framebuffer object.", __FILE__, __LINE__);
+            return;
+        }
+    }
+    if (this->fbo.Enable() != GL_NO_ERROR) {
+        throw vislib::Exception("[CINEMATIC VIEW] [Render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
+        return;
+    }
+
+    cr3d->SetOutputBuffer(&this->fbo);
+
     // TODO
     // this->camParams->CalcClipping(this->bboxs.ClipBox(), 0.1f);
     // This is painfully wrong in the vislib camera, and is fixed here as sort of hotfix
@@ -525,8 +550,29 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
 
     if (cr3d != nullptr) {
         cr3d->SetCameraState(this->cam);
-        (*cr3d)(view::AbstractCallRenderGL::FnRender);
+        (*cr3d)(view::AbstractCallRender::FnRender);
     }
+
+    if (this->fbo.IsEnabled()) {
+        this->fbo.Disable();
+    }
+
+    // Init rendering ---------------------------------------------------------
+    // Initialise rendering
+    if (!this->utils.InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[View3DGL] Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
+    glm::vec3 pos_bottom_left = {0.0f, 0.0f, 0.0f};
+    glm::vec3 pos_upper_left = {0.0f, 1.0f, 0.0f};
+    glm::vec3 pos_upper_right = {1.0f, 1.0f, 0.0f};
+    glm::vec3 pos_bottom_right = {1.0f, 0.0f, 0.0f};
+    this->utils.Push2DColorTexture(
+        this->fbo.GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
+
+
+    glm::mat4 ortho = glm::ortho(0.0f, window_width, 0.0f, window_height, -1.0f, 1.0f);
+    this->utils.DrawAllPrimitives(ortho, glm::vec2(window_width, window_height));
 
     this->setCameraValues(this->cam);
 
@@ -623,7 +669,7 @@ bool View3DGL::OnRenderView(Call& call) {
         this->overrideBkgndCol = overBC.data(); // hurk
     }
 
-    this->overrideCall = dynamic_cast<view::AbstractCallRenderGL*>(&call);
+    this->overrideCall = dynamic_cast<view::AbstractCallRender*>(&call);
 
     float time = crv->Time();
     if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());

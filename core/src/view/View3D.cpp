@@ -307,7 +307,7 @@ void View3D::Render(const mmcRenderViewContext& context) {
 
     this->removeTitleRenderer();
     cr3d->SetBackgroundColor(glm::vec4(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f));
-    cr3d->SetFramebuffer(_framebuffer);
+    cr3d->setGenericFramebuffer(_framebuffer);
 
     // camera settings
     if (this->stereoEyeDistSlot.IsDirty()) {

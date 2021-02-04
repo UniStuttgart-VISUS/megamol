@@ -13,7 +13,7 @@
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractViewGL.h"
+#include "mmcore/view/AbstractView.h"
 #include "vislib/sys/CriticalSection.h"
 #include "vislib/graphics/FpsCounter.h"
 
@@ -26,7 +26,7 @@ namespace view {
     /**
      * Abstract base class of rendering views
      */
-    class MEGAMOLCORE_API AbstractRenderingViewGL : public AbstractViewGL {
+    class MEGAMOLCORE_API AbstractRenderingViewGL : public AbstractView {
     public:
 
         /**

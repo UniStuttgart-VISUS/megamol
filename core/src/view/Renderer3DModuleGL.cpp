@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "mmcore/view/Renderer3DModuleGL.h"
-#include "mmcore/view/AbstractViewGL.h"
+#include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRender3DGL.h"
 
 using namespace megamol::core::view;
@@ -41,7 +41,7 @@ bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
         *chainedCall = call;
 
         // chain through the get extents call
-        (*chainedCall)(view::AbstractCallRenderGL::FnGetExtents);
+        (*chainedCall)(view::AbstractCallRender::FnGetExtents);
     }
 
     // TODO extents magic
@@ -70,8 +70,8 @@ bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
  */
 bool Renderer3DModuleGL::RenderChain(CallRender3DGL& call) {
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractViewGL> viewptr =
-        std::dynamic_pointer_cast<const view::AbstractViewGL>(leftSlotParent);
+    std::shared_ptr<const view::AbstractView> viewptr =
+        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
 
     if (viewptr != nullptr) {
         auto vp = call.GetViewport();
@@ -91,7 +91,7 @@ bool Renderer3DModuleGL::RenderChain(CallRender3DGL& call) {
         *chainedCall = call;
 
         // chain through the render call
-        (*chainedCall)(view::AbstractCallRenderGL::FnRender);
+        (*chainedCall)(view::AbstractCallRender::FnRender);
 
         call = *chainedCall;
     }
