@@ -27,6 +27,7 @@ uniform float k_diff;
 uniform float k_spec;
 uniform float k_exp;
 
+//TODO M_PI
 
 vec3 depthToWorldPos(float depth, vec2 uv) {
     float z = depth * 2.0 - 1.0;
@@ -45,23 +46,23 @@ vec3 depthToWorldPos(float depth, vec2 uv) {
 //TODO: ambient part adding via light component through uniforms like Point/Distant lights
 
 //Blinn-Phong Illumination 
-vec3 blinnPhong(vec3 normal, vec3 lightdirection){//, vec3 v){
-    vec3 Colorout = specularColor.rgb;//vec3(k_amb, 0.0, 0.0);//vec3(1.0,0.0,0.0);
+vec3 blinnPhong(vec3 normal, vec3 lightdirection, vec3 v){
+    vec3 Colorout;
 
     //Ambient Part
-    //vec3 Camb = k_amb * ambientColor;
+    vec3 Camb = k_amb * ambientColor.rgb;
 
     //Diffuse Part
-    //vec3 Cdiff = diffuseColor * k_diff * dot(normal,lightdirection);
+    vec3 Cdiff = diffuseColor.rgb * k_diff * dot(normal,lightdirection);
 
     //Specular Part
-    //vec3 h = normalize(v+l);
-    //normal = normal / sqrt(normal.x*normal.x + normal.y*normal.y + normal.z*normal.z);
-    //float costheta = dot(h,normal);
-    //vec3 Cspek = specularColor * k_spec * ((k_exp + 2)/(2 * M_PI)) * pow(costheta, k_exp);
+    vec3 h = normalize(v+ lightdirection);
+    normal = normal / sqrt(normal.x*normal.x + normal.y*normal.y + normal.z*normal.z);
+    float costheta = dot(h,normal);
+    vec3 Cspek = specularColor.rgb * k_spec * ((k_exp + 2)/(2 * 3.141592f)) * pow(costheta, k_exp);
 
     //Final Equation
-    //Colorout = Camb + Cdiff + Cspek;
+    Colorout = Camb + Cdiff + Cspek;
     return Colorout;
 }
 
@@ -95,14 +96,18 @@ void main() {
             vec3 light_dir = vec3(point_light_params[i].x,point_light_params[i].y,point_light_params[i].z) - world_pos;
             float d = length(light_dir);
             light_dir = normalize(light_dir);
-            reflected_light += blinnPhong(normal,light_dir) * point_light_params[i].intensity * (1.0/(d*d));
+            //TODO V??
+            vec3 v = vec3(1.0);
+            reflected_light += blinnPhong(normal,light_dir,v) * point_light_params[i].intensity * (1.0/(d*d));
        
         }
         
         for(int i=0; i<distant_light_cnt; ++i)
         {
             vec3 light_dir = vec3(distant_light_params[i].x,distant_light_params[i].y,distant_light_params[i].z);
-            reflected_light += blinnPhong(normal,light_dir) * distant_light_params[i].intensity;
+            //TODO V??
+            vec3 v = vec3(1.0);
+            reflected_light += blinnPhong(normal,light_dir,v) * distant_light_params[i].intensity;
         
         }
         //Sets pixelcolor to illumination + color (alpha channels remains the same)
