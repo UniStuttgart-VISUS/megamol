@@ -213,34 +213,6 @@ bool ProteinViewRenderer::Render(view::CallRender3D_2& call) {
         0.0f, static_cast<float>(this->m_viewport.x), 0.0f, static_cast<float>(this->m_viewport.y), -1.0f, 1.0f);
 
     #if 1
-
-    if (this->nameSlot.Param<param::StringParam>()->Value() != vislib::TString("")) {
-        std::string id = this->nameSlot.Param<param::StringParam>()->Value().PeekBuffer();
-        if (id.size() > 4) {
-            id = id.substr(0, 4);
-        }
-        auto fontSize = 5.0f;
-        auto stringToDraw = id.c_str();
-
-        auto lineHeight = theFont.LineHeight(fontSize);
-        auto lineWidth = theFont.LineWidth(fontSize, stringToDraw);
-        std::array<float, 4> color = {0.0f, 0.0f, 0.0f, 1.0f};
-
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
-        this->theFont.DrawString(color.data(), 0.0f, 0.0, -1.0f, fontSize, false, stringToDraw);
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
-        glPopMatrix();
-    }
-    #endif
-
-    #if 1
     // lighting setup
     this->GetLights();
     glm::vec4 lightPos = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -632,7 +604,7 @@ bool ProteinViewRenderer::Render(view::CallRender3D_2& call) {
 
         ortho = glm::mat4(1.0f);
 
-        glUniform2f(this->textureShader.ParameterLocation("lowerleft"), 0.55f, 0.55f);
+        glUniform2f(this->textureShader.ParameterLocation("lowerleft"), 0.25f, 0.25f);
         glUniform2f(this->textureShader.ParameterLocation("upperright"), 0.95f, 0.95f);
         glUniform3f(this->textureShader.ParameterLocation("viewvec"), viewdir.x, viewdir.y, viewdir.z);
         glUniformMatrix4fv(this->textureShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(ortho));
@@ -642,6 +614,23 @@ bool ProteinViewRenderer::Render(view::CallRender3D_2& call) {
         this->textureShader.Disable();
         glBindVertexArray(0);
         glDisable(GL_TEXTURE_2D);
+
+        #if 1
+        if (this->nameSlot.Param<param::StringParam>()->Value() != vislib::TString("")) {
+            std::string id = this->nameSlot.Param<param::StringParam>()->Value().PeekBuffer();
+            if (id.size() > 4) {
+                id = id.substr(0, 4);
+            }
+            auto fontSize = 50.0f;
+            auto stringToDraw = id.c_str();
+
+            auto lineHeight = theFont.LineHeight(fontSize);
+            auto lineWidth = theFont.LineWidth(fontSize, stringToDraw);
+            std::array<float, 4> color = {0.0f, 0.0f, 0.0f, 1.0f};
+
+            this->theFont.DrawString(color.data(), 0.0f, 0.0, -1.0f, fontSize, false, stringToDraw);
+        }
+        #endif
 
 
         glMatrixMode(GL_PROJECTION);
