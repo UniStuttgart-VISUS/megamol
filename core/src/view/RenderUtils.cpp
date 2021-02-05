@@ -11,7 +11,7 @@ namespace megamol::core::view {
 
 // STATIC functions -------------------------------------------------------
 
-bool RenderUtils::LoadTextureFromFile(std::unique_ptr<glowl::Texture2D>& out_texture_ptr, const std::wstring& filename) {
+bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::wstring& filename) {
 
     if (filename.empty())
         return false;
@@ -46,7 +46,7 @@ bool RenderUtils::LoadTextureFromFile(std::unique_ptr<glowl::Texture2D>& out_tex
 
 
 bool RenderUtils::LoadTextureFromData(
-    std::unique_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data) {
+    std::shared_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data) {
 
     if (data == nullptr)
         return false;

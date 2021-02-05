@@ -56,7 +56,7 @@ namespace gui {
     private:
         // VARIABLES --------------------------------------------------------------
 
-        std::unique_ptr<glowl::Texture2D> tex_ptr;
+        std::shared_ptr<glowl::Texture2D> tex_ptr;
 
         // Widgets
         HoverToolTip tooltip;

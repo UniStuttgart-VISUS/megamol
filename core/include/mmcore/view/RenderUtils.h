@@ -118,14 +118,15 @@ public:
     /**
      * Load textures.
      */
-    static bool LoadTextureFromFile(std::unique_ptr<glowl::Texture2D>& out_texture_ptr, const std::wstring& filename);
+    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::wstring& filename);
 
-    static bool LoadTextureFromFile(std::unique_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename) {
+    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename) {
         return megamol::core::view::RenderUtils::LoadTextureFromFile(
             out_texture_ptr, megamol::core::utility::to_wstring(filename));
     }
 
-    static bool LoadTextureFromData(std::unique_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data);
+    static bool LoadTextureFromData(
+        std::shared_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data);
 
     /**
      * Create shader.
@@ -223,7 +224,7 @@ private:
     bool smooth;
     bool init_once;
     GLuint vertex_array;
-    std::vector<std::unique_ptr<glowl::Texture2D>> textures;
+    std::vector<std::shared_ptr<glowl::Texture2D>> textures;
     std::array<ShaderDataType, Primitives::PRIM_COUNT> queues;
     std::array<std::unique_ptr<glowl::GLSLProgram>, Primitives::PRIM_COUNT> shaders;
     std::array<std::unique_ptr<glowl::BufferObject>, Buffers::BUFF_COUNT> buffers;

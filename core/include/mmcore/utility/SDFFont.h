@@ -578,7 +578,7 @@ namespace utility {
         vislib::graphics::gl::GLSLShader shadervertcol;
 
         /** The texture of the font. */
-        std::unique_ptr<glowl::Texture2D> texture;
+        std::shared_ptr<glowl::Texture2D> texture;
 
         /** Vertex buffer object attributes. */
         enum VBOAttrib {
