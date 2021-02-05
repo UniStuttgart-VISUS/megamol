@@ -225,8 +225,7 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
                 m_point_lights_buffer->bind(1);
                 glUniform1i(m_lambert_prgm->ParameterLocation("point_light_cnt"), static_cast<GLint>(m_point_lights.size()));
                 m_distant_lights_buffer->bind(2);
-                glUniform1i(
-                    m_lambert_prgm->ParameterLocation("distant_light_cnt"), static_cast<GLint>(m_distant_lights.size()));
+                glUniform1i(m_lambert_prgm->ParameterLocation("distant_light_cnt"), static_cast<GLint>(m_distant_lights.size()));
                 glActiveTexture(GL_TEXTURE0);
                 albedo_tx2D->bindTexture();
                 glUniform1i(m_lambert_prgm->ParameterLocation("albedo_tx2D"), 0);
@@ -268,14 +267,13 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
 
                 //Phong Parameter to Shader
                 glUniform4fv(m_phong_prgm->ParameterLocation("ambientColor"),1, m_phong_ambientColor.Param<core::param::ColorParam>()->Value().data());
+                glUniform4fv(m_phong_prgm->ParameterLocation("diffuseColor"), 1, m_phong_diffuseColor.Param<core::param::ColorParam>()->Value().data());
+                glUniform4fv(m_phong_prgm->ParameterLocation("specularColor"), 1, m_phong_specularColor.Param<core::param::ColorParam>()->Value().data());
 
                 glUniform1f(m_phong_prgm->ParameterLocation("k_amb"), m_phong_k_ambient.Param<core::param::FloatParam>()->Value());
                 glUniform1f(m_phong_prgm->ParameterLocation("k_diff"), m_phong_k_diffuse.Param<core::param::FloatParam>()->Value());
                 glUniform1f(m_phong_prgm->ParameterLocation("k_spec"), m_phong_k_specular.Param<core::param::FloatParam>()->Value());
                 glUniform1f(m_phong_prgm->ParameterLocation("k_exp"), m_phong_k_exp.Param<core::param::FloatParam>()->Value());
-
-
-
 
                 m_point_lights_buffer->bind(1);
                 glUniform1i(m_phong_prgm->ParameterLocation("point_light_cnt"), static_cast<GLint>(m_point_lights.size()));

@@ -19,8 +19,8 @@ uniform mat4 inv_view_mx;
 uniform mat4 inv_proj_mx;
 
 uniform vec4 ambientColor; 
-uniform vec3 diffuseColor;
-uniform vec3 specularColor;
+uniform vec4 diffuseColor;
+uniform vec4 specularColor;
 
 uniform float k_amb;
 uniform float k_diff;
@@ -46,7 +46,7 @@ vec3 depthToWorldPos(float depth, vec2 uv) {
 
 //Blinn-Phong Illumination 
 vec3 blinnPhong(vec3 normal, vec3 lightdirection){//, vec3 v){
-    vec3 Colorout = ambientColor.rgb;//vec3(k_amb, 0.0, 0.0);//vec3(1.0,0.0,0.0);
+    vec3 Colorout = specularColor.rgb;//vec3(k_amb, 0.0, 0.0);//vec3(1.0,0.0,0.0);
 
     //Ambient Part
     //vec3 Camb = k_amb * ambientColor;
