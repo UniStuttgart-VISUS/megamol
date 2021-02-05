@@ -44,7 +44,7 @@ void compute(float t, const float tfar, const Ray ray, const float rayStep, cons
 
         // Calculate lighting
         if (use_lighting) {
-            vol_sample.xyz = phong(vol_sample.xyz, calculate_normal(texCoords), -ray.d, light - pos);
+            vol_sample.xyz = phong(vol_sample.xyz, calculate_normal(texCoords), -ray.d, -light);
         }
 
         // Opacity correction.

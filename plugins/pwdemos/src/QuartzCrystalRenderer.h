@@ -93,6 +93,9 @@ namespace demos {
         /** The slot to get the data */
         core::CallerSlot dataInSlot;
 
+        /** The call for light sources */
+        core::CallerSlot lightsSlot;
+
         /** The index of the selected crystal */
         core::param::ParamSlot crystalIdx;
 

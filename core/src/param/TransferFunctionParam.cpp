@@ -113,7 +113,7 @@ vislib::TString TransferFunctionParam::ValueString(void) const { return vislib::
  * TransferFunctionParam::TransferFunctionTexture
  */
 bool TransferFunctionParam::TransferFunctionTexture(
-    const std::string& in_tfs, std::vector<float>& out_nodes, UINT& out_texsize, std::array<float, 2>& out_range) {
+    const std::string& in_tfs, std::vector<float>& out_nodes, unsigned int& out_texsize, std::array<float, 2>& out_range) {
 
     TFNodeType nodes;
     InterpolationMode mode;
@@ -138,12 +138,12 @@ bool TransferFunctionParam::TransferFunctionTexture(
  * TransferFunctionParam::ParseTransferFunction
  */
 bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFNodeType& out_nodes,
-    InterpolationMode& out_interpolmode, UINT& out_texsize, std::array<float, 2>& out_range) {
+    InterpolationMode& out_interpolmode, unsigned int& out_texsize, std::array<float, 2>& out_range) {
 
     TFNodeType tmp_nodes;
     std::string tmp_interpolmode_str;
     InterpolationMode tmp_interpolmode;
-    UINT tmp_texsize;
+    unsigned int tmp_texsize;
     std::array<float, 2> tmp_range;
 
     if (!in_tfs.empty()) {
@@ -167,9 +167,9 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFN
             }
 
             // Get nodes data
-            UINT tf_size = (UINT)json.at("Nodes").size();
+            unsigned int tf_size = (unsigned int)json.at("Nodes").size();
             tmp_nodes.resize(tf_size);
-            for (UINT i = 0; i < tf_size; ++i) {
+            for (unsigned int i = 0; i < tf_size; ++i) {
                 json.at("Nodes")[i].get_to(tmp_nodes[i]);
             }
 
@@ -179,14 +179,6 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFN
 
         }
         catch (nlohmann::json::type_error& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::exception& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::parse_error& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }
@@ -236,7 +228,7 @@ bool TransferFunctionParam::ParseTransferFunction(const std::string& in_tfs, TFN
  * TransferFunctionParam::DumpTransferFunction
  */
 bool TransferFunctionParam::DumpTransferFunction(std::string& out_tfs, const TFNodeType& in_nodes,
-    const InterpolationMode in_interpolmode, const UINT in_texsize, std::array<float, 2> in_range) {
+    const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range) {
 
     try {
         nlohmann::json json;
@@ -266,14 +258,6 @@ bool TransferFunctionParam::DumpTransferFunction(std::string& out_tfs, const TFN
         megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
     }
-    catch (nlohmann::json::exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
-    catch (nlohmann::json::parse_error& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-        return false;
-    }
     catch (nlohmann::json::invalid_iterator& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
         return false;
@@ -300,7 +284,7 @@ bool TransferFunctionParam::DumpTransferFunction(std::string& out_tfs, const TFN
  * TransferFunctionParam::CheckTransferFunctionData
  */
 bool TransferFunctionParam::CheckTransferFunctionData(const TFNodeType& nodes, const InterpolationMode interpolmode,
-    const UINT texsize, const std::array<float, 2> range) {
+    const unsigned int texsize, const std::array<float, 2> range) {
 
     bool check = true;
 
@@ -404,13 +388,13 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
 
             // Check transfer function node data
             if (json.at("Nodes").is_array()) {
-                UINT tmp_size = (UINT)json.at("Nodes").size();
+                unsigned int tmp_size = (unsigned int)json.at("Nodes").size();
                 if (tmp_size < 2) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[CheckTransferFunctionString] There should be at least two entries in 'Nodes' array.");
                     check = false;
                 }
-                for (UINT i = 0; i < tmp_size; ++i) {
+                for (unsigned int i = 0; i < tmp_size; ++i) {
                     if (!json.at("Nodes")[i].is_array()) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[CheckTransferFunctionString] Entries of 'Nodes' should be arrays.");
@@ -422,7 +406,7 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
                                 TFP_VAL_CNT);
                             check = false;
                         } else {
-                            for (UINT k = 0; k < TFP_VAL_CNT; ++k) {
+                            for (unsigned int k = 0; k < TFP_VAL_CNT; ++k) {
                                 if (!json.at("Nodes")[i][k].is_number()) {
                                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                                         "[CheckTransferFunctionString] Values in 'Nodes' arrays should be numbers.");
@@ -439,13 +423,13 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
 
             // Check value range
             if (json.at("ValueRange").is_array()) {
-                UINT tmp_size = (UINT)json.at("ValueRange").size();
+                unsigned int tmp_size = (unsigned int)json.at("ValueRange").size();
                 if (tmp_size != 2) {
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
                         "[CheckTransferFunctionString] There should be at two entries in 'ValueRange' array.");
                     check = false;
                 }
-                for (UINT i = 0; i < tmp_size; ++i) {
+                for (unsigned int i = 0; i < tmp_size; ++i) {
                     if (!json.at("ValueRange")[i].is_number()) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[CheckTransferFunctionString] Values in 'ValueRange' array should be numbers.");
@@ -459,14 +443,6 @@ bool TransferFunctionParam::CheckTransferFunctionString(const std::string& tfs) 
             }
         }
         catch (nlohmann::json::type_error& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::exception& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::parse_error& e) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
             return false;
         }

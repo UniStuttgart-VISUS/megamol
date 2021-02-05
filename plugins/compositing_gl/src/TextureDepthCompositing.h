@@ -10,7 +10,7 @@
 
 #include <memory>
 
-#include "compositing/compositing_gl.h"
+#include "mmcore/utility/plugins/Plugin200Instance.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -22,7 +22,7 @@
 namespace megamol {
 namespace compositing {
 
-class COMPOSITING_GL_API TextureDepthCompositing : public core::Module {
+class TextureDepthCompositing : public core::Module {
 public:
     /**
      * Answer the name of this module.

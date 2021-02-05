@@ -24,25 +24,31 @@ megamol::gui::ParameterPresentation::ParameterPresentation(Param_t type)
         , widget_store()
         , set_focus(0)
         , guistate_dirty(false)
+        , show_minmax(false)
         , tf_editor_external_ptr(nullptr)
-        , tf_editor_internal()
+        , tf_editor_inplace()
         , use_external_tf_editor(false)
         , show_tf_editor(false)
         , tf_editor_hash(0)
         , file_browser()
         , tooltip()
         , image_widget()
-        , rotation_widget()
-        , show_minmax(false) {
+        , rotation_widget() {
 
     this->InitPresentation(type);
 }
 
 
-megamol::gui::ParameterPresentation::~ParameterPresentation(void) {}
+megamol::gui::ParameterPresentation::~ParameterPresentation(void) {
+
+    if (this->tf_editor_external_ptr != nullptr) {
+        this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
+    }
+}
 
 
-bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout_parameter, WidgetScope scope) {
+bool megamol::gui::ParameterPresentation::Present(
+    megamol::gui::Parameter& inout_parameter, WidgetScope scope, const std::string& module_fullname) {
 
     bool retval = false;
 
@@ -103,6 +109,13 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
                     this->tooltip.ToolTip("Presentation", ImGui::GetItemID(), 1.0f, 3.0f);
 
                     ImGui::SameLine();
+
+                    // Lua
+                    ParameterPresentation::LuaButton("param_lua_button", inout_parameter.GetValueString(),
+                        inout_parameter.full_name, module_fullname);
+                    this->tooltip.ToolTip("Copy lua command to clipboard.", ImGui::GetItemID(), 1.0f, 3.0f);
+
+                    ImGui::SameLine();
                 }
 
                 /// PARAMETER VALUE WIDGET ---------------------------------
@@ -134,7 +147,7 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
 
         ImGui::PopID();
 
-    } catch (std::exception e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
@@ -157,20 +170,20 @@ void megamol::gui::ParameterPresentation::LoadTransferFunctionTexture(
 
 bool megamol::gui::ParameterPresentation::OptionButton(const std::string& id, const std::string& label, bool dirty) {
 
+    assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
+
     bool retval = false;
     std::string widget_name("option_button");
     std::string widget_id = widget_name + id;
     ImGui::PushID(widget_id.c_str());
 
-    assert(ImGui::GetCurrentContext() != nullptr);
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    float knob_size = ImGui::GetFrameHeight();
-    float half_knob_size = knob_size / 2.0f;
+    float button_size = ImGui::GetFrameHeight();
+    float half_button_size = button_size / 2.0f;
     ImVec2 widget_start_pos = ImGui::GetCursorScreenPos();
 
     if (!label.empty()) {
-        float text_x_offset_pos = knob_size + style.ItemInnerSpacing.x;
+        float text_x_offset_pos = button_size + style.ItemInnerSpacing.x;
         ImGui::SetCursorScreenPos(widget_start_pos + ImVec2(text_x_offset_pos, 0.0f));
         ImGui::AlignTextToFramePadding();
         ImGui::TextUnformatted(label.c_str());
@@ -179,13 +192,13 @@ bool megamol::gui::ParameterPresentation::OptionButton(const std::string& id, co
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
     auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
-    ImGui::BeginChild("special_button_background", ImVec2(knob_size, knob_size), false, child_flags);
+    ImGui::BeginChild("special_button_background", ImVec2(button_size, button_size), false, child_flags);
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
-    float thickness = knob_size / 5.0f;
-    ImVec2 center = widget_start_pos + ImVec2(half_knob_size, half_knob_size);
+    float thickness = button_size / 5.0f;
+    ImVec2 center = widget_start_pos + ImVec2(half_button_size, half_button_size);
     ImU32 color_front = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
     if (dirty) {
         color_front = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_BUTTON_MODIFIED);
@@ -193,7 +206,7 @@ bool megamol::gui::ParameterPresentation::OptionButton(const std::string& id, co
     draw_list->AddCircleFilled(center, thickness, color_front, 12);
     draw_list->AddCircle(center, 2.0f * thickness, color_front, 12, (thickness / 2.0f));
 
-    ImVec2 rect = ImVec2(knob_size, knob_size);
+    ImVec2 rect = ImVec2(button_size, button_size);
     retval = ImGui::InvisibleButton("special_button", rect);
 
     ImGui::EndChild();
@@ -208,6 +221,9 @@ bool megamol::gui::ParameterPresentation::OptionButton(const std::string& id, co
 bool megamol::gui::ParameterPresentation::KnobButton(
     const std::string& id, float size, float& inout_value, float minval, float maxval) {
 
+    assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
+
     bool retval = false;
 
     const float pi = 3.14159265358f;
@@ -216,8 +232,6 @@ bool megamol::gui::ParameterPresentation::KnobButton(
     std::string widget_id = widget_name + id;
     ImGui::PushID(widget_id.c_str());
 
-    assert(ImGui::GetCurrentContext() != nullptr);
-    ImGuiStyle& style = ImGui::GetStyle();
     ImVec2 widget_start_pos = ImGui::GetCursorScreenPos();
 
     const float thickness = size / 15.0f;
@@ -299,9 +313,17 @@ bool megamol::gui::ParameterPresentation::KnobButton(
 }
 
 
-bool megamol::gui::ParameterPresentation::ParameterExtendedModeButton(bool& inout_extended_mode) {
+bool megamol::gui::ParameterPresentation::ParameterExtendedModeButton(
+    const std::string& id, bool& inout_extended_mode) {
+
+    assert(ImGui::GetCurrentContext() != nullptr);
 
     bool retval = false;
+
+    std::string widget_name("param_extend_button");
+    std::string widget_id = widget_name + id;
+    ImGui::PushID(widget_id.c_str());
+
     ImGui::BeginGroup();
 
     megamol::gui::ParameterPresentation::OptionButton("param_mode_button", "Mode");
@@ -317,6 +339,76 @@ bool megamol::gui::ParameterPresentation::ParameterExtendedModeButton(bool& inou
         ImGui::EndPopup();
     }
     ImGui::EndGroup();
+
+    ImGui::PopID();
+
+    return retval;
+}
+
+
+bool megamol::gui::ParameterPresentation::LuaButton(const std::string& id, const std::string& param_value,
+    const std::string& param_fullname, const std::string& module_fullname) {
+
+    assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    bool retval = false;
+
+    std::string widget_name("lua_button");
+    std::string widget_id = widget_name + id;
+    ImGui::PushID(widget_id.c_str());
+
+    float button_size = ImGui::GetFrameHeight();
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
+    auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
+    ImGui::BeginChild("lua_button_background", ImVec2(button_size, button_size), false, child_flags);
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
+
+    const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]);
+    ImVec2 button_start_pos = ImGui::GetCursorScreenPos();
+    ImVec2 button_middle = button_start_pos + ImVec2(button_size / 2.0f, button_size / 2.0f);
+    const std::string button_label = "lua";
+    ImVec2 text_size = ImGui::CalcTextSize(button_label.c_str());
+    ImVec2 text_pos_left_upper = button_middle - ImVec2(text_size.x / 2.0f, text_size.y / 2.0f);
+    draw_list->AddText(text_pos_left_upper, COLOR_TEXT, button_label.c_str());
+
+    ImVec2 rect = ImVec2(button_size, button_size);
+    retval = ImGui::InvisibleButton("lua_invisible_button", rect);
+
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
+
+    if (ImGui::BeginPopupContextItem("param_lua_button_context", 0)) {
+        bool copy_to_clipboard = false;
+        std::string lua_param_cmd;
+        std::string mod_name(module_fullname.c_str()); /// local copy required
+        if (ImGui::MenuItem("Copy mmSetParamValue")) {
+            lua_param_cmd = "mmSetParamValue(\"" + mod_name + "::" + param_fullname + "\",[=[" + param_value + "]=])";
+            copy_to_clipboard = true;
+        }
+        if (ImGui::MenuItem("Copy mmGetParamValue")) {
+            lua_param_cmd = "mmGetParamValue(\"" + mod_name + "::" + param_fullname + "\")";
+            copy_to_clipboard = true;
+        }
+
+        if (copy_to_clipboard) {
+#ifdef GUI_USE_GLFW
+            auto glfw_win = ::glfwGetCurrentContext();
+            ::glfwSetClipboardString(glfw_win, lua_param_cmd.c_str());
+#elif _WIN32
+            ImGui::SetClipboardText(lua_param_cmd.c_str());
+#else // LINUX
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] LUA Command:\n%s", lua_param_cmd.c_str());
+#endif
+        }
+        ImGui::EndPopup();
+    }
+
+    ImGui::PopID();
 
     return retval;
 }
@@ -683,6 +775,8 @@ bool megamol::gui::ParameterPresentation::present_parameter(
                     }
                     error = false;
                 } break;
+                default:
+                    break;
                 }
             }
         } break;
@@ -818,16 +912,10 @@ bool megamol::gui::ParameterPresentation::widget_string(
         int multiline_cnt = static_cast<int>(std::count(
             std::get<std::string>(this->widget_store).begin(), std::get<std::string>(this->widget_store).end(), '\n'));
         multiline_cnt = std::min(static_cast<int>(GUI_MAX_MULITLINE), multiline_cnt);
-        /// if (multiline_cnt == 0) {
-        ///    ImGui::InputText(hidden_label.c_str(), &std::get<std::string>(this->widget_store),
-        ///    ImGuiInputTextFlags_CtrlEnterForNewLine);
-        ///}
-        /// else {
         ImVec2 multiline_size = ImVec2(ImGui::CalcItemWidth(),
             ImGui::GetFrameHeightWithSpacing() + (ImGui::GetFontSize() * static_cast<float>(multiline_cnt)));
         ImGui::InputTextMultiline(hidden_label.c_str(), &std::get<std::string>(this->widget_store), multiline_size,
             ImGuiInputTextFlags_CtrlEnterForNewLine);
-        ///}
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             std::string utf8Str = std::get<std::string>(this->widget_store);
             GUIUtils::Utf8Decode(utf8Str);
@@ -970,7 +1058,8 @@ bool megamol::gui::ParameterPresentation::widget_filepath(
         ImGuiStyle& style = ImGui::GetStyle();
         float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
         ImGui::PushItemWidth(widget_width);
-        bool button_edit = this->file_browser.Button(std::get<std::string>(this->widget_store));
+        bool button_edit = this->file_browser.Button(
+            std::get<std::string>(this->widget_store), megamol::gui::FileBrowserWidget::FileBrowserFlag::SELECT, "");
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
@@ -1433,13 +1522,9 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
     ImGuiStyle& style = ImGui::GetStyle();
 
     if (this->use_external_tf_editor) {
-        if (this->tf_editor_external_ptr == nullptr) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Pointer to external transfer function editor is nullptr. [%s, %s, line %d]\n", __FILE__,
-                __FUNCTION__, __LINE__);
-            return false;
+        if (this->tf_editor_external_ptr != nullptr) {
+            isActive = !(this->tf_editor_external_ptr->GetConnectedParameterName().empty());
         }
-        isActive = !(this->tf_editor_external_ptr->GetConnectedParameterName().empty());
     }
 
     // LOCAL -----------------------------------------------------------
@@ -1468,36 +1553,40 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
             ImGui::TextEx(label.c_str(), ImGui::FindRenderedTextEnd(label.c_str()));
         }
 
-        // Toggle internal and external editor, if available
-        if (this->tf_editor_external_ptr != nullptr) {
-            if (ImGui::RadioButton("External", this->use_external_tf_editor)) {
-                this->use_external_tf_editor = true;
-                /// If not this->tf_editor_external_ptr->SetConnectedParameter(&param, full_param_name); additional
-                /// click on edit is required.
-            }
-            ImGui::SameLine();
-            if (ImGui::RadioButton("Internal", !this->use_external_tf_editor)) {
-                this->use_external_tf_editor = false;
+        // Toggle inplace and external editor, if available
+        if (this->tf_editor_external_ptr == nullptr) {
+            GUIUtils::ReadOnlyWigetStyle(true);
+        }
+        if (ImGui::RadioButton("External Editor", this->use_external_tf_editor)) {
+            this->use_external_tf_editor = true;
+            this->show_tf_editor = false;
+        }
+        if (this->tf_editor_external_ptr == nullptr) {
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Inplace", !this->use_external_tf_editor)) {
+            this->use_external_tf_editor = false;
+            if (this->tf_editor_external_ptr != nullptr) {
                 this->tf_editor_external_ptr->SetConnectedParameter(nullptr, "");
             }
-            ImGui::SameLine();
         }
+        ImGui::SameLine();
 
         if (this->use_external_tf_editor) {
 
             // Editor
-            ImGui::PushID("Edit_");
-            ImGui::PushStyleColor(ImGuiCol_Button, style.Colors[isActive ? ImGuiCol_ButtonHovered : ImGuiCol_Button]);
-            ImGui::PushStyleColor(
-                ImGuiCol_ButtonHovered, style.Colors[isActive ? ImGuiCol_Button : ImGuiCol_ButtonHovered]);
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, style.Colors[ImGuiCol_ButtonActive]);
-            if (ImGui::Button("Edit")) {
+            if (isActive || (this->tf_editor_external_ptr == nullptr)) {
+                GUIUtils::ReadOnlyWigetStyle(true);
+            }
+            if (ImGui::Button("Connect")) {
                 retval = true;
             }
-            ImGui::PopStyleColor(3);
-            ImGui::PopID();
+            if (isActive || (this->tf_editor_external_ptr == nullptr)) {
+                GUIUtils::ReadOnlyWigetStyle(false);
+            }
 
-        } else { // Internal Editor
+        } else { // Inplace Editor
 
             // Editor
             if (ImGui::Checkbox("Editor ", &this->show_tf_editor)) {
@@ -1551,7 +1640,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
                     this->tf_editor_external_ptr->SetTransferFunction(value, true);
                 }
             } else {
-                this->tf_editor_internal.SetTransferFunction(value, false);
+                this->tf_editor_inplace.SetTransferFunction(value, false);
             }
         }
 
@@ -1562,13 +1651,13 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
             }
             // Propagate the transfer function to the editor.
             if (updateEditor) {
-                this->tf_editor_internal.SetTransferFunction(value, false);
+                this->tf_editor_inplace.SetTransferFunction(value, false);
             }
             // Draw transfer function editor
             if (this->show_tf_editor) {
-                if (this->tf_editor_internal.Widget(false)) {
+                if (this->tf_editor_inplace.Widget(false)) {
                     std::string value;
-                    if (this->tf_editor_internal.GetTransferFunction(value)) {
+                    if (this->tf_editor_inplace.GetTransferFunction(value)) {
                         inout_parameter.SetValue(value);
                         retval = false; /// (Returning true opens external editor)
                     }
@@ -1614,8 +1703,7 @@ bool megamol::gui::ParameterPresentation::widget_knob(
     if (scope == ParameterPresentation::WidgetScope::LOCAL) {
 
         // Draw knob
-        const float knob_size =
-            (1.0f * ImGui::GetTextLineHeightWithSpacing()) + (1.0f * ImGui::GetFrameHeightWithSpacing());
+        const float knob_size = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetFrameHeightWithSpacing();
         if (ParameterPresentation::KnobButton("param_knob", knob_size, value, minval, maxval)) {
             retval = true;
         }

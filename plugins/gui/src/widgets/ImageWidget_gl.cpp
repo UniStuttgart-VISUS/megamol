@@ -62,7 +62,7 @@ bool megamol::gui::ImageWidget::LoadTextureFromData(int width, int height, float
             // Reload data
             this->tex_ptr->reload(tex_layout, static_cast<GLvoid*>(data), false);
         }
-    } catch (glowl::TextureException e) {
+    } catch (glowl::TextureException& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error during texture creation: '%s'. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__,
             __LINE__);

@@ -40,17 +40,18 @@ OSPRayGlassMaterial::~OSPRayGlassMaterial(void) {
 void OSPRayGlassMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::GLASS;
 
+    glassMaterial gm;
     auto colori = this->glassAttenuationColorInside.Param<core::param::Vector3fParam>();
-    materialContainer.glassAttenuationColorInside = colori->getArray();
-
+    gm.glassAttenuationColorInside = colori->getArray();
     auto coloro = this->glassAttenuationColorOutside.Param<core::param::Vector3fParam>();
-    materialContainer.glassAttenuationColorOutside = coloro->getArray();
+    gm.glassAttenuationColorOutside = coloro->getArray();
+    gm.glassEtaInside = this->glassEtaInside.Param<core::param::FloatParam>()->Value();
+    gm.glassEtaOutside =
+        this->glassEtaOutside.Param<core::param::FloatParam>()->Value();
+    gm.glassAttenuationDistance =
+        this->glassAttenuationDistance.Param<core::param::FloatParam>()->Value();
 
-    materialContainer.glassEtaInside = this->glassEtaInside.Param<core::param::FloatParam>()->Value();
-
-    materialContainer.glassEtaOutside = this->glassEtaOutside.Param<core::param::FloatParam>()->Value();
-
-    materialContainer.glassAttenuationDistance = this->glassAttenuationDistance.Param<core::param::FloatParam>()->Value();
+    materialContainer.material = gm;
 }
 
 bool OSPRayGlassMaterial::InterfaceIsDirty() {

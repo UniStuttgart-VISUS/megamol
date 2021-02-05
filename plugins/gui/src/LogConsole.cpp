@@ -162,14 +162,6 @@ bool megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
                     // Force open log window if there is any warning
                     if (wc.log_force_open && (new_log_level < megamol::core::utility::log::Log::LEVEL_INFO)) {
                         this->log_level = megamol::core::utility::log::Log::LEVEL_WARN;
-                        if (!wc.win_show) {
-                            ImGuiIO& io = ImGui::GetIO();
-                            ImVec2 viewport = io.DisplaySize;
-                            const float height = 10.0f * ImGui::GetFrameHeightWithSpacing();
-                            wc.win_position = ImVec2(0.0f, viewport.y - height);
-                            wc.win_size = ImVec2(viewport.x, height);
-                            wc.win_reset = true;
-                        }
                         wc.win_show = true;
                     }
 
@@ -191,9 +183,8 @@ bool megamol::gui::LogConsole::connect_log(void) {
 
     // Only connect if echo target is still default OfflineTarget
     /// Note: A second log console is temporarily created when "GUIView" module is loaded in configurator for complete
-    /// module list.
-    ///       For this "GUIView" module NO log is connected, because the main LogConsole instance is already connected
-    ///       and the taget is not the default OfflineTarget.
+    /// module list. For this "GUIView" module NO log is connected, because the main LogConsole instance is already
+    /// connected and the taget is not the default OfflineTarget.
     if ((offline_echo_target != nullptr) && (this->echo_log_target != nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(this->echo_log_target);
     }

@@ -77,7 +77,7 @@ bool megamol::gui::FileUtils::WriteFile(const std::string& filename, const std::
 
             return false;
         }
-    } catch (std::exception e) {
+    } catch (std::exception& e) {
         if (!silent)
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
@@ -108,7 +108,7 @@ bool megamol::gui::FileUtils::ReadFile(const std::string& filename, std::string&
             file.close();
             return false;
         }
-    } catch (std::exception e) {
+    } catch (std::exception& e) {
         if (!silent)
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);

@@ -15,7 +15,7 @@ elseif(WIN32)
   list(REMOVE_ITEM HEADER_FILES "include/glad/glad_glx.h")
 endif()
 
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
+add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES})
 
 target_compile_definitions(${PROJECT_NAME} 
   PRIVATE GLAD_GLAPI_EXPORT_BUILD

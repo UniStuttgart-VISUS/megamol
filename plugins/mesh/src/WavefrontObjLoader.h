@@ -10,7 +10,6 @@
 
 #include "mesh/AbstractMeshDataSource.h"
 #include "mesh/MeshCalls.h"
-#include "mesh/mesh.h"
 #include "mesh/MeshDataAccessCollection.h"
 
 #include "mmcore/CalleeSlot.h"
@@ -21,7 +20,7 @@
 namespace megamol {
 namespace mesh {
 
-class MESH_API WavefrontObjLoader : public AbstractMeshDataSource {
+class WavefrontObjLoader : public AbstractMeshDataSource {
 public:
     /**
      * Answer the name of this module.

@@ -9,7 +9,6 @@
 #define UI_ELEMENT_H_INCLUDED
 
 #include "mesh/MeshCalls.h"
-#include "mesh/mesh.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
@@ -17,7 +16,7 @@
 namespace megamol {
 namespace mesh {
 
-class MESH_API UIElement : public core::Module {
+class UIElement : public core::Module {
 public:
     /**
      * Answer the name of this module.

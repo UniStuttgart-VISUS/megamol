@@ -12,6 +12,12 @@ namespace core {
 namespace view {
 namespace light {
 
+    struct QuadLightType : public BaseLightType {
+        std::array<float, 3> position;
+        std::array<float, 3> edgeOne;
+        std::array<float, 3> edgeTwo;
+    };
+
 class MEGAMOLCORE_API QuadLight : public AbstractLight {
 public:
     /**
@@ -35,6 +41,11 @@ public:
      */
     static bool IsAvailable(void) { return true; }
 
+    /**
+     * Add the lightsource of this module to a given collection
+     */
+    void addLight(LightCollection& light_collection);
+
     /** Ctor. */
     QuadLight(void);
 
@@ -42,9 +53,9 @@ public:
     virtual ~QuadLight(void);
 
 private:
-    core::param::ParamSlot ql_position;
-    core::param::ParamSlot ql_edgeOne;
-    core::param::ParamSlot ql_edgeTwo;
+    core::param::ParamSlot position;
+    core::param::ParamSlot edgeOne;
+    core::param::ParamSlot edgeTwo;
 
     virtual bool InterfaceIsDirty();
     virtual void readParams();
