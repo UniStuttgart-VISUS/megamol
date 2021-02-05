@@ -21,9 +21,9 @@
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/view/light/QuadLight.h"
 #include "mmcore/view/light/SpotLight.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/sys/Path.h"
 #include <stdio.h>
+#include "mmcore/utility/sys/SystemInformation.h"
 
 namespace megamol {
 namespace ospray {
@@ -123,7 +123,7 @@ namespace ospray {
                 if (this->_numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
                     _device->setParam("numThreads", this->_numThreads.Param<megamol::core::param::IntParam>()->Value());
                 } else {
-                    //_device->setParam("numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
+                    _device->setParam("numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
                 }
             }
             }

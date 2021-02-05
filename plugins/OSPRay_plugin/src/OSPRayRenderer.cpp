@@ -8,19 +8,9 @@
 #include "OSPRayRenderer.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/ShaderSource.h"
-#include "vislib/math/Vector.h"
 #include "mmcore/utility/log/Log.h"
-
-#include "mmcore/CoreInstance.h"
-
 #include <chrono>
-#include <functional>
-
 #include "ospray/ospray_cpp.h"
-
-#include <sstream>
 #include <stdint.h>
 #include <corecrt_math_defines.h>
 
