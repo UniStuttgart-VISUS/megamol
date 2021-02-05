@@ -296,26 +296,29 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         */
         RendererSettings(cr.BackgroundColor());
 
+        // Only usefull if dephbuffer is used as input
+        //if (this->_useDB.Param<core::param::BoolParam>()->Value()) {
+        //    // far distance
+        //    float far_clip = _cam.far_clipping_plane();
+        //    std::vector<float> far_dist(_imgSize[0] * _imgSize[1], far_clip);
+        //    rkcommon::math::vec2i imgSize = {
+        //        _imgSize[0],
+        //        _imgSize[1]
+        //    };
 
-        if (this->_useDB.Param<core::param::BoolParam>()->Value()) {
-            // far distance
-            float far_clip = _cam.far_clipping_plane();
-            std::vector<float> far_dist(_imgSize[0] * _imgSize[1], far_clip);
-            rkcommon::math::vec2i imgSize = {
-                _imgSize[0],
-                _imgSize[1]
-            };
+        //    auto depth_texture_data = ::ospray::cpp::CopiedData(far_dist.data(), OSP_FLOAT, imgSize);
+        //    depth_texture_data.commit();
+        //    auto depth_texture = ::ospray::cpp::Texture("texture2d");
+        //    depth_texture.setParam("format", OSP_TEXTURE_R32F);
+        //    depth_texture.setParam("filter", OSP_TEXTURE_FILTER_NEAREST);
+        //    depth_texture.setParam("data", depth_texture_data);
+        //    depth_texture.commit();
 
-            auto depth_texture_data = ::ospray::cpp::CopiedData(far_dist.data(), OSP_FLOAT, imgSize);
-            depth_texture_data.commit();
-            auto depth_texture = ::ospray::cpp::Texture("texture2d");
-            depth_texture.setParam("format", OSP_TEXTURE_R32F);
-            depth_texture.setParam("filter", OSP_TEXTURE_FILTER_NEAREST);
-            depth_texture.setParam("data", depth_texture_data);
-            depth_texture.commit();
+        //    _renderer->setParam("map_maxDepth", depth_texture);
+        //} else {
+        //    _renderer->setParam("map_maxDepth", NULL);
+        //}
 
-            _renderer->setParam("map_maxDepth", depth_texture);
-        }
         _renderer->commit();
 
         // setup framebuffer and measure time
@@ -340,12 +343,8 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         }
 
 
-        float* db;
         if (this->_useDB.Param<core::param::BoolParam>()->Value()) {
-             db = static_cast<float*>(_framebuffer->map(OSP_FB_DEPTH));
-            _db = std::vector<float>(db, db + _imgSize[0] * _imgSize[1]);
-        
-            getOpenGLDepthFromOSPPerspective(_db.data());
+            getOpenGLDepthFromOSPPerspective(_db, projTemp);
         }
 
         // write a sequence of single pictures while the screenshooter is running
@@ -370,9 +369,6 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
 
         // clear stuff
          _framebuffer->unmap(_fb);
-        if (this->_useDB.Param<core::param::BoolParam>()->Value()) {
-            _framebuffer->unmap(db);
-        }
 
         //auto dvce_ = ospGetCurrentDevice();
         //auto error_ = std::string(ospDeviceGetLastErrorMsg(dvce_));
@@ -474,12 +470,10 @@ bool OSPRayRenderer::GetExtents(megamol::core::view::CallRender3D_2& cr) {
     return true;
 }
 
-void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(float* db) {
+void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(std::vector<float>& db, cam_type::matrix_type projTemp) {
 
     const float fovy = _cam.aperture_angle();
     const float aspect = _cam.resolution_gate_aspect();
-    const float zNear = _cam.near_clipping_plane();
-    const float zFar = _cam.far_clipping_plane();
 
     const glm::vec3 cameraUp = {_cam.up_vector().x(), _cam.up_vector().y(), _cam.up_vector().z()};
     const glm::vec3 cameraDir = {_cam.view_vector().x(), _cam.view_vector().y(), _cam.view_vector().z()};
@@ -489,6 +483,8 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(float* db) {
 
     const auto ospDepthBufferWidth = static_cast<const size_t>(_imgSize[0]);
     const auto ospDepthBufferHeight = static_cast<const size_t>(_imgSize[1]);
+
+    db.resize(ospDepthBufferWidth * ospDepthBufferHeight);
 
     // transform from ray distance t to orthogonal Z depth
     auto dir_du = glm::normalize(glm::cross(cameraDir, cameraUp));
@@ -502,8 +498,9 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(float* db) {
 
     const auto dir_00 = cameraDir - .5f * dir_du - .5f * dir_dv;
 
-    const float A = -(zFar + zNear) / (zFar - zNear);
-    const float B = -2. * zFar * zNear / (zFar - zNear);
+    // transform from linear to nonlinear OpenGL depth
+    const auto A = projTemp.operator()(2,2);
+    const auto B = projTemp.operator()(3, 2);
 
     int j, i;
 #pragma omp parallel for private(i)
@@ -512,7 +509,7 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(float* db) {
             const auto dir_ij = glm::normalize(dir_00 + float(i) / float(ospDepthBufferWidth - 1) * dir_du +
                                                       float(j) / float(ospDepthBufferHeight - 1) * dir_dv);
 
-            const float tmp = ospDepthBuffer[j * ospDepthBufferWidth + i];// * dot(cameraDir, dir_ij);
+            const float tmp = ospDepthBuffer[j * ospDepthBufferWidth + i];
             float res = 0.5 * (-A * tmp + B) / tmp + 0.5;
             if (!std::isfinite(res)) res = 1.0f;
             db[j * ospDepthBufferWidth + i] = res;
