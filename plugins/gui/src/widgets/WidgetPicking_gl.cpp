@@ -247,7 +247,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
                                    "    outFragColor = color; \n "
                                    "} ";
 
-        if (!PickingBuffer::CreatShader(this->fbo_shader, vertex_src, fragment_src))
+        if (!megamol::core::view::RenderUtils::CreateShader(this->fbo_shader, vertex_src, fragment_src))
             return false;
     }
 
@@ -301,65 +301,6 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
     glBindTexture(GL_TEXTURE_2D, 0);
 
     return true;
-}
-
-
-bool megamol::gui::PickingBuffer::CreatShader(
-    ShaderPtr& shader_ptr, const std::string& vertex_src, const std::string& fragment_src) {
-
-    std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
-
-    if (!vertex_src.empty())
-        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Vertex, vertex_src});
-    if (!fragment_src.empty())
-        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Fragment, fragment_src});
-
-    try {
-        if (shader_ptr != nullptr)
-            shader_ptr.reset();
-        shader_ptr = std::make_shared<glowl::GLSLProgram>(shader_srcs);
-    } catch (glowl::GLSLProgramException const& exc) {
-        std::string debug_label;
-        if (shader_ptr != nullptr) {
-            debug_label = shader_ptr->getDebugLabel();
-        }
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n ", debug_label.c_str(),
-            exc.what(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    return true;
-}
-
-
-glm::vec3 megamol::gui::PickingBuffer::Worldspace2Screenspace(
-    const glm::vec3& vec_world, const glm::mat4& mvp, const glm::vec2& viewport) {
-
-    glm::vec4 world = {vec_world.x, vec_world.y, vec_world.z, 1.0f};
-    world = mvp * world;
-    world = world / world.w;
-    glm::vec3 screen;
-    screen.x = (world.x + 1.0f) / 2.0f * viewport.x;
-    screen.y = (world.y + 1.0f) / 2.0f * viewport.y; // flipped y-axis: glm::abs(world.y - 1.0f)
-    screen.z = -1.0f * (world.z + 1.0f) / 2.0f;
-    return screen;
-}
-
-
-glm::vec3 megamol::gui::PickingBuffer::Screenspace2Worldspace(
-    const glm::vec3& vec_screen, const glm::mat4& mvp, const glm::vec2& viewport) {
-
-    glm::vec3 screen;
-    screen.x = (vec_screen.x * 2.0f / viewport.x) - 1.0f;
-    screen.y = (vec_screen.y * 2.0f / viewport.y) - 1.0f;
-    screen.z = ((vec_screen.z * 2.0f * -1.0f) - 1.0f);
-    glm::vec4 world = {screen.x, screen.y, screen.z, 1.0f};
-    glm::mat4 mvp_inverse = glm::inverse(mvp);
-    world = mvp_inverse * world;
-    world = world / world.w;
-    glm::vec3 vec3d = glm::vec3(world.x, world.y, world.z);
-    return vec3d;
 }
 
 
@@ -431,7 +372,7 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
                                    "    outFragInfo  = vec2(float(id << face_index), depth); \n "
                                    "} ";
 
-        if (!PickingBuffer::CreatShader(this->shader, vertex_src, fragment_src)) {
+        if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
             return;
         }
     }

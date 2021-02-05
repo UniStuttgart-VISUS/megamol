@@ -9,9 +9,10 @@
 #define MEGAMOL_GUI_FILEBROWSERPOPUP_INCLUDED
 
 
-#include "FileUtils.h"
 #include "GUIUtils.h"
 #include "StringSearchWidget.h"
+
+#include "mmcore/utility/FileUtils.h"
 
 
 namespace megamol {

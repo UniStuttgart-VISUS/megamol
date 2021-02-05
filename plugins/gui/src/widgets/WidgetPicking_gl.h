@@ -14,13 +14,10 @@
 #include "mmcore/thecam/math/functions.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
+#include "mmcore/view/RenderUtils.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <queue>
-
-#define GLOWL_OPENGL_INCLUDE_GLAD
-#include "glowl/FramebufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
 
 #include <tuple>
 
@@ -59,7 +56,7 @@ namespace gui {
         float value;
     };
 
-    typedef std::shared_ptr<glowl::GLSLProgram> ShaderPtr;
+    typedef std::unique_ptr<glowl::GLSLProgram> ShaderPtr;
     typedef std::vector<Interaction> InteractVector;
     typedef std::vector<Manipulation> ManipVector;
 
@@ -82,15 +79,6 @@ namespace gui {
         ManipVector& GetPendingManipulations(void) {
             return this->pending_manipulations;
         }
-
-        // Static functions ---------------------------------------------------
-
-        static bool CreatShader(ShaderPtr& shader_ptr, const std::string& vertex_src, const std::string& fragment_src);
-
-        static glm::vec3 Worldspace2Screenspace(
-            const glm::vec3& vec_world, const glm::mat4& mvp, const glm::vec2& viewport);
-        static glm::vec3 Screenspace2Worldspace(
-            const glm::vec3& vec_screen, const glm::mat4& mvp, const glm::vec2& viewport);
 
     protected:
         // FUNCTIONS --------------------------------------------------------------
@@ -136,7 +124,7 @@ namespace gui {
 
         bool enabled;
 
-        std::shared_ptr<glowl::GLSLProgram> fbo_shader;
+        std::unique_ptr<glowl::GLSLProgram> fbo_shader;
 
         // FUNCTIONS --------------------------------------------------------------
 
@@ -164,7 +152,7 @@ namespace gui {
         InteractVector GetInteractions(unsigned int id) const;
 
     private:
-        std::shared_ptr<glowl::GLSLProgram> shader;
+        std::unique_ptr<glowl::GLSLProgram> shader;
     };
 
 

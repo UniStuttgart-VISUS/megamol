@@ -654,7 +654,7 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
 bool megamol::gui::Configurator::load_graph_state_from_file(const std::string& filename) {
 
     std::string state_str;
-    if (FileUtils::ReadFile(filename, state_str, true)) {
+    if (megamol::core::utility::FileUtils::ReadFile(filename, state_str, true)) {
         state_str = GUIUtils::ExtractGUIState(state_str);
         if (state_str.empty())
             return false;

@@ -6,43 +6,43 @@
  */
 
 #include "stdafx.h"
-#include "FileUtils.h"
+#include "mmcore/utility/FileUtils.h"
 
 
-using namespace megamol;
-using namespace megamol::gui;
+using namespace megamol::core::utility;
 
 
-size_t megamol::gui::FileUtils::LoadRawFile(std::string name, void** outData) {
+size_t megamol::core::utility::FileUtils::LoadRawFile(const std::wstring& filename, void** outData) {
 
     *outData = nullptr;
 
-    vislib::StringW filename = static_cast<vislib::StringW>(name.c_str());
-    if (filename.IsEmpty()) {
+    auto file_name = static_cast<vislib::StringW>(filename.c_str());
+    if (file_name.IsEmpty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unable to load file: No file name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return 0;
     }
 
-    if (!vislib::sys::File::Exists(filename)) {
+    if (!vislib::sys::File::Exists(file_name)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to load file \"%s\": Not existing. [%s, %s, line %d]\n", name.c_str(), __FILE__, __FUNCTION__,
+            "[GUI] Unable to load file \"%s\": Not existing. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
+            __FUNCTION__,
             __LINE__);
         return 0;
     }
 
-    size_t size = static_cast<size_t>(vislib::sys::File::GetSize(filename));
+    size_t size = static_cast<size_t>(vislib::sys::File::GetSize(file_name));
     if (size < 1) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to load file \"%s\": File is empty. [%s, %s, line %d]\n", name.c_str(), __FILE__,
+            "[GUI] Unable to load file \"%s\": File is empty. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
             __FUNCTION__, __LINE__);
         return 0;
     }
 
     vislib::sys::FastFile f;
-    if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+    if (!f.Open(file_name, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to load file \"%s\": Unable to open file. [%s, %s, line %d]\n", name.c_str(), __FILE__,
+            "[GUI] Unable to load file \"%s\": Unable to open file. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
             __FUNCTION__, __LINE__);
         return 0;
     }
@@ -51,7 +51,8 @@ size_t megamol::gui::FileUtils::LoadRawFile(std::string name, void** outData) {
     size_t num = static_cast<size_t>(f.Read(*outData, size));
     if (num != size) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to load file \"%s\": Unable to read whole file. [%s, %s, line %d]\n", name.c_str(), __FILE__,
+            "[GUI] Unable to load file \"%s\": Unable to read whole file. [%s, %s, line %d]\n", filename.c_str(),
+            __FILE__,
             __FUNCTION__, __LINE__);
         ARY_SAFE_DELETE(*outData);
         return 0;
@@ -61,7 +62,7 @@ size_t megamol::gui::FileUtils::LoadRawFile(std::string name, void** outData) {
 }
 
 
-bool megamol::gui::FileUtils::WriteFile(const std::string& filename, const std::string& in_content, bool silent) {
+bool megamol::core::utility::FileUtils::WriteFile(const std::string& filename, const std::string& in_content, bool silent) {
     try {
         std::ofstream file;
         file.open(filename, std::ios_base::out);
@@ -93,7 +94,7 @@ bool megamol::gui::FileUtils::WriteFile(const std::string& filename, const std::
 }
 
 
-bool megamol::gui::FileUtils::ReadFile(const std::string& filename, std::string& out_content, bool silent) {
+bool megamol::core::utility::FileUtils::ReadFile(const std::string& filename, std::string& out_content, bool silent) {
     try {
         std::ifstream file;
         file.open(filename, std::ios_base::in);

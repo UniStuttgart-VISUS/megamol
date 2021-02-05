@@ -17,16 +17,17 @@
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include <glowl/BufferObject.hpp>
+#include <glowl/Texture2D.hpp>
+#include <glowl/GLSLProgram.hpp>
 
+#include "glowl/FramebufferObject.hpp"
+
+#include "mmcore/utility/FileUtils.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
 #include "mmcore/view/Camera_2.h"
 
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "vislib/graphics/gl/ShaderSource.h"
 
 namespace megamol::core::view {
 
@@ -72,6 +73,38 @@ static inline glm::quat quaternion_from_vectors(glm::vec3 view_vector, glm::vec3
 }
 
 
+// #### Utility transformation functions ################################### //
+
+static inline glm::vec3 worldspace_to_screenspace(
+    const glm::vec3& vec_world, const glm::mat4& mvp, const glm::vec2& viewport) {
+
+    glm::vec4 world = {vec_world.x, vec_world.y, vec_world.z, 1.0f};
+    world = mvp * world;
+    world = world / world.w;
+    glm::vec3 screen;
+    screen.x = (world.x + 1.0f) / 2.0f * viewport.x;
+    screen.y = (world.y + 1.0f) / 2.0f * viewport.y; // flipped y-axis: glm::abs(world.y - 1.0f)
+    screen.z = -1.0f * (world.z + 1.0f) / 2.0f;
+    return screen;
+}
+
+
+static inline glm::vec3 screenspace_to_worldspace(
+    const glm::vec3& vec_screen, const glm::mat4& mvp, const glm::vec2& viewport) {
+
+    glm::vec3 screen;
+    screen.x = (vec_screen.x * 2.0f / viewport.x) - 1.0f;
+    screen.y = (vec_screen.y * 2.0f / viewport.y) - 1.0f;
+    screen.z = ((vec_screen.z * 2.0f * -1.0f) - 1.0f);
+    glm::vec4 world = {screen.x, screen.y, screen.z, 1.0f};
+    glm::mat4 mvp_inverse = glm::inverse(mvp);
+    world = mvp_inverse * world;
+    world = world / world.w;
+    glm::vec3 vec3d = glm::vec3(world.x, world.y, world.z);
+    return vec3d;
+}
+
+
 // ##################################################################### //
 /*
  * Utility class providing simple primitive rendering (using non legacy opengl).
@@ -79,9 +112,37 @@ static inline glm::quat quaternion_from_vectors(glm::vec3 view_vector, glm::vec3
 class RenderUtils {
 
 public:
+
+    // STATIC functions -------------------------------------------------------
+
+    /**
+     * Load textures.
+     */
+    static bool LoadTextureFromFile(std::unique_ptr<glowl::Texture2D>& out_texture_ptr, const std::wstring& filename);
+
+    static bool LoadTextureFromFile(std::unique_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename) {
+        return megamol::core::view::RenderUtils::LoadTextureFromFile(
+            out_texture_ptr, megamol::core::utility::to_wstring(filename));
+    }
+
+    static bool LoadTextureFromData(std::unique_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data);
+
+    /**
+     * Create shader.
+     */
+    static bool CreateShader(std::unique_ptr<glowl::GLSLProgram>& out_shader_ptr, const std::string& vertex_code,
+        const std::string& fragment_code);
+
+    // LOCAL functions -------------------------------------------------------
+
     bool InitPrimitiveRendering(megamol::core::utility::ShaderSourceFactory& factory);
 
-    bool LoadTextureFromFile(std::wstring filename, GLuint& out_texture_id);
+    // Keeps the texture object in rener utils for later access via texture id
+    bool LoadTextureFromFile(GLuint& out_texture_id, const std::wstring& filename);
+
+    bool LoadTextureFromFile(GLuint& out_texture_id, const std::string& filename) {
+        return this->LoadTextureFromFile(out_texture_id, megamol::core::utility::to_wstring(filename));
+    }
 
     void PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_view,
         const glm::vec3& cam_pos, const glm::vec4& color, bool sort = false);
@@ -157,21 +218,15 @@ private:
         DataType attributes;
     } ShaderDataType;
 
-    typedef vislib::graphics::gl::OpenGLTexture2D TextureType;
-    typedef std::vector<std::shared_ptr<TextureType>> TexturesType;
-    typedef std::array<ShaderDataType, Primitives::PRIM_COUNT> QueuesType;
-    typedef std::array<vislib::graphics::gl::GLSLShader, Primitives::PRIM_COUNT> ShadersType;
-    typedef std::array<std::unique_ptr<glowl::BufferObject>, Buffers::BUFF_COUNT> BuffersType;
-
     // VARIABLES ------------------------------------------------------- //
 
     bool smooth;
     bool init_once;
-    TexturesType textures;
     GLuint vertex_array;
-    QueuesType queues;
-    ShadersType shaders;
-    BuffersType buffers;
+    std::vector<std::unique_ptr<glowl::Texture2D>> textures;
+    std::array<ShaderDataType, Primitives::PRIM_COUNT> queues;
+    std::array<std::unique_ptr<glowl::GLSLProgram>, Primitives::PRIM_COUNT> shaders;
+    std::array<std::unique_ptr<glowl::BufferObject>, Buffers::BUFF_COUNT> buffers;
 
     // FUNCTIONS ------------------------------------------------------- //
 
@@ -182,9 +237,6 @@ private:
     void drawPrimitives(Primitives primitive, glm::mat4& mat_mvp, glm::vec2 dim_vp);
 
     void sortPrimitiveQueue(Primitives primitive);
-
-    bool createShader(vislib::graphics::gl::GLSLShader& shader, const std::string* const vertex_code,
-        const std::string* const fragment_code);
 
     const std::string getShaderCode(megamol::core::utility::ShaderSourceFactory& factory, std::string snippet_name);
 

@@ -745,9 +745,9 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
     ImGuiID in_graph_uid, const std::string& project_filename) {
 
     std::string projectstr;
-
-    if (!FileUtils::ReadFile(project_filename, projectstr))
+    if (!megamol::core::utility::FileUtils::ReadFile(project_filename, projectstr)) {
         return false;
+    }
     GUIUtils::Utf8Decode(projectstr);
 
     std::cout << projectstr;
@@ -1239,7 +1239,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                              confParams.str() + "\n" + confGUIState.str();
 
                 graph_ptr->ResetDirty();
-                if (FileUtils::WriteFile(project_filename, projectstr)) {
+                if (megamol::core::utility::FileUtils::WriteFile(project_filename, projectstr)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                         "[GUI] Successfully saved project '%s' to file '%s'.\n", graph_ptr->name.c_str(),
                         project_filename.c_str());
@@ -1637,7 +1637,7 @@ std::string megamol::gui::GraphCollection::GetUpdatedGUIState(ImGuiID graph_id, 
 
     // Try to load existing gui state from file
     std::string state_str;
-    if (FileUtils::ReadFile(filename, state_str, true)) {
+    if (megamol::core::utility::FileUtils::ReadFile(filename, state_str, true)) {
         state_str = GUIUtils::ExtractGUIState(state_str);
         if (!state_str.empty()) {
             state_json = nlohmann::json::parse(state_str);
@@ -1681,7 +1681,7 @@ std::string megamol::gui::GraphCollection::GetUpdatedGUIState(ImGuiID graph_id, 
 bool megamol::gui::GraphCollection::load_state_from_file(const std::string& filename, ImGuiID graph_id) {
 
     std::string state_str;
-    if (FileUtils::ReadFile(filename, state_str, true)) {
+    if (megamol::core::utility::FileUtils::ReadFile(filename, state_str, true)) {
         state_str = GUIUtils::ExtractGUIState(state_str);
         if (state_str.empty())
             return false;

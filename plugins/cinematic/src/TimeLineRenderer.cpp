@@ -89,7 +89,7 @@ bool TimeLineRenderer::create(void) {
     // Load texture
     vislib::StringA shortfilename = "arrow.png";
     auto fullfilename = megamol::core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), shortfilename);
-    if (!this->utils.LoadTextureFromFile(std::wstring(fullfilename.PeekBuffer()), this->texture)) {
+    if (!this->utils.LoadTextureFromFile(this->texture, std::wstring(fullfilename.PeekBuffer()))) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }

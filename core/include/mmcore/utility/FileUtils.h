@@ -23,17 +23,30 @@ namespace stdfs = std::experimental::filesystem;
 #endif
 #endif
 
-#include "GUIUtils.h"
-
 #include <fstream>
 #include <iostream>
+#include <codecvt>
+#include <locale>
+#include <string>
 
+#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/FastFile.h"
 
-
 namespace megamol {
-namespace gui {
+namespace core {
+namespace utility {
 
+    // #### Utility string conversion functions ############################ //
+
+    static inline std::string to_string(std::wstring wstr) {
+         return std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(wstr);
+    }
+
+    static inline std::wstring to_wstring(std::string str) {
+        return std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(str);
+    }
+
+    // ##################################################################### //
     /**
      * File utility functions.
      */
@@ -42,7 +55,11 @@ namespace gui {
         /**
          * Load raw data from file (e.g. texture data)
          */
-        static size_t LoadRawFile(std::string name, void** outData);
+        static size_t LoadRawFile(const std::wstring& filename, void** outData);
+
+        static size_t LoadRawFile(const std::string& filename, void** outData) {
+            return megamol::core::utility::FileUtils::LoadRawFile(megamol::core::utility::to_wstring(filename), outData);
+        }
 
         /**
          * Check if file exists.
@@ -118,7 +135,7 @@ namespace gui {
 
 
     template<typename T>
-    bool megamol::gui::FileUtils::FileExists(const T& path_str) {
+    bool megamol::core::utility::FileUtils::FileExists(const T& path_str) {
         auto path = static_cast<stdfs::path>(path_str);
         try {
             if (stdfs::exists(path) && stdfs::is_regular_file(path)) {
@@ -130,7 +147,7 @@ namespace gui {
 
 
     template<typename T>
-    bool megamol::gui::FileUtils::FileWithExtensionExists(const T& path_str, const std::string& ext) {
+    bool megamol::core::utility::FileUtils::FileWithExtensionExists(const T& path_str, const std::string& ext) {
         if (FileUtils::FileExists<T>(path_str)) {
             auto path = static_cast<stdfs::path>(path_str);
             return (path.extension().generic_u8string() == std::string("." + ext));
@@ -140,14 +157,14 @@ namespace gui {
 
 
     template<typename T>
-    bool megamol::gui::FileUtils::FileHasExtension(const T& path_str, const std::string& ext) {
+    bool megamol::core::utility::FileUtils::FileHasExtension(const T& path_str, const std::string& ext) {
         auto path = static_cast<stdfs::path>(path_str);
         return (path.extension().generic_u8string() == ext);
     }
 
 
     template<typename T>
-    std::string megamol::gui::FileUtils::GetFilenameStem(const T& path_str) {
+    std::string megamol::core::utility::FileUtils::GetFilenameStem(const T& path_str) {
         auto path = static_cast<stdfs::path>(path_str);
         std::string filename;
         if (path.has_stem()) {
@@ -158,7 +175,7 @@ namespace gui {
 
 
     template<typename T, typename S>
-    std::string megamol::gui::FileUtils::SearchFileRecursive(const T& search_path_str, const S& search_file_str) {
+    std::string megamol::core::utility::FileUtils::SearchFileRecursive(const T& search_path_str, const S& search_file_str) {
         auto search_path = static_cast<stdfs::path>(search_path_str);
         auto file_path = static_cast<stdfs::path>(search_file_str);
         std::string found_path;
@@ -172,7 +189,8 @@ namespace gui {
     }
 
 
-} // namespace gui
+} // namespace utility
+} // namespace core
 } // namespace megamol
 
 #endif // MEGAMOL_GUI_FILEUTILS_INCLUDED
