@@ -534,12 +534,12 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
         if (!this->fbo.Create(window_width, window_height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
             throw vislib::Exception(
-                "[CINEMATIC VIEW] [Render] Unable to create image framebuffer object.", __FILE__, __LINE__);
+                "[VIEW3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
             return;
         }
     }
     if (this->fbo.Enable() != GL_NO_ERROR) {
-        throw vislib::Exception("[CINEMATIC VIEW] [Render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
+        throw vislib::Exception("[VIEW3DGL] Cannot enable Framebuffer object.", __FILE__, __LINE__);
         return;
     }
 
@@ -560,38 +560,17 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
     cam_type::matrix_type viewCam, projCam;
     this->cam.calc_matrices(camsnap, viewCam, projCam);
 
-    glm::mat4 view = viewCam;
-    glm::mat4 proj = projCam;
-    glm::mat4 mvp = projCam * viewCam;
-
-    /*glm::vec3 eyepos(cam.eye_position().x(), cam.eye_position().y(), cam.eye_position().z());
-    glm::vec3 snappos(camsnap.position.x(), camsnap.position.y(), camsnap.position.z());
-    printf("%u: %s %s\n", this->GetCoreInstance()->GetFrameID(), glm::to_string(view).c_str(),
-        glm::to_string(proj).c_str());
-    printf("%u: %s %s\n", this->GetCoreInstance()->GetFrameID(), glm::to_string(eyepos).c_str(),
-        glm::to_string(snappos).c_str());*/
-
     if (cr3d != nullptr) {
         cr3d->SetCameraState(this->cam);
         (*cr3d)(view::AbstractCallRender::FnRender);
     }
 
-    if (this->fbo.IsEnabled()) {
-        this->fbo.Disable();
+    if (this->fbo.IsValid()) {
+        if (this->fbo.IsEnabled()) {
+            this->fbo.Disable();
+        }
+        this->fbo.DrawColourTexture();
     }
-
-    // Init rendering ---------------------------------------------------------
-
-    glm::vec3 pos_bottom_left = {0.0f, 0.0f, 0.0f};
-    glm::vec3 pos_upper_left = {0.0f, 1.0f, 0.0f};
-    glm::vec3 pos_upper_right = {1.0f, 1.0f, 0.0f};
-    glm::vec3 pos_bottom_right = {1.0f, 0.0f, 0.0f};
-    this->utils.Push2DColorTexture(
-        this->fbo.GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
-
-
-    glm::mat4 ortho = glm::ortho(0.0f, window_width, 0.0f, window_height, -1.0f, 1.0f);
-    this->utils.DrawAllPrimitives(ortho, glm::vec2(window_width, window_height));
 
     this->setCameraValues(this->cam);
 
@@ -1102,15 +1081,6 @@ bool View3DGL::create(void) {
     this->cursor2d.SetButtonCount(3);
 
     this->firstImg = true;
-
-    // Initialise utils
-    if (!this->utils.isInitialized()){
-        if (!this->utils.InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[View3DGL] Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
-        }
-    }
 
     return true;
 }

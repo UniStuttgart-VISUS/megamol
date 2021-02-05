@@ -7,8 +7,8 @@
 
 #pragma once
 #include "mmcore/view/Renderer3DModuleGL.h"
-#include "mmcore/view/CallRender3D.h"
 #include "vislib/graphics/gl/GLSLShader.h"
+#include "mmcore/view/RenderUtils.h"
 
 namespace megamol::core::view {
 
@@ -86,6 +86,8 @@ private:
     core::CallerSlot _getContextSlot;
 
     std::shared_ptr<CPUFramebuffer> _framebuffer;
+
+    RenderUtils _utils;
 
 };
 

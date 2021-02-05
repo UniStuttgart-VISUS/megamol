@@ -420,7 +420,6 @@ protected:
     bool cameraControlOverrideActive;
 
     vislib::graphics::gl::FramebufferObject fbo;
-    RenderUtils utils;
 };
 
 } // namespace view
