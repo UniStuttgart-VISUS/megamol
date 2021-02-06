@@ -22,6 +22,7 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
+#include "mmcore/utility/sys/ASCIIFileBuffer.h"
 #include "vislib/OutOfRangeException.h"
 #include "vislib/String.h"
 #include "vislib/StringConverter.h"
@@ -31,7 +32,6 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Matrix.h"
 #include "vislib/math/Quaternion.h"
-#include "vislib/sys/ASCIIFileBuffer.h"
 
 using namespace megamol;
 using namespace megamol::core;
@@ -43,29 +43,29 @@ using namespace megamol::core::utility::log;
  * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
  */
 SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
-    : view::Renderer3DModule_2()
-    , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
-    , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
-    , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
-    , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
-    , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
-    , cmWeightParam("color::colorWeighting", "The weighting of the two coloring modes.")
-    , renderModeParam("renderMode", "The rendering mode.")
-    , stickRadiusParam("stickRadius", "The radius for stick rendering")
-    , probeRadiusParam("probeRadius", "The probe radius for SAS rendering")
-    , minGradColorParam("color::minGradColor", "The color for the minimum value for gradient coloring")
-    , midGradColorParam("color::midGradColor", "The color for the middle value for gradient coloring")
-    , maxGradColorParam("color::maxGradColor", "The color for the maximum value for gradient coloring")
-    , molIdxListParam("molIdxList", "The list of molecule indices for RS computation:")
-    , specialColorParam("color::specialColor", "The color for the specified molecules")
-    , interpolParam("posInterpolation", "Enable positional interpolation between frames")
-    , offscreenRenderingParam("offscreenRendering", "Toggle offscreenRendering")
-    , toggleGeomShaderParam("geomShader", "Toggle the use of geometry shaders for glyph ray casting")
-    , toggleZClippingParam("toggleZClip", "...")
-    , clipPlaneTimeOffsetParam("clipPlane::timeOffset", "...")
-    , clipPlaneDurationParam("clipPlane::Duration", "...")
-    , useNeighborColors("color::neighborhood", "Add the color of the neighborhood to the own")
-    , currentZClipPos(-20) {
+        : view::Renderer3DModule_2()
+        , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
+        , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
+        , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
+        , coloringModeParam0("color::coloringMode0", "The first coloring mode.")
+        , coloringModeParam1("color::coloringMode1", "The second coloring mode.")
+        , cmWeightParam("color::colorWeighting", "The weighting of the two coloring modes.")
+        , renderModeParam("renderMode", "The rendering mode.")
+        , stickRadiusParam("stickRadius", "The radius for stick rendering")
+        , probeRadiusParam("probeRadius", "The probe radius for SAS rendering")
+        , minGradColorParam("color::minGradColor", "The color for the minimum value for gradient coloring")
+        , midGradColorParam("color::midGradColor", "The color for the middle value for gradient coloring")
+        , maxGradColorParam("color::maxGradColor", "The color for the maximum value for gradient coloring")
+        , molIdxListParam("molIdxList", "The list of molecule indices for RS computation:")
+        , specialColorParam("color::specialColor", "The color for the specified molecules")
+        , interpolParam("posInterpolation", "Enable positional interpolation between frames")
+        , offscreenRenderingParam("offscreenRendering", "Toggle offscreenRendering")
+        , toggleGeomShaderParam("geomShader", "Toggle the use of geometry shaders for glyph ray casting")
+        , toggleZClippingParam("toggleZClip", "...")
+        , clipPlaneTimeOffsetParam("clipPlane::timeOffset", "...")
+        , clipPlaneDurationParam("clipPlane::Duration", "...")
+        , useNeighborColors("color::neighborhood", "Add the color of the neighborhood to the own")
+        , currentZClipPos(-20) {
     this->molDataCallerSlot.SetCompatibleCall<MolecularDataCallDescription>();
     this->MakeSlotAvailable(&this->molDataCallerSlot);
     this->bsDataCallerSlot.SetCompatibleCall<BindingSiteCallDescription>();
@@ -184,7 +184,9 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
 /*
  * protein::SimpleMoleculeRenderer::~SimpleMoleculeRenderer (DTOR)
  */
-SimpleMoleculeRenderer::~SimpleMoleculeRenderer(void) { this->Release(); }
+SimpleMoleculeRenderer::~SimpleMoleculeRenderer(void) {
+    this->Release();
+}
 
 /*
  * protein::SimpleMoleculeRenderer::release
@@ -195,9 +197,11 @@ void SimpleMoleculeRenderer::release(void) {}
  * protein::SimpleMoleculeRenderer::create
  */
 bool SimpleMoleculeRenderer::create(void) {
-    if (!ogl_IsVersionGEQ(2, 0)) return false;
+    if (!ogl_IsVersionGEQ(2, 0))
+        return false;
 
-    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions()) return false;
+    if (!vislib::graphics::gl::GLSLShader::InitialiseExtensions())
+        return false;
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -485,8 +489,10 @@ bool SimpleMoleculeRenderer::create(void) {
  */
 bool SimpleMoleculeRenderer::GetExtents(core::view::CallRender3D_2& call) {
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
-    if (mol == NULL) return false;
-    if (!(*mol)(MolecularDataCall::CallForGetExtent)) return false;
+    if (mol == NULL)
+        return false;
+    if (!(*mol)(MolecularDataCall::CallForGetExtent))
+        return false;
 
     call.AccessBoundingBoxes().SetBoundingBox(mol->AccessBoundingBoxes().ObjectSpaceBBox());
     call.AccessBoundingBoxes().SetBoundingBox(mol->AccessBoundingBoxes().ObjectSpaceClipBox());
@@ -528,14 +534,17 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3D_2& call) {
     this->viewportStuff[1] = 0.0f;
     this->viewportStuff[2] = this->cam.resolution_gate().width();
     this->viewportStuff[3] = this->cam.resolution_gate().height();
-    if (this->viewportStuff[2] < 1.0f) this->viewportStuff[2] = 1.0f;
-    if (this->viewportStuff[3] < 1.0f) this->viewportStuff[3] = 1.0f;
+    if (this->viewportStuff[2] < 1.0f)
+        this->viewportStuff[2] = 1.0f;
+    if (this->viewportStuff[3] < 1.0f)
+        this->viewportStuff[3] = 1.0f;
     this->viewportStuff[2] = 2.0f / this->viewportStuff[2];
     this->viewportStuff[3] = 2.0f / this->viewportStuff[3];
 
     // get pointer to MolecularDataCall
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
-    if (mol == NULL) return false;
+    if (mol == NULL)
+        return false;
 
     // get pointer to BindingSiteCall
     BindingSiteCall* bs = this->bsDataCallerSlot.CallAs<BindingSiteCall>();
@@ -555,9 +564,11 @@ bool SimpleMoleculeRenderer::Render(core::view::CallRender3D_2& call) {
     // set frame ID and call data
     mol->SetFrameID(static_cast<int>(callTime));
 
-    if (!(*mol)(MolecularDataCall::CallForGetData)) return false;
+    if (!(*mol)(MolecularDataCall::CallForGetData))
+        return false;
     // check if atom count is zero
-    if (mol->AtomCount() == 0) return true;
+    if (mol->AtomCount() == 0)
+        return true;
     // get positions of the first frame
     float* pos0 = new float[mol->AtomCount() * 3];
     memcpy(pos0, mol->AtomPositions(), mol->AtomCount() * 3 * sizeof(float));
@@ -834,8 +845,7 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
                 glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
             glUniform3fv(this->sphereShaderOR.ParameterLocation("camUp"), 1,
                 glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
-            glUniform2f(
-                this->sphereShaderOR.ParameterLocation("zValues"), snapshot.frustum_near, snapshot.frustum_far);
+            glUniform2f(this->sphereShaderOR.ParameterLocation("zValues"), snapshot.frustum_near, snapshot.frustum_far);
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
@@ -911,8 +921,7 @@ void SimpleMoleculeRenderer::RenderStick(const MolecularDataCall* mol, const flo
                 glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
             glUniform3fv(this->sphereShaderGeomOR.ParameterLocation("camUp"), 1,
                 glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
-            glUniformMatrix4fv(
-                this->sphereShaderGeomOR.ParameterLocation("modelview"), 1, false, modelMatrix_column);
+            glUniformMatrix4fv(this->sphereShaderGeomOR.ParameterLocation("modelview"), 1, false, modelMatrix_column);
             glUniformMatrix4fv(this->sphereShaderGeomOR.ParameterLocation("proj"), 1, false, projMatrix_column);
             glUniform4fv(this->sphereShaderGeomOR.ParameterLocation("lightPos"), 1, lightPos);
             glUniformMatrix4fv(this->sphereShaderGeomOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
@@ -1214,7 +1223,8 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
-            glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
+            glUniformMatrix4fv(
+                this->sphereShaderOR.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
         }
 
         // set vertex and color pointers and draw them
@@ -1303,7 +1313,8 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
             glUniformMatrix4fv(this->cylinderShader.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->cylinderShader.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->cylinderShader.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
-            glUniformMatrix4fv(this->cylinderShader.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
+            glUniformMatrix4fv(
+                this->cylinderShader.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
             // get the attribute locations
             attribLocInParams = glGetAttribLocation(this->cylinderShader, "inParams");
             attribLocQuatC = glGetAttribLocation(this->cylinderShader, "quatC");
@@ -1324,7 +1335,8 @@ void SimpleMoleculeRenderer::RenderBallAndStick(const MolecularDataCall* mol, co
             glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
-            glUniformMatrix4fv(this->cylinderShaderOR.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
+            glUniformMatrix4fv(
+                this->cylinderShaderOR.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
             // get the attribute locations
             attribLocInParams = glGetAttribLocation(this->cylinderShaderOR, "inParams");
             attribLocQuatC = glGetAttribLocation(this->cylinderShaderOR, "quatC");
@@ -1620,8 +1632,7 @@ void SimpleMoleculeRenderer::RenderSpacefilling(const MolecularDataCall* mol, co
                 glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
             glUniform3fv(this->sphereShaderOR.ParameterLocation("camUp"), 1,
                 glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
-            glUniform2f(
-                this->sphereShaderOR.ParameterLocation("zValues"), snapshot.frustum_near, snapshot.frustum_far);
+            glUniform2f(this->sphereShaderOR.ParameterLocation("zValues"), snapshot.frustum_near, snapshot.frustum_far);
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
@@ -1635,7 +1646,7 @@ void SimpleMoleculeRenderer::RenderSpacefilling(const MolecularDataCall* mol, co
         glVertexPointer(4, GL_FLOAT, 0, this->vertSpheres.PeekElements());
         glColorPointer(3, GL_FLOAT, 0, this->atomColorTable.PeekElements());
         glDrawArrays(GL_POINTS, 0, mol->AtomCount());
-		
+
         // disable sphere shader
         if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
             this->sphereShader.Disable();
@@ -1659,10 +1670,11 @@ void SimpleMoleculeRenderer::RenderSpacefilling(const MolecularDataCall* mol, co
                 glm::value_ptr(static_cast<glm::vec4>(snapshot.right_vector)));
             glUniform3fv(this->sphereShaderGeom.ParameterLocation("camUp"), 1,
                 glm::value_ptr(static_cast<glm::vec4>(snapshot.up_vector)));
-            glUniformMatrix4fv(this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, glm::value_ptr(this->view));
+            glUniformMatrix4fv(
+                this->sphereShaderGeom.ParameterLocation("modelview"), 1, false, glm::value_ptr(this->view));
             glUniformMatrix4fv(this->sphereShaderGeom.ParameterLocation("proj"), 1, false, glm::value_ptr(this->proj));
-			// ---TODO---
-            //glUniform4fv(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
+            // ---TODO---
+            // glUniform4fv(this->sphereShaderGeom.ParameterLocation("lightPos"), 1, lightPos);
 
             // Vertex attributes
             vertexPos = glGetAttribLocation(this->sphereShaderGeom, "vertex");
@@ -1683,7 +1695,7 @@ void SimpleMoleculeRenderer::RenderSpacefilling(const MolecularDataCall* mol, co
             glUniformMatrix4fv(
                 this->sphereShaderGeomOR.ParameterLocation("proj"), 1, false, glm::value_ptr(this->proj));
             // ---TODO---
-            //glUniform4fv(this->sphereShaderGeomOR.ParameterLocation("lightPos"), 1, lightPos);
+            // glUniform4fv(this->sphereShaderGeomOR.ParameterLocation("lightPos"), 1, lightPos);
 
             // Vertex attributes
             vertexPos = glGetAttribLocation(this->sphereShaderGeomOR, "vertex");
@@ -1779,7 +1791,6 @@ void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float
                                          this->probeRadiusParam.Param<param::FloatParam>()->Value();
     }
 
-	
 
     // ---------- actual rendering ----------
 
@@ -1815,7 +1826,8 @@ void SimpleMoleculeRenderer::RenderSAS(const MolecularDataCall* mol, const float
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVP"), 1, false, glm::value_ptr(MVP));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVinv"), 1, false, glm::value_ptr(MVinv));
             glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPinv"), 1, false, glm::value_ptr(MVPinv));
-            glUniformMatrix4fv(this->sphereShaderOR.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
+            glUniformMatrix4fv(
+                this->sphereShaderOR.ParameterLocation("MVPtransp"), 1, false, glm::value_ptr(MVPtransp));
         }
 
         // set vertex and color pointers and draw them
@@ -2002,9 +2014,9 @@ void SimpleMoleculeRenderer::RenderLinesFilter(const MolecularDataCall* mol, con
  */
 void SimpleMoleculeRenderer::RenderStickFilter(const MolecularDataCall* mol, const float* atomPos) {
 
-    //int n;
-    //glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n);
-    //megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+    // int n;
+    // glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &n);
+    // megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
     //  "Maximum num of generic vertex attributes: %i\n", n);
 
     // ----- prepare stick raycasting -----
@@ -2276,7 +2288,6 @@ void SimpleMoleculeRenderer::RenderSpacefillingFilter(const MolecularDataCall* m
     // ---------- actual rendering ----------
 
 
-
     // Enable sphere shader
     if (!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
         this->filterSphereShader.Enable();
@@ -2347,17 +2358,14 @@ void SimpleMoleculeRenderer::UpdateParameters(const MolecularDataCall* mol, cons
             static_cast<Color::ColoringMode>(int(this->coloringModeParam1.Param<param::EnumParam>()->Value()));
 
         // Mix two coloring modes
-        Color::MakeColorTable(mol, this->currentColoringMode0,
-                this->currentColoringMode1,
-                cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the first cm
-                1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
-                this->atomColorTable, this->colorLookupTable,
-                this->rainbowColors,
-                this->minGradColorParam.Param<param::StringParam>()->Value(),
-                this->midGradColorParam.Param<param::StringParam>()->Value(),
-                this->maxGradColorParam.Param<param::StringParam>()->Value(),
-                true, bs,
-				this->useNeighborColors.Param<param::BoolParam>()->Value());
+        Color::MakeColorTable(mol, this->currentColoringMode0, this->currentColoringMode1,
+            cmWeightParam.Param<param::FloatParam>()->Value(),        // weight for the first cm
+            1.0f - cmWeightParam.Param<param::FloatParam>()->Value(), // weight for the second cm
+            this->atomColorTable, this->colorLookupTable, this->rainbowColors,
+            this->minGradColorParam.Param<param::StringParam>()->Value(),
+            this->midGradColorParam.Param<param::StringParam>()->Value(),
+            this->maxGradColorParam.Param<param::StringParam>()->Value(), true, bs,
+            this->useNeighborColors.Param<param::BoolParam>()->Value());
 
         // Use one coloring mode
         /*Color::MakeColorTable( mol,

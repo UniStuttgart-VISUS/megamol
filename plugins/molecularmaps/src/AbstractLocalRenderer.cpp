@@ -13,7 +13,9 @@ using namespace megamol::molecularmaps;
 /*
  * AbstractLocalRenderer::AbstractLocalRenderer
  */
-AbstractLocalRenderer::AbstractLocalRenderer(void) { this->lastDataHash = 0; }
+AbstractLocalRenderer::AbstractLocalRenderer(void) {
+    this->lastDataHash = 0;
+}
 
 
 /*
@@ -26,4 +28,6 @@ AbstractLocalRenderer::~AbstractLocalRenderer(void) {
 /*
  * AbstractLocalRenderer::Release
  */
-void AbstractLocalRenderer::Release(void) { this->release(); }
+void AbstractLocalRenderer::Release(void) {
+    this->release();
+}

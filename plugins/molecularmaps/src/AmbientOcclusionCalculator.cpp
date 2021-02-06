@@ -6,9 +6,9 @@
 
 #include "stdafx.h"
 #include "AmbientOcclusionCalculator.h"
+#include "mmcore/utility/log/Log.h"
 #include "vislib/math/AbstractPolynomImpl.h"
 #include "vislib/math/ShallowVector.h"
-#include "vislib/sys/Log.h"
 
 #include <array>
 #include <fstream>
@@ -21,19 +21,19 @@ using namespace megamol::molecularmaps;
  * AmbientOcclusionCalculator::AmbientOcclusionCalculator
  */
 AmbientOcclusionCalculator::AmbientOcclusionCalculator(void)
-    : aoSampleMax(0)
-    , colourSSBOHandle(0)
-    , dirTexture(0)
-    , lvlTexture(0)
-    , mdc(nullptr)
-    , normalSSBOHandle(0)
-    , resultVector(std::vector<float>(0))
-    , shaderChanged(false)
-    , vertex_normals(nullptr)
-    , vertexSSBOHandle(0)
-    , vertices(nullptr)
-    , volTexture(0)
-    , volumeInitialized(false) {}
+        : aoSampleMax(0)
+        , colourSSBOHandle(0)
+        , dirTexture(0)
+        , lvlTexture(0)
+        , mdc(nullptr)
+        , normalSSBOHandle(0)
+        , resultVector(std::vector<float>(0))
+        , shaderChanged(false)
+        , vertex_normals(nullptr)
+        , vertexSSBOHandle(0)
+        , vertices(nullptr)
+        , volTexture(0)
+        , volumeInitialized(false) {}
 
 /*
  * AmbientOcclusionCalculator::~AmbientOcclusionCalculator
@@ -140,7 +140,7 @@ void AmbientOcclusionCalculator::calcLevels(float aoWidthX, float aoWidthY, floa
         dist += step * (1.0f + (levelWidth != minVoxelWidth) * sampleWidth);
     }
     /*for (int j = 0; j < counter; j++) {
-        levels[j * 4 + 3] = levels[j * 4 + 3];
+            levels[j * 4 + 3] = levels[j * 4 + 3];
     }*/
     this->aoSampleMax = counter;
 
@@ -164,10 +164,14 @@ void AmbientOcclusionCalculator::calcLevels(float aoWidthX, float aoWidthY, floa
 /*
  * AmbientOcclusionCalculator::calculateVertexShadows
  */
-const std::vector<float> * AmbientOcclusionCalculator::calculateVertexShadows(AmbientOcclusionCalculator::AOSettings settings) {
-	if (this->vertices == nullptr) return nullptr;
-	if (this->vertex_normals == nullptr) return nullptr;
-	if (this->mdc == nullptr) return nullptr;
+const std::vector<float>* AmbientOcclusionCalculator::calculateVertexShadows(
+    AmbientOcclusionCalculator::AOSettings settings) {
+    if (this->vertices == nullptr)
+        return nullptr;
+    if (this->vertex_normals == nullptr)
+        return nullptr;
+    if (this->mdc == nullptr)
+        return nullptr;
 
     // allocate enough space for the result
     if (this->settings.isDirty(settings) || this->resultVector.size() == 0 || this->shaderChanged) {
@@ -242,13 +246,16 @@ const std::vector<float> * AmbientOcclusionCalculator::calculateVertexShadows(Am
 /*
  * AmbientOcclusionCalculator::clearStoredShadowData
  */
-void AmbientOcclusionCalculator::clearStoredShadowData(void) { this->resultVector.clear(); }
+void AmbientOcclusionCalculator::clearStoredShadowData(void) {
+    this->resultVector.clear();
+}
 
 /*
  * AmbientOcclusionCalculator::createEmptyVolume
  */
 void AmbientOcclusionCalculator::createEmptyVolume(AmbientOcclusionCalculator::AOSettings settings) {
-    if (this->volTexture == 0) return;
+    if (this->volTexture == 0)
+        return;
     std::vector<float> vol(settings.volSizeX * settings.volSizeY * settings.volSizeZ, 0.0f);
     glActiveTexture(GL_TEXTURE7);
     glBindTexture(GL_TEXTURE_3D, this->volTexture);
@@ -323,7 +330,7 @@ void AmbientOcclusionCalculator::createVolumeCPU(AmbientOcclusionCalculator::AOS
 
 #ifdef DEBUG_WRITE
     std::ofstream file("aovolume.raw", std::ios::binary);
-    file.write((char*)vol[0].data(), sizeof(float) * vol[0].size());
+    file.write((char*) vol[0].data(), sizeof(float) * vol[0].size());
     file.close();
 #endif /* DEBUG_WRITE */
 
@@ -363,7 +370,8 @@ bool AmbientOcclusionCalculator::initilialize(core::CoreInstance* instance, cons
     }
     glGenTextures(1, &this->volTexture);
 
-    if (!this->loadShaders(instance)) return false;
+    if (!this->loadShaders(instance))
+        return false;
 
     // create SSBOs
     if (this->colourSSBOHandle != 0) {
@@ -402,32 +410,29 @@ bool AmbientOcclusionCalculator::loadShaders(core::CoreInstance* instance) {
         return false;
     }
 
-	try {
-		if (!this->aoComputeShader.Compile(compute.Code(), compute.Count())) {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-				"Unable to compile aocompute shader: Unknown error\n");
-			return false;
-		}
-	}
-	catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-			"Unable to compile aocompute shader (@%s): %s\n",
-			vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
-				ce.FailedAction()), ce.GetMsgA());
-		return false;
-	}
-	catch (vislib::Exception e) {
-		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-			"Unable to compile aocompute shader: %s\n", e.GetMsgA());
-		return false;
-	}
-	catch (...) {
-		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-			"Unable to compile aocompute shader: Unknown exception\n");
-		return false;
-	}
-	this->shaderChanged = true;
-	return true;
+    try {
+        if (!this->aoComputeShader.Compile(compute.Code(), compute.Count())) {
+            megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+                megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile aocompute shader: Unknown error\n");
+            return false;
+        }
+    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "Unable to compile aocompute shader (@%s): %s\n",
+            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+            ce.GetMsgA());
+        return false;
+    } catch (vislib::Exception e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile aocompute shader: %s\n", e.GetMsgA());
+        return false;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(
+            megamol::core::utility::log::Log::LEVEL_ERROR, "Unable to compile aocompute shader: Unknown exception\n");
+        return false;
+    }
+    this->shaderChanged = true;
+    return true;
 }
 
 /*
@@ -445,7 +450,8 @@ void AmbientOcclusionCalculator::readColourData(void) {
  * AmbientOcclusionCalculator::resizeVolume
  */
 void AmbientOcclusionCalculator::resizeVolume(AmbientOcclusionCalculator::AOSettings settings) {
-    if (this->volTexture == 0) return;
+    if (this->volTexture == 0)
+        return;
     std::vector<float> vol(settings.volSizeX * settings.volSizeY * settings.volSizeZ, 0.0f);
     glActiveTexture(GL_TEXTURE7);
     glBindTexture(GL_TEXTURE_3D, this->volTexture);

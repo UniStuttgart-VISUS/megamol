@@ -89,7 +89,9 @@ AtomGrid::AtomGrid(void) : isInitializedFlag(false) {}
 /*
  * AtomGrid::AtomGrid
  */
-AtomGrid::AtomGrid(std::vector<vec4d>& atomVector) { this->initialize(atomVector); }
+AtomGrid::AtomGrid(std::vector<vec4d>& atomVector) {
+    this->initialize(atomVector);
+}
 
 /*
  * AtomGrid::cellPositionToIndex
@@ -194,7 +196,7 @@ bool AtomGrid::checkForIntersections(
 void AtomGrid::ClearSearchGrid() {
     std::vector<vec4d> dummy1;
     this->atoms.swap(dummy1);
-    std::vector<Cell> dummy2;
+    std::vector<megamol::molecularmaps::Cell> dummy2;
     this->cells.swap(dummy2);
     std::vector<std::vector<std::vector<uint16_t>>> dummy3;
     this->cell_rings.swap(dummy3);
@@ -203,12 +205,16 @@ void AtomGrid::ClearSearchGrid() {
 /*
  * AtomGrid::GetAtoms
  */
-const std::vector<vec4d>& AtomGrid::GetAtoms() const { return this->atoms; }
+const std::vector<vec4d>& AtomGrid::GetAtoms() const {
+    return this->atoms;
+}
 
 /*
  * AtomGrid::GetCellCnt
  */
-size_t AtomGrid::GetCellCnt() { return this->cells.size(); }
+size_t AtomGrid::GetCellCnt() {
+    return this->cells.size();
+}
 
 /*
  * AtomGrid::getCoordOf
@@ -318,7 +324,8 @@ int AtomGrid::GetEndVertex(const EndVertexParams& p_params, vec4d& edgeEndResult
                     auto sphereResult = Computations::ComputeVoronoiSphereR(p_params.gate_vector, spheres);
 
                     // We always take the result with the smaller radius, if available.
-                    if (sphereResult < 1) continue;
+                    if (sphereResult < 1)
+                        continue;
                     auto edgeEnd = spheres[0];
 
                     // Compute the angular distance to the found result sphere. If it is the currently smallest,
@@ -363,7 +370,9 @@ int AtomGrid::GetEndVertex(const EndVertexParams& p_params, vec4d& edgeEndResult
 /*
  * AtomGrid::Init
  */
-void AtomGrid::Init(std::vector<vec4d>& atomVector) { this->initialize(atomVector); }
+void AtomGrid::Init(std::vector<vec4d>& atomVector) {
+    this->initialize(atomVector);
+}
 
 /*
  * AtomGrid::initialize
@@ -382,12 +391,18 @@ void AtomGrid::initialize(std::vector<vec4d>& atomVector) {
     double zmax = DBL_MIN;
     this->max_radius = 0.0;
     for (uint i = 0; i < this->atoms.size(); i++) {
-        if (this->atoms[i].X() < xmin) xmin = this->atoms[i].X();
-        if (this->atoms[i].Y() < ymin) ymin = this->atoms[i].Y();
-        if (this->atoms[i].Z() < zmin) zmin = this->atoms[i].Z();
-        if (this->atoms[i].X() > xmax) xmax = this->atoms[i].X();
-        if (this->atoms[i].Y() > ymax) ymax = this->atoms[i].Y();
-        if (this->atoms[i].Z() > zmax) zmax = this->atoms[i].Z();
+        if (this->atoms[i].X() < xmin)
+            xmin = this->atoms[i].X();
+        if (this->atoms[i].Y() < ymin)
+            ymin = this->atoms[i].Y();
+        if (this->atoms[i].Z() < zmin)
+            zmin = this->atoms[i].Z();
+        if (this->atoms[i].X() > xmax)
+            xmax = this->atoms[i].X();
+        if (this->atoms[i].Y() > ymax)
+            ymax = this->atoms[i].Y();
+        if (this->atoms[i].Z() > zmax)
+            zmax = this->atoms[i].Z();
 
         if (this->atoms[i].GetW() > this->max_radius) {
             this->max_radius = this->atoms[i].GetW();
@@ -400,8 +415,10 @@ void AtomGrid::initialize(std::vector<vec4d>& atomVector) {
 
     // Compute the size of the grid.
     double smallestDimSize = this->boundingBox.Width();
-    if (smallestDimSize > this->boundingBox.Height()) smallestDimSize = this->boundingBox.Height();
-    if (smallestDimSize > this->boundingBox.Depth()) smallestDimSize = this->boundingBox.Depth();
+    if (smallestDimSize > this->boundingBox.Height())
+        smallestDimSize = this->boundingBox.Height();
+    if (smallestDimSize > this->boundingBox.Depth())
+        smallestDimSize = this->boundingBox.Depth();
 
     // The number of cell should be equal to the number of atoms but not exceed 65535, since the cells
     // are addressed with uint16 in the rings to save memory.
@@ -431,7 +448,8 @@ void AtomGrid::initialize(std::vector<vec4d>& atomVector) {
     this->cellSizeDenom.SetDepth(1.0 / this->cellSize.GetDepth());
 
     // Initialise the cells, the neighbours of the cells and the closest atoms.
-    this->cells = std::vector<Cell>(this->cellNum.GetDepth() * this->cellNum.GetHeight() * this->cellNum.GetWidth());
+    this->cells = std::vector<megamol::molecularmaps::Cell>(
+        this->cellNum.GetDepth() * this->cellNum.GetHeight() * this->cellNum.GetWidth());
     this->cells.shrink_to_fit();
 
     // Determine the sizes of the rings and the maximum size.
@@ -538,7 +556,9 @@ void AtomGrid::insertAtoms(const size_t p_begin, const size_t p_end) {
 /*
  * AtomGrid::IsInitialized
  */
-bool AtomGrid::IsInitialized(void) const { return this->isInitializedFlag; }
+bool AtomGrid::IsInitialized(void) const {
+    return this->isInitializedFlag;
+}
 
 /*
  * AtomGrid::operator=

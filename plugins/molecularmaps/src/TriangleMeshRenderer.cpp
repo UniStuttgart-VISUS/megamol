@@ -14,48 +14,20 @@ using namespace megamol::molecularmaps;
  * TriangleMeshRenderer::TriangleMeshRenderer
  */
 TriangleMeshRenderer::TriangleMeshRenderer(void)
-    : AbstractLocalRenderer()
-    , faces(nullptr)
-    , vertex_colors(nullptr)
-    , vertex_normals(nullptr)
-    , vertices(nullptr)
-    , shaderProgram(nullptr) {}
+        : AbstractLocalRenderer(), faces(nullptr), vertex_colors(nullptr), vertex_normals(nullptr), vertices(nullptr) {}
 
 /*
  * TriangleMeshRenderer::~TriangleMeshRenderer
  */
-TriangleMeshRenderer::~TriangleMeshRenderer(void) { this->Release(); }
+TriangleMeshRenderer::~TriangleMeshRenderer(void) {
+    this->Release();
+}
 
 /*
  * TriangleMeshRenderer::create
  */
 bool TriangleMeshRenderer::create(void) {
-    if (shaderProgram == nullptr) {
-        shaderProgram = std::make_shared<glowl::GLSLProgram>();
-        shaderProgram->init();
-        constexpr auto vertexShader = 
-            "#version 400"
-            "";
 
-        constexpr auto fragmentShader = 
-            "#version 400";
-
-        auto vS = std::string(vertexShader);
-        auto fS = std::string(fragmentShader);
-        if (!shaderProgram->compileShaderFromString(&vS, GL_VERTEX_SHADER)) {
-            std::cout << "Shader compile error: " << shaderProgram->getLog();
-            return false;
-        }
-        if (!shaderProgram->compileShaderFromString(&fS, GL_FRAGMENT_SHADER)) {
-            std::cout << "Shader compile error: " << shaderProgram->getLog();
-            return false;
-        }
-        if (!shaderProgram->link()) {
-            std::cout << "Shader linker error: " << shaderProgram->getLog();
-            return false;
-        }
-        
-    }
     return true;
 }
 
@@ -67,13 +39,18 @@ void TriangleMeshRenderer::release(void) {}
 /*
  * TriangleMeshRenderer::Render
  */
-bool TriangleMeshRenderer::Render(core::view::CallRender3D_2& call) {
+bool TriangleMeshRenderer::Render(core::view::CallRender3D& call) {
 
-    if (this->faces == nullptr) return false;
-    if (this->vertices == nullptr) return false;
-    if (this->vertex_colors == nullptr) return false;
-    if (this->vertex_normals == nullptr) return false;
-    if (this->numValuesPerColor != 3 && this->numValuesPerColor != 4) return false;
+    if (this->faces == nullptr)
+        return false;
+    if (this->vertices == nullptr)
+        return false;
+    if (this->vertex_colors == nullptr)
+        return false;
+    if (this->vertex_normals == nullptr)
+        return false;
+    if (this->numValuesPerColor != 3 && this->numValuesPerColor != 4)
+        return false;
 
     glEnableClientState(GL_COLOR_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
@@ -94,7 +71,7 @@ bool TriangleMeshRenderer::Render(core::view::CallRender3D_2& call) {
 /*
  * TriangleMeshRenderer::RenderWireFrame
  */
-bool TriangleMeshRenderer::RenderWireFrame(core::view::CallRender3D_2& call) {
+bool TriangleMeshRenderer::RenderWireFrame(core::view::CallRender3D& call) {
     GLint oldpolymode[2];
     glGetIntegerv(GL_POLYGON_MODE, oldpolymode);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);

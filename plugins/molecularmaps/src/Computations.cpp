@@ -82,7 +82,8 @@ size_t Computations::ComputeGateCenter(const std::array<vec4d, 4>& p_gate_vector
     auto bary_cnt = Computations::incircleBaryCoords(p_gate_vector, p_bary_solutions, p_circles);
 
     // If no incircle was found, process the next gate.
-    if (bary_cnt < 1) return 0;
+    if (bary_cnt < 1)
+        return 0;
 
     // Compute the real middle spheres based on the barycentric coordinates.
     for (size_t i = 0; i < bary_cnt; i++) {
@@ -135,7 +136,8 @@ size_t Computations::ComputeVoronoiCircle(
     evec2d rhs = evec2d(0.0, 0.0);
     size_t row = 0;
     for (size_t i = 0; i < p_circles.size(); i++) {
-        if (i == circle_id) continue;
+        if (i == circle_id)
+            continue;
         for (size_t j = 0; j < 3; j++) {
             // Compute the value.
             double val = p_circles[i].PeekComponents()[j] - p_circles[circle_id].PeekComponents()[j];
@@ -226,7 +228,7 @@ size_t Computations::ComputeVoronoiCircle(
     double rhs_0_sq = rhs(0) * rhs(0);
     double rhs_1_sq = rhs(1) * rhs(1);
 
-    // Compute the a, b and c values for each of the aX² + bx + c terms. For each dependent variable we have one of
+    // Compute the a, b and c values for each of the aXÂ² + bx + c terms. For each dependent variable we have one of
     // these terms.
     double a = m_1_sq * v_1_sq + m_3_sq * v_2_sq + 2.0 * m_1_m_3 * v_1 * v_2;
     double d = m_2_sq * v_1_sq + m_4_sq * v_2_sq + 2.0 * m_2_m_4 * v_1 * v_2;
@@ -236,7 +238,7 @@ size_t Computations::ComputeVoronoiCircle(
     double f = m_2_sq * rhs_0_sq + m_4_sq * rhs_1_sq + 2.0 * m_2_m_4 * rhs(0) * rhs(1);
 
 
-    // Set the correct order for the computation of the polynom X² + Y² - R² = 0. The independent variable has the value
+    // Set the correct order for the computation of the polynom XÂ² + YÂ² - RÂ² = 0. The independent variable has the value
     // of 1 the the others are a and d.
     double m_a;
     switch (free_variable) {
@@ -422,7 +424,8 @@ uint Computations::ComputeVoronoiSphere(const std::array<vec4d, 4>& p_spheres, s
     evec3d rhs = evec3d(0.0, 0.0, 0.0);
     size_t row = 0;
     for (size_t i = 0; i < p_spheres.size(); i++) {
-        if (i == sphere_id) continue;
+        if (i == sphere_id)
+            continue;
         for (size_t j = 0; j < 4; j++) {
             // Compute the value.
             double val = p_spheres[i].PeekComponents()[j] - p_spheres[sphere_id].PeekComponents()[j];
@@ -554,7 +557,7 @@ uint Computations::ComputeVoronoiSphere(const std::array<vec4d, 4>& p_spheres, s
     double b_0_b_2 = rhs(0) * rhs(2);
     double b_2_b_1 = rhs(2) * rhs(1);
 
-    // Compute the a, b and c values for each of the aX² + bx + c terms. For each dependent variable we have one of
+    // Compute the a, b and c values for each of the aXÂ² + bx + c terms. For each dependent variable we have one of
     // these terms.
     double a = m_1_sq * r_1_sq + m_4_sq * r_2_sq + m_7_sq * r_3_sq +
                2.0 * (m_1_m_4 * v_1_v_2 + m_1_m_7 * v_1_v_3 + m_4_m_7 * v_2_v_3);
@@ -580,7 +583,7 @@ uint Computations::ComputeVoronoiSphere(const std::array<vec4d, 4>& p_spheres, s
     double i = m_3_sq * b_0_sq + m_6_sq * b_1_sq + m_9_sq * b_2_sq +
                2.0 * (m_3_m_9 * b_0_b_2 + m_6_m_9 * b_2_b_1 + m_3_m_6 * b_0_b_1);
 
-    // Set the correct order for the computation of the polynom X² + Y² + Z² - R² = 0. The independent variable has the
+    // Set the correct order for the computation of the polynom XÂ² + YÂ² + ZÂ² - RÂ² = 0. The independent variable has the
     // value of 1 the the others are a, d and g.
     double m_a;
     switch (free_variable) {
@@ -839,7 +842,8 @@ uint Computations::ComputeVoronoiSphereR(
     std::array<double, 3> rhs{0.0, 0.0, 0.0};
     size_t row = 0;
     for (size_t i = 0; i < p_spheres.size(); i++) {
-        if (i == sphere_id) continue;
+        if (i == sphere_id)
+            continue;
         for (size_t j = 0; j < 4; j++) {
             // Compute the value.
             double val = p_spheres[i].PeekComponents()[j] - p_spheres[sphere_id].PeekComponents()[j];
@@ -927,7 +931,7 @@ uint Computations::ComputeVoronoiSphereR(
     double b_1_sq = rhs[1] * rhs[1];
     double b_2_sq = rhs[2] * rhs[2];
 
-    // Compute the a, b and c values for each of the aX² + bx + c terms. For each dependent variable we have one of
+    // Compute the a, b and c values for each of the aXÂ² + bx + c terms. For each dependent variable we have one of
     // these terms.
     double a = m_1_sq * r_1_sq + m_4_sq * r_2_sq + m_7_sq * r_3_sq +
                2.0 * (m_1_m_4 * v_1_v_2 + m_1_m_7 * v_1_v_3 + m_4_m_7 * v_2_v_3);
@@ -953,7 +957,7 @@ uint Computations::ComputeVoronoiSphereR(
     double i = m_3_sq * b_0_sq + m_6_sq * b_1_sq + m_9_sq * b_2_sq +
                2.0 * (m_3_m_9 * b_0_b_2 + m_6_m_9 * b_2_b_1 + m_3_m_6 * b_0_b_1);
 
-    // Set the correct order for the computation of the polynom X² + Y² + Z² - R² = 0. The independent variable has the
+    // Set the correct order for the computation of the polynom XÂ² + YÂ² + ZÂ² - RÂ² = 0. The independent variable has the
     // value of 1 the the others are a, d and g.
     double m_a = a + d + g - 1.0;
 

@@ -887,8 +887,10 @@ void Color::MakeColorTable(const megamol::protein_calls::MolecularDataCall* mol,
     }
 
     // Clamp weights to zero
-    if (weight0 < 0.0) weight0 = 0.0;
-    if (weight1 < 0.0) weight1 = 0.0;
+    if (weight0 < 0.0)
+        weight0 = 0.0;
+    if (weight1 < 0.0)
+        weight1 = 0.0;
 
     // Normalize weights
     weight0 = weight0 / (weight0 + weight1);
@@ -947,7 +949,8 @@ void Color::MakeComparisonColorTable(const megamol::protein_calls::MolecularData
 
     unsigned int ssc = mol1->SecondaryStructureCount();
 
-    if (ssc > mol2->SecondaryStructureCount()) ssc = mol2->SecondaryStructureCount();
+    if (ssc > mol2->SecondaryStructureCount())
+        ssc = mol2->SecondaryStructureCount();
 
     float max = -2.0f;
 
@@ -972,14 +975,15 @@ void Color::MakeComparisonColorTable(const megamol::protein_calls::MolecularData
 
             const megamol::protein_calls::MolecularDataCall::Residue* t1 = mol2->Residues()[cntRes];
 
-            if (t1 == NULL) break;
+            if (t1 == NULL)
+                break;
 
             if (mol1->Residues()[cntRes]->Identifier() ==
                     megamol::protein_calls::MolecularDataCall::Residue::AMINOACID &&
                 mol2->Residues()[cntRes]->Identifier() ==
                     megamol::protein_calls::MolecularDataCall::Residue::AMINOACID) {
-                aminoacid1 = (megamol::protein_calls::MolecularDataCall::AminoAcid*)(mol1->Residues()[cntRes]);
-                aminoacid2 = (megamol::protein_calls::MolecularDataCall::AminoAcid*)(mol2->Residues()[cntRes]);
+                aminoacid1 = (megamol::protein_calls::MolecularDataCall::AminoAcid*) (mol1->Residues()[cntRes]);
+                aminoacid2 = (megamol::protein_calls::MolecularDataCall::AminoAcid*) (mol2->Residues()[cntRes]);
             } else { // TODO check if this is correct
                 continue;
             }
@@ -993,7 +997,8 @@ void Color::MakeComparisonColorTable(const megamol::protein_calls::MolecularData
 
             float absoluteDist = sqrt(xDist * xDist + yDist * yDist + zDist * zDist);
 
-            if (absoluteDist > max) max = absoluteDist;
+            if (absoluteDist > max)
+                max = absoluteDist;
 
             // set the color for every atom
             for (cntAtom = atomIdx; cntAtom < atomCnt; ++cntAtom) {
@@ -1022,7 +1027,8 @@ void Color::MakeRainbowColorTable(unsigned int num, vislib::Array<vislib::math::
 
     unsigned int n = (num / 4);
     // the color table should have a minimum size of 16
-    if (n < 4) n = 4;
+    if (n < 4)
+        n = 4;
     rainbowColors.Clear();
     rainbowColors.AssertCapacity(num);
     float f = 1.0f / float(n);

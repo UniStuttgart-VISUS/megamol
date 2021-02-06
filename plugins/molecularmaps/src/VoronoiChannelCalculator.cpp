@@ -51,14 +51,16 @@ void VoronoiChannelCalculator::checkVertexAndGateValidity(MolecularDataCall* mdc
             filtered_radius_vertices++;
         }
 
-		// Check if the vertex is at infinity, i.e. from that vertex no other vertices could be reached.
-		if (it->second.infinity_count > 2) {
-			filtered_inf_vertices++;
-		}
-		i++;
-	}
-	//megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Filtered %d voronoi vertices, because their radius was lower than %f", filtered_radius_vertices, this->probeRadius);
-	//megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Filtered %d voronoi infinity vertices", filtered_inf_vertices);
+        // Check if the vertex is at infinity, i.e. from that vertex no other vertices could be reached.
+        if (it->second.infinity_count > 2) {
+            filtered_inf_vertices++;
+        }
+        i++;
+    }
+    // megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Filtered %d
+    // voronoi vertices, because their radius was lower than %f", filtered_radius_vertices, this->probeRadius);
+    // megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Filtered %d
+    // voronoi infinity vertices", filtered_inf_vertices);
 
     // Initialise the threads to test if the vertices are inside or outside of the convex hull.
     size_t core_num = Concurrency::details::_CurrentScheduler::_GetNumberOfVirtualProcessors();
@@ -211,15 +213,15 @@ bool VoronoiChannelCalculator::constructVoronoiDiagram(MolecularDataCall* mdc) {
     std::array<vec4d, 2> sphereVec{vec4d(), vec4d()};
     auto sphere_results = Computations::ComputeVoronoiSphereR(startVec, sphereVec);
 
-	// Check if there is at least one sphere and if so take the one with the smallest radius,
-	// i.e. the first sphere.
-	if (sphere_results != 1) {
-		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
-			"The initial voronoi sphere could not be computed or is ambigous!"
-			"\nPlease contact the developer to fix this.\n");
-		return false;
-	}
-	auto centroid = sphereVec[0];
+    // Check if there is at least one sphere and if so take the one with the smallest radius,
+    // i.e. the first sphere.
+    if (sphere_results != 1) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "The initial voronoi sphere could not be computed or is ambigous!"
+            "\nPlease contact the developer to fix this.\n");
+        return false;
+    }
+    auto centroid = sphereVec[0];
 
     // Copy the atom data.
     std::vector<vec4d> atomData(mdc->AtomCount());
@@ -293,12 +295,12 @@ bool VoronoiChannelCalculator::constructVoronoiDiagram(MolecularDataCall* mdc) {
         }
     }
 
-	if (!this->initVertexFound) {
-		megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-			"No initial Voronoi vertex could be found!"
-			"\nPlease contact the developer to fix this.\n");
-		return false;
-	}
+    if (!this->initVertexFound) {
+        megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
+            "No initial Voronoi vertex could be found!"
+            "\nPlease contact the developer to fix this.\n");
+        return false;
+    }
 
     // Remove the remaining gates in the queue.
     this->gatesToTest_one.clear();
@@ -590,12 +592,14 @@ void VoronoiChannelCalculator::stopThreads() {
 /*
  * VoronoiChannelCalculator::create
  */
-bool VoronoiChannelCalculator::create(void) { return true; }
+bool VoronoiChannelCalculator::create(void) {
+    return true;
+}
 
 /*
  * VoronoiChannelCalculator::Render
  */
-bool VoronoiChannelCalculator::Render(view::CallRender3D_2& call) {
+bool VoronoiChannelCalculator::Render(view::CallRender3D& call) {
     glLineWidth(1.0);
     glDisable(GL_LIGHTING);
     glBegin(GL_LINES);

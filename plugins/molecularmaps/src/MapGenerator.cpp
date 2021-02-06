@@ -11,6 +11,7 @@
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
+
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -18,6 +19,8 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/view/CallRender3D.h"
 #include "protein_calls/MolecularDataCall.h"
+
+#include <numeric>
 
 using namespace megamol;
 using namespace megamol::core;
@@ -29,57 +32,67 @@ using namespace megamol::protein_calls;
  * MapGenerator::MapGenerator
  */
 MapGenerator::MapGenerator(void)
-    : Renderer3DModule_2()
-    , aoActive("ambientOcclusion::useAO", "Flag whether or not use Ambient Occlusion for the tunnel detection.")
-    , aoAngleFactorParam("ambientOcclusion::angleFactor", "Factor for the angle between two sample directions")
-    , aoEvalParam("ambientOcclusion::eval", "Scaling factor for the final brightness value")
-    , aoFalloffParam("ambientOcclusion::falloff", "Exponent of the distance function of the ambient occlusion")
-    , aoGenFactorParam(
-          "ambientOcclusion::genFactor", "The influence factor for the influence of a sphere on a single voxel")
-    , aoMaxDistSample("ambientOcclusion::maxDistance", "The maximum distance between the surface and the last sample")
-    , aoMinDistSample("ambientOcclusion::minDistance", "The distance between the surface and the first sample")
-    , aoNumSampleDirectionsParam("ambientOcclusion::numSampleDirections", "The number of sample directions per vertex")
-    , aoScalingFactorParam("ambientOcclusion::scaling", "Scaling factor for the particle radii")
-    , aoThresholdParam("ambientOcclusion::threshold", "Set the thresholding factor for the shadow test.")
-    , aoVolSizeXParam("ambientOcclusion::volSizeX", "Size of the shadow volume in x-direction (in voxels)")
-    , aoVolSizeYParam("ambientOcclusion::volSizeY", "Size of the shadow volume in y-direction (in voxels)")
-    , aoVolSizeZParam("ambientOcclusion::volSizeZ", "Size of the shadow volume in z-direction (in voxels)")
-    , bindingSiteColor("bindingSite::color", "The color of the selected binding site.")
-    , bindingSiteColoring("bindingSite::enable", "Flag whether or not use coloring of a specific binding site")
-    , bindingSiteIgnoreRadius("bindingSite::ingoreRadius",
-          "Flag whether or not use the radius around a binding site. Instead, all atoms of the site are colored")
-    , bindingSiteRadius("bindingSite::radius", "The radius of the colored binding site. A negative radius means we use "
-                                               "the circumcircle of the site as radius.")
-    , bindingSiteRadiusOffset("bindingSite::radiusOffset",
-          "The offset that gets added to the radius of the computed sphere. This is ignored if radius is positive.")
-    , blending("rendering::blending", "Flag whether or not use blending for the surface")
-    , computeButton("recompute", "Button that starts the computation of the molecular map")
-    , cut_colour_param("colour::cutColour", "The path to the file that contains the colours for the cuts")
-    , display_param("display mode", "Choose what to display, protein, sphere, map and debug modes")
-    , draw_wireframe_param("wireframe", "Choose whether to render meshes as wireframe or not")
-    , geodesic_lines_param("geodesic lines", "Choose what kind of geodesic lines to display")
-    , group_colour_param("colour::groupColour", "The path to the file that contains the colours for the groups")
-    , lat_lines_count_param("grid::latLinesCount", "The number of latitude lines")
-    , lat_lon_lines_param("grid::toggle lat/lon lines", "Turn latitude and longitude lines on or off")
-    , lat_lon_lines_colour_param("grid::color", "The base color for the latitude/longitude grid")
-    , lat_lon_lines_eq_colour_param("grid::equator color", "The color of the equator")
-    , lat_lon_lines_gm_colour_param("grid::meridian color", "The color of the Greenwich meridian")
-    , lighting("rendering::lighting", "Flag whether or not use lighting for the surface")
-    , lon_lines_count_param("grid::lonLinesCount", "The number of longitude lines")
-    , meshDataOutSlot("meshDataOut", "The output mesh data")
-    , meshDataSlot("meshData", "The input mesh data")
-    , meshDataSlotWithCap("capData", "The input mesh data with the cap")
-    , mirror_map_param("mirrorMap", "Choose whether the final map should be mirrored or not")
-    , out_mesh_selection_slot("outputMeshMode", "Choose the mesh that is passed on to the rest of the application")
-    , probeRadiusSlot("probeRadius", "The radius of the probe for protein channel detection in Angstrom")
-    , proteinDataSlot("proteinData", "The input protein data")
-    , radius_offset_param("radiusOffset", "The offset for the BoundingSphere radius")
-    , shaderReloadButtonParam("shaderReload", "Triggers the reloading of the shader programs")
-    , store_png_button("screenshot::Store Map To PNG", "Stores the molecular surface map to a PNG image file")
-    , store_png_font(vislib::graphics::gl::FontInfo_Verdana)
-    , store_png_path(
-          "screenshot::Filename for map(PNG)", "Filename of the PNG image file to which the map will be stored")
-    , zeBindingSiteSlot("bindingSite", "The input binding site data") {
+        : Renderer3DModule()
+        , aoActive("ambientOcclusion::useAO", "Flag whether or not use Ambient Occlusion for the tunnel detection.")
+        , aoAngleFactorParam("ambientOcclusion::angleFactor", "Factor for the angle between two sample directions")
+        , aoEvalParam("ambientOcclusion::eval", "Scaling factor for the final brightness value")
+        , aoFalloffParam("ambientOcclusion::falloff", "Exponent of the distance function of the ambient occlusion")
+        , aoGenFactorParam(
+              "ambientOcclusion::genFactor", "The influence factor for the influence of a sphere on a single voxel")
+        , aoMaxDistSample(
+              "ambientOcclusion::maxDistance", "The maximum distance between the surface and the last sample")
+        , aoMinDistSample("ambientOcclusion::minDistance", "The distance between the surface and the first sample")
+        , aoNumSampleDirectionsParam(
+              "ambientOcclusion::numSampleDirections", "The number of sample directions per vertex")
+        , aoScalingFactorParam("ambientOcclusion::scaling", "Scaling factor for the particle radii")
+        , aoThresholdParam("ambientOcclusion::threshold", "Set the thresholding factor for the shadow test.")
+        , aoVolSizeXParam("ambientOcclusion::volSizeX", "Size of the shadow volume in x-direction (in voxels)")
+        , aoVolSizeYParam("ambientOcclusion::volSizeY", "Size of the shadow volume in y-direction (in voxels)")
+        , aoVolSizeZParam("ambientOcclusion::volSizeZ", "Size of the shadow volume in z-direction (in voxels)")
+        , bindingSiteColor("bindingSite::color", "The color of the selected binding site.")
+        , bindingSiteColoring("bindingSite::enable", "Flag whether or not use coloring of a specific binding site")
+        , bindingSiteIgnoreRadius("bindingSite::ingoreRadius",
+              "Flag whether or not use the radius around a binding site. Instead, all atoms of the site are colored")
+        , bindingSiteRadius("bindingSite::radius",
+              "The radius of the colored binding site. A negative radius means we use "
+              "the circumcircle of the site as radius.")
+        , bindingSiteRadiusOffset("bindingSite::radiusOffset",
+              "The offset that gets added to the radius of the computed sphere. This is ignored if radius is positive.")
+        , blending("rendering::blending", "Flag whether or not use blending for the surface")
+        , close_after_screen_store_param(
+              "screenshot::closeAfterScreenshot", "When set, MegaMol is shut down when a screenshot has been performed")
+        , computeButton("recompute", "Button that starts the computation of the molecular map")
+        , cut_colour_param("colour::cutColour", "The path to the file that contains the colours for the cuts")
+        , display_param("display mode", "Choose what to display, protein, sphere, map and debug modes")
+        , draw_wireframe_param("wireframe", "Choose whether to render meshes as wireframe or not")
+        , geodesic_lines_param("geodesic lines", "Choose what kind of geodesic lines to display")
+        , group_colour_param("colour::groupColour", "The path to the file that contains the colours for the groups")
+        , lat_lines_count_param("grid::latLinesCount", "The number of latitude lines")
+        , lat_lon_lines_param("grid::toggle lat/lon lines", "Turn latitude and longitude lines on or off")
+        , lat_lon_lines_colour_param("grid::color", "The base color for the latitude/longitude grid")
+        , lat_lon_lines_eq_colour_param("grid::equator color", "The color of the equator")
+        , lat_lon_lines_gm_colour_param("grid::meridian color", "The color of the Greenwich meridian")
+        , lighting("rendering::lighting", "Flag whether or not use lighting for the surface")
+        , lon_lines_count_param("grid::lonLinesCount", "The number of longitude lines")
+        , meshDataOutSlot("meshDataOut", "The output mesh data")
+        , meshDataSlot("meshData", "The input mesh data")
+        , meshDataSlotWithCap("capData", "The input mesh data with the cap")
+        , mirror_map_param("mirrorMap", "Choose whether the final map should be mirrored or not")
+        , out_mesh_selection_slot("outputMeshMode", "Choose the mesh that is passed on to the rest of the application")
+        , probeRadiusSlot("probeRadius", "The radius of the probe for protein channel detection in Angstrom")
+        , proteinDataSlot("proteinData", "The input protein data")
+        , radius_offset_param("radiusOffset", "The offset for the BoundingSphere radius")
+        , render_equator_length("renderEquatorLength",
+              "Enables or disables the rendering of the information text about the equator length")
+        , shaderReloadButtonParam("shaderReload", "Triggers the reloading of the shader programs")
+        , store_png_button("screenshot::Store Map To PNG", "Stores the molecular surface map to a PNG image file")
+        , store_png_font(vislib::graphics::gl::FontInfo_Verdana)
+        , store_png_path(
+              "screenshot::Filename for map(PNG)", "Filename of the PNG image file to which the map will be stored")
+        , store_png_values_path(
+              "screenshot::Filename for values(PNG)", "Filename of the PNG image file that stores the values")
+        , writeValueImageParam("writeValueImage", "When enabled, storing a PNG also stores a value image for later use")
+        , zeBindingSiteSlot("bindingSite", "The input binding site data") {
     this->aoActive.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->aoActive);
 
@@ -136,6 +149,12 @@ MapGenerator::MapGenerator(void)
 
     this->blending.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->blending);
+
+    this->bufferIDs = nullptr;
+    this->bufferValues = nullptr;
+
+    this->close_after_screen_store_param.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->close_after_screen_store_param);
 
     this->computeButton.SetParameter(new param::ButtonParam(view::Key::KEY_C));
     this->MakeSlotAvailable(&this->computeButton);
@@ -267,6 +286,9 @@ MapGenerator::MapGenerator(void)
     this->radius_offset_param.SetParameter(new param::FloatParam(0.1f, 0.0f, 1.0f));
     this->MakeSlotAvailable(&this->radius_offset_param);
 
+    this->render_equator_length.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->render_equator_length);
+
     this->shaderReloadButtonParam << new param::ButtonParam(view::Key::KEY_F5);
     this->MakeSlotAvailable(&this->shaderReloadButtonParam);
 
@@ -277,6 +299,9 @@ MapGenerator::MapGenerator(void)
 
     this->store_png_path.SetParameter(new param::FilePathParam(""));
     this->MakeSlotAvailable(&this->store_png_path);
+
+    this->store_png_values_path.SetParameter(new param::FilePathParam(""));
+    this->MakeSlotAvailable(&this->store_png_values_path);
 
     this->tunnel_faces = std::vector<uint>(0);
 
@@ -292,9 +317,13 @@ MapGenerator::MapGenerator(void)
     this->vertices_added = std::vector<uint>(0);
     this->vertices_added_tunnel_id = std::vector<uint>(0);
     this->vertices_rebuild = std::vector<float>(0);
+    this->vertices_rebuild_ids = std::vector<int>(0);
     this->vertices_sphere = std::vector<float>(0);
 
     this->voronoiNeeded = false;
+
+    this->writeValueImageParam.SetParameter(new core::param::BoolParam(false));
+    this->MakeSlotAvailable(&this->writeValueImageParam);
 
     this->zeBindingSiteSlot.SetCompatibleCall<protein_calls::BindingSiteCallDescription>();
     this->MakeSlotAvailable(&this->zeBindingSiteSlot);
@@ -304,7 +333,9 @@ MapGenerator::MapGenerator(void)
 /*
  * MapGenerator::~MapGenerator
  */
-MapGenerator::~MapGenerator(void) { this->Release(); }
+MapGenerator::~MapGenerator(void) {
+    this->Release();
+}
 
 
 /*
@@ -313,6 +344,12 @@ MapGenerator::~MapGenerator(void) { this->Release(); }
 bool MapGenerator::create(void) {
     this->triMeshRenderer.create();
     this->voronoiCalc.create();
+
+    this->bufferIDs =
+        std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, std::vector<unsigned int>(), GL_DYNAMIC_DRAW);
+    this->bufferValues =
+        std::make_unique<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, std::vector<float>(), GL_DYNAMIC_DRAW);
+
     return true;
 }
 
@@ -321,7 +358,8 @@ bool MapGenerator::create(void) {
  * MapGenerator::release
  */
 void MapGenerator::release(void) {
-    if (this->map_vertex_vbo != 0) glDeleteBuffers(1, &this->map_vertex_vbo);
+    if (this->map_vertex_vbo != 0)
+        glDeleteBuffers(1, &this->map_vertex_vbo);
 }
 
 
@@ -330,7 +368,8 @@ void MapGenerator::release(void) {
  */
 bool MapGenerator::allElementsTrue(const std::vector<bool>& p_vec) {
     for (size_t i = 0; i < p_vec.size(); i++) {
-        if (!p_vec[i]) return false;
+        if (!p_vec[i])
+            return false;
     }
     return true;
 }
@@ -340,7 +379,7 @@ bool MapGenerator::allElementsTrue(const std::vector<bool>& p_vec) {
  * MapGenerator::capColouring
  */
 bool MapGenerator::capColouring(
-    CallTriMeshData* p_cap_data_call, view::CallRender3D_2* p_cr3d, protein_calls::BindingSiteCall* p_bs) {
+    CallTriMeshData* p_cap_data_call, view::CallRender3D* p_cr3d, protein_calls::BindingSiteCall* p_bs) {
     // Check the calls.
     if (p_bs == nullptr || p_cr3d == nullptr) {
         return false;
@@ -348,10 +387,12 @@ bool MapGenerator::capColouring(
 
     // Get the extend and the data.
     p_cap_data_call->SetFrameID(static_cast<uint>(p_cr3d->Time()));
-    if (!(*p_cap_data_call)(1)) return false;
+    if (!(*p_cap_data_call)(1))
+        return false;
 
     p_cap_data_call->SetFrameID(static_cast<uint>(p_cr3d->Time()));
-    if (!(*p_cap_data_call)(0)) return false;
+    if (!(*p_cap_data_call)(0))
+        return false;
 
     // Check if the call contains data.
     if (p_cap_data_call->Count() <= 0) {
@@ -369,12 +410,14 @@ bool MapGenerator::capColouring(
     cap_vertices.resize(vertex_cnt * 3);
     if (mesh.GetVertexDataType() == CallTriMeshData::Mesh::DT_FLOAT) {
         // float vertex data
-        if (mesh.GetVertexPointerFloat() == nullptr) return false;
+        if (mesh.GetVertexPointerFloat() == nullptr)
+            return false;
         std::copy(mesh.GetVertexPointerFloat(), mesh.GetVertexPointerFloat() + vertex_cnt * 3, cap_vertices.begin());
 
     } else if (mesh.GetVertexDataType() == CallTriMeshData::Mesh::DT_DOUBLE) {
         // double vertex data
-        if (mesh.GetVertexPointerDouble() == nullptr) return false;
+        if (mesh.GetVertexPointerDouble() == nullptr)
+            return false;
         std::transform(mesh.GetVertexPointerDouble(), mesh.GetVertexPointerDouble() + vertex_cnt * 3,
             cap_vertices.begin(), [](double v) { return static_cast<float>(v); });
 
@@ -1091,36 +1134,42 @@ bool MapGenerator::createSphere(const vec3f& p_eye_dir, const vec3f& p_up_dir) {
     vislib::math::Vector<float, 3> center;
     auto ret = createBoundingSphere(
         this->radius_offset_param.Param<param::FloatParam>()->Value(), radius, center, this->vertices_rebuild);
-    if (!ret) return false;
+    if (!ret)
+        return false;
 
     // Determine the poles of the protein.
     Poles poles;
     ret = findPoles(p_eye_dir, p_up_dir, center, poles);
-    if (!ret) return false;
+    if (!ret)
+        return false;
 
     // Initialise the z values of the poles and their neighbouring vertices.
     float z_val = 50.0f;
     std::vector<float> z_values = std::vector<float>(vertex_cnt, 0.0f);
     std::vector<bool> valid_vertices = std::vector<bool>(vertex_cnt, true);
     ret = initialiseZvalues(poles, z_values, valid_vertices, z_val);
-    if (!ret) return false;
+    if (!ret)
+        return false;
 
     // Set the zvalues of the vertices.
     ret = this->cuda_kernels->CreateZValues(
         20000, z_values, valid_vertices, this->vertex_edge_offset, this->vertex_edge_offset_depth);
-    if (!ret) return false;
+    if (!ret)
+        return false;
 
     // Find boundary meridian.
     std::vector<int> types = std::vector<int>(vertex_cnt, 0);
     valid_vertices = std::vector<bool>(vertex_cnt, true);
     ret = findBoundaryMeridian(poles, types, valid_vertices, z_values, p_eye_dir);
-    if (!ret) return false;
+    if (!ret)
+        return false;
 
     // Set the phi values of the vertices.
     std::vector<float> phi_values = std::vector<float>(vertex_cnt, 0.0f);
     ret = this->cuda_kernels->CreatePhiValues(
         0.01f, phi_values, valid_vertices, this->vertex_edge_offset, this->vertex_edge_offset_depth, types);
-    if (!ret) return false;
+    if (!ret)
+        return false;
 
     // Delete the types.
     types.clear();
@@ -1129,7 +1178,8 @@ bool MapGenerator::createSphere(const vec3f& p_eye_dir, const vec3f& p_up_dir) {
     // Set the d values of the vertices.
     float theta_const;
     ret = setDvalues(vertex_cnt, theta_const, poles);
-    if (!ret) return false;
+    if (!ret)
+        return false;
 
     // Set the theta values of the vertices.
     std::vector<float> theta_values = std::vector<float>(vertex_cnt, 0.0f);
@@ -1139,7 +1189,8 @@ bool MapGenerator::createSphere(const vec3f& p_eye_dir, const vec3f& p_up_dir) {
     valid_vertices[poles.north] = false;
     valid_vertices[poles.south] = false;
     ret = this->cuda_kernels->CreateThetaValues(theta_const, theta_values, valid_vertices, z_values, z_val);
-    if (!ret) return false;
+    if (!ret)
+        return false;
 
     // Delete the z values, the valid vertices.
     z_values.clear();
@@ -1246,9 +1297,10 @@ void MapGenerator::depthFirstSearch(const size_t p_cur, const std::vector<Vorono
 /*
  * MapGenerator::drawMap
  */
-void MapGenerator::drawMap() {
+void MapGenerator::drawMap(void) {
+
     // Enable FBO
-    this->map_fbo.Enable();
+    this->map_fbo.EnableMultiple(2, GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1);
     GLfloat bk_colour[4];
     glGetFloatv(GL_COLOR_CLEAR_VALUE, bk_colour);
     glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -1281,6 +1333,8 @@ void MapGenerator::drawMap() {
 
     // Render
     this->map_shader.Enable();
+    this->bufferIDs->bind(12);
+    this->bufferValues->bind(13);
     this->map_shader.SetParameter("sphere", this->sphere_data.GetX(), this->sphere_data.GetY(),
         this->sphere_data.GetZ(), this->sphere_data.GetW());
     this->map_shader.SetParameter("frontVertex", this->vertices_sphere[this->look_at_id * 3],
@@ -1324,19 +1378,32 @@ void MapGenerator::drawMap() {
 /*
  * MapGenerator::GetExtents
  */
-bool MapGenerator::GetExtents(view::CallRender3D_2& call) {
+bool MapGenerator::GetExtents(Call& call) {
+    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
+    if (cr3d == nullptr)
+        return false;
+
     CallTriMeshData* ctmd = this->meshDataSlot.CallAs<CallTriMeshData>();
-    if (ctmd == nullptr) return false;
+    if (ctmd == nullptr)
+        return false;
 
-    ctmd->SetFrameID(static_cast<uint>(call.Time()));
-    if (!(*ctmd)(1)) return false; // GetExtent of CallTriMeshData
+    ctmd->SetFrameID(static_cast<uint>(cr3d->Time()));
+    if (!(*ctmd)(1))
+        return false; // GetExtent of CallTriMeshData
 
-    call.SetTimeFramesCount(ctmd->FrameCount());
-    call.AccessBoundingBoxes().Clear();
+    cr3d->SetTimeFramesCount(ctmd->FrameCount());
+    cr3d->AccessBoundingBoxes().Clear();
     auto tmpBBox = ctmd->AccessBoundingBoxes().ObjectSpaceBBox();
-    call.AccessBoundingBoxes().SetBoundingBox(tmpBBox);
+    cr3d->AccessBoundingBoxes().SetObjectSpaceBBox(tmpBBox);
     tmpBBox = ctmd->AccessBoundingBoxes().ObjectSpaceClipBox();
-    call.AccessBoundingBoxes().SetClipBox(tmpBBox);
+    cr3d->AccessBoundingBoxes().SetObjectSpaceClipBox(tmpBBox);
+    float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
+    if (scale > 0.0f) {
+        scale = 2.0f / scale;
+    } else {
+        scale = 1.0f;
+    }
+    cr3d->AccessBoundingBoxes().MakeScaledWorld(scale);
 
     return true;
 }
@@ -1347,7 +1414,8 @@ bool MapGenerator::GetExtents(view::CallRender3D_2& call) {
  */
 bool MapGenerator::GetMeshData(Call& call) {
     geocalls::CallTriMeshData* ctmd = dynamic_cast<geocalls::CallTriMeshData*>(&call);
-    if (ctmd == nullptr) return false;
+    if (ctmd == nullptr)
+        return false;
     ctmd->SetObjects(1, &this->out_mesh);
 
     return true;
@@ -1359,10 +1427,11 @@ bool MapGenerator::GetMeshData(Call& call) {
  */
 bool MapGenerator::GetMeshExtents(Call& call) {
     geocalls::CallTriMeshData* ctmd = dynamic_cast<geocalls::CallTriMeshData*>(&call);
-    if (ctmd == nullptr) return false;
+    if (ctmd == nullptr)
+        return false;
 
     if (this->store_new_mesh) {
-        MeshMode selected = (MeshMode)this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
+        MeshMode selected = (MeshMode) this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
         geocalls::CallTriMeshData::Mesh themesh;
         if (selected == MeshMode::MESH_ORIGINAL) {
             themesh.SetVertexData(static_cast<uint>(this->vertices.size() / 3), this->vertices.data(),
@@ -1414,8 +1483,10 @@ bool MapGenerator::GetMeshExtents(Call& call) {
                 auto fin = vislib::math::Vector<float, 3>(
                     (lambda - lambda2) / static_cast<float>(vislib::math::PI_DOUBLE), relCoord.Y(), len);
 
-                if (fin.X() > 1.0) fin[0] -= 2.0f;
-                if (fin.X() < -1.0) fin[0] += 2.0f;
+                if (fin.X() > 1.0)
+                    fin[0] -= 2.0f;
+                if (fin.X() < -1.0)
+                    fin[0] += 2.0f;
 
                 this->vertices_map[3 * i + 0] = fin.X();
                 this->vertices_map[3 * i + 1] = fin.Y();
@@ -1560,18 +1631,24 @@ bool MapGenerator::fillLocalMesh(const CallTriMeshData::Mesh& mesh) {
     this->vertices.resize(vertexCnt * 3);
     this->vertices.shrink_to_fit();
 
+    this->vertices_rebuild_ids.resize(vertexCnt);
+    this->vertices_rebuild_ids.shrink_to_fit();
+    std::iota(this->vertices_rebuild_ids.begin(), this->vertices_rebuild_ids.end(), 0);
+
+    this->bufferIDs->rebuffer(this->vertices_rebuild_ids);
+
     // copy the vertex data
     if (mesh.GetVertexDataType() == CallTriMeshData::Mesh::DT_FLOAT) {
         // float vertex data
-        if (mesh.GetVertexPointerFloat() == nullptr) return false;
+        if (mesh.GetVertexPointerFloat() == nullptr)
+            return false;
         std::copy(mesh.GetVertexPointerFloat(), mesh.GetVertexPointerFloat() + vertexCnt * 3, this->vertices.begin());
-
     } else if (mesh.GetVertexDataType() == CallTriMeshData::Mesh::DT_DOUBLE) {
         // double vertex data
-        if (mesh.GetVertexPointerDouble() == nullptr) return false;
+        if (mesh.GetVertexPointerDouble() == nullptr)
+            return false;
         std::transform(mesh.GetVertexPointerDouble(), mesh.GetVertexPointerDouble() + vertexCnt * 3,
             this->vertices.begin(), [](double v) { return static_cast<float>(v); });
-
     } else {
         return false;
     }
@@ -1579,18 +1656,21 @@ bool MapGenerator::fillLocalMesh(const CallTriMeshData::Mesh& mesh) {
     // copy the face data
     if (mesh.GetTriDataType() == CallTriMeshData::Mesh::DT_UINT32) {
         // 32 bit uint face indices
-        if (mesh.GetTriIndexPointerUInt32() == nullptr) return false;
+        if (mesh.GetTriIndexPointerUInt32() == nullptr)
+            return false;
         std::copy(mesh.GetTriIndexPointerUInt32(), mesh.GetTriIndexPointerUInt32() + faceCnt * 3, this->faces.begin());
 
     } else if (mesh.GetTriDataType() == CallTriMeshData::Mesh::DT_UINT16) {
         // 16 bit unsigned face indices
-        if (mesh.GetTriIndexPointerUInt16() == nullptr) return false;
+        if (mesh.GetTriIndexPointerUInt16() == nullptr)
+            return false;
         std::transform(mesh.GetTriIndexPointerUInt16(), mesh.GetTriIndexPointerUInt16() + faceCnt * 3,
             this->faces.begin(), [](unsigned short v) { return static_cast<uint>(v); });
 
     } else if (mesh.GetTriDataType() == CallTriMeshData::Mesh::DT_BYTE) {
         // 8 bit unsigned face indices
-        if (mesh.GetTriIndexPointerByte() == nullptr) return false;
+        if (mesh.GetTriIndexPointerByte() == nullptr)
+            return false;
         std::transform(mesh.GetTriIndexPointerByte(), mesh.GetTriIndexPointerByte() + faceCnt * 3, this->faces.begin(),
             [](unsigned char v) { return static_cast<uint>(v); });
 
@@ -1601,12 +1681,14 @@ bool MapGenerator::fillLocalMesh(const CallTriMeshData::Mesh& mesh) {
     // copy the normal data
     if (mesh.GetNormalDataType() == CallTriMeshData::Mesh::DT_FLOAT) {
         // float normals
-        if (mesh.GetNormalPointerFloat() == nullptr) return false;
+        if (mesh.GetNormalPointerFloat() == nullptr)
+            return false;
         std::copy(mesh.GetNormalPointerFloat(), mesh.GetNormalPointerFloat() + vertexCnt * 3, this->normals.begin());
 
     } else if (mesh.GetNormalDataType() == CallTriMeshData::Mesh::DT_DOUBLE) {
         // double normals
-        if (mesh.GetNormalPointerDouble() == nullptr) return false;
+        if (mesh.GetNormalPointerDouble() == nullptr)
+            return false;
         std::transform(mesh.GetNormalPointerDouble(), mesh.GetNormalPointerDouble() + vertexCnt * 3,
             this->normals.begin(), [](double v) { return static_cast<float>(v); });
 
@@ -1617,19 +1699,22 @@ bool MapGenerator::fillLocalMesh(const CallTriMeshData::Mesh& mesh) {
     // copy the colour data
     if (mesh.GetColourDataType() == CallTriMeshData::Mesh::DT_FLOAT) {
         // float colours
-        if (mesh.GetColourPointerFloat() == nullptr) return false;
+        if (mesh.GetColourPointerFloat() == nullptr)
+            return false;
         std::copy(
             mesh.GetColourPointerFloat(), mesh.GetColourPointerFloat() + vertexCnt * 3, this->vertexColors.begin());
 
     } else if (mesh.GetColourDataType() == CallTriMeshData::Mesh::DT_DOUBLE) {
         // double colours
-        if (mesh.GetColourPointerDouble() == nullptr) return false;
+        if (mesh.GetColourPointerDouble() == nullptr)
+            return false;
         std::transform(mesh.GetColourPointerDouble(), mesh.GetColourPointerDouble() + vertexCnt * 3,
             this->vertexColors.begin(), [](double v) { return static_cast<float>(v); });
 
     } else if (mesh.GetColourDataType() == CallTriMeshData::Mesh::DT_BYTE) {
         // unsigned char colours
-        if (mesh.GetColourPointerByte() == nullptr) return false;
+        if (mesh.GetColourPointerByte() == nullptr)
+            return false;
         std::transform(mesh.GetColourPointerByte(), mesh.GetColourPointerByte() + vertexCnt * 3,
             this->vertexColors.begin(), [](unsigned char v) {
                 return static_cast<float>(v) / 255.0f; // the range of uchar values has to be corrected to [0, 1]
@@ -1640,6 +1725,22 @@ bool MapGenerator::fillLocalMesh(const CallTriMeshData::Mesh& mesh) {
     }
 
     return true;
+}
+
+/*
+ * MapGenerator::findValueAttributeIndex
+ */
+int MapGenerator::findValueAttributeIndex(const geocalls::CallTriMeshData::Mesh& mesh) {
+    auto attribcnt = mesh.GetVertexAttribCount();
+    // find float attribute
+    if (attribcnt != 0) {
+        for (int attribIdx = 0; attribIdx < attribcnt; ++attribIdx) {
+            if (mesh.GetVertexAttribDataType(attribIdx) == geocalls::CallTriMeshData::Mesh::DataType::DT_FLOAT) {
+                return attribIdx;
+            }
+        }
+    }
+    return -1;
 }
 
 
@@ -1726,7 +1827,8 @@ bool MapGenerator::findBoundaryMeridian(const Poles& p_poles, std::vector<int>& 
             }
         }
 
-        if (nxt == cur) return false;
+        if (nxt == cur)
+            return false;
         cur = nxt;
     }
     meridian.push_back(cur);
@@ -1842,14 +1944,18 @@ bool MapGenerator::findBoundaryMeridian(const Poles& p_poles, std::vector<int>& 
 bool MapGenerator::findCircles(std::vector<FaceGroup>& p_groups) {
     for (auto& group : p_groups) {
         // We are only interested in shadowed groups.
-        if (!group.state) continue;
-        if (group.border_edges.empty()) continue;
+        if (!group.state)
+            continue;
+        if (group.border_edges.empty())
+            continue;
 
         // Sort the edges according to the first and to the second vertex ID.
         std::vector<Edge> sorted_edges_id0 = group.border_edges;
         std::vector<Edge> sorted_edges_id1 = group.border_edges;
-        if (!this->cuda_kernels->SortEdges(sorted_edges_id0, 0)) return false;
-        if (!this->cuda_kernels->SortEdges(sorted_edges_id1, 1)) return false;
+        if (!this->cuda_kernels->SortEdges(sorted_edges_id0, 0))
+            return false;
+        if (!this->cuda_kernels->SortEdges(sorted_edges_id1, 1))
+            return false;
 
         // Initialise the circle detection.
         std::vector<uint> circle;
@@ -2185,7 +2291,8 @@ bool MapGenerator::findPoles(const vislib::math::Vector<float, 3>& p_eye_dir,
     Ray ray = Ray(p_eye_dir, p_center);
     // Intersect the Octree to find the first face we intersect and use one of it's vertex IDs.
     auto retval = this->octree.IntersectOctree(this->faces_rebuild, ray, this->vertices_rebuild);
-    if (retval == -1) return false;
+    if (retval == -1)
+        return false;
     this->look_at_id = static_cast<uint>(retval);
 
     return true;
@@ -2196,8 +2303,7 @@ bool MapGenerator::findPoles(const vislib::math::Vector<float, 3>& p_eye_dir,
  * MapGenerator::getNameOfPDB
  */
 std::string MapGenerator::getNameOfPDB(MolecularDataCall& mdc) {
-    auto str = mdc.GetPDBFilename();
-    std::string name(str);
+    std::string name(vislib::StringA(T2A(mdc.GetPDBFilename())).PeekBuffer());
     if (name.length() > 4) {
         name = name.substr(0, name.length() - 4);
     }
@@ -2408,7 +2514,8 @@ bool MapGenerator::growFaces(std::vector<uint>& p_circle_faces, std::vector<uint
 void MapGenerator::identifyBorderEdges(const std::vector<bool>& p_face_shadowed, std::vector<FaceGroup>& p_groups) {
     for (auto& group : p_groups) {
         // Skip not shadowed groups, we are only interested in tunnels.
-        if (!group.state) continue;
+        if (!group.state)
+            continue;
         group.border_edges.reserve(group.face_map.size() * 3);
 
         // Look at all faces of the group.
@@ -2522,7 +2629,8 @@ bool MapGenerator::initialiseMapShader(bool shaderReload) {
         }
 
         error = glGetError();
-        if (error != 0) return false;
+        if (error != 0)
+            return false;
     }
 
     if (!this->map_shader_init || shaderReload) {
@@ -2534,118 +2642,135 @@ bool MapGenerator::initialiseMapShader(bool shaderReload) {
 
         vislib::graphics::gl::ShaderSource vert, frag, geom;
 
-		// Create shader for map and build the programme.
-		if (!instance()->ShaderSourceFactory().MakeShaderSource("mapShader::vertex", vert)) {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-				"Unable to load vertex shader source for map shader");
-			return false;
-		}
-		if (!instance()->ShaderSourceFactory().MakeShaderSource("mapShader::geometry", geom)) {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-				"Unable to load geometry shader source for map shader");
-			return false;
-		}
-		if (!instance()->ShaderSourceFactory().MakeShaderSource("mapShader::fragment", frag)) {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-				"Unable to load fragment shader source for map shader");
-			return false;
-		}
+        // Create shader for map and build the programme.
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("mapShader::vertex", vert)) {
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Unable to load vertex shader source for map shader");
+            return false;
+        }
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("mapShader::geometry", geom)) {
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Unable to load geometry shader source for map shader");
+            return false;
+        }
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("mapShader::fragment", frag)) {
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Unable to load fragment shader source for map shader");
+            return false;
+        }
 
-		const char* buildState = "compile";
-		try {
-			if (!this->map_shader.Compile(vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
-				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-					"Unable to compile map shader: Unknown error\n");
-				return false;
-			}
-			buildState = "setup";
-			this->map_shader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES);
-			this->map_shader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
-			this->map_shader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 6);
-			buildState = "link";
-			if (!this->map_shader.Link()) {
-				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-					"Unable to link map shader: Unknown error\n");
-				return false;
-			}
+        const char* buildState = "compile";
+        try {
+            if (!this->map_shader.Compile(
+                    vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
+                core::utility::log::Log::DefaultLog.WriteMsg(
+                    core::utility::log::Log::LEVEL_ERROR, "Unable to compile map shader: Unknown error\n");
+                return false;
+            }
+            buildState = "setup";
+            this->map_shader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_TRIANGLES);
+            this->map_shader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_TRIANGLE_STRIP);
+            this->map_shader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 6);
+            buildState = "link";
+            if (!this->map_shader.Link()) {
+                core::utility::log::Log::DefaultLog.WriteMsg(
+                    core::utility::log::Log::LEVEL_ERROR, "Unable to link map shader: Unknown error\n");
+                return false;
+            }
 
-		} catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-				"Unable to %s map shader (@%s): %s\n", buildState,
-				vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
-					ce.FailedAction()), ce.GetMsgA());
-			return false;
+        } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+                "Unable to %s map shader (@%s): %s\n", buildState,
+                vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+                ce.GetMsgA());
+            return false;
 
-		} catch (vislib::Exception e) {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-				"Unable to %s map shader: %s\n", buildState, e.GetMsgA());
-			return false;
+        } catch (vislib::Exception e) {
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Unable to %s map shader: %s\n", buildState, e.GetMsgA());
+            return false;
 
-		} catch (...) {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-				"Unable to %s map shader: Unknown exception\n", buildState);
-			return false;
-		}
+        } catch (...) {
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Unable to %s map shader: Unknown exception\n", buildState);
+            return false;
+        }
 
-		// Create shader for geodesic lines and build the programme.
-		if (!instance()->ShaderSourceFactory().MakeShaderSource("geolinesShader::vertex", vert)) {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-				"Unable to load vertex shader source for geodesic lines shader");
-			return false;
-		}
-		if (!instance()->ShaderSourceFactory().MakeShaderSource("geolinesShader::geometry", geom)) {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-				"Unable to load geometry shader source for geodesic lines shader");
-			return false;
-		}
-		if (!instance()->ShaderSourceFactory().MakeShaderSource("geolinesShader::fragment", frag)) {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-				"Unable to load vertex shader source for geodesic lines shader");
-			return false;
-		}
+        // Create shader for geodesic lines and build the programme.
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("geolinesShader::vertex", vert)) {
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Unable to load vertex shader source for geodesic lines shader");
+            return false;
+        }
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("geolinesShader::geometry", geom)) {
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+                "Unable to load geometry shader source for geodesic lines shader");
+            return false;
+        }
+        if (!instance()->ShaderSourceFactory().MakeShaderSource("geolinesShader::fragment", frag)) {
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_ERROR, "Unable to load vertex shader source for geodesic lines shader");
+            return false;
+        }
 
-		buildState = "compile";
-		try {
-			if (!this->geodesic_shader.Compile(vert.Code(), vert.Count(), geom.Code(), geom.Count(),
-				frag.Code(), frag.Count()))
-			{
-				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-					"Unable to compile geodesic lines shader: Unknown error\n");
-				return false;
-			}
-			buildState = "setup";
-			this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES);
-			this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
-			this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 4);
-			buildState = "link";
-			if (!this->geodesic_shader.Link())
-			{
-				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-					"Unable to link geodesic lines shader: Unknown error\n");
-				return false;
-			}
+        buildState = "compile";
+        try {
+            if (!this->geodesic_shader.Compile(
+                    vert.Code(), vert.Count(), geom.Code(), geom.Count(), frag.Code(), frag.Count())) {
+                core::utility::log::Log::DefaultLog.WriteMsg(
+                    core::utility::log::Log::LEVEL_ERROR, "Unable to compile geodesic lines shader: Unknown error\n");
+                return false;
+            }
+            buildState = "setup";
+            this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_INPUT_TYPE_EXT, GL_LINES);
+            this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_OUTPUT_TYPE_EXT, GL_LINE_STRIP);
+            this->geodesic_shader.SetProgramParameter(GL_GEOMETRY_VERTICES_OUT_EXT, 4);
+            buildState = "link";
+            if (!this->geodesic_shader.Link()) {
+                core::utility::log::Log::DefaultLog.WriteMsg(
+                    core::utility::log::Log::LEVEL_ERROR, "Unable to link geodesic lines shader: Unknown error\n");
+                return false;
+            }
 
-		} catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-				"Unable to %s geodesic lines shader (@%s): %s\n", buildState,
-				vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(
-					ce.FailedAction()), ce.GetMsgA());
-			return false;
-		} catch (vislib::Exception e) {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-				"Unable to %s geodesic lines shader: %s\n", buildState, e.GetMsgA());
-			return false;
-		} catch (...) {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-				"Unable to %s geodesic lines shader: Unknown exception\n", buildState);
-			return false;
-		}
-	}
+        } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+                "Unable to %s geodesic lines shader (@%s): %s\n", buildState,
+                vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
+                ce.GetMsgA());
+            return false;
+        } catch (vislib::Exception e) {
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+                "Unable to %s geodesic lines shader: %s\n", buildState, e.GetMsgA());
+            return false;
+        } catch (...) {
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+                "Unable to %s geodesic lines shader: Unknown exception\n", buildState);
+            return false;
+        }
+    }
 
     if (!this->map_fbo.IsValid() && !shaderReload) {
         uint pxW = 1570 * 4;
         uint pxH = static_cast<uint>(pxW / vislib::math::PI_DOUBLE);
-        this->map_fbo.Create(pxW, pxH);
+
+        std::vector<vislib::graphics::gl::FramebufferObject::ColourAttachParams> colorAttachments(2);
+        colorAttachments[0].internalFormat = GL_RGBA8;
+        colorAttachments[0].format = GL_RGBA;
+        colorAttachments[0].type = GL_UNSIGNED_BYTE;
+
+        colorAttachments[1].internalFormat = GL_R32F;
+        colorAttachments[1].format = GL_RED;
+        colorAttachments[1].type = GL_FLOAT;
+
+        vislib::graphics::gl::FramebufferObject::DepthAttachParams dap;
+        dap.format = GL_DEPTH_COMPONENT24;
+        dap.state = vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER;
+
+        vislib::graphics::gl::FramebufferObject::StencilAttachParams sap;
+        sap.format = GL_STENCIL_INDEX;
+        sap.state = vislib::graphics::gl::FramebufferObject::ATTACHMENT_DISABLED;
+
+        this->map_fbo.Create(pxW, pxH, 2, colorAttachments.data(), dap, sap);
     }
 
     return true;
@@ -2811,9 +2936,11 @@ uint MapGenerator::processAOOutput(const std::vector<float>* p_ao_vals, std::vec
         cnt = 0;
         for (size_t j = 0; j < 3; j++) {
             auto id = this->faces[i * 3 + j];
-            if (p_ao_vals->at(id * 4) <= p_threshold) cnt++;
+            if (p_ao_vals->at(id * 4) <= p_threshold)
+                cnt++;
         }
-        if (cnt >= 2) face_shadowed[i] = true;
+        if (cnt >= 2)
+            face_shadowed[i] = true;
     }
 
     // Set the group colours to a default value of gray (193,193,193)
@@ -2826,7 +2953,8 @@ uint MapGenerator::processAOOutput(const std::vector<float>* p_ao_vals, std::vec
     this->findCircles(groups);
     for (const auto& group : groups) {
         // We are only interested in shadowed groups.
-        if (!group.state) continue;
+        if (!group.state)
+            continue;
 
         if (group.circles.size() >= 2) {
             // The group represents a tunnel so mark the faces.
@@ -2841,7 +2969,8 @@ uint MapGenerator::processAOOutput(const std::vector<float>* p_ao_vals, std::vec
     uint vertex_id = static_cast<uint>(this->vertices.size() / 3);
     this->vertexColors_cuts = std::vector<float>(this->vertexColors.size(), 193.0f / 255.0f);
     for (const auto& group : groups) {
-        if (!group.state || group.circles.size() < 2) continue;
+        if (!group.state || group.circles.size() < 2)
+            continue;
         for (const auto& circle : group.circles) {
             p_cuts.push_back(this->createCut(false, tunnel_id, vertex_id, circle, p_tunnels));
         }
@@ -2855,14 +2984,15 @@ uint MapGenerator::processAOOutput(const std::vector<float>* p_ao_vals, std::vec
 /*
  * MapGenerator::processTopologyOutput
  */
-void MapGenerator::processTopologyOutput(std::vector<Cut>& p_cuts, uint& p_tunnel_id,
-		std::vector<bool>& p_tunnels, const std::vector<VoronoiVertex>& p_voronoi_vertices,
-		const std::vector<VoronoiEdge>& p_voronoi_edges, const vislib::math::Cuboid<float>& bbox) {
-	// Create the Octree of the current faces.
-	megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Creating the Voronoi Cut Octree...");
-	Octree voronoiOctree;
-	voronoiOctree.CreateOctreeRootNode(this->faces_rebuild, make_float3(bbox.Right(), bbox.Top(), bbox.Front()),
-		make_float3(bbox.Left(), bbox.Bottom(), bbox.Back()), make_float3(2.0f), this->vertices_rebuild);
+void MapGenerator::processTopologyOutput(std::vector<Cut>& p_cuts, uint& p_tunnel_id, std::vector<bool>& p_tunnels,
+    const std::vector<VoronoiVertex>& p_voronoi_vertices, const std::vector<VoronoiEdge>& p_voronoi_edges,
+    const vislib::math::Cuboid<float>& bbox) {
+    // Create the Octree of the current faces.
+    core::utility::log::Log::DefaultLog.WriteMsg(
+        core::utility::log::Log::LEVEL_INFO, "Creating the Voronoi Cut Octree...");
+    Octree voronoiOctree;
+    voronoiOctree.CreateOctreeRootNode(this->faces_rebuild, make_float3(bbox.Right(), bbox.Top(), bbox.Front()),
+        make_float3(bbox.Left(), bbox.Bottom(), bbox.Back()), make_float3(2.0f), this->vertices_rebuild);
 
     // Compute the AO value for every voronoi vertex. Remember the faces that where intersected
     // by the rays. Also mark the voronoi vertices that have an AO value higher than the
@@ -2923,7 +3053,7 @@ void MapGenerator::processTopologyOutput(std::vector<Cut>& p_cuts, uint& p_tunne
         }
     }
 
-#    pragma omp parallel for
+#pragma omp parallel for
     for (int i = 0; i < p_voronoi_vertices.size(); i++) {
         // Initialise the ao value and the position of the voronoi vertex.
         float ao_val = 0.0f;
@@ -3325,6 +3455,7 @@ void MapGenerator::rebuildSurface(
     // Create vectors for the new surface.
     std::vector<float> new_colours, new_normals, new_vertices;
     std::vector<uint> new_faces;
+    std::vector<int> old_ids;
 
     // Create vectors to the old surface parameters.
     float* old_colours_ptr;
@@ -3387,6 +3518,7 @@ void MapGenerator::rebuildSurface(
     new_faces.reserve(old_face_cnt * 3 + cut_face_cnt);
     new_normals.reserve(old_normals_cnt * 3 + cut_normal_cnt);
     new_vertices.reserve(old_vertices_cnt * 3 + cut_vertex_cnt);
+    old_ids.reserve(old_vertices_cnt + cut_vertex_cnt);
 
     // Copy the old faces into the new ones except for the faces that need to be removed.
     for (size_t i = 0; i < old_face_cnt; i++) {
@@ -3416,6 +3548,8 @@ void MapGenerator::rebuildSurface(
                     this->vertexColors_tunnel[id * 4] = old_colours_ptr[id * 3];
                     this->vertexColors_tunnel[id * 4 + 1] = old_colours_ptr[id * 3 + 1];
                     this->vertexColors_tunnel[id * 4 + 2] = old_colours_ptr[id * 3 + 2];
+                    // Remember the old ids
+                    old_ids.push_back(id);
 
                 } else {
                     // The vertex was already added, use the updated vertex ID.
@@ -3473,7 +3607,8 @@ void MapGenerator::rebuildSurface(
                         new_vertices.push_back(old_vertices_ptr[id * 3]);
                         new_vertices.push_back(old_vertices_ptr[id * 3 + 1]);
                         new_vertices.push_back(old_vertices_ptr[id * 3 + 2]);
-
+                        // remember the old ids
+                        old_ids.push_back(id);
                     } else {
                         // The vertex was not delete so add the the new ID to the faces.
                         new_faces.push_back(vertex_offset[id]);
@@ -3498,6 +3633,8 @@ void MapGenerator::rebuildSurface(
                     new_vertices.push_back(cut.vertices[cut_id * 3]);
                     new_vertices.push_back(cut.vertices[cut_id * 3 + 1]);
                     new_vertices.push_back(cut.vertices[cut_id * 3 + 2]);
+                    // Remember the old ids
+                    old_ids.push_back(-1);
                 }
             }
         }
@@ -3512,6 +3649,10 @@ void MapGenerator::rebuildSurface(
     this->vertexColors_rebuild.shrink_to_fit();
     this->vertices_rebuild = new_vertices;
     this->vertices_rebuild.shrink_to_fit();
+    this->vertices_rebuild_ids = old_ids;
+    this->vertices_rebuild_ids.shrink_to_fit();
+
+    this->bufferIDs->rebuffer(this->vertices_rebuild_ids);
 
     // Delete temporary vectors.
     new_colours.erase(new_colours.begin(), new_colours.end());
@@ -3561,7 +3702,7 @@ void MapGenerator::rebuildSurface(
 /*
  * MapGenerator::Render
  */
-bool MapGenerator::Render(view::CallRender3D_2& call) {
+bool MapGenerator::Render(Call& call) {
     // Check if we need to reload the shaders.
     bool shaderReloaded = false;
     if (this->shaderReloadButtonParam.IsDirty()) {
@@ -3571,34 +3712,50 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
         shaderReloaded = true;
     }
 
-    MeshMode meshMode = (MeshMode)this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
+    MeshMode meshMode = (MeshMode) this->out_mesh_selection_slot.Param<param::EnumParam>()->Value();
     if (this->out_mesh_selection_slot.IsDirty()) {
         store_new_mesh = true;
         this->out_mesh_selection_slot.ResetDirty();
     }
 
     // Set up the calls for the CallTriMeshData call and the MolecularDataCall call.
+    view::CallRender3D* cr3d = dynamic_cast<view::CallRender3D*>(&call);
+    if (cr3d == nullptr)
+        return false;
     CallTriMeshData* ctmd = this->meshDataSlot.CallAs<CallTriMeshData>();
-    if (ctmd == nullptr) return false;
+    if (ctmd == nullptr)
+        return false;
     CallTriMeshData* cctmd = this->meshDataSlotWithCap.CallAs<CallTriMeshData>();
     MolecularDataCall* mdc = this->proteinDataSlot.CallAs<MolecularDataCall>();
-    if (mdc == nullptr) return false;
+    if (mdc == nullptr)
+        return false;
 
     // Set the frame for the MolecularDataCall .
-    mdc->SetFrameID(static_cast<uint>(call.Time()));
-    if (!(*mdc)(1)) return false;
+    mdc->SetFrameID(static_cast<uint>(cr3d->Time()));
+    if (!(*mdc)(1))
+        return false;
 
     // Set the frame for the CallTriMeshData and get the bounding box.
-    ctmd->SetFrameID(static_cast<uint>(call.Time()));
-    if (!(*ctmd)(1)) return false;
+    ctmd->SetFrameID(static_cast<uint>(cr3d->Time()));
+    if (!(*ctmd)(1))
+        return false;
+    float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
+    if (scale > 0.0f) {
+        scale = 2.0f / scale;
+    } else {
+        scale = 1.0f;
+    }
+    ::glScalef(scale, scale, scale);
 
     // Get the data from the MolecularDataCall.
-    mdc->SetFrameID(static_cast<uint>(call.Time()));
-    if (!(*mdc)(0)) return false;
+    mdc->SetFrameID(static_cast<uint>(cr3d->Time()));
+    if (!(*mdc)(0))
+        return false;
 
     // Get the data from the CallTriMeshData.
-    ctmd->SetFrameID(static_cast<uint>(call.Time()));
-    if (!(*ctmd)(0)) return false;
+    ctmd->SetFrameID(static_cast<uint>(cr3d->Time()));
+    if (!(*ctmd)(0))
+        return false;
 
     // Set up OpenGL.
     glEnable(GL_DEPTH_TEST);
@@ -3657,6 +3814,7 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
         auto pdb_name = getNameOfPDB(*mdc);
         if (!pdb_name.empty()) {
             pdb_name = splitString(pdb_name, '\\').back();
+            pdb_name = splitString(pdb_name, '/').back();
         }
         vislib::TString prev_file_path;
         if (this->store_png_path.IsDirty()) {
@@ -3667,93 +3825,104 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
         prev_file_path.Append(_T(".png"));
         this->store_png_path.Param<param::FilePathParam>()->SetValue(prev_file_path, false);
 
+        prev_file_path.Clear();
+        if (this->store_png_values_path.IsDirty()) {
+            prev_file_path = this->store_png_values_path.Param<param::FilePathParam>()->Value();
+            this->store_png_values_path.ResetDirty();
+        }
+        prev_file_path.Append(A2T(pdb_name.c_str()));
+        prev_file_path.Append(_T("_values.dat"));
+        this->store_png_values_path.Param<param::FilePathParam>()->SetValue(prev_file_path, false);
+
         // Get the colour tables.
         Color::ReadColorTableFromFile(cut_colour_param.Param<param::FilePathParam>()->Value(), cut_colour_table);
         Color::ReadColorTableFromFile(group_colour_param.Param<param::FilePathParam>()->Value(), group_colour_table);
 
         // Get the bounding box, the view direction and the up direction of the camera.
-        auto bbox = call.AccessBoundingBoxes().BoundingBox();
-        view::Camera_2 cam;
-        call.GetCamera(cam);
-        cam_type::snapshot_type snapshot;
-        cam_type::matrix_type viewTemp, projTemp;
-        cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-        glm::vec3 eye_dir = static_cast<glm::vec4>(snapshot.view_vector);
-        glm::vec3 up_dir = static_cast<glm::vec4>(snapshot.up_vector);
+        auto bbox = cr3d->AccessBoundingBoxes().ObjectSpaceBBox();
+        auto eye_dir = cr3d->GetCameraParameters()->EyeDirection();
+        auto up_dir = cr3d->GetCameraParameters()->EyeUpVector();
 
-		if (ctmd->Count() > 0 && ctmd->Objects()[0].GetVertexCount() > 0 ) {
-			// Create local copy of the mesh.
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Copying the mesh...");
-			if (!fillLocalMesh(ctmd->Objects()[0])) {
-				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, "The mesh data is malformed!");
-				return false;
-			}
+        if (ctmd->Count() > 0 && ctmd->Objects()[0].GetVertexCount() > 0) {
+            // Create local copy of the mesh.
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO, "Copying the mesh...");
+            if (!fillLocalMesh(ctmd->Objects()[0])) {
+                core::utility::log::Log::DefaultLog.WriteMsg(
+                    core::utility::log::Log::LEVEL_ERROR, "The mesh data is malformed!");
+                return false;
+            }
 
-			// Create mesh topology information.
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Creating the topology information...");
-			if (!this->cuda_kernels->CreateMeshTopology(this->faces, this->vertex_edge_offset,
-					this->face_edge_offset, this->vertex_edge_offset_depth, this->face_edge_offset_depth)) {
-				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-					"Unable to create the Mesh Topology!"
-					"\nPlease contact the developer to fix this.\n");
-				return false;
-			}
+            // Create mesh topology information.
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Creating the topology information...");
+            if (!this->cuda_kernels->CreateMeshTopology(this->faces, this->vertex_edge_offset, this->face_edge_offset,
+                    this->vertex_edge_offset_depth, this->face_edge_offset_depth)) {
+                core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+                    "Unable to create the Mesh Topology!"
+                    "\nPlease contact the developer to fix this.\n");
+                return false;
+            }
 
-			// Check if we have a genus > 0.
-			uint genus;
-			if (isGenusN(static_cast<uint>(this->vertices.size() / 3), static_cast<uint>(this->faces.size() / 3), genus)) {
-				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "The mesh has genus %d.", genus);
+            // Check if we have a genus > 0.
+            uint genus;
+            if (isGenusN(
+                    static_cast<uint>(this->vertices.size() / 3), static_cast<uint>(this->faces.size() / 3), genus)) {
+                core::utility::log::Log::DefaultLog.WriteMsg(
+                    core::utility::log::Log::LEVEL_INFO, "The mesh has genus %d.", genus);
 
-				// Check if we want to use AO (default is false, i.e. we do not want to use AO).
-				uint tunnel_id = 0;
-				if (this->aoActive.Param<param::BoolParam>()->Value()) {
-					this->aoCalculator.clearStoredShadowData();
-					AmbientOcclusionCalculator::AOSettings settings;
-					settings.angleFactor = this->aoAngleFactorParam.Param<param::FloatParam>()->Value();
-					settings.evalFactor = this->aoEvalParam.Param<param::FloatParam>()->Value();
-					settings.falloffFactor = this->aoFalloffParam.Param<param::FloatParam>()->Value();
-					settings.genFac = this->aoGenFactorParam.Param<param::FloatParam>()->Value();
-					settings.maxDist = this->aoMaxDistSample.Param<param::FloatParam>()->Value();
-					settings.minDist = this->aoMinDistSample.Param<param::FloatParam>()->Value();
-					settings.numSampleDirections = this->aoNumSampleDirectionsParam.Param<param::IntParam>()->Value();
-					settings.scaling = this->aoScalingFactorParam.Param<param::FloatParam>()->Value();
-					settings.volSizeX = this->aoVolSizeXParam.Param<param::IntParam>()->Value();
-					settings.volSizeY = this->aoVolSizeYParam.Param<param::IntParam>()->Value();
-					settings.volSizeZ = this->aoVolSizeZParam.Param<param::IntParam>()->Value();
-					this->aoCalculator.initilialize(instance(), &this->vertices, &this->normals, mdc);
-					auto result = this->aoCalculator.calculateVertexShadows(settings);
-					if (result != nullptr) {
-						// Process the output to identify tunnels and create the cuts.
-						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Processing the AO output...");
-						std::vector<Cut> cuts;
-						std::vector<bool> tunnels = std::vector<bool>(this->faces.size() / 3, false);
-						tunnel_id = processAOOutput(result, cuts, this->aoThresholdParam.Param<param::FloatParam>()->Value(),
-							tunnels);
+                // Check if we want to use AO (default is false, i.e. we do not want to use AO).
+                uint tunnel_id = 0;
+                if (this->aoActive.Param<param::BoolParam>()->Value()) {
+                    this->aoCalculator.clearStoredShadowData();
+                    AmbientOcclusionCalculator::AOSettings settings;
+                    settings.angleFactor = this->aoAngleFactorParam.Param<param::FloatParam>()->Value();
+                    settings.evalFactor = this->aoEvalParam.Param<param::FloatParam>()->Value();
+                    settings.falloffFactor = this->aoFalloffParam.Param<param::FloatParam>()->Value();
+                    settings.genFac = this->aoGenFactorParam.Param<param::FloatParam>()->Value();
+                    settings.maxDist = this->aoMaxDistSample.Param<param::FloatParam>()->Value();
+                    settings.minDist = this->aoMinDistSample.Param<param::FloatParam>()->Value();
+                    settings.numSampleDirections = this->aoNumSampleDirectionsParam.Param<param::IntParam>()->Value();
+                    settings.scaling = this->aoScalingFactorParam.Param<param::FloatParam>()->Value();
+                    settings.volSizeX = this->aoVolSizeXParam.Param<param::IntParam>()->Value();
+                    settings.volSizeY = this->aoVolSizeYParam.Param<param::IntParam>()->Value();
+                    settings.volSizeZ = this->aoVolSizeZParam.Param<param::IntParam>()->Value();
+                    this->aoCalculator.initilialize(instance(), &this->vertices, &this->normals, mdc);
+                    auto result = this->aoCalculator.calculateVertexShadows(settings);
+                    if (result != nullptr) {
+                        // Process the output to identify tunnels and create the cuts.
+                        core::utility::log::Log::DefaultLog.WriteMsg(
+                            core::utility::log::Log::LEVEL_INFO, "Processing the AO output...");
+                        std::vector<Cut> cuts;
+                        std::vector<bool> tunnels = std::vector<bool>(this->faces.size() / 3, false);
+                        tunnel_id = processAOOutput(
+                            result, cuts, this->aoThresholdParam.Param<param::FloatParam>()->Value(), tunnels);
 
-						// Rebuild the local copy with the new cuts and the tunnels removed.
-						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Rebuilding the surface...");
-						rebuildSurface(cuts, false, tunnels);
+                        // Rebuild the local copy with the new cuts and the tunnels removed.
+                        core::utility::log::Log::DefaultLog.WriteMsg(
+                            core::utility::log::Log::LEVEL_INFO, "Rebuilding the surface...");
+                        rebuildSurface(cuts, false, tunnels);
 
-						// Create mesh topology information after the cuts have been placed.
-						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Creating the topology information...");
-						if (!this->cuda_kernels->CreateMeshTopology(this->faces_rebuild, this->vertex_edge_offset, 
-								this->face_edge_offset, this->vertex_edge_offset_depth, 
-								this->face_edge_offset_depth)) {
-							megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-								"Unable to create the Mesh Topology!"
-								"\nPlease contact the developer to fix this.\n");
-							return false;
-						}
+                        // Create mesh topology information after the cuts have been placed.
+                        core::utility::log::Log::DefaultLog.WriteMsg(
+                            core::utility::log::Log::LEVEL_INFO, "Creating the topology information...");
+                        if (!this->cuda_kernels->CreateMeshTopology(this->faces_rebuild, this->vertex_edge_offset,
+                                this->face_edge_offset, this->vertex_edge_offset_depth, this->face_edge_offset_depth)) {
+                            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+                                "Unable to create the Mesh Topology!"
+                                "\nPlease contact the developer to fix this.\n");
+                            return false;
+                        }
 
-					} else {
-						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-							"Unable to compute the Ambient Occlusion!"
-							"\nPlease contact the developer to fix this.\n");
-						return false;
-					}
+                    } else {
+                        core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+                            "Unable to compute the Ambient Occlusion!"
+                            "\nPlease contact the developer to fix this.\n");
+                        return false;
+                    }
 
-				} else {
-					megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Not computing the Ambient Occlusion.");
+                } else {
+                    core::utility::log::Log::DefaultLog.WriteMsg(
+                        core::utility::log::Log::LEVEL_INFO, "Not computing the Ambient Occlusion.");
 
                     // The rebuild mesh is equal to the local copy because AO was not used.
                     this->faces_rebuild = this->faces;
@@ -3775,52 +3944,58 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
                     this->vertexColors_cuts = std::vector<float>(this->vertexColors.size(), 193.0f / 255.0f);
                 }
 
-				// Only perfrom the topology based algorithm if we have a mesh of genus n after the AO.
-				auto vertex_cnt = static_cast<uint>(this->vertices_rebuild.size() / 3);
-				auto face_cnt = static_cast<uint>(this->faces_rebuild.size() / 3);
-				if (isGenusN(vertex_cnt, face_cnt, genus)) {
-					megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "The mesh has genus %d.", genus);
-					// Compute the voronoi vertices and edges.
-					megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Computing the Voronoi diagram...");
-					std::vector<VoronoiVertex> new_voronoi_vertices;
-					std::vector<VoronoiEdge> new_voronoi_edges;
-					if (!this->voronoiCalc.Update(mdc, new_voronoi_vertices, new_voronoi_edges, 
-							this->probeRadiusSlot.Param<param::FloatParam>()->Value())) {
-						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR, 
-							"Unable to compute/update the Voronoi Diagram!"
-							"\nPlease contact the developer to fix this.\n");
-						return false;
-					}
+                // Only perfrom the topology based algorithm if we have a mesh of genus n after the AO.
+                auto vertex_cnt = static_cast<uint>(this->vertices_rebuild.size() / 3);
+                auto face_cnt = static_cast<uint>(this->faces_rebuild.size() / 3);
+                if (isGenusN(vertex_cnt, face_cnt, genus)) {
+                    core::utility::log::Log::DefaultLog.WriteMsg(
+                        core::utility::log::Log::LEVEL_INFO, "The mesh has genus %d.", genus);
+                    // Compute the voronoi vertices and edges.
+                    core::utility::log::Log::DefaultLog.WriteMsg(
+                        core::utility::log::Log::LEVEL_INFO, "Computing the Voronoi diagram...");
+                    std::vector<VoronoiVertex> new_voronoi_vertices;
+                    std::vector<VoronoiEdge> new_voronoi_edges;
+                    if (!this->voronoiCalc.Update(mdc, new_voronoi_vertices, new_voronoi_edges,
+                            this->probeRadiusSlot.Param<param::FloatParam>()->Value())) {
+                        core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+                            "Unable to compute/update the Voronoi Diagram!"
+                            "\nPlease contact the developer to fix this.\n");
+                        return false;
+                    }
 
-					// Process the output of the topology based algorithm.
-					megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Processing the topology output...");
-					std::vector<Cut> cuts;
-					std::vector<bool> tunnels = std::vector<bool>(this->faces_rebuild.size() / 3, false);
-					this->processTopologyOutput(cuts, tunnel_id, tunnels, new_voronoi_vertices, new_voronoi_edges, bbox);
+                    // Process the output of the topology based algorithm.
+                    core::utility::log::Log::DefaultLog.WriteMsg(
+                        core::utility::log::Log::LEVEL_INFO, "Processing the topology output...");
+                    std::vector<Cut> cuts;
+                    std::vector<bool> tunnels = std::vector<bool>(this->faces_rebuild.size() / 3, false);
+                    this->processTopologyOutput(
+                        cuts, tunnel_id, tunnels, new_voronoi_vertices, new_voronoi_edges, bbox);
 
-					// Rebuild the local copy with the new cuts and the tunnels removed.
-					megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Rebuilding the surface...");
-					rebuildSurface(cuts, true, tunnels);
+                    // Rebuild the local copy with the new cuts and the tunnels removed.
+                    core::utility::log::Log::DefaultLog.WriteMsg(
+                        core::utility::log::Log::LEVEL_INFO, "Rebuilding the surface...");
+                    rebuildSurface(cuts, true, tunnels);
 
-					// Create mesh topology information after the last cuts have been placed.
-					megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Creating the topology information...");
-					if (!this->cuda_kernels->CreateMeshTopology(this->faces_rebuild, this->vertex_edge_offset, 
-							this->face_edge_offset, this->vertex_edge_offset_depth, 
-							this->face_edge_offset_depth)) {
-						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-							"Unable to create the Mesh Topology!"
-							"\nPlease contact the developer to fix this.\n");
-						return false;
-					}
-				}
+                    // Create mesh topology information after the last cuts have been placed.
+                    core::utility::log::Log::DefaultLog.WriteMsg(
+                        core::utility::log::Log::LEVEL_INFO, "Creating the topology information...");
+                    if (!this->cuda_kernels->CreateMeshTopology(this->faces_rebuild, this->vertex_edge_offset,
+                            this->face_edge_offset, this->vertex_edge_offset_depth, this->face_edge_offset_depth)) {
+                        core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+                            "Unable to create the Mesh Topology!"
+                            "\nPlease contact the developer to fix this.\n");
+                        return false;
+                    }
+                }
 
-			} else {
-				// The rebuild mesh is equal to the local copy.
-				megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "The mesh has genus %d.", 0);
-				this->faces_rebuild = this->faces;
-				this->normals_rebuild = this->normals;
-				this->vertexColors_rebuild = this->vertexColors;
-				this->vertices_rebuild = this->vertices;
+            } else {
+                // The rebuild mesh is equal to the local copy.
+                core::utility::log::Log::DefaultLog.WriteMsg(
+                    core::utility::log::Log::LEVEL_INFO, "The mesh has genus %d.", 0);
+                this->faces_rebuild = this->faces;
+                this->normals_rebuild = this->normals;
+                this->vertexColors_rebuild = this->vertexColors;
+                this->vertices_rebuild = this->vertices;
 
                 // Copy the colour for the tunnel rendering.
                 auto colour_cnt = this->vertexColors_rebuild.size() / 3;
@@ -3837,16 +4012,17 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
                 this->vertexColors_voronoi = std::vector<float>(this->vertexColors.size(), 193.0f / 255.0f);
             }
 
-			// Print the genus of the mesh after the voronoi tunnel detection is finished.
-			auto vertex_cnt = static_cast<uint>(this->vertices_rebuild.size() / 3);
-			auto face_cnt = static_cast<uint>(this->faces_rebuild.size() / 3);
-			isGenusN(vertex_cnt, face_cnt, genus);
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "The mesh has genus %d.", genus);
+            // Print the genus of the mesh after the voronoi tunnel detection is finished.
+            auto vertex_cnt = static_cast<uint>(this->vertices_rebuild.size() / 3);
+            auto face_cnt = static_cast<uint>(this->faces_rebuild.size() / 3);
+            isGenusN(vertex_cnt, face_cnt, genus);
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "The mesh has genus %d.", genus);
 
-			// Create Octree.
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Creating the Octree...");
-			this->octree.CreateOctreeRootNode(this->faces_rebuild, make_float3(bbox.Right(), bbox.Top(), bbox.Front()),
-				make_float3(bbox.Left(), bbox.Bottom(), bbox.Back()), make_float3(2.0f), this->vertices_rebuild);
+            // Create Octree.
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO, "Creating the Octree...");
+            this->octree.CreateOctreeRootNode(this->faces_rebuild, make_float3(bbox.Right(), bbox.Top(), bbox.Front()),
+                make_float3(bbox.Left(), bbox.Bottom(), bbox.Back()), make_float3(2.0f), this->vertices_rebuild);
 
             // Color the selected binding site
             if (this->bindingSiteColoring.Param<param::BoolParam>()->Value()) {
@@ -3857,54 +4033,68 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
                 vec3f bsColor;
                 utility::ColourParser::FromString(bsColorString, 3, bsColor.PeekComponents());
 
-				protein_calls::BindingSiteCall * bs = this->zeBindingSiteSlot.CallAs<protein_calls::BindingSiteCall>();
-				
-				if (bs != nullptr) {
-					(*bs)(protein_calls::BindingSiteCall::CallForGetData);
-					if (!this->colourBindingSite(bs, bsColor, mdc, radius, radiusOffset, ignoreRadius)) {
-						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-							"Unable to create the binding site sphere!"
-							"\nPlease contact the developer to fix this.\n");
-						return false;
-					}
-				}
-			}
+                protein_calls::BindingSiteCall* bs = this->zeBindingSiteSlot.CallAs<protein_calls::BindingSiteCall>();
 
-			// Color the vertices that are shadowed by the cap.
-			if (cctmd != nullptr) {
-				protein_calls::BindingSiteCall* bs = this->zeBindingSiteSlot.CallAs<protein_calls::BindingSiteCall>();
-				if (bs != nullptr) {
-					(*bs)(protein_calls::BindingSiteCall::CallForGetData);
-					if (!this->capColouring(cctmd, cr3d, bs)) {
-						megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-							"Unable to show the shadow of the cap!"
-							"\nPlease contact the developer to fix this.\n");
-						return false;
-					}
-				}
-			}
+                if (bs != nullptr) {
+                    (*bs)(protein_calls::BindingSiteCall::CallForGetData);
+                    if (!this->colourBindingSite(bs, bsColor, mdc, radius, radiusOffset, ignoreRadius)) {
+                        core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+                            "Unable to create the binding site sphere!"
+                            "\nPlease contact the developer to fix this.\n");
+                        return false;
+                    }
+                }
+            }
 
-			// Create sphere.
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Creating the sphere...");
-			if (!createSphere(cr3d->GetCameraParameters()->EyeDirection(), cr3d->GetCameraParameters()->EyeUpVector())) {
-				return false;
-			}
-			this->computed_sphere = true;
+            // Color the vertices that are shadowed by the cap.
+            if (cctmd != nullptr) {
+                protein_calls::BindingSiteCall* bs = this->zeBindingSiteSlot.CallAs<protein_calls::BindingSiteCall>();
+                if (bs != nullptr) {
+                    (*bs)(protein_calls::BindingSiteCall::CallForGetData);
+                    if (!this->capColouring(cctmd, cr3d, bs)) {
+                        core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
+                            "Unable to show the shadow of the cap!"
+                            "\nPlease contact the developer to fix this.\n");
+                        return false;
+                    }
+                }
+            }
 
-			// Initialise map shader
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "Initialising the map shader...");
-			if (!initialiseMapShader()) return false;
-			this->computed_map = true;
+            // Create sphere.
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO, "Creating the sphere...");
+            if (!createSphere(
+                    cr3d->GetCameraParameters()->EyeDirection(), cr3d->GetCameraParameters()->EyeUpVector())) {
+                return false;
+            }
+            this->computed_sphere = true;
 
-		} else {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_WARN, "The mesh input data is empty!");
-			return false;
-		}
-	}
+            // Initialise map shader
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_INFO, "Initialising the map shader...");
+            if (!initialiseMapShader())
+                return false;
+            this->computed_map = true;
 
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_WARN, "The mesh input data is empty!");
+            core::utility::log::Log::DefaultLog.WriteMsg(
+                core::utility::log::Log::LEVEL_WARN, "The mesh input data is empty!");
             return false;
+        }
+
+        auto attribIdx = this->findValueAttributeIndex(ctmd->Objects()[0]);
+        if (attribIdx >= 0) {
+            auto vertCnt = ctmd->Objects()[0].GetVertexCount();
+            this->bufferMinMax =
+                std::make_pair(std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest());
+            for (size_t i = 0; i < vertCnt; ++i) {
+                auto val = ctmd->Objects()[0].GetVertexAttribPointerFloat(attribIdx)[i];
+                if (val < this->bufferMinMax.first)
+                    this->bufferMinMax.first = val;
+                if (val > this->bufferMinMax.second)
+                    this->bufferMinMax.second = val;
+            }
+            this->bufferValues->rebuffer(
+                ctmd->Objects()[0].GetVertexAttribPointerFloat(attribIdx), vertCnt * sizeof(float));
         }
     }
 
@@ -3918,16 +4108,12 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
     if (this->store_png_button.IsDirty() && this->computed_map) {
         this->store_png_button.ResetDirty();
 
-        // Reset the fbo size if necessary.
+        bool writeValues = this->writeValueImageParam.Param<param::BoolParam>()->Value();
+
+        // resize the values fbo if needed
         if (!this->store_png_fbo.IsValid()) {
             this->store_png_fbo.Release();
-            // The size of the map is determined by the radius of the bounding sphere. Since we can't just
-            // create an image with a floating point width or an odd width we need to round up or down
-            // based on the radius. The base width is 1500 and we add 10 * radius of the sphere to it. Then
-            // the width needs to be rounded to the closest even number. Since that does not always work,
-            // e.g. a width of 1738 doesn't produce a correct png image, the rounding is changed to the
-            // nearest even 100. The 1738 then becomes 1700. The height is the half of the width, Hobo-Dyer
-            // (aspect ratio of 2.0).
+
             uint width = 1500 + static_cast<uint>(this->sphere_data.GetW() * 10.0f);
             uint diff = width - ((width / 100) * 100);
             if (diff < 50)
@@ -3935,7 +4121,38 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
             else
                 width = ((width / 100) * 100) + 100;
             uint height = width / 2;
-            this->store_png_fbo.Create(width, height);
+
+#define HARDCODED_SIZE
+#ifdef HARDCODED_SIZE
+            width = 2560;
+            height = 1440;
+#endif
+
+            std::vector<vislib::graphics::gl::FramebufferObject::ColourAttachParams> colorAttachments(2);
+            colorAttachments[0].internalFormat = GL_RGBA8;
+            colorAttachments[0].format = GL_RGBA;
+            colorAttachments[0].type = GL_UNSIGNED_BYTE;
+
+            colorAttachments[1].internalFormat = GL_R32F;
+            colorAttachments[1].format = GL_RED;
+            colorAttachments[1].type = GL_FLOAT;
+
+            vislib::graphics::gl::FramebufferObject::DepthAttachParams dap;
+            dap.format = GL_DEPTH_COMPONENT24;
+            dap.state = vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER;
+
+            vislib::graphics::gl::FramebufferObject::StencilAttachParams sap;
+            sap.format = GL_STENCIL_INDEX;
+            sap.state = vislib::graphics::gl::FramebufferObject::ATTACHMENT_DISABLED;
+
+            this->store_png_fbo.Create(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+        }
+
+        if (!this->store_values_fbo.IsValid() || this->store_values_fbo.GetWidth() != this->store_png_fbo.GetWidth() ||
+            this->store_values_fbo.GetHeight() != this->store_png_fbo.GetHeight()) {
+
+            this->store_values_fbo.Create(
+                this->store_png_fbo.GetWidth(), this->store_png_fbo.GetHeight(), GL_R32F, GL_RED, GL_FLOAT);
         }
 
         // Render the map to the fbo and write the content to a file.
@@ -3948,35 +4165,24 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
             this->renderLatLonLines(numLat, numLon, 120, 120, true);
         }
 
-			// Render the text.
-			glColor3f(1.0f, 0.0f, 0.0f);
-			float font_size = static_cast<float>(this->store_png_fbo.GetWidth() - 1200) / 100.0f * 3.0f;
-			float text_len = this->store_png_font.LineWidth(font_size, text) + font_size;
-			float x = this->store_png_fbo.GetWidth() - text_len;
-			float y = this->store_png_fbo.GetHeight() - font_size;
-			this->store_png_font.DrawString(x, y, text_len, -1.0f, font_size, false, text,
-				vislib::graphics::AbstractFont::ALIGN_LEFT_MIDDLE);
-		}
-		this->store_png_fbo.Disable();
-		this->store_png_fbo.DrawColourTexture(0, GL_LINEAR, GL_LINEAR, 0.9f);
-		this->store_png_data.SetCount(this->store_png_fbo.GetWidth() * this->store_png_fbo.GetHeight() * 3);
-		this->store_png_fbo.GetColourTexture(&this->store_png_data[0], 0, GL_RGB, GL_UNSIGNED_BYTE);
-		this->store_png_image.Image() = new vislib::graphics::BitmapImage(this->store_png_fbo.GetWidth(),
-			this->store_png_fbo.GetHeight(), 3U, vislib::graphics::BitmapImage::CHANNELTYPE_BYTE,
-			static_cast<const void*>(&this->store_png_data[0]));
-		this->store_png_image.Image()->FlipVertical();
-		if (this->store_png_image.Save(T2A(this->store_png_path.Param<param::FilePathParam>()->Value()))) {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-				"%s: Stored molecular surface map to file: %s",
-				this->ClassName(), T2A(this->store_png_path.Param<param::FilePathParam>()->Value()));
+        if (this->render_equator_length.Param<param::BoolParam>()->Value() && this->store_png_font.Initialise()) {
+            // Generate the text to be rendered based on the length of the equator in Angstr�m.
+            vislib::StringA text = "Equator length: ";
+            float equator_length = 2.0f * static_cast<float>(vislib::math::PI_DOUBLE) * this->sphere_data.GetW();
+            text.Append(std::to_string(equator_length).c_str());
+            // Note:
+            // The vislib font renderer is unable to render the Angst�rm symbol. Therefore we render a
+            // simple A instead of the symbol. If at any time in the future the vislib is able to render
+            // the symbol simply change the A with the Anstr�m symbol and all is well.
+            // char32_t angstrom = U'\U000000c5';
+            // text.Append(angstrom);
+            text.Append("A");
 
-		} else {
-			megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-				"%s: Could not store molecular surface map to file: %s",
-				this->ClassName(), T2A(this->store_png_path.Param<param::FilePathParam>()->Value()));
-		}
-		delete this->store_png_image.Image();
-	}
+            // Disable the depth test, culling, texture and ligthing
+            glDisable(GL_DEPTH_TEST);
+            glDisable(GL_CULL_FACE);
+            glDisable(GL_TEXTURE_2D);
+            glDisable(GL_LIGHTING);
 
             // Set the 2D orthographic projection.
             glMatrixMode(GL_PROJECTION);
@@ -4000,21 +4206,32 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
         this->store_png_fbo.DrawColourTexture(0, GL_LINEAR, GL_LINEAR, 0.9f);
         this->store_png_data.SetCount(this->store_png_fbo.GetWidth() * this->store_png_fbo.GetHeight() * 3);
         this->store_png_fbo.GetColourTexture(&this->store_png_data[0], 0, GL_RGB, GL_UNSIGNED_BYTE);
+
+        if (writeValues) {
+            this->writeValueImage(
+                this->store_png_values_path.Param<param::FilePathParam>()->Value(), *ctmd, this->store_png_data);
+        }
+
         this->store_png_image.Image() =
             new vislib::graphics::BitmapImage(this->store_png_fbo.GetWidth(), this->store_png_fbo.GetHeight(), 3U,
                 vislib::graphics::BitmapImage::CHANNELTYPE_BYTE, static_cast<const void*>(&this->store_png_data[0]));
         this->store_png_image.Image()->FlipVertical();
         if (this->store_png_image.Save(T2A(this->store_png_path.Param<param::FilePathParam>()->Value()))) {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_INFO,
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_INFO,
                 "%s: Stored molecular surface map to file: %s", this->ClassName(),
                 T2A(this->store_png_path.Param<param::FilePathParam>()->Value()));
 
         } else {
-            vislib::sys::Log::DefaultLog.WriteMsg(vislib::sys::Log::LEVEL_ERROR,
+            core::utility::log::Log::DefaultLog.WriteMsg(core::utility::log::Log::LEVEL_ERROR,
                 "%s: Could not store molecular surface map to file: %s", this->ClassName(),
                 T2A(this->store_png_path.Param<param::FilePathParam>()->Value()));
         }
         delete this->store_png_image.Image();
+        if (this->close_after_screen_store_param.Param<param::BoolParam>()->Value()) {
+            // TODO this should just shut down the core instance instead of hard exiting.
+            // however, this does not seem to work here
+            std::exit(0);
+        }
     }
 
     // If we render the tunnels we need blending.
@@ -4158,9 +4375,9 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
 
     // Render the protein.
     if (this->draw_wireframe_param.Param<param::BoolParam>()->Value()) {
-        this->triMeshRenderer.RenderWireFrame(call);
+        this->triMeshRenderer.RenderWireFrame(*cr3d);
     } else {
-        this->triMeshRenderer.Render(call);
+        this->triMeshRenderer.Render(*cr3d);
     }
 
     // Render the geodesic lines.
@@ -4200,7 +4417,6 @@ bool MapGenerator::Render(view::CallRender3D_2& call) {
     glEnable(GL_CULL_FACE);
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
-    glDisable(GL_POINT_SIZE);
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
 
@@ -4569,4 +4785,113 @@ std::vector<std::string> MapGenerator::splitString(
         p_elements.push_back(item);
     }
     return p_elements;
+}
+
+/*
+ * MapGenerator::writeValueImage
+ */
+void MapGenerator::writeValueImage(const vislib::TString& path_to_image, const geocalls::CallTriMeshData& ctmd,
+    vislib::Array<unsigned char>& input_image) {
+
+    auto attribcnt = ctmd.Objects()[0].GetVertexAttribCount();
+    // find float attribute
+    int attribIdx = this->findValueAttributeIndex(ctmd.Objects()[0]);
+    bool found = attribIdx >= 0 ? true : false;
+
+    if (!found) {
+        core::utility::log::Log::DefaultLog.WriteError(
+            "Impossible to write value image due to missing values in the mesh call");
+        return;
+    }
+
+#if 0
+    else {
+        auto valptr = ctmd.Objects()[0].GetVertexAttribPointerFloat(attribIdx);
+        auto vertCnt = ctmd.Objects()[0].GetVertexCount();
+        for (uint32_t i = 0; i < vertCnt; i++) {
+            // std::cout << valptr[i] << std::endl;
+        }
+    }
+#endif
+
+    this->store_values_fbo.Enable();
+    this->map_fbo.DrawColourTexture(1, GL_LINEAR, GL_LINEAR, 0.9);
+    this->store_values_fbo.Disable();
+
+    std::vector<float> texture(this->store_values_fbo.GetWidth() * this->store_values_fbo.GetHeight());
+    std::vector<float> textureold(this->map_fbo.GetWidth() * this->map_fbo.GetHeight());
+    this->store_values_fbo.GetColourTexture(&texture[0], 0, GL_RED, GL_FLOAT);
+    this->map_fbo.GetColourTexture(&textureold[0], 1, GL_RED, GL_FLOAT);
+
+    this->store_values_image.Image() =
+        new vislib::graphics::BitmapImage(this->store_values_fbo.GetWidth(), this->store_values_fbo.GetHeight(), 1U,
+            vislib::graphics::BitmapImage::CHANNELTYPE_FLOAT, static_cast<const void*>(texture.data()));
+    this->store_values_image.Image()->FlipVertical();
+    auto data = this->store_values_image.Image()->PeekDataAs<float>();
+    std::vector<float> newvalues(texture.size());
+    std::copy(data, data + texture.size(), newvalues.begin());
+    delete this->store_png_image.Image();
+
+    std::string path = T2A(path_to_image).PeekBuffer();
+    std::ofstream file(path, std::ios::binary);
+
+    if (file.is_open()) {
+        file.write(reinterpret_cast<const char*>(newvalues.data()), newvalues.size() * sizeof(float));
+        core::utility::log::Log::DefaultLog.WriteInfo("Successfully wrote values to file \"%s\"", path.c_str());
+    } else {
+        core::utility::log::Log::DefaultLog.WriteError("Error while writing values to file \"%s\"", path.c_str());
+    }
+
+#if 0 // this is part of the code that is used for the infamous cel-shading effect. Do not remove
+    float minVal, maxVal;
+    glm::vec3 minColor, midColor, maxColor;
+    bool hasMidColor = ctmd.GetColorBounds(minVal, maxVal, minColor, midColor, maxColor);
+    std::vector<float> valueVec(input_image.Count() / 3, minVal);
+    const float securityFactor = 0.1f;
+    float midVal = (maxVal + minVal) / 2.0f;
+    uint64_t noneCounter = 0;
+    for (uint64_t i = 0; i < valueVec.size(); ++i) {
+        glm::uvec3 color(input_image[i * 3 + 0], input_image[i * 3 + 1], input_image[i * 3 + 2]);
+        glm::vec3 colfloat = static_cast<glm::vec3>(color) / 255.0f;
+
+        if (hasMidColor) {
+            auto left = (colfloat - minColor) / (midColor - minColor);
+            auto right = (colfloat - midColor) / (maxColor - midColor);
+            bool none = true;
+
+            // left check
+            auto minl = std::min(std::min(left.r, left.g), left.b);
+            auto maxl = std::max(std::max(left.r, left.g), left.b);
+            if (maxl - minl < securityFactor) {
+                float avg = (left.r + left.g + left.b) / 3.0f;
+                valueVec[i] = glm::mix(minVal, midVal, avg);
+                none = false;
+            }
+
+            // right check
+            auto minr = std::min(std::min(right.r, right.g), right.b);
+            auto maxr = std::max(std::max(right.r, right.g), right.b);
+            if (maxr - minr < securityFactor) {
+                float avg = (left.r + left.g + left.b) / 3.0f;
+                valueVec[i] = glm::mix(midVal, maxVal, avg);
+                none = false;
+            }
+
+            if (none && color.r != 75) {
+                noneCounter++;
+                // std::cout << std::min(maxl - minl, maxr - minr) << std::endl;
+                input_image[i * 3 + 0] = 0;
+                input_image[i * 3 + 1] = 0;
+                input_image[i * 3 + 2] = 0;
+            }
+            // std::cout << left.r << " " << left.g << " " << left.b << std::endl;
+            // std::cout << right.r << " " << right.g << " " << right.b << std::endl << std::endl;
+        } else {
+            auto middle = (colfloat - minColor) / (maxColor - minColor);
+            float avg = (middle.r + middle.g + middle.b) / 3.0f;
+            valueVec[i] = glm::mix(minVal, maxVal, avg);
+        }
+        // std::cout << valueVec[i] << " for " << colfloat.r << " " << colfloat.g << " " << colfloat.b << std::endl;
+    }
+#endif
 }
