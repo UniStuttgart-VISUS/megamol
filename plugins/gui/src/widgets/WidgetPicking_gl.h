@@ -56,7 +56,7 @@ namespace gui {
         float value;
     };
 
-    typedef std::unique_ptr<glowl::GLSLProgram> ShaderPtr;
+    typedef std::shared_ptr<glowl::GLSLProgram> ShaderPtr;
     typedef std::vector<Interaction> InteractVector;
     typedef std::vector<Manipulation> ManipVector;
 
@@ -120,11 +120,10 @@ namespace gui {
         std::map<int, std::vector<Interaction>> available_interactions;
         ManipVector pending_manipulations;
 
-        std::unique_ptr<glowl::FramebufferObject> fbo;
+        std::shared_ptr<glowl::FramebufferObject> fbo;
+        std::shared_ptr<glowl::GLSLProgram> fbo_shader;
 
         bool enabled;
-
-        std::unique_ptr<glowl::GLSLProgram> fbo_shader;
 
         // FUNCTIONS --------------------------------------------------------------
 
@@ -152,7 +151,7 @@ namespace gui {
         InteractVector GetInteractions(unsigned int id) const;
 
     private:
-        std::unique_ptr<glowl::GLSLProgram> shader;
+        std::shared_ptr<glowl::GLSLProgram> shader;
     };
 
 

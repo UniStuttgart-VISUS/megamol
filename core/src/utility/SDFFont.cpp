@@ -1188,7 +1188,7 @@ void SDFFont::drawGlyphs(const float col[4], int* run, float x, float y, float z
 void SDFFont::render(unsigned int gc, const float *col[4]) const {
 
     // Check texture
-    if (this->texture->getTextureHandle() == 0) {
+    if (this->texture->getName() == 0) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[SDFFont] [render] Texture is not valid. \n");
         return;
     }
@@ -1289,7 +1289,8 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     // (2) Load font information -----------------------------------------------
     vislib::StringA infoFile = this->fontFileName;
     infoFile.Append(".fnt");
-    if (!this->loadFontInfo(ResourceWrapper::getFileName(core->Configuration(), infoFile))) {
+    vislib::StringW info_filename = ResourceWrapper::getFileName(core->Configuration(), infoFile).PeekBuffer();
+    if (!this->loadFontInfo(info_filename)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font info file: \"%s\". \n", infoFile.PeekBuffer());
         return false;
     }
@@ -1297,9 +1298,9 @@ bool SDFFont::loadFont(megamol::core::CoreInstance *core) {
     // (3) Load font texture --------------------------------------------------------
     vislib::StringA textureFile = this->fontFileName;
     textureFile.Append(".png");
-    auto filename =
+    auto texture_filename =
         static_cast<std::wstring>(ResourceWrapper::getFileName(core->Configuration(), textureFile).PeekBuffer());
-    if (!megamol::core::view::RenderUtils::LoadTextureFromFile(this->texture, filename)) {
+    if (!megamol::core::view::RenderUtils::LoadTextureFromFile(this->texture, texture_filename)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[SDFFont] [loadFont] Failed to load font texture: \"%s\". \n", textureFile.PeekBuffer());
         return false;
     }

@@ -34,8 +34,8 @@ megamol::gui::PickingBuffer::PickingBuffer(void)
         , available_interactions()
         , pending_manipulations()
         , fbo(nullptr)
-        , enabled(false)
-        , fbo_shader(nullptr) {}
+        , fbo_shader(nullptr)
+        , enabled(false) {}
 
 
 megamol::gui::PickingBuffer::~PickingBuffer(void) {

@@ -131,7 +131,7 @@ public:
     /**
      * Create shader.
      */
-    static bool CreateShader(std::unique_ptr<glowl::GLSLProgram>& out_shader_ptr, const std::string& vertex_code,
+    static bool CreateShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_ptr, const std::string& vertex_code,
         const std::string& fragment_code);
 
     // LOCAL functions -------------------------------------------------------
@@ -226,8 +226,8 @@ private:
     GLuint vertex_array;
     std::vector<std::shared_ptr<glowl::Texture2D>> textures;
     std::array<ShaderDataType, Primitives::PRIM_COUNT> queues;
-    std::array<std::unique_ptr<glowl::GLSLProgram>, Primitives::PRIM_COUNT> shaders;
-    std::array<std::unique_ptr<glowl::BufferObject>, Buffers::BUFF_COUNT> buffers;
+    std::array<std::shared_ptr<glowl::GLSLProgram>, Primitives::PRIM_COUNT> shaders;
+    std::array<std::shared_ptr<glowl::BufferObject>, Buffers::BUFF_COUNT> buffers;
 
     // FUNCTIONS ------------------------------------------------------- //
 

@@ -25,7 +25,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule()
     , resetPanScaleParam("resetAxes", "Reset shifted and scaled time axes.")
     , axes()
     , utils()
-    , texture(0)
+    , texture_id(0)
     , yAxisParam(ActiveParam::SIMULATION_TIME)
     , dragDropKeyframe()
     , dragDropActive(false)
@@ -89,7 +89,7 @@ bool TimeLineRenderer::create(void) {
     // Load texture
     vislib::StringA shortfilename = "arrow.png";
     auto fullfilename = megamol::core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), shortfilename);
-    if (!this->utils.LoadTextureFromFile(this->texture, std::wstring(fullfilename.PeekBuffer()))) {
+    if (!this->utils.LoadTextureFromFile(this->texture_id, std::wstring(fullfilename.PeekBuffer()))) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
@@ -422,7 +422,8 @@ void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, g
     glm::vec3 pos_upper_left   = { pos_x - (size / 2.0f), pos_y + size, 0.0f };
     glm::vec3 pos_upper_right  = { pos_x + (size / 2.0f), pos_y + size, 0.0f };
     glm::vec3 pos_bottom_right = { pos_x + (size / 2.0f), pos_y, 0.0f };
-    this->utils.Push2DColorTexture(this->texture, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true, color);
+    this->utils.Push2DColorTexture(
+        this->texture_id, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true, color);
 }
 
 

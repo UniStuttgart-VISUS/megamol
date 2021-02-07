@@ -69,8 +69,8 @@ bool RenderUtils::LoadTextureFromData(
 }
 
 
-bool RenderUtils::CreateShader(
-    std::unique_ptr<glowl::GLSLProgram>& out_shader_ptr, const std::string& vertex_code, const std::string& fragment_code) {
+bool RenderUtils::CreateShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_ptr, const std::string& vertex_code,
+    const std::string& fragment_code) {
 
     std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
 
@@ -119,62 +119,62 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
     std::string vertShaderCode = this->getShaderCode(factory, "primitives::points::vertex");
     std::string fragShaderCode = this->getShaderCode(factory, "primitives::points::fragment");
     if (!RenderUtils::CreateShader(this->shaders[Primitives::POINTS], vertShaderCode, fragShaderCode)) {
-        this->shaders[Primitives::POINTS]->bindAttribLocation(Buffers::POSITION, "inPosition");
-        this->shaders[Primitives::POINTS]->bindAttribLocation(Buffers::COLOR, "inColor");
-        this->shaders[Primitives::POINTS]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
-        this->shaders[Primitives::POINTS]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Failed to create point shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    this->shaders[Primitives::POINTS]->bindAttribLocation(Buffers::POSITION, "inPosition");
+    this->shaders[Primitives::POINTS]->bindAttribLocation(Buffers::COLOR, "inColor");
+    this->shaders[Primitives::POINTS]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
+    this->shaders[Primitives::POINTS]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
 
     vertShaderCode = this->getShaderCode(factory, "primitives::lines::vertex");
     fragShaderCode = this->getShaderCode(factory, "primitives::lines::fragment");
     if (!RenderUtils::CreateShader(this->shaders[Primitives::LINES], vertShaderCode, fragShaderCode)) {
-        this->shaders[Primitives::LINES]->bindAttribLocation(Buffers::POSITION, "inPosition");
-        this->shaders[Primitives::LINES]->bindAttribLocation(Buffers::COLOR, "inColor");
-        this->shaders[Primitives::LINES]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
-        this->shaders[Primitives::LINES]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Failed to create line shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    this->shaders[Primitives::LINES]->bindAttribLocation(Buffers::POSITION, "inPosition");
+    this->shaders[Primitives::LINES]->bindAttribLocation(Buffers::COLOR, "inColor");
+    this->shaders[Primitives::LINES]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
+    this->shaders[Primitives::LINES]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
 
     vertShaderCode = this->getShaderCode(factory, "primitives::quads::vertex");
     fragShaderCode = this->getShaderCode(factory, "primitives::quads::fragment");
     if (!RenderUtils::CreateShader(this->shaders[Primitives::QUADS], vertShaderCode, fragShaderCode)) {
-        this->shaders[Primitives::QUADS]->bindAttribLocation(Buffers::POSITION, "inPosition");
-        this->shaders[Primitives::QUADS]->bindAttribLocation(Buffers::COLOR, "inColor");
-        this->shaders[Primitives::QUADS]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
-        this->shaders[Primitives::QUADS]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Failed to create quad shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    this->shaders[Primitives::QUADS]->bindAttribLocation(Buffers::POSITION, "inPosition");
+    this->shaders[Primitives::QUADS]->bindAttribLocation(Buffers::COLOR, "inColor");
+    this->shaders[Primitives::QUADS]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
+    this->shaders[Primitives::QUADS]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
 
     vertShaderCode = this->getShaderCode(factory, "primitives::color_texture::vertex");
     fragShaderCode = this->getShaderCode(factory, "primitives::color_texture::fragment");
     if (!RenderUtils::CreateShader(this->shaders[Primitives::COLOR_TEXTURE], vertShaderCode, fragShaderCode)) {
-        this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocation(Buffers::POSITION, "inPosition");
-        this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocation(Buffers::COLOR, "inColor");
-        this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
-        this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Failed to create color texture shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocation(Buffers::POSITION, "inPosition");
+    this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocation(Buffers::COLOR, "inColor");
+    this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
+    this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
 
     vertShaderCode = this->getShaderCode(factory, "primitives::depth_texture::vertex");
     fragShaderCode = this->getShaderCode(factory, "primitives::depth_texture::fragment");
     if (!RenderUtils::CreateShader(this->shaders[Primitives::DEPTH_TEXTURE], vertShaderCode, fragShaderCode)) {
-        this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::POSITION, "inPosition");
-        this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::COLOR, "inColor");
-        this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
-        this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Failed to create depth texture shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::POSITION, "inPosition");
+    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::COLOR, "inColor");
+    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
+    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
 
     // Create buffers
     this->buffers[Buffers::POSITION] =
@@ -222,7 +222,7 @@ bool RenderUtils::LoadTextureFromFile(GLuint& out_texture_id, const std::wstring
     out_texture_id = 0;
     this->textures.push_back(nullptr);
     if (RenderUtils::LoadTextureFromFile(this->textures.back(), filename)) {
-        out_texture_id = this->textures.back()->getTextureHandle();
+        out_texture_id = this->textures.back()->getName();
         return true;
     }
     return false;
