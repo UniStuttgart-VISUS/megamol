@@ -185,6 +185,10 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // Check hotkey for gui toggling
     if (this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
         this->state.gui_enabled = !this->state.gui_enabled;
+        // Restore menu when GUI is enabled
+        if (this->state.gui_enabled) {
+            this->state.menu_visible = true;
+        }
         this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
     }
 
@@ -726,7 +730,12 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
                     if (param.type == Param_t::BUTTON) {
                         auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
                         if (this->isHotkeyPressed(keyCode)) {
-                            param.ForceSetValueDirty();
+                            // Sync directly button action to parameter in core
+                            /// Does not require syncing of graphs
+                            if (param.core_param_ptr != nullptr) {
+                                param.core_param_ptr->setDirty();
+                            }
+                            /// param.ForceSetValueDirty();
                             hotkeyPressed = true;
                         }
                     }
@@ -1722,6 +1731,12 @@ void GUIWindows::drawMenu(void) {
 
     // FILE -------------------------------------------------------------------
     if (ImGui::BeginMenu("File")) {
+
+        if (ImGui::MenuItem("Enable/Disable GUI",
+                this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str())) {
+            this->state.gui_enabled = !this->state.gui_enabled;
+        }
+
         if (megamolgraph_interface) {
             if (ImGui::MenuItem("Load Project",
                     this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].keycode.ToString().c_str())) {
@@ -1765,13 +1780,6 @@ void GUIWindows::drawMenu(void) {
             }
         };
         this->window_collection.EnumWindows(func);
-
-        ImGui::Separator();
-        if (ImGui::MenuItem("Toggle GUI Visibility",
-                this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str(),
-                this->state.gui_enabled)) {
-            this->state.gui_enabled = !this->state.gui_enabled;
-        }
 
         ImGui::EndMenu();
     }
@@ -2366,6 +2374,7 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
         for (auto& header_item : in_json.items()) {
             if (header_item.key() == GUI_JSON_TAG_GUI) {
                 auto gui_state = header_item.value();
+                megamol::core::utility::get_json_value<bool>(gui_state, {"gui_enabled"}, &this->state.gui_enabled);
                 megamol::core::utility::get_json_value<bool>(gui_state, {"menu_visible"}, &this->state.menu_visible);
                 int style = 0;
                 megamol::core::utility::get_json_value<int>(gui_state, {"style"}, &style);
@@ -2420,6 +2429,7 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
 
     try {
         // Write GUI state
+        inout_json[GUI_JSON_TAG_GUI]["gui_enabled"] = this->state.gui_enabled;
         inout_json[GUI_JSON_TAG_GUI]["menu_visible"] = this->state.menu_visible;
         inout_json[GUI_JSON_TAG_GUI]["style"] = static_cast<int>(this->state.style);
         GUIUtils::Utf8Encode(this->state.font_file_name);
