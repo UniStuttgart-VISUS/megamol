@@ -120,9 +120,11 @@ namespace gui {
     template<typename T>
     bool megamol::gui::FileUtils::FileExists(const T& path_str) {
         auto path = static_cast<stdfs::path>(path_str);
-        if (stdfs::exists(path) && stdfs::is_regular_file(path)) {
-            return true;
-        }
+        try {
+            if (stdfs::exists(path) && stdfs::is_regular_file(path)) {
+                return true;
+            }
+        } catch (...) {}
         return false;
     }
 
@@ -131,7 +133,7 @@ namespace gui {
     bool megamol::gui::FileUtils::FileWithExtensionExists(const T& path_str, const std::string& ext) {
         if (FileUtils::FileExists<T>(path_str)) {
             auto path = static_cast<stdfs::path>(path_str);
-            return (path.extension().generic_u8string() == ext);
+            return (path.extension().generic_u8string() == std::string("." + ext));
         }
         return false;
     }

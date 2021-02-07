@@ -451,6 +451,8 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                         }
                     }
                     new_module_ptr->plugin_name = "[n/a]";
+
+                    /// XXX VIEW TEST
                     core::view::AbstractView* viewptr = dynamic_cast<core::view::AbstractView*>(module_ptr);
                     new_module_ptr->is_view = (viewptr != nullptr);
                     new_module_ptr->present.label_visible = graph_ptr->present.GetModuleLabelVisibility();
@@ -688,7 +690,6 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             } else if (use_core_instance) {
                 /// TODO
                 /// How to list calls in core instance graph?
-                // gui_graph_changed = true;
             }
         }
 
@@ -859,6 +860,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 //        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
                 //    }
                 //}
+
                 // Add new main view
                 queue_data.name_id = queue_data.rename_id;
                 graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
@@ -1307,6 +1309,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         // megamol::core::utility::log::Log::DefaultLog.WriteInfo(
         //    "[GUI] [DEBUG] Created temporary module '%s'.", mod_desc->ClassName());
 
+        /// XXX VIEW TEST
         std::shared_ptr<const core::view::AbstractView> viewptr =
             std::dynamic_pointer_cast<const core::view::AbstractView>(new_mod);
         mod.is_view = (viewptr != nullptr);
@@ -1593,7 +1596,7 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_callee_idxs(
     for (std::string callName : completeCallNames) {
         size_t calls_cnt = this->calls_stock.size();
         for (size_t idx = 0; idx < calls_cnt; ++idx) {
-            /// XXX Case-Insensitive call slot comparison
+            // Case-Insensitive call slot comparison
             if (this->case_insensitive_str_comp(this->calls_stock[idx].class_name, callName)) {
                 retval.emplace_back(idx);
             }
@@ -1617,7 +1620,7 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_caller_idxs(
         std::string comp_call_class_name = std::string(caller_slot->GetCompCallClassName(i));
         size_t calls_cnt = this->calls_stock.size();
         for (size_t idx = 0; idx < calls_cnt; ++idx) {
-            /// XXX Case-Insensitive call slot comparison
+            // Case-Insensitive call slot comparison
             if (this->case_insensitive_str_comp(this->calls_stock[idx].class_name, comp_call_class_name)) {
                 retval.emplace_back(idx);
             }
