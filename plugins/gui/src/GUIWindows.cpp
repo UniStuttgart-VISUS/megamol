@@ -54,6 +54,8 @@ GUIWindows::GUIWindows(void)
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_L, core::view::Modifier::CTRL), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_G, core::view::Modifier::CTRL), false};
 
     // Init State
     this->init_state();
@@ -178,6 +180,12 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
             "[GUI] Chaining GUIVIew modules is not supported. GUI is disabled. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
         this->state.gui_enabled = false;
+    }
+
+    // Check hotkey for gui toggling
+    if (this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
+        this->state.gui_enabled = !this->state.gui_enabled;
+        this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
     }
 
     // Required to prevent change in gui drawing between pre and post draw
@@ -1757,6 +1765,13 @@ void GUIWindows::drawMenu(void) {
             }
         };
         this->window_collection.EnumWindows(func);
+
+        ImGui::Separator();
+        if (ImGui::MenuItem("Toggle GUI Visibility",
+                this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str(),
+                this->state.gui_enabled)) {
+            this->state.gui_enabled = !this->state.gui_enabled;
+        }
 
         ImGui::EndMenu();
     }
