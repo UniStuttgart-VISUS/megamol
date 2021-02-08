@@ -383,18 +383,16 @@ To do this, try:
 
     > megamol.exe ..\examples\testspheres_megamol.lua
 
-You can also open an empty MegaMol rendering window and load the example project file via the menu.
-
-
 MegaMol should now open a rendering window showing a generated dataset with several colored spheres and the outline of the bounding box. 
 Hitting the `space` key starts and stops the animation playback.
 In the GUI window *Parameters* you can find all available parameters of the running MegaMol instance grouped by the modules.
 For example, you can find the parameter `speed` in the group `inst::view::anim`. 
 With this parameter, you can adjust the playback speed of the animation.
-In the parameter group `anim` of the `view` module you can adjust the animation speed.
+In the parameter group `anim` of the `view` module you can adjust the animation speed.  
 
+Alternatively, you can also open an empty MegaMol rendering window and load the above example project script file via the menu.  
 
-All further options provided via the graphical user interface are described separately in the readme file of the [GUI plugin](../plugins/gui).
+All available options provided via the graphical user interface are described separately in the readme file of the [GUI plugin](../plugins/gui).
 
 ![Test Project](pics/testspheres.png)
 *Screenshot of MegaMol running the test spheres instance.*
@@ -522,7 +520,7 @@ This project script files are available in the `examples` directory, which is in
 
 The runtime functionality of MegaMol is constructed by *modules* and *calls*. 
 These two type of objects are instantiated at runtime, interconnected and build the *module graph*. 
-The figure [Example Graph](#example-raph) shows an example module graph containing a rendering content of a window *view*, a *renderer*, a *data source*, and two modules providing additional information for the renderer. 
+The figure given below, shows an example module graph containing a rendering content of a window *view*, a *renderer*, a *data source*, and two modules providing additional information for the renderer. 
 The modules, shown as blue boxes, are interconnected by *call* objects, shown as gray boxes. 
 The connection endpoints at the modules are *CallerSlots* (outgoing, located on the right of modules) or *CalleeSlots* (incoming, located on the left side of modules) shown as circled dots.
 
@@ -536,7 +534,8 @@ Left-most module view of class `View3D_2` represents the rendering content of a 
 The center module renderer of class `SphererRenderer` is called by the window using the corresponding call of type `CallRenderer3D`. 
 The right modules provide data and additional information for the renderer, namely a color map function and a clip plane. 
 
-![Example Graph](pics/example_graph.png)
+![Example Graph](pics/example_graph.png)  
+
 *An example module graph.*
 
 <!-- ---------------------------------------------------------------------- -->
@@ -544,7 +543,7 @@ The right modules provide data and additional information for the renderer, name
 
 *Modules* are the functional entities of MegaMol. 
 They provide several programmatic access points, the *slots*. 
-Two types of these slots are shown in figure [Example Graph](#examplegraph) as circled dots.
+Two types of these slots are shown in the above figure of an example graph as circled dots.
 
 *CalleeSlots* are access points of modules, through which these can be called to perform a function. 
 For example, modules of class `SphererRenderer` provide a CalleeSlot rendering through which the rendering function can be invoked. 
@@ -552,14 +551,14 @@ The counterparts are CallerSlots which are outgoing access points.
 These allow modules to call other modules. 
 Modules of class `View3D_2` provide a corresponding slot `rendering` to call a connected renderer.
 These two types of slots are connected using objects of *call* classes. 
-These are shown as gray boxes in figure [Example Graph](#examplegraph). 
+These are shown as gray boxes in the example graph figure. 
 Both *CalleeSlots* and *CallerSlots* specify types of calls they are compatible with. 
 In the case of the above examples of renderings-relates slots, this is the type `CallRender3D`.
 
 *Calls* should be lightweight. 
 Instead, they are thin interfaces meant for data transport. 
 For example, data to be visualized is loaded by data source modules. 
-In [Example Graph](#examplegraph) the module *data* of class *MMPLDDataSource* loads a specified data set into main memory and provides the data through its  CalleeSlot*. 
+In the example graph figure the module *data* of class *MMPLDDataSource* loads a specified data set into main memory and provides the data through its  CalleeSlot*. 
 The data is accessed through a *MultiParticleDataCall*. 
 The call, however, does not copy the data but provides access to the data in terms of memory pointers, and metadata. 
 This avoidance of copy operations is most important and one of the core design ideas of MegaMol.
