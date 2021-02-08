@@ -90,34 +90,48 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 Since the full support of some C++17 functionality is required (e.g. *std::filesystem*), a `gcc` version equal or greater than **8** is required (with `CMAKE_CXX_FLAGS` appended by `--std=c++17`). 
 **Latest tested version:**
 
+```
     $ cat /proc/version
     Linux version 5.8.0-41-generic (buildd@lgw01-amd64-003) (gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #46~20.04.1-Ubuntu SMP Mon Jan 18 17:52:23 UTC 2021
+```
 
 - As prerequisites, following packages from the repository are required:
 
+```
     $ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev
+```
 
 - First, download the source code from GitHub:
 
+```
     $ mkdir megamol
     $ git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/
     $ cd megamol/
+```
 
 - Checkout the lastest release:
 
+```
     $ git checkout tags/v1.3 -b latest_release
+```
 
 - Create a build directory and switch to it:
 
+```
     $ mkdir build; cd build
+```
 
 - Check for required dependencies:
-    
+
+```    
     $ cmake ..
+```
 
 - Start the ncurses gui for cmake:
 
+```
     $ ccmake .
+```
 
     - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
     - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
@@ -125,7 +139,9 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
     - Then hit `g` to generate the build files.
 - On the console prompt, start the building:
 
+```
     $ make && make install
+```
 
     Hint: Use the `-j` option for `make` to run the build in parallel threads.
 
