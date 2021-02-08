@@ -208,6 +208,7 @@ While MegaMol might work on further platforms, the development team will current
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 It is recommended to use the latest [release 1.3](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) version of the source code.
 All bleeding edge features are available in the current [main branch](https://github.com/UniStuttgart-VISUS/megamol/tree/master).
 =======
@@ -229,6 +230,9 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 >>>>>>> 800f17d5c (manual update)
 =======
 It is recommended to use the latest [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) version of the source code.
+=======
+It is recommended to use the latest [release 1.3](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) version of the source code.
+>>>>>>> a1cbe09fa (docu ...)
 All bleeding edge features are available in the [main branch](https://github.com/UniStuttgart-VISUS/megamol/tree/master).
 >>>>>>> 55301faa9 (docu ...)
 
@@ -310,6 +314,7 @@ Screenshot of `cmake-gui` after generating build files.
 #### Linux (Ubuntu)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Since the full support of some C++17 functionality is required (e.g. std::filesystem) a `gcc` version equal or greater than **8** is required (with `CMAKE_CXX_FLAGS` appended by `--std=c++17`).
 
 <<<<<<< HEAD
@@ -325,6 +330,10 @@ Since the full support of some C++17 functionality is required (e.g. std::filesy
 >>>>>>> 8b2342edf (docu)
 Latest tested version:
 >>>>>>> f5eec258f (manual update ....)
+=======
+Since the full support of some C++17 functionality is required (e.g. *std::filesystem*), a `gcc` version equal or greater than **8** is required (with `CMAKE_CXX_FLAGS` appended by `--std=c++17`). 
+**Latest tested version:**
+>>>>>>> a1cbe09fa (docu ...)
 
     $ cat /proc/version
     Linux version 5.8.0-41-generic (buildd@lgw01-amd64-003) (gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #46~20.04.1-Ubuntu SMP Mon Jan 18 17:52:23 UTC 2021
@@ -337,6 +346,7 @@ Latest tested version:
 
     `$ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev`
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 2. First, download the source code from GitHub:
@@ -379,9 +389,21 @@ First, download the software package from GitHub:
 =======
 =======
     `$ mkdir megamol; git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/`
+=======
+- First, download the source code from GitHub:
+
+    `$ mkdir megamol`
+    `$ git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/`
+    `$ cd megamol/`
+
+- Checkout the lastest release:
+
+    `$ git checkout tags/v1.3 -b latest_release`
+>>>>>>> a1cbe09fa (docu ...)
 
 >>>>>>> 8e58073aa (...)
 - Create a build directory and switch to it:
+<<<<<<< HEAD
 >>>>>>> 8b2342edf (docu)
 
 <<<<<<< HEAD
@@ -398,6 +420,10 @@ First, download the software package from GitHub:
 5. Check for required dependencies:
     
     `$ cmake ..`
+=======
+
+    `$ mkdir build; cd build`
+>>>>>>> a1cbe09fa (docu ...)
 
 <<<<<<< HEAD
 6. Start the ncurses gui for cmake:
