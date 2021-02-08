@@ -59,6 +59,9 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 
 ### Add own plugin using the template
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 94da8d87e (docu)
 1. Copy the template folder `../megamol/plugins/template`.
 2. Rename the copied folder to the intended plugin name.
 3. Execute the `instawiz.pl` script inside the new folder.
@@ -69,6 +72,7 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 6. Implement the content of your plugin.
 7. Write a `Readme.md` for your plugin (mandatory).
 8. Add the folder to your local git.
+<<<<<<< HEAD
 =======
     1. Copy the template folder `../megamol/plugins/template`.
     2. Rename the copied folder to the intended plugin name.
@@ -81,6 +85,8 @@ This guide is intended to give MegaMol developers a useful insight into the inte
     7. Write a `Readme.md` for your plugin (mandatory).
     8. Add the folder to your local git.
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
+=======
+>>>>>>> 94da8d87e (docu)
 
 
 <!-- ###################################################################### -->
