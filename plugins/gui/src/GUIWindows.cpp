@@ -827,6 +827,18 @@ bool megamol::gui::GUIWindows::ConsumeTriggeredScreenshot(void) {
 }
 
 
+void megamol::gui::GUIWindows::SetClipboardFunc(const char* (*get_clipboard_func)(void* user_data),
+    void (*set_clipboard_func)(void* user_data, const char* string), void* user_data) {
+
+    if (this->context != nullptr) {
+        ImGuiIO& io = ImGui::GetIO();
+        io.SetClipboardTextFn = set_clipboard_func;
+        io.GetClipboardTextFn = get_clipboard_func;
+        io.ClipboardUserData = user_data;
+    }
+}
+
+
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
 
     // Disable synchronizing graphs when pre step is omitted
@@ -1180,12 +1192,6 @@ bool GUIWindows::createContext(void) {
     io.LogFilename = nullptr;                             // "imgui_log.txt" - disabled
     io.FontAllowUserScaling = false;                      // disable font scaling using ctrl + mouse wheel
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
-
-#ifdef GUI_USE_GLFW
-    io.SetClipboardTextFn = ImGui_ImplGlfw_SetClipboardText;
-    io.GetClipboardTextFn = ImGui_ImplGlfw_GetClipboardText;
-    io.ClipboardUserData = ::glfwGetCurrentContext();
-#endif // GUI_USE_GLFW
 
 /// DOCKING
 #if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
@@ -1660,17 +1666,7 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
         }
 
         if (ImGui::Button("Current Value")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, overlay.c_str());
-#elif _WIN32
             ImGui::SetClipboardText(overlay.c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[GUI] Current Performance Monitor Value:\n%s", overlay.c_str());
-#endif // GUI_USE_GLFW
         }
         ImGui::SameLine();
 
@@ -1681,17 +1677,7 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
             for (std::vector<float>::reverse_iterator i = value_array.rbegin(); i != reverse_end; ++i) {
                 stream << (*i) << "\n";
             }
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, stream.str().c_str());
-#elif _WIN32
             ImGui::SetClipboardText(stream.str().c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[GUI] All Performance Monitor Values:\n%s", stream.str().c_str());
-#endif // GUI_USE_GLFW
         }
         ImGui::SameLine();
         ImGui::TextUnformatted("Copy to Clipborad");
@@ -1977,46 +1963,19 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         ImGui::TextUnformatted(mmstr.c_str());
 
         if (ImGui::Button("Copy E-Mail")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, email.c_str());
-#elif _WIN32
             ImGui::SetClipboardText(email.c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] E-Mail address:\n%s", email.c_str());
-#endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(mailstr.c_str());
 
         if (ImGui::Button("Copy Website")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, web_link.c_str());
-#elif _WIN32
             ImGui::SetClipboardText(web_link.c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Website link:\n%s", web_link.c_str());
-#endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(webstr.c_str());
 
         if (ImGui::Button("Copy GitHub###megamol_copy_github")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, github_link.c_str());
-#elif _WIN32
             ImGui::SetClipboardText(github_link.c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] GitHub link:\n%s", github_link.c_str());
-#endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(gitstr.c_str());
@@ -2024,16 +1983,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         ImGui::Separator();
         ImGui::TextUnformatted(imguistr.c_str());
         if (ImGui::Button("Copy GitHub###imgui_copy_github")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, imgui_link.c_str());
-#elif _WIN32
             ImGui::SetClipboardText(imgui_link.c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] ImGui GitHub Link:\n%s", imgui_link.c_str());
-#endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(imguigitstr.c_str());
