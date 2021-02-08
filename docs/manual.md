@@ -9,7 +9,8 @@
     - [Building from Source](#building-from-source)
         - [Microsoft Windows](#microsoft-windows)
         - [Linux (Ubuntu)](#linux-ubuntu)
-    - [Configuration](#configuration)
+    - [Commandline Arguments](#commandline-arguments)        
+    - [Configuration File](#configuration-file)
         - [General Settings](#general-settings)
         - [Logging](#logging)
         - [Application, Shaders and Resources](#application-shaders-and-resources) 
@@ -68,18 +69,18 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 <!-- ---------------------------------------------------------------------- -->
 #### Microsoft Windows
 
-- Download and unzip the source code of the latest [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) into a new directory (e.g. `megamol`).
-- You have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository.
-- Create a new `build` directory.
-- AS generator, it is recommended to use the latest version of [Visual Studio](https://visualstudio.microsoft.com/downloads/) (Community Edition is free to use) with default native compilers and for the platform x64.
-- Next, click `Configure` a few times (until all red entries disappear).
-- Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
-- Then click `Generate` to generate the build files.
-- The configuration creates a `megamol.sln` file inside the build directory.
-- Open the `sln` file with *Visual Studio*. 
-- Use the `ALL_BUILD` target to build MegaMol.
-- Afterwards, use the `INSTALL` target to create your MegaMol installation.
-- The binary `megamol.exe` is located in the default installation path `../megamol/build/install/bin`.
+1. Download and unzip the source code of the latest [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) into a new directory (e.g. `megamol`).
+2. You have to install [CMake](https://cmake.org/), and load the `CMakeLists.txt` present in the root directory of the repository.
+3. Create a new `build` directory.
+4. As generator, it is recommended to use the latest version of [Visual Studio](https://visualstudio.microsoft.com/downloads/) (Community Edition is free to use) with default native compilers and for the platform x64.
+5. Next, click `Configure` a few times (until all red entries disappear).
+6. Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files and configure once more.
+7. Then click `Generate` to generate the build files.
+8. The configuration creates a `megamol.sln` file inside the build directory.
+9. Open the `megamol.sln` file with *Visual Studio*. 
+10. Use the `ALL_BUILD` target to build MegaMol.
+11. Afterwards, use the `INSTALL` target to create your MegaMol installation.
+12. The binary `megamol.exe` is located in the default installation path `../megamol/build/install/bin`.
 
 ![CMake Windows](pics/cmake_windows.png)
 *Screenshot of `cmake-gui` after generating build files.*
@@ -93,29 +94,29 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
     $ cat /proc/version
     Linux version 5.8.0-41-generic (buildd@lgw01-amd64-003) (gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #46~20.04.1-Ubuntu SMP Mon Jan 18 17:52:23 UTC 2021
 
-- As prerequisites, following packages from the repository are required:
+1. As prerequisites, following packages from the repository are required:
 
     `$ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev`
 
-- First, download the source code from GitHub:
+2. First, download the source code from GitHub:
 
     `$ mkdir megamol`
     `$ git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/`
     `$ cd megamol/`
 
-- Checkout the lastest release:
+3. Checkout the lastest release:
 
     `$ git checkout tags/v1.3 -b latest_release`
 
-- Create a build directory and switch to it:
+4. Create a build directory and switch to it:
 
     `$ mkdir build; cd build`
 
-- Check for required dependencies:
+5. Check for required dependencies:
     
     `$ cmake ..`
 
-- Start the ncurses gui for cmake:
+6. Start the ncurses gui for cmake:
 
     `$ ccmake .`
 
@@ -123,13 +124,13 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
     - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
     - Then hit `g` to generate the build files.
 
-- On the console prompt, start the building:
+7. On the console prompt, start the building:
 
     `$ make && make install`
 
     - Hint: Use the `-j` option for `make` to run the build in parallel threads.
 
-- The binary `megamol` is located in the default installation path `../megamol/build/install/bin`.
+8. The binary `megamol` is located in the default installation path `../megamol/build/install/bin`.
 
   If you use additional external libraries (e.g. when using OSPRay), you have have to use the shell script `megamol.sh` instead. 
   This script adds the required library path:
@@ -148,14 +149,43 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
   ```
 
 <!-- ---------------------------------------------------------------------- -->
-### Configuration
+### Commandline Arguments
+
+Providing additional commandline arguments allow individual configuration of global MegaMol behaviour and settings.
+(The commandline arguments are only read and interpreted by the `frontend`.)
+
+**Note:** The *khrdebug* option is currently ignored and not applied.
+
+The following commandline arguments are available:
+
+```
+    megamol.exe [OPTION...] <additional project files>
+
+      --host arg      address of lua host server, default:
+                      tcp://127.0.0.1:33333
+      --example       load minimal test spheres example project
+      --khrdebug      enable OpenGL KHR debug messages
+      --vsync         enable VSync in OpenGL window
+      --window arg    set the window size and position, accepted format:
+                      WIDTHxHEIGHT[+POSX+POSY]
+      --fullscreen    open maximized window
+      --nodecoration  open window without decorations
+      --topmost       open window that stays on top of all others
+      --nocursor      do not show mouse cursor inside window
+      --help          print help
+```
+
+<!-- ---------------------------------------------------------------------- -->
+### Configuration File
+
+**Note:** Some tagged configuration settings are deprecated and ignored!
 
 After successfully compiling and installing MegaMol, you should have all executable files inside your `bin` directory (default: `../megamol/build/install/bin`). 
 In the `bin` directory, you can find the default configuration file `megamolconfig.lua`:
 
 ```lua
     -- Standard MegaMol Configuration File --
-    print("Standard MegaMol configuration:")
+    print("Standard MegaMol Configuration:")
 
     basePath = "C:/megamol/build/install/"
 
@@ -225,7 +255,10 @@ The *Add...Dir* commands set the paths for the respective resources.
 <!-- ---------------------------------------------------------------------- -->
 #### Plugins
 
-*DEPRECATED --- Because static build ... *
+Since switched to static linking of plugin libraries into the MegaMol binary, the configuration of *Plugin Loader Info* is no longer required.
+
+***DEPRECATED***
+*Mentioned only for legacy purposes:*
 
 Extend the configuration if you introduce new plugins into your installation. 
 Although there are different ways to specify the plugins to be loaded, the tags in the example configuration file are the most secure way. 
@@ -248,31 +281,67 @@ To register a shader directory, add a corresponding tag to the configuration fil
 <!-- ---------------------------------------------------------------------- -->
 #### Global Settings
 
-The configuration file also specifies global settings variables which can modify the behavior of different modules. 
-Two such variables are set in the example configuration file.
-In line 14 the variable `*-window` is set. 
+The configuration file also specifies global settings variables which can modify the behavior of different modules.
+(The configuration file is only read and interpreted by the MegaMol `core`.)
+
+***DEPRECATED***
+For example, in line 14 the variable `*-window` is set. 
 This variable specifies the default position and size for all rendering windows MegaMol will create. 
 The asterisk represents any window name. 
 If you set a variable with a specific name, windows with exactly this name will respect the settings variable. 
 For example, `test-window` will specify the value for the window created by the view instance test.
+The value itself contains five variables:
+- The first two variables are prefixed with `x` and `y` and specify the location of the window in screen pixel coordinates.
+- The second two variables are prefixed with `w` and `h` and specify the size of the client area of the window in pixels.
+- The last optional variable `nd` (stands for **n**o **d**ecorations) will remove all window decorations, buttons, and border from the created window. 
+This variable allows us to create borderless windows filling the complete screen for full-screen rendering.
 
 ```lua
     mmSetConfigValue("*-window",    "x5y35w1280h720")
 ```
 
-The value itself contains five variables:
-- The first two variables are prefixed with `x` and `y` and specify the location of the window in screen pixel coordinates.
-- The second two variables are prefixed with `w` and `h` and specify the size of the client area of the window in pixels.
-- The last variable `nd` (stands for no decorations) will remove all window decorations, buttons, and border from the created window. 
-This variable allows us to create borderless windows filling the complete screen for full-screen rendering.
+***DEPRECATED***
+This variable defines whether the GUI is show or not.
 
-The last settings variable activates (or deactivates) the arcball camera behavior. Set this option to `on` in order to use the arcball camera navigation.
+```lua
+    mmSetConfigValue("consolegui",  "on")
+```
+
+***DEPRECATED***
+Show MegaMol window on top of other windows or not.
+
+```lua    
+    mmSetConfigValue("topmost",     "off")
+```
+
+***DEPRECATED***
+Show MegMol window in fullscreen or not.
+
+```lua    
+    mmSetConfigValue("fullscreen",  "off")
+```
+
+***DEPRECATED***
+Enable or disable VSync (vertical synchronization).
+
+```lua    
+    mmSetConfigValue("vsync",       "off")
+```
+
+***DEPRECATED***
+Defines wether the OpenGL Debug Output (KHR extension)[https://www.khronos.org/opengl/wiki/Debug_Output] is used or not.
+
+```lua    
+    mmSetConfigValue("useKHRdebug", "off")
+```
+
+The last settings variable activates (or deactivates) the *arcball* camera behavior. Set this option to `on` in order to use the *arcball* camera navigation.
 
 ```lua
     mmSetConfigValue("arcball",     "off")
 ```
 
-This concludes the building and configuring of MegaMol.
+This concludes the information on building and the options on how to configure MegaMol.
 Test your installation following the description in the following section.
 
 
