@@ -393,7 +393,9 @@ First, download the software package from GitHub:
 - First, download the source code from GitHub:
 
     `$ mkdir megamol`
+
     `$ git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/`
+    
     `$ cd megamol/`
 
 - Checkout the lastest release:
