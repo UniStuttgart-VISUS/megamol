@@ -31,6 +31,7 @@
         - [Global Settings](#global-settings) 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     - [Test Installation](#test-installation) 
         - [Examples](#examples) 
 =======
@@ -40,10 +41,16 @@
 >>>>>>> 9f08ae8ac (updted cineamtic and ospray docu)
 - [Load and Create Projects](#load-and-create-projects)
 >>>>>>> d6e034ef9 (docu toc fix)
+=======
+    - [Test Installation](#test-installation) 
+        - [Examples](#examples) 
+    - [Project Files](#project-files) 
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 - [Viewing Data Sets](#viewing-data-sets)
     - [Modules, Views and Calls](#modules-views-and-calls) 
         - [Modules and Calls](#modules-and-calls) 
         - [Views](#views) 
+<<<<<<< HEAD
 <<<<<<< HEAD
     - [View Interaction](#view-interaction) 
 - [Project Files](#project-files)     
@@ -89,15 +96,20 @@
     <!-- - [Advanced Usage](#advanced-usage) -->
 =======
     - [Project Files](#project-files) 
+=======
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
     - [View Interaction](#view-interaction) 
     - [Making High-Resolution Screenshots](#making-high-resolution-screenshots) 
-    - [Reproducibility](#reproducibility) 
     - [Making Simple Videos](#making-simple-videos) 
-- [Jobs: Converting Data](#jobs)
+- [Jobs](#jobs)
     - [Job Instance](#job-instance) 
     - [Converting to MMPLD](#converting-to-mmpld) 
+<<<<<<< HEAD
 <!-- - [Advanced Usage](#advanced-usage) -->
 >>>>>>> d6e034ef9 (docu toc fix)
+=======
+- [Reproducibility](#reproducibility) 
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
 <!-- /TOC -->
 
@@ -360,10 +372,14 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
     $ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev
 >>>>>>> 8b2342edf (docu)
 
+<<<<<<< HEAD
 3. Checkout the latest release:
 =======
     `$ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev`
 >>>>>>> 8e58073aa (...)
+=======
+    $ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
     `$ git checkout tags/v1.3 -b latest_release`
 =======
@@ -392,22 +408,25 @@ First, download the software package from GitHub:
 =======
 - First, download the source code from GitHub:
 
-    `$ mkdir megamol`
-
-    `$ git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/`
-    
-    `$ cd megamol/`
+    $ mkdir megamol
+    $ git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/
+    $ cd megamol/
 
 - Checkout the lastest release:
 
+<<<<<<< HEAD
     `$ git checkout tags/v1.3 -b latest_release`
 >>>>>>> a1cbe09fa (docu ...)
+=======
+    $ git checkout tags/v1.3 -b latest_release
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
 >>>>>>> 8e58073aa (...)
 - Create a build directory and switch to it:
 <<<<<<< HEAD
 >>>>>>> 8b2342edf (docu)
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     `$ mkdir build; cd build`
@@ -423,6 +442,9 @@ First, download the software package from GitHub:
     
     `$ cmake ..`
 =======
+=======
+    $ mkdir build; cd build
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
     `$ mkdir build; cd build`
 >>>>>>> a1cbe09fa (docu ...)
@@ -432,17 +454,21 @@ First, download the software package from GitHub:
 =======
 - Check for required dependencies:
     
-    `$ cmake ..`
+    $ cmake ..
 
 - Start the ncurses gui for cmake:
 >>>>>>> 88e3119f9 (docu)
 
+<<<<<<< HEAD
     `$ ccmake .`
 <<<<<<< HEAD
 =======
     $ ccmake .
 =======
 >>>>>>> 8e58073aa (...)
+=======
+    $ ccmake .
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
     - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
     - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
@@ -450,6 +476,7 @@ First, download the software package from GitHub:
     - Then hit `g` to generate the build files.
 - On the console prompt, start the building:
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     $ make && make install
@@ -534,6 +561,9 @@ You can append the option `-j 4` to the make command to run the build in 4 paral
 >>>>>>> c571ca9c6 (...)
 =======
     `$ make && make install`
+=======
+    $ make && make install
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
     Hint: Use the `-j` option for `make` to run the build in parallel threads.
 >>>>>>> f42be6ab4 (...)
@@ -645,8 +675,12 @@ Locate line 3 containing the variable `basePath`. Both relative and absolute pat
 =======
 Locate line 3 containing the variable `basePath`. 
 Both relative and absolute path should work here fine. 
+<<<<<<< HEAD
 This path is set automatically and always has to fit the currently used execution path.
 >>>>>>> 06b190844 (docu)
+=======
+This path is set automatically and always has to fit the currently used execution path!
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
 ```lua
     basePath = "C:/megamol/build/install/"  
@@ -688,6 +722,7 @@ The asterisk `*` stands for the highest numeric value, thus printing all message
 >>>>>>> 2e3d465a0 (...)
 ```
 
+<<<<<<< HEAD
 <!-- ---------------------------------------------------------------------- -->
 #### Application, Shaders and Resources
 
@@ -701,6 +736,9 @@ Line 9-11 define the shader and resource directories:
 =======
 Line 9-11 define the application, shader and resource directories:
 >>>>>>> 8b2342edf (docu)
+=======
+Line 7-10 define the application, shader and resource directories:
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
 Line 7-10 define the application, shader and resource directories:
 ```lua
@@ -742,9 +780,13 @@ The *Add...Dir* commands set the paths for the respective resources.
 #### Plugins
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 Since we switched to static linking of plugin libraries into the MegaMol binary, the configuration of `mmPluginLoaderInfo` is ***DEPRECATED*** and no longer required.
 =======
 *DEPRECATED*
+=======
+*DEPRECATED --- Because static build ... *
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
 <<<<<<< HEAD
 Extend the configuration if you introduce new plugins into your installation. Although there are different ways to specify the plugins to be loaded, the tags in the example configuration file are the most secure way. Each `mmPluginLoaderInfo` tag requires three attributes:
@@ -879,12 +921,16 @@ Test your installation following the description in the following section.
 
 <!-- ---------------------------------------------------------------------- -->
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> 0ae2f4429 (manual update ...)
 ### Tests
 >>>>>>> 4fa438626 (manual update ...)
 =======
 ### Test Installation
 >>>>>>> 9f08ae8ac (updted cineamtic and ospray docu)
+=======
+## Test Installation
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -900,7 +946,7 @@ the MegaMol start script:
 *REWORK*
 
 In order to test the installtion, simply start the frontend executable. 
-Open a console and change your working directory to the MegaMol install directory. 
+Open a console and change your working directory to the MegaMol install directory (default: `../megamol/build/install/bin`). 
 Execute the MegaMol binary:
 >>>>>>> 06b190844 (docu)
 
@@ -993,9 +1039,13 @@ This direct invocation is not recommended.
 Thus, the remaining examples in this manual will assume that you use the start shell script. 
 MegaMol should start and print several messages to the console. 
 The leading number of each line is the log level. 
-There should be no output of warnings (log level of 100 or less) or errors (log level 1). 
-The output should match the one above. 
-For a better test, you should invoke MegaMol requesting a simple rendering. 
+
+<!-- ---------------------------------------------------------------------- -->
+### Examples
+
+The [example project script files](https://github.com/UniStuttgart-VISUS/megamol-examples) are automatically available in the `examples` directory, which is installed next to the `bin` directory.
+
+For a better test, you should invoke MegaMol loading an example project script requesting a simple rendering. 
 Then you can be sure that the graphics drivers, graphics libraries, and shader codes are correctly found and are working. 
 To do this, try: 
 >>>>>>> 06b190844 (docu)
@@ -1039,6 +1089,7 @@ This script adds the required library path:
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH ./megamol "$@"
 ```
 =======
@@ -1073,11 +1124,14 @@ In the highlighted parameter group `anim` in the *ImGui* on the left side of the
 =======
 In the highlighted parameter group `anim` in the *ImGui* on the left side of the window you can adjust the animation speed.
 >>>>>>> 8b2342edf (docu)
+=======
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 MegaMol should now open a rendering window showing a generated dataset with several colored spheres. 
-Hitting the `space` key starts and stops the animation playback. 
-In the *ImGui*, on the left side of the window, you can adjust all parameters of the running MegaMol instance. 
-For example, you can find the parameter `Speed` in the group `inst::view::anim`. 
+Hitting the `space` key starts and stops the animation playback.
+In the *Parameters* window you can find all available parameters of the running MegaMol instance grouped by the modules.
+For example, you can find the parameter `speed` in the group `inst::view::anim`. 
 With this parameter, you can adjust the playback speed of the animation.
+In the parameter group `anim` of the `view` module you can adjust the animation speed.
 
 ![Test Project](pics/testspheres.png)
 *Screenshot of MegaMol running the test spheres instance.*
@@ -1085,10 +1139,11 @@ With this parameter, you can adjust the playback speed of the animation.
 
 <!-- ###################################################################### -->
 -----
-## Load and Create Projects
+## Project Files
 
 *TODO*
 
+<<<<<<< HEAD
 A detailed description of the GUI and the configurator can be found in the readme file of the [GUI plugin](https://github.com/UniStuttgart-VISUS/megamol/blob/master/plugins/gui/README.md).
 
 
@@ -1340,6 +1395,10 @@ The view description *TestSpheres* used in section [Test](#tests) is one example
 >>>>>>> 0ae2f4429 (manual update ...)
 ### Project Files
 >>>>>>> 4fa438626 (manual update ...)
+=======
+A detailed description of the GUI and the configurator can be found in the readme file of the [GUI plugin](plugins/gui#2-configurator).
+Start project by adding entry module `View3D_2` ...
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1545,6 +1604,97 @@ The corresponding parameter button in the GUI also shows the associated hotkey.
 =======
 --> 
 
+<!-- ###################################################################### -->
+-----
+## Viewing Data Sets
+<!-- XXX More suitable caption name? -->
+
+In this chapter, we discuss the principle usage of the prepared project files for data set viewing. 
+This project script files are available in the `examples` directory, which is installed next to the `bin` directory.
+
+<!-- ---------------------------------------------------------------------- -->
+### Modules, Views and Calls
+
+The runtime functionality of MegaMol is constructed by *modules* and *calls*. 
+These two type of objects are instantiated at runtime, interconnected and build the *module graph*. 
+The figure [Example Graph](#example-raph) shows an example module graph containing a rendering content of a window *view*, a *renderer*, a *data source*, and two modules providing additional information for the renderer. 
+The modules, shown as blue boxes, are interconnected by *call* objects, shown as gray boxes. 
+The connection endpoints at the modules are *CallerSlots* (outgoing, located on the right of modules) or *CalleeSlots* (incoming, located on the left side of modules) shown as circled dots.
+
+The module graph follows the pull pattern. 
+This means that modules request function invocation by other modules. 
+For example, the *view* module needs to update the window content. 
+The *view* module thus invokes the *renderer* module to provide a new rendering. 
+The *renderer* calls the data source if new data is available or to provide the old cached data.
+
+Left-most module view of class `View3D_2` represents the rendering content of a window. 
+The center module renderer of class `SphererRenderer` is called by the window using the corresponding call of type `CallRenderer3D`. 
+The right modules provide data and additional information for the renderer, namely a color map function and a clip plane. 
+
+![Example Graph](pics/example_graph.png)
+*An example module graph.*
+
+<!-- ---------------------------------------------------------------------- -->
+#### Modules and Calls
+
+*Modules* are the functional entities of MegaMol. 
+They provide several programmatic access points, the *slots*. 
+Two types of these slots are shown in figure [Example Graph](#examplegraph) as circled dots.
+
+*CalleeSlots* are access points of modules, through which these can be called to perform a function. 
+For example, modules of class `SphererRenderer` provide a CalleeSlot rendering through which the rendering function can be invoked. 
+The counterparts are CallerSlots which are outgoing access points. 
+These allow modules to call other modules. 
+Modules of class `View3D_2` provide a corresponding slot `rendering` to call a connected renderer.
+These two types of slots are connected using objects of *call* classes. 
+These are shown as gray boxes in figure [Example Graph](#examplegraph). 
+Both *CalleeSlots* and *CallerSlots* specify types of calls they are compatible with. 
+In the case of the above examples of renderings-relates slots, this is the type `CallRender3D`.
+
+*Calls* should be lightweight. 
+Instead, they are thin interfaces meant for data transport. 
+For example, data to be visualized is loaded by data source modules. 
+In [Example Graph](#examplegraph) the module *data* of class *MMPLDDataSource* loads a specified data set into main memory and provides the data through its  CalleeSlot*. 
+The data is accessed through a *MultiParticleDataCall*. 
+The call, however, does not copy the data but provides access to the data in terms of memory pointers, and metadata. 
+This avoidance of copy operations is most important and one of the core design ideas of MegaMol.
+
+*Parameter slots* are the third type of slots. 
+These are access points to exposed parameters controlling the functionality. 
+Such parameters are automatically included in the frontend’s GUI. 
+Examples of such parameters are the setup of the virtual camera and light source in modules of type `View3D` or the dataset file name in data source modules.  
+
+The *module graph* is configured for MegaMol using a project file. 
+These files define modules and interconnecting calls for different instance specifications. 
+There are two types of instances:
+Views (see section [Views](#views)) and jobs (see section [Jobs](#jobs)). 
+The starting command line of the console front-end loads project files (using `-p`) and requests instantiation of views and jobs (using `-i`).
+
+<!-- ---------------------------------------------------------------------- -->
+#### Views 
+
+*UPDATE/DEPRECATED*
+
+*Views* are one of the two instance types MegaMol can run. 
+They are specified by the corresponding tag in a MegaMol project file (see section [Project Files](#project-files)). 
+When a view is instantiated, a corresponding namespace will be created, and all modules instantiated as part of the view will be created inside this namespace. 
+For example, the project file seen in next section ([Project Files](#project-files)) defines the module data as part of the view dataview. 
+If this view is instantiated by the command line note (note that files might need some path adjustments):
+
+    $ ./megamol.sh -p ../docs/samples/projects/pdbcartoonview.mmprj -i pdbcartoonview pv --paramfile ../docs/samples/projects/pdbmolview02.param -v ::pdbdata::pdbFilename ../docs/samples/sampledata/1m40_sim.pdb -v ::pdbdata::xtcFilename ../docs/samples/sampledata/1m40_100frames.xtc
+
+Then the module will be created with the full name `::inst::data`. 
+Correspondingly, its parameter slot `filename` can be globally addressed by `::inst::data::filename`. 
+This allows for the instantiation of several independent view instances. 
+For each view instance, a rendering window will be created. 
+To provide the content for the rendering window, each view instance description needs to provide a *default view*, usually via the `viewmod` attribute of the view tag in the MegaMol project file. 
+The value of this attribute is the name for the view module to be called by the window management code. 
+This module class must be implemented by deriving from `::megamol::core::view::AbstractView`. 
+Typically, you use `View3D` or `View2D`.
+MegaMol provides some internal description of views which can be instantiated without loading a project file first. 
+The view description *TestSpheres* used in section [Test](#test-installation) is one example of such a built-in description.
+
+
 <!-- ---------------------------------------------------------------------- -->
 ### View Interaction
 >>>>>>> 800f17d5c (manual update)
@@ -1616,6 +1766,7 @@ MegaMol has special functions to create high-resolution screen shoots of any ren
 
 Use GUI menu option `Screenshot`.
 
+For a more flexible way, use Screenshoter module
 <!-- DEPRECATED 
 MegaMol has special functions to create high-resolution screen shoots of any rendering, namely the `ScreenShooter` module. The provided starting scripts add this module. If you create a project file of your own, remember to add the `ScreenShooter` module. The corresponding settings can be found in the ImGui in the groups `inst::screenshooter` and `inst::screenshooter::anim` (see figure [ScreenShooter](#screenshooter)).
 >>>>>>> 0ae2f4429 (manual update ...)
@@ -1665,6 +1816,7 @@ The parameter filename specifies the path to the image file to be created. MegaM
 -->
 
 <!-- ---------------------------------------------------------------------- -->
+<<<<<<< HEAD
 >>>>>>> 0ae2f4429 (manual update ...)
 ### Reproducibility
 >>>>>>> 800f17d5c (manual update)
@@ -1706,6 +1858,8 @@ The corresponding settings can be found in the modules parameters provided in th
 <!-- ---------------------------------------------------------------------- -->
 <a name="makevideo"></a>
 
+=======
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 ### Making Simple Videos
 
 <<<<<<< HEAD
@@ -1760,7 +1914,7 @@ Adjust the parameters in the group `::screenshooter::anim` in addition to the pa
 =======
 *TODO*
 
-See [Cinematic Plugin](https://github.com/UniStuttgart-VISUS/megamol/blob/master/plugins/cinematic/README.md).
+See [Cinematic Plugin](plugins/cinematic#usage).
 
 <!-- DEPRECATED 
 MegaMol cannot create video files directly. However, MegaMol can create a sequence of screenshots of a time-dependent data set showing the different points-in-time. Adjust the parameters in the group `inst::screenshooter::anim` in addition to the parameters for simple screenshots ([ScreenShots](#makescreenshot)).
@@ -1827,7 +1981,9 @@ Examples are based on the project script files available in the installed `examp
 <!-- ###################################################################### -->
 ## Jobs
 
-This chapter discusses the job concept available in MegaMol. Especially, how jobs can be used for data conversion. Examples are based on the project script files available in the *script and example* package from the MegaMol project website.
+This chapter discusses the job concept available in MegaMol. 
+Especially, how jobs can be used for data conversion. 
+Examples are based on the project script files available in the *examples* directory from the MegaMol project website.
 
 <!-- ---------------------------------------------------------------------- -->
 <<<<<<< HEAD
@@ -1912,6 +2068,7 @@ To convert from other file formats, for which a corresponding loader does exist,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 --> 
 =======
 <!-- ###################################################################### -->
@@ -1922,6 +2079,19 @@ To convert from other file formats, for which a corresponding loader does exist,
 [//]: # (######################################################################) 
 >>>>>>> 4fa438626 (manual update ...)
 =======
+=======
+<!-- ---------------------------------------------------------------------- -->
+## Reproducibility
+
+MegaMol stores the active project and all parameter settings in the EXIF field of the saved screenshots. 
+Please note that this field currently contains a simple zero-terminated string with the LUA code required to reproduce the state when the screenshot is taken, and **not** valid EXIF data. Such a project can be restored by simply loading the PNG file:
+
+    $ megamol.exe <something>.png
+
+Also note that only Views with direct access to camera parameters (like `View3D_2`) can be properly restored.
+
+
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 <!-- ###################################################################### -->
 >>>>>>> 0ae2f4429 (manual update ...)
 =======
@@ -2000,6 +2170,7 @@ Also note that only Views with direct access to camera parameters (like `View3D_
 The whole process command line can be copied to the clipboard using the remaining menu items in the Start menu. The differences for Cmd shell and Powershell are only the way how special characters and strings are escaped.
 
 -->
+<<<<<<< HEAD
 
 <!-- ADD:
     ## Add own plugin using the template
@@ -2015,3 +2186,5 @@ The whole process command line can be copied to the clipboard using the remainin
     8. Add the folder to your local git
 -->
 >>>>>>> 800f17d5c (manual update)
+=======
+>>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
