@@ -24,16 +24,16 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 ***UPDATE required***
 
 ### Add own plugin using the template
-    1. Copy the template folder `../megamol/plugins/template`.
-    2. Rename the copied folder to the intended plugin name.
-    3. Execute the `instawiz.pl` script inside the new folder.
-        1. The script detects the plugin name.
-        2. Autogenerate the GUID.
-    4. Remove `instawiz.pl`
-    5. Add libraries/dependencies to `CMakeLists.txt` (optional).
-    6. Implement the content of your plugin.
-    7. Write a `Readme.md` for your plugin (mandatory).
-    8. Add the folder to your local git.
+1. Copy the template folder `../megamol/plugins/template`.
+2. Rename the copied folder to the intended plugin name.
+3. Execute the `instawiz.pl` script inside the new folder.
+    1. The script detects the plugin name.
+    2. Autogenerate the GUID.
+4. Remove `instawiz.pl`from the new plugins folder.
+5. Add libraries/dependencies to `CMakeLists.txt` (optional, see [external dependencies](#external-dependencies)).
+6. Implement the content of your plugin.
+7. Write a `Readme.md` for your plugin (mandatory).
+8. Add the folder to your local git.
 
 
 <!-- ###################################################################### -->
