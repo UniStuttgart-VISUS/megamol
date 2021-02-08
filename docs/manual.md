@@ -926,6 +926,7 @@ The *Add...Dir* commands set the paths for the respective resources.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 Since we switched to static linking of plugin libraries into the MegaMol binary, the configuration of `mmPluginLoaderInfo` is ***DEPRECATED*** and no longer required.
 =======
 *DEPRECATED*
@@ -948,6 +949,11 @@ Since switched to static linking of plugin libraries into the MegaMol binary, th
 *Mentioned only for legacy purposes:*
 >>>>>>> 94da8d87e (docu)
 =======
+=======
+Since switched to static linking of plugin libraries into the MegaMol binary, the configuration of `mmPluginLoaderInfo` is no longer required.
+
+<!--
+>>>>>>> c1b6286c7 (docu)
 *DEPRECATED:*
 >>>>>>> ce3f629ba (docu)
 
@@ -1001,13 +1007,17 @@ In line 14 the variable `*-window` is set.
 The configuration file also specifies global settings variables which can modify the behavior of different modules.
 (The configuration file is only read and interpreted by the MegaMol `core`.)
 
-- This settings variable activates (or deactivates) the *arcball* camera behavior. Set this option to `on` in order to use the *arcball* camera navigation.
+- The following settings variable activates (or deactivates) the *arcball* camera behavior. Set this option to `on` in order to use the *arcball* camera navigation.
 ```lua
     mmSetConfigValue("arcball",     "off")
 ```
 
+All other configuration options are *DEPRECATED*!
+
+<!--
 *DEPRECATED:*
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 For example, in line 14 the variable `*-window` is set. 
 >>>>>>> 94da8d87e (docu)
@@ -1035,6 +1045,9 @@ This variable allows us to create borderless windows filling the complete screen
 ```
 =======
 - For example, in line 14 the variable `*-window` is set. 
+=======
+- In line 14 the variable `*-window` is set. 
+>>>>>>> c1b6286c7 (docu)
     This variable specifies the default position and size for all rendering windows MegaMol will create. 
     The asterisk represents any window name. 
     If you set a variable with a specific name, windows with exactly this name will respect the settings variable. 
@@ -1523,10 +1536,18 @@ The right modules provide data and additional information for the renderer, name
 #### Modules and calls
 >>>>>>> 800f17d5c (manual update)
 
+<<<<<<< HEAD
 All available options provided via the graphical user interface are described separately in the readme file of the [GUI plugin](../plugins/gui).
 =======
 #### Modules and Calls
 >>>>>>> 6668c26ff (docu toc)
+=======
+- Defines wether the OpenGL Debug Output (KHR extension)[https://www.khronos.org/opengl/wiki/Debug_Output] is used or not.
+```lua    
+    mmSetConfigValue("useKHRdebug", "off")
+```
+--> 
+>>>>>>> c1b6286c7 (docu)
 
 ![Test Project](pics/testspheres.png)
 *Screenshot of MegaMol running the test spheres instance.*
@@ -1560,8 +1581,12 @@ In order to test the installtion, simply execute the frontend executable.
 Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your working directory to the MegaMol install directory (default: `../megamol/build/install/bin`). 
 Execute the MegaMol binary:
 
+<<<<<<< HEAD
 Windows:
 >>>>>>> bdc293c78 (docu)
+=======
+**Windows:**
+>>>>>>> c1b6286c7 (docu)
 
 The runtime functionality of MegaMol is constructed by *modules* and *calls*. 
 These two types of objects are instantiated at runtime, interconnected and build the *module call graph*. 
@@ -1587,13 +1612,18 @@ For example, the *view* module needs to update the window content.
 The *view* module thus invokes the *renderer* module to provide a new rendering. 
 The *renderer* calls the data source if new data is available or to provide the old cached data.
 
+<<<<<<< HEAD
 Left-most module view of class `View3D_2` represents the rendering content of a window. 
 The center module renderer of class `BoundingBoxRenderer` and `SphererRenderer` are called subsequently by the window using the corresponding call of type `CallRenderer3D_2`. 
 The right modules provide data and additional information for the renderer, namely a color map transfer function and a clipping plane. 
 =======
 Linux:
+=======
+**Linux:**
+>>>>>>> c1b6286c7 (docu)
 
     $ ./megamol
+
 
     If you use additional external libraries (e.g. when using the OSPRay plugin), you have have to run the shell script `./megamol.sh` instead. 
     This script adds the required library path:
@@ -1614,8 +1644,12 @@ MegaMol should start and print several messages to the console and an empty rend
 You can eather check the console log messages or the messages printed in the *Log Console* window shown on the bottom of the window.
 The leading number of each line is the log level.
 There should be no error messages (log level **1**). 
+<<<<<<< HEAD
 Some warnings (log level **100**) might occur but indicate no failed installation or execution.
 >>>>>>> bdc293c78 (docu)
+=======
+Some warnings (log level **100**) might occur but are *normal* and indicate no failed installation or execution.
+>>>>>>> c1b6286c7 (docu)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1629,6 +1663,7 @@ Some warnings (log level **100**) might occur but indicate no failed installatio
 They provide several programmatic access points, the *slots*. 
 Two types of these slots are shown in figure [Example Graph](#examplegraph) as circled dots.
 
+<<<<<<< HEAD
 *CalleeSlots* are access points of modules, through which these can be called to perform a function. 
 For example, modules of class `SphererRenderer` provide a CalleeSlot rendering through which the rendering function can be invoked. 
 The counterparts are CallerSlots which are outgoing access points. 
@@ -1638,6 +1673,9 @@ These two types of slots are connected using objects of *call* classes.
 These are shown as gray boxes in figure [Example Graph](#examplegraph). 
 Both *CalleeSlots* and *CallerSlots* specify types of calls they are compatible with. 
 In the case of the above examples of renderings-relates slots, this is the type `CallRender3D`.
+=======
+**Linux:**
+>>>>>>> c1b6286c7 (docu)
 
 <<<<<<< HEAD
 *Calls* should be lightweight. 
@@ -1656,12 +1694,16 @@ These are access points to exposed parameters controlling the functionality.
 Such parameters are automatically included in the frontend’s GUI. 
 Examples of such parameters are the setup of the virtual camera and light source in modules of type `View3D` or the dataset file name in data source modules.  
 
+<<<<<<< HEAD
 The *module graph* is configured for MegaMol using a project file. 
 These files define modules and interconnecting calls for different instance specifications. 
 There are two types of instances:
 Views (see section [Views](#views)) and jobs (see section [Jobs](#jobs)). 
 The starting command line of the console front-end loads project files (using `-p`) and requests instantiation of views and jobs (using `-i`).
 >>>>>>> 8b2342edf (docu)
+=======
+**Windows:** 
+>>>>>>> c1b6286c7 (docu)
 
 <<<<<<< HEAD
 *Example module call graph.*
