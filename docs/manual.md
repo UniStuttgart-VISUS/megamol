@@ -1586,6 +1586,7 @@ Windows:
 >>>>>>> bdc293c78 (docu)
 =======
 **Windows:**
+<<<<<<< HEAD
 >>>>>>> c1b6286c7 (docu)
 
 The runtime functionality of MegaMol is constructed by *modules* and *calls*. 
@@ -1611,6 +1612,11 @@ This means that modules request function invocation by other modules.
 For example, the *view* module needs to update the window content. 
 The *view* module thus invokes the *renderer* module to provide a new rendering. 
 The *renderer* calls the data source if new data is available or to provide the old cached data.
+=======
+```
+    > megamol.exe
+```
+>>>>>>> 88d2d64e8 (docu)
 
 <<<<<<< HEAD
 Left-most module view of class `View3D_2` represents the rendering content of a window. 
@@ -1622,23 +1628,25 @@ Linux:
 **Linux:**
 >>>>>>> c1b6286c7 (docu)
 
+```
     $ ./megamol
-
+```
 
     If you use additional external libraries (e.g. when using the OSPRay plugin), you have have to run the shell script `./megamol.sh` instead. 
     This script adds the required library path:
-    ```bash
-        #!/bin/bash
-        #
-        # MegaMol startup script
-        # Copyright 2020, https://megamol.org/
-        #
 
-        BIN_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
-        cd "$BIN_DIR"
+```bash
+    #!/bin/bash
+    #
+    # MegaMol startup script
+    # Copyright 2020, https://megamol.org/
+    #
 
-        LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH ./megamol "$@"
-    ```
+    BIN_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+    cd "$BIN_DIR"
+
+    LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH ./megamol "$@"
+```
 
 MegaMol should start and print several messages to the console and an empty rendering window should appear.
 You can eather check the console log messages or the messages printed in the *Log Console* window shown on the bottom of the window.
