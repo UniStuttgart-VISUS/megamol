@@ -18,20 +18,20 @@
         - [Global Settings](#global-settings) 
     - [Test Installation](#test-installation) 
         - [Examples](#examples) 
-    - [Project Files](#project-files) 
 - [Viewing Data Sets](#viewing-data-sets)
     - [Modules, Views and Calls](#modules-views-and-calls) 
         - [Modules and Calls](#modules-and-calls) 
         - [Views](#views) 
     - [View Interaction](#view-interaction) 
+- [Project Files](#project-files)     
 - [Making High-Resolution Screenshots](#making-high-resolution-screenshots) 
 - [Making Simple Videos](#making-simple-videos) 
+- [Reproducibility](#reproducibility) 
 <!-- 
 - [Jobs](#jobs)
     - [Job Instance](#job-instance) 
     - [Converting to MMPLD](#converting-to-mmpld) 
 -->
-- [Reproducibility](#reproducibility) 
 
 <!-- /TOC -->
 
