@@ -101,7 +101,9 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 - First, download the source code from GitHub:
 
     `$ mkdir megamol`
+
     `$ git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/`
+    
     `$ cd megamol/`
 
 - Checkout the lastest release:
