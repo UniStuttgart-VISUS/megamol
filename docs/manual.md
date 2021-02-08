@@ -45,6 +45,8 @@ Today, it is governed by a number of teams at the TU Dresden and the University 
 The goal of the project is to provide a software base for visualization research and to provide a stable environment to deploy newest visualization prototypes to application domain researchers. MegaMol is not a visualization tool. MegaMol is a platform for visualization research.
 Visit the project [website](https://megamol.org/ "MegaMol Homepage") for downloads and more information.
 
+**If you faced any trouble during installation or if you have any furhter questions concerning MegaMol, we encourage you to contact the developer team by opening an [issue](https://github.com/UniStuttgart-VISUS/megamol/issues/new) on github!**
+
 
 <!-- ###################################################################### -->
 -----
@@ -132,22 +134,6 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 
 8. The binary `megamol` is located in the default installation path `../megamol/build/install/bin`.
 
-  If you use additional external libraries (e.g. when using OSPRay), you have have to use the shell script `megamol.sh` instead. 
-  This script adds the required library path:
-
-  ```bash
-    #!/bin/bash
-    #
-    # MegaMol startup script
-    # Copyright 2020, https://megamol.org/
-    #
-
-    BIN_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
-    cd "$BIN_DIR"
-
-    LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH ./megamol "$@"
-  ```
-
 <!-- ---------------------------------------------------------------------- -->
 ### Commandline Arguments
 
@@ -155,6 +141,7 @@ Providing additional commandline arguments allow individual configuration of glo
 (The commandline arguments are only read and interpreted by the `frontend`.)
 
 The following commandline arguments are available:
+
 **Note:** The *khrdebug* option is currently ignored and not applied.
 ```
     megamol.exe [OPTION...] <additional project files>
@@ -180,7 +167,6 @@ The following commandline arguments are available:
 
 After successfully compiling and installing MegaMol, you should have all executable files inside your `bin` directory (default: `../megamol/build/install/bin`). 
 In the `bin` directory, you can find the default configuration file `megamolconfig.lua`:
-
 ```lua
     -- Standard MegaMol Configuration File --
     print("Standard MegaMol Configuration:")
@@ -215,7 +201,6 @@ The following paragraphs explain the essential steps of configuring MegaMol in m
 Locate line 3 containing the variable `basePath`. 
 Both relative and absolute path should work here fine. 
 This path is set automatically and always has to fit the currently used execution path!
-
 ```lua
     basePath = "C:/megamol/build/install/"  
 ```
@@ -229,7 +214,6 @@ Specifying a log file and the level informs MegaMol to write a log file and prin
 The *LogLevel* is a numeric value. 
 All messages with lower numeric values will be printed (or saved). 
 The asterisk `*` stands for the highest numeric value, thus printing all messages.
-
 ```lua
     mmSetLogLevel('*') -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=*
     mmSetEchoLevel('*')
@@ -240,14 +224,12 @@ The asterisk `*` stands for the highest numeric value, thus printing all message
 #### Application, Shaders and Resources
 
 Line 7-10 define the application, shader and resource directories:
-
 ```lua
     mmSetAppDir(basePath .. "bin")  
     mmAddShaderDir(basePath .. "share/shaders")
     mmAddResourceDir(basePath .. "share/shaders")
     mmAddResourceDir(basePath .. "share/resources")
 ```
-
 The *Add...Dir* commands set the paths for the respective resources.
 
 <!-- ---------------------------------------------------------------------- -->
@@ -270,7 +252,6 @@ case for Windows installations.
 Rendering modules from plugins require shader codes to function. 
 MegaMol searches these codes in all registered shader directories. 
 To register a shader directory, add a corresponding tag to the configuration file.
-
 ```lua
     mmPluginLoaderInfo(basePath .. "bin", "*.mmplg", "include")
 ```
@@ -280,6 +261,11 @@ To register a shader directory, add a corresponding tag to the configuration fil
 
 The configuration file also specifies global settings variables which can modify the behavior of different modules.
 (The configuration file is only read and interpreted by the MegaMol `core`.)
+
+- This settings variable activates (or deactivates) the *arcball* camera behavior. Set this option to `on` in order to use the *arcball* camera navigation.
+```lua
+    mmSetConfigValue("arcball",     "off")
+```
 
 *DEPRECATED:*
 
@@ -293,7 +279,6 @@ The configuration file also specifies global settings variables which can modify
     - The second two variables are prefixed with `w` and `h` and specify the size of the client area of the window in pixels.
     - The last optional variable `nd` (stands for **n**o **d**ecorations) will remove all window decorations, buttons, and border from the created window. 
     This variable allows us to create borderless windows filling the complete screen for full-screen rendering.
-
 ```lua
     mmSetConfigValue("*-window",    "x5y35w1280h720")
 ```
@@ -301,7 +286,6 @@ The configuration file also specifies global settings variables which can modify
 *DEPRECATED:*
 
 - This variable defines whether the GUI is show or not.
-
 ```lua
     mmSetConfigValue("consolegui",  "on")
 ```
@@ -309,7 +293,6 @@ The configuration file also specifies global settings variables which can modify
 *DEPRECATED:*
 
 - Show MegaMol window on top of other windows or not.
-
 ```lua    
     mmSetConfigValue("topmost",     "off")
 ```
@@ -317,7 +300,6 @@ The configuration file also specifies global settings variables which can modify
 *DEPRECATED:*
 
 - Show MegMol window in fullscreen or not.
-
 ```lua    
     mmSetConfigValue("fullscreen",  "off")
 ```
@@ -325,7 +307,6 @@ The configuration file also specifies global settings variables which can modify
 *DEPRECATED:*
 
 - Enable or disable VSync (vertical synchronization).
-
 ```lua    
     mmSetConfigValue("vsync",       "off")
 ```
@@ -333,15 +314,8 @@ The configuration file also specifies global settings variables which can modify
 *DEPRECATED:*
 
 - Defines wether the OpenGL Debug Output (KHR extension)[https://www.khronos.org/opengl/wiki/Debug_Output] is used or not.
-
 ```lua    
     mmSetConfigValue("useKHRdebug", "off")
-```
-
-- The last settings variable activates (or deactivates) the *arcball* camera behavior. Set this option to `on` in order to use the *arcball* camera navigation.
-
-```lua
-    mmSetConfigValue("arcball",     "off")
 ```
 
 This concludes the information on building and the options on how to configure MegaMol.
@@ -352,32 +326,38 @@ Test your installation following the description in the following section.
 -----
 ## Test Installation
 
-*REWORK*
-
-In order to test the installtion, simply start the frontend executable. 
-Open a console and change your working directory to the MegaMol install directory (default: `../megamol/build/install/bin`). 
+In order to test the installtion, simply execute the frontend executable. 
+Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your working directory to the MegaMol install directory (default: `../megamol/build/install/bin`). 
 Execute the MegaMol binary:
-
-Linux:
-
-    $ ./megamol.sh
 
 Windows:
 
     > megamol.exe
 
-Alternatively, you can descend into the `bin` directory and start the frontend directly. 
-Doing so, you must ensure that the additional shared objects can be found and loaded. 
-Enter the commands. 
-To test this, try:
+Linux:
 
-    cd bin
-    LD_LIBRARY_PATH=../lib ./megamol
+    $ ./megamol
 
-This direct invocation is not recommended. 
-Thus, the remaining examples in this manual will assume that you use the start shell script. 
-MegaMol should start and print several messages to the console. 
-The leading number of each line is the log level. 
+    If you use additional external libraries (e.g. when using the OSPRay plugin), you have have to run the shell script `./megamol.sh` instead. 
+    This script adds the required library path:
+    ```bash
+        #!/bin/bash
+        #
+        # MegaMol startup script
+        # Copyright 2020, https://megamol.org/
+        #
+
+        BIN_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+        cd "$BIN_DIR"
+
+        LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH ./megamol "$@"
+    ```
+
+MegaMol should start and print several messages to the console and an empty rendering window should appear.
+You can eather check the console log messages or the messages printed in the *Log Console* window shown on the bottom of the window.
+The leading number of each line is the log level.
+There should be no error messages (log level **1**). 
+Some warnings (log level **100**) might occur but indicate no failed installation or execution.
 
 <!-- ---------------------------------------------------------------------- -->
 ### Examples
@@ -390,18 +370,24 @@ To do this, try:
 
 Linux: 
 
-    $ ./megamol.sh ../examples/testspheres_megamol.lua
+    $ ./megamol ../examples/testspheres_megamol.lua
 
 Windows: 
 
     > megamol.exe ..\examples\testspheres_megamol.lua
 
-MegaMol should now open a rendering window showing a generated dataset with several colored spheres. 
+You can also open an empty MegaMol rendering window and load the example project file via the menu.
+
+
+MegaMol should now open a rendering window showing a generated dataset with several colored spheres and the outline of the bounding box. 
 Hitting the `space` key starts and stops the animation playback.
-In the *Parameters* window you can find all available parameters of the running MegaMol instance grouped by the modules.
+In the GUI window *Parameters* you can find all available parameters of the running MegaMol instance grouped by the modules.
 For example, you can find the parameter `speed` in the group `inst::view::anim`. 
 With this parameter, you can adjust the playback speed of the animation.
 In the parameter group `anim` of the `view` module you can adjust the animation speed.
+
+
+All further options provided via the graphical user interface are described separately in the readme file of the [GUI plugin](../plugins/gui).
 
 ![Test Project](pics/testspheres.png)
 *Screenshot of MegaMol running the test spheres instance.*

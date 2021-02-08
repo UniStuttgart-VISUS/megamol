@@ -153,7 +153,7 @@ It causes the graph updater to stop at the indicated event and delay further gra
 -----
 ## Build System
 
-For building MegaMol, CMake is used. For developers, two aspects are of importance: adding new plugins, and [adding and using external dependencies](#external-dependencies).
+For building MegaMol, CMake is used. For developers, two aspects are of importance: [adding new plugins](#create-new-plugin), and [adding and using external dependencies](#external-dependencies).
 
 ### External dependencies
 
