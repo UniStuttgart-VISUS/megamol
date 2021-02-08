@@ -24,8 +24,8 @@
         - [Modules and Calls](#modules-and-calls) 
         - [Views](#views) 
     - [View Interaction](#view-interaction) 
-    - [Making High-Resolution Screenshots](#making-high-resolution-screenshots) 
-    - [Making Simple Videos](#making-simple-videos) 
+- [Making High-Resolution Screenshots](#making-high-resolution-screenshots) 
+- [Making Simple Videos](#making-simple-videos) 
 <!-- 
 - [Jobs](#jobs)
     - [Job Instance](#job-instance) 
@@ -403,119 +403,9 @@ All available options provided via the graphical user interface are described se
 
 <!-- ###################################################################### -->
 -----
-## Project Files
-
-*TODO*
-
-A detailed description of the GUI and the configurator can be found in the readme file of the [GUI plugin](../plugins/gui#configurator).
-Start project by adding entry module `View3D_2` ...
-
-*TODO/UPDATE*
-
-Project files are `lua`scripts.
-
-<!-- COMPLETE REWORK / DEPRECTED => lua
-
-Project files are the primary method to start up MegaMol. The snippets below show the content of the project file `simple_siff.mmprj` and `pdbcartoonview.mmprj` which can be used to view the sample particle datasets.
-
-Although, it is possible to host multiple instance descriptions in a single project file it is recommended to only have one description per file. Both files define a *view*, which is the only node in the top-level node `MegaMol`. The other keywords describe the behavior of this view.
-
-Example 1: `simple_siff.mmprj`
-```xml
-    <?xml version="1.0" encoding="utf-8"?>
-    <MegaMol type="project" version="1.3">
-    <view name="dataview" viewmod="view">
-        <module class="SIFFDataSource" name="data" />
-        <module class="SphererRenderer" name="renderer" />
-        <module class="View3D" name="view" />
-        <module class="LinearTransferFunction" name="colors">
-                <param name="mincolour" value="forestgreen" />
-                <param name="maxcolour" value="lightskyblue" />
-        </module>
-        <module class="ClipPlane" name="clipplane">
-                <param name="colour" value="#80808000" />
-        </module>
-        <module class="ScreenShooter" name="screenshooter">
-                <param name="view" value="inst" />
-        </module>
-        <call class="MultiParticleDataCall" from="renderer::getdata" to="data::getdata" />
-        <call class="CallRender3D" from="view::rendering" to="renderer::rendering" />
-        <call class="CallGetTransferFunction" from="renderer::gettransferfunction" to="colors::gettransferfunction" />
-        <call class="CallClipPlane" from="renderer::getclipplane" to="clipplane::getclipplane" />
-    </view>
-    </MegaMol>
-```
-
-Example 2: `pdbcartoonview.mmprj`
-```xml
-    <?xml version="1.0" encoding="utf-8"?>
-    <MegaMol type="project" version="1.3">
-    <view name="pdbcartoonview" viewmod="view3d">
-        <module class="PDBLoader" name="::pdbdata" />
-        <module class="MoleculeCartoonRenderer" name="cartoonren" />
-        <module class="View3d" name="view3d" />
-        <call class="CallRender3D" from="view3d::rendering" to="cartoonren::rendering" />
-        <call class="MolecularDataCall" from="cartoonren::getdata" to="::pdbdata::dataout" />
-    </view>
-    </MegaMol>
-
-```
-
-### Code Walkthrough
-
-After the data sources, the renderer is defined:
-
-```xml
-        <module class="MoleculeCartoonRenderer" name="cartoonren" />
-        <module class="SphererRenderer" name="renderer" />
-```
-
-After this, the *view* module is specified.
-All used data source modules use mainly slots with the same names, i.e. a *ParameterSlot* named `filename` and a *CalleeSlot* named `getdata`, compatible with MultiParticleDataCall, providing access to the loaded data. Specifying the right config set variable thus allows the caller to use data sets from different file formats with this project file. See the online documentation for more information on these file formats. The recommended file format for MegaMol currently is **MMPLD**, and the corresponding data source module is thus the default module.
-
-```xml
-        <module class="View3d" name="view3d" />
-        <module class="View3D" name="view" />
-        <module class="LinearTransferFunction" name="colors">
-                <param name="mincolour" value="forestgreen" />
-                <param name="maxcolour" value="lightskyblue" />
-        </module>
-        <module class="ClipPlane" name="clipplane">
-                <param name="colour" value="#80808000" />
-        </module>
-```
-
-One important function of project files can be seen in the code for `simple_siff.mmprj`: specifying parameter values. You can specify values for parameter slots of modules using the `<param>` tag inside the `<module>` tag. Use attributes to select the name and value for the corresponding parameter.
-
-The following block deals with the modules being interconnected using call objects. The corresponding tags specify the class of the call, the source *CallerSlot* to connect `from`, and the targeted *CalleeSlot* to connect `to`. The slot identifiers consist of module instance name (as defined in the project file, here its `cartoonren` and `::pdbdata`, while the slot name is as defined by the implementation (i.e. `rendering`, `getdata` and `dataout`). Specifying the full name would require the instance name this view will be instantiated as. Searching for the slots does, therefore, work using relative names.
-
-```xml
-        <call class="CallRender3D" from="view3d::rendering" to="cartoonren::rendering" />
-        <call class="MolecularDataCall" from="cartoonren::getdata" to="::pdbdata::dataout" />
-        <call class="MultiParticleDataCall" from="renderer::getdata" to="data::getdata" />
-        <call class="CallRender3D" from="view::rendering" to="renderer::rendering" />
-        <call class="CallGetTransferFunction" from="renderer::gettransferfunction" to="colors::gettransferfunction" />
-        <call class="CallClipPlane" from="renderer::getclipplane" to="clipplane::getclipplane" />
-```
-
-Additionally, the `simple_siff.mmprj` project includes the module *ScreenShooter*. As parameters, the connected view must be specified, which is done by setting the `view` parameter to `inst` which is the name of the view instance given on the command line.
-
-```xml
-        <module class="ScreenShooter" name="screenshooter">
-                <param name="view" value="inst" />
-        </module>
-```
-
-**Note**: If you experience problems with one of the renderers, for example, due to problems with your graphics card or graphics driver, try to select another one by specifying it in line 7, i.e., change the *class* value from `SphererRenderer` to `SimpleGeoSphereRenderer`.
-
---> 
-
-<!-- ###################################################################### -->
------
 ## MegaMol Graph
 
-In this chapter, we discuss the principle usage of the prepared project files for data set viewing. 
-Some predefined project script files are available in the `examples` directory, which is installed next to the `bin` directory.
+In this chapter, we show the operating principle of MegaMol which is required to creating own custom projects for MegaMol.
 
 <!-- ---------------------------------------------------------------------- -->
 ### Modules, Views and Calls
@@ -615,6 +505,7 @@ Most parameters can be found in the sub-namespace `viewKey` inside the view name
 The corresponding parameter button in the GUI also shows the associated hotkey.
 
 ***UPDATE REQUIRED***:  
+<!-- TODO -->
 
 Some useful controls:
 - Hitting *Home* (aka *Pos1*) is associated with the button *resetView*. This function resets the view to default.
@@ -629,8 +520,44 @@ Some useful controls:
 - Hold *Control* while holding and dragging the *Middle Mouse Button* moves the look-at point forwards or backwards, changing the center of the corresponding rotation. 
     Use the parameter `showLookAt` of the view to visualize the look-at point for better adjustment.
 
-<!-- ---------------------------------------------------------------------- -->
-### Making High-Resolution Screenshots
+
+<!-- ###################################################################### -->
+-----
+## Project Files
+
+Project files are [`lua`](https://www.lua.org/) scripts using special custom functions to define any module graph for MegaMol.
+Some predefined example project script files are available in the `examples` directory, which is installed next to the `bin` directory.
+Here you can see the example project script `..\examples\testspheres_megamol.lua`:
+
+```lua
+    mmCreateView("testspheres", "View3D_2","::view")
+
+    mmCreateModule("BoundingBoxRenderer","::bbox")
+    mmCreateModule("DistantLight","::distantlight")
+    mmCreateModule("SphereRenderer","::renderer")
+    mmCreateModule("TestSpheresDataSource", "::data")
+
+    mmSetParamValue("::renderer::renderMode", [=[Simple]=])
+
+    mmCreateCall("CallRender3D_2", "::view::rendering", "::bbox::rendering")
+    mmCreateCall("CallRender3D_2","::bbox::chainRendering","::renderer::rendering")
+    mmCreateCall("MultiParticleDataCall", "::renderer::getData", "::data::getData")
+    mmCreateCall("CallLight","::renderer::lights","::distantlight::deployLightSlot")
+```
+
+Project files can easily be created using the built in *Configurator*.
+It can be opened via the menu `Windows / Configurator`.
+You can either edit the currently running MegaMol graph (which might be empty) or you can create a new project starting a module graph by adding the main view module `View3D_2`.
+A detailed description of the configurator can be found in the readme file of the [GUI plugin](../plugins/gui#configurator).
+
+<!-- TODO 
+
+Add more ... ?
+
+-->
+
+<!-- ###################################################################### -->
+## Making High-Resolution Screenshots
 
 The GUI menu option `Screenshot` (hotkey `F2`) provides a basic screenshot funtionality using the current viewport size. 
 If screenshots are taken consecutively, the given file name is prepended by an incrementing suffix. 
@@ -661,8 +588,9 @@ Hit the button trigger to have MegaMol create the requested screenshot.
 
 -->
 
-<!-- ---------------------------------------------------------------------- -->
-### Making Simple Videos
+
+<!-- ###################################################################### -->
+## Making Simple Videos
 
 MegaMol cannot create video files directly. 
 However, MegaMol can create a sequence of screenshots of a time-dependent data set showing the different points-in-time. 

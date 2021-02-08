@@ -25,6 +25,13 @@ This guide is intended to give MegaMol developers a useful insight into the inte
           - [Built libraries](#built-libraries) 
 - [GUI Parameter Widgets](#gui-parameter-widgets)
 
+<!-- TODO
+
+- Add section describing all available LUA commands
+- Add section describing remote console usage
+
+-->
+
 <!-- /TOC -->
 
 
