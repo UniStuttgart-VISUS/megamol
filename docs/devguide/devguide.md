@@ -37,8 +37,12 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 - [Synchronized Selection across Modules](#synchronized-selection-across-modules)
 - [Graph Manipulation](#graph-manipulation)
 - [Build System](#build-system)
+<<<<<<< HEAD
 - [Parameter Widgets](#parameter-widgets)
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
+=======
+- [GUI Parameter Widgets](#gui-parameter-widgets)
+>>>>>>> aea90c840 (docu)
 
 <!-- /TOC -->
 
@@ -346,11 +350,15 @@ Additionally, information about the libraries can be queried with the command ``
 <!-- ###################################################################### -->
 -----
 <<<<<<< HEAD
+<<<<<<< HEAD
 ## GUI Parameter Widgets
 
 See separate [developer information for GUI plugin](../../plugins/gui#information-for-developers).
 =======
 ## Parameter Widgets
+=======
+## GUI Parameter Widgets
+>>>>>>> aea90c840 (docu)
 
 <<<<<<< HEAD
 <<<<<<< HEAD

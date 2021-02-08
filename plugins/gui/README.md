@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # MegaMol Plugin: GUI
+=======
+# MegaMol Plugin: **GUI**
+>>>>>>> aea90c840 (docu)
 
 This is the plugin providing the GUI for MegaMol.
 
