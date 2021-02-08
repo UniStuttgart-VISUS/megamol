@@ -5,7 +5,6 @@
 ## Contents
 
 - [Overview](#overview)
-    - [License](#license)
 - [Installation and Setup](#installation-and-setup)
     - [Building from Source](#building-from-source)
         - [Microsoft Windows](#microsoft-windows)
@@ -44,22 +43,7 @@ The MegaMol project was started in the Collaborative Research Center 716, subpro
 Today, it is governed by a number of teams at the TU Dresden and the University of Stuttgart.
 
 The goal of the project is to provide a software base for visualization research and to provide a stable environment to deploy newest visualization prototypes to application domain researchers. MegaMol is not a visualization tool. MegaMol is a platform for visualization research.
-Visit the project [website](https://github.com/UniStuttgart-VISUS/megamol.git "MegaMol Homepage") for downloads and more information.
-
-<!-- ---------------------------------------------------------------------- -->
-### License
-
-MegaMol is freely and publicly available as open source following the terms of the BSD License.
-Copyright (c) 2015, MegaMol Team TU Dresden, Germany Visualization Research Center, University of Stuttgart (VISUS), Germany
-Alle Rechte vorbehalten.
-All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, are permitted
-provided that the following conditions are met:
-- Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-- Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-- Neither the name of the MegaMol Team, TU Dresden, University of Stuttgart, nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE MEGAMOL TEAM "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE MEGAMOL TEAM BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Visit the project [website](https://megamol.org/ "MegaMol Homepage") for downloads and more information.
 
 
 <!-- ###################################################################### -->
@@ -75,7 +59,8 @@ While MegaMol might work on further platforms, the development team will current
 <!-- ---------------------------------------------------------------------- -->
 ### Building from Source
 
-It is recommende to use the latest [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) version of the source code. 
+It is recommended to use the latest [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) version of the source code.
+All bleeding edge features are available in the [main branch](https://github.com/UniStuttgart-VISUS/megamol/tree/master).
 
 **Note**: 
 The *OSPRay plugin* is currently disabled by default. 
