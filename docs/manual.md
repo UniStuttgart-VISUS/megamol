@@ -347,8 +347,10 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 **Latest tested version:**
 >>>>>>> a1cbe09fa (docu ...)
 
+```
     $ cat /proc/version
     Linux version 5.8.0-41-generic (buildd@lgw01-amd64-003) (gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #46~20.04.1-Ubuntu SMP Mon Jan 18 17:52:23 UTC 2021
+```
 
 <<<<<<< HEAD
 1. As prerequisites, following packages from the repository are required:
@@ -356,12 +358,18 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 - As prerequisites, following packages from the repository are required:
 >>>>>>> 88e3119f9 (docu)
 
+<<<<<<< HEAD
     `$ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev`
 
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 2. First, download the source code from GitHub:
+=======
+```
+    $ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev
+```
+>>>>>>> aa0faee09 (docu)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -408,21 +416,30 @@ First, download the software package from GitHub:
 =======
 - First, download the source code from GitHub:
 
+```
     $ mkdir megamol
     $ git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/
     $ cd megamol/
+```
 
 - Checkout the lastest release:
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     `$ git checkout tags/v1.3 -b latest_release`
 >>>>>>> a1cbe09fa (docu ...)
 =======
     $ git checkout tags/v1.3 -b latest_release
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
+=======
+```
+    $ git checkout tags/v1.3 -b latest_release
+```
+>>>>>>> aa0faee09 (docu)
 
 >>>>>>> 8e58073aa (...)
 - Create a build directory and switch to it:
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> 8b2342edf (docu)
 
@@ -445,6 +462,12 @@ First, download the software package from GitHub:
 =======
     $ mkdir build; cd build
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
+=======
+
+```
+    $ mkdir build; cd build
+```
+>>>>>>> aa0faee09 (docu)
 
     `$ mkdir build; cd build`
 >>>>>>> a1cbe09fa (docu ...)
@@ -453,12 +476,15 @@ First, download the software package from GitHub:
 6. Start the ncurses gui for cmake:
 =======
 - Check for required dependencies:
-    
+
+```    
     $ cmake ..
+```
 
 - Start the ncurses gui for cmake:
 >>>>>>> 88e3119f9 (docu)
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     `$ ccmake .`
 <<<<<<< HEAD
@@ -469,6 +495,11 @@ First, download the software package from GitHub:
 =======
     $ ccmake .
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
+=======
+```
+    $ ccmake .
+```
+>>>>>>> aa0faee09 (docu)
 
     - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
     - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
@@ -476,6 +507,7 @@ First, download the software package from GitHub:
     - Then hit `g` to generate the build files.
 - On the console prompt, start the building:
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -564,6 +596,11 @@ You can append the option `-j 4` to the make command to run the build in 4 paral
 =======
     $ make && make install
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
+=======
+```
+    $ make && make install
+```
+>>>>>>> aa0faee09 (docu)
 
     Hint: Use the `-j` option for `make` to run the build in parallel threads.
 >>>>>>> f42be6ab4 (...)
