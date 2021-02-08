@@ -501,10 +501,10 @@ First, download the software package from GitHub:
 ```
 >>>>>>> aa0faee09 (docu)
 
-    - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
-    - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
+  - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
+  - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
+  - Then hit `g` to generate the build files.
 
-    - Then hit `g` to generate the build files.
 - On the console prompt, start the building:
 
 <<<<<<< HEAD
@@ -602,8 +602,12 @@ You can append the option `-j 4` to the make command to run the build in 4 paral
 ```
 >>>>>>> aa0faee09 (docu)
 
+<<<<<<< HEAD
     Hint: Use the `-j` option for `make` to run the build in parallel threads.
 >>>>>>> f42be6ab4 (...)
+=======
+  - Hint: Use the `-j` option for `make` to run the build in parallel threads.
+>>>>>>> 9712fbc5e (docu)
 
 <<<<<<< HEAD
 - The default installation path for the binary `megamol` is `../megamol/build/install/bin`
