@@ -347,8 +347,8 @@ Execute the MegaMol binary:
     $ ./megamol
 ```
 
-    If you use additional external libraries (e.g. when using the OSPRay plugin), you have have to run the shell script `./megamol.sh` instead. 
-    This script adds the required library path:
+If you use additional external libraries (e.g. when using the OSPRay plugin), you have have to run the shell script `./megamol.sh` instead. 
+This script adds the required library path:
 
 ```bash
     #!/bin/bash
