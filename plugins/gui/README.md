@@ -1,4 +1,4 @@
-# MegaMol GUI Plugin
+# MegaMol Plugin: **GUI**
 
 This is the plugin providing the GUI for MegaMol.
 
