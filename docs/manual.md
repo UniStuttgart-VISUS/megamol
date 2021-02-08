@@ -333,7 +333,14 @@ Test your installation following the description in the following section.
 ## Test Installation
 
 In order to test the installtion, simply execute the frontend executable. 
-Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your working directory to the MegaMol install directory (default: `../megamol/build/install/bin`). 
+Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your working directory to the MegaMol install directory (default: `../megamol/build/install/bin`).  
+
+MegaMol should start and print several messages to the console and an empty rendering window should appear.
+You can eather check the console log messages or the messages printed in the *Log Console* window shown on the bottom of the window.
+The leading number of each line is the log level.
+There should be no error messages (log level **1**). 
+Some warnings (log level **100**) might occur but are *normal* and indicate no failed installation or execution.  
+
 Execute the MegaMol binary:
 
 **Windows:**
@@ -362,12 +369,6 @@ This script adds the required library path:
 
     LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH ./megamol "$@"
 ```
-
-MegaMol should start and print several messages to the console and an empty rendering window should appear.
-You can eather check the console log messages or the messages printed in the *Log Console* window shown on the bottom of the window.
-The leading number of each line is the log level.
-There should be no error messages (log level **1**). 
-Some warnings (log level **100**) might occur but are *normal* and indicate no failed installation or execution.
 
 <!-- ---------------------------------------------------------------------- -->
 ### Examples
