@@ -154,10 +154,8 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 Providing additional commandline arguments allow individual configuration of global MegaMol behaviour and settings.
 (The commandline arguments are only read and interpreted by the `frontend`.)
 
-**Note:** The *khrdebug* option is currently ignored and not applied.
-
 The following commandline arguments are available:
-
+**Note:** The *khrdebug* option is currently ignored and not applied.
 ```
     megamol.exe [OPTION...] <additional project files>
 
@@ -178,7 +176,7 @@ The following commandline arguments are available:
 <!-- ---------------------------------------------------------------------- -->
 ### Configuration File
 
-**Note:** Some tagged configuration settings are deprecated and ignored!
+**Note:** Some tagged configuration settings are ***DEPRECATED*** and ignored!
 
 After successfully compiling and installing MegaMol, you should have all executable files inside your `bin` directory (default: `../megamol/build/install/bin`). 
 In the `bin` directory, you can find the default configuration file `megamolconfig.lua`:
@@ -258,6 +256,7 @@ The *Add...Dir* commands set the paths for the respective resources.
 Since switched to static linking of plugin libraries into the MegaMol binary, the configuration of *Plugin Loader Info* is no longer required.
 
 ***DEPRECATED***
+
 *Mentioned only for legacy purposes:*
 
 Extend the configuration if you introduce new plugins into your installation. 
@@ -285,6 +284,7 @@ The configuration file also specifies global settings variables which can modify
 (The configuration file is only read and interpreted by the MegaMol `core`.)
 
 ***DEPRECATED***
+
 For example, in line 14 the variable `*-window` is set. 
 This variable specifies the default position and size for all rendering windows MegaMol will create. 
 The asterisk represents any window name. 
@@ -301,6 +301,7 @@ This variable allows us to create borderless windows filling the complete screen
 ```
 
 ***DEPRECATED***
+
 This variable defines whether the GUI is show or not.
 
 ```lua
@@ -308,6 +309,7 @@ This variable defines whether the GUI is show or not.
 ```
 
 ***DEPRECATED***
+
 Show MegaMol window on top of other windows or not.
 
 ```lua    
@@ -315,6 +317,7 @@ Show MegaMol window on top of other windows or not.
 ```
 
 ***DEPRECATED***
+
 Show MegMol window in fullscreen or not.
 
 ```lua    
@@ -322,6 +325,7 @@ Show MegMol window in fullscreen or not.
 ```
 
 ***DEPRECATED***
+
 Enable or disable VSync (vertical synchronization).
 
 ```lua    
@@ -329,6 +333,7 @@ Enable or disable VSync (vertical synchronization).
 ```
 
 ***DEPRECATED***
+
 Defines wether the OpenGL Debug Output (KHR extension)[https://www.khronos.org/opengl/wiki/Debug_Output] is used or not.
 
 ```lua    

@@ -7,14 +7,25 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 ## Contents
 
 - [Create new Plugin](#create-new-plugin)
+    - [Add own plugin using the template](#add-own-plugin-using-the-template) 
 - [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
+    - [Recipe](#) 
+    - [Usage: ```DATACallRead```](#usage-datacallread) 
+    - [Usage: ```DataCallWrite```](#usage-datacallwrite) 
 - [Synchronized Selection across Modules](#synchronized-selection-across-modules)
+    - [FlagStorage](#flagstorage) 
+    - [FlagStorage_GL](#flagstorage_gl) 
 - [Graph Manipulation](#graph-manipulation)
+    - [Graph Manipulation Queues](#graph-manipulation-queues) 
 - [Build System](#build-system)
+    - [External dependencies](#external-dependencies) 
+        - [Using external dependencies](#using-external-dependencies) 
+        - [Adding new external dependencies](#adding-new-external-dependencies) 
+          - [Header-only libraries](#header-only-libraries) 
+          - [Built libraries](#built-libraries) 
 - [GUI Parameter Widgets](#gui-parameter-widgets)
 
 <!-- /TOC -->
-
 
 
 <!-- ###################################################################### -->
