@@ -296,4 +296,4 @@ Additionally, information about the libraries can be queried with the command ``
 -----
 ## Parameter Widgets
 
-See [developer information in GUI plugin](../plugins/gui#information-for-developers).
+See [developer information in GUI plugin](../../plugins/gui#information-for-developers).
