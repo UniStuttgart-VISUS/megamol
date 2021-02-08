@@ -691,10 +691,8 @@ You can append the option `-j 4` to the make command to run the build in 4 paral
 Providing additional commandline arguments allow individual configuration of global MegaMol behaviour and settings.
 (The commandline arguments are only read and interpreted by the `frontend`.)
 
-**Note:** The *khrdebug* option is currently ignored and not applied.
-
 The following commandline arguments are available:
-
+**Note:** The *khrdebug* option is currently ignored and not applied.
 ```
     megamol.exe [OPTION...] <additional project files>
 
@@ -715,7 +713,7 @@ The following commandline arguments are available:
 <!-- ---------------------------------------------------------------------- -->
 ### Configuration File
 
-**Note:** Some tagged configuration settings are deprecated and ignored!
+**Note:** Some tagged configuration settings are ***DEPRECATED*** and ignored!
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -921,6 +919,7 @@ Extend the configuration if you introduce new plugins into your installation. Al
 Since switched to static linking of plugin libraries into the MegaMol binary, the configuration of *Plugin Loader Info* is no longer required.
 
 ***DEPRECATED***
+
 *Mentioned only for legacy purposes:*
 >>>>>>> 94da8d87e (docu)
 
@@ -972,6 +971,7 @@ The configuration file also specifies global settings variables which can modify
 (The configuration file is only read and interpreted by the MegaMol `core`.)
 
 ***DEPRECATED***
+
 For example, in line 14 the variable `*-window` is set. 
 >>>>>>> 94da8d87e (docu)
 This variable specifies the default position and size for all rendering windows MegaMol will create. 
@@ -1036,6 +1036,7 @@ The last settings variable activates (or deactivates) the arcball camera behavio
 >>>>>>> 06b190844 (docu)
 =======
 ***DEPRECATED***
+
 This variable defines whether the GUI is show or not.
 
 ```lua
@@ -1043,6 +1044,7 @@ This variable defines whether the GUI is show or not.
 ```
 
 ***DEPRECATED***
+
 Show MegaMol window on top of other windows or not.
 
 ```lua    
@@ -1050,6 +1052,7 @@ Show MegaMol window on top of other windows or not.
 ```
 
 ***DEPRECATED***
+
 Show MegMol window in fullscreen or not.
 
 ```lua    
@@ -1057,6 +1060,7 @@ Show MegMol window in fullscreen or not.
 ```
 
 ***DEPRECATED***
+
 Enable or disable VSync (vertical synchronization).
 
 ```lua    
@@ -1064,6 +1068,7 @@ Enable or disable VSync (vertical synchronization).
 ```
 
 ***DEPRECATED***
+
 Defines wether the OpenGL Debug Output (KHR extension)[https://www.khronos.org/opengl/wiki/Debug_Output] is used or not.
 
 ```lua    

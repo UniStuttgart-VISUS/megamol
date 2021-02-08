@@ -8,9 +8,15 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 
 - [Create new Plugin](#create-new-plugin)
 <<<<<<< HEAD
+<<<<<<< HEAD
     - [Add own plugin using the template](#add-own-plugin-using-the-template) 
 - [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
     - [Recipe](#recipe) 
+=======
+    - [Add own plugin using the template](#add-own-plugin-using-the-template) 
+- [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
+    - [Recipe](#) 
+>>>>>>> 7056d6a53 (docu)
     - [Usage: ```DATACallRead```](#usage-datacallread) 
     - [Usage: ```DataCallWrite```](#usage-datacallwrite) 
 - [Synchronized Selection across Modules](#synchronized-selection-across-modules)
@@ -48,9 +54,12 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
+=======
+>>>>>>> 7056d6a53 (docu)
 <!-- ###################################################################### -->
 -----
 ## Create new Plugin
