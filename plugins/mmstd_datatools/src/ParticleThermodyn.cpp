@@ -282,7 +282,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
         float theMaxTemp = 0.0f;
 
         auto const search_volume = 4.0f / 3.0f * 3.14f * theRadius * theRadius * theRadius;
-        auto const inv_search_voume = 1.0f / search_volume;
+        auto const inv_search_volume = 1.0f / search_volume;
         auto const phase_krit = 0.5f * theFluidDensity;
 
         const bool remove_self = this->removeSelfSlot.Param<megamol::core::param::BoolParam>()->Value();
@@ -428,7 +428,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
                             }
                         } break;
                     case metricsEnum::PHASE: {
-                        auto const num_density = num_matches * inv_search_voume;
+                        auto const num_density = num_matches * inv_search_volume;
                         magnitude = 0.5f;
                         if (num_density > phase_krit) {
                             // fluid
