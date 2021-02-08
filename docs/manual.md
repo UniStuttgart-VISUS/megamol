@@ -337,28 +337,31 @@ Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your wo
 Execute the MegaMol binary:
 
 **Windows:**
-
+```
     > megamol.exe
+```
 
 **Linux:**
 
+```
     $ ./megamol
-
+```
 
     If you use additional external libraries (e.g. when using the OSPRay plugin), you have have to run the shell script `./megamol.sh` instead. 
     This script adds the required library path:
-    ```bash
-        #!/bin/bash
-        #
-        # MegaMol startup script
-        # Copyright 2020, https://megamol.org/
-        #
 
-        BIN_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
-        cd "$BIN_DIR"
+```bash
+    #!/bin/bash
+    #
+    # MegaMol startup script
+    # Copyright 2020, https://megamol.org/
+    #
 
-        LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH ./megamol "$@"
-    ```
+    BIN_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+    cd "$BIN_DIR"
+
+    LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH ./megamol "$@"
+```
 
 MegaMol should start and print several messages to the console and an empty rendering window should appear.
 You can eather check the console log messages or the messages printed in the *Log Console* window shown on the bottom of the window.
