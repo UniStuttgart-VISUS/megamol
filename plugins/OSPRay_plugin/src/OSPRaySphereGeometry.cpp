@@ -82,8 +82,7 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
         auto const zAcc = parts.GetParticleStore().GetZAcc();
 
         if (parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I &&
-            parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I &&
-            parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_NONE) {
+            parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I) {
             auto const crAcc = parts.GetParticleStore().GetCRAcc();
             auto const cgAcc = parts.GetParticleStore().GetCGAcc();
             auto const cbAcc = parts.GetParticleStore().GetCBAcc();
@@ -103,15 +102,17 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
             core::utility::log::Log::DefaultLog.WriteWarn(
                 "[OSPRaySphereGeometry]: Color type not supported. Fallback to constant color.");
 
+            auto const g_color = parts.GetGlobalColour();
+
             for (std::size_t pidx = 0; pidx < partCount; ++pidx) {
                 vd[pidx * 3 + 0] = xAcc->Get_f(pidx);
                 vd[pidx * 3 + 1] = yAcc->Get_f(pidx);
                 vd[pidx * 3 + 2] = zAcc->Get_f(pidx);
 
-                cd_rgba[pidx * 4 + 0] = 0.f;
-                cd_rgba[pidx * 4 + 1] = 1.f;
-                cd_rgba[pidx * 4 + 2] = 0.f;
-                cd_rgba[pidx * 4 + 3] = 1.f;
+                cd_rgba[pidx * 4 + 0] = g_color[0] / 255.0f;
+                cd_rgba[pidx * 4 + 1] = g_color[1] / 255.0f;
+                cd_rgba[pidx * 4 + 2] = g_color[2] / 255.0f;
+                cd_rgba[pidx * 4 + 3] = g_color[3] / 255.0f;
             }
         }
 
