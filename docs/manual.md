@@ -183,9 +183,14 @@ Visit the project [website](https://megamol.org/ "MegaMol Homepage") for downloa
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 <!-- ###################################################################### -->
 <a name="installation-and-setup"></a>
 >>>>>>> 800f17d5c (manual update)
+=======
+**If you faced any trouble during installation or if you have any furhter questions concerning MegaMol, we encourage you to contact the developer team by opening an [issue](https://github.com/UniStuttgart-VISUS/megamol/issues/new) on github!**
+
+>>>>>>> bdc293c78 (docu)
 
 =======
 >>>>>>> 8e58073aa (...)
@@ -573,6 +578,7 @@ First, download the software package from GitHub:
 8. The binary `megamol` is located in the default installation path `../megamol/build/install/bin`.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 <!-- ---------------------------------------------------------------------- -->
 ### Command Line Arguments
 
@@ -685,6 +691,8 @@ You can append the option `-j 4` to the make command to run the build in 4 paral
   ```
 >>>>>>> 06b190844 (docu)
 
+=======
+>>>>>>> bdc293c78 (docu)
 <!-- ---------------------------------------------------------------------- -->
 ### Commandline Arguments
 
@@ -692,6 +700,7 @@ Providing additional commandline arguments allow individual configuration of glo
 (The commandline arguments are only read and interpreted by the `frontend`.)
 
 The following commandline arguments are available:
+
 **Note:** The *khrdebug* option is currently ignored and not applied.
 ```
     megamol.exe [OPTION...] <additional project files>
@@ -731,8 +740,11 @@ After successfully compiling and installing MegaMol, you should have all executa
 After successfully compiling and installing MegaMol, you should have all executable files inside your `bin` directory (default: `../megamol/build/install/bin`). 
 >>>>>>> 8b2342edf (docu)
 In the `bin` directory, you can find the default configuration file `megamolconfig.lua`:
+<<<<<<< HEAD
 >>>>>>> 06b190844 (docu)
 
+=======
+>>>>>>> bdc293c78 (docu)
 ```lua
     -- Standard MegaMol Configuration File --
     print("Standard MegaMol Configuration:")
@@ -778,6 +790,7 @@ The following paragraphs explain the essential steps of configuring MegaMol in m
 Locate line 3 containing the variable `basePath`. 
 Both relative and absolute path should work here fine. 
 This path is set automatically and always has to fit the currently used execution path!
+<<<<<<< HEAD
 ```lua
     basePath = "C:/megamol/build/install/"  
 =======
@@ -802,6 +815,8 @@ This path is set automatically and always has to fit the currently used executio
 This path is set automatically and always has to fit the currently used execution path!
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
+=======
+>>>>>>> bdc293c78 (docu)
 ```lua
     basePath = "C:/megamol/build/install/"  
 ```
@@ -822,9 +837,12 @@ The *LogLevel* is a numeric value.
 All messages with lower numeric values will be printed (or saved). 
 The asterisk `*` stands for the highest numeric value, thus printing all messages.
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> 06b190844 (docu)
+=======
+>>>>>>> bdc293c78 (docu)
 ```lua
     mmSetLogLevel('*') -- LogLevel: None=0,Error=1,Warn=100,INFO=200,ALL=*
     mmSetEchoLevel('*')
@@ -858,9 +876,12 @@ Line 9-11 define the application, shader and resource directories:
 >>>>>>> 8b2342edf (docu)
 =======
 Line 7-10 define the application, shader and resource directories:
+<<<<<<< HEAD
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
 Line 7-10 define the application, shader and resource directories:
+=======
+>>>>>>> bdc293c78 (docu)
 ```lua
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -881,10 +902,13 @@ Line 7-10 define the application, shader and resource directories:
     mmAddResourceDir(basePath .. "share/resources")
 >>>>>>> 800f17d5c (manual update)
 ```
+<<<<<<< HEAD
 The *Add...Dir* commands set the paths for the respective resources.
 
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> bdc293c78 (docu)
 The *Add...Dir* commands set the paths for the respective resources.
 
 <<<<<<< HEAD
@@ -944,6 +968,7 @@ case for Windows installations.
 Rendering modules from plugins require shader codes to function. 
 MegaMol searches these codes in all registered shader directories. 
 To register a shader directory, add a corresponding tag to the configuration file.
+<<<<<<< HEAD
 >>>>>>> 06b190844 (docu)
 
 - `path` should be the path to find the plugin. The example configuration file assumes to find the plugins in the same directory as the MegaMol executable (which is the
@@ -955,6 +980,8 @@ case for Windows installations.
 Rendering modules from plugins require shader codes to function. 
 MegaMol searches these codes in all registered shader directories. 
 To register a shader directory, add a corresponding tag to the configuration file.
+=======
+>>>>>>> bdc293c78 (docu)
 ```lua
     mmPluginLoaderInfo(basePath .. "bin", "*.mmplg", "include")
 ```
@@ -973,6 +1000,11 @@ In line 14 the variable `*-window` is set.
 =======
 The configuration file also specifies global settings variables which can modify the behavior of different modules.
 (The configuration file is only read and interpreted by the MegaMol `core`.)
+
+- This settings variable activates (or deactivates) the *arcball* camera behavior. Set this option to `on` in order to use the *arcball* camera navigation.
+```lua
+    mmSetConfigValue("arcball",     "off")
+```
 
 *DEPRECATED:*
 
@@ -1012,6 +1044,7 @@ This variable allows us to create borderless windows filling the complete screen
     - The second two variables are prefixed with `w` and `h` and specify the size of the client area of the window in pixels.
     - The last optional variable `nd` (stands for **n**o **d**ecorations) will remove all window decorations, buttons, and border from the created window. 
     This variable allows us to create borderless windows filling the complete screen for full-screen rendering.
+<<<<<<< HEAD
 >>>>>>> ce3f629ba (docu)
 
 <<<<<<< HEAD
@@ -1030,6 +1063,8 @@ All other configuration options are ***DEPRECATED*** and have currently no effec
     - The second two variables are prefixed with `w` and `h` and specify the size of the client area of the window in pixels.
     - The last optional variable `nd` (stands for **n**o **d**ecorations) will remove all window decorations, buttons, and border from the created window. 
     This variable allows us to create borderless windows filling the complete screen for full-screen rendering.
+=======
+>>>>>>> bdc293c78 (docu)
 ```lua
     mmSetConfigValue("*-window",    "x5y35w1280h720")
 ```
@@ -1059,7 +1094,6 @@ The last settings variable activates (or deactivates) the arcball camera behavio
 >>>>>>> ce3f629ba (docu)
 
 - This variable defines whether the GUI is show or not.
-
 ```lua
     mmSetConfigValue("consolegui",  "on")
 ```
@@ -1067,7 +1101,6 @@ The last settings variable activates (or deactivates) the arcball camera behavio
 *DEPRECATED:*
 
 - Show MegaMol window on top of other windows or not.
-
 ```lua    
     mmSetConfigValue("topmost",     "off")
 ```
@@ -1075,7 +1108,6 @@ The last settings variable activates (or deactivates) the arcball camera behavio
 *DEPRECATED:*
 
 - Show MegMol window in fullscreen or not.
-
 ```lua    
     mmSetConfigValue("fullscreen",  "off")
 ```
@@ -1083,7 +1115,6 @@ The last settings variable activates (or deactivates) the arcball camera behavio
 *DEPRECATED:*
 
 - Enable or disable VSync (vertical synchronization).
-
 ```lua    
     mmSetConfigValue("vsync",       "off")
 ```
@@ -1091,11 +1122,11 @@ The last settings variable activates (or deactivates) the arcball camera behavio
 *DEPRECATED:*
 
 - Defines wether the OpenGL Debug Output (KHR extension)[https://www.khronos.org/opengl/wiki/Debug_Output] is used or not.
-
 ```lua    
     mmSetConfigValue("useKHRdebug", "off")
 ```
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 The last settings variable activates (or deactivates) the *arcball* camera behavior. Set this option to `on` in order to use the *arcball* camera navigation.
 >>>>>>> 94da8d87e (docu)
@@ -1190,6 +1221,8 @@ Execute the MegaMol binary:
 ```
 --> 
 
+=======
+>>>>>>> bdc293c78 (docu)
 This concludes the information on building and the options on how to configure MegaMol.
 Test your installation following the description in the following section.
 =======
@@ -1503,6 +1536,7 @@ All available options provided via the graphical user interface are described se
 
 <!-- ###################################################################### -->
 -----
+<<<<<<< HEAD
 ## MegaMol Graph
 
 In this chapter, we show the operating principle of MegaMol which is required to creating own custom projects for MegaMol.
@@ -1519,6 +1553,15 @@ These two types of slots are connected using objects of *call* classes. These ar
 <!-- ---------------------------------------------------------------------- -->
 <<<<<<< HEAD
 ### Modules, Views and Calls
+=======
+## Test Installation
+
+In order to test the installtion, simply execute the frontend executable. 
+Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your working directory to the MegaMol install directory (default: `../megamol/build/install/bin`). 
+Execute the MegaMol binary:
+
+Windows:
+>>>>>>> bdc293c78 (docu)
 
 The runtime functionality of MegaMol is constructed by *modules* and *calls*. 
 These two types of objects are instantiated at runtime, interconnected and build the *module call graph*. 
@@ -1534,6 +1577,7 @@ The connection endpoints at the modules are *CallerSlots* (outgoing, located on 
 >>>>>>> 4fa438626 (manual update ...)
 #### Views 
 
+<<<<<<< HEAD
 *Views* are one of the two instance types MegaMol can run. They are specified by the corresponding tag in a MegaMol project file (see section [Project Files](#project-files)). When a view is instantiated, a corresponding namespace will be created, and all modules instantiated as part of the view will be created inside this namespace. For example, the project file seen in next section ([Project Files](#project-files)) defines the module data as part of the view dataview. If this view is instantiated by the command line note (note that files might need some path adjustments):
 >>>>>>> 800f17d5c (manual update)
 
@@ -1546,6 +1590,32 @@ The *renderer* calls the data source if new data is available or to provide the 
 Left-most module view of class `View3D_2` represents the rendering content of a window. 
 The center module renderer of class `BoundingBoxRenderer` and `SphererRenderer` are called subsequently by the window using the corresponding call of type `CallRenderer3D_2`. 
 The right modules provide data and additional information for the renderer, namely a color map transfer function and a clipping plane. 
+=======
+Linux:
+
+    $ ./megamol
+
+    If you use additional external libraries (e.g. when using the OSPRay plugin), you have have to run the shell script `./megamol.sh` instead. 
+    This script adds the required library path:
+    ```bash
+        #!/bin/bash
+        #
+        # MegaMol startup script
+        # Copyright 2020, https://megamol.org/
+        #
+
+        BIN_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+        cd "$BIN_DIR"
+
+        LD_LIBRARY_PATH=../lib:$LD_LIBRARY_PATH ./megamol "$@"
+    ```
+
+MegaMol should start and print several messages to the console and an empty rendering window should appear.
+You can eather check the console log messages or the messages printed in the *Log Console* window shown on the bottom of the window.
+The leading number of each line is the log level.
+There should be no error messages (log level **1**). 
+Some warnings (log level **100**) might occur but indicate no failed installation or execution.
+>>>>>>> bdc293c78 (docu)
 
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -1569,6 +1639,7 @@ These are shown as gray boxes in figure [Example Graph](#examplegraph).
 Both *CalleeSlots* and *CallerSlots* specify types of calls they are compatible with. 
 In the case of the above examples of renderings-relates slots, this is the type `CallRender3D`.
 
+<<<<<<< HEAD
 *Calls* should be lightweight. 
 Instead, they are thin interfaces meant for data transport. 
 For example, data to be visualized is loaded by data source modules. 
@@ -1576,6 +1647,9 @@ In [Example Graph](#examplegraph) the module *data* of class *MMPLDDataSource* l
 The data is accessed through a *MultiParticleDataCall*. 
 The call, however, does not copy the data but provides access to the data in terms of memory pointers, and metadata. 
 This avoidance of copy operations is most important and one of the core design ideas of MegaMol.
+=======
+    $ ./megamol ../examples/testspheres_megamol.lua
+>>>>>>> bdc293c78 (docu)
 
 *Parameter slots* are the third type of slots. 
 These are access points to exposed parameters controlling the functionality. 
@@ -1589,6 +1663,7 @@ Views (see section [Views](#views)) and jobs (see section [Jobs](#jobs)).
 The starting command line of the console front-end loads project files (using `-p`) and requests instantiation of views and jobs (using `-i`).
 >>>>>>> 8b2342edf (docu)
 
+<<<<<<< HEAD
 *Example module call graph.*
 =======
 [//]: # (----------------------------------------------------------------------) 
@@ -1597,6 +1672,23 @@ The starting command line of the console front-end loads project files (using `-
 #### Views 
 
 *UPDATE/DEPRECATED*
+=======
+You can also open an empty MegaMol rendering window and load the example project file via the menu.
+
+
+MegaMol should now open a rendering window showing a generated dataset with several colored spheres and the outline of the bounding box. 
+Hitting the `space` key starts and stops the animation playback.
+In the GUI window *Parameters* you can find all available parameters of the running MegaMol instance grouped by the modules.
+For example, you can find the parameter `speed` in the group `inst::view::anim`. 
+With this parameter, you can adjust the playback speed of the animation.
+In the parameter group `anim` of the `view` module you can adjust the animation speed.
+
+
+All further options provided via the graphical user interface are described separately in the readme file of the [GUI plugin](../plugins/gui).
+
+![Test Project](pics/testspheres.png)
+*Screenshot of MegaMol running the test spheres instance.*
+>>>>>>> bdc293c78 (docu)
 
 *Views* are one of the two instance types MegaMol can run. 
 They are specified by the corresponding tag in a MegaMol project file (see section [Project Files](#project-files)). 
