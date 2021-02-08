@@ -291,7 +291,9 @@ The last settings variable activates (or deactivates) the arcball camera behavio
 This concludes the building and configuring of MegaMol.
 Test your installation following the description in the following section.
 
-<!-- ---------------------------------------------------------------------- -->
+
+<!-- ###################################################################### -->
+-----
 ## Test Installation
 
 *REWORK*
@@ -355,7 +357,7 @@ In the parameter group `anim` of the `view` module you can adjust the animation 
 
 *TODO*
 
-A detailed description of the GUI and the configurator can be found in the readme file of the [GUI plugin](plugins/gui#2-configurator).
+A detailed description of the GUI and the configurator can be found in the readme file of the [GUI plugin](../plugins/gui#2-configurator).
 Start project by adding entry module `View3D_2` ...
 
 *TODO/UPDATE*
@@ -591,7 +593,7 @@ The parameter filename specifies the path to the image file to be created. MegaM
 
 *TODO*
 
-See [Cinematic Plugin](plugins/cinematic#usage).
+See [Cinematic Plugin](../plugins/cinematic#usage).
 
 <!-- DEPRECATED 
 MegaMol cannot create video files directly. However, MegaMol can create a sequence of screenshots of a time-dependent data set showing the different points-in-time. Adjust the parameters in the group `inst::screenshooter::anim` in addition to the parameters for simple screenshots ([ScreenShots](#makescreenshot)).
@@ -721,7 +723,8 @@ The input file name and output file name are explicitly specified using the -v a
 To convert from other file formats, for which a corresponding loader does exist, you should be able to adjust this project file.
 --> 
 
-<!-- ---------------------------------------------------------------------- -->
+<!-- ###################################################################### -->
+-----
 ## Reproducibility
 
 MegaMol stores the active project and all parameter settings in the EXIF field of the saved screenshots. 
