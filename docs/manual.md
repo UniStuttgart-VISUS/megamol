@@ -357,7 +357,7 @@ In the parameter group `anim` of the `view` module you can adjust the animation 
 
 *TODO*
 
-A detailed description of the GUI and the configurator can be found in the readme file of the [GUI plugin](../plugins/gui#2-configurator).
+A detailed description of the GUI and the configurator can be found in the readme file of the [GUI plugin](../plugins/gui#configurator).
 Start project by adding entry module `View3D_2` ...
 
 *TODO/UPDATE*
