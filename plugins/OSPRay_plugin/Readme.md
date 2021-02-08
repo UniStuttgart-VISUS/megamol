@@ -1,5 +1,6 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # MegaMol Plugin: OSPRay
 =======
 # OSPRay plugin
@@ -7,6 +8,9 @@
 =======
 # MegaMol Plugin: **OSPRay**
 >>>>>>> aea90c840 (docu)
+=======
+# MegaMol Plugin: OSPRay
+>>>>>>> 58a641e06 (file include test)
 
 [OSPRay](http://ospray.org) is a CPU ray tracing engine and is one project of the Software Defined Visualization (SDVis) open source initiative of Intel (http://sdvis.org/).
 It builds on top of the high-performance ray tracing kernels of [Embree](https://embree.github.io/) and the [ISPC](https://ispc.github.io/) SPMD compiler.

@@ -72,8 +72,13 @@ See the [manual](docs/manual.md) for detailed instructions on how to build and u
 
 ## License
 
+<<<<<<< HEAD
 See the [license](LICENSE) file.
 >>>>>>> 55301faa9 (docu ...)
+=======
+See the [license](LICENSE) file:
+![License](LICENSE)
+>>>>>>> 58a641e06 (file include test)
 
 
 ## Citing MegaMol

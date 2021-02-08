@@ -1,8 +1,12 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # MegaMol Plugin: Cinematic
 =======
 # MegaMol Plugin: **Cinematic**
 >>>>>>> aea90c840 (docu)
+=======
+# MegaMol Plugin: Cinematic
+>>>>>>> 58a641e06 (file include test)
 
 This plugin allows the video rendering (separate file per frame) of any rendering output in MegaMol.
 By defining fixed keyframes for desired camera positions and specific animation times, arbitrary tracking shots can be created.
