@@ -10,9 +10,9 @@ See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol
 
 <!-- TOC -->
 ## Contents
-- [1) Graphical User Interface (GUI)](#1-graphical-user-interface-gui) 
-    - [[1] Main Menu](#1-main-menu) 
-    - [[2] Configurator](#2-configurator) 
+- [Graphical User Interface (GUI)](#graphical-user-interface-gui) 
+    - [Main Menu](#main-menu) 
+    - [Configurator](#configurator) 
         - [Main Menu](#main-menu) 
         - [*Module Stock List* Sidebar](#module-stock-list-sidebar) 
         - [*Module Parameters* Sidebar](#module-parameters-sidebar) 
@@ -21,22 +21,22 @@ See bug and feature tracker [#539](https://github.com/UniStuttgart-VISUS/megamol
             - [Graph](#graph) 
             - [Module Groups](#module-groups) 
             - [Module Group Interface Slots](#module-group-interface-slots) 
-- [2) Modules](#2-modules) 
-    - [[1] GUIView](#1-guiview) 
-    - [[2] OverlayRenderer](#2-overlayrenderer) 
+- [Modules](#modules) 
+    - [GUIView](#guiview) 
+    - [OverlayRenderer](#overlayrenderer) 
         - [Parameters](#parameters) 
-- [3) Information for Developers](#3-information-for-developers) 
-    - [[1] New Parameter Widgets](#1-new-parameter-widgets) 
+- [Information for Developers](#information-for-developers) 
+    - [New Parameter Widgets](#new-parameter-widgets) 
         - [How to add a new parameter widget](#how-to-add-a-new-parameter-widget) 
         - [How to add a new parameter group widget](#how-to-add-a-new-parameter-group-widget) 
-    - [[2] Default GUI State ](#2-default-gui-state) 
-    - [[3] Graph Data Structure](#3-graph-data-structure) 
-    - [[4] Class Dependencies](#4-class-dependencies) 
+    - [Default GUI State ](#default-gui-state) 
+    - [Graph Data Structure](#graph-data-structure) 
+    - [Class Dependencies](#class-dependencies) 
 <!-- /TOC -->
 
 ---
 
-## 1) Graphical User Interface (GUI)
+## Graphical User Interface (GUI)
 
 The GUI of MegaMol is based on [Dear ImGui](https://github.com/ocornut/imgui).
 
@@ -44,7 +44,7 @@ The GUI of MegaMol is based on [Dear ImGui](https://github.com/ocornut/imgui).
 * Hotkeys use the key mapping of the US keyboard layout. Other keyboard layouts are currently not considered or recognized. Consider possible transposed `z` and `y` which are used in `undo` and `redo` hotkeys on text input.
 * Parameter values in the lua command `mmSetParamValue` must have the value enclosed in `[=[`and `]=]` delimiters. String delimiters `"` for parameter values are not supported any more.
 
-### [1] Main Menu
+### Main Menu
 
 The main menu provides the following options:
 (Assigned hotkeys are given in brackets.)
@@ -74,7 +74,7 @@ The main menu provides the following options:
 * `Help`
     * `About`: Some information and links concerning the currently running MegaMol.
 
-### [2] Configurator
+### Configurator
 
 The project configurator is part of the GUI and can be opened via the main menu: `Windows`/`Configurator`.  
 
@@ -185,15 +185,15 @@ Interface slots are stored in project files as part of the configurators state p
 
 ---
 
-## 2) Modules
+## Modules
 
 Additional modules provided by the GUI plugin:
 
-### [1] GUIView
+### GUIView
 
 The GUIView module is deprecated. It was required for using the GUI with the former MegaMol frontend provided by mmconsole.exe / mmconsole.sh.
 
-### [2] OverlayRenderer
+### OverlayRenderer
 
 The `OverlayRenderer` is a rendering module which provides overlay rendering like textures, text, parameter values and transport control icons. Prepend the `OverlayRenderer` module any other existing 3D renderer module you want to have an overlay for. 
 
@@ -222,9 +222,9 @@ The `OverlayRenderer` is a rendering module which provides overlay rendering lik
 
 ---
 
-## 3) Information for Developers
+## Information for Developers
 
-### [1] New Parameter Widgets
+### New Parameter Widgets
 
 Parameter widgets can be defined for the `local` or the `global` scope. The widgets of the local scope are shown inside the parameter list in the `All Parameters` window. The global scope of a parameter widget can contain arbitrary ImGui code.
 There are widgets for the basic parameter types defined in `gui/src/graph/Parameter.h`and there are group widgets bundling parameters of the same namespace in `gui/src/graph/ParameterGroups.h`. The parameters namespace is a prefix in the parameters, name delimited with `::`. The presentation of a parameter (group) can be changed by switching to `expert` mode in the `All Parameters` window an clicking on the 'circle button'.
@@ -253,7 +253,7 @@ The function should be named like: `bool check_group_widget_<NEW_WIDGET_NAME>(..
 * Add a new group widget data set of the type `GroupWidgetData` in the ctor and register above functions as callbacks. 
 * Identification of parameter widget groups. Currently by name of namespace and name and type of expected parameters.
 
-### [2] Default GUI State 
+### Default GUI State 
 
 This is the default GUI state stored as JSON string in the lua project file:
 
@@ -261,10 +261,10 @@ This is the default GUI state stored as JSON string in the lua project file:
 -- <GUI_STATE_JSON>{"ConfiguratorState":{"module_list_sidebar_width":250.0,"show_module_list_sidebar":true},"GUIState":{"font_file_name":"","font_size":13,"menu_visible":true,"scale":1.0,"style":2},"WindowConfigurations":{"Configurator":{"log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":6,"win_collapsed":false,"win_flags":1032,"win_hotkey":[300,0],"win_position":[0.0,0.0],"win_reset_position":[0.0,0.0],"win_reset_size":[1440.0,810.0],"win_show":false,"win_size":[1440.0,810.0]},"Log Console":{"log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":7,"win_collapsed":false,"win_flags":3072,"win_hotkey":[298,0],"win_position":[0.0,634.0],"win_reset_position":[0.0,634.0],"win_reset_size":[1440.0,176.0],"win_show":false,"win_size":[1440.0,176.0]},"Parameters":{"log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":1,"win_collapsed":false,"win_flags":8,"win_hotkey":[299,0],"win_position":[0.0,18.0],"win_reset_position":[0.0,0.0],"win_reset_size":[400.0,500.0],"win_show":true,"win_size":[400.0,500.0]},"Performance Metrics":{"log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":3,"win_collapsed":false,"win_flags":65,"win_hotkey":[296,0],"win_position":[720.0,0.0],"win_reset_position":[720.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]},"Transfer Function Editor":{"log_force_open":true,"log_level":4294967295,"ms_max_history_count":20,"ms_mode":0,"ms_refresh_rate":2.0,"ms_show_options":false,"param_extended_mode":false,"param_module_filter":0,"param_modules_list":[],"param_show_hotkeys":false,"tfe_active_param":"","tfe_view_minimized":false,"tfe_view_vertical":false,"win_callback":5,"win_collapsed":false,"win_flags":64,"win_hotkey":[297,0],"win_position":[400.0,0.0],"win_reset_position":[400.0,0.0],"win_reset_size":[0.0,0.0],"win_show":false,"win_size":[0.0,0.0]}}}</GUI_STATE_JSON>
 ```
 
-### [3] Graph Data Structure
+### Graph Data Structure
 
 ![gui graph structure](graph_structure.png)
 
-### [4] Class Dependencies
+### Class Dependencies
 
 ![gui plugin class dependencies](class_dependencies.png)
