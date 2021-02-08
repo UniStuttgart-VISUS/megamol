@@ -59,7 +59,7 @@ While MegaMol might work on further platforms, the development team will current
 <!-- ---------------------------------------------------------------------- -->
 ### Building from Source
 
-It is recommended to use the latest [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) version of the source code.
+It is recommended to use the latest [release 1.3](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) version of the source code.
 All bleeding edge features are available in the [main branch](https://github.com/UniStuttgart-VISUS/megamol/tree/master).
 
 **Note**: 
@@ -88,9 +88,8 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 <!-- ---------------------------------------------------------------------- -->
 #### Linux (Ubuntu)
 
-Since the full support of some C++17 functionality is required (e.g. std::filesystem), a `gcc` version equal or greater than **8** is required (with `CMAKE_CXX_FLAGS` appended by `--std=c++17`).
-
-Latest tested version:
+Since the full support of some C++17 functionality is required (e.g. *std::filesystem*), a `gcc` version equal or greater than **8** is required (with `CMAKE_CXX_FLAGS` appended by `--std=c++17`). 
+**Latest tested version:**
 
     $ cat /proc/version
     Linux version 5.8.0-41-generic (buildd@lgw01-amd64-003) (gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0, GNU ld (GNU Binutils for Ubuntu) 2.34) #46~20.04.1-Ubuntu SMP Mon Jan 18 17:52:23 UTC 2021
@@ -99,13 +98,19 @@ Latest tested version:
 
     `$ sudo apt install cmake-curses-gui git libgl1-mesa-dev libncurses5-dev uuid-dev libexpat-dev libunwind-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglu1-mesa-dev`
 
-- First, download the software package from GitHub:
+- First, download the source code from GitHub:
 
-    `$ mkdir megamol; git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/`
+    `$ mkdir megamol`
+    `$ git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/`
+    `$ cd megamol/`
+
+- Checkout the lastest release:
+
+    `$ git checkout tags/v1.3 -b latest_release`
 
 - Create a build directory and switch to it:
 
-    `$ cd megamol; mkdir build; cd build`
+    `$ mkdir build; cd build`
 
 - Check for required dependencies:
     
