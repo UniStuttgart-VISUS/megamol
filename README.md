@@ -39,6 +39,7 @@ See the [manual](docs/manual.md) for more detailed isntructions.
 
         $ ./megamol.sh -p ../examples/testspheres.lua
 
+<<<<<<< HEAD
 >>>>>>> ba7df3ade (manual update)
 
 See the [manual](docs/manual.md) for detailed instructions on how to build and use MegaMol.
@@ -59,11 +60,28 @@ See the [manual](docs/manual.md) for detailed instructions.
 ## Changelog
 ​See [changelog](https://github.com/UniStuttgart-VISUS/megamol/wiki/Changelog) for newly available features in the current version of MegaMol. 
 >>>>>>> 800f17d5c (manual update)
+=======
+## Manual
+
+See the [manual](docs/manual.md) for detailed instructions on how to build and use MegaMol.
+
+
+## Changelog
+
+​See the [changelog](https://github.com/UniStuttgart-VISUS/megamol/wiki/Changelog) for newly available features in the current version of MegaMol. 
+
+## License
+
+See the [license](LICENSE) file.
+>>>>>>> 55301faa9 (docu ...)
 
 
 ## Citing MegaMol
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 55301faa9 (docu ...)
 Please use one of the following methods to reference the MegaMol project.
 
 =======

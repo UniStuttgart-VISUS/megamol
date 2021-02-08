@@ -9,8 +9,11 @@
 - [Overview](#overview)
 =======
 - [Overview](#overview)
+<<<<<<< HEAD
     - [License](#license)
 >>>>>>> d6e034ef9 (docu toc fix)
+=======
+>>>>>>> 55301faa9 (docu ...)
 - [Installation and Setup](#installation-and-setup)
     - [Building from Source](#building-from-source)
         - [Microsoft Windows](#microsoft-windows)
@@ -124,6 +127,7 @@ Today, it is governed by a number of teams at the TU Dresden and the University 
 
 The goal of the project is to provide a software base for visualization research and to provide a stable environment to deploy newest visualization prototypes to application domain researchers. MegaMol is not a visualization tool. MegaMol is a platform for visualization research.
 <<<<<<< HEAD
+<<<<<<< HEAD
 Visit the project [website](https://megamol.org/ "MegaMol Homepage") for downloads and more information.
 
 <<<<<<< HEAD
@@ -153,6 +157,9 @@ provided that the following conditions are met:
 - Neither the name of the MegaMol Team, TU Dresden, University of Stuttgart, nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE MEGAMOL TEAM "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE MEGAMOL TEAM BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+=======
+Visit the project [website](https://megamol.org/ "MegaMol Homepage") for downloads and more information.
+>>>>>>> 55301faa9 (docu ...)
 
 
 <<<<<<< HEAD
@@ -200,6 +207,7 @@ While MegaMol might work on further platforms, the development team will current
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 It is recommended to use the latest [release 1.3](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) version of the source code.
 All bleeding edge features are available in the current [main branch](https://github.com/UniStuttgart-VISUS/megamol/tree/master).
 =======
@@ -219,6 +227,10 @@ See the plugins' [readme](https://github.com/UniStuttgart-VISUS/megamol/blob/mas
 <!-- ---------------------------------------------------------------------- -->
 #### Microsoft Windows
 >>>>>>> 800f17d5c (manual update)
+=======
+It is recommended to use the latest [release](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) version of the source code.
+All bleeding edge features are available in the [main branch](https://github.com/UniStuttgart-VISUS/megamol/tree/master).
+>>>>>>> 55301faa9 (docu ...)
 
 **Note**: 
 The *OSPRay plugin* is currently disabled by default. 
