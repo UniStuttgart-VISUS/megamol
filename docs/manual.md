@@ -235,8 +235,9 @@ The *Add...Dir* commands set the paths for the respective resources.
 <!-- ---------------------------------------------------------------------- -->
 #### Plugins
 
-Since switched to static linking of plugin libraries into the MegaMol binary, the configuration of *Plugin Loader Info* is no longer required.
+Since switched to static linking of plugin libraries into the MegaMol binary, the configuration of `mmPluginLoaderInfo` is no longer required.
 
+<!--
 *DEPRECATED:*
 
 Extend the configuration if you introduce new plugins into your installation. 
@@ -255,6 +256,7 @@ To register a shader directory, add a corresponding tag to the configuration fil
 ```lua
     mmPluginLoaderInfo(basePath .. "bin", "*.mmplg", "include")
 ```
+-->
 
 <!-- ---------------------------------------------------------------------- -->
 #### Global Settings
@@ -262,14 +264,17 @@ To register a shader directory, add a corresponding tag to the configuration fil
 The configuration file also specifies global settings variables which can modify the behavior of different modules.
 (The configuration file is only read and interpreted by the MegaMol `core`.)
 
-- This settings variable activates (or deactivates) the *arcball* camera behavior. Set this option to `on` in order to use the *arcball* camera navigation.
+- The following settings variable activates (or deactivates) the *arcball* camera behavior. Set this option to `on` in order to use the *arcball* camera navigation.
 ```lua
     mmSetConfigValue("arcball",     "off")
 ```
 
+All other configuration options are *DEPRECATED*!
+
+<!--
 *DEPRECATED:*
 
-- For example, in line 14 the variable `*-window` is set. 
+- In line 14 the variable `*-window` is set. 
     This variable specifies the default position and size for all rendering windows MegaMol will create. 
     The asterisk represents any window name. 
     If you set a variable with a specific name, windows with exactly this name will respect the settings variable. 
@@ -317,6 +322,7 @@ The configuration file also specifies global settings variables which can modify
 ```lua    
     mmSetConfigValue("useKHRdebug", "off")
 ```
+--> 
 
 This concludes the information on building and the options on how to configure MegaMol.
 Test your installation following the description in the following section.
@@ -330,13 +336,14 @@ In order to test the installtion, simply execute the frontend executable.
 Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your working directory to the MegaMol install directory (default: `../megamol/build/install/bin`). 
 Execute the MegaMol binary:
 
-Windows:
+**Windows:**
 
     > megamol.exe
 
-Linux:
+**Linux:**
 
     $ ./megamol
+
 
     If you use additional external libraries (e.g. when using the OSPRay plugin), you have have to run the shell script `./megamol.sh` instead. 
     This script adds the required library path:
@@ -357,7 +364,7 @@ MegaMol should start and print several messages to the console and an empty rend
 You can eather check the console log messages or the messages printed in the *Log Console* window shown on the bottom of the window.
 The leading number of each line is the log level.
 There should be no error messages (log level **1**). 
-Some warnings (log level **100**) might occur but indicate no failed installation or execution.
+Some warnings (log level **100**) might occur but are *normal* and indicate no failed installation or execution.
 
 <!-- ---------------------------------------------------------------------- -->
 ### Examples
@@ -368,11 +375,11 @@ For a better test, you should invoke MegaMol loading an example project script r
 Then you can be sure that the graphics drivers, graphics libraries, and shader codes are correctly found and are working. 
 To do this, try: 
 
-Linux: 
+**Linux:**
 
     $ ./megamol ../examples/testspheres_megamol.lua
 
-Windows: 
+**Windows:** 
 
     > megamol.exe ..\examples\testspheres_megamol.lua
 
