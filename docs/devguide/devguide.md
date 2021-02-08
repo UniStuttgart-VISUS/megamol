@@ -352,5 +352,9 @@ See separate [developer information for GUI plugin](../../plugins/gui#informatio
 =======
 ## Parameter Widgets
 
+<<<<<<< HEAD
 See [developer information in GUI plugin](gui#3-information-for-developers).
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
+=======
+See [developer information in GUI plugin](../plugins/gui#3-information-for-developers).
+>>>>>>> 83aa4eadb (docu)

@@ -956,6 +956,7 @@ The last settings variable activates (or deactivates) the arcball camera behavio
 This concludes the building and configuring of MegaMol.
 Test your installation following the description in the following section.
 
+<<<<<<< HEAD
 <!-- ---------------------------------------------------------------------- -->
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -966,6 +967,11 @@ Test your installation following the description in the following section.
 ### Test Installation
 >>>>>>> 9f08ae8ac (updted cineamtic and ospray docu)
 =======
+=======
+
+<!-- ###################################################################### -->
+-----
+>>>>>>> 83aa4eadb (docu)
 ## Test Installation
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
@@ -1180,6 +1186,7 @@ In the parameter group `anim` of the `view` module you can adjust the animation 
 
 *TODO*
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 A detailed description of the GUI and the configurator can be found in the readme file of the [GUI plugin](https://github.com/UniStuttgart-VISUS/megamol/blob/master/plugins/gui/README.md).
 
@@ -1434,6 +1441,9 @@ The view description *TestSpheres* used in section [Test](#tests) is one example
 >>>>>>> 4fa438626 (manual update ...)
 =======
 A detailed description of the GUI and the configurator can be found in the readme file of the [GUI plugin](plugins/gui#2-configurator).
+=======
+A detailed description of the GUI and the configurator can be found in the readme file of the [GUI plugin](../plugins/gui#2-configurator).
+>>>>>>> 83aa4eadb (docu)
 Start project by adding entry module `View3D_2` ...
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
@@ -1951,7 +1961,7 @@ Adjust the parameters in the group `::screenshooter::anim` in addition to the pa
 =======
 *TODO*
 
-See [Cinematic Plugin](plugins/cinematic#usage).
+See [Cinematic Plugin](../plugins/cinematic#usage).
 
 <!-- DEPRECATED 
 MegaMol cannot create video files directly. However, MegaMol can create a sequence of screenshots of a time-dependent data set showing the different points-in-time. Adjust the parameters in the group `inst::screenshooter::anim` in addition to the parameters for simple screenshots ([ScreenShots](#makescreenshot)).
@@ -2106,6 +2116,7 @@ To convert from other file formats, for which a corresponding loader does exist,
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 --> 
 =======
 <!-- ###################################################################### -->
@@ -2118,6 +2129,10 @@ To convert from other file formats, for which a corresponding loader does exist,
 =======
 =======
 <!-- ---------------------------------------------------------------------- -->
+=======
+<!-- ###################################################################### -->
+-----
+>>>>>>> 83aa4eadb (docu)
 ## Reproducibility
 
 MegaMol stores the active project and all parameter settings in the EXIF field of the saved screenshots. 
