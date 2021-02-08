@@ -15,8 +15,12 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 =======
     - [Add own plugin using the template](#add-own-plugin-using-the-template) 
 - [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
+<<<<<<< HEAD
     - [Recipe](#) 
 >>>>>>> 7056d6a53 (docu)
+=======
+    - [Recipe](#recipe) 
+>>>>>>> ce3f629ba (docu)
     - [Usage: ```DATACallRead```](#usage-datacallread) 
     - [Usage: ```DataCallWrite```](#usage-datacallwrite) 
 - [Synchronized Selection across Modules](#synchronized-selection-across-modules)
@@ -369,6 +373,7 @@ Additionally, information about the libraries can be queried with the command ``
 ## GUI Parameter Widgets
 
 See separate [developer information for GUI plugin](../../plugins/gui#information-for-developers).
+<<<<<<< HEAD
 =======
 ## Parameter Widgets
 =======
@@ -389,3 +394,5 @@ See [developer information in GUI plugin](../plugins/gui#information-for-develop
 =======
 See [developer information in GUI plugin](../../plugins/gui#information-for-developers).
 >>>>>>> 9712fbc5e (docu)
+=======
+>>>>>>> ce3f629ba (docu)
