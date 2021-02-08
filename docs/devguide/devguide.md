@@ -6,15 +6,38 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 
 ## Contents
 
-- [MegaMol Developer Guide](#megamol-developer-guide)
-    - [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
-    - [Synchronized Selection across Modules](#synchronized-selection-across-modules)
-    - [Graph Manipulation](#graph-manipulation)
-    - [Build System](#build-system)
-- [License](#license)
+- [Create new Plugin](#create-new-plugin)
+- [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
+- [Synchronized Selection across Modules](#synchronized-selection-across-modules)
+- [Graph Manipulation](#graph-manipulation)
+- [Build System](#build-system)
+- [Parameter Widgets](#parameter-widgets)
 
 <!-- /TOC -->
 
+
+
+<!-- ###################################################################### -->
+-----
+## Create new Plugin
+
+***UPDATE required***
+
+### Add own plugin using the template
+    1. Copy the template folder `../megamol/plugins/template`.
+    2. Rename the copied folder to the intended plugin name.
+    3. Execute the `instawiz.pl` script inside the new folder.
+        1. The script detects the plugin name.
+        2. Autogenerate the GUID.
+    4. Remove `instawiz.pl`
+    5. Add libraries/dependencies to `CMakeLists.txt` (optional).
+    6. Implement the content of your plugin.
+    7. Write a `Readme.md` for your plugin (mandatory).
+    8. Add the folder to your local git.
+
+
+<!-- ###################################################################### -->
+-----
 ## Bi-Directional Communication across Modules
 
 Bi-Directional Communication, while in principle enabled on any Call in MegaMol, has severe implications when data can be changed at an arbitrary end and multiple Modules work on the data that is passed around. The current state of knowledge is described here and should be used for any and all Calls moving forward.
@@ -54,6 +77,9 @@ A module with slots for both directions by convention should first execute the r
   - **ALWAYS** set the data in the call, supplying your version.
   - issue the Call: ```(*call)(DATACallRead::CallGetData)``` or your specialized version
 
+
+<!-- ###################################################################### -->
+-----
 ## Synchronized Selection across Modules
 
 You can and should use one of the ```FlagStorage``` variants to handle selection. These modules provide an array of ```uint32_t``` that is implicitly index-synchronized (think row, record, item) to the data available to a renderer. Indices are accumulated across primitives and primitive groups, so if you employ these, you need to take care yourself that you always handle Sum_Items flags and apply proper **offsets** across, e.g., particle lists.
@@ -68,6 +94,9 @@ The flags here are stored uniquely, resembling a unique pointer or Rust-like mem
 
 This FlagStorage variant relies on a shader storage buffer and does not move any data around. It is implicitly synchronized by single-threaded execution in OpenGL. You still need to synchronize with the host if you want to download the data though. It still keeps track of proper versions so you can detect and act on changes, for example when synchronizing a FlagStorage and a FlagStorage_GL.
 
+
+<!-- ###################################################################### -->
+-----
 ## Graph Manipulation
 
 There are appropriate methods in the ```megamol::core::CoreInstance``` to traverse, search, and manipulate the graph.
@@ -108,6 +137,9 @@ It causes the graph updater to stop at the indicated event and delay further gra
 |paramSetRequestsFlushIndices|
 |groupParamSetRequestsFlushIndices|
 
+
+<!-- ###################################################################### -->
+-----
 ## Build System
 
 For building MegaMol, CMake is used. For developers, two aspects are of importance: adding new plugins, and [adding and using external dependencies](#external-dependencies).
@@ -259,16 +291,9 @@ Additionally, information about the libraries can be queried with the command ``
 | SHARED         | Indicates that the library was built as a dynamic library if ```TRUE```, or a static library otherwise. |
 | BUILD_TYPE     | Build type of the output library on single-configuration systems. |
 
-# License
 
-MegaMol is freely and publicly available as open source following the terms of the BSD License.
-Copyright (c) 2015, MegaMol Team TU Dresden, Germany Visualization Research Center, University of Stuttgart (VISUS), Germany
-Alle Rechte vorbehalten.
-All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, are permitted
-provided that the following conditions are met:
-- Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-- Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-- Neither the name of the MegaMol Team, TU Dresden, University of Stuttgart, nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+<!-- ###################################################################### -->
+-----
+## Parameter Widgets
 
-THIS SOFTWARE IS PROVIDED BY THE MEGAMOL TEAM "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE MEGAMOL TEAM BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+See [developer information in GUI plugin](gui#3-information-for-developers).
