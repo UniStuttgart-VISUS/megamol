@@ -176,7 +176,7 @@ The following commandline arguments are available:
 <!-- ---------------------------------------------------------------------- -->
 ### Configuration File
 
-**Note:** Some tagged configuration settings are ***DEPRECATED*** and ignored!
+**Note:** Some tagged configuration settings are *DEPRECATED* and ignored!
 
 After successfully compiling and installing MegaMol, you should have all executable files inside your `bin` directory (default: `../megamol/build/install/bin`). 
 In the `bin` directory, you can find the default configuration file `megamolconfig.lua`:
@@ -255,9 +255,7 @@ The *Add...Dir* commands set the paths for the respective resources.
 
 Since switched to static linking of plugin libraries into the MegaMol binary, the configuration of *Plugin Loader Info* is no longer required.
 
-***DEPRECATED***
-
-*Mentioned only for legacy purposes:*
+*DEPRECATED:*
 
 Extend the configuration if you introduce new plugins into your installation. 
 Although there are different ways to specify the plugins to be loaded, the tags in the example configuration file are the most secure way. 
@@ -283,64 +281,64 @@ To register a shader directory, add a corresponding tag to the configuration fil
 The configuration file also specifies global settings variables which can modify the behavior of different modules.
 (The configuration file is only read and interpreted by the MegaMol `core`.)
 
-***DEPRECATED***
+*DEPRECATED:*
 
-For example, in line 14 the variable `*-window` is set. 
-This variable specifies the default position and size for all rendering windows MegaMol will create. 
-The asterisk represents any window name. 
-If you set a variable with a specific name, windows with exactly this name will respect the settings variable. 
-For example, `test-window` will specify the value for the window created by the view instance test.
-The value itself contains five variables:
-- The first two variables are prefixed with `x` and `y` and specify the location of the window in screen pixel coordinates.
-- The second two variables are prefixed with `w` and `h` and specify the size of the client area of the window in pixels.
-- The last optional variable `nd` (stands for **n**o **d**ecorations) will remove all window decorations, buttons, and border from the created window. 
-This variable allows us to create borderless windows filling the complete screen for full-screen rendering.
+- For example, in line 14 the variable `*-window` is set. 
+    This variable specifies the default position and size for all rendering windows MegaMol will create. 
+    The asterisk represents any window name. 
+    If you set a variable with a specific name, windows with exactly this name will respect the settings variable. 
+    For example, `test-window` will specify the value for the window created by the view instance test.
+    The value itself contains five variables:
+    - The first two variables are prefixed with `x` and `y` and specify the location of the window in screen pixel coordinates.
+    - The second two variables are prefixed with `w` and `h` and specify the size of the client area of the window in pixels.
+    - The last optional variable `nd` (stands for **n**o **d**ecorations) will remove all window decorations, buttons, and border from the created window. 
+    This variable allows us to create borderless windows filling the complete screen for full-screen rendering.
 
 ```lua
     mmSetConfigValue("*-window",    "x5y35w1280h720")
 ```
 
-***DEPRECATED***
+*DEPRECATED:*
 
-This variable defines whether the GUI is show or not.
+- This variable defines whether the GUI is show or not.
 
 ```lua
     mmSetConfigValue("consolegui",  "on")
 ```
 
-***DEPRECATED***
+*DEPRECATED:*
 
-Show MegaMol window on top of other windows or not.
+- Show MegaMol window on top of other windows or not.
 
 ```lua    
     mmSetConfigValue("topmost",     "off")
 ```
 
-***DEPRECATED***
+*DEPRECATED:*
 
-Show MegMol window in fullscreen or not.
+- Show MegMol window in fullscreen or not.
 
 ```lua    
     mmSetConfigValue("fullscreen",  "off")
 ```
 
-***DEPRECATED***
+*DEPRECATED:*
 
-Enable or disable VSync (vertical synchronization).
+- Enable or disable VSync (vertical synchronization).
 
 ```lua    
     mmSetConfigValue("vsync",       "off")
 ```
 
-***DEPRECATED***
+*DEPRECATED:*
 
-Defines wether the OpenGL Debug Output (KHR extension)[https://www.khronos.org/opengl/wiki/Debug_Output] is used or not.
+- Defines wether the OpenGL Debug Output (KHR extension)[https://www.khronos.org/opengl/wiki/Debug_Output] is used or not.
 
 ```lua    
     mmSetConfigValue("useKHRdebug", "off")
 ```
 
-The last settings variable activates (or deactivates) the *arcball* camera behavior. Set this option to `on` in order to use the *arcball* camera navigation.
+- The last settings variable activates (or deactivates) the *arcball* camera behavior. Set this option to `on` in order to use the *arcball* camera navigation.
 
 ```lua
     mmSetConfigValue("arcball",     "off")
