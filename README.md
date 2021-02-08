@@ -20,7 +20,8 @@ See the [manual](docs/manual.md) for detailed instructions on how to build and u
 
 ## License
 
-See the [license](LICENSE) file.
+See the [license](LICENSE) file:
+![License](LICENSE)
 
 
 ## Citing MegaMol
