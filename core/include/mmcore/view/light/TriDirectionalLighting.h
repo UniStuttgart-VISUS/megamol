@@ -12,6 +12,13 @@ namespace core {
     namespace view {
         namespace light {
 
+            struct TriDirectionalLightType : public BaseLightType {
+                std::array<float, 3> key_direction;
+                std::array<float, 3> fill_direction;
+                std::array<float, 3> back_direction;
+                bool in_view_space;
+            };
+
             class MEGAMOLCORE_API TriDirectionalLighting : public AbstractLight {
             public:
                 /**
@@ -40,6 +47,11 @@ namespace core {
                 static bool IsAvailable(void) {
                     return true;
                 }
+
+                /**
+                 * Add the lightsource of this module to a given collection
+                 */
+                void addLight(LightCollection& light_collection);
 
                 /** Ctor. */
                 TriDirectionalLighting(void);

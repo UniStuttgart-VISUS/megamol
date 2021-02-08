@@ -10,9 +10,9 @@
 
 #include <memory>
 
-#include "compositing/compositing_gl.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
+#include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
@@ -22,7 +22,7 @@
 namespace megamol {
 namespace compositing {
 
-    class COMPOSITING_GL_API NormalFromDepth : public core::Module {
+    class NormalFromDepth : public core::Module {
     public:
         /**
          * Answer the name of this module.
