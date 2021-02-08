@@ -1188,6 +1188,7 @@ In the parameter group `anim` of the `view` module you can adjust the animation 
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 A detailed description of the GUI and the configurator can be found in the readme file of the [GUI plugin](https://github.com/UniStuttgart-VISUS/megamol/blob/master/plugins/gui/README.md).
 
 
@@ -1444,6 +1445,9 @@ A detailed description of the GUI and the configurator can be found in the readm
 =======
 A detailed description of the GUI and the configurator can be found in the readme file of the [GUI plugin](../plugins/gui#2-configurator).
 >>>>>>> 83aa4eadb (docu)
+=======
+A detailed description of the GUI and the configurator can be found in the readme file of the [GUI plugin](../plugins/gui#configurator).
+>>>>>>> 98308507c (docu)
 Start project by adding entry module `View3D_2` ...
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
 
