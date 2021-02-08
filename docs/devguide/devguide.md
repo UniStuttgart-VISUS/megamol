@@ -42,6 +42,7 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 - Add section describing remote console usage
 
 -->
+<<<<<<< HEAD
 =======
 - [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
 - [Synchronized Selection across Modules](#synchronized-selection-across-modules)
@@ -53,6 +54,8 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 =======
 - [GUI Parameter Widgets](#gui-parameter-widgets)
 >>>>>>> aea90c840 (docu)
+=======
+>>>>>>> cdd0bbbc9 (docu)
 
 <!-- /TOC -->
 

@@ -108,8 +108,8 @@
 =======
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
     - [View Interaction](#view-interaction) 
-    - [Making High-Resolution Screenshots](#making-high-resolution-screenshots) 
-    - [Making Simple Videos](#making-simple-videos) 
+- [Making High-Resolution Screenshots](#making-high-resolution-screenshots) 
+- [Making Simple Videos](#making-simple-videos) 
 <!-- 
 - [Jobs](#jobs)
     - [Job Instance](#job-instance) 
@@ -1788,6 +1788,7 @@ When a view is instantiated, a corresponding namespace will be created, and all 
 For example, the project file seen in next section ([Project Files](#project-files)) defines the module data as part of the view dataview. 
 If this view is instantiated by the command line note (note that files might need some path adjustments):
 
+<<<<<<< HEAD
     $ ./megamol.sh -p ../docs/samples/projects/pdbcartoonview.mmprj -i pdbcartoonview pv --paramfile ../docs/samples/projects/pdbmolview02.param -v ::pdbdata::pdbFilename ../docs/samples/sampledata/1m40_sim.pdb -v ::pdbdata::xtcFilename ../docs/samples/sampledata/1m40_100frames.xtc
 
 Then the module will be created with the full name `::inst::data`. 
@@ -2020,12 +2021,13 @@ The corresponding parameter button in the GUI also shows the associated hotkey.
 =======
 --> 
 
+=======
+>>>>>>> cdd0bbbc9 (docu)
 <!-- ###################################################################### -->
 -----
 ## MegaMol Graph
 
-In this chapter, we discuss the principle usage of the prepared project files for data set viewing. 
-Some predefined project script files are available in the `examples` directory, which is installed next to the `bin` directory.
+In this chapter, we show the operating principle of MegaMol which is required to creating own custom projects for MegaMol.
 
 <!-- ---------------------------------------------------------------------- -->
 ### Modules, Views and Calls
@@ -2131,6 +2133,7 @@ Most parameters can be found in the sub-namespace `viewKey` inside the view name
 The corresponding parameter button in the GUI also shows the associated hotkey.
 
 ***UPDATE REQUIRED***:  
+<!-- TODO -->
 
 Some useful controls:
 - Hitting *Home* (aka *Pos1*) is associated with the button *resetView*. This function resets the view to default.
@@ -2195,8 +2198,44 @@ MegaMol has special functions to create high-resolution screen shoots of any ren
 =======
 >>>>>>> ee6adca4d (docu)
 
-<!-- ---------------------------------------------------------------------- -->
-### Making High-Resolution Screenshots
+
+<!-- ###################################################################### -->
+-----
+## Project Files
+
+Project files are [`lua`](https://www.lua.org/) scripts using special custom functions to define any module graph for MegaMol.
+Some predefined example project script files are available in the `examples` directory, which is installed next to the `bin` directory.
+Here you can see the example project script `..\examples\testspheres_megamol.lua`:
+
+```lua
+    mmCreateView("testspheres", "View3D_2","::view")
+
+    mmCreateModule("BoundingBoxRenderer","::bbox")
+    mmCreateModule("DistantLight","::distantlight")
+    mmCreateModule("SphereRenderer","::renderer")
+    mmCreateModule("TestSpheresDataSource", "::data")
+
+    mmSetParamValue("::renderer::renderMode", [=[Simple]=])
+
+    mmCreateCall("CallRender3D_2", "::view::rendering", "::bbox::rendering")
+    mmCreateCall("CallRender3D_2","::bbox::chainRendering","::renderer::rendering")
+    mmCreateCall("MultiParticleDataCall", "::renderer::getData", "::data::getData")
+    mmCreateCall("CallLight","::renderer::lights","::distantlight::deployLightSlot")
+```
+
+Project files can easily be created using the built in *Configurator*.
+It can be opened via the menu `Windows / Configurator`.
+You can either edit the currently running MegaMol graph (which might be empty) or you can create a new project starting a module graph by adding the main view module `View3D_2`.
+A detailed description of the configurator can be found in the readme file of the [GUI plugin](../plugins/gui#configurator).
+
+<!-- TODO 
+
+Add more ... ?
+
+-->
+
+<!-- ###################################################################### -->
+## Making High-Resolution Screenshots
 
 The GUI menu option `Screenshot` (hotkey `F2`) provides a basic screenshot funtionality using the current viewport size. 
 If screenshots are taken consecutively, the given file name is prepended by an incrementing suffix. 
@@ -2275,6 +2314,7 @@ Hit the button trigger to have MegaMol create the requested screenshot.
 
 -->
 
+<<<<<<< HEAD
 <!-- ---------------------------------------------------------------------- -->
 <<<<<<< HEAD
 >>>>>>> 0ae2f4429 (manual update ...)
@@ -2351,6 +2391,11 @@ Hit the button trigger to have MegaMol create the requested screenshot.
 =======
 <!-- ---------------------------------------------------------------------- -->
 ### Making Simple Videos
+=======
+
+<!-- ###################################################################### -->
+## Making Simple Videos
+>>>>>>> cdd0bbbc9 (docu)
 
 <<<<<<< HEAD
 <!-- ADD Cinematic plugin: [cinematic plugin](https://github.com/UniStuttgart-VISUS/megamol/blob/master/plugins/cinematic/README.md) -->
