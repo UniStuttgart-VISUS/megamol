@@ -11,7 +11,7 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 - [Synchronized Selection across Modules](#synchronized-selection-across-modules)
 - [Graph Manipulation](#graph-manipulation)
 - [Build System](#build-system)
-- [Parameter Widgets](#parameter-widgets)
+- [GUI Parameter Widgets](#gui-parameter-widgets)
 
 <!-- /TOC -->
 
@@ -294,6 +294,6 @@ Additionally, information about the libraries can be queried with the command ``
 
 <!-- ###################################################################### -->
 -----
-## Parameter Widgets
+## GUI Parameter Widgets
 
 See [developer information in GUI plugin](../../plugins/gui#information-for-developers).
