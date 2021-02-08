@@ -25,41 +25,14 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     GIT_TAG "v7.3.2"
     BUILD_BYPRODUCTS "<INSTALL_DIR>/${QHULL_IMPORT_LIB}" "<INSTALL_DIR>/${QHULL_LIB}"
     #CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
+    #CMAKE_ARGS -DBUILD_SHARED_LIBS=OFF
     PATCH_COMMAND ${CMAKE_COMMAND} -E copy
       "${CMAKE_CURRENT_SOURCE_DIR}/cmake/qhull/CMakeLists.txt"
       "<SOURCE_DIR>/CMakeLists.txt")
   add_external_library(qhull
     INCLUDE_DIR "include"
     IMPORT_LIBRARY ${QHULL_IMPORT_LIB}
-    LIBRARY ${QHULL_LIB})
-
-  add_external_headeronly_project(asmjit INTERFACE
-    GIT_REPOSITORY https://github.com/asmjit/asmjit.git
-    GIT_TAG "8474400e82c3ea65bd828761539e5d9b25f6bd83" )
-  #add_external_library(asmjit
-  #  INCLUDE_DIR "src/asmjit_ext/")
-    
-  if(WIN32)
-    set(BLEND2D_IMPORT_LIB "lib/blend2d.lib")
-    set(BLEND2D_LIB "bin/blend2d.dll")
-  else()
-    include(GNUInstallDirs)
-    set(BLEND2D_IMPORT_LIB "lib/libblend2d.so")
-    set(BLEND2D_LIB "lib/libblend2d.so")
-  endif()
-
-  external_get_property(asmjit SOURCE_DIR)
-  add_external_project(blend2d STATIC
-    GIT_REPOSITORY https://github.com/blend2d/blend2d.git
-    GIT_TAG "8aeac6cb34b00898ae725bd76eb3bb2c7cffcf86"
-    BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}" "<INSTALL_DIR>/${BLEND2D_LIB}"
-    CMAKE_ARGS -DASMJIT_DIR=${SOURCE_DIR})
-  add_external_library(blend2d
-    DEPENDS asmjit
-    INCLUDE_DIR "include"
-    IMPORT_LIBRARY ${BLEND2D_IMPORT_LIB}
-    LIBRARY ${BLEND2D_LIB})
-
+    LIBRARY ${QHULL_IMPORT_LIB})
 
   require_external(Eigen)
   require_external(nanoflann)
@@ -102,7 +75,12 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/probe_ospray/include> "probe_ospray/src")
   endif()
 
-  target_link_libraries(${PROJECT_NAME} PRIVATE core adios_plugin Eigen nanoflann mesh blend2d qhull libigl mmstd_datatools CGAL::CGAL)# Qhull::libqhull )
+  find_library(blend2d blend2d REQUIRED)
+  find_path(blend2d_INCLUDES blend2d.h)
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${blend2d})
+  target_include_directories(${PROJECT_NAME} PRIVATE ${blend2d_INCLUDES})
+
+  target_link_libraries(${PROJECT_NAME} PRIVATE core adios_plugin Eigen nanoflann mesh qhull libigl mmstd_datatools CGAL::CGAL)# Qhull::libqhull )
   if(BUILD_OSPRAY_PLUGIN_PLUGIN)
     target_link_libraries(${PROJECT_NAME} PUBLIC OSPRay_plugin)
   endif()
