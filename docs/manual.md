@@ -53,8 +53,11 @@
 =======
     - [Test Installation](#test-installation) 
         - [Examples](#examples) 
+<<<<<<< HEAD
     - [Project Files](#project-files) 
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
+=======
+>>>>>>> e7bb59b8f (docu)
 - [Viewing Data Sets](#viewing-data-sets)
     - [Modules, Views and Calls](#modules-views-and-calls) 
         - [Modules and Calls](#modules-and-calls) 
@@ -108,8 +111,10 @@
 =======
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
     - [View Interaction](#view-interaction) 
+- [Project Files](#project-files)     
 - [Making High-Resolution Screenshots](#making-high-resolution-screenshots) 
 - [Making Simple Videos](#making-simple-videos) 
+- [Reproducibility](#reproducibility) 
 <!-- 
 - [Jobs](#jobs)
     - [Job Instance](#job-instance) 
@@ -121,9 +126,12 @@
 =======
 =======
 -->
+<<<<<<< HEAD
 >>>>>>> ee6adca4d (docu)
 - [Reproducibility](#reproducibility) 
 >>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
+=======
+>>>>>>> e7bb59b8f (docu)
 
 <!-- /TOC -->
 
