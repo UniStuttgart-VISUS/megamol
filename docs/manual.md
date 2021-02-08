@@ -9,7 +9,7 @@
     - [Building from Source](#building-from-source)
         - [Microsoft Windows](#microsoft-windows)
         - [Linux (Ubuntu)](#linux-ubuntu)
-    - [Commandline Arguments](#commandline-arguments)        
+    - [Command Line Arguments](#command-line-arguments)        
     - [Configuration File](#configuration-file)
         - [General Settings](#general-settings)
         - [Logging](#logging)
@@ -26,9 +26,11 @@
     - [View Interaction](#view-interaction) 
     - [Making High-Resolution Screenshots](#making-high-resolution-screenshots) 
     - [Making Simple Videos](#making-simple-videos) 
+<!-- 
 - [Jobs](#jobs)
     - [Job Instance](#job-instance) 
     - [Converting to MMPLD](#converting-to-mmpld) 
+-->
 - [Reproducibility](#reproducibility) 
 
 <!-- /TOC -->
@@ -62,7 +64,7 @@ While MegaMol might work on further platforms, the development team will current
 ### Building from Source
 
 It is recommended to use the latest [release 1.3](https://github.com/UniStuttgart-VISUS/megamol/releases/tag/v1.3) version of the source code.
-All bleeding edge features are available in the [main branch](https://github.com/UniStuttgart-VISUS/megamol/tree/master).
+All bleeding edge features are available in the current [main branch](https://github.com/UniStuttgart-VISUS/megamol/tree/master).
 
 **Note**: 
 The *OSPRay plugin* is currently disabled by default. 
@@ -135,12 +137,12 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 8. The binary `megamol` is located in the default installation path `../megamol/build/install/bin`.
 
 <!-- ---------------------------------------------------------------------- -->
-### Commandline Arguments
+### Command Line Arguments
 
-Providing additional commandline arguments allow individual configuration of global MegaMol behaviour and settings.
-(The commandline arguments are only read and interpreted by the `frontend`.)
+Providing additional command line arguments allow individual configuration of global MegaMol behaviour and settings.  
+<!-- (The command line arguments are only read and interpreted by the `frontend`.)-->
 
-The following commandline arguments are available:
+The following command line arguments are available:
 
 **Note:** The *khrdebug* option is currently ignored and not applied.
 ```
@@ -164,7 +166,9 @@ The following commandline arguments are available:
 ### Configuration File
 
 After successfully compiling and installing MegaMol, you should have all executable files inside your `bin` directory (default: `../megamol/build/install/bin`). 
-In the `bin` directory, you can find the default configuration file `megamolconfig.lua`:
+<!-- (The configuration file is only read and interpreted by the MegaMol `core`.) -->
+In the `bin` directory, you can find the default configuration file `megamolconfig.lua`:  
+
 ```lua
     -- Standard MegaMol Configuration File --
     print("Standard MegaMol Configuration:")
@@ -233,7 +237,7 @@ The *Add...Dir* commands set the paths for the respective resources.
 <!-- ---------------------------------------------------------------------- -->
 #### Plugins
 
-Since switched to static linking of plugin libraries into the MegaMol binary, the configuration of `mmPluginLoaderInfo` is no longer required and ***DEPRECATED***.
+Since we switched to static linking of plugin libraries into the MegaMol binary, the configuration of `mmPluginLoaderInfo` is ***DEPRECATED*** and no longer required.
 
 <!--
 *DEPRECATED:*
@@ -260,14 +264,13 @@ To register a shader directory, add a corresponding tag to the configuration fil
 #### Global Settings
 
 The configuration file also specifies global settings variables which can modify the behavior of different modules.
-(The configuration file is only read and interpreted by the MegaMol `core`.)
 
 - The following settings variable activates (or deactivates) the *arcball* camera behavior. Set this option to `on` in order to use the *arcball* camera navigation.
 ```lua
     mmSetConfigValue("arcball",     "off")
 ```
 
-All other configuration options are ***DEPRECATED*** and have no effect!
+All other configuration options are ***DEPRECATED*** and have currently no effect!
 
 <!--
 *DEPRECATED:*
@@ -361,7 +364,7 @@ This script adds the required library path:
 ```
 
 MegaMol should start and print several messages to the console and an empty rendering window should appear.
-You can eather check the console log messages or the messages printed in the *Log Console* window shown on the bottom of the window.
+You can either check the console log messages or the messages printed in the *Log Console* window.
 The leading number of each line is the log level.
 There should be no error messages (log level **1**). 
 Some warnings (log level **100**) might occur but are *normal* and indicate no failed installation or execution.  
@@ -390,7 +393,7 @@ For example, you can find the parameter `speed` in the group `inst::view::anim`.
 With this parameter, you can adjust the playback speed of the animation.
 In the parameter group `anim` of the `view` module you can adjust the animation speed.  
 
-Alternatively, you can also open an empty MegaMol rendering window and load the above example project script file via the menu.  
+Alternatively, you can also open an empty MegaMol rendering window and load the above example project script file via the menu `File / Load Project`.  
 
 All available options provided via the graphical user interface are described separately in the readme file of the [GUI plugin](../plugins/gui).
 
@@ -509,34 +512,33 @@ Additionally, the `simple_siff.mmprj` project includes the module *ScreenShooter
 
 <!-- ###################################################################### -->
 -----
-## Viewing Data Sets
-<!-- XXX More suitable caption name? -->
+## MegaMol Graph
 
 In this chapter, we discuss the principle usage of the prepared project files for data set viewing. 
-This project script files are available in the `examples` directory, which is installed next to the `bin` directory.
+Some predefined project script files are available in the `examples` directory, which is installed next to the `bin` directory.
 
 <!-- ---------------------------------------------------------------------- -->
 ### Modules, Views and Calls
 
 The runtime functionality of MegaMol is constructed by *modules* and *calls*. 
-These two type of objects are instantiated at runtime, interconnected and build the *module graph*. 
-The figure given below, shows an example module graph containing a rendering content of a window *view*, a *renderer*, a *data source*, and two modules providing additional information for the renderer. 
-The modules, shown as blue boxes, are interconnected by *call* objects, shown as gray boxes. 
-The connection endpoints at the modules are *CallerSlots* (outgoing, located on the right of modules) or *CalleeSlots* (incoming, located on the left side of modules) shown as circled dots.
+These two type of objects are instantiated at runtime, interconnected and build the *module call graph*. 
+The figure given below, shows an example module call graph containing a *view*, the rendering content of a window, a *renderer*, a *data source*, and some modules providing additional information for the renderer. 
+The modules are interconnected by the *call* objects. 
+The connection endpoints at the modules are *CallerSlots* (outgoing, located on the right side of modules) or *CalleeSlots* (incoming, located on the left side of modules) shown as circled dots.
 
-The module graph follows the pull pattern. 
+The module call graph follows the pull pattern. 
 This means that modules request function invocation by other modules. 
 For example, the *view* module needs to update the window content. 
 The *view* module thus invokes the *renderer* module to provide a new rendering. 
 The *renderer* calls the data source if new data is available or to provide the old cached data.
 
 Left-most module view of class `View3D_2` represents the rendering content of a window. 
-The center module renderer of class `SphererRenderer` is called by the window using the corresponding call of type `CallRenderer3D`. 
-The right modules provide data and additional information for the renderer, namely a color map function and a clip plane. 
+The center module renderer of class `BoundingBoxRenderer` and `SphererRenderer` are called subsequently by the window using the corresponding call of type `CallRenderer3D_2`. 
+The right modules provide data and additional information for the renderer, namely a color map transfer function and a clipping plane. 
 
 ![Example Graph](pics/example_graph.png)  
 
-*An example module graph.*
+*Example module call graph.*
 
 <!-- ---------------------------------------------------------------------- -->
 #### Modules and Calls
@@ -546,42 +548,47 @@ They provide several programmatic access points, the *slots*.
 Two types of these slots are shown in the above figure of an example graph as circled dots.
 
 *CalleeSlots* are access points of modules, through which these can be called to perform a function. 
-For example, modules of class `SphererRenderer` provide a CalleeSlot rendering through which the rendering function can be invoked. 
+For example, modules of class `SphererRenderer` provide a CalleeSlot `rendering` through which the rendering function can be invoked. 
 The counterparts are CallerSlots which are outgoing access points. 
 These allow modules to call other modules. 
-Modules of class `View3D_2` provide a corresponding slot `rendering` to call a connected renderer.
+View modules of class `View3D_2` provide a corresponding slot `rendering` to call a connected renderer.
 These two types of slots are connected using objects of *call* classes. 
-These are shown as gray boxes in the example graph figure. 
 Both *CalleeSlots* and *CallerSlots* specify types of calls they are compatible with. 
-In the case of the above examples of renderings-relates slots, this is the type `CallRender3D`.
+In the case of the above examples of renderings-relates slots, this is the type `CallRender3D_2`.
 
 *Calls* should be lightweight. 
-Instead, they are thin interfaces meant for data transport. 
+They are thin interfaces meant for data transport. 
 For example, data to be visualized is loaded by data source modules. 
-In the example graph figure the module *data* of class *MMPLDDataSource* loads a specified data set into main memory and provides the data through its  CalleeSlot*. 
+In the example graph figure the module *data* of class *MMPLDDataSource* loads a specified data set into main memory and provides the data through its *CalleeSlot*. 
 The data is accessed through a *MultiParticleDataCall*. 
 The call, however, does not copy the data but provides access to the data in terms of memory pointers, and metadata. 
 This avoidance of copy operations is most important and one of the core design ideas of MegaMol.
 
-*Parameter slots* are the third type of slots. 
+*Parameter Slots* are the third type of slots. 
 These are access points to exposed parameters controlling the functionality. 
 Such parameters are automatically included in the frontend’s GUI. 
-Examples of such parameters are the setup of the virtual camera and light source in modules of type `View3D` or the dataset file name in data source modules.  
+An example of such parameters are the setup of the virtual camera in modules of type `View3D_2` or the dataset file name in data source modules.  
 
-The *module graph* is configured for MegaMol using a project file. 
+The *module call graph* is configured for MegaMol using a project file. 
 These files define modules and interconnecting calls for different instance specifications. 
+
+<!-- DEPERCATED
+
 There are two types of instances:
 Views (see section [Views](#views)) and jobs (see section [Jobs](#jobs)). 
-The starting command line of the console front-end loads project files (using `-p`) and requests instantiation of views and jobs (using `-i`).
+The starting command line of the console frontend loads project files and requests instantiation of views and jobs.
+
+-->
 
 <!-- ---------------------------------------------------------------------- -->
 #### Views 
 
-*UPDATE/DEPRECATED*
-
 *Views* are one of the two instance types MegaMol can run. 
 They are specified by the corresponding tag in a MegaMol project file (see section [Project Files](#project-files)). 
 When a view is instantiated, a corresponding namespace will be created, and all modules instantiated as part of the view will be created inside this namespace. 
+
+<!-- DEPRECATED
+
 For example, the project file seen in next section ([Project Files](#project-files)) defines the module data as part of the view dataview. 
 If this view is instantiated by the command line note (note that files might need some path adjustments):
 
@@ -597,90 +604,122 @@ This module class must be implemented by deriving from `::megamol::core::view::A
 Typically, you use `View3D` or `View2D`.
 MegaMol provides some internal description of views which can be instantiated without loading a project file first. 
 The view description *TestSpheres* used in section [Test](#test-installation) is one example of such a built-in description.
-
+-->
 
 <!-- ---------------------------------------------------------------------- -->
 ### View Interaction
 
-The primary interaction with a view is controlling the camera with mouse and keyboard. The keyboard mapping is implemented by button parameters of the view module, also available in the GUI. Most parameters can be found in the sub-namespace `viewKey` inside the view name, e.g. `RotLeft`. Hovering with the mouse over the corresponding button reveals the associated hot key in the GUI’s status text line.
+The primary interaction with a view is controlling the camera with mouse and keyboard. 
+The keyboard mapping is implemented by button parameters of the view module, also available in the GUI. 
+Most parameters can be found in the sub-namespace `viewKey` inside the view name, e.g. `RotLeft`. 
+The corresponding parameter button in the GUI also shows the associated hotkey.
+
+***UPDATE REQUIRED***:  
+
 Some useful controls:
 - Hitting *Home* (aka *Pos1*) is associated with the button *resetView*. This function resets the view to default.
-- Hold the *left mouse button* and move your mouse to rotate the view around the look-at point. The look-at point initially is placed in the center of the bounding box of the data set.
-- Hold *shift* while holding and dragging the *left mouse button* rolls the camera around the viewing direction.
-- Hold *control* while holding and dragging the *left mouse button* rotates the camera around its center point.
-- Hold *alt* while holding and dragging the *left mouse button* moves the camera orthogonally to the viewing direction.
-- Hold the *middle mouse button* and move your mouse up or down to zoom the view by move the camera forwards or backwards. Note that if you zoom in too much, parts of the data set will be clipped by the near-clipping plane.
-- Hold *alt* while holding and dragging the *middle mouse button* zoom the view by changing the opening angle of the camera.
-- Hold *control* while holding and dragging the *middle mouse button* moves the look-at point forwards or backwards, changing the center of the corresponding rotation. Use the parameter
-`showLookAt` of the view to visualize the look-at point for better adjustment.
+- Hold the *Left Mouse Button* and move your mouse to rotate the view around the look-at point. 
+    The look-at point initially is placed in the center of the bounding box of the data set.
+- Hold *Shift* while holding and dragging the *Left Mouse Button* rolls the camera around the viewing direction.
+- Hold *Control* while holding and dragging the *Left Mouse Button* rotates the camera around its center point.
+- Hold *Alt* while holding and dragging the *Left Mouse Button* moves the camera orthogonally to the viewing direction.
+- Hold the *Middle Mouse Button* and move your mouse up or down to zoom the view by move the camera forwards or backwards. 
+    Note that if you zoom in too much, parts of the data set will be clipped by the near-clipping plane.
+- Hold *Alt* while holding and dragging the *Middle Mouse Button* zoom the view by changing the opening angle of the camera.
+- Hold *Control* while holding and dragging the *Middle Mouse Button* moves the look-at point forwards or backwards, changing the center of the corresponding rotation. 
+    Use the parameter `showLookAt` of the view to visualize the look-at point for better adjustment.
 
 <!-- ---------------------------------------------------------------------- -->
 ### Making High-Resolution Screenshots
 
-*TODO*
+The GUI menu option `Screenshot` (hotkey `F2`) provides a basic screenshot funtionality using the current viewport size. 
+If screenshots are taken consecutively, the given file name is prepended by an incrementing suffix. 
+This way, no new file name has to be set after each screenshot.  
 
-Use GUI menu option `Screenshot`.
+<!-- DEPRECATED/UPDATE - MegaMol is not accessible for modules and therefore the required view instance can not be found
 
-For a more flexible way, use Screenshoter module
-<!-- DEPRECATED 
-MegaMol has special functions to create high-resolution screen shoots of any rendering, namely the `ScreenShooter` module. The provided starting scripts add this module. If you create a project file of your own, remember to add the `ScreenShooter` module. The corresponding settings can be found in the ImGui in the groups `inst::screenshooter` and `inst::screenshooter::anim` (see figure [ScreenShooter](#screenshooter)).
+Offering more flexible options and special functions to create high-resolution screenshoots of any rendering, you can add the `ScreenShooter` module to you project.
+The corresponding settings can be found in the modules parameters provided in the GUI (see figure of `ScreenShooter` parameters below).
 
-To connect the `ScreenShooter` with your view, you need to set the instance name of your view instance in the corresponding variable `inst::screenshooter::anim` (e.g. to `inst`). When making single screen shots, set the option `makeAnim` in the group `inst::screenshooter::anim` to `disabled`, as shown in the figure. Ignore the remaining options in that group. These options will be explained in section [Making Simple Videos](#makevideo), as they are used to produce videos.
+In order to connect the `ScreenShooter` with your *view*, you need to set the **instance name** of your view instance in the corresponding variable `::screenshooter::view` (e.g. to `inst`). When making single screenshots, set the option `makeAnim` in the group `::screenshooter::anim` to `disabled`, as shown in the figure. 
+Ignore the remaining options in that group. 
+These options will be explained in section [Making Simple Videos](#making-simple-videos), as they are used to produce videos.
 
-The parameters `imgWidth` and `imgHeight` specify the size of the screenshot to be rendered. These values are not limited to the window size and can be, in theory, arbitrarily large. If these values are getting large, the image can be rendered in several tiles, i.e., sub-images. The size for these tiles is specified by `tileWidth` and `tileHeight`. However, many renderers have problems with producing these tiled images. It is, thus, recommended to set `tileWidth` and `tileHeight` to be at least as large as `imgWidth` and `imgHeight`. The values for `tileWidth` and `tileHeight` are limited by the maximum texture size, maximum frame buffer object size and graphics memory size of your graphics card. Thus, these values are often limited.
+The parameters `imgWidth` and `imgHeight` specify the size of the screenshot to be rendered. 
+These values are not limited to the window size and can be, in theory, arbitrarily large. 
+If these values are getting large, the image can be rendered in several tiles, i.e., sub-images. 
+The size for these tiles is specified by `tileWidth` and `tileHeight`. 
+However, many renderers have problems with producing these tiled images. 
+It is, thus, recommended to set `tileWidth` and `tileHeight` to be at least as large as `imgWidth` and `imgHeight`. 
+The values for `tileWidth` and `tileHeight` are limited by the maximum texture size, maximum frame buffer object size and graphics memory size of your graphics card. 
+Thus, these values are often limited.
+The parameter file name specifies the path to the image file to be created. 
+MegaMol only creates PNG files. 
+Hit the button trigger to have MegaMol create the requested screenshot.
 
--->
-
-<!-- DEPERCATED 
 ![ScreenShooter](pics/screenshooter.png)
-The parameter filename specifies the path to the image file to be created. MegaMol only creates PNG files. Hit the button trigger to have MegaMol create the requested screenshot.
+
 -->
 
 <!-- ---------------------------------------------------------------------- -->
 ### Making Simple Videos
 
-*TODO*
-
-See [Cinematic Plugin](../plugins/cinematic#usage).
+MegaMol cannot create video files directly. 
+However, MegaMol can create a sequence of screenshots of a time-dependent data set showing the different points-in-time. 
+This functionality is provided and further described in the [*Cinematic* plugin](../plugins/cinematic#usage).
 
 <!-- DEPRECATED 
-MegaMol cannot create video files directly. However, MegaMol can create a sequence of screenshots of a time-dependent data set showing the different points-in-time. Adjust the parameters in the group `inst::screenshooter::anim` in addition to the parameters for simple screenshots ([ScreenShots](#makescreenshot)).
+
+Adjust the parameters in the group `::screenshooter::anim` in addition to the parameters for simple screenshots ([ScreenShots](#makescreenshot)).
 Enable the option `makeAnim` to make a screenshot sequence.
 
-The parameters `from` and `to` specify the time codes to start and end the animation. The parameter `step` specifies the time code increment between two screenshots.
-For example, if you specify `from=0`, `to=100`, and `step= 10` (assuming the dataset stores enough time frames), 11 screenshots will be created and stored. These will show the data set at times 0, 10, 20, ... , 90, and 100. The screenshot files names will be extended by an increasing number: e.g. `test.00000.png`, `test.00001.png`, `test.00002.png`, ...
+The parameters `from` and `to` specify the time codes to start and end the animation. 
+The parameter `step` specifies the time code increment between two screenshots.
+For example, if you specify `from=0`, `to=100`, and `step= 10` (assuming the dataset stores enough time frames), 11 screenshots will be created and stored. 
+These will show the data set at times 0, 10, 20, ... , 90, and 100. 
+The screenshot files names will be extended by an increasing number: e.g. `test.00000.png`, `test.00001.png`, `test.00002.png`, ...
 This sequence of image files can then be merged to produce a video file, e.g. using avconv:
 
     $ avconv -r 30 -i test.%05d.png test.mp4
 
-**KNOWN BUG**: Several renderers will request the best data they can get. As usually data is loaded asynchronously, the correct data is often not available yet, and the best data is the data from a slightly wrong time. While this is not a big deal for viewing data, it is fatal when rendering images for videos. Many renderers thus expose a parameter `forceTime`, or with a similar name. Set this parameter to `true` and the renderer will always show the correct data. It will need to wait if the correct data is not available, yet, which can reduce the overall performance.
+**KNOWN BUG**: 
+Several renderers will request the best data they can get. 
+As usually data is loaded asynchronously, the correct data is often not available yet, and the best data is the data from a slightly wrong time. 
+While this is not a big deal for viewing data, it is fatal when rendering images for videos. 
+Many renderers thus expose a parameter `forceTime`, or with a similar name. 
+Set this parameter to `true` and the renderer will always show the correct data. 
+It will need to wait if the correct data is not available, yet, which can reduce the overall performance.
+
 -->
 
 <!-- ###################################################################### -->
+<!-- DEPRECATED/UPDATE
 ## Jobs
 
 This chapter discusses the job concept available in MegaMol. 
 Especially, how jobs can be used for data conversion. 
-Examples are based on the project script files available in the *examples* directory from the MegaMol project website.
+Examples are based on the project script files available in the installed `examples` directory.
 
-<!-- ---------------------------------------------------------------------- -->
+
 ### Job Instance
 
-Jobs are the second type of instances available at the MegaMol runtime (compare view instances in section [Views](#views)). The primary difference is the `<job>` tag as primary instance tag. Similarly, to the viewmod attribute, the `<job>` tag specifies a jobmod module as entry module.
+Jobs are the second type of instances available at the MegaMol runtime (compare view instances in section [Views](#views)). 
+The primary difference is the `<job>` tag as primary instance tag. 
+Similarly, to the viewmod attribute, the `<job>` tag specifies a jobmod module as entry module.
 
 ```xml
     <job name="convjob" jobmod="job">
 ```
 
-One significant limitation of this release is that the MegaMol Configurator is only able to edit view instance descriptions, see section [Configurator](#configurator). If you want graphical assistance in creating a job description, the recommended way is to create a view instance description with all required modules and calls. Use a `DataWriterJob` module as an entry point. Save the corresponding project file and edit it manually with a text editor. Replace the `<view>` tags with the similarly behaving
-`<job>` tags and adjust the corresponding attributes.
+One significant limitation of this release is that the MegaMol Configurator is only able to edit view instance descriptions, see section [Configurator](#configurator). 
+If you want graphical assistance in creating a job description, the recommended way is to create a view instance description with all required modules and calls. 
+Use a `DataWriterJob` module as an entry point. 
+Save the corresponding project file and edit it manually with a text editor. 
+Replace the `<view>` tags with the similarly behaving `<job>` tags and adjust the corresponding attributes.
 
-<!-- ---------------------------------------------------------------------- -->
+
 ### Converting to MMPLD
 
-*UPDATE*
-
-<!-- UPDATE
 The MegaMol Particle List Data file format (MMPLD) is a very fast loading binary memory dump of MegaMol meant for small and mid-sized datasets (1-10 mio. particles). MegaMol can convert most of its supported file formats to MMPLD file format. More precisely, all file formats which are loaded by a MegaMol module supporting the `MultiParticleDataCall` can be converted to MMPLD. For this, specify a converter job using a `DataWriterJob` module and a `MMPLDWriter` module. The content of the project file `makemmpld.mmprj` which can be used to convert data into the MMPLD file format, is shown below.
 
 ```xml
@@ -703,72 +742,12 @@ The entry module for data conversion is of class `DataWriterJob`, see line 11. T
 
     $ mmconsole -p makemmpld.mmprj -i convjob j -v j::data::filename inputfile.siff -v j::writer::filename outputfile.mmpld
 
-The input file name and output file name are explicitly specified using the -v arguments. The job execution starts immediately. After data is written, MegaMol terminates itself. The console output should be similar to this listing:
-
-    0200|MegaMol� Console
-    0200|Console: (Ver.: 1.2.cef9ff221ce4-dirty) 64 Bit Linux
-    0300|MegaMol Core API "cef9ff221ce4-dirty"; 
-    0200|Core "MegaMol Core (Evolution Chamber)" (Ver.: 1.2.cef9ff221ce4-dirty) 64 Bit Linux
-    0300|
-    0200|Started Fri Sep 29 16:16:56 2017
-
-    MegaMol� Console
-    Copyright (c) 2006 - 2017 by MegaMol Team: VISUS (Universitaet Stuttgart, Germany), TU Dresden (Dresden, Germany)
-    Alle Rechte vorbehalten.
-    All rights reserved.
-
-    0200|Called: /nethome/user/software/megamol/bin/mmconsole -p ../docs/lua/makemmpld.mmprj -i convjob j -v j::data::filename ../samples/MegaMol/sampledata/exp2mill.00010.siff -v j::writer::filename outputfile.mmpld
-    250|Path "/nethome/user/software/megamol/share/shaders" added as shader search path.
-    250|Configuration value "*-window" set to "w1280h720".
-    250|Configuration value "consolegui" set to "on".
-    350|Directory "application" is "/nethome/user/software/megamol/bin"
-    200|Configuration sucessfully loaded from "/nethome/user/software/megamol/bin/megamol.cfg"
-    200|Default LRHostAddress = "tcp://*:33333"
-    200|Default LRHostEnable = "true"
-    200|Installed service "LuaRemote" [1]
-    200|LRH Server socket opened on "tcp://*:33333"
-    200|Auto-enabled service "LuaRemote" [1]
-    200|Plugin CinematicCamera loaded: 4 Modules, 1 Calls
-    200|Plugin "CinematicCamera" (/nethome/user/software/megamol/lib/libcinematiccamera.mmplg) loaded: 4 Modules, 1 Calls registered
-    200|Plugin infovis loaded: 3 Modules, 2 Calls
-    200|Plugin "infovis" (/nethome/user/software/megamol/lib/libinfovis.mmplg) loaded: 3 Modules, 2 Calls registered
-    200|Plugin mdao2 loaded: 1 Modules, 0 Calls
-    200|Plugin "mdao2" (/nethome/user/software/megamol/lib/libmdao2.mmplg) loaded: 1 Modules, 0 Calls registered
-    200|Plugin mmstd_datatools loaded: 43 Modules, 4 Calls
-    200|Plugin "mmstd_datatools" (/nethome/user/software/megamol/lib/libmmstd_datatools.mmplg) loaded: 43 Modules, 4 Calls registered
-    200|Plugin mmstd_moldyn loaded: 16 Modules, 1 Calls
-    200|Plugin "mmstd_moldyn" (/nethome/user/software/megamol/lib/libmmstd_moldyn.mmplg) loaded: 16 Modules, 1 Calls registered
-    200|Plugin mmstd_trisoup loaded: 12 Modules, 4 Calls
-    200|Plugin "mmstd_trisoup" (/nethome/user/software/megamol/lib/libmmstd_trisoup.mmplg) loaded: 12 Modules, 4 Calls registered
-    200|Plugin "mmstd.volume" (/nethome/user/software/megamol/lib/libmmstd_volume.mmplg) loaded: 7 Modules, 0 Calls registered
-    200|Plugin Protein loaded: 55 Modules, 9 Calls
-    200|Plugin "Protein" (/nethome/user/software/megamol/lib/libprotein.mmplg) loaded: 55 Modules, 9 Calls registered
-    200|Plugin Protein_Calls loaded: 0 Modules, 10 Calls
-    200|Plugin "Protein_Calls" (/nethome/user/software/megamol/lib/libprotein_calls.mmplg) loaded: 0 Modules, 10 Calls registered
-    200|Loading project file "../docs/lua/makemmpld.mmprj"
-    550|Created module "N7megamol9stdplugin6moldyn2io14SIFFDataSourceE"
-    550|Created module "SIFFDataSource" (::j::data)
-    550|Created module "N7megamol4core3job13DataWriterJobE"
-    550|Created module "DataWriterJob" (::j::job)
-    550|Created module "N7megamol4core6moldyn11MMPLDWriterE"
-    550|Created module "MMPLDWriter" (::j::writer)
-    550|Call "DataWriterCtrlCall" instantiated from "::j::job::writer" to "::j::writer::control"
-    550|Call "MultiParticleDataCall" instantiated from "::j::writer::data" to "::j::data::getdata"
-    200|Setting parameter "::j::data::filename" to "../samples/MegaMol/sampledata/exp2mill.00010.siff"
-    200|Setting parameter "::j::writer::filename" to "outputfile.mmpld"
-    200|Job "job" started ...
-    200|Starting DataWriterJob "::j::job"
-    200|Started writing data frame 0
-    200|Completed writing data
-    200|DataWriterJob "::j::job" complete
-    250|Job instance j terminating ...
-    550|Released module "N7megamol9stdplugin6moldyn2io14SIFFDataSourceE"
-    550|Released module "N7megamol4core3job13DataWriterJobE"
-    550|Released module "N7megamol4core6moldyn11MMPLDWriterE"
-    200|Core Instance destroyed
-    200|LRH Server socket closed
+The input file name and output file name are explicitly specified using the -v arguments. 
+The job execution starts immediately. 
+After data is written, MegaMol terminates itself. 
 
 To convert from other file formats, for which a corresponding loader does exist, you should be able to adjust this project file.
+
 --> 
 
 <!-- ###################################################################### -->
@@ -781,72 +760,3 @@ Please note that this field currently contains a simple zero-terminated string w
     $ megamol.exe <something>.png
 
 Also note that only Views with direct access to camera parameters (like `View3D_2`) can be properly restored.
-
-
-<!-- ###################################################################### -->
-<!-- MOVE to separate file 
-
-## Advanced Usage
-
-This chapter discusses advanced usage of MegaMol.
-
--- >
-<!-- DEPRECATED 
-
-### Configurator (Windows)
-
-The Configurator is a utility application for editing MegaMol project files. More specifically, it allows us to edit the modules, calls, and parameters to be instantiated and set for view instances (see sections [Modules, View, and Calls](#modules-views-calls) and [Project Files](#project-files)). The [image](#configurator-pic) below shows the main GUI window of the application.
-
-<center>
-<a name="configurator-pic"></a>
-<img src="pics/configurator.png" alt="Configurator" style="width: 1024px;"/>
-<p style="width: 1024px;">
-The Configurator main GUI.
-</p>
-</center>
-
-The Configurator is written in C#. The Configurator can be run on Linux using Mono 1. However, we never tested the Configurator with Mono and thus will not support it. The right editing pane allows you to place modules and interconnect their *CallerSlots* and *CalleeSlots* with matching calls. The tabs above that pane allow to open and edit several project files at once. On the left side, you have the list of modules available and, below, the parameters of the currently selected module (which is marked in the editing pane by a dashed border). The menu strip contains direct access to all functions. The Configurator is a stand-alone editor for MegaMol project files. There is no way to connect the editor to a running instance of MegaMol , e.g., to edit parameters on the fly.
-
-### Class Data Base
-
-To fill the left list of available modules, the Configurator requires a database containing all classes of the MegaMol module graph engine. This file is called the state file. You can load and save the state file using the Settings menu. There, you can also view a summary of the contents of the loaded state file. The MegaMol release package contains a state file of all modules and classes available in the released MegaMol binary. You can directly load this state file.
-
-On Windows operating systems you can also analyze MegaMol binaries to generate a state file containing their classes. You find this function also in the Settings menu. This function relies on system DLLs and native, unmanaged code. So, this function will not work on Linux with Mono. A dialog window will open in which you can select the folder to analyze. After a short time, the list in this dialog will show you all compatible MegaMol binaries, including versions of the core library and all plugins. Select all binaries you want to be included in the state file. Be aware that you can only select binaries which depend on the exact same core library. Select Ok, and
-the new state file will be created and loaded. Per default, a dialog will appear, allowing you to save the newly generated state file.
-
-### Editing
-
-Project files can be saved and loaded using the corresponding functions for the menu bar. Save will always ask you for a file name, but will use the last file name as the default value. New creates a new editing tab. To close a tab use the x button on the right or click a tab with the middle mouse button.
-
-#### Modules
-
-To add a new module to the current project, double-click on the corresponding entry in the module list. The module will be created in the upper left corner and will be automatically selected. To select a module click it with any mouse button. You can move all modules by simple dragging and dropping them with the mouse. This has no influence on the functionality. To delete the selected module hit the `Del` key.
-While a module is selected, the parameter editor on the left shows all parameters of that module. In addition to the parameters exposed by *parameter slots*, there are some management parameters. You can edit the name of all module instances. For view modules, you can select if this module is the main view module for the whole project.
-Click on a free space to deselect any module, call or slot. This will select the project itself.
-You can now edit project parameters in the parameter editor on the left.
-
-#### Calls
-
-To select a *CallerSlot* (red triangles) or a *CalleeSlot* (green triangles), click the corresponding triangle of the module. The selected slot will be highlighted in yellow. All matching slots that are compatible with the selected slot are highlighted by a yellow outline. If the *Filter Compatible* option is active, the module list will then only show modules which have compatible slots. To connect two slots, drag with your mouse a line from one onto the other. The drag direction does not matter. If both slots are compatible, a matching call object is created and shown by a gray box. These call boxes are placed automatically. If the connection could be established by different call classes, a dialog window will appear asking to you select the call class to be used. To delete a call, select it by clicking on its box and press the `Del` key.
-A (red) *CallerSlot* can only have a single outgoing call, while (green) *CalleeSlots* may be connected by multiple calls. Therefore, if you drag from a *CallerSlot* to a *CalleeSlot* which already has incoming connections, a new connection is added. If you, however, drag from a *CalleeSlot to a *CallerSlot* which already has an outgoing connection, this connection is replaced.
-
-### Starting MegaMol
-
-The Configurator allows you to directly start MegaMol with the currently selected project file. Remember: The Configurator is only an editor for project files and has no online connection to a running MegaMol instance. You thus need to remember to save your edited project files before starting MegaMol.
-
-<center>
-<a name="configurator-start"></a>
-<img src="pics/configurator-start.png" alt="Start Arguments" style="width: 512px;"/>
-<p style="text-align: center; width: 512px;">
-MegaMol startup arguments dialog.
-</p>
-</center>
-
-After launching the Configurator, selecting the menu item `MegaMol Start Arguments...` opens the dialog window shown in the above [figure](#configurator-start). Here you can edit all start settings. The menu item `Start MegaMol` directly starts MegaMol with these settings. So does the `Start` button in this dialog window. The `Ok` button stores changes to the settings and closes the dialog window without starting MegaMol. The top line of elements controls the way MegaMol starts. Tick directly to directly spawn the MegaMol process from the configurator. This is the only working option for Linux operating systems. Tick `in Cmd` or `in Windows Powershell` and the configurator will first start the corresponding shell and then spawn the MegaMol process inside this shell. Tick the `Keep Open` option to start these shells in a way that they will remain open after the MegaMol process terminates. 
-
-This configuration is useful in case of errors which cause MegaMol to instantly terminate. The next text box control holds the full path to the MegaMol front-end executable. This should be set by the state file. You can then use the directory of this executable as the working directory for the MegaMol process, or you can specify another one. Specifying another working directory is not recommended, as it influences the way the paths inside configuration file will be interpreted. The last text box control holds the command line arguments for the MegaMol process. The last used command line arguments are available via the drop-down list. The start button gives
-you access to the default command lines for your project.
-
-The whole process command line can be copied to the clipboard using the remaining menu items in the Start menu. The differences for Cmd shell and Powershell are only the way how special characters and strings are escaped.
-
--->
