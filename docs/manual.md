@@ -133,17 +133,17 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
     $ ccmake .
 ```
 
-    - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
-    - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
+  - Configure the project repeatedly using `c` (and `e`) until no more changes are marked. 
+  - Change the `CMAKE_INSTALL_PREFIX` in order to change the destination directory of the installed files.
+  - Then hit `g` to generate the build files.
 
-    - Then hit `g` to generate the build files.
 - On the console prompt, start the building:
 
 ```
     $ make && make install
 ```
 
-    Hint: Use the `-j` option for `make` to run the build in parallel threads.
+  - Hint: Use the `-j` option for `make` to run the build in parallel threads.
 
 - The binary `megamol` is located in the default installation path `../megamol/build/install/bin`.
 
