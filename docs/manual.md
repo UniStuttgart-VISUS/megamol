@@ -2243,6 +2243,7 @@ Add more ... ?
 -->
 
 <!-- ###################################################################### -->
+-----
 ## Making High-Resolution Screenshots
 
 The GUI menu option `Screenshot` (hotkey `F2`) provides a basic screenshot funtionality using the current viewport size. 
@@ -2402,6 +2403,7 @@ Hit the button trigger to have MegaMol create the requested screenshot.
 =======
 
 <!-- ###################################################################### -->
+-----
 ## Making Simple Videos
 >>>>>>> cdd0bbbc9 (docu)
 
