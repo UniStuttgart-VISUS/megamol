@@ -722,6 +722,7 @@ The following commandline arguments are available:
 <!-- ---------------------------------------------------------------------- -->
 ### Configuration File
 
+<<<<<<< HEAD
 **Note:** Some tagged configuration settings are *DEPRECATED* and ignored!
 
 <<<<<<< HEAD
@@ -737,6 +738,8 @@ In the `bin` directory, you can find the default configuration file for MegaMol 
 =======
 After successfully compiling and installing MegaMol, you should have all executable files inside your bin folder (default: `../megamol/build/install/bin`). 
 =======
+=======
+>>>>>>> 11f6a30ac (docu)
 After successfully compiling and installing MegaMol, you should have all executable files inside your `bin` directory (default: `../megamol/build/install/bin`). 
 >>>>>>> 8b2342edf (docu)
 In the `bin` directory, you can find the default configuration file `megamolconfig.lua`:
@@ -927,6 +930,7 @@ The *Add...Dir* commands set the paths for the respective resources.
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 Since we switched to static linking of plugin libraries into the MegaMol binary, the configuration of `mmPluginLoaderInfo` is ***DEPRECATED*** and no longer required.
 =======
 *DEPRECATED*
@@ -951,6 +955,9 @@ Since switched to static linking of plugin libraries into the MegaMol binary, th
 =======
 =======
 Since switched to static linking of plugin libraries into the MegaMol binary, the configuration of `mmPluginLoaderInfo` is no longer required.
+=======
+Since switched to static linking of plugin libraries into the MegaMol binary, the configuration of `mmPluginLoaderInfo` is no longer required and ***DEPRECATED***.
+>>>>>>> 11f6a30ac (docu)
 
 <!--
 >>>>>>> c1b6286c7 (docu)
@@ -1012,7 +1019,7 @@ The configuration file also specifies global settings variables which can modify
     mmSetConfigValue("arcball",     "off")
 ```
 
-All other configuration options are *DEPRECATED*!
+All other configuration options are ***DEPRECATED*** and have no effect!
 
 <!--
 *DEPRECATED:*
@@ -1577,16 +1584,8 @@ These two types of slots are connected using objects of *call* classes. These ar
 =======
 ## Test Installation
 
-In order to test the installtion, simply execute the frontend executable. 
-Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your working directory to the MegaMol install directory (default: `../megamol/build/install/bin`).  
-
-MegaMol should start and print several messages to the console and an empty rendering window should appear.
-You can eather check the console log messages or the messages printed in the *Log Console* window shown on the bottom of the window.
-The leading number of each line is the log level.
-There should be no error messages (log level **1**). 
-Some warnings (log level **100**) might occur but are *normal* and indicate no failed installation or execution.  
-
-Execute the MegaMol binary:
+In order to test the installtion, simply run the frontend executable.  
+Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your working directory to the MegaMol  install directory containing the `bin` folder (default: `../megamol/build/install/bin`) and execute the MegaMol binary:
 
 <<<<<<< HEAD
 Windows:
@@ -1639,7 +1638,7 @@ Linux:
     $ ./megamol
 ```
 
-If you use additional external libraries (e.g. when using the OSPRay plugin), you have have to run the shell script `./megamol.sh` instead. 
+If additional external libraries are required (e.g. when using the OSPRay plugin), for Linux you have have to run the provided shell script `./megamol.sh` instead. 
 This script adds the required library path:
 
 ```bash
@@ -1656,10 +1655,14 @@ This script adds the required library path:
 ```
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 11f6a30ac (docu)
 MegaMol should start and print several messages to the console and an empty rendering window should appear.
 You can eather check the console log messages or the messages printed in the *Log Console* window shown on the bottom of the window.
 The leading number of each line is the log level.
 There should be no error messages (log level **1**). 
+<<<<<<< HEAD
 <<<<<<< HEAD
 Some warnings (log level **100**) might occur but indicate no failed installation or execution.
 >>>>>>> bdc293c78 (docu)
@@ -1673,6 +1676,10 @@ Some warnings (log level **100**) might occur but are *normal* and indicate no f
 =======
 =======
 >>>>>>> bc7ad0b5d (docu)
+=======
+Some warnings (log level **100**) might occur but are *normal* and indicate no failed installation or execution.  
+
+>>>>>>> 11f6a30ac (docu)
 <!-- ---------------------------------------------------------------------- -->
 <a name="project-files"></a>
 >>>>>>> 800f17d5c (manual update)
