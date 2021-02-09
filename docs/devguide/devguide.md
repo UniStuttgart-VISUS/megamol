@@ -164,15 +164,24 @@ For building MegaMol, CMake is used. For developers, two aspects are of importan
 
 ### External dependencies
 
+**All externals must be build STATIC now!**
+The installation of shared libraries was removed, therefore the megamol binary will not find the so/dll files of externals if they are used as SHARED library.
+
 The system for including external dependencies in MegaMol is a process split into two phases, corresponding to CMake configuration and the build process.
 
-In the CMake configuration run, in which the external is first requested, it is downloaded from a git repository by providing a URL and tag (or commit hash), and configured in a separate process and folder. This is done to prevent global CMake options from clashing. In later CMake configuration runs, this configuration of the external dependencies is not re-run, except when manually requested by setting the appropriate CMake cache variable ```EXTERNAL_<NAME>_NEW_VERSION``` to ```TRUE```, or when the URL, tag or build type change.
+In the CMake configuration run, in which the external is first requested, it is downloaded from a git repository by providing a URL and tag (or commit hash), and configured in a separate process and folder. 
+This is done to prevent global CMake options from clashing. 
+In later CMake configuration runs, this configuration of the external dependencies is not re-run, except when manually requested by setting the appropriate CMake cache variable ```EXTERNAL_<NAME>_NEW_VERSION``` to ```TRUE```, or when the URL, tag or build type change.
 
-When building MegaMol, all external dependencies are only built if they have not been built before. Afterwards, only by setting ```EXTERNAL_<NAME>_NEW_VERSION``` to ```TRUE``` can the build process be triggered again. This ensures that they are not rebuilt unnecessarily, but built when their version change.
+When building MegaMol, all external dependencies are only built if they have not been built before. 
+Afterwards, only by setting ```EXTERNAL_<NAME>_NEW_VERSION``` to ```TRUE``` can the build process be triggered again. 
+This ensures that they are not rebuilt unnecessarily, but built when their version change.
 
 #### Using external dependencies
 
-External dependencies are split into two categories: header-only libraries and libraries that have to be built into a static (```.a```/```.lib```) or dynamic (```.so```/```.dll```) library. Both kinds are defined in the ```CMakeExternals.cmake``` file in the MegaMol main directory and can be requested in the plugins using the command ```require_external(<NAME>)```. Generally, this command makes available the target ```<NAME>```, which provides all necessary information on where to find the library and include files.
+External dependencies are split into two categories: header-only libraries and libraries that have to be built into a static (```.a```/```.lib```) library. 
+Both kinds are defined in the ```CMakeExternals.cmake``` file in the MegaMol main directory and can be requested in the plugins using the command ```require_external(<NAME>)```. 
+Generally, this command makes available the target ```<NAME>```, which provides all necessary information on where to find the library and include files.
 
 #### Adding new external dependencies
 
@@ -198,7 +207,8 @@ add_external_headeronly_project(<NAME>
 | ```<INCLUDE_DIR>```    | Relative directory where the include files can be found, usually ```include```. Defaults to the main source directory. |
 | ```<DEPENDS>```        | Targets this library depends on, if any. |
 
-In the following example, the library Delaunator is downloaded from ```https://github.com/delfrrr/delaunator-cpp.git``` in its version ```v0.4.0```. The header files can be found in the folder ```include```.
+In the following example, the library Delaunator is downloaded from ```https://github.com/delfrrr/delaunator-cpp.git``` in its version ```v0.4.0```. 
+The header files can be found in the folder ```include```.
 
 ```
 add_external_headeronly_project(Delaunator
@@ -219,12 +229,13 @@ Additionally, information about the header-only libraries can be queried with th
 
 ##### Built libraries
 
-Libraries that are built into static or dynamic libraries, follow a process executing two different commands. The first command is responsible for setting up the project, while the second command creates the interface targets.
+Libraries that are built into static libraries, follow a process executing two different commands. 
+The first command is responsible for setting up the project, while the second command creates the interface targets.
 
 Similarly to the header-only libraries, the setup uses a command specifying the source and type of the library, additionally providing information for the configuration and build processes:
 
 ```
-add_external_project(<NAME> SHARED|STATIC
+add_external_project(<NAME> STATIC
    GIT_REPOSITORY <GIT_REPOSITORY>
   [GIT_TAG <GIT_TAG>]
   [PATCH_COMMAND <PATCH_COMMAND>...]
@@ -238,7 +249,7 @@ add_external_project(<NAME> SHARED|STATIC
 | Parameter                     | Description |
 | ----------------------------- | ----------- |
 | ```<NAME>```                  | Project name, usually the official name of the library or its abbreviation. |
-| ```SHARED \| STATIC```        | Indicate to build a shared (```.so```/```.dll```) or static (```.a```/```.lib```) library. Shared libraries are always built as Release, static libraries according to user selection. |
+| ```STATIC```                  | Indicate to build a static (```.a```/```.lib```) library. Static libraries are always built according to user selection. |
 | ```<GIT_REPOSITORY>```        | URL of the git repository. |
 | ```<GIT_TAG>```               | Tag or commit hash for getting a specific version, ensuring compatibility. Default behavior is to get the latest version. |
 | ```<PATCH_COMMAND>```         | Command that is run before the configuration step and is mostly used to apply patches or providing a modified ```CMakeLists.txt``` file. |
@@ -263,39 +274,36 @@ add_external_library(<NAME> [PROJECT <PROJECT>]
 | ```<NAME>```                  | Target name, for the main target this is usually the official name of the library or its abbreviation. |
 | ```<PROJECT>```               | If the target name does not match the name provided in the ```add_external_project``` command, the project has to be set accordingly. |
 | ```<LIBRARY>```               | The created library file, in case of a shared library a ```.so``` or ```.dll``` file, or ```.a``` or ```.lib``` for a static library. |
-| ```<IMPORT_LIBRARY>```        | If the library is a shared library, this defines the import library (```.lib```) on Windows systems. This has to be set for shared libraries. |
 | ```<INTERFACE_LIBRARIES>```   | Additional libraries the external library depends on. |
 | ```<DEBUG_SUFFIX>```          | Specify a suffix for the debug version of the library. The position of this suffix has to be specified by providing ```<SUFFIX>``` in the library name and has to match the debug suffix provided to the ```add_external_project``` command. |
 
-An example for a dynamic library is as follows, where the ```tracking``` library ```v2.0``` is defined as a dynamic library and downloaded from the VISUS github repository at ```https://github.com/UniStuttgart-VISUS/mm-tracking```. It builds two libraries, ```tracking``` and ```NatNetLib```, and uses the CMake flag ```-DCREATE_TRACKING_TEST_PROGRAM=OFF``` to prevent the building of a test program. Both libraries are created providing the paths to the respective dynamic and import libraries. Note that only the ```NatNetLib``` has to specify the project as its name does not match the external library.
+An example for a static library is as follows, where the ```tracking``` library ```v2.0``` is defined as a static library and downloaded from the VISUS github repository at ```https://github.com/UniStuttgart-VISUS/mm-tracking```. 
+It builds two libraries, ```tracking``` and ```NatNetLib```, and uses the CMake flag ```-DCREATE_TRACKING_TEST_PROGRAM=OFF``` to prevent the building of a test program. 
+Both libraries are created providing the paths to the respective import libraries. 
+Note that only the ```NatNetLib``` has to specify the project as its name does not match the external library.
 
 ```
-add_external_project(tracking SHARED
-  GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking
-  GIT_TAG "v2.0"
-  BUILD_BYPRODUCTS
-    "<INSTALL_DIR>/bin/tracking.dll"
-    "<INSTALL_DIR>/lib/tracking.lib"
-    "<INSTALL_DIR>/bin/NatNetLib.dll"
-    "<INSTALL_DIR>/lib/NatNetLib.lib"
-  CMAKE_ARGS
-    -DCREATE_TRACKING_TEST_PROGRAM=OFF)
+    set(TRACKING_LIB "lib/tracking.lib")
+    set(TRACKING_NATNET_LIB "lib/NatNetLib.lib")
+
+    add_external_project(tracking STATIC
+      GIT_REPOSITORY https://github.com/UniStuttgart-VISUS/mm-tracking.git
+      GIT_TAG "v2.0"
+      BUILD_BYPRODUCTS
+        "<INSTALL_DIR>/${TRACKING_LIB}"
+        "<INSTALL_DIR>/${TRACKING_NATNET_LIB}"
+      CMAKE_ARGS
+        -DCREATE_TRACKING_TEST_PROGRAM=OFF)
+
+    add_external_library(tracking
+      LIBRARY ${TRACKING_LIB})
+
+    add_external_library(natnet
+      PROJECT tracking
+      LIBRARY ${TRACKING_NATNET_LIB})
 ```
 
-```
-add_external_library(tracking
-  LIBRARY "bin/tracking.dll"
-  IMPORT_LIBRARY "lib/tracking.lib")
-```
-
-```
-add_external_library(natnet
-  PROJECT tracking
-  LIBRARY "bin/NatNetLib.dll"
-  IMPORT_LIBRARY "lib/NatNetLib.lib")
-```
-
-Further examples on how to include dynamic and static libraries can be found in the ```CMakeExternals.cmake``` file in the MegaMol main directory.
+Further examples on how to include static libraries can be found in the ```CMakeExternals.cmake``` file in the MegaMol main directory.
 
 Additionally, information about the libraries can be queried with the command ```external_get_property(<NAME> <VARIABLE>)```, where variable has to be one of the provided variables in the following table, and at the same time is used as local variable name for storing the queried results.
 
