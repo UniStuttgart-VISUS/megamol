@@ -77,7 +77,8 @@ jobs:
     inputs:
       cmakeArgs: '--build . --parallel $(numberOfCpuCores)'
 
-- job: 'File Checks'
+- job: FileChecks
+  displayName: 'File Checks'
   pool:
     name: 'default'
     demands:
