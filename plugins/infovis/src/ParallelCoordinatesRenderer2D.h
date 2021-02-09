@@ -330,7 +330,6 @@ namespace infovis {
         GLuint stenStore;
         GLuint depthStore2;
         GLuint ssboMatrices;
-        std::shared_ptr<glowl::FramebufferObject> nuFB;
         GLuint amortizedFboA;
         GLuint amortizedFboB;
         GLuint amortizedFboC;
@@ -357,8 +356,6 @@ namespace infovis {
         glm::mat4 invTexC = glm::mat4(1.0);
         glm::mat4 invTexD = glm::mat4(1.0);
 
-        //glm::mat4 invMatrices[100];
-        //glm::mat4 moveMatrices[100];
         std::vector<glm::mat4> invMatrices;
         std::vector<glm::mat4> moveMatrices;
         std::vector<glm::fvec2> hammerPositions;

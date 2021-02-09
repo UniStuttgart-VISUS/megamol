@@ -24,6 +24,7 @@
 #include "HistogramRenderer2D.h"
 #include "ParallelCoordinatesRenderer2D.h"
 #include "ScatterplotMatrixRenderer2D.h"
+#include "InfovisAmortizedRenderer.h"
 
 namespace megamol::infovis {
 /** Implementing the instance class of this plugin */
@@ -59,6 +60,7 @@ public:
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeriesCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::infovis::InfovisAmortizedRenderer>();
     }
 };
 } // namespace megamol::infovis

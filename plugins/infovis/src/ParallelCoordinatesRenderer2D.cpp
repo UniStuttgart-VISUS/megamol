@@ -235,8 +235,6 @@ bool ParallelCoordinatesRenderer2D::create(void) {
     glGenBuffers(1, &minmaxBuffer);
     glGenBuffers(1, &counterBuffer);
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("GENERATED");
-    nuFB = std::make_shared<glowl::FramebufferObject>(1, 1);
-    nuFB->createColorAttachment(GL_RGB32F, GL_RGB, GL_FLOAT);
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
 
