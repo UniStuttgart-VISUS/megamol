@@ -47,7 +47,7 @@ Today, it is governed by a number of teams at the TU Dresden and the University 
 The goal of the project is to provide a software base for visualization research and to provide a stable environment to deploy newest visualization prototypes to application domain researchers. MegaMol is not a visualization tool. MegaMol is a platform for visualization research.
 Visit the project [website](https://megamol.org/ "MegaMol Homepage") for downloads and more information.
 
-**If you faced any trouble during installation or if you have any furhter questions concerning MegaMol, we encourage you to contact the developer team by opening an [issue](https://github.com/UniStuttgart-VISUS/megamol/issues/new) on github!**
+**If you faced any trouble during installation or if you have any further questions concerning MegaMol, we encourage you to contact the developer team by opening an [issue](https://github.com/UniStuttgart-VISUS/megamol/issues/new) on github!**
 
 
 <!-- ###################################################################### -->
@@ -108,7 +108,7 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
     `$ git clone https://github.com/UniStuttgart-VISUS/megamol.git megamol/`
     `$ cd megamol/`
 
-3. Checkout the lastest release:
+3. Checkout the latest release:
 
     `$ git checkout tags/v1.3 -b latest_release`
 
@@ -139,7 +139,7 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 <!-- ---------------------------------------------------------------------- -->
 ### Command Line Arguments
 
-Providing additional command line arguments allow individual configuration of global MegaMol behaviour and settings.  
+Providing additional command line arguments allow individual configuration of global MegaMol behavior and settings.  
 <!-- (The command line arguments are only read and interpreted by the `frontend`.)-->
 
 The following command line arguments are available:
@@ -265,7 +265,7 @@ To register a shader directory, add a corresponding tag to the configuration fil
 
 The configuration file also specifies global settings variables which can modify the behavior of different modules.
 
-- The following settings variable activates (or deactivates) the *arcball* camera behavior. Set this option to `on` in order to use the *arcball* camera navigation.
+- The following settings variable activates (or deactivates) the *arcball* (orbiting) camera behavior. Set this option to `on` in order to use the *arcball* camera navigation.
 ```lua
     mmSetConfigValue("arcball",     "off")
 ```
@@ -305,7 +305,7 @@ All other configuration options are ***DEPRECATED*** and have currently no effec
 
 *DEPRECATED:*
 
-- Show MegMol window in fullscreen or not.
+- Show MegMol window in full screen mode or not.
 ```lua    
     mmSetConfigValue("fullscreen",  "off")
 ```
@@ -333,8 +333,8 @@ Test your installation following the description in the following section.
 -----
 ## Test Installation
 
-In order to test the installtion, simply run the frontend executable.  
-Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your working directory to the MegaMol  install directory containing the `bin` folder (default: `../megamol/build/install/bin`) and execute the MegaMol binary:
+In order to test the installation, simply run the frontend executable.  
+Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your working directory to the MegaMol install directory containing the `bin` folder (default: `../megamol/build/install/bin`) and execute the MegaMol binary:
 
 **Windows:**
 ```
@@ -347,7 +347,7 @@ Open a console (e.g *Linux Terminal* or *Windows Powershell*) and change your wo
     $ ./megamol
 ```
 
-If additional external libraries are required (e.g. when using the OSPRay plugin), for Linux you have have to run the provided shell script `./megamol.sh` instead. 
+If additional external libraries are required (e.g. when using the OSPRay plugin), for Linux you have to run the provided shell script `./megamol.sh` instead. 
 This script adds the required library path:
 
 ```bash
@@ -411,7 +411,7 @@ In this chapter, we show the operating principle of MegaMol which is required to
 ### Modules, Views and Calls
 
 The runtime functionality of MegaMol is constructed by *modules* and *calls*. 
-These two type of objects are instantiated at runtime, interconnected and build the *module call graph*. 
+These two types of objects are instantiated at runtime, interconnected and build the *module call graph*. 
 The figure given below, shows an example module call graph containing a *view*, the rendering content of a window, a *renderer*, a *data source*, and some modules providing additional information for the renderer. 
 The modules are interconnected by the *call* objects. 
 The connection endpoints at the modules are *CallerSlots* (outgoing, located on the right side of modules) or *CalleeSlots* (incoming, located on the left side of modules) shown as circled dots.
@@ -457,7 +457,7 @@ This avoidance of copy operations is most important and one of the core design i
 *Parameter Slots* are the third type of slots. 
 These are access points to exposed parameters controlling the functionality. 
 Such parameters are automatically included in the frontend’s GUI. 
-An example of such parameters are the setup of the virtual camera in modules of type `View3D_2` or the dataset file name in data source modules.  
+An example of such parameters is the setup of the virtual camera in modules of type `View3D_2` or the dataset file name in data source modules.  
 
 The *module call graph* is configured for MegaMol using a project file. 
 These files define modules and interconnecting calls for different instance specifications. 
@@ -560,13 +560,13 @@ Add more ... ?
 -----
 ## Making High-Resolution Screenshots
 
-The GUI menu option `Screenshot` (hotkey `F2`) provides a basic screenshot funtionality using the current viewport size. 
+The GUI menu option `Screenshot` (hotkey `F2`) provides a basic screenshot functionality using the current viewport size. 
 If screenshots are taken consecutively, the given file name is prepended by an incrementing suffix. 
 This way, no new file name has to be set after each screenshot.  
 
 <!-- DEPRECATED/UPDATE - MegaMol is not accessible for modules and therefore the required view instance can not be found
 
-Offering more flexible options and special functions to create high-resolution screenshoots of any rendering, you can add the `ScreenShooter` module to you project.
+Offering more flexible options and special functions to create high-resolution screenshots of any rendering, you can add the `ScreenShooter` module to you project.
 The corresponding settings can be found in the modules parameters provided in the GUI (see figure of `ScreenShooter` parameters below).
 
 In order to connect the `ScreenShooter` with your *view*, you need to set the **instance name** of your view instance in the corresponding variable `::screenshooter::view` (e.g. to `inst`). When making single screenshots, set the option `makeAnim` in the group `::screenshooter::anim` to `disabled`, as shown in the figure. 
