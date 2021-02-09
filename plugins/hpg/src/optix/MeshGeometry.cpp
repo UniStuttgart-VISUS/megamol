@@ -219,7 +219,7 @@ bool megamol::hpg::optix::MeshGeometry::get_data_cb(core::Call& c) {
         if (!assertData(*in_data, *in_ctx))
             return false;
         _frame_id = meta.m_frame_ID;
-        _data_hash = meta.m_data_hash;
+        //_data_hash = meta.m_data_hash;
     }
 
     program_groups_[0] = mesh_module_;

@@ -383,11 +383,11 @@ bool megamol::hpg::optix::TransitionCalculator::get_data_cb(core::Call& c) {
     if (!(*in_paths)(0))
         return false;
 
-    if (/*in_data->hasUpdate()*/ meta.m_frame_ID != _frame_id || meta.m_data_hash != _data_hash) {
+    if (/*in_data->hasUpdate()*/ meta.m_frame_ID != _frame_id /*|| meta.m_data_hash != _data_hash*/) {
         if (!assertData(*in_ctx, *in_mesh, *in_paths, meta.m_frame_ID))
             return false;
         _frame_id = meta.m_frame_ID;
-        _data_hash = meta.m_data_hash;
+        //_data_hash = meta.m_data_hash;
     }
 
     /*program_groups_[0] = mesh_module_;

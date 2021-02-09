@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER hpg EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build hpg" ON)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build hpg" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   if(NOT ENABLE_CUDA)
@@ -95,8 +95,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Target definition
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${cuda_modules} ${cuda_resource_include_files})
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${cuda_resource_include_files} ${embedded_raygen_programs} ${embedded_miss_programs} ${embedded_sphere_programs} ${embedded_mesh_programs} ${embedded_transitioncalculator_programs})
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
+  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${cuda_resource_include_files} ${embedded_raygen_programs} ${embedded_miss_programs} ${embedded_sphere_programs} ${embedded_mesh_programs} ${embedded_transitioncalculator_programs})
+  #set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -109,9 +109,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   if(WIN32)
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-    if(MSVC)
-      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
-    endif()
   else()
     install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
@@ -125,4 +122,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   #source_group("CUDA Modules" FILES ${cuda_modules})
 
   #set_target_properties(${PROJECT_NAME}_PTX PROPERTIES FOLDER utility)
+
+  # Register plugin
+  megamol_register_plugin(${PROJECT_NAME})
 endif()
