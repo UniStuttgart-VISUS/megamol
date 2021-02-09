@@ -15,19 +15,32 @@ static void log(std::string const& text) {
 }
 
 
+static void log_error(std::string const& text) {
+    const std::string msg = "CUDA_Service: " + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
+}
+
+
 bool megamol::frontend::CUDA_Service::init(void* configPtr) {
-    cuInit(0);
+    auto const cu_ret = cuInit(0);
+    if (cu_ret != CUDA_SUCCESS) {
+        log_error("Unable to initialize Cuda");
+        return false;
+    }
     int deviceCount = 0;
     cuDeviceGetCount(&deviceCount);
     if (deviceCount == 0) {
-        throw std::runtime_error("[CUDA_Service]: No Cuda device available");
+        log_error("No Cuda device available");
+        return false;
     }
     cuDeviceGet(&ctx_.device_, 0);
     auto ctx_ptr = reinterpret_cast<CUcontext*>(&ctx_);
     cuCtxCreate(ctx_ptr, CU_CTX_SCHED_BLOCKING_SYNC | CU_CTX_MAP_HOST, ctx_.device_);
 
-    if (ctx_.ctx_ == nullptr)
+    if (ctx_.ctx_ == nullptr) {
+        log_error("Unable to create a Cuda context");
         return false;
+    }
 
     resourceReferences_ = {{"CUDA_Context", ctx_}};
 
