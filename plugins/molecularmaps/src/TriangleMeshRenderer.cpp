@@ -54,10 +54,12 @@ bool TriangleMeshRenderer::create(void) {
 
         out vec4 color;
         out vec3 normal;
+        out vec3 viewVec;
 
         void main() {
             normal = normalize(inverse(transpose(mat3(view))) * in_normal);
             color = vec4(in_color, 1.0);
+            viewVec = normalize(-vec3(view * glm::vec4(in_position, 1.0)));
             gl_Position = proj * view * glm::vec4(in_position, 1.0);
         }
         )"""";
@@ -91,9 +93,28 @@ bool TriangleMeshRenderer::create(void) {
 
         in vec4 color;
         in vec3 normal;
+        in vec3 viewVec;
+
+        uniform mat4 proj = mat4(1.0);
+        uniform mat4 view = mat4(1.0);
+
+        uniform vec3 light_direction = vec3(0.75, -1.0, 0.0);
+        uniform vec4 light_params = vec4(0.2, 0.8, 0.4, 10.0);
+
+        vec4 localLighting(vec4 color, vec3 normal, vec3 vv, vec3 light) {
+            if(length(light_direction) < 0.0001) return color;
+            float ndotl = dot(normal, light);
+            vec3 r = normalize(2.0 * vec3(ndotl) * normal - light);
+            vec4 l = light_params;
+            float alph = color.w;
+            vec3 result = l.x * color.xyz + l.y * color.xyz * max(ndotl, 0.0) + l.z * vec3(pow(max(dot(r, -vv), 0.0), l.w));
+            return vec4(result, alph);
+        }
 
         void main() {
-            out_color = color;
+            vec3 n = normalize(normal);
+            vec3 l = normalize(-light_direction);
+            out_color = localLighting(color, normal, viewVec, l);
         }
     )"""";
     const std::string fragment_code = fragment_code_c;
@@ -114,8 +135,8 @@ bool TriangleMeshRenderer::create(void) {
         this->shader_3 = std::make_shared<glowl::GLSLProgram>(shader_srcs_3);
     } catch (glowl::GLSLProgramException const& exc) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[TriangleMeshRenderer] Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n",
-            this->shader_3->getDebugLabel().c_str(), exc.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[TriangleMeshRenderer] Error during shader program creation: %s. [%s, %s, line %d]\n", exc.what(),
+            __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -126,8 +147,8 @@ bool TriangleMeshRenderer::create(void) {
         this->shader_4 = std::make_shared<glowl::GLSLProgram>(shader_srcs_4);
     } catch (glowl::GLSLProgramException const& exc) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[TriangleMeshRenderer] Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n",
-            this->shader_4->getDebugLabel().c_str(), exc.what(), __FILE__, __FUNCTION__, __LINE__);
+            "[TriangleMeshRenderer] Error during shader program creation: %s. [%s, %s, line %d]\n", exc.what(),
+            __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -143,7 +164,7 @@ void TriangleMeshRenderer::release(void) {}
 /*
  * TriangleMeshRenderer::Render
  */
-bool TriangleMeshRenderer::Render(core::view::CallRender3D& call) {
+bool TriangleMeshRenderer::Render(core::view::CallRender3D& call, bool lighting) {
 
     if (this->faces == nullptr)
         return false;
@@ -186,8 +207,14 @@ bool TriangleMeshRenderer::Render(core::view::CallRender3D& call) {
     glGetFloatv(GL_MODELVIEW_MATRIX, mv_matrix.data());
     glGetFloatv(GL_PROJECTION_MATRIX, proj_matrix.data());
 
+    glm::vec3 light_direction = glm::vec3(0.75f, -1.0f, 0.0f);
+    if (!lighting) {
+        light_direction = glm::vec3(0.0f, 0.0f, 0.0f);
+    }
+
     glUniformMatrix4fv(shader->getUniformLocation("view"), 1, GL_FALSE, mv_matrix.data());
     glUniformMatrix4fv(shader->getUniformLocation("proj"), 1, GL_FALSE, proj_matrix.data());
+    glUniform3f(shader->getUniformLocation("light_direction"), light_direction.x, light_direction.y, light_direction.z);
 
     glDrawElements(GL_TRIANGLES, static_cast<uint32_t>(this->faces->size()), GL_UNSIGNED_INT, nullptr);
 
@@ -202,11 +229,11 @@ bool TriangleMeshRenderer::Render(core::view::CallRender3D& call) {
 /*
  * TriangleMeshRenderer::RenderWireFrame
  */
-bool TriangleMeshRenderer::RenderWireFrame(core::view::CallRender3D& call) {
+bool TriangleMeshRenderer::RenderWireFrame(core::view::CallRender3D& call, bool lighting) {
     GLint oldpolymode[2];
     glGetIntegerv(GL_POLYGON_MODE, oldpolymode);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    this->Render(call);
+    this->Render(call, lighting);
     glPolygonMode(GL_FRONT, oldpolymode[0]);
     glPolygonMode(GL_BACK, oldpolymode[1]);
     return true;

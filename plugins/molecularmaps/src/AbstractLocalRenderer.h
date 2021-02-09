@@ -35,7 +35,7 @@ namespace molecularmaps {
          * @param call The incoming rendering call containing the necessary camera information
          * @return True on success, false otherwise.
          */
-        virtual bool Render(core::view::CallRender3D& call) = 0;
+        virtual bool Render(core::view::CallRender3D& call, bool lighting = true) = 0;
 
         /**
          * Frees all needed resources used by this renderer

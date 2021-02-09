@@ -4368,16 +4368,19 @@ bool MapGenerator::Render(Call& call) {
         glDisable(GL_DEPTH_TEST);
     }
 
+    bool lightDisabled = !lighting;
+
     // If we do not need lighting turn it off.
     if (!lighting || sphereMode) {
         glDisable(GL_LIGHTING);
+        lightDisabled = true;
     }
 
     // Render the protein.
     if (this->draw_wireframe_param.Param<param::BoolParam>()->Value()) {
-        this->triMeshRenderer.RenderWireFrame(*cr3d);
+        this->triMeshRenderer.RenderWireFrame(*cr3d, !lightDisabled);
     } else {
-        this->triMeshRenderer.Render(*cr3d);
+        this->triMeshRenderer.Render(*cr3d, !lightDisabled);
     }
 
     // Render the geodesic lines.
@@ -4644,10 +4647,12 @@ void MapGenerator::renderLatLonLines(
             this->sphere_data.GetZ(), this->sphere_data.GetW());
         this->geodesic_shader.SetParameter("frontVertex", this->vertices_sphere[this->look_at_id * 3],
             this->vertices_sphere[this->look_at_id * 3 + 1], this->vertices_sphere[this->look_at_id * 3 + 2]);
+
+        // Render the lines.
+        glDrawArrays(GL_LINES, 0, GLsizei(this->lat_lon_lines_vertex_cnt));
     }
 
-    // Render the lines.
-    glDrawArrays(GL_LINES, 0, GLsizei(this->lat_lon_lines_vertex_cnt));
+    // TODO fix for geodesic lines on the sphere
 
     // Check if we render onto the 3D sphere or the 2D map.
     if (p_project) {
