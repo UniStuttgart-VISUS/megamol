@@ -46,6 +46,15 @@ namespace hpg {
             glm::vec3 lower;
             glm::vec3 upper;
         } box3f;
+
+        typedef struct RayH {
+            RayH(glm::vec3 const& org, glm::vec3 const& dir, float tmin, float tmax)
+                    : origin(org), direction(dir), tMin(tmin), tMax(tmax) {}
+            glm::vec3 origin;
+            glm::vec3 direction;
+            float tMin;
+            float tMax;
+        };
     } // namespace optix
 } // namespace hpg
 } // namespace megamol

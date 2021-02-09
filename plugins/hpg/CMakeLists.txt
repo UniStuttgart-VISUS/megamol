@@ -1,5 +1,5 @@
 #
-# MegaMol™ hpg Plugin
+# MegaMol hpg Plugin
 # Copyright 2020, by MegaMol Team
 # Alle Rechte vorbehalten. All rights reserved.
 #
@@ -45,6 +45,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   cuda_compile_and_embed(embedded_miss_programs  cuda_resources/miss.cu)
   cuda_compile_and_embed(embedded_sphere_programs cuda_resources/sphere.cu)
   cuda_compile_and_embed(embedded_mesh_programs cuda_resources/mesh.cu)
+  cuda_compile_and_embed(embedded_transitioncalculator_programs cuda_resources/transitioncalculator.cu)
 
 #   set(cuda_module_base_path "${CMAKE_CURRENT_BINARY_DIR}/cuda_modules")
 #   set(cuda_modules )
@@ -94,7 +95,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Target definition
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
   #add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${cuda_modules} ${cuda_resource_include_files})
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${cuda_resource_include_files} ${embedded_raygen_programs} ${embedded_miss_programs} ${embedded_sphere_programs} ${embedded_mesh_programs})
+  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${source_files} ${cuda_resource_include_files} ${embedded_raygen_programs} ${embedded_miss_programs} ${embedded_sphere_programs} ${embedded_mesh_programs} ${embedded_transitioncalculator_programs})
   set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC

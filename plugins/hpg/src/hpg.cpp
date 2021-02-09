@@ -19,6 +19,7 @@
 #include "optix/SphereGeometry.h"
 #include "optix/Context.h"
 #include "optix/MeshGeometry.h"
+#include "optix/TransitionCalculator.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -50,6 +51,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::hpg::optix::SphereGeometry>();
             this->module_descriptions.RegisterAutoDescription<megamol::hpg::optix::Context>();
             this->module_descriptions.RegisterAutoDescription<megamol::hpg::optix::MeshGeometry>();
+            this->module_descriptions.RegisterAutoDescription<megamol::hpg::optix::TransitionCalculator>();
             //
             // TODO: Register your plugin's modules here
             // like:

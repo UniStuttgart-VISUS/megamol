@@ -144,6 +144,10 @@ namespace hpg {
                 return a + t * (b - a);
             }
 
+            inline __device__ glm::vec4 lerp(const glm::vec4& a, const glm::vec4& b, const float t) {
+                return a + t * (b - a);
+            }
+
             // Optix SDK
 
             struct Onb {
