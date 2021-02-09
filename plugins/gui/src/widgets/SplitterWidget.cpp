@@ -20,7 +20,7 @@ bool megamol::gui::SplitterWidget::Widget(FixedSplitterSide fixed_side, float& s
 
     assert(ImGui::GetCurrentContext() != nullptr);
 
-    const float thickness = 12.0f;
+    const float thickness = (12.0f * megamol::gui::gui_scaling.Get());
 
     bool split_vertically = true;
     float min_size = 1.0f; // >=1.0!
@@ -44,8 +44,8 @@ bool megamol::gui::SplitterWidget::Widget(FixedSplitterSide fixed_side, float& s
         bb.Min = window->DC.CursorPos + (split_vertically ? ImVec2((width_avail - size_right) + 1.0f, 0.0f)
                                                           : ImVec2(0.0f, (width_avail - size_right) + 1.0f));
     }
-    bb.Max = bb.Min + ImGui::CalcItemSize(split_vertically ? ImVec2(thickness - 6.0f, splitter_long_axis_size)
-                                                           : ImVec2(splitter_long_axis_size, thickness - 6.0f),
+    bb.Max = bb.Min + ImGui::CalcItemSize(split_vertically ? ImVec2(thickness / 2.0f, splitter_long_axis_size)
+                                                           : ImVec2(splitter_long_axis_size, thickness / 2.0f),
                           0.0f, 0.0f);
 
     bool retval = ImGui::SplitterBehavior(

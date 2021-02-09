@@ -278,8 +278,8 @@ namespace gui {
 
         // Presentation ----------------------------------------------------
 
-        inline bool PresentGUI(ParameterPresentation::WidgetScope scope) {
-            return this->present.Present(*this, scope);
+        inline bool PresentGUI(ParameterPresentation::WidgetScope scope, const std::string& module_fullname) {
+            return this->present.Present(*this, scope, module_fullname);
         }
 
     private:

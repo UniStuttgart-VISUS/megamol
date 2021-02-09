@@ -53,7 +53,7 @@ bool GUI_Service::init(const Config& config) {
             this->m_gui = std::make_shared<megamol::gui::GUIWrapper>();
 
             if (check_gui_not_nullptr) {
-                if (this->m_gui->Get()->CreateContext_GL(config.core_instance)) {
+                if (this->m_gui->Get()->CreateContext(megamol::gui::GUIImGuiAPI::OPEN_GL, config.core_instance)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully.");
                     return true;
                 }
@@ -101,6 +101,7 @@ void GUI_Service::digestChangedRequestedResources() {
         m_resource_state.window_size.x = static_cast<float>(std::get<0>(size_event));
         m_resource_state.window_size.y = static_cast<float>(std::get<1>(size_event));
     }
+    gui->SetClipboardFunc(window_events->_getClipboardString_Func, window_events->_setClipboardString_Func, window_events->_clipboard_user_data);
 
     /// KeyboardEvents = resource index 2
     auto keyboard_events = &this->m_requestedResourceReferences[2].getResource<megamol::frontend_resources::KeyboardEvents>();
