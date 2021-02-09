@@ -38,15 +38,18 @@ OSPRayMetallicPaintMaterial::~OSPRayMetallicPaintMaterial(void) {
 void OSPRayMetallicPaintMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::METALLICPAINT;
 
+    metallicpaintMaterial mpm;
+
     auto scolor = this->metallicShadeColor.Param<core::param::Vector3fParam>();
-    materialContainer.metallicShadeColor = scolor->getArray();
-
+    mpm.metallicShadeColor = scolor->getArray();
     auto gcolor = this->metallicGlitterColor.Param<core::param::Vector3fParam>();
-    materialContainer.metallicGlitterColor = gcolor->getArray();
+    mpm.metallicGlitterColor = gcolor->getArray();
+    mpm.metallicGlitterSpread =
+        this->metallicGlitterSpread.Param<core::param::FloatParam>()->Value();
+    mpm.metallicEta =
+        this->metallicEta.Param<core::param::FloatParam>()->Value();
 
-    materialContainer.metallicGlitterSpread = this->metallicGlitterSpread.Param<core::param::FloatParam>()->Value();
-
-    materialContainer.metallicEta = this->metallicEta.Param<core::param::FloatParam>()->Value();
+    materialContainer.material = mpm;
 }
 
 bool OSPRayMetallicPaintMaterial::InterfaceIsDirty() {

@@ -5,12 +5,10 @@
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/CallAutoDescription.h"
 
-#include "image_calls/image_calls.h"
-
 namespace megamol {
 namespace image_calls {
 
-class image_calls_API Image2DCall : public megamol::core::AbstractGetDataCall {
+class Image2DCall : public megamol::core::AbstractGetDataCall {
 public:
     /**
      * Answer the name of this call.

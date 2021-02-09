@@ -144,6 +144,90 @@ public:
 
 };
 
+
+template<typename T, int DIM>
+class genericPointcloud {
+public:
+    using coord_t = T;
+
+    genericPointcloud(std::vector<T> const& data, std::array<T, 2 * DIM> const& bbox, std::array<T, DIM> const& weights)
+            : _point_data(data), _bbox(bbox), _weights(weights) {}
+
+    ~genericPointcloud() = default;
+
+    // Must return the number of data points
+    inline size_t kdtree_get_point_count() const {
+        return _point_data.size() / static_cast<std::size_t>(DIM);
+    }
+
+    // Returns the distance between the vector "p1[0:size-1]" and the data point with index "idx_p2" stored in the
+    // class:
+    inline coord_t kdtree_distance(const coord_t* p1, const size_t idx_p2, size_t /*size*/) const {
+        coord_t const* p2 = get_position(idx_p2);
+
+        coord_t res = 0;
+
+        for (int d = 0; d < DIM; ++d) {
+            res += _weights[d] * (p1[d] - p2[d]) * (p1[d] - p2[d]);
+        }
+
+        return res;
+    }
+
+    // Returns the dim'th component of the idx'th point in the class:
+    // Since this is inlined and the "dim" argument is typically an immediate value, the
+    //  "if/else's" are actually solved at compile time.
+    inline coord_t kdtree_get_pt(const size_t idx, int dim) const {
+        return get_position(idx)[dim];
+    }
+
+    // Optional bounding-box computation: return false to default to a standard bbox computation loop.
+    //   Return true if the BBOX was already computed by the class and returned in "bb" so it can be avoided to redo it
+    //   again. Look at bb.size() to find out the expected dimensionality (e.g. 2 or 3 for point clouds)
+    template<typename BBOX>
+    bool kdtree_get_bbox(BBOX& bb) const {
+        for (int d = 0; d < DIM; ++d) {
+            bb[d].low = _bbox[d * 2];
+            bb[d].high = _bbox[d * 2 + 1];
+        }
+
+        return true;
+    }
+
+    coord_t const* get_position(std::size_t idx) const {
+        return &(_point_data[idx * static_cast<std::size_t>(DIM)]);
+    }
+
+    void normalize_data() {
+        std::array<T, DIM> mins;
+        std::array<T, DIM> divs;
+        for (int d = 0; d < DIM; ++d) {
+            mins[d] = _bbox[d * 2];
+            divs[d] = static_cast<T>(1.0f) / (_bbox[d * 2 + 1] - _bbox[d * 2] + static_cast<T>(1e-8f));
+        }
+
+        auto const num_points = kdtree_get_point_count();
+        for (std::size_t pidx = 0; pidx < num_points; ++pidx) {
+            for (int d = 0; d < DIM; ++d) {
+                _point_data[pidx * DIM + d] -= mins[d];
+                _point_data[pidx * DIM + d] *= divs[d];
+            }
+        }
+
+        for (int d = 0; d < DIM; ++d) {
+            _bbox[d * 2] = 0.0f;
+            _bbox[d * 2 + 1] = 1.0f;
+        }
+    }
+
+private:
+    std::vector<T> _point_data;
+
+    std::array<T, 2 * DIM> _bbox;
+
+    std::array<T, DIM> _weights;
+};
+
 } /* end namespace datatools */
 } /* end namespace stdplugin */
 } /* end namespace megamol */

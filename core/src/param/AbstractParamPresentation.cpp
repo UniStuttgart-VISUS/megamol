@@ -29,6 +29,7 @@ const std::string AbstractParamPresentation::GetTypeName(ParamType type) {
     case(ParamType::VECTOR3F): return "Vector3fParam";
     case(ParamType::VECTOR4F): return "Vector4fParam";
     case(ParamType::GROUP_ANIMATION): return "AnimationGroup";
+    case (ParamType::GROUP_3D_CUBE): return "3DCubeGroup";
     default: return "UNKNOWN";
     }
 }
@@ -55,6 +56,7 @@ AbstractParamPresentation::AbstractParamPresentation(void)
     this->presentation_name_map.emplace(Presentation::Rotation, "Rotation");
     this->presentation_name_map.emplace(Presentation::PinMouse, "Pin to Mouse");
     this->presentation_name_map.emplace(Presentation::Group_Animation, "Animation");
+    this->presentation_name_map.emplace(Presentation::Group_3D_Cube, "3D Cube");
 }
 
 
@@ -130,6 +132,10 @@ bool AbstractParamPresentation::InitPresentation(AbstractParamPresentation::Para
         } break;
         case (ParamType::GROUP_ANIMATION): {
             this->compatible = Presentation::Basic | Presentation::Group_Animation;
+            this->SetGUIPresentation(Presentation::Basic);
+        } break;
+        case (ParamType::GROUP_3D_CUBE): {
+            this->compatible = Presentation::Basic | Presentation::Group_3D_Cube;
             this->SetGUIPresentation(Presentation::Basic);
         } break;
         default:

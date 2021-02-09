@@ -8,7 +8,6 @@
 #ifndef MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
 #define MEGAMOL_CINEMATIC_KEYFRAME_H_INCLUDED
 
-
 #include <glm/glm.hpp>
 
 #include "CinematicUtils.h"

@@ -35,12 +35,15 @@ OSPRayLuminousMaterial::~OSPRayLuminousMaterial(void) {
 void OSPRayLuminousMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::LUMINOUS;
 
+    luminousMaterial lm;
     auto lumcolor = this->lumColor.Param<core::param::Vector3fParam>();
-    materialContainer.lumColor = lumcolor->getArray();
+    lm.lumColor = lumcolor->getArray();
+    lm.lumIntensity =
+        this->lumIntensity.Param<core::param::FloatParam>()->Value();
+    lm.lumTransparency =
+        this->lumTransparency.Param<core::param::FloatParam>()->Value();
 
-    materialContainer.lumIntensity = this->lumIntensity.Param<core::param::FloatParam>()->Value();
-
-    materialContainer.lumTransparency = this->lumTransparency.Param<core::param::FloatParam>()->Value();
+    materialContainer.material = lm;
 }
 
 bool OSPRayLuminousMaterial::InterfaceIsDirty() {

@@ -84,7 +84,7 @@ bool megamol::gui::Call::DisconnectCallSlots(ImGuiID calling_callslot_uid) {
                 callslot_map.second.reset();
             }
         }
-    } catch (std::exception e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;

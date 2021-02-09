@@ -34,6 +34,6 @@ CallKeyframeKeeper::CallKeyframeKeeper(void) : core::AbstractGetDataCall()
 CallKeyframeKeeper::~CallKeyframeKeeper(void) {
 
     this->cameraState.reset();
-	this->keyframes.reset();
+    this->keyframes.reset();
     this->interpolCamPos.reset();
 }

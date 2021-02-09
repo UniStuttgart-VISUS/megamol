@@ -34,7 +34,7 @@ OverlayRenderer::OverlayRenderer(void)
         , paramTimeParameter("transport_ctrl::time_parameter_name",
               "The full parameter name for the animation time, e.g. '::Project_1::View3D_21::anim::time'.")
         , paramPrefix("parameter::prefix", "The parameter value prefix.")
-        , paramSufix("parameter::sufix", "The parameter value sufix.")
+        , paramSuffix("parameter::suffix", "The parameter value suffix.")
         , paramParameterName("parameter::name",
               "The full parameter name, e.g. '::Project_1::View3D_21::cam::position'. "
               "Supprted parameter types: float, int, Vector2f/3f/4f")
@@ -120,8 +120,8 @@ OverlayRenderer::OverlayRenderer(void)
     this->paramPrefix << new param::StringParam("");
     this->MakeSlotAvailable(&this->paramPrefix);
 
-    this->paramSufix << new param::StringParam("");
-    this->MakeSlotAvailable(&this->paramSufix);
+    this->paramSuffix << new param::StringParam("");
+    this->MakeSlotAvailable(&this->paramSuffix);
 
     this->paramParameterName << new param::StringParam("");
     this->paramParameterName.SetUpdateCallback(this, &OverlayRenderer::onParameterName);
@@ -377,7 +377,7 @@ void OverlayRenderer::setParameterGUIVisibility(void) {
 
     // Parameter Mode
     this->paramPrefix.Parameter()->SetGUIVisible(parameter_mode);
-    this->paramSufix.Parameter()->SetGUIVisible(parameter_mode);
+    this->paramSuffix.Parameter()->SetGUIVisible(parameter_mode);
     this->paramParameterName.Parameter()->SetGUIVisible(parameter_mode);
 
     // Label Mode
@@ -504,7 +504,7 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         auto param_prefix = this->paramPrefix.Param<param::StringParam>()->Value();
         std::string prefix = std::string(param_prefix.PeekBuffer());
 
-        auto param_sufix = this->paramSufix.Param<param::StringParam>()->Value();
+        auto param_sufix = this->paramSuffix.Param<param::StringParam>()->Value();
         std::string sufix = std::string(param_sufix.PeekBuffer());
 
         std::string text("");
@@ -806,13 +806,13 @@ bool OverlayRenderer::loadShader(
                 "[GUI] Unable to compile: Unknown error [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException ce) {
+    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException& ce) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unable to compile shader (@%s): %s [%s, %s, line %d]\n",
             vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
             ce.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return false;
-    } catch (vislib::Exception e) {
+    } catch (vislib::Exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Unable to compile shader: %s [%s, %s, line %d]\n", e.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
         return false;

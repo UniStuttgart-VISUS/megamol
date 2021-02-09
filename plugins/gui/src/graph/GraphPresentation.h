@@ -55,7 +55,6 @@ namespace gui {
             this->graph_state.interact.interfaceslot_compat_ptr.reset();
         }
 
-
         ImGuiID GetHoveredGroup(void) const {
             return this->graph_state.interact.group_hovered_uid;
         }
@@ -110,7 +109,7 @@ namespace gui {
         bool multiselect_done;
         bool canvas_hovered;
         float current_font_scaling;
-        float module_param_child_height;
+        bool add_menu_scrollbar_height;
         // State propagated and shared by all graph items.
         megamol::gui::GraphItemsState_t graph_state;
 

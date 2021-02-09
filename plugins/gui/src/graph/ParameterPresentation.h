@@ -34,11 +34,6 @@
 
 #include <variant>
 
-// Used for platform independent clipboard (ImGui so far only provides windows implementation)
-#ifdef GUI_USE_GLFW
-#include "GLFW/glfw3.h"
-#endif
-
 
 namespace megamol {
 namespace gui {
@@ -87,14 +82,13 @@ namespace gui {
 
         inline void ConnectExternalTransferFunctionEditor(
             std::shared_ptr<megamol::gui::TransferFunctionEditor> tfe_ptr) {
-            if (this->tf_editor_external_ptr != tfe_ptr) {
-                this->tf_editor_external_ptr = tfe_ptr;
-                this->use_external_tf_editor = true;
-            }
+            this->tf_editor_external_ptr = tfe_ptr;
         }
 
         void LoadTransferFunctionTexture(
             std::vector<float>& in_texture_data, int& in_texture_width, int& in_texture_height);
+
+        // Custom Buttons ---------------
 
         /** "Point in Circle" Button for additional drop down Options. */
         static bool OptionButton(const std::string& id, const std::string& label = "", bool dirty = false);
@@ -103,7 +97,11 @@ namespace gui {
         static bool KnobButton(const std::string& id, float size, float& inout_value, float minval, float maxval);
 
         /** Extended parameter mode button. */
-        static bool ParameterExtendedModeButton(bool& inout_extended_mode);
+        static bool ParameterExtendedModeButton(const std::string& id, bool& inout_extended_mode);
+
+        /** Lua parameter command copy button. */
+        static bool LuaButton(const std::string& id, const std::string& param_value, const std::string& param_fullname,
+            const std::string& module_fullname);
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -116,7 +114,7 @@ namespace gui {
         bool show_minmax;
 
         std::shared_ptr<megamol::gui::TransferFunctionEditor> tf_editor_external_ptr;
-        megamol::gui::TransferFunctionEditor tf_editor_internal;
+        megamol::gui::TransferFunctionEditor tf_editor_inplace;
         bool use_external_tf_editor;
         bool show_tf_editor;
         size_t tf_editor_hash;
@@ -128,7 +126,7 @@ namespace gui {
         ParameterOrbitalWidget rotation_widget;
 
         // FUNCTIONS --------------------------------------------------------------
-        bool Present(Parameter& inout_param, WidgetScope scope);
+        bool Present(Parameter& inout_param, WidgetScope scope, const std::string& module_fullname);
 
         bool present_parameter(Parameter& inout_parameter, WidgetScope scope);
 

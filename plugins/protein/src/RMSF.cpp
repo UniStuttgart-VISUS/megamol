@@ -13,7 +13,7 @@ using namespace megamol;
 using namespace megamol::protein;
 using namespace megamol::protein_calls;
 
-PROTEIN_API bool megamol::protein::computeRMSF(protein_calls::MolecularDataCall *mol) {
+bool megamol::protein::computeRMSF(protein_calls::MolecularDataCall *mol) {
 	if (mol == NULL) return false;
 
 	// store current frame and calltime

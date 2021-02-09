@@ -14,7 +14,6 @@
 #include "GPURenderTaskCollection.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mesh.h"
 #include "mesh/MeshCalls.h"
 
 #include "mmcore/view/light/CallLight.h"
@@ -22,7 +21,7 @@
 namespace megamol {
 namespace mesh {
 
-class MESH_API AbstractGPURenderTaskDataSource : public core::Module {
+class AbstractGPURenderTaskDataSource : public core::Module {
 public:
     AbstractGPURenderTaskDataSource();
     virtual ~AbstractGPURenderTaskDataSource();
@@ -58,13 +57,6 @@ protected:
      */
     virtual void release();
 
-    /**
-     * Receives the current lights from the light call and writes them to the lightMap
-     *
-     * @return True if any light has changed, false otherwise.
-     */
-    bool GetLights(void);
-
     void syncRenderTaskCollection(CallGPURenderTaskData* lhs_call);
 
     /**
@@ -72,9 +64,6 @@ protected:
      * Needed to delete/update RenderTasks if the rt collection is shared across a chain of rt data sources.
      */
     std::pair<std::shared_ptr<GPURenderTaskCollection>, std::vector<std::string>> m_rendertask_collection;
-
-    /** map to store the called lights */
-    core::view::light::LightMap lightMap;
 
     /** The slot for requesting data from this module, i.e. lhs connection */
     megamol::core::CalleeSlot m_renderTask_lhs_slot;

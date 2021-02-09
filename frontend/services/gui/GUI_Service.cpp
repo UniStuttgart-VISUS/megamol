@@ -44,7 +44,7 @@ bool GUI_Service::init(const Config& config) {
         {"IOpenGL_Context"},                       // resource index 4
         {"FramebufferEvents"},                     // resource index 5
         {"GLFrontbufferToPNG_ScreenshotTrigger"},  // resource index 6
-        {"LuaScriptPaths"}  // resource index 7
+        {"LuaScriptPaths"}                         // resource index 7
     };
 
     // init gui
@@ -53,8 +53,7 @@ bool GUI_Service::init(const Config& config) {
             this->m_gui = std::make_shared<megamol::gui::GUIWrapper>();
 
             if (check_gui_not_nullptr) {
-                if (this->m_gui->Get()->CreateContext_GL(config.core_instance)) {  
-                    this->m_providedResourceReferences = { {"GUIResource", this->m_gui} };
+                if (this->m_gui->Get()->CreateContext(megamol::gui::GUIImGuiAPI::OPEN_GL, config.core_instance)) {
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully.");
                     return true;
                 }
@@ -102,6 +101,7 @@ void GUI_Service::digestChangedRequestedResources() {
         m_resource_state.window_size.x = static_cast<float>(std::get<0>(size_event));
         m_resource_state.window_size.y = static_cast<float>(std::get<1>(size_event));
     }
+    gui->SetClipboardFunc(window_events->_getClipboardString_Func, window_events->_setClipboardString_Func, window_events->_clipboard_user_data);
 
     /// KeyboardEvents = resource index 2
     auto keyboard_events = &this->m_requestedResourceReferences[2].getResource<megamol::frontend_resources::KeyboardEvents>();
@@ -201,7 +201,7 @@ void GUI_Service::preGraphRender() {
         this->m_resource_state.opengl_context_ptr->activate();
 
         if (this->m_resource_state.megamol_graph != nullptr) {
-            // Requires enabled OpenGL context
+            // Requires enabled OpenGL context, e.g. for textures used in parameters
             gui->SynchronizeGraphs(this->m_resource_state.megamol_graph);
         }
 
@@ -226,7 +226,6 @@ void GUI_Service::postGraphRender() {
 
 std::vector<FrontendResource>& GUI_Service::getProvidedResources() {
 
-    // unused - returning empty list
     return this->m_providedResourceReferences;
 }
 
