@@ -215,7 +215,7 @@ bool megamol::hpg::optix::MeshGeometry::get_data_cb(core::Call& c) {
         return false;
     meta = in_data->getMetaData();
 
-    if (/*in_data->hasUpdate()*/ meta.m_frame_ID != _frame_id || meta.m_data_hash != _data_hash) {
+    if (in_data->hasUpdate() /*meta.m_frame_ID != _frame_id || meta.m_data_hash != _data_hash*/) {
         if (!assertData(*in_data, *in_ctx))
             return false;
         _frame_id = meta.m_frame_ID;
