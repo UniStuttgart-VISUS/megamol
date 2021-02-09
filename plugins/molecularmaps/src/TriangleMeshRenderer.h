@@ -10,6 +10,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "AbstractLocalRenderer.h"
+#include "glowl/BufferObject.hpp"
+#include "glowl/GLSLProgram.hpp"
 
 namespace megamol {
 namespace molecularmaps {
@@ -59,11 +61,32 @@ namespace molecularmaps {
         virtual void release(void);
 
     private:
+        /** Pointer to the object holding the color vertex buffer */
+        std::shared_ptr<glowl::BufferObject> colorBuffer;
+
+        /** Pointer to the object holding the face index buffer */
+        std::shared_ptr<glowl::BufferObject> faceBuffer;
+
         /** Pointer to the vector containing the face vertex indices */
         const std::vector<uint>* faces;
 
+        /** Pointer to the object holding the normal vertex buffer */
+        std::shared_ptr<glowl::BufferObject> normalBuffer;
+
         /** Number of color values per color in vertex_colors */
         unsigned int numValuesPerColor;
+
+        /** Pointer to the object holding the position vertex buffer */
+        std::shared_ptr<glowl::BufferObject> positionBuffer;
+
+        /** Pointer to the shader program for 3-element color arrays */
+        std::shared_ptr<glowl::GLSLProgram> shader_3;
+
+        /** Pointer to the shader program for 4-element color arrays */
+        std::shared_ptr<glowl::GLSLProgram> shader_4;
+
+        /** Handle for the vertex array */
+        GLuint vertex_array;
 
         /** Pointer to the vector containing the face vertex colors */
         const std::vector<float>* vertex_colors;
