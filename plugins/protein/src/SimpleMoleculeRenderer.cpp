@@ -106,10 +106,10 @@ SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
     this->MakeSlotAvailable(&this->useNeighborColors);
 
     // rendering mode
-    this->currentRenderMode = LINES;
+    // this->currentRenderMode = LINES;
     // this->currentRenderMode = STICK;
     // this->currentRenderMode = BALL_AND_STICK;
-    // this->currentRenderMode = SPACEFILLING;
+    this->currentRenderMode = SPACEFILLING;
     // this->currentRenderMode = SAS;
     param::EnumParam* rm = new param::EnumParam(int(this->currentRenderMode));
     rm->SetTypePair(LINES, "Lines");
