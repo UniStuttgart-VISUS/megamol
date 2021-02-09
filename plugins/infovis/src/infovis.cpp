@@ -60,7 +60,7 @@ public:
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::infovis::DiagramSeriesCall>();
-        this->call_descriptions.RegisterAutoDescription<megamol::infovis::InfovisAmortizedRenderer>();
+        this->module_descriptions.RegisterAutoDescription<megamol::infovis::InfovisAmortizedRenderer>();
     }
 };
 } // namespace megamol::infovis

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "InfovisAmortizedRenderer.h"
 #include "glm/gtc/functions.hpp"
+#include "mmcore/view/CallRender2D.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
@@ -9,6 +10,8 @@
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 #include <glm/gtc/type_ptr.hpp>
+#include "mmcore/utility/log/Log.h"
+
 
 using namespace megamol;
 using namespace megamol::infovis;
@@ -43,6 +46,7 @@ InfovisAmortizedRenderer::~InfovisAmortizedRenderer() {
 }
 
 bool megamol::infovis::InfovisAmortizedRenderer::create(void) {
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("yes");
     makeShaders();
 
     setupBuffers();
@@ -113,6 +117,8 @@ void InfovisAmortizedRenderer::makeShaders() {
 }
 
 void InfovisAmortizedRenderer::setupBuffers() {
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
+
     glGenFramebuffers(1, &amortizedFboA);
     glGenFramebuffers(1, &amortizedFboB);
     glGenFramebuffers(1, &amortizedMsaaFboA);
@@ -161,6 +167,8 @@ void InfovisAmortizedRenderer::setupBuffers() {
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
 }
 
 void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLevel) {
@@ -402,6 +410,11 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 
         glViewport(0, 0, w, h);
     }
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadMatrixf(modelViewMatrix_column);
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixf(projMatrix_column);
 }
 
 void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int ssLevel) {
@@ -513,6 +526,10 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
 
     core::view::CallRender2D* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2D>();
 
+    cr2d->SetTime(call.Time());
+    cr2d->SetInstanceTime(call.InstanceTime());
+    cr2d->SetLastFrameTime(call.LastFrameTime());
+
     auto bg = call.GetBackgroundColour();
 
     backgroundColor[0] = 0;
@@ -531,9 +548,15 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
     glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    cr2d->SetBackgroundColour(0, 0, 0);
+    cr2d->SetBoundingBox(call.GetBoundingBox());
+    cr2d->SetOutputBuffer(call.OutputBuffer());
+    cr2d->SetGpuAffinity(call.GpuAffinity<megamol::core::view::AbstractCallRender::GpuHandleType>());
+
     setupAccel(approach, w, h, ssLevel);
 
-    //render
+    //send call to next renderer in line
+    (*cr2d)(core::view::AbstractCallRender::FnRender);
 
     doReconstruction(approach, w, h, ssLevel);
 
@@ -542,5 +565,5 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
 }
 
 bool megamol::infovis::InfovisAmortizedRenderer::GetExtents(core::view::CallRender2D& call) {
-    return false;
+    return true;
 }
