@@ -139,7 +139,6 @@ private:
     core::param::ParamSlot m_shininess_slot;
     core::param::ParamSlot m_ambient_color;
     core::param::ParamSlot m_specular_color;
-    core::param::ParamSlot m_light_color;
     core::param::ParamSlot m_material_color;
 
     core::param::ParamSlot paramOverride;
@@ -149,6 +148,7 @@ private:
     /** caller slot */
     megamol::core::CallerSlot m_renderer_callerSlot;
     megamol::core::CallerSlot m_volumetricData_callerSlot;
+    megamol::core::CallerSlot m_lights_callerSlot;
     megamol::core::CallerSlot m_transferFunction_callerSlot;
 
     std::array<float, 2> valRange;

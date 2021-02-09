@@ -335,7 +335,7 @@ bool mmvtkmStreamLines::assignSTPQ(core::param::ParamSlot& slot) {
         seedPlaneIndices_.push_back(i);
 	}
 
-
+    std::cout << "chck\n";
     deleteMesh(seedPlaneIdentifier_);
     createAndAddMeshDataToCall(seedPlaneIdentifier_, liveSeedPlane_, seedPlaneColorVec_, seedPlaneIndices_,
             numPoints, numPoints, mesh::MeshDataAccessCollection::TRIANGLE_FAN);
@@ -1260,24 +1260,14 @@ bool mmvtkmStreamLines::getDataCallback(core::Call& caller) {
         createAndAddMeshDataToCall(ghostPlaneIdentifier_, ghostPlane_, ghostColors_, ghostIdcs_, ghostPlane_.size(), ghostIdcs_.size(), \
             mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLE_FAN);
 
-        
-        for(auto a : this->meshDataAccess_.second) {
-            std::cout << "streamline module vector strng before: " << a << "\n";
-        }
 
         lhsMeshDc->setData(meshDataAccess_.first, ++this->newVersion_);
 
-        auto after = lhsMeshDc->getData()->accessMeshes();
-        for(auto a : after) {
-            std::cout << "streamline module vector strng after: " << a.first << "\n";
-        }
-
 
         streamlineUpdate_ = false;
-
+        
         return true;
     }
-
 
     return true;
 }

@@ -119,12 +119,12 @@ void KeyframeManipulators::UpdateExtents(vislib::math::Cuboid<float>& inout_bbox
     glm::vec3 pos; 
     for (auto& m : this->manipulators) {
         pos = this->getActualManipulatorPosition(m);
-        inout_bbox.GrowToPoint(glm_to_vislib_point(pos));
+        inout_bbox.GrowToPoint(view::glm_to_vislib_point(pos));
     }
     for (auto& s : this->selectors) {
         pos = s.vector;
         pos = pos + glm::normalize(pos) * (this->state.point_radius * 2.0f);
-        inout_bbox.GrowToPoint(glm_to_vislib_point(pos));
+        inout_bbox.GrowToPoint(view::glm_to_vislib_point(pos));
     }
 }
 
@@ -424,7 +424,7 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
         glm::vec3 up = static_cast<glm::vec3>(snap_up);
 
         glm::vec3 new_view = (manipulator_origin - static_cast<glm::vec3>(camera_position)) + diff_world_vector;
-        glm::quat new_orientation = quaternion_from_vectors(new_view, up);
+        glm::quat new_orientation = view::quaternion_from_vectors(new_view, up);
         selected_camera.orientation(new_orientation);
         this->state.lookat_length = glm::length(new_view);
     }
@@ -457,7 +457,7 @@ bool KeyframeManipulators::ProcessHitManipulator(float mouse_x, float mouse_y) {
         diff_world_vector = right * diff_world_length;
 
         glm::vec3 new_up = world_vector + diff_world_vector;
-        glm::quat new_orientation = quaternion_from_vectors(view, new_up);
+        glm::quat new_orientation = view::quaternion_from_vectors(view, new_up);
         selected_camera.orientation(new_orientation);
 
         this->state.hit->vector = glm::normalize(new_up);
@@ -526,7 +526,7 @@ glm::vec3 KeyframeManipulators::getActualManipulatorPosition(Manipulator& manipu
 
     if (this->toggleOusideBbox && (this->state.line_length > 0.0f) && (glm::length(manipulator.vector) > 0.0f) && (!this->state.bbox.IsEmpty())) {
         float offset = 0.0f;
-        while (this->state.bbox.Contains(glm_to_vislib_point(manipulator_position))) {
+        while (this->state.bbox.Contains(view::glm_to_vislib_point(manipulator_position))) {
             offset += this->state.line_length / 4.0f;
             manipulator_position += manipulator.vector * offset;
         }

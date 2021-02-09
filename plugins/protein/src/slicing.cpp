@@ -30,6 +30,8 @@
 #include "vislib/math/Vector.h"
 #include "slicing.h"
 
+namespace megamol {
+namespace protein {
 
 const char ViewSlicing::cubeEdges[12] = 
 { VS_FACE_FRONT + VS_FACE_BOTTOM, VS_FACE_FRONT + VS_FACE_TOP, 
@@ -475,3 +477,5 @@ inline bool ViewSlicing::pointCmp( float *p1, float *p2, float eps) {
         return false;
 }
 
+} /* end namespace protein */
+} /* end namespace megamol */

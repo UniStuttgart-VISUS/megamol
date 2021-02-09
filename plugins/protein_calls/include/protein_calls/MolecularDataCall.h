@@ -15,7 +15,6 @@
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "protein_calls/Protein_Calls.h"
 #include "vislib/Array.h"
 #include "vislib/IllegalParamException.h"
 #include "vislib/String.h"
@@ -38,7 +37,7 @@ namespace protein_calls {
  * compatible data source should therefore use the public nested class of
  */
 
-class PROTEIN_CALLS_API MolecularDataCall : public megamol::core::AbstractGetData3DCall {
+class MolecularDataCall : public megamol::core::AbstractGetData3DCall {
 public:
     /**
      * Nested class describing one unspecific residue.
@@ -46,7 +45,7 @@ public:
      * Base class for all specific residues like amino acids, nucleic
      * acids, lipids etc.
      */
-    class PROTEIN_CALLS_API Residue {
+    class Residue {
     public:
         /** Residue types */
         enum ResidueType { UNSPECIFIC = 0, AMINOACID = 1 };
@@ -226,7 +225,7 @@ public:
     /**
      * Nested class describing one specific amino acid.
      */
-    class PROTEIN_CALLS_API AminoAcid : public Residue {
+    class AminoAcid : public Residue {
     public:
         /** Default ctor initialising all fields to zero. */
         AminoAcid(void);
@@ -372,7 +371,7 @@ public:
     /**
      * Nested class describing a molecule
      */
-    class PROTEIN_CALLS_API Molecule {
+    class Molecule {
     public:
         /** ctor */
         Molecule();
@@ -551,7 +550,7 @@ public:
      * Nested class holding all information about one segment of a proteins
      * secondary structure.
      */
-    class PROTEIN_CALLS_API SecStructure {
+    class SecStructure {
     public:
         /** possible types of secondary structure elements */
         enum ElementType { TYPE_COIL = 0, TYPE_SHEET = 1, TYPE_HELIX = 2, TYPE_TURN = 3 };
@@ -656,7 +655,7 @@ public:
     /**
      * Nested class describing a chain
      */
-    class PROTEIN_CALLS_API Chain {
+    class Chain {
     public:
         /** Residue types */
         enum ChainType { UNSPECIFIC = 0, SOLVENT = 1 };
@@ -798,7 +797,7 @@ public:
     /**
      * Nested class holding all information about one atom type.
      */
-    class PROTEIN_CALLS_API AtomType {
+    class AtomType {
     public:
         /**
          * Default ctor

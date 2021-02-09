@@ -13,7 +13,7 @@
 
 #include <glm/glm.hpp>
 #include <memory>
-#include "astro/astro.h"
+#include <vector>
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/math/Cuboid.h"
@@ -26,7 +26,7 @@ typedef std::shared_ptr<std::vector<float>> floatArrayPtr;
 typedef std::shared_ptr<std::vector<bool>> boolArrayPtr;
 typedef std::shared_ptr<std::vector<int64_t>> idArrayPtr;
 
-class ASTRO_API AstroDataCall : public core::AbstractGetData3DCall {
+class AstroDataCall : public core::AbstractGetData3DCall {
 public:
     /**
      * Answer the name of the objects of this description.

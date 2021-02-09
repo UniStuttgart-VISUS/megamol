@@ -12,7 +12,6 @@ megamol::mesh::GPUMeshes::GPUMeshes()
 megamol::mesh::GPUMeshes::~GPUMeshes() { this->Release(); }
 
 bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
-    
     CallGPUMeshData* lhs_mesh_call = dynamic_cast<CallGPUMeshData*>(&caller);
     if (lhs_mesh_call == NULL) return false;
 
@@ -34,9 +33,9 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
         auto meshes = mc->getData()->accessMeshes();
 
-        for(auto a : meshes) {
+        /*for(auto a : meshes) {
         std::cout << "gpumeshes module vector strng: " << a.first << "\n";
-    }
+        }*/
         
         for (auto& mesh : meshes) {
 

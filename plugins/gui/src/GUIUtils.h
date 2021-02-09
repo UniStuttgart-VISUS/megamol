@@ -41,16 +41,13 @@
 #include "vislib/math/Ternary.h"
 
 
-namespace megamol {
-namespace gui {
-
-    /// #define GUI_VERBOSE
+/// #define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
-#define GUI_SLOT_RADIUS (8.0f)
-#define GUI_LINE_THICKNESS (3.0f)
+#define GUI_SLOT_RADIUS (8.0f * megamol::gui::gui_scaling.Get())
+#define GUI_LINE_THICKNESS (3.0f * megamol::gui::gui_scaling.Get())
 #define GUI_RECT_CORNER_RADIUS (0.0f)
-#define GUI_MAX_MULITLINE (7)
+#define GUI_MAX_MULITLINE (8)
 #define GUI_DND_CALLSLOT_UID_TYPE ("DND_CALL")
 #define GUI_GRAPH_BORDER (GUI_SLOT_RADIUS * 4.0f)
 #define GUI_MULTISELECT_MODIFIER (ImGui::GetIO().KeyShift)
@@ -62,20 +59,103 @@ namespace gui {
 #define GUI_JSON_TAG_PROJECT ("Project")
 #define GUI_JSON_TAG_MODULES ("Modules")
 #define GUI_JSON_TAG_INTERFACES ("Interfaces")
-    /// #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") see
-    /// megamol::core::param::AbstractParamPresentation.h
+/// #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") see
+/// megamol::core::param::AbstractParamPresentation.h
 
 #define GUI_PROJECT_GUI_STATE_START_TAG ("-- <GUI_STATE_JSON>")
 #define GUI_PROJECT_GUI_STATE_END_TAG ("</GUI_STATE_JSON>")
 
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))
-#define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.f, 1.0f))
+#define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.0f, 1.0f))
 #define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.6f, 0.0f, 0.3f, 1.0f))
 #define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.45f, 1.0f))
-#define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 1.0f, 0.75f, 1.0f))
-#define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
-#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.75f, 1.0f, 0.25f, 1.0f))
+#define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 0.5f, 1.0f, 1.0f))
+#define GUI_COLOR_SLOT_CALLEE (ImVec4(0.5f, 0.0f, 1.0f, 1.0f))
+#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.4f, 0.8f, 0.0f, 1.0f))
+#define GUI_COLOR_GROUP_HEADER (ImVec4(0.0f, 0.4f, 0.3f, 1.0f))
+#define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.8f, 0.6f, 1.0f))
+
+
+namespace {
+
+/********** Global Operators **********/
+
+bool operator==(const ImVec2& left, const ImVec2& right) {
+    return ((left.x == right.x) && (left.y == right.y));
+}
+
+bool operator!=(const ImVec2& left, const ImVec2& right) {
+    return !(left == right);
+}
+
+} // namespace
+
+
+namespace megamol {
+namespace gui {
+
+
+    /********** Global Unique ID **********/
+
+    extern ImGuiID gui_generated_uid;
+
+    inline ImGuiID GenerateUniqueID(void) {
+        return (++gui_generated_uid);
+    }
+
+
+    /********** Global ImGui Context Pointer Counter **********/
+
+    // Only accessed by possible multiple instances of GUIWindows
+    extern unsigned int gui_context_count;
+
+
+    /********** Global GUI Scaling Factor **********/
+
+    class GUIWindows;
+
+    class GUIScaling {
+    public:
+        friend class GUIWindows;
+
+        GUIScaling() = default;
+        ~GUIScaling() = default;
+
+        float Get(void) const {
+            return this->scale;
+        }
+
+        float TransitonFactor(void) const {
+            return (this->scale / this->last_scale);
+        }
+
+        bool PendingChange(void) const {
+            return this->pending_change;
+        }
+
+    private:
+        bool ConsumePendingChange(void) {
+            bool current_pending_change = this->pending_change;
+            this->pending_change = false;
+            return current_pending_change;
+        }
+
+        void Set(float s) {
+            this->last_scale = this->scale;
+            this->scale = std::max(1.0f, s);
+            if (this->scale != this->last_scale) {
+                this->pending_change = true;
+            }
+        }
+
+        bool pending_change = false;
+        float scale = 1.0f;
+        float last_scale = 1.0f;
+    };
+
+    extern GUIScaling gui_scaling;
+
 
     /********** Types **********/
 
@@ -86,7 +166,7 @@ namespace gui {
     typedef std::shared_ptr<megamol::gui::InterfaceSlot> InterfaceSlotPtr_t;
 
     /** Available ImGui APIs */
-    enum GUIImGuiAPI { NO_API, OPEN_GL };
+    enum class GUIImGuiAPI { NONE, OPEN_GL };
 
     /** Hotkey Data Types (exclusively for configurator) */
     enum HotkeyIndex : size_t {
@@ -197,12 +277,7 @@ namespace gui {
         bool global_graph_save;              // out
     } GraphState_t;
 
-    /********** Global Unique ID **********/
-
-    extern ImGuiID gui_generated_uid;
-    inline ImGuiID GenerateUniqueID(void) {
-        return (++megamol::gui::gui_generated_uid);
-    }
+    enum class HeaderType { MODULE_GROUP, MODULE, PARAMETERG_ROUP };
 
     /********** Class **********/
 
@@ -225,6 +300,7 @@ namespace gui {
             return return_str;
         }
 
+
         /** Decode string from UTF-8. */
         static bool Utf8Decode(std::string& str) {
 
@@ -236,6 +312,7 @@ namespace gui {
             return false;
         }
 
+
         /** Encode string into UTF-8. */
         static bool Utf8Encode(std::string& str) {
 
@@ -246,6 +323,7 @@ namespace gui {
             }
             return false;
         }
+
 
         /**
          * Enable/Disable read only widget style.
@@ -259,6 +337,96 @@ namespace gui {
                 ImGui::PopItemFlag();
                 ImGui::PopStyleVar();
             }
+        }
+
+
+        /**
+         * Returns true if search string is found in source as a case insensitive substring.
+         *
+         * @param source   The string to search in.
+         * @param search   The string to search for in the source.
+         */
+        static bool FindCaseInsensitiveSubstring(const std::string& source, const std::string& search) {
+            if (search.empty())
+                return true;
+            auto it = std::search(source.begin(), source.end(), search.begin(), search.end(),
+                [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
+            return (it != source.end());
+        }
+
+
+        /*
+         * Draw collapsing group header.
+         */
+        static bool GroupHeader(megamol::gui::HeaderType type, const std::string& name, std::string& inout_search,
+            ImGuiID override_header_state = GUI_INVALID_ID) {
+            if (ImGui::GetCurrentContext() == nullptr) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                return false;
+            }
+
+            std::string header_label = name;
+            // switch (type) {
+            // case (megamol::gui::HeaderType::MODULE_GROUP): {
+            //    header_label = "[GROUP] " + header_label;
+            //} break;
+            // case (megamol::gui::HeaderType::MODULE): {
+            //    // header_label = "[MODULE] " + header_label;
+            //} break;
+            // case (megamol::gui::HeaderType::PARAMETERG_ROUP): {
+            //    // header_label = "[GROUP] " + header_label;
+            //} break;
+            // default:
+            //    break;
+            //}
+
+            // Determine header state and change color depending on active parameter search
+            auto headerId = ImGui::GetID(header_label.c_str());
+            auto headerState = override_header_state;
+            if (headerState == GUI_INVALID_ID) {
+                headerState = ImGui::GetStateStorage()->GetInt(headerId, 0); // 0=close 1=open
+            }
+
+            int pop_style_color = 0;
+            if (type == megamol::gui::HeaderType::MODULE_GROUP) {
+                ImGui::PushStyleColor(ImGuiCol_Header, GUI_COLOR_GROUP_HEADER);
+                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, GUI_COLOR_GROUP_HEADER_HIGHLIGHT);
+                auto header_active_color = GUI_COLOR_GROUP_HEADER_HIGHLIGHT;
+                header_active_color.w *= 0.75f;
+                ImGui::PushStyleColor(ImGuiCol_HeaderActive, header_active_color);
+                pop_style_color += 3;
+            }
+
+            bool searched = true;
+            if (!inout_search.empty()) {
+                headerState = 1;
+                searched = megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(name, inout_search);
+                if (!searched) {
+                    auto header_col = ImGui::GetStyleColorVec4(ImGuiCol_Header);
+                    header_col.w *= 0.25;
+                    ImGui::PushStyleColor(ImGuiCol_Header, header_col);
+                    auto header_hovered_col = ImGui::GetStyleColorVec4(ImGuiCol_HeaderHovered);
+                    header_hovered_col.w *= 0.25;
+                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, header_hovered_col);
+                    auto text_col = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+                    text_col.w *= 0.25;
+                    ImGui::PushStyleColor(ImGuiCol_Text, text_col);
+                    pop_style_color += 3;
+                } else {
+                    // Show all below when given name is part of the search
+                    inout_search.clear();
+                }
+            }
+            ImGui::GetStateStorage()->SetInt(headerId, headerState);
+            bool header_open = ImGui::CollapsingHeader(header_label.c_str(), nullptr);
+            ImGui::PopStyleColor(pop_style_color);
+
+            // Keep following elements open for one more frame to propagate override changes to headers below.
+            if (override_header_state == 0) {
+                header_open = true;
+            }
+            return header_open;
         }
 
     private:

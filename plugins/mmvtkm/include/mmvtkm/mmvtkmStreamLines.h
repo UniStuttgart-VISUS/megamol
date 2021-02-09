@@ -287,7 +287,7 @@ private:
 
     inline bool deleteMesh(const std::string& identifier) {
         this->meshDataAccess_.first->deleteMesh(identifier);
-        // reverse iteration order, because we know the ghostplane is near the end
+        // reverse iteration order, because we know the ghostplane should be near the end
         /*for (auto it = this->meshDataAccess_.second.end() - 1; it > this->meshDataAccess_.second.begin(); --it) {
                 if (*it == identifier) {
                 this->meshDataAccess_.second.erase(it);

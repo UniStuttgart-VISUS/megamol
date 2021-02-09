@@ -13,12 +13,12 @@
 
 #include "mesh/AbstractMeshDataSource.h"
 #include "mesh/MeshCalls.h"
-#include "mesh/mesh.h"
+#include "mesh/MeshDataAccessCollection.h"
 
 namespace megamol {
 namespace mesh {
 
-class MESH_API GlTFFileLoader : public AbstractMeshDataSource {
+class GlTFFileLoader : public AbstractMeshDataSource {
 public:
     /**
      * Answer the name of this module.

@@ -8,11 +8,11 @@ option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build vtkm plugin" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(mmvtkm)# LANGUAGES CXX CUDA)
-  
+
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
   set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_ADIOS_PLUGIN_PLUGIN BUILD_MESH_PLUGIN" CACHE INTERNAL "")
-  
+
   # Add externals.
   require_external(vtkm)
 
@@ -55,7 +55,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
     endif()
   else()
-    install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
+    #install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
 
   # Grouping in Visual Studio
@@ -65,4 +65,8 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Source Files" FILES ${source_files})
   source_group("Shaders" FILES ${shader_files})
 
+  #source_group("Shaders" FILES ${shader_files})
+
+  # Register plugin
+  megamol_register_plugin(${PROJECT_NAME})
 endif()

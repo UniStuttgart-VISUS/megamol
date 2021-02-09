@@ -40,7 +40,13 @@ namespace datatools {
             DENSITY,
             PRESSURE,
             NEIGHBORS,
-            NEAREST_DISTANCE
+            NEAREST_DISTANCE,
+            PHASE
+        };
+
+        enum phaseEnum {
+            FLUID = 0,
+            GAS = 1
         };
 
         /** Return module class name */
@@ -113,6 +119,7 @@ namespace datatools {
         core::param::ParamSlot removeSelfSlot;
         core::param::ParamSlot findExtremesSlot;
         core::param::ParamSlot extremeValueSlot;
+        core::param::ParamSlot fluidDensitySlot;
         
         size_t datahash;
         size_t myHash = 0;

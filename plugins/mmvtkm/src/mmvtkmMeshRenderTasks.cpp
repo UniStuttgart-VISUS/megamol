@@ -94,13 +94,13 @@ bool mmvtkmMeshRenderTasks ::getDataCallback(core::Call& caller) {
             std::vector<std::string>::iterator it =
                 std::find(identifiers[i].begin(), identifiers[i].end(), ghostIdentifier.c_str());
 			if (it != identifiers[i].end()) {
-                // swap ghostplane to last position for blending
-                int gp_idx = std::distance(identifiers[i].begin(), it);
+                // swap ghostplane to last position within batch for blending
+                //int gp_idx = std::distance(identifiers[i].begin(), it);
                 //std::cout << identifiers[i].size() << " " << gp_idx << "\n";
                 //std::swap(identifiers[i][gp_idx], identifiers[i][identifiers[i].size() - 1]);
                 //std::swap(draw_commands[i][gp_idx], draw_commands[i][draw_commands.size() - 1]);
                 //std::swap(object_transforms[i][gp_idx], object_transforms[i][object_transforms.size() - 1]);
-
+                //std::cout << "check\n";
 				auto set_states = [] { 
 					glEnable(GL_BLEND);
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

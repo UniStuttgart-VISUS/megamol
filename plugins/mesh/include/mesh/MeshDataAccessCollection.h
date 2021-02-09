@@ -10,12 +10,11 @@
 #define MESH_DATA_ACCESS_COLLECTION_H_INCLUDED
 
 #include <vector>
-#include "mesh.h"
 
 namespace megamol {
 namespace mesh {
 
-class MESH_API MeshDataAccessCollection {
+class MeshDataAccessCollection {
 public:
     enum ValueType { BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT, INT, UNSIGNED_INT, HALF_FLOAT, FLOAT, DOUBLE };
     enum AttributeSemanticType { POSITION, NORMAL, COLOR, TEXCOORD, TANGENT };
