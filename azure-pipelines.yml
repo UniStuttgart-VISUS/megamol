@@ -76,3 +76,14 @@ jobs:
     displayName: 'CMake Build'
     inputs:
       cmakeArgs: '--build . --parallel $(numberOfCpuCores)'
+
+- job: 'File Checks'
+  pool:
+    name: 'default'
+    demands:
+    - Agent.OS -equals Linux
+  steps:
+  - task: Bash@3
+    displayName: 'Run File Checks'
+    inputs:
+      filePath: '.ci/check_files.sh'
