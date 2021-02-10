@@ -11,12 +11,12 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractRenderingView.h"
-#include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/TimeControl.h"
-#include "vislib/math/Rectangle.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 namespace megamol {
 namespace core {
@@ -278,11 +278,15 @@ namespace view {
          */
         float *overrideViewTile;
 
+        int* overrideViewport;
+
         /** The time control */
         TimeControl timeCtrl;
 
         /** cached bounding box */
-        vislib::math::Rectangle<float> bbox;
+        BoundingBoxes_2 bbox;
+
+        std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
     };
 
 

@@ -83,6 +83,8 @@ void view::HeadView::DeserialiseCamera(vislib::Serialiser& serialiser) {
 void view::HeadView::Render(const mmcRenderViewContext& context) {
     CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
 
+    auto cam  = view->GetCamera();
+
     if (view != nullptr) {
         std::unique_ptr<CallRenderViewGL> last_view_call = nullptr;
 
@@ -91,7 +93,13 @@ void view::HeadView::Render(const mmcRenderViewContext& context) {
             *view = *this->override_view_call;
         }
         else {
-            const_cast<vislib::math::Rectangle<int>&>(view->GetViewport()).Set(0, 0, this->width, this->height);
+            //const_cast<vislib::math::Rectangle<int>&>(view->GetViewport()).Set(0, 0, this->width, this->height);
+            thecam::math::rectangle<int> rect;
+            rect.bottom() = 0;
+            rect.left() = 0;
+            rect.right() = this->width;
+            rect.top() = this->height;
+            cam.image_tile.operator()(rect);
         }
 
         view->SetInstanceTime(context.InstanceTime);

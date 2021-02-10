@@ -37,7 +37,6 @@ CinematicView::CinematicView(void) : View3DGL()
     , addSBSideToNameParam( "cinematic::addSBSideToName", "Toggle whether skybox side should be added to output filename")
     , eyeParam("cinematic::stereo_eye", "Select eye position (for stereo view).")
     , projectionParam("cinematic::stereo_projection", "Select camera projection.")
-    , fbo()
     , png_data()
     , utils()
     , deltaAnimTime(clock())
@@ -125,7 +124,9 @@ CinematicView::CinematicView(void) : View3DGL()
 CinematicView::~CinematicView(void) {
 
     this->render_to_file_cleanup();
-    this->fbo.Release();
+    if (this->fbo != nullptr) {
+        this->fbo->Release();
+    }
 }
 
 
@@ -414,20 +415,20 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     vislib::Trace::GetInstance().SetLevel(0);
 #endif // DEBUG || _DEBUG
 
-    if (this->fbo.IsValid()) {
-        if ((this->fbo.GetWidth() != fboWidth) || (this->fbo.GetHeight() != fboHeight)) {
-            this->fbo.Release();
+    if (this->fbo->IsValid()) {
+        if ((this->fbo->GetWidth() != fboWidth) || (this->fbo->GetHeight() != fboHeight)) {
+            this->fbo->Release();
         }
     }
-    if (!this->fbo.IsValid()) {
-        if (!this->fbo.Create(fboWidth, fboHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+    if (!this->fbo->IsValid()) {
+        if (!this->fbo->Create(fboWidth, fboHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
             throw vislib::Exception(
                 "[CINEMATIC VIEW] [Render] Unable to create image framebuffer object.", __FILE__, __LINE__);
             return;
         }
     }
-    if (this->fbo.Enable() != GL_NO_ERROR) {
+    if (this->fbo->Enable() != GL_NO_ERROR) {
         throw vislib::Exception("[CINEMATIC VIEW] [Render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
         return;
     }
@@ -444,9 +445,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     /* Using FBO buffer in call. */
     
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-    cr3d->SetOutputBuffer(&this->fbo);
+    cr3d->SetFramebufferObject(this->fbo);
     // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
-    int fboVp[4] = { 0, 0, fboWidth, fboHeight };
+    glm::vec4 fboVp = glm::vec4( 0, 0, fboWidth, fboHeight );
     Base::overrideViewport = fboVp;
     
     //ALTERNATIVE
@@ -470,14 +471,14 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Reset override render call
     Base::overrideCall = nullptr;
 
-    if (this->fbo.IsEnabled()) {
-        this->fbo.Disable();
+    if (this->fbo->IsEnabled()) {
+        this->fbo->Disable();
     }
 
     // Write frame to file
     if (this->rendering) {
         // Check if fbo in cr3d was reset by renderer to indicate that no new frame is available (e.g. see remote/FBOCompositor2 Render())
-        this->png_data.write_lock = ((cr3d->FrameBufferObject() != nullptr) ? (0) : (1));
+        this->png_data.write_lock = ((cr3d->GetFramebufferObject() != nullptr) ? (0) : (1));
         if (this->png_data.write_lock > 0) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC RENDERING] Waiting for next frame (Received empty FBO from renderer) ...\n");
         }
@@ -506,7 +507,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glm::vec3 pos_upper_left = { left, up, 0.0f };
     glm::vec3 pos_upper_right = { right, up, 0.0f };
     glm::vec3 pos_bottom_right = { right, bottom, 0.0f };
-    this->utils.Push2DColorTexture(this->fbo.GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
+    this->utils.Push2DColorTexture(this->fbo->GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
 
     // Push letter box --------------------------------------------------------
     float letter_x = 0;
@@ -676,7 +677,7 @@ bool CinematicView::render_to_file_write() {
         png_set_IHDR(this->png_data.structptr, this->png_data.infoptr, this->png_data.width, this->png_data.height, 8,
             PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
-        if (this->fbo.GetColourTexture(this->png_data.buffer, 0, GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
+        if (this->fbo->GetColourTexture(this->png_data.buffer, 0, GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
             throw vislib::Exception(
                 "[CINEMATIC VIEW] [render_to_file_write] Unable to read color texture. ", __FILE__,
                 __LINE__);

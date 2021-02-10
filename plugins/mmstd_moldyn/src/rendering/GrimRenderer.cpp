@@ -321,8 +321,6 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     auto cr = &call;
     if (cr == NULL) return false;
 
-    cr->DisableOutputBuffer();
-
     ParticleGridDataCall *pgdc = this->getDataSlot.CallAs<ParticleGridDataCall>();
     if (pgdc == NULL) return false;
 
@@ -439,21 +437,21 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     }
 
     // update fbo size, if required ///////////////////////////////////////////
-    auto viewport = call.GetViewport();
-    if ((this->fbo.GetWidth() != viewport.Width())
-            || (this->fbo.GetHeight() != viewport.Height())
+    auto viewport = cam.resolution_gate();
+    if ((this->fbo.GetWidth() != viewport.width())
+            || (this->fbo.GetHeight() != viewport.height())
             || this->deferredShadingSlot.IsDirty()) {
         this->deferredShadingSlot.ResetDirty();
 
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "grim-fbo-resize");
         this->fbo.Release();
-        this->fbo.Create(viewport.Width(), viewport.Height(),
+        this->fbo.Create(viewport.width(), viewport.height(),
                 GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, // colour buffer
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
                 GL_DEPTH_COMPONENT24); // depth buffer
 
-        unsigned int dmw = vislib::math::NextPowerOfTwo(viewport.Width());
-        unsigned int dmh = vislib::math::NextPowerOfTwo(viewport.Height());
+        unsigned int dmw = vislib::math::NextPowerOfTwo(viewport.width());
+        unsigned int dmh = vislib::math::NextPowerOfTwo(viewport.height());
         dmh += dmh / 2;
         if ((this->depthmap[0].GetWidth() != dmw) || (this->depthmap[0].GetHeight() != dmh)) {
             for (int i = 0; i < 2; i++) {
@@ -488,7 +486,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
             sap.format = GL_STENCIL_INDEX;
 
             try {
-                if (!this->dsFBO.Create(viewport.Width(), viewport.Height(), 3, cap, dap, sap)) {
+                if (!this->dsFBO.Create(viewport.width(), viewport.height(), 3, cap, dap, sap)) {
                     throw vislib::Exception("dsFBO.Create failed\n", __FILE__, __LINE__);
                 }
             } catch(vislib::Exception ex) {
@@ -718,7 +716,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     // init depth disks ///////////////////////////////////////////////////////
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "grim-init-depth-disks");
 
-    float viewportStuff[4] = { 0.0f, 0.0f, viewport.Width(), viewport.Height() };
+    float viewportStuff[4] = { 0.0f, 0.0f, viewport.width(), viewport.height() };
     float defaultPointSize = glm::max(viewportStuff[2], viewportStuff[3]);
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
@@ -1320,7 +1318,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         } else {
 
             // REACTIVATE TARGET FBO
-            cr->EnableOutputBuffer();
+            cr->GetFramebufferObject()->Enable();
         }
 
         glEnable(GL_DEPTH_TEST);
@@ -1761,7 +1759,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     // deferred shading ///////////////////////////////////////////////////////
     if (deferredShading) {
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 8, -1, "grim-deferred-shading");
-        cr->EnableOutputBuffer();
+        cr->GetFramebufferObject()->Enable();
 
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_LIGHTING);
@@ -1801,7 +1799,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
         up *= sinf(half_aperture_angle);
         right *= sinf(half_aperture_angle)
-            * static_cast<float>(viewport.Width()) / static_cast<float>(viewport.Height());
+            * static_cast<float>(viewport.width()) / static_cast<float>(viewport.height());
 
         this->deferredShader.SetParameterArray3("ray", 1, glm::value_ptr(camView));
 

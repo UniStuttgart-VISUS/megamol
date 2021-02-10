@@ -91,7 +91,7 @@ bool QuartzPlaneRenderer::create(void) {
 /*
  * QuartzPlaneRenderer::QuartzPlaneRenderer
  */
-bool QuartzPlaneRenderer::GetExtents(core::view::CallRender2D& call) {
+bool QuartzPlaneRenderer::GetExtents(core::view::CallRender2DGL& call) {
     ParticleGridDataCall *pgdc = this->getParticleData();
     core::view::CallClipPlane *ccp = this->getClipPlaneData();
     if ((pgdc != NULL) && (ccp != NULL)) {
@@ -167,7 +167,7 @@ bool QuartzPlaneRenderer::GetExtents(core::view::CallRender2D& call) {
                 if (minY > y) minY = y;
                 if (maxY < y) maxY = y;
 
-                call.SetBoundingBox(minX, minY, maxX, maxY);
+                call.AccessBoundingBoxes().SetBoundingBox(minX, minY, 0, maxX, maxY, 0);
 
                 return true;
             }
@@ -175,7 +175,7 @@ bool QuartzPlaneRenderer::GetExtents(core::view::CallRender2D& call) {
         }
     }
 
-    call.SetBoundingBox(-1.0f, -1.0f, 1.0f, 1.0f);
+    call.AccessBoundingBoxes().SetBoundingBox(-1.0f, -1.0f, 0, 1.0f, 1.0f, 0);
     return false;
 }
 
@@ -192,7 +192,7 @@ void QuartzPlaneRenderer::release(void) {
 /*
  * QuartzPlaneRenderer::Render
  */
-bool QuartzPlaneRenderer::Render(core::view::CallRender2D& call) {
+bool QuartzPlaneRenderer::Render(core::view::CallRender2DGL& call) {
     ParticleGridDataCall *pgdc = this->getParticleData();
     CrystalDataCall *tdc = this->getCrystaliteData();
     core::view::CallClipPlane *ccp = this->getClipPlaneData();

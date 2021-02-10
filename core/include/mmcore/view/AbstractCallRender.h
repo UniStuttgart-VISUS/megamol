@@ -11,9 +11,12 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/AbstractRenderOutput.h"
+#include <glm/glm.hpp>
 #include "mmcore/view/InputCall.h"
 #include "vislib/Array.h"
+#include "mmcore/BoundingBoxes_2.h"
+#include "mmcore/view/Camera_2.h"
+
 
 
 namespace megamol {
@@ -26,7 +29,7 @@ namespace view {
      *
      * Handles the output buffer control.
      */
-    class MEGAMOLCORE_API AbstractCallRender : public InputCall, public virtual AbstractRenderOutput {
+    class MEGAMOLCORE_API AbstractCallRender : public InputCall {
     public:
         static const unsigned int FnRender = 5;
         static const unsigned int FnGetExtents = 6;
@@ -70,7 +73,7 @@ namespace view {
          * @return The instance time code
          */
         inline double InstanceTime(void) const {
-            return this->instTime;
+            return this->_instTime;
         }
 
         /**
@@ -81,7 +84,7 @@ namespace view {
          * @return The flag for in situ timing
          */
         inline bool IsInSituTime(void) const {
-            return this->isInSituTime;
+            return this->_isInSituTime;
         }
 
         /**
@@ -90,7 +93,7 @@ namespace view {
          * @param time The time code of the frame to render
          */
         inline void SetInstanceTime(double time) {
-            this->instTime = time;
+            this->_instTime = time;
         }
 
         /**
@@ -101,7 +104,7 @@ namespace view {
          * @param v The new value for the flag for in situ timing
          */
         inline void SetIsInSituTime(bool v) {
-            this->isInSituTime = v;
+            this->_isInSituTime = v;
         }
 
         /**
@@ -110,7 +113,7 @@ namespace view {
          * @param time The time code of the frame to render.
          */
         inline void SetTime(float time) {
-            this->time = time;
+            this->_time = time;
         }
 
         /**
@@ -122,7 +125,7 @@ namespace view {
          */
         inline void SetTimeFramesCount(unsigned int cnt) {
             ASSERT(cnt > 0);
-            this->cntTimeFrames = cnt;
+            this->_cntTimeFrames = cnt;
         }
 
         /**
@@ -131,7 +134,7 @@ namespace view {
          * @return The time frame code of the frame to render.
          */
         inline float Time(void) const {
-            return time;
+            return _time;
         }
 
         /**
@@ -140,7 +143,7 @@ namespace view {
          * @return The number of time frames of the data the callee can render.
          */
         inline unsigned int TimeFramesCount(void) const {
-            return this->cntTimeFrames;
+            return this->_cntTimeFrames;
         }
 
         /**
@@ -149,7 +152,7 @@ namespace view {
          * @return The time required to render the last frame
          */
         inline double LastFrameTime(void) const {
-            return this->lastFrameTime;
+            return this->_lastFrameTime;
         }
 
         /**
@@ -158,7 +161,88 @@ namespace view {
          * @param time The time required to render the last frame
          */
         inline void SetLastFrameTime(double time) {
-            this->lastFrameTime = time;
+            this->_lastFrameTime = time;
+        }
+
+             /**
+         * Sets the background color
+         *
+         * @param backCol The new background color
+         */
+        inline void SetBackgroundColor(glm::vec4 backCol) {
+            _backgroundCol = backCol;
+        }
+
+        /**
+         * Gets the background color
+         *
+         * @return The stored background color
+         */
+        inline glm::vec4 BackgroundColor(void) const {
+            return _backgroundCol;
+        }
+
+            /**
+         * Accesses the bounding boxes of the output of the callee. This can
+         * be called by the callee as answer to 'GetExtents'.
+         *
+         * @return The bounding boxes of the output of the callee.
+         */
+        inline BoundingBoxes_2& AccessBoundingBoxes(void) {
+            return this->_bboxs;
+        }
+
+        /**
+         * Gets the bounding boxes of the output of the callee. This can
+         * be called by the callee as answer to 'GetExtents'.
+         *
+         * @return The bounding boxes of the output of the callee.
+         */
+        inline const BoundingBoxes_2& GetBoundingBoxes(void) const {
+            return this->_bboxs;
+        }
+
+        /**
+         * Gets the camera parameters .
+         *
+         * @return The camera parameters pointer.
+         */
+        inline const cam_type::minimal_state_type& GetCameraState(void) const {
+            return this->_minCamState;
+        }
+
+        /**
+         * Returns the camera containing the parameters transferred by this call.
+         * Things like the view matrix are not calculated yet and have still to be retrieved from the object
+         * by using the appropriate functions. THIS METHOD PERFORMS A COPY OF A WHOLE CAMERA OBJECT.
+         * TO AVOID THIS, USE GetCameraState() or GetCamera(Camera_2&) INSTEAD.
+         *
+         * @return A camera object containing the minimal state transferred by this call.
+         */
+        inline const Camera_2 GetCamera(void) const {
+            Camera_2 retval = this->_minCamState;
+            return retval;
+        }
+
+        /**
+         * Stores the transferred camera state in a given Camera_2 object to avoid the copy of whole camera objects.
+         * This invalidates all present parameters in the given object. They have to be calculated again, using the
+         * appropriate functions.
+         *
+         * @param cam The camera object the transferred state is stored in
+         */
+        inline void GetCamera(Camera_2& cam) const {
+            cam = this->_minCamState;
+        }
+
+        /**
+         * Sets the camera state. This has to be set by the
+         * caller before calling 'Render'.
+         *
+         * @param camera The camera the state is adapted from.
+         */
+        inline void SetCameraState(Camera_2& camera) {
+            this->_minCamState = camera.get_minimal_state(this->_minCamState);
         }
 
         /**
@@ -178,22 +262,31 @@ namespace view {
     private:
 
         /** The number of time frames available to render */
-        unsigned int cntTimeFrames;
+        unsigned int _cntTimeFrames;
 
         /** The time code requested to render */
-        float time;
+        float _time;
 
         /** The instance time code */
-        double instTime;
+        double _instTime;
 
         /**
          * Flag marking that 'cntTimeFrames' store the number of the currently
          * available time frame when doing in situ visualization
          */
-        bool isInSituTime;
+        bool _isInSituTime;
 
         /** The number of milliseconds required to render the last frame */
-        double lastFrameTime;
+        double _lastFrameTime;
+
+        glm::vec4 _backgroundCol;
+
+        /** The transferred camera state */
+        cam_type::minimal_state_type _minCamState;
+
+
+        /** The bounding boxes */
+        BoundingBoxes_2 _bboxs;
 
     };
 

@@ -10,17 +10,12 @@
 #include <glm/glm.hpp>
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/MouseFlags.h"
-#include "mmcore/view/RenderOutputOpenGL.h"
-#include "mmcore/view/GPUAffinity.h"
+#include "mmcore/view/CallRenderGL.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 namespace megamol {
 namespace core {
 namespace view {
-#ifdef _WIN32
-#    pragma warning(disable : 4250) // I know what I am doing ...
-#endif                              /* _WIN32 */
 /**
  * New and improved base class of rendering graph calls
  *
@@ -30,7 +25,7 @@ namespace view {
  * Function "GetExtents" asks the callee to fill the extents member of the
  * call (bounding boxes, temporal extents).
  */
-class MEGAMOLCORE_API CallRender3DGL : public CallRender3D, public view::RenderOutputOpenGL, public GPUAffinity {
+class CallRender3DGL : public CallRenderGL {
 public:
     /**
      * Answer the name of the objects of this description.
@@ -51,7 +46,7 @@ public:
      *
      * @return The number of functions used for this call.
      */
-    static unsigned int FunctionCount(void) { return AbstractCallRender3D::FunctionCount(); }
+    static unsigned int FunctionCount(void) { return AbstractCallRender::FunctionCount(); }
 
     /**
      * Answer the name of the function used for this call.
@@ -60,61 +55,13 @@ public:
      *
      * @return The name of the requested function.
      */
-    static const char* FunctionName(unsigned int idx) { return AbstractCallRender3D::FunctionName(idx); }
+    static const char* FunctionName(unsigned int idx) { return AbstractCallRender::FunctionName(idx); }
 
     /** Ctor. */
-    CallRender3DGL(void);
+    CallRender3DGL(void) : CallRenderGL() { }
 
     /** Dtor. */
-    virtual ~CallRender3DGL(void);
-
-    /**
-     * Answer the mouse flags
-     *
-     * @return The mouse flags
-     */
-    inline view::MouseFlags GetMouseFlags(void) const { return this->mouseFlags; }
-
-    /**
-     * Answer the mouse x coordinate in world space
-     *
-     * @return The mouse x coordinate in world space
-     */
-    inline float GetMouseX(void) const { return this->mouseX; }
-
-    /**
-     * Answer the mouse y coordinate in world space
-     *
-     * @return The mouse y coordinate in world space
-     */
-    inline float GetMouseY(void) const { return this->mouseY; }
-
-    /**
-     * Sets the mouse informations.
-     *
-     * @param x The mouse x coordinate in world space
-     * @param y The mouse y coordinate in world space
-     * @param flags The mouse flags
-     */
-    inline void SetMouseInfo(float x, float y, view::MouseFlags flags) {
-        this->mouseX = x;
-        this->mouseY = y;
-        this->mouseFlags = flags;
-    }
-
-    /**
-     * Gets the state of the mouse selection.
-     *
-     * @return The current state of the mouse selection
-     */
-    inline bool MouseSelection(void) { return this->mouseSelection; }
-
-    /**
-     * Sets the state of the mouse selection.
-     *
-     * @param selection The current state of the mouse selection
-     */
-    inline void SetMouseSelection(bool selection) { this->mouseSelection = selection; }
+    virtual ~CallRender3DGL(void) = default;
 
     /**
      * Assignment operator
@@ -123,27 +70,12 @@ public:
      *
      * @return A reference to this
      */
-    CallRender3DGL& operator=(const CallRender3DGL& rhs);
+    CallRender3DGL& operator=(const CallRender3DGL& rhs) {
+        CallRenderGL::operator=(rhs);
+        return *this;
+    }
 
-    using RenderOutputOpenGL::DisableOutputBuffer;
-    using RenderOutputOpenGL::EnableOutputBuffer;
-
-private:
-    /** x-coordinate of the mouse pointer */
-    float mouseX;
-
-    /** y-coordinate of the mouse pointer */
-    float mouseY;
-
-    /** The mouse flags for the mouse event */
-    view::MouseFlags mouseFlags;
-
-    /** The current state of the mouse toggle selection */
-    bool mouseSelection;
 };
-#ifdef _WIN32
-#    pragma warning(default : 4250)
-#endif /* _WIN32 */
 
 /** Description class typedef */
 typedef factories::CallAutoDescription<CallRender3DGL> CallRender3DGLDescription;

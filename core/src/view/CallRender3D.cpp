@@ -13,7 +13,7 @@ using namespace megamol::core;
 /*
  * view::CallRender3D::CallRender3D
  */
-view::CallRender3D::CallRender3D(void) : AbstractCallRender3D(), RenderOutput() {
+view::CallRender3D::CallRender3D(void) : AbstractCallRender() {
     // intentionally empty
 }
 
@@ -29,8 +29,7 @@ view::CallRender3D::~CallRender3D(void) {
  * view::CallRender3D::operator=
  */
 view::CallRender3D& view::CallRender3D::operator=(const view::CallRender3D& rhs) {
-    view::AbstractCallRender3D::operator=(rhs);
-    view::RenderOutput::operator=(rhs);
-    _backgroundCol = rhs._backgroundCol;
+    view::AbstractCallRender::operator=(rhs);
+    _framebuffer = rhs._framebuffer;
     return *this;
 }

@@ -39,6 +39,11 @@ bool GUIView::create() {
             __FUNCTION__, __LINE__);
         return false;
     }
+
+    if (this->_fbo == nullptr) {
+        this->_fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    }
+
 }
 
 
@@ -93,13 +98,33 @@ void GUIView::Render(const mmcRenderViewContext& context) {
         this->doBeforeRenderHook();
     }
     if (crv) {
-        crv->SetOutputBuffer(GL_BACK);
+        // Camera
+        core::view::Camera_2 cam;
+        crv->GetCamera(cam);
+        cam_type::snapshot_type snapshot;
+        cam_type::matrix_type viewTemp, projTemp;
+        cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
+
+        auto viewport_rect = cam.resolution_gate();
+        auto viewport =
+            glm::vec2(static_cast<float>(viewport_rect.width()), static_cast<float>(viewport_rect.height()));
+
+        if (this->_fbo->IsValid()) {
+            if ((this->_fbo->GetWidth() != viewport.x) || (this->_fbo->GetHeight() != viewport.y)) {
+                this->_fbo->Release();
+                if (!this->_fbo->Create(viewport.x, viewport.y, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+                        vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE)) {
+                    throw vislib::Exception(
+                        "[TILEVIEW] Unable to create image framebuffer object.", __FILE__, __LINE__);
+                    return;
+                }
+            }
+        }
+
+        crv->SetFramebufferObject(_fbo);
         crv->SetInstanceTime(context.InstanceTime);
         // Should be negative to trigger animation! (see View3DGL.cpp line ~612 | View2D.cpp line ~661):
         crv->SetTime(-1.0f);
-        auto viewport_rect = crv->GetViewport();
-        auto viewport =
-            glm::vec2(static_cast<float>(viewport_rect.Width()), static_cast<float>(viewport_rect.Height()));
         this->gui.PreDraw(viewport, viewport, crv->InstanceTime());
         (*crv)(core::view::AbstractCallRender::FnRender);
         this->gui.PostDraw();
@@ -107,9 +132,14 @@ void GUIView::Render(const mmcRenderViewContext& context) {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         if (this->overrideCall != nullptr) {
-            auto viewport_rect = this->overrideCall->GetViewport();
+            auto override_cam = this->overrideCall->GetCamera();
+            cam_type::snapshot_type override_snapshot;
+            cam_type::matrix_type override_viewTemp, override_projTemp;
+            override_cam.calc_matrices(
+                override_snapshot, override_viewTemp, override_projTemp, core::thecam::snapshot_content::all);
+            auto viewport_rect = override_cam.resolution_gate();
             auto viewport =
-                glm::vec2(static_cast<float>(viewport_rect.Width()), static_cast<float>(viewport_rect.Height()));
+                glm::vec2(static_cast<float>(viewport_rect.width()), static_cast<float>(viewport_rect.height()));
             this->gui.PreDraw(viewport, viewport, context.InstanceTime);
             this->gui.PostDraw();
         } else {

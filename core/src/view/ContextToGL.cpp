@@ -44,13 +44,14 @@ bool ContextToGL::GetExtents(CallRender3DGL& call) {
     auto cr = _getContextSlot.CallAs<CallRender3D>();
     if (cr == nullptr) return false;
     // no copy constructor available
-    auto cast = dynamic_cast<CallRender3D*>(&call);
-    *cr = *cast;
+    auto cast_in = dynamic_cast<AbstractCallRender*>(&call);
+    auto cast_out = dynamic_cast<AbstractCallRender*>(cr);
+    *cast_out = *cast_in;
 
     if (!_framebuffer) {
         _framebuffer = std::make_shared<CPUFramebuffer>();
     }
-    cr->setGenericFramebuffer(_framebuffer);
+    cr->SetFramebuffer(_framebuffer);
 
     (*cr)(view::CallRender3D::FnGetExtents);
 
@@ -65,13 +66,14 @@ bool ContextToGL::Render(CallRender3DGL& call) {
     auto cr = _getContextSlot.CallAs<CallRender3D>();
     if (cr == nullptr) return false;
     // no copy constructor available
-    auto cast = dynamic_cast<CallRender3D*>(&call);
-    *cr = *cast;
+    auto cast_in = dynamic_cast<AbstractCallRender*>(&call);
+    auto cast_out = dynamic_cast<AbstractCallRender*>(cr);
+    *cast_out = *cast_in;
 
     if (!_framebuffer) {
         _framebuffer = std::make_shared<CPUFramebuffer>();
     }
-    cr->setGenericFramebuffer(_framebuffer);
+    cr->SetFramebuffer(_framebuffer);
 
     (*cr)(view::CallRender3D::FnRender);
 
@@ -86,7 +88,7 @@ bool ContextToGL::Render(CallRender3DGL& call) {
     auto width = cam.resolution_gate().width();
     auto height = cam.resolution_gate().height();
 
-    auto lhs_fbo = call.FrameBufferObject();
+    auto lhs_fbo = call.GetFramebufferObject();
     if (lhs_fbo != NULL) {
 
         // module own fbo

@@ -18,7 +18,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractCallRender.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/AbstractRenderingView.h"
 #include "mmcore/view/CameraSerializer.h"
 #include "mmcore/view/Camera_2.h"
@@ -32,7 +32,7 @@ namespace megamol {
 namespace core {
 namespace view {
 
-class MEGAMOLCORE_API View3DGL : public view::AbstractRenderingView /*, public view::AbstractCamParamSync*/ {
+class MEGAMOLCORE_API View3DGL : public view::AbstractRenderingView {
 
 public:
     /** Enum for default views from the respective direction */
@@ -325,7 +325,7 @@ protected:
     param::ParamSlot stereoEyeDistSlot;
 
     /** The incoming call */
-    view::AbstractCallRender* overrideCall;
+    view::CallRender3DGL* overrideCall;
 
     /** The move step size in world coordinates */
     param::ParamSlot viewKeyMoveStepSlot;
@@ -419,7 +419,7 @@ protected:
 
     bool cameraControlOverrideActive;
 
-    vislib::graphics::gl::FramebufferObject fbo;
+    std::shared_ptr<vislib::graphics::gl::FramebufferObject> fbo;
 };
 
 } // namespace view

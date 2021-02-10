@@ -12,14 +12,12 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/cluster/mpi/MpiCall.h"
-#include "mmcore/cluster/simple/Client.h"
-#include "mmcore/cluster/simple/View.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/CallRender2D.h"
+#include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "vislib/Trace.h"
 #include "mmcore/utility/sys/SystemInformation.h"
@@ -537,8 +535,8 @@ bool megamol::remote::FBOTransmitter2::extractBkgndColor(std::array<float, 4>& b
     // this->ModuleGraphLock().LockExclusive();
     const auto ret = this->GetCoreInstance()->FindModuleNoLock<core::view::AbstractRenderingView>(
         mvn, [&bkgnd_color](core::view::AbstractRenderingView* arv) {
-            const float* bkgndCol = arv->BkgndColour();
-            if (bkgndCol != nullptr) {
+            auto bkgndCol = arv->BkgndColour();
+            if (bkgndCol != glm::vec4(0,0,0,0)) {
                 bkgnd_color[0] = bkgndCol[0];
                 bkgnd_color[1] = bkgndCol[1];
                 bkgnd_color[2] = bkgndCol[2];

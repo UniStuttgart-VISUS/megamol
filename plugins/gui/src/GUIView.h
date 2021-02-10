@@ -116,6 +116,8 @@ namespace gui {
         /** The gui */
         megamol::gui::GUIWindows gui;
 
+        std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
+
         // ------------------------------------------------------------------------
     };
 

@@ -9,6 +9,7 @@
 #include "mmcore/view/Renderer3DModuleGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "mmcore/view/RenderUtils.h"
+#include "mmcore/view/CallRender3D.h"
 
 namespace megamol::core::view {
 

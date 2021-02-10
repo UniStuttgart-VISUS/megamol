@@ -1139,13 +1139,13 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // Viewport
-    auto viewport = call.GetViewport();
-    this->curVpWidth = viewport.Width();
-    this->curVpHeight = viewport.Height();
+    auto viewport = cam.resolution_gate();
+    this->curVpWidth = viewport.width();
+    this->curVpHeight = viewport.height();
     this->curViewAttrib[0] = 0.0f;
     this->curViewAttrib[1] = 0.0f;
-    this->curViewAttrib[2] = static_cast<float>(viewport.Width());
-    this->curViewAttrib[3] = static_cast<float>(viewport.Height());
+    this->curViewAttrib[2] = static_cast<float>(viewport.width());
+    this->curViewAttrib[3] = static_cast<float>(viewport.height());
     if (this->curViewAttrib[2] < 1.0f) this->curViewAttrib[2] = 1.0f;
     if (this->curViewAttrib[3] < 1.0f) this->curViewAttrib[3] = 1.0f;
     this->curViewAttrib[2] = 2.0f / this->curViewAttrib[2];

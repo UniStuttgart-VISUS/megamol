@@ -18,6 +18,7 @@
 #include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/TimeControl.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
+#include "vislib/math/Rectangle.h"
 
 namespace megamol {
 namespace core {
@@ -255,9 +256,9 @@ private:
 
     vislib::math::Rectangle<float> clientArea2;
 
-    vislib::graphics::gl::FramebufferObject fbo1;
+    std::shared_ptr<vislib::graphics::gl::FramebufferObject> fbo1;
 
-    vislib::graphics::gl::FramebufferObject fbo2;
+    std::shared_ptr<vislib::graphics::gl::FramebufferObject> fbo2;
 
     int focus;
 

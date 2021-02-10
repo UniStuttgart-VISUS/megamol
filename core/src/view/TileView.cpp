@@ -15,7 +15,7 @@ using namespace megamol::core;
 /*
  * view::TileView::TileView
  */
-view::TileView::TileView(void) : AbstractTileView(), firstFrame(false), outCtrl(NULL) {
+view::TileView::TileView(void) : AbstractTileView(), firstFrame(false) {
 
 }
 
@@ -44,18 +44,37 @@ void view::TileView::Render(const mmcRenderViewContext& context) {
     crv->SetTime(static_cast<float>(context.Time));
     crv->SetInstanceTime(context.InstanceTime);
     crv->SetProjection(this->getProjType(), this->getEye());
-    crv->SetGpuAffinity(context.GpuAffinity);
     if ((this->getVirtWidth() != 0) && (this->getVirtHeight() != 0)
             && (this->getTileW() != 0) && (this->getTileH() != 0)) {
         crv->SetTile(this->getVirtWidth(), this->getVirtHeight(),
             this->getTileX(), this->getTileY(), this->getTileW(), this->getTileH());
     }
-    if (this->outCtrl == NULL) {
-        crv->SetOutputBuffer(GL_BACK, this->getViewportWidth(), this->getViewportHeight()); // TODO: Fix me!
+    if (this->_fbo == NULL) {
+        if (!this->_fbo->Create(this->getViewportWidth(), this->getViewportHeight(), GL_RGBA8, GL_RGBA,
+                GL_UNSIGNED_BYTE,
+                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
+            throw vislib::Exception("[TILEVIEW] Unable to create image framebuffer object.", __FILE__, __LINE__);
+            return;
+        }
+        crv->SetFramebufferObject(this->_fbo);
     } else {
-        crv->SetOutputBuffer(*this->outCtrl);
+        if (this->_fbo->IsValid()) {
+            if ((this->_fbo->GetWidth() != this->getViewportWidth()) ||
+                (this->_fbo->GetHeight() != this->getViewportHeight())) {
+                this->_fbo->Release();
+                if (!this->_fbo->Create(this->getViewportWidth(), this->getViewportHeight(), GL_RGBA8, GL_RGBA,
+                        GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
+                        GL_DEPTH_COMPONENT24)) {
+                    throw vislib::Exception(
+                        "[TILEVIEW] Unable to create image framebuffer object.", __FILE__, __LINE__);
+                    return;
+                }
+            }
+        }
+        crv->SetFramebufferObject(this->_fbo);
     }
     (*crv)(view::CallRenderViewGL::CALL_RENDER);
+
 }
 
 
@@ -83,7 +102,7 @@ bool view::TileView::OnRenderView(Call& call) {
     view::CallRenderViewGL *crv = dynamic_cast<view::CallRenderViewGL *>(&call);
     if (crv == NULL) return false;
 
-    this->outCtrl = crv;
+    this->_fbo = crv->GetFramebufferObject();
 
     mmcRenderViewContext c;
     ::ZeroMemory(&c, sizeof(mmcRenderViewContext));
@@ -93,10 +112,6 @@ bool view::TileView::OnRenderView(Call& call) {
     c.InstanceTime = crv->InstanceTime();
     // TODO: Affinity
     this->Render(c);
-
-    // TODO: Fix me!
-
-    this->outCtrl = NULL;
 
     return true;
 }

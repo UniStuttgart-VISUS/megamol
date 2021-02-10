@@ -352,7 +352,7 @@ bool ScatterplotMatrixRenderer2D::OnMouseMove(double x, double y) {
     return false;
 }
 
-bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
+bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2DGL& call) {
     try {
         if (!this->validate(call, false))
             return false;
@@ -410,9 +410,9 @@ bool ScatterplotMatrixRenderer2D::Render(core::view::CallRender2D& call) {
     return true;
 }
 
-bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2D& call) {
+bool ScatterplotMatrixRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
     this->validate(call, true);
-    call.SetBoundingBox(this->bounds);
+    call.AccessBoundingBoxes() = this->bounds;
     return true;
 }
 
@@ -444,7 +444,7 @@ void ScatterplotMatrixRenderer2D::resetDirtyScreen() {
     }
 }
 
-bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2D& call, bool ignoreMVP) {
+bool ScatterplotMatrixRenderer2D::validate(core::view::CallRender2DGL& call, bool ignoreMVP) {
     this->floatTable = this->floatTableInSlot.CallAs<table::TableDataCall>();
 
     this->transferFunction = this->transferFunctionInSlot.CallAs<megamol::core::view::CallGetTransferFunction>();
@@ -540,7 +540,7 @@ void ScatterplotMatrixRenderer2D::updateColumns() {
         }
     }
 
-    this->bounds.Set(0, 0, columnCount * (size + margin) - margin, columnCount * (size + margin) - margin);
+    this->bounds.SetBoundingBox(0, 0, 0, columnCount * (size + margin) - margin, columnCount * (size + margin) - margin, 0);
 
     this->plotSSBO.SetData(plots.data(), sizeof(PlotInfo), sizeof(PlotInfo), plots.size());
 }

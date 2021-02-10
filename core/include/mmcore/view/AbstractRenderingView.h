@@ -11,6 +11,8 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <glm/glm.hpp>
+
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
@@ -84,7 +86,7 @@ namespace view {
         *
         * @return The background colour for the view
         */
-        const float *BkgndColour(void) const;
+        glm::vec4 BkgndColour(void) const;
 
     protected:
 
@@ -141,10 +143,9 @@ namespace view {
         void toggleSoftCurse(void);
 
         /** Pointer to the override background colour */
-        float *overrideBkgndCol;
+        glm::vec4 overrideBkgndCol;
 
-        /** Pointer to the override viewport */
-        int *overrideViewport;
+        glm::vec4 overrideViewport;
 
     private:
 
@@ -193,7 +194,7 @@ namespace view {
         };
 
         /** The background colour for the view */
-        mutable float bkgndCol[3];
+        mutable glm::vec4 bkgndCol;
 
         /** The background colour for the view */
         mutable param::ParamSlot bkgndColSlot;

@@ -215,7 +215,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
 	cam.calc_matrices(view, proj);
 
 	// create render target
-	glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr.GetViewport().Width(), cr.GetViewport().Height(),
+	glowl::TextureLayout render_tgt_layout(GL_RGBA8, cam.resolution_gate().width(), cam.resolution_gate().height(),
 		1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},

@@ -178,9 +178,9 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     glm::mat4 mvp = proj * view;
 
     // Get current viewport
-    auto viewport = call.GetViewport();
-    const float vp_fw = static_cast<float>(viewport.Width());
-    const float vp_fh = static_cast<float>(viewport.Height());
+    auto viewport = cam.resolution_gate();
+    const float vp_fw = static_cast<float>(viewport.width());
+    const float vp_fh = static_cast<float>(viewport.height());
 
     // Get matrix for orthogonal projection of 2D rendering
     glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);

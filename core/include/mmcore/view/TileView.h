@@ -109,8 +109,7 @@ namespace view {
         /** Flag to identify the first frame */
         bool firstFrame;
 
-        /** TODO */
-        RenderOutputOpenGL * outCtrl;
+        std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
 
     };
 

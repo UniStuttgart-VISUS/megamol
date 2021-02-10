@@ -159,13 +159,13 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
     //}
 
     if (this->splitPositionSlot.IsDirty() || this->splitOrientationSlot.IsDirty() || this->splitWidthSlot.IsDirty() ||
-        !this->fbo1.IsValid() || !this->fbo2.IsValid() ||
+        !this->fbo1->IsValid() || !this->fbo2->IsValid() ||
         !vislib::math::IsEqual(this->clientArea.Width(), static_cast<float>(vpw)) ||
         !vislib::math::IsEqual(this->clientArea.Height(), static_cast<float>(vph))) {
         this->updateSize(vpw, vph);
 
         if (this->overrideCall != nullptr) {
-            this->overrideCall->EnableOutputBuffer();
+            this->overrideCall->GetFramebufferObject()->Enable();
         }
     }
 
@@ -187,12 +187,12 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
     propagateViewport(this->render1(), this->clientArea1);
     propagateViewport(this->render2(), this->clientArea2);
 
-    auto renderAndBlit = [&](vislib::graphics::gl::FramebufferObject& fbo, CallRenderViewGL* crv,
+    auto renderAndBlit = [&](std::shared_ptr<vislib::graphics::gl::FramebufferObject> fbo, CallRenderViewGL* crv,
                              const vislib::math::Rectangle<float>& ca) {
         if (crv == nullptr) {
             return;
         }
-        crv->SetOutputBuffer(&fbo);
+        crv->SetFramebufferObject(fbo);
         crv->SetInstanceTime(context.InstanceTime);
         crv->SetTime(-1.0f);
 
@@ -204,7 +204,7 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
         unsigned int otl = vislib::Trace::GetInstance().GetLevel();
         vislib::Trace::GetInstance().SetLevel(0);
 #endif /* DEBUG || _DEBUG */
-        fbo.Enable();
+        fbo->Enable();
 #if defined(DEBUG) || defined(_DEBUG)
         vislib::Trace::GetInstance().SetLevel(otl);
 #endif /* DEBUG || _DEBUG */
@@ -216,13 +216,13 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
 #if defined(DEBUG) || defined(_DEBUG)
         vislib::Trace::GetInstance().SetLevel(0);
 #endif /* DEBUG || _DEBUG */
-        fbo.Disable();
+        fbo->Disable();
 #if defined(DEBUG) || defined(_DEBUG)
         vislib::Trace::GetInstance().SetLevel(otl);
 #endif /* DEBUG || _DEBUG */
 
         if (this->overrideCall != nullptr) {
-            this->overrideCall->EnableOutputBuffer();
+            this->overrideCall->GetFramebufferObject()->Enable();
         }
 
         // Bind and blit framebuffer.
@@ -230,9 +230,9 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
         glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &binding);
         glGetIntegerv(GL_READ_BUFFER, &readBuffer);
 
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo.GetID());
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->GetID());
         glReadBuffer(GL_COLOR_ATTACHMENT0);
-        glBlitFramebuffer(0, 0, fbo.GetWidth(), fbo.GetHeight(), ca.Left(), this->clientArea.Height() - ca.Top(),
+        glBlitFramebuffer(0, 0, fbo->GetWidth(), fbo->GetHeight(), ca.Left(), this->clientArea.Height() - ca.Top(),
             ca.Right(), this->clientArea.Height() - ca.Bottom(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, binding);
@@ -482,14 +482,15 @@ bool view::SplitView::OnMouseScroll(double dx, double dy) {
 }
 
 bool view::SplitView::create() {
-    // nothing to do
+    this->fbo1 = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    this->fbo2 = std::make_shared<vislib::graphics::gl::FramebufferObject>();
     return true;
 }
 
 void view::SplitView::release() {
     this->overrideCall = nullptr; // do not delete
-    if (this->fbo1.IsValid()) this->fbo1.Release();
-    if (this->fbo2.IsValid()) this->fbo2.Release();
+    if (this->fbo1->IsValid()) this->fbo1->Release();
+    if (this->fbo2->IsValid()) this->fbo2->Release();
 }
 
 void view::SplitView::unpackMouseCoordinates(float& x, float& y) {
@@ -506,15 +507,15 @@ void view::SplitView::updateSize(size_t width, size_t height) {
     unsigned int otl = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(0);
 #endif /* DEBUG || _DEBUG */
-    if (this->fbo1.IsValid()) this->fbo1.Release();
-    this->fbo1.Create(
+    if (this->fbo1->IsValid()) this->fbo1->Release();
+    this->fbo1->Create(
         static_cast<unsigned int>(this->clientArea1.Width()), static_cast<unsigned int>(this->clientArea1.Height()));
-    this->fbo1.Disable();
+    this->fbo1->Disable();
 
-    if (this->fbo2.IsValid()) this->fbo2.Release();
-    this->fbo2.Create(
+    if (this->fbo2->IsValid()) this->fbo2->Release();
+    this->fbo2->Create(
         static_cast<unsigned int>(this->clientArea2.Width()), static_cast<unsigned int>(this->clientArea2.Height()));
-    this->fbo2.Disable();
+    this->fbo2->Disable();
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif /* DEBUG || _DEBUG */

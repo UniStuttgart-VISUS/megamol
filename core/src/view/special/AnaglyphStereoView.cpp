@@ -65,10 +65,10 @@ view::special::AnaglyphStereoView::~AnaglyphStereoView(void) {
 void view::special::AnaglyphStereoView::Resize(unsigned int width, unsigned int height) {
     AbstractOverrideView::Resize(width, height);
     if ((width > 0) && (height > 0)) {
-        this->leftBuffer.Release();
-        this->leftBuffer.Create(width, height);
-        this->rightBuffer.Release();
-        this->rightBuffer.Create(width, height);
+        this->leftBuffer->Release();
+        this->leftBuffer->Create(width, height);
+        this->rightBuffer->Release();
+        this->rightBuffer->Create(width, height);
     }
 }
 
@@ -81,7 +81,6 @@ void view::special::AnaglyphStereoView::Render(const mmcRenderViewContext& conte
     if (crv == NULL) return;
     crv->SetTime(static_cast<float>(context.Time));
     crv->SetInstanceTime(context.InstanceTime);
-    crv->SetGpuAffinity(context.GpuAffinity);
 
     if (this->colourPresetsSlot.IsDirty()) {
         this->colourPresetsSlot.ResetDirty();
@@ -153,18 +152,18 @@ void view::special::AnaglyphStereoView::Render(const mmcRenderViewContext& conte
     crv->SetProjection(proj,switchEyes
         ? thecam::Eye::left
         : thecam::Eye::right);
-    this->rightBuffer.Enable();
-    crv->SetOutputBuffer(&this->rightBuffer);
+    this->rightBuffer->Enable();
+    crv->SetFramebufferObject(this->rightBuffer);
     (*crv)(view::CallRenderViewGL::CALL_RENDER);
-    this->rightBuffer.Disable();
+    this->rightBuffer->Disable();
 
     crv->SetProjection(proj, switchEyes
         ? thecam::Eye::right
         : thecam::Eye::left);
-    this->leftBuffer.Enable();
-    crv->SetOutputBuffer(&this->leftBuffer);
+    this->leftBuffer->Enable();
+    crv->SetFramebufferObject(this->leftBuffer);
     (*crv)(view::CallRenderViewGL::CALL_RENDER);
-    this->leftBuffer.Disable();
+    this->leftBuffer->Disable();
 
     vislib::Trace::GetInstance().SetLevel(oldLevel);
 
@@ -180,9 +179,9 @@ void view::special::AnaglyphStereoView::Render(const mmcRenderViewContext& conte
     ::glDisable(GL_DEPTH_TEST);
 
     ::glActiveTextureARB(GL_TEXTURE0_ARB);
-    this->leftBuffer.BindColourTexture();
+    this->leftBuffer->BindColourTexture();
     ::glActiveTextureARB(GL_TEXTURE1_ARB);
-    this->rightBuffer.BindColourTexture();
+    this->rightBuffer->BindColourTexture();
 
     this->shader.Enable();
     this->shader.SetParameter("left", 0);
@@ -216,13 +215,14 @@ void view::special::AnaglyphStereoView::Render(const mmcRenderViewContext& conte
  */
 bool view::special::AnaglyphStereoView::create(void) {
     ASSERT(IsAvailable());
-
-    if (!this->leftBuffer.Create(1, 1)) {
+    this->leftBuffer = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    if (!this->leftBuffer->Create(1, 1)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to initialize left FBO");
         return false;
     }
-    if (!this->rightBuffer.Create(1, 1)) {
+    this->rightBuffer = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    if (!this->rightBuffer->Create(1, 1)) {
         megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
             "Unable to initialize right FBO");
         return false;
@@ -264,7 +264,7 @@ void main() {\n\
  * view::special::AnaglyphStereoView::release
  */
 void view::special::AnaglyphStereoView::release(void) {
-    this->leftBuffer.Release();
-    this->rightBuffer.Release();
+    this->leftBuffer->Release();
+    this->rightBuffer->Release();
     this->shader.Release();
 }

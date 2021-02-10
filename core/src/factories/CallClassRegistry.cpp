@@ -14,10 +14,9 @@
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/cluster/CallRegisterAtController.h"
-#include "mmcore/cluster/simple/ClientViewRegistration.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender2D.h"
+#include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/CallTimeControl.h"
@@ -51,11 +50,10 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     // Register all rendering graph call descriptions here
     //////////////////////////////////////////////////////////////////////
     instance.RegisterAutoDescription<cluster::CallRegisterAtController>();
-    instance.RegisterAutoDescription<cluster::simple::ClientViewRegistration>();
     instance.RegisterAutoDescription<moldyn::MultiParticleDataCall>();
     instance.RegisterAutoDescription<view::CallClipPlane>();
     instance.RegisterAutoDescription<view::CallGetTransferFunction>();
-    instance.RegisterAutoDescription<view::CallRender2D>();
+    instance.RegisterAutoDescription<view::CallRender2DGL>();
     instance.RegisterAutoDescription<view::CallRender3DGL>();
     instance.RegisterAutoDescription<view::CallRenderViewGL>();
     instance.RegisterAutoDescription<view::CallTimeControl>();

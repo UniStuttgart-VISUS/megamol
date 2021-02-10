@@ -86,7 +86,7 @@ void view::AbstractRenderingView::EmptyTitleRenderer::Release(void){
  * view::AbstractRenderingView::AbstractRenderingView
  */
 view::AbstractRenderingView::AbstractRenderingView(void) : AbstractView(),
-        overrideBkgndCol(NULL), overrideViewport(NULL),
+        overrideBkgndCol(NULL),
         bkgndColSlot("backCol", "The views background colour"),
         softCursor(false), softCursorSlot("softCursor", "Bool flag to activate software cursor rendering"),
         titleRenderer(NULL), fpsCounter(10), fpsThreadID(0), fpsOutputTimer(0) {
@@ -109,15 +109,14 @@ view::AbstractRenderingView::AbstractRenderingView(void) : AbstractView(),
  */
 view::AbstractRenderingView::~AbstractRenderingView(void) {
     this->removeTitleRenderer();
-    this->overrideBkgndCol = NULL; // DO NOT DELETE
-    this->overrideViewport = NULL; // DO NOT DELETE
+    this->overrideBkgndCol = glm::vec4(0,0,0,0); // DO NOT DELETE
 }
 
 
 /*
 * view::AbstractRenderingView::bkgndColour
 */
-const float *view::AbstractRenderingView::BkgndColour(void) const {
+glm::vec4 view::AbstractRenderingView::BkgndColour(void) const {
     if (this->bkgndColSlot.IsDirty()) {
         this->bkgndColSlot.ResetDirty();
         this->bkgndColSlot.Param<param::ColorParam>()->Value(this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]);
@@ -173,7 +172,7 @@ void view::AbstractRenderingView::endFrame(bool abort) {
 
 
 /*
- * view::AbstractRenderingView::lastFrameTime
+ * view::AbstractRenderingView::_lastFrameTime
  */
 double view::AbstractRenderingView::lastFrameTime(void) const {
     return this->fpsCounter.LastFrameTime();
@@ -208,7 +207,7 @@ void view::AbstractRenderingView::renderTitle(
     //}
 
     //this->titleRenderer->Render(tileX, tileY, tileW, tileH,
-    //    virtW, virtH, stereo, leftEye, instTime, this->GetCoreInstance());
+    //    virtW, virtH, stereo, leftEye, _instTime, this->GetCoreInstance());
 
 }
 

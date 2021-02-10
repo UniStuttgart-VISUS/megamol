@@ -18,18 +18,13 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/AbstractCallRender3D.h"
 #include "vislib/assert.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include <cmath>
-#include <iostream>
 #include <omp.h>
 #include "vislib/math/ShallowVector.h"
-#include "protein_calls/CallMouseInput.h"
 #include <vector>
 
 

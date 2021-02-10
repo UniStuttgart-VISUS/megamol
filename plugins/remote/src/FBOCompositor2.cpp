@@ -270,7 +270,7 @@ bool megamol::remote::FBOCompositor2::Render(megamol::core::view::CallRender3DGL
             (std::fabs(req_cam_view.z() - this->camera_params_[8]) >= min)) {
             // Resetting FBO in cr3d (to nullptr). This is detected by CinemativView to skip not requested frames while
             // rendering.
-            call.ResetOutputBuffer();
+            call.SetFramebufferObject(nullptr);
             return false;
         }
     }

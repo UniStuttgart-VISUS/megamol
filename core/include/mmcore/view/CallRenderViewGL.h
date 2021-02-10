@@ -5,35 +5,23 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_CALLRENDERVIEW_H_INCLUDED
-#define MEGAMOLCORE_CALLRENDERVIEW_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/api/MegaMolCore.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/CallRenderView.h"
-#include "mmcore/view/RenderOutputOpenGL.h" 
+#include "mmcore/view/AbstractCallRenderView.h"
 #include "mmcore/view/Input.h"
-#include "mmcore/thecam/camera.h"
-#include "vislib/graphics/graphicstypes.h"
-#include "mmcore/view/GPUAffinity.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 
 namespace megamol {
 namespace core {
 namespace view {
 
-#ifdef _WIN32
-#pragma warning(disable: 4250)  // I know what I am doing ...
-#endif /* _WIN32 */
     /**
      * Call for rendering visual elements (from separate sources) into a single target, i.e.,
 	 * FBO-based compositing and cluster display.
      */
-    class MEGAMOLCORE_API
-    CallRenderViewGL : public CallRenderView, public RenderOutputOpenGL, public GPUAffinity {
+    class CallRenderViewGL : public AbstractCallRenderView {
     public:
 
         /**
@@ -128,11 +116,20 @@ namespace view {
          */
         CallRenderViewGL& operator=(const CallRenderViewGL& rhs);
 
-    };
-#ifdef _WIN32
-#pragma warning(default: 4250)
-#endif /* _WIN32 */
+        inline void SetFramebufferObject(std::shared_ptr<vislib::graphics::gl::FramebufferObject> fbo) {
+            _framebuffer = fbo;
+        }
 
+        inline std::shared_ptr<vislib::graphics::gl::FramebufferObject> GetFramebufferObject() {
+            return _framebuffer;
+        }
+
+
+    private:
+
+        std::shared_ptr<vislib::graphics::gl::FramebufferObject> _framebuffer;
+
+    };
 
     /** Description class typedef */
     typedef factories::CallAutoDescription<CallRenderViewGL>
@@ -143,4 +140,3 @@ namespace view {
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_CALLRENDERVIEW_H_INCLUDED */

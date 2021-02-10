@@ -27,8 +27,6 @@
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/AbstractCallRender.h"
-#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "vislib/Exception.h"
 #include "vislib/String.h"
@@ -394,9 +392,6 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
 
     glm::ivec4 currentViewport;
     CallRender3DGL* cr3d = this->rendererSlot.CallAs<CallRender3DGL>();
-    if (cr3d != nullptr) {
-        cr3d->SetMouseSelection(this->toggleMouseSelection);
-    }
 
     this->handleCameraMovement();
 
@@ -426,18 +421,15 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
 
     if (this->overrideCall != nullptr) {
         if (cr3d != nullptr) {
-            view::RenderOutputOpenGL* ro = dynamic_cast<view::RenderOutputOpenGL*>(overrideCall);
-            if (ro != nullptr) {
-                *static_cast<view::RenderOutputOpenGL*>(cr3d) = *ro;
-            }
+            cr3d->SetFramebufferObject(overrideCall->GetFramebufferObject());
         }
-        this->overrideCall->EnableOutputBuffer();
+        this->overrideCall->GetFramebufferObject()->Enable();
     } else if (cr3d != nullptr) {
-        cr3d->SetOutputBuffer(GL_BACK);
-        cr3d->GetViewport(); // access the viewport to enforce evaluation TODO is this still necessary
+        //cr3d->SetOutputBuffer(GL_BACK);
+        //cr3d->GetViewport(); // access the viewport to enforce evaluation TODO is this still necessary
     }
 
-    const float* bkgndCol = (this->overrideBkgndCol != nullptr) ? this->overrideBkgndCol : this->BkgndColour();
+    const auto bkgndCol = (this->overrideBkgndCol != glm::vec4(0,0,0,0)) ? this->overrideBkgndCol : this->BkgndColour();
 
     if (cr3d == NULL) {
         /*this->renderTitle(this->cam.Parameters()->TileRect().Left(), this->cam.Parameters()->TileRect().Bottom(),
@@ -445,11 +437,10 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
             this->cam.Parameters()->VirtualViewSize().Width(), this->cam.Parameters()->VirtualViewSize().Height(),
             (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_ORTHOGRAPHIC) &&
             (this->cam.Parameters()->Projection() != vislib::graphics::CameraParameters::MONO_PERSPECTIVE),
-            this->cam.Parameters()->Eye() == vislib::graphics::CameraParameters::LEFT_EYE, instTime);*/
+            this->cam.Parameters()->Eye() == vislib::graphics::CameraParameters::LEFT_EYE, _instTime);*/
         this->endFrame(true);
         return; // empty enought
     } else {
-        cr3d->SetGpuAffinity(context.GpuAffinity);
         this->removeTitleRenderer();
         cr3d->SetBackgroundColor(glm::vec4(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f));
     }
@@ -525,28 +516,28 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
     float window_width = wndSize.width();
     float window_height = wndSize.height();
 
-    if (this->fbo.IsValid()) {
-        if ((this->fbo.GetWidth() != window_width) || (this->fbo.GetHeight() != window_height)) {
-            this->fbo.Release();
+    if (this->fbo->IsValid()) {
+        if ((this->fbo->GetWidth() != window_width) || (this->fbo->GetHeight() != window_height)) {
+            this->fbo->Release();
         }
     }
-    if (!this->fbo.IsValid()) {
-        if (!this->fbo.Create(window_width, window_height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+    if (!this->fbo->IsValid()) {
+        if (!this->fbo->Create(window_width, window_height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
             throw vislib::Exception(
                 "[VIEW3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
             return;
         }
     }
-    if (this->fbo.Enable() != GL_NO_ERROR) {
+    if (this->fbo->Enable() != GL_NO_ERROR) {
         throw vislib::Exception("[VIEW3DGL] Cannot enable Framebuffer object.", __FILE__, __LINE__);
         return;
     }
 
-    cr3d->SetOutputBuffer(&this->fbo);
+    cr3d->SetFramebufferObject(this->fbo);
 
     // TODO
-    // this->camParams->CalcClipping(this->bboxs.ClipBox(), 0.1f);
+    // this->camParams->CalcClipping(this->_bboxs.ClipBox(), 0.1f);
     // This is painfully wrong in the vislib camera, and is fixed here as sort of hotfix
     // float fc = this->camParams->FarClip();
     // float nc = this->camParams->NearClip();
@@ -565,11 +556,11 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
         (*cr3d)(view::AbstractCallRender::FnRender);
     }
 
-    if (this->fbo.IsValid()) {
-        if (this->fbo.IsEnabled()) {
-            this->fbo.Disable();
+    if (this->fbo->IsValid()) {
+        if (this->fbo->IsEnabled()) {
+            this->fbo->Disable();
         }
-        this->fbo.DrawColourTexture();
+        this->fbo->DrawColourTexture();
     }
 
     this->setCameraValues(this->cam);
@@ -704,13 +695,10 @@ bool View3DGL::OnRenderView(Call& call) {
     //    }
     //}
     if (crv->IsBackgroundSet()) {
-        overBC[0] = static_cast<float>(crv->BackgroundRed()) / 255.0f;
-        overBC[1] = static_cast<float>(crv->BackgroundGreen()) / 255.0f;
-        overBC[2] = static_cast<float>(crv->BackgroundBlue()) / 255.0f;
-        this->overrideBkgndCol = overBC.data(); // hurk
+        this->overrideBkgndCol = crv->BackgroundColor();
     }
 
-    this->overrideCall = dynamic_cast<view::AbstractCallRender*>(&call);
+    this->overrideCall = dynamic_cast<view::CallRender3DGL*>(&call);
 
     float time = crv->Time();
     if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
@@ -728,12 +716,11 @@ bool View3DGL::OnRenderView(Call& call) {
     this->Render(context);
 
     if (this->overrideCall != nullptr) {
-        this->overrideCall->DisableOutputBuffer();
+        this->overrideCall->GetFramebufferObject()->Disable();
         this->overrideCall = nullptr;
     }
 
-    this->overrideBkgndCol = nullptr;
-    this->overrideViewport = nullptr;
+    this->overrideBkgndCol = glm::vec4(0,0,0,0);
 
     return true;
 }
@@ -1081,6 +1068,8 @@ bool View3DGL::create(void) {
     this->cursor2d.SetButtonCount(3);
 
     this->firstImg = true;
+
+    this->fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
 
     return true;
 }

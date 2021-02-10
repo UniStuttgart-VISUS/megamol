@@ -15,11 +15,6 @@
 #include "mmcore/cluster/ClusterController.h"
 #include "mmcore/cluster/ClusterViewMaster.h"
 #include "mmcore/cluster/mpi/MpiProvider.h"
-#include "mmcore/cluster/mpi/View.h"
-#include "mmcore/cluster/simple/Client.h"
-#include "mmcore/cluster/simple/Heartbeat.h"
-#include "mmcore/cluster/simple/Server.h"
-#include "mmcore/cluster/simple/View.h"
 #include "mmcore/misc/SiffCSplineFitter.h"
 #include "mmcore/misc/TestSpheresDataSource.h"
 #include "mmcore/moldyn/MMPLDDataSource.h"
@@ -33,7 +28,6 @@
 #include "mmcore/view/special/AnaglyphStereoView.h"
 #include "mmcore/view/special/ChronoGraph.h"
 #include "mmcore/view/special/DemoRenderer2D.h"
-#include "mmcore/view/special/QuadBufferStereoView.h"
 #include "mmcore/view/special/ScreenShooter.h"
 #include "mmcore/view/TileView.h"
 #include "mmcore/view/View2D.h"
@@ -76,12 +70,7 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
 
     instance.RegisterAutoDescription<cluster::ClusterController>();
     instance.RegisterAutoDescription<cluster::ClusterViewMaster>();
-    instance.RegisterAutoDescription<cluster::simple::Client>();
-    instance.RegisterAutoDescription<cluster::simple::Heartbeat>();
-    instance.RegisterAutoDescription<cluster::simple::Server>();
-    instance.RegisterAutoDescription<cluster::simple::View>();
     instance.RegisterAutoDescription<cluster::mpi::MpiProvider>();
-    instance.RegisterAutoDescription<cluster::mpi::View>();
     instance.RegisterAutoDescription<misc::SiffCSplineFitter>();
     instance.RegisterAutoDescription<misc::TestSpheresDataSource>();
     instance.RegisterAutoDescription<moldyn::MMPLDDataSource>();
@@ -95,7 +84,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::special::AnaglyphStereoView>();
     instance.RegisterAutoDescription<view::special::ChronoGraph>();
     instance.RegisterAutoDescription<view::special::DemoRenderer2D>();
-    instance.RegisterAutoDescription<view::special::QuadBufferStereoView>();
     instance.RegisterAutoDescription<view::special::ScreenShooter>();
     instance.RegisterAutoDescription<view::TileView>();
     instance.RegisterAutoDescription<view::View2D>();

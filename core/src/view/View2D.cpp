@@ -10,7 +10,7 @@
 #include "mmcore/view/View2D.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallRenderViewGL.h"
-#include "mmcore/view/CallRender2D.h"
+#include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ColorParam.h"
@@ -20,6 +20,7 @@
 #include "vislib/math/Matrix4.h"
 #include "json.hpp"
 #include "mmcore/utility/log/Log.h"
+#include "vislib/math/Rectangle.h"
 
 
 using namespace megamol::core;
@@ -55,7 +56,7 @@ view::View2D::View2D(void)
     , overrideViewTile(NULL)
     , timeCtrl() {
 
-    this->rendererSlot.SetCompatibleCall<CallRender2DDescription>();
+    this->rendererSlot.SetCompatibleCall<CallRender2DGLDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
 
     this->cameraSettingsSlot.SetParameter(new param::StringParam(""));
@@ -139,7 +140,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
         this->doBeforeRenderHook();
     }
 
-    CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
+    CallRender2DGL *cr2d = this->rendererSlot.CallAs<CallRender2DGL>();
 
     AbstractRenderingView::beginFrame();
 
@@ -162,7 +163,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
             static_cast<GLsizei>(this->height));
     }
 
-    const float *bkgndCol = (this->overrideBkgndCol != NULL)
+    glm::vec4 bkgndCol = (!(this->overrideBkgndCol == glm::vec4(0,0,0,0)))
         ? this->overrideBkgndCol : this->BkgndColour();
     ::glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
 
@@ -181,11 +182,11 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     }
 
     if ((*cr2d)(AbstractCallRender::FnGetExtents)) {
-        if (this->bbox != cr2d->GetBoundingBox()
+        if (!(this->bbox == cr2d->AccessBoundingBoxes())
             && resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
             this->ResetView();
         }
-        bbox = cr2d->GetBoundingBox();
+        bbox = cr2d->AccessBoundingBoxes();
         this->timeCtrl.SetTimeExtend(cr2d->TimeFramesCount(), cr2d->IsInSituTime());
         if (time > static_cast<float>(cr2d->TimeFramesCount())) {
             time = static_cast<float>(cr2d->TimeFramesCount());
@@ -194,7 +195,6 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
 
     cr2d->SetTime(time);
     cr2d->SetInstanceTime(instTime);
-    cr2d->SetGpuAffinity(context.GpuAffinity);
     cr2d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
 
     ::glMatrixMode(GL_PROJECTION);
@@ -240,10 +240,8 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     //glGetFloatv(GL_MODELVIEW_MATRIX, aMatrix);
     glLoadMatrixf(m.PeekComponents());
 
-    cr2d->SetBackgroundColour(
-        static_cast<unsigned char>(bkgndCol[0] * 255.0f),
-        static_cast<unsigned char>(bkgndCol[1] * 255.0f),
-        static_cast<unsigned char>(bkgndCol[2] * 255.0f));
+    glm::vec4 bgcol = {bkgndCol[0], bkgndCol[1], bkgndCol[2],1};
+    cr2d->SetBackgroundColor(bgcol);
 
     asp = 1.0f / asp;
     vislib::math::Rectangle<float> vr(
@@ -251,13 +249,28 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
         (-1.0f / vz - vy),
         (asp / vz - vx),
         (1.0f / vz - vy));
-    cr2d->SetBoundingBox(vr);
+    cr2d->AccessBoundingBoxes().SetBoundingBox(vr.Left(),vr.Bottom(),0,vr.Right(),vr.Top(),0);
 
     if (this->incomingCall == NULL) {
-        cr2d->SetOutputBuffer(GL_BACK,
-            vpx, vpy, static_cast<int>(w), static_cast<int>(h));
+        if (this->_fbo == nullptr) this->_fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+        if (this->_fbo->IsValid()) {
+            if ((this->_fbo->GetWidth() != w) ||
+                (this->_fbo->GetHeight() != h)) {
+                this->_fbo->Release();
+                if (!this->_fbo->Create(w, h, GL_RGBA8, GL_RGBA,
+                        GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE)) {
+                    throw vislib::Exception(
+                        "[TILEVIEW] Unable to create image framebuffer object.", __FILE__, __LINE__);
+                    return;
+                }
+            }
+        }
+        cr2d->SetFramebufferObject(_fbo);
+        // TODO here we have to apply the new camera
+        //cr2d->SetOutputBuffer(GL_BACK,
+        //    vpx, vpy, static_cast<int>(w), static_cast<int>(h));
     } else {
-        cr2d->SetOutputBuffer(*this->incomingCall);
+        cr2d->SetFramebufferObject(this->incomingCall->GetFramebufferObject());
     }
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // depth could be required even for 2d
 
@@ -275,10 +288,10 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
 
         ::glColor4fv(this->bboxCol);
         ::glBegin(GL_LINE_LOOP);
-        ::glVertex2f(bbox.Left(), bbox.Top());
-        ::glVertex2f(bbox.Left(), bbox.Bottom());
-        ::glVertex2f(bbox.Right(), bbox.Bottom());
-        ::glVertex2f(bbox.Right(), bbox.Top());
+        ::glVertex2f(bbox.BoundingBox().Left(), bbox.BoundingBox().Top());
+        ::glVertex2f(bbox.BoundingBox().Left(), bbox.BoundingBox().Bottom());
+        ::glVertex2f(bbox.BoundingBox().Right(), bbox.BoundingBox().Bottom());
+        ::glVertex2f(bbox.BoundingBox().Right(), bbox.BoundingBox().Top());
         ::glEnd();
 
         ::glDisable(GL_LINE_SMOOTH);
@@ -314,14 +327,17 @@ void view::View2D::ResetView(void) {
     // using namespace vislib::graphics;
     VLTRACE(VISLIB_TRCELVL_INFO, "View2D::ResetView\n");
 
-    CallRender2D *cr2d = this->rendererSlot.CallAs<CallRender2D>();
+    CallRender2DGL *cr2d = this->rendererSlot.CallAs<CallRender2DGL>();
     if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
-        this->viewX = -0.5f * (cr2d->GetBoundingBox().Left() + cr2d->GetBoundingBox().Right());
-        this->viewY = -0.5f * (cr2d->GetBoundingBox().Bottom() + cr2d->GetBoundingBox().Top());
-        if ((this->width / this->height) > static_cast<float>(cr2d->GetBoundingBox().AspectRatio())) {
-            this->viewZoom = 2.0f / cr2d->GetBoundingBox().Height();
+        this->viewX =
+            -0.5f * (cr2d->GetBoundingBoxes().BoundingBox().Left() + cr2d->GetBoundingBoxes().BoundingBox().Right());
+        this->viewY =
+            -0.5f * (cr2d->GetBoundingBoxes().BoundingBox().Bottom() + cr2d->GetBoundingBoxes().BoundingBox().Top());
+        if ((this->width / this->height) > static_cast<float>(cr2d->GetBoundingBoxes().BoundingBox().Width() /
+                                                              cr2d->GetBoundingBoxes().BoundingBox().Height())) {
+            this->viewZoom = 2.0f / cr2d->GetBoundingBoxes().BoundingBox().Height();
         } else {
-            this->viewZoom = (2.0f * this->width) / (this->height * cr2d->GetBoundingBox().Width());
+            this->viewZoom = (2.0f * this->width) / (this->height * cr2d->GetBoundingBoxes().BoundingBox().Width());
         }
         this->viewZoom *= 0.99f;
 
@@ -355,7 +371,7 @@ bool view::View2D::OnRenderView(Call& call) {
     if (crv == NULL) return false;
 
     this->incomingCall = crv;
-    this->overrideViewport = overVP; // never set window viewport
+    this->overrideViewport = overVP;
     if (crv->IsViewportSet()) {
         overVP[2] = crv->ViewportWidth();
         overVP[3] = crv->ViewportHeight();
@@ -370,10 +386,7 @@ bool view::View2D::OnRenderView(Call& call) {
         this->overrideViewTile = overTile;
     }
     if (crv->IsBackgroundSet()) {
-        overBC[0] = static_cast<float>(crv->BackgroundRed()) / 255.0f;
-        overBC[1] = static_cast<float>(crv->BackgroundGreen()) / 255.0f;
-        overBC[2] = static_cast<float>(crv->BackgroundBlue()) / 255.0f;
-        this->overrideBkgndCol = overBC; // hurk
+         this->overrideBkgndCol = crv->BackgroundColor();
     }
 
     float time = crv->Time();
@@ -385,9 +398,9 @@ bool view::View2D::OnRenderView(Call& call) {
     // TODO: Affinity
     this->Render(context);
 
-    this->overrideBkgndCol = NULL;
-    this->overrideViewport = NULL;
+    this->overrideBkgndCol = glm::vec4(0,0,0,0);
     this->overrideViewTile = NULL;
+    this->overrideViewport = NULL;
     this->incomingCall = NULL;
 
     return true;
@@ -403,7 +416,7 @@ void view::View2D::UpdateFreeze(bool freeze) {
 
 
 bool view::View2D::OnKey(Key key, KeyAction action, Modifiers mods) {
-    auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
+    auto* cr = this->rendererSlot.CallAs<view::CallRender2DGL>();
     if (cr == NULL) return false;
 
     if (key == Key::KEY_HOME) {
@@ -416,21 +429,21 @@ bool view::View2D::OnKey(Key key, KeyAction action, Modifiers mods) {
     evt.keyData.action = action;
     evt.keyData.mods = mods;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender2D::FnOnKey)) return false;
+    if (!(*cr)(view::CallRender2DGL::FnOnKey)) return false;
 
     return true;
 }
 
 
 bool view::View2D::OnChar(unsigned int codePoint) {
-    auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
+    auto* cr = this->rendererSlot.CallAs<view::CallRender2DGL>();
     if (cr == NULL) return false;
 
     InputEvent evt;
     evt.tag = InputEvent::Tag::Char;
     evt.charData.codePoint = codePoint;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender2D::FnOnChar)) return false;
+    if (!(*cr)(view::CallRender2DGL::FnOnChar)) return false;
 
     return true;
 }
@@ -439,7 +452,7 @@ bool view::View2D::OnChar(unsigned int codePoint) {
 bool view::View2D::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
 	this->mouseMode = MouseMode::Propagate;
 
-    auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
+    auto* cr = this->rendererSlot.CallAs<view::CallRender2DGL>();
     if (cr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseButton;
@@ -447,7 +460,7 @@ bool view::View2D::OnMouseButton(MouseButton button, MouseButtonAction action, M
         evt.mouseButtonData.action = action;
         evt.mouseButtonData.mods = mods;
         cr->SetInputEvent(evt);
-        if ((*cr)(view::CallRender2D::FnOnMouseButton)) return true;
+        if ((*cr)(view::CallRender2DGL::FnOnMouseButton)) return true;
     }
 
     auto down = action == MouseButtonAction::PRESS;
@@ -471,14 +484,14 @@ bool view::View2D::OnMouseMove(double x, double y) {
         mx -= this->viewX;
         my -= this->viewY;
 
-        auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
+        auto* cr = this->rendererSlot.CallAs<view::CallRender2DGL>();
         if (cr) {
             InputEvent evt;
             evt.tag = InputEvent::Tag::MouseMove;
             evt.mouseMoveData.x = mx;
             evt.mouseMoveData.y = my;
             cr->SetInputEvent(evt);
-            if ((*cr)(view::CallRender2D::FnOnMouseMove)) return true;
+            if ((*cr)(view::CallRender2DGL::FnOnMouseMove)) return true;
         }
     } else if (this->mouseMode == MouseMode::Pan) {
         float movSpeed = 2.0f / (this->viewZoom * this->height);
@@ -492,9 +505,9 @@ bool view::View2D::OnMouseMove(double x, double y) {
         const double logSpd = log(spd);
         float base = 1.0f;
 
-        CallRender2D* cr2d = this->rendererSlot.CallAs<CallRender2D>();
+        CallRender2DGL* cr2d = this->rendererSlot.CallAs<CallRender2DGL>();
         if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
-            base = cr2d->GetBoundingBox().Height();
+            base = cr2d->GetBoundingBoxes().BoundingBox().Height();
         }
 
         float newZoom =
@@ -516,7 +529,7 @@ bool view::View2D::OnMouseMove(double x, double y) {
 
 
 bool view::View2D::OnMouseScroll(double dx, double dy) {
-    auto* cr = this->rendererSlot.CallAs<view::CallRender2D>();
+    auto* cr = this->rendererSlot.CallAs<view::CallRender2DGL>();
     if (cr == NULL) return false;
 
     InputEvent evt;
@@ -524,7 +537,7 @@ bool view::View2D::OnMouseScroll(double dx, double dy) {
     evt.mouseScrollData.dx = dx;
     evt.mouseScrollData.dy = dy;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::CallRender2D::FnOnMouseScroll)) return false;
+    if (!(*cr)(view::CallRender2DGL::FnOnMouseScroll)) return false;
 
     return true;
 }
@@ -615,10 +628,10 @@ bool view::View2D::GetExtents(Call& call) {
     view::CallRenderViewGL* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
     if (crv == nullptr) return false;
 
-    CallRender2D* cr2d = this->rendererSlot.CallAs<CallRender2D>();
+    CallRender2DGL* cr2d = this->rendererSlot.CallAs<CallRender2DGL>();
     if (cr2d == nullptr) return false;
 
-    if (!(*cr2d)(CallRender2D::FnGetExtents)) return false;
+    if (!(*cr2d)(CallRender2DGL::FnGetExtents)) return false;
 
     crv->SetTimeFramesCount(cr2d->TimeFramesCount());
     crv->SetIsInSituTime(cr2d->IsInSituTime());

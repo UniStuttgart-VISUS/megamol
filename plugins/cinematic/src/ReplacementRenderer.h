@@ -8,20 +8,9 @@
 #ifndef MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_REPLACEMENTRENDERER_H_INCLUDED
 
-#include "mmcore/CallerSlot.h"
 #include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/RendererModule.h"
-#include "mmcore/view/AbstractCallRender3D.h"
-#include "mmcore/view/Input.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/param/BoolParam.h"
-#include "mmcore/param/FloatParam.h"
-#include "mmcore/param/EnumParam.h"
-#include "mmcore/param/IntParam.h"
-#include "mmcore/param/ButtonParam.h"
-
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "mmcore/utility/log/Log.h"
 
 #include "CinematicUtils.h"
 

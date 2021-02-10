@@ -127,7 +127,6 @@ namespace cinematic {
             unsigned int          exp_frame_cnt;
         };
 
-        vislib::graphics::gl::FramebufferObject fbo;
         PngData                                 png_data;
         CinematicUtils                          utils;
         clock_t                                 deltaAnimTime;

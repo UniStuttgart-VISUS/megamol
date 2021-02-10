@@ -14,7 +14,7 @@ using namespace megamol::core;
 /*
  * view::CallRenderViewGL::CallRenderViewGL
  */
-view::CallRenderViewGL::CallRenderViewGL(void) : CallRenderView(), RenderOutputOpenGL() {
+view::CallRenderViewGL::CallRenderViewGL(void) : AbstractCallRenderView() {
     // intentionally empty
 }
 
@@ -23,7 +23,7 @@ view::CallRenderViewGL::CallRenderViewGL(void) : CallRenderView(), RenderOutputO
  * view::CallRenderViewGL::CallRenderViewGL
  */
 view::CallRenderViewGL::CallRenderViewGL(const CallRenderViewGL& src)
-        : CallRenderView(), RenderOutputOpenGL() {
+        : AbstractCallRenderView() {
     *this = src;
 }
 
@@ -40,8 +40,7 @@ view::CallRenderViewGL::~CallRenderViewGL(void) {
  * view::CallRenderViewGL::operator=
  */
 view::CallRenderViewGL& view::CallRenderViewGL::operator=(const view::CallRenderViewGL& rhs) {
-    view::CallRenderView::operator=(rhs);
-    view::RenderOutputOpenGL::operator=(rhs);
-    view::GPUAffinity::operator=(rhs);
+    view::AbstractCallRenderView::operator=(rhs);
+    _framebuffer = rhs._framebuffer;
     return *this;
 }

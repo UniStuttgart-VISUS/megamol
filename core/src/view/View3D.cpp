@@ -298,7 +298,7 @@ void View3D::Render(const mmcRenderViewContext& context) {
 
     AbstractRenderingView::beginFrame();
 
-    const float* bkgndCol = (this->overrideBkgndCol != nullptr) ? this->overrideBkgndCol : this->BkgndColour();
+    auto bkgndCol = (this->overrideBkgndCol != glm::vec4(0,0,0,0)) ? this->overrideBkgndCol : this->BkgndColour();
 
     if (cr3d == NULL) {
         this->endFrame(true);
@@ -307,7 +307,7 @@ void View3D::Render(const mmcRenderViewContext& context) {
 
     this->removeTitleRenderer();
     cr3d->SetBackgroundColor(glm::vec4(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f));
-    cr3d->setGenericFramebuffer(_framebuffer);
+    cr3d->SetFramebuffer(_framebuffer);
 
     // camera settings
     if (this->stereoEyeDistSlot.IsDirty()) {
@@ -365,7 +365,7 @@ void View3D::Render(const mmcRenderViewContext& context) {
     }
 
     // TODO
-    // this->camParams->CalcClipping(this->bboxs.ClipBox(), 0.1f);
+    // this->camParams->CalcClipping(this->_bboxs.ClipBox(), 0.1f);
     // This is painfully wrong in the vislib camera, and is fixed here as sort of hotfix
     // float fc = this->camParams->FarClip();
     // float nc = this->camParams->NearClip();
@@ -470,15 +470,11 @@ void View3D::Resize(unsigned int width, unsigned int height) {
  * View3D::OnRenderView
  */
 bool View3D::OnRenderView(Call& call) {
-    std::array<float, 3> overBC;
     view::CallRenderView* crv = dynamic_cast<view::CallRenderView*>(&call);
     if (crv == nullptr) return false;
 
     if (crv->IsBackgroundSet()) {
-        overBC[0] = static_cast<float>(crv->BackgroundRed()) / 255.0f;
-        overBC[1] = static_cast<float>(crv->BackgroundGreen()) / 255.0f;
-        overBC[2] = static_cast<float>(crv->BackgroundBlue()) / 255.0f;
-        this->overrideBkgndCol = overBC.data();
+        this->overrideBkgndCol = crv->BackgroundColor();
     }
 
     float time = crv->Time();
@@ -496,8 +492,8 @@ bool View3D::OnRenderView(Call& call) {
 
     this->Render(context);
 
-    this->overrideBkgndCol = nullptr;
-    this->overrideViewport = nullptr;
+    this->overrideBkgndCol = glm::vec4(0,0,0,0);
+    this->overrideViewport = glm::vec4(0, 0, 0, 0);
 
     return true;
 }
