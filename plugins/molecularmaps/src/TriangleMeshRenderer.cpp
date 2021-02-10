@@ -54,12 +54,10 @@ bool TriangleMeshRenderer::create(void) {
 
         out vec4 color;
         out vec3 normal;
-        out vec3 viewVec;
 
         void main() {
-            normal = normalize(inverse(transpose(mat3(view))) * in_normal);
+            normal = normalize(in_normal);
             color = vec4(in_color, 1.0);
-            viewVec = normalize(-vec3(view * glm::vec4(in_position, 1.0)));
             gl_Position = proj * view * glm::vec4(in_position, 1.0);
         }
         )"""";
@@ -79,9 +77,9 @@ bool TriangleMeshRenderer::create(void) {
         out vec3 normal;
 
         void main() {
-            normal = normalize(inverse(transpose(mat3(view))) * in_normal);
+            normal = normalize(in_normal);
             color = in_color;
-            gl_Position = glm::vec4(in_position, 1.0);
+            gl_Position = proj * view * glm::vec4(in_position, 1.0);
         }
     )"""";
     const std::string vertex_code_4 = vertex_code_4_c;
@@ -93,13 +91,13 @@ bool TriangleMeshRenderer::create(void) {
 
         in vec4 color;
         in vec3 normal;
-        in vec3 viewVec;
 
         uniform mat4 proj = mat4(1.0);
         uniform mat4 view = mat4(1.0);
 
         uniform vec3 light_direction = vec3(0.75, -1.0, 0.0);
         uniform vec4 light_params = vec4(0.2, 0.8, 0.4, 10.0);
+        uniform vec3 viewVec = vec3(0.0, 0.0, -1.0);
 
         vec4 localLighting(vec4 color, vec3 normal, vec3 vv, vec3 light) {
             if(length(light_direction) < 0.0001) return color;
@@ -219,6 +217,8 @@ bool TriangleMeshRenderer::Render(core::view::CallRender3D_2& call, bool lightin
     glUniformMatrix4fv(shader->getUniformLocation("view"), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(shader->getUniformLocation("proj"), 1, GL_FALSE, glm::value_ptr(proj));
     glUniform3f(shader->getUniformLocation("light_direction"), light_direction.x, light_direction.y, light_direction.z);
+    glUniform3f(shader->getUniformLocation("viewVec"), snapshot.view_vector.x(), snapshot.view_vector.y(),
+        snapshot.view_vector.z());
 
     glDrawElements(GL_TRIANGLES, static_cast<uint32_t>(this->faces->size()), GL_UNSIGNED_INT, nullptr);
 
