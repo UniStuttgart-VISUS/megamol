@@ -20,16 +20,16 @@ bool megamol::mesh::SimpleGPUMtlDataSource::getDataCallback(core::Call& caller) 
         return false;
     }
 
-    syncMaterialCollection(lhs_mtl_call, rhs_mtl_call);
-
+    std::vector<std::shared_ptr<GPUMaterialCollection>> gpu_mtl_collections;
     // if there is a material connection to the right, issue callback
     if (rhs_mtl_call != nullptr) {
         (*rhs_mtl_call)(0);
         if (rhs_mtl_call->hasUpdate()) {
             ++m_version;
-            rhs_mtl_call->getData();
         }
+        gpu_mtl_collections = rhs_mtl_call->getData();
     }
+    gpu_mtl_collections.push_back(m_material_collection.first);
 
     if (this->m_btf_filename_slot.IsDirty()) {
         m_btf_filename_slot.ResetDirty();
@@ -46,7 +46,7 @@ bool megamol::mesh::SimpleGPUMtlDataSource::getDataCallback(core::Call& caller) 
     }
 
     if (lhs_mtl_call->version() < m_version) {
-        lhs_mtl_call->setData(m_material_collection.first, m_version);
+        lhs_mtl_call->setData(gpu_mtl_collections, m_version);
     }
 
     return true;

@@ -21,8 +21,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
         return false;
     }
 
-    syncMeshCollection(lhs_mesh_call, rhs_mesh_call);
-
+    std::vector<std::shared_ptr<GPUMeshCollection>> gpu_mesh_collection;
     // if there is a mesh connection to the right, pass on the mesh collection
     if (rhs_mesh_call != nullptr) {
         if (!(*rhs_mesh_call)(0)) {
@@ -30,9 +29,10 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
         }
         if (rhs_mesh_call->hasUpdate()) {
             ++m_version;
-            rhs_mesh_call->getData();
         }
+        gpu_mesh_collection = rhs_mesh_call->getData();
     }
+    gpu_mesh_collection.push_back(m_mesh_collection.first);
 
     CallMesh* mc = this->m_mesh_slot.CallAs<CallMesh>();
     if (mc == nullptr)
@@ -104,7 +104,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     lhs_mesh_call->setMetaData(lhs_meta_data);
 
     if (lhs_mesh_call->version() < m_version) {
-        lhs_mesh_call->setData(m_mesh_collection.first, m_version);
+        lhs_mesh_call->setData(gpu_mesh_collection, m_version);
     }
 
     return true;

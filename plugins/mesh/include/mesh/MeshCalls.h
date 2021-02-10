@@ -46,9 +46,10 @@ public:
 };
 
 class CallGPUMaterialData
-    : public core::GenericVersionedCall<std::shared_ptr<GPUMaterialCollection>, core::EmptyMetaData> {
+        : public core::GenericVersionedCall<std::vector<std::shared_ptr<GPUMaterialCollection>>, core::EmptyMetaData> {
 public:
-    CallGPUMaterialData() : GenericVersionedCall<std::shared_ptr<GPUMaterialCollection>, core::EmptyMetaData>() {}
+    CallGPUMaterialData()
+            : GenericVersionedCall<std::vector<std::shared_ptr<GPUMaterialCollection>>, core::EmptyMetaData>() {}
     ~CallGPUMaterialData() = default;
 
     static const char* ClassName(void) { return "CallGPUMaterialData"; }
@@ -56,9 +57,10 @@ public:
 };
 
 class CallGPUMeshData
-    : public core::GenericVersionedCall<std::shared_ptr<GPUMeshCollection>, core::Spatial3DMetaData> {
+    : public core::GenericVersionedCall<std::vector<std::shared_ptr<GPUMeshCollection>>, core::Spatial3DMetaData> {
 public:
-    CallGPUMeshData() : GenericVersionedCall<std::shared_ptr<GPUMeshCollection>, core::Spatial3DMetaData>() {}
+    CallGPUMeshData()
+            : GenericVersionedCall<std::vector<std::shared_ptr<GPUMeshCollection>>, core::Spatial3DMetaData>() {}
     ~CallGPUMeshData() = default;
 
     static const char* ClassName(void) { return "CallGPUMeshData"; }

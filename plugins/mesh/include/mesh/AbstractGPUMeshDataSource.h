@@ -59,12 +59,6 @@ class AbstractGPUMeshDataSource : public core::Module {
         virtual void release();
 
         /**
-         * Syncs the render task collection of this module with the lefthand side (lhs) and righthand side (rhs)
-         * connections if available. Takes over materials from previously used to collection if lhs connection changes.
-         */
-        void syncMeshCollection(CallGPUMeshData* lhs_call, CallGPUMeshData* rhs_call);
-
-        /**
          * Clears all render task entries made by this module from the used material collection.
          */
         void clearMeshCollection();

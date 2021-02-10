@@ -111,28 +111,28 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
                     per_obj_data[0].color = {1.0f, 0.0f, 0.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[0].first = gpu_mesh_storage->getSubMesh("axisX_arrow");
+                    m_UI_template_elements[0].first = gpu_mesh_storage[0]->getSubMesh("axisX_arrow");
                     m_UI_template_elements[0].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "axisY_arrow") {
                     per_obj_data[0].color = {0.0f, 1.0f, 0.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[1].first = gpu_mesh_storage->getSubMesh("axisY_arrow");
+                    m_UI_template_elements[1].first = gpu_mesh_storage[0]->getSubMesh("axisY_arrow");
                     m_UI_template_elements[1].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "axisZ_arrow") {
                     per_obj_data[0].color = {0.0f, 0.0f, 1.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[2].first = gpu_mesh_storage->getSubMesh("axisZ_arrow");
+                    m_UI_template_elements[2].first = gpu_mesh_storage[0]->getSubMesh("axisZ_arrow");
                     m_UI_template_elements[2].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "slider_arrow") {
                     per_obj_data[0].color = {1.0f, 0.0f, 1.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[3].first = gpu_mesh_storage->getSubMesh("slider_arrow");
+                    m_UI_template_elements[3].first = gpu_mesh_storage[0]->getSubMesh("slider_arrow");
                     m_UI_template_elements[3].second = per_obj_data;
                 }
             }
@@ -148,7 +148,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             auto const& sub_mesh = m_UI_template_elements[3].first;
             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
+            auto const& shader = gpu_mtl_storage[0]->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(
@@ -167,7 +167,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             auto const& sub_mesh = m_UI_template_elements[2].first;
             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
+            auto const& shader = gpu_mtl_storage[0]->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(
@@ -186,7 +186,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             auto const& sub_mesh = m_UI_template_elements[1].first;
             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
+            auto const& shader = gpu_mtl_storage[0]->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(
@@ -205,7 +205,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             auto const& sub_mesh = m_UI_template_elements[0].first;
             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
+            auto const& shader = gpu_mtl_storage[0]->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(

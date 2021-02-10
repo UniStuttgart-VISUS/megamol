@@ -38,33 +38,8 @@ void megamol::mesh::AbstractGPUMaterialDataSource::release() {
     // intentionally empty ?
 }
 
-void megamol::mesh::AbstractGPUMaterialDataSource::syncMaterialCollection(
-    megamol::mesh::CallGPUMaterialData* lhs_call, CallGPUMaterialData* rhs_call) {
-    if (lhs_call->getData() == nullptr) {
-        // no incoming material -> use your own material storage, i.e share to left
-        lhs_call->setData(m_material_collection.first, lhs_call->version());
-    } else {
-        // incoming material -> use it, copy material from last used collection if needed
-        if (lhs_call->getData() != m_material_collection.first) {
-            std::pair<std::shared_ptr<GPUMaterialCollection>, std::vector<std::string>> mtl_collection = {
-                lhs_call->getData(), {}};
-            for (auto& identifier : m_material_collection.second) {
-                mtl_collection.first->addMaterial(identifier, m_material_collection.first->getMaterial(identifier));
-                mtl_collection.second.push_back(identifier);
-                m_material_collection.first->deleteMaterial(identifier);
-            }
-            m_material_collection = mtl_collection;
-        }
-    }
-
-    if (rhs_call != nullptr) {
-        rhs_call->setData(m_material_collection.first, rhs_call->version());
-    }
-}
 
 void megamol::mesh::AbstractGPUMaterialDataSource::clearMaterialCollection() {
-    for (auto& identifier : m_material_collection.second) {
-        m_material_collection.first->deleteMaterial(identifier);
-    }
+    m_material_collection.first->clear();
     m_material_collection.second.clear();
 }

@@ -55,12 +55,6 @@ class AbstractGPUMaterialDataSource : public core::Module {
         virtual void release();
 
         /**
-         * Syncs the material collection of this module with the lefthand side (lhs) and righthand side (rhs)
-         * connections if available. Takes over materials from previously used to collection if lhs connection changes.
-         */
-        void syncMaterialCollection(CallGPUMaterialData* lhs_call, CallGPUMaterialData* rhs_call);
-
-        /**
          * Clears all material entries made by this module from the used material collection.
          */
         void clearMaterialCollection();

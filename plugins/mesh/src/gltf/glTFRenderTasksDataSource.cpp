@@ -90,11 +90,20 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& calle
                         std::string sub_mesh_identifier = gltf_call->getData().first +
                                                           model->meshes[model->nodes[node_idx].mesh].name + "_" +
                                                           std::to_string(primitive_idx);
-                        auto const& sub_mesh = gpu_mesh_storage->getSubMesh(sub_mesh_identifier);
+                        
+                        GPUMeshCollection::SubMeshData sub_mesh;
+                        for (auto const& gpu_mesh_collection : gpu_mesh_storage){
+                            sub_mesh = gpu_mesh_collection->getSubMesh(sub_mesh_identifier);
 
-                        if (sub_mesh.mesh != nullptr && gpu_mtl_storage->getMaterials().size()) {
+                            if (sub_mesh.mesh != nullptr) {
+                                break;
+                            }
+                        } 
+
+                        //TODO will use its own material storage in the future
+                        if (sub_mesh.mesh != nullptr && gpu_mtl_storage[0]->getMaterials().size()) {
                             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-                            auto const& shader = gpu_mtl_storage->getMaterials().begin()->second.shader_program;
+                            auto const& shader = gpu_mtl_storage[0]->getMaterials().begin()->second.shader_program;
 
                             std::string rt_identifier(std::string(this->FullName()) + "_" + sub_mesh_identifier);
                             m_rendertask_collection.first->addRenderTask(rt_identifier, shader, gpu_batch_mesh,
