@@ -15,10 +15,7 @@ megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource(
         , m_renderTask_lhs_slot("renderTasks", "The slot publishing the loaded data")
         , m_renderTask_rhs_slot("chainRenderTasks", "The slot for chaining render task data sources.")
         , m_material_slot("gpuMaterials", "Connects to a material data source")
-        , m_mesh_slot("gpuMeshes", "Connects to a mesh data source")
-        , m_light_slot(
-              "lights", "Lights are retrieved over this slot. If no light is connected, a default camera light is used")
-        , m_light_cached_hash(0) {
+        , m_mesh_slot("gpuMeshes", "Connects to a mesh data source") {
     this->m_renderTask_lhs_slot.SetCallback(
         CallGPURenderTaskData::ClassName(), "GetData", &AbstractGPURenderTaskDataSource::getDataCallback);
     this->m_renderTask_lhs_slot.SetCallback(
@@ -34,8 +31,6 @@ megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource(
     this->m_mesh_slot.SetCompatibleCall<CallGPUMeshDataDescription>();
     this->MakeSlotAvailable(&this->m_mesh_slot);
 
-    this->m_light_slot.SetCompatibleCall<core::view::light::CallLightDescription>();
-    this->MakeSlotAvailable(&this->m_light_slot);
 }
 
 megamol::mesh::AbstractGPURenderTaskDataSource::~AbstractGPURenderTaskDataSource() {

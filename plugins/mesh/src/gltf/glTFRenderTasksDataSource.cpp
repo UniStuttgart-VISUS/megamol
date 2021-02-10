@@ -113,25 +113,6 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& calle
                     }
                 }
             }
-
-            // add some lights to the scene to test the per frame buffers
-            struct LightParams {
-                float x, y, z, intensity;
-            };
-
-            // Place lights in icosahedron pattern
-            float x = 0.525731112119133606f * 1000.0f;
-            float z = 0.850650808352039932f * 1000.0f;
-
-            std::vector<LightParams> lights = {{-x, 0.0f, z, 1.0f}, {x, 0.0f, z, 1.0f}, {-x, 0.0f, -z, 1.0f},
-                {x, 0.0f, -z, 1.0f}, {0.0f, z, x, 1.0f}, {0.0f, z, -x, 1.0f}, {0.0f, -z, x, 1.0f}, {0.0f, -z, -x, 1.0f},
-                {z, x, 0.0f, 1.0f}, {-z, x, 0.0f, 1.0f}, {z, -x, 0.0f, 1.0f}, {-z, -x, 0.0f, 1.0f}};
-
-            // Add a key light
-            lights.push_back({-5000.0, 5000.0, -5000.0, 1000.0f});
-
-            m_rendertask_collection.first->deletePerFrameDataBuffer(1);
-            m_rendertask_collection.first->addPerFrameDataBuffer("lights", lights, 1);
         }
     }
 

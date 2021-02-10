@@ -79,10 +79,6 @@ protected:
 
     /** The slot for querying mesh data, i.e. a rhs connection */
     megamol::core::CallerSlot m_mesh_slot;
-
-    /** Slot to retrieve the light information */
-    megamol::core::CallerSlot m_light_slot;
-    size_t m_light_cached_hash;
 };
 
 } // namespace mesh
