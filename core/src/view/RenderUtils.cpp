@@ -11,7 +11,7 @@ namespace megamol::core::view {
 
 // STATIC functions -------------------------------------------------------
 
-bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::wstring& filename) {
+bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename) {
 
     if (filename.empty())
         return false;
@@ -217,7 +217,7 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
 }
 
 
-bool RenderUtils::LoadTextureFromFile(GLuint& out_texture_id, const std::wstring& filename) {
+bool RenderUtils::LoadTextureFromFile(GLuint& out_texture_id, const std::string& filename) {
 
     out_texture_id = 0;
     this->textures.push_back(nullptr);

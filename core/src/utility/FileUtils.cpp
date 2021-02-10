@@ -12,7 +12,7 @@
 using namespace megamol::core::utility;
 
 
-size_t megamol::core::utility::FileUtils::LoadRawFile(const std::wstring& filename, void** outData) {
+size_t megamol::core::utility::FileUtils::LoadRawFile(const std::string& filename, void** outData) {
 
     *outData = nullptr;
 
@@ -22,7 +22,7 @@ size_t megamol::core::utility::FileUtils::LoadRawFile(const std::wstring& filena
         return 0;
     }
 
-    if (!megamol::core::utility::FileUtils::FileExists<std::wstring>(filename)) {
+    if (!megamol::core::utility::FileUtils::FileExists<std::string>(filename)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to load file \"%s\": Not existing. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
             __FUNCTION__,

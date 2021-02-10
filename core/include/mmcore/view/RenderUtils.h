@@ -118,12 +118,12 @@ public:
     /**
      * Load textures.
      */
-    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::wstring& filename);
-
-    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename) {
+    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::wstring& filename) {
         return megamol::core::view::RenderUtils::LoadTextureFromFile(
-            out_texture_ptr, megamol::core::utility::to_wstring(filename));
+            out_texture_ptr, megamol::core::utility::to_string(filename));
     }
+
+    static bool LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename);
 
     static bool LoadTextureFromData(
         std::shared_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data);
@@ -139,11 +139,11 @@ public:
     bool InitPrimitiveRendering(megamol::core::utility::ShaderSourceFactory& factory);
 
     // Keeps the texture object in rener utils for later access via texture id
-    bool LoadTextureFromFile(GLuint& out_texture_id, const std::wstring& filename);
-
-    bool LoadTextureFromFile(GLuint& out_texture_id, const std::string& filename) {
-        return this->LoadTextureFromFile(out_texture_id, megamol::core::utility::to_wstring(filename));
+    bool LoadTextureFromFile(GLuint& out_texture_id, const std::wstring& filename) {
+        return this->LoadTextureFromFile(out_texture_id, megamol::core::utility::to_string(filename));
     }
+
+    bool LoadTextureFromFile(GLuint& out_texture_id, const std::string& filename);
 
     void PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_view,
         const glm::vec3& cam_pos, const glm::vec4& color, bool sort = false);
