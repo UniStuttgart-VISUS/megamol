@@ -22,7 +22,7 @@
 namespace megamol {
 namespace mesh {
 
-class GPUMeshCollection {
+    class GPUMeshCollection {
     public:
         template<typename T>
         using IteratorPair = std::pair<T, T>;
