@@ -164,7 +164,7 @@ void TriangleMeshRenderer::release(void) {}
 /*
  * TriangleMeshRenderer::Render
  */
-bool TriangleMeshRenderer::Render(core::view::CallRender3D& call, bool lighting) {
+bool TriangleMeshRenderer::Render(core::view::CallRender3D_2& call, bool lighting) {
 
     if (this->faces == nullptr)
         return false;
@@ -203,17 +203,21 @@ bool TriangleMeshRenderer::Render(core::view::CallRender3D& call, bool lighting)
     }
     shader->use();
 
-    std::array<GLfloat, 16> mv_matrix, proj_matrix;
-    glGetFloatv(GL_MODELVIEW_MATRIX, mv_matrix.data());
-    glGetFloatv(GL_PROJECTION_MATRIX, proj_matrix.data());
+    core::view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type view_mat, proj_mat;
+    cam.calc_matrices(snapshot, view_mat, proj_mat, core::thecam::snapshot_content::all);
+    glm::mat4 view = view_mat;
+    glm::mat4 proj = proj_mat;
 
     glm::vec3 light_direction = glm::vec3(0.75f, -1.0f, 0.0f);
     if (!lighting) {
         light_direction = glm::vec3(0.0f, 0.0f, 0.0f);
     }
 
-    glUniformMatrix4fv(shader->getUniformLocation("view"), 1, GL_FALSE, mv_matrix.data());
-    glUniformMatrix4fv(shader->getUniformLocation("proj"), 1, GL_FALSE, proj_matrix.data());
+    glUniformMatrix4fv(shader->getUniformLocation("view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(shader->getUniformLocation("proj"), 1, GL_FALSE, glm::value_ptr(proj));
     glUniform3f(shader->getUniformLocation("light_direction"), light_direction.x, light_direction.y, light_direction.z);
 
     glDrawElements(GL_TRIANGLES, static_cast<uint32_t>(this->faces->size()), GL_UNSIGNED_INT, nullptr);
@@ -229,7 +233,7 @@ bool TriangleMeshRenderer::Render(core::view::CallRender3D& call, bool lighting)
 /*
  * TriangleMeshRenderer::RenderWireFrame
  */
-bool TriangleMeshRenderer::RenderWireFrame(core::view::CallRender3D& call, bool lighting) {
+bool TriangleMeshRenderer::RenderWireFrame(core::view::CallRender3D_2& call, bool lighting) {
     GLint oldpolymode[2];
     glGetIntegerv(GL_POLYGON_MODE, oldpolymode);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
