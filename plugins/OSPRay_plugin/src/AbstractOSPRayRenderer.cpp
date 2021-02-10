@@ -851,6 +851,8 @@ namespace ospray {
                     auto& container = std::get<sphereStructure>(element.structure);
 
                     if (container.vertexData == NULL) {
+                        core::utility::log::Log::DefaultLog.WriteError(
+                            "[OSPRay:generateRepresentations] Representation SPHERES active but no data provided.");
                         // returnValue = false;
                         break;
                     }
@@ -909,6 +911,7 @@ namespace ospray {
                     {
                     auto& container = std::get<sphereStructure>(element.structure);
                     if (container.raw == NULL) {
+                        core::utility::log::Log::DefaultLog.WriteError("[OSPRay:generateRepresentations] Representation NHSPHERES active but no data provided.");
                         // returnValue = false;
                         break;
                     }
@@ -973,6 +976,8 @@ namespace ospray {
                     {
                     auto& container = std::get<meshStrucutre>(element.structure);
                     if (container.mesh == NULL) {
+                        core::utility::log::Log::DefaultLog.WriteError(
+                            "[OSPRay:generateRepresentations] Representation MESH active but no data provided.");
                         // returnValue = false;
                         break;
                     }
@@ -1122,8 +1127,8 @@ namespace ospray {
                     auto& container = std::get<curveStructure>(element.structure);
                     if (container.vertexData == nullptr && container.mesh == nullptr) {
                         // returnValue = false;
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[AbstractOSPRayRenderer]Streamline geometry detected but no data found.");
+                        core::utility::log::Log::DefaultLog.WriteError(
+                            "[OSPRay:generateRepresentations] Representation CURVES active but no data provided.");
                         break;
                     }
                     if (container.mesh != nullptr) {
@@ -1244,7 +1249,8 @@ namespace ospray {
                 {
                 auto& container = std::get<structuredVolumeStructure>(element.structure);
                 if (container.voxels == NULL) {
-                    // returnValue = false;
+                    core::utility::log::Log::DefaultLog.WriteError(
+                        "[OSPRay:generateRepresentations] Representation VOLUME active but no data provided.");
                     break;
                 }
 
