@@ -974,7 +974,7 @@ namespace ospray {
                     break;
                 case geometryTypeEnum::MESH:
                     {
-                    auto& container = std::get<meshStrucutre>(element.structure);
+                    auto& container = std::get<meshStructure>(element.structure);
                     if (container.mesh == NULL) {
                         core::utility::log::Log::DefaultLog.WriteError(
                             "[OSPRay:generateRepresentations] Representation MESH active but no data provided.");
