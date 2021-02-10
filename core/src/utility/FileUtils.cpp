@@ -16,49 +16,51 @@ size_t megamol::core::utility::FileUtils::LoadRawFile(const std::wstring& filena
 
     *outData = nullptr;
 
-    auto file_name = static_cast<vislib::StringW>(filename.c_str());
-    if (file_name.IsEmpty()) {
+    if (filename.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to load file: No file name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "Unable to load file: No file name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return 0;
     }
 
-    if (!vislib::sys::File::Exists(file_name)) {
+    if (!megamol::core::utility::FileUtils::FileExists<std::wstring>(filename)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to load file \"%s\": Not existing. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
+            "Unable to load file \"%s\": Not existing. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
             __FUNCTION__,
             __LINE__);
         return 0;
     }
 
-    size_t size = static_cast<size_t>(vislib::sys::File::GetSize(file_name));
+    std::ifstream input_file(filename, (std::ifstream::in | std::ifstream::binary));
+    if (!input_file.good() || !input_file.is_open()) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Unable to open file \"%s\": Bad file. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
+            __FUNCTION__, __LINE__);
+        return 0;
+    }
+
+    size_t size = 0;
+    input_file.seekg(0, input_file.end);
+    size = input_file.tellg();
+    input_file.seekg(0, input_file.beg);
     if (size < 1) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to load file \"%s\": File is empty. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
+            "Unable to load file \"%s\": File is empty. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
             __FUNCTION__, __LINE__);
         return 0;
     }
 
-    vislib::sys::FastFile f;
-    if (!f.Open(file_name, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
+    *outData = new char[size];
+    input_file.read(static_cast<char*>(*outData), size);
+    if (!input_file.good()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to load file \"%s\": Unable to open file. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
-            __FUNCTION__, __LINE__);
-        return 0;
-    }
-
-    *outData = new BYTE[size];
-    size_t num = static_cast<size_t>(f.Read(*outData, size));
-    if (num != size) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to load file \"%s\": Unable to read whole file. [%s, %s, line %d]\n", filename.c_str(),
+            "Unable to load file \"%s\": Unable to read whole file. [%s, %s, line %d]\n", filename.c_str(),
             __FILE__,
             __FUNCTION__, __LINE__);
         ARY_SAFE_DELETE(*outData);
         return 0;
     }
 
-    return num;
+    return size;
 }
 
 
@@ -72,7 +74,7 @@ bool megamol::core::utility::FileUtils::WriteFile(const std::string& filename, c
         } else {
             if (!silent)
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Unable to create file '%s'. [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
+                    "Unable to create file '%s'. [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
                     __LINE__);
             file.close();
 
@@ -81,12 +83,12 @@ bool megamol::core::utility::FileUtils::WriteFile(const std::string& filename, c
     } catch (std::exception& e) {
         if (!silent)
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+                "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         if (!silent)
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -104,7 +106,7 @@ bool megamol::core::utility::FileUtils::ReadFile(const std::string& filename, st
         } else {
             if (!silent)
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Unable to open file '%s'. [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
+                    "Unable to open file '%s'. [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
                     __LINE__);
             file.close();
             return false;
@@ -112,12 +114,12 @@ bool megamol::core::utility::FileUtils::ReadFile(const std::string& filename, st
     } catch (std::exception& e) {
         if (!silent)
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+                "Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     } catch (...) {
         if (!silent)
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

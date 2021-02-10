@@ -32,7 +32,7 @@ bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_tex
                 RenderUtils::LoadTextureFromData(out_texture_ptr, img.Width(), img.Height(), img.PeekDataAs<FLOAT>());
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
+                "Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
                 __LINE__);
             retval = false;
         }
@@ -61,7 +61,7 @@ bool RenderUtils::LoadTextureFromData(
         }
     } catch (glowl::TextureException& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Error during texture creation: '%s'. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__,
+            "Error during texture creation: '%s'. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__,
             __LINE__);
         return false;
     }
@@ -89,7 +89,7 @@ bool RenderUtils::CreateShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_p
             debug_label = out_shader_ptr->getDebugLabel();
         }
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n ", debug_label.c_str(),
+            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n ", debug_label.c_str(),
             exc.what(), __FILE__, __FUNCTION__, __LINE__);
         return false;
     }

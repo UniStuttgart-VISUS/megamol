@@ -24,13 +24,14 @@ namespace stdfs = std::experimental::filesystem;
 #endif
 
 #include <fstream>
+#include <istream>
 #include <iostream>
 #include <codecvt>
 #include <locale>
 #include <string>
 
 #include "mmcore/utility/log/Log.h"
-#include "vislib/sys/FastFile.h"
+
 
 namespace megamol {
 namespace core {
