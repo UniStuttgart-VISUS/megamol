@@ -90,6 +90,7 @@ namespace mesh {
 
     void GPURenderTaskCollection::clear() {
         m_gpu_render_tasks.clear();
+        m_render_task_meta_data.clear();
         m_per_frame_data_buffers.clear();
     }
 

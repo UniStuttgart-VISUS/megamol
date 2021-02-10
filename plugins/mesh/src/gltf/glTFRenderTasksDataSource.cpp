@@ -114,6 +114,8 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& calle
                 }
             }
         }
+    } else {
+        clearRenderTaskCollection();
     }
 
     lhs_rtc->setData(gpu_render_tasks, m_version);

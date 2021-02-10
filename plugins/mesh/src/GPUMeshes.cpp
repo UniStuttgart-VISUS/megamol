@@ -35,73 +35,79 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
     gpu_mesh_collection.push_back(m_mesh_collection.first);
 
     CallMesh* mc = this->m_mesh_slot.CallAs<CallMesh>();
-    if (mc == nullptr)
-        return false;
-    if (!(*mc)(0))
-        return false;
+    if (mc != nullptr) {
 
-    bool something_has_changed = mc->hasUpdate(); // something has changed in the neath...
+        if (!(*mc)(0))
+            return false;
 
-    if (something_has_changed) {
-        ++m_version;
+        bool something_has_changed = mc->hasUpdate(); // something has changed in the neath...
 
-        clearMeshCollection();
+        if (something_has_changed) {
+            ++m_version;
 
-        auto meshes = mc->getData()->accessMeshes();
+            clearMeshCollection();
 
-        for (auto& mesh : meshes) {
+            auto meshes = mc->getData()->accessMeshes();
 
-            // check if primtives type
-            GLenum primtive_type = GL_TRIANGLES;
-            if (mesh.second.primitive_type == MeshDataAccessCollection::QUADS) {
-                primtive_type = GL_PATCHES;
+            for (auto& mesh : meshes) {
+
+                // check if primtives type
+                GLenum primtive_type = GL_TRIANGLES;
+                if (mesh.second.primitive_type == MeshDataAccessCollection::QUADS) {
+                    primtive_type = GL_PATCHES;
+                }
+
+                std::vector<glowl::VertexLayout> vb_layouts;
+                std::vector<std::pair<uint8_t*, uint8_t*>> vb_iterators;
+                std::pair<uint8_t*, uint8_t*> ib_iterators;
+
+                ib_iterators = {mesh.second.indices.data, mesh.second.indices.data + mesh.second.indices.byte_size};
+
+                for (auto attrib : mesh.second.attributes) {
+
+                    vb_layouts.push_back(glowl::VertexLayout(
+                        attrib.component_cnt * MeshDataAccessCollection::getByteSize(attrib.component_type),
+                        {glowl::VertexLayout::Attribute(attrib.component_cnt,
+                            MeshDataAccessCollection::convertToGLType(attrib.component_type), GL_FALSE /*ToDO*/,
+                            attrib.offset)}));
+
+                    // TODO vb_iterators
+                    vb_iterators.push_back({attrib.data, attrib.data + attrib.byte_size});
+                }
+
+                m_mesh_collection.first->addMesh(mesh.first, vb_layouts, vb_iterators, ib_iterators,
+                    MeshDataAccessCollection::convertToGLType(mesh.second.indices.type), GL_STATIC_DRAW, primtive_type);
+                m_mesh_collection.second.push_back(mesh.first);
             }
-
-            std::vector<glowl::VertexLayout> vb_layouts;
-            std::vector<std::pair<uint8_t*, uint8_t*>> vb_iterators;
-            std::pair<uint8_t*, uint8_t*> ib_iterators;
-
-            ib_iterators = {mesh.second.indices.data, mesh.second.indices.data + mesh.second.indices.byte_size};
-
-            for (auto attrib : mesh.second.attributes) {
-
-                vb_layouts.push_back(glowl::VertexLayout(
-                    attrib.component_cnt * MeshDataAccessCollection::getByteSize(attrib.component_type),
-                    {glowl::VertexLayout::Attribute(attrib.component_cnt,
-                        MeshDataAccessCollection::convertToGLType(attrib.component_type), GL_FALSE /*ToDO*/,
-                        attrib.offset)}));
-
-                // TODO vb_iterators
-                vb_iterators.push_back({attrib.data, attrib.data + attrib.byte_size});
-            }
-
-            m_mesh_collection.first->addMesh(mesh.first, vb_layouts, vb_iterators, ib_iterators,
-                MeshDataAccessCollection::convertToGLType(mesh.second.indices.type), GL_STATIC_DRAW, primtive_type);
-            m_mesh_collection.second.push_back(mesh.first);
         }
-    }
 
-    auto lhs_meta_data = lhs_mesh_call->getMetaData();
-    core::Spatial3DMetaData rhs_meta_data;
-    auto src_meta_data = mc->getMetaData();
+         auto lhs_meta_data = lhs_mesh_call->getMetaData();
+        core::Spatial3DMetaData rhs_meta_data;
+        auto src_meta_data = mc->getMetaData();
 
-    if (rhs_mesh_call != nullptr) {
-        rhs_meta_data = rhs_mesh_call->getMetaData();
+        if (rhs_mesh_call != nullptr) {
+            rhs_meta_data = rhs_mesh_call->getMetaData();
+        } else {
+            rhs_meta_data.m_frame_cnt = src_meta_data.m_frame_cnt;
+        }
+
+        lhs_meta_data.m_frame_cnt = std::min(src_meta_data.m_frame_cnt, rhs_meta_data.m_frame_cnt);
+
+        auto bbox = src_meta_data.m_bboxs.BoundingBox();
+        bbox.Union(rhs_meta_data.m_bboxs.BoundingBox());
+        lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
+
+        auto cbbox = src_meta_data.m_bboxs.ClipBox();
+        cbbox.Union(rhs_meta_data.m_bboxs.ClipBox());
+        lhs_meta_data.m_bboxs.SetClipBox(cbbox);
+
+        lhs_mesh_call->setMetaData(lhs_meta_data);
     } else {
-        rhs_meta_data.m_frame_cnt = src_meta_data.m_frame_cnt;
+        m_mesh_collection.first->clear();
+        m_mesh_collection.second.clear();
+
+        ++m_version;
     }
-
-    lhs_meta_data.m_frame_cnt = std::min(src_meta_data.m_frame_cnt, rhs_meta_data.m_frame_cnt);
-
-    auto bbox = src_meta_data.m_bboxs.BoundingBox();
-    bbox.Union(rhs_meta_data.m_bboxs.BoundingBox());
-    lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
-
-    auto cbbox = src_meta_data.m_bboxs.ClipBox();
-    cbbox.Union(rhs_meta_data.m_bboxs.ClipBox());
-    lhs_meta_data.m_bboxs.SetClipBox(cbbox);
-
-    lhs_mesh_call->setMetaData(lhs_meta_data);
 
     if (lhs_mesh_call->version() < m_version) {
         lhs_mesh_call->setData(gpu_mesh_collection, m_version);
