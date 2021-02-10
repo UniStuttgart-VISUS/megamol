@@ -46,7 +46,9 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
                                         "sure you have a transfer function that has stops at 0.4 and 0.5. The 0.5 stop "
                                         "allows you to highlight the neighbors responsible for the extremes.")
     , extremeValueSlot("extreme value", "the extreme value that you find weird")
-    , fluidDensitySlot("fluid density", "Density of the fluid")
+    , fluidDensitySlot("phase01::fluid density", "Density of the fluid")
+    , tcSlot("phase02::Tc", "Critical temperature")
+    , rhocSlot("phase02::RhoC", "Critical density")
     , datahash(0)
     , lastTime(-1)
     , newColors()
@@ -85,7 +87,8 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
     mt->SetTypePair(metricsEnum::PRESSURE, "Pressure");
     mt->SetTypePair(metricsEnum::NEIGHBORS, "Num Neighbors");
     mt->SetTypePair(metricsEnum::NEAREST_DISTANCE, "Nearest Dist");
-    mt->SetTypePair(metricsEnum::PHASE, "Phase");
+    mt->SetTypePair(metricsEnum::PHASE01, "Phase01");
+    mt->SetTypePair(metricsEnum::PHASE02, "Phase02");
     this->metricsSlot << mt;
     this->MakeSlotAvailable(&this->metricsSlot);
 
@@ -113,6 +116,11 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
 
     this->fluidDensitySlot.SetParameter(new core::param::FloatParam(1.0f));
     this->MakeSlotAvailable(&this->fluidDensitySlot);
+
+    this->tcSlot.SetParameter(new core::param::FloatParam(1.0795f));
+    this->MakeSlotAvailable(&this->tcSlot);
+    this->rhocSlot.SetParameter(new core::param::FloatParam(0.3211f));
+    this->MakeSlotAvailable(&this->rhocSlot);
 
     this->outDataSlot.SetCallback(
         megamol::core::moldyn::MultiParticleDataCall::ClassName(), "GetData", &ParticleThermodyn::getDataCallback);
@@ -287,6 +295,9 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
 
         const bool remove_self = this->removeSelfSlot.Param<megamol::core::param::BoolParam>()->Value();
 
+        auto const T_c = tcSlot.Param<core::param::FloatParam>()->Value();
+        auto const rho_c = rhocSlot.Param<core::param::FloatParam>()->Value();
+
         allpartcnt = 0;
         for (unsigned int pli = 0; pli < plc; pli++) {
             auto& pl = in->AccessParticles(pli);
@@ -427,10 +438,27 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
                                 }
                             }
                         } break;
-                    case metricsEnum::PHASE: {
+                    case metricsEnum::PHASE01: {
                         auto const num_density = num_matches * inv_search_volume;
                         magnitude = 0.5f;
                         if (num_density > phase_krit) {
+                            // fluid
+                            magnitude = phaseEnum::FLUID;
+                        } else {
+                            // gas
+                            magnitude = phaseEnum::GAS;
+                        }
+                    } break;
+                    case metricsEnum::PHASE02: {
+                        auto const temperature = computeTemperature(ret_matches, num_matches, theMass, theFreedom);
+                        auto const rho_fluid = rho_c + 0.5649f * std::pow(T_c - temperature, 0.3333333f) +
+                                               0.1314 * (T_c - temperature) +
+                                               0.0412 * std::pow(T_c - temperature, 1.5f);
+                        auto const rho_gas = rho_c - 0.5649f * std::pow(T_c - temperature, 0.3333333f) +
+                                             0.2128 * (T_c - temperature) + 0.0702 * std::pow(T_c - temperature, 1.5f);
+                        auto const num_density = num_matches * inv_search_volume;
+                        magnitude = 0.5f;
+                        if (num_density > 0.5f * rho_fluid) {
                             // fluid
                             magnitude = phaseEnum::FLUID;
                         } else {
