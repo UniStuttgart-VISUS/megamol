@@ -66,7 +66,9 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
             this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>(meta_data.m_bboxs);
             this->extendContainer.timeFramesCount = meta_data.m_frame_cnt;
             this->extendContainer.isValid = true;
-            std::get<meshStrucutre>(this->structureContainer.structure).mesh = cm->getData();
+            meshStrucutre mesh_str;
+            mesh_str.mesh = cm->getData();
+            this->structureContainer.structure = mesh_str;
         }
     } else {
 
