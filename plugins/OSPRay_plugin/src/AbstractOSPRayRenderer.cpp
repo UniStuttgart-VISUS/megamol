@@ -1012,7 +1012,7 @@ namespace ospray {
                             for (auto& attrib : mesh.second.attributes) {
 
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
-                                    const auto count = attrib.byte_size / attrib.stride;
+                                    size_t count = attrib.byte_size / attrib.stride;
                                     auto vertexData = ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
                                     vertexData.commit();
                                     std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
@@ -1023,7 +1023,7 @@ namespace ospray {
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
                                     ::ospray::cpp::SharedData colorData;
                                     if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT) {
-                                        auto count = attrib.byte_size / attrib.stride;
+                                        size_t count = attrib.byte_size / attrib.stride;
                                         colorData = ::ospray::cpp::SharedData(
                                             attrib.data, OSP_VEC3F, count, attrib.stride);
                                     } else {
@@ -1036,7 +1036,7 @@ namespace ospray {
                             }
                             // check index pointer
                             if (mesh.second.indices.data != nullptr) {
-                                const auto count =
+                                size_t count =
                                     mesh.second.indices.byte_size /
                                     mesh::MeshDataAccessCollection::getByteSize(mesh.second.indices.type);
                                 auto indexData = ::ospray::cpp::SharedData(mesh.second.indices.data, OSP_UINT, count);

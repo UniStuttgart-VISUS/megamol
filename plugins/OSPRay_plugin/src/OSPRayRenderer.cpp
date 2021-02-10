@@ -11,8 +11,7 @@
 #include "mmcore/utility/log/Log.h"
 #include <chrono>
 #include "ospray/ospray_cpp.h"
-#include <stdint.h>
-#include <corecrt_math_defines.h>
+
 
 using namespace megamol::ospray;
 
@@ -311,7 +310,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         //std::string fname("blub.ppm");
         //writePPM(fname, _imgSize, fb);
         
-        auto frmbuffer = cr.getGenericFramebuffer();
+        auto frmbuffer = cr.GetFramebuffer();
         frmbuffer->width = _imgSize[0];
         frmbuffer->height = _imgSize[1];
         frmbuffer->depthBuffer = _db;
@@ -331,7 +330,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         auto fb = reinterpret_cast<uint32_t*>(_framebuffer->map(OSP_FB_COLOR));
         _fb = std::vector<uint32_t>(fb, fb + _imgSize[0] * _imgSize[1]);
 
-        auto frmbuffer = cr.getGenericFramebuffer();
+        auto frmbuffer = cr.GetFramebuffer();
         frmbuffer->width = _imgSize[0];
         frmbuffer->height = _imgSize[1];
         frmbuffer->depthBuffer = _db;
