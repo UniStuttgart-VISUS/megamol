@@ -30,9 +30,10 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
         , param_extended_mode(false)
         , update(true)
         , show_grid(false)
-        , show_call_names(true)
-        , show_slot_names(false)
-        , show_module_names(true)
+        , show_call_label(true)
+        , show_call_slots_label(true)
+        , show_slot_label(false)
+        , show_module_label(true)
         , show_parameter_sidebar(true)
         , change_show_parameter_sidebar(true)
         , graph_layout(0)
@@ -47,7 +48,6 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
         , multiselect_done(false)
         , canvas_hovered(false)
         , current_font_scaling(1.0f)
-        , add_menu_scrollbar_height(false)
         , graph_state()
         , search_widget()
         , splitter_widget()
@@ -739,17 +739,82 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_graph) {
 
     ImGuiStyle& style = ImGui::GetStyle();
-    const std::string delimiter("|");
     auto button_size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
 
     float child_height = ImGui::GetFrameHeightWithSpacing();
-    if (this->add_menu_scrollbar_height) {
-        child_height += static_cast<float>(ImGuiStyleVar_ScrollbarSize) +
-                        (style.ItemInnerSpacing.y * megamol::gui::gui_scaling.Get()); // why?
-    }
-    auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_HorizontalScrollbar;
+    auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_MenuBar;
     ImGui::BeginChild("graph_menu", ImVec2(0.0f, child_height), false, child_flags);
-    float content_region_avail_x = ImGui::GetContentRegionAvail().x;
+
+    ImGui::BeginMenuBar();
+
+    // GRAPH LAYOUT
+    if (ImGui::Button("Layout Graph")) {
+        this->graph_layout = 1;
+    }
+    ImGui::SameLine();
+
+    // MODULES
+    if (ImGui::BeginMenu("Modules")) {
+        if (ImGui::MenuItem("Label", nullptr, &this->show_module_label)) {
+            for (auto& module_ptr : inout_graph.GetModules()) {
+                module_ptr->present.label_visible = this->show_module_label;
+            }
+            this->update = true;
+        }
+        ImGui::EndMenu();
+    }
+    ImGui::SameLine();
+
+    // CALLS
+    if (ImGui::BeginMenu("Calls")) {
+        if (ImGui::MenuItem("Label", nullptr, &this->show_call_label)) {
+            for (auto& call_ptr : inout_graph.GetCalls()) {
+                call_ptr->present.label_visible = this->show_call_label;
+            }
+            this->update = true;
+        }
+        if (ImGui::MenuItem("Slots", nullptr, &this->show_call_slots_label)) {
+            for (auto& call_ptr : inout_graph.GetCalls()) {
+                call_ptr->present.slots_visible = this->show_call_slots_label;
+            }
+            this->update = true;
+        }
+        ImGui::EndMenu();
+    }
+    ImGui::SameLine();
+
+    // SLOTS
+    if (ImGui::BeginMenu("Slots")) {
+        if (ImGui::MenuItem("Label", nullptr, &this->show_slot_label)) {
+            for (auto& module_ptr : inout_graph.GetModules()) {
+                for (auto& callslot_types : module_ptr->GetCallSlots()) {
+                    for (auto& callslots : callslot_types.second) {
+                        callslots->present.label_visible = this->show_slot_label;
+                    }
+                }
+            }
+            for (auto& group_ptr : inout_graph.GetGroups()) {
+                for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
+                    for (auto& interfaceslot_ptr : interfaceslots_map.second) {
+                        interfaceslot_ptr->present.label_visible = this->show_slot_label;
+                    }
+                }
+            }
+            this->update = true;
+        }
+        ImGui::EndMenu();
+    }
+    ImGui::SameLine();
+
+    // GRID
+    if (ImGui::BeginMenu("Grid")) {
+        ImGui::MenuItem("Show/Hide", nullptr, &this->show_grid);
+        ImGui::EndMenu();
+    }
+    ImGui::SameLine();
+
+    ImGui::Separator();
+    ImGui::SameLine();
 
     // Choose single selected view module
     ModulePtr_t selected_mod_ptr;
@@ -767,7 +832,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         bool is_graph_entry = false;
         this->current_graph_entry_name.clear();
         ImGui::Checkbox("Graph Entry", &is_graph_entry);
-        ImGui::SameLine(0.0f, min_text_width + 2.0f * style.ItemSpacing.x);
+        // ImGui::SameLine(0.0f, min_text_width + 2.0f * style.ItemSpacing.x);
         GUIUtils::ReadOnlyWigetStyle(false);
     } else {
         bool is_graph_entry = selected_mod_ptr->IsGraphEntry();
@@ -824,57 +889,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         ImGui::PopItemWidth();
         ImGui::SameLine();
     }
-    ImGui::TextUnformatted(delimiter.c_str());
-    ImGui::SameLine();
-
-    // GRAPH LAYOUT
-    if (ImGui::Button("Layout Graph")) {
-        this->graph_layout = 1;
-    }
-    ImGui::SameLine();
-
-    // MODULES
-    if (ImGui::Checkbox("Module Names", &this->show_module_names)) {
-        for (auto& module_ptr : inout_graph.GetModules()) {
-            module_ptr->present.label_visible = this->show_module_names;
-        }
-        this->update = true;
-    }
-    ImGui::SameLine();
-
-    // CALLS
-    if (ImGui::Checkbox("Call Names", &this->show_call_names)) {
-        for (auto& call_ptr : inout_graph.GetCalls()) {
-            call_ptr->present.label_visible = this->show_call_names;
-        }
-        this->update = true;
-    }
-    ImGui::SameLine();
-
-    // SLOTS
-    if (ImGui::Checkbox("Slot Names", &this->show_slot_names)) {
-        for (auto& module_ptr : inout_graph.GetModules()) {
-            for (auto& callslot_types : module_ptr->GetCallSlots()) {
-                for (auto& callslots : callslot_types.second) {
-                    callslots->present.label_visible = this->show_slot_names;
-                }
-            }
-        }
-        for (auto& group_ptr : inout_graph.GetGroups()) {
-            for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
-                for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-                    interfaceslot_ptr->present.label_visible = this->show_slot_names;
-                }
-            }
-        }
-        this->update = true;
-    }
-    ImGui::SameLine();
-
-    // GRID
-    ImGui::Checkbox("Grid", &this->show_grid);
-    ImGui::SameLine();
-    ImGui::TextUnformatted(delimiter.c_str());
+    ImGui::Separator();
     ImGui::SameLine();
 
     // SCROLLING
@@ -912,7 +927,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     ImGui::SameLine();
     this->tooltip.Marker("Middle Mouse Button");
     ImGui::SameLine();
-    ImGui::TextUnformatted(delimiter.c_str());
+    ImGui::Separator();
     ImGui::SameLine();
 
     // ZOOMING
@@ -933,16 +948,9 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     this->tooltip.Marker("Mouse Wheel");
 
     ImGui::SameLine();
-    ImGui::TextUnformatted(delimiter.c_str());
-    ImGui::SameLine();
+    ImGui::Separator();
 
-    // --------------------------------------------------
-    ImGui::SameLine();
-    float cursor_pos_x = ImGui::GetCursorPosX() - style.ItemSpacing.x;
-    this->add_menu_scrollbar_height = false;
-    if (content_region_avail_x < cursor_pos_x) {
-        this->add_menu_scrollbar_height = true;
-    }
+    ImGui::EndMenuBar();
 
     ImGui::EndChild();
 }
@@ -1675,7 +1683,7 @@ void megamol::gui::GraphPresentation::layout(
     size_t layer_count = layers.size();
     for (size_t i = 0; i < layer_count; i++) {
 
-        if (this->show_call_names) {
+        if (this->show_call_label || this->show_call_slots_label) {
             max_call_width = 0.0f;
         }
         max_graph_element_width = 0.0f;
@@ -1687,12 +1695,23 @@ void megamol::gui::GraphPresentation::layout(
             auto layer_item = layers[i][j];
 
             if (layer_item.module_ptr != nullptr) {
-                if (this->show_call_names) {
+                if (this->show_call_label) {
                     for (auto& callerslot_ptr : layer_item.module_ptr->GetCallSlots(CallSlotType::CALLER)) {
                         if (callerslot_ptr->CallsConnected() &&
                             this->connected_callslot(modules, groups, callerslot_ptr)) {
                             for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                                 auto call_name_length = ImGui::CalcTextSize(call_ptr->class_name.c_str()).x;
+                                max_call_width = std::max(call_name_length, max_call_width);
+                            }
+                        }
+                    }
+                }
+                if (this->show_call_slots_label) {
+                    for (auto& callerslot_ptr : layer_item.module_ptr->GetCallSlots(CallSlotType::CALLER)) {
+                        if (callerslot_ptr->CallsConnected() &&
+                            this->connected_callslot(modules, groups, callerslot_ptr)) {
+                            for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
+                                auto call_name_length = ImGui::CalcTextSize(call_ptr->GetSlotsLabel().c_str()).x;
                                 max_call_width = std::max(call_name_length, max_call_width);
                             }
                         }
@@ -1705,13 +1724,26 @@ void megamol::gui::GraphPresentation::layout(
                 found_layer_item = true;
 
             } else if (layer_item.group_ptr != nullptr) {
-                if (this->show_call_names) {
+                if (this->show_call_label) {
                     for (auto& interfaceslot_slot : layer_item.group_ptr->GetInterfaceSlots(CallSlotType::CALLER)) {
                         for (auto& callerslot_ptr : interfaceslot_slot->GetCallSlots()) {
                             if (callerslot_ptr->CallsConnected() &&
                                 this->connected_callslot(modules, groups, callerslot_ptr)) {
                                 for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                                     auto call_name_length = ImGui::CalcTextSize(call_ptr->class_name.c_str()).x;
+                                    max_call_width = std::max(call_name_length, max_call_width);
+                                }
+                            }
+                        }
+                    }
+                }
+                if (this->show_call_slots_label) {
+                    for (auto& interfaceslot_slot : layer_item.group_ptr->GetInterfaceSlots(CallSlotType::CALLER)) {
+                        for (auto& callerslot_ptr : interfaceslot_slot->GetCallSlots()) {
+                            if (callerslot_ptr->CallsConnected() &&
+                                this->connected_callslot(modules, groups, callerslot_ptr)) {
+                                for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
+                                    auto call_name_length = ImGui::CalcTextSize(call_ptr->GetSlotsLabel().c_str()).x;
                                     max_call_width = std::max(call_name_length, max_call_width);
                                 }
                             }

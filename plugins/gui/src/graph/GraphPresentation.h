@@ -71,13 +71,13 @@ namespace gui {
             return this->graph_state.interact.slot_dropped_uid;
         }
         bool GetModuleLabelVisibility(void) const {
-            return this->show_module_names;
+            return this->show_module_label;
         }
         bool GetCallSlotLabelVisibility(void) const {
-            return this->show_slot_names;
+            return this->show_slot_label;
         }
         bool GetCallLabelVisibility(void) const {
-            return this->show_call_names;
+            return this->show_call_label;
         }
         bool IsCanvasHoverd(void) const {
             return this->canvas_hovered;
@@ -92,9 +92,10 @@ namespace gui {
 
         bool update;
         bool show_grid;
-        bool show_call_names;
-        bool show_slot_names;
-        bool show_module_names;
+        bool show_call_label;
+        bool show_call_slots_label;
+        bool show_slot_label;
+        bool show_module_label;
         bool show_parameter_sidebar;
         bool change_show_parameter_sidebar;
         unsigned int graph_layout;
@@ -109,7 +110,6 @@ namespace gui {
         bool multiselect_done;
         bool canvas_hovered;
         float current_font_scaling;
-        bool add_menu_scrollbar_height;
         // State propagated and shared by all graph items.
         megamol::gui::GraphItemsState_t graph_state;
 

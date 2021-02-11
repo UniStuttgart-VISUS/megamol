@@ -968,31 +968,37 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                             graph_state, {"show_grid"}, &this->present.show_grid);
 
                         if (megamol::core::utility::get_json_value<bool>(
-                                graph_state, {"show_call_names"}, &this->present.show_call_names)) {
+                                graph_state, {"show_call_label"}, &this->present.show_call_label)) {
                             for (auto& call : this->GetCalls()) {
-                                call->present.label_visible = this->present.show_call_names;
+                                call->present.label_visible = this->present.show_call_label;
                             }
                         }
                         if (megamol::core::utility::get_json_value<bool>(
-                                graph_state, {"show_module_names"}, &this->present.show_module_names)) {
+                                graph_state, {"show_call_slots_label"}, &this->present.show_call_slots_label)) {
+                            for (auto& call : this->GetCalls()) {
+                                call->present.slots_visible = this->present.show_call_slots_label;
+                            }
+                        }
+                        if (megamol::core::utility::get_json_value<bool>(
+                                graph_state, {"show_module_label"}, &this->present.show_module_label)) {
                             for (auto& mod : this->GetModules()) {
-                                mod->present.label_visible = this->present.show_module_names;
+                                mod->present.label_visible = this->present.show_module_label;
                             }
                         }
 
                         if (megamol::core::utility::get_json_value<bool>(
-                                graph_state, {"show_slot_names"}, &this->present.show_slot_names)) {
+                                graph_state, {"show_slot_label"}, &this->present.show_slot_label)) {
                             for (auto& mod : this->GetModules()) {
                                 for (auto& callslot_types : mod->GetCallSlots()) {
                                     for (auto& callslots : callslot_types.second) {
-                                        callslots->present.label_visible = this->present.show_slot_names;
+                                        callslots->present.label_visible = this->present.show_slot_label;
                                     }
                                 }
                             }
                             for (auto& group_ptr : this->GetGroups()) {
                                 for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
                                     for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-                                        interfaceslot_ptr->present.label_visible = this->present.show_slot_names;
+                                        interfaceslot_ptr->present.label_visible = this->present.show_slot_label;
                                     }
                                 }
                             }
@@ -1167,9 +1173,11 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["parameter_sidebar_width"] =
             this->present.parameter_sidebar_width;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_grid"] = this->present.show_grid;
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_names"] = this->present.show_call_names;
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_slot_names"] = this->present.show_slot_names;
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_module_names"] = this->present.show_module_names;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_label"] = this->present.show_call_label;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_slots_label"] =
+            this->present.show_call_slots_label;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_slot_label"] = this->present.show_slot_label;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_module_label"] = this->present.show_module_label;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["params_visible"] = this->present.params_visible;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["params_readonly"] = this->present.params_readonly;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["param_extended_mode"] =
