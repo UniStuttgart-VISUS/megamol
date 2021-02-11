@@ -9,7 +9,7 @@
  * USED HOTKEYS:
  *
  * - Trigger Screenshot:        F2
- * - Toggle Main View:          F3
+ * - Toggle Graph Entry:        F3
  * - Show/hide Windows:         F7-F11
  * - Show/hide Menu:            F12
  * - Search Parameter:          Ctrl  + p
@@ -42,7 +42,7 @@ GUIWindows::GUIWindows(void)
 
     this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F2, core::view::Modifier::NONE), false};
-    this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS] = {
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F3, core::view::Modifier::NONE), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_F4, core::view::Modifier::ALT), false};
@@ -271,42 +271,42 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->state.screenshot_triggered = true;
         this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT].is_pressed = false;
     }
-    if (this->state.toggle_main_view || this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].is_pressed) {
+    if (this->state.toggle_graph_entry || this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].is_pressed) {
         GraphPtr_t graph_ptr;
         if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-            megamol::gui::ModulePtrVector_t::const_iterator module_mainview_iter = graph_ptr->GetModules().begin();
-            // Search for first main view and set next view to main view (= graph entry point)
+            megamol::gui::ModulePtrVector_t::const_iterator module_graph_entry_iter = graph_ptr->GetModules().begin();
+            // Search for first graph entry and set next view to graph entry (= graph entry point)
             for (auto module_iter = graph_ptr->GetModules().begin(); module_iter != graph_ptr->GetModules().end();
                  module_iter++) {
-                if ((*module_iter)->is_view && (*module_iter)->IsMainView()) {
-                    // Remove all main views
-                    (*module_iter)->main_view_name.clear();
+                if ((*module_iter)->is_view && (*module_iter)->IsGraphEntry()) {
+                    // Remove all graph entries
+                    (*module_iter)->graph_entry_name.clear();
                     Graph::QueueData queue_data;
                     queue_data.name_id = (*module_iter)->FullName();
-                    graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
-                    // Save index of last found main view
+                    graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
+                    // Save index of last found graph entry
                     if (module_iter != graph_ptr->GetModules().end()) {
-                        module_mainview_iter = module_iter + 1;
+                        module_graph_entry_iter = module_iter + 1;
                     }
                 }
             }
-            if ((module_mainview_iter == graph_ptr->GetModules().begin()) ||
-                (module_mainview_iter != graph_ptr->GetModules().end())) {
-                // Search for next main view
-                for (auto module_iter = module_mainview_iter; module_iter != graph_ptr->GetModules().end();
+            if ((module_graph_entry_iter == graph_ptr->GetModules().begin()) ||
+                (module_graph_entry_iter != graph_ptr->GetModules().end())) {
+                // Search for next graph entry
+                for (auto module_iter = module_graph_entry_iter; module_iter != graph_ptr->GetModules().end();
                      module_iter++) {
                     if ((*module_iter)->is_view) {
-                        (*module_iter)->main_view_name = graph_ptr->GenerateUniqueMainViewName();
+                        (*module_iter)->graph_entry_name = graph_ptr->GenerateUniqueGraphEntryName();
                         Graph::QueueData queue_data;
                         queue_data.name_id = (*module_iter)->FullName();
-                        graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                        graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
                         break;
                     }
                 }
             }
         }
-        this->state.toggle_main_view = false;
-        this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].is_pressed = false;
+        this->state.toggle_graph_entry = false;
+        this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].is_pressed = false;
     }
 
     // Auto-save state
@@ -925,7 +925,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                         vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
                 }
             } break;
-            case (Graph::QueueAction::CREATE_MAIN_VIEW): {
+            case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
                 if (megamol_graph != nullptr) {
                     megamol_graph->SetGraphEntryPoint(data.name_id,
                         megamol::core::view::get_gl_view_runtime_resources_requests(),
@@ -935,7 +935,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                      */
                 }
             } break;
-            case (Graph::QueueAction::REMOVE_MAIN_VIEW): {
+            case (Graph::QueueAction::REMOVE_GRAPH_ENTRY): {
                 if (megamol_graph != nullptr) {
                     megamol_graph->RemoveGraphEntryPoint(data.name_id);
                 } else if (this->core_instance != nullptr) {
@@ -1804,34 +1804,34 @@ void GUIWindows::drawMenu(void) {
         if (ImGui::BeginMenu("Render")) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 if (module_ptr->is_view) {
-                    if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsMainView())) {
-                        if (!module_ptr->IsMainView()) {
-                            // Remove all main views
+                    if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsGraphEntry())) {
+                        if (!module_ptr->IsGraphEntry()) {
+                            // Remove all graph entries
                             for (auto module_ptr : graph_ptr->GetModules()) {
-                                if (module_ptr->is_view && module_ptr->IsMainView()) {
-                                    module_ptr->main_view_name.clear();
+                                if (module_ptr->is_view && module_ptr->IsGraphEntry()) {
+                                    module_ptr->graph_entry_name.clear();
                                     Graph::QueueData queue_data;
                                     queue_data.name_id = module_ptr->FullName();
-                                    graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                                    graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                                 }
                             }
-                            // Add new main view
-                            module_ptr->main_view_name = graph_ptr->GenerateUniqueMainViewName();
+                            // Add new graph entry
+                            module_ptr->graph_entry_name = graph_ptr->GenerateUniqueGraphEntryName();
                             Graph::QueueData queue_data;
                             queue_data.name_id = module_ptr->FullName();
-                            graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                            graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
                         } else {
-                            module_ptr->main_view_name.clear();
+                            module_ptr->graph_entry_name.clear();
                             Graph::QueueData queue_data;
                             queue_data.name_id = module_ptr->FullName();
-                            graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                            graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                         }
                     }
                 }
             }
-            if (ImGui::MenuItem("Toggle Main Views",
-                    this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_MAIN_VIEWS].keycode.ToString().c_str())) {
-                this->state.toggle_main_view = true;
+            if (ImGui::MenuItem("Toggle Graph Entry",
+                    this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].keycode.ToString().c_str())) {
+                this->state.toggle_graph_entry = true;
             }
             ImGui::EndMenu();
         }
@@ -2494,7 +2494,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.open_popup_screenshot = false;
     this->state.menu_visible = true;
     this->state.graph_fonts_reserved = 0;
-    this->state.toggle_main_view = false;
+    this->state.toggle_graph_entry = false;
     this->state.shutdown_triggered = false;
     this->state.screenshot_triggered = false;
     this->state.screenshot_filepath = "megamol_screenshot.png";

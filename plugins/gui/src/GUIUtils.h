@@ -229,14 +229,14 @@ namespace gui {
         ImGuiID group_hovered_uid;  // in out
         bool group_layout;          // out
 
-        UIDVector_t modules_selected_uids;             // in out
-        ImGuiID module_hovered_uid;                    // in out
-        UIDPairVector_t modules_add_group_uids;        // out
-        UIDVector_t modules_remove_group_uids;         // out
-        bool modules_layout;                           // out
-        StrPairVector_t module_rename;                 // out
-        vislib::math::Ternary module_mainview_changed; // out
-        ImVec2 module_param_child_position;            // out
+        UIDVector_t modules_selected_uids;               // in out
+        ImGuiID module_hovered_uid;                      // in out
+        UIDPairVector_t modules_add_group_uids;          // out
+        UIDVector_t modules_remove_group_uids;           // out
+        bool modules_layout;                             // out
+        StrPairVector_t module_rename;                   // out
+        vislib::math::Ternary module_graphentry_changed; // out
+        ImVec2 module_param_child_position;              // out
 
         ImGuiID call_selected_uid; // in out
         ImGuiID call_hovered_uid;  // in out

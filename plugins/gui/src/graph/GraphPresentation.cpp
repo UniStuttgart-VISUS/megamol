@@ -41,7 +41,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
         , increment_zooming(false)
         , decrement_zooming(false)
         , param_name_space()
-        , current_main_view_name()
+        , current_graph_entry_name()
         , multiselect_start_pos()
         , multiselect_end_pos()
         , multiselect_done(false)
@@ -74,7 +74,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     this->graph_state.interact.modules_remove_group_uids.clear();
     this->graph_state.interact.modules_layout = false;
     this->graph_state.interact.module_rename.clear();
-    this->graph_state.interact.module_mainview_changed = vislib::math::Ternary::TRI_UNKNOWN;
+    this->graph_state.interact.module_graphentry_changed = vislib::math::Ternary::TRI_UNKNOWN;
     this->graph_state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
 
     this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;
@@ -291,8 +291,8 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 }
                 this->graph_state.interact.module_rename.clear();
             }
-            // Add module main view event to graph synchronization queue ----------
-            if (this->graph_state.interact.module_mainview_changed != vislib::math::Ternary::TRI_UNKNOWN) {
+            // Add module graph entry event to graph synchronization queue ----------
+            if (this->graph_state.interact.module_graphentry_changed != vislib::math::Ternary::TRI_UNKNOWN) {
                 // Choose single selected view module
                 ModulePtr_t selected_mod_ptr;
                 if (this->graph_state.interact.modules_selected_uids.size() == 1) {
@@ -304,26 +304,26 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 }
                 if (selected_mod_ptr != nullptr) {
                     Graph::QueueData queue_data;
-                    if (this->graph_state.interact.module_mainview_changed == vislib::math::Ternary::TRI_TRUE) {
-                        // Remove all main views
+                    if (this->graph_state.interact.module_graphentry_changed == vislib::math::Ternary::TRI_TRUE) {
+                        // Remove all graph entries
                         for (auto module_ptr : inout_graph.GetModules()) {
-                            if (module_ptr->is_view && module_ptr->IsMainView()) {
-                                module_ptr->main_view_name.clear();
+                            if (module_ptr->is_view && module_ptr->IsGraphEntry()) {
+                                module_ptr->graph_entry_name.clear();
                                 queue_data.name_id = module_ptr->FullName();
-                                inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                                inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                             }
                         }
-                        // Add new main view
+                        // Add new graph entry
                         queue_data.name_id = selected_mod_ptr->FullName();
-                        selected_mod_ptr->main_view_name = inout_graph.GenerateUniqueMainViewName();
-                        inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                        selected_mod_ptr->graph_entry_name = inout_graph.GenerateUniqueGraphEntryName();
+                        inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
                     } else {
                         queue_data.name_id = selected_mod_ptr->FullName();
-                        selected_mod_ptr->main_view_name.clear();
-                        inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                        selected_mod_ptr->graph_entry_name.clear();
+                        inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                     }
                 }
-                this->graph_state.interact.module_mainview_changed = vislib::math::Ternary::TRI_UNKNOWN;
+                this->graph_state.interact.module_graphentry_changed = vislib::math::Ternary::TRI_UNKNOWN;
             }
             // Add module to group ------------------------------------------------
             if (!this->graph_state.interact.modules_add_group_uids.empty()) {
@@ -759,66 +759,66 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
             }
         }
     }
-    // Main View Checkbox
+    // Graph Entry Checkbox
     const float min_text_width = 3.0f * ImGui::GetFrameHeightWithSpacing();
     if (selected_mod_ptr == nullptr) {
         GUIUtils::ReadOnlyWigetStyle(true);
-        bool is_main_view = false;
-        this->current_main_view_name.clear();
-        ImGui::Checkbox("Main View", &is_main_view);
+        bool is_graph_entry = false;
+        this->current_graph_entry_name.clear();
+        ImGui::Checkbox("Graph Entry", &is_graph_entry);
         ImGui::SameLine(0.0f, min_text_width + 2.0f * style.ItemSpacing.x);
         GUIUtils::ReadOnlyWigetStyle(false);
     } else {
-        bool is_main_view = selected_mod_ptr->IsMainView();
-        if (ImGui::Checkbox("Main View", &is_main_view)) {
+        bool is_graph_entry = selected_mod_ptr->IsGraphEntry();
+        if (ImGui::Checkbox("Graph Entry", &is_graph_entry)) {
             if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] The action [Change Main View] is not yet supported for the graph "
+                    "[GUI] The action [Change Graph Entry] is not yet supported for the graph "
                     "using the 'Core Instance Graph' interface. Open project from file to make desired "
                     "changes. [%s, %s, line %d]\n",
                     __FILE__, __FUNCTION__, __LINE__);
             } else {
                 Graph::QueueData queue_data;
-                if (is_main_view) {
-                    // Remove all main views
+                if (is_graph_entry) {
+                    // Remove all graph entries
                     for (auto module_ptr : inout_graph.GetModules()) {
-                        if (module_ptr->is_view && module_ptr->IsMainView()) {
-                            module_ptr->main_view_name.clear();
+                        if (module_ptr->is_view && module_ptr->IsGraphEntry()) {
+                            module_ptr->graph_entry_name.clear();
                             queue_data.name_id = module_ptr->FullName();
-                            inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                            inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                         }
                     }
-                    // Add new main view
-                    selected_mod_ptr->main_view_name = inout_graph.GenerateUniqueMainViewName();
+                    // Add new graph entry
+                    selected_mod_ptr->graph_entry_name = inout_graph.GenerateUniqueGraphEntryName();
                     queue_data.name_id = selected_mod_ptr->FullName();
-                    inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                    inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
                 } else {
-                    selected_mod_ptr->main_view_name.clear();
+                    selected_mod_ptr->graph_entry_name.clear();
                     queue_data.name_id = selected_mod_ptr->FullName();
-                    inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                    inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                 }
             }
         }
         ImGui::SameLine();
-        this->current_main_view_name = selected_mod_ptr->main_view_name;
-        float input_text_width = std::max(
-            min_text_width, (ImGui::CalcTextSize(this->current_main_view_name.c_str()).x + 2.0f * style.ItemSpacing.x));
+        this->current_graph_entry_name = selected_mod_ptr->graph_entry_name;
+        float input_text_width = std::max(min_text_width,
+            (ImGui::CalcTextSize(this->current_graph_entry_name.c_str()).x + 2.0f * style.ItemSpacing.x));
         ImGui::PushItemWidth(input_text_width);
-        GUIUtils::Utf8Encode(this->current_main_view_name);
-        ImGui::InputText("###current_main_view_name", &this->current_main_view_name, ImGuiInputTextFlags_None);
-        GUIUtils::Utf8Decode(this->current_main_view_name);
+        GUIUtils::Utf8Encode(this->current_graph_entry_name);
+        ImGui::InputText("###current_graph_entry_name", &this->current_graph_entry_name, ImGuiInputTextFlags_None);
+        GUIUtils::Utf8Decode(this->current_graph_entry_name);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] The action [Change Main View] is not yet supported for the graph "
+                    "[GUI] The action [Change Graph Entry] is not yet supported for the graph "
                     "using the 'Core Instance Graph' interface. Open project from file to make desired "
                     "changes. [%s, %s, line %d]\n",
                     __FILE__, __FUNCTION__, __LINE__);
             } else {
-                selected_mod_ptr->main_view_name = this->current_main_view_name;
+                selected_mod_ptr->graph_entry_name = this->current_graph_entry_name;
             }
         } else {
-            this->current_main_view_name = selected_mod_ptr->main_view_name;
+            this->current_graph_entry_name = selected_mod_ptr->graph_entry_name;
         }
         ImGui::PopItemWidth();
         ImGui::SameLine();

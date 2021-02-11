@@ -73,7 +73,7 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                 mod_ptr->plugin_name = mod.plugin_name;
                 mod_ptr->is_view = mod.is_view;
                 mod_ptr->name = this->generate_unique_module_name(mod.class_name);
-                mod_ptr->main_view_name.clear();
+                mod_ptr->graph_entry_name.clear();
                 mod_ptr->present.label_visible = this->present.GetModuleLabelVisibility();
 
                 for (auto& p : mod.parameters) {
@@ -145,10 +145,10 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
             if ((*iter)->uid == module_uid) {
 
-                if (!force && (*iter)->IsMainView()) {
+                if (!force && (*iter)->IsGraphEntry()) {
                     if (this->GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
                         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                            "[GUI] The action [Delete main view/ view instance] is not yet supported for the graph "
+                            "[GUI] The action [Delete graph entry/ view instance] is not yet supported for the graph "
                             "using the 'Core Instance Graph' interface. Open project from file to make desired "
                             "changes. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
@@ -902,9 +902,9 @@ bool megamol::gui::Graph::PushSyncQueue(QueueAction action, const QueueData& in_
             return false;
         }
     } break;
-    case (QueueAction::CREATE_MAIN_VIEW): {
+    case (QueueAction::CREATE_GRAPH_ENTRY): {
     } break;
-    case (QueueAction::REMOVE_MAIN_VIEW): {
+    case (QueueAction::REMOVE_GRAPH_ENTRY): {
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -1254,13 +1254,13 @@ const std::string megamol::gui::Graph::generate_unique_module_name(const std::st
 }
 
 
-const std::string megamol::gui::Graph::GenerateUniqueMainViewName(void) {
+const std::string megamol::gui::Graph::GenerateUniqueGraphEntryName(void) {
 
     int new_name_id = 0;
-    std::string new_name_prefix("MainView_");
+    std::string new_name_prefix("GraphEntry_");
     for (auto& module_ptr : this->modules) {
-        if (module_ptr->main_view_name.find(new_name_prefix) == 0) {
-            std::string int_postfix = module_ptr->main_view_name.substr(new_name_prefix.length());
+        if (module_ptr->graph_entry_name.find(new_name_prefix) == 0) {
+            std::string int_postfix = module_ptr->graph_entry_name.substr(new_name_prefix.length());
             try {
                 int last_id = std::stoi(int_postfix);
                 new_name_id = std::max(new_name_id, last_id);

@@ -383,7 +383,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 if (!graph_ptr->ModuleExists(module_fullname)) {
                     add_module_list.emplace_back(module_inst.modulePtr.get());
                     if (module_inst.isGraphEntryPoint) {
-                        new_view_instances[module_fullname] = graph_ptr->GenerateUniqueMainViewName();
+                        new_view_instances[module_fullname] = graph_ptr->GenerateUniqueGraphEntryName();
                     }
                 }
             }
@@ -466,19 +466,19 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                 // Check if module is view instance
                 auto view_inst_iter = new_view_instances.find(full_name);
                 if (view_inst_iter != new_view_instances.end()) {
-                    new_module_ptr->main_view_name = view_inst_iter->second;
+                    new_module_ptr->graph_entry_name = view_inst_iter->second;
                     Graph::QueueData queue_data;
-                    // Remove all main views
+                    // Remove all graph entries
                     // for (auto module_ptr : graph_ptr->GetModules()) {
-                    //    if (module_ptr->is_view && module_ptr->IsMainView()) {
-                    //        module_ptr->main_view_name.clear();
+                    //    if (module_ptr->is_view && module_ptr->IsGraphEntry()) {
+                    //        module_ptr->graph_entry_name.clear();
                     //        queue_data.name_id = module_ptr->FullName();
-                    //        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                    //        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_graph_entry, queue_data);
                     //    }
                     //}
-                    // Add new main view
+                    // Add new graph entry
                     queue_data.name_id = new_module_ptr->FullName();
-                    graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                    graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
                 }
                 // Add module to group
                 graph_ptr->AddGroupModule(module_namespace, new_module_ptr);
@@ -845,26 +845,26 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
                 graph_ptr->UniqueModuleRename(view_name);
                 graph_module->name = view_name;
                 graph_ptr->AddGroupModule(view_namespace, graph_module);
-                graph_module->main_view_name = view_instance;
+                graph_module->graph_entry_name = view_instance;
 
                 queue_data.rename_id = graph_module->FullName();
                 graph_ptr->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
 
-                // Remove all main views
+                // Remove all graph entries
                 // for (auto module_ptr : graph_ptr->GetModules()) {
-                //    if (module_ptr->is_view && module_ptr->IsMainView()) {
-                //        module_ptr->main_view_name.clear();
+                //    if (module_ptr->is_view && module_ptr->IsGraphEntry()) {
+                //        module_ptr->graph_entry_name.clear();
                 //        queue_data.name_id = module_ptr->FullName();
-                //        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                //        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_graph_entry, queue_data);
                 //    }
                 //}
 
-                // Add new main view
+                // Add new graph entry
                 queue_data.name_id = queue_data.rename_id;
-                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
 
-                // Allow only one main view at a time
-                /// XXX TODO reset other main views
+                // Allow only one graph entry at a time
+                /// XXX TODO reset other graph entry
             }
         }
 
@@ -1194,8 +1194,8 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                 std::string projectstr;
                 std::stringstream confInstances, confModules, confCalls, confParams, confGUIState;
                 for (auto& module_ptr : graph_ptr->GetModules()) {
-                    if (module_ptr->IsMainView()) {
-                        confInstances << "mmCreateView(\"" << module_ptr->main_view_name << "\",\""
+                    if (module_ptr->IsGraphEntry()) {
+                        confInstances << "mmCreateView(\"" << module_ptr->graph_entry_name << "\",\""
                                       << module_ptr->class_name << "\",\"" << module_ptr->FullName() << "\") \n";
                     } else {
                         confModules << "mmCreateModule(\"" << module_ptr->class_name << "\",\""

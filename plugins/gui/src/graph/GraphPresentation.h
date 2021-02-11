@@ -103,7 +103,7 @@ namespace gui {
         bool increment_zooming;
         bool decrement_zooming;
         std::string param_name_space;
-        std::string current_main_view_name;
+        std::string current_graph_entry_name;
         ImVec2 multiselect_start_pos;
         ImVec2 multiselect_end_pos;
         bool multiselect_done;

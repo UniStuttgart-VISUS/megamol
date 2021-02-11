@@ -204,7 +204,7 @@ namespace gui {
             bool open_popup_screenshot;        // Flag for opening screenshot file pop-up
             bool menu_visible;                 // Flag indicating menu state
             unsigned int graph_fonts_reserved; // Number of fonts reserved for the configurator graph canvas
-            bool toggle_main_view;             // Flag indicating that the main view should be toggeled
+            bool toggle_graph_entry;           // Flag indicating that the main view should be toggeled
             bool shutdown_triggered;           // Flag indicating user triggered shutdown
             bool screenshot_triggered;         // Trigger and file name for screenshot
             std::string screenshot_filepath;   // Filename the screenshot should be saved to
@@ -223,7 +223,7 @@ namespace gui {
             SAVE_PROJECT = 2,
             LOAD_PROJECT = 3,
             MENU = 4,
-            TOGGLE_MAIN_VIEWS = 5,
+            TOGGLE_GRAPH_ENTRY = 5,
             TRIGGER_SCREENSHOT = 6,
             SHOW_HIDE_GUI = 7,
             INDEX_COUNT = 8
