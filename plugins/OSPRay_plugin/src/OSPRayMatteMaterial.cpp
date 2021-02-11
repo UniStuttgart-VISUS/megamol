@@ -28,8 +28,12 @@ OSPRayMatteMaterial::~OSPRayMatteMaterial(void) {
 void OSPRayMatteMaterial::readParams() {
     materialContainer.materialType = materialTypeEnum::MATTE;
 
+    matteMaterial mm;
+
     auto reflect = this->matteReflectance.Param<core::param::Vector3fParam>();
-    materialContainer.matteReflectance = reflect->getArray();
+    mm.matteReflectance = reflect->getArray();
+
+    materialContainer.material = mm;
 }
 
 bool OSPRayMatteMaterial::InterfaceIsDirty() {

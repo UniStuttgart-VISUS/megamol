@@ -1,61 +1,60 @@
 /*
- * MMFTDataSource.h
- *
- * Copyright (C) 2016 by CGV (TU Dresden)
- * Alle Rechte vorbehalten.
+ * MegaMol
+ * Copyright (c) 2021, MegaMol Dev Team
+ * All rights reserved.
  */
 
 #ifndef MEGAMOL_DATATOOLS_MMFTDATASOURCE_H_INCLUDED
 #define MEGAMOL_DATATOOLS_MMFTDATASOURCE_H_INCLUDED
-#pragma once
 
-#include "mmcore/Module.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/Call.h"
-#include "mmcore/CalleeSlot.h"
-#include "mmstd_datatools/table/TableDataCall.h"
 #include <vector>
 
-namespace megamol {
-namespace stdplugin {
-namespace datatools {
-namespace table {
+#include "mmcore/Call.h"
+#include "mmcore/CalleeSlot.h"
+#include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
+#include "mmstd_datatools/table/TableDataCall.h"
 
-    class MMFTDataSource : public core::Module {
-    public:
+namespace megamol::stdplugin::datatools::table {
 
-        static const char *ClassName(void) { return "MMFTDataSource"; }
-        static const char *Description(void) { return "Binary float table data source"; }
-        static bool IsAvailable(void) { return true; }
+class MMFTDataSource : public core::Module {
+public:
+    static const char* ClassName() {
+        return "MMFTDataSource";
+    }
+    static const char* Description() {
+        return "Binary float table data source";
+    }
+    static bool IsAvailable() {
+        return true;
+    }
 
-        MMFTDataSource(void);
-        virtual ~MMFTDataSource(void);
+    MMFTDataSource();
+    ~MMFTDataSource() override;
 
-    protected:
+protected:
+    bool create() override;
+    void release() override;
 
-        virtual bool create(void);
-        virtual void release(void);
+    bool reloadCallback(core::param::ParamSlot& caller);
 
-    private:
+private:
+    inline void assertData();
+    bool getDataCallback(core::Call& caller);
+    bool getHashCallback(core::Call& caller);
 
-        inline void assertData(void);
-        bool getDataCallback(core::Call& caller);
-        bool getHashCallback(core::Call& caller);
+    core::CalleeSlot getDataSlot_;
 
-        core::param::ParamSlot filenameSlot;
+    core::param::ParamSlot filenameSlot_;
+    core::param::ParamSlot reloadSlot_;
 
-        core::CalleeSlot getDataSlot;
+    std::size_t dataHash_;
+    bool reload_;
 
-        SIZE_T dataHash;
+    std::vector<TableDataCall::ColumnInfo> columns_;
+    std::vector<float> values_;
+};
 
-        std::vector<TableDataCall::ColumnInfo> columns;
-        std::vector<float> values;
+} // namespace megamol::stdplugin::datatools::table
 
-    };
-
-} /* end namespace table */
-} /* end namespace datatools */
-} /* end namespace stdplugin */
-} /* end namespace megamol */
-
-#endif /* MEGAMOL_DATATOOLS_MMFTDATASOURCE_H_INCLUDED */
+#endif // MEGAMOL_DATATOOLS_MMFTDATASOURCE_H_INCLUDED

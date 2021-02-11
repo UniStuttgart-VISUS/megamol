@@ -1,11 +1,11 @@
 /*
- * OSPRayTriangleMesh.cpp
+ * OSPRayMeshGeometry.cpp
  * Copyright (C) 2009-2017 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
-#include "OSPRayTriangleMesh.h"
+#include "OSPRayMeshGeometry.h"
 #include <functional>
 #include "geometry_calls/CallTriMeshData.h"
 #include "mmcore/BoundingBoxes_2.h"
@@ -20,7 +20,7 @@
 using namespace megamol::ospray;
 
 
-OSPRayTriangleMesh::OSPRayTriangleMesh(void)
+OSPRayMeshGeometry::OSPRayMeshGeometry(void)
         : AbstractOSPRayStructure()
         , getTrimeshDataSlot("getTrimeshData", "Connects to the data source")
         , getMeshDataSlot("getMeshData", "Connects to the data source") {
@@ -33,7 +33,7 @@ OSPRayTriangleMesh::OSPRayTriangleMesh(void)
 }
 
 
-bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
+bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
 
     // fill material container
     this->processMaterial();
@@ -66,7 +66,9 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
             this->extendContainer.boundingBox = std::make_shared<megamol::core::BoundingBoxes_2>(meta_data.m_bboxs);
             this->extendContainer.timeFramesCount = meta_data.m_frame_cnt;
             this->extendContainer.isValid = true;
-            this->structureContainer.mesh = cm->getData();
+            meshStrucutre mesh_str;
+            mesh_str.mesh = cm->getData();
+            this->structureContainer.structure = mesh_str;
         }
     } else {
 
@@ -94,7 +96,9 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
         if (!(*cd)(0))
             return false;
 
-        this->structureContainer.mesh = std::make_shared<mesh::MeshDataAccessCollection>();
+        meshStrucutre ms;
+        ms.mesh = std::make_shared<mesh::MeshDataAccessCollection>();
+
 
 
         unsigned int triangleCount = 0;
@@ -127,7 +131,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
             // case geocalls::CallTriMeshData::Mesh::DT_DOUBLE:
             default:
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[OSPRayTriangleMesh] Vertex: No other data types than FLOAT are supported.");
+                    "[OSPRayMeshGeometry] Vertex: No other data types than FLOAT are supported.");
                 return false;
             }
 
@@ -144,7 +148,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                     break;
                 default:
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[OSPRayTriangleMesh] Normals: No other data types than FLOAT are supported.");
+                        "[OSPRayMeshGeometry] Normals: No other data types than FLOAT are supported.");
                     return false;
                 }
             }
@@ -174,7 +178,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                     break;
                 default:
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[OSPRayTriangleMesh] Color: No other data types than BYTE or FLOAT are supported.");
+                        "[OSPRayMeshGeometry] Color: No other data types than BYTE or FLOAT are supported.");
                     return false;
                 }
 
@@ -200,7 +204,7 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                     break;
                 default:
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[OSPRayTriangleMesh] TextureCoordinate: No other data "
+                        "[OSPRayMeshGeometry] TextureCoordinate: No other data "
                         "types than BYTE or FLOAT are supported.");
                     return false;
                 }
@@ -216,25 +220,27 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
                 case geocalls::CallTriMeshData::Mesh::DT_UINT32:
                     index.data = const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(obj.GetTriIndexPointerUInt32()));
                     index.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
-                    index.byte_size = 3 * triangleCount * sizeof(uint32_t);
+                    index.byte_size = 3 * sizeof(uint32_t) * (triangleCount - 1);
                     break;
 
                 default:
                     megamol::core::utility::log::Log::DefaultLog.WriteError(
-                        "[OSPRayTriangleMesh] Index: No other data types than BYTE or FLOAT are supported.");
+                        "[OSPRayMeshGeometry] Index: No other data types than BYTE or FLOAT are supported.");
                     return false;
                 }
             }
             std::string identifier = std::string(FullName()) + "_object_" + std::to_string(i);
-            this->structureContainer.mesh->addMesh(identifier, attrib, index);
+            ms.mesh->addMesh(identifier, attrib, index);
 
         } // end for
+
+        structureContainer.structure = ms;
     }
 
 
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
-    this->structureContainer.geometryType = geometryTypeEnum::TRIANGLES;
+    this->structureContainer.geometryType = geometryTypeEnum::MESH;
     // this->structureContainer.vertexData = std::make_shared<std::vector<float>>(std::move(vertexD));
     // this->structureContainer.colorData = std::make_shared<std::vector<float>>(std::move(colorD));
     // this->structureContainer.normalData = std::make_shared<std::vector<float>>(std::move(normalD));
@@ -247,25 +253,25 @@ bool OSPRayTriangleMesh::readData(megamol::core::Call& call) {
 }
 
 
-OSPRayTriangleMesh::~OSPRayTriangleMesh() {
+OSPRayMeshGeometry::~OSPRayMeshGeometry() {
     this->Release();
 }
 
-bool OSPRayTriangleMesh::create() {
+bool OSPRayMeshGeometry::create() {
     return true;
 }
 
-void OSPRayTriangleMesh::release() {}
+void OSPRayMeshGeometry::release() {}
 
 /*
 ospray::OSPRaySphereGeometry::InterfaceIsDirty()
 */
-bool OSPRayTriangleMesh::InterfaceIsDirty() {
+bool OSPRayMeshGeometry::InterfaceIsDirty() {
     return false;
 }
 
 
-bool OSPRayTriangleMesh::getExtends(megamol::core::Call& call) {
+bool OSPRayMeshGeometry::getExtends(megamol::core::Call& call) {
     CallOSPRayStructure* os = dynamic_cast<CallOSPRayStructure*>(&call);
 
     mesh::CallMesh* cm = this->getMeshDataSlot.CallAs<mesh::CallMesh>();

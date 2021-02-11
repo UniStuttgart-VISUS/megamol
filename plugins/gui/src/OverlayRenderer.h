@@ -170,7 +170,7 @@ namespace gui {
         core::param::ParamSlot paramTimeParameter;
         // Parameter Mode
         core::param::ParamSlot paramPrefix;
-        core::param::ParamSlot paramSufix;
+        core::param::ParamSlot paramSuffix;
         core::param::ParamSlot paramParameterName;
         // Label Mode
         core::param::ParamSlot paramText;

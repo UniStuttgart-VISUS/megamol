@@ -105,8 +105,9 @@ void megamol::gui::CallPresentation::Present(
                     if (state.canvas.zooming < 0.25f) {
                         draw_list->AddLine(p1, p2, color_curve, GUI_LINE_THICKNESS * state.canvas.zooming);
                     } else {
-                        draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2,
-                            color_curve, GUI_LINE_THICKNESS * state.canvas.zooming);
+                        draw_list->AddBezierCurve(p1, p1 + ImVec2((50.0f * megamol::gui::gui_scaling.Get()), 0.0f),
+                            p2 + ImVec2((-50.0f * megamol::gui::gui_scaling.Get()), 0.0f), p2, color_curve,
+                            GUI_LINE_THICKNESS * state.canvas.zooming);
                     }
                 }
 

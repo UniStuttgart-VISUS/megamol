@@ -327,6 +327,19 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
         auto lights = call_light->getData();
         auto distant_lights = lights.get<core::view::light::DistantLightType>();
 
+        if (!distant_lights.empty()) {
+            for (auto& l : distant_lights) {
+                const auto use_eyedir = l.eye_direction;
+                if (use_eyedir) {
+                    auto view_vec = cam.view_vector();
+                    l.direction[0] = view_vec[0];
+                    l.direction[1] = view_vec[1];
+                    l.direction[2] = view_vec[2];
+                }
+            }
+            curlight = distant_lights[0];
+        }
+
         if (distant_lights.size() > 1) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "[RaycastVolumeRenderer] Only one single 'Distant Light' source is supported by this renderer");
@@ -334,17 +347,6 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3D_2& cr) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn("[RaycastVolumeRenderer] No 'Distant Light' found");
         }
 
-        for (auto& l : distant_lights) {
-            const auto use_eyedir = l.eye_direction;
-            if (use_eyedir) {
-                auto view_vec = cam.view_vector();
-                l.direction[0] = view_vec[0];
-                l.direction[1] = view_vec[1];
-                l.direction[2] = view_vec[2];
-            }
-        }
-
-        curlight = distant_lights[0];
     }
 
     // setup

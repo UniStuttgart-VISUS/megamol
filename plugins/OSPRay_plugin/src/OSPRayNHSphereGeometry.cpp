@@ -54,9 +54,15 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
 
     this->structureContainer.dataChanged = false;
     if (cd == NULL) return false;
-	cd->SetTimeStamp(os->getTime());
-    cd->SetFrameID(os->getTime(), true); // isTimeForced flag set to true
-    if (this->datahash != cd->DataHash() || this->time != os->getTime() || this->InterfaceIsDirty()) {
+    cd->SetTimeStamp(os->getTime());
+    cd->SetFrameID(os->getTime(), true);
+    if (!(*cd)(1))
+        return false;
+    if (!(*cd)(0))
+        return false;
+
+    auto interface_dirty = this->InterfaceIsDirty();
+    if (this->datahash != cd->DataHash() || this->time != os->getTime() || interface_dirty ) {
         this->datahash = cd->DataHash();
         this->time = os->getTime();
         this->structureContainer.dataChanged = true;
@@ -64,8 +70,6 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
         return true;
     }
 
-    if (!(*cd)(1)) return false;
-    if (!(*cd)(0)) return false;
     if (cd->GetParticleListCount() == 0) return false;
 
     if (this->particleList.Param<core::param::IntParam>()->Value() > (cd->GetParticleListCount() - 1)) {
@@ -113,14 +117,16 @@ bool OSPRayNHSphereGeometry::readData(megamol::core::Call &call) {
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
     this->structureContainer.geometryType = geometryTypeEnum::NHSPHERES;
-    this->structureContainer.raw = parts.GetVertexData();
-    this->structureContainer.vertexLength = vertexLength;
-    this->structureContainer.vertexStride = vstride;
-    this->structureContainer.colorLength = colorLength;
-    this->structureContainer.colorStride = parts.GetColourDataStride();
-    this->structureContainer.partCount = partCount;
-    this->structureContainer.globalRadius = globalRadius;
-    this->structureContainer.mmpldColor = parts.GetColourDataType();
+    sphereStructure ss;
+    ss.raw = parts.GetVertexData();
+    ss.vertexLength = vertexLength;
+    ss.dataStride = vstride;
+    ss.colorLength = colorLength;
+    ss.partCount = partCount;
+    ss.globalRadius = globalRadius;
+    ss.mmpldColor = parts.GetColourDataType();
+
+    this->structureContainer.structure = ss;
 
     return true;
 }

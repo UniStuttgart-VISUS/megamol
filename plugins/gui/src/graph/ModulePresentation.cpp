@@ -63,7 +63,7 @@ void megamol::gui::ModulePresentation::Present(
         }
 
         // Init position of newly created module (check after size update)
-        if ((this->set_screen_position.x != FLT_MAX) && (this->set_screen_position.y != FLT_MAX)) {
+        if (this->set_screen_position != ImVec2(FLT_MAX, FLT_MAX)) {
             this->position = (this->set_screen_position - state.canvas.offset) / state.canvas.zooming;
             this->set_screen_position = ImVec2(FLT_MAX, FLT_MAX);
         }
@@ -438,7 +438,8 @@ void megamol::gui::ModulePresentation::Present(
                     }
 
                     // Draw Outline
-                    float border = ((!inout_module.main_view_name.empty()) ? (4.0f) : (1.0f)) * state.canvas.zooming;
+                    float border = ((!inout_module.main_view_name.empty()) ? (4.0f) : (1.0f)) *
+                                   megamol::gui::gui_scaling.Get() * state.canvas.zooming;
                     draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, GUI_RECT_CORNER_RADIUS,
                         ImDrawCornerFlags_All, border);
                 }
@@ -513,7 +514,8 @@ void megamol::gui::ModulePresentation::Update(megamol::gui::Module& inout_module
     float module_height = std::max(module_slot_height, text_button_height);
 
     // Clamp to minimum size
-    this->size = ImVec2(std::max(module_width, 100.0f), std::max(module_height, 50.0f));
+    this->size = ImVec2(std::max(module_width, (100.0f * megamol::gui::gui_scaling.Get())),
+        std::max(module_height, (50.0f * megamol::gui::gui_scaling.Get())));
 
     // UPDATE all Call Slots ---------------------
     for (auto& slot_pair : inout_module.GetCallSlots()) {
