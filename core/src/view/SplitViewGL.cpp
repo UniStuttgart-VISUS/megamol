@@ -1,11 +1,11 @@
 /*
- * SplitView.cpp
+ * SplitViewGL.cpp
  *
  * Copyright (C) 2012 by CGV (TU Dresden)
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "mmcore/view/SplitView.h"
+#include "mmcore/view/SplitViewGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -22,7 +22,7 @@ using megamol::core::utility::log::Log;
 
 enum Orientation { HORIZONTAL = 0, VERTICAL = 1 };
 
-view::SplitView::SplitView()
+view::SplitViewGL::SplitViewGL()
     : AbstractView()
     , render1Slot("render1", "Connects to the view 1 (left or top)")
     , render2Slot("render2", "Connects to the view 2 (right or bottom)")
@@ -75,24 +75,24 @@ view::SplitView::SplitView()
     }
 }
 
-view::SplitView::~SplitView(void) { this->Release(); }
+view::SplitViewGL::~SplitViewGL(void) { this->Release(); }
 
-float view::SplitView::DefaultTime(double instTime) const { return this->timeCtrl.Time(instTime); }
+float view::SplitViewGL::DefaultTime(double instTime) const { return this->timeCtrl.Time(instTime); }
 
-unsigned int view::SplitView::GetCameraSyncNumber() const {
-    Log::DefaultLog.WriteWarn("SplitView::GetCameraSyncNumber unsupported");
+unsigned int view::SplitViewGL::GetCameraSyncNumber() const {
+    Log::DefaultLog.WriteWarn("SplitViewGL::GetCameraSyncNumber unsupported");
     return 0u;
 }
 
-void view::SplitView::SerialiseCamera(vislib::Serialiser& serialiser) const {
-    Log::DefaultLog.WriteWarn("SplitView::SerialiseCamera unsupported");
+void view::SplitViewGL::SerialiseCamera(vislib::Serialiser& serialiser) const {
+    Log::DefaultLog.WriteWarn("SplitViewGL::SerialiseCamera unsupported");
 }
 
-void view::SplitView::DeserialiseCamera(vislib::Serialiser& serialiser) {
-    Log::DefaultLog.WriteWarn("SplitView::DeserialiseCamera unsupported");
+void view::SplitViewGL::DeserialiseCamera(vislib::Serialiser& serialiser) {
+    Log::DefaultLog.WriteWarn("SplitViewGL::DeserialiseCamera unsupported");
 }
 
-void view::SplitView::Render(const mmcRenderViewContext& context) {
+void view::SplitViewGL::Render(const mmcRenderViewContext& context) {
     // TODO: Affinity
 
 	 float time = static_cast<float>(context.Time);
@@ -248,7 +248,7 @@ void view::SplitView::Render(const mmcRenderViewContext& context) {
     renderAndBlit(this->fbo2, this->render2(), this->clientArea2);
 }
 
-bool view::SplitView::GetExtents(core::Call& call) {
+bool view::SplitViewGL::GetExtents(core::Call& call) {
     if (this->enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
         auto cr = this->render1();
         if (!(*cr)(CallRenderViewGL::CALL_EXTENTS)) return false;
@@ -267,20 +267,20 @@ bool view::SplitView::GetExtents(core::Call& call) {
     return true;
 }
 
-void view::SplitView::ResetView() {
+void view::SplitViewGL::ResetView() {
     for (auto crv : {this->render1(), this->render2()}) {
         if (crv != nullptr) (*crv)(CallRenderViewGL::CALL_RESETVIEW);
     }
 }
 
-void view::SplitView::Resize(unsigned int width, unsigned int height) {
+void view::SplitViewGL::Resize(unsigned int width, unsigned int height) {
     if (!vislib::math::IsEqual(this->clientArea.Width(), static_cast<float>(width)) ||
         !vislib::math::IsEqual(this->clientArea.Height(), static_cast<float>(height))) {
         this->updateSize(width, height);
     }
 }
 
-bool view::SplitView::OnRenderView(Call& call) {
+bool view::SplitViewGL::OnRenderView(Call& call) {
     auto* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
     if (crv == nullptr) return false;
 
@@ -300,13 +300,13 @@ bool view::SplitView::OnRenderView(Call& call) {
     return true;
 }
 
-void view::SplitView::UpdateFreeze(bool freeze) {
+void view::SplitViewGL::UpdateFreeze(bool freeze) {
     for (auto crv : {this->render1(), this->render2()}) {
         if (crv != nullptr) (*crv)(freeze ? CallRenderViewGL::CALL_FREEZE : CallRenderViewGL::CALL_UNFREEZE);
     }
 }
 
-bool view::SplitView::OnKey(Key key, KeyAction action, Modifiers mods) {
+bool view::SplitViewGL::OnKey(Key key, KeyAction action, Modifiers mods) {
     auto* crv = this->renderHovered();
     auto* crv1 = this->render1();
     auto* crv2 = this->render2();
@@ -335,7 +335,7 @@ bool view::SplitView::OnKey(Key key, KeyAction action, Modifiers mods) {
     return false;
 }
 
-bool view::SplitView::OnChar(unsigned int codePoint) {
+bool view::SplitViewGL::OnChar(unsigned int codePoint) {
     auto* crv = this->renderHovered();
     auto* crv1 = this->render1();
     auto* crv2 = this->render2();
@@ -362,7 +362,7 @@ bool view::SplitView::OnChar(unsigned int codePoint) {
     return false;
 }
 
-bool view::SplitView::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+bool view::SplitViewGL::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
     auto* crv = this->renderHovered();
     auto* crv1 = this->render1();
     auto* crv2 = this->render2();
@@ -399,7 +399,7 @@ bool view::SplitView::OnMouseButton(MouseButton button, MouseButtonAction action
 }
 
 
-bool view::SplitView::OnMouseMove(double x, double y) {
+bool view::SplitViewGL::OnMouseMove(double x, double y) {
     // x, y are coordinates in pixel
     this->mouseX = x;
     this->mouseY = y;
@@ -453,7 +453,7 @@ bool view::SplitView::OnMouseMove(double x, double y) {
 }
 
 
-bool view::SplitView::OnMouseScroll(double dx, double dy) {
+bool view::SplitViewGL::OnMouseScroll(double dx, double dy) {
     auto* crv = this->renderHovered();
     auto* crv1 = this->render1();
     auto* crv2 = this->render2();
@@ -481,24 +481,24 @@ bool view::SplitView::OnMouseScroll(double dx, double dy) {
     return false;
 }
 
-bool view::SplitView::create() {
+bool view::SplitViewGL::create() {
     this->fbo1 = std::make_shared<vislib::graphics::gl::FramebufferObject>();
     this->fbo2 = std::make_shared<vislib::graphics::gl::FramebufferObject>();
     return true;
 }
 
-void view::SplitView::release() {
+void view::SplitViewGL::release() {
     this->overrideCall = nullptr; // do not delete
     if (this->fbo1->IsValid()) this->fbo1->Release();
     if (this->fbo2->IsValid()) this->fbo2->Release();
 }
 
-void view::SplitView::unpackMouseCoordinates(float& x, float& y) {
+void view::SplitViewGL::unpackMouseCoordinates(float& x, float& y) {
     x *= this->clientArea.Width();
     y *= this->clientArea.Height();
 }
 
-void view::SplitView::updateSize(size_t width, size_t height) {
+void view::SplitViewGL::updateSize(size_t width, size_t height) {
     this->clientArea.SetWidth(static_cast<float>(width));
     this->clientArea.SetHeight(static_cast<float>(height));
     this->adjustClientAreas();
@@ -522,7 +522,7 @@ void view::SplitView::updateSize(size_t width, size_t height) {
 
 }
 
-void view::SplitView::adjustClientAreas() {
+void view::SplitViewGL::adjustClientAreas() {
     float sp = this->splitPositionSlot.Param<param::FloatParam>()->Value();
     float shw = this->splitWidthSlot.Param<param::FloatParam>()->Value() * 0.5f;
     auto so = static_cast<Orientation>(this->splitOrientationSlot.Param<param::EnumParam>()->Value());

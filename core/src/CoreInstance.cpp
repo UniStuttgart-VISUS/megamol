@@ -415,10 +415,10 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
     vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
-    // empty View2D
+    // empty View2DGL
     vd = std::make_shared<ViewDescription>("emptyview2d");
-    vd->AddModule(this->GetModuleDescriptionManager().Find("View2D"), "view");
-    // 'View2D' will show the title logo as long as no renderer is connected
+    vd->AddModule(this->GetModuleDescriptionManager().Find("View2DGL"), "view");
+    // 'View2DGL' will show the title logo as long as no renderer is connected
     vd->SetViewModuleID("view");
     this->builtinViewDescs.Register(vd);
 
@@ -3289,7 +3289,7 @@ bool megamol::core::CoreInstance::quickConnectUp(
         // test for end condition
         if (to == NULL) {
             for (SIZE_T i = 0; i < connInfo.Count(); i++) {
-                if (vislib::StringA("View2D").Equals(connInfo[i].nextMod->ClassName(), false) ||
+                if (vislib::StringA("View2DGL").Equals(connInfo[i].nextMod->ClassName(), false) ||
                     vislib::StringA("View3D").Equals(connInfo[i].nextMod->ClassName(), false) ||
                     vislib::StringA("View3D_2").Equals(connInfo[i].nextMod->ClassName(), false)) {
 

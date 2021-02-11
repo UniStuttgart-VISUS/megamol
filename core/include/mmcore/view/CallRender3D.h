@@ -1,7 +1,7 @@
 /*
  * CallRender3D.h
  *
- * Copyright (C) 2021 by Universitaet Stuttgart (VIS).
+ * Copyright (C) 2021 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 

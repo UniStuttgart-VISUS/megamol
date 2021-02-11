@@ -231,6 +231,25 @@ public:
      */
     virtual void UpdateFreeze(bool freeze) = 0;
 
+    /**
+     * cursor input callback
+     *
+     * @param call The calling call
+     *
+     * @return The return value
+     */
+    bool onResetView(Call& call);
+
+    bool OnKeyCallback(Call& call);
+
+    bool OnCharCallback(Call& call);
+
+    bool OnMouseButtonCallback(Call& call);
+
+    bool OnMouseMoveCallback(Call& call);
+
+    bool OnMouseScrollCallback(Call& call);
+
 protected:
     /** Typedef alias */
     typedef vislib::SingleLinkedList<Hooks*>::Iterator HooksIterator;
@@ -295,29 +314,10 @@ protected:
      */
     virtual void unpackMouseCoordinates(float& x, float& y);
 
-private:
-    /**
-     * cursor input callback
-     *
-     * @param call The calling call
-     *
-     * @return The return value
-     */
-    bool onResetView(Call& call);
-
-    bool OnKeyCallback(Call& call);
-
-    bool OnCharCallback(Call& call);
-
-    bool OnMouseButtonCallback(Call& call);
-
-    bool OnMouseMoveCallback(Call& call);
-
-    bool OnMouseScrollCallback(Call& call);
-
     /** Slot for incoming rendering requests */
     CalleeSlot renderSlot;
 
+private:
 #ifdef _WIN32
 #    pragma warning(disable : 4251)
 #endif /* _WIN32 */

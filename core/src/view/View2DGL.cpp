@@ -1,5 +1,5 @@
 /*
- * View2D.cpp
+ * View2DGL.cpp
  *
  * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart). 
  * Alle Rechte vorbehalten.
@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "mmcore/view/View2D.h"
+#include "mmcore/view/View2DGL.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/CallRender2DGL.h"
@@ -27,9 +27,9 @@ using namespace megamol::core;
 
 
 /*
- * view::View2D::View2D
+ * view::View2DGL::View2DGL
  */
-view::View2D::View2D(void)
+view::View2DGL::View2DGL(void)
     : view::AbstractRenderingView()
     , firstImg(false)
     , height(1.0f)
@@ -56,6 +56,31 @@ view::View2D::View2D(void)
     , overrideViewTile(NULL)
     , timeCtrl() {
 
+    // Override renderSlot behavior
+    this->renderSlot.SetCallback(
+        view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnChar),
+        &AbstractView::OnCharCallback);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseButton), &AbstractView::OnMouseButtonCallback);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
+        &AbstractView::OnMouseMoveCallback);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseScroll), &AbstractView::OnMouseScrollCallback);
+    // AbstractCallRender
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
+    // CallRenderViewGL
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_FREEZE), &AbstractView::OnFreezeView);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::onResetView);
+    this->MakeSlotAvailable(&this->renderSlot);
+
     this->rendererSlot.SetCompatibleCall<CallRender2DGLDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
 
@@ -64,15 +89,15 @@ view::View2D::View2D(void)
 
     this->storeCameraSettingsSlot.SetParameter(
         new param::ButtonParam(view::Key::KEY_C, (view::Modifier::SHIFT | view::Modifier::ALT)));
-    this->storeCameraSettingsSlot.SetUpdateCallback(&View2D::onStoreCamera);
+    this->storeCameraSettingsSlot.SetUpdateCallback(&View2DGL::onStoreCamera);
     this->MakeSlotAvailable(&this->storeCameraSettingsSlot);
 
     this->restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(view::Key::KEY_C, view::Modifier::ALT));
-    this->restoreCameraSettingsSlot.SetUpdateCallback(&View2D::onRestoreCamera);
+    this->restoreCameraSettingsSlot.SetUpdateCallback(&View2DGL::onRestoreCamera);
     this->MakeSlotAvailable(&this->restoreCameraSettingsSlot);
 
     this->resetViewSlot << new param::ButtonParam();
-    this->resetViewSlot.SetUpdateCallback(&View2D::onResetView);
+    this->resetViewSlot.SetUpdateCallback(&View2DGL::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
 
     this->showBBoxSlot << new param::BoolParam(true);
@@ -93,26 +118,26 @@ view::View2D::View2D(void)
 
 
 /*
- * view::View2D::~View2D
+ * view::View2DGL::~View2DGL
  */
-view::View2D::~View2D(void) {
+view::View2DGL::~View2DGL(void) {
     this->Release();
     this->overrideViewTile = NULL;
 }
 
 
 /*
- * view::View2D::GetCameraSyncNumber
+ * view::View2DGL::GetCameraSyncNumber
  */
-unsigned int view::View2D::GetCameraSyncNumber(void) const {
+unsigned int view::View2DGL::GetCameraSyncNumber(void) const {
     return this->viewUpdateCnt;
 }
 
 
 /*
- * view::View2D::SerialiseCamera
+ * view::View2DGL::SerialiseCamera
  */
-void view::View2D::SerialiseCamera(vislib::Serialiser& serialiser) const {
+void view::View2DGL::SerialiseCamera(vislib::Serialiser& serialiser) const {
     serialiser.Serialise(this->viewX, "viewX");
     serialiser.Serialise(this->viewY, "viewY");
     serialiser.Serialise(this->viewZoom, "viewZ");
@@ -120,9 +145,9 @@ void view::View2D::SerialiseCamera(vislib::Serialiser& serialiser) const {
 
 
 /*
- * view::View2D::DeserialiseCamera
+ * view::View2DGL::DeserialiseCamera
  */
-void view::View2D::DeserialiseCamera(vislib::Serialiser& serialiser) {
+void view::View2DGL::DeserialiseCamera(vislib::Serialiser& serialiser) {
     serialiser.Deserialise(this->viewX, "viewX");
     serialiser.Deserialise(this->viewY, "viewY");
     serialiser.Deserialise(this->viewZoom, "viewZ");
@@ -130,9 +155,9 @@ void view::View2D::DeserialiseCamera(vislib::Serialiser& serialiser) {
 
 
 /*
- * view::View2D::Render
+ * view::View2DGL::Render
  */
-void view::View2D::Render(const mmcRenderViewContext& context) {
+void view::View2DGL::Render(const mmcRenderViewContext& context) {
     float time = static_cast<float>(context.Time);
     double instTime = context.InstanceTime;
 
@@ -274,7 +299,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     }
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // depth could be required even for 2d
 
-	if (this->bboxColSlot.IsDirty()) {
+    if (this->bboxColSlot.IsDirty()) {
         this->bboxColSlot.Param<param::ColorParam>()->Value(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]);
         this->bboxColSlot.ResetDirty();
     }
@@ -321,11 +346,11 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
 
 
 /*
- * view::View2D::ResetView
+ * view::View2DGL::ResetView
  */
-void view::View2D::ResetView(void) {
+void view::View2DGL::ResetView(void) {
     // using namespace vislib::graphics;
-    VLTRACE(VISLIB_TRCELVL_INFO, "View2D::ResetView\n");
+    VLTRACE(VISLIB_TRCELVL_INFO, "View2DGL::ResetView\n");
 
     CallRender2DGL *cr2d = this->rendererSlot.CallAs<CallRender2DGL>();
     if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
@@ -351,9 +376,9 @@ void view::View2D::ResetView(void) {
 
 
 /*
- * view::View2D::Resize
+ * view::View2DGL::Resize
  */
-void view::View2D::Resize(unsigned int width, unsigned int height) {
+void view::View2DGL::Resize(unsigned int width, unsigned int height) {
     this->width = static_cast<float>(width);
     this->height = static_cast<float>(height);
     // intentionally empty ATM
@@ -361,9 +386,9 @@ void view::View2D::Resize(unsigned int width, unsigned int height) {
 
 
 /*
- * view::View2D::OnRenderView
+ * view::View2DGL::OnRenderView
  */
-bool view::View2D::OnRenderView(Call& call) {
+bool view::View2DGL::OnRenderView(Call& call) {
     float overBC[3];
     int overVP[4] = {0, 0, 0, 0};
     float overTile[6];
@@ -408,14 +433,14 @@ bool view::View2D::OnRenderView(Call& call) {
 
 
 /*
- * view::View2D::UpdateFreeze
+ * view::View2DGL::UpdateFreeze
  */
-void view::View2D::UpdateFreeze(bool freeze) {
+void view::View2DGL::UpdateFreeze(bool freeze) {
     // currently not supported
 }
 
 
-bool view::View2D::OnKey(Key key, KeyAction action, Modifiers mods) {
+bool view::View2DGL::OnKey(Key key, KeyAction action, Modifiers mods) {
     auto* cr = this->rendererSlot.CallAs<view::CallRender2DGL>();
     if (cr == NULL) return false;
 
@@ -435,7 +460,7 @@ bool view::View2D::OnKey(Key key, KeyAction action, Modifiers mods) {
 }
 
 
-bool view::View2D::OnChar(unsigned int codePoint) {
+bool view::View2DGL::OnChar(unsigned int codePoint) {
     auto* cr = this->rendererSlot.CallAs<view::CallRender2DGL>();
     if (cr == NULL) return false;
 
@@ -449,7 +474,7 @@ bool view::View2D::OnChar(unsigned int codePoint) {
 }
 
 
-bool view::View2D::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
+bool view::View2DGL::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
 	this->mouseMode = MouseMode::Propagate;
 
     auto* cr = this->rendererSlot.CallAs<view::CallRender2DGL>();
@@ -474,7 +499,7 @@ bool view::View2D::OnMouseButton(MouseButton button, MouseButtonAction action, M
 }
 
 
-bool view::View2D::OnMouseMove(double x, double y) {
+bool view::View2DGL::OnMouseMove(double x, double y) {
     if (this->mouseMode == MouseMode::Propagate) {
         float mx, my;
         mx = ((x * 2.0f / this->width) - 1.0f) * this->width / this->height;
@@ -528,7 +553,7 @@ bool view::View2D::OnMouseMove(double x, double y) {
 }
 
 
-bool view::View2D::OnMouseScroll(double dx, double dy) {
+bool view::View2DGL::OnMouseScroll(double dx, double dy) {
     auto* cr = this->rendererSlot.CallAs<view::CallRender2DGL>();
     if (cr == NULL) return false;
 
@@ -544,15 +569,15 @@ bool view::View2D::OnMouseScroll(double dx, double dy) {
 
 
 /*
- * view::View2D::unpackMouseCoordinates
+ * view::View2DGL::unpackMouseCoordinates
  */
-void view::View2D::unpackMouseCoordinates(float &x, float &y) {
+void view::View2DGL::unpackMouseCoordinates(float &x, float &y) {
     x *= this->width;
     y *= this->height;
     y -= 1.0f;
 }
 
-bool view::View2D::onStoreCamera(param::ParamSlot &p) {
+bool view::View2DGL::onStoreCamera(param::ParamSlot &p) {
     // TODO: multiple saved views, like View3DGL
     nlohmann::json out;
     out["viewX"] = this->viewX;
@@ -562,13 +587,13 @@ bool view::View2D::onStoreCamera(param::ParamSlot &p) {
     return true;
 }
 
-bool view::View2D::tryRestoringCamera(float &outViewX, float &outViewY, float &outViewZoom) {
+bool view::View2DGL::tryRestoringCamera(float &outViewX, float &outViewY, float &outViewZoom) {
     if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
         nlohmann::json obj = nlohmann::json::parse(
             this->cameraSettingsSlot.Param<param::StringParam>()->Value().PeekBuffer(), nullptr, false);
         if (!obj.is_object()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "View2D: Camera state invalid. Cannot deserialize.");
+                "View2DGL: Camera state invalid. Cannot deserialize.");
             return false;
         } else {
             if (obj.count("viewX") == 1 && obj.count("viewY") == 1 && obj.count("viewZoom") == 1 &&
@@ -578,7 +603,7 @@ bool view::View2D::tryRestoringCamera(float &outViewX, float &outViewY, float &o
                 outViewZoom = obj["viewZoom"];
             } else {
                 megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "View2D: Camera state invalid. Cannot deserialize.");
+                    "View2DGL: Camera state invalid. Cannot deserialize.");
                 return false;
             }
         }
@@ -586,7 +611,7 @@ bool view::View2D::tryRestoringCamera(float &outViewX, float &outViewY, float &o
     return true;
 }
 
-bool view::View2D::onRestoreCamera(param::ParamSlot &p) {
+bool view::View2DGL::onRestoreCamera(param::ParamSlot &p) {
     // TODO: multiple saved views, like View3DGL
     tryRestoringCamera(this->viewX, this->viewY, this->viewZoom);
     return true;
@@ -594,9 +619,9 @@ bool view::View2D::onRestoreCamera(param::ParamSlot &p) {
 
 
 /*
- * view::View2D::create
+ * view::View2DGL::create
  */
-bool view::View2D::create(void) {
+bool view::View2DGL::create(void) {
  
     this->firstImg = true;
 
@@ -605,26 +630,26 @@ bool view::View2D::create(void) {
 
 
 /*
- * view::View2D::release
+ * view::View2DGL::release
  */
-void view::View2D::release(void) {
+void view::View2DGL::release(void) {
     this->removeTitleRenderer();
     // intentionally empty
 }
 
 
 /*
- * view::View2D::onResetView
+ * view::View2DGL::onResetView
  */
-bool view::View2D::onResetView(param::ParamSlot& p) {
+bool view::View2DGL::onResetView(param::ParamSlot& p) {
     this->ResetView();
     return true;
 }
 
 /*
- * view::View2D::GetExtents
+ * view::View2DGL::GetExtents
  */
-bool view::View2D::GetExtents(Call& call) {
+bool view::View2DGL::GetExtents(Call& call) {
     view::CallRenderViewGL* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
     if (crv == nullptr) return false;
 

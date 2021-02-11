@@ -30,10 +30,10 @@
 #include "mmcore/view/special/DemoRenderer2D.h"
 #include "mmcore/view/special/ScreenShooter.h"
 #include "mmcore/view/TileView.h"
-#include "mmcore/view/View2D.h"
+#include "mmcore/view/View2DGL.h"
 #include "mmcore/view/View3DGL.h"
 #include "mmcore/view/BoundingBoxRenderer.h"
-#include "mmcore/view/SplitView.h"
+#include "mmcore/view/SplitViewGL.h"
 #include "mmcore/view/HeadView.h"
 #include "mmcore/job/DataWriterJob.h"
 #include "mmcore/job/JobThread.h"
@@ -86,10 +86,10 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     instance.RegisterAutoDescription<view::special::DemoRenderer2D>();
     instance.RegisterAutoDescription<view::special::ScreenShooter>();
     instance.RegisterAutoDescription<view::TileView>();
-    instance.RegisterAutoDescription<view::View2D>();
+    instance.RegisterAutoDescription<view::View2DGL>();
     instance.RegisterAutoDescription<view::View3DGL>();
     instance.RegisterAutoDescription<view::BoundingBoxRenderer>();
-    instance.RegisterAutoDescription<view::SplitView>();
+    instance.RegisterAutoDescription<view::SplitViewGL>();
     instance.RegisterAutoDescription<view::HeadView>();
     instance.RegisterAutoDescription<job::DataWriterJob>();
     instance.RegisterAutoDescription<job::JobThread>();
