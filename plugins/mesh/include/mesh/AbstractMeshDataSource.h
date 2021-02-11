@@ -46,7 +46,7 @@ namespace mesh {
          *
          * @return 'true' on success, 'false' on failure.
          */
-        virtual bool getMeshMetaDataCallback(core::Call& caller) = 0;
+        virtual bool getMeshMetaDataCallback(core::Call& caller);
 
         /**
          * Implementation of 'Release'.

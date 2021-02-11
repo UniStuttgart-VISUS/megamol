@@ -116,39 +116,7 @@ bool megamol::mesh::MeshBakery::getMeshDataCallback(core::Call& caller) {
 }
 
 bool megamol::mesh::MeshBakery::getMeshMetaDataCallback(core::Call& caller) {
-    CallMesh* lhs_mesh_call = dynamic_cast<CallMesh*>(&caller);
-    CallMesh* rhs_mesh_call = m_mesh_rhs_slot.CallAs<CallMesh>();
-
-    if (lhs_mesh_call == NULL) return false;
-    auto lhs_meta_data = lhs_mesh_call->getMetaData();
-
-    bool something_has_changed = false; // something has changed in the neath...
-    unsigned int frame_cnt = std::numeric_limits<unsigned int>::max();
-    auto bbox = lhs_meta_data.m_bboxs.BoundingBox();
-    auto cbbox = lhs_meta_data.m_bboxs.ClipBox();
-
-    if (rhs_mesh_call != NULL) {
-        auto rhs_meta_data = rhs_mesh_call->getMetaData();
-        rhs_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
-        rhs_mesh_call->setMetaData(rhs_meta_data);
-        if (!(*rhs_mesh_call)(1)) return false;
-        rhs_meta_data = rhs_mesh_call->getMetaData();
-
-        something_has_changed = rhs_mesh_call->hasUpdate();
-
-        frame_cnt = std::min(rhs_meta_data.m_frame_cnt, frame_cnt);
-
-        bbox.Union(rhs_meta_data.m_bboxs.BoundingBox());
-        cbbox.Union(rhs_meta_data.m_bboxs.ClipBox());
-    }
-
-    lhs_meta_data.m_frame_cnt = frame_cnt;
-    lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
-    lhs_meta_data.m_bboxs.SetClipBox(cbbox);
-
-    lhs_mesh_call->setMetaData(lhs_meta_data);
-
-    return true; 
+    return AbstractMeshDataSource::getMeshMetaDataCallback(caller);
 }
 
 void megamol::mesh::MeshBakery::createTriangleGeometry() {}

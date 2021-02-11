@@ -16,7 +16,10 @@ megamol::mesh::WavefrontObjLoader::WavefrontObjLoader()
 
 megamol::mesh::WavefrontObjLoader::~WavefrontObjLoader() {}
 
-bool megamol::mesh::WavefrontObjLoader::create(void) { return true; }
+bool megamol::mesh::WavefrontObjLoader::create(void) {
+    AbstractMeshDataSource::create();
+    return true;
+}
 
 bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) {
 
@@ -203,13 +206,7 @@ bool megamol::mesh::WavefrontObjLoader::getMeshDataCallback(core::Call& caller) 
 }
 
 bool megamol::mesh::WavefrontObjLoader::getMeshMetaDataCallback(core::Call& caller) { 
-
-    auto cm = dynamic_cast<CallMesh*>(&caller);
-
-    if (cm == nullptr) return false;
-
-    cm->setMetaData(m_meta_data);
-    return true;
+    return AbstractMeshDataSource::getMeshMetaDataCallback(caller);
 }
 
 void megamol::mesh::WavefrontObjLoader::release() {}

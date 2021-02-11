@@ -20,7 +20,6 @@
 #include "UIElement.h"
 #include "WavefrontObjLoader.h"
 #include "gltf/glTFFileLoader.h"
-#include "gltf/glTFMaterialDataSource.h"
 #include "gltf/glTFRenderTasksDataSource.h"
 #include "mesh/3DUIRenderTaskDataSource.h"
 #include "mesh/MeshCalls.h"
