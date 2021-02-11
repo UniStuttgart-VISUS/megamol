@@ -6,61 +6,9 @@
 
 MegaMol is a visualization middleware used to visualize point-based molecular data sets. This software is developed within the Collaborative Research Center 716, subproject ​D.3 at the ​[Visualization Research Center (VISUS)](https://www.visus.uni-stuttgart.de/en) of the University of Stuttgart and at the ​Computer Graphics and Visualization Group of the TU Dresden.  
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 MegaMol succeeds MolCloud, which has been developed at the University of Stuttgart in order to visualize point-based data sets. MegaMol is written in C++, and uses an OpenGL as Rendering-API and GLSL-Shader. It supports the operating systems Microsoft Windows and Linux, each in 64-bit version. In large parts, MegaMol is based on VISlib, a C++-class library for scientific visualization, which has also been developed at the University of Stuttgart. 
-=======
-MegaMol succeeds MolCloud, which has been developed at the University of Stuttgart in order to visualize point-based data sets. MegaMol is written in C++, and uses an OpenGL as Rendering-API and GLSL-Shader. It supports the operating systems Microsoft Windows and Linux, each in 32-bit and 64-bit versions. In large parts, MegaMol is based on VISlib, a C++-class library for scientific visualization, which has also been developed at the University of Stuttgart. 
->>>>>>> 4fa438626 (manual update ...)
-=======
-MegaMol succeeds MolCloud, which has been developed at the University of Stuttgart in order to visualize point-based data sets. MegaMol is written in C++, and uses an OpenGL as Rendering-API and GLSL-Shader. It supports the operating systems Microsoft Windows and Linux, each in 64-bit version. In large parts, MegaMol is based on VISlib, a C++-class library for scientific visualization, which has also been developed at the University of Stuttgart. 
->>>>>>> 88e3119f9 (docu)
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-## Manual
-=======
-## Changelog
-​See [changelog](https://github.com/UniStuttgart-VISUS/megamol/wiki/Changelog) for newly available features in the current version of MegaMol. 
-
-
-## Building MegaMol
-See the [manual](docs/manual.md) for more detailed isntructions.
-
-
-### Linux
-1. Clone the MegaMol repository
-2. Create a build folder
-3. Invoke `ccmake .` inside the build folder
-4. Execute `make` to build MegaMol
-5. Run `make install` to create your MegaMol installation
-6. Test Megamol with
-
-        $ ./megamol.sh -p ../examples/testspheres.lua
-
-<<<<<<< HEAD
->>>>>>> ba7df3ade (manual update)
-
-See the [manual](docs/manual.md) for detailed instructions on how to build and use MegaMol.
-
-
-## Changelog
-
-​See the [changelog](https://github.com/UniStuttgart-VISUS/megamol/wiki/Changelog) for newly available features in the current version of MegaMol. 
-
-## License
-
-See the [license](LICENSE) file.
-=======
-## Building and Using MegaMol
-See the [manual](docs/manual.md) for detailed instructions.
-
-
-## Changelog
-​See [changelog](https://github.com/UniStuttgart-VISUS/megamol/wiki/Changelog) for newly available features in the current version of MegaMol. 
->>>>>>> 800f17d5c (manual update)
-=======
 ## Manual
 
 See the [manual](docs/manual.md) for detailed instructions on how to build and use MegaMol.
@@ -72,29 +20,13 @@ See the [manual](docs/manual.md) for detailed instructions on how to build and u
 
 ## License
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 See the [license](LICENSE) file.
->>>>>>> 55301faa9 (docu ...)
-=======
-See the [license](LICENSE) file:
-![License](LICENSE)
->>>>>>> 58a641e06 (file include test)
-=======
-See the [license](LICENSE) file.
->>>>>>> 94da8d87e (docu)
 
 
 ## Citing MegaMol
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 55301faa9 (docu ...)
 Please use one of the following methods to reference the MegaMol project.
 
-=======
->>>>>>> 800f17d5c (manual update)
 **MegaMol – A Comprehensive Prototyping Framework for Visualizations**  
 P. Gralka, M. Becher, M. Braun, F. Frieß, C. Müller, T. Rau, K. Schatz, C. Schulz, M. Krone, G. Reina, T. Ertl  
 The European Physical Journal Special Topics, vol. 227, no. 14, pp. 1817--1829, 2019  

@@ -7,20 +7,9 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 ## Contents
 
 - [Create new Plugin](#create-new-plugin)
-<<<<<<< HEAD
-<<<<<<< HEAD
     - [Add own plugin using the template](#add-own-plugin-using-the-template) 
 - [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
     - [Recipe](#recipe) 
-=======
-    - [Add own plugin using the template](#add-own-plugin-using-the-template) 
-- [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
-<<<<<<< HEAD
-    - [Recipe](#) 
->>>>>>> 7056d6a53 (docu)
-=======
-    - [Recipe](#recipe) 
->>>>>>> ce3f629ba (docu)
     - [Usage: ```DATACallRead```](#usage-datacallread) 
     - [Usage: ```DataCallWrite```](#usage-datacallwrite) 
 - [Synchronized Selection across Modules](#synchronized-selection-across-modules)
@@ -42,31 +31,10 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 - Add section describing remote console usage
 
 -->
-<<<<<<< HEAD
-=======
-- [Bi-Directional Communication across Modules](#bi-directional-communication-across-modules)
-- [Synchronized Selection across Modules](#synchronized-selection-across-modules)
-- [Graph Manipulation](#graph-manipulation)
-- [Build System](#build-system)
-<<<<<<< HEAD
-- [Parameter Widgets](#parameter-widgets)
->>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
-=======
-- [GUI Parameter Widgets](#gui-parameter-widgets)
->>>>>>> aea90c840 (docu)
-=======
->>>>>>> cdd0bbbc9 (docu)
 
 <!-- /TOC -->
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
->>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
-=======
->>>>>>> 7056d6a53 (docu)
 <!-- ###################################################################### -->
 -----
 ## Create new Plugin
@@ -74,10 +42,6 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 ***UPDATE required***
 
 ### Add own plugin using the template
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 94da8d87e (docu)
 1. Copy the template folder `../megamol/plugins/template`.
 2. Rename the copied folder to the intended plugin name.
 3. Execute the `instawiz.pl` script inside the new folder.
@@ -88,21 +52,6 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 6. Implement the content of your plugin.
 7. Write a `Readme.md` for your plugin (mandatory).
 8. Add the folder to your local git.
-<<<<<<< HEAD
-=======
-    1. Copy the template folder `../megamol/plugins/template`.
-    2. Rename the copied folder to the intended plugin name.
-    3. Execute the `instawiz.pl` script inside the new folder.
-        1. The script detects the plugin name.
-        2. Autogenerate the GUID.
-    4. Remove `instawiz.pl`
-    5. Add libraries/dependencies to `CMakeLists.txt` (optional).
-    6. Implement the content of your plugin.
-    7. Write a `Readme.md` for your plugin (mandatory).
-    8. Add the folder to your local git.
->>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
-=======
->>>>>>> 94da8d87e (docu)
 
 
 <!-- ###################################################################### -->
@@ -371,31 +320,6 @@ Additionally, information about the libraries can be queried with the command ``
 
 <!-- ###################################################################### -->
 -----
-<<<<<<< HEAD
-<<<<<<< HEAD
 ## GUI Parameter Widgets
 
 See separate [developer information for GUI plugin](../../plugins/gui#information-for-developers).
-<<<<<<< HEAD
-=======
-## Parameter Widgets
-=======
-## GUI Parameter Widgets
->>>>>>> aea90c840 (docu)
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-See [developer information in GUI plugin](gui#3-information-for-developers).
->>>>>>> 1a324379f (moved mmpld specs to separate folder, deguide ...)
-=======
-See [developer information in GUI plugin](../plugins/gui#3-information-for-developers).
->>>>>>> 83aa4eadb (docu)
-=======
-See [developer information in GUI plugin](../plugins/gui#information-for-developers).
->>>>>>> 98308507c (docu)
-=======
-See [developer information in GUI plugin](../../plugins/gui#information-for-developers).
->>>>>>> 9712fbc5e (docu)
-=======
->>>>>>> ce3f629ba (docu)
