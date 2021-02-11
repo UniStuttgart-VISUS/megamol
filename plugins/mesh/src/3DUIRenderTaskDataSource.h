@@ -15,12 +15,12 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 
-#include "AbstractGPURenderTaskDataSource.h"
+#include "mesh/AbstractGPURenderTaskDataSource.h"
 #include "mesh/MeshCalls.h"
 #include "mesh/GPUMeshCollection.h"
 #include "vislib/math/Matrix.h"
 
-#include "3DInteractionCollection.h"
+#include "mesh/3DInteractionCollection.h"
 
 namespace megamol {
 namespace mesh {

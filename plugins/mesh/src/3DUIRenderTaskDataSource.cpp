@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "mesh/3DUIRenderTaskDataSource.h"
+#include "3DUIRenderTaskDataSource.h"
 
 #include "tiny_gltf.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
