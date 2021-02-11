@@ -49,7 +49,7 @@ view::AbstractView::AbstractView(void) : Module(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
     this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_RESETVIEW), &AbstractView::onResetView);
-    this->MakeSlotAvailable(&this->renderSlot);
+    //this->MakeSlotAvailable(&this->renderSlot);
 }
 
 
@@ -259,7 +259,7 @@ bool view::AbstractView::GetExtents(Call& call) {
 
 bool view::AbstractView::OnKeyCallback(Call& call) {
     try {
-        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        view::AbstractCallRender& cr = dynamic_cast<view::AbstractCallRender&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Key && "Callback invocation mismatched input event");
         return this->OnKey(evt.keyData.key, evt.keyData.action, evt.keyData.mods);
@@ -271,7 +271,7 @@ bool view::AbstractView::OnKeyCallback(Call& call) {
 
 bool view::AbstractView::OnCharCallback(Call& call) {
     try {
-        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        view::AbstractCallRender& cr = dynamic_cast<view::AbstractCallRender&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::Char && "Callback invocation mismatched input event");
         return this->OnChar(evt.charData.codePoint);
@@ -283,7 +283,7 @@ bool view::AbstractView::OnCharCallback(Call& call) {
 
 bool view::AbstractView::OnMouseButtonCallback(Call& call) {
     try {
-        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        view::AbstractCallRender& cr = dynamic_cast<view::AbstractCallRender&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseButton && "Callback invocation mismatched input event");
         return this->OnMouseButton(evt.mouseButtonData.button, evt.mouseButtonData.action, evt.mouseButtonData.mods);
@@ -295,7 +295,7 @@ bool view::AbstractView::OnMouseButtonCallback(Call& call) {
 
 bool view::AbstractView::OnMouseMoveCallback(Call& call) {
     try {
-        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        view::AbstractCallRender& cr = dynamic_cast<view::AbstractCallRender&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseMove && "Callback invocation mismatched input event");
         return this->OnMouseMove(evt.mouseMoveData.x, evt.mouseMoveData.y);
@@ -307,7 +307,7 @@ bool view::AbstractView::OnMouseMoveCallback(Call& call) {
 
 bool view::AbstractView::OnMouseScrollCallback(Call& call) {
     try {
-        view::CallRenderView& cr = dynamic_cast<view::CallRenderView&>(call);
+        view::AbstractCallRender& cr = dynamic_cast<view::AbstractCallRender&>(call);
         auto& evt = cr.GetInputEvent();
         ASSERT(evt.tag == InputEvent::Tag::MouseScroll && "Callback invocation mismatched input event");
         return this->OnMouseScroll(evt.mouseScrollData.dx, evt.mouseScrollData.dy);

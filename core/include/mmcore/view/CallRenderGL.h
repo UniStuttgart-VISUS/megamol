@@ -18,13 +18,6 @@ namespace view {
 class CallRenderGL : public AbstractCallRender {
 public:
 
-
-    /** Ctor. */
-    CallRenderGL(void);
-
-    /** Dtor. */
-    virtual ~CallRenderGL(void);
-
     /**
      * Assignment operator
      *
@@ -41,6 +34,13 @@ public:
     inline std::shared_ptr<vislib::graphics::gl::FramebufferObject> GetFramebufferObject() {
         return _framebuffer;
     }
+
+protected:
+    /** Ctor. */
+    CallRenderGL(void);
+
+    /** Dtor. */
+    virtual ~CallRenderGL(void);
 
 private:
 

@@ -113,6 +113,31 @@ View3DGL::View3DGL(void)
     , valuesFromOutside(false)
     , cameraControlOverrideActive(false) {
 
+    // Override renderSlot behavior
+    this->renderSlot.SetCallback(
+        view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
+    this->renderSlot.SetCallback(
+        view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnChar), &AbstractView::OnCharCallback);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseButton),
+        &AbstractView::OnMouseButtonCallback);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
+        &AbstractView::OnMouseMoveCallback);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
+        &AbstractView::OnMouseScrollCallback);
+    // AbstractCallRender
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
+    // CallRenderViewGL
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_FREEZE), &AbstractView::OnFreezeView);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::onResetView);
+    this->MakeSlotAvailable(&this->renderSlot);
+
     using vislib::sys::KeyCode;
 
     // this->camParams = this->cam.Parameters();

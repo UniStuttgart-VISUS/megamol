@@ -56,6 +56,31 @@ view::View2D::View2D(void)
     , overrideViewTile(NULL)
     , timeCtrl() {
 
+    // Override renderSlot behavior
+    this->renderSlot.SetCallback(
+        view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnChar),
+        &AbstractView::OnCharCallback);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseButton), &AbstractView::OnMouseButtonCallback);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
+        &AbstractView::OnMouseMoveCallback);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseScroll), &AbstractView::OnMouseScrollCallback);
+    // AbstractCallRender
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
+    // CallRenderViewGL
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_FREEZE), &AbstractView::OnFreezeView);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
+    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::onResetView);
+    this->MakeSlotAvailable(&this->renderSlot);
+
     this->rendererSlot.SetCompatibleCall<CallRender2DGLDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
 
@@ -274,7 +299,7 @@ void view::View2D::Render(const mmcRenderViewContext& context) {
     }
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // depth could be required even for 2d
 
-	if (this->bboxColSlot.IsDirty()) {
+    if (this->bboxColSlot.IsDirty()) {
         this->bboxColSlot.Param<param::ColorParam>()->Value(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]);
         this->bboxColSlot.ResetDirty();
     }

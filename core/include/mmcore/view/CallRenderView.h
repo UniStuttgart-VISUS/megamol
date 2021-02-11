@@ -41,21 +41,6 @@ namespace view {
             return "Call for rendering visual elements into a single target";
         }
 
-	/** Function index of 'render' */
-        static const unsigned int CALL_RENDER = AbstractCallRender::FnRender;
-
-        /** Function index of 'getExtents' */
-        static const unsigned int CALL_EXTENTS = AbstractCallRender::FnGetExtents;
-
-        /** Function index of 'freeze' */
-        static const unsigned int CALL_FREEZE = 7;
-
-        /** Function index of 'unfreeze' */
-        static const unsigned int CALL_UNFREEZE = 8;
-
-        /** Function index of 'ResetView' */
-        static const unsigned int CALL_RESETVIEW = 9;
-
         /**
          * Answer the number of functions used for this call.
          *

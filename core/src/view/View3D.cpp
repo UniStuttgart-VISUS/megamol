@@ -94,6 +94,8 @@ View3D::View3D(void)
     , valuesFromOutside(false)
     , cameraControlOverrideActive(false) {
 
+    this->MakeSlotAvailable(&this->renderSlot);
+
     using vislib::sys::KeyCode;
 
     this->cam.resolution_gate(cam_type::screen_size_type(100, 100));
