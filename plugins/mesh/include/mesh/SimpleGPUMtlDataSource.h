@@ -62,7 +62,7 @@ namespace mesh {
 
         /** The btf file name */
         core::param::ParamSlot m_btf_filename_slot;
-
+        
         /** */
         size_t m_material_idx;
     };

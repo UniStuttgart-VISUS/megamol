@@ -14,7 +14,6 @@ megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource(
         , m_rendertask_collection({nullptr, {}})
         , m_renderTask_lhs_slot("renderTasks", "The slot publishing the loaded data")
         , m_renderTask_rhs_slot("chainRenderTasks", "The slot for chaining render task data sources.")
-        , m_material_slot("gpuMaterials", "Connects to a material data source")
         , m_mesh_slot("gpuMeshes", "Connects to a mesh data source") {
     this->m_renderTask_lhs_slot.SetCallback(
         CallGPURenderTaskData::ClassName(), "GetData", &AbstractGPURenderTaskDataSource::getDataCallback);
@@ -24,9 +23,6 @@ megamol::mesh::AbstractGPURenderTaskDataSource::AbstractGPURenderTaskDataSource(
 
     this->m_renderTask_rhs_slot.SetCompatibleCall<GPURenderTasksDataCallDescription>();
     this->MakeSlotAvailable(&this->m_renderTask_rhs_slot);
-
-    this->m_material_slot.SetCompatibleCall<CallGPUMaterialDataDescription>();
-    this->MakeSlotAvailable(&this->m_material_slot);
 
     this->m_mesh_slot.SetCompatibleCall<CallGPUMeshDataDescription>();
     this->MakeSlotAvailable(&this->m_mesh_slot);
@@ -47,7 +43,6 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::C
 
     CallGPURenderTaskData* lhs_rt_call = dynamic_cast<CallGPURenderTaskData*>(&caller);
     CallGPURenderTaskData* rhs_rt_call = m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
-    CallGPUMaterialData* material_call = m_material_slot.CallAs<CallGPUMaterialData>();
     CallGPUMeshData* mesh_call = this->m_mesh_slot.CallAs<CallGPUMeshData>();
 
     if (lhs_rt_call == NULL)
@@ -75,14 +70,6 @@ bool megamol::mesh::AbstractGPURenderTaskDataSource::getMetaDataCallback(core::C
         if (rhs_meta_data.m_bboxs.IsClipBoxValid()) {
             cbbox.Union(rhs_meta_data.m_bboxs.ClipBox());
         }
-    }
-
-    if (material_call != NULL) {
-        auto mtl_meta_data = material_call->getMetaData();
-
-        if (!(*material_call)(1))
-            return false;
-        mtl_meta_data = material_call->getMetaData();
     }
 
     if (mesh_call != NULL) {

@@ -4,16 +4,32 @@
 #include "tiny_gltf.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/Matrix.h"
+#include "mmcore/param/FilePathParam.h"
 
 #include "mesh/MeshCalls.h"
 
 megamol::mesh::GlTFRenderTasksDataSource::GlTFRenderTasksDataSource()
-        : m_glTF_callerSlot("gltfModels", "Connects a collection of loaded glTF files") {
+        : m_version(0)
+        , m_glTF_callerSlot("gltfModels", "Connects a collection of loaded glTF files")
+        , m_material_collection(nullptr)
+        , m_btf_filename_slot("BTF filename", "Overload default gltf shader") {
     this->m_glTF_callerSlot.SetCompatibleCall<CallGlTFDataDescription>();
     this->MakeSlotAvailable(&this->m_glTF_callerSlot);
+
+    this->m_btf_filename_slot << new core::param::FilePathParam("dfr_gltfExample");
+    this->MakeSlotAvailable(&this->m_btf_filename_slot);
 }
 
 megamol::mesh::GlTFRenderTasksDataSource::~GlTFRenderTasksDataSource() {}
+
+bool megamol::mesh::GlTFRenderTasksDataSource::create(void) {
+    AbstractGPURenderTaskDataSource::create();
+
+    m_material_collection = std::make_shared<GPUMaterialCollection>();
+    m_material_collection->addMaterial(this->instance(), "dfr_gltfExample", "dfr_gltfExample");
+
+    return true;
+}
 
 bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& caller) {
     CallGPURenderTaskData* lhs_rtc = dynamic_cast<CallGPURenderTaskData*>(&caller);
@@ -35,15 +51,10 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& calle
     }
     gpu_render_tasks.push_back(m_rendertask_collection.first);
 
-    CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<CallGPUMaterialData>();
     CallGPUMeshData* mc = this->m_mesh_slot.CallAs<CallGPUMeshData>();
     CallGlTFData* gltf_call = this->m_glTF_callerSlot.CallAs<CallGlTFData>();
 
-    if (mtlc != nullptr && mc != nullptr && gltf_call != nullptr) {
-        if (!(*mtlc)(0)) {
-            return false;
-        }
-
+    if (mc != nullptr && gltf_call != nullptr) {
         if (!(*mc)(0)) {
             return false;
         }
@@ -52,11 +63,18 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& calle
             return false;
         }
 
-        auto gpu_mtl_storage = mtlc->getData();
         auto gpu_mesh_storage = mc->getData();
 
-        if (gltf_call->hasUpdate()) {
+        if (gltf_call->hasUpdate() || this->m_btf_filename_slot.IsDirty()) {
             ++m_version;
+
+            if (this->m_btf_filename_slot.IsDirty()) {
+                m_btf_filename_slot.ResetDirty();
+                auto vislib_filename = m_btf_filename_slot.Param<core::param::FilePathParam>()->Value();
+                std::string filename(vislib_filename.PeekBuffer());
+                m_material_collection->clear();
+                m_material_collection->addMaterial(this->instance(), filename, filename);
+            }
 
             clearRenderTaskCollection();
 
@@ -101,9 +119,9 @@ bool megamol::mesh::GlTFRenderTasksDataSource::getDataCallback(core::Call& calle
                         } 
 
                         //TODO will use its own material storage in the future
-                        if (sub_mesh.mesh != nullptr && gpu_mtl_storage[0]->getMaterials().size()) {
+                        if (sub_mesh.mesh != nullptr && !m_material_collection->getMaterials().empty()) {
                             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-                            auto const& shader = gpu_mtl_storage[0]->getMaterials().begin()->second.shader_program;
+                            auto const& shader = m_material_collection->getMaterials().begin()->second.shader_program;
 
                             std::string rt_identifier(std::string(this->FullName()) + "_" + sub_mesh_identifier);
                             m_rendertask_collection.first->addRenderTask(rt_identifier, shader, gpu_batch_mesh,

@@ -11,7 +11,11 @@
 
 #include "mesh/MeshCalls.h"
 
-megamol::mesh::MeshViewerRenderTasks::MeshViewerRenderTasks() : m_version(0) {}
+megamol::mesh::MeshViewerRenderTasks::MeshViewerRenderTasks()
+        : m_version(0), m_material_slot("gpuMaterials", "Connects to a material data source") {
+    this->m_material_slot.SetCompatibleCall<CallGPUMaterialDataDescription>();
+    this->MakeSlotAvailable(&this->m_material_slot);
+}
 
 megamol::mesh::MeshViewerRenderTasks::~MeshViewerRenderTasks() {}
 

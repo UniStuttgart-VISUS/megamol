@@ -12,11 +12,11 @@
 megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::ThreeDimensionalUIRenderTaskDataSource()
         : m_version(0)
         , m_interaction_collection(new ThreeDimensionalInteractionCollection)
+        , m_material_collection(nullptr)
         , m_3DInteraction_calleeSlot(
               "getInteraction", "The slot publishing available interactions and receiving pending manipulations")
         , m_3DInteraction_callerSlot("", "")
-        , m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file")
-        , m_glTF_cached_hash(0) {
+        , m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file") {
     this->m_3DInteraction_calleeSlot.SetCallback(
         Call3DInteraction::ClassName(), "GetData", &ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback);
     this->m_3DInteraction_calleeSlot.SetCallback(
@@ -31,6 +31,15 @@ megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::ThreeDimensionalUIRenderT
 }
 
 megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::~ThreeDimensionalUIRenderTaskDataSource() {}
+
+bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::create(void) {
+    AbstractGPURenderTaskDataSource::create();
+
+    m_material_collection = std::make_shared<GPUMaterialCollection>();
+    m_material_collection->addMaterial(this->instance(), "3DUI", "3DUI");
+
+    return true;
+}
 
 bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core::Call& caller) {
     CallGPURenderTaskData* lhs_rtc = dynamic_cast<CallGPURenderTaskData*>(&caller);
@@ -52,12 +61,6 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
     }
     gpu_render_tasks.push_back(m_rendertask_collection.first);
 
-    CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<CallGPUMaterialData>();
-    if (mtlc == NULL)
-        return false;
-    if (!(*mtlc)(0))
-        return false;
-
     CallGPUMeshData* mc = this->m_mesh_slot.CallAs<CallGPUMeshData>();
     if (mc == NULL)
         return false;
@@ -70,8 +73,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
     if (!(*gltf_call)(0))
         return false;
 
-
-    bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate() || gltf_call->hasUpdate();
+    bool something_has_changed = mc->hasUpdate() || gltf_call->hasUpdate();
 
     if (something_has_changed) {
         ++m_version;
@@ -79,7 +81,6 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
         clearRenderTaskCollection();
 
         auto model = gltf_call->getData().second;
-        auto gpu_mtl_storage = mtlc->getData();
         auto gpu_mesh_storage = mc->getData();
 
         for (size_t node_idx = 0; node_idx < model->nodes.size(); node_idx++) {
@@ -138,6 +139,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
             }
         }
 
+        auto const& shader = m_material_collection->getMaterials().find("3DUI")->second.shader_program;
 
         int render_task_index = 0;
         {
@@ -148,7 +150,6 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             auto const& sub_mesh = m_UI_template_elements[3].first;
             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-            auto const& shader = gpu_mtl_storage[0]->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(
@@ -167,7 +168,6 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             auto const& sub_mesh = m_UI_template_elements[2].first;
             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-            auto const& shader = gpu_mtl_storage[0]->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(
@@ -186,7 +186,6 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             auto const& sub_mesh = m_UI_template_elements[1].first;
             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-            auto const& shader = gpu_mtl_storage[0]->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(
@@ -205,7 +204,6 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             auto const& sub_mesh = m_UI_template_elements[0].first;
             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-            auto const& shader = gpu_mtl_storage[0]->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(

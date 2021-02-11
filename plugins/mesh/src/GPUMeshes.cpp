@@ -103,8 +103,7 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
         lhs_mesh_call->setMetaData(lhs_meta_data);
     } else {
-        m_mesh_collection.first->clear();
-        m_mesh_collection.second.clear();
+        clearMeshCollection();
 
         ++m_version;
     }

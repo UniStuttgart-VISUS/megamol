@@ -16,6 +16,7 @@ megamol::mesh::MeshBakery::MeshBakery()
 megamol::mesh::MeshBakery::~MeshBakery() { this->Release(); }
 
 bool megamol::mesh::MeshBakery::create(void) {
+    AbstractMeshDataSource::create();
     return true;
 }
 

@@ -48,6 +48,13 @@ public:
     ~GlTFRenderTasksDataSource();
 
 protected:
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
+
     virtual bool getDataCallback(core::Call& caller);
 
     virtual bool getMetaDataCallback(core::Call& caller);
@@ -58,6 +65,12 @@ private:
 
     /** Slot to retrieve the gltf model */
     megamol::core::CallerSlot m_glTF_callerSlot;
+
+    /** In-place material collection (initialized with gltf btf) */
+    std::shared_ptr<GPUMaterialCollection> m_material_collection;
+
+    /** The btf file name to override the default gltf material */
+    core::param::ParamSlot m_btf_filename_slot;
 };
 } // namespace mesh
 } // namespace megamol
