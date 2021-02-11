@@ -175,6 +175,9 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
     int w = ow / 2;
     int h = oh / 2;
 
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("o: %i", frametype);
+
+
     glm::mat4 pm;
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -188,17 +191,20 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         }
     }
     auto pmvm = pm * mvm;
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("start: %i, %i", invMatrices.size(), moveMatrices.size());
 
     if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         framesNeeded = 2;
         if (invMatrices.size() != framesNeeded) {
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
+            frametype = 0;
         }
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("a: %i, %i",invMatrices.size(), moveMatrices.size());
 
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
         glm::mat4 jit;
-
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("ft: %i", frametype);
         invMatrices[frametype] = pmvm;
 
         glm::mat4 inversePMVM = glm::inverse(pmvm);
@@ -246,9 +252,14 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         if (invMatrices.size() != framesNeeded) {
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
+            frametype = 0;
         }
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("yes");
 
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+
+        megamol::core::utility::log::Log::DefaultLog.WriteInfo("ft: %i", frametype);
+
 
         glm::mat4 jit;
         glm::mat4 pmvm = pm * mvm;
@@ -308,6 +319,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         if (invMatrices.size() != framesNeeded) {
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
+            frametype = 0;
         }
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
 
@@ -365,6 +377,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
             moveMatrices.resize(framesNeeded);
             hammerPositions.resize(ssLevel);
             hammerPositions = calculateHammersley(ssLevel);
+            frametype = 0;
         }
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
 
@@ -410,6 +423,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 
         glViewport(0, 0, w, h);
     }
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("b: %i, %i", invMatrices.size(), moveMatrices.size());
 
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(modelViewMatrix_column);
@@ -418,6 +432,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 }
 
 void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int ssLevel) {
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("rs: %i, %i", invMatrices.size(), moveMatrices.size());
 
     if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
         glViewport(0, 0, w, h);
@@ -517,6 +532,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
 
         frametype = (frametype + 1) % framesNeeded;
     }
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("rf: %i, %i", invMatrices.size(), moveMatrices.size());
 }
 
 bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
