@@ -394,16 +394,7 @@ bool megamol::gui::ParameterPresentation::LuaButton(const std::string& id, const
         }
 
         if (copy_to_clipboard) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, lua_param_cmd.c_str());
-#elif _WIN32
             ImGui::SetClipboardText(lua_param_cmd.c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] LUA Command:\n%s", lua_param_cmd.c_str());
-#endif
         }
         ImGui::EndPopup();
     }
@@ -1609,31 +1600,13 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
 
         // Copy
         if (ImGui::Button("Copy")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, value.c_str());
-#elif _WIN32
             ImGui::SetClipboardText(value.c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[GUI] Transfer Function JSON String:\n%s", value.c_str());
-#endif
         }
         ImGui::SameLine();
 
         // Paste
         if (ImGui::Button("Paste")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            inout_parameter.SetValue(std::string(::glfwGetClipboardString(glfw_win)));
-#elif _WIN32
             inout_parameter.SetValue(std::string(ImGui::GetClipboardText()));
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-#endif
             value = std::get<std::string>(inout_parameter.GetValue());
             if (this->use_external_tf_editor) {
                 if (this->tf_editor_external_ptr != nullptr) {

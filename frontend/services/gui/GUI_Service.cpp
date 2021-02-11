@@ -101,6 +101,7 @@ void GUI_Service::digestChangedRequestedResources() {
         m_resource_state.window_size.x = static_cast<float>(std::get<0>(size_event));
         m_resource_state.window_size.y = static_cast<float>(std::get<1>(size_event));
     }
+    gui->SetClipboardFunc(window_events->_getClipboardString_Func, window_events->_setClipboardString_Func, window_events->_clipboard_user_data);
 
     /// KeyboardEvents = resource index 2
     auto keyboard_events = &this->m_requestedResourceReferences[2].getResource<megamol::frontend_resources::KeyboardEvents>();
