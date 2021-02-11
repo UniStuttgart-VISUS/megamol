@@ -1,5 +1,5 @@
 /*
- * View2D.h
+ * View2DGL.h
  *
  * Copyright (C) 2008 - 2010 by VISUS (Universitaet Stuttgart). 
  * Alle Rechte vorbehalten.
@@ -31,7 +31,7 @@ namespace view {
     /**
      * Base class of rendering graph calls
      */
-    class View2D: public AbstractRenderingView {
+    class View2DGL: public AbstractRenderingView {
     public:
 
         /**
@@ -40,7 +40,7 @@ namespace view {
          * @return The name of this module.
          */
         static const char *ClassName(void) {
-            return "View2D";
+            return "View2DGL";
         }
 
         /**
@@ -62,10 +62,10 @@ namespace view {
         }
 
         /** Ctor. */
-        View2D(void);
+        View2DGL(void);
 
         /** Dtor. */
-        virtual ~View2D(void);
+        virtual ~View2DGL(void);
 
         /**
          * Answer the default time for this view

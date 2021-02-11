@@ -106,7 +106,7 @@ protected:
             view::MouseFlagsSetFlag(mouseFlags, view::MOUSEFLAG_BUTTON_MIDDLE_DOWN, down);
         }
         // TODO: Verify semantics of (X,Y) coordinates...
-        // - Could be "world space" (see View2D/View3D) instead of window space!
+        // - Could be "world space" (see View2DGL/View3D) instead of window space!
         // - If so, then provide a freaking method in the Call to the the transformation instead of passing around black
         // magic!
         this->MouseEvent(lastX, lastY, mouseFlags);

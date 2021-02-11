@@ -123,7 +123,7 @@ void GUIView::Render(const mmcRenderViewContext& context) {
 
         crv->SetFramebufferObject(_fbo);
         crv->SetInstanceTime(context.InstanceTime);
-        // Should be negative to trigger animation! (see View3DGL.cpp line ~612 | View2D.cpp line ~661):
+        // Should be negative to trigger animation! (see View3DGL.cpp line ~612 | View2DGL.cpp line ~661):
         crv->SetTime(-1.0f);
         this->gui.PreDraw(viewport, viewport, crv->InstanceTime());
         (*crv)(core::view::AbstractCallRender::FnRender);
