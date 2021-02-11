@@ -740,6 +740,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
 
     ImGuiStyle& style = ImGui::GetStyle();
     const std::string delimiter("|");
+    auto button_size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
 
     float child_height = ImGui::GetFrameHeightWithSpacing();
     if (this->add_menu_scrollbar_height) {
@@ -826,8 +827,57 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     ImGui::TextUnformatted(delimiter.c_str());
     ImGui::SameLine();
 
-    auto button_size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
+    // GRAPH LAYOUT
+    if (ImGui::Button("Layout Graph")) {
+        this->graph_layout = 1;
+    }
+    ImGui::SameLine();
 
+    // MODULES
+    if (ImGui::Checkbox("Module Names", &this->show_module_names)) {
+        for (auto& module_ptr : inout_graph.GetModules()) {
+            module_ptr->present.label_visible = this->show_module_names;
+        }
+        this->update = true;
+    }
+    ImGui::SameLine();
+
+    // CALLS
+    if (ImGui::Checkbox("Call Names", &this->show_call_names)) {
+        for (auto& call_ptr : inout_graph.GetCalls()) {
+            call_ptr->present.label_visible = this->show_call_names;
+        }
+        this->update = true;
+    }
+    ImGui::SameLine();
+
+    // SLOTS
+    if (ImGui::Checkbox("Slot Names", &this->show_slot_names)) {
+        for (auto& module_ptr : inout_graph.GetModules()) {
+            for (auto& callslot_types : module_ptr->GetCallSlots()) {
+                for (auto& callslots : callslot_types.second) {
+                    callslots->present.label_visible = this->show_slot_names;
+                }
+            }
+        }
+        for (auto& group_ptr : inout_graph.GetGroups()) {
+            for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
+                for (auto& interfaceslot_ptr : interfaceslots_map.second) {
+                    interfaceslot_ptr->present.label_visible = this->show_slot_names;
+                }
+            }
+        }
+        this->update = true;
+    }
+    ImGui::SameLine();
+
+    // GRID
+    ImGui::Checkbox("Grid", &this->show_grid);
+    ImGui::SameLine();
+    ImGui::TextUnformatted(delimiter.c_str());
+    ImGui::SameLine();
+
+    // SCROLLING
     const float scroll_fac = 10.0f;
     ImGui::Text("Scrolling: %.2f, %.2f", this->graph_state.canvas.scrolling.x, this->graph_state.canvas.scrolling.y);
     ImGui::SameLine();
@@ -865,6 +915,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     ImGui::TextUnformatted(delimiter.c_str());
     ImGui::SameLine();
 
+    // ZOOMING
     ImGui::Text("Zooming: %.2f", this->graph_state.canvas.zooming);
     ImGui::SameLine();
     if (ImGui::Button("+###incr_zooming", button_size)) {
@@ -880,52 +931,10 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     }
     ImGui::SameLine();
     this->tooltip.Marker("Mouse Wheel");
+
     ImGui::SameLine();
     ImGui::TextUnformatted(delimiter.c_str());
     ImGui::SameLine();
-
-    ImGui::Checkbox("Grid", &this->show_grid);
-
-    ImGui::SameLine();
-
-    if (ImGui::Checkbox("Call Names", &this->show_call_names)) {
-        for (auto& call_ptr : inout_graph.GetCalls()) {
-            call_ptr->present.label_visible = this->show_call_names;
-        }
-        this->update = true;
-    }
-    ImGui::SameLine();
-
-    if (ImGui::Checkbox("Module Names", &this->show_module_names)) {
-        for (auto& module_ptr : inout_graph.GetModules()) {
-            module_ptr->present.label_visible = this->show_module_names;
-        }
-        this->update = true;
-    }
-    ImGui::SameLine();
-
-    if (ImGui::Checkbox("Slot Names", &this->show_slot_names)) {
-        for (auto& module_ptr : inout_graph.GetModules()) {
-            for (auto& callslot_types : module_ptr->GetCallSlots()) {
-                for (auto& callslots : callslot_types.second) {
-                    callslots->present.label_visible = this->show_slot_names;
-                }
-            }
-        }
-        for (auto& group_ptr : inout_graph.GetGroups()) {
-            for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
-                for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-                    interfaceslot_ptr->present.label_visible = this->show_slot_names;
-                }
-            }
-        }
-        this->update = true;
-    }
-    ImGui::SameLine();
-
-    if (ImGui::Button("Layout Graph")) {
-        this->graph_layout = 1;
-    }
 
     // --------------------------------------------------
     ImGui::SameLine();
