@@ -1,5 +1,5 @@
 /*
- * SplitView.h
+ * SplitViewGL.h
  *
  * Copyright (C) 2012 by CGV (TU Dresden)
  * Alle Rechte vorbehalten.
@@ -28,14 +28,14 @@ namespace view {
 /**
  * Abstract base class of rendering views
  */
-class SplitView : public AbstractView {
+class SplitViewGL : public AbstractView {
 public:
     /**
      * Answer the name of this module.
      *
      * @return The name of this module.
      */
-    static const char* ClassName() { return "SplitView"; }
+    static const char* ClassName() { return "SplitViewGL"; }
 
     /**
      * Answer a human readable description of this module.
@@ -64,10 +64,10 @@ public:
     static bool SupportQuickstart() { return false; }
 
     /** Ctor. */
-    SplitView();
+    SplitViewGL();
 
     /** Dtor. */
-    ~SplitView() override;
+    ~SplitViewGL() override;
 
     /**
      * Answer the default time for this view
