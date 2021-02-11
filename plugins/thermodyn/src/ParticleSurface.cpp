@@ -210,7 +210,7 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
                 auto first_length = (center - first_point).squared_length();
 
                 DFacet test_facet = DFacet(first_cell, 0);
-                        
+
 
                 /*std::copy_if(tri.cells_begin(), tri.cells_end(), std::back_inserter(cells),
                     [squared_alpha](Delaunay::Cell const& cell) {
@@ -218,8 +218,8 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
                         auto squared_radius = (cell.vertex(0)->point() - center).squared_length();
                         return squared_radius <= squared_alpha;
                     });*/
-                std::copy_if(tri.cells_begin(), tri.cells_end(), std::back_inserter(cells),
-                    [alpha](Delaunay::Cell const& cell) {
+                std::copy_if(
+                    tri.cells_begin(), tri.cells_end(), std::back_inserter(cells), [alpha](Delaunay::Cell const& cell) {
                         auto const& a = cell.vertex(0)->point();
                         auto const& b = cell.vertex(1)->point();
                         auto const& c = cell.vertex(2)->point();
@@ -260,7 +260,7 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
                     vertices.push_back(d.x());
                     vertices.push_back(d.y());
                     vertices.push_back(d.z());
-                    
+
                     indices.push_back(base_idx + 0);
                     indices.push_back(base_idx + 1);
                     indices.push_back(base_idx + 2);
@@ -314,7 +314,7 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
 
     meta_data.m_frame_cnt = in_data->FrameCount();
     meta_data.m_frame_ID = _frame_id;
-    //meta_data.m_data_hash = ++_out_data_hash;
+    // meta_data.m_data_hash = ++_out_data_hash;
     out_mesh->setMetaData(meta_data);
     out_mesh->setData(_mesh_access_collection, ++_out_data_hash);
 

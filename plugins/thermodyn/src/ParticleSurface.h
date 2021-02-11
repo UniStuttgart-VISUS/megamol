@@ -7,16 +7,16 @@
 #include "mmcore/param/ParamSlot.h"
 
 // CGAL
-#include "CGAL/Exact_predicates_inexact_constructions_kernel.h"
 #include "CGAL/Exact_predicates_exact_constructions_kernel.h"
+#include "CGAL/Exact_predicates_inexact_constructions_kernel.h"
 
 #include "CGAL/Delaunay_triangulation_3.h"
 #include "CGAL/Fixed_alpha_shape_3.h"
 #include "CGAL/Fixed_alpha_shape_cell_base_3.h"
 #include "CGAL/Fixed_alpha_shape_vertex_base_3.h"
 
-#include "CGAL/Min_sphere_of_points_d_traits_d.h"
 #include "CGAL/Min_sphere_d.h"
+#include "CGAL/Min_sphere_of_points_d_traits_d.h"
 // END CGAL
 
 #include "mesh/MeshCalls.h"
@@ -44,7 +44,7 @@ public:
     virtual ~ParticleSurface();
 
     using Gt = CGAL::Exact_predicates_inexact_constructions_kernel;
-    //using Gt = CGAL::Exact_predicates_exact_constructions_kernel;
+    // using Gt = CGAL::Exact_predicates_exact_constructions_kernel;
 
     using Vb = CGAL::Fixed_alpha_shape_vertex_base_3<Gt>;
     using Fb = CGAL::Fixed_alpha_shape_cell_base_3<Gt>;
@@ -66,8 +66,6 @@ protected:
     void release() override;
 
 private:
-    
-
     /*using Traits = CGAL::Min_sphere_of_points_d_traits_d<Gt, Point_3::FT, 3>;
     using Min_sphere = CGAL::Min_sphere_d<Traits>;*/
 
