@@ -11,7 +11,11 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE;BUILD_MESH_PLUGIN" CACHE INTERNAL "")
+
+  find_package(CGAL CONFIG REQUIRED)
+
+  require_external(Eigen)
 
   # Collect source files
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
@@ -26,7 +30,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mesh Eigen CGAL::CGAL)
 
   # Installation rules for generated files
   #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
@@ -34,6 +38,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   if(WIN32)
     #install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     #install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
+    install(FILES "${CGAL_DIR}/../../bin/mpir.dll" "${CGAL_DIR}/../../bin/mpfr.dll" DESTINATION "bin")
   else()
     #install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
   endif()
