@@ -46,10 +46,17 @@ namespace mesh {
         };
 
         struct SubMeshData {
-            SubMeshData() : mesh(nullptr), sub_mesh_draw_command() {}
+            SubMeshData() : mesh(nullptr), sub_mesh_draw_command(), vertex_cnt(0), index_cnt(0) {}
 
+            /** OpenGL mesh object that contain the data for this submesh */
             std::shared_ptr<BatchedMeshes> mesh;
+            /** Draw command to render this submesh */
             glowl::DrawElementsCommand sub_mesh_draw_command;
+
+            /** Number of vertices used by this submesh */
+            unsigned int vertex_cnt;
+            /** Number of indices used by this submesh */
+            unsigned int index_cnt;
         };
 
         GPUMeshCollection() = default;
@@ -63,7 +70,15 @@ namespace mesh {
 
         void addMesh(std::string const& identifier, SubMeshData submesh);
 
+        template<typename VertexBufferIterator, typename IndexBufferIterator>
+        void updateSubMesh(std::string const& identifier, std::vector<glowl::VertexLayout> const& vertex_descriptor,
+            std::vector<IteratorPair<VertexBufferIterator>> const& vertex_buffers,
+            IteratorPair<IndexBufferIterator> index_buffer, GLenum index_type, GLenum primitive_type);
+
         void deleteSubMesh(std::string const& identifier);
+
+        // Future work: defragmentation of GPU mesh data after several deletions
+        //void defrag();
 
         void clear();
 
@@ -156,6 +171,8 @@ namespace mesh {
         new_sub_mesh.sub_mesh_draw_command.cnt = req_index_cnt;
         new_sub_mesh.sub_mesh_draw_command.instance_cnt = 1;
         new_sub_mesh.sub_mesh_draw_command.base_instance = 0;
+        new_sub_mesh.vertex_cnt = req_vertex_cnt;
+        new_sub_mesh.index_cnt = req_index_cnt;
         m_sub_mesh_data.insert({identifier, new_sub_mesh});
 
         // upload data to GPU
@@ -172,6 +189,69 @@ namespace mesh {
         // updated vertices and indices used
         batched_mesh->vertices_used += req_vertex_cnt;
         batched_mesh->indices_used += req_index_cnt;
+    }
+
+    template<typename VertexBufferIterator, typename IndexBufferIterator>
+    inline void GPUMeshCollection::updateSubMesh(std::string const& identifier,
+        std::vector<glowl::VertexLayout> const& vertex_descriptor,
+        std::vector<IteratorPair<VertexBufferIterator>> const& vertex_buffers,
+        IteratorPair<IndexBufferIterator> index_buffer, GLenum index_type, GLenum primitive_type) {
+
+        auto query = m_sub_mesh_data.find(identifier);
+
+        if (query != m_sub_mesh_data.end()) {
+
+            if (vertex_descriptor == query->second.mesh->mesh->getVertexLayouts()
+                && index_type == query->second.mesh->mesh->getIndexType()
+                && primitive_type == query->second.mesh->mesh->getPrimitiveType())
+            {
+                typedef typename std::iterator_traits<IndexBufferIterator>::value_type IndexBufferType;
+                typedef typename std::iterator_traits<VertexBufferIterator>::value_type VertexBufferType;
+
+                std::vector<size_t> vb_attrib_byte_sizes;
+                for (auto& vertex_layout : vertex_descriptor) {
+                    vb_attrib_byte_sizes.push_back(vertex_layout.stride);
+                }
+
+                // get vertex buffer data pointers and byte sizes
+                std::vector<GLvoid*> vb_data;
+                std::vector<size_t> vb_byte_sizes;
+                for (auto& vb : vertex_buffers) {
+                    vb_data.push_back(reinterpret_cast<GLvoid*>(&(*std::get<0>(vb))));
+                    vb_byte_sizes.push_back(sizeof(VertexBufferType) * std::distance(std::get<0>(vb), std::get<1>(vb)));
+                }
+                // compute overall byte size of index buffer
+                size_t ib_byte_size =
+                    sizeof(VertexBufferType) * std::distance(std::get<0>(index_buffer), std::get<1>(index_buffer));
+
+                // computer number of requested vertices and indices
+                size_t req_vertex_cnt = vb_byte_sizes.front() / vb_attrib_byte_sizes.front();
+                size_t req_index_cnt = ib_byte_size / glowl::computeByteSize(index_type);
+
+                if (query->second.vertex_cnt == req_vertex_cnt && query->second.index_cnt == req_index_cnt) {
+                    size_t index_byte_offset = query->second.sub_mesh_draw_command.first_idx * glowl::computeByteSize(index_type);
+                    query->second.mesh->mesh->bufferIndexSubData(
+                        reinterpret_cast<GLvoid*>(&*std::get<0>(index_buffer)), ib_byte_size, index_byte_offset);
+
+                    int vb_idx = 0;
+                    for (auto& vb : vertex_buffers) {
+                        size_t vb_stride = 0;
+                        for (auto& attrib : vertex_descriptor[vb_idx].attributes) {
+                            vb_stride += glowl::computeAttributeByteSize(attrib);
+                        }
+                        size_t vertex_byte_offset = query->second.sub_mesh_draw_command.base_vertex * vb_stride;
+                        query->second.mesh->mesh->bufferVertexSubData(
+                            vb_idx, vb_data[vb_idx], vb_byte_sizes[vb_idx], vertex_byte_offset);
+
+                        vb_idx++;
+                    }
+                }
+            }
+
+        } else {
+            // mesh for update not found, do nothing?
+        }
+
     }
 
     inline void GPUMeshCollection::addMesh(std::string const& identifier, SubMeshData submesh) {
