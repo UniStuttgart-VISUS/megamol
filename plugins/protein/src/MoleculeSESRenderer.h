@@ -275,10 +275,10 @@ namespace protein {
         megamol::core::CallerSlot bsDataCallerSlot;
 
         /** camera information */
-        vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+        cam_type::minimal_state_type cameraInfo;
         
         // camera information
-        vislib::SmartPtr<vislib::graphics::CameraParameters> MoleculeSESRenderercameraInfo;
+        cam_type::minimal_state_type MoleculeSESRenderercameraInfo;
 
         megamol::core::param::ParamSlot postprocessingParam;
         megamol::core::param::ParamSlot rendermodeParam;

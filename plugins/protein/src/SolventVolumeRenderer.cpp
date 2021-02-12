@@ -418,7 +418,7 @@ bool protein::SolventVolumeRenderer::GetExtents( Call& call) {
         scale = 1.0f;
     }
 
-    BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
+    BoundingBoxes_2 &bbox = cr3d->AccessBoundingBoxes();
     bbox.SetObjectSpaceBBox( boundingBox);
     bbox.SetWorldSpaceBBox(
         ( boundingBox.Left() + xoff) * scale,
@@ -435,7 +435,7 @@ bool protein::SolventVolumeRenderer::GetExtents( Call& call) {
     vislib::math::Point<float, 3> protrenbbc;
     if( protrencr3d ) {
         (*protrencr3d)(core::view::AbstractCallRender::FnGetExtents); // GetExtents
-        BoundingBoxes &protrenbb = protrencr3d->AccessBoundingBoxes();
+        BoundingBoxes_2 &protrenbb = protrencr3d->AccessBoundingBoxes();
         this->protrenScale =  protrenbb.ObjectSpaceBBox().Width() / boundingBox.Width();
         //this->protrenTranslate = ( protrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
         if( mol ) {

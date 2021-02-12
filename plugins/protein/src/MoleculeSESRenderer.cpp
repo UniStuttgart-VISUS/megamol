@@ -817,7 +817,7 @@ fragSrc.Append( vertSrc.Append(new ShaderSource::VersionSnippet(120)));
  */
 bool MoleculeSESRenderer::GetExtents(Call& call) {
 
-    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
+    view::AbstractCallRender *cr3d = dynamic_cast<view::AbstractCallRender *>(&call);
     if( cr3d == NULL ) return false;
 
     MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
@@ -851,7 +851,7 @@ bool MoleculeSESRenderer::GetExtents(Call& call) {
     scale = 2.0f / vislib::math::Max(vislib::math::Max(protein->BoundingBox().Width(),
         protein->BoundingBox().Height()), protein->BoundingBox().Depth());
 
-    BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
+    BoundingBoxes_2 &bbox = cr3d->AccessBoundingBoxes();
     bbox.SetObjectSpaceBBox(protein->BoundingBox());
     bbox.SetWorldSpaceBBox(
         (protein->BoundingBox().Left() + xoff) * scale,
@@ -876,7 +876,7 @@ bool MoleculeSESRenderer::Render( Call& call ) {
     unsigned int cntRS = 0;
 
     // cast the call to Render3D
-    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
+    view::AbstractCallRender *cr3d = dynamic_cast<view::AbstractCallRender *>(&call);
     if( cr3d == NULL ) return false;
 
     // get camera information

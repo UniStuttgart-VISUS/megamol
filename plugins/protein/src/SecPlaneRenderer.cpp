@@ -15,7 +15,7 @@
 #include "ogl_error_check.h"
 //#include "vislib_vector_typedefs.h"
 
-#include "mmcore/view/AbstractCallRender3D.h"
+#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/EnumParam.h"

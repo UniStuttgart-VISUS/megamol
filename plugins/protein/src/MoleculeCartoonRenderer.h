@@ -264,7 +264,7 @@ namespace protein {
 		megamol::core::CallerSlot molColorCallerSlot;
         
         /** camera information */
-        core::view::Camera_2 cameraInfo;
+        cam_type::minimal_state_type cameraInfo;
 
         megamol::core::param::ParamSlot renderingModeParam;
         /** parameter slot for coloring mode */

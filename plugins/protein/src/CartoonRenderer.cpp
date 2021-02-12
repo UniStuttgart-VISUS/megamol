@@ -168,8 +168,8 @@ bool CartoonRenderer::create(void) {
  * protein::CartoonRenderer::GetExtents
  */
 bool CartoonRenderer::GetExtents(Call& call) {
-    view::AbstractCallRender3D *cr3d =
-            dynamic_cast<view::AbstractCallRender3D *>(&call);
+    view::AbstractCallRender *cr3d =
+            dynamic_cast<view::AbstractCallRender *>(&call);
     if (cr3d == NULL)
         return false;
 
@@ -205,8 +205,8 @@ bool CartoonRenderer::GetExtents(Call& call) {
  */
 bool CartoonRenderer::Render(Call& call) {
     // cast the call to Render3D
-    view::AbstractCallRender3D *cr3d =
-            dynamic_cast<view::AbstractCallRender3D *>(&call);
+    view::AbstractCallRender *cr3d =
+            dynamic_cast<view::AbstractCallRender *>(&call);
     if (cr3d == NULL)
         return false;
 

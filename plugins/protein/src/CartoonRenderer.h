@@ -17,7 +17,7 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/Renderer3DModuleDS.h"
-#include "mmcore/view/AbstractCallRender3D.h"
+#include "mmcore/view/AbstractCallRender.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
@@ -130,7 +130,7 @@ namespace protein {
         megamol::core::CallerSlot bsDataCallerSlot;
 
         /** camera information */
-        vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+        cam_type::minimal_state_type cameraInfo;
 
         /** shader for the spheres (raycasting view) */
         vislib::graphics::gl::GLSLShader sphereShader;

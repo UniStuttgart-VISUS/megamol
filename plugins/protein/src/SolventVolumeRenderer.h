@@ -232,7 +232,7 @@ namespace protein {
         megamol::core::CalleeSlot dataOutSlot;
 				
 		// camera information
-		vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+		cam_type::minimal_state_type cameraInfo;
         // scaling factor for the scene
         float scale;
         // translation of the scene

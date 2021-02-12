@@ -291,7 +291,7 @@ private:
 #endif /* _WIN32 */
 
 	/// Camera information
-	vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+	cam_type::minimal_state_type cameraInfo;
 };
 
 

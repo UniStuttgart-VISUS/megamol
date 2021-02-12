@@ -119,7 +119,7 @@ bool SolPathDataSource::getExtent(megamol::core::Call &call) {
         this->loadData();
     }
 
-    megamol::core::BoundingBoxes &bboxs = spdc->AccessBoundingBoxes();
+    megamol::core::BoundingBoxes_2 &bboxs = spdc->AccessBoundingBoxes();
     bboxs.SetObjectSpaceBBox(this->bbox);
     bboxs.SetObjectSpaceClipBox(bboxs.ObjectSpaceBBox());
     bboxs.MakeScaledWorld(1.0f); // at least this is what i think

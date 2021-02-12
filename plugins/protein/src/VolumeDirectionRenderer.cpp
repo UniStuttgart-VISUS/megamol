@@ -137,7 +137,7 @@ bool VolumeDirectionRenderer::create(void) {
  * protein::VolumeDirectionRenderer::GetExtents
  */
 bool VolumeDirectionRenderer::GetExtents(Call& call) {
-    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
+    view::AbstractCallRender *cr3d = dynamic_cast<view::AbstractCallRender *>(&call);
     if( cr3d == NULL ) return false;
 
     
@@ -175,7 +175,7 @@ bool VolumeDirectionRenderer::GetExtents(Call& call) {
  */
 bool VolumeDirectionRenderer::Render(Call& call) {
     // cast the call to Render3D
-    view::AbstractCallRender3D *cr = dynamic_cast<view::AbstractCallRender3D *>(&call);
+    view::AbstractCallRender *cr = dynamic_cast<view::AbstractCallRender *>(&call);
     if( cr == NULL ) return false;
 
     // get camera information

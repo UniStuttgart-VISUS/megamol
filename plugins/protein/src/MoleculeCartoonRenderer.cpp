@@ -660,7 +660,7 @@ bool MoleculeCartoonRenderer::create(void) {
  * MoleculeCartoonRenderer::GetExtents
  */
 bool MoleculeCartoonRenderer::GetExtents(Call& call) {
-    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
+    view::AbstractCallRender *cr3d = dynamic_cast<view::AbstractCallRender *>(&call);
     if (cr3d == NULL) return false;
 
     MolecularDataCall *mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
@@ -714,7 +714,7 @@ bool MoleculeCartoonRenderer::GetExtents(Call& call) {
     scale = 2.0f / vislib::math::Max(vislib::math::Max(protein->BoundingBox().Width(),
         protein->BoundingBox().Height()), protein->BoundingBox().Depth());
 
-    BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
+    BoundingBoxes_2 &bbox = cr3d->AccessBoundingBoxes();
     bbox.SetObjectSpaceBBox(protein->BoundingBox());
     bbox.SetWorldSpaceBBox(
         (protein->BoundingBox().Left() + xoff) * scale,
@@ -731,7 +731,7 @@ bool MoleculeCartoonRenderer::GetExtents(Call& call) {
     vislib::math::Point<float, 3> solrenbbc;
     if( solrencr3d ) {
         (*solrencr3d)(core::view::AbstractCallRender::FnGetExtents); // GetExtents
-        BoundingBoxes &solrenbb = solrencr3d->AccessBoundingBoxes();
+        BoundingBoxes_2 &solrenbb = solrencr3d->AccessBoundingBoxes();
         //this->solrenScale =  solrenbb.ObjectSpaceBBox().Width() / boundingBox.Width();
         //this->solrenTranslate = ( solrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
     }
@@ -750,16 +750,16 @@ bool MoleculeCartoonRenderer::GetExtents(Call& call) {
  */
 bool MoleculeCartoonRenderer::Render(Call& call) {
     // cast the call to Render3D
-    view::AbstractCallRender3D *cr3d = dynamic_cast<view::AbstractCallRender3D *>(&call);
+    view::AbstractCallRender *cr3d = dynamic_cast<view::AbstractCallRender *>(&call);
     if( cr3d == NULL ) return false;
 
-    // get the pointer to AbstractCallRender3D (molecule renderer)
-    view::AbstractCallRender3D *molrencr3d;
+    // get the pointer to AbstractCallRender (molecule renderer)
+    view::AbstractCallRender *molrencr3d;
     if(!this->offscreenRenderingParam.Param<param::BoolParam>()->Value()) {
-        molrencr3d = this->molRendererCallerSlot.CallAs<view::AbstractCallRender3D>();
+        molrencr3d = this->molRendererCallerSlot.CallAs<view::AbstractCallRender>();
     }
     else {
-        molrencr3d = this->molRendererORCallerSlot.CallAs<view::AbstractCallRender3D>();
+        molrencr3d = this->molRendererORCallerSlot.CallAs<view::AbstractCallRender>();
     }
     
     // get pointer to BindingSiteCall
@@ -769,7 +769,7 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
     }
 
     // get camera information
-    this->cameraInfo = cr3d->GetCamera();
+    this->cameraInfo = cr3d->GetCameraState();
 
     // =============== Protein Rendering ===============
     if( molrencr3d ) {
@@ -1470,7 +1470,7 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataCall *mol,
     else {
         this->tubeORShader.Enable();
         glUniform2fARB(this->tubeORShader.ParameterLocation("zValues"),
-            cameraInfo.near_clipping_plane(), cameraInfo.far_clipping_plane());
+            cameraInfo.near_clipping_plane, cameraInfo.far_clipping_plane);
         glUniform2fARB(this->tubeORShader.ParameterLocation("winSize"),
             curVP[2], curVP[3]);
     }
@@ -1500,7 +1500,7 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataCall *mol,
     else {
         this->arrowORShader.Enable();
         glUniform2fARB(this->arrowORShader.ParameterLocation("zValues"),
-            cameraInfo.near_clipping_plane(), cameraInfo.far_clipping_plane());
+            cameraInfo.near_clipping_plane, cameraInfo.far_clipping_plane);
         glUniform2fARB(this->arrowORShader.ParameterLocation("winSize"),
             curVP[2], curVP[3]);
     }
@@ -1528,7 +1528,7 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataCall *mol,
     else {
         this->helixORShader.Enable();
         glUniform2fARB(this->helixORShader.ParameterLocation("zValues"),
-            cameraInfo.near_clipping_plane(), cameraInfo.near_clipping_plane());
+            cameraInfo.near_clipping_plane, cameraInfo.near_clipping_plane);
         glUniform2fARB(this->helixORShader.ParameterLocation("winSize"),
             curVP[2], curVP[3]);
     }
@@ -3074,7 +3074,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly ( const MolecularDataCall
     else {
         this->tubeORShader.Enable();
         glUniform2fARB(this->tubeORShader.ParameterLocation("zValues"),
-            cameraInfo.near_clipping_plane(), cameraInfo.far_clipping_plane());
+            cameraInfo.near_clipping_plane, cameraInfo.far_clipping_plane);
         glUniform2fARB(this->tubeORShader.ParameterLocation("winSize"),
             curVP[2], curVP[3]);
     }
@@ -3344,13 +3344,10 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
     }
 
     // ---------- actual rendering ----------
+    view::Camera_2 cam(cameraInfo);
 
     // get viewpoint parameters for raycasting
-    float viewportStuff[4] = {
-        cameraInfo.image_tile().left(),
-        cameraInfo.image_tile().bottom(),
-        cameraInfo.image_tile().width(),
-        cameraInfo.image_tile().height()};
+    float viewportStuff[4] = {cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height()};
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -3363,17 +3360,17 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
 		this->sphereShader.Enable();
 		// set shader variables
 		glUniform4fvARB(sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-		glUniform3fvARB(sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cameraInfo.view_vector()));
-        glUniform3fvARB(sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cameraInfo.right_vector()));
-        glUniform3fvARB(sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cameraInfo.up_vector()));
+                glUniform3fvARB(sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cam.view_vector()));
+                glUniform3fvARB(sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cam.right_vector()));
+                glUniform3fvARB(sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cam.up_vector()));
 	} else {
 		this->sphereShaderOR.Enable();
 		// set shader variables
 		glUniform4fvARB(sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB(sphereShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cameraInfo.view_vector()));
-        glUniform3fvARB(sphereShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cameraInfo.right_vector()));
-        glUniform3fvARB(sphereShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cameraInfo.up_vector()));
-		glUniform2fARB(sphereShaderOR.ParameterLocation("zValues"), cameraInfo.near_clipping_plane(), cameraInfo.far_clipping_plane());
+                glUniform3fvARB(sphereShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam.view_vector()));
+                glUniform3fvARB(sphereShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cam.right_vector()));
+                glUniform3fvARB(sphereShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cam.up_vector()));
+                glUniform2fARB(sphereShaderOR.ParameterLocation("zValues"), cam.near_clipping_plane(), cam.far_clipping_plane());
 	}
     // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, vertSpheres.PeekElements());
@@ -3392,9 +3389,9 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
 		this->cylinderShader.Enable();
 		// set shader variables
 		glUniform4fvARB(cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB(cylinderShader.ParameterLocation("camIn"), 1, glm::value_ptr(cameraInfo.view_vector()));
-        glUniform3fvARB(cylinderShader.ParameterLocation("camRight"), 1, glm::value_ptr(cameraInfo.right_vector()));
-        glUniform3fvARB(cylinderShader.ParameterLocation("camUp"), 1, glm::value_ptr(cameraInfo.up_vector()));
+                glUniform3fvARB(cylinderShader.ParameterLocation("camIn"), 1, glm::value_ptr(cam.view_vector()));
+                glUniform3fvARB(cylinderShader.ParameterLocation("camRight"), 1, glm::value_ptr(cam.right_vector()));
+                glUniform3fvARB(cylinderShader.ParameterLocation("camUp"), 1, glm::value_ptr(cam.up_vector()));
 		// get the attribute locations
 		attribLocInParams = glGetAttribLocationARB( cylinderShader, "inParams");
 		attribLocQuatC = glGetAttribLocationARB( cylinderShader, "quatC");
@@ -3404,10 +3401,10 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
 		this->cylinderShaderOR.Enable();
 		// set shader variables
 		glUniform4fvARB(cylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-        glUniform3fvARB(cylinderShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cameraInfo.view_vector()));
-        glUniform3fvARB(cylinderShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cameraInfo.right_vector()));
-        glUniform3fvARB(cylinderShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cameraInfo.up_vector()));
-		glUniform2fARB(cylinderShaderOR.ParameterLocation("zValues"), cameraInfo.near_clipping_plane(), cameraInfo.far_clipping_plane());
+                glUniform3fvARB(cylinderShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam.view_vector()));
+                glUniform3fvARB(cylinderShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cam.right_vector()));
+                glUniform3fvARB(cylinderShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cam.up_vector()));
+                glUniform2fARB(cylinderShaderOR.ParameterLocation("zValues"), cam.near_clipping_plane(),cam.far_clipping_plane());
 		// get the attribute locations
 		attribLocInParams = glGetAttribLocationARB(cylinderShaderOR, "inParams");
 		attribLocQuatC = glGetAttribLocationARB(cylinderShaderOR, "quatC");

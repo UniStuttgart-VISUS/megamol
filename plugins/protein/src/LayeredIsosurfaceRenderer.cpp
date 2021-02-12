@@ -332,7 +332,7 @@ bool LayeredIsosurfaceRenderer::GetExtents(Call& call) {
         cr3d->SetTimeFramesCount( vislib::math::Max( vti->FrameCount(), rencr3dFrames));
     }
 
-    BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
+    BoundingBoxes_2 &bbox = cr3d->AccessBoundingBoxes();
     bbox.SetObjectSpaceBBox(boundingBox);
     bbox.MakeScaledWorld( scale);
 

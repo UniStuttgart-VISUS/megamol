@@ -653,7 +653,7 @@ bool ProteinExploder::getGroupExtent(core::Call& call) {
     outCall->SetFrameCount(inCall->FrameCount());
     outCall->SetDataHash(inCall->DataHash());
 
-    core::BoundingBoxes boxes;
+    core::BoundingBoxes_2 boxes;
     boxes.SetObjectSpaceBBox(currentBoundingBox);
     boxes.SetObjectSpaceClipBox(currentBoundingBox);
     outCall->SetExtent(1, boxes);

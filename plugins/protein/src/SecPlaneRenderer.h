@@ -111,7 +111,7 @@ private:
     core::CallerSlot textureSlot;
 
     /// The data bounding box
-    core::BoundingBoxes bbox;
+    core::BoundingBoxes_2 bbox;
 
     /// The OpenGL texture handle
     GLuint tex;

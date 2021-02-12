@@ -103,7 +103,7 @@ private:
     core::param::ParamSlot sphereRadSlot;
 
     /// camera information
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    cam_type::minimal_state_type cameraInfo;
 
     /// Shader for the spheres (raycasting view)
     vislib::graphics::gl::GLSLShader sphereShader;
