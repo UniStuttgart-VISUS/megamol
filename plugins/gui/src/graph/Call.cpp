@@ -110,8 +110,8 @@ const megamol::gui::CallSlotPtr_t& megamol::gui::Call::GetCallSlot(megamol::gui:
 
 const std::string megamol::gui::Call::GetSlotsLabel(void) {
 
-    std::string caller = "N/A";
-    std::string callee = "N/A";
+    std::string caller = "n/a";
+    std::string callee = "n/a";
     auto callerslot_ptr = this->GetCallSlot(CallSlotType::CALLER);
     auto calleeslot_ptr = this->GetCallSlot(CallSlotType::CALLEE);
     if (callerslot_ptr != nullptr)
