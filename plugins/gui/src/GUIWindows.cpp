@@ -54,6 +54,8 @@ GUIWindows::GUIWindows(void)
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_S, core::view::Modifier::CTRL), false};
     this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT] = {
         megamol::core::view::KeyCode(megamol::core::view::Key::KEY_L, core::view::Modifier::CTRL), false};
+    this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI] = {
+        megamol::core::view::KeyCode(megamol::core::view::Key::KEY_G, core::view::Modifier::CTRL), false};
 
     // Init State
     this->init_state();
@@ -178,6 +180,16 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
             "[GUI] Chaining GUIVIew modules is not supported. GUI is disabled. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
         this->state.gui_enabled = false;
+    }
+
+    // Check hotkey for gui toggling
+    if (this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
+        this->state.gui_enabled = !this->state.gui_enabled;
+        // Restore menu when GUI is enabled
+        if (this->state.gui_enabled) {
+            this->state.menu_visible = true;
+        }
+        this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
     }
 
     // Required to prevent change in gui drawing between pre and post draw
@@ -718,7 +730,12 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
                     if (param.type == Param_t::BUTTON) {
                         auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
                         if (this->isHotkeyPressed(keyCode)) {
-                            param.ForceSetValueDirty();
+                            // Sync directly button action to parameter in core
+                            /// Does not require syncing of graphs
+                            if (param.core_param_ptr != nullptr) {
+                                param.core_param_ptr->setDirty();
+                            }
+                            /// param.ForceSetValueDirty();
                             hotkeyPressed = true;
                         }
                     }
@@ -824,6 +841,18 @@ bool megamol::gui::GUIWindows::ConsumeTriggeredScreenshot(void) {
     }
 
     return trigger_screenshot;
+}
+
+
+void megamol::gui::GUIWindows::SetClipboardFunc(const char* (*get_clipboard_func)(void* user_data),
+    void (*set_clipboard_func)(void* user_data, const char* string), void* user_data) {
+
+    if (this->context != nullptr) {
+        ImGuiIO& io = ImGui::GetIO();
+        io.SetClipboardTextFn = set_clipboard_func;
+        io.GetClipboardTextFn = get_clipboard_func;
+        io.ClipboardUserData = user_data;
+    }
 }
 
 
@@ -1180,12 +1209,6 @@ bool GUIWindows::createContext(void) {
     io.LogFilename = nullptr;                             // "imgui_log.txt" - disabled
     io.FontAllowUserScaling = false;                      // disable font scaling using ctrl + mouse wheel
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
-
-#ifdef GUI_USE_GLFW
-    io.SetClipboardTextFn = ImGui_ImplGlfw_SetClipboardText;
-    io.GetClipboardTextFn = ImGui_ImplGlfw_GetClipboardText;
-    io.ClipboardUserData = ::glfwGetCurrentContext();
-#endif // GUI_USE_GLFW
 
 /// DOCKING
 #if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
@@ -1660,17 +1683,7 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
         }
 
         if (ImGui::Button("Current Value")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, overlay.c_str());
-#elif _WIN32
             ImGui::SetClipboardText(overlay.c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[GUI] Current Performance Monitor Value:\n%s", overlay.c_str());
-#endif // GUI_USE_GLFW
         }
         ImGui::SameLine();
 
@@ -1681,17 +1694,7 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
             for (std::vector<float>::reverse_iterator i = value_array.rbegin(); i != reverse_end; ++i) {
                 stream << (*i) << "\n";
             }
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, stream.str().c_str());
-#elif _WIN32
             ImGui::SetClipboardText(stream.str().c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[GUI] All Performance Monitor Values:\n%s", stream.str().c_str());
-#endif // GUI_USE_GLFW
         }
         ImGui::SameLine();
         ImGui::TextUnformatted("Copy to Clipborad");
@@ -1714,6 +1717,12 @@ void GUIWindows::drawMenu(void) {
 
     // FILE -------------------------------------------------------------------
     if (ImGui::BeginMenu("File")) {
+
+        if (ImGui::MenuItem("Enable/Disable GUI",
+                this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str())) {
+            this->state.gui_enabled = !this->state.gui_enabled;
+        }
+
         if (megamolgraph_interface) {
             if (ImGui::MenuItem("Load Project",
                     this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].keycode.ToString().c_str())) {
@@ -1977,46 +1986,19 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         ImGui::TextUnformatted(mmstr.c_str());
 
         if (ImGui::Button("Copy E-Mail")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, email.c_str());
-#elif _WIN32
             ImGui::SetClipboardText(email.c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] E-Mail address:\n%s", email.c_str());
-#endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(mailstr.c_str());
 
         if (ImGui::Button("Copy Website")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, web_link.c_str());
-#elif _WIN32
             ImGui::SetClipboardText(web_link.c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Website link:\n%s", web_link.c_str());
-#endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(webstr.c_str());
 
         if (ImGui::Button("Copy GitHub###megamol_copy_github")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, github_link.c_str());
-#elif _WIN32
             ImGui::SetClipboardText(github_link.c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] GitHub link:\n%s", github_link.c_str());
-#endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(gitstr.c_str());
@@ -2024,16 +2006,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         ImGui::Separator();
         ImGui::TextUnformatted(imguistr.c_str());
         if (ImGui::Button("Copy GitHub###imgui_copy_github")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, imgui_link.c_str());
-#elif _WIN32
             ImGui::SetClipboardText(imgui_link.c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] ImGui GitHub Link:\n%s", imgui_link.c_str());
-#endif
         }
         ImGui::SameLine();
         ImGui::TextUnformatted(imguigitstr.c_str());
@@ -2351,6 +2324,7 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
         for (auto& header_item : in_json.items()) {
             if (header_item.key() == GUI_JSON_TAG_GUI) {
                 auto gui_state = header_item.value();
+                megamol::core::utility::get_json_value<bool>(gui_state, {"gui_enabled"}, &this->state.gui_enabled);
                 megamol::core::utility::get_json_value<bool>(gui_state, {"menu_visible"}, &this->state.menu_visible);
                 int style = 0;
                 megamol::core::utility::get_json_value<int>(gui_state, {"style"}, &style);
@@ -2405,6 +2379,7 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
 
     try {
         // Write GUI state
+        inout_json[GUI_JSON_TAG_GUI]["gui_enabled"] = this->state.gui_enabled;
         inout_json[GUI_JSON_TAG_GUI]["menu_visible"] = this->state.menu_visible;
         inout_json[GUI_JSON_TAG_GUI]["style"] = static_cast<int>(this->state.style);
         GUIUtils::Utf8Encode(this->state.font_file_name);

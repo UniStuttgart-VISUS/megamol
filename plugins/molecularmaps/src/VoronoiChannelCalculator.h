@@ -15,141 +15,139 @@
 
 #include "protein_calls/MolecularDataCall.h"
 
-#include "vislib/math/Vector.h"
 #include "vislib/math/Plane.h"
+#include "vislib/math/Vector.h"
 
 #include <Eigen/Dense>
 
 namespace megamol {
 namespace molecularmaps {
 
-	class VoronoiChannelCalculator : public AbstractLocalRenderer {
-	public:
-		/** Ctor. */
-		VoronoiChannelCalculator(void);
+    class VoronoiChannelCalculator : public AbstractLocalRenderer {
+    public:
+        /** Ctor. */
+        VoronoiChannelCalculator(void);
 
-		/** Dtor. */
-		virtual ~VoronoiChannelCalculator(void);
+        /** Dtor. */
+        virtual ~VoronoiChannelCalculator(void);
 
-		/**
-		 * Initializes the renderer.
-		 */
-		virtual bool create(void);
+        /**
+         * Initializes the renderer.
+         */
+        virtual bool create(void);
 
-		/**
-		 * Invokes the rendering calls.
-		 */
-		virtual bool Render(core::view::CallRender3D& call);
+        /**
+         * Invokes the rendering calls.
+         */
+        virtual bool Render(core::view::CallRender3D_2& call, bool lighting = true);
 
-		/**
-		 * Update function for the local data to render.
-		 *
-		 * @param mdc The molecular data call containing the particle data
-		 */
-		bool Update(protein_calls::MolecularDataCall* mdc, std::vector<VoronoiVertex>& p_voronoi_vertices, 
-			std::vector<VoronoiEdge>& p_voronoi_edges, float probeRadius = 1.5f);
+        /**
+         * Update function for the local data to render.
+         *
+         * @param mdc The molecular data call containing the particle data
+         */
+        bool Update(protein_calls::MolecularDataCall* mdc, std::vector<VoronoiVertex>& p_voronoi_vertices,
+            std::vector<VoronoiEdge>& p_voronoi_edges, float probeRadius = 1.5f);
 
-	protected:
+    protected:
+        /**
+         * Frees all needed resources used by this renderer
+         */
+        virtual void release(void);
 
-		/**
-		 * Frees all needed resources used by this renderer
-		 */
-		virtual void release(void);
+    private:
+        /**
+         * Checks the validity for each vertex
+         */
+        void checkVertexAndGateValidity(protein_calls::MolecularDataCall* mdc);
 
-	private:
+        /**
+         * Constructs the voronoi diagram for a protein.
+         *
+         * @param mdc The molecular data call containing the protein data.
+         *
+         * @return true if the diagram was created, false otherwise
+         */
+        bool constructVoronoiDiagram(protein_calls::MolecularDataCall* mdc);
 
-		/**
-	     * Checks the validity for each vertex
-		 */
-		void checkVertexAndGateValidity(protein_calls::MolecularDataCall* mdc);
+        /**
+         *
+         */
+        void convexHullThread();
 
-		/**
-		 * Constructs the voronoi diagram for a protein.
-		 *
-		 * @param mdc The molecular data call containing the protein data.
-		 *
-		 * @return true if the diagram was created, false otherwise
-		 */
-		bool constructVoronoiDiagram(protein_calls::MolecularDataCall* mdc);
+        /**
+         * Computes the next Voronoi vertices until the thread is stopped.
+         */
+        void nextVoronoiVertex();
 
-		/**
-		 * 
-		 */
-		void convexHullThread();
+        /**
+         * Computes the next Voronoi vertices until the thread is stopped.
+         */
+        void nextVoronoiVertexInit();
 
-		/**
-		 * Computes the next Voronoi vertices until the thread is stopped.
-		 */
-		void nextVoronoiVertex();
+        /**
+         * Stops all threads in the threadpool.
+         */
+        void stopThreads();
 
-		/**
-		 * Computes the next Voronoi vertices until the thread is stopped.
-		 */
-		void nextVoronoiVertexInit();
+        /** Indicates the active queue for the Voronoi threads. */
+        uint active_gates;
 
-		/**
-		 * Stops all threads in the threadpool.
-		 */
-		void stopThreads();
+        /** List of neighbouring particle indices per edge */
+        std::vector<vislib::math::Vector<int, 3>> edge_neighbours;
 
-		/** Indicates the active queue for the Voronoi threads. */
-		uint active_gates;
+        /** List of all gate vertices, one for each edge */
+        std::vector<vislib::math::Vector<float, 4>> gates;
 
-		/** List of neighbouring particle indices per edge */
-		std::vector<vislib::math::Vector<int, 3>> edge_neighbours;
+        /** Queue of all gate vertices that need to be processed. */
+        std::vector<std::pair<vec4d, std::array<uint, 5>>> gatesToTest_one;
+        std::vector<std::pair<vec4d, std::array<uint, 5>>> gatesToTest_two;
 
-		/** List of all gate vertices, one for each edge */
-		std::vector<vislib::math::Vector<float, 4>> gates;
+        /** Validity flags for all gates. Non-valid gates are not initialized and do not belong to cavities. */
+        std::vector<bool> gateValidFlags;
 
-		/** Queue of all gate vertices that need to be processed. */
-		std::vector<std::pair<vec4d, std::array<uint, 5>>> gatesToTest_one;
-		std::vector<std::pair<vec4d, std::array<uint, 5>>> gatesToTest_two;
+        /** The initial vertex. */
+        vec4d initVertex;
 
-		/** Validity flags for all gates. Non-valid gates are not initialized and do not belong to cavities. */
-		std::vector<bool> gateValidFlags;
+        /** The gate spheres of the initial vertex. */
+        vec4ui initVertexBorder;
 
-		/** The initial vertex. */
-		vec4d initVertex;
+        /** Flag that signals if the initial vertex is found. */
+        bool initVertexFound;
 
-		/** The gate spheres of the initial vertex. */
-		vec4ui initVertexBorder;
+        /** The probe radius the diagram is constructed for */
+        float probeRadius;
 
-		/** Flag that signals if the initial vertex is found. */
-		bool initVertexFound;
+        /** Flag showing whether a result is available. */
+        bool resultAvailable;
 
-		/** The probe radius the diagram is constructed for */
-		float probeRadius;
+        /** The search grid that contains all atoms of the protein. */
+        AtomGrid searchGrid;
 
-		/** Flag showing whether a result is available. */
-		bool resultAvailable;
+        /** map mapping vertex ids to identical other vertices */
+        std::vector<int> vertexMap;
 
-		/** The search grid that contains all atoms of the protein. */
-		AtomGrid searchGrid;
+        /** validity flags of all vertices */
+        std::vector<bool> vertexValidFlags;
 
-		/** map mapping vertex ids to identical other vertices */
-		std::vector<int> vertexMap;
+        /** List of all voronoi vertex positions. */
+        std::vector<vislib::math::Vector<float, 4>> vertices;
 
-		/** validity flags of all vertices */
-		std::vector<bool> vertexValidFlags;
+        /** List of all voronoi edges. */
+        std::vector<VoronoiEdge> voronoi_edges;
 
-		/** List of all voronoi vertex positions. */
-		std::vector<vislib::math::Vector<float, 4>> vertices;
+        /** The ID of the next voronoi vertex. */
+        uint voronoi_id;
 
-		/** List of all voronoi edges. */
-		std::vector<VoronoiEdge> voronoi_edges;
+        /** The mutex that locks access to the local variables for the threads. */
+        std::mutex voronoi_mutex;
 
-		/** The ID of the next voronoi vertex. */
-		uint voronoi_id;
+        /** Thread pool that computes the voronoi edges. */
+        std::vector<std::thread> voronoi_threads;
 
-		/** The mutex that locks access to the local variables for the threads. */
-		std::mutex voronoi_mutex;
-
-		/** Thread pool that computes the voronoi edges. */
-		std::vector<std::thread> voronoi_threads;
-
-		/** List of all voronoi vertices. */
-		std::map<uint64_t, VoronoiVertex> voronoi_vertices;
-	};
+        /** List of all voronoi vertices. */
+        std::map<uint64_t, VoronoiVertex> voronoi_vertices;
+    };
 
 } /* end namespace molecularmaps */
 } /* end namespace megamol */

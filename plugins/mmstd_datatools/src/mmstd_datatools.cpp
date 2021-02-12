@@ -97,6 +97,7 @@
 #include "CSVWriter.h"
 #include "clustering/ParticleIColClustering.h"
 #include "AddParticleColors.h"
+#include "ColorToDir.h"
 
 namespace megamol::stdplugin::datatools {
 /** Implementing the instance class of this plugin */
@@ -206,6 +207,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::CSVWriter>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::clustering::ParticleIColClustering>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::AddParticleColors>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ColorToDir>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();

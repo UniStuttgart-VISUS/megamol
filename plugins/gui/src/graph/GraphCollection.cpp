@@ -751,8 +751,6 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
         return false;
     GUIUtils::Utf8Decode(projectstr);
 
-    std::cout << projectstr;
-
     const std::string luacmd_view("mmCreateView");
     const std::string luacmd_module("mmCreateModule");
     const std::string luacmd_param("mmSetParamValue");
