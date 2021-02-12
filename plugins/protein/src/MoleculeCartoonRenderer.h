@@ -17,9 +17,8 @@
 #include "BSpline.h"
 #include "mmcore/CallerSlot.h"
 #include "Color.h"
-#include "mmcore/view/Renderer3DModuleDS.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/CallRenderDeferred3D.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/SimpleFont.h"
@@ -41,7 +40,7 @@ namespace protein {
      * - add RenderMode CARTOON_GPU
      */
 
-    class MoleculeCartoonRenderer : public megamol::core::view::Renderer3DModuleDS {
+    class MoleculeCartoonRenderer : public megamol::core::view::Renderer3DModuleGL {
     public:
 
         /**
@@ -265,7 +264,7 @@ namespace protein {
 		megamol::core::CallerSlot molColorCallerSlot;
         
         /** camera information */
-        vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+        core::view::Camera_2 cameraInfo;
 
         megamol::core::param::ParamSlot renderingModeParam;
         /** parameter slot for coloring mode */
