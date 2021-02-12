@@ -235,6 +235,10 @@ private:
 
     core::param::ParamSlot axisTickSizeParam;
 
+    core::param::ParamSlot axisTickPrecisionX;
+
+    core::param::ParamSlot axisTickPrecisionY;
+
     core::param::ParamSlot drawOuterLabelsParam;
 
     core::param::ParamSlot drawDiagonalLabelsParam;
