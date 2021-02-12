@@ -37,6 +37,8 @@ bool RemapIColValues::manipulateData(
 
     // get color data
     inIColData->SetFrameID(inData.FrameID(), true);
+    if (!(*inIColData)(1))
+        return false;
     if (!(*inIColData)(0)) return false;
 
     if ((dataHash != inData.DataHash()) || (inData.DataHash() == 0)

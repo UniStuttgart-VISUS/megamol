@@ -55,7 +55,7 @@ datatools::ParticleThermodyn::ParticleThermodyn(void)
     , allParts()
     , maxDist(0.0f)
     , particleTree(nullptr)
-    , myPts(nullptr)
+    /*, myPts(nullptr)*/
     , outDataSlot("outData", "Provides intensities based on a local particle metric")
     , inDataSlot("inData", "Takes the directional particle data") {
 
@@ -253,11 +253,11 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
 
         // allocate nanoflann data structures for border
         assert(allpartcnt == totalParts);
-        this->myPts = std::make_shared<simplePointcloud>(in, allParts);
+        this->myPts = simplePointcloud(in, allParts.size());
 
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticleThermodyn: building acceleration structure...");
-        particleTree = std::make_shared<my_kd_tree_t>(
-            3 /* dim */, *myPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
+        particleTree = std::make_unique<my_kd_tree_t>(
+            3 /* dim */, myPts, nanoflann::KDTreeSingleIndexAdaptorParams(10 /* max leaf */));
         particleTree->buildIndex();
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("ParticleThermodyn: done.");
 
@@ -336,7 +336,7 @@ bool datatools::ParticleThermodyn::assertData(core::moldyn::MultiParticleDataCal
 
                     INT64 myIndex = part_i + allpartcnt;
                     ret_matches.clear();
-                    const float* vertexBase = this->myPts->get_position(myIndex);
+                    const float* vertexBase = this->myPts.get_position(myIndex);
                     // const float *velocityBase = this->myPts->get_velocity(myIndex);
 
                     for (int x_s = 0; x_s < (cycl_x ? 2 : 1); ++x_s) {
@@ -563,7 +563,7 @@ float megamol::stdplugin::datatools::ParticleThermodyn::computeTemperature(
     std::array<float, 3> sq_sum = {0, 0, 0};
     std::array<float, 3> the_temperature = {0, 0, 0};
     for (size_t i = 0; i < num_matches; ++i) {
-        const float* velo = myPts->get_velocity(matches[i].first);
+        const float* velo = myPts.get_velocity(matches[i].first);
         for (int c = 0; c < 3; ++c) {
             float v = velo[c];
             sum[c] += v;
@@ -591,7 +591,7 @@ float megamol::stdplugin::datatools::ParticleThermodyn::computeFractionalAnisotr
     mat.fill(0.0f);
 
     for (size_t i = 0; i < num_matches; ++i) {
-        const float* velo = myPts->get_velocity(matches[i].first);
+        const float* velo = myPts.get_velocity(matches[i].first);
         for (int x = 0; x < 3; ++x)
             for (int y = 0; y < 3; ++y) mat(x, y) += velo[x] * velo[y];
     }
@@ -621,7 +621,7 @@ float megamol::stdplugin::datatools::ParticleThermodyn::computeDensity(std::vect
     std::vector<float> part;
     part.reserve(num_matches * 4);
     for (size_t i = 0; i < num_matches; ++i) {
-        auto coord = myPts->get_position(matches[i].first);
+        auto coord = this->myPts.get_position(matches[i].first);
         part.push_back(
             cycl_x ? coord[0] - bbox.Width() * std::nearbyintf((coord[0] - curPoint[0]) / bbox.Width()) : coord[0]);
         part.push_back(

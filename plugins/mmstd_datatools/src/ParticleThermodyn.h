@@ -139,8 +139,8 @@ namespace datatools {
             3 /* dim */
         > my_kd_tree_t;
 
-        std::shared_ptr<my_kd_tree_t> particleTree;
-        std::shared_ptr<simplePointcloud> myPts;
+        std::unique_ptr<my_kd_tree_t> particleTree;
+        simplePointcloud myPts;
 
         /** The slot providing access to the manipulated data */
         megamol::core::CalleeSlot outDataSlot;

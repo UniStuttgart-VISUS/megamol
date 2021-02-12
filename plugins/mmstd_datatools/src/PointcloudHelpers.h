@@ -25,15 +25,19 @@ class simplePointcloud {
 private:
 
     megamol::core::moldyn::MultiParticleDataCall *dat;
-    std::vector<size_t> &indices;
+    //std::vector<size_t> &indices;
+    std::size_t num_points;
     bool cycleX, cycleY, cycleZ;
 
 public:
 
     typedef float coord_t;
 
-    simplePointcloud(megamol::core::moldyn::MultiParticleDataCall *dat, std::vector<size_t> &indices)
-        : dat(dat), indices(indices) {
+    simplePointcloud()
+            : dat(nullptr), num_points(0) {}
+
+    simplePointcloud(megamol::core::moldyn::MultiParticleDataCall *dat, std::size_t num_points)
+            : dat(dat), num_points(num_points) {
         // intentionally empty
     }
     ~simplePointcloud() {
@@ -42,7 +46,7 @@ public:
 
     // Must return the number of data points
     inline size_t kdtree_get_point_count() const {
-        return indices.size();
+        return num_points;
     }
 
     // Returns the distance between the vector "p1[0:size-1]" and the data point with index "idx_p2" stored in the class:
