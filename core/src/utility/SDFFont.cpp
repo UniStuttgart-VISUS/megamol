@@ -1404,7 +1404,7 @@ bool SDFFont::loadFontBuffers() {
 * Bitmap Font file format: http://www.angelcode.com/products/fnont/doc/file_format.html
 *
 */
-bool SDFFont::loadFontInfo(vislib::StringA filename) {
+bool SDFFont::loadFontInfo(vislib::StringW filename) {
 
     // Reset font info
     for (unsigned int i = 0; i < this->glyphs.size(); i++) {

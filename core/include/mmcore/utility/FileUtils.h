@@ -56,12 +56,12 @@ namespace utility {
         /**
          * Load raw data from file (e.g. texture data)
          */
-        static size_t LoadRawFile(const std::wstring& filename, void** outData) {
+        static bool LoadRawFile(const std::wstring& filename, std::vector<char>& out_data) {
             return megamol::core::utility::FileUtils::LoadRawFile(
-                megamol::core::utility::to_string(filename), outData);
+                megamol::core::utility::to_string(filename), out_data);
         }
 
-        static size_t LoadRawFile(const std::string& filename, void** outData);
+        static bool LoadRawFile(const std::string& filename, std::vector<char>& out_data);
 
         /**
          * Check if file exists.

@@ -654,7 +654,7 @@ namespace utility {
         bool loadFontBuffers();
 
         /** Load font info from file. */
-        bool loadFontInfo(vislib::StringA filename);
+        bool loadFontInfo(vislib::StringW filename);
 
         /** Load shaders from files. */
         bool loadFontShader(megamol::core::CoreInstance *core);

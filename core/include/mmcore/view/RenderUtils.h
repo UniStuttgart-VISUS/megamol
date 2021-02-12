@@ -138,12 +138,11 @@ public:
 
     bool InitPrimitiveRendering(megamol::core::utility::ShaderSourceFactory& factory);
 
-    // Keeps the texture object in rener utils for later access via texture id
-    bool LoadTextureFromFile(GLuint& out_texture_id, const std::wstring& filename) {
-        return this->LoadTextureFromFile(out_texture_id, megamol::core::utility::to_string(filename));
+    // Keeps the texture object in render utils for later access via texture id
+    bool LoadTextureFromFile(GLuint& out_texture_id, const std::wstring& filename, bool reload = false) {
+        return this->LoadTextureFromFile(out_texture_id, megamol::core::utility::to_string(filename), reload);
     }
-
-    bool LoadTextureFromFile(GLuint& out_texture_id, const std::string& filename);
+    bool LoadTextureFromFile(GLuint& out_texture_id, const std::string& filename, bool reload = false);
 
     void PushPointPrimitive(const glm::vec3& pos_center, float size, const glm::vec3& cam_view,
         const glm::vec3& cam_pos, const glm::vec4& color, bool sort = false);
@@ -199,6 +198,13 @@ public:
         this->smooth = s;
     }
 
+    unsigned int GetTextureWidth(GLuint texture_id) const;
+    unsigned int GetTextureHeight(GLuint texture_id) const;
+
+    inline void DeleteAllTextures(void) {
+        this->textures.clear();
+    }
+
 protected:
     RenderUtils();
 
@@ -231,6 +237,10 @@ private:
 
     // FUNCTIONS ------------------------------------------------------- //
 
+    bool createShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_ptr,
+        megamol::core::utility::ShaderSourceFactory& shader_factory, const std::string& vertex_btf_snipprt,
+        const std::string& fragment_btf_snippet);
+
     void pushQuad(Primitives primitive, GLuint texture_id, const glm::vec3& pos_bottom_left,
         const glm::vec3& pos_upper_left, const glm::vec3& pos_upper_right, const glm::vec3& pos_bottom_right,
         const glm::vec4& color, const glm::vec4& attributes);
@@ -238,8 +248,6 @@ private:
     void drawPrimitives(Primitives primitive, glm::mat4& mat_mvp, glm::vec2 dim_vp);
 
     void sortPrimitiveQueue(Primitives primitive);
-
-    const std::string getShaderCode(megamol::core::utility::ShaderSourceFactory& factory, std::string snippet_name);
 
     size_t loadRawFile(std::wstring filename, BYTE** outData);
 

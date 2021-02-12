@@ -12,14 +12,14 @@
 using namespace megamol::core::utility;
 
 
-size_t megamol::core::utility::FileUtils::LoadRawFile(const std::string& filename, void** outData) {
+bool megamol::core::utility::FileUtils::LoadRawFile(const std::string& filename, std::vector<char>& out_data) {
 
-    *outData = nullptr;
+    out_data.clear();
 
     if (filename.empty()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to load file: No file name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return 0;
+        return false;
     }
 
     if (!megamol::core::utility::FileUtils::FileExists<std::string>(filename)) {
@@ -27,7 +27,7 @@ size_t megamol::core::utility::FileUtils::LoadRawFile(const std::string& filenam
             "Unable to load file \"%s\": Not existing. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
             __FUNCTION__,
             __LINE__);
-        return 0;
+        return false;
     }
 
     std::ifstream input_file(filename, (std::ifstream::in | std::ifstream::binary));
@@ -35,7 +35,7 @@ size_t megamol::core::utility::FileUtils::LoadRawFile(const std::string& filenam
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to open file \"%s\": Bad file. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
             __FUNCTION__, __LINE__);
-        return 0;
+        return false;
     }
 
     size_t size = 0;
@@ -46,21 +46,21 @@ size_t megamol::core::utility::FileUtils::LoadRawFile(const std::string& filenam
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to load file \"%s\": File is empty. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
             __FUNCTION__, __LINE__);
-        return 0;
+        return false;
     }
 
-    *outData = new char[size];
-    input_file.read(static_cast<char*>(*outData), size);
+    out_data.resize(size);
+    input_file.read(out_data.data(), size);
     if (!input_file.good()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to load file \"%s\": Unable to read whole file. [%s, %s, line %d]\n", filename.c_str(),
             __FILE__,
             __FUNCTION__, __LINE__);
-        ARY_SAFE_DELETE(*outData);
-        return 0;
+        out_data.clear();
+        return false;
     }
 
-    return size;
+    return true;
 }
 
 
