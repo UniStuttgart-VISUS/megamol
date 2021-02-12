@@ -19,7 +19,7 @@ using namespace megamol::gui;
 
 
 megamol::gui::CallPresentation::CallPresentation(void)
-        : label_visible(true), slots_visible(true), selected(false), tooltip() {}
+        : label_visible(true), slots_visible(false), selected(false), tooltip() {}
 
 
 megamol::gui::CallPresentation::~CallPresentation(void) {}

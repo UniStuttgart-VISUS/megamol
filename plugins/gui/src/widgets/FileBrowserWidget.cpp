@@ -25,12 +25,13 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget()
         , file_warning()
         , child_paths()
         , additional_lines(0)
-        , check_option(false) {}
+        , save_gui_state(vislib::math::Ternary::TRI_UNKNOWN)
+        , tooltip() {}
 
 
 bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
     megamol::gui::FileBrowserWidget::FileBrowserFlag flag, const std::string& label, bool open_popup,
-    const std::string& extension, const std::string& check_option_label, bool& inout_check_option) {
+    const std::string& extension, vislib::math::Ternary& inout_save_gui_state) {
 
     bool retval = false;
 
@@ -51,7 +52,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
 
             this->search_widget.ClearSearchString();
 
-            this->check_option = inout_check_option;
+            this->save_gui_state = inout_save_gui_state;
 
             ImGui::OpenPopup(label_id.c_str());
             // Set initial window size of pop up
@@ -94,7 +95,8 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
 
             // File browser selectables ---------------------------------------
             auto select_flags = ImGuiSelectableFlags_DontClosePopups;
-            float footer_height = ImGui::GetFrameHeightWithSpacing() * ((check_option_label.empty()) ? (2.0f) : (3.0f));
+            float footer_height =
+                ImGui::GetFrameHeightWithSpacing() * ((inout_save_gui_state.IsUnknown()) ? (2.0f) : (3.0f));
             float child_select_height =
                 (ImGui::GetContentRegionAvail().y - (ImGui::GetTextLineHeightWithSpacing() * this->additional_lines) -
                     footer_height);
@@ -229,9 +231,13 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
                 this->validate_file(this->file_name_str, extension, flag);
             }
 
-            // Optional check option ------------
-            if (!check_option_label.empty()) {
-                ImGui::Checkbox(check_option_label.c_str(), &this->check_option);
+            // Optional save GUI state option ------------
+            if (!inout_save_gui_state.IsUnknown()) {
+                bool check = this->save_gui_state.IsTrue();
+                ImGui::Checkbox("Save GUI state", &check);
+                this->save_gui_state =
+                    ((check) ? (vislib::math::Ternary::TRI_TRUE) : (vislib::math::Ternary::TRI_FALSE));
+                this->tooltip.Marker("Check this option to also save all settings affecting the GUI.");
             }
 
             // Buttons --------------------------
@@ -249,7 +255,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Cancel")) {
+            if (ImGui::Button("Cancel") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 ImGui::CloseCurrentPopup();
             }
 
@@ -273,7 +279,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
                     static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(this->file_name_str);
                 inout_filename = tmp_file_path.generic_u8string();
                 GUIUtils::Utf8Decode(inout_filename);
-                inout_check_option = this->check_option;
+                inout_save_gui_state = this->save_gui_state;
                 ImGui::CloseCurrentPopup();
                 retval = true;
             }

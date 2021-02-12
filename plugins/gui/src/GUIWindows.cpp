@@ -1732,11 +1732,6 @@ void GUIWindows::drawMenu(void) {
     // FILE -------------------------------------------------------------------
     if (ImGui::BeginMenu("File")) {
 
-        if (ImGui::MenuItem("Enable/Disable GUI",
-                this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str())) {
-            this->state.gui_enabled = !this->state.gui_enabled;
-        }
-
         if (megamolgraph_interface) {
             if (ImGui::MenuItem("Load Project",
                     this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].keycode.ToString().c_str())) {
@@ -1843,6 +1838,11 @@ void GUIWindows::drawMenu(void) {
 
     // SETTINGS ---------------------------------------------------------------
     if (ImGui::BeginMenu("Settings")) {
+
+        if (ImGui::MenuItem("Enable/Disable GUI",
+                this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str())) {
+            this->state.gui_enabled = !this->state.gui_enabled;
+        }
 
         if (ImGui::BeginMenu("Style")) {
 
@@ -2071,7 +2071,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         ImGui::TextUnformatted(about.c_str());
 
         ImGui::Separator();
-        if (ImGui::Button("Close")) {
+        if (ImGui::Button("Close") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
             ImGui::CloseCurrentPopup();
         }
 
@@ -2088,16 +2088,17 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         filename = graph_ptr->GetFilename();
     }
     if (graph_ptr != nullptr) {
-        bool check_option = false; // Default for option asking for saving gui state
+        vislib::math::Ternary save_gui_state(
+            vislib::math::Ternary::TRI_FALSE); // Default for option asking for saving gui state
         this->state.open_popup_save |= this->configurator.ConsumeTriggeredGlobalProjectSave();
 
         if (this->file_browser.PopUp(filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
-                this->state.open_popup_save, "lua", "Save GUI State?", check_option)) {
+                this->state.open_popup_save, "lua", save_gui_state)) {
 
             graph_ptr->SetFilename(filename);
 
             std::string gui_state;
-            if (check_option) {
+            if (save_gui_state.IsTrue()) {
                 gui_state = this->dump_state_to_file(filename);
             }
 
