@@ -85,7 +85,7 @@ struct structuredVolumeStructure {
     unsigned int maxDim;
 };
 
-struct meshStrucutre {
+struct meshStructure {
     std::shared_ptr<mesh::MeshDataAccessCollection> mesh;
     std::shared_ptr<mesh::ImageDataAccessCollection> mesh_textures;
 };
@@ -121,7 +121,7 @@ struct OSPRayStructureContainer {
     bool parameterChanged;
     bool isValid = false;
 
-    std::variant<sphereStructure, structuredVolumeStructure, meshStrucutre, apiStructure, curveStructure> structure;
+    std::variant<sphereStructure, structuredVolumeStructure, meshStructure, apiStructure, curveStructure> structure;
 };
 
 
