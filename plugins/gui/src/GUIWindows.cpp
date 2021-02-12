@@ -5,18 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-/**
- * USED HOTKEYS:
- *
- * - Trigger Screenshot:        F2
- * - Toggle Graph Entry:        F3
- * - Show/hide Windows:         F7-F11
- * - Show/hide Menu:            F12
- * - Search Parameter:          Ctrl  + p
- * - Save Running Project:      Ctrl  + s
- * - Quit Program:              Alt   + F4
- */
-
 #include "stdafx.h"
 #include "GUIWindows.h"
 

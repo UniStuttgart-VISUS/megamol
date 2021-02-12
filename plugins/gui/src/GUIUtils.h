@@ -9,6 +9,27 @@
 #define MEGAMOL_GUI_GUIUTILS_INCLUDED
 
 
+/**
+ * USED HOTKEYS:
+ * 
+ * ----- GUIWindows -----
+ * - Trigger Screenshot:        F2
+ * - Toggle Graph Entry:        F3
+ * - Show/hide Windows:         F7-F11
+ * - Show/hide Menu:            F12
+ * - Show/hide GUI:             Ctrl  + g
+ * - Search Parameter:          Ctrl  + p
+ * - Save Running Project:      Ctrl  + s
+ * - Quit Program:              Alt   + F4
+
+ * ----- Configurator -----
+ * - Search Module:             Ctrl + Shift + m
+ * - Search Parameter:          Ctrl + Shift + p
+ * - Save Edited Project:       Ctrl + Shift + s
+ * - Delete Graph Item:         Delete
+ * 
+ */
+
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include "imgui.h"
