@@ -84,14 +84,6 @@ unsigned int view::SplitViewGL::GetCameraSyncNumber() const {
     return 0u;
 }
 
-void view::SplitViewGL::SerialiseCamera(vislib::Serialiser& serialiser) const {
-    Log::DefaultLog.WriteWarn("SplitViewGL::SerialiseCamera unsupported");
-}
-
-void view::SplitViewGL::DeserialiseCamera(vislib::Serialiser& serialiser) {
-    Log::DefaultLog.WriteWarn("SplitViewGL::DeserialiseCamera unsupported");
-}
-
 void view::SplitViewGL::Render(const mmcRenderViewContext& context) {
     // TODO: Affinity
 

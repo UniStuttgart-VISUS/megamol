@@ -69,10 +69,6 @@ namespace gui {
 
         virtual unsigned int GetCameraSyncNumber(void) const override;
 
-        virtual void SerialiseCamera(vislib::Serialiser& serialiser) const override;
-
-        virtual void DeserialiseCamera(vislib::Serialiser& serialiser) override;
-
         virtual bool OnRenderView(megamol::core::Call& call);
 
         virtual void Render(const mmcRenderViewContext& context) override;

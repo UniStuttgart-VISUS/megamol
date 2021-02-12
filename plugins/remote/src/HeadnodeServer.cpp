@@ -15,6 +15,7 @@
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/CallRenderViewGL.h"
 #include "vislib/RawStorageSerialiser.h"
+#include "mmcore/view/CameraSerializer.h"
 
 //#include "mmcore/param/Vector4fParam.h"
 
@@ -141,11 +142,11 @@ bool megamol::remote::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
 
     AbstractNamedObject::const_ptr_type avp;
     const core::view::AbstractView* av = nullptr;
-    core::Call* call = nullptr;
+    core::view::CallRenderViewGL* call = nullptr;
     unsigned int csn = 0;
 
     av = nullptr;
-    call = this->view_slot_.CallAs<core::Call>();
+    call = this->view_slot_.CallAs<core::view::CallRenderViewGL>();
     if ((call != nullptr) && (call->PeekCalleeSlot() != nullptr) && (call->PeekCalleeSlot()->Parent() != nullptr)) {
         avp = call->PeekCalleeSlot()->Parent();
         av = dynamic_cast<const core::view::AbstractView*>(avp.get());
@@ -155,16 +156,24 @@ bool megamol::remote::HeadnodeServer::get_cam_upd(std::vector<char>& msg) {
     csn = av->GetCameraSyncNumber();
     if ((csn != syncnumber)) {
         syncnumber = csn;
-        vislib::RawStorage mem;
-        vislib::RawStorageSerialiser serialiser(&mem);
-        av->SerialiseCamera(serialiser);
+        core::view::Camera_2 cam;
+        call->GetCamera(cam);
+        cam_type::snapshot_type snapshot;
+        cam_type::matrix_type viewTemp, projTemp;
+        cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
+        cam_type::minimal_state_type min_state;
+        cam.get_minimal_state(min_state);
 
-        msg.resize(MessageHeaderSize + mem.GetSize());
+        core::view::CameraSerializer serializer;
+        const std::string mem = serializer.serialize(min_state);
+
+
+        msg.resize(MessageHeaderSize + mem.size());
         msg[0] = static_cast<char>(MessageType::CAM_UPD_MSG);
-        auto size = mem.GetSize();
+        auto size = mem.size();
         std::copy(reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + MessageSizeSize,
             msg.begin() + MessageTypeSize);
-        std::copy(mem.AsAt<char>(0), mem.AsAt<char>(0) + mem.GetSize(), msg.begin() + MessageHeaderSize);
+        std::copy(mem.data(), mem.data() + mem.size(), msg.begin() + MessageHeaderSize);
 
         return true;
     }

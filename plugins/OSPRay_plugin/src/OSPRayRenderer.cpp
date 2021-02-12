@@ -318,6 +318,9 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         frmbuffer->depthBufferActive = this->_useDB.Param<core::param::BoolParam>()
                                            ->Value();
 
+        // clear stuff
+         _framebuffer->unmap(fb);
+
         //auto dvce_ = ospGetCurrentDevice();
         //auto error_ = std::string(ospDeviceGetLastErrorMsg(dvce_));
         //megamol::core::utility::log::Log::DefaultLog.WriteError(std::string("OSPRAY last ERROR: " + error_).c_str());

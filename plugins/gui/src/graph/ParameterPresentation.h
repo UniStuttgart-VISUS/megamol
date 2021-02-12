@@ -34,11 +34,6 @@
 
 #include <variant>
 
-// Used for platform independent clipboard (ImGui so far only provides windows implementation)
-#ifdef GUI_USE_GLFW
-#include "GLFW/glfw3.h"
-#endif
-
 
 namespace megamol {
 namespace gui {

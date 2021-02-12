@@ -13,7 +13,6 @@
 #include "mmcore/factories/ModuleDescription.h"
 
 #include "mmcore/cluster/ClusterController.h"
-#include "mmcore/cluster/ClusterViewMaster.h"
 #include "mmcore/cluster/mpi/MpiProvider.h"
 #include "mmcore/misc/SiffCSplineFitter.h"
 #include "mmcore/misc/TestSpheresDataSource.h"
@@ -69,7 +68,6 @@ void factories::register_module_classes(factories::ModuleDescriptionManager& ins
     //////////////////////////////////////////////////////////////////////
 
     instance.RegisterAutoDescription<cluster::ClusterController>();
-    instance.RegisterAutoDescription<cluster::ClusterViewMaster>();
     instance.RegisterAutoDescription<cluster::mpi::MpiProvider>();
     instance.RegisterAutoDescription<misc::SiffCSplineFitter>();
     instance.RegisterAutoDescription<misc::TestSpheresDataSource>();
