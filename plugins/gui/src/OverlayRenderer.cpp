@@ -236,6 +236,7 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
     } break;
     }
 
+    this->onTriggerRecalcRectangle(slot);
     return true;
 }
 
@@ -339,16 +340,18 @@ bool OverlayRenderer::onTriggerRecalcRectangle(core::param::ParamSlot& slot) {
     glm::vec2 rel_pos = glm::vec2(param_position.X() / 100.0f, param_position.Y() / 100.0f);
     auto rel_width = this->paramRelativeWidth.Param<param::FloatParam>()->Value() / 100.0f;
 
-    if (transpctrl_mode) {
+    float width = this->m_viewport.x;
+    float height = this->m_viewport.y;
+    if (mode == Mode::TRANSPORT_CTRL) {
         if (this->m_state.icon != TranspCtrlIcon::NONE_COUNT) {
-            this->m_current_rectangle = this->getScreenSpaceRect(rel_pos, rel_width, anchor,
-                this->GetTextureWidth(this->m_transpctrl_icons[this->m_state.icon]),
-                this->GetTextureHeight(this->m_transpctrl_icons[this->m_state.icon]), this->m_viewport);
+            width = this->GetTextureWidth(this->m_transpctrl_icons[this->m_state.icon]);
+            height = this->GetTextureHeight(this->m_transpctrl_icons[this->m_state.icon]);
         }
-    } else {
-        this->m_current_rectangle = this->getScreenSpaceRect(rel_pos, rel_width, anchor,
-            this->GetTextureWidth(this->m_texture_id), this->GetTextureHeight(this->m_texture_id), this->m_viewport);
+    } else if (mode == Mode::TEXTURE) {
+        width = this->GetTextureWidth(this->m_texture_id);
+        height = this->GetTextureHeight(this->m_texture_id);
     }
+    this->m_current_rectangle = this->getScreenSpaceRect(rel_pos, rel_width, anchor, width, height, this->m_viewport);
 
     return true;
 }

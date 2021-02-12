@@ -212,18 +212,17 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
 
 bool RenderUtils::LoadTextureFromFile(GLuint& out_texture_id, const std::string& filename, bool reload) {
 
-    out_texture_id = 0;
-
     if (reload) {
         auto texture_iter = std::find_if(this->textures.begin(), this->textures.end(), [&out_texture_id](std::shared_ptr<glowl::Texture2D> tex_ptr) {
                 return (tex_ptr->getName() == out_texture_id); });
-        if (texture_iter == this->textures.end()) {
+        if (texture_iter != this->textures.end()) {
+            if (RenderUtils::LoadTextureFromFile(*texture_iter, filename)) {
+                return true;
+            }
+        } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Unable to reload texture. Texture with given id does not exist. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
-        }
-        if (RenderUtils::LoadTextureFromFile(*texture_iter, filename)) {
-            return true;
+                "Unable to reload texture. Texture with given id does not exist. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
         }
     } else {
         this->textures.push_back(nullptr);
@@ -234,6 +233,8 @@ bool RenderUtils::LoadTextureFromFile(GLuint& out_texture_id, const std::string&
             this->textures.pop_back();
         }
     }
+
+    out_texture_id = 0;
     return false;
 }
 
