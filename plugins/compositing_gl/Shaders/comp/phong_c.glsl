@@ -14,6 +14,7 @@ layout(rgba16) writeonly uniform image2D tgt_tx2D;
 
 uniform int point_light_cnt;
 uniform int distant_light_cnt;
+uniform vec3 camPos;
 
 uniform mat4 inv_view_mx;
 uniform mat4 inv_proj_mx;
@@ -56,7 +57,7 @@ vec3 blinnPhong(vec3 normal, vec3 lightdirection, vec3 v){
     vec3 Cdiff = diffuseColor.rgb * k_diff * dot(normal,lightdirection);
 
     //Specular Part
-    vec3 h = normalize(v+ lightdirection);
+    vec3 h = normalize(v + lightdirection);
     normal = normal / sqrt(normal.x*normal.x + normal.y*normal.y + normal.z*normal.z);
     float costheta = dot(h,normal);
     vec3 Cspek = specularColor.rgb * k_spec * ((k_exp + 2)/(2 * 3.141592f)) * pow(costheta, k_exp);
@@ -96,18 +97,16 @@ void main() {
             vec3 light_dir = vec3(point_light_params[i].x,point_light_params[i].y,point_light_params[i].z) - world_pos;
             float d = length(light_dir);
             light_dir = normalize(light_dir);
-            //TODO V??
-            vec3 v = vec3(1.0);
-            reflected_light += blinnPhong(normal,light_dir,v) * point_light_params[i].intensity * (1.0/(d*d));
+            vec3 view_dir = camPos - world_pos;
+            reflected_light += blinnPhong(normal,light_dir, view_dir) * point_light_params[i].intensity * (1.0/(d*d));
        
         }
         
         for(int i=0; i<distant_light_cnt; ++i)
         {
             vec3 light_dir = vec3(distant_light_params[i].x,distant_light_params[i].y,distant_light_params[i].z);
-            //TODO V??
-            vec3 v = vec3(1.0);
-            reflected_light += blinnPhong(normal,light_dir,v) * distant_light_params[i].intensity;
+            vec3 view_dir = camPos - world_pos;
+            reflected_light += blinnPhong(normal,light_dir, view_dir) * distant_light_params[i].intensity;
         
         }
         //Sets pixelcolor to illumination + color (alpha channels remains the same)
