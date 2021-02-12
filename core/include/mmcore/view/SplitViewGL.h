@@ -84,20 +84,6 @@ public:
     unsigned int GetCameraSyncNumber() const override;
 
     /**
-     * Serialises the camera of the view
-     *
-     * @param serialiser Serialises the camera of the view
-     */
-    void SerialiseCamera(vislib::Serialiser& serialiser) const override;
-
-    /**
-     * Deserialises the camera of the view
-     *
-     * @param serialiser Deserialises the camera of the view
-     */
-    void DeserialiseCamera(vislib::Serialiser& serialiser) override;
-
-    /**
      * Renders this AbstractView3D in the currently active OpenGL context.
      *
      * @param context

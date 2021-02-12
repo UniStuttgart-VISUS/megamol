@@ -112,20 +112,6 @@ public:
     virtual unsigned int GetCameraSyncNumber(void) const = 0;
 
     /**
-     * Serialises the camera of the view
-     *
-     * @param serialiser Serialises the camera of the view
-     */
-    virtual void SerialiseCamera(vislib::Serialiser& serialiser) const = 0;
-
-    /**
-     * Deserialises the camera of the view
-     *
-     * @param serialiser Deserialises the camera of the view
-     */
-    virtual void DeserialiseCamera(vislib::Serialiser& serialiser) = 0;
-
-    /**
      * Renders this AbstractView3D in the currently active OpenGL context.
      *
      * @param context The context information like time or GPU affinity.

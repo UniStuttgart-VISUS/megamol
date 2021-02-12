@@ -86,20 +86,6 @@ namespace view {
         virtual unsigned int GetCameraSyncNumber(void) const;
 
         /**
-         * Serialises the camera of the view
-         *
-         * @param serialiser Serialises the camera of the view
-         */
-        virtual void SerialiseCamera(vislib::Serialiser& serialiser) const;
-
-        /**
-         * Deserialises the camera of the view
-         *
-         * @param serialiser Deserialises the camera of the view
-         */
-        virtual void DeserialiseCamera(vislib::Serialiser& serialiser);
-
-        /**
          * Renders this AbstractView3D in the currently active OpenGL context.
          *
          * @param context
@@ -140,7 +126,7 @@ namespace view {
          */
         virtual void UpdateFreeze(bool freeze);
 
-	    virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
+	virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
 
         virtual bool OnChar(unsigned int codePoint) override;
 
@@ -186,7 +172,7 @@ namespace view {
 
     private:
 
-		enum MouseMode : uint8_t { Propagate, Pan, Zoom };
+        enum MouseMode : uint8_t { Propagate, Pan, Zoom };
 
         /**
          * Implementation of 'Create'.
@@ -278,7 +264,7 @@ namespace view {
          */
         float *overrideViewTile;
 
-        int* overrideViewport;
+        int* overrideViewport = NULL;
 
         /** The time control */
         TimeControl timeCtrl;

@@ -135,26 +135,6 @@ unsigned int view::View2DGL::GetCameraSyncNumber(void) const {
 
 
 /*
- * view::View2DGL::SerialiseCamera
- */
-void view::View2DGL::SerialiseCamera(vislib::Serialiser& serialiser) const {
-    serialiser.Serialise(this->viewX, "viewX");
-    serialiser.Serialise(this->viewY, "viewY");
-    serialiser.Serialise(this->viewZoom, "viewZ");
-}
-
-
-/*
- * view::View2DGL::DeserialiseCamera
- */
-void view::View2DGL::DeserialiseCamera(vislib::Serialiser& serialiser) {
-    serialiser.Deserialise(this->viewX, "viewX");
-    serialiser.Deserialise(this->viewY, "viewY");
-    serialiser.Deserialise(this->viewZoom, "viewZ");
-}
-
-
-/*
  * view::View2DGL::Render
  */
 void view::View2DGL::Render(const mmcRenderViewContext& context) {

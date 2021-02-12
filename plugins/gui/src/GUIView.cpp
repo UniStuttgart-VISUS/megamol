@@ -21,6 +21,7 @@ GUIView::GUIView()
 
     this->render_view_slot.SetCompatibleCall<core::view::CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->render_view_slot);
+    this->MakeSlotAvailable(&this->renderSlot);
 }
 
 
@@ -31,6 +32,10 @@ GUIView::~GUIView() {
 
 bool GUIView::create() {
 
+    if (this->_fbo == nullptr) {
+        this->_fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    }
+
     if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
         return gui.CreateContext(megamol::gui::GUIImGuiAPI::OPEN_GL, this->GetCoreInstance());
     } else {
@@ -39,11 +44,6 @@ bool GUIView::create() {
             __FUNCTION__, __LINE__);
         return false;
     }
-
-    if (this->_fbo == nullptr) {
-        this->_fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
-    }
-
 }
 
 
@@ -78,19 +78,6 @@ unsigned int GUIView::GetCameraSyncNumber(void) const {
         "[GUI] Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     return 0u;
 }
-
-
-void GUIView::SerialiseCamera(vislib::Serialiser& serialiser) const {
-    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "[GUI] Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-}
-
-
-void GUIView::DeserialiseCamera(vislib::Serialiser& serialiser) {
-    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-        "[GUI] Unsupported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-}
-
 
 void GUIView::Render(const mmcRenderViewContext& context) {
     auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
