@@ -1,11 +1,11 @@
 /*
  * mmvtkmStreamLines.h
  *
- * Copyright (C) 2020 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2020-2021 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-
-#pragma once
+#ifndef MEGAMOL_MMVTKM_STREAMLINES_H_INCLUDED
+#define MEGAMOL_MMVTKM_STREAMLINES_H_INCLUDED
 
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -165,8 +165,6 @@ private:
 
 	/** 
 	* Calculates the liveSeedPlane_ with the current u and v values 
-	* 
-	* @param isU, true for u, false for v
 	*/
     void calcLiveSeedPlane(
         unsigned int line, float uv, const glm::vec3& start, const glm::vec3& stop, 
@@ -420,6 +418,10 @@ private:
     glm::vec3 seedPlaneColor_;
     float seedPlaneAlpha_;
 	float gpRot_;
+    float borderLineS_;
+    float borderLineT_;
+    float borderLineP_;
+    float borderLineQ_;
 
     std::vector<glm::vec3> liveSeedPlane_;
     std::vector<glm::vec3> liveCopy_;
@@ -446,41 +448,32 @@ private:
     glm::vec3 black = glm::vec3(0.f);
     std::vector<glm::vec3> colorVec_ = { red_, orange_, yellow_, green_, cyan_, blue_, purple_, magenta_ };
 
-    std::vector<glm::vec3> seedPlane_ = {glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f)};
-    std::vector<glm::vec4> seedPlaneColorVec_ = {glm::vec4(red_, 1.0), glm::vec4(red_, 1.0), glm::vec4(red_, 1.0)};
-    std::vector<unsigned int> seedPlaneIndices_ = {0, 1, 2};
 
+    std::vector<glm::vec3> seedPlane_;
+    std::vector<glm::vec4> seedPlaneColorVec_;
+    std::vector<unsigned int> seedPlaneIndices_;
     
-	std::vector<glm::vec3> ghostCopy_ = {glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f)};
-    std::vector<glm::vec3> rotatedGhostCopy_ = {glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f), glm::vec3(0.f)};
-	std::vector<glm::vec3> ghostPlane_ = {
-        glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f)};
-	std::vector<glm::vec4> ghostColors_ = {
-        glm::vec4(red_, 0.2f), glm::vec4(green_, 0.2f), glm::vec4(blue_, 0.2f), glm::vec4(grey2, 0.2f)};
-    std::vector<unsigned int> ghostIdcs_ = {0, 1, 2, 3};
+	std::vector<glm::vec3> ghostCopy_;
+    std::vector<glm::vec3> rotatedGhostCopy_;
+	std::vector<glm::vec3> ghostPlane_;
+	std::vector<glm::vec4> ghostColors_;
+    std::vector<unsigned int> ghostIdcs_;
 
-	std::vector<glm::vec3> borderLine_ = {
-        glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f),
-		glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f),
-        glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 0.f)};
-    std::vector<glm::vec4> borderColors_ = {
-        glm::vec4(grey2, 0.8f), glm::vec4(grey2, 0.8f),
-		glm::vec4(grey2, 0.8f), glm::vec4(grey2, 0.8f),
-		glm::vec4(grey2, 0.8f), glm::vec4(grey2, 0.8f),
-        glm::vec4(grey2, 0.8f), glm::vec4(grey2, 0.8f)};
-    std::vector<unsigned int> borderIdcs_ = {0, 1, 2, 3, 4, 5, 6, 7};
-
-	float epsilon4_ = 1e-4f;
-	float epsilon5_ = 1e-5f;
+	std::vector<glm::vec3> borderLine_;
+    std::vector<glm::vec4> borderColors_;
+    std::vector<unsigned int> borderIdcs_;
 
     // mesh identifier
     std::string streamlineBaseIdentifier_;
     std::string seedPlaneIdentifier_;
     std::string ghostPlaneIdentifier_;
     std::string borderlineIdentifier_;
+
+	float epsilon4_ = 1e-4f;
+	float epsilon5_ = 1e-5f;
 };
 
 } // end namespace mmvtkm
 } // end namespace megamol
+
+#endif // MEGAMOL_MMVTKM_STREAMLINES_H_INCLUDED

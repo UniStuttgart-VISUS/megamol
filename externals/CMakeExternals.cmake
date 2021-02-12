@@ -18,7 +18,7 @@ include(CMakePrintHelpers)
 # Centralized function to require externals to add them once by invoking
 # require_external(<EXTERNAL_TARGET>).
 #
-# Think of this function as a big switch, testing for the name and presence 
+# Think of this function as a big switch, testing for the name and presence
 # of the external target to guard against duplicated targets.
 #
 function(require_external NAME)
@@ -149,7 +149,7 @@ function(require_external NAME)
       GIT_REPOSITORY https://github.com/ornladios/ADIOS2.git
       GIT_TAG "v2.4.0"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ADIOS2_LIB}"
-      CMAKE_ARGS 
+      CMAKE_ARGS
         -DBUILD_SHARED_LIBS=OFF
         -DBUILD_TESTING=OFF
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON
@@ -239,7 +239,7 @@ function(require_external NAME)
       LIBRARY ${FMT_LIB}
       DEBUG_SUFFIX "d")
 
-  #glad 
+  #glad
   elseif(NAME STREQUAL "glad")
     if(TARGET glad)
       return()
@@ -305,7 +305,7 @@ function(require_external NAME)
       set(ICET_GL_LIB "lib/libIceTGL.a")
       set(ICET_MPI_LIB "lib/libIceTMPI.a")
     endif()
-    
+
     add_external_project(IceT STATIC
       GIT_REPOSITORY https://gitlab.kitware.com/icet/icet.git
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${ICET_CORE_LIB}" "<INSTALL_DIR>/${ICET_GL_LIB}" "<INSTALL_DIR>/${ICET_MPI_LIB}"
@@ -791,11 +791,11 @@ function(require_external NAME)
     endif()
 
     #option(vtkm_ENABLE_CUDA "Option to build vtkm with cuda enabled" OFF)
-    
+
     add_external_project(vtkm STATIC
       GIT_REPOSITORY https://gitlab.kitware.com/vtk/vtk-m.git
       GIT_TAG "v${VTKM_VER}.0"
-      BUILD_BYPRODUCTS 
+      BUILD_BYPRODUCTS
         "<INSTALL_DIR>/${VTKM_CONT_LIB}"
         #"<INSTALL_DIR>/${VTKM_FILTER_LIB}"
 	      "<INSTALL_DIR>/${VTKM_RENDERER_LIB}"

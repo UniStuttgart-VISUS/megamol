@@ -1,13 +1,9 @@
 /*
  * mmvtkmStreamLines.cpp
  *
- * Copyright (C) 2020 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2020-2021 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
-
-#include "vtkm/filter/Streamline.h"
-#include "vtkm/io/writer/VTKDataSetWriter.h"
-
 #include "mmvtkm/mmvtkmDataCall.h"
 #include "mmvtkm/mmvtkmStreamLines.h"
 
@@ -19,6 +15,9 @@
 #include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/ColorParam.h"
+
+#include "vtkm/filter/Streamline.h"
+#include "vtkm/io/writer/VTKDataSetWriter.h"
 
 #include "glm/gtx/transform.hpp"
 
@@ -84,6 +83,10 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     , seedPlaneColor_(0.5f, 0.f, 0.f)
     , seedPlaneAlpha_(1.f)
 	, gpRot_(0.f)
+    , borderLineS_(0.f)
+    , borderLineT_(0.f)
+    , borderLineP_(0.f)
+    , borderLineQ_(0.f)
     , liveSeedPlane_{}
 	, liveCopy_{}
     , originalSeedPlane_{}
@@ -91,6 +94,18 @@ mmvtkmStreamLines::mmvtkmStreamLines()
     , seedPlaneTriangles_{}
     , seeds_{}
     , planeMode_(0)
+    , seedPlane_(3, glm::vec3(0.f))
+    , seedPlaneColorVec_(3, glm::vec4(red_, 1.f))
+    , seedPlaneIndices_{0, 1, 2}
+    , ghostCopy_(4, glm::vec3(0.f))
+    , rotatedGhostCopy_(4, glm::vec3(0.f))
+    , ghostPlane_(4, glm::vec3(0.f))
+    , ghostColors_{glm::vec4(red_, 0.2f), glm::vec4(green_, 0.2f), glm::vec4(blue_, 0.2f),
+              glm::vec4(grey2, 0.2f)}
+    , ghostIdcs_{0, 1, 2, 3}
+    , borderLine_(8, glm::vec3(0.f))
+    , borderColors_(8, glm::vec4(grey2, 0.8f))
+    , borderIdcs_{0, 1, 2, 3, 4, 5, 6, 7}
     , streamlineBaseIdentifier_{"streamline"}
     , seedPlaneIdentifier_{"seedplane"}
     , ghostPlaneIdentifier_{"ghostplane"}
@@ -255,9 +270,9 @@ void mmvtkmStreamLines::rotateGhostPlane(const float spRot) {
  * mmvtkmStreamLines::rotateSeedPlane
  */
 bool mmvtkmStreamLines::rotateSeedPlane(core::param::ParamSlot& slot) {
-	float scale = slot.Param<core::param::FloatParam>()->Value();
+	float angle = slot.Param<core::param::FloatParam>()->Value();
 
-	glm::mat4 rot = glm::rotate(scale * 2.f * 3.14159265358979f, seedPlaneNormal_);
+	glm::mat4 rot = glm::rotate(angle * 2.f * 3.14159265358979f, seedPlaneNormal_);
 
 	assert(liveCopy_.size() == liveSeedPlane_.size());
 
@@ -267,7 +282,7 @@ bool mmvtkmStreamLines::rotateSeedPlane(core::param::ParamSlot& slot) {
 		liveSeedPlane_[i] = newV;
 	}
 
-	rotateGhostPlane(scale);
+	rotateGhostPlane(angle);
 
 	planeAppearanceUpdate_ = true;
 
@@ -280,12 +295,10 @@ bool mmvtkmStreamLines::rotateSeedPlane(core::param::ParamSlot& slot) {
  */
 bool mmvtkmStreamLines::setSTQP(core::param::ParamSlot& slot) {
 	float s = slot.Param<core::param::FloatParam>()->Value();
-	// note: this causes to call mmvtkmStreamLines::assignSTQP 4 times in a row
-	// not beautiful, but it works
-	// TODO: do it better^^
-	this->psSeedPlaneS_.Param<core::param::FloatParam>()->SetValue(s);
-	this->psSeedPlaneT_.Param<core::param::FloatParam>()->SetValue(s);
-	this->psSeedPlaneP_.Param<core::param::FloatParam>()->SetValue(s);
+
+	this->psSeedPlaneS_.Param<core::param::FloatParam>()->SetValue(s, false);
+    this->psSeedPlaneT_.Param<core::param::FloatParam>()->SetValue(s, false);
+    this->psSeedPlaneP_.Param<core::param::FloatParam>()->SetValue(s, false);
 	this->psSeedPlaneQ_.Param<core::param::FloatParam>()->SetValue(s);
 
 	return true;
@@ -310,7 +323,7 @@ bool mmvtkmStreamLines::assignSTPQ(core::param::ParamSlot& slot) {
     float q = this->psSeedPlaneQ_.Param<core::param::FloatParam>()->Value();
 
     // intersect line with seedplane
-	// probably need a more performant solution
+	// TODO: probably need a more performant solution
     calcLiveSeedPlane(0, s, rotatedGhostCopy_[0], rotatedGhostCopy_[2], originalSeedPlane_);
     calcLiveSeedPlane(1, t, rotatedGhostCopy_[1], rotatedGhostCopy_[3], stpqSeedPlane_);
     calcLiveSeedPlane(2, p, rotatedGhostCopy_[2], rotatedGhostCopy_[0], stpqSeedPlane_);
@@ -335,7 +348,7 @@ bool mmvtkmStreamLines::assignSTPQ(core::param::ParamSlot& slot) {
         seedPlaneIndices_.push_back(i);
 	}
 
-    std::cout << "chck\n";
+    
     deleteMesh(seedPlaneIdentifier_);
     createAndAddMeshDataToCall(seedPlaneIdentifier_, liveSeedPlane_, seedPlaneColorVec_, seedPlaneIndices_,
             numPoints, numPoints, mesh::MeshDataAccessCollection::TRIANGLE_FAN);

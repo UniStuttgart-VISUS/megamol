@@ -1,7 +1,7 @@
 /*
  * mmvtkmDataCall.h
  *
- * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
+ * Copyright (C) 2020-2021 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
@@ -12,10 +12,10 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
-#include "vtkm/cont/DataSet.h"
-
 #include "mmcore/AbstractGetData3DCall.h"
 #include "mmcore/factories/CallAutoDescription.h"
+
+#include "vtkm/cont/DataSet.h"
 
 
 namespace megamol {

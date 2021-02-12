@@ -1,7 +1,7 @@
 /*
  * mmvtkmDataSource.cpp
  *
- * Copyright (C) 2020 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2020-2021 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -11,7 +11,6 @@
 
 #include "adios_plugin/CallADIOSData.h"
 
-#include "mmcore/CoreInstance.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/IntParam.h"
@@ -38,7 +37,7 @@ mmvtkmDataSource::mmvtkmDataSource(void)
 	, oldLabelDataHash_(0)
     , vtkmData_()
     , vtkmDataFile_("")
-    , minMaxBounds_(0.f, 0.f, 0.f, 1.f, 1.f, 1.f) 
+    , minMaxBounds_(0.f, 0.f, 0.f, 1.f, 1.f, 1.f)
 {
     this->getDataCalleeSlot_.SetCallback(mmvtkmDataCall::ClassName(), mmvtkmDataCall::FunctionName(0),
         &mmvtkmDataSource::getDataCallback); // GetData is FunctionName(0)

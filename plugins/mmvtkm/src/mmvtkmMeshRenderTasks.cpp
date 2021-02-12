@@ -1,7 +1,7 @@
 /*
  * mmvtkmMeshRenderTasks.cpp
  *
- * Copyright (C) 2020 by Universitaet Stuttgart (VISUS).
+ * Copyright (C) 2020-2021 by Universitaet Stuttgart (VISUS).
  * All rights reserved.
  */
 

@@ -1,7 +1,7 @@
 /*
  * mmvtkmFileLoader.h
  *
- * Copyright (C) 2020 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2020-2021 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 

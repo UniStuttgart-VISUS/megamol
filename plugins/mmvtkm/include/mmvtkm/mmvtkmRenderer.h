@@ -1,7 +1,7 @@
 /*
  * mmvtkmRenderer.h
  *
- * Copyright (C) 2020 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2020-2021 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
@@ -11,17 +11,16 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include "mmcore/CallerSlot.h"
+#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/param/ParamSlot.h"
+
 #include "vtkm/rendering/Actor.h"
 #include "vtkm/rendering/CanvasRayTracer.h"
 #include "vtkm/rendering/MapperRayTracer.h"
 #include "vtkm/rendering/MapperVolume.h"
 #include "vtkm/rendering/Scene.h"
 #include "vtkm/rendering/View3D.h"
-
-#include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer3DModule_2.h"
-
-#include "mmcore/param/ParamSlot.h"
 
 
 namespace megamol {

@@ -1,19 +1,17 @@
 /*
  * mmvtkmDataRenderer.cpp
  *
- * Copyright (C) 2020 by VISUS (Universitaet Stuttgart)
+ * Copyright (C) 2020-2021 by VISUS (Universitaet Stuttgart)
  * Alle Rechte vorbehalten.
  */
 
 #include "stdafx.h"
 #include "mmvtkm/mmvtkmRenderer.h"
 #include "mmvtkm/mmvtkmDataCall.h"
-#include "vtkm/io/reader/VTKDataSetReader.h"
 
 #include "mmcore/param/EnumParam.h"
 
-//#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_CUDA
-//#include "vtkm/cont/DeviceAdapter.h"
+#include "vtkm/io/reader/VTKDataSetReader.h"
 
 
 using namespace megamol;

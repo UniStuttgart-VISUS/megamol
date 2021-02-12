@@ -28,8 +28,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   string(REPLACE "-src" "-build" BUILD_DIR "${SOURCE_DIR}")
 
   # Target definition
-  add_library(${PROJECT_NAME} SHARED ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".mmplg")
+  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files})
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -40,22 +39,13 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     "${SOURCE_DIR}/vtkm/thirdparty/diy"
     "${SOURCE_DIR}/vtkm/thirdparty/lcl/vtkmlcl"
     )
-  #target_link_libraries(${PROJECT_NAME} PRIVATE core vtkm_cont vtkm_filter vtkm_renderer vtkm_source vtkm_worklet adios_plugin mesh)
+
   target_link_libraries(${PROJECT_NAME} PRIVATE core vtkm_cont vtkm_renderer vtkm_worklet adios_plugin mesh)
 
-  # Installation rules for generated files
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION "share/shaders")
 
-  if(WIN32)
-    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
-    install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
-    if(MSVC)
-      install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION bin OPTIONAL)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
-    endif()
-  else()
-    #install(TARGETS ${PROJECT_NAME} DESTINATION "lib" EXPORT ${PROJECT_NAME}-target)
+  if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
   endif()
 
   # Grouping in Visual Studio
@@ -64,8 +54,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
   source_group("Shaders" FILES ${shader_files})
-
-  #source_group("Shaders" FILES ${shader_files})
 
   # Register plugin
   megamol_register_plugin(${PROJECT_NAME})
