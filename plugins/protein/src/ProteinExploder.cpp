@@ -26,6 +26,8 @@
 #include <algorithm>
 #include <cfloat>
 
+#include "mmcore/BoundingBoxes_2.h"
+
 using namespace megamol;
 using namespace megamol::core;
 using namespace megamol::protein;
@@ -654,9 +656,9 @@ bool ProteinExploder::getGroupExtent(core::Call& call) {
     outCall->SetDataHash(inCall->DataHash());
 
     core::BoundingBoxes_2 boxes;
-    boxes.SetObjectSpaceBBox(currentBoundingBox);
-    boxes.SetObjectSpaceClipBox(currentBoundingBox);
-    outCall->SetExtent(1, boxes);
+    boxes.SetBoundingBox(currentBoundingBox);
+    outCall->SetExtent(1, boxes.BoundingBox().Left(), boxes.BoundingBox().Bottom(), boxes.BoundingBox().Back(),
+        boxes.BoundingBox().Right(), boxes.BoundingBox().Top(), boxes.BoundingBox().Front());
 
     lines.clear();
     lineVertexPositions.clear();

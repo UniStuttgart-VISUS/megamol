@@ -659,7 +659,7 @@ bool MoleculeCartoonRenderer::create(void) {
 /*
  * MoleculeCartoonRenderer::GetExtents
  */
-bool MoleculeCartoonRenderer::GetExtents(Call& call) {
+bool MoleculeCartoonRenderer::GetExtents(view::CallRender3DGL& call) {
     view::AbstractCallRender *cr3d = dynamic_cast<view::AbstractCallRender *>(&call);
     if (cr3d == NULL) return false;
 
@@ -748,7 +748,7 @@ bool MoleculeCartoonRenderer::GetExtents(Call& call) {
 /*
  * MoleculeCartoonRenderer::Render
  */
-bool MoleculeCartoonRenderer::Render(Call& call) {
+bool MoleculeCartoonRenderer::Render(view::CallRender3DGL& call) {
     // cast the call to Render3D
     view::AbstractCallRender *cr3d = dynamic_cast<view::AbstractCallRender *>(&call);
     if( cr3d == NULL ) return false;
@@ -769,7 +769,10 @@ bool MoleculeCartoonRenderer::Render(Call& call) {
     }
 
     // get camera information
-    this->cameraInfo = cr3d->GetCameraState();
+    call.GetCamera(cameraInfo);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cameraInfo.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
     // =============== Protein Rendering ===============
     if( molrencr3d ) {
@@ -1470,7 +1473,7 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataCall *mol,
     else {
         this->tubeORShader.Enable();
         glUniform2fARB(this->tubeORShader.ParameterLocation("zValues"),
-            cameraInfo.near_clipping_plane, cameraInfo.far_clipping_plane);
+            cameraInfo.near_clipping_plane(), cameraInfo.far_clipping_plane());
         glUniform2fARB(this->tubeORShader.ParameterLocation("winSize"),
             curVP[2], curVP[3]);
     }
@@ -1500,7 +1503,7 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataCall *mol,
     else {
         this->arrowORShader.Enable();
         glUniform2fARB(this->arrowORShader.ParameterLocation("zValues"),
-            cameraInfo.near_clipping_plane, cameraInfo.far_clipping_plane);
+            cameraInfo.near_clipping_plane(), cameraInfo.far_clipping_plane());
         glUniform2fARB(this->arrowORShader.ParameterLocation("winSize"),
             curVP[2], curVP[3]);
     }
@@ -1528,7 +1531,7 @@ void MoleculeCartoonRenderer::RenderCartoonHybrid( const MolecularDataCall *mol,
     else {
         this->helixORShader.Enable();
         glUniform2fARB(this->helixORShader.ParameterLocation("zValues"),
-            cameraInfo.near_clipping_plane, cameraInfo.near_clipping_plane);
+            cameraInfo.near_clipping_plane(), cameraInfo.near_clipping_plane());
         glUniform2fARB(this->helixORShader.ParameterLocation("winSize"),
             curVP[2], curVP[3]);
     }
@@ -3074,7 +3077,7 @@ void MoleculeCartoonRenderer::RenderCartoonGPUTubeOnly ( const MolecularDataCall
     else {
         this->tubeORShader.Enable();
         glUniform2fARB(this->tubeORShader.ParameterLocation("zValues"),
-            cameraInfo.near_clipping_plane, cameraInfo.far_clipping_plane);
+            cameraInfo.near_clipping_plane(), cameraInfo.far_clipping_plane());
         glUniform2fARB(this->tubeORShader.ParameterLocation("winSize"),
             curVP[2], curVP[3]);
     }
@@ -3344,10 +3347,9 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
     }
 
     // ---------- actual rendering ----------
-    view::Camera_2 cam(cameraInfo);
-
     // get viewpoint parameters for raycasting
-    float viewportStuff[4] = {cam.image_tile().left(), cam.image_tile().bottom(), cam.image_tile().width(), cam.image_tile().height()};
+    float viewportStuff[4] = {cameraInfo.image_tile().left(), cameraInfo.image_tile().bottom(),
+        cameraInfo.image_tile().width(), cameraInfo.image_tile().height()};
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -3360,17 +3362,18 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
 		this->sphereShader.Enable();
 		// set shader variables
 		glUniform4fvARB(sphereShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-                glUniform3fvARB(sphereShader.ParameterLocation("camIn"), 1, glm::value_ptr(cam.view_vector()));
-                glUniform3fvARB(sphereShader.ParameterLocation("camRight"), 1, glm::value_ptr(cam.right_vector()));
-                glUniform3fvARB(sphereShader.ParameterLocation("camUp"), 1, glm::value_ptr(cam.up_vector()));
+                glUniform3fvARB(sphereShader.ParameterLocation("camIn"), 1, &cameraInfo.view_vector().x());
+                glUniform3fvARB(sphereShader.ParameterLocation("camRight"), 1, &cameraInfo.right_vector().x());
+                glUniform3fvARB(sphereShader.ParameterLocation("camUp"), 1, &cameraInfo.up_vector().x());
 	} else {
 		this->sphereShaderOR.Enable();
 		// set shader variables
 		glUniform4fvARB(sphereShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-                glUniform3fvARB(sphereShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam.view_vector()));
-                glUniform3fvARB(sphereShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cam.right_vector()));
-                glUniform3fvARB(sphereShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cam.up_vector()));
-                glUniform2fARB(sphereShaderOR.ParameterLocation("zValues"), cam.near_clipping_plane(), cam.far_clipping_plane());
+                glUniform3fvARB(sphereShaderOR.ParameterLocation("camIn"), 1, &cameraInfo.view_vector().x());
+                glUniform3fvARB(sphereShaderOR.ParameterLocation("camRight"), 1, &cameraInfo.right_vector().x());
+                glUniform3fvARB(sphereShaderOR.ParameterLocation("camUp"), 1, &cameraInfo.up_vector().x());
+                glUniform2fARB(sphereShaderOR.ParameterLocation("zValues"), cameraInfo.near_clipping_plane(),
+                    cameraInfo.far_clipping_plane());
 	}
     // set vertex and color pointers and draw them
     glVertexPointer( 4, GL_FLOAT, 0, vertSpheres.PeekElements());
@@ -3389,9 +3392,9 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
 		this->cylinderShader.Enable();
 		// set shader variables
 		glUniform4fvARB(cylinderShader.ParameterLocation("viewAttr"), 1, viewportStuff);
-                glUniform3fvARB(cylinderShader.ParameterLocation("camIn"), 1, glm::value_ptr(cam.view_vector()));
-                glUniform3fvARB(cylinderShader.ParameterLocation("camRight"), 1, glm::value_ptr(cam.right_vector()));
-                glUniform3fvARB(cylinderShader.ParameterLocation("camUp"), 1, glm::value_ptr(cam.up_vector()));
+                glUniform3fvARB(cylinderShader.ParameterLocation("camIn"), 1, &cameraInfo.view_vector().x());
+                glUniform3fvARB(cylinderShader.ParameterLocation("camRight"), 1, &cameraInfo.right_vector().x());
+                glUniform3fvARB(cylinderShader.ParameterLocation("camUp"), 1, &cameraInfo.up_vector().x());
 		// get the attribute locations
 		attribLocInParams = glGetAttribLocationARB( cylinderShader, "inParams");
 		attribLocQuatC = glGetAttribLocationARB( cylinderShader, "quatC");
@@ -3401,10 +3404,13 @@ void MoleculeCartoonRenderer::RenderStick( const MolecularDataCall *mol, const f
 		this->cylinderShaderOR.Enable();
 		// set shader variables
 		glUniform4fvARB(cylinderShaderOR.ParameterLocation("viewAttr"), 1, viewportStuff);
-                glUniform3fvARB(cylinderShaderOR.ParameterLocation("camIn"), 1, glm::value_ptr(cam.view_vector()));
-                glUniform3fvARB(cylinderShaderOR.ParameterLocation("camRight"), 1, glm::value_ptr(cam.right_vector()));
-                glUniform3fvARB(cylinderShaderOR.ParameterLocation("camUp"), 1, glm::value_ptr(cam.up_vector()));
-                glUniform2fARB(cylinderShaderOR.ParameterLocation("zValues"), cam.near_clipping_plane(),cam.far_clipping_plane());
+                glUniform3fvARB(
+                    cylinderShaderOR.ParameterLocation("camIn"), 1, &cameraInfo.view_vector().x());
+                glUniform3fvARB(
+                    cylinderShaderOR.ParameterLocation("camRight"), 1, &cameraInfo.right_vector().x());
+                glUniform3fvARB(cylinderShaderOR.ParameterLocation("camUp"), 1, &cameraInfo.up_vector().x());
+                glUniform2fARB(cylinderShaderOR.ParameterLocation("zValues"), cameraInfo.near_clipping_plane(),
+                    cameraInfo.far_clipping_plane());
 		// get the attribute locations
 		attribLocInParams = glGetAttribLocationARB(cylinderShaderOR, "inParams");
 		attribLocQuatC = glGetAttribLocationARB(cylinderShaderOR, "quatC");
