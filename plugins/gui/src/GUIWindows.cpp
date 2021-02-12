@@ -1753,6 +1753,7 @@ void GUIWindows::drawMenu(void) {
         }
         ImGui::EndMenu();
     }
+    ImGui::Separator();
 
     // WINDOWS ----------------------------------------------------------------
     if (ImGui::BeginMenu("Windows")) {
@@ -1783,6 +1784,7 @@ void GUIWindows::drawMenu(void) {
 
         ImGui::EndMenu();
     }
+    ImGui::Separator();
 
     // SCREENSHOT -------------------------------------------------------------
     if (megamolgraph_interface) {
@@ -1798,6 +1800,7 @@ void GUIWindows::drawMenu(void) {
             ImGui::EndMenu();
         }
     }
+    ImGui::Separator();
 
     // RENDER -----------------------------------------------------------------
     if (megamolgraph_interface && (graph_ptr != nullptr)) {
@@ -1836,6 +1839,7 @@ void GUIWindows::drawMenu(void) {
             ImGui::EndMenu();
         }
     }
+    ImGui::Separator();
 
     // SETTINGS ---------------------------------------------------------------
     if (ImGui::BeginMenu("Settings")) {
@@ -1960,6 +1964,7 @@ void GUIWindows::drawMenu(void) {
 
         ImGui::EndMenu();
     }
+    ImGui::Separator();
 
     // HELP -------------------------------------------------------------------
     if (ImGui::BeginMenu("Help")) {
@@ -1968,6 +1973,7 @@ void GUIWindows::drawMenu(void) {
         }
         ImGui::EndMenu();
     }
+    ImGui::Separator();
 }
 
 

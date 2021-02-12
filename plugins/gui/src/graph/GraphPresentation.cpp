@@ -751,7 +751,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     if (ImGui::Button("Layout Graph")) {
         this->graph_layout = 1;
     }
-    ImGui::SameLine();
+    ImGui::Separator();
 
     // MODULES
     if (ImGui::BeginMenu("Modules")) {
@@ -763,7 +763,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         }
         ImGui::EndMenu();
     }
-    ImGui::SameLine();
+    ImGui::Separator();
 
     // CALLS
     if (ImGui::BeginMenu("Calls")) {
@@ -781,7 +781,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         }
         ImGui::EndMenu();
     }
-    ImGui::SameLine();
+    ImGui::Separator();
 
     // SLOTS
     if (ImGui::BeginMenu("Slots")) {
@@ -804,17 +804,14 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
         }
         ImGui::EndMenu();
     }
-    ImGui::SameLine();
+    ImGui::Separator();
 
     // GRID
     if (ImGui::BeginMenu("Grid")) {
         ImGui::MenuItem("Show/Hide", nullptr, &this->show_grid);
         ImGui::EndMenu();
     }
-    ImGui::SameLine();
-
     ImGui::Separator();
-    ImGui::SameLine();
 
     // Choose single selected view module
     ModulePtr_t selected_mod_ptr;
@@ -865,7 +862,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
                 }
             }
         }
-        ImGui::SameLine();
+
         this->current_graph_entry_name = selected_mod_ptr->graph_entry_name;
         float input_text_width = std::max(min_text_width,
             (ImGui::CalcTextSize(this->current_graph_entry_name.c_str()).x + 2.0f * style.ItemSpacing.x));
@@ -887,67 +884,49 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
             this->current_graph_entry_name = selected_mod_ptr->graph_entry_name;
         }
         ImGui::PopItemWidth();
-        ImGui::SameLine();
     }
     ImGui::Separator();
-    ImGui::SameLine();
 
     // SCROLLING
     const float scroll_fac = 10.0f;
     ImGui::Text("Scrolling: %.2f, %.2f", this->graph_state.canvas.scrolling.x, this->graph_state.canvas.scrolling.y);
-    ImGui::SameLine();
     ImGui::TextUnformatted("H:");
-    ImGui::SameLine();
     if (ImGui::Button("+###hor_incr_scrolling", button_size)) {
         this->graph_state.canvas.scrolling.x += scroll_fac;
         this->update = true;
     }
-    ImGui::SameLine();
     if (ImGui::Button("-###hor_decr_scrolling", button_size)) {
         this->graph_state.canvas.scrolling.x -= scroll_fac;
         this->update = true;
     }
-    ImGui::SameLine();
     ImGui::TextUnformatted("V:");
-    ImGui::SameLine();
     if (ImGui::Button("+###vert_incr_scrolling", button_size)) {
         this->graph_state.canvas.scrolling.y += scroll_fac;
         this->update = true;
     }
-    ImGui::SameLine();
     if (ImGui::Button("-###vert_decr_scrolling", button_size)) {
         this->graph_state.canvas.scrolling.y -= scroll_fac;
         this->update = true;
     }
-    ImGui::SameLine();
     if (ImGui::Button("Reset###reset_scrolling")) {
         this->graph_state.canvas.scrolling = ImVec2(0.0f, 0.0f);
         this->update = true;
     }
-    ImGui::SameLine();
     this->tooltip.Marker("Middle Mouse Button");
-    ImGui::SameLine();
     ImGui::Separator();
-    ImGui::SameLine();
 
     // ZOOMING
     ImGui::Text("Zooming: %.2f", this->graph_state.canvas.zooming);
-    ImGui::SameLine();
     if (ImGui::Button("+###incr_zooming", button_size)) {
         this->increment_zooming = true;
     }
-    ImGui::SameLine();
     if (ImGui::Button("-###decr_zooming", button_size)) {
         this->decrement_zooming = true;
     }
-    ImGui::SameLine();
     if (ImGui::Button("Reset###reset_zooming")) {
         this->reset_zooming = true;
     }
-    ImGui::SameLine();
     this->tooltip.Marker("Mouse Wheel");
-
-    ImGui::SameLine();
     ImGui::Separator();
 
     ImGui::EndMenuBar();
