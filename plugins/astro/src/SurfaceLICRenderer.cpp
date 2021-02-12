@@ -9,7 +9,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/ScaledBoundingBoxes.h"
-#include "mmcore/view/AbstractCallRender3D.h"
+#include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/TransferFunction.h"
 
@@ -51,7 +51,7 @@ namespace astro {
             , light_color("lighting::light color", "Light color")
             , hash(-1) {
 
-        this->input_renderer.SetCompatibleCall<core::view::CallRender3D_2Description>();
+        this->input_renderer.SetCompatibleCall<core::view::CallRender3DGLDescription>();
         this->MakeSlotAvailable(&this->input_renderer);
 
         this->input_velocities.SetCompatibleCall<core::misc::VolumetricDataCallDescription>();
@@ -155,8 +155,8 @@ namespace astro {
 
     void SurfaceLICRenderer::release() {}
 
-    bool SurfaceLICRenderer::GetExtents(core::view::CallRender3D_2& call) {
-        auto ci = this->input_renderer.CallAs<core::view::CallRender3D_2>();
+    bool SurfaceLICRenderer::GetExtents(core::view::CallRender3DGL& call) {
+        auto ci = this->input_renderer.CallAs<core::view::CallRender3DGL>();
         auto cd = this->input_velocities.CallAs<core::misc::VolumetricDataCall>();
 
         if (ci == nullptr)
@@ -171,7 +171,7 @@ namespace astro {
 
         *ci = call;
 
-        if (!(*ci)(core::view::CallRender3D_2::FnGetExtents))
+        if (!(*ci)(core::view::CallRender3DGL::FnGetExtents))
             return false;
         if (!(*cd)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS))
             return false;
@@ -188,11 +188,11 @@ namespace astro {
         return true;
     }
 
-    bool SurfaceLICRenderer::Render(core::view::CallRender3D_2& call) {
+    bool SurfaceLICRenderer::Render(core::view::CallRender3DGL& call) {
         const auto req_frame = call.Time();
 
         // Get input rendering
-        auto ci = this->input_renderer.CallAs<core::view::CallRender3D_2>();
+        auto ci = this->input_renderer.CallAs<core::view::CallRender3DGL>();
         if (ci == nullptr)
             return false;
 
@@ -200,7 +200,8 @@ namespace astro {
         core::view::Camera_2 cam = call.GetCamera();
         ci->SetCameraState(cam);
 
-        if (this->fbo.GetWidth() != ci->GetViewport().Width() || this->fbo.GetHeight() != ci->GetViewport().Height()) {
+        auto viewport = cam.resolution_gate();
+        if (this->fbo.GetWidth() != viewport.width() || this->fbo.GetHeight() != viewport.height()) {
             if (this->fbo.IsValid())
                 this->fbo.Release();
 
@@ -220,14 +221,14 @@ namespace astro {
             sap.format = GL_STENCIL_INDEX;
             sap.state = vislib::graphics::gl::FramebufferObject::ATTACHMENT_DISABLED;
 
-            this->fbo.Create(ci->GetViewport().Width(), ci->GetViewport().Height(), cap.size(), cap.data(), dap, sap);
+            this->fbo.Create(viewport.width(), viewport.height(), cap.size(), cap.data(), dap, sap);
         }
 
         this->fbo.Enable();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (!(*ci)(core::view::CallRender3D_2::FnRender))
+        if (!(*ci)(core::view::CallRender3DGL::FnRender))
             return false;
         call.SetTimeFramesCount(ci->TimeFramesCount());
 

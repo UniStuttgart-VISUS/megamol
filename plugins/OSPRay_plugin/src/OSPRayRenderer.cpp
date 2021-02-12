@@ -319,7 +319,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
                                            ->Value();
 
         // clear stuff
-         _framebuffer->unmap(_fb);
+         _framebuffer->unmap(fb);
 
         //auto dvce_ = ospGetCurrentDevice();
         //auto error_ = std::string(ospDeviceGetLastErrorMsg(dvce_));
