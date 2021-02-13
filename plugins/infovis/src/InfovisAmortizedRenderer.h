@@ -75,8 +75,6 @@ namespace infovis {
         GLuint amortizedFboA = 0;
         GLuint amortizedFboB = 0;
         GLuint amortizedMsaaFboA = 0;
-        GLuint amortizedMsaaFboB = 0;
-        GLuint msImageStorageA = 0;
         GLuint msImageArray = 0;
 
         GLuint imageArrayA = 0;

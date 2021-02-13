@@ -105,13 +105,6 @@ void InfovisAmortizedRenderer::makeShaders() {
     pc_reconstruction3_shdr->Compile(
         vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
     pc_reconstruction3_shdr->Link();
-
-    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert3", vertex_shader_src);
-    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag3h", fragment_shader_src);
-    pc_reconstruction3h_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    pc_reconstruction3h_shdr->Compile(
-        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    pc_reconstruction3h_shdr->Link();
 }
 
 void InfovisAmortizedRenderer::setupBuffers() {
@@ -120,27 +113,13 @@ void InfovisAmortizedRenderer::setupBuffers() {
     glGenFramebuffers(1, &amortizedFboA);
     glGenFramebuffers(1, &amortizedFboB);
     glGenFramebuffers(1, &amortizedMsaaFboA);
-    glGenFramebuffers(1, &amortizedMsaaFboB);
-    glGenTextures(1, &msImageStorageA);
     glGenTextures(1, &imageArrayA);
     glGenTextures(1, &imageArrayB);
     glGenTextures(1, &msImageArray);
     glGenBuffers(1, &ssboMatrices);
 
     glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
-    // glBindTexture(GL_TEXTURE_2D, imStoreI);
     glEnable(GL_MULTISAMPLE);
-    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msImageStorageA);
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
-    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 1, GL_RGB, 1, 1, GL_TRUE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-    // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msImageStorageA, 0);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
     glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 2, GL_RGB, 1, 1, 2, GL_TRUE);
@@ -172,6 +151,7 @@ void InfovisAmortizedRenderer::setupBuffers() {
 void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLevel) {
     int w = ow / 2;
     int h = oh / 2;
+    std::vector<glm::vec3> camOffsets(4);
 
     glm::mat4 pm;
     for (int i = 0; i < 4; i++) {
@@ -196,7 +176,6 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         }
 
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-        glm::mat4 jit;
 
         invMatrices[frametype] = pmvm;
 
@@ -208,35 +187,13 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         glActiveTexture(GL_TEXTURE11);
         glEnable(GL_MULTISAMPLE);
 
-        if (frametype == 0) {
-            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
-            glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 2, GL_RGBA8, w, h, 2, GL_TRUE);
-            glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, msImageArray, 0, 0);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
+        glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 2, GL_RGBA8, w, h, 2, GL_TRUE);
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, msImageArray, 0, frametype);
 
-            glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_PROGRAMMABLE_SAMPLE_LOCATIONS_ARB, 1);
-            const float tbl[4] = {0.25, 0.25, 0.75, 0.75};
-            glFramebufferSampleLocationsfvARB(GL_FRAMEBUFFER, 0u, 2, tbl);
-
-            // glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imStoreI, 0);
-            glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-        }
-        if (frametype == 1) {
-            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
-            glTexImage3DMultisample(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, 2, GL_RGBA8, w, h, 2, GL_TRUE);
-            glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, msImageArray, 0, 1);
-
-            glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_PROGRAMMABLE_SAMPLE_LOCATIONS_ARB, 1);
-            const float tblb[4] = {0.75, 0.25, 0.25, 0.75};
-            glFramebufferSampleLocationsfvARB(GL_FRAMEBUFFER, 0u, 2, tblb);
-
-            glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-        }
-        if (glGetError() == GL_INVALID_ENUM)
-            megamol::core::utility::log::Log::DefaultLog.WriteError("%i", glGetError());
-
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glViewport(0, 0, w, h);
+        glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_PROGRAMMABLE_SAMPLE_LOCATIONS_ARB, 1);
+        const float tbl[4] = {0.25 + (frametype * 0.5), 0.25, 0.75 - (frametype * 0.5), 0.75};
+        glFramebufferSampleLocationsfvARB(GL_FRAMEBUFFER, 0u, 2, tbl);
     }
 
     // non cbr quarter res 4 frame restoration
@@ -248,26 +205,14 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
             frametype = 0;
         }
 
-        glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-
         glm::mat4 jit;
         glm::mat4 pmvm = pm * mvm;
-        if (frametype == 0) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / ow, 1.0 / oh, 0));
-            invMatrices[frametype] = jit * pmvm;
-        }
-        if (frametype == 1) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / ow, 1.0 / oh, 0));
-            invMatrices[frametype] = jit * pmvm;
-        }
-        if (frametype == 2) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / ow, -1.0 / oh, 0));
-            invMatrices[frametype] = jit * pmvm;
-        }
-        if (frametype == 3) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / ow, -1.0 / oh, 0));
-            invMatrices[frametype] = jit * pmvm;
-        }
+
+        camOffsets = {glm::vec3(-1.0 / ow, 1.0 / oh, 0), glm::vec3(1.0 / ow, 1.0 / oh, 0),
+            glm::vec3(-1.0 / ow, -1.0 / oh, 0), glm::vec3(1.0 / ow, -1.0 / oh, 0)};
+        jit = glm::translate(glm::mat4(1.0f), camOffsets[frametype]);
+        invMatrices[frametype] = jit * pmvm;
+
 
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
@@ -283,24 +228,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
         glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4, 0, GL_RGB, GL_FLOAT, 0);
 
-        if (frametype == 0) {
-            glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, 0);
-        }
-        if (frametype == 1) {
-            glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, 1);
-        }
-        if (frametype == 2) {
-            glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, 2);
-        }
-        if (frametype == 3) {
-            glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, 3);
-        }
-        glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-
-
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glViewport(0, 0, w, h);
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, frametype);
     }
 
     if (approach == 2 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
@@ -310,22 +238,13 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
             moveMatrices.resize(framesNeeded);
             frametype = 0;
         }
-        glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
 
         glm::mat4 jit;
-        glm::mat4 pmvm = pm * mvm;
-        if (frametype == 0) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0 / ow, 2.0 / oh, 0));
-        }
-        if (frametype == 1) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3(0 / ow, 2.0 / oh, 0));
-        }
-        if (frametype == 2) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0 / ow, 0 / oh, 0));
-        }
-        if (frametype == 3) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3(0.0 / ow, 0 / oh, 0));
-        }
+        glm::mat4 pmvm = pm * mvm; 
+        camOffsets = {glm::vec3(-2.0 / ow, 2.0 / oh, 0), glm::vec3(0.0 / ow, 2.0 / oh, 0),
+            glm::vec3(-2.0 / ow, 0 / oh, 0), glm::vec3(.00 / ow, -0.0 / oh, 0)};
+        jit = glm::translate(glm::mat4(1.0f), camOffsets[frametype]);
+        invMatrices[frametype] = jit * pmvm;
         invMatrices[frametype] = jit * pmvm;
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
@@ -341,22 +260,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayB);
         glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4, 0, GL_RGB, GL_FLOAT, 0);
 
-        if (frametype == 0) {
-            glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayB, 0, 0);
-        }
-        if (frametype == 1) {
-            glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayB, 0, 1);
-        }
-        if (frametype == 2) {
-            glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayB, 0, 2);
-        }
-        if (frametype == 3) {
-            glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayB, 0, 3);
-        }
-        glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glViewport(0, 0, w, h);
+        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayB, 0, frametype);
     }
 
     if (approach == 3 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
@@ -368,7 +272,6 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
             hammerPositions = calculateHammersley(ssLevel);
             frametype = 0;
         }
-        glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
 
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
         glActiveTexture(GL_TEXTURE10);
@@ -408,10 +311,10 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
             projMatrix_column[i] = glm::value_ptr(pm)[i];
 
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, frametype);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glViewport(0, 0, w, h);
     }
+    glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glViewport(0, 0, w, h);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(modelViewMatrix_column);
@@ -571,5 +474,15 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
 }
 
 bool megamol::infovis::InfovisAmortizedRenderer::GetExtents(core::view::CallRender2D& call) {
+    core::view::CallRender2D* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2D>();
+    if (cr2d == nullptr)
+        return false;
+
+    if (!(*cr2d)(core::view::CallRender2D::FnGetExtents))
+        return false;
+
+    cr2d->SetTimeFramesCount(call.TimeFramesCount());
+    cr2d->SetIsInSituTime(call.IsInSituTime());
+
     return true;
 }
