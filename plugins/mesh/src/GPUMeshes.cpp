@@ -32,10 +32,6 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
         m_mesh_collection.second.clear();
 
         auto meshes = mc->getData()->accessMeshes();
-
-        /*for(auto a : meshes) {
-        std::cout << "gpumeshes module vector strng: " << a.first << "\n";
-        }*/
         
         for (auto& mesh : meshes) {
 
@@ -79,9 +75,14 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                 // TODO vb_iterators
                 vb_iterators.push_back({attrib.data, attrib.data + attrib.byte_size});
             }
-            
+
+            bool store_separate = false;
+            if (mesh.first == "ghostplane")
+                store_separate = true;
+
             m_mesh_collection.first->addMesh(mesh.first, vb_layouts, vb_iterators, ib_iterators,
-                MeshDataAccessCollection::convertToGLType(mesh.second.indices.type), GL_STATIC_DRAW, primitive_type);
+                MeshDataAccessCollection::convertToGLType(mesh.second.indices.type), GL_STATIC_DRAW, primitive_type,
+                store_separate);
             m_mesh_collection.second.push_back(mesh.first);
         }
     }

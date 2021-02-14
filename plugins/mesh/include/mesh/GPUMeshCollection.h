@@ -15,6 +15,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <iostream>
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/Mesh.hpp"
@@ -183,24 +184,26 @@ inline void GPUMeshCollection::deleteSubMesh(std::string const& identifier) {
 
     // after deleting submesh we need to adjust the batched_meshes
     // otherwise it causes a memory hog
-    auto batch_query = std::find_if(m_batched_meshes.begin(), m_batched_meshes.end(),
-        [query](
-            std::shared_ptr<BatchedMeshes> const& batched_meshes) {
-            std::shared_ptr<glowl::Mesh> query_mesh = (*query).second.mesh->mesh;
-            bool retval = true;
-            for (int i = 0; i < query_mesh->getVertexLayouts().size(); ++i) {
-                retval &= query_mesh->getVertexLayouts()[i] == batched_meshes->mesh->getVertexLayouts()[i];
-            }
-            retval &= query_mesh->getIndexType() == batched_meshes->mesh->getIndexType();
-            retval &= query_mesh->getPrimitiveType() == batched_meshes->mesh->getPrimitiveType();
+    /*if (identifier == "ghostplane") {
+        std::cout << "check0\n";
+        auto batch_query = std::find_if(m_batched_meshes.begin(), m_batched_meshes.end(),
+            [query](std::shared_ptr<BatchedMeshes> const& batched_meshes) {
+                std::shared_ptr<glowl::Mesh> query_mesh = (*query).second.mesh->mesh;
+                bool retval = true;
+                for (int i = 0; i < query_mesh->getVertexLayouts().size(); ++i) {
+                    retval &= query_mesh->getVertexLayouts()[i] == batched_meshes->mesh->getVertexLayouts()[i];
+                }
+                retval &= query_mesh->getIndexType() == batched_meshes->mesh->getIndexType();
+                retval &= query_mesh->getPrimitiveType() == batched_meshes->mesh->getPrimitiveType();
 
-            return retval;
-        });
+                return retval;
+            });
 
-    if (batch_query != m_batched_meshes.end()) {
-        (*batch_query)->vertices_used -= (*query).second.mesh->vertices_used;
-        (*batch_query)->indices_used -= (*query).second.mesh->indices_used;
-    }
+        if (batch_query != m_batched_meshes.end()) {
+            std::cout << "check1\n";
+            m_batched_meshes.erase(batch_query);
+        }
+    }*/
 }
 
 inline void GPUMeshCollection::clear() {
