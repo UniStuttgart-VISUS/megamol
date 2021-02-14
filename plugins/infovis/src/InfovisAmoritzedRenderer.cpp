@@ -56,10 +56,10 @@ bool megamol::infovis::InfovisAmortizedRenderer::create(void) {
 // TODO
 void InfovisAmortizedRenderer::release() {}
 
-std::vector<glm::fvec2> InfovisAmortizedRenderer::calculateHammersley(int until) {
+std::vector<glm::fvec3> InfovisAmortizedRenderer::calculateHammersley(int until) {
     // calculation of Positions according to hammersley sequence
     // https://www.researchgate.net/publication/244441430_Sampling_with_Hammersley_and_Halton_Points
-    std::vector<glm::fvec2> outputArray(until);
+    std::vector<glm::fvec3> outputArray(until);
     float p = 0;
     float u;
     float v = 0;
@@ -72,7 +72,7 @@ std::vector<glm::fvec2> InfovisAmortizedRenderer::calculateHammersley(int until)
             }
             v = (float) ((k + 0.5) / until);
         }
-        outputArray[k] = glm::vec2(u - floor(2 * u), v - floor(2 * v));
+        outputArray[k] = glm::vec3(u - floor(2 * u), v - floor(2 * v), 0);
     }
     return outputArray;
 }
@@ -151,7 +151,6 @@ void InfovisAmortizedRenderer::setupBuffers() {
 void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLevel) {
     int w = ow / 2;
     int h = oh / 2;
-    std::vector<glm::vec3> camOffsets(4);
 
     glm::mat4 pm;
     for (int i = 0; i < 4; i++) {
@@ -167,15 +166,13 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
     }
     auto pmvm = pm * mvm;
 
-    if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+    if (approach == 0) {
         framesNeeded = 2;
         if (invMatrices.size() != framesNeeded) {
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
             frametype = 0;
         }
-
-        glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
 
         invMatrices[frametype] = pmvm;
 
@@ -197,19 +194,21 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
     }
 
     // non cbr quarter res 4 frame restoration
-    if (approach == 1 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+    if (approach == 1) {
         framesNeeded = 4;
         if (invMatrices.size() != framesNeeded) {
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
             frametype = 0;
+            camOffsets.resize(4);
+            camOffsets = {glm::vec3(-1.0 / ow, 1.0 / oh, 0), glm::vec3(1.0 / ow, 1.0 / oh, 0),
+                glm::vec3(-1.0 / ow, -1.0 / oh, 0), glm::vec3(1.0 / ow, -1.0 / oh, 0)};
         }
 
         glm::mat4 jit;
         glm::mat4 pmvm = pm * mvm;
 
-        camOffsets = {glm::vec3(-1.0 / ow, 1.0 / oh, 0), glm::vec3(1.0 / ow, 1.0 / oh, 0),
-            glm::vec3(-1.0 / ow, -1.0 / oh, 0), glm::vec3(1.0 / ow, -1.0 / oh, 0)};
+       
         jit = glm::translate(glm::mat4(1.0f), camOffsets[frametype]);
         invMatrices[frametype] = jit * pmvm;
 
@@ -231,18 +230,21 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, frametype);
     }
 
-    if (approach == 2 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+    if (approach == 2) {
         framesNeeded = 4;
         if (invMatrices.size() != framesNeeded) {
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
             frametype = 0;
+            camOffsets.resize(4);
         }
+
+        camOffsets = {glm::vec3(-2.0 / ow, 2.0 / oh, 0), glm::vec3(0.0 / ow, 2.0 / oh, 0),
+            glm::vec3(-2.0 / ow, 0 / oh, 0), glm::vec3(.00 / ow, -0.0 / oh, 0)};
 
         glm::mat4 jit;
         glm::mat4 pmvm = pm * mvm; 
-        camOffsets = {glm::vec3(-2.0 / ow, 2.0 / oh, 0), glm::vec3(0.0 / ow, 2.0 / oh, 0),
-            glm::vec3(-2.0 / ow, 0 / oh, 0), glm::vec3(.00 / ow, -0.0 / oh, 0)};
+        
         jit = glm::translate(glm::mat4(1.0f), camOffsets[frametype]);
         invMatrices[frametype] = jit * pmvm;
         invMatrices[frametype] = jit * pmvm;
@@ -263,13 +265,13 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayB, 0, frametype);
     }
 
-    if (approach == 3 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+    if (approach == 3) {
         framesNeeded = 4 * ssLevel;
-        if (invMatrices.size() != framesNeeded || hammerPositions.size() != ssLevel) {
+        if (invMatrices.size() != framesNeeded || camOffsets.size() != ssLevel) {
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
-            hammerPositions.resize(ssLevel);
-            hammerPositions = calculateHammersley(ssLevel);
+            camOffsets.resize(ssLevel);
+            camOffsets = calculateHammersley(ssLevel);
             frametype = 0;
         }
 
@@ -281,26 +283,10 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         glm::mat4 jit;
         glm::mat4 pmvm = pm * mvm;
         int f = floor(frametype / 4);
-        if (frametype % 4 == 0) {
-            jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3((hammerPositions[f].x - 1) / ow, (hammerPositions[f].y + 1) / oh, 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / ow, 1.0 / oh, 0)) * pmvm;
-        }
-        if (frametype % 4 == 1) {
-            jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3((hammerPositions[f].x + 1) / ow, (hammerPositions[f].y + 1) / oh, 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / ow, 1.0 / oh, 0)) * pmvm;
-        }
-        if (frametype % 4 == 2) {
-            jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3((hammerPositions[f].x - 1) / ow, (hammerPositions[f].y - 1) / oh, 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / ow, -1.0 / oh, 0)) * pmvm;
-        }
-        if (frametype % 4 == 3) {
-            jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3((hammerPositions[f].x + 1) / ow, (hammerPositions[f].y - 1) / oh, 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / ow, -1.0 / oh, 0)) * pmvm;
-        }
+
+        jit = glm::translate(glm::mat4(1.0f), glm::vec3((camOffsets[f].x - 1 + 2 * (frametype % 2)) / ow, (camOffsets[f].y + 1 - 2 * floor((frametype % 4) / 2)) / oh, 0));
+        invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3((-1.0 + 2.0 * floor(frametype % 2)) / ow, (1 - (2 * floor((frametype % 4)/2))) / oh, 0)) * pmvm;
+
         glm::mat4 invM = glm::inverse(pmvm);
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * invM;
@@ -323,7 +309,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 }
 
 void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int ssLevel) {
-    if (approach == 0 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+    if (approach == 0) {
         glViewport(0, 0, w, h);
 
         pc_reconstruction0_shdr->Enable();
@@ -344,7 +330,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         frametype = (frametype + 1) % framesNeeded;
     }
 
-    if (approach == 1 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+    if (approach == 1) {
         glViewport(0, 0, w, h);
 
         pc_reconstruction1_shdr->Enable();
@@ -367,7 +353,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         frametype = (frametype + 1) % framesNeeded;
     }
 
-    if (approach == 2 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+    if (approach == 2) {
         glViewport(0, 0, w, h);
 
         pc_reconstruction2_shdr->Enable();
@@ -390,7 +376,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         frametype = (frametype + 1) % framesNeeded;
     }
 
-    if (approach == 3 && this->halveRes.Param<core::param::BoolParam>()->Value()) {
+    if (approach == 3) {
         glViewport(0, 0, w, h);
 
         pc_reconstruction3_shdr->Enable();
@@ -463,13 +449,15 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
     cr2d->SetOutputBuffer(call.OutputBuffer());
     cr2d->SetGpuAffinity(call.GpuAffinity<megamol::core::view::AbstractCallRender::GpuHandleType>());
 
-
-    setupAccel(approach, w, h, ssLevel);
-
-    // send call to next renderer in line
-    (*cr2d)(core::view::AbstractCallRender::FnRender);
-
-    doReconstruction(approach, w, h, ssLevel);
+    if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        setupAccel(approach, w, h, ssLevel);
+        // send call to next renderer in line
+        (*cr2d)(core::view::AbstractCallRender::FnRender);
+        doReconstruction(approach, w, h, ssLevel);
+    } else {
+        // send call to next renderer in line
+        (*cr2d)(core::view::AbstractCallRender::FnRender);
+    }
     return true;
 }
 

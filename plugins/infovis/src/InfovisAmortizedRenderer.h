@@ -54,7 +54,7 @@ namespace infovis {
 
         void setupBuffers();
 
-        std::vector<glm::fvec2> calculateHammersley(int until);
+        std::vector<glm::fvec3> calculateHammersley(int until);
 
         void makeShaders();
 
@@ -89,6 +89,7 @@ namespace infovis {
         std::vector<glm::mat4> invMatrices;
         std::vector<glm::mat4> moveMatrices;
         std::vector<glm::fvec2> hammerPositions;
+        std::vector<glm::vec3> camOffsets;
 
          float backgroundColor[4];
 
