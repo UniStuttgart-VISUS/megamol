@@ -11,6 +11,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -43,6 +44,10 @@ namespace gui {
     class OverlayRenderer : public megamol::core::view::RendererModule<megamol::core::view::CallRender3D_2>,
                             megamol::core::view::RenderUtils {
     public:
+        virtual std::vector<std::string> requested_lifetime_resources() {
+            return {"IOpenGL_Context", "MegaMolGraph"};
+        }
+
         /**
          * Answer the name of this module.
          *
@@ -177,12 +182,12 @@ namespace gui {
         glm::vec2 m_viewport;
         Rectangle m_current_rectangle;
         // Parameter Mode
-        vislib::SmartPtr<megamol::core::param::AbstractParam> m_parameter_ptr;
+        megamol::core::param::AbstractParam* m_parameter_ptr;
         // TranspCtrl Icons
         std::array<GLuint, NONE_COUNT> m_transpctrl_icons;
         TranspCtrlIconState m_state;
-        vislib::SmartPtr<megamol::core::param::AbstractParam> m_speed_parameter_ptr;
-        vislib::SmartPtr<megamol::core::param::AbstractParam> m_time_parameter_ptr;
+        megamol::core::param::AbstractParam* m_speed_parameter_ptr;
+        megamol::core::param::AbstractParam* m_time_parameter_ptr;
 
         /**********************************************************************
          * functions

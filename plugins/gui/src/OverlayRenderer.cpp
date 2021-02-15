@@ -159,6 +159,8 @@ void OverlayRenderer::release(void) {
 
     this->m_font_ptr.reset();
     this->m_parameter_ptr = nullptr;
+    this->m_speed_parameter_ptr = nullptr;
+    this->m_time_parameter_ptr = nullptr;
 }
 
 
@@ -179,6 +181,8 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
     slot.ResetDirty();
     this->m_font_ptr.reset();
     this->m_parameter_ptr = nullptr;
+    this->m_speed_parameter_ptr = nullptr;
+    this->m_time_parameter_ptr = nullptr;
     this->DeleteAllTextures();
     this->m_texture_id = 0;
 
@@ -274,54 +278,75 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
     if (parameter_name.IsEmpty()) {
         return false;
     }
-    auto parameter_ptr = this->GetCoreInstance()->FindParameter(parameter_name, false, false);
-    if (parameter_ptr.IsNull()) {
+
+    // Check megamol graph for available parameter:
+    megamol::core::param::AbstractParam* param_ptr = nullptr;
+    const megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
+    auto megamolgraph_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
+        [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
+    if (megamolgraph_it != this->frontend_resources.end()) {
+        megamolgraph_ptr = &megamolgraph_it->getResource<megamol::core::MegaMolGraph>();
+    }
+    if (megamolgraph_ptr != nullptr) {
+        param_ptr = megamolgraph_ptr->FindParameter(std::string(parameter_name.PeekBuffer()));
+    }
+    // Alternatively, check core instance graph for available parameter:
+    if (param_ptr == nullptr) {
+        auto core_parameter_ptr = this->GetCoreInstance()->FindParameter(parameter_name, false, false);
+        if (!core_parameter_ptr.IsNull()) {
+            param_ptr = core_parameter_ptr.DynamicCast<megamol::core::param::AbstractParam>();
+        }
+    }
+    if (param_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to find parameter by name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+
     bool found_valid_param_type = false;
 
     if (&slot == &this->paramTimeParameter) {
-        if (parameter_ptr.DynamicCast<param::FloatParam>() != nullptr) {
+        if (dynamic_cast<param::FloatParam*>(param_ptr) != nullptr) {
             found_valid_param_type = true;
         }
         this->m_time_parameter_ptr = nullptr;
         if (found_valid_param_type) {
-            this->m_time_parameter_ptr = parameter_ptr;
+            this->m_time_parameter_ptr = param_ptr;
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "Parameter type is not supported, only: Float. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     } else if (&slot == &this->paramSpeedParameter) {
-        if (parameter_ptr.DynamicCast<param::FloatParam>() != nullptr) {
+        if (dynamic_cast<param::FloatParam*>(param_ptr) != nullptr) {
             found_valid_param_type = true;
         }
         this->m_speed_parameter_ptr = nullptr;
         if (found_valid_param_type) {
-            this->m_speed_parameter_ptr = parameter_ptr;
+            this->m_speed_parameter_ptr = param_ptr;
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "Parameter type is not supported, only: Float. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     } else if (&slot == &this->paramParameterName) {
-        if (parameter_ptr.DynamicCast<param::FloatParam>() != nullptr) {
+        if (dynamic_cast<param::FloatParam*>(param_ptr) != nullptr) {
             found_valid_param_type = true;
-        } else if (parameter_ptr.DynamicCast<param::IntParam>() != nullptr) {
+        } else if (dynamic_cast<param::IntParam*>(param_ptr) != nullptr) {
             found_valid_param_type = true;
-        } else if (parameter_ptr.DynamicCast<param::Vector2fParam>() != nullptr) {
+        } else if (dynamic_cast<param::Vector2fParam*>(param_ptr) != nullptr) {
             found_valid_param_type = true;
-        } else if (parameter_ptr.DynamicCast<param::Vector3fParam>() != nullptr) {
+        } else if (dynamic_cast<param::Vector3fParam*>(param_ptr) != nullptr) {
             found_valid_param_type = true;
-        } else if (parameter_ptr.DynamicCast<param::Vector4fParam>() != nullptr) {
+        } else if (dynamic_cast<param::Vector4fParam*>(param_ptr) != nullptr) {
             found_valid_param_type = true;
         }
         this->m_parameter_ptr = nullptr;
         if (found_valid_param_type) {
-            this->m_parameter_ptr = parameter_ptr;
+            this->m_parameter_ptr = param_ptr;
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "Parameter type is not supported, only: Float, Int, Vector2f, Vector3f and Vector4f. [%s, %s, line "
+                "%d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
         }
     }
 
@@ -452,12 +477,16 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         float ultra_fast_speed = this->paramUltraFastSpeed.Param<param::FloatParam>()->Value();
 
         float current_speed = 0.0f;
-        if (auto* float_param = this->m_speed_parameter_ptr.DynamicCast<param::FloatParam>()) {
-            current_speed = float_param->Value();
+        if (this->m_speed_parameter_ptr != nullptr) {
+            if (auto* float_param = dynamic_cast<param::FloatParam*>(this->m_speed_parameter_ptr)) {
+                current_speed = float_param->Value();
+            }
         }
         float current_anim_time = 0.0f;
-        if (auto* float_param = this->m_time_parameter_ptr.DynamicCast<param::FloatParam>()) {
-            current_anim_time = float_param->Value();
+        if (this->m_time_parameter_ptr != nullptr) {
+            if (auto* float_param = dynamic_cast<param::FloatParam*>(this->m_time_parameter_ptr)) {
+                current_anim_time = float_param->Value();
+            }
         }
         float delta_time = current_anim_time - this->m_state.current_anim_time;
         this->m_state.current_anim_time = current_anim_time;
@@ -509,33 +538,35 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         std::string sufix = std::string(param_sufix.PeekBuffer());
 
         std::string text("");
-        if (auto* float_param = this->m_parameter_ptr.DynamicCast<param::FloatParam>()) {
-            auto value = float_param->Value();
-            std::stringstream stream;
-            stream << std::fixed << std::setprecision(8) << " " << value << " ";
-            text = prefix + stream.str() + sufix;
-        } else if (auto* int_param = this->m_parameter_ptr.DynamicCast<param::IntParam>()) {
-            auto value = int_param->Value();
-            std::stringstream stream;
-            stream << " " << value << " ";
-            text = prefix + stream.str() + sufix;
-        } else if (auto* vec2_param = this->m_parameter_ptr.DynamicCast<param::Vector2fParam>()) {
-            auto value = vec2_param->Value();
-            std::stringstream stream;
-            stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ") ";
-            text = prefix + stream.str() + sufix;
-        } else if (auto* vec3_param = this->m_parameter_ptr.DynamicCast<param::Vector3fParam>()) {
-            auto value = vec3_param->Value();
-            std::stringstream stream;
-            stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ", " << value.Z()
-                   << ") ";
-            text = prefix + stream.str() + sufix;
-        } else if (auto* vec4_param = this->m_parameter_ptr.DynamicCast<param::Vector4fParam>()) {
-            auto value = vec4_param->Value();
-            std::stringstream stream;
-            stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ", " << value.Z()
-                   << ", " << value.W() << ") ";
-            text = prefix + stream.str() + sufix;
+        if (this->m_parameter_ptr != nullptr) {
+            if (auto* float_param = dynamic_cast<param::FloatParam*>(this->m_parameter_ptr)) {
+                auto value = float_param->Value();
+                std::stringstream stream;
+                stream << std::fixed << std::setprecision(8) << " " << value << " ";
+                text = prefix + stream.str() + sufix;
+            } else if (auto* int_param = dynamic_cast<param::IntParam*>(this->m_parameter_ptr)) {
+                auto value = int_param->Value();
+                std::stringstream stream;
+                stream << " " << value << " ";
+                text = prefix + stream.str() + sufix;
+            } else if (auto* vec2_param = dynamic_cast<param::Vector2fParam*>(this->m_parameter_ptr)) {
+                auto value = vec2_param->Value();
+                std::stringstream stream;
+                stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ") ";
+                text = prefix + stream.str() + sufix;
+            } else if (auto* vec3_param = dynamic_cast<param::Vector3fParam*>(this->m_parameter_ptr)) {
+                auto value = vec3_param->Value();
+                std::stringstream stream;
+                stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ", "
+                       << value.Z() << ") ";
+                text = prefix + stream.str() + sufix;
+            } else if (auto* vec4_param = dynamic_cast<param::Vector4fParam*>(this->m_parameter_ptr)) {
+                auto value = vec4_param->Value();
+                std::stringstream stream;
+                stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ", "
+                       << value.Z() << ", " << value.W() << ") ";
+                text = prefix + stream.str() + sufix;
+            }
         }
         if (text.empty()) {
             // megamol::core::utility::log::Log::DefaultLog.WriteError(
