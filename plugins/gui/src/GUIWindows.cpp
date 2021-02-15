@@ -317,7 +317,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
             std::string filename = graph_ptr->GetFilename();
             this->configurator.GetGraphCollection().SaveProjectToFile(
-                this->state.graph_uid, filename, this->dump_state_to_file(filename));
+                this->state.graph_uid, filename, this->dump_state_to_string());
         }
         this->state.win_save_state = false;
     }
@@ -826,7 +826,7 @@ bool GUIWindows::OnMouseScroll(double dx, double dy) {
 }
 
 
-bool megamol::gui::GUIWindows::ConsumeTriggeredScreenshot(void) {
+bool megamol::gui::GUIWindows::GetTriggeredScreenshot(void) {
 
     bool trigger_screenshot = this->state.screenshot_triggered;
     this->state.screenshot_triggered = false;
@@ -2042,7 +2042,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 
             std::string gui_state;
             if (check_option) {
-                gui_state = this->dump_state_to_file(filename);
+                gui_state = this->dump_state_to_string();
             }
 
             popup_failed |=
@@ -2284,10 +2284,9 @@ void megamol::gui::GUIWindows::triggerCoreInstanceShutdown(void) {
 }
 
 
-std::string megamol::gui::GUIWindows::dump_state_to_file(const std::string& filename) {
+std::string megamol::gui::GUIWindows::dump_state_to_string(void) {
 
     nlohmann::json state_json;
-
     if (this->state_to_json(state_json)) {
         std::string state_str = state_json.dump(); // No line feed
         return state_str;

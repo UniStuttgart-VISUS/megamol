@@ -110,33 +110,43 @@ namespace gui {
          */
         bool OnMouseScroll(double dx, double dy);
 
+        // FUNCTIONS used in GUI_Service //////////////////////////////////////
+
         /**
-         * Triggered Shutdown.
+         * Pass current GUI state.
          */
-        inline bool ConsumeTriggeredShutdown(void) {
+        std::string GetStateString(void) {
+            return this->dump_state_to_string();
+        }
+
+        /**
+         * Pass triggered Shutdown.
+         */
+        inline bool GetTriggeredShutdown(void) {
             bool request_shutdown = this->state.shutdown_triggered;
             this->state.shutdown_triggered = false;
             return request_shutdown;
         }
 
         /**
-         * Triggered Screenshot.
+         * Pass triggered Screenshot.
          */
-        bool ConsumeTriggeredScreenshot(void);
+        bool GetTriggeredScreenshot(void);
+
         // Valid filename is only ensured after screenshot was triggered.
-        inline const std::string ConsumeScreenshotFileName(void) const {
+        inline const std::string GetScreenshotFileName(void) const {
             return this->state.screenshot_filepath;
         }
 
         /**
-         * Set Project Script Paths.
+         * Set project script paths.
          */
         void SetProjectScriptPaths(const std::vector<std::string>& script_paths) {
             this->state.project_script_paths = script_paths;
         }
 
         /**
-         * Enable or disable GUI drawing
+         * Set GUI visibility.
          */
         void SetEnableDisable(bool enable) {
             this->state.gui_enabled = enable;
@@ -161,6 +171,8 @@ namespace gui {
          * @param megamol_graph    If no megamol_graph is given, 'old' graph is synchronised via core_instance.
          */
         bool SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph = nullptr);
+
+        ///////////////////////////////////////////////////////////////////////
 
     private:
         /** Available GUI styles. */
@@ -277,7 +289,7 @@ namespace gui {
         bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
         void triggerCoreInstanceShutdown(void);
 
-        std::string dump_state_to_file(const std::string& filename);
+        std::string dump_state_to_string(void);
         bool load_state_from_file(const std::string& filename);
 
         bool state_from_json(const nlohmann::json& in_json);

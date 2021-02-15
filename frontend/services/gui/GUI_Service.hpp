@@ -17,6 +17,7 @@
 #include "IOpenGL_Context.h"
 #include "Screenshot_Service.hpp"
 #include "ScriptPaths.h"
+#include "GUI_Resource.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
@@ -76,21 +77,22 @@ public:
 
 private:
 
-    struct ResourceState {
-        double time;
-        glm::vec2 framebuffer_size;
-        glm::vec2 window_size;
-        megamol::core::MegaMolGraph* megamol_graph;
-        megamol::frontend_resources::IOpenGL_Context const* opengl_context_ptr;
-    };
+    double m_time;
+    glm::vec2 m_framebuffer_size;
+    glm::vec2 m_window_size;
+    megamol::core::MegaMolGraph* m_megamol_graph;
+    megamol::frontend_resources::IOpenGL_Context const* m_opengl_context_ptr;
+    std::shared_ptr<megamol::gui::GUIWrapper> m_gui = nullptr;
+    std::vector<std::string> m_queuedProjectFiles;
 
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<FrontendResource> m_requestedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
+    megamol::frontend_resources::GUIResource m_providedResource;
 
-    std::shared_ptr<megamol::gui::GUIWrapper> m_gui = nullptr;
-    ResourceState m_resource_state;
-    std::vector<std::string> m_queuedProjectFiles;
+    std::string resource_get_gui_state(void);
+    void resource_set_gui_visible(bool visible);
+
 };
 
 } // namespace frontend
