@@ -21,7 +21,8 @@ float megamol::stdplugin::datatools::AddParticleColors::lerp(float a, float b, f
 }
 
 
-glm::vec4 megamol::stdplugin::datatools::AddParticleColors::sample_tf(float const* tf, unsigned int tf_size, int base, float rest) {
+glm::vec4 megamol::stdplugin::datatools::AddParticleColors::sample_tf(
+    float const* tf, unsigned int tf_size, int base, float rest) {
     if (base < 0 || tf_size == 0)
         return glm::vec4(0);
     auto const last_el = tf_size - 1;
@@ -45,9 +46,9 @@ bool megamol::stdplugin::datatools::AddParticleColors::manipulateData(
     if (!(*cgtf)())
         return false;
 
-    if (_frame_id != inData.FrameID() || _in_data_hash != inData.DataHash() || cgtf->IsDirty()) {
-        outData = inData;
+    outData = inData;
 
+    if (_frame_id != inData.FrameID() || _in_data_hash != inData.DataHash() || cgtf->IsDirty()) {
         auto const tf = cgtf->GetTextureData();
         auto const tf_size = cgtf->TextureSize();
 
@@ -89,7 +90,6 @@ bool megamol::stdplugin::datatools::AddParticleColors::manipulateData(
     }
 
     outData.SetDataHash(_out_data_hash);
-    outData.SetUnlocker(inData.GetUnlocker());
     inData.SetUnlocker(nullptr, false);
 
     return true;
