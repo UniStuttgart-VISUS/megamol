@@ -216,7 +216,8 @@ namespace gui {
             MENU = 4,
             TOGGLE_MAIN_VIEWS = 5,
             TRIGGER_SCREENSHOT = 6,
-            INDEX_COUNT = 7
+            SHOW_HIDE_GUI = 7,
+            INDEX_COUNT = 8
         };
 
         // VARIABLES --------------------------------------------------------------

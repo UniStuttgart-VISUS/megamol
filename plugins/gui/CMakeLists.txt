@@ -27,8 +27,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   set_source_files_properties(${imgui_files} PROPERTIES GENERATED TRUE)
   # imguizmoquat
   require_external(imguizmoquat)
-  # glfw
-  require_external(glfw3)
 
   # target definition
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${imgui_files} ${resource_files})

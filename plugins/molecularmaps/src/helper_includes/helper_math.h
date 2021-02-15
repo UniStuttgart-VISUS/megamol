@@ -25,7 +25,7 @@
 
 #include "cuda_runtime.h"
 
-typedef unsigned int uint;
+typedef uint32_t uint;
 typedef unsigned short ushort;
 
 #ifndef EXIT_WAIVED
