@@ -213,6 +213,8 @@ private:
 
     /* Allow the container to access the internal create flag */
     friend class ::megamol::core::AbstractNamedObjectContainer;
+
+    std::vector<megamol::frontend::FrontendResource> frontend_resources;
 };
 
 
