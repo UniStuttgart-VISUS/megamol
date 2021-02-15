@@ -163,28 +163,34 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     /// [DEPRECATED USAGE - only mmconsole] ///
     // Disable GUI drawing if GUIView module is chained
-    if (this->state.gui_enabled && ImGui::GetCurrentContext()->WithinFrameScope) {
+    if (this->state.gui_visible && ImGui::GetCurrentContext()->WithinFrameScope) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Chaining GUIVIew modules is not supported. GUI is disabled. [%s, %s, line %d]\n", __FILE__,
             __FUNCTION__, __LINE__);
-        this->state.gui_enabled = false;
+        this->state.gui_visible = false;
     }
 
-    // Check hotkey for gui toggling
-    if (this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
-        this->state.gui_enabled = !this->state.gui_enabled;
-        // Restore menu when GUI is enabled
-        if (this->state.gui_enabled) {
-            this->state.menu_visible = true;
-        }
+    // Restore GUI after it was disabled (before early exit!)
+    if (!this->state.gui_visible && this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
         this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
+        // Restore window 'open' state (Always restore at least menu)
+        this->state.menu_visible = true;
+        const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
+            if (std::find(this->state.gui_visible_buffer.begin(), this->state.gui_visible_buffer.end(),
+                    wc.win_callback) != this->state.gui_visible_buffer.end()) {
+                wc.win_show = true;
+            }
+        };
+        this->window_collection.EnumWindows(func);
+        this->state.gui_visible_buffer.clear();
+        this->state.gui_visible = true;
     }
 
     // Required to prevent change in gui drawing between pre and post draw
-    this->state.enable_gui_post = this->state.gui_enabled;
+    this->state.gui_visible_post = this->state.gui_visible;
 
     // Early exit when pre step should be omitted
-    if (!this->state.gui_enabled) {
+    if (!this->state.gui_visible) {
         return true;
     }
 
@@ -246,6 +252,28 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     // Process hotkeys
     this->checkMultipleHotkeyAssignement();
+    if (this->state.gui_visible) {
+        // Second frame
+        if (this->state.gui_hide_next_frame) {
+            this->state.gui_hide_next_frame = false;
+            this->state.gui_visible = false;
+        }
+        // First frame
+        if (this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
+            this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
+            // Save 'open' state of windows for later restore. Closing all windows before omitting GUI rendering is
+            // required to set right ImGui state for mouse handling
+            this->state.gui_visible_buffer.clear();
+            const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
+                if (wc.win_show) {
+                    this->state.gui_visible_buffer.push_back(wc.win_callback);
+                    wc.win_show = false;
+                }
+            };
+            this->window_collection.EnumWindows(func);
+            this->state.gui_hide_next_frame = true;
+        }
+    }
     if (this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM].is_pressed) {
         this->triggerCoreInstanceShutdown();
         this->state.shutdown_triggered = true;
@@ -355,7 +383,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 bool GUIWindows::PostDraw(void) {
 
     // Early exit when post step should be omitted
-    if (!this->state.enable_gui_post) {
+    if (!this->state.gui_visible_post) {
         return true;
     }
 
@@ -835,7 +863,7 @@ bool megamol::gui::GUIWindows::ConsumeTriggeredScreenshot(void) {
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
 
     // Disable synchronizing graphs when pre step is omitted
-    if (!this->state.gui_enabled) {
+    if (!this->state.gui_visible) {
         return true;
     }
 
@@ -1829,7 +1857,8 @@ void GUIWindows::drawMenu(void) {
 
         if (ImGui::MenuItem("Enable/Disable GUI",
                 this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str())) {
-            this->state.gui_enabled = !this->state.gui_enabled;
+            /// gui_visible needs to be toggled via hotkey!
+            this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = true;
         }
 
         if (ImGui::BeginMenu("Style")) {
@@ -2369,7 +2398,7 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
         for (auto& header_item : in_json.items()) {
             if (header_item.key() == GUI_JSON_TAG_GUI) {
                 auto gui_state = header_item.value();
-                megamol::core::utility::get_json_value<bool>(gui_state, {"gui_enabled"}, &this->state.gui_enabled);
+                megamol::core::utility::get_json_value<bool>(gui_state, {"gui_visible"}, &this->state.gui_visible);
                 megamol::core::utility::get_json_value<bool>(gui_state, {"menu_visible"}, &this->state.menu_visible);
                 int style = 0;
                 megamol::core::utility::get_json_value<int>(gui_state, {"style"}, &style);
@@ -2424,7 +2453,7 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
 
     try {
         // Write GUI state
-        inout_json[GUI_JSON_TAG_GUI]["gui_enabled"] = this->state.gui_enabled;
+        inout_json[GUI_JSON_TAG_GUI]["gui_visible"] = this->state.gui_visible;
         inout_json[GUI_JSON_TAG_GUI]["menu_visible"] = this->state.menu_visible;
         inout_json[GUI_JSON_TAG_GUI]["style"] = static_cast<int>(this->state.style);
         GUIUtils::Utf8Encode(this->state.font_file_name);
@@ -2470,8 +2499,10 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
 
 void megamol::gui::GUIWindows::init_state(void) {
 
-    this->state.gui_enabled = true;
-    this->state.enable_gui_post = true;
+    this->state.gui_visible = true;
+    this->state.gui_visible_post = true;
+    this->state.gui_visible_buffer.clear();
+    this->state.gui_hide_next_frame = false;
     this->state.style = GUIWindows::Styles::DarkColors;
     this->state.rescale_windows = false;
     this->state.style_changed = true;

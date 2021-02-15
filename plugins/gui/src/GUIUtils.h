@@ -11,7 +11,7 @@
 
 /**
  * USED HOTKEYS:
- * 
+ *
  * ----- GUIWindows -----
  * - Trigger Screenshot:        F2
  * - Toggle Graph Entry:        F3
@@ -27,8 +27,8 @@
  * - Search Parameter:          Ctrl + Shift + p
  * - Save Edited Project:       Ctrl + Shift + s
  * - Delete Graph Item:         Delete
- * 
- */
+ *
+ **/
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
