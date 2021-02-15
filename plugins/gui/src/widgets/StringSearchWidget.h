@@ -26,21 +26,7 @@ namespace gui {
 
         ~StringSearchWidget(void) = default;
 
-        /**
-         * Returns true if search string is found in source as a case insensitive substring.
-         *
-         * @param source   The string to search in.
-         * @param search   The string to search for in the source.
-         */
-        static bool FindCaseInsensitiveSubstring(const std::string& source, const std::string& search) {
-            if (search.empty())
-                return true;
-            auto it = std::search(source.begin(), source.end(), search.begin(), search.end(),
-                [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
-            return (it != source.end());
-        }
-
-        bool Widget(const std::string& label, const std::string& help);
+        bool Widget(const std::string& label, const std::string& help, bool apply_focus = true);
 
         inline void SetSearchFocus(bool focus) {
             this->search_focus = focus;
@@ -48,6 +34,10 @@ namespace gui {
 
         inline std::string GetSearchString(void) const {
             return this->search_string;
+        }
+
+        inline void ClearSearchString(void) {
+            this->search_string.clear();
         }
 
     private:

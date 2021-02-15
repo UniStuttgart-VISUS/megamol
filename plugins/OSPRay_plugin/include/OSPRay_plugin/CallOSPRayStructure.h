@@ -9,7 +9,6 @@
 #include <map>
 #include <vector>
 #include "OSPRay_plugin/CallOSPRayMaterial.h"
-#include "OSPRay_plugin/OSPRay_plugin.h"
 #include "mmcore/BoundingBoxes.h"
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -25,10 +24,11 @@ enum structureTypeEnum { UNINITIALIZED, GEOMETRY, VOLUME, OSPRAY_API_STRUCTURES 
 enum geometryTypeEnum {
     SPHERES,
     NHSPHERES,
-    TRIANGLES,
-    STREAMLINES,
+    MESH,
+    LINES,
+    CURVES,
     CYLINDERS,
-    QUADS
+    TEST
 };
 
 enum volumeTypeEnum { STRUCTUREDVOLUME, BLOCKBRICKEDVOLUME, GHOSTBLOCKBRICKEDVOLUME };
@@ -49,102 +49,99 @@ static uint32_t voxelDataTypeOSP[] = {2500, 3000, 3500, 6000, 7000};
 //    DOUBLE = OSP_DOUBLE
 //};
 
+struct sphereStructure {
+    std::shared_ptr<std::vector<float>> vertexData;
+    std::shared_ptr<std::vector<float>> colorData;
+    std::shared_ptr<std::vector<unsigned int>> indexData;
 
-class OSPRayStructureContainer {
-public:
-    structureTypeEnum type;
-    std::shared_ptr<OSPRayMaterialContainer> materialContainer;
-    geometryTypeEnum geometryType;
-    volumeTypeEnum volumeType;
+    const void* raw;
+    unsigned int vertexCount;
+    unsigned int vertexLength;
+    unsigned int dataStride;
+    unsigned int colorLength;
+    int colorType;
+    long long int partCount;
+    float globalRadius;
+    core::moldyn::SimpleSphericalParticles::ColourDataType mmpldColor =
+        core::moldyn::SimpleSphericalParticles::ColourDataType::COLDATA_NONE;
+};
+
+struct structuredVolumeStructure {
+    std::shared_ptr<std::vector<float>> tfRGB;
+    std::shared_ptr<std::vector<float>> tfA;
+    std::array<float, 2> valueRange;
+
+    const void* voxels;
+    std::array<float, 3> gridOrigin;
+    std::array<float, 3> gridSpacing;
+    std::array<int, 3> dimensions;
+    std::array<float, 3> clippingBoxLower;
+    std::array<float, 3> clippingBoxUpper;
+    float isoValue;
+    bool clippingBoxActive;
     volumeRepresentationType volRepType;
+    voxelDataType voxelDType;
+    unsigned int voxelCount;
+    unsigned int maxDim;
+};
 
-    std::shared_ptr<OSPRayTransformationContainer> transformationContainer = nullptr;
-    bool transformationChanged = false;
+struct meshStructure {
+    std::shared_ptr<mesh::MeshDataAccessCollection> mesh;
+    std::shared_ptr<mesh::ImageDataAccessCollection> mesh_textures;
+};
+
+struct apiStructure {
+    std::pair<std::vector<void*>, structureTypeEnum> ospStructures;
+};
+
+struct curveStructure {
+    std::shared_ptr<mesh::MeshDataAccessCollection> mesh;
 
     std::shared_ptr<std::vector<float>> vertexData;
     std::shared_ptr<std::vector<float>> colorData;
     std::shared_ptr<std::vector<unsigned int>> indexData;
-    void* voxels;
-    std::shared_ptr<std::vector<float>> gridOrigin;
-    std::shared_ptr<std::vector<float>> gridSpacing;
-    std::shared_ptr<std::vector<int>> dimensions;
-    std::shared_ptr<std::vector<float>> clippingBoxLower;
-    std::shared_ptr<std::vector<float>> clippingBoxUpper;
-    std::shared_ptr<std::vector<float>> isoValue;
-    std::shared_ptr<std::vector<float>> sliceData;
-    std::shared_ptr<std::vector<float>> clipPlaneData;
-    std::shared_ptr<std::vector<float>> clipPlaneColor;
-    const void* raw;
-    std::shared_ptr<void const*> raw2;
-    std::shared_ptr<std::vector<float>> tfRGB;
-    std::shared_ptr<std::vector<float>> tfA;
-    std::shared_ptr<std::pair<float, float>> valueRange;
-    std::shared_ptr<std::vector<float>> xData;
-    std::shared_ptr<std::vector<float>> yData;
-    std::shared_ptr<std::vector<float>> zData;
-    std::shared_ptr<megamol::core::BoundingBoxes> boundingBox; //< TODO data duplicate to extent container ... however,
-                                                               // this makes access more concise in the renderer
-
-    std::pair<std::vector<void*>,structureTypeEnum> ospStructures;
-
-    std::shared_ptr<mesh::MeshDataAccessCollection> mesh;
-    std::shared_ptr<mesh::ImageDataAccessCollection> mesh_textures;
-
-    unsigned int voxelCount;
-    unsigned int maxDim;
-    unsigned int vertexCount;
     unsigned int vertexLength;
-    unsigned int vertexStride;
+    unsigned int dataStride;
     unsigned int colorLength;
-    unsigned int colorStride;
-    int colorType;
-    long long int partCount;
     float globalRadius;
-    core::moldyn::SimpleSphericalParticles::ColourDataType mmpldColor;
+};
 
-    bool clippingBoxActive;
+struct OSPRayStructureContainer {
+
+    structureTypeEnum type = structureTypeEnum::UNINITIALIZED;
+    std::shared_ptr<OSPRayMaterialContainer> materialContainer;
+
+    geometryTypeEnum geometryType;
+    volumeTypeEnum volumeType;
+
+    std::shared_ptr<OSPRayTransformationContainer> transformationContainer = nullptr;
+    bool transformationChanged = false;
     bool dataChanged;
     bool materialChanged;
     bool parameterChanged;
-    bool isValid;
-    bool smooth; //< valid for lines
+    bool isValid = false;
 
-    // stuff that should be in OSPRayVolumetricStructure: AbstractOSPRayStructure
-    // TODO: both actually.
-    bool useMIP;
-    bool useGradient;
-    bool usePreIntegration;
-    bool useAdaptiveSampling;
-    float adaptiveFactor;
-    float adaptiveMaxRate;
-
-    voxelDataType voxelDType;
-
-    float samplingRate;
-    float aoThreshold;
-    float aoRayOffsetFactor;
-
-    OSPRayStructureContainer();
-    ~OSPRayStructureContainer();
+    std::variant<sphereStructure, structuredVolumeStructure, meshStructure, apiStructure, curveStructure> structure;
 };
+
 
 class OSPRayExtendContainer {
 public:
     std::shared_ptr<megamol::core::BoundingBoxes_2> boundingBox;
     unsigned int timeFramesCount;
-    bool isValid;
+    bool isValid = false;
 
-    OSPRayExtendContainer();
-    ~OSPRayExtendContainer();
+    OSPRayExtendContainer() = default;
+    ~OSPRayExtendContainer() = default;
 };
 
 
-class OSPRAY_PLUGIN_API CallOSPRayStructure;
+class CallOSPRayStructure;
 typedef std::map<CallOSPRayStructure*, OSPRayStructureContainer> OSPRayStrcutrureMap;
 typedef std::map<CallOSPRayStructure*, OSPRayExtendContainer> OSPRayExtendMap;
 
 
-class OSPRAY_PLUGIN_API CallOSPRayStructure : public megamol::core::Call {
+class CallOSPRayStructure : public megamol::core::Call {
 public:
     /**
      * Answer the name of the objects of this description.

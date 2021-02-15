@@ -70,6 +70,6 @@ if(BUILD_VISLIB)
   endif()
 
   # Installation rules for generated files
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-  install(TARGETS vislib DESTINATION "lib" EXPORT vislib-target)
+  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
+  #install(TARGETS vislib DESTINATION "lib" EXPORT vislib-target)
 endif()

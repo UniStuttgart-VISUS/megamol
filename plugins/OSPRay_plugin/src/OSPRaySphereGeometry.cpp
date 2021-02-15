@@ -82,8 +82,7 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
         auto const zAcc = parts.GetParticleStore().GetZAcc();
 
         if (parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I &&
-            parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I &&
-            parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_NONE) {
+            parts.GetColourDataType() != core::moldyn::SimpleSphericalParticles::COLDATA_DOUBLE_I) {
             auto const crAcc = parts.GetParticleStore().GetCRAcc();
             auto const cgAcc = parts.GetParticleStore().GetCGAcc();
             auto const cbAcc = parts.GetParticleStore().GetCBAcc();
@@ -103,24 +102,30 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
             core::utility::log::Log::DefaultLog.WriteWarn(
                 "[OSPRaySphereGeometry]: Color type not supported. Fallback to constant color.");
 
+            auto const g_color = parts.GetGlobalColour();
+
             for (std::size_t pidx = 0; pidx < partCount; ++pidx) {
                 vd[pidx * 3 + 0] = xAcc->Get_f(pidx);
                 vd[pidx * 3 + 1] = yAcc->Get_f(pidx);
                 vd[pidx * 3 + 2] = zAcc->Get_f(pidx);
 
-                cd_rgba[pidx * 4 + 0] = 0.f;
-                cd_rgba[pidx * 4 + 1] = 1.f;
-                cd_rgba[pidx * 4 + 2] = 0.f;
-                cd_rgba[pidx * 4 + 3] = 1.f;
+                cd_rgba[pidx * 4 + 0] = g_color[0] / 255.0f;
+                cd_rgba[pidx * 4 + 1] = g_color[1] / 255.0f;
+                cd_rgba[pidx * 4 + 2] = g_color[2] / 255.0f;
+                cd_rgba[pidx * 4 + 3] = g_color[3] / 255.0f;
             }
         }
 
-        this->structureContainer.vertexData = std::make_shared<std::vector<float>>(std::move(vd));
-        this->structureContainer.colorData = std::make_shared<std::vector<float>>(std::move(cd_rgba));
-        this->structureContainer.vertexLength = 3;
-        this->structureContainer.colorLength = 4;
-        this->structureContainer.partCount = partCount;
-        this->structureContainer.globalRadius = globalRadius;
+        sphereStructure ss;
+
+        ss.vertexData = std::make_shared<std::vector<float>>(std::move(vd));
+        ss.colorData = std::make_shared<std::vector<float>>(std::move(cd_rgba));
+        ss.vertexLength = 3;
+        ss.colorLength = 4;
+        ss.partCount = partCount;
+        ss.globalRadius = globalRadius;
+
+        this->structureContainer.structure = ss;
 
         this->datahash = cd->DataHash();
         this->time = cd->FrameID();
@@ -130,16 +135,16 @@ bool OSPRaySphereGeometry::readData(megamol::core::Call& call) {
     }
 
     // clipPlane setup
-    std::vector<float> clipDat(4);
-    std::vector<float> clipCol(4);
+    std::array<float,4> clipDat;
+    std::array<float,4> clipCol;
     this->getClipData(clipDat.data(), clipCol.data());
 
 
     // Write stuff into the structureContainer
     this->structureContainer.type = structureTypeEnum::GEOMETRY;
     this->structureContainer.geometryType = geometryTypeEnum::SPHERES;
-    this->structureContainer.clipPlaneData = std::make_shared<std::vector<float>>(std::move(clipDat));
-    this->structureContainer.clipPlaneColor = std::make_shared<std::vector<float>>(std::move(clipCol));
+    //this->structureContainer.clipPlaneData = std::make_shared<std::vector<float>>(std::move(clipDat));
+    //this->structureContainer.clipPlaneColor = std::make_shared<std::vector<float>>(std::move(clipCol));
 
     return true;
 }

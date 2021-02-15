@@ -2,6 +2,7 @@
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/FilePathParam.h"
+#include "mmcore/view/light/PointLight.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
 megamol::core::DeferredShading::DeferredShading() 
@@ -9,10 +10,14 @@ megamol::core::DeferredShading::DeferredShading()
     , m_GBuffer(nullptr)
     , m_deferred_shading_prgm(nullptr)
     , m_lights_buffer(nullptr)
+    , getLightsSlot("lights", "Lights are retrieved over this slot.")
     , m_btf_filename_slot("BTF filename", "The name of the btf file to load") 
 {
     this->m_btf_filename_slot << new core::param::FilePathParam("");
     this->MakeSlotAvailable(&this->m_btf_filename_slot);
+
+    this->getLightsSlot.SetCompatibleCall<core::view::light::CallLightDescription>();
+    this->MakeSlotAvailable(&this->getLightsSlot);
 }
 
 megamol::core::DeferredShading::~DeferredShading() { this->Release(); }
@@ -88,24 +93,34 @@ bool megamol::core::DeferredShading::Render(core::view::CallRender3D_2& call) {
             GL_SHADER_STORAGE_BUFFER, nullptr, 0, GL_DYNAMIC_DRAW);
     }
 
-    auto light_update = this->GetLights();
-    if (light_update)
-    {
-        struct LightParams {
-            float x, y, z, intensity;
-        };
-
-        auto light_cnt = lightMap.size();
-
-        std::vector<LightParams> lights;
-        lights.reserve(light_cnt);
-
-        for (const auto element : this->lightMap) {
-            auto light = element.second;
-            lights.push_back({light.pl_position[0], light.pl_position[1], light.pl_position[2], light.lightIntensity});
+    auto call_light = getLightsSlot.CallAs<core::view::light::CallLight>();
+    if (call_light != nullptr) {
+        if (!(*call_light)(0)) {
+            return false;
         }
 
-        m_lights_buffer->rebuffer(lights);
+        if (call_light->hasUpdate()) {
+            auto lights = call_light->getData();
+            auto point_lights = lights.get<core::view::light::PointLightType>();
+
+            if (point_lights.empty()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteWarn("[DeferredShading] No 'Point Light' found");
+            }
+
+            struct LightParams {
+                float x, y, z, intensity;
+            };
+            auto light_cnt = point_lights.size();
+            std::vector<LightParams> light_params;
+            light_params.reserve(light_cnt);
+
+            for (auto const& light : point_lights) {
+                light_params.push_back(
+                    {light.position[0], light.position[1], light.position[2], light.intensity});
+            }
+
+            m_lights_buffer->rebuffer(light_params);
+        }
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

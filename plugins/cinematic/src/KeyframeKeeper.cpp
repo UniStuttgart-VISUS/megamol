@@ -414,7 +414,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
-            glm::vec3 pos_v = vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
+            glm::vec3 pos_v = view::vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
             std::array<float, 3> pos = { pos_v.x, pos_v.y, pos_v.z };
             auto cam_state = this->selectedKeyframe.GetCameraState();
             cam_state.position = pos;
@@ -441,7 +441,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
 
             glm::vec3 up = static_cast<glm::vec3>(cam_up);
             glm::vec3 new_view = this->modelBboxCenter - static_cast<glm::vec3>(cam_pos);
-            glm::quat new_orientation = quaternion_from_vectors(new_view, up);
+            glm::quat new_orientation = view::quaternion_from_vectors(new_view, up);
             camera.orientation(new_orientation);
 
             cam_type::minimal_state_type camera_state;
@@ -466,8 +466,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             glm::vec4 cam_up = snapshot.up_vector;
             glm::vec3 up = static_cast<glm::vec3>(cam_up);
 
-            glm::vec3 new_view = vislib_vector_to_glm(this->editCurrentViewParam.Param<param::Vector3fParam>()->Value());
-            glm::quat new_orientation = quaternion_from_vectors(new_view, up);
+            glm::vec3 new_view = view::vislib_vector_to_glm(this->editCurrentViewParam.Param<param::Vector3fParam>()->Value());
+            glm::quat new_orientation = view::quaternion_from_vectors(new_view, up);
             camera.orientation(new_orientation);
 
             cam_type::minimal_state_type camera_state;
@@ -492,8 +492,8 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             glm::vec4 cam_view = snapshot.view_vector;
             glm::vec3 view = static_cast<glm::vec3>(cam_view);
 
-            glm::vec3 new_up= vislib_vector_to_glm(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
-            glm::quat new_orientation = quaternion_from_vectors(view, new_up);
+            glm::vec3 new_up= view::vislib_vector_to_glm(this->editCurrentUpParam.Param<param::Vector3fParam>()->Value());
+            glm::quat new_orientation = view::quaternion_from_vectors(view, new_up);
             camera.orientation(new_orientation);
 
             cam_type::minimal_state_type camera_state;
@@ -597,7 +597,7 @@ bool KeyframeKeeper::addUndoAction(KeyframeKeeper::Undo::Action act, Keyframe kf
     // Remove all already undone actions in list
     if (!this->undoQueue.empty() && (this->undoQueueIndex >= -1)) {
         if (this->undoQueueIndex < (int)(this->undoQueue.size() - 1)) {
-            this->undoQueue.erase(this->undoQueue.begin() + (this->undoQueueIndex + 1), this->undoQueue.begin() + ((this->undoQueue.size() + 1) - (SIZE_T)(this->undoQueueIndex + 1)));
+            this->undoQueue.erase(this->undoQueue.begin() + (this->undoQueueIndex + 1), this->undoQueue.end());
         }
     }
 
@@ -1029,7 +1029,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         kf.SetAnimTime(t);
         kf.SetSimTime(0.0f);
         auto state = this->cameraState;
-        state.half_aperture_angle_radians = glm::radians(30.0f); // = 60° aperture angle
+        state.half_aperture_angle_radians = glm::radians(30.0f); // = 60Â° aperture angle
         kf.SetCameraState(state);
         return kf;
     }
@@ -1330,9 +1330,9 @@ void KeyframeKeeper::updateEditParameters(Keyframe kf) {
     glm::vec3 up = static_cast<glm::vec3>(cam_up);
     this->editCurrentAnimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetAnimTime(), false);
     this->editCurrentSimTimeParam.Param<param::FloatParam>()->SetValue(kf.GetSimTime() * this->totalSimTime, false);
-    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(pos), false);
-    this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(view), false);
-    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(glm_to_vislib_vector(up), false);
+    this->editCurrentPosParam.Param<param::Vector3fParam>()->SetValue(view::glm_to_vislib_vector(pos), false);
+    this->editCurrentViewParam.Param<param::Vector3fParam>()->SetValue(view::glm_to_vislib_vector(view), false);
+    this->editCurrentUpParam.Param<param::Vector3fParam>()->SetValue(view::glm_to_vislib_vector(up), false);
     this->editCurrentApertureParam.Param<param::FloatParam>()->SetValue(camera.aperture_angle(), false);
     
 }

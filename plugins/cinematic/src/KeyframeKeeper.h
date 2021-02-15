@@ -8,8 +8,6 @@
 #ifndef MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
 #define MEGAMOL_CINEMATIC_KEYFRAMEKEEPER_H_INCLUDED
 
-#include "Cinematic/Cinematic.h"
-
 #include "mmcore/Module.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
@@ -95,8 +93,8 @@ namespace cinematic {
 
         // Variables shared/updated with call ---------------------------------
         camera_state_type            cameraState;
-		std::vector<glm::vec3 >      interpolCamPos;
-		std::vector<Keyframe>        keyframes;
+	std::vector<glm::vec3 >      interpolCamPos;
+        std::vector<Keyframe>        keyframes;
         Keyframe                     selectedKeyframe;
         Keyframe                     dragDropKeyframe;
         glm::vec3                    startCtrllPos;

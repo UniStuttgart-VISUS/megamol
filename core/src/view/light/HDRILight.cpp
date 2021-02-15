@@ -13,24 +13,28 @@
 
 using namespace megamol::core::view::light;
 
+void megamol::core::view::light::HDRILight::addLight(LightCollection& light_collection) {
+    light_collection.add<HDRILightType>(std::static_pointer_cast<HDRILightType>(lightsource));
+}
+
 /*
  * megamol::core::view::light::HDRILight::HDRILight
  */
 HDRILight::HDRILight(void)
     : AbstractLight()
-    ,
-    // hdri light parameteres
-    hdri_up("up", "")
-    , hdri_direction("Direction", "")
-    , hdri_evnfile("EvironmentFile", "") {
+    , up("up", "")
+    , direction("Direction", "")
+    , evnfile("EvironmentFile", "") {
 
     // HDRI light
-    this->hdri_up << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f));
-    this->hdri_direction << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
-    this->hdri_evnfile << new core::param::FilePathParam("");
-    this->MakeSlotAvailable(&this->hdri_up);
-    this->MakeSlotAvailable(&this->hdri_direction);
-    this->MakeSlotAvailable(&this->hdri_evnfile);
+    lightsource = std::make_shared<HDRILightType>();
+
+    this->up << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 1.0f, 0.0f));
+    this->direction << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, 0.0f, 1.0f));
+    this->evnfile << new core::param::FilePathParam("");
+    this->MakeSlotAvailable(&this->up);
+    this->MakeSlotAvailable(&this->direction);
+    this->MakeSlotAvailable(&this->evnfile);
 }
 
 /*
@@ -42,26 +46,27 @@ HDRILight::~HDRILight(void) { this->Release(); }
  * megamol::core::view::light::HDRILight::readParams
  */
 void HDRILight::readParams() {
-    lightContainer.lightType = lightenum::HDRILIGHT;
-	lightContainer.lightColor = this->lightColor.Param<core::param::ColorParam>()->Value();
-    lightContainer.lightIntensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
+    auto light = std::static_pointer_cast<HDRILightType>(lightsource);
 
-    auto hdriup = this->hdri_up.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-	std::copy(hdriup, hdriup + 3, lightContainer.hdri_up.begin());
-    auto hdri_dir = this->hdri_direction.Param<core::param::Vector3fParam>()->Value().PeekComponents();
-	std::copy(hdri_dir, hdri_dir + 3, lightContainer.hdri_direction.begin());
-    lightContainer.hdri_evnfile = this->hdri_evnfile.Param<core::param::FilePathParam>()->Value();
+    light->colour = this->lightColor.Param<core::param::ColorParam>()->Value();
+    light->intensity = this->lightIntensity.Param<core::param::FloatParam>()->Value();
+
+    auto hdriup = this->up.Param<core::param::Vector3fParam>()->Value().PeekComponents();
+    std::copy(hdriup, hdriup + 3, light->up.begin());
+    auto hdri_dir = this->direction.Param<core::param::Vector3fParam>()->Value().PeekComponents();
+    std::copy(hdri_dir, hdri_dir + 3, light->direction.begin());
+    light->evnfile = this->evnfile.Param<core::param::FilePathParam>()->Value();
 }
 
 /*
  * megamol::core::view::light::HDRILight::InterfaceIsDirty
  */
 bool HDRILight::InterfaceIsDirty() {
-    if (this->AbstractIsDirty() || this->hdri_up.IsDirty() || this->hdri_direction.IsDirty() ||
-        this->hdri_evnfile.IsDirty()) {
-        this->hdri_up.ResetDirty();
-        this->hdri_direction.ResetDirty();
-        this->hdri_evnfile.ResetDirty();
+    if (this->AbstractIsDirty() || this->up.IsDirty() || this->direction.IsDirty() ||
+        this->evnfile.IsDirty()) {
+        this->up.ResetDirty();
+        this->direction.ResetDirty();
+        this->evnfile.ResetDirty();
         return true;
     } else {
         return false;
