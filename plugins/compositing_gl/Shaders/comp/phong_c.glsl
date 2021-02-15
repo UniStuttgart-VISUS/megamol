@@ -19,7 +19,9 @@ uniform vec3 camPos;
 uniform mat4 inv_view_mx;
 uniform mat4 inv_proj_mx;
 
-uniform vec4 ambientColor; 
+//ambient light for ambientcolor todo
+uniform vec4 ambientColor;
+//textur bezogen for diffcolor todo
 uniform vec4 diffuseColor;
 uniform vec4 specularColor;
 
@@ -54,12 +56,12 @@ vec3 blinnPhong(vec3 normal, vec3 lightdirection, vec3 v){
     vec3 Camb = k_amb * ambientColor.rgb;
 
     //Diffuse Part
-    vec3 Cdiff = diffuseColor.rgb * k_diff * dot(normal,lightdirection);
+    vec3 Cdiff = diffuseColor.rgb * k_diff * clamp(dot(normal,lightdirection),0,1);
 
     //Specular Part
     vec3 h = normalize(v + lightdirection);
     normal = normal / sqrt(normal.x*normal.x + normal.y*normal.y + normal.z*normal.z);
-    float costheta = dot(h,normal);
+    float costheta = clamp(dot(h,normal),0,1);
     vec3 Cspek = specularColor.rgb * k_spec * ((k_exp + 2)/(2 * 3.141592f)) * pow(costheta, k_exp);
 
     //Final Equation
@@ -97,7 +99,7 @@ void main() {
             vec3 light_dir = vec3(point_light_params[i].x,point_light_params[i].y,point_light_params[i].z) - world_pos;
             float d = length(light_dir);
             light_dir = normalize(light_dir);
-            vec3 view_dir = camPos - world_pos;
+            vec3 view_dir = normalize(camPos - world_pos);
             reflected_light += blinnPhong(normal,light_dir, view_dir) * point_light_params[i].intensity * (1.0/(d*d));
        
         }
@@ -105,11 +107,12 @@ void main() {
         for(int i=0; i<distant_light_cnt; ++i)
         {
             vec3 light_dir = vec3(distant_light_params[i].x,distant_light_params[i].y,distant_light_params[i].z);
-            vec3 view_dir = camPos - world_pos;
+            vec3 view_dir = normalize(camPos - world_pos);
             reflected_light += blinnPhong(normal,light_dir, view_dir) * distant_light_params[i].intensity;
         
         }
         //Sets pixelcolor to illumination + color (alpha channels remains the same)
+        //albedo = ambi/diff koeff auf albedo 
         retval.rgb = reflected_light * albedo.rgb;
     }
 

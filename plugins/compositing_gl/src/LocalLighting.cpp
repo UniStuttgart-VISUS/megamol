@@ -201,9 +201,8 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
                     m_distant_lights.push_back(
                         {light.dl_direction[0], light.dl_direction[1], light.dl_direction[2], light.lightIntensity});
                 }
-            }
+            } 
         }
-
         m_point_lights_buffer->rebuffer(m_point_lights);
         m_distant_lights_buffer->rebuffer(m_distant_lights);
 
@@ -253,6 +252,7 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
         }
         else if (this->m_illuminationmode.Param<core::param::EnumParam>()->Value() == 1) {
             //Blinn-Phong: std::cout << "Blinn Phong" << std::endl;
+            //ambient/diffus/specular anhand von Lichtern & keine auswahl mehr todo 
             m_phong_ambientColor.Param<core::param::ColorParam>()->SetGUIVisible(true);
             m_phong_diffuseColor.Param<core::param::ColorParam>()->SetGUIVisible(true);
             m_phong_specularColor.Param<core::param::ColorParam>()->SetGUIVisible(true);
@@ -265,7 +265,7 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
             if (m_phong_prgm != nullptr && m_point_lights_buffer != nullptr && m_distant_lights_buffer != nullptr) {
                 m_phong_prgm->Enable();
 
-                //Phong Parameter to Shader
+                //Phong Parameter to Shader  
                 glUniform4fv(m_phong_prgm->ParameterLocation("ambientColor"),1, m_phong_ambientColor.Param<core::param::ColorParam>()->Value().data());
                 glUniform4fv(m_phong_prgm->ParameterLocation("diffuseColor"), 1, m_phong_diffuseColor.Param<core::param::ColorParam>()->Value().data());
                 glUniform4fv(m_phong_prgm->ParameterLocation("specularColor"), 1, m_phong_specularColor.Param<core::param::ColorParam>()->Value().data());
@@ -274,9 +274,9 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
                 glUniform1f(m_phong_prgm->ParameterLocation("k_diff"), m_phong_k_diffuse.Param<core::param::FloatParam>()->Value());
                 glUniform1f(m_phong_prgm->ParameterLocation("k_spec"), m_phong_k_specular.Param<core::param::FloatParam>()->Value());
                 glUniform1f(m_phong_prgm->ParameterLocation("k_exp"), m_phong_k_exp.Param<core::param::FloatParam>()->Value());
-
+                
                 //Cameraposition
-                glm::vec3 camPos(snapshot.view_vector.x(), snapshot.view_vector.y(), snapshot.view_vector.z());
+                glm::vec3 camPos(snapshot.position.x(), snapshot.position.y(), snapshot.position.z());
                 glUniform3fv(m_phong_prgm->ParameterLocation("camPos"), 1, glm::value_ptr(camPos));
 
                 m_point_lights_buffer->bind(1);
