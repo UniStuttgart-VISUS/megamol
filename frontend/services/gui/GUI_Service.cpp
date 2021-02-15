@@ -80,7 +80,6 @@ void GUI_Service::updateProvidedResources() {
     this->m_providedResource.get_gui_state = [&](void) -> std::string {
         return this->resource_get_gui_state();
     };
-
     this->m_providedResource.set_gui_visible = [&](bool visible) -> void {
         this->resource_set_gui_visible(visible);
     };
@@ -237,7 +236,7 @@ void GUI_Service::postGraphRender() {
 
 std::vector<FrontendResource>& GUI_Service::getProvidedResources() {
 
-    this->m_providedResourceReferences = {{"GUIResource", m_providedResource}};
+    this->m_providedResourceReferences = {{"GUIResources", m_providedResource}};
     return this->m_providedResourceReferences;
 }
 
@@ -272,7 +271,7 @@ void GUI_Service::resource_set_gui_visible(bool visible) {
         return;
     }
     auto gui = this->m_gui->Get();
-    gui->SetEnableDisable(visible);
+    gui->SetVisibility(visible);
 }
 
 } // namespace frontend

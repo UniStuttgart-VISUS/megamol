@@ -78,12 +78,13 @@ void megamol::gui::GraphCollectionPresentation::Present(
                 project_filename = graph_ptr->GetFilename();
             }
         }
-        bool check_option = false; // Default for option asking for saving gui state
+        vislib::math::Ternary save_gui_state(
+            vislib::math::Ternary::TRI_FALSE); // Default for option asking for saving gui state
         if (this->file_browser.PopUp(project_filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
-                state.configurator_graph_save, "lua", "Save GUI State?", check_option)) {
+                state.configurator_graph_save, "lua", save_gui_state)) {
 
             std::string gui_state;
-            if (check_option) {
+            if (save_gui_state.IsTrue()) {
                 gui_state = inout_graph_collection.GetUpdatedGUIState(state.graph_selected_uid, project_filename);
             }
 

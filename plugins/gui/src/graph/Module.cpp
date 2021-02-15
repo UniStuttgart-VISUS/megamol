@@ -26,7 +26,7 @@ megamol::gui::Module::Module(ImGuiID uid)
         , is_view(false)
         , parameters()
         , name()
-        , main_view_name()
+        , graph_entry_name()
         , callslots() {
 
     this->callslots.emplace(megamol::gui::CallSlotType::CALLER, std::vector<CallSlotPtr_t>());
