@@ -464,7 +464,7 @@ megamol::core::Call::ptr_type megamol::core::MegaMolGraph::FindCall(
     return call_it->callPtr;
 }
 
-static const auto check_module_is_prefix = [&](auto const& module) {
+static const auto check_module_is_prefix = [](std::string const& request, auto const& module) {
         const auto& module_name = module.request.id;
         const auto substring = request.substr(0, module_name.size());
         return (module_name == substring) && // module name is prefix of request
@@ -474,11 +474,11 @@ static const auto check_module_is_prefix = [&](auto const& module) {
 
 // find module where module name is prefix of request
 megamol::core::ModuleList_t::iterator megamol::core::MegaMolGraph::find_module_by_prefix(std::string const& request) {
-    return std::find_if(module_list_.begin(), module_list_.end(), check_module_is_prefix);
+    return std::find_if(module_list_.begin(), module_list_.end(), [&](auto const& module){ return check_module_is_prefix(request, module); });
 }
 
-megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_module_by_prefix(std::string const& name) const {
-    return std::find_if(module_list_.begin(), module_list_.end(), check_module_is_prefix);
+megamol::core::ModuleList_t::const_iterator megamol::core::MegaMolGraph::find_module_by_prefix(std::string const& request) const {
+    return std::find_if(module_list_.begin(), module_list_.end(), [&](auto const& module){ return check_module_is_prefix(request, module); });
 }
 
 megamol::core::param::ParamSlot* megamol::core::MegaMolGraph::FindParameterSlot(std::string const& paramName) const {
