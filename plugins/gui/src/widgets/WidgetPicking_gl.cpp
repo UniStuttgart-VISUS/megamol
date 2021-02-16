@@ -304,7 +304,7 @@ bool megamol::gui::PickingBuffer::DisableInteraction(void) {
 }
 
 
-// Pickable Cube ##########################################################
+// *** Pickable Cube ******************************************************** //
 
 megamol::gui::PickableCube::PickableCube(void) : shader(nullptr) {}
 
@@ -382,18 +382,18 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_defaultview_in
     for (auto& manip : pending_manipulations) {
 
         /// Indices must fit enum order in megamol::core::view::View3D_2::defaultview
-        int view_index;
-        if (id == (manip.obj_id >> 0)) // DEFAULTVIEW_FRONT
+        int view_index = -1;
+        if (id == (id & (manip.obj_id >> 0))) // DEFAULTVIEW_FRONT
             view_index = 0;
-        if (id == (manip.obj_id >> 1)) // DEFAULTVIEW_BACK
+        if (id == (id & (manip.obj_id >> 1))) // DEFAULTVIEW_BACK
             view_index = 1;
-        if (id == (manip.obj_id >> 2)) // DEFAULTVIEW_RIGHT
+        if (id == (id & (manip.obj_id >> 2))) // DEFAULTVIEW_RIGHT
             view_index = 2;
-        if (id == (manip.obj_id >> 3)) // DEFAULTVIEW_LEFT
+        if (id == (id & (manip.obj_id >> 3))) // DEFAULTVIEW_LEFT
             view_index = 3;
-        if (id == (manip.obj_id >> 4)) // DEFAULTVIEW_TOP
+        if (id == (id & (manip.obj_id >> 4))) // DEFAULTVIEW_TOP
             view_index = 4;
-        if (id == (manip.obj_id >> 5)) // DEFAULTVIEW_BOTTOM
+        if (id == (id & (manip.obj_id >> 5))) // DEFAULTVIEW_BOTTOM
             view_index = 5;
 
         if (view_index >= 0) {

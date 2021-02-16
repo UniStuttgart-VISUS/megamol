@@ -138,8 +138,9 @@ namespace gui {
     };
 
 
-    // Pickable Cube ##########################################################
-
+    /**
+     * Pickable Cube
+     */
     class PickableCube {
     public:
         PickableCube(void);
