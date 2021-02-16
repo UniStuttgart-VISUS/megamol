@@ -30,6 +30,7 @@
 #include "TableToProbes.h"
 #include "ComputeDTWDistance.h"
 #include "ProbeClustering.h"
+#include "ReconstructSurface.h"
 
 
 /* anonymous namespace hides this type from any other object files */
@@ -72,6 +73,7 @@ namespace {
             this->module_descriptions.RegisterAutoDescription<megamol::probe::TableToProbes>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ComputeDTWDistance>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ProbeClustering>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::ReconstructSurface>();
 #ifdef PROBE_HAS_OSPRAY
             this->module_descriptions.RegisterAutoDescription<megamol::probe::OSPRayGlyphGeometry>();
 #endif
