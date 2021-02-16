@@ -131,7 +131,8 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             auto view_orientation = std::get<glm::vec4>(param_cubeOrientation->GetValue());
             auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
             int hovered_view = -1;
-            this->cube_widget.Draw(id, default_view, hovered_view, view_orientation, viewport_dim,
+            int hovered_orientation = -1;
+            this->cube_widget.Draw(id, default_view, hovered_view, hovered_orientation, view_orientation, viewport_dim,
                 inout_picking_buffer->GetPendingManipulations());
 
             std::string tooltip_text;
@@ -154,6 +155,22 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
                 break;
             case (5): // DEFAULTVIEW_BOTTOM
                 tooltip_text = "Bottom";
+                break;
+            default:
+                break;
+            }
+            switch (hovered_orientation) {
+            case (0): // TOP
+                tooltip_text += "\n0 degree";
+                break;
+            case (1): // RIGHT
+                tooltip_text += "\n90 degree";
+                break;
+            case (2): // BOTTOM
+                tooltip_text += "\n180 degree";
+                break;
+            case (3): // LEFT
+                tooltip_text += "\n270 degree";
                 break;
             default:
                 break;

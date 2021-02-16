@@ -147,7 +147,8 @@ namespace gui {
         ~PickableCube(void) = default;
 
         void Draw(unsigned int id, int& inout_defaultview_index, int& out_hovered_view_index,
-            const glm::vec4& view_orientation, const glm::vec2& vp_dim, ManipVector& pending_manipulations);
+            int& out_hovered_orientation_index, const glm::vec4& view_orientation, const glm::vec2& vp_dim,
+            ManipVector& pending_manipulations);
 
         InteractVector GetInteractions(unsigned int id) const;
 
