@@ -26,6 +26,7 @@
 #include "mmcore/view/CameraSerializer.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Camera_2.h"
+#include "mmcore/view/TimeControl.h"
 
 namespace megamol {
 namespace core {
@@ -93,11 +94,13 @@ public:
     /**
      * Answer the default time for this view
      *
+     * @param instTime the current instance time
+     *
      * @return The default time
      */
-    virtual float DefaultTime(double instTime) const = 0; /* {
-        return 0.0f;
-    }*/
+    virtual float DefaultTime(double instTime) const {
+        return this->timeCtrl.Time(instTime);
+    }
 
     /**
      * Answers whether the given parameter is relevant for this view.
@@ -222,11 +225,11 @@ public:
     virtual void UpdateFreeze(bool freeze) = 0;
 
     /**
-     * cursor input callback
+     * Restores the view
      *
-     * @param call The calling call
+     * @param p Must be resetViewSlot
      *
-     * @return The return value
+     * @return true
      */
     bool onResetView(Call& call);
 
@@ -329,6 +332,15 @@ protected:
     bool onRestoreCamera(param::ParamSlot& p);
 
     /**
+     * Restores the view
+     *
+     * @param p Must be resetViewSlot
+     *
+     * @return true
+     */
+    bool onResetView(param::ParamSlot& p);
+
+    /**
      * This method determines the file path the camera file should have
      *
      * @return The file path of the camera file as string
@@ -337,6 +349,9 @@ protected:
 
     /** Slot for incoming rendering requests */
     CalleeSlot renderSlot;
+
+    /** The complete scene bounding box */
+    BoundingBoxes_2 bboxs;
 
     /** The camera */
     Camera_2 cam;
@@ -359,16 +374,30 @@ protected:
     /** Slot activating or deactivating the automatic load of camera parameters at program startup */
     param::ParamSlot autoLoadCamSettingsSlot;
 
+    /** Triggers the reset of the view */
+    param::ParamSlot resetViewSlot;
+
+    /** whether to reset the view when the object bounding box changes */
+    param::ParamSlot resetViewOnBBoxChangeSlot;
+
     /** Array that holds the saved camera states */
     std::array<std::pair<Camera_2::minimal_state_type, bool>, 11> savedCameras;
 
     /** The object responsible for camera serialization */
     CameraSerializer serializer;
 
+    /** The time control */
+    view::TimeControl timeCtrl;
+
     /** Pointer to the override background colour */
     glm::vec4 overrideBkgndCol;
 
     glm::vec4 overrideViewport;
+
+    /**  */
+    std::chrono::time_point<std::chrono::high_resolution_clock> lastFrameTime;
+
+    std::chrono::microseconds lastFrameDuration;
 
     /** The background colour for the view */
     mutable param::ParamSlot bkgndColSlot;

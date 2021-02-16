@@ -39,7 +39,6 @@ AbstractView3D::AbstractView3D(void)
         : AbstractView()
     , rendererSlot("rendering", "Connects the view to a Renderer")
     , showLookAt("showLookAt", "Flag showing the look at point")
-    , resetViewSlot("resetView", "Triggers the reset of the view")
     , firstImg(false)
     , stereoFocusDistSlot("stereo::focusDist", "focus distance for stereo projection")
     , stereoEyeDistSlot("stereo::eyeDist", "eye distance for stereo projection")
@@ -51,8 +50,6 @@ AbstractView3D::AbstractView3D(void)
     , viewKeyRotPointSlot("viewKey::RotPoint", "The point around which the view will be rotated")
     , enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
     , showViewCubeSlot("viewcube::show", "Shows the view cube helper")
-    , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
-    , timeCtrl()
     , hookOnChangeOnlySlot("hookOnChange", "whether post-hooks are triggered when the frame would be identical")
     , cameraPositionParam("cam::position", "")
     , cameraOrientationParam("cam::orientation", "")
@@ -79,15 +76,8 @@ AbstractView3D::AbstractView3D(void)
     this->cam.resolution_gate(cam_type::screen_size_type(100, 100));
     this->cam.image_tile(cam_type::screen_rectangle_type(std::array<int, 4>{0, 100, 100, 0}));
 
-    // this triggers the initialization
-    this->bboxs.Clear();
-
     this->showLookAt.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showLookAt);
-
-    this->resetViewSlot.SetParameter(new param::ButtonParam(Key::KEY_HOME));
-    this->resetViewSlot.SetUpdateCallback(&AbstractView3D::onResetView);
-    this->MakeSlotAvailable(&this->resetViewSlot);
 
     this->ResetView();
 
@@ -118,15 +108,8 @@ AbstractView3D::AbstractView3D(void)
     this->enableMouseSelectionSlot.SetUpdateCallback(&AbstractView3D::onToggleButton);
     this->MakeSlotAvailable(&this->enableMouseSelectionSlot);
 
-    this->resetViewOnBBoxChangeSlot.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
-
     this->showViewCubeSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->showViewCubeSlot);
-
-    for (unsigned int i = 0; this->timeCtrl.GetSlot(i) != NULL; i++) {
-        this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
-    }
 
     this->hookOnChangeOnlySlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->hookOnChangeOnlySlot);
@@ -236,8 +219,6 @@ void AbstractView3D::beforeRender(const mmcRenderViewContext& context) {
     AbstractCallRender* cr3d = this->rendererSlot.CallAs<AbstractCallRender>();
     this->handleCameraMovement();
 
-    
-
     auto bkgndCol = (this->overrideBkgndCol != glm::vec4(0, 0, 0, 0)) ? this->overrideBkgndCol : this->BkgndColour();
 
     if (cr3d == NULL) {
@@ -308,6 +289,7 @@ void AbstractView3D::beforeRender(const mmcRenderViewContext& context) {
 
     this->cam.CalcClipping(this->bboxs.ClipBox(), 0.1f);
 
+    // is the rest needed for anything? (a question by someone who didn't write the code...)
     cam_type::snapshot_type camsnap;
     cam_type::matrix_type viewCam, projCam;
     this->cam.calc_matrices(camsnap, viewCam, projCam);
@@ -315,6 +297,7 @@ void AbstractView3D::beforeRender(const mmcRenderViewContext& context) {
     glm::mat4 view = viewCam;
     glm::mat4 proj = projCam;
     glm::mat4 mvp = projCam * viewCam;
+
 }
 
 /*
@@ -568,15 +551,6 @@ bool AbstractView3D::create(void) {
         } catch (...) {}
     }
     this->firstImg = true;
-    return true;
-}
-
-
-/*
- * AbstractView3D::onResetView
- */
-bool AbstractView3D::onResetView(param::ParamSlot& p) {
-    this->ResetView();
     return true;
 }
 

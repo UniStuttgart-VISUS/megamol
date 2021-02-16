@@ -15,7 +15,6 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/Camera_2.h"
-#include "mmcore/view/TimeControl.h"
 #include "mmcore/view/CallRender3D.h"
 
 namespace megamol {
@@ -25,16 +24,6 @@ namespace view {
 class MEGAMOLCORE_API AbstractView3D : public view::AbstractView {
 
 public:
-
-
-    /**
-     * Answer the default time for this view
-     *
-     * @param instTime the current instance time
-     *
-     * @return The default time
-     */
-    virtual float DefaultTime(double instTime) const { return this->timeCtrl.Time(instTime); }
 
     /**
      * Answer the camera synchronization number.
@@ -136,9 +125,6 @@ protected:
 #    pragma warning(default : 4251)
 #endif /* _WIN32 */
 
-    /** The complete scene bounding box */
-    BoundingBoxes_2 bboxs;
-
     bool frameIsNew = false;
 
     bool mouseSensitivityChanged(param::ParamSlot& p);
@@ -151,15 +137,6 @@ protected:
      * @return true in case of success, false otherwise.
      */
     // virtual bool OnGetCamParams(view::CallCamParamSync& c);
-
-    /**
-     * Resets the view
-     *
-     * @param p Must be resetViewSlot
-     *
-     * @return true
-     */
-    bool onResetView(param::ParamSlot& p);
 
     bool onToggleButton(param::ParamSlot& p);
 
@@ -191,9 +168,6 @@ protected:
 
     /** Flag showing the look at point */
     param::ParamSlot showLookAt;
-
-    /** Triggers the reset of the view */
-    param::ParamSlot resetViewSlot;
 
     /** The incoming call */
     view::AbstractCallRender* overrideCall;
@@ -234,9 +208,6 @@ protected:
     /** Shows the view cube helper */
     param::ParamSlot showViewCubeSlot;
 
-    /** whether to reset the view when the object bounding box changes */
-    param::ParamSlot resetViewOnBBoxChangeSlot;
-
     /** Invisible parameters for lua manipulation */
     param::ParamSlot cameraPositionParam;
     param::ParamSlot cameraOrientationParam;
@@ -260,9 +231,6 @@ protected:
 
     bool cameraOvrCallback(param::ParamSlot& p);
 
-    /** The time control */
-    view::TimeControl timeCtrl;
-
     /** Map storing the pressed state of all keyboard buttons */
     std::map<view::Key, bool> pressedKeyMap;
 
@@ -277,11 +245,6 @@ protected:
 
     /** Value storing whether there have been read parameter values that came from outside */
     bool valuesFromOutside;
-
-    /**  */
-    std::chrono::time_point<std::chrono::high_resolution_clock> lastFrameTime;
-
-    std::chrono::microseconds lastFrameDuration;
 
     bool cameraControlOverrideActive;
 };

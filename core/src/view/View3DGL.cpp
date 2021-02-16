@@ -47,7 +47,6 @@ View3DGL::View3DGL(void) : view::AbstractView3D(), toggleMouseSelection(false), 
     this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::onResetView);
     this->MakeSlotAvailable(&this->renderSlot);
-
 }
 
 /*

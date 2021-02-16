@@ -68,17 +68,6 @@ public:
     virtual ~View2DGL(void);
 
     /**
-     * Answer the default time for this view
-     *
-     * @param instTime the current instance time
-     *
-     * @return The default time
-     */
-    virtual float DefaultTime(double instTime) const {
-        return this->timeCtrl.Time(instTime);
-    }
-
-    /**
      * Answer the camera synchronization number.
      *
      * @return The camera synchronization number
@@ -159,22 +148,6 @@ public:
      */
     virtual void release(void);
 
-    /**
-     * Resets the view
-     *
-     * @param p Must be resetViewSlot
-     *
-     * @return true
-     */
-    bool onResetView(param::ParamSlot& p);
-
-
-    /** Triggers the reset of the view */
-    param::ParamSlot resetViewSlot;
-
-    /** whether to reset the view when the object bounding box changes */
-    param::ParamSlot resetViewOnBBoxChangeSlot;
-
     /** Slot to call the renderer to render */
     CallerSlot rendererSlot;
 
@@ -220,12 +193,6 @@ private:
      *   tileX, tileY, tileW, tileH, fullW, fullH
      */
     float *overrideViewTile;
-
-    /** The time control */
-    TimeControl timeCtrl;
-
-    /** cached bounding box */
-    BoundingBoxes_2 bbox;
 
     std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
 };

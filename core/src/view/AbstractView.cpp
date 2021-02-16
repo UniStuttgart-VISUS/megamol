@@ -47,7 +47,10 @@ view::AbstractView::AbstractView(void)
         , autoLoadCamSettingsSlot("camstore::autoLoadSettings",
               "When activated, the view will load the camera settings from disk at startup. "
               "This only works if you use .lua project files")
+        , resetViewSlot("resetView", "Triggers the reset of the view")
+        , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
         , hooks()
+        , timeCtrl()
         , overrideBkgndCol(NULL)
         , bkgndColSlot("backCol", "The views background colour") {
     // InputCall
@@ -75,7 +78,7 @@ view::AbstractView::AbstractView(void)
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_RESETVIEW), &AbstractView::onResetView);
     // this->MakeSlotAvailable(&this->renderSlot);
 
-        this->cameraSettingsSlot.SetParameter(new param::StringParam(""));
+    this->cameraSettingsSlot.SetParameter(new param::StringParam(""));
     this->MakeSlotAvailable(&this->cameraSettingsSlot);
 
     this->storeCameraSettingsSlot.SetParameter(
@@ -95,6 +98,20 @@ view::AbstractView::AbstractView(void)
 
     this->autoLoadCamSettingsSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->autoLoadCamSettingsSlot);
+
+    this->resetViewSlot.SetParameter(new param::ButtonParam(Key::KEY_HOME));
+    this->resetViewSlot.SetUpdateCallback(&AbstractView::onResetView);
+    this->MakeSlotAvailable(&this->resetViewSlot);
+
+    this->resetViewOnBBoxChangeSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
+
+    for (unsigned int i = 0; this->timeCtrl.GetSlot(i) != NULL; i++) {
+        this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
+    }
+
+    // this triggers the initialization
+    this->bboxs.Clear();
 
     this->bkgndCol[0] = 0.0f;
     this->bkgndCol[1] = 0.0f;
@@ -312,6 +329,14 @@ void view::AbstractView::unpackMouseCoordinates(float &x, float &y) {
  * view::AbstractView::onResetView
  */
 bool view::AbstractView::onResetView(Call& call) {
+    this->ResetView();
+    return true;
+}
+
+/*
+ * view::AbstractView::onResetView
+ */
+bool view::AbstractView::onResetView(param::ParamSlot& p) {
     this->ResetView();
     return true;
 }

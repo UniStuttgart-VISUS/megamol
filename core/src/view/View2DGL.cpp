@@ -37,16 +37,13 @@ view::View2DGL::View2DGL(void)
     , mouseX(0.0f)
     , mouseY(0.0f)
     , rendererSlot("rendering", "Connects the view to a Renderer")
-    , resetViewSlot("resetView", "Triggers the reset of the view")
-    , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
     , viewX(0.0f)
     , viewY(0.0f)
     , viewZoom(1.0f)
     , viewUpdateCnt(0)
     , width(1.0f)
     , incomingCall(NULL)
-    , overrideViewTile(NULL)
-    , timeCtrl() {
+    , overrideViewTile(NULL) {
 
     // Override renderSlot behavior
     this->renderSlot.SetCallback(
@@ -75,17 +72,6 @@ view::View2DGL::View2DGL(void)
 
     this->rendererSlot.SetCompatibleCall<CallRender2DGLDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
-
-    this->resetViewSlot << new param::ButtonParam();
-    this->resetViewSlot.SetUpdateCallback(&View2DGL::onResetView);
-    this->MakeSlotAvailable(&this->resetViewSlot);
-
-    this->resetViewOnBBoxChangeSlot << new param::BoolParam(false);
-    this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
-
-    for (unsigned int i = 0; this->timeCtrl.GetSlot(i) != NULL; i++) {
-        this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
-    }
 
     this->ResetView();
 }
@@ -156,11 +142,11 @@ void view::View2DGL::Render(const mmcRenderViewContext& context) {
     }
 
     if ((*cr2d)(AbstractCallRender::FnGetExtents)) {
-        if (!(this->bbox == cr2d->AccessBoundingBoxes())
+        if (!(this->bboxs == cr2d->AccessBoundingBoxes())
             && resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
             this->ResetView();
         }
-        bbox = cr2d->AccessBoundingBoxes();
+        bboxs = cr2d->AccessBoundingBoxes();
         this->timeCtrl.SetTimeExtend(cr2d->TimeFramesCount(), cr2d->IsInSituTime());
         if (time > static_cast<float>(cr2d->TimeFramesCount())) {
             time = static_cast<float>(cr2d->TimeFramesCount());
@@ -513,14 +499,6 @@ void view::View2DGL::release(void) {
     // intentionally empty
 }
 
-
-/*
- * view::View2DGL::onResetView
- */
-bool view::View2DGL::onResetView(param::ParamSlot& p) {
-    this->ResetView();
-    return true;
-}
 
 /*
  * view::View2DGL::GetExtents
