@@ -16,7 +16,11 @@ using namespace megamol::gui;
 
 
 megamol::gui::ParameterGroupAnimationWidget::ParameterGroupAnimationWidget(void)
-        : AbstractParameterGroupWidget(), speed_knob_pos(), time_knob_pos(), image_buttons(), tooltip() {
+        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
+        , speed_knob_pos()
+        , time_knob_pos()
+        , image_buttons()
+        , tooltip() {
 
     this->InitPresentation(Param_t::GROUP_ANIMATION);
     this->name = "anim";
@@ -44,6 +48,12 @@ bool megamol::gui::ParameterGroupAnimationWidget::Check(bool only_check, ParamPt
 bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, const std::string& in_module_fullname,
     const std::string& in_search, megamol::gui::ParameterPresentation::WidgetScope in_scope,
     PickingBuffer* inout_picking_buffer) {
+
+    if (ImGui::GetCurrentContext() == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
 
     // Check required parameters ----------------------------------------------
     Parameter* param_play = nullptr;
@@ -89,7 +99,10 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
             // LOCAL
 
+            ImGui::PushID(this->uid);
             ImGui::TextDisabled(this->name.c_str());
+            ImGui::PopID();
+
             return true;
         }
         /// else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
@@ -116,6 +129,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         }
 
         // DRAW -------------------------------------------------------------------
+        ImGui::PushID(this->uid);
+
         const ImVec2 button_size =
             ImVec2(1.5f * ImGui::GetFrameHeightWithSpacing(), 1.5f * ImGui::GetFrameHeightWithSpacing());
         const float knob_size = 2.5f * ImGui::GetFrameHeightWithSpacing();
@@ -123,8 +138,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         ImGuiStyle& style = ImGui::GetStyle();
         if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
             // GLOBAL
-
-            ImGui::Begin(this->name.c_str(), nullptr,
+            std::string unique_child_name = this->name + "###" + this->name + std::to_string(this->uid);
+            ImGui::Begin(unique_child_name.c_str(), nullptr,
                 ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
                     ImGuiWindowFlags_NoCollapse);
         } else { // if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
@@ -217,6 +232,8 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
 
             // ImGui::EndGroup();
         }
+
+        ImGui::PopID();
 
         return true;
     }

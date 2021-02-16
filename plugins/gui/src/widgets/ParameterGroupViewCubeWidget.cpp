@@ -16,7 +16,7 @@ using namespace megamol::gui;
 
 
 megamol::gui::ParameterGroupViewCubeWidget::ParameterGroupViewCubeWidget(void)
-        : AbstractParameterGroupWidget(), tooltip(), cube_widget() {
+        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID()), tooltip(), cube_widget() {
 
     this->InitPresentation(Param_t::GROUP_3D_CUBE);
     this->name = "view";
@@ -45,6 +45,12 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Check(bool only_check, ParamPtr
 bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, const std::string& in_module_fullname,
     const std::string& in_search, megamol::gui::ParameterPresentation::WidgetScope in_scope,
     PickingBuffer* inout_picking_buffer) {
+
+    if (ImGui::GetCurrentContext() == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
 
     // Check required parameters ----------------------------------------------
     Parameter* param_cubeOrientation = nullptr;
@@ -115,6 +121,8 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
                 return false;
             }
 
+            ImGui::PushID(this->uid);
+
             auto id = param_defaultView->uid;
             inout_picking_buffer->AddInteractionObject(id, this->cube_widget.GetInteractions(id));
 
@@ -157,6 +165,8 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             }
 
             param_defaultView->SetValue(default_view);
+
+            ImGui::PopID();
 
             return true;
         }

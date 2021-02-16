@@ -48,10 +48,12 @@ namespace gui {
 
         bool active;
         std::string name;
+        const ImGuiID uid;
 
         // FUNCTIONS ----------------------------------------------------------
 
-        AbstractParameterGroupWidget(void) : megamol::core::param::AbstractParamPresentation(), active(false), name(){};
+        AbstractParameterGroupWidget(ImGuiID uid)
+                : megamol::core::param::AbstractParamPresentation(), active(false), name(), uid(uid){};
     };
 
 
