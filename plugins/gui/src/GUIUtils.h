@@ -308,7 +308,7 @@ namespace gui {
     class GUIUtils {
     public:
         /** Extract gui state enclosed in predefined tags. */
-        static std::string ExtractGUIState(std::string& str) {
+        static std::string ExtractGUIState(const std::string& str) {
             std::string return_str;
             auto start_idx = str.find(GUI_PROJECT_GUI_STATE_START_TAG);
             if (start_idx != std::string::npos) {

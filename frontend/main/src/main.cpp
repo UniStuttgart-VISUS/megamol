@@ -244,7 +244,7 @@ int main(int argc, char* argv[]) {
         std::string result;
         if (megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(file, ".png")) {
             if (!lua_api.RunString(
-                    megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(file), result)) {
+                    megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(file), result, file)) {
                 std::cout << "Project file \"" << file << "\" did not execute correctly: " << result << std::endl;
                 run_megamol = false;
             }

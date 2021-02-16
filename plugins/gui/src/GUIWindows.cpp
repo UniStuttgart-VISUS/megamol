@@ -2340,12 +2340,12 @@ bool megamol::gui::GUIWindows::load_state_from_file(const std::string& filename)
 
 bool megamol::gui::GUIWindows::load_state_from_string(const std::string& project) {
 
-    std::string state_str = GUIUtils::ExtractGUIState(state_str);
+    std::string state_str = GUIUtils::ExtractGUIState(project);
     if (state_str.empty()) {
         return false;
     }
-    nlohmann::json in_json = nlohmann::json::parse(state_str);
-    return this->state_from_json(in_json);
+    nlohmann::json state_json = nlohmann::json::parse(state_str);
+    return this->state_from_json(state_json);
 }
 
 
