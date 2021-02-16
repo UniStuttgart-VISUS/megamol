@@ -5,15 +5,6 @@
  * Alle Rechte vorbehalten.
  */
 
-/**
- * USED HOTKEYS:
- *
- * - Search Module:        Ctrl + Shift + m
- * - Search Parameter:     Ctrl + Shift + p
- * - Save Edited Project:  Ctrl + Shift + s
- * - Delete Graph Item:    Delete
- */
-
 #include "stdafx.h"
 #include "Configurator.h"
 
