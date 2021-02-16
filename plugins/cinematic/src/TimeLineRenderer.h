@@ -155,7 +155,7 @@ namespace cinematic {
 
         std::array<AxisData, Axis::COUNT> axes;
         CinematicUtils                    utils;
-        GLuint                            texture;
+        GLuint                            texture_id;
         ActiveParam                       yAxisParam;
         Keyframe                          dragDropKeyframe;
         bool                              dragDropActive;
