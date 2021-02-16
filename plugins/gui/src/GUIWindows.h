@@ -144,11 +144,6 @@ namespace gui {
         ///////// SET ///////////
 
         /**
-         * Set project containing GUI that should be loaded.
-         */
-        void SetStateString(std::string state) {}
-
-        /**
          * Set project script paths.
          */
         void SetProjectScriptPaths(const std::vector<std::string>& script_paths) {
