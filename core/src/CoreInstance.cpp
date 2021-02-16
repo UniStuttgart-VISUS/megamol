@@ -25,7 +25,6 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/Module.h"
 #include "mmcore/cluster/ClusterController.h"
-#include "mmcore/cluster/ClusterViewMaster.h"
 #include "mmcore/job/JobThread.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/ParamSlot.h"
@@ -2323,8 +2322,7 @@ void megamol::core::CoreInstance::SetupGraphFromNetwork(const void* data) {
             vislib::StringA modName(dat.GetBodyAsAt<char>(pos));
             pos += modName.Length() + 1;
 
-            if (modClass.Equals(cluster::ClusterViewMaster::ClassName()) ||
-                modClass.Equals(cluster::ClusterController::ClassName()) ) {
+            if (modClass.Equals(cluster::ClusterController::ClassName()) ) {
                 // these are infra structure modules and not to be synced
                 continue;
             }

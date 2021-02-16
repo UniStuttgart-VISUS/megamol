@@ -5,8 +5,8 @@
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_VIEW2D_H_INCLUDED
-#define MEGAMOLCORE_VIEW2D_H_INCLUDED
+#ifndef MEGAMOLCORE_VIEW2DGL_H_INCLUDED
+#define MEGAMOLCORE_VIEW2DGL_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
@@ -22,262 +22,215 @@ namespace megamol {
 namespace core {
 namespace view {
 
-    /*
-     * Forward declaration of incoming render calls
-     */
-    class CallRenderViewGL;
+/*
+ * Forward declaration of incoming render calls
+ */
+class CallRenderViewGL;
 
+
+/**
+ * Base class of rendering graph calls
+ */
+class View2DGL: public AbstractRenderingView {
+public:
 
     /**
-     * Base class of rendering graph calls
+     * Answer the name of this module.
+     *
+     * @return The name of this module.
      */
-    class View2DGL: public AbstractRenderingView {
-    public:
+    static const char *ClassName(void) {
+        return "View2DGL";
+    }
 
-        /**
-         * Answer the name of this module.
-         *
-         * @return The name of this module.
-         */
-        static const char *ClassName(void) {
-            return "View2DGL";
-        }
+    /**
+     * Answer a human readable description of this module.
+     *
+     * @return A human readable description of this module.
+     */
+    static const char *Description(void) {
+        return "2D View Module";
+    }
 
-        /**
-         * Answer a human readable description of this module.
-         *
-         * @return A human readable description of this module.
-         */
-        static const char *Description(void) {
-            return "2D View Module";
-        }
+    /**
+     * Answers whether this module is available on the current system.
+     *
+     * @return 'true' if the module is available, 'false' otherwise.
+     */
+    static bool IsAvailable(void) {
+        return true;
+    }
 
-        /**
-         * Answers whether this module is available on the current system.
-         *
-         * @return 'true' if the module is available, 'false' otherwise.
-         */
-        static bool IsAvailable(void) {
-            return true;
-        }
+    /** Ctor. */
+    View2DGL(void);
 
-        /** Ctor. */
-        View2DGL(void);
+    /** Dtor. */
+    virtual ~View2DGL(void);
 
-        /** Dtor. */
-        virtual ~View2DGL(void);
+    /**
+     * Answer the default time for this view
+     *
+     * @param instTime the current instance time
+     *
+     * @return The default time
+     */
+    virtual float DefaultTime(double instTime) const {
+        return this->timeCtrl.Time(instTime);
+    }
 
-        /**
-         * Answer the default time for this view
-         *
-         * @param instTime the current instance time
-         *
-         * @return The default time
-         */
-        virtual float DefaultTime(double instTime) const {
-            return this->timeCtrl.Time(instTime);
-        }
+    /**
+     * Answer the camera synchronization number.
+     *
+     * @return The camera synchronization number
+     */
+    virtual unsigned int GetCameraSyncNumber(void) const;
 
-        /**
-         * Answer the camera synchronization number.
-         *
-         * @return The camera synchronization number
-         */
-        virtual unsigned int GetCameraSyncNumber(void) const;
+    /**
+     * Renders this AbstractView3D in the currently active OpenGL context.
+     *
+     * @param context
+     */
+    virtual void Render(const mmcRenderViewContext& context);
 
-        /**
-         * Renders this AbstractView3D in the currently active OpenGL context.
-         *
-         * @param context
-         */
-        virtual void Render(const mmcRenderViewContext& context);
+    /**
+     * Resets the view. This normally sets the camera parameters to
+     * default values.
+     */
+    virtual void ResetView(void);
 
-        /**
-         * Resets the view. This normally sets the camera parameters to
-         * default values.
-         */
-        virtual void ResetView(void);
+    /**
+     * Resizes the AbstractView3D.
+     *
+     * @param width The new width.
+     * @param height The new height.
+     */
+    virtual void Resize(unsigned int width, unsigned int height);
 
-        /**
-         * Resizes the AbstractView3D.
-         *
-         * @param width The new width.
-         * @param height The new height.
-         */
-        virtual void Resize(unsigned int width, unsigned int height);
+    /**
+     * Callback requesting a rendering of this view
+     *
+     * @param call The calling call
+     *
+     * @return The return value
+     */
+    virtual bool OnRenderView(Call& call);
 
-        /**
-         * Callback requesting a rendering of this view
-         *
-         * @param call The calling call
-         *
-         * @return The return value
-         */
-        virtual bool OnRenderView(Call& call);
+    virtual bool GetExtents(Call& call) override;
 
-        virtual bool GetExtents(Call& call) override;
+    /**
+     * Freezes, updates, or unfreezes the view onto the scene (not the
+     * rendering, but camera settings, timing, etc).
+     *
+     * @param freeze true means freeze or update freezed settings,
+     *               false means unfreeze
+     */
+    virtual void UpdateFreeze(bool freeze);
 
-        /**
-         * Freezes, updates, or unfreezes the view onto the scene (not the
-         * rendering, but camera settings, timing, etc).
-         *
-         * @param freeze true means freeze or update freezed settings,
-         *               false means unfreeze
-         */
-        virtual void UpdateFreeze(bool freeze);
+    virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
 
-	virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
+    virtual bool OnChar(unsigned int codePoint) override;
 
-        virtual bool OnChar(unsigned int codePoint) override;
+    virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override;
 
-        virtual bool OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) override;
+    virtual bool OnMouseMove(double x, double y) override;
 
-        virtual bool OnMouseMove(double x, double y) override;
+    virtual bool OnMouseScroll(double dx, double dy) override;
 
-        virtual bool OnMouseScroll(double dx, double dy) override;
+    /**
+     * Unpacks the mouse coordinates, which are relative to the virtual
+     * viewport size.
+     *
+     * @param x The x coordinate of the mouse position
+     * @param y The y coordinate of the mouse position
+     */
+    virtual void unpackMouseCoordinates(float &x, float &y);
 
-    protected:
+    enum MouseMode : uint8_t { Propagate, Pan, Zoom };
 
-        /**
-         * Unpacks the mouse coordinates, which are relative to the virtual
-         * viewport size.
-         *
-         * @param x The x coordinate of the mouse position
-         * @param y The y coordinate of the mouse position
-         */
-        virtual void unpackMouseCoordinates(float &x, float &y);
+    /**
+     * Implementation of 'Create'.
+     *
+     * @return 'true' on success, 'false' otherwise.
+     */
+    virtual bool create(void);
 
-        /**
-         * Stores the current camera settings
-         *
-         * @param p Must be storeCameraSettingsSlot
-         * @return true
-         */
-        bool onStoreCamera(param::ParamSlot& p);
+    /**
+     * Implementation of 'Release'.
+     */
+    virtual void release(void);
 
-        /**
-         * Tries to parse the cameraSettingsSlot and, if successful, returns the
-         * view parameters in outViewX, outViewY, and outViewZoom.
-         */
-        bool tryRestoringCamera(float &outViewX, float &outViewY, float &outViewZoom);
-
-        /**
-         * Restores the camera settings
-         *
-         * @param p Must be restoreCameraSettingsSlot
-         *
-         * @return true
-         */
-        bool onRestoreCamera(param::ParamSlot& p);
-
-    private:
-
-        enum MouseMode : uint8_t { Propagate, Pan, Zoom };
-
-        /**
-         * Implementation of 'Create'.
-         *
-         * @return 'true' on success, 'false' otherwise.
-         */
-        virtual bool create(void);
-
-        /**
-         * Implementation of 'Release'.
-         */
-        virtual void release(void);
-
-        /**
-         * Resets the view
-         *
-         * @param p Must be resetViewSlot
-         *
-         * @return true
-         */
-        bool onResetView(param::ParamSlot& p);
-
-        /**
-         * Flag if this is the first time an image gets created. Used for 
-         * initial camera reset
-         */
-        bool firstImg;
-
-        /** The viewport height */
-        float height;
-
-        /** The mouse drag mode */
-        MouseMode mouseMode;
-
-        /** The mouse x coordinate */
-        float mouseX;
-
-        /** The mouse y coordinate */
-        float mouseY;
-
-        /** Slot to call the renderer to render */
-        CallerSlot rendererSlot;
-
-        /** Slot containing the settings of the currently stored camera */
-        param::ParamSlot cameraSettingsSlot;
-
-        /** Triggers the storage of the camera settings */
-        param::ParamSlot storeCameraSettingsSlot;
-
-        /** Triggers the restore of the camera settings */
-        param::ParamSlot restoreCameraSettingsSlot;
-
-        /** Triggers the reset of the view */
-        param::ParamSlot resetViewSlot;
-
-        /** whether to reset the view when the object bounding box changes */
-        param::ParamSlot resetViewOnBBoxChangeSlot;
-
-        /** Shows/hides the bounding box */
-        param::ParamSlot showBBoxSlot;
-
-        /** The colour of the bounding box */
-        float bboxCol[4];
-
-		/** Parameter slot for the bounding box colour */
-        param::ParamSlot bboxColSlot;
-
-        /** The view focus x coordinate */
-        float viewX;
-
-        /** The view focus y coordinate */
-        float viewY;
-
-        /** The view zoom factor */
-        float viewZoom;
-
-        /** the update counter for the view settings */
-        unsigned int viewUpdateCnt;
-
-        /** the viewport width */
-        float width;
-
-        /** the incoming rendering call */
-        class CallRenderViewGL *incomingCall;
-
-        /**
-         * 6 floats holding the override information for the viewing tile:
-         *   tileX, tileY, tileW, tileH, fullW, fullH
-         */
-        float *overrideViewTile;
-
-        int* overrideViewport = NULL;
-
-        /** The time control */
-        TimeControl timeCtrl;
-
-        /** cached bounding box */
-        BoundingBoxes_2 bbox;
-
-        std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
-    };
+    /**
+     * Resets the view
+     *
+     * @param p Must be resetViewSlot
+     *
+     * @return true
+     */
+    bool onResetView(param::ParamSlot& p);
 
 
+    /** Triggers the reset of the view */
+    param::ParamSlot resetViewSlot;
+
+    /** whether to reset the view when the object bounding box changes */
+    param::ParamSlot resetViewOnBBoxChangeSlot;
+
+    /** Slot to call the renderer to render */
+    CallerSlot rendererSlot;
+
+private:
+    /**
+     * Flag if this is the first time an image gets created. Used for 
+     * initial camera reset
+     */
+    bool firstImg;
+
+    /** The viewport height */
+    float height;
+
+    /** The mouse drag mode */
+    MouseMode mouseMode;
+
+    /** The mouse x coordinate */
+    float mouseX;
+
+    /** The mouse y coordinate */
+    float mouseY;
+
+    /** The view focus x coordinate */
+    float viewX;
+
+    /** The view focus y coordinate */
+    float viewY;
+
+    /** The view zoom factor */
+    float viewZoom;
+
+    /** the update counter for the view settings */
+    unsigned int viewUpdateCnt;
+
+    /** the viewport width */
+    float width;
+
+    /** the incoming rendering call */
+    class CallRenderViewGL *incomingCall;
+
+    /**
+     * 6 floats holding the override information for the viewing tile:
+     *   tileX, tileY, tileW, tileH, fullW, fullH
+     */
+    float *overrideViewTile;
+
+    /** The time control */
+    TimeControl timeCtrl;
+
+    /** cached bounding box */
+    BoundingBoxes_2 bbox;
+
+    std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
+};
 } /* end namespace view */
 } /* end namespace core */
 } /* end namespace megamol */
 
-#endif /* MEGAMOLCORE_VIEW2D_H_INCLUDED */
+#endif /* MEGAMOLCORE_VIEW2DGL_H_INCLUDED */

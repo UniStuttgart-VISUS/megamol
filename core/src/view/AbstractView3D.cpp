@@ -18,46 +18,27 @@
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
-#include "mmcore/param/StringParam.h"
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
-#include "vislib/String.h"
-#include "vislib/StringSerialiser.h"
 #include "vislib/math/Point.h"
 #include "vislib/math/Quaternion.h"
 #include "vislib/math/Vector.h"
 #include "vislib/sys/KeyCode.h"
-#include "mmcore/utility/log/Log.h"
 #include "vislib/sys/sysfunctions.h"
 #include "mmcore/view/CallRenderView.h"
 
 #include "glm/gtc/matrix_transform.hpp"
 
-using namespace megamol::core;
 using namespace megamol::core::view;
 
 /*
  * AbstractView3D::AbstractView3D
  */
 AbstractView3D::AbstractView3D(void)
-    : view::AbstractRenderingView()
+    : AbstractRenderingView()
     , rendererSlot("rendering", "Connects the view to a Renderer")
     , showLookAt("showLookAt", "Flag showing the look at point")
-    , cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")
-    , storeCameraSettingsSlot("camstore::storecam", "Triggers the storage of the camera settings. This only works for "
-                                                    "multiple cameras if you use .lua project files")
-    , restoreCameraSettingsSlot("camstore::restorecam", "Triggers the restore of the camera settings. This only works "
-                                                        "for multiple cameras if you use .lua project files")
-    , overrideCamSettingsSlot("camstore::overrideSettings",
-          "When activated, existing camera settings files will be overwritten by this "
-          "module. This only works if you use .lua project files")
-    , autoSaveCamSettingsSlot("camstore::autoSaveSettings",
-          "When activated, the camera settings will be stored to disk whenever a camera checkpoint is saved or MegaMol "
-          "is closed. This only works if you use .lua project files")
-    , autoLoadCamSettingsSlot("camstore::autoLoadSettings",
-          "When activated, the view will load the camera settings from disk at startup. "
-          "This only works if you use .lua project files")
     , resetViewSlot("resetView", "Triggers the reset of the view")
     , firstImg(false)
     , stereoFocusDistSlot("stereo::focusDist", "focus distance for stereo projection")
@@ -104,28 +85,7 @@ AbstractView3D::AbstractView3D(void)
     this->showLookAt.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showLookAt);
 
-    this->cameraSettingsSlot.SetParameter(new param::StringParam(""));
-    this->MakeSlotAvailable(&this->cameraSettingsSlot);
-
-    this->storeCameraSettingsSlot.SetParameter(
-        new param::ButtonParam(view::Key::KEY_C, (view::Modifier::SHIFT | view::Modifier::ALT)));
-    this->storeCameraSettingsSlot.SetUpdateCallback(&AbstractView3D::onStoreCamera);
-    this->MakeSlotAvailable(&this->storeCameraSettingsSlot);
-
-    this->restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(view::Key::KEY_C, view::Modifier::ALT));
-    this->restoreCameraSettingsSlot.SetUpdateCallback(&AbstractView3D::onRestoreCamera);
-    this->MakeSlotAvailable(&this->restoreCameraSettingsSlot);
-
-    this->overrideCamSettingsSlot.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->overrideCamSettingsSlot);
-
-    this->autoSaveCamSettingsSlot.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->autoSaveCamSettingsSlot);
-
-    this->autoLoadCamSettingsSlot.SetParameter(new param::BoolParam(true));
-    this->MakeSlotAvailable(&this->autoLoadCamSettingsSlot);
-
-    this->resetViewSlot.SetParameter(new param::ButtonParam(view::Key::KEY_HOME));
+    this->resetViewSlot.SetParameter(new param::ButtonParam(Key::KEY_HOME));
     this->resetViewSlot.SetUpdateCallback(&AbstractView3D::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
 
@@ -154,7 +114,7 @@ AbstractView3D::AbstractView3D(void)
     this->viewKeyRotPointSlot.SetParameter(vrpsev);
     this->MakeSlotAvailable(&this->viewKeyRotPointSlot);
 
-    this->enableMouseSelectionSlot.SetParameter(new param::ButtonParam(view::Key::KEY_TAB));
+    this->enableMouseSelectionSlot.SetParameter(new param::ButtonParam(Key::KEY_TAB));
     this->enableMouseSelectionSlot.SetUpdateCallback(&AbstractView3D::onToggleButton);
     this->MakeSlotAvailable(&this->enableMouseSelectionSlot);
 
@@ -256,7 +216,7 @@ AbstractView3D::~AbstractView3D(void) {
 /*
  * AbstractView3D::GetCameraSyncNumber
  */
-unsigned int view::AbstractView3D::GetCameraSyncNumber(void) const {
+unsigned int AbstractView3D::GetCameraSyncNumber(void) const {
     // TODO implement
     return 0;
 }
@@ -306,7 +266,7 @@ void AbstractView3D::beforeRender(const mmcRenderViewContext& context) {
     }
 
     if (cr3d != nullptr) {
-        (*cr3d)(view::AbstractCallRender::FnGetExtents);
+        (*cr3d)(AbstractCallRender::FnGetExtents);
         this->valuesFromOutside = this->adaptCameraValues(this->cam);
         if (this->firstImg || (!(cr3d->AccessBoundingBoxes() == this->bboxs) &&
                                   !(!cr3d->AccessBoundingBoxes().IsAnyValid() && !this->bboxs.IsBoundingBoxValid() &&
@@ -434,7 +394,7 @@ void AbstractView3D::Resize(unsigned int width, unsigned int height) {
  * AbstractView3D::OnRenderView
  */
 bool AbstractView3D::OnRenderView(Call& call) {
-    view::CallRenderView* crv = dynamic_cast<view::CallRenderView*>(&call);
+    CallRenderView* crv = dynamic_cast<CallRenderView*>(&call);
     if (crv == nullptr) return false;
 
     if (crv->IsBackgroundSet()) {
@@ -472,11 +432,11 @@ void AbstractView3D::UpdateFreeze(bool freeze) {
 /*
  * AbstractView3D::OnKey
  */
-bool view::AbstractView3D::OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) {
+bool AbstractView3D::OnKey(Key key, KeyAction action, Modifiers mods) {
     auto* cr = this->rendererSlot.CallAs<AbstractCallRender>();
     if (cr != nullptr) {
-        view::InputEvent evt;
-        evt.tag = view::InputEvent::Tag::Key;
+        InputEvent evt;
+        evt.tag = InputEvent::Tag::Key;
         evt.keyData.key = key;
         evt.keyData.action = action;
         evt.keyData.mods = mods;
@@ -485,45 +445,45 @@ bool view::AbstractView3D::OnKey(view::Key key, view::KeyAction action, view::Mo
             return true;
     }
 
-    if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
+    if (action == KeyAction::PRESS || action == KeyAction::REPEAT) {
         this->pressedKeyMap[key] = true;
-    } else if (action == view::KeyAction::RELEASE) {
+    } else if (action == KeyAction::RELEASE) {
         this->pressedKeyMap[key] = false;
     }
 
-    if (key == view::Key::KEY_LEFT_ALT || key == view::Key::KEY_RIGHT_ALT) {
-        if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
-            this->modkeys.set(view::Modifier::ALT);
+    if (key == Key::KEY_LEFT_ALT || key == Key::KEY_RIGHT_ALT) {
+        if (action == KeyAction::PRESS || action == KeyAction::REPEAT) {
+            this->modkeys.set(Modifier::ALT);
             cameraControlOverrideActive = true;
-        } else if (action == view::KeyAction::RELEASE) {
-            this->modkeys.reset(view::Modifier::ALT);
+        } else if (action == KeyAction::RELEASE) {
+            this->modkeys.reset(Modifier::ALT);
             cameraControlOverrideActive = false;
         }
     }
-    if (key == view::Key::KEY_LEFT_SHIFT || key == view::Key::KEY_RIGHT_SHIFT) {
-        if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
-            this->modkeys.set(view::Modifier::SHIFT);
-        } else if (action == view::KeyAction::RELEASE) {
-            this->modkeys.reset(view::Modifier::SHIFT);
+    if (key == Key::KEY_LEFT_SHIFT || key == Key::KEY_RIGHT_SHIFT) {
+        if (action == KeyAction::PRESS || action == KeyAction::REPEAT) {
+            this->modkeys.set(Modifier::SHIFT);
+        } else if (action == KeyAction::RELEASE) {
+            this->modkeys.reset(Modifier::SHIFT);
         }
     }
-    if (key == view::Key::KEY_LEFT_CONTROL || key == view::Key::KEY_RIGHT_CONTROL) {
-        if (action == view::KeyAction::PRESS || action == view::KeyAction::REPEAT) {
-            this->modkeys.set(view::Modifier::CTRL);
+    if (key == Key::KEY_LEFT_CONTROL || key == Key::KEY_RIGHT_CONTROL) {
+        if (action == KeyAction::PRESS || action == KeyAction::REPEAT) {
+            this->modkeys.set(Modifier::CTRL);
             cameraControlOverrideActive = true;
-        } else if (action == view::KeyAction::RELEASE) {
-            this->modkeys.reset(view::Modifier::CTRL);
+        } else if (action == KeyAction::RELEASE) {
+            this->modkeys.reset(Modifier::CTRL);
             cameraControlOverrideActive = false;
         }
     }
 
-    if (action == view::KeyAction::PRESS && (key >= view::Key::KEY_0 && key <= view::Key::KEY_9)) {
+    if (action == KeyAction::PRESS && (key >= Key::KEY_0 && key <= Key::KEY_9)) {
         int index =
-            static_cast<int>(key) - static_cast<int>(view::Key::KEY_0); // ugly hack, maybe this can be done better
+            static_cast<int>(key) - static_cast<int>(Key::KEY_0); // ugly hack, maybe this can be done better
         index = (index - 1) % 10;                                       // put key '1' at index 0
         index = index < 0 ? index + 10 : index;                         // wrap key '0' to a positive index '9'
 
-        if (mods.test(view::Modifier::CTRL)) {
+        if (mods.test(Modifier::CTRL)) {
             this->savedCameras[index].first = this->cam.get_minimal_state(this->savedCameras[index].first);
             this->savedCameras[index].second = true;
             if (this->autoSaveCamSettingsSlot.Param<param::BoolParam>()->Value()) {
@@ -546,15 +506,15 @@ bool view::AbstractView3D::OnKey(view::Key key, view::KeyAction action, view::Mo
 /*
  * AbstractView3D::OnChar
  */
-bool view::AbstractView3D::OnChar(unsigned int codePoint) {
-    auto* cr = this->rendererSlot.CallAs<view::AbstractCallRender>();
+bool AbstractView3D::OnChar(unsigned int codePoint) {
+    auto* cr = this->rendererSlot.CallAs<AbstractCallRender>();
     if (cr == NULL) return false;
 
-    view::InputEvent evt;
-    evt.tag = view::InputEvent::Tag::Char;
+    InputEvent evt;
+    evt.tag = InputEvent::Tag::Char;
     evt.charData.codePoint = codePoint;
     cr->SetInputEvent(evt);
-    if (!(*cr)(view::AbstractCallRender::FnOnChar))
+    if (!(*cr)(AbstractCallRender::FnOnChar))
         return false;
 
     return true;
@@ -573,7 +533,7 @@ bool AbstractView3D::mouseSensitivityChanged(param::ParamSlot& p) { return true;
 /*
  * AbstractView3D::OnMouseButton
  */
- bool AbstractView3D::OnMouseButton(view::MouseButton button, view::MouseButtonAction action, view::Modifiers mods) {
+ bool AbstractView3D::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
      return true;
  }
 
@@ -624,105 +584,6 @@ bool AbstractView3D::create(void) {
     return true;
 }
 
-/*
- * AbstractView3D::onStoreCamera
- */
-bool AbstractView3D::onStoreCamera(param::ParamSlot& p) {
-    // save the current camera, too
-    Camera_2::minimal_state_type minstate;
-    this->cam.get_minimal_state(minstate);
-    this->savedCameras[10].first = minstate;
-    this->savedCameras[10].second = true;
-    this->serializer.setPrettyMode(false);
-    std::string camstring = this->serializer.serialize(this->savedCameras[10].first);
-    this->cameraSettingsSlot.Param<param::StringParam>()->SetValue(camstring.c_str());
-
-    auto path = this->determineCameraFilePath();
-    if (path.empty()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "The camera output file path could not be determined. This is probably due to the usage of .mmprj project "
-            "files. Please use a .lua project file instead");
-        return false;
-    }
-
-    if (!this->overrideCamSettingsSlot.Param<param::BoolParam>()->Value()) {
-        // check if the file already exists
-        std::ifstream file(path);
-        if (file.good()) {
-            file.close();
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "The camera output file path already contains a camera file with the name '%s'. Override mode is "
-                "deactivated, so no camera is stored",
-                path.c_str());
-            return false;
-        }
-    }
-
-
-    this->serializer.setPrettyMode();
-    auto outString = this->serializer.serialize(this->savedCameras);
-
-    std::ofstream file(path);
-    if (file.is_open()) {
-        file << outString;
-        file.close();
-    } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "The camera output file could not be written to '%s' because the file could not be opened.", path.c_str());
-        return false;
-    }
-
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("Camera statistics successfully written to '%s'", path.c_str());
-    return true;
-}
-
-/*
- * AbstractView3D::onRestoreCamera
- */
-bool AbstractView3D::onRestoreCamera(param::ParamSlot& p) {
-    if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
-        std::string camstring(this->cameraSettingsSlot.Param<param::StringParam>()->Value());
-        cam_type::minimal_state_type minstate;
-        if (!this->serializer.deserialize(minstate, camstring)) {
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "The entered camera string was not valid. No change of the camera has been performed");
-        } else {
-            this->cam = minstate;
-            return true;
-        }
-    }
-
-    auto path = this->determineCameraFilePath();
-    if (path.empty()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "The camera file path could not be determined. This is probably due to the usage of .mmprj project "
-            "files. Please use a .lua project file instead");
-        return false;
-    }
-
-    std::ifstream file(path);
-    std::string text;
-    if (file.is_open()) {
-        text.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-    } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("The camera output file at '%s' could not be opened.", path.c_str());
-        return false;
-    }
-    auto copy = this->savedCameras;
-    bool success = this->serializer.deserialize(copy, text);
-    if (!success) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "The reading of the camera parameters did not work properly. No changes were made.");
-        return false;
-    }
-    this->savedCameras = copy;
-    if (this->savedCameras.back().second) {
-        this->cam = this->savedCameras.back().first;
-    } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn("The stored default cam was not valid. The old default cam is used");
-    }
-    return true;
-}
 
 /*
  * AbstractView3D::onResetView
@@ -741,18 +602,6 @@ bool AbstractView3D::onToggleButton(param::ParamSlot& p) {
 }
 
 /*
- * AbstractView3D::determineCameraFilePath
- */
-std::string AbstractView3D::determineCameraFilePath(void) const {
-    auto path = this->GetCoreInstance()->GetLuaState()->GetScriptPath();
-    if (path.empty()) return path; // early exit for mmprj projects
-    auto dotpos = path.find_last_of('.');
-    path = path.substr(0, dotpos);
-    path.append("_cam.json");
-    return path;
-}
-
-/*
  * AbstractView3D::handleCameraMovement
  */
 void AbstractView3D::handleCameraMovement(void) {
@@ -761,7 +610,7 @@ void AbstractView3D::handleCameraMovement(void) {
     step *= dt;
 
     const float runFactor = this->viewKeyRunFactorSlot.Param<param::FloatParam>()->Value();
-    if (this->modkeys.test(view::Modifier::SHIFT)) {
+    if (this->modkeys.test(Modifier::SHIFT)) {
         step *= runFactor;
     }
 
@@ -774,40 +623,40 @@ void AbstractView3D::handleCameraMovement(void) {
 
     if (this->translateManipulator.manipulating()) {
 
-        if (this->pressedKeyMap.count(view::Key::KEY_W) > 0 && this->pressedKeyMap[view::Key::KEY_W]) {
+        if (this->pressedKeyMap.count(Key::KEY_W) > 0 && this->pressedKeyMap[Key::KEY_W]) {
             this->translateManipulator.move_forward(step);
         }
-        if (this->pressedKeyMap.count(view::Key::KEY_S) > 0 && this->pressedKeyMap[view::Key::KEY_S]) {
+        if (this->pressedKeyMap.count(Key::KEY_S) > 0 && this->pressedKeyMap[Key::KEY_S]) {
             this->translateManipulator.move_forward(-step);
         }
-        if (this->pressedKeyMap.count(view::Key::KEY_A) > 0 && this->pressedKeyMap[view::Key::KEY_A]) {
+        if (this->pressedKeyMap.count(Key::KEY_A) > 0 && this->pressedKeyMap[Key::KEY_A]) {
             this->translateManipulator.move_horizontally(-step);
         }
-        if (this->pressedKeyMap.count(view::Key::KEY_D) > 0 && this->pressedKeyMap[view::Key::KEY_D]) {
+        if (this->pressedKeyMap.count(Key::KEY_D) > 0 && this->pressedKeyMap[Key::KEY_D]) {
             this->translateManipulator.move_horizontally(step);
         }
-        if (this->pressedKeyMap.count(view::Key::KEY_C) > 0 && this->pressedKeyMap[view::Key::KEY_C]) {
+        if (this->pressedKeyMap.count(Key::KEY_C) > 0 && this->pressedKeyMap[Key::KEY_C]) {
             this->translateManipulator.move_vertically(step);
         }
-        if (this->pressedKeyMap.count(view::Key::KEY_V) > 0 && this->pressedKeyMap[view::Key::KEY_V]) {
+        if (this->pressedKeyMap.count(Key::KEY_V) > 0 && this->pressedKeyMap[Key::KEY_V]) {
             this->translateManipulator.move_vertically(-step);
         }
-        if (this->pressedKeyMap.count(view::Key::KEY_Q) > 0 && this->pressedKeyMap[view::Key::KEY_Q]) {
+        if (this->pressedKeyMap.count(Key::KEY_Q) > 0 && this->pressedKeyMap[Key::KEY_Q]) {
             this->rotateManipulator.roll(-rotationStep);
         }
-        if (this->pressedKeyMap.count(view::Key::KEY_E) > 0 && this->pressedKeyMap[view::Key::KEY_E]) {
+        if (this->pressedKeyMap.count(Key::KEY_E) > 0 && this->pressedKeyMap[Key::KEY_E]) {
             this->rotateManipulator.roll(rotationStep);
         }
-        if (this->pressedKeyMap.count(view::Key::KEY_UP) > 0 && this->pressedKeyMap[view::Key::KEY_UP]) {
+        if (this->pressedKeyMap.count(Key::KEY_UP) > 0 && this->pressedKeyMap[Key::KEY_UP]) {
             this->rotateManipulator.pitch(-rotationStep);
         }
-        if (this->pressedKeyMap.count(view::Key::KEY_DOWN) > 0 && this->pressedKeyMap[view::Key::KEY_DOWN]) {
+        if (this->pressedKeyMap.count(Key::KEY_DOWN) > 0 && this->pressedKeyMap[Key::KEY_DOWN]) {
             this->rotateManipulator.pitch(rotationStep);
         }
-        if (this->pressedKeyMap.count(view::Key::KEY_LEFT) > 0 && this->pressedKeyMap[view::Key::KEY_LEFT]) {
+        if (this->pressedKeyMap.count(Key::KEY_LEFT) > 0 && this->pressedKeyMap[Key::KEY_LEFT]) {
             this->rotateManipulator.yaw(rotationStep);
         }
-        if (this->pressedKeyMap.count(view::Key::KEY_RIGHT) > 0 && this->pressedKeyMap[view::Key::KEY_RIGHT]) {
+        if (this->pressedKeyMap.count(Key::KEY_RIGHT) > 0 && this->pressedKeyMap[Key::KEY_RIGHT]) {
             this->rotateManipulator.yaw(-rotationStep);
         }
     }
@@ -820,7 +669,7 @@ void AbstractView3D::handleCameraMovement(void) {
 /*
  * AbstractView3D::setCameraValues
  */
-void AbstractView3D::setCameraValues(const view::Camera_2& cam) {
+void AbstractView3D::setCameraValues(const Camera_2& cam) {
     glm::vec4 pos = cam.position();
     const bool makeDirty = false;
     this->cameraPositionParam.Param<param::Vector3fParam>()->SetValue(
@@ -862,7 +711,7 @@ void AbstractView3D::setCameraValues(const view::Camera_2& cam) {
 /*
  * AbstractView3D::adaptCameraValues
  */
-bool AbstractView3D::adaptCameraValues(view::Camera_2& cam) {
+bool AbstractView3D::adaptCameraValues(Camera_2& cam) {
     bool result = false;
     if (this->cameraPositionParam.IsDirty()) {
         auto val = this->cameraPositionParam.Param<param::Vector3fParam>()->Value();

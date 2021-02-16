@@ -11,6 +11,9 @@
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/param/AbstractParam.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "vislib/assert.h"
@@ -23,9 +26,26 @@ using megamol::core::utility::log::Log;
 /*
  * view::AbstractView::AbstractView
  */
-view::AbstractView::AbstractView(void) : Module(),
-        renderSlot("render", "Connects modules requesting renderings"),
-        hooks() {
+view::AbstractView::AbstractView(void)
+        : Module()
+        , renderSlot("render", "Connects modules requesting renderings")
+        , cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")
+        , storeCameraSettingsSlot("camstore::storecam",
+              "Triggers the storage of the camera settings. This only works for "
+              "multiple cameras if you use .lua project files")
+        , restoreCameraSettingsSlot("camstore::restorecam",
+              "Triggers the restore of the camera settings. This only works "
+              "for multiple cameras if you use .lua project files")
+        , overrideCamSettingsSlot("camstore::overrideSettings",
+              "When activated, existing camera settings files will be overwritten by this "
+              "module. This only works if you use .lua project files")
+        , autoSaveCamSettingsSlot("camstore::autoSaveSettings",
+              "When activated, the camera settings will be stored to disk whenever a camera checkpoint is saved or "
+              "MegaMol "
+              "is closed. This only works if you use .lua project files")
+        , autoLoadCamSettingsSlot("camstore::autoLoadSettings",
+              "When activated, the view will load the camera settings from disk at startup. "
+              "This only works if you use .lua project files"), hooks() {
     // InputCall
     this->renderSlot.SetCallback(
         view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
@@ -49,7 +69,28 @@ view::AbstractView::AbstractView(void) : Module(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
     this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_RESETVIEW), &AbstractView::onResetView);
-    //this->MakeSlotAvailable(&this->renderSlot);
+    // this->MakeSlotAvailable(&this->renderSlot);
+
+        this->cameraSettingsSlot.SetParameter(new param::StringParam(""));
+    this->MakeSlotAvailable(&this->cameraSettingsSlot);
+
+    this->storeCameraSettingsSlot.SetParameter(
+        new param::ButtonParam(view::Key::KEY_C, (view::Modifier::SHIFT | view::Modifier::ALT)));
+    this->storeCameraSettingsSlot.SetUpdateCallback(&AbstractView::onStoreCamera);
+    this->MakeSlotAvailable(&this->storeCameraSettingsSlot);
+
+    this->restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(view::Key::KEY_C, view::Modifier::ALT));
+    this->restoreCameraSettingsSlot.SetUpdateCallback(&AbstractView::onRestoreCamera);
+    this->MakeSlotAvailable(&this->restoreCameraSettingsSlot);
+
+    this->overrideCamSettingsSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->overrideCamSettingsSlot);
+
+    this->autoSaveCamSettingsSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->autoSaveCamSettingsSlot);
+
+    this->autoLoadCamSettingsSlot.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->autoLoadCamSettingsSlot);
 }
 
 
@@ -315,4 +356,120 @@ bool view::AbstractView::OnMouseScrollCallback(Call& call) {
         ASSERT("OnMouseScrollCallback call cast failed\n");
     }
     return false;
+}
+
+/*
+ * AbstractView::onStoreCamera
+ */
+bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
+    // save the current camera, too
+    view::Camera_2::minimal_state_type minstate;
+    this->cam.get_minimal_state(minstate);
+    this->savedCameras[10].first = minstate;
+    this->savedCameras[10].second = true;
+    this->serializer.setPrettyMode(false);
+    std::string camstring = this->serializer.serialize(this->savedCameras[10].first);
+    this->cameraSettingsSlot.Param<param::StringParam>()->SetValue(camstring.c_str());
+
+    auto path = this->determineCameraFilePath();
+    if (path.empty()) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "The camera output file path could not be determined. This is probably due to the usage of .mmprj project "
+            "files. Please use a .lua project file instead");
+        return false;
+    }
+
+    if (!this->overrideCamSettingsSlot.Param<param::BoolParam>()->Value()) {
+        // check if the file already exists
+        std::ifstream file(path);
+        if (file.good()) {
+            file.close();
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "The camera output file path already contains a camera file with the name '%s'. Override mode is "
+                "deactivated, so no camera is stored",
+                path.c_str());
+            return false;
+        }
+    }
+
+
+    this->serializer.setPrettyMode();
+    auto outString = this->serializer.serialize(this->savedCameras);
+
+    std::ofstream file(path);
+    if (file.is_open()) {
+        file << outString;
+        file.close();
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "The camera output file could not be written to '%s' because the file could not be opened.", path.c_str());
+        return false;
+    }
+
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(
+        "Camera statistics successfully written to '%s'", path.c_str());
+    return true;
+}
+
+/*
+ * AbstractView::onRestoreCamera
+ */
+bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
+    if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
+        std::string camstring(this->cameraSettingsSlot.Param<param::StringParam>()->Value());
+        cam_type::minimal_state_type minstate;
+        if (!this->serializer.deserialize(minstate, camstring)) {
+            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                "The entered camera string was not valid. No change of the camera has been performed");
+        } else {
+            this->cam = minstate;
+            return true;
+        }
+    }
+
+    auto path = this->determineCameraFilePath();
+    if (path.empty()) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "The camera file path could not be determined. This is probably due to the usage of .mmprj project "
+            "files. Please use a .lua project file instead");
+        return false;
+    }
+
+    std::ifstream file(path);
+    std::string text;
+    if (file.is_open()) {
+        text.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "The camera output file at '%s' could not be opened.", path.c_str());
+        return false;
+    }
+    auto copy = this->savedCameras;
+    bool success = this->serializer.deserialize(copy, text);
+    if (!success) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "The reading of the camera parameters did not work properly. No changes were made.");
+        return false;
+    }
+    this->savedCameras = copy;
+    if (this->savedCameras.back().second) {
+        this->cam = this->savedCameras.back().first;
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "The stored default cam was not valid. The old default cam is used");
+    }
+    return true;
+}
+
+/*
+ * AbstractView::determineCameraFilePath
+ */
+std::string view::AbstractView::determineCameraFilePath(void) const {
+    auto path = this->GetCoreInstance()->GetLuaState()->GetScriptPath();
+    if (path.empty())
+        return path; // early exit for mmprj projects
+    auto dotpos = path.find_last_of('.');
+    path = path.substr(0, dotpos);
+    path.append("_cam.json");
+    return path;
 }

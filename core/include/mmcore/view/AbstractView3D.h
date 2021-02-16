@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <array>
 #include <map>
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CalleeSlot.h"
@@ -15,7 +14,6 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractRenderingView.h"
-#include "mmcore/view/CameraSerializer.h"
 #include "mmcore/view/Camera_2.h"
 #include "mmcore/view/TimeControl.h"
 #include "mmcore/view/CallRender3D.h"
@@ -100,13 +98,6 @@ protected:
 
 
     /**
-     * This method determines the file path the camera file should have
-     *
-     * @return The file path of the camera file as string
-     */
-    std::string determineCameraFilePath(void) const;
-
-    /**
      * Unpacks the mouse coordinates, which are relative to the virtual
      * viewport size.
      *
@@ -170,23 +161,6 @@ protected:
     // virtual bool OnGetCamParams(view::CallCamParamSync& c);
 
     /**
-     * Stores the current camera settings
-     *
-     * @param p Must be storeCameraSettingsSlot
-     * @return true
-     */
-    bool onStoreCamera(param::ParamSlot& p);
-
-    /**
-     * Restores the camera settings
-     *
-     * @param p Must be restoreCameraSettingsSlot
-     *
-     * @return true
-     */
-    bool onRestoreCamera(param::ParamSlot& p);
-
-    /**
      * Resets the view
      *
      * @param p Must be resetViewSlot
@@ -205,9 +179,6 @@ protected:
 #ifdef _WIN32
 #    pragma warning(disable : 4251)
 #endif /* _WIN32 */
-    /** The camera */
-    Camera_2 cam;
-
     /** The orbital arcball manipulator for the camera */
     arcball_type arcballManipulator;
 
@@ -223,32 +194,11 @@ protected:
     /** The manipulator for changing the orbital altitude */
     orbit_altitude_type orbitAltitudeManipulator;
 
-    /** The object responsible for camera serialization */
-    CameraSerializer serializer;
-
     /** Slot to call the renderer to render */
     CallerSlot rendererSlot;
 
     /** Flag showing the look at point */
     param::ParamSlot showLookAt;
-
-    /** Slot containing the settings of the currently stored camera */
-    param::ParamSlot cameraSettingsSlot;
-
-    /** Triggers the storage of the camera settings */
-    param::ParamSlot storeCameraSettingsSlot;
-
-    /** Triggers the restore of the camera settings */
-    param::ParamSlot restoreCameraSettingsSlot;
-
-    /** Slot activating or deactivating the override of already present camera settings */
-    param::ParamSlot overrideCamSettingsSlot;
-
-    /** Slot activating or deactivating the automatic save of camera parameters to disk when a camera is saved */
-    param::ParamSlot autoSaveCamSettingsSlot;
-
-    /** Slot activating or deactivating the automatic load of camera parameters at program startup */
-    param::ParamSlot autoLoadCamSettingsSlot;
 
     /** Triggers the reset of the view */
     param::ParamSlot resetViewSlot;
@@ -326,9 +276,6 @@ protected:
 
     /** Map storing the pressed state of all mouse buttons */
     std::map<view::MouseButton, bool> pressedMouseMap;
-
-    /** Array that holds the saved camera states */
-    std::array<std::pair<Camera_2::minimal_state_type, bool>, 11> savedCameras;
 
     /** Flag determining whether the arcball is the default steering method of the camera */
     bool arcballDefault;

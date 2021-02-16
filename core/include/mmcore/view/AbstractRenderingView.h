@@ -147,6 +147,13 @@ protected:
 
     glm::vec4 overrideViewport;
 
+    /** The background colour for the view */
+    mutable param::ParamSlot bkgndColSlot;
+
+    /** Bool flag to activate software cursor rendering */
+    mutable param::ParamSlot softCursorSlot;
+
+
 private:
 
     /**
@@ -196,14 +203,8 @@ private:
     /** The background colour for the view */
     mutable glm::vec4 bkgndCol;
 
-    /** The background colour for the view */
-    mutable param::ParamSlot bkgndColSlot;
-
     /** Bool flag to activate software cursor rendering */
     mutable bool softCursor;
-
-    /** Bool flag to activate software cursor rendering */
-    mutable param::ParamSlot softCursorSlot;
 
     /** The title renderer */
     mutable AbstractTitleRenderer* titleRenderer;

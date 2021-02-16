@@ -37,15 +37,7 @@ view::View2DGL::View2DGL(void)
     , mouseX(0.0f)
     , mouseY(0.0f)
     , rendererSlot("rendering", "Connects the view to a Renderer")
-    , cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")
-    , storeCameraSettingsSlot("camstore::storecam", "Triggers the storage of the camera settings. This only works for "
-                                                    "multiple cameras if you use .lua project files")
-    , restoreCameraSettingsSlot("camstore::restorecam", "Triggers the restore of the camera settings. This only works "
-                                                        "for multiple cameras if you use .lua project files")
     , resetViewSlot("resetView", "Triggers the reset of the view")
-    , showBBoxSlot("showBBox", "Shows/hides the bounding box")
-    , bboxCol{1.0f, 1.0f, 1.0f, 0.625f}
-    , bboxColSlot("bboxCol", "Sets the colour for the bounding box")
     , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
     , viewX(0.0f)
     , viewY(0.0f)
@@ -84,27 +76,9 @@ view::View2DGL::View2DGL(void)
     this->rendererSlot.SetCompatibleCall<CallRender2DGLDescription>();
     this->MakeSlotAvailable(&this->rendererSlot);
 
-    this->cameraSettingsSlot.SetParameter(new param::StringParam(""));
-    this->MakeSlotAvailable(&this->cameraSettingsSlot);
-
-    this->storeCameraSettingsSlot.SetParameter(
-        new param::ButtonParam(view::Key::KEY_C, (view::Modifier::SHIFT | view::Modifier::ALT)));
-    this->storeCameraSettingsSlot.SetUpdateCallback(&View2DGL::onStoreCamera);
-    this->MakeSlotAvailable(&this->storeCameraSettingsSlot);
-
-    this->restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(view::Key::KEY_C, view::Modifier::ALT));
-    this->restoreCameraSettingsSlot.SetUpdateCallback(&View2DGL::onRestoreCamera);
-    this->MakeSlotAvailable(&this->restoreCameraSettingsSlot);
-
     this->resetViewSlot << new param::ButtonParam();
     this->resetViewSlot.SetUpdateCallback(&View2DGL::onResetView);
     this->MakeSlotAvailable(&this->resetViewSlot);
-
-    this->showBBoxSlot << new param::BoolParam(true);
-    this->MakeSlotAvailable(&this->showBBoxSlot);
-
-    this->bboxColSlot << new param::ColorParam(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]);
-    this->MakeSlotAvailable(&this->bboxColSlot);
 
     this->resetViewOnBBoxChangeSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
@@ -153,7 +127,7 @@ void view::View2DGL::Render(const mmcRenderViewContext& context) {
     int vpx = 0, vpy = 0;
     float w = this->width;
     float h = this->height;
-    if (this->overrideViewport != NULL) {
+    if (this->overrideViewport != glm::vec4(0)) {
         if ((this->overrideViewport[0] >= 0) && (this->overrideViewport[1] >= 0)
             && (this->overrideViewport[2] > 0) && (this->overrideViewport[3] > 0)) {
             ::glViewport(
@@ -183,7 +157,8 @@ void view::View2DGL::Render(const mmcRenderViewContext& context) {
     if (this->firstImg) {
         this->firstImg = false;
         this->ResetView();
-        tryRestoringCamera(this->viewX, this->viewY, this->viewZoom);
+        param::ParamSlot p("",""); // HACK
+        onRestoreCamera(p);
     }
 
     if ((*cr2d)(AbstractCallRender::FnGetExtents)) {
@@ -254,7 +229,7 @@ void view::View2DGL::Render(const mmcRenderViewContext& context) {
         (-1.0f / vz - vy),
         (asp / vz - vx),
         (1.0f / vz - vy));
-    cr2d->AccessBoundingBoxes().SetBoundingBox(vr.Left(),vr.Bottom(),0,vr.Right(),vr.Top(),0);
+    cr2d->AccessBoundingBoxes().SetBoundingBox(vr.Left(),vr.Bottom(),vr.Right(),vr.Top());
 
     if (this->incomingCall == NULL) {
         if (this->_fbo == nullptr) this->_fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
@@ -278,31 +253,6 @@ void view::View2DGL::Render(const mmcRenderViewContext& context) {
         cr2d->SetFramebufferObject(this->incomingCall->GetFramebufferObject());
     }
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // depth could be required even for 2d
-
-    if (this->bboxColSlot.IsDirty()) {
-        this->bboxColSlot.Param<param::ColorParam>()->Value(this->bboxCol[0], this->bboxCol[1], this->bboxCol[2], this->bboxCol[3]);
-        this->bboxColSlot.ResetDirty();
-    }
-
-    if (this->showBBoxSlot.Param<param::BoolParam>()->Value()) {
-        ::glEnable(GL_BLEND);
-        ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        ::glEnable(GL_LINE_SMOOTH);
-        ::glLineWidth(1.2f);
-        ::glDisable(GL_LIGHTING);
-
-        ::glColor4fv(this->bboxCol);
-        ::glBegin(GL_LINE_LOOP);
-        ::glVertex2f(bbox.BoundingBox().Left(), bbox.BoundingBox().Top());
-        ::glVertex2f(bbox.BoundingBox().Left(), bbox.BoundingBox().Bottom());
-        ::glVertex2f(bbox.BoundingBox().Right(), bbox.BoundingBox().Bottom());
-        ::glVertex2f(bbox.BoundingBox().Right(), bbox.BoundingBox().Top());
-        ::glEnd();
-
-        ::glDisable(GL_LINE_SMOOTH);
-        ::glDisable(GL_BLEND);
-        ::glLineWidth(1.0f);
-    }
 
     (*cr2d)(AbstractCallRender::FnRender);
 
@@ -351,6 +301,16 @@ void view::View2DGL::ResetView(void) {
         this->viewY = 0.0f;
         this->viewZoom = 1.0f;
     }
+
+    this->cam.projection_type(thecam::Projection_type::orthographic);
+    this->cam.eye_position() = glm::vec4(viewX,viewY,0,1);
+    cam.film_gate({this->width, this->height});
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+
+
+
     this->viewUpdateCnt++;
 }
 
@@ -370,7 +330,7 @@ void view::View2DGL::Resize(unsigned int width, unsigned int height) {
  */
 bool view::View2DGL::OnRenderView(Call& call) {
     float overBC[3];
-    int overVP[4] = {0, 0, 0, 0};
+    glm::vec4 overVP = glm::vec4(0);
     float overTile[6];
     view::CallRenderViewGL *crv = dynamic_cast<view::CallRenderViewGL *>(&call);
     if (crv == NULL) return false;
@@ -405,7 +365,7 @@ bool view::View2DGL::OnRenderView(Call& call) {
 
     this->overrideBkgndCol = glm::vec4(0,0,0,0);
     this->overrideViewTile = NULL;
-    this->overrideViewport = NULL;
+    this->overrideViewport = glm::vec4(0);
     this->incomingCall = NULL;
 
     return true;
@@ -555,46 +515,6 @@ void view::View2DGL::unpackMouseCoordinates(float &x, float &y) {
     x *= this->width;
     y *= this->height;
     y -= 1.0f;
-}
-
-bool view::View2DGL::onStoreCamera(param::ParamSlot &p) {
-    // TODO: multiple saved views, like View3DGL
-    nlohmann::json out;
-    out["viewX"] = this->viewX;
-    out["viewY"] = this->viewY;
-    out["viewZoom"] = this->viewZoom;
-    this->cameraSettingsSlot.Param<param::StringParam>()->SetValue(out.dump().c_str());
-    return true;
-}
-
-bool view::View2DGL::tryRestoringCamera(float &outViewX, float &outViewY, float &outViewZoom) {
-    if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
-        nlohmann::json obj = nlohmann::json::parse(
-            this->cameraSettingsSlot.Param<param::StringParam>()->Value().PeekBuffer(), nullptr, false);
-        if (!obj.is_object()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "View2DGL: Camera state invalid. Cannot deserialize.");
-            return false;
-        } else {
-            if (obj.count("viewX") == 1 && obj.count("viewY") == 1 && obj.count("viewZoom") == 1 &&
-                obj["viewX"].is_number() && obj["viewY"].is_number() && obj["viewZoom"].is_number()) {
-                outViewX = obj["viewX"];
-                outViewY = obj["viewY"];
-                outViewZoom = obj["viewZoom"];
-            } else {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "View2DGL: Camera state invalid. Cannot deserialize.");
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-bool view::View2DGL::onRestoreCamera(param::ParamSlot &p) {
-    // TODO: multiple saved views, like View3DGL
-    tryRestoringCamera(this->viewX, this->viewY, this->viewZoom);
-    return true;
 }
 
 
