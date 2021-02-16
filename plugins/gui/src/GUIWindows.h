@@ -136,10 +136,12 @@ namespace gui {
         }
 
         /**
-         * Enable or disable GUI drawing
+         * Show or hide GUI
          */
-        void SetEnableDisable(bool enable) {
-            this->state.gui_enabled = enable;
+        void SetVisibility(bool visible) {
+            if (this->state.gui_visible != visible) {
+                this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = true;
+            }
         }
 
         /**
@@ -176,12 +178,15 @@ namespace gui {
 
         /** The global state (for settings to be applied before ImGui::Begin). */
         struct StateBuffer {
-            bool gui_enabled;        // Flag indicating whether GUI is completely disabled
-            bool enable_gui_post;    // Required to prevent changes to 'gui_enabled' between pre and post drawing
-            bool rescale_windows;    // Indicates resizing of windows for new gui zoom
-            Styles style;            // Predefined GUI style
-            bool style_changed;      // Flag indicating changed style
-            bool autosave_gui_state; // Automatically save state after gui has been changed
+            bool gui_visible;      // Flag indicating whether GUI is completely disabled
+            bool gui_visible_post; // Required to prevent changes to 'gui_enabled' between pre and post drawing
+            std::vector<WindowCollection::DrawCallbacks>
+                gui_visible_buffer;   // List of all visible window IDs for restore when GUI is visible again
+            bool gui_hide_next_frame; // Hiding all GUI windows properly needs two frames for ImGui to apply right state
+            bool rescale_windows;     // Indicates resizing of windows for new gui zoom
+            Styles style;             // Predefined GUI style
+            bool style_changed;       // Flag indicating changed style
+            bool autosave_gui_state;  // Automatically save state after gui has been changed
             std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
             ImGuiID graph_uid;                             // UID of currently running graph
             std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.
@@ -195,7 +200,7 @@ namespace gui {
             bool open_popup_screenshot;        // Flag for opening screenshot file pop-up
             bool menu_visible;                 // Flag indicating menu state
             unsigned int graph_fonts_reserved; // Number of fonts reserved for the configurator graph canvas
-            bool toggle_main_view;             // Flag indicating that the main view should be toggeled
+            bool toggle_graph_entry;           // Flag indicating that the main view should be toggeled
             bool shutdown_triggered;           // Flag indicating user triggered shutdown
             bool screenshot_triggered;         // Trigger and file name for screenshot
             std::string screenshot_filepath;   // Filename the screenshot should be saved to
@@ -214,7 +219,7 @@ namespace gui {
             SAVE_PROJECT = 2,
             LOAD_PROJECT = 3,
             MENU = 4,
-            TOGGLE_MAIN_VIEWS = 5,
+            TOGGLE_GRAPH_ENTRY = 5,
             TRIGGER_SCREENSHOT = 6,
             SHOW_HIDE_GUI = 7,
             INDEX_COUNT = 8
