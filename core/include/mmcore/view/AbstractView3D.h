@@ -13,7 +13,7 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractRenderingView.h"
+#include "mmcore/view/AbstractView.h"
 #include "mmcore/view/Camera_2.h"
 #include "mmcore/view/TimeControl.h"
 #include "mmcore/view/CallRender3D.h"
@@ -22,7 +22,7 @@ namespace megamol {
 namespace core {
 namespace view {
 
-class MEGAMOLCORE_API AbstractView3D : public view::AbstractRenderingView {
+class MEGAMOLCORE_API AbstractView3D : public view::AbstractView {
 
 public:
 
@@ -52,14 +52,6 @@ public:
      * default values.
      */
     virtual void ResetView(void);
-
-    /**
-     * Resizes the AbstractAbstractView3D.
-     *
-     * @param width The new width.
-     * @param height The new height.
-     */
-    virtual void Resize(unsigned int width, unsigned int height);
 
     /**
      * Callback requesting a rendering of this view

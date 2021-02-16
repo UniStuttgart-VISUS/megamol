@@ -30,7 +30,7 @@ using namespace megamol::core;
  * view::View2DGL::View2DGL
  */
 view::View2DGL::View2DGL(void)
-    : view::AbstractRenderingView()
+        : view::AbstractView()
     , firstImg(false)
     , height(1.0f)
     , mouseMode(MouseMode::Propagate)

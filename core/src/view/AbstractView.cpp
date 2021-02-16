@@ -13,6 +13,7 @@
 #include "mmcore/param/AbstractParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
+#include "mmcore/param/ColorParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/view/CallRenderView.h"
 #include "mmcore/view/AbstractCallRender.h"
@@ -45,7 +46,10 @@ view::AbstractView::AbstractView(void)
               "is closed. This only works if you use .lua project files")
         , autoLoadCamSettingsSlot("camstore::autoLoadSettings",
               "When activated, the view will load the camera settings from disk at startup. "
-              "This only works if you use .lua project files"), hooks() {
+              "This only works if you use .lua project files")
+        , hooks()
+        , overrideBkgndCol(NULL)
+        , bkgndColSlot("backCol", "The views background colour") {
     // InputCall
     this->renderSlot.SetCallback(
         view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
@@ -91,6 +95,13 @@ view::AbstractView::AbstractView(void)
 
     this->autoLoadCamSettingsSlot.SetParameter(new param::BoolParam(true));
     this->MakeSlotAvailable(&this->autoLoadCamSettingsSlot);
+
+    this->bkgndCol[0] = 0.0f;
+    this->bkgndCol[1] = 0.0f;
+    this->bkgndCol[2] = 0.125f;
+
+    this->bkgndColSlot << new param::ColorParam(this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2], 1.0f);
+    this->MakeSlotAvailable(&this->bkgndColSlot);
 }
 
 
@@ -98,6 +109,7 @@ view::AbstractView::AbstractView(void)
  * view::AbstractView::~AbstractView
  */
 view::AbstractView::~AbstractView(void) {
+    this->overrideBkgndCol = glm::vec4(0, 0, 0, 0); // DO NOT DELETE
     this->hooks.Clear(); // DO NOT DELETE OBJECTS
 }
 
@@ -275,6 +287,18 @@ bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
     return true;
 }
 
+/*
+ * AbstractView::Resize
+ */
+void view::AbstractView::Resize(unsigned int width, unsigned int height) {
+    if (this->cam.resolution_gate().width() != width || this->cam.resolution_gate().height() != height) {
+        this->cam.resolution_gate(cam_type::screen_size_type(static_cast<LONG>(width), static_cast<LONG>(height)));
+    }
+    if (this->cam.image_tile().width() != width || this->cam.image_tile().height() != height) {
+        this->cam.image_tile(cam_type::screen_rectangle_type(
+            std::array<int, 4>({0, static_cast<int>(height), static_cast<int>(width), 0})));
+    }
+}
 
 /*
  * view::AbstractView::unpackMouseCoordinates
@@ -472,4 +496,15 @@ std::string view::AbstractView::determineCameraFilePath(void) const {
     path = path.substr(0, dotpos);
     path.append("_cam.json");
     return path;
+}
+
+/*
+ * view::AbstractView::bkgndColour
+ */
+glm::vec4 view::AbstractView::BkgndColour(void) const {
+    if (this->bkgndColSlot.IsDirty()) {
+        this->bkgndColSlot.ResetDirty();
+        this->bkgndColSlot.Param<param::ColorParam>()->Value(this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]);
+    }
+    return this->bkgndCol;
 }

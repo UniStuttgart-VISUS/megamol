@@ -134,7 +134,7 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height) = 0;
+    virtual void Resize(unsigned int width, unsigned int height);
 
     /**
      * Answers the desired window position configuration of this view.
@@ -239,6 +239,13 @@ public:
     bool OnMouseMoveCallback(Call& call);
 
     bool OnMouseScrollCallback(Call& call);
+
+    /**
+     * Answer the background colour for the view
+     *
+     * @return The background colour for the view
+     */
+    glm::vec4 BkgndColour(void) const;
 
 protected:
     /** Typedef alias */
@@ -358,9 +365,20 @@ protected:
     /** The object responsible for camera serialization */
     CameraSerializer serializer;
 
+    /** Pointer to the override background colour */
+    glm::vec4 overrideBkgndCol;
+
+    glm::vec4 overrideViewport;
+
+    /** The background colour for the view */
+    mutable param::ParamSlot bkgndColSlot;
+
 private:
     /** List of registered hooks */
     vislib::SingleLinkedList<Hooks*> hooks;
+
+    /** The background colour for the view */
+    mutable glm::vec4 bkgndCol;
 };
 
 

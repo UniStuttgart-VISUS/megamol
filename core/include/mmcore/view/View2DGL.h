@@ -14,7 +14,7 @@
 #include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/AbstractRenderingView.h"
+#include "mmcore/view/AbstractView.h"
 #include "mmcore/view/TimeControl.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
@@ -31,7 +31,7 @@ class CallRenderViewGL;
 /**
  * Base class of rendering graph calls
  */
-class View2DGL: public AbstractRenderingView {
+class View2DGL: public AbstractView {
 public:
 
     /**

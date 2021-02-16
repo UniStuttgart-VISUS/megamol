@@ -36,7 +36,7 @@ using namespace megamol::core::view;
  * AbstractView3D::AbstractView3D
  */
 AbstractView3D::AbstractView3D(void)
-    : AbstractRenderingView()
+        : AbstractView()
     , rendererSlot("rendering", "Connects the view to a Renderer")
     , showLookAt("showLookAt", "Flag showing the look at point")
     , resetViewSlot("resetView", "Triggers the reset of the view")
@@ -375,19 +375,6 @@ void AbstractView3D::ResetView(void) {
 
     // TODO Further manipulators? better value?
     this->valuesFromOutside = false;
-}
-
-/*
- * AbstractView3D::Resize
- */
-void AbstractView3D::Resize(unsigned int width, unsigned int height) {
-    if (this->cam.resolution_gate().width() != width || this->cam.resolution_gate().height() != height) {
-        this->cam.resolution_gate(cam_type::screen_size_type(static_cast<LONG>(width), static_cast<LONG>(height)));
-    }
-    if (this->cam.image_tile().width() != width || this->cam.image_tile().height() != height) {
-        this->cam.image_tile(cam_type::screen_rectangle_type(
-            std::array<int, 4>({0, static_cast<int>(height), static_cast<int>(width), 0})));
-    }
 }
 
 /*
