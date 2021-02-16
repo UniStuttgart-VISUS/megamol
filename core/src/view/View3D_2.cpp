@@ -88,6 +88,7 @@ View3D_2::View3D_2(void)
     , enableMouseSelectionSlot("enableMouseSelection", "Enable selecting and picking with the mouse")
     , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "Whether to reset the view when the bounding boxes change")
     , cameraSetViewChooserParam("view::defaultView", "Choose a default view to look from")
+    , cameraSetOrientationChooserParam("view::defaultOrientation", "Choose a default orientation to look from")
     , cameraViewOrientationParam("view::cubeOrientation", "Current camera orientation used for view cube.")
     , showViewCubeParam("view::showViewCube", "Shows view cube.")
     , resetViewSlot("resetView", "Triggers the reset of the view")
@@ -317,6 +318,16 @@ View3D_2::View3D_2(void)
     this->cameraSetViewChooserParam.SetParameter(defaultViewParam),
     this->MakeSlotAvailable(&this->cameraSetViewChooserParam);
     this->cameraSetViewChooserParam.SetUpdateCallback(&View3D_2::onResetView);
+
+    auto defaultOrientationParam = new param::EnumParam(0);
+    defaultOrientationParam->SetTypePair(defaultorientation::DEFAULTORIENTATION_TOP, "Top");
+    defaultOrientationParam->SetTypePair(defaultorientation::DEFAULTORIENTATION_RIGHT, "Right");
+    defaultOrientationParam->SetTypePair(defaultorientation::DEFAULTORIENTATION_BOTTOM, "Bottom");
+    defaultOrientationParam->SetTypePair(defaultorientation::DEFAULTORIENTATION_LEFT, "Left");
+    defaultOrientationParam->SetGUIVisible(camparamvisibility);
+    this->cameraSetOrientationChooserParam.SetParameter(defaultOrientationParam),
+        this->MakeSlotAvailable(&this->cameraSetOrientationChooserParam);
+    this->cameraSetOrientationChooserParam.SetUpdateCallback(&View3D_2::onResetView);
 
     this->cameraViewOrientationParam.SetParameter(new param::Vector4fParam(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 1.0f)));
     this->MakeSlotAvailable(&this->cameraViewOrientationParam);

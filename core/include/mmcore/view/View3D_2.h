@@ -59,6 +59,14 @@ public:
         DEFAULTVIEW_BOTTOM,
     };
 
+    /** Enum for default orientations from the respective direction */
+    enum defaultorientation {
+        DEFAULTORIENTATION_TOP,
+        DEFAULTORIENTATION_RIGHT,
+        DEFAULTORIENTATION_BOTTOM,
+        DEFAULTORIENTATION_LEFT
+    };
+
     /**
      * Answer the name of this module.
      *
@@ -390,6 +398,7 @@ protected:
     param::ParamSlot showViewCubeParam;
     param::ParamSlot cameraViewOrientationParam;
     param::ParamSlot cameraSetViewChooserParam;
+    param::ParamSlot cameraSetOrientationChooserParam;
 
     bool cameraOvrCallback(param::ParamSlot& p);
 
