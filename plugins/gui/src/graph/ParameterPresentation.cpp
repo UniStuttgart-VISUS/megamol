@@ -47,7 +47,8 @@ megamol::gui::ParameterPresentation::~ParameterPresentation(void) {
 }
 
 
-bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout_parameter, WidgetScope scope) {
+bool megamol::gui::ParameterPresentation::Present(
+    megamol::gui::Parameter& inout_parameter, WidgetScope scope, const std::string& module_fullname) {
 
     bool retval = false;
 
@@ -108,6 +109,13 @@ bool megamol::gui::ParameterPresentation::Present(megamol::gui::Parameter& inout
                     this->tooltip.ToolTip("Presentation", ImGui::GetItemID(), 1.0f, 3.0f);
 
                     ImGui::SameLine();
+
+                    // Lua
+                    ParameterPresentation::LuaButton("param_lua_button", inout_parameter.GetValueString(),
+                        inout_parameter.full_name, module_fullname);
+                    this->tooltip.ToolTip("Copy lua command to clipboard.", ImGui::GetItemID(), 1.0f, 3.0f);
+
+                    ImGui::SameLine();
                 }
 
                 /// PARAMETER VALUE WIDGET ---------------------------------
@@ -162,20 +170,20 @@ void megamol::gui::ParameterPresentation::LoadTransferFunctionTexture(
 
 bool megamol::gui::ParameterPresentation::OptionButton(const std::string& id, const std::string& label, bool dirty) {
 
+    assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
+
     bool retval = false;
     std::string widget_name("option_button");
     std::string widget_id = widget_name + id;
     ImGui::PushID(widget_id.c_str());
 
-    assert(ImGui::GetCurrentContext() != nullptr);
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    float knob_size = ImGui::GetFrameHeight();
-    float half_knob_size = knob_size / 2.0f;
+    float button_size = ImGui::GetFrameHeight();
+    float half_button_size = button_size / 2.0f;
     ImVec2 widget_start_pos = ImGui::GetCursorScreenPos();
 
     if (!label.empty()) {
-        float text_x_offset_pos = knob_size + style.ItemInnerSpacing.x;
+        float text_x_offset_pos = button_size + style.ItemInnerSpacing.x;
         ImGui::SetCursorScreenPos(widget_start_pos + ImVec2(text_x_offset_pos, 0.0f));
         ImGui::AlignTextToFramePadding();
         ImGui::TextUnformatted(label.c_str());
@@ -184,13 +192,13 @@ bool megamol::gui::ParameterPresentation::OptionButton(const std::string& id, co
 
     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
     auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
-    ImGui::BeginChild("special_button_background", ImVec2(knob_size, knob_size), false, child_flags);
+    ImGui::BeginChild("special_button_background", ImVec2(button_size, button_size), false, child_flags);
 
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
-    float thickness = knob_size / 5.0f;
-    ImVec2 center = widget_start_pos + ImVec2(half_knob_size, half_knob_size);
+    float thickness = button_size / 5.0f;
+    ImVec2 center = widget_start_pos + ImVec2(half_button_size, half_button_size);
     ImU32 color_front = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
     if (dirty) {
         color_front = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_BUTTON_MODIFIED);
@@ -198,7 +206,7 @@ bool megamol::gui::ParameterPresentation::OptionButton(const std::string& id, co
     draw_list->AddCircleFilled(center, thickness, color_front, 12);
     draw_list->AddCircle(center, 2.0f * thickness, color_front, 12, (thickness / 2.0f));
 
-    ImVec2 rect = ImVec2(knob_size, knob_size);
+    ImVec2 rect = ImVec2(button_size, button_size);
     retval = ImGui::InvisibleButton("special_button", rect);
 
     ImGui::EndChild();
@@ -213,6 +221,9 @@ bool megamol::gui::ParameterPresentation::OptionButton(const std::string& id, co
 bool megamol::gui::ParameterPresentation::KnobButton(
     const std::string& id, float size, float& inout_value, float minval, float maxval) {
 
+    assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
+
     bool retval = false;
 
     const float pi = 3.14159265358f;
@@ -221,8 +232,6 @@ bool megamol::gui::ParameterPresentation::KnobButton(
     std::string widget_id = widget_name + id;
     ImGui::PushID(widget_id.c_str());
 
-    assert(ImGui::GetCurrentContext() != nullptr);
-    ImGuiStyle& style = ImGui::GetStyle();
     ImVec2 widget_start_pos = ImGui::GetCursorScreenPos();
 
     const float thickness = size / 15.0f;
@@ -304,9 +313,17 @@ bool megamol::gui::ParameterPresentation::KnobButton(
 }
 
 
-bool megamol::gui::ParameterPresentation::ParameterExtendedModeButton(bool& inout_extended_mode) {
+bool megamol::gui::ParameterPresentation::ParameterExtendedModeButton(
+    const std::string& id, bool& inout_extended_mode) {
+
+    assert(ImGui::GetCurrentContext() != nullptr);
 
     bool retval = false;
+
+    std::string widget_name("param_extend_button");
+    std::string widget_id = widget_name + id;
+    ImGui::PushID(widget_id.c_str());
+
     ImGui::BeginGroup();
 
     megamol::gui::ParameterPresentation::OptionButton("param_mode_button", "Mode");
@@ -322,6 +339,67 @@ bool megamol::gui::ParameterPresentation::ParameterExtendedModeButton(bool& inou
         ImGui::EndPopup();
     }
     ImGui::EndGroup();
+
+    ImGui::PopID();
+
+    return retval;
+}
+
+
+bool megamol::gui::ParameterPresentation::LuaButton(const std::string& id, const std::string& param_value,
+    const std::string& param_fullname, const std::string& module_fullname) {
+
+    assert(ImGui::GetCurrentContext() != nullptr);
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    bool retval = false;
+
+    std::string widget_name("lua_button");
+    std::string widget_id = widget_name + id;
+    ImGui::PushID(widget_id.c_str());
+
+    float button_size = ImGui::GetFrameHeight();
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBg]));
+    auto child_flags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
+    ImGui::BeginChild("lua_button_background", ImVec2(button_size, button_size), false, child_flags);
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    assert(draw_list != nullptr);
+
+    const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonHovered]);
+    ImVec2 button_start_pos = ImGui::GetCursorScreenPos();
+    ImVec2 button_middle = button_start_pos + ImVec2(button_size / 2.0f, button_size / 2.0f);
+    const std::string button_label = "lua";
+    ImVec2 text_size = ImGui::CalcTextSize(button_label.c_str());
+    ImVec2 text_pos_left_upper = button_middle - ImVec2(text_size.x / 2.0f, text_size.y / 2.0f);
+    draw_list->AddText(text_pos_left_upper, COLOR_TEXT, button_label.c_str());
+
+    ImVec2 rect = ImVec2(button_size, button_size);
+    retval = ImGui::InvisibleButton("lua_invisible_button", rect);
+
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
+
+    if (ImGui::BeginPopupContextItem("param_lua_button_context", 0)) {
+        bool copy_to_clipboard = false;
+        std::string lua_param_cmd;
+        std::string mod_name(module_fullname.c_str()); /// local copy required
+        if (ImGui::MenuItem("Copy mmSetParamValue")) {
+            lua_param_cmd = "mmSetParamValue(\"" + mod_name + "::" + param_fullname + "\",[=[" + param_value + "]=])";
+            copy_to_clipboard = true;
+        }
+        if (ImGui::MenuItem("Copy mmGetParamValue")) {
+            lua_param_cmd = "mmGetParamValue(\"" + mod_name + "::" + param_fullname + "\")";
+            copy_to_clipboard = true;
+        }
+
+        if (copy_to_clipboard) {
+            ImGui::SetClipboardText(lua_param_cmd.c_str());
+        }
+        ImGui::EndPopup();
+    }
+
+    ImGui::PopID();
 
     return retval;
 }
@@ -971,7 +1049,8 @@ bool megamol::gui::ParameterPresentation::widget_filepath(
         ImGuiStyle& style = ImGui::GetStyle();
         float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
         ImGui::PushItemWidth(widget_width);
-        bool button_edit = this->file_browser.Button(std::get<std::string>(this->widget_store));
+        bool button_edit = this->file_browser.Button(
+            std::get<std::string>(this->widget_store), megamol::gui::FileBrowserWidget::FileBrowserFlag::SELECT, "");
         ImGui::SameLine();
         ImGui::InputText(label.c_str(), &std::get<std::string>(this->widget_store), ImGuiInputTextFlags_None);
         if (button_edit || ImGui::IsItemDeactivatedAfterEdit()) {
@@ -1434,9 +1513,7 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
     ImGuiStyle& style = ImGui::GetStyle();
 
     if (this->use_external_tf_editor) {
-        if (this->tf_editor_external_ptr == nullptr) {
-            this->use_external_tf_editor = false;
-        } else {
+        if (this->tf_editor_external_ptr != nullptr) {
             isActive = !(this->tf_editor_external_ptr->GetConnectedParameterName().empty());
         }
     }
@@ -1468,13 +1545,17 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
         }
 
         // Toggle inplace and external editor, if available
-        if (this->tf_editor_external_ptr != nullptr) {
-            if (ImGui::RadioButton("External Editor", this->use_external_tf_editor)) {
-                this->use_external_tf_editor = true;
-                this->show_tf_editor = false;
-            }
-            ImGui::SameLine();
+        if (this->tf_editor_external_ptr == nullptr) {
+            GUIUtils::ReadOnlyWigetStyle(true);
         }
+        if (ImGui::RadioButton("External Editor", this->use_external_tf_editor)) {
+            this->use_external_tf_editor = true;
+            this->show_tf_editor = false;
+        }
+        if (this->tf_editor_external_ptr == nullptr) {
+            GUIUtils::ReadOnlyWigetStyle(false);
+        }
+        ImGui::SameLine();
         if (ImGui::RadioButton("Inplace", !this->use_external_tf_editor)) {
             this->use_external_tf_editor = false;
             if (this->tf_editor_external_ptr != nullptr) {
@@ -1486,13 +1567,13 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
         if (this->use_external_tf_editor) {
 
             // Editor
-            if (isActive) {
+            if (isActive || (this->tf_editor_external_ptr == nullptr)) {
                 GUIUtils::ReadOnlyWigetStyle(true);
             }
             if (ImGui::Button("Connect")) {
                 retval = true;
             }
-            if (isActive) {
+            if (isActive || (this->tf_editor_external_ptr == nullptr)) {
                 GUIUtils::ReadOnlyWigetStyle(false);
             }
 
@@ -1519,31 +1600,13 @@ bool megamol::gui::ParameterPresentation::widget_transfer_function_editor(
 
         // Copy
         if (ImGui::Button("Copy")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            ::glfwSetClipboardString(glfw_win, value.c_str());
-#elif _WIN32
             ImGui::SetClipboardText(value.c_str());
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[GUI] Transfer Function JSON String:\n%s", value.c_str());
-#endif
         }
         ImGui::SameLine();
 
         // Paste
         if (ImGui::Button("Paste")) {
-#ifdef GUI_USE_GLFW
-            auto glfw_win = ::glfwGetCurrentContext();
-            inout_parameter.SetValue(std::string(::glfwGetClipboardString(glfw_win)));
-#elif _WIN32
             inout_parameter.SetValue(std::string(ImGui::GetClipboardText()));
-#else // LINUX
-            megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                "[GUI] No clipboard use provided. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-#endif
             value = std::get<std::string>(inout_parameter.GetValue());
             if (this->use_external_tf_editor) {
                 if (this->tf_editor_external_ptr != nullptr) {
@@ -1613,8 +1676,7 @@ bool megamol::gui::ParameterPresentation::widget_knob(
     if (scope == ParameterPresentation::WidgetScope::LOCAL) {
 
         // Draw knob
-        const float knob_size =
-            (1.0f * ImGui::GetTextLineHeightWithSpacing()) + (1.0f * ImGui::GetFrameHeightWithSpacing());
+        const float knob_size = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetFrameHeightWithSpacing();
         if (ParameterPresentation::KnobButton("param_knob", knob_size, value, minval, maxval)) {
             retval = true;
         }

@@ -11,6 +11,7 @@
 
 #include "GUIUtils.h"
 
+#include "mmcore/thecam/math/functions.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
 
@@ -40,7 +41,7 @@ namespace gui {
 
     struct Interaction {
         InteractionType type;
-        int obj_id;
+        unsigned int obj_id;
         float axis_x;
         float axis_y;
         float axis_z;
@@ -51,16 +52,18 @@ namespace gui {
 
     struct Manipulation {
         InteractionType type;
-        int obj_id;
+        unsigned int obj_id;
         float axis_x;
         float axis_y;
-        float axis_Z;
+        float axis_z;
         float value;
     };
 
     typedef std::shared_ptr<glowl::GLSLProgram> ShaderPtr;
     typedef std::vector<Interaction> InteractVector;
     typedef std::vector<Manipulation> ManipVector;
+
+    class GUIWindows;
 
     /**
      * OpenGL implementation of widget picking.
@@ -70,19 +73,9 @@ namespace gui {
      */
     class PickingBuffer {
     public:
-        PickingBuffer(void);
-        ~PickingBuffer(void);
+        friend class GUIWindows;
 
-        bool ProcessMouseMove(double x, double y);
-
-        bool ProcessMouseClick(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
-            megamol::core::view::Modifiers mods);
-
-        bool EnableInteraction(glm::vec2 vp_dim);
-
-        bool DisableInteraction(void);
-
-        void AddInteractionObject(int obj_id, std::vector<Interaction> const& interactions) {
+        void AddInteractionObject(unsigned int obj_id, std::vector<Interaction> const& interactions) {
             this->available_interactions.insert({obj_id, interactions});
         }
 
@@ -90,7 +83,32 @@ namespace gui {
             return this->pending_manipulations;
         }
 
+        // Static functions ---------------------------------------------------
+
         static bool CreatShader(ShaderPtr& shader_ptr, const std::string& vertex_src, const std::string& fragment_src);
+
+        static glm::vec3 Worldspace2Screenspace(
+            const glm::vec3& vec_world, const glm::mat4& mvp, const glm::vec2& viewport);
+        static glm::vec3 Screenspace2Worldspace(
+            const glm::vec3& vec_screen, const glm::mat4& mvp, const glm::vec2& viewport);
+
+    protected:
+        // FUNCTIONS --------------------------------------------------------------
+        /// Should only be callable by friend class who owns the object
+
+        PickingBuffer(void);
+        ~PickingBuffer(void);
+
+        // Call only once per frame
+        bool EnableInteraction(glm::vec2 vp_dim);
+
+        // Call only once per frame
+        bool DisableInteraction(void);
+
+        bool ProcessMouseMove(double x, double y);
+
+        bool ProcessMouseClick(megamol::core::view::MouseButton button, megamol::core::view::MouseButtonAction action,
+            megamol::core::view::Modifiers mods);
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -109,7 +127,7 @@ namespace gui {
          * respective obj id as second value Set to fale if cursor is on "background" during current frame with -1 as
          * second value
          */
-        std::tuple<bool, int, float> active_interaction_obj;
+        std::tuple<bool, unsigned int, float> active_interaction_obj;
 
         std::map<int, std::vector<Interaction>> available_interactions;
         ManipVector pending_manipulations;
@@ -122,7 +140,7 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        std::vector<Interaction> get_available_interactions(int obj_id) {
+        std::vector<Interaction> get_available_interactions(unsigned int obj_id) {
             std::vector<Interaction> retval;
             auto query = this->available_interactions.find(obj_id);
             if (query != this->available_interactions.end()) {
@@ -133,35 +151,20 @@ namespace gui {
     };
 
 
-    class PickableTriangle {
+    // Pickable Cube ##########################################################
+
+    class PickableCube {
     public:
-        PickableTriangle(void);
-        ~PickableTriangle(void) = default;
+        PickableCube(void);
+        ~PickableCube(void) = default;
 
-        void Draw(unsigned int id, glm::vec2 pixel_dir, glm::vec2 vp_dim, ManipVector& pending_manipulations);
+        void Draw(unsigned int id, int& inout_defaultview_index, int& out_hovered_view_index,
+            const glm::vec4& view_orientation, const glm::vec2& vp_dim, ManipVector& pending_manipulations);
 
-        InteractVector GetInteractions(unsigned int id) {
-            InteractVector interactions;
-            interactions.emplace_back(Interaction(
-                {InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<int>(id), 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-            interactions.emplace_back(Interaction(
-                {InteractionType::MOVE_ALONG_AXIS_SCREEN, static_cast<int>(id), 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}));
-            interactions.emplace_back(
-                Interaction({InteractionType::SELECT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-            interactions.emplace_back(
-                Interaction({InteractionType::DESELECT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-            interactions.emplace_back(
-                Interaction({InteractionType::HIGHLIGHT, static_cast<int>(id), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-            return interactions;
-        }
+        InteractVector GetInteractions(unsigned int id) const;
 
     private:
-        // VARIABLES --------------------------------------------------------------
-
         std::shared_ptr<glowl::GLSLProgram> shader;
-
-        glm::vec2 pixel_direction;
-        bool selected;
     };
 
 

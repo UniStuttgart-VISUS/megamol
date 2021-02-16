@@ -49,6 +49,9 @@ bool megamol::gui::MinimalPopUp::PopUp(const std::string& label_id, bool open_po
                 ImGui::CloseCurrentPopup();
             }
         }
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+            ImGui::CloseCurrentPopup();
+        }
         ImGui::EndPopup();
     }
 

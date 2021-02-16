@@ -116,7 +116,7 @@ private:
     // OSPRay textures
     uint32_t* _fb;
     std::vector<float> _db;
-    void getOpenGLDepthFromOSPPerspective(float* db);
+    void getOpenGLDepthFromOSPPerspective(std::vector<float>& db, cam_type::matrix_type projTemp);
 
     bool _renderer_has_changed;
 

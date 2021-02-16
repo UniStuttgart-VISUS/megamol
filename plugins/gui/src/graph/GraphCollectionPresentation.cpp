@@ -78,10 +78,18 @@ void megamol::gui::GraphCollectionPresentation::Present(
                 project_filename = graph_ptr->GetFilename();
             }
         }
-        if (this->file_browser.PopUp(FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
-                state.configurator_graph_save, project_filename)) {
-            popup_failed = !inout_graph_collection.SaveProjectToFile(state.graph_selected_uid, project_filename,
-                inout_graph_collection.GetUpdatedGUIState(state.graph_selected_uid, project_filename));
+        vislib::math::Ternary save_gui_state(
+            vislib::math::Ternary::TRI_FALSE); // Default for option asking for saving gui state
+        if (this->file_browser.PopUp(project_filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
+                state.configurator_graph_save, "lua", save_gui_state)) {
+
+            std::string gui_state;
+            if (save_gui_state.IsTrue()) {
+                gui_state = inout_graph_collection.GetUpdatedGUIState(state.graph_selected_uid, project_filename);
+            }
+
+            popup_failed =
+                !inout_graph_collection.SaveProjectToFile(state.graph_selected_uid, project_filename, gui_state);
         }
         MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
             confirmed, "Cancel", aborted);

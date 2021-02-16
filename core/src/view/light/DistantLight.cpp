@@ -32,7 +32,7 @@ DistantLight::DistantLight(void)
     lightsource = std::make_shared<DistantLightType>();
 
     this->angularDiameter << new core::param::FloatParam(0.0f);
-    this->direction << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(0.0f, -1.0f, 0.0f));
+    this->direction << new core::param::Vector3fParam(vislib::math::Vector<float, 3>(-0.25f, -0.5f, -0.75f));
     this->eye_direction << new core::param::BoolParam(0);
     this->MakeSlotAvailable(&this->direction);
     this->MakeSlotAvailable(&this->angularDiameter);

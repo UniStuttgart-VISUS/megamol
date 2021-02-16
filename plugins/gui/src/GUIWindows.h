@@ -47,11 +47,6 @@
 #include <iomanip>
 #include <sstream>
 
-// Used for platform independent clipboard (ImGui so far only provides windows implementation)
-#ifdef GUI_USE_GLFW
-#include "GLFW/glfw3.h"
-#endif
-
 
 namespace megamol {
 namespace gui {
@@ -73,7 +68,7 @@ namespace gui {
          *
          * @param core_instance     The currently available core instance.
          */
-        bool CreateContext_GL(megamol::core::CoreInstance* core_instance);
+        bool CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstance* core_instance);
 
         /**
          * Setup and enable ImGui context for subsequent use.
@@ -141,11 +136,19 @@ namespace gui {
         }
 
         /**
-         * Enable or disable GUI drawing
+         * Show or hide GUI
          */
-        void SetEnableDisable(bool enable) {
-            this->state.gui_enabled = enable;
+        void SetVisibility(bool visible) {
+            if (this->state.gui_visible != visible) {
+                this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = true;
+            }
         }
+
+        /**
+         * Set externally provided clipboard function and user data
+         */
+        void SetClipboardFunc(const char* (*get_clipboard_func)(void* user_data),
+            void (*set_clipboard_func)(void* user_data, const char* string), void* user_data);
 
         /**
          * Synchronise changes between core graph <-> gui graph.
@@ -175,17 +178,17 @@ namespace gui {
 
         /** The global state (for settings to be applied before ImGui::Begin). */
         struct StateBuffer {
-            bool gui_enabled;        // Flag indicating whether GUI is completely disabled
-            bool enable_gui_post;    // Required to prevent changes to 'gui_enabled' being applied between pre and post
-                                     // drawing
-            Styles style;            // Predefined GUI style
-            bool style_changed;      // Flag indicating changed style
-            bool autosave_gui_state; // Automatically save state after gui has been changed
+            bool gui_visible;      // Flag indicating whether GUI is completely disabled
+            bool gui_visible_post; // Required to prevent changes to 'gui_enabled' between pre and post drawing
+            std::vector<WindowCollection::DrawCallbacks>
+                gui_visible_buffer;   // List of all visible window IDs for restore when GUI is visible again
+            bool gui_hide_next_frame; // Hiding all GUI windows properly needs two frames for ImGui to apply right state
+            bool rescale_windows;     // Indicates resizing of windows for new gui zoom
+            Styles style;             // Predefined GUI style
+            bool style_changed;       // Flag indicating changed style
+            bool autosave_gui_state;  // Automatically save state after gui has been changed
             std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
             ImGuiID graph_uid;                             // UID of currently running graph
-            std::string font_file;                         // Apply changed font file name.
-            float font_size;                               // Apply changed font size.
-            unsigned int font_index;                       // Apply cahnged font by index.
             std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.
             bool win_save_state;    // Flag indicating that window state should be written to parameter.
             float win_save_delay;   // Flag indicating how long to wait for saving window state since last user action.
@@ -197,12 +200,15 @@ namespace gui {
             bool open_popup_screenshot;        // Flag for opening screenshot file pop-up
             bool menu_visible;                 // Flag indicating menu state
             unsigned int graph_fonts_reserved; // Number of fonts reserved for the configurator graph canvas
-            bool toggle_main_view;             // Flag indicating that the main view should be toggeled
+            bool toggle_graph_entry;           // Flag indicating that the main view should be toggeled
             bool shutdown_triggered;           // Flag indicating user triggered shutdown
             bool screenshot_triggered;         // Trigger and file name for screenshot
             std::string screenshot_filepath;   // Filename the screenshot should be saved to
             int screenshot_filepath_id;        // Last unique id for screenshot filename
             std::string last_script_filename;  // Last script filename provided from lua
+            bool font_apply;                   // Flag indicating whether new font should be applied
+            std::string font_file_name;        // Font imgui name or font file name.
+            int font_size;                     // Font size (only used whe font file name is given)
             bool hotkeys_check_once;           // WORKAROUND: Check multiple hotkey assignments once
         };
 
@@ -213,9 +219,9 @@ namespace gui {
             SAVE_PROJECT = 2,
             LOAD_PROJECT = 3,
             MENU = 4,
-            TOGGLE_MAIN_VIEWS = 5,
+            TOGGLE_GRAPH_ENTRY = 5,
             TRIGGER_SCREENSHOT = 6,
-            RESET_WINDOWS_POS = 7,
+            SHOW_HIDE_GUI = 7,
             INDEX_COUNT = 8
         };
 
@@ -251,17 +257,17 @@ namespace gui {
         std::shared_ptr<TransferFunctionEditor> tf_editor_ptr;
         HoverToolTip tooltip;
         PickingBuffer picking_buffer;
-        PickableTriangle triangle_widget;
 
         // FUNCTIONS --------------------------------------------------------------
 
-        bool createContext(GUIImGuiAPI imgui_api);
+        bool createContext(void);
         bool destroyContext(void);
+
+        void load_default_fonts(bool reload_font_api);
 
         // Window Draw Callbacks
         void drawParamWindowCallback(WindowCollection::WindowConfiguration& wc);
         void drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc);
-        void drawFontWindowCallback(WindowCollection::WindowConfiguration& wc);
         void drawTransferFunctionWindowCallback(WindowCollection::WindowConfiguration& wc);
         void drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc);
 

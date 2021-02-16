@@ -207,14 +207,6 @@ void megamol::gui::GroupPresentation::Present(
 
             const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
 
-            tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
-            tmpcol.y = 0.75f;
-            const ImU32 COLOR_HEADER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-            tmpcol = style.Colors[ImGuiCol_ButtonActive];
-            tmpcol.y = 0.75f;
-            const ImU32 COLOR_HEADER_HIGHLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
             // Background
             ImU32 group_bg_color = (this->selected) ? (COLOR_GROUP_HIGHTLIGHT) : (COLOR_GROUP_BACKGROUND);
             draw_list->AddRectFilled(group_rect_min, group_rect_max, group_bg_color, 0.0f);
@@ -228,9 +220,9 @@ void megamol::gui::GroupPresentation::Present(
                 text_pos_left_upper =
                     ImVec2((group_rect_min.x + style.ItemSpacing.x), (group_rect_min.y + (style.ItemSpacing.y / 2.0f)));
             }
-            auto header_color = (this->selected) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
-            draw_list->AddRectFilled(group_rect_min, header_rect_max, header_color, GUI_RECT_CORNER_RADIUS,
-                (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
+            auto header_color = (this->selected) ? (GUI_COLOR_GROUP_HEADER_HIGHLIGHT) : (GUI_COLOR_GROUP_HEADER);
+            draw_list->AddRectFilled(group_rect_min, header_rect_max, ImGui::ColorConvertFloat4ToU32(header_color),
+                GUI_RECT_CORNER_RADIUS, (ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_TopRight));
             draw_list->AddText(text_pos_left_upper, COLOR_TEXT, inout_group.name.c_str());
         }
 
@@ -349,7 +341,8 @@ void megamol::gui::GroupPresentation::UpdatePositionSize(
         group_height = std::max(group_height, (pos_maxY + GUI_GRAPH_BORDER) - pos_minY);
     }
     // Clamp to minimum size
-    this->size = ImVec2(std::max(group_width, 100.0f), std::max(group_height, 50.0f));
+    this->size = ImVec2(std::max(group_width, (100.0f * megamol::gui::gui_scaling.Get())),
+        std::max(group_height, (50.0f * megamol::gui::gui_scaling.Get())));
 
 
     // Set group interface position of call slots --------------------------

@@ -63,7 +63,7 @@ void megamol::gui::ModulePresentation::Present(
         }
 
         // Init position of newly created module (check after size update)
-        if ((this->set_screen_position.x != FLT_MAX) && (this->set_screen_position.y != FLT_MAX)) {
+        if (this->set_screen_position != ImVec2(FLT_MAX, FLT_MAX)) {
             this->position = (this->set_screen_position - state.canvas.offset) / state.canvas.zooming;
             this->set_screen_position = ImVec2(FLT_MAX, FLT_MAX);
         }
@@ -346,11 +346,11 @@ void megamol::gui::ModulePresentation::Present(
                     ImVec2 text_pos_left_upper;
                     const float line_height = ImGui::GetTextLineHeightWithSpacing();
                     bool other_item_hovered = false;
+                    bool graph_entry_button = inout_module.is_view;
+                    bool parameter_button = (inout_module.parameters.size() > 0);
+                    bool any_option_button = (graph_entry_button || parameter_button);
 
                     if (this->label_visible) {
-                        bool main_view_button = inout_module.is_view;
-                        bool parameter_button = (inout_module.parameters.size() > 0);
-                        bool any_option_button = (main_view_button || parameter_button);
 
                         auto header_color = (this->selected) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
                         ImVec2 header_rect_max =
@@ -368,79 +368,82 @@ void megamol::gui::ModulePresentation::Present(
                             module_center -
                             ImVec2((text_width / 2.0f), ((any_option_button) ? (line_height * 0.6f) : (0.0f)));
                         draw_list->AddText(text_pos_left_upper, COLOR_TEXT, inout_module.name.c_str());
-
-                        if (any_option_button) {
-                            float item_y_offset = (line_height / 2.0f);
-                            float item_x_offset = (ImGui::GetFrameHeight() / 2.0f);
-                            if (main_view_button && parameter_button) {
-                                item_x_offset =
-                                    ImGui::GetFrameHeight() + (0.5f * style.ItemSpacing.x * state.canvas.zooming);
-                            }
-                            ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
-
-                            if (main_view_button) {
-                                bool is_main_view = inout_module.IsMainView();
-                                if (ImGui::RadioButton("###main_view_switch", is_main_view)) {
-                                    if (state.interact.graph_core_interface ==
-                                        GraphCoreInterface::CORE_INSTANCE_GRAPH) {
-                                        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                                            "[GUI] The action [Change Main View] is not yet supported for the graph "
-                                            "using the 'Core Instance Graph' interface. Open project from file to make "
-                                            "desired changes. [%s, %s, line %d]\n",
-                                            __FILE__, __FUNCTION__, __LINE__);
-                                    } else {
-                                        if (!is_main_view) {
-                                            state.interact.module_mainview_changed = vislib::math::Ternary::TRI_TRUE;
-                                        } else {
-                                            state.interact.module_mainview_changed = vislib::math::Ternary::TRI_FALSE;
-                                        }
-                                    }
-                                }
-                                ImGui::SetItemAllowOverlap();
-                                if (hovered) {
-                                    std::string tooltip_label;
-                                    if (is_main_view) {
-                                        tooltip_label =
-                                            tooltip_label + "Main View '" + inout_module.main_view_name + "'";
-                                    } else {
-                                        tooltip_label = "No Main View";
-                                    }
-                                    other_item_hovered = other_item_hovered || this->tooltip.ToolTip(tooltip_label);
-                                }
-                                ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
-                            }
-
-                            // Param Button
-                            if (parameter_button) {
-                                ImVec2 param_button_pos = ImGui::GetCursorScreenPos();
-                                if (this->selected) {
-                                    this->param_child_show = ((state.interact.module_param_child_position.x > 0.0f) &&
-                                                              (state.interact.module_param_child_position.y > 0.0f));
-                                } else {
-                                    this->param_child_show = false;
-                                }
-                                if (ImGui::ArrowButton("###parameter_toggle",
-                                        ((this->param_child_show) ? (ImGuiDir_Down) : (ImGuiDir_Up))) &&
-                                    hovered) {
-                                    this->param_child_show = !this->param_child_show;
-                                    if (this->param_child_show) {
-                                        state.interact.module_param_child_position = param_button_pos;
-                                    } else {
-                                        state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
-                                    }
-                                }
-                                ImGui::SetItemAllowOverlap();
-                                if (hovered) {
-                                    other_item_hovered |= this->tooltip.ToolTip("Parameters");
-                                }
-                            }
-                        }
                     }
 
-                    // Draw Outline
-                    float border = ((!inout_module.main_view_name.empty()) ? (4.0f) : (1.0f)) * state.canvas.zooming;
-                    draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, GUI_RECT_CORNER_RADIUS,
-                        ImDrawCornerFlags_All, border);
+                    if (any_option_button) {
+                        float item_y_offset = (line_height / 2.0f);
+                        float item_x_offset = (ImGui::GetFrameHeight() / 2.0f);
+                        if (!this->label_visible) {
+                            item_y_offset = -(line_height / 2.0f);
+                        }
+                        if (graph_entry_button && parameter_button) {
+                            item_x_offset =
+                                ImGui::GetFrameHeight() + (0.5f * style.ItemSpacing.x * state.canvas.zooming);
+                        }
+                        ImGui::SetCursorScreenPos(module_center + ImVec2(-item_x_offset, item_y_offset));
+
+                        if (graph_entry_button) {
+                            bool is_graph_entry = inout_module.IsGraphEntry();
+                            if (ImGui::RadioButton("###graph_entry_switch", is_graph_entry)) {
+                                if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
+                                    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+                                        "[GUI] The action [Change Graph Entry] is not yet supported for the graph "
+                                        "using the 'Core Instance Graph' interface. Open project from file to make "
+                                        "desired changes. [%s, %s, line %d]\n",
+                                        __FILE__, __FUNCTION__, __LINE__);
+                                } else {
+                                    if (!is_graph_entry) {
+                                        state.interact.module_graphentry_changed = vislib::math::Ternary::TRI_TRUE;
+                                    } else {
+                                        state.interact.module_graphentry_changed = vislib::math::Ternary::TRI_FALSE;
+                                    }
+                                }
+                            }
+                            ImGui::SetItemAllowOverlap();
+                            if (hovered) {
+                                std::string tooltip_label;
+                                if (is_graph_entry) {
+                                    tooltip_label =
+                                        tooltip_label + "Graph Entry '" + inout_module.graph_entry_name + "'";
+                                } else {
+                                    tooltip_label = "No Graph Entry";
+                                }
+                                other_item_hovered = other_item_hovered || this->tooltip.ToolTip(tooltip_label);
+                            }
+                            ImGui::SameLine(0.0f, style.ItemSpacing.x * state.canvas.zooming);
+                        }
+
+                        // Param Button
+                        if (parameter_button) {
+                            ImVec2 param_button_pos = ImGui::GetCursorScreenPos();
+                            if (this->selected) {
+                                this->param_child_show = ((state.interact.module_param_child_position.x > 0.0f) &&
+                                                          (state.interact.module_param_child_position.y > 0.0f));
+                            } else {
+                                this->param_child_show = false;
+                            }
+                            if (ImGui::ArrowButton("###parameter_toggle",
+                                    ((this->param_child_show) ? (ImGuiDir_Down) : (ImGuiDir_Up))) &&
+                                hovered) {
+                                this->param_child_show = !this->param_child_show;
+                                if (this->param_child_show) {
+                                    state.interact.module_param_child_position = param_button_pos;
+                                } else {
+                                    state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
+                                }
+                            }
+                            ImGui::SetItemAllowOverlap();
+                            if (hovered) {
+                                other_item_hovered |= this->tooltip.ToolTip("Parameters");
+                            }
+                        }
+
+                        // Draw Outline
+                        float border = ((!inout_module.graph_entry_name.empty()) ? (4.0f) : (1.0f)) *
+                                       megamol::gui::gui_scaling.Get() * state.canvas.zooming;
+                        draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER,
+                            GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All, border);
+                    }
                 }
             }
 
@@ -483,10 +486,11 @@ void megamol::gui::ModulePresentation::Update(megamol::gui::Module& inout_module
     if (this->label_visible) {
         class_width = ImGui::CalcTextSize(inout_module.class_name.c_str()).x;
         float name_length = ImGui::CalcTextSize(inout_module.name.c_str()).x;
-        float button_width =
-            ((inout_module.is_view) ? (2.0f) : (1.0f)) * ImGui::GetTextLineHeightWithSpacing() + style.ItemSpacing.x;
-        max_label_length = std::max(name_length, button_width);
+        max_label_length = name_length;
     }
+    float button_width =
+        ((inout_module.is_view) ? (2.0f) : (1.0f)) * ImGui::GetTextLineHeightWithSpacing() + style.ItemSpacing.x;
+    max_label_length = std::max(max_label_length, button_width);
     max_label_length /= in_canvas.zooming;
     float max_slot_name_length = 0.0f;
     for (auto& callslots_map : inout_module.GetCallSlots()) {
@@ -513,7 +517,8 @@ void megamol::gui::ModulePresentation::Update(megamol::gui::Module& inout_module
     float module_height = std::max(module_slot_height, text_button_height);
 
     // Clamp to minimum size
-    this->size = ImVec2(std::max(module_width, 100.0f), std::max(module_height, 50.0f));
+    this->size = ImVec2(std::max(module_width, (100.0f * megamol::gui::gui_scaling.Get())),
+        std::max(module_height, (50.0f * megamol::gui::gui_scaling.Get())));
 
     // UPDATE all Call Slots ---------------------
     for (auto& slot_pair : inout_module.GetCallSlots()) {

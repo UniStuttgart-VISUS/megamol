@@ -20,7 +20,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   file(GLOB_RECURSE public_header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h")
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
-  file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "shaders/*")
+  #file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "shaders/*")
   file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "resources/*")
 
   # Target definition
@@ -31,7 +31,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Installation rules for generated files
   #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ DESTINATION "share/shaders")
+  #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ DESTINATION "share/shaders")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION "share/resources")
 
   if(WIN32)
@@ -46,7 +46,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Public Header Files" FILES ${public_header_files})
   source_group("Header Files" FILES ${header_files})
   source_group("Source Files" FILES ${source_files})
-  source_group("Shaders" FILES ${shader_files})
+  #source_group("Shaders" FILES ${shader_files})
 
   # Register plugin
   megamol_register_plugin(${PROJECT_NAME})

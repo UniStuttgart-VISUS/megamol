@@ -55,7 +55,6 @@ namespace gui {
             this->graph_state.interact.interfaceslot_compat_ptr.reset();
         }
 
-
         ImGuiID GetHoveredGroup(void) const {
             return this->graph_state.interact.group_hovered_uid;
         }
@@ -72,13 +71,13 @@ namespace gui {
             return this->graph_state.interact.slot_dropped_uid;
         }
         bool GetModuleLabelVisibility(void) const {
-            return this->show_module_names;
+            return this->show_module_label;
         }
         bool GetCallSlotLabelVisibility(void) const {
-            return this->show_slot_names;
+            return this->show_slot_label;
         }
         bool GetCallLabelVisibility(void) const {
-            return this->show_call_names;
+            return this->show_call_label;
         }
         bool IsCanvasHoverd(void) const {
             return this->canvas_hovered;
@@ -93,9 +92,10 @@ namespace gui {
 
         bool update;
         bool show_grid;
-        bool show_call_names;
-        bool show_slot_names;
-        bool show_module_names;
+        bool show_call_label;
+        bool show_call_slots_label;
+        bool show_slot_label;
+        bool show_module_label;
         bool show_parameter_sidebar;
         bool change_show_parameter_sidebar;
         unsigned int graph_layout;
@@ -104,7 +104,7 @@ namespace gui {
         bool increment_zooming;
         bool decrement_zooming;
         std::string param_name_space;
-        std::string current_main_view_name;
+        std::string current_graph_entry_name;
         ImVec2 multiselect_start_pos;
         ImVec2 multiselect_end_pos;
         bool multiselect_done;

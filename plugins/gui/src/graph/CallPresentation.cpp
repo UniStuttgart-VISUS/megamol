@@ -18,7 +18,8 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::CallPresentation::CallPresentation(void) : label_visible(true), selected(false), tooltip() {}
+megamol::gui::CallPresentation::CallPresentation(void)
+        : label_visible(true), slots_visible(false), selected(false), tooltip() {}
 
 
 megamol::gui::CallPresentation::~CallPresentation(void) {}
@@ -105,16 +106,29 @@ void megamol::gui::CallPresentation::Present(
                     if (state.canvas.zooming < 0.25f) {
                         draw_list->AddLine(p1, p2, color_curve, GUI_LINE_THICKNESS * state.canvas.zooming);
                     } else {
-                        draw_list->AddBezierCurve(p1, p1 + ImVec2(50.0f, 0.0f), p2 + ImVec2(-50.0f, 0.0f), p2,
-                            color_curve, GUI_LINE_THICKNESS * state.canvas.zooming);
+                        draw_list->AddBezierCurve(p1, p1 + ImVec2((50.0f * megamol::gui::gui_scaling.Get()), 0.0f),
+                            p2 + ImVec2((-50.0f * megamol::gui::gui_scaling.Get()), 0.0f), p2, color_curve,
+                            GUI_LINE_THICKNESS * state.canvas.zooming);
                     }
                 }
 
-                if (this->label_visible) {
+                if (this->label_visible || this->slots_visible) {
+                    std::string slots_label = inout_call.GetSlotsLabel();
+                    auto slots_label_width = ImGui::CalcTextSize(slots_label.c_str()).x;
+                    auto class_name_width = ImGui::CalcTextSize(inout_call.class_name.c_str()).x;
                     ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
-                    auto call_name_width = ImGui::CalcTextSize(inout_call.class_name.c_str()).x;
+                    auto call_name_width = 0.0f;
+                    if (this->label_visible) {
+                        call_name_width = std::max(call_name_width, class_name_width);
+                    }
+                    if (this->slots_visible) {
+                        call_name_width = std::max(call_name_width, slots_label_width);
+                    }
                     ImVec2 rect_size = ImVec2(call_name_width + (2.0f * style.ItemSpacing.x),
                         ImGui::GetFontSize() + (2.0f * style.ItemSpacing.y));
+                    if (this->label_visible && this->slots_visible) {
+                        rect_size.y += (ImGui::GetFontSize() + style.ItemSpacing.y);
+                    }
                     ImVec2 call_rect_min =
                         ImVec2(call_center.x - (rect_size.x / 2.0f), call_center.y - (rect_size.y / 2.0f));
                     ImVec2 call_rect_max = ImVec2((call_rect_min.x + rect_size.x), (call_rect_min.y + rect_size.y));
@@ -158,11 +172,12 @@ void megamol::gui::CallPresentation::Present(
                         }
 
                         // Hover Tooltip
-                        if (state.interact.call_hovered_uid == inout_call.uid) {
-                            std::string tooltip = callerslot_ptr->name + " > " + calleeslot_ptr->name;
-                            this->tooltip.ToolTip(tooltip, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
-                        } else {
-                            this->tooltip.Reset();
+                        if (!this->slots_visible) {
+                            if (state.interact.call_hovered_uid == inout_call.uid) {
+                                this->tooltip.ToolTip(slots_label, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
+                            } else {
+                                this->tooltip.Reset();
+                            }
                         }
 
                     } else if (phase == megamol::gui::PresentPhase::RENDERING) {
@@ -206,9 +221,24 @@ void megamol::gui::CallPresentation::Present(
 
                         // Draw Text
                         ImVec2 text_pos_left_upper =
-                            (call_center + ImVec2(-(call_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
-                        draw_list->AddText(text_pos_left_upper,
-                            ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), inout_call.class_name.c_str());
+                            (call_center + ImVec2(-(class_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
+                        if (this->label_visible && this->slots_visible) {
+                            text_pos_left_upper.y -= (0.5f * ImGui::GetFontSize());
+                        }
+                        if (this->label_visible) {
+                            draw_list->AddText(text_pos_left_upper,
+                                ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]),
+                                inout_call.class_name.c_str());
+                        }
+                        text_pos_left_upper =
+                            (call_center + ImVec2(-(slots_label_width / 2.0f), -0.5f * ImGui::GetFontSize()));
+                        if (this->label_visible && this->slots_visible) {
+                            text_pos_left_upper.y += (0.5f * ImGui::GetFontSize());
+                        }
+                        if (this->slots_visible) {
+                            draw_list->AddText(text_pos_left_upper,
+                                ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), slots_label.c_str());
+                        }
                     }
                 }
 

@@ -201,18 +201,18 @@ namespace cinematic {
         **********************************************************************/
 
         // Out Data (set by called KeyframeKeeper) ---------------------------
-		std::shared_ptr<camera_state_type>             cameraState;
-		std::shared_ptr<std::vector<glm::vec3>>        interpolCamPos;
-		std::shared_ptr<std::vector<Keyframe>>	       keyframes;
-        Keyframe						               selectedKeyframe;
+	std::shared_ptr<camera_state_type>             cameraState;
+	std::shared_ptr<std::vector<glm::vec3>>        interpolCamPos;
+	std::shared_ptr<std::vector<Keyframe>>	       keyframes;
+        Keyframe                                       selectedKeyframe;
         glm::vec3                                      startCtrllPos;
         glm::vec3                                      endCtrllPos;
-        float								           totalAnimTime;
+        float					       totalAnimTime;
         float                                          totalSimTime;
         unsigned int                                   fps;
 
         // In Data (set by calling modules) -----------------------------------
-        ///Keyframe						               selectedKeyframe;
+        ///Keyframe				       selectedKeyframe;
         unsigned int                                   interpolSteps;
         float                                          dropAnimTime;
         float                                          dropSimTime;
