@@ -1,12 +1,10 @@
-uniform sampler2DArray tx2D_array;
+uniform sampler2DArray src_tex2D;
 
 uniform int frametype;
 uniform int h;
 uniform int w;
 uniform int approach;
 uniform int ssLevel;
-
-//uniform mat4 mMatrices[100];
 
 layout (std430, binding = 7) buffer ssboMatrices{
     mat4 mMatrices[];
@@ -39,6 +37,6 @@ void main()
     vec4 r;
     for (int i = 0; i < ssLevel; i++){
         r = mMatrices[t + (i * 4)] * p;
-        frag_out += texture(tx2D_array, vec3(0.5 *  r.xy + vec2(0.5), t + (i*4))) / ssLevel;
+        frag_out += texture(src_tex2D, vec3(0.5 *  r.xy + vec2(0.5), t + (i*4))) / ssLevel;
     }
 }

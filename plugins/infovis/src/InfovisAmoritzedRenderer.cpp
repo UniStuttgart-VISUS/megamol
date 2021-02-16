@@ -80,31 +80,31 @@ std::vector<glm::fvec3> InfovisAmortizedRenderer::calculateHammersley(int until)
 void InfovisAmortizedRenderer::makeShaders() {
     instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert0", vertex_shader_src);
     instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag0", fragment_shader_src);
-    pc_reconstruction0_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    pc_reconstruction0_shdr->Compile(
+    pc_reconstruction_shdr_array[0] = std::make_unique<vislib::graphics::gl::GLSLShader>();
+    pc_reconstruction_shdr_array[0]->Compile(
         vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    pc_reconstruction0_shdr->Link();
+    pc_reconstruction_shdr_array[0]->Link();
 
     instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert1", vertex_shader_src);
     instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag1", fragment_shader_src);
-    pc_reconstruction1_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    pc_reconstruction1_shdr->Compile(
+    pc_reconstruction_shdr_array[1] = std::make_unique<vislib::graphics::gl::GLSLShader>();
+    pc_reconstruction_shdr_array[1]->Compile(
         vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    pc_reconstruction1_shdr->Link();
+    pc_reconstruction_shdr_array[1]->Link();
 
     instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert2", vertex_shader_src);
     instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag2", fragment_shader_src);
-    pc_reconstruction2_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    pc_reconstruction2_shdr->Compile(
+    pc_reconstruction_shdr_array[2] = std::make_unique<vislib::graphics::gl::GLSLShader>();
+    pc_reconstruction_shdr_array[2]->Compile(
         vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    pc_reconstruction2_shdr->Link();
+    pc_reconstruction_shdr_array[2]->Link();
 
     instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert3", vertex_shader_src);
     instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag3", fragment_shader_src);
-    pc_reconstruction3_shdr = std::make_unique<vislib::graphics::gl::GLSLShader>();
-    pc_reconstruction3_shdr->Compile(
+    pc_reconstruction_shdr_array[3] = std::make_unique<vislib::graphics::gl::GLSLShader>();
+    pc_reconstruction_shdr_array[3]->Compile(
         vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
-    pc_reconstruction3_shdr->Link();
+    pc_reconstruction_shdr_array[3]->Link();
 }
 
 void InfovisAmortizedRenderer::setupBuffers() {
@@ -181,7 +181,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
             moveMatrices[i] = invMatrices[i] * inversePMVM;
 
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
-        glActiveTexture(GL_TEXTURE11);
+        glActiveTexture(GL_TEXTURE10);
         glEnable(GL_MULTISAMPLE);
 
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE_ARRAY, msImageArray);
@@ -258,7 +258,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
             projMatrix_column[i] = glm::value_ptr(pm)[i];
 
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboB);
-        glActiveTexture(GL_TEXTURE11);
+        glActiveTexture(GL_TEXTURE10);
         glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayB);
         glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4, 0, GL_RGB, GL_FLOAT, 0);
 
@@ -309,92 +309,22 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 }
 
 void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int ssLevel) {
-    if (approach == 0) {
         glViewport(0, 0, w, h);
 
-        pc_reconstruction0_shdr->Enable();
+        pc_reconstruction_shdr_array[approach]->Enable();
 
-        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("src_tex2D"), 11);
+        glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("src_tex2D"), 10);
 
         glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
-        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("h"), h);
-        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("w"), w);
-        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("approach"), approach);
-        glUniform1i(pc_reconstruction0_shdr->ParameterLocation("frametype"), frametype);
+
+        glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("h"), h);
+        glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("w"), w);
+        glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("approach"), approach);
+        glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("frametype"), frametype);
+        glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("ssLevel"), ssLevel);
 
         glUniformMatrix4fv(
-            pc_reconstruction0_shdr->ParameterLocation("moveMatrices"), 2, GL_FALSE, &moveMatrices[0][0][0]);
-
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        pc_reconstruction0_shdr->Disable();
-        frametype = (frametype + 1) % framesNeeded;
-    }
-
-    if (approach == 1) {
-        glViewport(0, 0, w, h);
-
-        pc_reconstruction1_shdr->Enable();
-
-        glActiveTexture(GL_TEXTURE10);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
-        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("tx2D_array"), 10);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
-        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("h"), h);
-        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("w"), w);
-        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("approach"), approach);
-        glUniform1i(pc_reconstruction1_shdr->ParameterLocation("frametype"), frametype);
-
-        glUniformMatrix4fv(
-            pc_reconstruction1_shdr->ParameterLocation("mMatrices"), 4, GL_FALSE, &moveMatrices[0][0][0]);
-
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        pc_reconstruction1_shdr->Disable();
-        frametype = (frametype + 1) % framesNeeded;
-    }
-
-    if (approach == 2) {
-        glViewport(0, 0, w, h);
-
-        pc_reconstruction2_shdr->Enable();
-
-        glActiveTexture(GL_TEXTURE11);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayB);
-        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("src_tx2Da"), 11);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
-        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("h"), h);
-        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("w"), w);
-        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("approach"), approach);
-        glUniform1i(pc_reconstruction2_shdr->ParameterLocation("frametype"), frametype);
-
-        glUniformMatrix4fv(
-            pc_reconstruction2_shdr->ParameterLocation("mMatrices"), framesNeeded, GL_FALSE, &moveMatrices[0][0][0]);
-
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        pc_reconstruction2_shdr->Disable();
-        frametype = (frametype + 1) % framesNeeded;
-    }
-
-    if (approach == 3) {
-        glViewport(0, 0, w, h);
-
-        pc_reconstruction3_shdr->Enable();
-
-        glActiveTexture(GL_TEXTURE10);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
-        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("tx2D_array"), 10);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
-
-        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("h"), h);
-        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("w"), w);
-        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("approach"), approach);
-        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("frametype"), frametype);
-        glUniform1i(pc_reconstruction3_shdr->ParameterLocation("ssLevel"), ssLevel);
-
-        // glUniformMatrix4fv(
-        //    pc_reconstruction3_shdr->ParameterLocation("mMatrices"), framesNeeded, GL_FALSE, &moveMatrices[0][0][0]);
+            pc_reconstruction_shdr_array[approach]->ParameterLocation("moveMatrices"), 4, GL_FALSE, &moveMatrices[0][0][0]);
 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
         glBufferData(
@@ -403,10 +333,9 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        pc_reconstruction3_shdr->Disable();
+        pc_reconstruction_shdr_array[approach]->Disable();
 
-        frametype = (frametype + 1) % framesNeeded;
-    }
+        frametype = (frametype + 1) % framesNeeded; 
 }
 
 bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
