@@ -16,8 +16,6 @@
 #include "mmcore/Call.h"
 #include "mmcore/factories/CallAutoDescription.h"
 #include "vislib/Array.h"
-#include "protein_calls/Protein_Calls.h"
-
 
 namespace megamol {
 namespace protein_calls {
@@ -31,7 +29,7 @@ namespace protein_calls {
 	 * allows for that as well.
 	 */
 
-	class PROTEIN_CALLS_API ResidueSelectionCall : public megamol::core::Call {
+	class ResidueSelectionCall : public megamol::core::Call {
 	public:
 
 		struct Residue {

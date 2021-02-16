@@ -162,14 +162,6 @@ bool megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
                     // Force open log window if there is any warning
                     if (wc.log_force_open && (new_log_level < megamol::core::utility::log::Log::LEVEL_INFO)) {
                         this->log_level = megamol::core::utility::log::Log::LEVEL_WARN;
-                        if (!wc.win_show) {
-                            ImGuiIO& io = ImGui::GetIO();
-                            ImVec2 viewport = io.DisplaySize;
-                            const float height = 10.0f * ImGui::GetFrameHeightWithSpacing();
-                            wc.win_position = ImVec2(0.0f, viewport.y - height);
-                            wc.win_size = ImVec2(viewport.x, height);
-                            wc.win_reset = true;
-                        }
                         wc.win_show = true;
                     }
 

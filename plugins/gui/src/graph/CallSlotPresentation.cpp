@@ -249,7 +249,7 @@ void megamol::gui::CallSlotPresentation::Present(
                     tmpcol = ImVec4(tmpcol.x * brightness, tmpcol.y * brightness, tmpcol.z * brightness, tmpcol.w);
                     slot_background_color = ImGui::ColorConvertFloat4ToU32(tmpcol);
                 }
-                const float segment_numer = 20.0f;
+                const float segment_numer = (20.0f * megamol::gui::gui_scaling.Get());
                 draw_list->AddCircleFilled(slot_position, radius, slot_background_color, segment_numer);
                 draw_list->AddCircle(slot_position, radius, slot_border_color, segment_numer);
 
@@ -265,7 +265,7 @@ void megamol::gui::CallSlotPresentation::Present(
             ImGui::PopID();
         }
 
-    } catch (std::exception e) {
+    } catch (std::exception& e) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
         return;

@@ -10,7 +10,8 @@
 #include "mmcore/factories/CallAutoDescription.h"
 #include "mmcore/Call.h"
 #include <array>
-#include "OSPRay_plugin/OSPRay_plugin.h"
+#include <variant>
+
 
 namespace megamol {
 namespace ospray {
@@ -28,66 +29,88 @@ enum materialTypeEnum {
     VELVET
 };
 
-struct OSPRayMaterialContainer {
-    materialTypeEnum materialType = materialTypeEnum::OBJMATERIAL;
 
-    // OBJMaterial/ScivisMaterial
-    std::array<float,3> Kd;
-    std::array<float,3> Ks;
-    float Ns = 0.0f;
-    float d = 0.0f;
-    std::array<float,3> Tf;
-    
-    // LUMINOUS
-    std::array<float,3> lumColor;
-    float lumIntensity = 0.0f;
-    float lumTransparency = 0.0f;
+// OBJMaterial/ScivisMaterial
+struct objMaterial {
+std::array<float, 3> Kd;
+std::array<float, 3> Ks;
+float Ns = 0.0f;
+float d = 0.0f;
+std::array<float, 3> Tf;
+};
 
-    // VELVET
-    std::array<float,3> velvetReflectance;
-    float velvetBackScattering = 0.0f;
-    std::array<float,3> velvetHorizonScatteringColor;
-    float velvetHorizonScatteringFallOff = 0.0f;
+// LUMINOUS
+struct luminousMaterial {
+std::array<float, 3> lumColor;
+float lumIntensity = 0.0f;
+float lumTransparency = 0.0f;
+};
 
-    // MATTE
-    std::array<float,3> matteReflectance;
+// VELVET
+struct velvetMaterial {
+std::array<float, 3> velvetReflectance;
+float velvetBackScattering = 0.0f;
+std::array<float, 3> velvetHorizonScatteringColor;
+float velvetHorizonScatteringFallOff = 0.0f;
+};
 
-    // METAL
-    std::array<float,3> metalReflectance;
-    std::array<float,3> metalEta;
-    std::array<float,3> metalK;
-    float metalRoughness = 0.0f;
+// MATTE
+struct matteMaterial {
+std::array<float, 3> matteReflectance;
+};
 
-    // METALLICPAINT
-    std::array<float, 3> metallicShadeColor;
-    std::array<float, 3> metallicGlitterColor;
-    float metallicGlitterSpread = 0.0f;
-    float metallicEta = 0.0f;
+// METAL
+struct metalMaterial {
+std::array<float, 3> metalReflectance;
+std::array<float, 3> metalEta;
+std::array<float, 3> metalK;
+float metalRoughness = 0.0f;
+};
 
-    // GLASS
-    float glassEtaInside = 0.0f;
-    float glassEtaOutside = 0.0f;
-    std::array<float, 3> glassAttenuationColorInside;
-    std::array<float, 3> glassAttenuationColorOutside;
-    float glassAttenuationDistance = 0.0f;
+// METALLICPAINT
+struct metallicpaintMaterial {
+std::array<float, 3> metallicShadeColor;
+std::array<float, 3> metallicGlitterColor;
+float metallicGlitterSpread = 0.0f;
+float metallicEta = 0.0f;
+};
 
-    //THINGLASS
-    std::array<float, 3> thinglassTransmission;
-    float thinglassEta = 0.0f;
-    float thinglassThickness = 0.0f;
+// GLASS
+struct glassMaterial {
+float glassEtaInside = 0.0f;
+float glassEtaOutside = 0.0f;
+std::array<float, 3> glassAttenuationColorInside;
+std::array<float, 3> glassAttenuationColorOutside;
+float glassAttenuationDistance = 0.0f;
+};
 
-    // PLASTIC
-    std::array<float, 3> plasticPigmentColor;
-    float plasticEta = 0.0f;
-    float plasticRoughness = 0.0f;
-    float plasticThickness = 0.0f;
+// THINGLASS
+struct thinglassMaterial {
+std::array<float, 3> thinglassTransmission;
+float thinglassEta = 0.0f;
+float thinglassThickness = 0.0f;
+};
 
-    bool isValid = false;
-
+// PLASTIC
+struct plasticMaterial {
+std::array<float, 3> plasticPigmentColor;
+float plasticEta = 0.0f;
+float plasticRoughness = 0.0f;
+float plasticThickness = 0.0f;
 };
 
 
-class OSPRAY_PLUGIN_API CallOSPRayMaterial : public megamol::core::Call {
+struct OSPRayMaterialContainer {
+    materialTypeEnum materialType = materialTypeEnum::OBJMATERIAL;
+
+    std::variant<objMaterial, luminousMaterial, velvetMaterial, matteMaterial, metalMaterial, metallicpaintMaterial,
+        glassMaterial, thinglassMaterial, plasticMaterial> material;
+    bool isValid = false;
+   
+};
+
+
+class CallOSPRayMaterial : public megamol::core::Call {
 public:
 
     /**

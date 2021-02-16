@@ -63,57 +63,108 @@ def pluralTuple(thingy):
     return thingy, "s" if (thingy != 1) else ""
 
 def listFramedata(parseResult, frame):
-    return parseResult.v and (parseResult.v > 1) or (parseResult.v == 1 and frame == 0)
+    return (parseResult.v and (parseResult.v > 1) or (parseResult.v == 1 and frame == 0))
 
-def readParticles(number, vertType, colType, file):
+# returns timeStamp, numLists
+def readFrameHeader(file):
+    timestamp = 0.0
+    if (version >= 102):
+        timestamp = getFloat(f)
+    numLists = getUInt(f)
+    return timestamp, numLists
+
+# returns vertType, colType, stride, globalRad, globalCol, intensityRange, listNumParts, listBBox
+def readListHeader(file):
+    vertType = getByte(f)
+    if (vertType >= len(vertexNames)):
+        vertType = 0
+    colType = getByte(f)
+    if (colType >= len(colorNames)):
+        colType = 0
+    if (vertType == 0):
+        colType = 0
+
+    listFramedata(parseResult, fi) and print("    #%u: %s, %s" % (li, vertexNames[vertType], colorNames[colType]))
+    stride = vertexSizes[vertType] + colorSizes[colType]
+    listFramedata(parseResult, fi) and print("        %u byte%s per particle" % pluralTuple(stride))
+
+    globalRad = 0.05
+    globalCol = (0.0, 0.0, 0.0, 0.0)
+    intensityRange = (0.0, 0.0)
+    listBBox = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+    if (vertType == 1 or vertType == 3 or vertType == 4):
+        globalRad = getFloat(f)
+        listFramedata(parseResult, fi) and print("        global radius: %f" % (globalRad))
+
+    if (colType == 0):
+        globalCol = [getByte(f) for x in range(4)]
+        listFramedata(parseResult, fi) and print("        global color: (%u, %u, %u, %u)" % (tuple(globalCol)))
+    elif (colType == 3 or colType == 7):
+        intensityRange = [getFloat(f) for x in range(2)]
+        listFramedata(parseResult, fi) and print("        intensity color range: [%f, %f]" % (tuple(intensityRange)))
+
+    listNumParts = getUInt64(f)
+    #listFramedata and print("        %Q particle%s" % countPlural(listNumParts))
+    listFramedata(parseResult, fi) and print("        {0} particle{1}".format(*pluralTuple(listNumParts)))
+
+    if (version >= 103):
+        listBBox = [getFloat(f) for x in range(6)]
+        listFramedata(parseResult, fi) and print("        list bounding box: (%f, %f, %f) - (%f, %f, %f)" % (tuple(box)))
+    return vertType, colType, stride, globalRad, globalCol, intensityRange, listNumParts, listBBox
+
+def readParticles(number, vertType, colType, file, listIndex):
     mins = [sys.float_info.max, sys.float_info.max, sys.float_info.max]
     maxs = [-sys.float_info.max, -sys.float_info.max, -sys.float_info.max]
+    consoleSilent = parseResult.bboxonly or parseResult.dumpxyz
     for p in range(number):
         if (vertType == 0):
-            parseResult.bboxonly or print("        no position", end ='')
+            consoleSilent or print("        no position", end ='')
         elif (vertType == 1):
             pos = [getFloat(file) for x in range(3)]
-            parseResult.bboxonly or print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
+            consoleSilent or print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
         elif (vertType == 2):
             pos = [getFloat(file) for x in range(4)]
-            parseResult.bboxonly or print("        pos = (%f, %f, %f), rad = %f" % (tuple(pos)), end ='')
+            consoleSilent or print("        pos = (%f, %f, %f), rad = %f" % (tuple(pos)), end ='')
         elif (vertType == 3):            
             pos = [getUShort(file) for x in range(3)]
-            parseResult.bboxonly or print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
+            consoleSilent or print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
         elif (vertType == 4):
             pos = [getDouble(file) for x in range(3)]
-            parseResult.bboxonly or print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
+            consoleSilent or print("        pos = (%f, %f, %f)" % (tuple(pos)), end ='')
         for x in range(3):
             if (pos[x] < mins[x]):
                 mins[x] = pos[x]
             if (pos[x] > maxs[x]):
                 maxs[x] = pos[x]
 
+        if (parseResult.dumpxyz):
+            outFile.write("%s %f %f %f\n" % (chr(listIndex + 65), *pos))
+
         if (colType == 0):
-            print(", no color")
+            consoleSilent or print(", no color")
         elif (colType == 1):
             col = [getByte(file) for x in range(3)]
-            parseResult.bboxonly or print(", col = (%d, %d, %d)" % (tuple(col)))
+            consoleSilent or print(", col = (%d, %d, %d)" % (tuple(col)))
         elif (colType == 2):
             col = [getByte(file) for x in range(4)]
-            parseResult.bboxonly or print(", col = (%d, %d, %d, %d)" % (tuple(col)))
+            consoleSilent or print(", col = (%d, %d, %d, %d)" % (tuple(col)))
         elif (colType == 3):
             col = [getFloat(file) for x in range(1)]
-            parseResult.bboxonly or print(", col = (%f)" % (tuple(col)))
+            consoleSilent or print(", col = (%f)" % (tuple(col)))
         elif (colType == 4):
             col = [getFloat(file) for x in range(3)]
-            parseResult.bboxonly or print(", col = (%f, %f, %f)" % (tuple(col)))
+            consoleSilent or print(", col = (%f, %f, %f)" % (tuple(col)))
         elif (colType == 5):
             col = [getFloat(file) for x in range(4)]
-            parseResult.bboxonly or print(", col = (%f, %f, %f, %f)" % (tuple(col)))
+            consoleSilent or print(", col = (%f, %f, %f, %f)" % (tuple(col)))
         elif (colType == 6):
             col = [getUShort(file) for x in range(4)]
-            parseResult.bboxonly or print(", col = (%d, %d, %d, %d)" % (tuple(col)))
+            consoleSilent or print(", col = (%d, %d, %d, %d)" % (tuple(col)))
         elif (colType == 7):
             col = [getDouble(file) for x in range(1)]
-            parseResult.bboxonly or print(", col = (%f)" % (tuple(col)))
+            consoleSilent or print(", col = (%f)" % (tuple(col)))
     if (number > 0):
-        print("        bounding box of these particles: (%f, %f, %f) - (%f, %f, %f)" % tuple(mins + maxs))
+        consoleSilent or print("        bounding box of these particles: (%f, %f, %f) - (%f, %f, %f)" % tuple(mins + maxs))
 
 vertexSizes = [0, 12, 16, 6, 24]
 vertexNames = ["VERTDATA_NONE", "VERTDATA_FLOAT_XYZ", "VERTDATA_FLOAT_XYZR", "VERTDATA_SHORT_XYZ", "VERTDATA_DOUBLE_XYZ"]
@@ -127,9 +178,11 @@ parser.add_argument('--head', action='store', help='show that many particles at 
 parser.add_argument('--tail', action='store', help='show that many particles at the end of each shown frame (or "all"))')
 parser.add_argument('--bboxonly', action='count', help='only print the bbox of head/tail, not the particles)')
 parser.add_argument('--versiononly', action='count', help='show only file version and exit')
+parser.add_argument('--dumpxyz', action='store', help='dump/convert mmpld to xyz files <DUMPXYZ>_<frame>.xyz')
 parseResult = parser.parse_args()
 
 specific_only = parseResult.bboxonly or parseResult.versiononly
+hideVersion = parseResult.bboxonly
 
 if (not specific_only):
     print("")
@@ -156,13 +209,13 @@ for filename in parseResult.inputfiles:
             exit(1)
         version = getUShort(f)
         if (version == 100):
-            parseResult.bboxonly or print("mmpld version 1.0")
+            hideVersion or print("mmpld version 1.0")
         elif (version == 101):
-            parseResult.bboxonly or print("mmpld version 1.1")
+            hideVersion or print("mmpld version 1.1")
         elif (version == 102):
-            parseResult.bboxonly or print("mmpld version 1.2")
+            hideVersion or print("mmpld version 1.2")
         elif (version == 103):
-            parseResult.bboxonly or print("mmpld version 1.3")
+            hideVersion or print("mmpld version 1.3")
         else:
             print("unsupported mmpld version " + str(version / 100) + "." + str(version % 100))
             exit(1)
@@ -212,11 +265,10 @@ for filename in parseResult.inputfiles:
 
         for fi in range(frameCount):
             f.seek(frameTable[fi], os.SEEK_SET)
+            timeStamp, numLists = readFrameHeader(f)
             timeStampString = ""
             if (version >= 102):
-                timestamp = getFloat(f)
-                timeStampString = "(%f)" % timestamp
-            numLists = getUInt(f)
+                timeStampString = "(%f)" % timeStamp
             listFramedata(parseResult, fi) and (sys.stdout.write("Frame # %u %s" % (fi, timeStampString)), print("- %u list%s" % pluralTuple(numLists)))
             if (fi == 0):
                 minNumLists = maxNumLists = numLists
@@ -227,65 +279,37 @@ for filename in parseResult.inputfiles:
                     maxNumLists = numLists
             frameNumParts = 0
             for li in range(numLists):
-                vertType = getByte(f)
-                if (vertType >= len(vertexNames)):
-                    vertType = 0
-                colType = getByte(f)
-                if (colType >= len(colorNames)):
-                    colType = 0
-                if (vertType == 0):
-                    colType = 0
-
-                listFramedata(parseResult, fi) and print("    #%u: %s, %s" % (li, vertexNames[vertType], colorNames[colType]))
-                stride = vertexSizes[vertType] + colorSizes[colType]
-                listFramedata(parseResult, fi) and print("        %u byte%s per particle" % pluralTuple(stride))
-            
-                globalRad = 0.05
-                if (vertType == 1 or vertType == 3 or vertType == 4):
-                    globalRad = getFloat(f)
-                    listFramedata(parseResult, fi) and print("        global radius: %f" % (globalRad))
-
-                if (colType == 0):
-                    col = [getByte(f) for x in range(4)]
-                    listFramedata(parseResult, fi) and print("        global color: (%u, %u, %u, %u)" % (tuple(col)))
-                elif (colType == 3 or colType == 7):
-                    intensity = [getFloat(f) for x in range(2)]
-                    listFramedata(parseResult, fi) and print("        intensity color range: [%f, %f]" % (tuple(intensity)))
-
-                listNumParts = getUInt64(f)
-                #listFramedata and print("        %Q particle%s" % countPlural(listNumParts))
-                listFramedata(parseResult, fi) and print("        {0} particle{1}".format(*pluralTuple(listNumParts)))
+                vertType, colType, stride, globalRad, globalCol, intensityRange, listNumParts, listBBox = readListHeader(f)
                 frameNumParts += listNumParts
 
-                if (version >= 103):
-                    box = [getFloat(f) for x in range(6)]
-                    listFramedata(parseResult, fi) and print("        list bounding box: (%f, %f, %f) - (%f, %f, %f)" % (tuple(box)))
-
-                if (listFramedata(parseResult, fi)):
-                    if (parseResult.head):
-                        if (parseResult.head == "all"):
-                            numHead = listNumParts
+                if (not parseResult.dumpxyz):
+                    if (listFramedata(parseResult, fi)):
+                        if (parseResult.head):
+                            if (parseResult.head == "all"):
+                                numHead = listNumParts
+                            else:
+                                numHead = min(int(parseResult.head), listNumParts)
                         else:
-                            numHead = min(int(parseResult.head), listNumParts)
-                    else:
-                        numHead = 0
-                    if (parseResult.tail):
-                        if (parseResult.tail == "all"):
-                            numTail = listNumParts
+                            numHead = 0
+                        if (parseResult.tail):
+                            if (parseResult.tail == "all"):
+                                numTail = listNumParts
+                            else:
+                                numTail = min(int(parseResult.tail), listNumParts)
                         else:
-                            numTail = min(int(parseResult.tail), listNumParts)
+                            numTail = 0
+                        if (numHead > 0):
+                            print("        list head (%d particles):" % numHead)
+                        readParticles(numHead, vertType, colType, f, li)
+                        if (numTail + numHead > listNumParts):
+                            print("        not enough particles to also list tail")
+                            numTail = 0
+                        f.seek((listNumParts - numHead - numTail) * stride, os.SEEK_CUR)
+                        if (numTail > 0):
+                            print("        list tail (%d particles):" % numTail)
+                        readParticles(numTail, vertType, colType, f, li)
                     else:
-                        numTail = 0
-                    if (numHead > 0):
-                        print("        list head (%d particles):" % numHead)
-                    readParticles(numHead, vertType, colType, f)
-                    if (numTail + numHead > listNumParts):
-                        print("        not enough particles to also list tail")
-                        numTail = 0
-                    f.seek((listNumParts - numHead - numTail) * stride, os.SEEK_CUR)
-                    if (numTail > 0):
-                        print("        list tail (%d particles):" % numTail)
-                    readParticles(numTail, vertType, colType, f)
+                        f.seek(listNumParts * stride, os.SEEK_CUR)
                 else:
                     f.seek(listNumParts * stride, os.SEEK_CUR)
 
@@ -298,7 +322,24 @@ for filename in parseResult.inputfiles:
                     minNumParts = frameNumParts
                 if (maxNumParts < frameNumParts):
                     maxNumParts = frameNumParts
+
+            # now that we know the number of particles in the frame we can actually read them for dumping
+            if (parseResult.dumpxyz):
+                outName = "%s_%04u.xyz" % (parseResult.dumpxyz, fi)
+                print("dumping frame into %s" % outName)
+                outFile = open(outName, "x")
+                outFile.write("%lu\n" % frameNumParts)
+                outFile.write("%s frame %u\n" % (filename, fi))
+                f.seek(frameTable[fi], os.SEEK_SET)
+
+                timeStamp, numLists = readFrameHeader(f)
+                for li in range(numLists):
+                    vertType, colType, stride, globalRad, globalCol, intensityRange, listNumParts, listBBox = readListHeader(f)
+                    readParticles(listNumParts, vertType, colType, f, li)
+
             accumulatedParts += frameNumParts
+            if (parseResult.dumpxyz):
+                outFile.close()
 
         accumulatedParts /= frameCount
 

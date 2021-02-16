@@ -80,7 +80,7 @@ public:
     *
     * @return True if JSON string was successfully converted into transfer function texture, false otherwise.
     */
-    static bool TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_nodes, UINT &out_texsize, std::array<float, 2> &out_range);
+    static bool TransferFunctionTexture(const std::string &in_tfs, std::vector<float> &out_nodes, unsigned int &out_texsize, std::array<float, 2> &out_range);
 
     /**
     * Set transfer function data from JSON string.
@@ -92,7 +92,7 @@ public:
     *
     * @return True if JSON string was successfully converted into transfer function data, false otherwise.
     */
-    static bool ParseTransferFunction(const std::string &in_tfs, TFNodeType &out_nodes, InterpolationMode &out_interpolmode, UINT &out_texsize, std::array<float, 2> &out_range);
+    static bool ParseTransferFunction(const std::string &in_tfs, TFNodeType &out_nodes, InterpolationMode &out_interpolmode, unsigned int &out_texsize, std::array<float, 2> &out_range);
 
     /**
      * Get transfer function JSON string from data.
@@ -104,7 +104,7 @@ public:
      *
      * @return True if transfer function data was successfully converted into JSON string, false otherwise.
      */
-    static bool DumpTransferFunction(std::string &out_tfs, const TFNodeType &in_nodes, const InterpolationMode in_interpolmode, const UINT in_texsize, std::array<float, 2> in_range);
+    static bool DumpTransferFunction(std::string &out_tfs, const TFNodeType &in_nodes, const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range);
 
     /**
      * Check given transfer function data.
@@ -115,7 +115,7 @@ public:
      *
      * @return True if given data is valid, false otherwise.
      */
-    static bool CheckTransferFunctionData(const TFNodeType &nodes, const InterpolationMode interpolmode, const UINT texsize, const std::array<float, 2> range);
+    static bool CheckTransferFunctionData(const TFNodeType &nodes, const InterpolationMode interpolmode, const unsigned int texsize, const std::array<float, 2> range);
 
     /**
      * Check given transfer function JSON string.

@@ -11,18 +11,18 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
+#include <algorithm>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #define GLOWL_OPENGL_INCLUDE_GLAD
 #include "glowl/Mesh.hpp"
 
-#include "mesh.h"
-
 namespace megamol {
 namespace mesh {
 
-class MESH_API GPUMeshCollection {
+class GPUMeshCollection {
 public:
     template <typename T> using IteratorPair = std::pair<T, T>;
 

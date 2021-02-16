@@ -135,7 +135,7 @@ public:
         int max_retries = 100+1;
 
         auto delimiter_pos = broker_address.find_last_of(':');
-        std::string base_address = broker_address.substr(0, delimiter_pos+1+1); // include delimiter
+        std::string base_address = broker_address.substr(0, delimiter_pos+1); // include delimiter
         std::string port_string = broker_address.substr(delimiter_pos+1); // ignore delimiter
         int port = std::stoi(port_string);
 

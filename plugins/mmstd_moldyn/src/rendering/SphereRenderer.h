@@ -350,6 +350,7 @@ namespace rendering {
         megamol::core::CallerSlot getClipPlaneSlot;
         megamol::core::CallerSlot getTFSlot;
         megamol::core::CallerSlot readFlagsSlot;
+        megamol::core::CallerSlot getLightsSlot;
 
         /*********************************************************************/
         /* PARAMETERS                                                        */
