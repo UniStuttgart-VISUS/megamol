@@ -584,14 +584,14 @@ end
 ```
 #### Framebuffer Size
 
-The actual framebuffer size to use for a screenshot can be set i the following ways:
+The actual framebuffer size to use for a screenshot can be set in the following ways:
 
 **LUA Project File:** 
-`mmSetFramebufferSize(width, height)`
+`mmSetFramebufferSize(width, height)`  
 e.g. mmSetFramebufferSize(100, 100).
 
 **CLI Option:** 
-`--window wxh+x+y`
+`--window wxh+x+y`  
  e.g. ./megamol.sh --window 100x100 for a window of size 100 x 100 pixels. 
  Also see help output: `./megamol.sh -h`
 
