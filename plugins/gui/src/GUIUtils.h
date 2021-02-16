@@ -9,6 +9,27 @@
 #define MEGAMOL_GUI_GUIUTILS_INCLUDED
 
 
+/**
+ * USED HOTKEYS:
+ *
+ * ----- GUIWindows -----
+ * - Trigger Screenshot:        F2
+ * - Toggle Graph Entry:        F3
+ * - Show/hide Windows:         F7-F11
+ * - Show/hide Menu:            F12
+ * - Show/hide GUI:             Ctrl  + g
+ * - Search Parameter:          Ctrl  + p
+ * - Save Running Project:      Ctrl  + s
+ * - Quit Program:              Alt   + F4
+
+ * ----- Configurator -----
+ * - Search Module:             Ctrl + Shift + m
+ * - Search Parameter:          Ctrl + Shift + p
+ * - Save Edited Project:       Ctrl + Shift + s
+ * - Delete Graph Item:         Delete
+ *
+ **/
+
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include "imgui.h"
@@ -229,14 +250,14 @@ namespace gui {
         ImGuiID group_hovered_uid;  // in out
         bool group_layout;          // out
 
-        UIDVector_t modules_selected_uids;             // in out
-        ImGuiID module_hovered_uid;                    // in out
-        UIDPairVector_t modules_add_group_uids;        // out
-        UIDVector_t modules_remove_group_uids;         // out
-        bool modules_layout;                           // out
-        StrPairVector_t module_rename;                 // out
-        vislib::math::Ternary module_mainview_changed; // out
-        ImVec2 module_param_child_position;            // out
+        UIDVector_t modules_selected_uids;               // in out
+        ImGuiID module_hovered_uid;                      // in out
+        UIDPairVector_t modules_add_group_uids;          // out
+        UIDVector_t modules_remove_group_uids;           // out
+        bool modules_layout;                             // out
+        StrPairVector_t module_rename;                   // out
+        vislib::math::Ternary module_graphentry_changed; // out
+        ImVec2 module_param_child_position;              // out
 
         ImGuiID call_selected_uid; // in out
         ImGuiID call_hovered_uid;  // in out
