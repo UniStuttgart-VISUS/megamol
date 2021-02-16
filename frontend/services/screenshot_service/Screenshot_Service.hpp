@@ -12,6 +12,8 @@
 // ImageData struct and interfaces for screenshot sources/writers
 #include "Screenshots.h"
 
+#include "GUI_Resource.h"
+
 namespace megamol {
 namespace frontend {
 

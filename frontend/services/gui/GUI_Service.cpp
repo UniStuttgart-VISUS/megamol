@@ -11,10 +11,7 @@
 namespace megamol {
 namespace frontend {
 
-    
 #define check_gui_not_nullptr (static_cast<bool>((this->m_gui != nullptr) && (this->m_gui->Get() != nullptr)))
-
-
 
 GUI_Service::~GUI_Service() {
 
@@ -77,11 +74,8 @@ void GUI_Service::close() {
 
 void GUI_Service::updateProvidedResources() {
 
-    this->m_providedResource.get_gui_state = [&](void) -> std::string {
+    this->m_providedResource.gui_state = [&](void) -> std::string {
         return this->resource_get_gui_state();
-    };
-    this->m_providedResource.set_gui_visible = [&](bool visible) -> void {
-        this->resource_set_gui_visible(visible);
     };
 }
 
@@ -197,8 +191,7 @@ void GUI_Service::digestChangedRequestedResources() {
 
 void GUI_Service::resetProvidedResources() {
 
-    this->m_providedResource.get_gui_state = nullptr;
-    this->m_providedResource.set_gui_visible = nullptr;
+    /// this->m_providedResource.gui_state = nullptr;
 }
 
 
@@ -253,26 +246,15 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 }
 
 
-
-
 std::string GUI_Service::resource_get_gui_state(void) {
 
     if (!check_gui_not_nullptr) {
         return std::string();
     }
     auto gui = this->m_gui->Get();
-    return gui->GetStateString();
+    return gui->GetState();
 }
 
-
-void GUI_Service::resource_set_gui_visible(bool visible) {
-
-    if (!check_gui_not_nullptr) {
-        return;
-    }
-    auto gui = this->m_gui->Get();
-    gui->SetVisibility(visible);
-}
 
 } // namespace frontend
 } // namespace megamol

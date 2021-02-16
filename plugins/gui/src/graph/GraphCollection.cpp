@@ -1192,7 +1192,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
 
                 // Serialze graph to string -----------------------------------
                 std::string projectstr;
-                std::stringstream confInstances, confModules, confCalls, confParams, confGUIState;
+                std::stringstream confInstances, confModules, confCalls, confParams;
                 for (auto& module_ptr : graph_ptr->GetModules()) {
                     if (module_ptr->IsGraphEntry()) {
                         confInstances << "mmCreateView(\"" << module_ptr->graph_entry_name << "\",\""
@@ -1229,12 +1229,9 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                         }
                     }
                 }
-                if (!state_json.empty()) {
-                    confGUIState << (GUI_PROJECT_GUI_STATE_START_TAG) << state_json << (GUI_PROJECT_GUI_STATE_END_TAG);
-                }
 
                 projectstr = confInstances.str() + "\n" + confModules.str() + "\n" + confCalls.str() + "\n" +
-                             confParams.str() + "\n" + confGUIState.str();
+                             confParams.str() + "\n" + state_json;
 
                 graph_ptr->ResetDirty();
                 if (FileUtils::WriteFile(project_filename, projectstr)) {

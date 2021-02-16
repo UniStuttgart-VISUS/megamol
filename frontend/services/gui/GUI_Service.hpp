@@ -91,8 +91,6 @@ private:
     megamol::frontend_resources::GUIResource m_providedResource;
 
     std::string resource_get_gui_state(void);
-    void resource_set_gui_visible(bool visible);
-
 };
 
 } // namespace frontend

@@ -995,24 +995,31 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                 __LINE__);
         }
 
+        // Check for script path name and for requested update of GUI state
         GraphPtr_t graph_ptr;
         if (graph_sync_success && this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
             std::string script_filename = this->state.last_script_filename;
-            if (graph_ptr->GetFilename().empty()) {
-                if (this->core_instance != nullptr) {
-                    // Set project filename from lua state of core instance
-                    script_filename = this->core_instance->GetLuaState()->GetScriptPath();
-                }
+            // Set project filename from lua state of core instance
+            if (graph_ptr->GetFilename().empty() && (this->core_instance != nullptr)) {
+                script_filename = this->core_instance->GetLuaState()->GetScriptPath();
             }
-            // Always check for changed script path when project file is dropped
+            // Always check for changed script path when new project file might be loaded via LuaServiceWrapper
             if (!this->state.project_script_paths.empty()) {
                 script_filename = this->state.project_script_paths.front();
             }
             // Load GUI state from project file when project file changed
             if (script_filename != this->state.last_script_filename) {
                 graph_ptr->SetFilename(script_filename);
-                this->load_state_from_file(graph_ptr->GetFilename());
                 this->state.last_script_filename = script_filename;
+
+                if (megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(
+                        script_filename, ".png")) {
+                    std::string project =
+                        megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(script_filename);
+                    this->load_state_from_string(project);
+                } else {
+                    this->load_state_from_file(script_filename);
+                }
             }
         }
         sync_success &= graph_sync_success;
@@ -2313,6 +2320,8 @@ std::string megamol::gui::GUIWindows::dump_state_to_string(void) {
     nlohmann::json state_json;
     if (this->state_to_json(state_json)) {
         std::string state_str = state_json.dump(); // No line feed
+        state_str = "\n" + std::string(GUI_PROJECT_GUI_STATE_START_TAG) + state_str +
+                    std::string(GUI_PROJECT_GUI_STATE_END_TAG);
         return state_str;
     }
     return std::string("");
@@ -2321,16 +2330,22 @@ std::string megamol::gui::GUIWindows::dump_state_to_string(void) {
 
 bool megamol::gui::GUIWindows::load_state_from_file(const std::string& filename) {
 
-    std::string state_str;
-    if (FileUtils::ReadFile(filename, state_str, true)) {
-        state_str = GUIUtils::ExtractGUIState(state_str);
-        if (state_str.empty())
-            return false;
-        nlohmann::json in_json = nlohmann::json::parse(state_str);
-        return this->state_from_json(in_json);
+    std::string project;
+    if (FileUtils::ReadFile(filename, project, true)) {
+        return this->load_state_from_string(project);
     }
-
     return false;
+}
+
+
+bool megamol::gui::GUIWindows::load_state_from_string(const std::string& project) {
+
+    std::string state_str = GUIUtils::ExtractGUIState(state_str);
+    if (state_str.empty()) {
+        return false;
+    }
+    nlohmann::json in_json = nlohmann::json::parse(state_str);
+    return this->state_from_json(in_json);
 }
 
 

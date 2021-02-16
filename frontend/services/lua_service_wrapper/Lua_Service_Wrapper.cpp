@@ -74,8 +74,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
         "WindowEvents", // for file drag and drop events
         "FrameStatistics", // for LastFrameTime
-        "WindowManipulation", // for Framebuffer resize
-        "GUIResources"  
+        "WindowManipulation" // for Framebuffer resize
     }; //= {"ZMQ_Context"};
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
@@ -186,7 +185,7 @@ void Lua_Service_Wrapper::updateProvidedResources() {
         std::string result;
         log("running file " + file);
         if (megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(file, ".png")) {
-            luaAPI.RunString(megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(file), result);
+            luaAPI.RunString(megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(file), result, file);
         } else {
             luaAPI.RunFile(file, result);
         }
@@ -213,12 +212,6 @@ void Lua_Service_Wrapper::digestChangedRequestedResources() {
             }
         }
     }
-
-    /// XXX GUI TEST
-    //auto gui_resources = m_requestedResourceReferences[5].getResource<megamol::frontend_resources::GUIResource>();
-    //std::string gui_state = gui_resources.get_gui_state();
-    //bool gui_visible = true;
-    //gui_resources.set_gui_visible(gui_visible);
 }
 
 void Lua_Service_Wrapper::resetProvidedResources() { recursion_guard; }

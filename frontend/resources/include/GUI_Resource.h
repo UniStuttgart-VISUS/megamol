@@ -43,11 +43,8 @@ namespace frontend_resources {
 
 struct GUIResource {
 
-    // Function requesting updated GUI state -> LUA save project
-    std::function<std::string(void)> get_gui_state = nullptr;
-
-    // Function setting GUI disabled/enabled -> LUA cli
-    std::function<void(bool)> set_gui_visible = nullptr;
+    // Function requesting updated GUI state (e.g. ScreenshotService save project with GUI state tp PNG header)
+    std::function<std::string(void)> gui_state = nullptr;
 };
 
 } /* end namespace frontend_resources */

@@ -38,6 +38,7 @@
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/ViewDescription.h"
 #include "mmcore/utility/ResourceWrapper.h"
+#include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "mmcore/versioninfo.h"
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
@@ -112,10 +113,12 @@ namespace gui {
 
         // FUNCTIONS used in GUI_Service //////////////////////////////////////
 
+        //////////GET //////////
+
         /**
          * Pass current GUI state.
          */
-        std::string GetStateString(void) {
+        std::string GetState(void) {
             return this->dump_state_to_string();
         }
 
@@ -137,6 +140,13 @@ namespace gui {
         inline const std::string GetScreenshotFileName(void) const {
             return this->state.screenshot_filepath;
         }
+
+        ///////// SET ///////////
+
+        /**
+         * Set project containing GUI that should be loaded.
+         */
+        void SetStateString(std::string state) {}
 
         /**
          * Set project script paths.
@@ -296,6 +306,7 @@ namespace gui {
 
         std::string dump_state_to_string(void);
         bool load_state_from_file(const std::string& filename);
+        bool load_state_from_string(const std::string& project);
 
         bool state_from_json(const nlohmann::json& in_json);
         bool state_to_json(nlohmann::json& inout_json);
