@@ -25,9 +25,14 @@
     - [View Interaction](#view-interaction) 
 - [Project Files](#project-files)     
 - [Making High-Resolution Screenshots](#making-high-resolution-screenshots) 
+    - [GUI](#gui)
+    - [Project File](#project-file)
+        - [Framebuffer Size](#framebuffer-size)
+    - [ScreenShooter Module](#screenshooter-module)
 - [Making Simple Videos](#making-simple-videos) 
 - [Reproducibility](#reproducibility) 
-<!-- 
+
+<!-- TODO
 - [Jobs](#jobs)
     - [Job Instance](#job-instance) 
     - [Converting to MMPLD](#converting-to-mmpld) 
@@ -140,7 +145,7 @@ Since the full support of some C++17 functionality is required (e.g. *std::files
 ### Command Line Arguments
 
 Providing additional command line arguments allow individual configuration of global MegaMol behavior and settings.  
-<!-- (The command line arguments are only read and interpreted by the `frontend`.)-->
+<!-- INFO: The command line arguments are only read and interpreted by the `frontend`. -->
 
 The following command line arguments are available:
 
@@ -166,7 +171,7 @@ The following command line arguments are available:
 ### Configuration File
 
 After successfully compiling and installing MegaMol, you should have all executable files inside your `bin` directory (default: `../megamol/build/install/bin`). 
-<!-- (The configuration file is only read and interpreted by the MegaMol `core`.) -->
+<!-- INFO: The configuration file is only read and interpreted by the MegaMol `core`. -->
 In the `bin` directory, you can find the default configuration file `megamolconfig.lua`:  
 
 ```lua
@@ -239,8 +244,7 @@ The *Add...Dir* commands set the paths for the respective resources.
 
 Since we switched to static linking of plugin libraries into the MegaMol binary, the configuration of `mmPluginLoaderInfo` is ***DEPRECATED*** and no longer required.
 
-<!--
-*DEPRECATED:*
+<!-- DEPRECATED
 
 Extend the configuration if you introduce new plugins into your installation. 
 Although there are different ways to specify the plugins to be loaded, the tags in the example configuration file are the most secure way. 
@@ -272,8 +276,7 @@ The configuration file also specifies global settings variables which can modify
 
 All other configuration options are ***DEPRECATED*** and have currently no effect!
 
-<!--
-*DEPRECATED:*
+<!-- DEPRECATED
 
 - In line 14 the variable `*-window` is set. 
     This variable specifies the default position and size for all rendering windows MegaMol will create. 
@@ -462,7 +465,7 @@ An example of such parameters is the setup of the virtual camera in modules of t
 The *module call graph* is configured for MegaMol using a project file. 
 These files define modules and interconnecting calls for different instance specifications. 
 
-<!-- DEPERCATED
+<!-- TODO: UPDATE or DEPERCATED
 
 There are two types of instances:
 Views (see section [Views](#views)) and jobs (see section [Jobs](#jobs)). 
@@ -503,11 +506,13 @@ The primary interaction with a view is controlling the camera with mouse and key
 The keyboard mapping is implemented by button parameters of the view module, also available in the GUI. 
 Most parameters can be found in the sub-namespace `viewKey` inside the view name, e.g. `RotLeft`. 
 The corresponding parameter button in the GUI also shows the associated hotkey.
+In the configuration file `megamolconfig.lua` the camera behaviour can be change be switching the *arcball* option on or off.
 
-***UPDATE REQUIRED***:  
-<!-- TODO -->
+<!-- TODO: 
+UPDATE 
+-->
+Some useful controls assuming the *arcball* option is set to **on**:
 
-Some useful controls:
 - Hitting *Home* (aka *Pos1*) is associated with the button *resetView*. This function resets the view to default.
 - Hold the *Left Mouse Button* and move your mouse to rotate the view around the look-at point. 
     The look-at point initially is placed in the center of the bounding box of the data set.
@@ -550,26 +555,53 @@ It can be opened via the menu `Windows / Configurator`.
 You can either edit the currently running MegaMol graph (which might be empty) or you can create a new project starting a module graph by adding the main view module `View3D_2`.
 A detailed description of the configurator can be found in the readme file of the [GUI plugin](../plugins/gui#configurator).
 
-<!-- TODO 
-
+<!-- TODO:
 Add more ... ?
-
 -->
 
 <!-- ###################################################################### -->
 -----
 ## Making High-Resolution Screenshots
 
+### GUI
+
 The GUI menu option `Screenshot` (hotkey `F2`) provides a basic screenshot functionality using the current viewport size. 
 If screenshots are taken consecutively, the given file name is prepended by an incrementing suffix. 
 This way, no new file name has to be set after each screenshot.  
 
-<!-- DEPRECATED/UPDATE - MegaMol is not accessible for modules and therefore the required view instance can not be found
+### Project File
+
+Within the LUA project file a screenshot can be triggered using the command `mmScreenShot("screenshot_filename.png")`.
+
+The following example shows how to take screenshots of various time steps:
+
+```lua
+for i=0,1 do
+    mmSetParamValue("::View3D_2_1::anim::time", tostring(i))
+    mmRenderNextFrame()
+    mmScreenShot("screenshot_timestep_" .. string.format("%04d",i) .. ".png")
+end
+```
+#### Framebuffer Size
+
+The actual framebuffer size to use for a screenshot can be set i the following ways:
+
+**LUA Project File:** 
+`mmSetFramebufferSize(width, height)`
+e.g. mmSetFramebufferSize(100, 100).
+
+**CLI Option:** 
+`--window wxh+x+y`
+ e.g. ./megamol.sh --window 100x100 for a window of size 100 x 100 pixels. 
+ Also see help output: `./megamol.sh -h`
+
+### ScreenShooter Module
 
 Offering more flexible options and special functions to create high-resolution screenshots of any rendering, you can add the `ScreenShooter` module to you project.
 The corresponding settings can be found in the modules parameters provided in the GUI (see figure of `ScreenShooter` parameters below).
 
-In order to connect the `ScreenShooter` with your *view*, you need to set the **instance name** of your view instance in the corresponding variable `::screenshooter::view` (e.g. to `inst`). When making single screenshots, set the option `makeAnim` in the group `::screenshooter::anim` to `disabled`, as shown in the figure. 
+In order to connect the `ScreenShooter` with your *view*, you need to set the <!-- **instance name** or the --> **module name** of your view module in the corresponding variable `::screenshooter::view` (e.g. to `::View3D_2_1`). 
+When making single screenshots, set the option `makeAnim` in the group `::screenshooter::anim` to `disabled`, as shown in the figure. 
 Ignore the remaining options in that group. 
 These options will be explained in section [Making Simple Videos](#making-simple-videos), as they are used to produce videos.
 
@@ -586,8 +618,6 @@ MegaMol only creates PNG files.
 Hit the button trigger to have MegaMol create the requested screenshot.
 
 ![ScreenShooter](pics/screenshooter.png)
-
--->
 
 
 <!-- ###################################################################### -->
@@ -623,13 +653,12 @@ It will need to wait if the correct data is not available, yet, which can reduce
 -->
 
 <!-- ###################################################################### -->
-<!-- DEPRECATED/UPDATE
+<!-- TODO: UPDATE or DEPRECATED
 ## Jobs
 
 This chapter discusses the job concept available in MegaMol. 
 Especially, how jobs can be used for data conversion. 
 Examples are based on the project script files available in the installed `examples` directory.
-
 
 ### Job Instance
 
@@ -646,7 +675,6 @@ If you want graphical assistance in creating a job description, the recommended 
 Use a `DataWriterJob` module as an entry point. 
 Save the corresponding project file and edit it manually with a text editor. 
 Replace the `<view>` tags with the similarly behaving `<job>` tags and adjust the corresponding attributes.
-
 
 ### Converting to MMPLD
 
