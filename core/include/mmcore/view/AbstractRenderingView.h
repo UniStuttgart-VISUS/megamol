@@ -90,58 +90,6 @@ public:
 
 protected:
 
-    /**
-     * Marks the beginning of a frame
-     */
-    void beginFrame(void);
-
-    /**
-     * Marks the end of a frame
-     *
-     * @param abort Flag if the frame is aborted
-     */
-    void endFrame(bool abort = false);
-
-    /**
-     * The number of seconds the last frame needed to be drawn
-     *
-     * @return The last frame rendering time
-     */
-    double lastFrameTime(void) const;
-
-    /**
-     * Answer if the soft cursor should be shown
-     *
-     * @return 'true' if the soft cursor should be shown
-     */
-    bool showSoftCursor(void) const;
-
-    /**
-     * Renders the title scene
-     *
-     * @param tileX The view tile x coordinate
-     * @param tileY The view tile y coordinate
-     * @param tileW The view tile width
-     * @param tileH The view tile height
-     * @param virtW The virtual view width
-     * @param virtH The virtual view height
-     * @param stereo Flag if stereo rendering is to be performed
-     * @param leftEye Flag if the stereo rendering is done for the left eye view
-         * @param instTime The instance time code
-     */
-    void renderTitle(float tileX, float tileY, float tileW, float tileH,
-        float virtW, float virtH, bool stereo, bool leftEye, double instTime) const;
-
-    /**
-     * Removes the title renderer
-     */
-    void removeTitleRenderer(void) const;
-
-    /**
-     * TODO: Document me or I will softly curse you
-     */
-    void toggleSoftCurse(void);
-
     /** Pointer to the override background colour */
     glm::vec4 overrideBkgndCol;
 
@@ -150,82 +98,10 @@ protected:
     /** The background colour for the view */
     mutable param::ParamSlot bkgndColSlot;
 
-    /** Bool flag to activate software cursor rendering */
-    mutable param::ParamSlot softCursorSlot;
-
-
 private:
-
-    /**
-     * Fallback class just clearing the screen
-     */
-    class EmptyTitleRenderer : public AbstractTitleRenderer {
-    public:
-
-        /** Ctor */
-        EmptyTitleRenderer(void);
-
-        /** Dtor */
-        virtual ~EmptyTitleRenderer(void);
-
-        /**
-         * Create the renderer and allocates all resources
-         *
-         * @return True on success
-         */
-        virtual bool Create(void);
-
-        /**
-         * Renders the title scene
-         *
-         * @param tileX The view tile x coordinate
-         * @param tileY The view tile y coordinate
-         * @param tileW The view tile width
-         * @param tileH The view tile height
-         * @param virtW The virtual view width
-         * @param virtH The virtual view height
-         * @param stereo Flag if stereo rendering is to be performed
-         * @param leftEye Flag if the stereo rendering is done for the left eye view
-         * @param instTime The instance time code
-         * @param core The core
-         */
-        virtual void Render(float tileX, float tileY, float tileW, float tileH,
-            float virtW, float virtH, bool stereo, bool leftEye, double instTime,
-            class ::megamol::core::CoreInstance *core);
-
-        /**
-         * Releases the renderer and all of its resources
-         */
-        virtual void Release(void);
-
-    };
 
     /** The background colour for the view */
     mutable glm::vec4 bkgndCol;
-
-    /** Bool flag to activate software cursor rendering */
-    mutable bool softCursor;
-
-    /** The title renderer */
-    mutable AbstractTitleRenderer* titleRenderer;
-
-#ifdef _WIN32
-#pragma warning (disable: 4251)
-#endif /* _WIN32 */
-    /** The frames per second counter */
-    vislib::graphics::FpsCounter fpsCounter;
-
-    /** Sync object for fps counter */
-    vislib::sys::CriticalSection fpsLock;
-#ifdef _WIN32
-#pragma warning (default: 4251)
-#endif /* _WIN32 */
-
-    /** The ID of the thread currently */
-    DWORD fpsThreadID;
-
-    /** A timer managing the fps output */
-    unsigned int fpsOutputTimer;
 
 };
 

@@ -236,16 +236,14 @@ void AbstractView3D::beforeRender(const mmcRenderViewContext& context) {
     AbstractCallRender* cr3d = this->rendererSlot.CallAs<AbstractCallRender>();
     this->handleCameraMovement();
 
-    AbstractRenderingView::beginFrame();
+    
 
     auto bkgndCol = (this->overrideBkgndCol != glm::vec4(0, 0, 0, 0)) ? this->overrideBkgndCol : this->BkgndColour();
 
     if (cr3d == NULL) {
-        this->endFrame(true);
         return; // empty enought
     }
 
-    this->removeTitleRenderer();
     cr3d->SetBackgroundColor(glm::vec4(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f));
     // cr3d->SetFramebuffer(_framebuffer);
 
@@ -296,12 +294,16 @@ void AbstractView3D::beforeRender(const mmcRenderViewContext& context) {
 
         // TODO
         // cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
-        cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
+        //TODO!? cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
 
         auto currentTime = std::chrono::high_resolution_clock::now();
         this->lastFrameDuration =
             std::chrono::duration_cast<std::chrono::microseconds>(currentTime - this->lastFrameTime);
         this->lastFrameTime = currentTime;
+
+        cr3d->SetLastFrameTime(std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::time_point_cast<std::chrono::milliseconds>(this->lastFrameTime).time_since_epoch())
+                                   .count());
     }
 
     this->cam.CalcClipping(this->bboxs.ClipBox(), 0.1f);
@@ -320,8 +322,6 @@ void AbstractView3D::beforeRender(const mmcRenderViewContext& context) {
  */
 void AbstractView3D::afterRender(const mmcRenderViewContext& context) {
     this->setCameraValues(this->cam);
-
-    AbstractRenderingView::endFrame();
 
     // this->lastFrameParams->CopyFrom(this->OnGetCamParams, false);
 
@@ -523,7 +523,7 @@ bool AbstractView3D::OnChar(unsigned int codePoint) {
 /*
  * AbstractView3D::release
  */
-void AbstractView3D::release(void) { this->removeTitleRenderer(); }
+void AbstractView3D::release(void) { }
 
 /*
  * AbstractView3D::mouseSensitivityChanged

@@ -121,8 +121,6 @@ void view::View2DGL::Render(const mmcRenderViewContext& context) {
 
     CallRender2DGL *cr2d = this->rendererSlot.CallAs<CallRender2DGL>();
 
-    AbstractRenderingView::beginFrame();
-
     // clear viewport
     int vpx = 0, vpy = 0;
     float w = this->width;
@@ -147,12 +145,8 @@ void view::View2DGL::Render(const mmcRenderViewContext& context) {
     ::glClearColor(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f);
 
     if (cr2d == NULL) {
-        this->renderTitle(0.0f, 0.0f, this->width, this->height,
-            this->width, this->height, false, false, instTime);
-        AbstractRenderingView::endFrame(true);
         return;
     } else {
-        this->removeTitleRenderer();
     }
     if (this->firstImg) {
         this->firstImg = false;
@@ -175,7 +169,7 @@ void view::View2DGL::Render(const mmcRenderViewContext& context) {
 
     cr2d->SetTime(time);
     cr2d->SetInstanceTime(instTime);
-    cr2d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
+    //TODO!? cr2d->SetLastFrameTime();
 
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
@@ -256,22 +250,6 @@ void view::View2DGL::Render(const mmcRenderViewContext& context) {
 
     (*cr2d)(AbstractCallRender::FnRender);
 
-    if (this->showSoftCursor()) {
-        ::glMatrixMode(GL_PROJECTION);
-        ::glLoadIdentity();
-        ::glTranslatef(-1.0f, 1.0f, 0.0f);
-        ::glScalef(2.0f / this->width, -2.0f / this->height, 1.0f);
-        ::glMatrixMode(GL_MODELVIEW);
-        ::glLoadIdentity();
-        ::glBegin(GL_LINES);
-        ::glColor4ub(255, 255, 0, 255);
-        ::glVertex2f(0.0f, 0.0f);
-        ::glVertex2f(this->mouseX, this->mouseY);
-        ::glEnd();
-    }
-
-    AbstractRenderingView::endFrame();
-
 }
 
 
@@ -302,14 +280,13 @@ void view::View2DGL::ResetView(void) {
         this->viewZoom = 1.0f;
     }
 
-    this->cam.projection_type(thecam::Projection_type::orthographic);
-    this->cam.eye_position() = glm::vec4(viewX,viewY,0,1);
-    cam.film_gate({this->width, this->height});
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-
-
+    //  this->cam.projection_type(thecam::Projection_type::orthographic);
+    //  this->cam.eye_position() = glm::vec4(viewX,viewY,0,1);
+    //  cam.film_gate({this->width, this->height});
+    //  cam.resolution_gate({static_cast<int>(this->_fbo->GetWidth()), static_cast<int>(this->_fbo->GetHeight())});
+    //  cam_type::snapshot_type snapshot;
+    //  cam_type::matrix_type viewTemp, projTemp;
+    //  cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
     this->viewUpdateCnt++;
 }
@@ -533,7 +510,6 @@ bool view::View2DGL::create(void) {
  * view::View2DGL::release
  */
 void view::View2DGL::release(void) {
-    this->removeTitleRenderer();
     // intentionally empty
 }
 
