@@ -6,10 +6,13 @@
  * Alle Rechte vorbehalten.
  */
 #include "stdafx.h"
-#include "imageviewer2/JpegBitmapCodec.h"
+#include "imageviewer/JpegBitmapCodec.h"
 #ifndef _WIN32
 #include "jpeglib.h"
 #endif
+#include <fstream>
+#include "vislib/IllegalStateException.h"
+#include "vislib/RawStorage.h"
 #include "vislib/SmartPtr.h"
 #include "vislib/graphics/BitmapImage.h"
 #include "vislib/IllegalStateException.h"
@@ -25,23 +28,23 @@ namespace sg {
 namespace graphics {
 namespace jpegutil {
 
-    /**
-     * Convert "exit" to "throw"
-     */
-    void jpeg_error_exit_throw(j_common_ptr cinfo) {
-        char buffer[JMSG_LENGTH_MAX];
-        (*cinfo->err->format_message)(cinfo, buffer);
-        vislib::StringA msg(buffer);
-        ::jpeg_destroy(cinfo);
-        throw vislib::Exception(msg, __FILE__, __LINE__);
-    }
+/**
+ * Convert "exit" to "throw"
+ */
+void jpeg_error_exit_throw(j_common_ptr cinfo) {
+    char buffer[JMSG_LENGTH_MAX];
+    (*cinfo->err->format_message)(cinfo, buffer);
+    vislib::StringA msg(buffer);
+    ::jpeg_destroy(cinfo);
+    throw vislib::Exception(msg, __FILE__, __LINE__);
+}
 
-    /**
-     * block any warning, trace, error of libJpeg
-     */
-    void jpeg_output_message_no(j_common_ptr cinfo) {
-        // be silent!
-    }
+/**
+ * block any warning, trace, error of libJpeg
+ */
+void jpeg_output_message_no(j_common_ptr cinfo) {
+    // be silent!
+}
 
 } /* end namespace jpegutil */
 } /* end namespace graphics */
@@ -59,9 +62,7 @@ JpegBitmapCodec::JpegBitmapCodec(void) : AbstractBitmapCodec(), quality(75) {
 
     // Create the COM imaging factory.
     if (hr != RPC_E_CHANGED_MODE) {
-        hr = CoCreateInstance(CLSID_WICImagingFactory,
-            NULL, CLSCTX_INPROC_SERVER,
-            IID_PPV_ARGS(&piFactory));
+        hr = CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&piFactory));
         if (SUCCEEDED(hr)) {
             comOK = true;
         } else {
@@ -89,8 +90,8 @@ JpegBitmapCodec::~JpegBitmapCodec(void) {
 /*
  * JpegBitmapCodec::AutoDetect
  */
-int JpegBitmapCodec::AutoDetect(const void *mem, SIZE_T size) const {
-    const unsigned char *dat = static_cast<const unsigned char*>(mem);
+int JpegBitmapCodec::AutoDetect(const void* mem, SIZE_T size) const {
+    const unsigned char* dat = static_cast<const unsigned char*>(mem);
     if (size < 3) return -1;
     if ((dat[0] == 0xFF) && (dat[1] == 0xD8) && (dat[2] == 0xFF)) {
         return 1; // looks like a jpeg, but I am not soooo sure
@@ -103,41 +104,31 @@ int JpegBitmapCodec::AutoDetect(const void *mem, SIZE_T size) const {
 /*
  * JpegBitmapCodec::CanAutoDetect
  */
-bool JpegBitmapCodec::CanAutoDetect(void) const {
-    return true;
-}
+bool JpegBitmapCodec::CanAutoDetect(void) const { return true; }
 
 
 /*
  * JpegBitmapCodec::FileNameExtsA
  */
-const char* JpegBitmapCodec::FileNameExtsA(void) const {
-    return ".jpeg;.jpe;.jpg";
-}
+const char* JpegBitmapCodec::FileNameExtsA(void) const { return ".jpeg;.jpe;.jpg"; }
 
 
 /*
  * JpegBitmapCodec::FileNameExtsW
  */
-const wchar_t* JpegBitmapCodec::FileNameExtsW(void) const {
-    return L".jpeg;.jpe;.jpg";
-}
+const wchar_t* JpegBitmapCodec::FileNameExtsW(void) const { return L".jpeg;.jpe;.jpg"; }
 
 
 /*
  * JpegBitmapCodec::NameA
  */
-const char * JpegBitmapCodec::NameA(void) const {
-    return "Joint Photographic Experts Group";
-}
+const char* JpegBitmapCodec::NameA(void) const { return "Joint Photographic Experts Group"; }
 
 
 /*
  * JpegBitmapCodec::NameW
  */
-const wchar_t * JpegBitmapCodec::NameW(void) const {
-    return L"Joint Photographic Experts Group";
-}
+const wchar_t* JpegBitmapCodec::NameW(void) const { return L"Joint Photographic Experts Group"; }
 
 
 /**
@@ -175,11 +166,11 @@ void JpegBitmapCodec::OptimizeCompressionQuality(void) {
 
 #ifdef _WIN32
 /*
-* JpegBitmapCodec::loadFromMemory
-*/
-bool JpegBitmapCodec::loadFromMemory(const void *mem, SIZE_T size) {
+ * JpegBitmapCodec::loadFromMemory
+ */
+bool JpegBitmapCodec::loadFromMemory(const void* mem, SIZE_T size) {
 
-    IWICBitmapDecoder *piDecoder = NULL;
+    IWICBitmapDecoder* piDecoder = NULL;
     HRESULT hr;
 
     // Create the decoder.
@@ -187,7 +178,7 @@ bool JpegBitmapCodec::loadFromMemory(const void *mem, SIZE_T size) {
         IStream* stream = SHCreateMemStream(reinterpret_cast<const BYTE*>(mem), size);
 
         hr = piFactory->CreateDecoderFromStream(stream, NULL,
-            WICDecodeMetadataCacheOnDemand, //For JPEG lossless decoding/encoding.
+            WICDecodeMetadataCacheOnDemand, // For JPEG lossless decoding/encoding.
             &piDecoder);
 
         UINT count;
@@ -248,7 +239,8 @@ bool JpegBitmapCodec::loadFromMemory(const void *mem, SIZE_T size) {
                 this->image().SetChannelLabel(2, BitmapImage::CHANNEL_BLUE);
             }
 
-            hr = piFrameDecode->CopyPixels(NULL, width * stride, width * height * stride, this->image().PeekDataAs<BYTE>());
+            hr = piFrameDecode->CopyPixels(
+                NULL, width * stride, width * height * stride, this->image().PeekDataAs<BYTE>());
 
             // release stuff
             if (piDecoder) piDecoder->Release();
@@ -262,13 +254,13 @@ bool JpegBitmapCodec::loadFromMemory(const void *mem, SIZE_T size) {
 }
 
 /*
-* JpegBitmapCodec::saveToMemory
-*/
-bool JpegBitmapCodec::saveToMemory(vislib::RawStorage &mem) const {
+ * JpegBitmapCodec::saveToMemory
+ */
+bool JpegBitmapCodec::saveToMemory(vislib::RawStorage& mem) const {
 
     HRESULT hr;
-    IWICBitmapFrameEncode *piFrameEncode = NULL;
-    IWICBitmapEncoder *piEncoder = NULL;
+    IWICBitmapFrameEncode* piFrameEncode = NULL;
+    IWICBitmapEncoder* piEncoder = NULL;
     WICPixelFormatGUID pixelFormat;
     UINT stride = 0;
     BYTE* memory;
@@ -332,7 +324,7 @@ bool JpegBitmapCodec::saveToMemory(vislib::RawStorage &mem) const {
                     pixelFormat = GUID_WICPixelFormat24bppRGB;
                     stride = 3;
                 } else if (this->image().GetChannelLabel(0) == BitmapImage::CHANNEL_BLUE &&
-                    this->image().GetChannelLabel(1) == BitmapImage::CHANNEL_GREEN) {
+                           this->image().GetChannelLabel(1) == BitmapImage::CHANNEL_GREEN) {
                     pixelFormat = GUID_WICPixelFormat24bppBGR;
                     stride = 3;
                 } else {
@@ -350,8 +342,8 @@ bool JpegBitmapCodec::saveToMemory(vislib::RawStorage &mem) const {
 
     if (SUCCEEDED(hr) && stride > 0) {
 
-        hr = piFrameEncode->WritePixels(this->image().Height(),
-            this->image().Width() * stride, this->image().Height() * this->image().Width() * stride,
+        hr = piFrameEncode->WritePixels(this->image().Height(), this->image().Width() * stride,
+            this->image().Height() * this->image().Width() * stride,
             const_cast<BYTE*>(this->image().PeekDataAs<BYTE>()));
     }
 
@@ -394,7 +386,7 @@ bool JpegBitmapCodec::saveToMemory(vislib::RawStorage &mem) const {
 /*
  * JpegBitmapCodec::loadFromMemory
  */
-bool JpegBitmapCodec::loadFromMemory(const void *mem, SIZE_T size) {
+bool JpegBitmapCodec::loadFromMemory(const void* mem, SIZE_T size) {
     struct jpeg_decompress_struct cinfo;
     struct jpeg_error_mgr jerr;
 
@@ -402,9 +394,7 @@ bool JpegBitmapCodec::loadFromMemory(const void *mem, SIZE_T size) {
     cinfo.err->error_exit = jpegutil::jpeg_error_exit_throw;
     cinfo.err->output_message = jpegutil::jpeg_output_message_no;
     ::jpeg_create_decompress(&cinfo);
-    ::jpeg_mem_src(&cinfo,
-        static_cast<unsigned char*>(const_cast<void*>(mem)),
-        static_cast<unsigned long>(size));
+    ::jpeg_mem_src(&cinfo, static_cast<unsigned char*>(const_cast<void*>(mem)), static_cast<unsigned long>(size));
 
     if (::jpeg_read_header(&cinfo, TRUE) != 1) {
         ::jpeg_destroy_decompress(&cinfo);
@@ -430,63 +420,64 @@ bool JpegBitmapCodec::loadFromMemory(const void *mem, SIZE_T size) {
         return false;
     }
 
-    this->image().CreateImage(cinfo.output_width, cinfo.output_height, cinfo.output_components, BitmapImage::CHANNELTYPE_BYTE);
+    this->image().CreateImage(
+        cinfo.output_width, cinfo.output_height, cinfo.output_components, BitmapImage::CHANNELTYPE_BYTE);
     switch (cinfo.out_color_space) {
-        case JCS_UNKNOWN:
-            for (int i = 0; i < cinfo.output_components; i++) {
-                this->image().SetChannelLabel(static_cast<unsigned int>(i), BitmapImage::CHANNEL_UNDEF);
-            }
-            break;
-        case JCS_GRAYSCALE:
+    case JCS_UNKNOWN:
+        for (int i = 0; i < cinfo.output_components; i++) {
+            this->image().SetChannelLabel(static_cast<unsigned int>(i), BitmapImage::CHANNEL_UNDEF);
+        }
+        break;
+    case JCS_GRAYSCALE:
+        for (int i = 0; i < cinfo.output_components; i++) {
+            this->image().SetChannelLabel(static_cast<unsigned int>(i), BitmapImage::CHANNEL_GRAY);
+        }
+        break;
+    case JCS_RGB:
+        if (this->image().GetChannelCount() == 3) {
+            this->image().SetChannelLabel(0, BitmapImage::CHANNEL_RED);
+            this->image().SetChannelLabel(1, BitmapImage::CHANNEL_GREEN);
+            this->image().SetChannelLabel(2, BitmapImage::CHANNEL_BLUE);
+        } else {
             for (int i = 0; i < cinfo.output_components; i++) {
                 this->image().SetChannelLabel(static_cast<unsigned int>(i), BitmapImage::CHANNEL_GRAY);
             }
-            break;
-        case JCS_RGB:
-            if (this->image().GetChannelCount() == 3) {
-                this->image().SetChannelLabel(0, BitmapImage::CHANNEL_RED);
-                this->image().SetChannelLabel(1, BitmapImage::CHANNEL_GREEN);
-                this->image().SetChannelLabel(2, BitmapImage::CHANNEL_BLUE);
-            } else {
-                for (int i = 0; i < cinfo.output_components; i++) {
-                    this->image().SetChannelLabel(static_cast<unsigned int>(i), BitmapImage::CHANNEL_GRAY);
-                }
-            }
-            break;
-        case JCS_YCbCr: /* Y/Cb/Cr (also known as YUV) */
-            // not supported
+        }
+        break;
+    case JCS_YCbCr: /* Y/Cb/Cr (also known as YUV) */
+        // not supported
+        for (int i = 0; i < cinfo.output_components; i++) {
+            this->image().SetChannelLabel(static_cast<unsigned int>(i), BitmapImage::CHANNEL_UNDEF);
+        }
+        break;
+    case JCS_CMYK:
+        if (this->image().GetChannelCount() == 4) {
+            this->image().SetChannelLabel(0, BitmapImage::CHANNEL_CYAN);
+            this->image().SetChannelLabel(1, BitmapImage::CHANNEL_MAGENTA);
+            this->image().SetChannelLabel(2, BitmapImage::CHANNEL_YELLOW);
+            this->image().SetChannelLabel(3, BitmapImage::CHANNEL_BLACK);
+        } else {
             for (int i = 0; i < cinfo.output_components; i++) {
-                this->image().SetChannelLabel(static_cast<unsigned int>(i), BitmapImage::CHANNEL_UNDEF);
+                this->image().SetChannelLabel(static_cast<unsigned int>(i), BitmapImage::CHANNEL_GRAY);
             }
-            break;
-        case JCS_CMYK:
-            if (this->image().GetChannelCount() == 4) {
-                this->image().SetChannelLabel(0, BitmapImage::CHANNEL_CYAN);
-                this->image().SetChannelLabel(1, BitmapImage::CHANNEL_MAGENTA);
-                this->image().SetChannelLabel(2, BitmapImage::CHANNEL_YELLOW);
-                this->image().SetChannelLabel(3, BitmapImage::CHANNEL_BLACK);
-            } else {
-                for (int i = 0; i < cinfo.output_components; i++) {
-                    this->image().SetChannelLabel(static_cast<unsigned int>(i), BitmapImage::CHANNEL_GRAY);
-                }
-            }
-            break;
-        case JCS_YCCK: /* Y/Cb/Cr/K */
-            // not supported
-            for (int i = 0; i < cinfo.output_components; i++) {
-                this->image().SetChannelLabel(static_cast<unsigned int>(i), BitmapImage::CHANNEL_UNDEF);
-            }
-            break;
-        default: // not supported for SURE
-            for (int i = 0; i < cinfo.output_components; i++) {
-                this->image().SetChannelLabel(static_cast<unsigned int>(i), BitmapImage::CHANNEL_UNDEF);
-            }
-            break;
+        }
+        break;
+    case JCS_YCCK: /* Y/Cb/Cr/K */
+        // not supported
+        for (int i = 0; i < cinfo.output_components; i++) {
+            this->image().SetChannelLabel(static_cast<unsigned int>(i), BitmapImage::CHANNEL_UNDEF);
+        }
+        break;
+    default: // not supported for SURE
+        for (int i = 0; i < cinfo.output_components; i++) {
+            this->image().SetChannelLabel(static_cast<unsigned int>(i), BitmapImage::CHANNEL_UNDEF);
+        }
+        break;
     }
 
     unsigned int row_stride = cinfo.output_width * cinfo.output_components;
     while (cinfo.output_scanline < cinfo.output_height) {
-        JSAMPLE *ptr = this->image().PeekDataAs<JSAMPLE>() + row_stride * cinfo.output_scanline;
+        JSAMPLE* ptr = this->image().PeekDataAs<JSAMPLE>() + row_stride * cinfo.output_scanline;
         ::jpeg_read_scanlines(&cinfo, &ptr, 1);
     }
 
@@ -505,7 +496,7 @@ bool JpegBitmapCodec::loadFromMemory(const void *mem, SIZE_T size) {
 /*
  * JpegBitmapCodec::saveToMemory
  */
-bool JpegBitmapCodec::saveToMemory(vislib::RawStorage &mem) const {
+bool JpegBitmapCodec::saveToMemory(vislib::RawStorage& mem) const {
     using vislib::graphics::BitmapImage;
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr jerr;
@@ -515,11 +506,11 @@ bool JpegBitmapCodec::saveToMemory(vislib::RawStorage &mem) const {
     cinfo.err->output_message = jpegutil::jpeg_output_message_no;
     ::jpeg_create_compress(&cinfo);
 
-    unsigned char *buf = NULL;
+    unsigned char* buf = NULL;
     unsigned long bufSize = 0;
     ::jpeg_mem_dest(&cinfo, &buf, &bufSize);
 
-    const BitmapImage *src = &(this->image());
+    const BitmapImage* src = &(this->image());
     vislib::SmartPtr<BitmapImage> alt;
     if (!src->EqualChannelLayout(BitmapImage::TemplateByteRGB)) {
         alt = new BitmapImage();
@@ -555,19 +546,15 @@ bool JpegBitmapCodec::saveToMemory(vislib::RawStorage &mem) const {
 #endif
 
 /*
-* JpegBitmapCodec::loadFromMemoryImplemented
-*/
-bool JpegBitmapCodec::loadFromMemoryImplemented(void) const {
-    return true;
-}
+ * JpegBitmapCodec::loadFromMemoryImplemented
+ */
+bool JpegBitmapCodec::loadFromMemoryImplemented(void) const { return true; }
 
 
 /*
  * JpegBitmapCodec::saveToMemoryImplemented
  */
-bool JpegBitmapCodec::saveToMemoryImplemented(void) const {
-    return true;
-}
+bool JpegBitmapCodec::saveToMemoryImplemented(void) const { return true; }
 
 
 bool JpegBitmapCodec::saveToStream(vislib::sys::File& stream) const {
@@ -577,6 +564,4 @@ bool JpegBitmapCodec::saveToStream(vislib::sys::File& stream) const {
     return count == mem.GetSize();
 }
 
-bool JpegBitmapCodec::saveToStreamImplemented(void) const {
-    return true;
-}
+bool JpegBitmapCodec::saveToStreamImplemented(void) const { return true; }

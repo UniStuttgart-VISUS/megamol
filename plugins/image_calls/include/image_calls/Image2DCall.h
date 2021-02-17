@@ -1,93 +1,155 @@
 #pragma once
 
+#include <map>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "mmcore/AbstractGetDataCall.h"
 #include "mmcore/CallAutoDescription.h"
+#include "mmcore/utility/graphics/BitmapCodecCollection.h"
+
 
 namespace megamol {
 namespace image_calls {
 
-class Image2DCall : public megamol::core::AbstractGetDataCall {
-public:
-    /**
-     * Answer the name of this call.
-     *
-     * @return The name of this call.
-     */
-    static const char* ClassName(void) { return "Image2DCall"; }
+    class Image2DCall : public megamol::core::AbstractGetDataCall {
+    public:
+        typedef std::map<std::string, vislib::graphics::BitmapImage> ImageMap;
 
-    /**
-     * Answer a human readable description of this call.
-     *
-     * @return A human readable description of this call.
-     */
-    static const char* Description(void) { return "Call to transport 2D image data"; }
+        /** Index of the GetData function */
+        static const uint32_t CallForGetData;
 
-    /**
-     * Answer the number of functions used for this call.
-     *
-     * @return The number of functions used for this call.
-     */
-    static unsigned int FunctionCount(void) { return 1; }
+        /** Index of the GetMetaData function */
+        static const uint32_t CallForGetMetaData;
 
-    /**
-     * Answer the name of the function used for this call.
-     *
-     * @param idx The index of the function to return it's name.
-     *
-     * @return The name of the requested function.
-     */
-    static const char* FunctionName(unsigned int idx) {
-        switch (idx) {
-        case 0:
-            return "GetData";
+        /** Index of the SetWishlist function */
+        static const uint32_t CallForSetWishlist;
+
+        /** Index of the WaitForData function */
+        static const uint32_t CallForWaitForData;
+
+        /** Index of the DeleteData function */
+        static const uint32_t CallForDeleteData;
+
+        /**
+         * Answer the name of this call.
+         *
+         * @return The name of this call.
+         */
+        static const char* ClassName(void) {
+            return "Image2DCall";
         }
-        return nullptr;
-    }
 
-    enum Encoding : uint8_t { PNG, BMP, JPEG, SNAPPY, RAW };
+        /**
+         * Answer a human readable description of this call.
+         *
+         * @return A human readable description of this call.
+         */
+        static const char* Description(void) {
+            return "Call to transport 2D image data";
+        }
 
-    enum Format : uint8_t { RGB, RGBA };
+        /**
+         * Answer the number of functions used for this call.
+         *
+         * @return The number of functions used for this call.
+         */
+        static unsigned int FunctionCount(void) {
+            return 5;
+        }
 
-    Image2DCall();
+        /**
+         * Answer the name of the function used for this call.
+         *
+         * @param idx The index of the function to return it's name.
+         *
+         * @return The name of the requested function.
+         */
+        static const char* FunctionName(unsigned int idx) {
+            switch (idx) {
+            case 0:
+                return "GetData";
+            case 1:
+                return "GetMetaData";
+            case 2:
+                return "SetWishlist";
+            case 3:
+                return "WaitForData";
+            case 4:
+                return "DeleteData";
+            }
+            return nullptr;
+        }
 
-    virtual ~Image2DCall() = default;
+        /**
+         * Answer the count of stored images
+         *
+         * @return The number of stored images
+         */
+        size_t GetImageCount(void) const;
 
-    void* GetData() const { return this->data_; }
+        /**
+         * Sets the data pointer
+         *
+         * @param ptr Pointer to the vector storing the images
+         */
+        void SetImagePtr(const std::shared_ptr<ImageMap> ptr);
 
-    Encoding GetEncoding() const { return this->enc_; }
+        /**
+         * Returns the currently stored image vector
+         *
+         * @return Pointer to the vector storing the images
+         */
+        const std::shared_ptr<ImageMap> GetImagePtr(void) const;
 
-    Format GetFormat() const { return this->format_; }
+        /**
+         * Set the pointer to the field containing all paths to the available files.
+         *
+         * @param ptr Pointer to the data vector
+         */
+        void SetAvailablePathsPtr(const std::shared_ptr<std::vector<std::string>> ptr);
 
-    size_t GetWidth() const { return this->width_; }
+        /**
+         * Returns the pointer to the vector containing all available image file paths.
+         *
+         * @return All available image file paths.
+         */
+        const std::shared_ptr<std::vector<std::string>> GetAvailablePathsPtr(void) const;
 
-    size_t GetHeight() const { return this->height_; }
+        /**
+         * Sets the pointer to the wishlist, containing all indices of the desired images
+         * When this is set to nullptr, all images are set as wished for.
+         *
+         * @param ptr Pointer to the vector containing all desired image indices
+         */
+        void SetWishlistPtr(const std::shared_ptr<std::vector<uint64_t>> ptr);
 
-    size_t GetFilesize() const { return this->filesize_; }
+        /**
+         * Returns the pointer to the wishlist
+         *
+         * @return Pointer to the wishlist
+         */
+        const std::shared_ptr<std::vector<uint64_t>> GetWishlistPtr(void) const;
 
-    void SetData(Encoding const enc, Format const format, size_t width, size_t height, size_t filesize,
-        void* data) {
-        this->enc_ = enc;
-        this->format_ = format;
-        this->width_ = width;
-        this->height_ = height;
-        this->filesize_ = filesize;
-        this->data_ = data;
-    }
+        /** Ctor. */
+        Image2DCall();
 
-private:
-    size_t width_, height_, filesize_;
+        /** Dtor. */
+        virtual ~Image2DCall() = default;
 
-    Encoding enc_;
+    private:
+        /** Pointer to the stored data */
+        std::shared_ptr<ImageMap> imagePtr;
 
-    Format format_;
+        /** Pointer to the list storing the paths to all available (but not necessarily loaded) images */
+        std::shared_ptr<std::vector<std::string>> availablePathsPtr;
 
-    void* data_;
+        /** Pointer to the list storing the indices of all wished figures */
+        std::shared_ptr<std::vector<uint64_t>> wishlistPtr;
+    };
 
-}; // end class Image2DCall
-
-typedef megamol::core::CallAutoDescription<Image2DCall> Image2DCallDescription;
+    typedef megamol::core::CallAutoDescription<Image2DCall> Image2DCallDescription;
 
 } // end namespace image_calls
 } // end namespace megamol
