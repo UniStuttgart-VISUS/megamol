@@ -44,42 +44,43 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
             "    // Vertex indices must fit enum order in megamol::core::view::View3D_2::defaultview \n "
             "    const vec4 vertices[72] = vec4[72]( \n "
             "        // DEFAULTVIEW_FRONT = 0 \n "
-            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n "
-            "        vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n "
             "        vec4(1.0, 1.0, 1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n "
+            "        vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n "
+            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n "
             "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(0.0, 0.0, 1.0, 1.0), \n "
             "        // DEFAULTVIEW_BACK = 1 \n "
-            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n "
             "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n "
-            "        vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n "
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n "
             "        vec4(1.0, -1.0, -1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n "
+            "        vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(0.0, 0.0, -1.0, 1.0), \n "
             "        // DEFAULTVIEW_RIGHT = 2 \n "
-            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n "
             "        vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n "
-            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n "
+            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n "
             "        vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n "
+            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(1.0, 0.0, 0.0, 1.0), \n "
             "        // DEFAULTVIEW_LEFT = 3 \n "
-            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n "
             "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n "
+            "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n "
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n "
             "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(-1.0, 0.0, 0.0, 1.0), \n "
             "        // DEFAULTVIEW_TOP = 4 \n "
-            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n "
-            "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n "
-            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n "
             "        vec4(1.0, 1.0, -1.0, 1.0), vec4(-1.0, 1.0, -1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n"
+            "        vec4(1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, -1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n "
+            "        vec4(-1.0, 1.0, 1.0, 1.0), vec4(1.0, 1.0, 1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n "
+            "        vec4(-1.0, 1.0, -1.0, 1.0), vec4(-1.0, 1.0, 1.0, 1.0), vec4(0.0, 1.0, 0.0, 1.0), \n "
             "        // DEFAULTVIEW_BOTTOM = 5 \n "
-            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n "
-            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n "
             "        vec4(1.0, -1.0, 1.0, 1.0), vec4(-1.0, -1.0, 1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n "
+            "        vec4(1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, 1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n "
+            "        vec4(-1.0, -1.0, -1.0, 1.0), vec4(1.0, -1.0, -1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0), \n "
             "        vec4(-1.0, -1.0, 1.0, 1.0), vec4(-1.0, -1.0, -1.0, 1.0), vec4(0.0, -1.0, 0.0, 1.0)); \n "
             "    \n"
-            "    const vec4 colors[6] = vec4[6](vec4(0.0, 0.0, 1.0, 1.0), vec4(0.0, 0.0, 0.5, 1.0), \n "
-            "        vec4(0.0, 1.0, 0.0, 1.0),  vec4(0.0, 0.5, 0.0, 1.0), \n "
-            "        vec4(1.0, 0.0, 0.0, 1.0), vec4(0.5, 0.0, 0.0, 1.0)); \n "
+            "    const vec4 colors[6] = vec4[6](vec4(0.0, 0.0, 1.0, 1.0), vec4(0.0, 1.0, 1.0, 1.0), \n "
+            "                                   vec4(0.0, 1.0, 0.0, 1.0), vec4(1.0, 1.0, 0.0, 1.0), \n "
+            "                                   vec4(1.0, 0.0, 0.0, 1.0), vec4(1.0, 0.0, 1.0, 1.0)); \n "
             "    \n"
             "    float vertex_index = float(gl_VertexID); \n"
             "    float mod_index = vertex_index - (12.0 * floor(vertex_index/12.0)); \n"
+            "    float mod_triangle_index = mod_index - (3.0 * floor(mod_index/3.0)); \n"
             "    int current_orientation_index = int(floor(mod_index / 3.0)); \n"
             "    int current_orientation_id = int(1 << current_orientation_index); // in range [0-3]\n "
             "    int current_view_index = int(gl_VertexID / 12);       // in range [0-5] \n "
@@ -90,8 +91,10 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
             "        vertex_color *= 0.25; \n "
             "        vertex_color.w = 1.0; \n "
             "    } \n "
-            "    if ((view_index == current_view_index) && (orientation_index == current_orientation_index)) { \n "
-            "        vertex_color = vec4(1.0, 1.0, 0.0, 1.0); \n "
+            "    if ((view_index == current_view_index) && \n"
+            "        (orientation_index == current_orientation_index) && \n"
+            "        (mod_triangle_index == 2.0)) { \n "
+            "            vertex_color = vec4(0.0, 0.0, 0.0, 1.0); \n "
             "    } \n "
             "    \n"
             "    gl_Position = proj_mx * model_mx * rot_mx * vertices[gl_VertexID]; \n "
@@ -138,14 +141,15 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
 
         int orientation_index = -1;
         // First 4 bit indicate currently hovered orientation
-        if ((1 << 0) & manip.obj_id) // TOP
-            orientation_index = 0;
-        else if ((1 << 1) & manip.obj_id) // RIGHT
-            orientation_index = 1;
-        else if ((1 << 2) & manip.obj_id) // BOTTOM
-            orientation_index = 2;
-        else if ((1 << 3) & manip.obj_id) // LEFT
-            orientation_index = 3;
+        // Orientation is given by triangle order in shader of pickable cube
+        if ((1 << 0) & manip.obj_id)
+            orientation_index = 0; // TOP
+        else if ((1 << 1) & manip.obj_id)
+            orientation_index = 1; // RIGHT
+        else if ((1 << 2) & manip.obj_id)
+            orientation_index = 2; // BOTTOM
+        else if ((1 << 3) & manip.obj_id)
+            orientation_index = 3; // LEFT
 
         if (view_index >= 0) {
             if (manip.type == InteractionType::SELECT) {
@@ -349,32 +353,33 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             std::string tooltip_text;
             /// Indices must fit enum order in view::View3D_2::defaultview
             if (hovered_view >= 0) {
-                tooltip_text = "[Face] ";
+                tooltip_text = "Face: ";
                 switch (hovered_view) {
                 case (0): // DEFAULTVIEW_FRONT
-                    tooltip_text = "Front";
+                    tooltip_text += "[Front]";
                     break;
                 case (1): // DEFAULTVIEW_BACK
-                    tooltip_text = "Back";
+                    tooltip_text += "[Back]";
                     break;
                 case (2): // DEFAULTVIEW_RIGHT
-                    tooltip_text = "Right";
+                    tooltip_text += "[Right]";
                     break;
                 case (3): // DEFAULTVIEW_LEFT
-                    tooltip_text = "Left";
+                    tooltip_text += "[Left]";
                     break;
                 case (4): // DEFAULTVIEW_TOP
-                    tooltip_text = "Top";
+                    tooltip_text += "[Top]";
                     break;
                 case (5): // DEFAULTVIEW_BOTTOM
-                    tooltip_text = "Bottom";
+                    tooltip_text += "[Bottom]";
                     break;
                 default:
                     break;
                 }
             }
+            // Order is given by triangle order in shader of pickable cube
             if (hovered_orientation >= 0) {
-                tooltip_text += "\n[Orientation] ";
+                tooltip_text += " ";
                 switch (hovered_orientation) {
                 case (0): // TOP
                     tooltip_text += "0 degree";

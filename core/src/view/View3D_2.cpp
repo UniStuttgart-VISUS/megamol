@@ -610,8 +610,22 @@ void View3D_2::ResetView(void) {
     pseudoDepth = this->bboxs.BoundingBox().Height();
     break;
     default:;
-      
     }
+    defaultorientation dor =
+        static_cast<defaultorientation>(this->cameraSetOrientationChooserParam.Param<param::EnumParam>()->Value());
+    switch (dor) {
+    case DEFAULTORIENTATION_TOP: // 0 degree
+        break;
+    case DEFAULTORIENTATION_RIGHT: // 90 degree
+        break;
+    case DEFAULTORIENTATION_BOTTOM: // 180 degree
+        break;
+    case DEFAULTORIENTATION_LEFT: // 270 degree (= -90 degree)
+        break;
+    default:
+        break;
+    }
+
     auto dim = this->cam.resolution_gate();
     double halfFovX =
         (static_cast<double>(dim.width()) * static_cast<double>(this->cam.aperture_angle_radians() / 2.0f)) /
