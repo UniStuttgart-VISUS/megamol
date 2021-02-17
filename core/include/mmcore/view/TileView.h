@@ -70,7 +70,7 @@ namespace view {
         /**
          * Renders this AbstractView3D in the currently active OpenGL context.
          */
-        virtual void Render(const mmcRenderViewContext& context);
+        virtual void Render(const mmcRenderViewContext& context, Call* call) override;
 
     protected:
 

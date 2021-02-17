@@ -130,7 +130,7 @@ CinematicView::~CinematicView(void) {
 }
 
 
-void CinematicView::Render(const mmcRenderViewContext& context) {
+void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call) {
 
     auto cr3d = this->rhsRenderSlot.CallAs<core::view::CallRender3DGL>();
     if (cr3d == nullptr) return;
@@ -460,7 +460,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     */
 
     // Call Render-Function of parent View3DGL
-    Base::Render(context);
+    Base::Render(context, call);
 
     if (this->fbo->IsEnabled()) {
         this->fbo->Disable();

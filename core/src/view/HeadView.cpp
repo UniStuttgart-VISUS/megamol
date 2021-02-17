@@ -80,7 +80,7 @@ void view::HeadView::DeserialiseCamera(vislib::Serialiser& serialiser) {
 /*
  * view::HeadView::Render
  */
-void view::HeadView::Render(const mmcRenderViewContext& context) {
+void view::HeadView::Render(const mmcRenderViewContext& context, Call* call) {
     CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     auto cam  = view->GetCamera();
@@ -173,7 +173,7 @@ bool view::HeadView::OnRenderView(Call& call) {
     context.Time = view->Time();
     context.InstanceTime = view->InstanceTime();
 
-    this->Render(context);
+    this->Render(context, &call);
 
     this->override_view_call = nullptr;
 

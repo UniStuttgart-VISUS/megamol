@@ -59,7 +59,7 @@ public:
      *
      * @param context
      */
-    virtual void Render(const mmcRenderViewContext& context);
+    virtual void Render(const mmcRenderViewContext& context, Call* call) override;
 
     virtual bool OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) override;
 

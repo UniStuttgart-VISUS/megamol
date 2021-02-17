@@ -90,7 +90,7 @@ namespace cinematic {
         /**
          * Renders this View3DGL in the currently active OpenGL context.
          */
-        virtual void Render(const mmcRenderViewContext& context);
+        virtual void Render(const mmcRenderViewContext& context, core::Call* call);
 
     private:
 

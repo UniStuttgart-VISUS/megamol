@@ -30,7 +30,6 @@ using megamol::core::utility::log::Log;
 view::AbstractView::AbstractView(void)
         : Module()
         , firstImg(false)
-        , lhsCall(nullptr)
         , rhsRenderSlot("rendering", "Connects the view to a Renderer")
         , lhsRenderSlot("render", "Connects modules requesting renderings")
         , cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")

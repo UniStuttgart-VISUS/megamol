@@ -92,7 +92,7 @@ unsigned int view::View2DGL::GetCameraSyncNumber(void) const {
 /*
  * view::View2DGL::Render
  */
-void view::View2DGL::Render(const mmcRenderViewContext& context) {
+void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
 
     AbstractView::beforeRender(context);
 
@@ -140,7 +140,7 @@ void view::View2DGL::Render(const mmcRenderViewContext& context) {
         (1.0f / vz - vy));
     cr2d->AccessBoundingBoxes().SetBoundingBox(vr.Left(),vr.Bottom(),vr.Right(),vr.Top());
 
-    if (this->lhsCall == nullptr) {
+    if (call == nullptr) {
         if (this->_fbo->IsValid()) {
             if ((this->_fbo->GetWidth() != w) ||
                 (this->_fbo->GetHeight() != h)) {
@@ -156,7 +156,7 @@ void view::View2DGL::Render(const mmcRenderViewContext& context) {
         cr2d->SetFramebufferObject(_fbo);
         // TODO here we have to apply the new camera
     } else {
-        auto gl_call = dynamic_cast<view::CallRenderViewGL*>(this->lhsCall);
+        auto gl_call = dynamic_cast<view::CallRenderViewGL*>(call);
         cr2d->SetFramebufferObject(gl_call->GetFramebufferObject());
     }
 
@@ -226,8 +226,6 @@ bool view::View2DGL::OnRenderView(Call& call) {
     view::CallRenderViewGL *crv = dynamic_cast<view::CallRenderViewGL*>(&call);
     if (crv == NULL) return false;
 
-    this->lhsCall = crv;
-
     float time = crv->Time();
     if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
     mmcRenderViewContext context;
@@ -235,9 +233,7 @@ bool view::View2DGL::OnRenderView(Call& call) {
     context.Time = time;
     context.InstanceTime = crv->InstanceTime();
     // TODO: Affinity
-    this->Render(context);
-
-    this->lhsCall = NULL;
+    this->Render(context, &call);
 
     return true;
 }

@@ -35,7 +35,7 @@ View3D::~View3D(void) {
 /*
  * View3D::Render
  */
-void View3D::Render(const mmcRenderViewContext& context) {
+void View3D::Render(const mmcRenderViewContext& context, Call* call) {
 
     CallRender3D* cr3d = this->rhsRenderSlot.CallAs<CallRender3D>();
     this->handleCameraMovement();
@@ -44,13 +44,13 @@ void View3D::Render(const mmcRenderViewContext& context) {
         return;
     }
 
-    if (this->lhsCall == nullptr) {
+    if (call == nullptr) {
         _framebuffer->width = cam.image_tile().width();
         _framebuffer->height = cam.image_tile().height();
         cr3d->SetFramebuffer(_framebuffer);
     }
     else {
-        auto cpu_call = dynamic_cast<view::CallRenderView*>(this->lhsCall);
+        auto cpu_call = dynamic_cast<view::CallRenderView*>(call);
         cr3d->SetFramebuffer(cpu_call->GetFramebuffer());
     }
 

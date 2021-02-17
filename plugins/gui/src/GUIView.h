@@ -71,7 +71,7 @@ namespace gui {
 
         virtual bool OnRenderView(megamol::core::Call& call);
 
-        virtual void Render(const mmcRenderViewContext& context) override;
+        virtual void Render(const mmcRenderViewContext& context, core::Call* call) override;
 
         virtual void ResetView(void) override;
 

@@ -79,7 +79,7 @@ public:
      *
      * @param context
      */
-    virtual void Render(const mmcRenderViewContext& context);
+    virtual void Render(const mmcRenderViewContext& context, Call* call = nullptr);
 
     /**
      * Resets the view. This normally sets the camera parameters to

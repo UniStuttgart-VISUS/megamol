@@ -119,11 +119,20 @@ public:
     virtual unsigned int GetCameraSyncNumber(void) const = 0;
 
     /**
-     * Renders this AbstractView3D in the currently active OpenGL context.
+     * Renders this AbstractView.
      *
      * @param context The context information like time or GPU affinity.
      */
-    virtual void Render(const mmcRenderViewContext& context) = 0;
+    void Render(const mmcRenderViewContext& context) {
+        this->Render(context, nullptr);
+    };
+
+    /**
+     * Renders this AbstractView. Implemented by child classes.
+     *
+     * @param context The context information like time or GPU affinity.
+     */
+    virtual void Render(const mmcRenderViewContext& context, Call* call) = 0;
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -362,9 +371,6 @@ protected:
      * initial camera reset
      */
     bool firstImg;
-
-    /** the incoming rendering call */
-    class AbstractCallRenderView* lhsCall;
 
     /** Slot to call the renderer to render */
     CallerSlot rhsRenderSlot;

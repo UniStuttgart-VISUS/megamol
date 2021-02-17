@@ -31,7 +31,7 @@ view::TileView::~TileView(void) {
 /*
  * view::TileView::Render
  */
-void view::TileView::Render(const mmcRenderViewContext& context) {
+void view::TileView::Render(const mmcRenderViewContext& context, Call* call) {
     view::CallRenderViewGL *crv = this->getCallRenderView();
     if (crv == NULL) return; // false ?
     if (this->firstFrame) {
@@ -111,7 +111,7 @@ bool view::TileView::OnRenderView(Call& call) {
     if (c.Time < 0.0f) c.Time = this->DefaultTime(crv->InstanceTime());
     c.InstanceTime = crv->InstanceTime();
     // TODO: Affinity
-    this->Render(c);
+    this->Render(c, &call);
 
     return true;
 }

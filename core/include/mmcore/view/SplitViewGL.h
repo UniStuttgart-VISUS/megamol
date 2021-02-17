@@ -88,7 +88,7 @@ public:
      *
      * @param context
      */
-    void Render(const mmcRenderViewContext& context) override;
+    void Render(const mmcRenderViewContext& context, Call* call) override;
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -229,9 +229,6 @@ private:
 
     /** Option for forwarding mouse and keyboard events to both child views */
     param::ParamSlot inputToBothSlot;
-
-    /** The parameter storage for time control */
-    TimeControl timeCtrl;
 
     /** The override call */
     CallRenderViewGL* overrideCall;

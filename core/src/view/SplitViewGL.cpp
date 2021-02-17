@@ -69,10 +69,6 @@ view::SplitViewGL::SplitViewGL()
 
     this->inputToBothSlot << new param::BoolParam(false);
     this->MakeSlotAvailable(&this->inputToBothSlot);
-
-    for (unsigned int i = 0; this->timeCtrl.GetSlot(i) != nullptr; i++) {
-        this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
-    }
 }
 
 view::SplitViewGL::~SplitViewGL(void) { this->Release(); }
@@ -84,7 +80,7 @@ unsigned int view::SplitViewGL::GetCameraSyncNumber() const {
     return 0u;
 }
 
-void view::SplitViewGL::Render(const mmcRenderViewContext& context) {
+void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) {
     // TODO: Affinity
 
 	 float time = static_cast<float>(context.Time);
@@ -285,7 +281,7 @@ bool view::SplitViewGL::OnRenderView(Call& call) {
         context.Time = this->DefaultTime(crv->InstanceTime());
     }
     context.InstanceTime = crv->InstanceTime();
-    this->Render(context);
+    this->Render(context, &call);
 
     this->overrideCall = nullptr;
 

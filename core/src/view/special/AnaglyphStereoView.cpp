@@ -76,7 +76,7 @@ void view::special::AnaglyphStereoView::Resize(unsigned int width, unsigned int 
 /*
  * view::special::AnaglyphStereoView::Render
  */
-void view::special::AnaglyphStereoView::Render(const mmcRenderViewContext& context) {
+void view::special::AnaglyphStereoView::Render(const mmcRenderViewContext& context, Call* call) {
     CallRenderViewGL *crv = this->getCallRenderView();
     if (crv == NULL) return;
     crv->SetTime(static_cast<float>(context.Time));

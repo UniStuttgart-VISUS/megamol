@@ -48,7 +48,7 @@ public:
      *
      * @param context
      */
-    virtual void Render(const mmcRenderViewContext& context);
+    virtual void Render(const mmcRenderViewContext& context, Call* call);
 
  protected:
  

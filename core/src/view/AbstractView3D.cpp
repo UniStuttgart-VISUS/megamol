@@ -309,7 +309,7 @@ bool AbstractView3D::OnRenderView(Call& call) {
             crv->TileX(), crv->TileY(), crv->TileWidth(), crv->TileHeight()));
     }
 
-    this->Render(context);
+    this->Render(context, &call);
 
     return true;
 }

@@ -140,7 +140,7 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 }
 
 
-void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context) {
+void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context, core::Call* call) {
 #ifdef WITH_MPI
     static bool first_frame = true;
 
@@ -272,7 +272,7 @@ bool megamol::remote::RendernodeView::OnRenderView(core::Call& call) {
     context.Time = time;
     context.InstanceTime = crv->InstanceTime();
 
-    this->Render(context);
+    this->Render(context, &call);
 
     return true;
 }

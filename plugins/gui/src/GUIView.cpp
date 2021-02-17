@@ -79,7 +79,7 @@ unsigned int GUIView::GetCameraSyncNumber(void) const {
     return 0u;
 }
 
-void GUIView::Render(const mmcRenderViewContext& context) {
+void GUIView::Render(const mmcRenderViewContext& context, core::Call* call) {
     auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
@@ -292,7 +292,7 @@ bool GUIView::OnRenderView(megamol::core::Call& call) {
     context.InstanceTime = crv->InstanceTime();
     // XXX Affinity?
 
-    this->Render(context);
+    this->Render(context, &call);
 
     this->overrideCall = nullptr;
 

@@ -60,7 +60,7 @@ View3DGL::~View3DGL(void) {
 /*
  * View3DGL::Render
  */
-void View3DGL::Render(const mmcRenderViewContext& context) {
+void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
 
     CallRender3DGL* cr3d = this->rhsRenderSlot.CallAs<CallRender3DGL>();
     this->handleCameraMovement();
@@ -69,7 +69,7 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
         return;
     }
 
-    if (this->lhsCall == nullptr) {
+    if (call == nullptr) {
         if ((this->fbo->GetWidth() != cam.image_tile().width()) ||
             (this->fbo->GetHeight() != cam.image_tile().height())) {
             this->fbo->Release();
@@ -82,7 +82,7 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
         }
         cr3d->SetFramebufferObject(this->fbo);
     } else {
-        auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(this->lhsCall);
+        auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
         cr3d->SetFramebufferObject(gpu_call->GetFramebufferObject());
     }
 
