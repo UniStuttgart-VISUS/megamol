@@ -148,15 +148,7 @@ public:
      */
     virtual void release(void);
 
-    /** Slot to call the renderer to render */
-    CallerSlot rendererSlot;
-
 private:
-    /**
-     * Flag if this is the first time an image gets created. Used for 
-     * initial camera reset
-     */
-    bool firstImg;
 
     /** The viewport height */
     float height;
@@ -184,15 +176,6 @@ private:
 
     /** the viewport width */
     float width;
-
-    /** the incoming rendering call */
-    class CallRenderViewGL *incomingCall;
-
-    /**
-     * 6 floats holding the override information for the viewing tile:
-     *   tileX, tileY, tileW, tileH, fullW, fullH
-     */
-    float *overrideViewTile;
 
     std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
 };

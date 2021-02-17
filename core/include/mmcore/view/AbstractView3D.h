@@ -125,8 +125,6 @@ protected:
 #    pragma warning(default : 4251)
 #endif /* _WIN32 */
 
-    bool frameIsNew = false;
-
     bool mouseSensitivityChanged(param::ParamSlot& p);
 
     /**
@@ -163,20 +161,8 @@ protected:
     /** The manipulator for changing the orbital altitude */
     orbit_altitude_type orbitAltitudeManipulator;
 
-    /** Slot to call the renderer to render */
-    CallerSlot rendererSlot;
-
     /** Flag showing the look at point */
     param::ParamSlot showLookAt;
-
-    /** The incoming call */
-    view::AbstractCallRender* overrideCall;
-
-    /**
-     * Flag if this is the first time an image gets created. Used for
-     * initial camera reset
-     */
-    bool firstImg;
 
     /** focus distance for stereo projection */
     param::ParamSlot stereoFocusDistSlot;

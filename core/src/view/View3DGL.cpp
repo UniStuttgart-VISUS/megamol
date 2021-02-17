@@ -21,32 +21,32 @@ using namespace megamol::core::view;
  * View3DGL::View3DGL
  */
 View3DGL::View3DGL(void) : view::AbstractView3D(), toggleMouseSelection(false), cursor2d() {
-    this->rendererSlot.SetCompatibleCall<CallRender3DGLDescription>();
-    this->MakeSlotAvailable(&this->rendererSlot);
+    this->rhsRenderSlot.SetCompatibleCall<CallRender3DGLDescription>();
+    this->MakeSlotAvailable(&this->rhsRenderSlot);
     // Override renderSlot behavior
-    this->renderSlot.SetCallback(
+    this->lhsRenderSlot.SetCallback(
         view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
-    this->renderSlot.SetCallback(
+    this->lhsRenderSlot.SetCallback(
         view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnChar), &AbstractView::OnCharCallback);
-    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseButton),
+    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseButton),
         &AbstractView::OnMouseButtonCallback);
-    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
+    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
         &AbstractView::OnMouseMoveCallback);
-    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
+    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
         &AbstractView::OnMouseScrollCallback);
     // AbstractCallRender
-    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
-    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
     // CallRenderViewGL
-    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_FREEZE), &AbstractView::OnFreezeView);
-    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
-    this->renderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::onResetView);
-    this->MakeSlotAvailable(&this->renderSlot);
+    this->MakeSlotAvailable(&this->lhsRenderSlot);
 }
 
 /*
@@ -62,20 +62,34 @@ View3DGL::~View3DGL(void) {
  */
 void View3DGL::Render(const mmcRenderViewContext& context) {
 
-    CallRender3DGL* cr3d = this->rendererSlot.CallAs<CallRender3DGL>();
+    CallRender3DGL* cr3d = this->rhsRenderSlot.CallAs<CallRender3DGL>();
     this->handleCameraMovement();
 
     if (cr3d == NULL) {
         return;
     }
-    cr3d->SetFramebufferObject(this->fbo);
+
+    if (this->lhsCall == nullptr) {
+        if ((this->fbo->GetWidth() != cam.image_tile().width()) ||
+            (this->fbo->GetHeight() != cam.image_tile().height())) {
+            this->fbo->Release();
+            if (!this->fbo->Create(cam.image_tile().width(), cam.image_tile().height(), GL_RGBA8, GL_RGBA,
+                    GL_UNSIGNED_BYTE,
+                    vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE)) {
+                throw vislib::Exception("[View3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
+                return;
+            }
+        }
+        cr3d->SetFramebufferObject(this->fbo);
+    } else {
+        auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(this->lhsCall);
+        cr3d->SetFramebufferObject(gpu_call->GetFramebufferObject());
+    }
 
     AbstractView3D::beforeRender(context);
 
-    if (cr3d != nullptr) {
-        cr3d->SetCameraState(this->cam);
-        (*cr3d)(view::CallRender3DGL::FnRender);
-    }
+    cr3d->SetCameraState(this->cam);
+    (*cr3d)(view::CallRender3DGL::FnRender);
 
     AbstractView3D::afterRender(context);
 }
@@ -84,7 +98,7 @@ void View3DGL::Render(const mmcRenderViewContext& context) {
  * View3DGL::OnKey
  */
 bool view::View3DGL::OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) {
-    auto* cr = this->rendererSlot.CallAs<CallRender3DGL>();
+    auto* cr = this->rhsRenderSlot.CallAs<CallRender3DGL>();
     if (cr != nullptr) {
         view::InputEvent evt;
         evt.tag = view::InputEvent::Tag::Key;
@@ -157,7 +171,7 @@ bool view::View3DGL::OnKey(view::Key key, view::KeyAction action, view::Modifier
  * View3DGL::OnChar
  */
 bool view::View3DGL::OnChar(unsigned int codePoint) {
-    auto* cr = this->rendererSlot.CallAs<view::CallRender3DGL>();
+    auto* cr = this->rhsRenderSlot.CallAs<view::CallRender3DGL>();
     if (cr == NULL) return false;
 
     view::InputEvent evt;
@@ -179,7 +193,7 @@ bool view::View3DGL::OnMouseButton(view::MouseButton button, view::MouseButtonAc
                                 orbitAltitudeManipulator.manipulating();
 
     if (!cameraControlOverrideActive && !anyManipulatorActive) {
-        auto* cr = this->rendererSlot.CallAs<CallRender3DGL>();
+        auto* cr = this->rhsRenderSlot.CallAs<CallRender3DGL>();
         if (cr != nullptr) {
             view::InputEvent evt;
             evt.tag = view::InputEvent::Tag::MouseButton;
@@ -282,7 +296,7 @@ bool view::View3DGL::OnMouseMove(double x, double y) {
                                 orbitAltitudeManipulator.manipulating();
 
     if (!anyManipulatorActive) {
-        auto* cr = this->rendererSlot.CallAs<CallRender3DGL>();
+        auto* cr = this->rhsRenderSlot.CallAs<CallRender3DGL>();
         if (cr != nullptr) {
             view::InputEvent evt;
             evt.tag = view::InputEvent::Tag::MouseMove;
@@ -340,7 +354,7 @@ bool view::View3DGL::OnMouseMove(double x, double y) {
  * View3DGL::OnMouseScroll
  */
 bool view::View3DGL::OnMouseScroll(double dx, double dy) {
-    auto* cr = this->rendererSlot.CallAs<view::CallRender3DGL>();
+    auto* cr = this->rhsRenderSlot.CallAs<view::CallRender3DGL>();
     if (cr != NULL) {
         view::InputEvent evt;
         evt.tag = view::InputEvent::Tag::MouseScroll;

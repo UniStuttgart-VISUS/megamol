@@ -29,7 +29,10 @@ using megamol::core::utility::log::Log;
  */
 view::AbstractView::AbstractView(void)
         : Module()
-        , renderSlot("render", "Connects modules requesting renderings")
+        , firstImg(false)
+        , lhsCall(nullptr)
+        , rhsRenderSlot("rendering", "Connects the view to a Renderer")
+        , lhsRenderSlot("render", "Connects modules requesting renderings")
         , cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")
         , storeCameraSettingsSlot("camstore::storecam",
               "Triggers the storage of the camera settings. This only works for "
@@ -51,30 +54,29 @@ view::AbstractView::AbstractView(void)
         , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
         , hooks()
         , timeCtrl()
-        , overrideBkgndCol(NULL)
         , bkgndColSlot("backCol", "The views background colour") {
     // InputCall
-    this->renderSlot.SetCallback(
+    this->lhsRenderSlot.SetCallback(
         view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
-    this->renderSlot.SetCallback(
+    this->lhsRenderSlot.SetCallback(
         view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnChar), &AbstractView::OnCharCallback);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseButton),
+    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseButton),
         &AbstractView::OnMouseButtonCallback);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
+    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
         &AbstractView::OnMouseMoveCallback);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
+    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
         &AbstractView::OnMouseScrollCallback);
     // AbstractCallRender
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
+    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
+    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
     // CallRenderView
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
+    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_FREEZE), &AbstractView::OnFreezeView);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
+    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
-    this->renderSlot.SetCallback(view::CallRenderView::ClassName(),
+    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_RESETVIEW), &AbstractView::onResetView);
     // this->MakeSlotAvailable(&this->renderSlot);
 
@@ -126,7 +128,6 @@ view::AbstractView::AbstractView(void)
  * view::AbstractView::~AbstractView
  */
 view::AbstractView::~AbstractView(void) {
-    this->overrideBkgndCol = glm::vec4(0, 0, 0, 0); // DO NOT DELETE
     this->hooks.Clear(); // DO NOT DELETE OBJECTS
 }
 
@@ -314,6 +315,77 @@ void view::AbstractView::Resize(unsigned int width, unsigned int height) {
     if (this->cam.image_tile().width() != width || this->cam.image_tile().height() != height) {
         this->cam.image_tile(cam_type::screen_rectangle_type(
             std::array<int, 4>({0, static_cast<int>(height), static_cast<int>(width), 0})));
+    }
+}
+
+void megamol::core::view::AbstractView::beforeRender(const mmcRenderViewContext& context) {
+    float simulationTime = static_cast<float>(context.Time);
+    float instTime = static_cast<float>(context.InstanceTime);
+
+    if (this->doHookCode()) {
+        this->doBeforeRenderHook();
+    }
+
+    glm::ivec4 currentViewport;
+    AbstractCallRender* cr = this->rhsRenderSlot.CallAs<AbstractCallRender>();
+
+    auto bkgndCol = this->BkgndColour();
+
+    if (cr == NULL) {
+        return; // empty enough
+    }
+
+    cr->SetBackgroundColor(glm::vec4(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f));
+
+    
+    if ((*cr)(AbstractCallRender::FnGetExtents)) {
+        if (!(cr->AccessBoundingBoxes() == this->bboxs) && cr->AccessBoundingBoxes().IsAnyValid()) {
+            this->bboxs = cr->AccessBoundingBoxes();
+            glm::vec3 bbcenter = glm::make_vec3(this->bboxs.BoundingBox().CalcCenter().PeekCoordinates());
+
+            if (resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
+                this->ResetView();
+            }
+        }
+
+        if (this->firstImg) {
+            this->ResetView();
+            this->firstImg = false;
+            if (this->autoLoadCamSettingsSlot.Param<param::BoolParam>()->Value()) {
+                this->onRestoreCamera(this->restoreCameraSettingsSlot);
+            }
+            this->lastFrameTime = std::chrono::high_resolution_clock::now();
+        }
+
+        this->timeCtrl.SetTimeExtend(cr->TimeFramesCount(), false);
+        if (simulationTime > static_cast<float>(cr->TimeFramesCount())) {
+            simulationTime = static_cast<float>(cr->TimeFramesCount());
+        }
+
+        // old code was ...SetTime(this->frozenValues ? this->frozenValues->time : time);
+        cr->SetTime(simulationTime);
+    }
+
+    // TODO
+    // cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
+    // TODO!? cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
+
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    this->lastFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - this->lastFrameTime);
+    this->lastFrameTime = currentTime;
+
+    cr->SetLastFrameTime(std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::time_point_cast<std::chrono::milliseconds>(this->lastFrameTime).time_since_epoch())
+                               .count());
+
+    this->cam.CalcClipping(this->bboxs.ClipBox(), 0.1f);
+}
+
+void megamol::core::view::AbstractView::afterRender(const mmcRenderViewContext& context) {
+    // this->lastFrameParams->CopyFrom(this->OnGetCamParams, false);
+
+    if (this->doHookCode()) {
+        this->doAfterRenderHook();
     }
 }
 

@@ -306,6 +306,16 @@ protected:
     }
 
     /**
+     * ...
+     */
+    void beforeRender(const mmcRenderViewContext& context);
+
+    /**
+     * ...
+     */
+    void afterRender(const mmcRenderViewContext& context);
+
+    /**
      * Unpacks the mouse coordinates, which are relative to the virtual
      * viewport size.
      *
@@ -347,8 +357,20 @@ protected:
      */
     std::string determineCameraFilePath(void) const;
 
+    /**
+     * Flag if this is the first time an image gets created. Used for
+     * initial camera reset
+     */
+    bool firstImg;
+
+    /** the incoming rendering call */
+    class AbstractCallRenderView* lhsCall;
+
+    /** Slot to call the renderer to render */
+    CallerSlot rhsRenderSlot;
+
     /** Slot for incoming rendering requests */
-    CalleeSlot renderSlot;
+    CalleeSlot lhsRenderSlot;
 
     /** The complete scene bounding box */
     BoundingBoxes_2 bboxs;
@@ -388,11 +410,6 @@ protected:
 
     /** The time control */
     view::TimeControl timeCtrl;
-
-    /** Pointer to the override background colour */
-    glm::vec4 overrideBkgndCol;
-
-    glm::vec4 overrideViewport;
 
     /**  */
     std::chrono::time_point<std::chrono::high_resolution_clock> lastFrameTime;

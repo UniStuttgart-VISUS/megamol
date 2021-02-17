@@ -132,7 +132,7 @@ CinematicView::~CinematicView(void) {
 
 void CinematicView::Render(const mmcRenderViewContext& context) {
 
-    auto cr3d = this->rendererSlot.CallAs<core::view::CallRender3DGL>();
+    auto cr3d = this->rhsRenderSlot.CallAs<core::view::CallRender3DGL>();
     if (cr3d == nullptr) return;
     if (!(*cr3d)(view::AbstractCallRender::FnGetExtents)) return;
 
@@ -446,9 +446,6 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetFramebufferObject(this->fbo);
-    // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
-    glm::vec4 fboVp = glm::vec4( 0, 0, fboWidth, fboHeight );
-    Base::overrideViewport = fboVp;
     
     //ALTERNATIVE
     /// XXX Requires View3DGL line 394 to be deleted/commented! 
@@ -462,14 +459,8 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glViewport(fbovp[0], fbovp[1], fbovp[2], fbovp[3]);
     */
 
-    /// ! Set override call for using currrent fbo and current viewport
-    Base::overrideCall = cr3d;
-
     // Call Render-Function of parent View3DGL
     Base::Render(context);
-
-    // Reset override render call
-    Base::overrideCall = nullptr;
 
     if (this->fbo->IsEnabled()) {
         this->fbo->Disable();

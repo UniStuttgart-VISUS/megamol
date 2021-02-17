@@ -37,9 +37,7 @@ using namespace megamol::core::view;
  */
 AbstractView3D::AbstractView3D(void)
         : AbstractView()
-    , rendererSlot("rendering", "Connects the view to a Renderer")
     , showLookAt("showLookAt", "Flag showing the look at point")
-    , firstImg(false)
     , stereoFocusDistSlot("stereo::focusDist", "focus distance for stereo projection")
     , stereoEyeDistSlot("stereo::eyeDist", "eye distance for stereo projection")
     , viewKeyMoveStepSlot("viewKey::MoveStep", "The move step size in world coordinates")
@@ -208,25 +206,14 @@ unsigned int AbstractView3D::GetCameraSyncNumber(void) const {
  * AbstractView3D::beforeRender
  */
 void AbstractView3D::beforeRender(const mmcRenderViewContext& context) {
-    float time = static_cast<float>(context.Time);
-    float instTime = static_cast<float>(context.InstanceTime);
 
-    if (this->doHookCode()) {
-        this->doBeforeRenderHook();
-    }
+    AbstractView::beforeRender(context);
 
-    glm::ivec4 currentViewport;
-    AbstractCallRender* cr3d = this->rendererSlot.CallAs<AbstractCallRender>();
+    // get camera values from params(?)
+    this->adaptCameraValues(this->cam);
+
+    // handle 3D view specific camera implementation
     this->handleCameraMovement();
-
-    auto bkgndCol = (this->overrideBkgndCol != glm::vec4(0, 0, 0, 0)) ? this->overrideBkgndCol : this->BkgndColour();
-
-    if (cr3d == NULL) {
-        return; // empty enought
-    }
-
-    cr3d->SetBackgroundColor(glm::vec4(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f));
-    // cr3d->SetFramebuffer(_framebuffer);
 
     // camera settings
     if (this->stereoEyeDistSlot.IsDirty()) {
@@ -243,74 +230,16 @@ void AbstractView3D::beforeRender(const mmcRenderViewContext& context) {
         // fp->SetValue(this->camParams->FocalDistance(false));
         this->stereoFocusDistSlot.ResetDirty();
     }
-
-    if (cr3d != nullptr) {
-        (*cr3d)(AbstractCallRender::FnGetExtents);
-        this->valuesFromOutside = this->adaptCameraValues(this->cam);
-        if (this->firstImg || (!(cr3d->AccessBoundingBoxes() == this->bboxs) &&
-                                  !(!cr3d->AccessBoundingBoxes().IsAnyValid() && !this->bboxs.IsBoundingBoxValid() &&
-                                      !this->bboxs.IsClipBoxValid()))) {
-            this->bboxs = cr3d->AccessBoundingBoxes();
-            glm::vec3 bbcenter = glm::make_vec3(this->bboxs.BoundingBox().CalcCenter().PeekCoordinates());
-
-            if (this->firstImg) {
-                this->ResetView();
-                this->firstImg = false;
-                if (this->autoLoadCamSettingsSlot.Param<param::BoolParam>()->Value()) {
-                    this->onRestoreCamera(this->restoreCameraSettingsSlot);
-                }
-                this->lastFrameTime = std::chrono::high_resolution_clock::now();
-            } else if (resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
-                this->ResetView();
-            }
-        }
-
-        this->timeCtrl.SetTimeExtend(cr3d->TimeFramesCount(), false);
-        if (time > static_cast<float>(cr3d->TimeFramesCount())) {
-            time = static_cast<float>(cr3d->TimeFramesCount());
-        }
-
-        // old code was ...SetTime(this->frozenValues ? this->frozenValues->time : time);
-        cr3d->SetTime(time);
-
-        // TODO
-        // cr3d->SetCameraParameters(this->cam.Parameters()); // < here we use the 'active' parameters!
-        //TODO!? cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
-
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        this->lastFrameDuration =
-            std::chrono::duration_cast<std::chrono::microseconds>(currentTime - this->lastFrameTime);
-        this->lastFrameTime = currentTime;
-
-        cr3d->SetLastFrameTime(std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::time_point_cast<std::chrono::milliseconds>(this->lastFrameTime).time_since_epoch())
-                                   .count());
-    }
-
-    this->cam.CalcClipping(this->bboxs.ClipBox(), 0.1f);
-
-    // is the rest needed for anything? (a question by someone who didn't write the code...)
-    cam_type::snapshot_type camsnap;
-    cam_type::matrix_type viewCam, projCam;
-    this->cam.calc_matrices(camsnap, viewCam, projCam);
-
-    glm::mat4 view = viewCam;
-    glm::mat4 proj = projCam;
-    glm::mat4 mvp = projCam * viewCam;
-
 }
 
 /*
  * AbstractView3D::afterRender
  */
 void AbstractView3D::afterRender(const mmcRenderViewContext& context) {
+    // set camera values to params
     this->setCameraValues(this->cam);
 
-    // this->lastFrameParams->CopyFrom(this->OnGetCamParams, false);
-
-    if (this->doHookCode() && frameIsNew) {
-        this->doAfterRenderHook();
-    }
+    AbstractView::afterRender(context);
 }
 
 /*
@@ -367,10 +296,6 @@ bool AbstractView3D::OnRenderView(Call& call) {
     CallRenderView* crv = dynamic_cast<CallRenderView*>(&call);
     if (crv == nullptr) return false;
 
-    if (crv->IsBackgroundSet()) {
-        this->overrideBkgndCol = crv->BackgroundColor();
-    }
-
     float time = crv->Time();
     if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
     mmcRenderViewContext context;
@@ -386,9 +311,6 @@ bool AbstractView3D::OnRenderView(Call& call) {
 
     this->Render(context);
 
-    this->overrideBkgndCol = glm::vec4(0,0,0,0);
-    this->overrideViewport = glm::vec4(0, 0, 0, 0);
-
     return true;
 }
 
@@ -403,7 +325,7 @@ void AbstractView3D::UpdateFreeze(bool freeze) {
  * AbstractView3D::OnKey
  */
 bool AbstractView3D::OnKey(Key key, KeyAction action, Modifiers mods) {
-    auto* cr = this->rendererSlot.CallAs<AbstractCallRender>();
+    auto* cr = this->rhsRenderSlot.CallAs<AbstractCallRender>();
     if (cr != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::Key;
@@ -477,7 +399,7 @@ bool AbstractView3D::OnKey(Key key, KeyAction action, Modifiers mods) {
  * AbstractView3D::OnChar
  */
 bool AbstractView3D::OnChar(unsigned int codePoint) {
-    auto* cr = this->rendererSlot.CallAs<AbstractCallRender>();
+    auto* cr = this->rhsRenderSlot.CallAs<AbstractCallRender>();
     if (cr == NULL) return false;
 
     InputEvent evt;
