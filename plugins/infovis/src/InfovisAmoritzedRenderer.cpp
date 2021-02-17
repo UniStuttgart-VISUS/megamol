@@ -401,5 +401,7 @@ bool megamol::infovis::InfovisAmortizedRenderer::GetExtents(core::view::CallRend
     cr2d->SetTimeFramesCount(call.TimeFramesCount());
     cr2d->SetIsInSituTime(call.IsInSituTime());
 
+    call.SetBoundingBox(cr2d->GetBoundingBox());
+
     return true;
 }
