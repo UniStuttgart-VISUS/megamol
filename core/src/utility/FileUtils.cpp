@@ -30,8 +30,8 @@ bool megamol::core::utility::FileUtils::LoadRawFile(const std::string& filename,
         return false;
     }
 
-    std::ifstream input_file(filename, (std::ifstream::in | std::ifstream::binary));
-    if (!input_file.good() || !input_file.is_open()) {
+    std::ifstream input_file(filename, std::ifstream::binary);
+    if (!input_file.is_open() || !input_file.good()) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Unable to open file \"%s\": Bad file. [%s, %s, line %d]\n", filename.c_str(), __FILE__,
             __FUNCTION__, __LINE__);
@@ -67,7 +67,7 @@ bool megamol::core::utility::FileUtils::LoadRawFile(const std::string& filename,
 bool megamol::core::utility::FileUtils::WriteFile(const std::string& filename, const std::string& in_content, bool silent) {
     try {
         std::ofstream file;
-        file.open(filename, std::ios_base::out);
+        file.open(filename);
         if (file.is_open() && file.good()) {
             file << in_content.c_str();
             file.close();
@@ -99,7 +99,7 @@ bool megamol::core::utility::FileUtils::WriteFile(const std::string& filename, c
 bool megamol::core::utility::FileUtils::ReadFile(const std::string& filename, std::string& out_content, bool silent) {
     try {
         std::ifstream file;
-        file.open(filename, std::ios_base::in);
+        file.open(filename);
         if (file.is_open() && file.good()) {
             out_content.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
             file.close();
