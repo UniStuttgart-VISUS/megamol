@@ -571,7 +571,8 @@ bool GUIWindows::PostDraw(void) {
     // (after first imgui frame for default fonts being available)
     if (this->state.font_apply) {
         bool load_success = false;
-        if (FileUtils::FileWithExtensionExists<std::string>(this->state.font_file_name, std::string("ttf"))) {
+        if (megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
+                this->state.font_file_name, std::string("ttf"))) {
             ImFontConfig config;
             config.OversampleH = 4;
             config.OversampleV = 4;
@@ -1353,15 +1354,15 @@ void megamol::gui::GUIWindows::load_default_fonts(bool reload_font_api) {
         auto search_paths = this->core_instance->Configuration().ResourceDirectories();
         for (size_t i = 0; i < search_paths.Count(); ++i) {
             std::wstring search_path(search_paths[i].PeekBuffer());
-            std::string font_path =
-                FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, "Roboto-Regular.ttf");
+            std::string font_path = megamol::core::utility::FileUtils::SearchFileRecursive<std::wstring, std::string>(
+                search_path, "Roboto-Regular.ttf");
             if (!font_path.empty()) {
                 font_paths.emplace_back(font_path);
                 configurator_font = font_path;
                 default_font = font_path;
             }
-            font_path =
-                FileUtils::SearchFileRecursive<std::wstring, std::string>(search_path, "SourceCodePro-Regular.ttf");
+            font_path = megamol::core::utility::FileUtils::SearchFileRecursive<std::wstring, std::string>(
+                search_path, "SourceCodePro-Regular.ttf");
             if (!font_path.empty()) {
                 font_paths.emplace_back(font_path);
             }
@@ -1913,8 +1914,8 @@ void GUIWindows::drawMenu(void) {
             GUIUtils::Utf8Decode(this->state.font_file_name);
             ImGui::PopItemWidth();
             // Validate font file before offering load button
-            bool valid_file =
-                FileUtils::FileWithExtensionExists<std::string>(this->state.font_file_name, std::string("ttf"));
+            bool valid_file = megamol::core::utility::FileUtils::FileWithExtensionExists<std::string>(
+                this->state.font_file_name, std::string("ttf"));
             if (!valid_file) {
                 megamol::gui::GUIUtils::ReadOnlyWigetStyle(true);
                 ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
@@ -2323,7 +2324,7 @@ std::string megamol::gui::GUIWindows::dump_state_to_file(const std::string& file
 bool megamol::gui::GUIWindows::load_state_from_file(const std::string& filename) {
 
     std::string state_str;
-    if (FileUtils::ReadFile(filename, state_str, true)) {
+    if (megamol::core::utility::FileUtils::ReadFile(filename, state_str, true)) {
         state_str = GUIUtils::ExtractGUIState(state_str);
         if (state_str.empty())
             return false;
@@ -2490,9 +2491,9 @@ bool megamol::gui::GUIWindows::create_not_existing_png_filepath(std::string& ino
     // Check for existing file
     bool created_filepath = false;
     if (!inout_filepath.empty()) {
-        while (FileUtils::FileExists<std::string>(inout_filepath)) {
+        while (megamol::core::utility::FileUtils::FileExists<std::string>(inout_filepath)) {
             // Create new filename with iterating suffix
-            std::string filename = FileUtils::GetFilenameStem<std::string>(inout_filepath);
+            std::string filename = megamol::core::utility::FileUtils::GetFilenameStem<std::string>(inout_filepath);
             std::string id_separator = "_";
             bool new_separator = false;
             auto separator_index = filename.find_last_of(id_separator);

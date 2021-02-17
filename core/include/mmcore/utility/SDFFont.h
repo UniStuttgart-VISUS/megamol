@@ -15,6 +15,7 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 
+#include "mmcore/view/RenderUtils.h"
 #include "mmcore/utility/AbstractFont.h"
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/ResourceWrapper.h"
@@ -95,7 +96,7 @@ namespace utility {
      *     - Bold,Italic:                       false
      *     - Rendering:                         java
      *     - Glyph Cache Page - Width,Height:   1024
-     *     - Glyph set:                         ASCII + ™ + €
+     *     - Glyph set:                         ASCII + â„¢ + â‚¬
      *     - Size:                             ~90 (glyphs must fit on !one! page)
      *     - Distance Field - Spread:           10 
      *     - Distance Field - Scale:            50 (set in the end, operation is expensive)
@@ -577,7 +578,7 @@ namespace utility {
         vislib::graphics::gl::GLSLShader shadervertcol;
 
         /** The texture of the font. */
-        vislib::graphics::gl::OpenGLTexture2D texture;
+        std::shared_ptr<glowl::Texture2D> texture;
 
         /** Vertex buffer object attributes. */
         enum VBOAttrib {
@@ -653,16 +654,10 @@ namespace utility {
         bool loadFontBuffers();
 
         /** Load font info from file. */
-        bool loadFontInfo(vislib::StringA filename);
-
-        /** Load texture from file. */
-        bool loadFontTexture(vislib::StringA filename);
+        bool loadFontInfo(vislib::StringW filename);
 
         /** Load shaders from files. */
         bool loadFontShader(megamol::core::CoreInstance *core);
-
-        /** Load file into outData buffer and return size. */
-        size_t loadFile(vislib::StringA filename, BYTE **outData);
 
         /**
         * Answer the number of lines in the glyph run
