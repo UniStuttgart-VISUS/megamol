@@ -13,23 +13,31 @@ The figure below shows a common OSPRay module call graph in MegaMol.
 ## Building
 
 [OSPRay](http://ospray.org) is not included in this package, however it is required for this plugin to be build.
-The currently supported OSPRay version is **2.4**.
-You need to install OSPRays dependencies manually and locate them manually as well. 
-Ideally, you just download [OSPRay](https://www.ospray.org/downloads.html).
+The currently supported OSPRay versions are **2.4** and **2.5**.
+*Installing the precompiled binaries is not sufficient!*
+In order to get all dependencies installed at once, we strongly recommend to build [OSPRay](https://www.ospray.org/downloads.html) following the **CMake Superbuild** instructions.
+The current dependencies are in detail:
+- [rekcommon](https://github.com/ospray/rkcommon)
+- [openvkl](https://www.openvkl.org/)
+- [ISPC](https://ispc.github.io/)
+- [TBB](https://www.threadingbuildingblocks.org/), [oneTBB](https://github.com/oneapi-src/oneTBB)
+- [Embree](https://embree.github.io/)
 
-However, if you want to compile OSPRay yourself, you need to install [ISPC](https://ispc.github.io/), [TBB](https://www.threadingbuildingblocks.org/), and [Embree](https://embree.github.io/) first (binary versions are okay).
+- Step 1: **OSPRay:** 
+    - Download the source code to a new folder `git clone https://github.com/ospray/ospray.git ospray` and configure OSPRay with CMake using the CMake file located in `..scripts/superbuild`. 
+    - In order to speed up the build process, uncheck the option `BUILD_EMBREE_FROM_SOURCE` since the binary version of Embree is sufficient. 
+    - Build OSPRay following further instructions for the CMake Superbuild.
 
-- Step 1: Get and build OSPRay. Follow the instructions on the OSPRay website (http://ospray.org) or the OSPRay GitHub page (https://github.com/ospray/ospray). 
-    Make sure `OSPRAY_INSTALL_DEPENDENCIES` is enabled, otherwise Embree and TBB DLLs will not be installed and will be unavailable for the plugin. 
-    The plugin always uses the release version of OSPRay.
-
-- Step 2: Make sure you enable the plugin in CMake. 
-    Either use `-DBUILD_OSPRAY_PLUGIN` as configuration argument or use the graphical user interface `ccmake`.
-
-    If OSPRay is not automatically found during configuration of MegaMol, set the appropriate `ospray_DIR`. 
-    Hint: The CMake configuration files of OSPRay are usually found in a subdirectory of the `lib` install directory.
-
-    <!-- TODO How to get the additionally required rkcommonConfig.cmake since OSPRay 2.4 ??? -->
+- Step 2: **MegaMol:** 
+    - Make sure you enable the plugin in CMake by checking the option `BUILD_OSPRAY_PLUGIN_PLUGIN`.
+    Either use `-DBUILD_OSPRAY_PLUGIN_PLUGIN` as configuration argument or use the graphical user interface `ccmake`.
+    - If OSPRay is not automatically found during configuration of MegaMol, set the appropriate `ospray_DIR`.
+    Hint: The CMake configuration files of OSPRay are usually found in a subdirectory of the install directory: `../build/install/ospray/lib/cmake/...`
+    - CMake subsequently asks for the build files of the following dependencies:
+        - rkcommon: `../build/install/rkcommon/lib/cmake/...`
+        - TBB root directory: `../build/install/tbb`
+    - Build and install MegaMol. 
+    - In order to test OSPRay, start MegaMol using the example project file `..build/install/examples/testspheres_ospray_megamol.lua`.
 
 ## Modules
 
