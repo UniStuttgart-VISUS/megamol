@@ -16,12 +16,7 @@ The figure below shows a common OSPRay module call graph in MegaMol.
 The currently supported OSPRay versions are **2.4** and **2.5**.
 *Installing the precompiled binaries is not sufficient!*
 In order to get all dependencies installed at once, we strongly recommend to build [OSPRay](https://www.ospray.org/downloads.html) following the **CMake Superbuild** instructions.
-The current dependencies are in detail:
-- [rekcommon](https://github.com/ospray/rkcommon)
-- [openvkl](https://www.openvkl.org/)
-- [ISPC](https://ispc.github.io/)
-- [TBB](https://www.threadingbuildingblocks.org/), [oneTBB](https://github.com/oneapi-src/oneTBB)
-- [Embree](https://embree.github.io/)
+The current dependencies are [rekcommon](https://github.com/ospray/rkcommon), [openvkl](https://www.openvkl.org/), [ISPC](https://ispc.github.io/), [TBB](https://www.threadingbuildingblocks.org/) ([oneTBB](https://github.com/oneapi-src/oneTBB)), and [Embree](https://embree.github.io/).
 
 - Step 1: **OSPRay:** 
     - Download the source code to a new folder `git clone https://github.com/ospray/ospray.git ospray` and configure OSPRay with CMake using the CMake file located in `..scripts/superbuild`. 
