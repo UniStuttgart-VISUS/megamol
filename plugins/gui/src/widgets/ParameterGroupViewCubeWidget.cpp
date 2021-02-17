@@ -20,11 +20,12 @@ using namespace megamol::gui;
 megamol::gui::PickableCube::PickableCube(void) : shader(nullptr) {}
 
 
-void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, int& inout_orientation_index,
-    int& out_hovered_view_index, int& out_hovered_orientation_index, const glm::vec4& view_orientation,
+bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, int& inout_orientation_index,
+    int& out_view_hover_index, int& out_orientation_hover_index, const glm::vec4& view_orientation,
     const glm::vec2& vp_dim, ManipVector& pending_manipulations) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
+    bool selected = false;
 
     // Info: IDs of the six cube faces are encoded via bit shift by face index of given parameter id.
 
@@ -38,6 +39,8 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
             "uniform mat4 proj_mx; \n "
             "uniform int view_index; \n "
             "uniform int orientation_index; \n "
+            "uniform int view_hover_index; \n "
+            "uniform int orientation_hover_index; \n "
             "out vec4 vertex_color; \n "
             "flat out int face_id; \n "
             "void main() { \n "
@@ -77,7 +80,7 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
             "    const vec4 colors[6] = vec4[6](vec4(0.0, 0.0, 1.0, 1.0), vec4(0.0, 1.0, 1.0, 1.0), \n "
             "                                   vec4(0.0, 1.0, 0.0, 1.0), vec4(1.0, 1.0, 0.0, 1.0), \n "
             "                                   vec4(1.0, 0.0, 0.0, 1.0), vec4(1.0, 0.0, 1.0, 1.0)); \n "
-            "    \n"
+            "    // Calculate indices and IDs \n"
             "    float vertex_index = float(gl_VertexID); \n"
             "    float mod_index = vertex_index - (12.0 * floor(vertex_index/12.0)); \n"
             "    float mod_triangle_index = mod_index - (3.0 * floor(mod_index/3.0)); \n"
@@ -86,16 +89,19 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
             "    int current_view_index = int(gl_VertexID / 12);       // in range [0-5] \n "
             "    face_id = int((id << (current_view_index + 4)) | current_orientation_id);"
             "    \n"
+            "    // Set colors depending on selected or hovered triangles \n"
             "    vertex_color = colors[current_view_index]; \n "
             "    if (view_index != current_view_index) { \n "
             "        vertex_color *= 0.25; \n "
-            "        vertex_color.w = 1.0; \n "
             "    } \n "
-            "    if ((view_index == current_view_index) && \n"
-            "        (orientation_index == current_orientation_index) && \n"
-            "        (mod_triangle_index == 2.0)) { \n "
-            "            vertex_color = vec4(0.0, 0.0, 0.0, 1.0); \n "
+            "    if (view_index == current_view_index) { \n "
+            "        vertex_color *= (0.5 + (0.5 - 0.5*(current_orientation_index/2.0))); \n "
             "    } \n "
+            "    if ((view_hover_index == current_view_index) && \n"
+            "            (orientation_hover_index == current_orientation_index)) { \n "
+            "        vertex_color = vec4(0.5); \n "
+            "    } \n "
+            "    vertex_color.w = 1.0; \n "
             "    \n"
             "    gl_Position = proj_mx * model_mx * rot_mx * vertices[gl_VertexID]; \n "
             "}";
@@ -112,14 +118,13 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
                                    "} ";
 
         if (!megamol::core::view::RenderUtils::CreateShader(this->shader, vertex_src, fragment_src)) {
-            return;
+            return false;
         }
     }
 
-    int shader_view_index = inout_view_index;
-    int shader_orientation_index = inout_orientation_index;
-
     // Process pending manipulations ------------------------------------------
+    out_orientation_hover_index = -1;
+    out_view_hover_index = -1;
     for (auto& manip : pending_manipulations) {
 
         // ID is shifted by at least 4 bits and at most 9 bits.
@@ -154,14 +159,11 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
         if (view_index >= 0) {
             if (manip.type == InteractionType::SELECT) {
                 inout_view_index = view_index;
-                shader_view_index = view_index;
                 inout_orientation_index = orientation_index;
-                shader_orientation_index = orientation_index;
+                selected = true;
             } else if (manip.type == InteractionType::HIGHLIGHT) {
-                out_hovered_view_index = view_index;
-                shader_view_index = view_index;
-                out_hovered_orientation_index = orientation_index;
-                shader_orientation_index = orientation_index;
+                out_view_hover_index = view_index;
+                out_orientation_hover_index = orientation_index;
             }
         }
     }
@@ -193,8 +195,10 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
     this->shader->setUniform("rot_mx", rotation);
     this->shader->setUniform("model_mx", model);
     this->shader->setUniform("proj_mx", proj);
-    this->shader->setUniform("view_index", shader_view_index);
-    this->shader->setUniform("orientation_index", shader_orientation_index);
+    this->shader->setUniform("view_index", inout_view_index);
+    this->shader->setUniform("orientation_index", inout_orientation_index);
+    this->shader->setUniform("view_hover_index", out_view_hover_index);
+    this->shader->setUniform("orientation_hover_index", out_orientation_hover_index);
     this->shader->setUniform("id", static_cast<int>(id));
 
     glDrawArrays(GL_TRIANGLES, 0, 72);
@@ -206,19 +210,16 @@ void megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, in
     if (!culling) {
         glDisable(GL_CULL_FACE);
     }
+
+    return selected;
 }
 
 
 InteractVector megamol::gui::PickableCube::GetInteractions(unsigned int id) const {
+
     InteractVector interactions;
     interactions.emplace_back(Interaction({InteractionType::SELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     interactions.emplace_back(Interaction({InteractionType::HIGHLIGHT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-    // interactions.emplace_back(
-    //    Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, id, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
-    // interactions.emplace_back(
-    //    Interaction({InteractionType::MOVE_ALONG_AXIS_SCREEN, id, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f}));
-    // interactions.emplace_back(
-    //    Interaction({InteractionType::DESELECT, id, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}));
     return interactions;
 }
 
@@ -237,12 +238,18 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Check(bool only_check, ParamPtr
 
     bool param_cubeOrientation = false;
     bool param_defaultView = false;
+    bool param_defaultOrientation = false;
+    bool param_resetView = false;
     bool param_showCube = false;
     for (auto& param_ptr : params) {
         if ((param_ptr->GetName() == "cubeOrientation") && (param_ptr->type == Param_t::VECTOR4F)) {
             param_cubeOrientation = true;
         } else if ((param_ptr->GetName() == "defaultView") && (param_ptr->type == Param_t::ENUM)) {
             param_defaultView = true;
+        } else if ((param_ptr->GetName() == "defaultOrientation") && (param_ptr->type == Param_t::ENUM)) {
+            param_defaultOrientation = true;
+        } else if ((param_ptr->GetName() == "resetView") && (param_ptr->type == Param_t::BUTTON)) {
+            param_resetView = true;
         } else if ((param_ptr->GetName() == "showViewCube") && (param_ptr->type == Param_t::BOOL)) {
             param_showCube = true;
         }
@@ -266,6 +273,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
     Parameter* param_cubeOrientation = nullptr;
     Parameter* param_defaultView = nullptr;
     Parameter* param_defaultOrientation = nullptr;
+    Parameter* param_resetView = nullptr;
     Parameter* param_showCube = nullptr;
     /// Find specific parameters of group by name because parameter type can occure multiple times.
     for (auto& param_ptr : params) {
@@ -275,6 +283,8 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             param_defaultView = param_ptr;
         } else if ((param_ptr->GetName() == "defaultOrientation") && (param_ptr->type == Param_t::ENUM)) {
             param_defaultOrientation = param_ptr;
+        } else if ((param_ptr->GetName() == "resetView") && (param_ptr->type == Param_t::BUTTON)) {
+            param_resetView = param_ptr;
         } else if ((param_ptr->GetName() == "showViewCube") && (param_ptr->type == Param_t::BOOL)) {
             param_showCube = param_ptr;
         }
@@ -347,13 +357,13 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             auto viewport_dim = glm::vec2(io.DisplaySize.x, io.DisplaySize.y);
             int hovered_view = -1;
             int hovered_orientation = -1;
-            this->cube_widget.Draw(id, default_view, default_orientation, hovered_view, hovered_orientation,
-                view_orientation, viewport_dim, inout_picking_buffer->GetPendingManipulations());
+
+            bool selected = this->cube_widget.Draw(id, default_view, default_orientation, hovered_view,
+                hovered_orientation, view_orientation, viewport_dim, inout_picking_buffer->GetPendingManipulations());
 
             std::string tooltip_text;
             /// Indices must fit enum order in view::View3D_2::defaultview
             if (hovered_view >= 0) {
-                tooltip_text = "Face: ";
                 switch (hovered_view) {
                 case (0): // DEFAULTVIEW_FRONT
                     tooltip_text += "[Front]";
@@ -403,6 +413,9 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
                 ImGui::EndTooltip();
             }
 
+            if (selected) {
+                param_resetView->ForceSetValueDirty();
+            }
             param_defaultOrientation->SetValue(default_orientation);
             param_defaultView->SetValue(default_view);
 
@@ -411,6 +424,5 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
             return true;
         }
     }
-
     return false;
 }
