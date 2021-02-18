@@ -74,7 +74,7 @@ void GUI_Service::close() {
 
 void GUI_Service::updateProvidedResources() {
 
-    this->m_providedResource.gui_state = [&](void) -> std::string {
+    this->m_providedResource.request_gui_state = [&](void) -> std::string {
         return this->resource_get_gui_state();
     };
 }
