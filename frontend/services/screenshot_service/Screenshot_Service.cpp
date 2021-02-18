@@ -214,8 +214,6 @@ const std::vector<std::string> Screenshot_Service::getRequestedResourceNames() c
 void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     gl_context_ptr = const_cast<megamol::frontend_resources::IOpenGL_Context*>(&resources[0].getResource<megamol::frontend_resources::IOpenGL_Context>());
     megamolgraph_ptr = const_cast<megamol::core::MegaMolGraph*>(&resources[1].getResource<megamol::core::MegaMolGraph>());
-
-    /// XXX TODO GUI TEST
     guiresources_ptr = const_cast<megamol::frontend_resources::GUIResource*>(
         &resources[2].getResource<megamol::frontend_resources::GUIResource>());
 }

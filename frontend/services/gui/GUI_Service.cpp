@@ -191,7 +191,7 @@ void GUI_Service::digestChangedRequestedResources() {
 
 void GUI_Service::resetProvidedResources() {
 
-    /// this->m_providedResource.gui_state = nullptr;
+    this->m_providedResource.request_gui_state = nullptr;
 }
 
 

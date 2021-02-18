@@ -13,7 +13,7 @@ namespace frontend_resources {
 struct GUIResource {
 
     // Function requesting updated GUI state (e.g. ScreenshotService save project with GUI state tp PNG header)
-    std::function<std::string(void)> gui_state = nullptr;
+    std::function<std::string(void)> request_gui_state = nullptr;
 };
 
 } /* end namespace frontend_resources */
