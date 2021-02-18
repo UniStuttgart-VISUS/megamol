@@ -11,7 +11,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE;BUILD_MESH_PLUGIN" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE;BUILD_MESH_PLUGIN;BUILD_MMSTD_DATATOOLS_PLUGIN" CACHE INTERNAL "")
 
   find_package(CGAL CONFIG REQUIRED)
 
@@ -30,7 +30,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core mesh Eigen CGAL::CGAL)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core mesh mmstd_datatools Eigen CGAL::CGAL)
 
   # Installation rules for generated files
   #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

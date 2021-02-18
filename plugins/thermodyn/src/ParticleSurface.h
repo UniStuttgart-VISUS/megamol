@@ -17,6 +17,8 @@
 
 #include "CGAL/Min_sphere_d.h"
 #include "CGAL/Min_sphere_of_points_d_traits_d.h"
+
+#include "CGAL/Triangulation_vertex_base_with_info_3.h"
 // END CGAL
 
 #include "mesh/MeshCalls.h"
@@ -46,7 +48,8 @@ public:
     using Gt = CGAL::Exact_predicates_inexact_constructions_kernel;
     // using Gt = CGAL::Exact_predicates_exact_constructions_kernel;
 
-    using Vb = CGAL::Fixed_alpha_shape_vertex_base_3<Gt>;
+    using Vbt = CGAL::Triangulation_vertex_base_with_info_3<float, Gt>;
+    using Vb = CGAL::Fixed_alpha_shape_vertex_base_3<Gt, Vbt>;
     using Fb = CGAL::Fixed_alpha_shape_cell_base_3<Gt>;
     using Tds = CGAL::Triangulation_data_structure_3<Vb, Fb>;
     using Triangulation_3 = CGAL::Delaunay_triangulation_3<Gt, Tds>;
@@ -54,10 +57,12 @@ public:
 
     using Delaunay = CGAL::Delaunay_triangulation_3<Gt>;
     using DFacet = Delaunay::Facet;
+    
+    //using Point_3 = Gt::Point_3;
+    using Point_3 = Alpha_shape_3::Point;
 
-    using Point_3 = Gt::Point_3;
-
-    using Triangle = Alpha_shape_3::Triangle;
+    //using Triangle = Alpha_shape_3::Triangle;
+    using Triangle = Triangulation_3::Triangle;
     using Facet = Alpha_shape_3::Facet;
 
 protected:
@@ -88,6 +93,8 @@ private:
 
     core::CallerSlot _in_data_slot;
 
+    core::CallerSlot _tf_slot;
+
     core::param::ParamSlot _alpha_slot;
 
     core::param::ParamSlot _type_slot;
@@ -95,6 +102,8 @@ private:
     std::vector<std::vector<float>> _vertices;
 
     std::vector<std::vector<float>> _normals;
+
+    std::vector<std::vector<float>> _colors;
 
     std::vector<std::vector<std::uint32_t>> _indices;
 

@@ -4,12 +4,19 @@
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
+#include "mmcore/view/CallGetTransferFunction.h"
 
 #include "Eigen/Dense"
 
+#include "TFUtils.h"
+
 
 megamol::thermodyn::ParticleSurface::ParticleSurface()
-        : _out_mesh_slot("outMesh", ""), _in_data_slot("inData", ""), _alpha_slot("alpha", ""), _type_slot("type", "") {
+        : _out_mesh_slot("outMesh", "")
+        , _in_data_slot("inData", "")
+        , _tf_slot("inTF", "")
+        , _alpha_slot("alpha", "")
+        , _type_slot("type", "") {
     _out_mesh_slot.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &ParticleSurface::get_data_cb);
     _out_mesh_slot.SetCallback(
@@ -18,6 +25,9 @@ megamol::thermodyn::ParticleSurface::ParticleSurface()
 
     _in_data_slot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&_in_data_slot);
+
+    _tf_slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
+    MakeSlotAvailable(&_tf_slot);
 
     _alpha_slot << new core::param::FloatParam(1.25f, 0.0f);
     MakeSlotAvailable(&_alpha_slot);
@@ -99,6 +109,9 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
     auto in_data = _in_data_slot.CallAs<core::moldyn::MultiParticleDataCall>();
     if (in_data == nullptr)
         return false;
+    core::view::CallGetTransferFunction* cgtf = _tf_slot.CallAs<core::view::CallGetTransferFunction>();
+    if (cgtf != nullptr && !(*cgtf)())
+        return false;
 
     auto meta_data = out_mesh->getMetaData();
 
@@ -108,11 +121,12 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
     if (!(*in_data)(0))
         return false;
 
-    if (in_data->DataHash() != _in_data_hash || in_data->FrameID() != _frame_id || is_dirty()) {
+    if (in_data->DataHash() != _in_data_hash || in_data->FrameID() != _frame_id || is_dirty() || (cgtf != nullptr && cgtf->IsDirty())) {
 
         auto const pl_count = in_data->GetParticleListCount();
         _vertices.resize(pl_count);
         _normals.resize(pl_count);
+        _colors.resize(pl_count);
         _indices.resize(pl_count);
 
         auto const alpha = _alpha_slot.Param<core::param::FloatParam>()->Value();
@@ -122,11 +136,52 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
 
         _mesh_access_collection = std::make_shared<mesh::MeshDataAccessCollection>();
 
+        float const* color_tf = nullptr;
+        auto color_tf_size = 0;
+        std::array<float, 2> range = {0.f, 0.f};
+
+        if (in_data->DataHash() != _in_data_hash || in_data->FrameID() != _frame_id) {
+            for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
+                auto const& parts = in_data->AccessParticles(pl_idx);
+
+                range[0] = std::min(parts.GetMinColourIndexValue(), range[0]);
+                range[1] = std::max(parts.GetMaxColourIndexValue(), range[1]);
+            }
+            if (cgtf != nullptr) {
+                cgtf->SetRange(range);
+                (*cgtf)(0);
+                color_tf = cgtf->GetTextureData();
+                color_tf_size = cgtf->TextureSize();
+            }
+        } else {
+            if (cgtf != nullptr) {
+                (*cgtf)(0);
+                color_tf = cgtf->GetTextureData();
+                color_tf_size = cgtf->TextureSize();
+                range = cgtf->Range();
+            }
+        }
+        
+        auto const def_color = glm::vec4(1.0f);
+
+        /*if (cgtf != nullptr) {
+            cgtf->SetRange(range);
+            (*cgtf)(0);
+            color_tf = cgtf->GetTextureData();
+            color_tf_size = cgtf->TextureSize();
+            range = cgtf->Range();
+        }*/
+
         for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
             auto const& parts = in_data->AccessParticles(pl_idx);
 
+            auto const min_i = range[0];
+            auto const max_i = range[1];
+            auto const fac_i = 1.0f / (max_i - min_i + 1e-8f);
+
             auto& vertices = _vertices[pl_idx];
             auto& normals = _normals[pl_idx];
+            auto& colors = _colors[pl_idx];
             auto& indices = _indices[pl_idx];
 
             auto const p_count = parts.GetCount();
@@ -135,11 +190,14 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
             auto const yAcc = parts.GetParticleStore().GetYAcc();
             auto const zAcc = parts.GetParticleStore().GetZAcc();
 
-            std::vector<Point_3> points;
+            auto const iAcc = parts.GetParticleStore().GetCRAcc();
+
+            std::vector<std::pair<Point_3, float>> points;
             points.reserve(p_count);
 
             for (std::remove_const_t<decltype(p_count)> pidx = 0; pidx < p_count; ++pidx) {
-                points.emplace_back(xAcc->Get_f(pidx), yAcc->Get_f(pidx), zAcc->Get_f(pidx));
+                points.emplace_back(std::make_pair(
+                    Point_3(xAcc->Get_f(pidx), yAcc->Get_f(pidx), zAcc->Get_f(pidx)), iAcc->Get_f(pidx)));
             }
 
             if (type == surface_type::alpha_shape) {
@@ -159,20 +217,30 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
                     1))->point());
                     mesh_points.push_back(facet.first->vertex(Triangulation_3::vertex_triple_index(facet.second,
                     2))->point());*/
-
                     alpha_mesh.push_back(as.triangle(facet));
                 }
 
                 vertices.clear();
-                vertices.reserve(alpha_mesh.size() * 9);
+                vertices.reserve(facets.size() * 9);
                 normals.clear();
-                normals.reserve(alpha_mesh.size() * 9);
-                indices.resize(alpha_mesh.size() * 3);
+                normals.reserve(facets.size() * 9);
+                colors.clear();
+                colors.reserve(facets.size() * 12);
+                indices.resize(facets.size() * 3);
 
-                for (auto& triangle : alpha_mesh) {
-                    auto const& a = triangle.vertex(0);
+                // for (auto& triangle : alpha_mesh) {
+                for (auto& face : facets) {
+                    /*auto const& a = triangle.vertex(0);
                     auto const& b = triangle.vertex(1);
-                    auto const& c = triangle.vertex(2);
+                    auto const& c = triangle.vertex(2);*/
+
+                    auto const& vert_a = face.first->vertex(as.vertex_triple_index(face.second, 0));
+                    auto const& vert_b = face.first->vertex(as.vertex_triple_index(face.second, 1));
+                    auto const& vert_c = face.first->vertex(as.vertex_triple_index(face.second, 2));
+
+                    auto const& a = vert_a->point();
+                    auto const& b = vert_b->point();
+                    auto const& c = vert_c->point();
 
                     vertices.push_back(a.x());
                     vertices.push_back(a.y());
@@ -186,7 +254,9 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
                     vertices.push_back(c.y());
                     vertices.push_back(c.z());
 
-                    auto const normal = CGAL::normal(a, b, c);
+                    auto normal = CGAL::normal(a, b, c);
+                    auto const length = std::sqrtf(normal.squared_length());
+                    normal /= length;
                     normals.push_back(normal.x());
                     normals.push_back(normal.y());
                     normals.push_back(normal.z());
@@ -196,90 +266,136 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
                     normals.push_back(normal.x());
                     normals.push_back(normal.y());
                     normals.push_back(normal.z());
+
+                    auto col_a = def_color;
+                    auto col_b = def_color;
+                    auto col_c = def_color;
+
+                    if (color_tf != nullptr) {
+                        auto const val_a = (vert_a->info() - min_i) * fac_i * static_cast<float>(color_tf_size);
+                        auto const val_b = (vert_b->info() - min_i) * fac_i * static_cast<float>(color_tf_size);
+                        auto const val_c = (vert_c->info() - min_i) * fac_i * static_cast<float>(color_tf_size);
+                        std::remove_const_t<decltype(val_a)> main_a = 0;
+                        auto rest_a = std::modf(val_a, &main_a);
+                        rest_a =
+                            static_cast<int>(main_a) >= 0 && static_cast<int>(main_a) < color_tf_size ? rest_a : 0.0f;
+                        std::remove_const_t<decltype(val_b)> main_b = 0;
+                        auto rest_b = std::modf(val_b, &main_b);
+                        rest_b =
+                            static_cast<int>(main_b) >= 0 && static_cast<int>(main_b) < color_tf_size ? rest_b : 0.0f;
+                        std::remove_const_t<decltype(val_c)> main_c = 0;
+                        auto rest_c = std::modf(val_c, &main_c);
+                        rest_c =
+                            static_cast<int>(main_c) >= 0 && static_cast<int>(main_c) < color_tf_size ? rest_c : 0.0f;
+                        main_a = std::clamp(static_cast<int>(main_a), 0, color_tf_size - 1);
+                        main_b = std::clamp(static_cast<int>(main_b), 0, color_tf_size - 1);
+                        main_c = std::clamp(static_cast<int>(main_c), 0, color_tf_size - 1);
+                        col_a =
+                            stdplugin::datatools::sample_tf(color_tf, color_tf_size, static_cast<int>(main_a), rest_a);
+                        col_b =
+                            stdplugin::datatools::sample_tf(color_tf, color_tf_size, static_cast<int>(main_b), rest_b);
+                        col_c =
+                            stdplugin::datatools::sample_tf(color_tf, color_tf_size, static_cast<int>(main_c), rest_c);
+                    }
+
+                    colors.push_back(col_a.r);
+                    colors.push_back(col_a.g);
+                    colors.push_back(col_a.b);
+                    colors.push_back(col_a.a);
+                    colors.push_back(col_b.r);
+                    colors.push_back(col_b.g);
+                    colors.push_back(col_b.b);
+                    colors.push_back(col_b.a);
+                    colors.push_back(col_c.r);
+                    colors.push_back(col_c.g);
+                    colors.push_back(col_c.b);
+                    colors.push_back(col_c.a);
                 }
 
                 std::iota(indices.begin(), indices.end(), 0);
-            } else {
-                Delaunay tri = Delaunay(points.cbegin(), points.cend());
-
-                std::list<Delaunay::Cell> cells;
-
-                auto first_cell = tri.cells_begin();
-                auto center = first_cell->circumcenter();
-                auto first_point = first_cell->vertex(0)->point();
-                auto first_length = (center - first_point).squared_length();
-
-                DFacet test_facet = DFacet(first_cell, 0);
-
-
-                /*std::copy_if(tri.cells_begin(), tri.cells_end(), std::back_inserter(cells),
-                    [squared_alpha](Delaunay::Cell const& cell) {
-                        auto center = cell.circumcenter();
-                        auto squared_radius = (cell.vertex(0)->point() - center).squared_length();
-                        return squared_radius <= squared_alpha;
-                    });*/
-                std::copy_if(
-                    tri.cells_begin(), tri.cells_end(), std::back_inserter(cells), [alpha](Delaunay::Cell const& cell) {
-                        auto const& a = cell.vertex(0)->point();
-                        auto const& b = cell.vertex(1)->point();
-                        auto const& c = cell.vertex(2)->point();
-                        auto const& d = cell.vertex(3)->point();
-
-                        float radius = 0.0f;
-                        auto res = compute_touchingsphere_radius(a, 0.5f, b, 0.5f, c, 0.5f, d, 0.5f, radius);
-                        return res && (radius <= alpha);
-                    });
-
-                vertices.clear();
-                vertices.reserve(cells.size() * 12);
-                normals.clear();
-                normals.reserve(cells.size() * 12);
-                indices.reserve(cells.size() * 12);
-
-                std::size_t idx = 0;
-                for (auto const& cell : cells) {
-                    auto const base_idx = idx * 4;
-
-                    auto const& a = cell.vertex(0)->point();
-                    auto const& b = cell.vertex(1)->point();
-                    auto const& c = cell.vertex(2)->point();
-                    auto const& d = cell.vertex(3)->point();
-
-                    vertices.push_back(a.x());
-                    vertices.push_back(a.y());
-                    vertices.push_back(a.z());
-
-                    vertices.push_back(b.x());
-                    vertices.push_back(b.y());
-                    vertices.push_back(b.z());
-
-                    vertices.push_back(c.x());
-                    vertices.push_back(c.y());
-                    vertices.push_back(c.z());
-
-                    vertices.push_back(d.x());
-                    vertices.push_back(d.y());
-                    vertices.push_back(d.z());
-
-                    indices.push_back(base_idx + 0);
-                    indices.push_back(base_idx + 1);
-                    indices.push_back(base_idx + 2);
-
-                    indices.push_back(base_idx + 0);
-                    indices.push_back(base_idx + 1);
-                    indices.push_back(base_idx + 3);
-
-                    indices.push_back(base_idx + 1);
-                    indices.push_back(base_idx + 2);
-                    indices.push_back(base_idx + 3);
-
-                    indices.push_back(base_idx + 2);
-                    indices.push_back(base_idx + 0);
-                    indices.push_back(base_idx + 3);
-
-                    ++idx;
-                }
             }
+            //} else {
+            //    Delaunay tri = Delaunay(points.cbegin(), points.cend());
+
+            //    std::list<Delaunay::Cell> cells;
+
+            //    auto first_cell = tri.cells_begin();
+            //    auto center = first_cell->circumcenter();
+            //    auto first_point = first_cell->vertex(0)->point();
+            //    auto first_length = (center - first_point).squared_length();
+
+            //    DFacet test_facet = DFacet(first_cell, 0);
+
+
+            //    /*std::copy_if(tri.cells_begin(), tri.cells_end(), std::back_inserter(cells),
+            //        [squared_alpha](Delaunay::Cell const& cell) {
+            //            auto center = cell.circumcenter();
+            //            auto squared_radius = (cell.vertex(0)->point() - center).squared_length();
+            //            return squared_radius <= squared_alpha;
+            //        });*/
+            //    std::copy_if(
+            //        tri.cells_begin(), tri.cells_end(), std::back_inserter(cells), [alpha](Delaunay::Cell const& cell)
+            //        {
+            //            auto const& a = cell.vertex(0)->point();
+            //            auto const& b = cell.vertex(1)->point();
+            //            auto const& c = cell.vertex(2)->point();
+            //            auto const& d = cell.vertex(3)->point();
+
+            //            float radius = 0.0f;
+            //            auto res = compute_touchingsphere_radius(a, 0.5f, b, 0.5f, c, 0.5f, d, 0.5f, radius);
+            //            return res && (radius <= alpha);
+            //        });
+
+            //    vertices.clear();
+            //    vertices.reserve(cells.size() * 12);
+            //    normals.clear();
+            //    normals.reserve(cells.size() * 12);
+            //    indices.reserve(cells.size() * 12);
+
+            //    std::size_t idx = 0;
+            //    for (auto const& cell : cells) {
+            //        auto const base_idx = idx * 4;
+
+            //        auto const& a = cell.vertex(0)->point();
+            //        auto const& b = cell.vertex(1)->point();
+            //        auto const& c = cell.vertex(2)->point();
+            //        auto const& d = cell.vertex(3)->point();
+
+            //        vertices.push_back(a.x());
+            //        vertices.push_back(a.y());
+            //        vertices.push_back(a.z());
+
+            //        vertices.push_back(b.x());
+            //        vertices.push_back(b.y());
+            //        vertices.push_back(b.z());
+
+            //        vertices.push_back(c.x());
+            //        vertices.push_back(c.y());
+            //        vertices.push_back(c.z());
+
+            //        vertices.push_back(d.x());
+            //        vertices.push_back(d.y());
+            //        vertices.push_back(d.z());
+
+            //        indices.push_back(base_idx + 0);
+            //        indices.push_back(base_idx + 1);
+            //        indices.push_back(base_idx + 2);
+
+            //        indices.push_back(base_idx + 0);
+            //        indices.push_back(base_idx + 1);
+            //        indices.push_back(base_idx + 3);
+
+            //        indices.push_back(base_idx + 1);
+            //        indices.push_back(base_idx + 2);
+            //        indices.push_back(base_idx + 3);
+
+            //        indices.push_back(base_idx + 2);
+            //        indices.push_back(base_idx + 0);
+            //        indices.push_back(base_idx + 3);
+
+            //        ++idx;
+            //    }
+            //}
 
 
             std::vector<mesh::MeshDataAccessCollection::VertexAttribute> mesh_attributes;
@@ -289,9 +405,13 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
             mesh_indices.data = reinterpret_cast<uint8_t*>(indices.data());
             mesh_indices.type = mesh::MeshDataAccessCollection::UNSIGNED_INT;
 
-            /*mesh_attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
+            mesh_attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
                 reinterpret_cast<uint8_t*>(normals.data()), normals.size() * sizeof(float), 3,
-                mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 3, 0, mesh::MeshDataAccessCollection::NORMAL});*/
+                mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 3, 0, mesh::MeshDataAccessCollection::NORMAL});
+
+            mesh_attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
+                reinterpret_cast<uint8_t*>(colors.data()), colors.size() * sizeof(float), 4,
+                mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 4, 0, mesh::MeshDataAccessCollection::COLOR});
 
             mesh_attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
                 reinterpret_cast<uint8_t*>(vertices.data()), vertices.size() * sizeof(float), 3,
@@ -310,6 +430,10 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
 
         meta_data.m_bboxs.SetBoundingBox(bbox);
         meta_data.m_bboxs.SetClipBox(cbox);
+
+        if (cgtf != nullptr) {
+            cgtf->ResetDirty();
+        }
     }
 
     meta_data.m_frame_cnt = in_data->FrameCount();
