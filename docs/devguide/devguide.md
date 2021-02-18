@@ -26,10 +26,8 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 - [GUI Parameter Widgets](#gui-parameter-widgets)
 
 <!-- TODO
-
 - Add section describing all available LUA commands
 - Add section describing remote console usage
-
 -->
 
 <!-- /TOC -->
@@ -39,7 +37,7 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 -----
 ## Create new Plugin
 
-***UPDATE required***
+<!-- TODO: UPDATE -->
 
 ### Add own plugin using the template
 1. Copy the template folder `../megamol/plugins/template`.
