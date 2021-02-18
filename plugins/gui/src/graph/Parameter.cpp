@@ -85,7 +85,7 @@ megamol::gui::Parameter::Parameter(ImGuiID uid, Param_t type, Stroage_t store, M
 megamol::gui::Parameter::~Parameter(void) {}
 
 
-std::string megamol::gui::Parameter::GetValueString(void) {
+std::string megamol::gui::Parameter::GetValueString(void) const {
 
     std::string value_string("UNKNOWN PARAMETER TYPE");
 
@@ -116,26 +116,7 @@ std::string megamol::gui::Parameter::GetValueString(void) {
                 break;
             }
         } else if constexpr (std::is_same_v<T, std::string>) {
-            switch (this->type) {
-            case (Param_t::STRING): {
-                auto parameter = megamol::core::param::StringParam(arg.c_str());
-                value_string = std::string(parameter.ValueString().PeekBuffer());
-            } break;
-            case (Param_t::TRANSFERFUNCTION): {
-                auto parameter = megamol::core::param::TransferFunctionParam(arg);
-                value_string = std::string(parameter.ValueString().PeekBuffer());
-            } break;
-            case (Param_t::FILEPATH): {
-                auto parameter = megamol::core::param::FilePathParam(arg.c_str());
-                value_string = std::string(parameter.ValueString().PeekBuffer());
-            } break;
-            case (Param_t::FLEXENUM): {
-                auto parameter = megamol::core::param::FlexEnumParam(arg.c_str());
-                value_string = std::string(parameter.ValueString().PeekBuffer());
-            } break;
-            default:
-                break;
-            }
+            value_string = arg;
         } else if constexpr (std::is_same_v<T, vislib::math::Ternary>) {
             auto parameter = megamol::core::param::TernaryParam(arg);
             value_string = std::string(parameter.ValueString().PeekBuffer());
