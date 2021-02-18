@@ -65,7 +65,9 @@ namespace probe {
             , _zSlot("z", "")
             , _xyzSlot("xyz", "")
             , _formatSlot("format", "")
-            , _isoValue("isoValue", "") {
+            , _isoValue("isoValue", "")
+            , _showShellSlot("showShell", "")
+            , _numShellsSlot("numShells", "") {
 
         this->_numSlices << new core::param::IntParam(64);
         this->_numSlices.SetUpdateCallback(&ReconstructSurface::parameterChanged);
@@ -85,7 +87,7 @@ namespace probe {
         this->_faceTypeSlot << ep;
         this->MakeSlotAvailable(&this->_faceTypeSlot);
 
-            core::param::EnumParam* fp = new core::param::EnumParam(0);
+        core::param::EnumParam* fp = new core::param::EnumParam(0);
         fp->SetTypePair(0, "separated");
         fp->SetTypePair(1, "interleaved");
         this->_formatSlot << fp;
@@ -106,6 +108,14 @@ namespace probe {
         core::param::FlexEnumParam* xyzEp = new core::param::FlexEnumParam("undef");
         this->_xyzSlot << xyzEp;
         this->MakeSlotAvailable(&this->_xyzSlot);
+
+        this->_showShellSlot << new core::param::IntParam(-1);
+        this->_showShellSlot.SetUpdateCallback(&ReconstructSurface::parameterChanged);
+        this->MakeSlotAvailable(&this->_showShellSlot);
+
+        this->_numShellsSlot << new core::param::IntParam(10);
+        this->_numShellsSlot.SetUpdateCallback(&ReconstructSurface::parameterChanged);
+        this->MakeSlotAvailable(&this->_numShellsSlot);
 
         this->_deployMeshCall.SetCallback(
             mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &ReconstructSurface::getData);
@@ -659,7 +669,39 @@ namespace probe {
         namespace PMP = CGAL::Polygon_mesh_processing;
         namespace params = CGAL::Polygon_mesh_processing::parameters;
 
-        //_sm.
+        unsigned int num_shells = _numShellsSlot.Param<core::param::IntParam>()->Value();
+
+        // translate vertices back to center
+        for (int i = 0; i < _sm.num_vertices(); ++i) {
+            auto it = std::next(_sm.points().begin(), i);
+
+            glm::vec3 p = {it->x(), it->y(), it->z()};
+            p.x -= _data_origin[0];
+            p.y -= _data_origin[1];
+            p.z -= _data_origin[2];
+
+            const Point point(p.x, p.y, p.z);
+            *it = point;
+        }
+
+        // build initial shells
+        _shells.clear();
+        _shells.resize(num_shells);
+        for (int i = 0; i < num_shells; ++i) {
+            _shells[i] = _sm;
+            float scale_factor = 1 - i*(1.0f / static_cast<float>(num_shells));
+            for (int j = 0; j < _shells[i].num_vertices(); ++j) {
+                auto it = std::next(_shells[i].points().begin(), j);
+
+                glm::vec3 p = {it->x(), it->y(), it->z()};
+                p.x *= scale_factor;
+                p.y *= scale_factor;
+                p.z *= scale_factor;
+
+                const Point point(p.x, p.y, p.z);
+                *it = point;
+            }
+        }
         
 
     }
@@ -759,6 +801,10 @@ namespace probe {
         this->sliceData();
         this->tighten();
         this->generateNormals();
+        this->onionize();
+        if (_showShellSlot.Param<core::param::IntParam>()->Value() > 0) {
+            
+        }
 
         _mesh_attribs.resize(2);
         _mesh_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
@@ -854,7 +900,6 @@ namespace probe {
 
         return true;
     }
-
 
     bool ReconstructSurface::getNormalData(core::Call& call) {
         bool something_changed = _recalc;
@@ -998,6 +1043,28 @@ namespace probe {
 
 
         return true;
+    }
+
+    void ReconstructSurface::displayShell(int shell_number) {
+
+        _vertices.clear();
+        _vertices.resize(_shells[shell_number].num_vertices());
+        for (int i = 0; i < _shells[shell_number].num_vertices(); ++i) {
+            auto it = std::next(_shells[shell_number].points().begin(), i);
+
+            glm::vec3 p = {it->x(), it->y(), it->z()};
+            p.x += _data_origin[0];
+            p.y += _data_origin[1];
+            p.z += _data_origin[2];
+
+            const Point point(p.x, p.y, p.z);
+            *it = point;
+
+            _vertices[i][0] = it->x();
+            _vertices[i][1] = it->y();
+            _vertices[i][2] = it->z();
+        }
+
     }
 
 

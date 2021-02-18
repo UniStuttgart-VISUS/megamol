@@ -112,6 +112,8 @@ protected:
     core::param::ParamSlot _zSlot;
     core::param::ParamSlot _xyzSlot;
     core::param::ParamSlot _formatSlot;
+    core::param::ParamSlot _showShellSlot;
+    core::param::ParamSlot _numShellsSlot;
 
 
 private:
@@ -132,6 +134,8 @@ private:
     bool getNormalData(core::Call& call);
 
     bool getNormalMetaData(core::Call& call);
+
+    void displayShell(int shell_number);
 
     // CallMesh stuff
     std::vector<mesh::MeshDataAccessCollection::VertexAttribute> _mesh_attribs;
@@ -155,7 +159,7 @@ private:
     glm::vec3 _data_origin;
 
     Surface_mesh _sm;
-
+    std::vector<Surface_mesh> _shells;
 
     // store surface
     std::vector<std::array<float, 4>> _vertices;
