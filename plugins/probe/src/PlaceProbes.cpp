@@ -52,6 +52,7 @@ namespace probe {
         ep->SetTypePair(2, "force_directed");
         ep->SetTypePair(3, "load_existing");
         ep->SetTypePair(4, "vertices+normals");
+        ep->SetTypePair(5, "face+normals");
         this->_method_slot << ep;
         this->MakeSlotAvailable(&this->_method_slot);
 
@@ -499,8 +500,10 @@ namespace probe {
         }
     }
 
-    void megamol::probe::PlaceProbes::vertexNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
-        mesh::MeshDataAccessCollection::VertexAttribute& normals) {
+    void megamol::probe::PlaceProbes::vertexNormalSampling(
+        mesh::MeshDataAccessCollection::VertexAttribute& vertices,
+        mesh::MeshDataAccessCollection::VertexAttribute& normals,
+        mesh::MeshDataAccessCollection::VertexAttribute& probe_ids) {
 
         uint32_t probe_count = vertices.byte_size / vertices.stride;
 
@@ -510,6 +513,8 @@ namespace probe {
         auto normal_accessor = reinterpret_cast<float*>(normals.data);
         auto normal_step = normals.stride / sizeof(float);
 
+        auto probe_id_accessor = reinterpret_cast<uint32_t*>(probe_ids.data);
+
         //#pragma omp parallel for
         for (int i = 0; i < probe_count; i++) {
 
@@ -517,13 +522,80 @@ namespace probe {
 
             probe.m_position = {vertex_accessor[vertex_step * i + 0], vertex_accessor[vertex_step * i + 1],
                 vertex_accessor[vertex_step * i + 2]};
-            probe.m_direction = {normal_accessor[normal_step * i + 0], normal_accessor[normal_step * i + 1],
-                normal_accessor[normal_step * i + 2]};
+            probe.m_direction = {-normal_accessor[normal_step * i + 0], -normal_accessor[normal_step * i + 1],
+                -normal_accessor[normal_step * i + 2]};
             probe.m_begin = -2.0;
             probe.m_end = 50.0;
             probe.m_cluster_id = -1;
 
+            auto probe_idx = this->_probes->getProbeCount();
             this->_probes->addProbe(std::move(probe));
+
+            probe_id_accessor[i] = probe_idx;
+        }
+    }
+
+    void PlaceProbes::faceNormalSampling(mesh::MeshDataAccessCollection::VertexAttribute& vertices,
+        mesh::MeshDataAccessCollection::VertexAttribute& normals,
+        mesh::MeshDataAccessCollection::VertexAttribute& probe_ids, 
+        mesh::MeshDataAccessCollection::IndexData& indices) {
+
+        auto vertex_accessor = reinterpret_cast<float*>(vertices.data);
+        auto vertex_step = vertices.stride / sizeof(float);
+
+        auto normal_accessor = reinterpret_cast<float*>(normals.data);
+        auto normal_step = normals.stride / sizeof(float);
+
+        auto probe_id_accessor = reinterpret_cast<uint32_t*>(probe_ids.data);
+
+        auto index_accessor = reinterpret_cast<uint32_t*>(indices.data);
+
+        uint32_t probe_count = (indices.byte_size / sizeof(uint32_t)) / 4;
+
+        //#pragma omp parallel for
+        for (int i = 0; i < probe_count; i++) {
+
+            BaseProbe probe;
+
+            auto i00 = index_accessor[(i*4)];
+            auto i01 = index_accessor[(i*4)+1];
+            auto i11 = index_accessor[(i*4)+2];
+            auto i10 = index_accessor[(i*4)+3];
+
+            glm::vec3 v00 = glm::vec3(vertex_accessor[vertex_step * i00 + 0], vertex_accessor[vertex_step * i00 + 1],
+                vertex_accessor[vertex_step * i00 + 2]);
+            glm::vec3 v01 = glm::vec3(vertex_accessor[vertex_step * i01 + 0], vertex_accessor[vertex_step * i01 + 1],
+                vertex_accessor[vertex_step * i01 + 2]);
+            glm::vec3 v11 = glm::vec3(vertex_accessor[vertex_step * i11 + 0], vertex_accessor[vertex_step * i11 + 1],
+                vertex_accessor[vertex_step * i11 + 2]);
+            glm::vec3 v10 = glm::vec3(vertex_accessor[vertex_step * i10 + 0], vertex_accessor[vertex_step * i10 + 1],
+                vertex_accessor[vertex_step * i10 + 2]);
+
+            glm::vec3 n00 = glm::vec3(normal_accessor[normal_step * i00 + 0], normal_accessor[normal_step * i00 + 1],
+                normal_accessor[normal_step * i00 + 2]);
+            glm::vec3 n01 = glm::vec3(normal_accessor[normal_step * i01 + 0], normal_accessor[normal_step * i01 + 1],
+                normal_accessor[normal_step * i01 + 2]);
+            glm::vec3 n11 = glm::vec3(normal_accessor[normal_step * i11 + 0], normal_accessor[normal_step * i11 + 1],
+                normal_accessor[normal_step * i11 + 2]);
+            glm::vec3 n10 = glm::vec3(normal_accessor[normal_step * i10 + 0], normal_accessor[normal_step * i10 + 1],
+                normal_accessor[normal_step * i10 + 2]);
+
+            glm::vec3 p_c = (v00 + v01 + v11 + v10) / 4.0f;
+            glm::vec3 n_c = (n00 + n01 + n11 + n10) / 4.0f;
+
+            probe.m_position = {p_c.x, p_c.y, p_c.z};
+            probe.m_direction = {-n_c.x,-n_c.y,-n_c.z};
+            probe.m_begin = -2.0;
+            probe.m_end = 50.0;
+            probe.m_cluster_id = -1;
+
+            auto probe_idx = this->_probes->getProbeCount();
+            this->_probes->addProbe(std::move(probe));
+
+            probe_id_accessor[i00] = probe_idx;
+            probe_id_accessor[i01] = probe_idx;
+            probe_id_accessor[i11] = probe_idx;
+            probe_id_accessor[i10] = probe_idx;
         }
     }
 
@@ -532,7 +604,7 @@ namespace probe {
 
         _probes = std::make_shared<ProbeCollection>();
 
-        assert(_mesh->accessMeshes().size() == 1);
+        //assert(_mesh->accessMeshes().size() == 1);
 
         mesh::MeshDataAccessCollection::VertexAttribute vertices;
         mesh::MeshDataAccessCollection::VertexAttribute centerline;
@@ -554,18 +626,58 @@ namespace probe {
             this->forceDirectedSampling(_mesh->accessMeshes().begin()->second);
         } else if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 3) {
             this->loadFromFile();
-        }
+        } else if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 4) {
 
-        if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 4) {
+            for (auto& mesh : _mesh->accessMeshes()) {
 
-            mesh::MeshDataAccessCollection::VertexAttribute normals;
-            for (auto& attribute : _mesh->accessMeshes().begin()->second.attributes) {
-                if (attribute.semantic == mesh::MeshDataAccessCollection::NORMAL) {
-                    normals = attribute;
+                for (auto& attribute : mesh.second.attributes) {
+                    if (attribute.semantic == mesh::MeshDataAccessCollection::POSITION) {
+                        vertices = attribute;
+                    }
                 }
-            }
 
-            this->vertexNormalSampling(vertices, normals);
+                mesh::MeshDataAccessCollection::VertexAttribute normals;
+                for (auto& attribute : mesh.second.attributes) {
+                    if (attribute.semantic == mesh::MeshDataAccessCollection::NORMAL) {
+                        normals = attribute;
+                    }
+                }
+
+                mesh::MeshDataAccessCollection::VertexAttribute probe_ids;
+                for (auto& attribute : mesh.second.attributes) {
+                    if (attribute.semantic == mesh::MeshDataAccessCollection::ID) {
+                        probe_ids = attribute;
+                    }
+                }
+
+                this->vertexNormalSampling(vertices, normals, probe_ids);
+            }
+        } else if (this->_method_slot.Param<core::param::EnumParam>()->Value() == 5) {
+
+            for (auto& mesh : _mesh->accessMeshes()) {
+
+                for (auto& attribute : mesh.second.attributes) {
+                    if (attribute.semantic == mesh::MeshDataAccessCollection::POSITION) {
+                        vertices = attribute;
+                    }
+                }
+
+                mesh::MeshDataAccessCollection::VertexAttribute normals;
+                for (auto& attribute : mesh.second.attributes) {
+                    if (attribute.semantic == mesh::MeshDataAccessCollection::NORMAL) {
+                        normals = attribute;
+                    }
+                }
+
+                mesh::MeshDataAccessCollection::VertexAttribute probe_ids;
+                for (auto& attribute : mesh.second.attributes) {
+                    if (attribute.semantic == mesh::MeshDataAccessCollection::ID) {
+                        probe_ids = attribute;
+                    }
+                }
+
+                this->faceNormalSampling(vertices, normals, probe_ids, mesh.second.indices);
+            }
         } else {
             mesh::CallMesh* ccl = this->_centerline_slot.CallAs<mesh::CallMesh>();
             if (ccl == nullptr) {

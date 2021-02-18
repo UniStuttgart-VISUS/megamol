@@ -17,7 +17,7 @@ namespace mesh {
 class MeshDataAccessCollection {
 public:
     enum ValueType { BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT, INT, UNSIGNED_INT, HALF_FLOAT, FLOAT, DOUBLE };
-    enum AttributeSemanticType { POSITION, NORMAL, COLOR, TEXCOORD, TANGENT };
+    enum AttributeSemanticType { POSITION, NORMAL, COLOR, TEXCOORD, TANGENT, ID };
     enum PrimitiveType { TRIANGLES, QUADS, LINES };
 
     static constexpr unsigned int convertToGLType(ValueType value_type) {
@@ -169,6 +169,8 @@ public:
 
     void deleteMesh(std::string const& identifier);
 
+    void clear();
+
     std::unordered_map<std::string, Mesh>& accessMeshes();
 
     Mesh const& accessMesh(std::string const& identifier);
@@ -195,6 +197,10 @@ inline void MeshDataAccessCollection::deleteMesh(std::string const& identifier) 
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError("deleteMesh error: identifier not found.");
     }
+}
+
+inline void MeshDataAccessCollection::clear() {
+    meshes.clear();
 }
 
 inline std::unordered_map<std::string, MeshDataAccessCollection::Mesh>& MeshDataAccessCollection::accessMeshes() {

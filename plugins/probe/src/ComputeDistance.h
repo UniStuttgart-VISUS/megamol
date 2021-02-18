@@ -4,13 +4,17 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
+#include "mmcore/param/ParamSlot.h"
+
+#include "vislib/graphics/gl/GLSLComputeShader.h"
+#include "vislib/graphics/gl/ShaderSource.h"
 
 #include "ProbeCalls.h"
 
 #include "mmstd_datatools/table/TableDataCall.h"
 
 namespace megamol::probe {
-class ComputeDTWDistance : public core::Module {
+class ComputeDistance : public core::Module {
 public:
     /**
      * Answer the name of this module.
@@ -18,7 +22,7 @@ public:
      * @return The name of this module.
      */
     static const char* ClassName() {
-        return "ComputeDTWDistance";
+        return "ComputeDistance";
     }
 
     /**
@@ -39,9 +43,9 @@ public:
         return true;
     }
 
-    ComputeDTWDistance();
+    ComputeDistance();
 
-    virtual ~ComputeDTWDistance();
+    virtual ~ComputeDistance();
 
 protected:
     bool create() override;
@@ -57,6 +61,8 @@ private:
 
     core::CallerSlot _in_probes_slot;
 
+    core::param::ParamSlot _stretching_factor_slot;
+
     std::size_t _row_count = 0;
 
     std::size_t _col_count = 0;
@@ -68,5 +74,9 @@ private:
     unsigned int _frame_id = std::numeric_limits<unsigned int>::max();
 
     std::size_t _out_data_hash = 0;
+
+    vislib::graphics::gl::GLSLComputeShader _fd_shader;
+
+    vislib::graphics::gl::ShaderSource _compute_shader_src;
 };
 } // namespace megamol::probe

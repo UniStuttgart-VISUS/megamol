@@ -8,17 +8,47 @@
 #include "stdafx.h"
 
 #include "mmcore/EventCall.h"
+#include "mmcore/param/EnumParam.h"
 
+#include "ProbeCalls.h"
 #include "ProbeEvents.h"
 #include "ProbeGlCalls.h"
 #include "ProbeHUllRenderTasks.h"
 
 #include "mesh/MeshCalls.h"
 
+bool megamol::probe_gl::ProbeHullRenderTasks::create() {
+
+    m_rendertask_collection.first = std::make_shared<mesh::GPURenderTaskCollection>();
+
+    struct PerFrameData {
+        int shading_mode;
+    };
+
+    std::array<PerFrameData, 1> per_frame_data;
+    per_frame_data[0].shading_mode = m_shading_mode_slot.Param<core::param::EnumParam>()->Value();
+
+    m_rendertask_collection.first->addPerFrameDataBuffer("", per_frame_data, 1);
+
+    return true;
+}
+
 megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks()
-        : m_version(0), m_show_hull(true), m_event_slot("GetEvents", "") {
+        : m_version(0)
+        , m_show_hull(true)
+        //, m_probes_slot("probes","")
+        , m_event_slot("GetEvents", "")
+        , m_shading_mode_slot("ShadingMode","") {
+    //this->m_probes_slot.SetCompatibleCall<megamol::probe::CallProbesDescription>();
+    //this->MakeSlotAvailable(&this->m_probes_slot);
+
     this->m_event_slot.SetCompatibleCall<core::CallEventDescription>();
     this->MakeSlotAvailable(&this->m_event_slot);
+
+    this->m_shading_mode_slot << new megamol::core::param::EnumParam(0);
+    this->m_shading_mode_slot.Param<megamol::core::param::EnumParam>()->SetTypePair(0, "Grey");
+    this->m_shading_mode_slot.Param<megamol::core::param::EnumParam>()->SetTypePair(1, "ClusterID");
+    this->MakeSlotAvailable(&this->m_shading_mode_slot);
 }
 
 megamol::probe_gl::ProbeHullRenderTasks::~ProbeHullRenderTasks() {}
@@ -42,6 +72,19 @@ bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller
         return false;
 
     syncRenderTaskCollection(lhs_rtc);
+
+    if (m_shading_mode_slot.IsDirty()) {
+        m_shading_mode_slot.ResetDirty();
+
+        struct PerFrameData {
+            int shading_mode;
+        };
+
+        std::array<PerFrameData, 1> per_frame_data;
+        per_frame_data[0].shading_mode = m_shading_mode_slot.Param<core::param::EnumParam>()->Value();
+
+        m_rendertask_collection.first->updatePerFrameDataBuffer("", per_frame_data, 1);
+    }
 
     bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate();
 

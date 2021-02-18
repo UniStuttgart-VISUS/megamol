@@ -9,8 +9,12 @@
 #ifndef PROBE_COLLECTION_H_INCLUDED
 #define PROBE_COLLECTION_H_INCLUDED
 
+#include "probe/probe.h"
+
+#include <algorithm>
 #include <array>
 #include <string>
+#include <random>
 #include <variant>
 
 namespace megamol {
@@ -34,6 +38,8 @@ struct BaseProbe {
     float m_sample_radius;
     /** for clustered samples */
     int m_cluster_id;
+    /** true, if clustering considers this probe to be a representant */
+    bool m_representant;
 
     // virtual void probe() = 0;
 };
@@ -117,6 +123,12 @@ public:
             }
         }
         m_probes = tmp;
+    }
+
+    void shuffle_probes() {
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::shuffle(m_probes.begin(), m_probes.end(), g);
     }
 
 private:

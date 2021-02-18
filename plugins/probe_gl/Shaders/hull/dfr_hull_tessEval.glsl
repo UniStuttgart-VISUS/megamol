@@ -3,10 +3,12 @@ layout(quads) in;
 
 layout(location = 0) in vec3 world_pos[];
 layout(location = 1) in vec3 normal[];
+layout(location = 2) flat in int cluster_id[];
 
 layout(location = 0) out vec3 world_pos_out;
 layout(location = 1) out vec3 normal_out;
 layout(location = 2) out vec3 debug_col_out;
+layout(location = 3) flat out int cluster_id_out;
 
 uniform mat4 view_mx;
 uniform mat4 proj_mx;
@@ -22,6 +24,7 @@ void main()
     normal_out = normalize(mix(n_0, n_1, gl_TessCoord.y));
 
     debug_col_out = vec3(gl_TessCoord.x,gl_TessCoord.y,0.0);
+    cluster_id_out = cluster_id[0];
 
     vec4 cs_p1 = mix(gl_in[1].gl_Position,gl_in[0].gl_Position,gl_TessCoord.x);
     vec4 cs_p2 = mix(gl_in[2].gl_Position,gl_in[3].gl_Position,gl_TessCoord.x);

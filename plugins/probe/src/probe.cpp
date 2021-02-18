@@ -28,9 +28,11 @@
 #endif
 #include "MeshSelector.h"
 #include "TableToProbes.h"
-#include "ComputeDTWDistance.h"
+#include "ComputeDistance.h"
 #include "ProbeClustering.h"
 #include "ReconstructSurface.h"
+#include "TessellateBoundingBox.h"
+#include "InjectClusterID.h"
 
 namespace megamol::probe {
     /** Implementing the instance class of this plugin */
@@ -70,9 +72,11 @@ namespace megamol::probe {
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ProbeToTable>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::MeshSelector>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::TableToProbes>();
-            this->module_descriptions.RegisterAutoDescription<megamol::probe::ComputeDTWDistance>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::ComputeDistance>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ProbeClustering>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ReconstructSurface>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::TessellateBoundingBox>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::InjectClusterID>();
 #ifdef PROBE_HAS_OSPRAY
             this->module_descriptions.RegisterAutoDescription<megamol::probe::OSPRayGlyphGeometry>();
 #endif

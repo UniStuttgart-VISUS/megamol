@@ -54,9 +54,9 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
                     attrib.component_cnt * MeshDataAccessCollection::getByteSize(attrib.component_type),
                     {glowl::VertexLayout::Attribute(attrib.component_cnt,
                         MeshDataAccessCollection::convertToGLType(attrib.component_type), GL_FALSE /*ToDO*/,
-                        attrib.offset)}));
+                        attrib.offset, attrib.component_type == MeshDataAccessCollection::ValueType::INT ? GL_INT : GL_FLOAT)}));
+                //TODO: check for INT to switch between shader input types is a temporary hotfix....
 
-                // TODO vb_iterators
                 vb_iterators.push_back({attrib.data, attrib.data + attrib.byte_size});
             }
 

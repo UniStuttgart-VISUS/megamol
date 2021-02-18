@@ -53,7 +53,12 @@ private:
     bool get_extent_cb(core::Call& c);
 
     bool is_dirty() {
-        return _eps_slot.IsDirty() || _minpts_slot.IsDirty() || _threshold_slot.IsDirty() || _handwaving_slot.IsDirty();
+        return _eps_slot.IsDirty() || _minpts_slot.IsDirty() || _threshold_slot.IsDirty() ||
+               _handwaving_slot.IsDirty() || _angle_threshold_slot.IsDirty();
+    }
+
+    bool is_debug_dirty() {
+        return _lhs_idx_slot.IsDirty() || _rhs_idx_slot.IsDirty();
     }
 
     void reset_dirty() {
@@ -61,6 +66,12 @@ private:
         _minpts_slot.ResetDirty();
         _threshold_slot.ResetDirty();
         _handwaving_slot.ResetDirty();
+        _angle_threshold_slot.ResetDirty();
+    }
+
+    void reset_debug_dirty() {
+        _lhs_idx_slot.ResetDirty();
+        _rhs_idx_slot.ResetDirty();
     }
 
     core::CalleeSlot _out_probes_slot;
@@ -77,9 +88,19 @@ private:
 
     core::param::ParamSlot _handwaving_slot;
 
+    core::param::ParamSlot _lhs_idx_slot;
+
+    core::param::ParamSlot _rhs_idx_slot;
+
+    core::param::ParamSlot _toggle_reps_slot;
+
+    core::param::ParamSlot _angle_threshold_slot;
+
     std::shared_ptr<stdplugin::datatools::genericPointcloud<float, 3>> _points;
 
     std::shared_ptr<stdplugin::datatools::clustering::kd_tree_t<float, 3>> _kd_tree;
+
+    stdplugin::datatools::clustering::cluster_result_t _cluster_res;
 
     unsigned int _frame_id = std::numeric_limits<unsigned int>::max();
 

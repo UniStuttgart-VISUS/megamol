@@ -42,6 +42,8 @@ namespace probe_gl {
             return true;
         }
 
+        bool create();
+
         ProbeHullRenderTasks();
         ~ProbeHullRenderTasks();
 
@@ -60,7 +62,11 @@ namespace probe_gl {
         std::vector<std::vector<std::array<float, 16>>> m_object_transforms;
         std::vector<std::shared_ptr<glowl::Mesh>> m_batch_meshes;
 
+        //core::CallerSlot m_probes_slot;
+
         core::CallerSlot m_event_slot;
+
+        core::param::ParamSlot m_shading_mode_slot;
     };
 
 } // namespace probe_gl
