@@ -119,7 +119,7 @@ namespace gui {
          * Pass current GUI state.
          */
         std::string GetState(void) {
-            return this->dump_state_to_string();
+            return this->project_to_lua_string();
         }
 
         /**
@@ -142,6 +142,13 @@ namespace gui {
         }
 
         ///////// SET ///////////
+
+        /**
+         * Set GUI state.
+         */
+        void SetState(const std::string& json_state) {
+            this->state_from_string(json_state);
+        }
 
         /**
          * Set project script paths.
@@ -203,12 +210,9 @@ namespace gui {
             bool rescale_windows;     // Indicates resizing of windows for new gui zoom
             Styles style;             // Predefined GUI style
             bool style_changed;       // Flag indicating changed style
-            bool autosave_gui_state;  // Automatically save state after gui has been changed
             std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
             ImGuiID graph_uid;                             // UID of currently running graph
             std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.
-            bool win_save_state;    // Flag indicating that window state should be written to parameter.
-            float win_save_delay;   // Flag indicating how long to wait for saving window state since last user action.
             std::string win_delete; // Name of the window to delete.
             double last_instance_time;         // Last instance time.
             bool open_popup_about;             // Flag for opening about pop-up
@@ -222,7 +226,6 @@ namespace gui {
             bool screenshot_triggered;         // Trigger and file name for screenshot
             std::string screenshot_filepath;   // Filename the screenshot should be saved to
             int screenshot_filepath_id;        // Last unique id for screenshot filename
-            std::string last_script_filename;  // Last script filename provided from lua
             bool font_apply;                   // Flag indicating whether new font should be applied
             std::string font_file_name;        // Font imgui name or font file name.
             int font_size;                     // Font size (only used whe font file name is given)
@@ -299,12 +302,10 @@ namespace gui {
         bool isHotkeyPressed(megamol::core::view::KeyCode keycode);
         void triggerCoreInstanceShutdown(void);
 
-        std::string dump_state_to_string(void);
+        std::string project_to_lua_string(void);
         bool load_state_from_file(const std::string& filename);
-        bool load_state_from_string(const std::string& project);
-
-        bool state_from_json(const nlohmann::json& in_json);
-        bool state_to_json(nlohmann::json& inout_json);
+        bool state_from_string(const std::string& state);
+        bool state_to_string(std::string& out_state);
 
         void init_state(void);
 

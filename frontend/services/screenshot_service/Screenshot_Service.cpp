@@ -82,7 +82,7 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
 
     // todo: camera settings are not stored without magic knowledge about the view
     std::string project = megamolgraph_ptr->Convenience().SerializeGraph();
-    if (guiresources_ptr->request_gui_state != nullptr) project.append(guiresources_ptr->request_gui_state());
+    project.append(guiresources_ptr->request_gui_state());
     megamol::core::utility::graphics::ScreenShotComments ssc(project);
     png_set_text(pngPtr, pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
 

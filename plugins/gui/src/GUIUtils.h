@@ -83,8 +83,10 @@
 /// #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") see
 /// megamol::core::param::AbstractParamPresentation.h
 
-#define GUI_PROJECT_GUI_STATE_START_TAG ("-- <GUI_STATE_JSON>")
-#define GUI_PROJECT_GUI_STATE_END_TAG ("</GUI_STATE_JSON>")
+#define GUI_START_TAG_SET_GUI_STATE ("mmSetGUIState{[=[")
+#define GUI_END_TAG_SET_GUI_STATE ("]=]}>")
+#define GUI_START_TAG_SET_GUI_VISIBILITY ("mmShowGUI{[=[")
+#define GUI_END_TAG_SET_GUI_VISIBILITY ("]=]}>")
 
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))
@@ -307,14 +309,15 @@ namespace gui {
      */
     class GUIUtils {
     public:
-        /** Extract gui state enclosed in predefined tags. */
-        static std::string ExtractGUIState(const std::string& str) {
+        /** Extract string enclosed in predefined tags. */
+        static std::string ExtractTaggedString(
+            const std::string& str, const std::string& start_tag, const std::string& end_tag) {
             std::string return_str;
-            auto start_idx = str.find(GUI_PROJECT_GUI_STATE_START_TAG);
+            auto start_idx = str.find(start_tag);
             if (start_idx != std::string::npos) {
-                auto end_idx = str.find(GUI_PROJECT_GUI_STATE_END_TAG);
+                auto end_idx = str.find(end_tag);
                 if ((end_idx != std::string::npos) && (start_idx < end_idx)) {
-                    start_idx += std::string(GUI_PROJECT_GUI_STATE_START_TAG).length();
+                    start_idx += std::string(start_tag).length();
                     return_str = str.substr(start_idx, (end_idx - start_idx));
                 }
             }

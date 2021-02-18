@@ -1633,7 +1633,7 @@ std::string megamol::gui::GraphCollection::GetUpdatedGUIState(ImGuiID graph_id, 
     // Try to load existing gui state from file
     std::string state_str;
     if (megamol::core::utility::FileUtils::ReadFile(filename, state_str, true)) {
-        state_str = GUIUtils::ExtractGUIState(state_str);
+        state_str = GUIUtils::ExtractTaggedString(state_str, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
         if (!state_str.empty()) {
             state_json = nlohmann::json::parse(state_str);
             if (!state_json.is_object()) {
@@ -1677,7 +1677,7 @@ bool megamol::gui::GraphCollection::load_state_from_file(const std::string& file
 
     std::string state_str;
     if (megamol::core::utility::FileUtils::ReadFile(filename, state_str, true)) {
-        state_str = GUIUtils::ExtractGUIState(state_str);
+        state_str = GUIUtils::ExtractTaggedString(state_str, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
         if (state_str.empty())
             return false;
         nlohmann::json json;

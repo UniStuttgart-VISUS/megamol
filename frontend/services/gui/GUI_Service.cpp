@@ -46,7 +46,7 @@ bool GUI_Service::init(const Config& config) {
         {"IOpenGL_Context"},                       // resource index 4
         {"FramebufferEvents"},                     // resource index 5
         {"GLFrontbufferToPNG_ScreenshotTrigger"},  // resource index 6
-        {"LuaScriptPaths"}                         // resource index 7
+        {"LuaScriptPaths"}                        // resource index 7
     };
 
     // init gui
@@ -55,6 +55,14 @@ bool GUI_Service::init(const Config& config) {
             this->m_gui = std::make_shared<megamol::gui::GUIWrapper>();
             if (check_gui_not_nullptr) {
                 if (this->m_gui->Get()->CreateContext(megamol::gui::GUIImGuiAPI::OPEN_GL, config.core_instance)) {
+                    // Set function pointer in resource once
+                    this->m_providedResource.request_gui_state = [&](void) -> std::string {return this->resource_request_gui_state();};
+                    this->m_providedResource.provide_gui_state = [&](std::string json_state) -> void {
+                        return this->resource_provide_gui_state(json_state);
+                    };
+                    this->m_providedResource.provide_gui_visibility = [&](bool show) -> void {
+                        return this->resource_provide_gui_visibility(show);
+                    };
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully.");
                     return true;
                 }
@@ -73,9 +81,6 @@ void GUI_Service::close() {
 
 void GUI_Service::updateProvidedResources() {
 
-    this->m_providedResource.request_gui_state = [&](void) -> std::string {
-        return this->resource_get_gui_state();
-    };
 }
 
 
@@ -183,8 +188,8 @@ void GUI_Service::digestChangedRequestedResources() {
     }
 
     /// Pipe lua script paths to gui = resource index 7
-   auto& script_paths = this->m_requestedResourceReferences[7].getResource< megamol::frontend_resources::ScriptPaths>();
-   gui->SetProjectScriptPaths(script_paths.lua_script_paths);
+    auto& script_paths = this->m_requestedResourceReferences[7].getResource<megamol::frontend_resources::ScriptPaths>();
+    gui->SetProjectScriptPaths(script_paths.lua_script_paths);
 }
 
 
@@ -244,13 +249,33 @@ void GUI_Service::setRequestedResources(std::vector<FrontendResource> resources)
 }
 
 
-std::string GUI_Service::resource_get_gui_state(void) {
+std::string GUI_Service::resource_request_gui_state(void) {
 
     if (!check_gui_not_nullptr) {
         return std::string();
     }
     auto gui = this->m_gui->Get();
     return gui->GetState();
+}
+
+
+void GUI_Service::resource_provide_gui_state(const std::string& json_state) {
+
+    if (!check_gui_not_nullptr) {
+        return;
+    }
+    auto gui = this->m_gui->Get();
+    gui->SetState(json_state);
+}
+
+
+void GUI_Service::resource_provide_gui_visibility(bool show) {
+
+    if (!check_gui_not_nullptr) {
+        return;
+    }
+    auto gui = this->m_gui->Get();
+    gui->SetVisibility(show);
 }
 
 

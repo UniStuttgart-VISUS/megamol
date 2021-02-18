@@ -74,7 +74,8 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
         "WindowEvents", // for file drag and drop events
         "FrameStatistics", // for LastFrameTime
-        "WindowManipulation" // for Framebuffer resize
+        "WindowManipulation", // for Framebuffer resize
+        "GUIResource"
     }; //= {"ZMQ_Context"};
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
@@ -145,6 +146,18 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
     callbacks.mmSetVsync_callback_= [&](bool state) {
         auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
         window_manipulation.set_swap_interval(state ? 1 : 0);
+    };
+
+    callbacks.mmSetGUIState_callback_ = [&](std::string json) {
+        auto& gui_resource =
+            m_requestedResourceReferences[5].getResource<megamol::frontend_resources::GUIResource>();
+        gui_resource.provide_gui_state(json);
+    };
+
+    callbacks.mmShowGUI_callback_ = [&](bool show) {
+        auto& gui_resource =
+            m_requestedResourceReferences[5].getResource<megamol::frontend_resources::GUIResource>();
+        gui_resource.provide_gui_visibility(show);
     };
 
     luaAPI.SetCallbacks(callbacks);

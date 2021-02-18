@@ -325,19 +325,6 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].is_pressed = false;
     }
 
-    // Auto-save state
-    this->state.win_save_delay += io.DeltaTime;
-    if (this->state.autosave_gui_state && this->state.win_save_state && (this->state.win_save_delay > 1.0f)) {
-        // Delayed saving after triggering saving state (in seconds).
-        GraphPtr_t graph_ptr;
-        if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-            std::string filename = graph_ptr->GetFilename();
-            this->configurator.GetGraphCollection().SaveProjectToFile(
-                this->state.graph_uid, filename, this->dump_state_to_string());
-        }
-        this->state.win_save_state = false;
-    }
-
     // Style
     if (this->state.style_changed) {
         ImGuiStyle& style = ImGui::GetStyle();
@@ -811,12 +798,6 @@ bool GUIWindows::OnMouseButton(
 
     io.MouseDown[buttonIndex] = down;
 
-    // Trigger saving state when mouse hovered any window and on button mouse release event
-    if (!io.MouseDown[buttonIndex] && ImGui::IsWindowHovered(hoverFlags)) {
-        this->state.win_save_state = true;
-        this->state.win_save_delay = 0.0f;
-    }
-
     // Always consumed if any imgui windows is hovered.
     bool consumed = ImGui::IsWindowHovered(hoverFlags);
     if (!consumed) {
@@ -996,30 +977,21 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                 __LINE__);
         }
 
-        // Check for script path name and for requested update of GUI state
+        // Check for script path name
         GraphPtr_t graph_ptr;
         if (graph_sync_success && this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-            std::string script_filename = this->state.last_script_filename;
-            // Set project filename from lua state of core instance
+            std::string script_filename;
+            // Get project filename from lua state of core instance
             if (graph_ptr->GetFilename().empty() && (this->core_instance != nullptr)) {
                 script_filename = this->core_instance->GetLuaState()->GetScriptPath();
             }
-            // Always check for changed script path when new project file might be loaded via LuaServiceWrapper
+            // Get project filename from lua state of frontend service
             if (!this->state.project_script_paths.empty()) {
                 script_filename = this->state.project_script_paths.front();
             }
             // Load GUI state from project file when project file changed
-            if (script_filename != this->state.last_script_filename) {
+            if (!script_filename.empty()) {
                 graph_ptr->SetFilename(script_filename);
-                this->state.last_script_filename = script_filename;
-
-                if (megamol::core::utility::FileUtils::FileHasExtension(script_filename, ".png")) {
-                    std::string project =
-                        megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(script_filename);
-                    this->load_state_from_string(project);
-                } else {
-                    this->load_state_from_file(script_filename);
-                }
             }
         }
         sync_success &= graph_sync_success;
@@ -2073,7 +2045,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
 
             std::string gui_state;
             if (save_gui_state.IsTrue()) {
-                gui_state = this->dump_state_to_string();
+                gui_state = this->project_to_lua_string();
             }
 
             popup_failed |=
@@ -2097,6 +2069,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
             if (!popup_failed) {
                 this->load_state_from_file(filename);
             }
+            /// XXX TODO Redirect project loading request to Lua_Wrapper_service
         }
         MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
             confirmed, "Cancel", aborted);
@@ -2315,14 +2288,16 @@ void megamol::gui::GUIWindows::triggerCoreInstanceShutdown(void) {
 }
 
 
-std::string megamol::gui::GUIWindows::dump_state_to_string(void) {
+std::string megamol::gui::GUIWindows::project_to_lua_string(void) {
 
-    nlohmann::json state_json;
-    if (this->state_to_json(state_json)) {
-        std::string state_str = state_json.dump(); // No line feed
-        state_str = "\n" + std::string(GUI_PROJECT_GUI_STATE_START_TAG) + state_str +
-                    std::string(GUI_PROJECT_GUI_STATE_END_TAG);
-        return state_str;
+    std::string gui_state;
+    if (this->state_to_string(gui_state)) {
+        std::string state = "\n\n" + std::string(GUI_START_TAG_SET_GUI_VISIBILITY) +
+                            std::to_string(this->state.gui_visible) + std::string(GUI_END_TAG_SET_GUI_VISIBILITY);
+
+        state += "\n\n" + std::string(GUI_START_TAG_SET_GUI_STATE) + gui_state + std::string(GUI_END_TAG_SET_GUI_STATE);
+
+        return state;
     }
     return std::string("");
 }
@@ -2330,39 +2305,39 @@ std::string megamol::gui::GUIWindows::dump_state_to_string(void) {
 
 bool megamol::gui::GUIWindows::load_state_from_file(const std::string& filename) {
 
+    bool retval = false;
     std::string project;
     if (megamol::core::utility::FileUtils::ReadFile(filename, project, true)) {
-        return this->load_state_from_string(project);
+
+        std::string gui_state_str =
+            GUIUtils::ExtractTaggedString(project, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
+        retval = this->state_from_string(gui_state_str);
+
+        std::string gui_visible_str =
+            GUIUtils::ExtractTaggedString(project, GUI_START_TAG_SET_GUI_VISIBILITY, GUI_END_TAG_SET_GUI_VISIBILITY);
+        if (!gui_visible_str.empty()) {
+            this->state.gui_visible = false;
+            retval |= true;
+        }
     }
-    return false;
+    return retval;
 }
 
 
-bool megamol::gui::GUIWindows::load_state_from_string(const std::string& project) {
-
-    std::string state_str = GUIUtils::ExtractGUIState(project);
-    if (state_str.empty()) {
-        return false;
-    }
-    nlohmann::json state_json = nlohmann::json::parse(state_str);
-    return this->state_from_json(state_json);
-}
-
-
-bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
+bool megamol::gui::GUIWindows::state_from_string(const std::string& state) {
 
     try {
-        if (!in_json.is_object()) {
+        nlohmann::json state_json = nlohmann::json::parse(state);
+        if (!state_json.is_object()) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Invalid JSON object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
         // Read GUI state
-        for (auto& header_item : in_json.items()) {
+        for (auto& header_item : state_json.items()) {
             if (header_item.key() == GUI_JSON_TAG_GUI) {
                 auto gui_state = header_item.value();
-                megamol::core::utility::get_json_value<bool>(gui_state, {"gui_visible"}, &this->state.gui_visible);
                 megamol::core::utility::get_json_value<bool>(gui_state, {"menu_visible"}, &this->state.menu_visible);
                 int style = 0;
                 megamol::core::utility::get_json_value<int>(gui_state, {"style"}, &style);
@@ -2379,10 +2354,10 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
         }
 
         // Read window configurations
-        this->window_collection.StateFromJSON(in_json);
+        this->window_collection.StateFromJSON(state_json);
 
         // Read configurator state
-        this->configurator.StateFromJSON(in_json);
+        this->configurator.StateFromJSON(state_json);
 
         // Read GUI state of parameters (groups)
         GraphPtr_t graph_ptr;
@@ -2390,11 +2365,11 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 std::string module_full_name = module_ptr->FullName();
                 // Parameter Groups
-                module_ptr->present.param_groups.StateFromJSON(in_json, module_full_name);
+                module_ptr->present.param_groups.StateFromJSON(state_json, module_full_name);
                 // Parameters
                 for (auto& param : module_ptr->parameters) {
                     std::string param_full_name = module_full_name + "::" + param.full_name;
-                    param.present.StateFromJSON(in_json, param_full_name);
+                    param.present.StateFromJSON(state_json, param_full_name);
                     param.present.ForceSetGUIStateDirty();
                 }
             }
@@ -2413,24 +2388,27 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
 }
 
 
-bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
+bool megamol::gui::GUIWindows::state_to_string(std::string& out_state) {
 
     try {
+        out_state.clear();
+        nlohmann::json json_state;
+
         // Write GUI state
-        inout_json[GUI_JSON_TAG_GUI]["gui_visible"] = this->state.gui_visible;
-        inout_json[GUI_JSON_TAG_GUI]["menu_visible"] = this->state.menu_visible;
-        inout_json[GUI_JSON_TAG_GUI]["style"] = static_cast<int>(this->state.style);
+        json_state[GUI_JSON_TAG_GUI]["menu_visible"] = this->state.menu_visible;
+        json_state[GUI_JSON_TAG_GUI]["style"] = static_cast<int>(this->state.style);
         GUIUtils::Utf8Encode(this->state.font_file_name);
-        inout_json[GUI_JSON_TAG_GUI]["font_file_name"] = this->state.font_file_name;
+        json_state[GUI_JSON_TAG_GUI]["font_file_name"] = this->state.font_file_name;
         GUIUtils::Utf8Decode(this->state.font_file_name);
-        inout_json[GUI_JSON_TAG_GUI]["font_size"] = this->state.font_size;
-        inout_json[GUI_JSON_TAG_GUI]["scale"] = megamol::gui::gui_scaling.Get();
+        json_state[GUI_JSON_TAG_GUI]["font_size"] = this->state.font_size;
+        json_state[GUI_JSON_TAG_GUI]["scale"] = megamol::gui::gui_scaling.Get();
 
         // Write window configuration
-        this->window_collection.StateToJSON(inout_json);
+        this->window_collection.StateToJSON(json_state);
 
         // Write the configurator state
-        this->configurator.StateToJSON(inout_json);
+        this->configurator.StateToJSON(json_state);
+        this->configurator.StateToJSON(json_state);
 
         // Write GUI state of parameters (groups)
         GraphPtr_t graph_ptr;
@@ -2438,15 +2416,16 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 std::string module_full_name = module_ptr->FullName();
                 // Parameter Groups
-                module_ptr->present.param_groups.StateToJSON(inout_json, module_full_name);
+                module_ptr->present.param_groups.StateToJSON(json_state, module_full_name);
                 // Parameters
                 for (auto& param : module_ptr->parameters) {
                     std::string param_full_name = module_full_name + "::" + param.full_name;
-                    param.present.StateToJSON(inout_json, param_full_name);
+                    param.present.StateToJSON(json_state, param_full_name);
                 }
             }
         }
 
+        out_state = json_state.dump();
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Wrote GUI state to JSON.");
 #endif // GUI_VERBOSE
@@ -2470,12 +2449,9 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.style = GUIWindows::Styles::DarkColors;
     this->state.rescale_windows = false;
     this->state.style_changed = true;
-    this->state.autosave_gui_state = false;
     this->state.project_script_paths.clear();
     this->state.graph_uid = GUI_INVALID_ID;
     this->state.font_utf8_ranges.clear();
-    this->state.win_save_state = false;
-    this->state.win_save_delay = 0.0f;
     this->state.win_delete = "";
     this->state.last_instance_time = 0.0;
     this->state.open_popup_about = false;
@@ -2489,7 +2465,6 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.screenshot_triggered = false;
     this->state.screenshot_filepath = "megamol_screenshot.png";
     this->state.screenshot_filepath_id = 0;
-    this->state.last_script_filename = "";
     this->state.hotkeys_check_once = true;
     this->state.font_apply = false;
     this->state.font_file_name = "";

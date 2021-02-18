@@ -90,7 +90,9 @@ private:
     std::vector<std::string> m_requestedResourcesNames;
     megamol::frontend_resources::GUIResource m_providedResource;
 
-    std::string resource_get_gui_state(void);
+    std::string resource_request_gui_state(void);
+    void resource_provide_gui_state(const std::string& json_state);
+    void resource_provide_gui_visibility(bool show);
 };
 
 } // namespace frontend
