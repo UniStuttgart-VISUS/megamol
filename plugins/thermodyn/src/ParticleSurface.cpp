@@ -434,13 +434,14 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
         if (cgtf != nullptr) {
             cgtf->ResetDirty();
         }
+        ++_out_data_hash;
     }
 
     meta_data.m_frame_cnt = in_data->FrameCount();
     meta_data.m_frame_ID = _frame_id;
     // meta_data.m_data_hash = ++_out_data_hash;
     out_mesh->setMetaData(meta_data);
-    out_mesh->setData(_mesh_access_collection, ++_out_data_hash);
+    out_mesh->setData(_mesh_access_collection, _out_data_hash);
 
     return true;
 }
