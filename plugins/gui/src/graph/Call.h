@@ -74,6 +74,8 @@ namespace gui {
             this->present.Present(phase, *this, state);
         }
 
+        const std::string GetSlotsLabel(void);
+
     private:
         // VARIABLES --------------------------------------------------------------
 

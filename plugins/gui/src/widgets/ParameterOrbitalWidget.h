@@ -34,6 +34,8 @@ namespace gui {
     private:
         ::quat m_rotation;
         ::vec3 m_direction;
+
+        bool init;
     };
 
 

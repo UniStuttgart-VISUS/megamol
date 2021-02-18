@@ -14,13 +14,10 @@
 #include "mmcore/thecam/math/functions.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/Input.h"
+#include "mmcore/view/RenderUtils.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <queue>
-
-#define GLOWL_OPENGL_INCLUDE_GLAD
-#include "glowl/FramebufferObject.hpp"
-#include "glowl/GLSLProgram.hpp"
 
 #include <tuple>
 
@@ -83,15 +80,6 @@ namespace gui {
             return this->pending_manipulations;
         }
 
-        // Static functions ---------------------------------------------------
-
-        static bool CreatShader(ShaderPtr& shader_ptr, const std::string& vertex_src, const std::string& fragment_src);
-
-        static glm::vec3 Worldspace2Screenspace(
-            const glm::vec3& vec_world, const glm::mat4& mvp, const glm::vec2& viewport);
-        static glm::vec3 Screenspace2Worldspace(
-            const glm::vec3& vec_screen, const glm::mat4& mvp, const glm::vec2& viewport);
-
     protected:
         // FUNCTIONS --------------------------------------------------------------
         /// Should only be callable by friend class who owns the object
@@ -132,11 +120,10 @@ namespace gui {
         std::map<int, std::vector<Interaction>> available_interactions;
         ManipVector pending_manipulations;
 
-        std::unique_ptr<glowl::FramebufferObject> fbo;
+        std::shared_ptr<glowl::FramebufferObject> fbo;
+        std::shared_ptr<glowl::GLSLProgram> fbo_shader;
 
         bool enabled;
-
-        std::shared_ptr<glowl::GLSLProgram> fbo_shader;
 
         // FUNCTIONS --------------------------------------------------------------
 
