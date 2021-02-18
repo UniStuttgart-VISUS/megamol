@@ -106,7 +106,7 @@ void main() {
         
         for(int i=0; i<distant_light_cnt; ++i)
         {
-            vec3 light_dir = vec3(distant_light_params[i].x,distant_light_params[i].y,distant_light_params[i].z);
+            vec3 light_dir = -1.0 * vec3(distant_light_params[i].x,distant_light_params[i].y,distant_light_params[i].z);
             vec3 view_dir = normalize(camPos - world_pos);
             reflected_light += blinnPhong(normal,light_dir, view_dir) * distant_light_params[i].intensity;
         
