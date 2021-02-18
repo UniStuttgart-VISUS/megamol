@@ -83,10 +83,10 @@
 /// #define GUI_JSON_TAG_GUISTATE_PARAMETERS ("ParameterStates") see
 /// megamol::core::param::AbstractParamPresentation.h
 
-#define GUI_START_TAG_SET_GUI_STATE ("mmSetGUIState{[=[")
-#define GUI_END_TAG_SET_GUI_STATE ("]=]}>")
-#define GUI_START_TAG_SET_GUI_VISIBILITY ("mmShowGUI{[=[")
-#define GUI_END_TAG_SET_GUI_VISIBILITY ("]=]}>")
+#define GUI_START_TAG_SET_GUI_STATE ("mmSetGUIState([=[")
+#define GUI_END_TAG_SET_GUI_STATE ("]=])")
+#define GUI_START_TAG_SET_GUI_VISIBILITY ("mmShowGUI([=[")
+#define GUI_END_TAG_SET_GUI_VISIBILITY ("]=])")
 
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))

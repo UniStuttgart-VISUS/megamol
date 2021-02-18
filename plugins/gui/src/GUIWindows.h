@@ -213,23 +213,23 @@ namespace gui {
             std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
             ImGuiID graph_uid;                             // UID of currently running graph
             std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.
-            std::string win_delete; // Name of the window to delete.
-            double last_instance_time;         // Last instance time.
-            bool open_popup_about;             // Flag for opening about pop-up
-            bool open_popup_save;              // Flag for opening save pop-up
-            bool open_popup_load;              // Flag for opening load pop-up
-            bool open_popup_screenshot;        // Flag for opening screenshot file pop-up
-            bool menu_visible;                 // Flag indicating menu state
-            unsigned int graph_fonts_reserved; // Number of fonts reserved for the configurator graph canvas
-            bool toggle_graph_entry;           // Flag indicating that the main view should be toggeled
-            bool shutdown_triggered;           // Flag indicating user triggered shutdown
-            bool screenshot_triggered;         // Trigger and file name for screenshot
-            std::string screenshot_filepath;   // Filename the screenshot should be saved to
-            int screenshot_filepath_id;        // Last unique id for screenshot filename
-            bool font_apply;                   // Flag indicating whether new font should be applied
-            std::string font_file_name;        // Font imgui name or font file name.
-            int font_size;                     // Font size (only used whe font file name is given)
-            bool hotkeys_check_once;           // WORKAROUND: Check multiple hotkey assignments once
+            std::string win_delete;                        // Name of the window to delete.
+            double last_instance_time;                     // Last instance time.
+            bool open_popup_about;                         // Flag for opening about pop-up
+            bool open_popup_save;                          // Flag for opening save pop-up
+            bool open_popup_load;                          // Flag for opening load pop-up
+            bool open_popup_screenshot;                    // Flag for opening screenshot file pop-up
+            bool menu_visible;                             // Flag indicating menu state
+            unsigned int graph_fonts_reserved;             // Number of fonts reserved for the configurator graph canvas
+            bool toggle_graph_entry;                       // Flag indicating that the main view should be toggeled
+            bool shutdown_triggered;                       // Flag indicating user triggered shutdown
+            bool screenshot_triggered;                     // Trigger and file name for screenshot
+            std::string screenshot_filepath;               // Filename the screenshot should be saved to
+            int screenshot_filepath_id;                    // Last unique id for screenshot filename
+            bool font_apply;                               // Flag indicating whether new font should be applied
+            std::string font_file_name;                    // Font imgui name or font file name.
+            int font_size;                                 // Font size (only used whe font file name is given)
+            bool hotkeys_check_once;                       // WORKAROUND: Check multiple hotkey assignments once
         };
 
         /** The GUI hotkey array index mapping. */

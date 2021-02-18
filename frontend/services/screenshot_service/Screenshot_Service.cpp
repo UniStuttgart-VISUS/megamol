@@ -177,7 +177,7 @@ bool Screenshot_Service::init(const Config& config) {
     {
         "IOpenGL_Context",
         "MegaMolGraph",
-        "GUIResources"
+        "GUIResource"
     };
 
     this->m_frontbufferToPNG_trigger = [&](std::string const& filename) -> bool

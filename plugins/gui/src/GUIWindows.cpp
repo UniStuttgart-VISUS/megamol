@@ -2292,10 +2292,10 @@ std::string megamol::gui::GUIWindows::project_to_lua_string(void) {
 
     std::string gui_state;
     if (this->state_to_string(gui_state)) {
-        std::string state = "\n\n" + std::string(GUI_START_TAG_SET_GUI_VISIBILITY) +
+        std::string state = "\n" + std::string(GUI_START_TAG_SET_GUI_VISIBILITY) +
                             std::to_string(this->state.gui_visible) + std::string(GUI_END_TAG_SET_GUI_VISIBILITY);
 
-        state += "\n\n" + std::string(GUI_START_TAG_SET_GUI_STATE) + gui_state + std::string(GUI_END_TAG_SET_GUI_STATE);
+        state += "\n" + std::string(GUI_START_TAG_SET_GUI_STATE) + gui_state + std::string(GUI_END_TAG_SET_GUI_STATE);
 
         return state;
     }

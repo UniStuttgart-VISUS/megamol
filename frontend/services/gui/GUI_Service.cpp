@@ -232,7 +232,7 @@ void GUI_Service::postGraphRender() {
 
 std::vector<FrontendResource>& GUI_Service::getProvidedResources() {
 
-    this->m_providedResourceReferences = {{"GUIResources", m_providedResource}};
+    this->m_providedResourceReferences = {{"GUIResource", m_providedResource}};
     return this->m_providedResourceReferences;
 }
 
