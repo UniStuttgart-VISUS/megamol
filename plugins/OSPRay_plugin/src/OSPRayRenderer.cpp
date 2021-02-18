@@ -12,6 +12,8 @@
 #include <chrono>
 #include "ospray/ospray_cpp.h"
 
+#include <sstream>
+#include <stdint.h>
 
 using namespace megamol::ospray;
 

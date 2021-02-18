@@ -54,7 +54,7 @@ bool megamol::gui::RenamePopUp::PopUp(const std::string& label_id, bool open_pop
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
-        if (ImGui::Button("Cancel")) {
+        if (ImGui::Button("Cancel") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
             ImGui::CloseCurrentPopup();
         }
 

@@ -928,7 +928,7 @@ namespace ospray {
                                 auto count = mesh.second.indices.byte_size /
                                              mesh::MeshDataAccessCollection::getByteSize(mesh.second.indices.type);
 
-                                unsigned long long stride = 3 * sizeof(unsigned int);
+                                size_t stride = 3 * sizeof(unsigned int);
                                 auto osp_type = OSP_VEC3UI;
 
                                 if (mesh_type == mesh::MeshDataAccessCollection::QUADS) {
