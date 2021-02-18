@@ -45,8 +45,8 @@ namespace gui {
             RENAME_MODULE,
             ADD_CALL,
             DELETE_CALL,
-            CREATE_MAIN_VIEW,
-            REMOVE_MAIN_VIEW
+            CREATE_GRAPH_ENTRY,
+            REMOVE_GRAPH_ENTRY
         };
 
         struct QueueData {
@@ -130,7 +130,7 @@ namespace gui {
             return (this->graph_core_interface != GraphCoreInterface::NO_INTERFACE);
         }
 
-        const std::string GenerateUniqueMainViewName(void);
+        const std::string GenerateUniqueGraphEntryName(void);
 
         bool StateFromJSON(const nlohmann::json& in_json);
         bool StateToJSON(nlohmann::json& inout_json);
