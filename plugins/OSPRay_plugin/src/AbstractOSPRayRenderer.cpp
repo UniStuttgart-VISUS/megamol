@@ -1049,11 +1049,14 @@ namespace ospray {
 
                                 size_t stride = 3 * sizeof(unsigned int);
                                 auto osp_type = OSP_VEC3UI;
+                                auto divider = 3ull;
 
                                 if (mesh_type == mesh::MeshDataAccessCollection::QUADS) {
                                     stride = 4 * sizeof(unsigned int);
                                     osp_type = OSP_VEC4UI;
+                                    divider = 4ull;
                                 }
+                                count /= divider;
                                 
                                 auto indexData =
                                     ::ospray::cpp::SharedData(mesh.second.indices.data, osp_type, count, stride);
@@ -1389,9 +1392,9 @@ namespace ospray {
 
         for (auto& entry : this->_structureMap) {
 
-            if (_instances[entry.first]) {
+            /*if (_instances[entry.first]) {
                 ospRelease(_instances[entry.first].handle());
-            }
+            }*/
             _instances.erase(entry.first);
 
             auto const& element = entry.second;
