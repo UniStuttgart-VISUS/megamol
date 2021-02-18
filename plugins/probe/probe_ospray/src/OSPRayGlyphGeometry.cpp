@@ -75,9 +75,12 @@ bool OSPRayGlyphGeometry::readData(core::Call& call) {
 
         // Write stuff into the structureContainer
         this->structureContainer.type = ospray::structureTypeEnum::GEOMETRY;
-        this->structureContainer.geometryType = ospray::geometryTypeEnum::TRIANGLES;
-        this->structureContainer.mesh = cm->getData();
-        this->structureContainer.mesh_textures = ctex->getData();
+        this->structureContainer.geometryType = ospray::geometryTypeEnum::MESH;
+
+        ospray::meshStructure mesh_str;
+        mesh_str.mesh = cm->getData();
+        mesh_str.mesh_textures = ctex->getData();
+        this->structureContainer.structure = mesh_str;
         this->structureContainer.materialChanged = false;
     }
 

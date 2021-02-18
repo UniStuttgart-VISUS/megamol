@@ -10,6 +10,7 @@
 #define MESH_DATA_ACCESS_COLLECTION_H_INCLUDED
 
 #include <vector>
+#include <unordered_map>
 
 namespace megamol {
 namespace mesh {

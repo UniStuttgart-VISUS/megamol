@@ -9,9 +9,6 @@
 #ifndef PROBE_COLLECTION_H_INCLUDED
 #define PROBE_COLLECTION_H_INCLUDED
 
-#include "probe/probe.h"
-
-#include <algorithm>
 #include <array>
 #include <string>
 #include <random>

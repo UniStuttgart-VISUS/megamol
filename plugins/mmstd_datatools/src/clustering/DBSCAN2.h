@@ -1,7 +1,5 @@
 #pragma once
 
-#include "mmstd_datatools/mmstd_datatools.h"
-
 #include "ann_interface.h"
 
 namespace megamol {

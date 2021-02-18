@@ -20,7 +20,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
     set(QUHULL_LIB "lib/libqhull.so")
   endif()
 
-  add_external_project(qhull STATIC
+  add_external_project(qhull SHARED
     GIT_REPOSITORY https://github.com/qhull/qhull.git
     GIT_TAG "v7.3.2"
     BUILD_BYPRODUCTS "<INSTALL_DIR>/${QHULL_IMPORT_LIB}" "<INSTALL_DIR>/${QHULL_LIB}"
@@ -49,7 +49,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   endif()
 
   external_get_property(asmjit SOURCE_DIR)
-  add_external_project(blend2d STATIC
+  add_external_project(blend2d SHARED
     GIT_REPOSITORY https://github.com/blend2d/blend2d.git
     GIT_TAG "8aeac6cb34b00898ae725bd76eb3bb2c7cffcf86"
     BUILD_BYPRODUCTS "<INSTALL_DIR>/${BLEND2D_IMPORT_LIB}" "<INSTALL_DIR>/${BLEND2D_LIB}"
