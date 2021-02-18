@@ -23,7 +23,6 @@
 
 #include <sstream>
 #include <stdint.h>
-#include <corecrt_math_defines.h>
 
 using namespace megamol::ospray;
 
