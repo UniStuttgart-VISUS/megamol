@@ -38,9 +38,9 @@ private:
         glm::vec4 rgba;
     };
 
-    float lerp(float a, float b, float inter);
+    /*float lerp(float a, float b, float inter);
 
-    glm::vec4 sample_tf(float const* tf, unsigned int tf_size, int base, float rest);
+    glm::vec4 sample_tf(float const* tf, unsigned int tf_size, int base, float rest);*/
 
     core::CallerSlot _tf_slot;
 
