@@ -9,7 +9,6 @@
 #define MEGAMOL_GUI_GRAPH_PARAMETER_PRESENTATION_H_INCLUDED
 
 
-#include "FileUtils.h"
 #include "GUIUtils.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
@@ -31,6 +30,7 @@
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
+#include "mmcore/utility/FileUtils.h"
 
 #include <variant>
 
