@@ -68,7 +68,6 @@ bool GUI_Service::init(const Config& config) {
 
 void GUI_Service::close() {
 
-    // nothing to do here so far ...
 }
     
 
@@ -191,7 +190,6 @@ void GUI_Service::digestChangedRequestedResources() {
 
 void GUI_Service::resetProvidedResources() {
 
-    this->m_providedResource.request_gui_state = nullptr;
 }
 
 
