@@ -2,13 +2,14 @@
 #define MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED
 
 #include "json.hpp"
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/FlagStorage.h"
 #include "mmcore/Module.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
-#include "mmcore/view/CallRender2D.h"
+#include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 
@@ -82,9 +83,9 @@ namespace infovis {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender2D& call);
+        virtual bool Render(core::view::CallRender2DGL& call);
 
-        virtual bool GetExtents(core::view::CallRender2D& call);
+        virtual bool GetExtents(core::view::CallRender2DGL& call);
 
         // virtual bool MouseEvent(float x, float y, core::view::MouseFlags flags);
 
@@ -130,7 +131,7 @@ namespace infovis {
 
         void pickIndicator(float x, float y, int& axis, int& index);
 
-        void assertData(core::view::CallRender2D& call);
+        void assertData(core::view::CallRender2DGL& call);
 
         void computeScaling(void);
 
@@ -225,7 +226,7 @@ namespace infovis {
         int windowWidth;
         int windowHeight;
         float backgroundColor[4];
-        vislib::math::Rectangle<float> bounds;
+        core::BoundingBoxes_2 bounds;
         unsigned int lastTimeStep;
 
         GLuint columnCount;
