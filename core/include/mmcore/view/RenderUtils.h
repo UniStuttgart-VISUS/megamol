@@ -198,6 +198,10 @@ public:
         this->smooth = s;
     }
 
+    inline bool isInitialized() {
+        return this->init_once;
+    }
+
     unsigned int GetTextureWidth(GLuint texture_id) const;
     unsigned int GetTextureHeight(GLuint texture_id) const;
 
@@ -205,7 +209,6 @@ public:
         this->textures.clear();
     }
 
-protected:
     RenderUtils();
 
     ~RenderUtils();

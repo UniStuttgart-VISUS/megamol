@@ -10,7 +10,7 @@
 #include <inttypes.h>
 #include <stdint.h>
 #include "mmcore/CoreInstance.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -43,7 +43,7 @@ const GLuint SSBObindingPoint = 2;
  * moldyn::CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT
  */
 CartoonTessellationRenderer2000GT::CartoonTessellationRenderer2000GT(void)
-    : view::Renderer3DModule_2()
+    : view::Renderer3DModuleGL()
     , getDataSlot("getdata", "Connects to the data source")
     , getLightsSlot("lights", "Lights are retrieved over this slot.")
     , fences()
@@ -315,8 +315,8 @@ void CartoonTessellationRenderer2000GT::getBytesAndStrideLines(MolecularDataCall
 /*
  * GetExtents
  */
-bool CartoonTessellationRenderer2000GT::GetExtents(view::CallRender3D_2& call) {
-    view::CallRender3D_2* cr = dynamic_cast<view::CallRender3D_2*>(&call);
+bool CartoonTessellationRenderer2000GT::GetExtents(view::CallRender3DGL& call) {
+    view::CallRender3DGL* cr = dynamic_cast<view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
 
     MolecularDataCall* mol = this->getDataSlot.CallAs<MolecularDataCall>();
@@ -361,12 +361,12 @@ MolecularDataCall* CartoonTessellationRenderer2000GT::getData(unsigned int t, fl
 /*
  * moldyn::SimpleSphereRenderer::Render
  */
-bool CartoonTessellationRenderer2000GT::Render(view::CallRender3D_2& call) {
+bool CartoonTessellationRenderer2000GT::Render(view::CallRender3DGL& call) {
 #ifdef DEBUG_BLAHBLAH
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
-    view::CallRender3D_2* cr = dynamic_cast<view::CallRender3D_2*>(&call);
+    view::CallRender3DGL* cr = dynamic_cast<view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
 
     float scaling = 1.0f;

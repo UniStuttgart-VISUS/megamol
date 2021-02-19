@@ -16,6 +16,7 @@
 #include "mmcore/ViewInstance.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 
 
 namespace megamol {
@@ -182,6 +183,8 @@ namespace special {
 
         /** A simple running flag */
         bool running;
+
+        std::shared_ptr<vislib::graphics::gl::FramebufferObject> currentFbo;
 
     };
 
