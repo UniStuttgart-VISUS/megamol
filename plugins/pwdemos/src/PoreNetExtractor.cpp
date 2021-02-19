@@ -9,7 +9,7 @@
 #include "PoreNetExtractor.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -37,7 +37,7 @@ namespace demos {
 /*
  * PoreNetExtractor::PoreNetExtractor
  */
-PoreNetExtractor::PoreNetExtractor(void) : core::view::Renderer3DModule(), AbstractQuartzModule(),
+PoreNetExtractor::PoreNetExtractor(void) : core::view::Renderer3DModuleGL(), AbstractQuartzModule(),
 typeTexture(0), bbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0), cbox(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0),
 filenameSlot("filename", "The file name of the pore network data file"),
 streamSaveSlot("streamSave", "Saves the data to the pore network data file while extracting"),
@@ -114,14 +114,10 @@ PoreNetExtractor::~PoreNetExtractor(void) {
 /*
  * PoreNetExtractor::GetExtents
  */
-bool PoreNetExtractor::GetExtents(core::Call& call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
-    cr->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
-    cr->AccessBoundingBoxes().SetObjectSpaceClipBox(this->cbox);
-    cr->AccessBoundingBoxes().MakeScaledWorld(1.0f); // for now
-    cr->SetTimeFramesCount(1);
+bool PoreNetExtractor::GetExtents(core::view::CallRender3DGL& call) {
+    call.AccessBoundingBoxes().SetBoundingBox(this->bbox);
+    call.AccessBoundingBoxes().SetClipBox(this->cbox);
+    call.SetTimeFramesCount(1);
 
     return true;
 }
@@ -130,10 +126,7 @@ bool PoreNetExtractor::GetExtents(core::Call& call) {
 /*
  * PoreNetExtractor::Render
  */
-bool PoreNetExtractor::Render(core::Call& call) {
-    core::view::CallRender3D *cr = dynamic_cast<core::view::CallRender3D*>(&call);
-    if (cr == NULL) return false;
-
+bool PoreNetExtractor::Render(core::view::CallRender3DGL& call) {
     if (this->isExtractionRunning()) {
         this->performExtraction();
     }

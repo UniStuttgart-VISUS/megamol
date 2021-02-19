@@ -15,35 +15,32 @@
 #include "mmcore/param/Vector4fParam.h"
 
 using namespace megamol::core;
-using vislib::graphics::CameraParameters;
 
 
 /*
  * view::AbstractTileView::AbstractTileView
  */
 view::AbstractTileView::AbstractTileView(void) : AbstractOverrideView(),
-        eye(CameraParameters::LEFT_EYE),
+        eye(thecam::Eye::left),
         eyeSlot("eye", "The stereo projection eye"),
-        projType(CameraParameters::MONO_PERSPECTIVE),
+        projType(thecam::Projection_type::perspective),
         projTypeSlot("projType", "The stereo projection type"),
         tileH(100.0f), tileSlot("tile", "The rendering tile"),
         tileW(100.0f), tileX(0.0f), tileY(0.0f), virtHeight(100.0f),
         virtSizeSlot("virtSize", "The virtual viewport size"),
         virtWidth(0.0f) {
 
-    param::EnumParam *eyeParam = new param::EnumParam(
-        static_cast<int>(CameraParameters::LEFT_EYE));
-    eyeParam->SetTypePair(static_cast<int>(CameraParameters::LEFT_EYE), "Left Eye");
-    eyeParam->SetTypePair(static_cast<int>(CameraParameters::RIGHT_EYE), "Right Eye");
+    param::EnumParam *eyeParam = new param::EnumParam(static_cast<int>(thecam::Eye::left));
+    eyeParam->SetTypePair(static_cast<int>(thecam::Eye::left), "Left Eye");
+    eyeParam->SetTypePair(static_cast<int>(thecam::Eye::right), "Right Eye");
     this->eyeSlot << eyeParam;
     this->MakeSlotAvailable(&this->eyeSlot);
 
-    param::EnumParam *projParam = new param::EnumParam(
-        static_cast<int>(CameraParameters::MONO_PERSPECTIVE));
-    projParam->SetTypePair(static_cast<int>(CameraParameters::MONO_PERSPECTIVE), "Mono");
-    projParam->SetTypePair(static_cast<int>(CameraParameters::STEREO_OFF_AXIS), "Stereo OffAxis");
-    projParam->SetTypePair(static_cast<int>(CameraParameters::STEREO_PARALLEL), "Stereo Parallel");
-    projParam->SetTypePair(static_cast<int>(CameraParameters::STEREO_TOE_IN), "Stereo ToeIn");
+    param::EnumParam *projParam = new param::EnumParam(static_cast<int>(thecam::Projection_type::perspective));
+    projParam->SetTypePair(static_cast<int>(thecam::Projection_type::perspective), "Mono");
+    projParam->SetTypePair(static_cast<int>(thecam::Projection_type::off_axis), "Stereo OffAxis");
+    projParam->SetTypePair(static_cast<int>(thecam::Projection_type::parallel), "Stereo Parallel");
+    projParam->SetTypePair(static_cast<int>(thecam::Projection_type::toe_in), "Stereo ToeIn");
     this->projTypeSlot << projParam;
     this->MakeSlotAvailable(&this->projTypeSlot);
 
@@ -98,28 +95,28 @@ void view::AbstractTileView::initTileViewParameters(void) {
         bool seteye = true;
 
         if (v.Equals("left", false)) {
-            this->eye = CameraParameters::LEFT_EYE;
+            this->eye = thecam::Eye::left;
         } else if (v.Equals("lefteye", false)) {
-            this->eye = CameraParameters::LEFT_EYE;
+            this->eye = thecam::Eye::left;
         } else if (v.Equals("left eye", false)) {
-            this->eye = CameraParameters::LEFT_EYE;
+            this->eye = thecam::Eye::left;
         } else if (v.Equals("l", false)) {
-            this->eye = CameraParameters::LEFT_EYE;
+            this->eye = thecam::Eye::left;
         } else if (v.Equals("right", false)) {
-            this->eye = CameraParameters::RIGHT_EYE;
+            this->eye = thecam::Eye::right;
         } else if (v.Equals("righteye", false)) {
-            this->eye = CameraParameters::RIGHT_EYE;
+            this->eye = thecam::Eye::right;
         } else if (v.Equals("right eye", false)) {
-            this->eye = CameraParameters::RIGHT_EYE;
+            this->eye = thecam::Eye::right;
         } else if (v.Equals("r", false)) {
-            this->eye = CameraParameters::RIGHT_EYE;
+            this->eye = thecam::Eye::right;
         } else {
             try {
                 int ei = vislib::CharTraitsA::ParseInt(v);
                 if (ei == 0) {
-                    this->eye = CameraParameters::LEFT_EYE;
+                    this->eye = thecam::Eye::left;
                 } else if (ei == 1) {
-                    this->eye = CameraParameters::RIGHT_EYE;
+                    this->eye = thecam::Eye::right;
                 } else {
                     seteye = false;
                 }
@@ -139,56 +136,56 @@ void view::AbstractTileView::initTileViewParameters(void) {
         bool setproj = true;
 
         if (v.Equals("mono", false)) {
-            this->projType = CameraParameters::MONO_PERSPECTIVE;
+            this->projType = thecam::Projection_type::perspective;
         } else if (v.Equals("stereo", false)) {
-            this->projType = CameraParameters::STEREO_OFF_AXIS;
+            this->projType = thecam::Projection_type::off_axis;
         } else if (v.Equals("stereo", false)) {
-            this->projType = CameraParameters::STEREO_OFF_AXIS;
+            this->projType = thecam::Projection_type::off_axis;
         } else if (v.Equals("stereo", false)) {
-            this->projType = CameraParameters::STEREO_PARALLEL;
+            this->projType = thecam::Projection_type::parallel;
         } else if (v.Equals("stereo", false)) {
-            this->projType = CameraParameters::STEREO_TOE_IN;
+            this->projType = thecam::Projection_type::toe_in;
         } else if (v.Equals("stereooffaxis", false)) {
-            this->projType = CameraParameters::STEREO_OFF_AXIS;
+            this->projType = thecam::Projection_type::off_axis;
         } else if (v.Equals("stereoparallel", false)) {
-            this->projType = CameraParameters::STEREO_PARALLEL;
+            this->projType = thecam::Projection_type::parallel;
         } else if (v.Equals("stereotoein", false)) {
-            this->projType = CameraParameters::STEREO_TOE_IN;
+            this->projType = thecam::Projection_type::toe_in;
         } else if (v.Equals("stereo off axis", false)) {
-            this->projType = CameraParameters::STEREO_OFF_AXIS;
+            this->projType = thecam::Projection_type::off_axis;
         } else if (v.Equals("stereo parallel", false)) {
-            this->projType = CameraParameters::STEREO_PARALLEL;
+            this->projType = thecam::Projection_type::parallel;
         } else if (v.Equals("stereo toe in", false)) {
-            this->projType = CameraParameters::STEREO_TOE_IN;
+            this->projType = thecam::Projection_type::toe_in;
         } else if (v.Equals("off axis", false)) {
-            this->projType = CameraParameters::STEREO_OFF_AXIS;
+            this->projType = thecam::Projection_type::off_axis;
         } else if (v.Equals("parallel", false)) {
-            this->projType = CameraParameters::STEREO_PARALLEL;
+            this->projType = thecam::Projection_type::parallel;
         } else if (v.Equals("toe in", false)) {
-            this->projType = CameraParameters::STEREO_TOE_IN;
+            this->projType = thecam::Projection_type::toe_in;
         } else if (v.Equals("offaxis", false)) {
-            this->projType = CameraParameters::STEREO_OFF_AXIS;
+            this->projType = thecam::Projection_type::off_axis;
         } else if (v.Equals("toein", false)) {
-            this->projType = CameraParameters::STEREO_TOE_IN;
+            this->projType = thecam::Projection_type::toe_in;
         } else if (v.Equals("stereo offaxis", false)) {
-            this->projType = CameraParameters::STEREO_OFF_AXIS;
+            this->projType = thecam::Projection_type::off_axis;
         } else if (v.Equals("stereo toein", false)) {
-            this->projType = CameraParameters::STEREO_TOE_IN;
+            this->projType = thecam::Projection_type::toe_in;
         } else if (v.Equals("stereooff axis", false)) {
-            this->projType = CameraParameters::STEREO_OFF_AXIS;
+            this->projType = thecam::Projection_type::off_axis;
         } else if (v.Equals("stereotoe in", false)) {
-            this->projType = CameraParameters::STEREO_TOE_IN;
+            this->projType = thecam::Projection_type::toe_in;
         } else {
             try {
                 int pi = vislib::CharTraitsA::ParseInt(v);
                 if (pi == 0) {
-                    this->projType = CameraParameters::MONO_PERSPECTIVE;
+                    this->projType = thecam::Projection_type::perspective;
                 } else if (pi == 1) {
-                    this->projType = CameraParameters::STEREO_OFF_AXIS;
+                    this->projType = thecam::Projection_type::off_axis;
                 } else if (pi == 2) {
-                    this->projType = CameraParameters::STEREO_PARALLEL;
+                    this->projType = thecam::Projection_type::parallel;
                 } else if (pi == 3) {
-                    this->projType = CameraParameters::STEREO_TOE_IN;
+                    this->projType = thecam::Projection_type::toe_in;
                 } else {
                     setproj = false;
                 }
@@ -235,12 +232,12 @@ void view::AbstractTileView::initTileViewParameters(void) {
 void view::AbstractTileView::checkParameters(void) {
     if (this->eyeSlot.IsDirty()) {
         this->eyeSlot.ResetDirty();
-        this->eye = static_cast<CameraParameters::StereoEye>(
+        this->eye = static_cast<thecam::Eye>(
             this->eyeSlot.Param<param::EnumParam>()->Value());
     }
     if (this->projTypeSlot.IsDirty()) {
         this->projTypeSlot.ResetDirty();
-        this->projType = static_cast<CameraParameters::ProjectionType>(
+        this->projType = static_cast<thecam::Projection_type>(
             this->projTypeSlot.Param<param::EnumParam>()->Value());
     }
     if (this->tileSlot.IsDirty()) {

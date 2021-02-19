@@ -13,7 +13,7 @@
 #ifdef RIG_RENDERCALLS_WITH_DEBUGGROUPS
 #    include "mmcore/view/Renderer2DModule.h"
 #    include "mmcore/view/Renderer3DModule.h"
-#    include "mmcore/view/Renderer3DModule_2.h"
+#    include "mmcore/view/Renderer3DModuleGL.h"
 #    include "vislib/graphics/gl/IncludeAllGL.h"
 #endif
 #include "mmcore/utility/log/Log.h"
@@ -56,7 +56,7 @@ bool Call::operator()(unsigned int func) {
         auto f = this->callee->GetCallbackFuncName(func);
         auto parent = callee->Parent().get();
         auto p3 = dynamic_cast<core::view::Renderer3DModule*>(parent);
-        auto p3_2 = dynamic_cast<core::view::Renderer3DModule_2*>(parent);
+        auto p3_2 = dynamic_cast<core::view::Renderer3DModuleGL*>(parent);
         auto p2 = dynamic_cast<core::view::Renderer2DModule*>(parent);
         if (p3 || p3_2 || p2) {
             std::string output = dynamic_cast<core::Module*>(parent)->ClassName();

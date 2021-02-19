@@ -18,11 +18,9 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/CameraParameters.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/forceinline.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
@@ -32,7 +30,6 @@
 #include "vislib/SmartPtr.h"
 #include "vislib/Array.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/Camera.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/math/mathtypes.h"
 #include "vislib/Pair.h"
@@ -56,7 +53,7 @@ namespace rendering {
     /**
         * Renderer for gridded imposters
         */
-    class GrimRenderer : public core::view::Renderer3DModule_2 {
+    class GrimRenderer : public core::view::Renderer3DModuleGL {
     public:
 
         /**
@@ -114,7 +111,7 @@ namespace rendering {
             *
             * @return The return value of the function.
             */
-        virtual bool GetExtents(core::view::CallRender3D_2 &call);
+        virtual bool GetExtents(core::view::CallRender3DGL &call);
 
         /**
             * Implementation of 'Release'.
@@ -128,7 +125,7 @@ namespace rendering {
             *
             * @return The return value of the function.
             */
-        virtual bool Render(core::view::CallRender3D_2& call);
+        virtual bool Render(core::view::CallRender3DGL& call);
 
     private:
 
