@@ -6,7 +6,7 @@
 #include "vislib/graphics/gl/ShaderSource.h"
 
 megamol::core::DeferredShading::DeferredShading() 
-    : Renderer3DModule_2()
+    : Renderer3DModuleGL()
     , m_GBuffer(nullptr)
     , m_deferred_shading_prgm(nullptr)
     , m_lights_buffer(nullptr)
@@ -28,13 +28,13 @@ bool megamol::core::DeferredShading::create() {
 
 void megamol::core::DeferredShading::release() { m_GBuffer.reset(); }
 
-bool megamol::core::DeferredShading::GetExtents(core::view::CallRender3D_2& call) { 
+bool megamol::core::DeferredShading::GetExtents(core::view::CallRender3DGL& call) { 
     return true;
 }
 
-bool megamol::core::DeferredShading::Render(core::view::CallRender3D_2& call) { 
+bool megamol::core::DeferredShading::Render(core::view::CallRender3DGL& call) { 
 
-    megamol::core::view::CallRender3D_2* cr = &call; // dynamic_cast<core::view::CallRender3D_2*>(&call);
+    megamol::core::view::CallRender3DGL* cr = &call; // dynamic_cast<core::view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
 
     // obtain camera information
@@ -159,7 +159,7 @@ bool megamol::core::DeferredShading::Render(core::view::CallRender3D_2& call) {
     return true; 
 }
 
-void megamol::core::DeferredShading::PreRender(core::view::CallRender3D_2& call) {
+void megamol::core::DeferredShading::PreRender(core::view::CallRender3DGL& call) {
 
     GLfloat viewport[4];
     glGetFloatv(GL_VIEWPORT, viewport);

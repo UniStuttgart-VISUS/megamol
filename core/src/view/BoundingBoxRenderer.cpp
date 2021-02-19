@@ -32,7 +32,7 @@ using namespace megamol::core::view;
  * BoundingBoxRenderer::BoundingBoxRenderer
  */
 BoundingBoxRenderer::BoundingBoxRenderer(void)
-    : RendererModule<CallRender3D_2>()
+    : RendererModule<CallRender3DGL>()
     , enableBoundingBoxSlot("enableBoundingBox", "Enables the rendering of the bounding box")
     , boundingBoxColorSlot("boundingBoxColor", "Color of the bounding box")
     , smoothLineSlot("smoothLines", "Enables the smoothing of lines (may look strange on some setups)")
@@ -161,8 +161,8 @@ void BoundingBoxRenderer::release(void) {
 /*
  * BoundingBoxRenderer::GetExtents
  */
-bool BoundingBoxRenderer::GetExtents(CallRender3D_2& call) {
-    CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
+bool BoundingBoxRenderer::GetExtents(CallRender3DGL& call) {
+    CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<CallRender3DGL>();
     if (chainedCall == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "The BoundingBoxRenderer does not work without a renderer attached to its right");
@@ -177,29 +177,10 @@ bool BoundingBoxRenderer::GetExtents(CallRender3D_2& call) {
 /*
  * BoundingBoxRenderer::Render
  */
-bool BoundingBoxRenderer::Render(CallRender3D_2& call) {
+bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
     std::shared_ptr<const view::AbstractView> viewptr =
         std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
-
-    if (viewptr != nullptr) {
-        // TODO move this behind the fbo magic?
-        auto vp = call.GetViewport();
-        glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
-        auto backCol = call.BackgroundColor();
-        glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-
-    CallRender3D_2* chainedCall = this->chainRenderSlot.CallAs<CallRender3D_2>();
-    if (chainedCall == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "The BoundingBoxRenderer does not work without a renderer attached to its right");
-        return false;
-    }
-    *chainedCall = call;
-    bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
-    call = *chainedCall;
 
     Camera_2 cam;
     call.GetCamera(cam);
@@ -212,6 +193,27 @@ bool BoundingBoxRenderer::Render(CallRender3D_2& call) {
     glm::mat4 view = viewT;
     glm::mat4 proj = projT;
     glm::mat4 mvp = proj * view;
+
+    if (viewptr != nullptr) {
+        // TODO move this behind the fbo magic?
+        auto vp = cam.image_tile();
+        glViewport(vp.left(), vp.bottom(), vp.width(), vp.height());
+        auto backCol = call.BackgroundColor();
+        glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
+
+    CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<CallRender3DGL>();
+    if (chainedCall == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "The BoundingBoxRenderer does not work without a renderer attached to its right");
+        return false;
+    }
+    *chainedCall = call;
+    bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
+    call = *chainedCall;
+
+
 
     auto boundingBoxes = chainedCall->AccessBoundingBoxes();
     auto smoothLines = this->smoothLineSlot.Param<param::BoolParam>()->Value();
@@ -330,7 +332,7 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const Boun
 /*
  * BoundingBoxRenderer::RenderViewCube
  */
-bool BoundingBoxRenderer::RenderViewCube(CallRender3D_2& call) {
+bool BoundingBoxRenderer::RenderViewCube(CallRender3DGL& call) {
     // Get camera orientation
     core::view::Camera_2 cam;
     call.GetCamera(cam);

@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "GraphCollection.h"
+#include "mmcore/view/AbstractView.h"
 
 
 using namespace megamol;
@@ -1307,6 +1308,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         /// XXX VIEW TEST
         std::shared_ptr<const core::view::AbstractView> viewptr =
             std::dynamic_pointer_cast<const core::view::AbstractView>(new_mod);
+
         mod.is_view = (viewptr != nullptr);
 
         std::vector<std::shared_ptr<core::param::ParamSlot>> paramSlots;

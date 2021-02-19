@@ -12,8 +12,8 @@
 #include "vislib/math/Matrix.h"
 
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "glowl/BufferObject.hpp"
 #include "glowl/FramebufferObject.hpp"
@@ -24,7 +24,7 @@ namespace core {
 /**
  * TODO
  */
-class DeferredShading : public megamol::core::view::Renderer3DModule_2 {
+class DeferredShading : public megamol::core::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -78,7 +78,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender3D_2& call);
+    bool GetExtents(core::view::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -87,14 +87,14 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender3D_2& call);
+    bool Render(core::view::CallRender3DGL& call);
 
     /**
      * Method that gets called before the rendering is started for all changed modules
      *
      * @param call The rendering call that contains the camera
      */
-    void PreRender(core::view::CallRender3D_2& call);
+    void PreRender(core::view::CallRender3DGL& call);
 
 private:
     typedef vislib::graphics::gl::GLSLShader GLSLShader;
