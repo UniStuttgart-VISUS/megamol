@@ -30,9 +30,10 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
         , param_extended_mode(false)
         , update(true)
         , show_grid(false)
-        , show_call_names(true)
-        , show_slot_names(false)
-        , show_module_names(true)
+        , show_call_label(true)
+        , show_call_slots_label(false)
+        , show_slot_label(false)
+        , show_module_label(true)
         , show_parameter_sidebar(true)
         , change_show_parameter_sidebar(true)
         , graph_layout(0)
@@ -41,13 +42,12 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
         , increment_zooming(false)
         , decrement_zooming(false)
         , param_name_space()
-        , current_main_view_name()
+        , current_graph_entry_name()
         , multiselect_start_pos()
         , multiselect_end_pos()
         , multiselect_done(false)
         , canvas_hovered(false)
         , current_font_scaling(1.0f)
-        , add_menu_scrollbar_height(false)
         , graph_state()
         , search_widget()
         , splitter_widget()
@@ -74,7 +74,7 @@ megamol::gui::GraphPresentation::GraphPresentation(void)
     this->graph_state.interact.modules_remove_group_uids.clear();
     this->graph_state.interact.modules_layout = false;
     this->graph_state.interact.module_rename.clear();
-    this->graph_state.interact.module_mainview_changed = vislib::math::Ternary::TRI_UNKNOWN;
+    this->graph_state.interact.module_graphentry_changed = vislib::math::Ternary::TRI_UNKNOWN;
     this->graph_state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
 
     this->graph_state.interact.call_selected_uid = GUI_INVALID_ID;
@@ -291,8 +291,8 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 }
                 this->graph_state.interact.module_rename.clear();
             }
-            // Add module main view event to graph synchronization queue ----------
-            if (this->graph_state.interact.module_mainview_changed != vislib::math::Ternary::TRI_UNKNOWN) {
+            // Add module graph entry event to graph synchronization queue ----------
+            if (this->graph_state.interact.module_graphentry_changed != vislib::math::Ternary::TRI_UNKNOWN) {
                 // Choose single selected view module
                 ModulePtr_t selected_mod_ptr;
                 if (this->graph_state.interact.modules_selected_uids.size() == 1) {
@@ -304,26 +304,26 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
                 }
                 if (selected_mod_ptr != nullptr) {
                     Graph::QueueData queue_data;
-                    if (this->graph_state.interact.module_mainview_changed == vislib::math::Ternary::TRI_TRUE) {
-                        // Remove all main views
+                    if (this->graph_state.interact.module_graphentry_changed == vislib::math::Ternary::TRI_TRUE) {
+                        // Remove all graph entries
                         for (auto module_ptr : inout_graph.GetModules()) {
-                            if (module_ptr->is_view && module_ptr->IsMainView()) {
-                                module_ptr->main_view_name.clear();
+                            if (module_ptr->is_view && module_ptr->IsGraphEntry()) {
+                                module_ptr->graph_entry_name.clear();
                                 queue_data.name_id = module_ptr->FullName();
-                                inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                                inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                             }
                         }
-                        // Add new main view
+                        // Add new graph entry
                         queue_data.name_id = selected_mod_ptr->FullName();
-                        selected_mod_ptr->main_view_name = inout_graph.GenerateUniqueMainViewName();
-                        inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                        selected_mod_ptr->graph_entry_name = inout_graph.GenerateUniqueGraphEntryName();
+                        inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
                     } else {
                         queue_data.name_id = selected_mod_ptr->FullName();
-                        selected_mod_ptr->main_view_name.clear();
-                        inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                        selected_mod_ptr->graph_entry_name.clear();
+                        inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                     }
                 }
-                this->graph_state.interact.module_mainview_changed = vislib::math::Ternary::TRI_UNKNOWN;
+                this->graph_state.interact.module_graphentry_changed = vislib::math::Ternary::TRI_UNKNOWN;
             }
             // Add module to group ------------------------------------------------
             if (!this->graph_state.interact.modules_add_group_uids.empty()) {
@@ -739,16 +739,79 @@ void megamol::gui::GraphPresentation::Present(megamol::gui::Graph& inout_graph, 
 void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_graph) {
 
     ImGuiStyle& style = ImGui::GetStyle();
-    const std::string delimiter("|");
+    auto button_size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
 
     float child_height = ImGui::GetFrameHeightWithSpacing();
-    if (this->add_menu_scrollbar_height) {
-        child_height += static_cast<float>(ImGuiStyleVar_ScrollbarSize) +
-                        (style.ItemInnerSpacing.y * megamol::gui::gui_scaling.Get()); // why?
-    }
-    auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_HorizontalScrollbar;
+    auto child_flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NavFlattened | ImGuiWindowFlags_MenuBar;
     ImGui::BeginChild("graph_menu", ImVec2(0.0f, child_height), false, child_flags);
-    float content_region_avail_x = ImGui::GetContentRegionAvail().x;
+
+    ImGui::BeginMenuBar();
+
+    // GRAPH LAYOUT
+    if (ImGui::Button("Layout Graph")) {
+        this->graph_layout = 1;
+    }
+    ImGui::Separator();
+
+    // MODULES
+    if (ImGui::BeginMenu("Modules")) {
+        if (ImGui::MenuItem("Label", nullptr, &this->show_module_label)) {
+            for (auto& module_ptr : inout_graph.GetModules()) {
+                module_ptr->present.label_visible = this->show_module_label;
+            }
+            this->update = true;
+        }
+        ImGui::EndMenu();
+    }
+    ImGui::Separator();
+
+    // CALLS
+    if (ImGui::BeginMenu("Calls")) {
+        if (ImGui::MenuItem("Label", nullptr, &this->show_call_label)) {
+            for (auto& call_ptr : inout_graph.GetCalls()) {
+                call_ptr->present.label_visible = this->show_call_label;
+            }
+            this->update = true;
+        }
+        if (ImGui::MenuItem("Slots", nullptr, &this->show_call_slots_label)) {
+            for (auto& call_ptr : inout_graph.GetCalls()) {
+                call_ptr->present.slots_visible = this->show_call_slots_label;
+            }
+            this->update = true;
+        }
+        ImGui::EndMenu();
+    }
+    ImGui::Separator();
+
+    // SLOTS
+    if (ImGui::BeginMenu("Slots")) {
+        if (ImGui::MenuItem("Label", nullptr, &this->show_slot_label)) {
+            for (auto& module_ptr : inout_graph.GetModules()) {
+                for (auto& callslot_types : module_ptr->GetCallSlots()) {
+                    for (auto& callslots : callslot_types.second) {
+                        callslots->present.label_visible = this->show_slot_label;
+                    }
+                }
+            }
+            for (auto& group_ptr : inout_graph.GetGroups()) {
+                for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
+                    for (auto& interfaceslot_ptr : interfaceslots_map.second) {
+                        interfaceslot_ptr->present.label_visible = this->show_slot_label;
+                    }
+                }
+            }
+            this->update = true;
+        }
+        ImGui::EndMenu();
+    }
+    ImGui::Separator();
+
+    // GRID
+    if (ImGui::BeginMenu("Grid")) {
+        ImGui::MenuItem("Show/Hide", nullptr, &this->show_grid);
+        ImGui::EndMenu();
+    }
+    ImGui::Separator();
 
     // Choose single selected view module
     ModulePtr_t selected_mod_ptr;
@@ -759,181 +822,114 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
             }
         }
     }
-    // Main View Checkbox
+    // Graph Entry Checkbox
     const float min_text_width = 3.0f * ImGui::GetFrameHeightWithSpacing();
     if (selected_mod_ptr == nullptr) {
         GUIUtils::ReadOnlyWigetStyle(true);
-        bool is_main_view = false;
-        this->current_main_view_name.clear();
-        ImGui::Checkbox("Main View", &is_main_view);
-        ImGui::SameLine(0.0f, min_text_width + 2.0f * style.ItemSpacing.x);
+        bool is_graph_entry = false;
+        this->current_graph_entry_name.clear();
+        ImGui::Checkbox("Graph Entry", &is_graph_entry);
+        // ImGui::SameLine(0.0f, min_text_width + 2.0f * style.ItemSpacing.x);
         GUIUtils::ReadOnlyWigetStyle(false);
     } else {
-        bool is_main_view = selected_mod_ptr->IsMainView();
-        if (ImGui::Checkbox("Main View", &is_main_view)) {
+        bool is_graph_entry = selected_mod_ptr->IsGraphEntry();
+        if (ImGui::Checkbox("Graph Entry", &is_graph_entry)) {
             if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] The action [Change Main View] is not yet supported for the graph "
+                    "[GUI] The action [Change Graph Entry] is not yet supported for the graph "
                     "using the 'Core Instance Graph' interface. Open project from file to make desired "
                     "changes. [%s, %s, line %d]\n",
                     __FILE__, __FUNCTION__, __LINE__);
             } else {
                 Graph::QueueData queue_data;
-                if (is_main_view) {
-                    // Remove all main views
+                if (is_graph_entry) {
+                    // Remove all graph entries
                     for (auto module_ptr : inout_graph.GetModules()) {
-                        if (module_ptr->is_view && module_ptr->IsMainView()) {
-                            module_ptr->main_view_name.clear();
+                        if (module_ptr->is_view && module_ptr->IsGraphEntry()) {
+                            module_ptr->graph_entry_name.clear();
                             queue_data.name_id = module_ptr->FullName();
-                            inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                            inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                         }
                     }
-                    // Add new main view
-                    selected_mod_ptr->main_view_name = inout_graph.GenerateUniqueMainViewName();
+                    // Add new graph entry
+                    selected_mod_ptr->graph_entry_name = inout_graph.GenerateUniqueGraphEntryName();
                     queue_data.name_id = selected_mod_ptr->FullName();
-                    inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_MAIN_VIEW, queue_data);
+                    inout_graph.PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
                 } else {
-                    selected_mod_ptr->main_view_name.clear();
+                    selected_mod_ptr->graph_entry_name.clear();
                     queue_data.name_id = selected_mod_ptr->FullName();
-                    inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_MAIN_VIEW, queue_data);
+                    inout_graph.PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                 }
             }
         }
-        ImGui::SameLine();
-        this->current_main_view_name = selected_mod_ptr->main_view_name;
-        float input_text_width = std::max(
-            min_text_width, (ImGui::CalcTextSize(this->current_main_view_name.c_str()).x + 2.0f * style.ItemSpacing.x));
+
+        this->current_graph_entry_name = selected_mod_ptr->graph_entry_name;
+        float input_text_width = std::max(min_text_width,
+            (ImGui::CalcTextSize(this->current_graph_entry_name.c_str()).x + 2.0f * style.ItemSpacing.x));
         ImGui::PushItemWidth(input_text_width);
-        GUIUtils::Utf8Encode(this->current_main_view_name);
-        ImGui::InputText("###current_main_view_name", &this->current_main_view_name, ImGuiInputTextFlags_None);
-        GUIUtils::Utf8Decode(this->current_main_view_name);
+        GUIUtils::Utf8Encode(this->current_graph_entry_name);
+        ImGui::InputText("###current_graph_entry_name", &this->current_graph_entry_name, ImGuiInputTextFlags_None);
+        GUIUtils::Utf8Decode(this->current_graph_entry_name);
         if (ImGui::IsItemDeactivatedAfterEdit()) {
             if (inout_graph.GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
                 megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                    "[GUI] The action [Change Main View] is not yet supported for the graph "
+                    "[GUI] The action [Change Graph Entry] is not yet supported for the graph "
                     "using the 'Core Instance Graph' interface. Open project from file to make desired "
                     "changes. [%s, %s, line %d]\n",
                     __FILE__, __FUNCTION__, __LINE__);
             } else {
-                selected_mod_ptr->main_view_name = this->current_main_view_name;
+                selected_mod_ptr->graph_entry_name = this->current_graph_entry_name;
             }
         } else {
-            this->current_main_view_name = selected_mod_ptr->main_view_name;
+            this->current_graph_entry_name = selected_mod_ptr->graph_entry_name;
         }
         ImGui::PopItemWidth();
-        ImGui::SameLine();
     }
-    ImGui::TextUnformatted(delimiter.c_str());
-    ImGui::SameLine();
+    ImGui::Separator();
 
-    auto button_size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-
+    // SCROLLING
     const float scroll_fac = 10.0f;
     ImGui::Text("Scrolling: %.2f, %.2f", this->graph_state.canvas.scrolling.x, this->graph_state.canvas.scrolling.y);
-    ImGui::SameLine();
     ImGui::TextUnformatted("H:");
-    ImGui::SameLine();
     if (ImGui::Button("+###hor_incr_scrolling", button_size)) {
         this->graph_state.canvas.scrolling.x += scroll_fac;
         this->update = true;
     }
-    ImGui::SameLine();
     if (ImGui::Button("-###hor_decr_scrolling", button_size)) {
         this->graph_state.canvas.scrolling.x -= scroll_fac;
         this->update = true;
     }
-    ImGui::SameLine();
     ImGui::TextUnformatted("V:");
-    ImGui::SameLine();
     if (ImGui::Button("+###vert_incr_scrolling", button_size)) {
         this->graph_state.canvas.scrolling.y += scroll_fac;
         this->update = true;
     }
-    ImGui::SameLine();
     if (ImGui::Button("-###vert_decr_scrolling", button_size)) {
         this->graph_state.canvas.scrolling.y -= scroll_fac;
         this->update = true;
     }
-    ImGui::SameLine();
     if (ImGui::Button("Reset###reset_scrolling")) {
         this->graph_state.canvas.scrolling = ImVec2(0.0f, 0.0f);
         this->update = true;
     }
-    ImGui::SameLine();
     this->tooltip.Marker("Middle Mouse Button");
-    ImGui::SameLine();
-    ImGui::TextUnformatted(delimiter.c_str());
-    ImGui::SameLine();
+    ImGui::Separator();
 
+    // ZOOMING
     ImGui::Text("Zooming: %.2f", this->graph_state.canvas.zooming);
-    ImGui::SameLine();
     if (ImGui::Button("+###incr_zooming", button_size)) {
         this->increment_zooming = true;
     }
-    ImGui::SameLine();
     if (ImGui::Button("-###decr_zooming", button_size)) {
         this->decrement_zooming = true;
     }
-    ImGui::SameLine();
     if (ImGui::Button("Reset###reset_zooming")) {
         this->reset_zooming = true;
     }
-    ImGui::SameLine();
     this->tooltip.Marker("Mouse Wheel");
-    ImGui::SameLine();
-    ImGui::TextUnformatted(delimiter.c_str());
-    ImGui::SameLine();
+    ImGui::Separator();
 
-    ImGui::Checkbox("Grid", &this->show_grid);
-
-    ImGui::SameLine();
-
-    if (ImGui::Checkbox("Call Names", &this->show_call_names)) {
-        for (auto& call_ptr : inout_graph.GetCalls()) {
-            call_ptr->present.label_visible = this->show_call_names;
-        }
-        this->update = true;
-    }
-    ImGui::SameLine();
-
-    if (ImGui::Checkbox("Module Names", &this->show_module_names)) {
-        for (auto& module_ptr : inout_graph.GetModules()) {
-            module_ptr->present.label_visible = this->show_module_names;
-        }
-        this->update = true;
-    }
-    ImGui::SameLine();
-
-    if (ImGui::Checkbox("Slot Names", &this->show_slot_names)) {
-        for (auto& module_ptr : inout_graph.GetModules()) {
-            for (auto& callslot_types : module_ptr->GetCallSlots()) {
-                for (auto& callslots : callslot_types.second) {
-                    callslots->present.label_visible = this->show_slot_names;
-                }
-            }
-        }
-        for (auto& group_ptr : inout_graph.GetGroups()) {
-            for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
-                for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-                    interfaceslot_ptr->present.label_visible = this->show_slot_names;
-                }
-            }
-        }
-        this->update = true;
-    }
-    ImGui::SameLine();
-
-    if (ImGui::Button("Layout Graph")) {
-        this->graph_layout = 1;
-    }
-
-    // --------------------------------------------------
-    ImGui::SameLine();
-    float cursor_pos_x = ImGui::GetCursorPosX() - style.ItemSpacing.x;
-    this->add_menu_scrollbar_height = false;
-    if (content_region_avail_x < cursor_pos_x) {
-        this->add_menu_scrollbar_height = true;
-    }
+    ImGui::EndMenuBar();
 
     ImGui::EndChild();
 }
@@ -1666,7 +1662,7 @@ void megamol::gui::GraphPresentation::layout(
     size_t layer_count = layers.size();
     for (size_t i = 0; i < layer_count; i++) {
 
-        if (this->show_call_names) {
+        if (this->show_call_label || this->show_call_slots_label) {
             max_call_width = 0.0f;
         }
         max_graph_element_width = 0.0f;
@@ -1678,12 +1674,23 @@ void megamol::gui::GraphPresentation::layout(
             auto layer_item = layers[i][j];
 
             if (layer_item.module_ptr != nullptr) {
-                if (this->show_call_names) {
+                if (this->show_call_label) {
                     for (auto& callerslot_ptr : layer_item.module_ptr->GetCallSlots(CallSlotType::CALLER)) {
                         if (callerslot_ptr->CallsConnected() &&
                             this->connected_callslot(modules, groups, callerslot_ptr)) {
                             for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                                 auto call_name_length = ImGui::CalcTextSize(call_ptr->class_name.c_str()).x;
+                                max_call_width = std::max(call_name_length, max_call_width);
+                            }
+                        }
+                    }
+                }
+                if (this->show_call_slots_label) {
+                    for (auto& callerslot_ptr : layer_item.module_ptr->GetCallSlots(CallSlotType::CALLER)) {
+                        if (callerslot_ptr->CallsConnected() &&
+                            this->connected_callslot(modules, groups, callerslot_ptr)) {
+                            for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
+                                auto call_name_length = ImGui::CalcTextSize(call_ptr->GetSlotsLabel().c_str()).x;
                                 max_call_width = std::max(call_name_length, max_call_width);
                             }
                         }
@@ -1696,13 +1703,26 @@ void megamol::gui::GraphPresentation::layout(
                 found_layer_item = true;
 
             } else if (layer_item.group_ptr != nullptr) {
-                if (this->show_call_names) {
+                if (this->show_call_label) {
                     for (auto& interfaceslot_slot : layer_item.group_ptr->GetInterfaceSlots(CallSlotType::CALLER)) {
                         for (auto& callerslot_ptr : interfaceslot_slot->GetCallSlots()) {
                             if (callerslot_ptr->CallsConnected() &&
                                 this->connected_callslot(modules, groups, callerslot_ptr)) {
                                 for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                                     auto call_name_length = ImGui::CalcTextSize(call_ptr->class_name.c_str()).x;
+                                    max_call_width = std::max(call_name_length, max_call_width);
+                                }
+                            }
+                        }
+                    }
+                }
+                if (this->show_call_slots_label) {
+                    for (auto& interfaceslot_slot : layer_item.group_ptr->GetInterfaceSlots(CallSlotType::CALLER)) {
+                        for (auto& callerslot_ptr : interfaceslot_slot->GetCallSlots()) {
+                            if (callerslot_ptr->CallsConnected() &&
+                                this->connected_callslot(modules, groups, callerslot_ptr)) {
+                                for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
+                                    auto call_name_length = ImGui::CalcTextSize(call_ptr->GetSlotsLabel().c_str()).x;
                                     max_call_width = std::max(call_name_length, max_call_width);
                                 }
                             }

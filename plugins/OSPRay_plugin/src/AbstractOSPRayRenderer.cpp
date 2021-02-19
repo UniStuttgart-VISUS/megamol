@@ -716,38 +716,38 @@ namespace ospray {
 
             // check if structure should be released first
             if (element.dataChanged) {
-                for (int i = 0; i < _baseStructures[entry.first].size(); ++i) {
-                    if (_baseStructures[entry.first].types[i] == structureTypeEnum::GEOMETRY) {
-                        ospRelease(std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures[i]).handle());
-                    } else {
-                        ospRelease(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures[i]).handle());
-                    }
-                }
+                //for (int i = 0; i < _baseStructures[entry.first].size(); ++i) {
+                //    if (_baseStructures[entry.first].types[i] == structureTypeEnum::GEOMETRY) {
+                //        ospRelease(std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures[i]).handle());
+                //    } else {
+                //        ospRelease(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures[i]).handle());
+                //    }
+                //}
                 _baseStructures[entry.first].clear();
                 _baseStructures.erase(entry.first);
 
-                for (auto& georep : _geometricModels[entry.first]) {
-                    ospRelease(georep.handle());
-                }
+                //for (auto& georep : _geometricModels[entry.first]) {
+                //    ospRelease(georep.handle());
+                //}
                 _geometricModels[entry.first].clear();
                 _geometricModels.erase(entry.first);
 
-                for (auto& volrep : _volumetricModels[entry.first]) {
-                    ospRelease(volrep.handle());
-                }
+                //for (auto& volrep : _volumetricModels[entry.first]) {
+                //    ospRelease(volrep.handle());
+                //}
                 _volumetricModels[entry.first].clear();
                 _volumetricModels.erase(entry.first);
 
-                for (auto& cliprep : _clippingModels[entry.first]) {
-                    ospRelease(cliprep.handle());
-                }
+                //for (auto& cliprep : _clippingModels[entry.first]) {
+                //    ospRelease(cliprep.handle());
+                //}
                 _clippingModels[entry.first].clear();
                 _clippingModels.erase(entry.first);
 
-                if (_groups[entry.first]) {
-                    ospRelease(_groups[entry.first].handle());
-                }
-                _groups[entry.first] = nullptr;
+                //if (_groups[entry.first]) {
+                //    ospRelease(_groups[entry.first].handle());
+                //}
+                //_groups[entry.first] = nullptr;
                 _groups.erase(entry.first);
 
             } else {
@@ -974,7 +974,7 @@ namespace ospray {
                     break;
                 case geometryTypeEnum::MESH:
                     {
-                    auto& container = std::get<meshStrucutre>(element.structure);
+                    auto& container = std::get<meshStructure>(element.structure);
                     if (container.mesh == NULL) {
                         core::utility::log::Log::DefaultLog.WriteError(
                             "[OSPRay:generateRepresentations] Representation MESH active but no data provided.");
@@ -1052,7 +1052,7 @@ namespace ospray {
                                 auto count = mesh.second.indices.byte_size /
                                              mesh::MeshDataAccessCollection::getByteSize(mesh.second.indices.type);
 
-                                unsigned long long stride = 3 * sizeof(unsigned int);
+                                size_t stride = 3 * sizeof(unsigned int);
                                 auto osp_type = OSP_VEC3UI;
 
                                 if (mesh_type == mesh::MeshDataAccessCollection::QUADS) {
