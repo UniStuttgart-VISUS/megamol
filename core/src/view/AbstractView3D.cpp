@@ -188,7 +188,7 @@ AbstractView3D::AbstractView3D(void)
     defaultViewParam->SetGUIVisible(camparamvisibility);
     this->_cameraSetViewChooserParam.SetParameter(defaultViewParam),
         this->MakeSlotAvailable(&this->_cameraSetViewChooserParam);
-    this->_cameraSetViewChooserParam.SetUpdateCallback(&AbstractView::onResetView);
+    this->_cameraSetViewChooserParam.SetUpdateCallback(&AbstractView::OnResetView);
 
     auto defaultOrientationParam = new param::EnumParam(0);
     defaultOrientationParam->SetTypePair(defaultorientation::DEFAULTORIENTATION_TOP, "Top");
@@ -198,7 +198,7 @@ AbstractView3D::AbstractView3D(void)
     defaultOrientationParam->SetGUIVisible(camparamvisibility);
     this->_cameraSetOrientationChooserParam.SetParameter(defaultOrientationParam),
         this->MakeSlotAvailable(&this->_cameraSetOrientationChooserParam);
-    this->_cameraSetOrientationChooserParam.SetUpdateCallback(&AbstractView::onResetView);
+    this->_cameraSetOrientationChooserParam.SetUpdateCallback(&AbstractView::OnResetView);
 
     this->_cameraViewOrientationParam.SetParameter(
         new param::Vector4fParam(vislib::math::Vector<float, 4>(0.0f, 0.0f, 0.0f, 1.0f)));

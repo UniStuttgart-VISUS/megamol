@@ -233,7 +233,7 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
         crv->ResetAll();
         crv->SetTime(static_cast<float>(timestamps[0]));
         crv->SetInstanceTime(timestamps[1]);
-        crv->SetGpuAffinity(context.GpuAffinity);
+        //crv->SetGpuAffinity(context.GpuAffinity);
         crv->SetProjection(this->getProjType(), this->getEye());
 
         if (this->hasTile()) {
@@ -241,7 +241,7 @@ void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context
                 this->getTileW(), this->getTileH());
         }
 
-        crv->SetOutputBuffer(GL_BACK, this->getViewportWidth(), this->getViewportHeight());
+        //crv->SetOutputBuffer(GL_BACK, this->getViewportWidth(), this->getViewportHeight());
 
         if (!crv->operator()(core::view::CallRenderViewGL::CALL_RENDER)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("RendernodeView: Failed to call render on dependend view.");
