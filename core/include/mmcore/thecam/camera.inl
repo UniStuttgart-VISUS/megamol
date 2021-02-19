@@ -498,6 +498,8 @@ typename megamol::core::thecam::camera<M, P>::snapshot_type& megamol::core::thec
             snapshot.frustum_top = tt - (ih * HALF);
             snapshot.frustum_right = tr - (iw * HALF);
             snapshot.frustum_bottom = tb - (ih * HALF);
+            snapshot.frustum_near = 0.0;
+            snapshot.frustum_far = 1.0;
             break;
 
         default:

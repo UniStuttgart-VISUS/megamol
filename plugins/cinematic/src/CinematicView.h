@@ -9,9 +9,9 @@
 #define MEGAMOL_CINEMATIC_CINEMATICVIEW_H_INCLUDED
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/View3D_2.h"
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/View3DGL.h"
+#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -43,10 +43,10 @@ namespace cinematic {
     /**
     * Cinemtic View.
     */
-    class CinematicView : public core::view::View3D_2 {
+    class CinematicView : public core::view::View3DGL {
     public:
 
-        typedef core::view::View3D_2 Base;
+        typedef core::view::View3DGL Base;
 
         /**
          * Answer the name of this module.
@@ -88,9 +88,9 @@ namespace cinematic {
     protected:
 
         /**
-         * Renders this View3D_2 in the currently active OpenGL context.
+         * Renders this View3DGL in the currently active OpenGL context.
          */
-        virtual void Render(const mmcRenderViewContext& context);
+        virtual void Render(const mmcRenderViewContext& context, core::Call* call);
 
     private:
 
@@ -127,7 +127,6 @@ namespace cinematic {
             unsigned int          exp_frame_cnt;
         };
 
-        vislib::graphics::gl::FramebufferObject fbo;
         PngData                                 png_data;
         CinematicUtils                          utils;
         clock_t                                 deltaAnimTime;

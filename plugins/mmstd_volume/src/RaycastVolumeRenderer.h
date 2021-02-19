@@ -12,7 +12,7 @@
 #include "mmcore/Call.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLComputeShader.h"
@@ -29,7 +29,7 @@ namespace megamol {
 namespace stdplugin {
 namespace volume {
 
-class RaycastVolumeRenderer : public megamol::core::view::Renderer3DModule_2 {
+class RaycastVolumeRenderer : public megamol::core::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -87,7 +87,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender3D_2& call) override;
+    bool GetExtents(core::view::CallRender3DGL& call) override;
 
     /**
      * The render callback.
@@ -96,7 +96,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender3D_2& call) override;
+    bool Render(core::view::CallRender3DGL& call) override;
 
     bool updateVolumeData(const unsigned int frameID);
 

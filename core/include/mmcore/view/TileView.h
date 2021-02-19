@@ -70,7 +70,7 @@ namespace view {
         /**
          * Renders this AbstractView3D in the currently active OpenGL context.
          */
-        virtual void Render(const mmcRenderViewContext& context);
+        virtual void Render(const mmcRenderViewContext& context, Call* call) override;
 
     protected:
 
@@ -109,8 +109,7 @@ namespace view {
         /** Flag to identify the first frame */
         bool firstFrame;
 
-        /** TODO */
-        RenderOutputOpenGL * outCtrl;
+        std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
 
     };
 
