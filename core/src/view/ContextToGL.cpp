@@ -125,16 +125,11 @@ bool ContextToGL::Render(CallRender3DGL& call) {
                 new_fbo.GetDepthTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true);
         }
 
-
         new_fbo.Disable();
 
         // draw into lhs fbo
-        if (lhs_fbo->IsValid()) {
-            if ((lhs_fbo->GetWidth() != width) || (lhs_fbo->GetHeight() != height)) {
-                lhs_fbo->Release();
-            }
-        }
-        if (!lhs_fbo->IsValid()) {
+        if ((lhs_fbo->GetWidth() != width) || (lhs_fbo->GetHeight() != height)) {
+            lhs_fbo->Release();
             lhs_fbo->Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
         }
@@ -143,10 +138,8 @@ bool ContextToGL::Render(CallRender3DGL& call) {
         }
 
         glm::mat4 ortho = glm::ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -1.0f, 1.0f);
-        //_utils.DrawAllPrimitives(ortho, glm::vec2(width, height));
-        _utils.DrawTextures(ortho, glm::vec2(width, height));
 
-        //new_fbo.DrawColourTexture();
+        _utils.DrawTextures(ortho, glm::vec2(width, height));
 
         if (lhs_fbo->IsValid()) {
             lhs_fbo->Disable();
