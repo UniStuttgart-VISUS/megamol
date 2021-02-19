@@ -248,7 +248,7 @@ bool view::View2DGL::OnKey(Key key, KeyAction action, Modifiers mods) {
     if (cr == NULL) return false;
 
     if (key == Key::KEY_HOME) {
-        onResetView(this->_resetViewSlot);
+        OnResetView(this->_resetViewSlot);
     }
 
     InputEvent evt;
