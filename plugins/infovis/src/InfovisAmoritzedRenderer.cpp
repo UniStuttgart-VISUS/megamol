@@ -56,7 +56,7 @@ bool megamol::infovis::InfovisAmortizedRenderer::create(void) {
 // TODO
 void InfovisAmortizedRenderer::release() {}
 
-std::vector<glm::fvec3> InfovisAmortizedRenderer::calculateHammersley(int until) {
+std::vector<glm::fvec3> InfovisAmortizedRenderer::calculateHammersley(int until, int ow, int oh) {
     // calculation of Positions according to hammersley sequence
     // https://www.researchgate.net/publication/244441430_Sampling_with_Hammersley_and_Halton_Points
     std::vector<glm::fvec3> outputArray(until);
@@ -74,7 +74,21 @@ std::vector<glm::fvec3> InfovisAmortizedRenderer::calculateHammersley(int until)
         }
         outputArray[k] = glm::vec3(u - floor(2 * u), v - floor(2 * v), 0);
     }
-    return outputArray;
+    std::vector<glm::fvec3> camOffsets(4 * until);
+    for (int i = 0; i < until; i++) {
+        glm::vec3 temp = (outputArray[i] + glm::vec3(-1.0, +1.0, 0.0));
+        camOffsets[4 * i] = glm::vec3(temp.x/ow, temp.y/oh, 0);
+        temp = (outputArray[i] + glm::vec3(+1.0, +1.0, 0.0));
+        camOffsets[4 * i + 1] = glm::vec3(temp.x / ow, temp.y / oh, 0);
+        temp = (outputArray[i] + glm::vec3(-1.0, -1.0, 0.0));
+        camOffsets[4 * i + 2] = glm::vec3(temp.x / ow, temp.y / oh, 0);
+        temp = (outputArray[i] + glm::vec3(+1.0, -1.0, 0.0));
+        camOffsets[4 * i + 3] = glm::vec3(temp.x / ow, temp.y / oh, 0);
+    }
+    // jit = glm::translate(glm::mat4(1.0f), glm::vec3((camOffsets[f].x - 1 + 2 * (frametype % 2)) / ow,
+    // (camOffsets[f].y + 1 - 2 * floor((frametype % 4) / 2)) / oh, 0));
+
+    return camOffsets;
 }
 
 void InfovisAmortizedRenderer::makeShaders() {
@@ -111,10 +125,8 @@ void InfovisAmortizedRenderer::setupBuffers() {
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
 
     glGenFramebuffers(1, &amortizedFboA);
-    glGenFramebuffers(1, &amortizedFboB);
     glGenFramebuffers(1, &amortizedMsaaFboA);
     glGenTextures(1, &imageArrayA);
-    glGenTextures(1, &imageArrayB);
     glGenTextures(1, &msImageArray);
     glGenBuffers(1, &ssboMatrices);
 
@@ -130,14 +142,6 @@ void InfovisAmortizedRenderer::setupBuffers() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
 
     glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, 1, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
-
-    glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayB);
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, 1, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -167,12 +171,6 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
     auto pmvm = pm * mvm;
 
     if (approach == 0) {
-        framesNeeded = 2;
-        if (invMatrices.size() != framesNeeded) {
-            invMatrices.resize(framesNeeded);
-            moveMatrices.resize(framesNeeded);
-            frametype = 0;
-        }
 
         invMatrices[frametype] = pmvm;
 
@@ -192,31 +190,14 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         const float tbl[4] = {0.25 + (frametype * 0.5), 0.25, 0.75 - (frametype * 0.5), 0.75};
         glFramebufferSampleLocationsfvARB(GL_FRAMEBUFFER, 0u, 2, tbl);
     }
-
-    // non cbr quarter res 4 frame restoration
-    if (approach == 1) {
-        framesNeeded = 4;
-        if (invMatrices.size() != framesNeeded) {
-            invMatrices.resize(framesNeeded);
-            moveMatrices.resize(framesNeeded);
-            frametype = 0;
-            camOffsets.resize(4);
-            camOffsets = {glm::vec3(-1.0 / ow, 1.0 / oh, 0), glm::vec3(1.0 / ow, 1.0 / oh, 0),
-                glm::vec3(-1.0 / ow, -1.0 / oh, 0), glm::vec3(1.0 / ow, -1.0 / oh, 0)};
-        }
-
+    if (approach == 1 || approach == 2 || approach == 3) {
         glm::mat4 jit;
         glm::mat4 pmvm = pm * mvm;
-
        
         jit = glm::translate(glm::mat4(1.0f), camOffsets[frametype]);
         invMatrices[frametype] = jit * pmvm;
-
-
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
-        // moveMatrices[i] = glm::mat4(1.0);
-
 
         pm = jit * pm;
         for (int i = 0; i < 16; i++)
@@ -225,56 +206,12 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
         glActiveTexture(GL_TEXTURE10);
         glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4, 0, GL_RGB, GL_FLOAT, 0);
+        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4 * ssLevel, 0, GL_RGB, GL_FLOAT, 0);
 
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, frametype);
     }
 
-    if (approach == 2) {
-        framesNeeded = 4;
-        if (invMatrices.size() != framesNeeded) {
-            invMatrices.resize(framesNeeded);
-            moveMatrices.resize(framesNeeded);
-            frametype = 0;
-            camOffsets.resize(4);
-        }
-
-        camOffsets = {glm::vec3(-2.0 / ow, 2.0 / oh, 0), glm::vec3(0.0 / ow, 2.0 / oh, 0),
-            glm::vec3(-2.0 / ow, 0 / oh, 0), glm::vec3(.00 / ow, -0.0 / oh, 0)};
-
-        glm::mat4 jit;
-        glm::mat4 pmvm = pm * mvm; 
-        
-        jit = glm::translate(glm::mat4(1.0f), camOffsets[frametype]);
-        invMatrices[frametype] = jit * pmvm;
-        invMatrices[frametype] = jit * pmvm;
-        for (int i = 0; i < framesNeeded; i++)
-            moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
-        // moveMatrices[i] = glm::mat4(1.0);
-
-
-        pm = jit * pm;
-        for (int i = 0; i < 16; i++)
-            projMatrix_column[i] = glm::value_ptr(pm)[i];
-
-        glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboB);
-        glActiveTexture(GL_TEXTURE10);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayB);
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4, 0, GL_RGB, GL_FLOAT, 0);
-
-        glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayB, 0, frametype);
-    }
-
-    if (approach == 3) {
-        framesNeeded = 4 * ssLevel;
-        if (invMatrices.size() != framesNeeded || camOffsets.size() != ssLevel) {
-            invMatrices.resize(framesNeeded);
-            moveMatrices.resize(framesNeeded);
-            camOffsets.resize(ssLevel);
-            camOffsets = calculateHammersley(ssLevel);
-            frametype = 0;
-        }
-
+    if (false) {
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
         glActiveTexture(GL_TEXTURE10);
         glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
@@ -284,7 +221,9 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         glm::mat4 pmvm = pm * mvm;
         int f = floor(frametype / 4);
 
-        jit = glm::translate(glm::mat4(1.0f), glm::vec3((camOffsets[f].x - 1 + 2 * (frametype % 2)) / ow, (camOffsets[f].y + 1 - 2 * floor((frametype % 4) / 2)) / oh, 0));
+        //jit = glm::translate(glm::mat4(1.0f), glm::vec3((camOffsets[f].x - 1 + 2 * (frametype % 2)) / ow, (camOffsets[f].y + 1 - 2 * floor((frametype % 4) / 2)) / oh, 0));
+
+        jit = glm::translate(glm::mat4(1.0f), camOffsets[frametype]);
         invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3((-1.0 + 2.0 * floor(frametype % 2)) / ow, (1 - (2 * floor((frametype % 4)/2))) / oh, 0)) * pmvm;
 
         glm::mat4 invM = glm::inverse(pmvm);
@@ -298,7 +237,6 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, frametype);
     }
-    glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
     glClear(GL_COLOR_BUFFER_BIT);
     glViewport(0, 0, w, h);
 
@@ -306,6 +244,51 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
     glLoadMatrixf(modelViewMatrix_column);
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(projMatrix_column);
+}
+
+void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLevel) {
+    if (approach == 0) {
+        framesNeeded = 2;
+        if (invMatrices.size() != framesNeeded) {
+            invMatrices.resize(framesNeeded);
+            moveMatrices.resize(framesNeeded);
+            frametype = 0;
+        }
+    }
+    if (approach == 1) {
+        framesNeeded = 4;
+        if (invMatrices.size() != framesNeeded) {
+            invMatrices.resize(framesNeeded);
+            moveMatrices.resize(framesNeeded);
+            frametype = 0;
+            camOffsets.resize(4);
+            camOffsets = {glm::vec3(-1.0 / w, 1.0 / h, 0), glm::vec3(1.0 / w, 1.0 / h, 0),
+                glm::vec3(-1.0 / w, -1.0 / h, 0), glm::vec3(1.0 / w, -1.0 / h, 0)};
+        }
+    }
+    if (approach == 2) {
+
+        framesNeeded = 4;
+        if (invMatrices.size() != framesNeeded) {
+            invMatrices.resize(framesNeeded);
+            moveMatrices.resize(framesNeeded);
+            frametype = 0;
+            camOffsets.resize(4);
+            camOffsets = {glm::vec3(-2.0 / w, 2.0 / h, 0), glm::vec3(0.0 / w, 2.0 / h, 0),
+                glm::vec3(-2.0 / w, 0 / h, 0), glm::vec3(0.0 / w, 0.0 / h, 0)};
+        }
+    }
+
+    if (approach == 3) {
+        framesNeeded = 4 * ssLevel;
+        if (invMatrices.size() != framesNeeded || camOffsets.size() != ssLevel) {
+            invMatrices.resize(framesNeeded);
+            moveMatrices.resize(framesNeeded);
+            camOffsets.resize(4 * ssLevel);
+            camOffsets = calculateHammersley(ssLevel, w , h);
+            frametype = 0;
+        }
+    }
 }
 
 void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int ssLevel) {
@@ -349,7 +332,7 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
     int w = call.GetViewport().Width();
     int h = call.GetViewport().Height();
     int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
-
+    int approach = this->approachSlot.Param<core::param::IntParam>()->Value();
 
     cr2d->SetTime(call.Time());
     cr2d->SetInstanceTime(call.InstanceTime());
@@ -368,8 +351,6 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
     // end suck
 
-    int approach = this->approachSlot.Param<core::param::IntParam>()->Value();
-
     glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -378,15 +359,31 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
     cr2d->SetOutputBuffer(call.OutputBuffer());
     cr2d->SetGpuAffinity(call.GpuAffinity<megamol::core::view::AbstractCallRender::GpuHandleType>());
 
+    
+
     if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
+
+        // check if amortization mode changed
+        if (approach != oldApp || w != oldW || h != oldH || ssLevel != oldssLevel) {
+            resizeArrays(approach, w, h, ssLevel);
+        }
+
         setupAccel(approach, w, h, ssLevel);
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);
         doReconstruction(approach, w, h, ssLevel);
+
+        // to avoid excessive resizing, retain last render variables and check if changed
+        oldApp = approach;
+        oldssLevel = ssLevel;
+        oldH = h;
+        oldW = w;
     } else {
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);
     }
+    
+
     return true;
 }
 

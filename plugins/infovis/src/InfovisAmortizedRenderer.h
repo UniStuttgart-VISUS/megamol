@@ -54,13 +54,15 @@ namespace infovis {
 
         void setupBuffers();
 
-        std::vector<glm::fvec3> calculateHammersley(int until);
+        std::vector<glm::fvec3> calculateHammersley(int until, int ow, int oh);
 
         void makeShaders();
 
         void setupAccel(int approach, int ow, int oh, int ssLevel);
 
         void doReconstruction(int approach, int w, int h, int ssLevel);
+
+        void resizeArrays(int approach, int w, int h, int ssLevel);
 
     private:
         // required Shaders for different kinds of reconstruction
@@ -69,14 +71,16 @@ namespace infovis {
         vislib::graphics::gl::ShaderSource fragment_shader_src;
 
         GLuint amortizedFboA = 0;
-        GLuint amortizedFboB = 0;
         GLuint amortizedMsaaFboA = 0;
         GLuint msImageArray = 0;
-
         GLuint imageArrayA = 0;
-        GLuint imageArrayB = 0;
         GLuint ssboMatrices = 0;
         int frametype = 0;
+
+        int oldApp = -1;
+        int oldW = -1;
+        int oldH = -1;
+        int oldssLevel = -1;
 
         GLint origFBO = 0;
         int framesNeeded = 1;
