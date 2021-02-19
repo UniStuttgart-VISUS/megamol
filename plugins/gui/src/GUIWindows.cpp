@@ -977,6 +977,12 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                 __LINE__);
         }
 
+        // Check for new GUI state
+        if (!this->state.new_gui_state.empty()) {
+            this->state_from_string(this->state.new_gui_state);
+            this->state.new_gui_state.clear();
+        }
+
         // Check for script path name
         GraphPtr_t graph_ptr;
         if (graph_sync_success && this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
@@ -2292,14 +2298,15 @@ std::string megamol::gui::GUIWindows::project_to_lua_string(void) {
 
     std::string gui_state;
     if (this->state_to_string(gui_state)) {
-        std::string state = "\n" + std::string(GUI_START_TAG_SET_GUI_VISIBILITY) +
-                            std::to_string(this->state.gui_visible) + std::string(GUI_END_TAG_SET_GUI_VISIBILITY);
+        std::string state = std::string(GUI_START_TAG_SET_GUI_VISIBILITY) +
+                            ((this->state.gui_visible) ? ("true") : ("false")) +
+                            std::string(GUI_END_TAG_SET_GUI_VISIBILITY) + "\n";
 
-        state += "\n" + std::string(GUI_START_TAG_SET_GUI_STATE) + gui_state + std::string(GUI_END_TAG_SET_GUI_STATE);
+        state += std::string(GUI_START_TAG_SET_GUI_STATE) + gui_state + std::string(GUI_END_TAG_SET_GUI_STATE) + "\n";
 
         return state;
     }
-    return std::string("");
+    return std::string();
 }
 
 
@@ -2316,8 +2323,13 @@ bool megamol::gui::GUIWindows::load_state_from_file(const std::string& filename)
         std::string gui_visible_str =
             GUIUtils::ExtractTaggedString(project, GUI_START_TAG_SET_GUI_VISIBILITY, GUI_END_TAG_SET_GUI_VISIBILITY);
         if (!gui_visible_str.empty()) {
-            this->state.gui_visible = false;
-            retval |= true;
+            if ((gui_visible_str == "1") || (gui_visible_str == "True") || (gui_visible_str == "true")) {
+                this->state.gui_visible = true;
+                retval |= true;
+            } else if ((gui_visible_str == "0") || (gui_visible_str == "False") || (gui_visible_str == "false")) {
+                this->state.gui_visible = false;
+                retval |= true;
+            }
         }
     }
     return retval;
@@ -2449,6 +2461,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.style = GUIWindows::Styles::DarkColors;
     this->state.rescale_windows = false;
     this->state.style_changed = true;
+    this->state.new_gui_state = "";
     this->state.project_script_paths.clear();
     this->state.graph_uid = GUI_INVALID_ID;
     this->state.font_utf8_ranges.clear();

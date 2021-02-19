@@ -147,7 +147,7 @@ namespace gui {
          * Set GUI state.
          */
         void SetState(const std::string& json_state) {
-            this->state_from_string(json_state);
+            this->state.new_gui_state = json_state;
         }
 
         /**
@@ -161,9 +161,8 @@ namespace gui {
          * Set GUI visibility.
          */
         void SetVisibility(bool visible) {
-            if (this->state.gui_visible != visible) {
-                this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = true;
-            }
+            // In order to take immediate effect, the GUI visibility directly is set (and not indirectly via hotkey)
+            this->state.gui_visible = visible;
         }
 
         /**
@@ -210,6 +209,7 @@ namespace gui {
             bool rescale_windows;     // Indicates resizing of windows for new gui zoom
             Styles style;             // Predefined GUI style
             bool style_changed;       // Flag indicating changed style
+            std::string new_gui_state; // If set, new gui state is applied in next graph synchronisation step
             std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
             ImGuiID graph_uid;                             // UID of currently running graph
             std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.
