@@ -114,5 +114,9 @@ private:
     std::size_t _in_data_hash = std::numeric_limits<std::size_t>::max();
 
     std::size_t _out_data_hash = 0;
+
+    std::vector<std::shared_ptr<Alpha_shape_3>> _alpha_shapes;
+
+    std::vector<std::list<Facet>> _facets;
 };
 } // namespace megamol::thermodyn
