@@ -141,48 +141,10 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
 
             auto const type = static_cast<surface_type>(_type_slot.Param<core::param::EnumParam>()->Value());
 
-            /*float const* color_tf = nullptr;
-            auto color_tf_size = 0;
-            std::array<float, 2> range = {0.f, 0.f};
-
-            if (in_data->DataHash() != _in_data_hash || in_data->FrameID() != _frame_id) {
-                for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
-                    auto const& parts = in_data->AccessParticles(pl_idx);
-
-                    range[0] = std::min(parts.GetMinColourIndexValue(), range[0]);
-                    range[1] = std::max(parts.GetMaxColourIndexValue(), range[1]);
-                }
-                if (cgtf != nullptr) {
-                    cgtf->SetRange(range);
-                    (*cgtf)(0);
-                    color_tf = cgtf->GetTextureData();
-                    color_tf_size = cgtf->TextureSize();
-                }
-            } else {
-                if (cgtf != nullptr) {
-                    (*cgtf)(0);
-                    color_tf = cgtf->GetTextureData();
-                    color_tf_size = cgtf->TextureSize();
-                    range = cgtf->Range();
-                }
-            }
-
-            auto const def_color = glm::vec4(1.0f);*/
-
-            /*if (cgtf != nullptr) {
-                cgtf->SetRange(range);
-                (*cgtf)(0);
-                color_tf = cgtf->GetTextureData();
-                color_tf_size = cgtf->TextureSize();
-                range = cgtf->Range();
-            }*/
 
             for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
                 auto const& parts = in_data->AccessParticles(pl_idx);
 
-                /*auto const min_i = range[0];
-                auto const max_i = range[1];
-                auto const fac_i = 1.0f / (max_i - min_i + 1e-8f);*/
 
                 auto& vertices = _vertices[pl_idx];
                 auto& normals = _normals[pl_idx];
@@ -213,21 +175,8 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
                     _alpha_shapes.push_back(std::make_shared<Alpha_shape_3>(tri, alpha));
                     auto& as = _alpha_shapes.back();
 
-                    // std::list<Facet> facets;
                     facets.clear();
                     as->get_alpha_shape_facets(std::back_inserter(facets), Alpha_shape_3::REGULAR);
-
-                    // std::list<Triangle> alpha_mesh;
-
-                    // for (auto& facet : facets) {
-                    //    /*mesh_points.push_back(facet.first->vertex(Triangulation_3::vertex_triple_index(facet.second,
-                    //    0))->point());
-                    //    mesh_points.push_back(facet.first->vertex(Triangulation_3::vertex_triple_index(facet.second,
-                    //    1))->point());
-                    //    mesh_points.push_back(facet.first->vertex(Triangulation_3::vertex_triple_index(facet.second,
-                    //    2))->point());*/
-                    //    alpha_mesh.push_back(as.triangle(facet));
-                    //}
 
                     vertices.clear();
                     vertices.reserve(facets.size() * 9);
@@ -238,11 +187,7 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
                     indices.clear();
                     indices.resize(facets.size() * 3);
 
-                    // for (auto& triangle : alpha_mesh) {
                     for (auto& face : facets) {
-                        /*auto const& a = triangle.vertex(0);
-                        auto const& b = triangle.vertex(1);
-                        auto const& c = triangle.vertex(2);*/
 
                         auto const& vert_a = face.first->vertex(as->vertex_triple_index(face.second, 0));
                         auto const& vert_b = face.first->vertex(as->vertex_triple_index(face.second, 1));
@@ -276,50 +221,6 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
                         normals.push_back(normal.x());
                         normals.push_back(normal.y());
                         normals.push_back(normal.z());
-
-                        /*auto col_a = def_color;
-                        auto col_b = def_color;
-                        auto col_c = def_color;
-
-                        if (color_tf != nullptr) {
-                            auto const val_a = (vert_a->info() - min_i) * fac_i * static_cast<float>(color_tf_size);
-                            auto const val_b = (vert_b->info() - min_i) * fac_i * static_cast<float>(color_tf_size);
-                            auto const val_c = (vert_c->info() - min_i) * fac_i * static_cast<float>(color_tf_size);
-                            std::remove_const_t<decltype(val_a)> main_a = 0;
-                            auto rest_a = std::modf(val_a, &main_a);
-                            rest_a = static_cast<int>(main_a) >= 0 && static_cast<int>(main_a) < color_tf_size ? rest_a
-                                                                                                               : 0.0f;
-                            std::remove_const_t<decltype(val_b)> main_b = 0;
-                            auto rest_b = std::modf(val_b, &main_b);
-                            rest_b = static_cast<int>(main_b) >= 0 && static_cast<int>(main_b) < color_tf_size ? rest_b
-                                                                                                               : 0.0f;
-                            std::remove_const_t<decltype(val_c)> main_c = 0;
-                            auto rest_c = std::modf(val_c, &main_c);
-                            rest_c = static_cast<int>(main_c) >= 0 && static_cast<int>(main_c) < color_tf_size ? rest_c
-                                                                                                               : 0.0f;
-                            main_a = std::clamp(static_cast<int>(main_a), 0, color_tf_size - 1);
-                            main_b = std::clamp(static_cast<int>(main_b), 0, color_tf_size - 1);
-                            main_c = std::clamp(static_cast<int>(main_c), 0, color_tf_size - 1);
-                            col_a = stdplugin::datatools::sample_tf(
-                                color_tf, color_tf_size, static_cast<int>(main_a), rest_a);
-                            col_b = stdplugin::datatools::sample_tf(
-                                color_tf, color_tf_size, static_cast<int>(main_b), rest_b);
-                            col_c = stdplugin::datatools::sample_tf(
-                                color_tf, color_tf_size, static_cast<int>(main_c), rest_c);
-                        }
-
-                        colors.push_back(col_a.r);
-                        colors.push_back(col_a.g);
-                        colors.push_back(col_a.b);
-                        colors.push_back(col_a.a);
-                        colors.push_back(col_b.r);
-                        colors.push_back(col_b.g);
-                        colors.push_back(col_b.b);
-                        colors.push_back(col_b.a);
-                        colors.push_back(col_c.r);
-                        colors.push_back(col_c.g);
-                        colors.push_back(col_c.b);
-                        colors.push_back(col_c.a);*/
                     }
 
                     std::iota(indices.begin(), indices.end(), 0);
