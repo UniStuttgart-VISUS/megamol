@@ -71,7 +71,8 @@ void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
 
     if (call == nullptr) {
         if ((this->_fbo->GetWidth() != _camera.image_tile().width()) ||
-            (this->_fbo->GetHeight() != _camera.image_tile().height())) {
+            (this->_fbo->GetHeight() != _camera.image_tile().height()) ||
+            (!this->_fbo->IsValid()) ) {
             this->_fbo->Release();
             if (!this->_fbo->Create(_camera.image_tile().width(), _camera.image_tile().height(), GL_RGBA8, GL_RGBA,
                     GL_UNSIGNED_BYTE,
@@ -88,7 +89,7 @@ void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
 
     AbstractView3D::beforeRender(context);
 
-    cr3d->SetCameraState(this->_camera);
+    cr3d->SetCamera(this->_camera);
     (*cr3d)(view::CallRender3DGL::FnRender);
 
     AbstractView3D::afterRender(context);

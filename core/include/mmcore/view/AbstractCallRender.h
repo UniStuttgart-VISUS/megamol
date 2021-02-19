@@ -203,15 +203,6 @@ namespace view {
         }
 
         /**
-         * Gets the camera parameters .
-         *
-         * @return The camera parameters pointer.
-         */
-        inline const cam_type::minimal_state_type& GetCameraState(void) const {
-            return this->_minCamState;
-        }
-
-        /**
          * Returns the camera containing the parameters transferred by this call.
          * Things like the view matrix are not calculated yet and have still to be retrieved from the object
          * by using the appropriate functions. THIS METHOD PERFORMS A COPY OF A WHOLE CAMERA OBJECT.
@@ -220,8 +211,7 @@ namespace view {
          * @return A camera object containing the minimal state transferred by this call.
          */
         inline const Camera_2 GetCamera(void) const {
-            Camera_2 retval = this->_minCamState;
-            return retval;
+            return this->_camera;
         }
 
         /**
@@ -232,7 +222,7 @@ namespace view {
          * @param cam The camera object the transferred state is stored in
          */
         inline void GetCamera(Camera_2& cam) const {
-            cam = this->_minCamState;
+            cam = this->_camera;
         }
 
         /**
@@ -241,8 +231,8 @@ namespace view {
          *
          * @param camera The camera the state is adapted from.
          */
-        inline void SetCameraState(Camera_2& camera) {
-            this->_minCamState = camera.get_minimal_state(this->_minCamState);
+        inline void SetCamera(Camera_2& camera) {
+            this->_camera = camera;
         }
 
         /**
@@ -282,7 +272,7 @@ namespace view {
         glm::vec4 _backgroundCol;
 
         /** The transferred camera state */
-        cam_type::minimal_state_type _minCamState;
+        Camera_2 _camera;
 
 
         /** The bounding boxes */

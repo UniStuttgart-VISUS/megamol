@@ -236,7 +236,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
 
     if (ci != nullptr) {
         auto cam = cr.GetCamera();
-        ci->SetCameraState(cam);
+        ci->SetCamera(cam);
 
         if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
             this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
