@@ -43,7 +43,7 @@ using namespace megamol::core::utility::log;
  * protein::SimpleMoleculeRenderer::SimpleMoleculeRenderer (CTOR)
  */
 SimpleMoleculeRenderer::SimpleMoleculeRenderer(void)
-        : view::Renderer3DModule_2()
+        : view::Renderer3DModuleGL()
         , molDataCallerSlot("getData", "Connects the molecule rendering with molecule data storage")
         , bsDataCallerSlot("getBindingSites", "Connects the molecule rendering with binding site data storage")
         , colorTableFileParam("color::colorTableFilename", "The filename of the color table.")
@@ -487,7 +487,7 @@ bool SimpleMoleculeRenderer::create(void) {
 /*
  * protein::SimpleMoleculeRenderer::GetExtents
  */
-bool SimpleMoleculeRenderer::GetExtents(core::view::CallRender3D_2& call) {
+bool SimpleMoleculeRenderer::GetExtents(core::view::CallRender3DGL& call) {
     MolecularDataCall* mol = this->molDataCallerSlot.CallAs<MolecularDataCall>();
     if (mol == NULL)
         return false;
@@ -509,7 +509,7 @@ bool SimpleMoleculeRenderer::GetExtents(core::view::CallRender3D_2& call) {
 /*
  * protein::SimpleMoleculeRenderer::Render
  */
-bool SimpleMoleculeRenderer::Render(core::view::CallRender3D_2& call) {
+bool SimpleMoleculeRenderer::Render(core::view::CallRender3DGL& call) {
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 

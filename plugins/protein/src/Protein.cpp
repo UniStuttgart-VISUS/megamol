@@ -10,31 +10,20 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/utility/plugins/PluginRegister.h"
 
-// views
-#include "View3DSpaceMouse.h"
-
 // jobs
 #include "PDBWriter.h"
 #include "VTIWriter.h"
 
 // 3D renderers
-#include "CartoonRenderer.h"
 #include "CartoonTessellationRenderer2000GT.h"
-#include "DofRendererDeferred.h"
 #include "GLSLVolumeRenderer.h"
-#include "LayeredIsosurfaceRenderer.h"
 #include "MoleculeCartoonRenderer.h"
-#include "MoleculeSESRenderer.h"
-#include "ProteinVolumeRenderer.h"
-#include "SSAORendererDeferred.h"
 #include "SecPlaneRenderer.h"
 #include "SimpleMoleculeRenderer.h"
 #include "SolPathRenderer.h"
 #include "SolventVolumeRenderer.h"
-#include "ToonRendererDeferred.h"
 #include "UnstructuredGridRenderer.h"
 #include "VariantMatchRenderer.h"
-#include "VolumeDirectionRenderer.h"
 #include "SombreroMeshRenderer.h"
 
 // 2D renderers
@@ -136,12 +125,10 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::BindingSiteDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolPathDataSource>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolPathRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinVolumeRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CCP4VolumeData>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SimpleMoleculeRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CoarseGrainDataLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeSESRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MoleculeCartoonRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::FrodockLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::VolumeSliceRenderer>();
@@ -149,11 +136,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::XYZLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventVolumeRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SolventHydroBondGenerator>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::View3DSpaceMouse>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::GROLoader>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::SSAORendererDeferred>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::ToonRendererDeferred>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::DofRendererDeferred>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::GLSLVolumeRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::DiagramRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::SplitMergeRenderer>();
@@ -173,12 +156,9 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::protein::UnstructuredGridRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularBezierData>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MultiParticleDataFilter>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::VolumeDirectionRenderer>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::LayeredIsosurfaceRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MultiPDBLoader>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ColorModule>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::PDBInterpolator>();
-        this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonRenderer>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::CartoonTessellationRenderer2000GT>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::ProteinExploder>();
         this->module_descriptions.RegisterAutoDescription<megamol::protein::MolecularNeighborhood>();

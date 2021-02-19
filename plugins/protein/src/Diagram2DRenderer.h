@@ -98,7 +98,7 @@ namespace protein {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents( megamol::core::view::CallRender2D& call);
+        virtual bool GetExtents( megamol::core::view::CallRender2DGL& call);
 
 		/**
 		* The Open GL Render callback.
@@ -106,7 +106,7 @@ namespace protein {
 		* @param call The calling call.
 		* @return The return value of the function.
 		*/
-        virtual bool Render( megamol::core::view::CallRender2D& call);
+        virtual bool Render( megamol::core::view::CallRender2DGL& call);
 
         /**
          * Generate the diagram textures and FBOs.

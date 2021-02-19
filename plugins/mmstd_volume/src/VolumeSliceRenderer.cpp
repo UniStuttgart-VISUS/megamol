@@ -13,8 +13,8 @@
 #include "mmcore/misc/VolumetricDataCall.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/ShaderSource.h"
@@ -33,7 +33,7 @@
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
 megamol::stdplugin::volume::VolumeSliceRenderer::VolumeSliceRenderer(void)
-	: Renderer3DModule_2()
+	: Renderer3DModuleGL()
 	, getVolSlot("getVol", "The call for data")
 	, getTFSlot("gettransferfunction", "The call for Transfer function")
 	, getClipPlaneSlot("getclipplane", "The call for clipping plane") {
@@ -106,7 +106,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::create(void) {
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool megamol::stdplugin::volume::VolumeSliceRenderer::GetExtents(core::view::CallRender3D_2& cr) {
+bool megamol::stdplugin::volume::VolumeSliceRenderer::GetExtents(core::view::CallRender3DGL& cr) {
     auto *vdc = this->getVolSlot.CallAs<core::misc::VolumetricDataCall>();
 
 	vdc->SetFrameID(static_cast<unsigned int>(cr.Time()));
@@ -131,7 +131,7 @@ void megamol::stdplugin::volume::VolumeSliceRenderer::release(void) {
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */
-bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRender3D_2& cr) {
+bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRender3DGL& cr) {
     // get volume data
     auto *vdc = this->getVolSlot.CallAs<core::misc::VolumetricDataCall>();
 	if (vdc == nullptr || !(*vdc)(core::misc::VolumetricDataCall::IDX_GET_EXTENTS)) return false;
@@ -215,7 +215,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
 	cam.calc_matrices(view, proj);
 
 	// create render target
-	glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr.GetViewport().Width(), cr.GetViewport().Height(),
+	glowl::TextureLayout render_tgt_layout(GL_RGBA8, cam.resolution_gate().width(), cam.resolution_gate().height(),
 		1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},

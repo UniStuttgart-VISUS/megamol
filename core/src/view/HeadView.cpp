@@ -7,7 +7,7 @@
 #include "stdafx.h"
 
 #include "mmcore/job/TickCall.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/HeadView.h"
 
 #include "mmcore/utility/log/Log.h"
@@ -27,7 +27,7 @@ viewSlot("view", "Connects to a view"),
 tickSlot("tick", "Connects to a module that needs a tick"),
 override_view_call(nullptr) {
 
-    this->viewSlot.SetCompatibleCall<view::CallRenderViewDescription>();
+    this->viewSlot.SetCompatibleCall<view::CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->viewSlot);
 
     this->tickSlot.SetCompatibleCall<job::TickCall::TickCallDescription>();
@@ -80,18 +80,26 @@ void view::HeadView::DeserialiseCamera(vislib::Serialiser& serialiser) {
 /*
  * view::HeadView::Render
  */
-void view::HeadView::Render(const mmcRenderViewContext& context) {
-    CallRenderView *view = this->viewSlot.CallAs<CallRenderView>();
+void view::HeadView::Render(const mmcRenderViewContext& context, Call* call) {
+    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
+
+    auto cam  = view->GetCamera();
 
     if (view != nullptr) {
-        std::unique_ptr<CallRenderView> last_view_call = nullptr;
+        std::unique_ptr<CallRenderViewGL> last_view_call = nullptr;
 
         if (this->override_view_call != nullptr) {
-            last_view_call = std::make_unique<CallRenderView>(*view);
+            last_view_call = std::make_unique<CallRenderViewGL>(*view);
             *view = *this->override_view_call;
         }
         else {
-            const_cast<vislib::math::Rectangle<int>&>(view->GetViewport()).Set(0, 0, this->width, this->height);
+            //const_cast<vislib::math::Rectangle<int>&>(view->GetViewport()).Set(0, 0, this->width, this->height);
+            thecam::math::rectangle<int> rect;
+            rect.bottom() = 0;
+            rect.left() = 0;
+            rect.right() = this->width;
+            rect.top() = this->height;
+            cam.image_tile.operator()(rect);
         }
 
         view->SetInstanceTime(context.InstanceTime);
@@ -101,7 +109,7 @@ void view::HeadView::Render(const mmcRenderViewContext& context) {
             this->doBeforeRenderHook();
         }
 
-        (*view)(CallRenderView::CALL_RENDER);
+        (*view)(CallRenderViewGL::CALL_RENDER);
 
         if (this->doHookCode()) {
             this->doAfterRenderHook();
@@ -125,9 +133,9 @@ void view::HeadView::Render(const mmcRenderViewContext& context) {
  * view::HeadView::ResetView
  */
 void view::HeadView::ResetView(void) {
-    CallRenderView *view = this->viewSlot.CallAs<CallRenderView>();
+    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
 
-    if (view != nullptr) (*view)(CallRenderView::CALL_RESETVIEW);
+    if (view != nullptr) (*view)(CallRenderViewGL::CALL_RESETVIEW);
 }
 
 
@@ -135,7 +143,7 @@ void view::HeadView::ResetView(void) {
  * view::HeadView::Resize
  */
 void view::HeadView::Resize(unsigned int width, unsigned int height) {
-    CallRenderView *view = this->viewSlot.CallAs<CallRenderView>();
+    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     this->width = width;
     this->height = height;
@@ -154,7 +162,7 @@ void view::HeadView::Resize(unsigned int width, unsigned int height) {
  * view::HeadView::OnRenderView
  */
 bool view::HeadView::OnRenderView(Call& call) {
-    view::CallRenderView *view = dynamic_cast<view::CallRenderView *>(&call);
+    view::CallRenderViewGL *view = dynamic_cast<view::CallRenderViewGL *>(&call);
     if (view == nullptr) return false;
 
     this->override_view_call = view;
@@ -165,7 +173,7 @@ bool view::HeadView::OnRenderView(Call& call) {
     context.Time = view->Time();
     context.InstanceTime = view->InstanceTime();
 
-    this->Render(context);
+    this->Render(context, &call);
 
     this->override_view_call = nullptr;
 
@@ -177,9 +185,9 @@ bool view::HeadView::OnRenderView(Call& call) {
  * view::HeadView::UpdateFreeze
  */
 void view::HeadView::UpdateFreeze(bool freeze) {
-    CallRenderView *view = this->viewSlot.CallAs<CallRenderView>();
+    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
 
-    if (view != nullptr) (*view)(freeze ? CallRenderView::CALL_FREEZE : CallRenderView::CALL_UNFREEZE);
+    if (view != nullptr) (*view)(freeze ? CallRenderViewGL::CALL_FREEZE : CallRenderViewGL::CALL_UNFREEZE);
 }
 
 
@@ -187,7 +195,7 @@ bool view::HeadView::OnKey(Key key, KeyAction action, Modifiers mods) {
 
     bool consumed = false;
 
-    CallRenderView *view = this->viewSlot.CallAs<CallRenderView>();
+    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
     if (view != nullptr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::Key;
@@ -197,7 +205,7 @@ bool view::HeadView::OnKey(Key key, KeyAction action, Modifiers mods) {
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderView::FnOnKey)) consumed = true;
+        if ((*view)(view::CallRenderViewGL::FnOnKey)) consumed = true;
     }
 
     return consumed;
@@ -208,7 +216,7 @@ bool view::HeadView::OnChar(unsigned int codePoint) {
 
     bool consumed = false;
 
-    CallRenderView *view = this->viewSlot.CallAs<CallRenderView>();
+    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     if (view != nullptr) {
         InputEvent evt;
@@ -217,7 +225,7 @@ bool view::HeadView::OnChar(unsigned int codePoint) {
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderView::FnOnChar)) consumed = true;
+        if ((*view)(view::CallRenderViewGL::FnOnChar)) consumed = true;
     }
 
     return consumed;
@@ -226,7 +234,7 @@ bool view::HeadView::OnChar(unsigned int codePoint) {
 
 bool view::HeadView::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
 
-    CallRenderView *view = this->viewSlot.CallAs<CallRenderView>();
+    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     if (view != nullptr) {
         InputEvent evt;
@@ -237,7 +245,7 @@ bool view::HeadView::OnMouseButton(MouseButton button, MouseButtonAction action,
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderView::FnOnMouseButton)) return true;
+        if ((*view)(view::CallRenderViewGL::FnOnMouseButton)) return true;
     }
 
     return true;
@@ -246,7 +254,7 @@ bool view::HeadView::OnMouseButton(MouseButton button, MouseButtonAction action,
 
 bool view::HeadView::OnMouseMove(double x, double y) {
 
-    CallRenderView *view = this->viewSlot.CallAs<CallRenderView>();
+    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     if (view != nullptr) {
         InputEvent evt;
@@ -256,7 +264,7 @@ bool view::HeadView::OnMouseMove(double x, double y) {
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderView::FnOnMouseMove)) return true;
+        if ((*view)(view::CallRenderViewGL::FnOnMouseMove)) return true;
     }
 
     return true;
@@ -265,7 +273,7 @@ bool view::HeadView::OnMouseMove(double x, double y) {
 
 bool view::HeadView::OnMouseScroll(double dx, double dy) {
 
-    CallRenderView *view = this->viewSlot.CallAs<CallRenderView>();
+    CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
 
     if (view != nullptr) {
         InputEvent evt;
@@ -275,7 +283,7 @@ bool view::HeadView::OnMouseScroll(double dx, double dy) {
 
         view->SetInputEvent(evt);
 
-        if ((*view)(view::CallRenderView::FnOnMouseScroll)) return true;
+        if ((*view)(view::CallRenderViewGL::FnOnMouseScroll)) return true;
     }
 
     return true;

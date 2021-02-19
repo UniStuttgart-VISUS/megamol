@@ -18,18 +18,13 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/AbstractCallRender3D.h"
 #include "vislib/assert.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/BoolParam.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include <cmath>
-#include <iostream>
 #include <omp.h>
 #include "vislib/math/ShallowVector.h"
-#include "protein_calls/CallMouseInput.h"
 #include <vector>
 
 
@@ -40,7 +35,7 @@ namespace demos {
 /*
  * AOSphereRenderer::AOSphereRenderer
  */
-AOSphereRenderer::AOSphereRenderer(void) : megamol::core::view::Renderer3DModule_2(),
+AOSphereRenderer::AOSphereRenderer(void) : megamol::core::view::Renderer3DModuleGL(),
         sphereShaderAOMainAxes(), sphereShaderAONormals(),
         getDataSlot("getdata", "Connects to the data source"),
         getTFSlot("gettransferfunction", "Connects to the transfer function module"),
@@ -251,7 +246,7 @@ bool AOSphereRenderer::create(void) {
 /*
  * AOSphereRenderer::GetExtents
  */
-bool AOSphereRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
+bool AOSphereRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) {
     megamol::core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
     protein_calls::MolecularDataCall *mol = this->getDataSlot.CallAs<protein_calls::MolecularDataCall>();
     if ((c2 != NULL) && ((*c2)(1))) {
@@ -291,7 +286,7 @@ void AOSphereRenderer::release(void) {
 /*
  * AOSphereRenderer::Render
  */
-bool AOSphereRenderer::Render(megamol::core::view::CallRender3D_2& call) {
+bool AOSphereRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     megamol::core::moldyn::MultiParticleDataCall *c2 = this->getDataSlot.CallAs<megamol::core::moldyn::MultiParticleDataCall>();
     protein_calls::MolecularDataCall *mol = this->getDataSlot.CallAs<protein_calls::MolecularDataCall>();
@@ -457,7 +452,7 @@ void AOSphereRenderer::resizeVolume() {
     }
 }
 
-void AOSphereRenderer::uploadCameraUniforms(megamol::core::view::CallRender3D_2& call, vislib::graphics::gl::GLSLShader *sphereShader) {
+void AOSphereRenderer::uploadCameraUniforms(megamol::core::view::CallRender3DGL& call, vislib::graphics::gl::GLSLShader *sphereShader) {
 
     float viewportStuff[4];
     ::glGetFloatv(GL_VIEWPORT, viewportStuff);
@@ -503,7 +498,7 @@ void AOSphereRenderer::uploadCameraUniforms(megamol::core::view::CallRender3D_2&
 /*
  * AOSphereRenderer::renderParticles
  */
-void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3D_2& call, megamol::core::moldyn::MultiParticleDataCall *c2) {
+void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3DGL& call, megamol::core::moldyn::MultiParticleDataCall *c2) {
 
     vislib::graphics::gl::GLSLShader *sphereShader = NULL;
 
@@ -664,7 +659,7 @@ void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3D_2& call
 /*
  * AOSphereRenderer::renderParticles
  */
-void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3D_2& call, protein_calls::MolecularDataCall *mol) {
+void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3DGL& call, protein_calls::MolecularDataCall *mol) {
 
     vislib::graphics::gl::GLSLShader *sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
@@ -774,7 +769,7 @@ void AOSphereRenderer::renderParticles(megamol::core::view::CallRender3D_2& call
 /*
  * AOSphereRenderer::renderParticlesVBO
  */
-void AOSphereRenderer::renderParticlesVBO(megamol::core::view::CallRender3D_2& call, megamol::core::moldyn::MultiParticleDataCall *c2) {
+void AOSphereRenderer::renderParticlesVBO(megamol::core::view::CallRender3DGL& call, megamol::core::moldyn::MultiParticleDataCall *c2) {
 
     vislib::graphics::gl::GLSLShader *sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
@@ -863,7 +858,7 @@ void AOSphereRenderer::renderParticlesVBO(megamol::core::view::CallRender3D_2& c
 /*
  * AOSphereRenderer::renderParticlesVBO
  */
-void AOSphereRenderer::renderParticlesVBO(megamol::core::view::CallRender3D_2& call, protein_calls::MolecularDataCall *mol) {
+void AOSphereRenderer::renderParticlesVBO(megamol::core::view::CallRender3DGL& call, protein_calls::MolecularDataCall *mol) {
 
     vislib::graphics::gl::GLSLShader *sphereShader = NULL;
     int shadMod = this->aoShadModeSlot.Param<megamol::core::param::EnumParam>()->Value();
