@@ -198,7 +198,7 @@ namespace astro {
 
         ci->SetTime(req_frame);
         core::view::Camera_2 cam = call.GetCamera();
-        ci->SetCameraState(cam);
+        ci->SetCamera(cam);
 
         auto viewport = cam.resolution_gate();
         if (this->fbo.GetWidth() != viewport.width() || this->fbo.GetHeight() != viewport.height()) {

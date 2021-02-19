@@ -101,7 +101,7 @@ void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
     if (cr2d == NULL) {
         return;
     }
-    cr2d->SetCamera(this->cam);
+    cr2d->SetCamera(this->_camera);
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
     float w = this->_width;
@@ -196,7 +196,7 @@ void view::View2DGL::ResetView(void) {
         this->_viewZoom = 1.0f;
     }
 
-    this->viewUpdateCnt++;
+    this->_viewUpdateCnt++;
 }
 
 
@@ -413,7 +413,7 @@ bool view::View2DGL::GetExtents(Call& call) {
     if (cr2d == nullptr) {
         return false;
     }
-    cr2d->SetCamera(this->cam);
+    cr2d->SetCamera(this->_camera);
 
     if (!(*cr2d)(CallRender2DGL::FnGetExtents)) return false;
 
