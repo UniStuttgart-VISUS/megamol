@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER protein EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build protein" ON)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build protein" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(protein)

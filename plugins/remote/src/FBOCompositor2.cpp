@@ -11,7 +11,7 @@
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ResourceWrapper.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Camera_2.h"
 #include "mmcore/utility/log/Log.h"
 
@@ -141,7 +141,7 @@ bool megamol::remote::FBOCompositor2::create() {
 void megamol::remote::FBOCompositor2::release() { shutdownThreads(); }
 
 
-bool megamol::remote::FBOCompositor2::GetExtents(megamol::core::view::CallRender3D_2& call) {
+bool megamol::remote::FBOCompositor2::GetExtents(megamol::core::view::CallRender3DGL& call) {
     auto& out_bbox = call.AccessBoundingBoxes();
 
 #if _DEBUG && VERBOSE
@@ -198,7 +198,7 @@ bool megamol::remote::FBOCompositor2::GetExtents(megamol::core::view::CallRender
 }
 
 
-bool megamol::remote::FBOCompositor2::Render(megamol::core::view::CallRender3D_2& call) {
+bool megamol::remote::FBOCompositor2::Render(megamol::core::view::CallRender3DGL& call) {
     // initThreads();
 
     auto req_time = call.Time();
@@ -270,7 +270,7 @@ bool megamol::remote::FBOCompositor2::Render(megamol::core::view::CallRender3D_2
             (std::fabs(req_cam_view.z() - this->camera_params_[8]) >= min)) {
             // Resetting FBO in cr3d (to nullptr). This is detected by CinemativView to skip not requested frames while
             // rendering.
-            call.ResetOutputBuffer();
+            call.SetFramebufferObject(nullptr);
             return false;
         }
     }

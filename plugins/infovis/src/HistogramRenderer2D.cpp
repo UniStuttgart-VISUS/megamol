@@ -105,18 +105,18 @@ void HistogramRenderer2D::release() {
     glDeleteBuffers(1, &this->maxBinValueBuffer);
 }
 
-bool HistogramRenderer2D::GetExtents(core::view::CallRender2D& call) {
+bool HistogramRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
     if (!handleCall(call)) {
         return false;
     }
 
     // Draw histogram within 10.0 x 10.0 quads, left + right margin 1.0, top and bottom 2.0 for title and axes
     float sizeX = static_cast<float>(std::max<size_t>(1, this->colCount)) * 12.0f;
-    call.SetBoundingBox(0.0f, 0.0f, sizeX, 14.0f);
+    call.AccessBoundingBoxes().SetBoundingBox(0.0f, 0.0f, 0, sizeX, 14.0f, 0);
     return true;
 }
 
-bool HistogramRenderer2D::Render(core::view::CallRender2D& call) {
+bool HistogramRenderer2D::Render(core::view::CallRender2DGL& call) {
     if (!handleCall(call)) {
         return false;
     }
@@ -224,7 +224,7 @@ bool HistogramRenderer2D::Render(core::view::CallRender2D& call) {
     return true;
 }
 
-bool HistogramRenderer2D::handleCall(core::view::CallRender2D& call) {
+bool HistogramRenderer2D::handleCall(core::view::CallRender2DGL& call) {
     auto floatTableCall = this->tableDataCallerSlot.CallAs<table::TableDataCall>();
     if (floatTableCall == nullptr) {
         return false;

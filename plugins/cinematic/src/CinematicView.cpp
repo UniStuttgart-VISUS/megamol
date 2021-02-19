@@ -21,7 +21,7 @@ using namespace megamol::cinematic;
 using namespace vislib;
 
 
-CinematicView::CinematicView(void) : View3D_2()
+CinematicView::CinematicView(void) : View3DGL()
     , keyframeKeeperSlot("keyframeData", "Connects to the Keyframe Keeper.")
     , renderParam("cinematic::renderAnim", "Toggle rendering of complete animation to PNG files.")
     , toggleAnimPlayParam("cinematic::playPreview", "Toggle playing animation as preview")
@@ -37,7 +37,6 @@ CinematicView::CinematicView(void) : View3D_2()
     , addSBSideToNameParam( "cinematic::addSBSideToName", "Toggle whether skybox side should be added to output filename")
     , eyeParam("cinematic::stereo_eye", "Select eye position (for stereo view).")
     , projectionParam("cinematic::stereo_projection", "Select camera projection.")
-    , fbo()
     , png_data()
     , utils()
     , deltaAnimTime(clock())
@@ -125,13 +124,15 @@ CinematicView::CinematicView(void) : View3D_2()
 CinematicView::~CinematicView(void) {
 
     this->render_to_file_cleanup();
-    this->fbo.Release();
+    if (this->_fbo != nullptr) {
+        this->_fbo->Release();
+    }
 }
 
 
-void CinematicView::Render(const mmcRenderViewContext& context) {
+void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call) {
 
-    auto cr3d = this->rendererSlot.CallAs<core::view::CallRender3D_2>();
+    auto cr3d = this->_rhsRenderSlot.CallAs<core::view::CallRender3DGL>();
     if (cr3d == nullptr) return;
     if (!(*cr3d)(view::AbstractCallRender::FnGetExtents)) return;
 
@@ -217,12 +218,12 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Set (mono/stereo) projection for camera
     if (this->projectionParam.IsDirty()) {
         this->projectionParam.ResetDirty();
-        this->cam.projection_type(static_cast<megamol::core::thecam::Projection_type>(this->projectionParam.Param<param::EnumParam>()->Value()));
+        this->_camera.projection_type(static_cast<megamol::core::thecam::Projection_type>(this->projectionParam.Param<param::EnumParam>()->Value()));
     }
     // Set eye position for camera
     if (this->eyeParam.IsDirty()) {
         this->eyeParam.ResetDirty();
-        this->cam.eye(static_cast<megamol::core::thecam::Eye>(this->eyeParam.Param<param::EnumParam>()->Value()));
+        this->_camera.eye(static_cast<megamol::core::thecam::Eye>(this->eyeParam.Param<param::EnumParam>()->Value()));
     }
 
     // Time settings ----------------------------------------------------------
@@ -252,7 +253,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     // Load current simulation time to parameter
     float simTime = skf.GetSimTime();
-    param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->timeCtrl.GetSlot(2));
+    param::ParamSlot* animTimeParam = static_cast<param::ParamSlot*>(this->_timeCtrl.GetSlot(2));
     animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
 
     // Viewport ---------------------------------------------------------------
@@ -302,9 +303,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     // Set camera settings ----------------------------------------------------
     auto res = cam_type::screen_size_type(glm::ivec2(fboWidth, fboHeight));
-    this->cam.resolution_gate(res);
+    this->_camera.resolution_gate(res);
     auto tile = cam_type::screen_rectangle_type(std::array<int, 4>{0, 0, fboWidth, fboHeight});
-    this->cam.image_tile(tile);
+    this->_camera.image_tile(tile);
 
     // Set camera parameters of selected keyframe for this view.
     // But only if selected keyframe differs to last locally stored and shown keyframe.
@@ -315,11 +316,11 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
         if (!ccc->GetKeyframes()->empty()) {
             // ! Using only a subset of the keyframe camera state !
             auto pos = skf.GetCameraState().position;
-            this->cam.position(glm::vec4(pos[0], pos[1], pos[2], 1.0f));
+            this->_camera.position(glm::vec4(pos[0], pos[1], pos[2], 1.0f));
             auto ori = skf.GetCameraState().orientation;
-            this->cam.orientation(glm::quat(ori[3], ori[0], ori[1], ori[2]));
+            this->_camera.orientation(glm::quat(ori[3], ori[0], ori[1], ori[2]));
             auto aper = skf.GetCameraState().half_aperture_angle_radians;
-            this->cam.half_aperture_angle_radians(aper);
+            this->_camera.half_aperture_angle_radians(aper);
         }
         else {
             this->ResetView();
@@ -328,7 +329,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
 
     // Propagate current camera state to keyframe keeper (before applying following skybox side settings).
     cam_type::minimal_state_type camera_state;
-    this->cam.get_minimal_state(camera_state);
+    this->_camera.get_minimal_state(camera_state);
     ccc->SetCameraState(std::make_shared<camera_state_type>(camera_state));
     if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe)) return;
 
@@ -336,7 +337,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     // Non-permanent overwrite of selected keyframe camera by skybox camera settings.
     if (this->sbSide != CinematicView::SkyboxSides::SKYBOX_NONE) {
         cam_type::snapshot_type snapshot;
-        this->cam.take_snapshot(snapshot, thecam::snapshot_content::all);
+        this->_camera.take_snapshot(snapshot, thecam::snapshot_content::all);
 
         glm::vec4 snap_pos = snapshot.position;
         glm::vec4 snap_right = snapshot.right_vector;
@@ -402,9 +403,9 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
             }
         }
         // Apply new position, orientation and aperture angle to current camera.
-        this->cam.position(new_pos);
-        this->cam.orientation(new_orientation);
-        this->cam.aperture_angle(90.0f);
+        this->_camera.position(new_pos);
+        this->_camera.orientation(new_orientation);
+        this->_camera.aperture_angle(90.0f);
     }
 
     // Render to texture ------------------------------------------------------------
@@ -414,20 +415,20 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     vislib::Trace::GetInstance().SetLevel(0);
 #endif // DEBUG || _DEBUG
 
-    if (this->fbo.IsValid()) {
-        if ((this->fbo.GetWidth() != fboWidth) || (this->fbo.GetHeight() != fboHeight)) {
-            this->fbo.Release();
+    if (this->_fbo->IsValid()) {
+        if ((this->_fbo->GetWidth() != fboWidth) || (this->_fbo->GetHeight() != fboHeight)) {
+            this->_fbo->Release();
         }
     }
-    if (!this->fbo.IsValid()) {
-        if (!this->fbo.Create(fboWidth, fboHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+    if (!this->_fbo->IsValid()) {
+        if (!this->_fbo->Create(fboWidth, fboHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
             throw vislib::Exception(
                 "[CINEMATIC VIEW] [Render] Unable to create image framebuffer object.", __FILE__, __LINE__);
             return;
         }
     }
-    if (this->fbo.Enable() != GL_NO_ERROR) {
+    if (this->_fbo->Enable() != GL_NO_ERROR) {
         throw vislib::Exception("[CINEMATIC VIEW] [Render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
         return;
     }
@@ -444,13 +445,10 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     /* Using FBO buffer in call. */
     
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-    cr3d->SetOutputBuffer(&this->fbo);
-    // Set override viewport of view (otherwise viewport is overwritten in Base::Render(context))
-    int fboVp[4] = { 0, 0, fboWidth, fboHeight };
-    Base::overrideViewport = fboVp;
+    cr3d->SetFramebufferObject(this->_fbo);
     
     //ALTERNATIVE
-    /// XXX Requires View3D_2 line 394 to be deleted/commented! 
+    /// XXX Requires View3DGL line 394 to be deleted/commented! 
         //this->overrideCall->EnableOutputBuffer();
     /// XXX Requires view::RenderOutputOpenGL::GetViewport() to get viewport always from:
         /// GLint vp[4];
@@ -461,23 +459,17 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glViewport(fbovp[0], fbovp[1], fbovp[2], fbovp[3]);
     */
 
-    /// ! Set override call for using currrent fbo and current viewport
-    Base::overrideCall = cr3d;
+    // Call Render-Function of parent View3DGL
+    Base::Render(context, call);
 
-    // Call Render-Function of parent View3D_2
-    Base::Render(context);
-
-    // Reset override render call
-    Base::overrideCall = nullptr;
-
-    if (this->fbo.IsEnabled()) {
-        this->fbo.Disable();
+    if (this->_fbo->IsEnabled()) {
+        this->_fbo->Disable();
     }
 
     // Write frame to file
     if (this->rendering) {
         // Check if fbo in cr3d was reset by renderer to indicate that no new frame is available (e.g. see remote/FBOCompositor2 Render())
-        this->png_data.write_lock = ((cr3d->FrameBufferObject() != nullptr) ? (0) : (1));
+        this->png_data.write_lock = ((cr3d->GetFramebufferObject() != nullptr) ? (0) : (1));
         if (this->png_data.write_lock > 0) {
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[CINEMATIC RENDERING] Waiting for next frame (Received empty FBO from renderer) ...\n");
         }
@@ -506,7 +498,7 @@ void CinematicView::Render(const mmcRenderViewContext& context) {
     glm::vec3 pos_upper_left = { left, up, 0.0f };
     glm::vec3 pos_upper_right = { right, up, 0.0f };
     glm::vec3 pos_bottom_right = { right, bottom, 0.0f };
-    this->utils.Push2DColorTexture(this->fbo.GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
+    this->utils.Push2DColorTexture(this->_fbo->GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
 
     // Push letter box --------------------------------------------------------
     float letter_x = 0;
@@ -676,7 +668,7 @@ bool CinematicView::render_to_file_write() {
         png_set_IHDR(this->png_data.structptr, this->png_data.infoptr, this->png_data.width, this->png_data.height, 8,
             PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
-        if (this->fbo.GetColourTexture(this->png_data.buffer, 0, GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
+        if (this->_fbo->GetColourTexture(this->png_data.buffer, 0, GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
             throw vislib::Exception(
                 "[CINEMATIC VIEW] [render_to_file_write] Unable to read color texture. ", __FILE__,
                 __LINE__);

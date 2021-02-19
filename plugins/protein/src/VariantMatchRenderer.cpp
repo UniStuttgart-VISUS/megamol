@@ -136,8 +136,8 @@ bool VariantMatchRenderer::create(void) {
 /*
  * VariantMatchRenderer::GetExtents
  */
-bool VariantMatchRenderer::GetExtents(megamol::core::view::CallRender2D& call) {
-    call.SetBoundingBox(-1.0f, -1.0f, 1.0f, 1.0f);
+bool VariantMatchRenderer::GetExtents(megamol::core::view::CallRender2DGL& call) {
+    call.AccessBoundingBoxes().SetBoundingBox(-1.0f, -1.0f, 0, 1.0f, 1.0f, 0);
     return true;
 }
 
@@ -158,7 +158,7 @@ void VariantMatchRenderer::release(void) {
 /*
  * VariantMatchRenderer::Render
  */
-bool VariantMatchRenderer::Render(megamol::core::view::CallRender2D& call) {
+bool VariantMatchRenderer::Render(megamol::core::view::CallRender2DGL& call) {
 
     //float gridHalfStep;
 

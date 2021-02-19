@@ -623,7 +623,7 @@ public:
      * Answer the time of this instance in seconds.
      *
      * DO NOT USE THIS FUNCTION in Renderer Modules.
-     * Use 'instTime' parameter in method 'Render' instead.
+     * Use '_instTime' parameter in method 'Render' instead.
      *
      * @return The time of this instance.
      */

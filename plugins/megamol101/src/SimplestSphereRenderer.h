@@ -14,7 +14,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
@@ -27,7 +27,7 @@ namespace megamol101 {
  * Renders incoming spheres to the screen, either using GL_POINTS or more
  * sophisticated shaders.
  */
-class SimplestSphereRenderer : public core::view::Renderer3DModule_2 {
+class SimplestSphereRenderer : public core::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -94,7 +94,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::view::CallRender3D_2& call);
+    virtual bool GetExtents(core::view::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -104,7 +104,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(core::view::CallRender3D_2& call);
+    virtual bool Render(core::view::CallRender3DGL& call);
 
     /** The input data slot. */
     core::CallerSlot sphereDataSlot;

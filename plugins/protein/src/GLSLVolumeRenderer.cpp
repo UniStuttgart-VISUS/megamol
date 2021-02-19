@@ -49,8 +49,8 @@ using namespace megamol::core::utility::log;
 /*
  * protein::GLSLVolumeRenderer::GLSLVolumeRenderer (CTOR)
  */
-protein::GLSLVolumeRenderer::GLSLVolumeRenderer ( void ) : Renderer3DModule (),
-        protDataCallerSlot ( "getData", "Connects the volume rendering with data storage" ),
+protein::GLSLVolumeRenderer::GLSLVolumeRenderer(void)
+        : Renderer3DModuleGL(), protDataCallerSlot ( "getData", "Connects the volume rendering with data storage" ),
         protRendererCallerSlot ( "renderProtein", "Connects the volume rendering with a protein renderer" ),
         coloringModeParam ( "coloringMode", "Coloring Mode" ),
         volIsoValueParam( "volIsoValue", "Isovalue for isosurface rendering"),
@@ -79,7 +79,7 @@ protein::GLSLVolumeRenderer::GLSLVolumeRenderer ( void ) : Renderer3DModule (),
     this->MakeSlotAvailable ( &this->protDataCallerSlot );
 
     // set renderer caller slot
-    this->protRendererCallerSlot.SetCompatibleCall<view::CallRender3DDescription>();
+    this->protRendererCallerSlot.SetCompatibleCall<view::CallRender3DGLDescription>();
     this->MakeSlotAvailable( &this->protRendererCallerSlot);
 
     // --- set the coloring mode ---
@@ -392,8 +392,8 @@ bool protein::GLSLVolumeRenderer::create ( void ) {
 /*
  * protein::ProteinRenderer::GetExtents
  */
-bool protein::GLSLVolumeRenderer::GetExtents( Call& call) {
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D *>(&call);
+bool protein::GLSLVolumeRenderer::GetExtents(view::CallRender3DGL& call) {
+    view::CallRender3DGL *cr3d = dynamic_cast<view::CallRender3DGL *>(&call);
     if (cr3d == NULL) return false;
 
     MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
@@ -425,31 +425,22 @@ bool protein::GLSLVolumeRenderer::GetExtents( Call& call) {
         scale = 1.0f;
     }
 
-    BoundingBoxes &bbox = cr3d->AccessBoundingBoxes();
-    bbox.SetObjectSpaceBBox( boundingBox);
-    bbox.SetWorldSpaceBBox(
-        ( boundingBox.Left() + xoff) * scale,
-        ( boundingBox.Bottom() + yoff) * scale,
-        ( boundingBox.Back() + zoff) * scale,
-        ( boundingBox.Right() + xoff) * scale,
-        ( boundingBox.Top() + yoff) * scale,
-        ( boundingBox.Front() + zoff) * scale);
-    bbox.SetObjectSpaceClipBox( bbox.ObjectSpaceBBox());
-    bbox.SetWorldSpaceClipBox( bbox.WorldSpaceBBox());
+    BoundingBoxes_2 &bbox = cr3d->AccessBoundingBoxes();
+    bbox.SetBoundingBox(boundingBox);
 
-    // get the pointer to CallRender3D (protein renderer)
-    view::CallRender3D *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3D>();
+    // get the pointer to CallRender3DGL (protein renderer)
+    view::CallRender3DGL *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3DGL>();
     vislib::math::Point<float, 3> protrenbbc;
     if( protrencr3d ) {
         (*protrencr3d)(core::view::AbstractCallRender::FnGetExtents);
-        BoundingBoxes &protrenbb = protrencr3d->AccessBoundingBoxes();
-        this->protrenScale =  protrenbb.ObjectSpaceBBox().Width() / boundingBox.Width();
+        BoundingBoxes_2 &protrenbb = protrencr3d->AccessBoundingBoxes();
+        this->protrenScale =  protrenbb.BoundingBox().Width() / boundingBox.Width();
         //this->protrenTranslate = ( protrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
         if( mol ) {
             this->protrenTranslate.Set( xoff, yoff, zoff);
             this->protrenTranslate *= scale;
         } else {
-            this->protrenTranslate = ( protrenbb.ObjectSpaceBBox().CalcCenter() - bbc) * scale;
+            this->protrenTranslate = ( protrenbb.BoundingBox().CalcCenter() - bbc) * scale;
         }
     }
     return true;
@@ -458,7 +449,7 @@ bool protein::GLSLVolumeRenderer::GetExtents( Call& call) {
 /*
  * protein::GLSLVolumeRenderer::Render
  */
-bool protein::GLSLVolumeRenderer::Render( Call& call ) {
+bool protein::GLSLVolumeRenderer::Render( view::CallRender3DGL& call ) {
 #if 0
     // generate volume, if necessary
     if( !glIsTexture( this->volumeTex) ) {
@@ -564,39 +555,42 @@ bool protein::GLSLVolumeRenderer::Render( Call& call ) {
     return true;
 #else
     // cast the call to Render3D
-    view::CallRender3D *cr3d = dynamic_cast<view::CallRender3D*>( &call );
+    view::CallRender3DGL *cr3d = dynamic_cast<view::CallRender3DGL*>( &call );
     if( !cr3d ) return false;
-    // get the pointer to CallRender3D (protein renderer)
-    view::CallRender3D *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3D>();
+    // get the pointer to CallRender3DGL (protein renderer)
+    view::CallRender3DGL *protrencr3d = this->protRendererCallerSlot.CallAs<view::CallRender3DGL>();
     // get pointer to MolecularDataCall
     MolecularDataCall *mol = this->protDataCallerSlot.CallAs<MolecularDataCall>();
 
     // get camera information
-    this->cameraInfo = cr3d->GetCameraParameters();
+    cr3d->GetCamera(cameraInfo);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cameraInfo.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
     // =============== Query Camera View Dimensions ===============
-    if( static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth()) != this->width ||
-        static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight()) != this->height ) {
-        this->width = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetWidth());
-        this->height = static_cast<unsigned int>(cameraInfo->VirtualViewSize().GetHeight());
+    if( static_cast<unsigned int>(cameraInfo.resolution_gate().width()) != this->width ||
+        static_cast<unsigned int>(cameraInfo.resolution_gate().height()) != this->height ) {
+        this->width = static_cast<unsigned int>(cameraInfo.resolution_gate().width());
+        this->height = static_cast<unsigned int>(cameraInfo.resolution_gate().height());
     }
 
     // create the fbo, if necessary
-    if( !this->proteinFBO.IsValid() ) {
-        this->proteinFBO.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+    if( !this->proteinFBO->IsValid() ) {
+        this->proteinFBO->Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
     }
     // resize the fbo, if necessary
-    if( this->proteinFBO.GetWidth() != this->width || this->proteinFBO.GetHeight() != this->height ) {
-        this->proteinFBO.Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
+    if( this->proteinFBO->GetWidth() != this->width || this->proteinFBO->GetHeight() != this->height ) {
+        this->proteinFBO->Create( this->width, this->height, GL_RGBA16F, GL_RGBA, GL_FLOAT, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
     }
 
 
     if( this->renderProteinParam.Param<param::BoolParam>()->Value() ) {
         // =============== Protein Rendering ===============
         // disable the output buffer
-        cr3d->DisableOutputBuffer();
+        cr3d->GetFramebufferObject()->Disable();
         // start rendering to the FBO for protein rendering
-        this->proteinFBO.Enable();
+        this->proteinFBO->Enable();
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
     
         if( protrencr3d ) {
@@ -605,14 +599,14 @@ bool protein::GLSLVolumeRenderer::Render( Call& call ) {
             glTranslatef( this->protrenTranslate.X(), this->protrenTranslate.Y(), this->protrenTranslate.Z());
             //glScalef( this->protrenScale, this->protrenScale, this->protrenScale);
             *protrencr3d = *cr3d;
-            protrencr3d->SetOutputBuffer( &this->proteinFBO); // TODO: Handle incoming buffers!
+            protrencr3d->SetFramebufferObject(this->proteinFBO); // TODO: Handle incoming buffers!
             (*protrencr3d)();
             glPopMatrix();
         }
         // stop rendering to the FBO for protein rendering
-        this->proteinFBO.Disable();
+        this->proteinFBO->Disable();
         // re-enable the output buffer
-        cr3d->EnableOutputBuffer();
+        cr3d->GetFramebufferObject()->Enable();
     }
 
     // =============== Refresh all parameters ===============
@@ -665,7 +659,7 @@ bool protein::GLSLVolumeRenderer::Render( Call& call ) {
 /*
  * Volume rendering using molecular data.
  */
-bool protein::GLSLVolumeRenderer::RenderMolecularData( view::CallRender3D *call, MolecularDataCall *mol) {
+bool protein::GLSLVolumeRenderer::RenderMolecularData( view::CallRender3DGL *call, MolecularDataCall *mol) {
 
     // check last atom count with current atom count
     if( this->atomCount != mol->AtomCount() ) {
@@ -705,7 +699,7 @@ bool protein::GLSLVolumeRenderer::RenderMolecularData( view::CallRender3D *call,
     }
 
     if( this->renderProteinParam.Param<param::BoolParam>()->Value() ) {
-        this->proteinFBO.DrawColourTexture();
+        this->proteinFBO->DrawColourTexture();
         CHECK_FOR_OGL_ERROR();
     }
 
@@ -739,7 +733,7 @@ bool protein::GLSLVolumeRenderer::RenderMolecularData( view::CallRender3D *call,
 /*
  * refresh parameters
  */
-void protein::GLSLVolumeRenderer::ParameterRefresh( view::CallRender3D *call) {
+void protein::GLSLVolumeRenderer::ParameterRefresh( view::CallRender3DGL *call) {
     
     // parameter refresh
     if( this->coloringModeParam.IsDirty() ) {
@@ -791,7 +785,7 @@ void protein::GLSLVolumeRenderer::ParameterRefresh( view::CallRender3D *call) {
         this->volClipPlane0NormParam.ResetDirty();
     }
     // compute maximum extent
-    vislib::math::Cuboid<float> bbox( call->AccessBoundingBoxes().WorldSpaceBBox());
+    vislib::math::Cuboid<float> bbox( call->AccessBoundingBoxes().BoundingBox());
     vislib::math::Vector<float, 3> tmpVec;
     float d, maxD, minD;
     // 1
@@ -1187,15 +1181,15 @@ void protein::GLSLVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> 
     // the shader transforms camera coords back to object space
     this->volRayStartEyeShader.Enable();
 
-    float u = this->cameraInfo->NearClip() * tan( this->cameraInfo->ApertureAngle() * float(vislib::math::PI_DOUBLE) / 360.0f);
+    float u = this->cameraInfo.near_clipping_plane() * tan( this->cameraInfo.aperture_angle() * float(vislib::math::PI_DOUBLE) / 360.0f);
     float r = ( this->width / this->height)*u;
 
     glBegin(GL_QUADS);
         //glVertex3f(-r, -u, -_nearClip);
-        glVertex3f(-r, -u, -this->cameraInfo->NearClip());
-        glVertex3f( r, -u, -this->cameraInfo->NearClip());
-        glVertex3f( r,  u, -this->cameraInfo->NearClip());
-        glVertex3f(-r,  u, -this->cameraInfo->NearClip());
+        glVertex3f(-r, -u, -this->cameraInfo.near_clipping_plane());
+        glVertex3f( r, -u, -this->cameraInfo.near_clipping_plane());
+        glVertex3f( r,  u, -this->cameraInfo.near_clipping_plane());
+        glVertex3f(-r,  u, -this->cameraInfo.near_clipping_plane());
     glEnd();
     CHECK_FOR_OGL_ERROR();
 
@@ -1269,7 +1263,7 @@ void protein::GLSLVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> 
     glUniform2f( this->volRayLengthShader.ParameterLocation( "screenResInv"),
         1.0f / float(this->width), 1.0f / float(this->height));
     glUniform2f( this->volRayLengthShader.ParameterLocation( "zNearFar"),
-        this->cameraInfo->NearClip(), this->cameraInfo->FarClip() );
+        this->cameraInfo.near_clipping_plane(), this->cameraInfo.far_clipping_plane() );
 
     if( this->renderIsometric ) {
         glUniform3f( this->volRayLengthShader.ParameterLocation( "translate"), 
@@ -1283,7 +1277,7 @@ void protein::GLSLVolumeRenderer::RayParamTextures( vislib::math::Cuboid<float> 
 
     glActiveTexture( GL_TEXTURE1);
     //glBindTexture( GL_TEXTURE_2D, _depthTexId[0]);
-    this->proteinFBO.BindDepthTexture();
+    this->proteinFBO->BindDepthTexture();
     glActiveTexture( GL_TEXTURE0);
     //glBindTexture( GL_TEXTURE_2D, _volRayStartTex);
     glBindTexture( GL_TEXTURE_2D, this->volRayStartTex);

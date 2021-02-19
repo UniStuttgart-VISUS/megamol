@@ -19,7 +19,7 @@ namespace demos {
 /*
  * AbstractBezierRenderer::AbstractBezierRenderer
  */
-AbstractBezierRenderer::AbstractBezierRenderer(void) : Renderer3DModule_2(),
+AbstractBezierRenderer::AbstractBezierRenderer(void) : Renderer3DModuleGL(),
         getDataSlot("getdata", "Connects to the data source"),
         objsHash(0), shader(NULL) {
     // intentionally empty
@@ -46,7 +46,7 @@ bool AbstractBezierRenderer::create(void) {
 /*
  * AbstractBezierRenderer::GetExtents
  */
-bool AbstractBezierRenderer::GetExtents(core::view::CallRender3D_2& call) {
+bool AbstractBezierRenderer::GetExtents(core::view::CallRender3DGL& call) {
 
     core::AbstractGetData3DCall *gd = this->getDataSlot.CallAs<core::AbstractGetData3DCall>();
     if ((gd != NULL) && ((*gd)(1))) {
@@ -72,7 +72,7 @@ void AbstractBezierRenderer::release(void) {
 /*
  * AbstractBezierRenderer::Render
  */
-bool AbstractBezierRenderer::Render(core::view::CallRender3D_2& call) {
+bool AbstractBezierRenderer::Render(core::view::CallRender3DGL& call) {
 
     if (this->shader_required() && (this->shader == NULL)) return false;
     return this->render(call);
