@@ -20,13 +20,10 @@
 #include "volumetrics/VoluMetricJob.h"
 #include "OSCBFix.h"
 #include "CoordSysMarker.h"
-#include "TrackerRendererTransform.h"
 #include "volumetrics/IsoSurface.h"
 #include "CallBinaryVolumeData.h"
 #include "CallVolumetricData.h"
-#include "ScreenSpaceEdgeRenderer.h"
 #include "vislib/Trace.h"
-#include "LinesRenderer.h"
 
 namespace megamol::trisoup {
     /** Implementing the instance class of this plugin */
@@ -62,10 +59,7 @@ namespace megamol::trisoup {
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::volumetrics::VoluMetricJob>();
             this->module_descriptions.RegisterAutoDescription<megamol::quartz::OSCBFix>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::CoordSysMarker>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::TrackerRendererTransform>();
             this->module_descriptions.RegisterAutoDescription<megamol::trisoup::volumetrics::IsoSurface>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::ScreenSpaceEdgeRenderer>();
-            this->module_descriptions.RegisterAutoDescription<megamol::trisoup::LinesRenderer>();
 
             // register calls here:
             this->call_descriptions.RegisterAutoDescription<megamol::trisoup::CallBinaryVolumeData>();

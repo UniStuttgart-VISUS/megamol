@@ -8,7 +8,7 @@
 #include "QuartzCrystalRenderer.h"
 #include "QuartzCrystalDataCall.h"
 #include "mmcore/param/IntParam.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/light/PointLight.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "mmcore/factories/CallAutoDescription.h"
@@ -20,7 +20,7 @@ namespace demos {
 /*
  * CrystalRenderer::CrystalRenderer
  */
-CrystalRenderer::CrystalRenderer(void) : core::view::Renderer3DModule_2(),
+CrystalRenderer::CrystalRenderer(void) : core::view::Renderer3DModuleGL(),
 dataInSlot("datain", "slot to get the data"),
 lightsSlot("lights", "Lights are retrieved over this slot."),
 crystalIdx("idx", "The index of the selected crystal") {
@@ -48,7 +48,7 @@ CrystalRenderer::~CrystalRenderer(void) {
 /*
  * CrystalRenderer::GetExtents
  */
-bool CrystalRenderer::GetExtents(core::view::CallRender3D_2& call) {
+bool CrystalRenderer::GetExtents(core::view::CallRender3DGL& call) {
 
     call.AccessBoundingBoxes().Clear();
     call.SetTimeFramesCount(1);
@@ -60,7 +60,7 @@ bool CrystalRenderer::GetExtents(core::view::CallRender3D_2& call) {
 /*
  * CrystalRenderer::Render
  */
-bool CrystalRenderer::Render(core::view::CallRender3D_2& call) {
+bool CrystalRenderer::Render(core::view::CallRender3DGL& call) {
 
     unsigned int idx = static_cast<unsigned int>(this->crystalIdx.Param<core::param::IntParam>()->Value());
 

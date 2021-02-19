@@ -133,6 +133,21 @@ namespace core {
         }
 
         /**
+         * Sets the bounding box.
+         *
+         * @param left   The x-coordinate of the left/bottom/back point.
+         * @param bottom The y-coordinate of the left/bottom/back point.
+         * @param right  The x-coordinate of the right/top/front point.
+         * @param top    The y-coordinate of the right/top/front point.
+         */
+        inline void SetBoundingBox(const float& left, const float& bottom, const float& right,
+            const float& top) {
+            this->boundingBox.Set(left, bottom, 0, right, top, 0);
+            this->boundingBoxValid = true;
+            this->clipBoxValid = false;
+        }
+
+        /**
          * Sets the object space clipping box.
          *
          * @param box The new object space clipping box
@@ -156,6 +171,22 @@ namespace core {
                                           const float& back, const float& right, const float& top,
                                           const float& front) {
             this->clipBox.Set(left, bottom, back, right, top, front);
+            this->clipBoxValid = true;
+        }
+
+        /**
+         * Sets the clipping box.
+         *
+         * @param left   The x-coordinate of the left/bottom/back point.
+         * @param bottom The y-coordinate of the left/bottom/back point.
+         * @param back   The z-coordinate of the left/bottom/back point.
+         * @param right  The x-coordinate of the right/top/front point.
+         * @param top    The y-coordinate of the right/top/front point.
+         * @param front  The z-coordinate of the right/top/front point.
+         */
+        inline void SetClipBox(const float& left, const float& bottom, const float& right,
+            const float& top) {
+            this->clipBox.Set(left, bottom, 0, right, top, 0);
             this->clipBoxValid = true;
         }
 

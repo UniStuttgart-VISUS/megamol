@@ -72,7 +72,7 @@ void megamol::thermodyn::rendering::BoxRenderer::release() {
 }
 
 
-bool megamol::thermodyn::rendering::BoxRenderer::Render(megamol::core::view::CallRender3D_2& call) {
+bool megamol::thermodyn::rendering::BoxRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     std::vector<BoxDataCall::box_entry_t> boxes;
 
     BoxDataCall* inBoxCall = nullptr;
@@ -151,7 +151,7 @@ bool megamol::thermodyn::rendering::BoxRenderer::Render(megamol::core::view::Cal
 }
 
 
-bool megamol::thermodyn::rendering::BoxRenderer::GetExtents(core::view::CallRender3D_2& call) {
+bool megamol::thermodyn::rendering::BoxRenderer::GetExtents(core::view::CallRender3DGL& call) {
     BoxDataCall* inBoxCall = nullptr;
     core::moldyn::MultiParticleDataCall* inParCall = nullptr;
     if ((inBoxCall = dataInSlot_.CallAs<BoxDataCall>()) != nullptr) {

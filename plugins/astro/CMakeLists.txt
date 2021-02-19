@@ -4,7 +4,7 @@
 # Alle Rechte vorbehalten. All rights reserved.
 #
 string(TOUPPER astro EXPORT_NAME)
-option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build astro" ON)
+option(BUILD_${EXPORT_NAME}_PLUGIN "Option to build astro" OFF)
 
 if(BUILD_${EXPORT_NAME}_PLUGIN)
   project(astro)

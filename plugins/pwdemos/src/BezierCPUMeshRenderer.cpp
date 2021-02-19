@@ -61,7 +61,7 @@ BezierCPUMeshRenderer::~BezierCPUMeshRenderer(void) {
 /*
  * BezierCPUMeshRenderer::render
  */
-bool BezierCPUMeshRenderer::render(megamol::core::view::CallRender3D_2& call) {
+bool BezierCPUMeshRenderer::render(megamol::core::view::CallRender3DGL& call) {
     using core::misc::BezierCurvesListDataCall;
     BezierCurvesListDataCall *data = this->getDataSlot.CallAs<BezierCurvesListDataCall>();
     if (data == nullptr) return false;

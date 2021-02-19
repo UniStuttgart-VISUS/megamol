@@ -6,7 +6,6 @@
  */
 
 #include "stdafx.h"
-#include "View3DSpaceMouse.h"
 #include "Raw3DRelativeMouseInput.h"
 
 #include "vislib/assert.h"
