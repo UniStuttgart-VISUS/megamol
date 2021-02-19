@@ -21,7 +21,7 @@ GUIView::GUIView()
 
     this->render_view_slot.SetCompatibleCall<core::view::CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->render_view_slot);
-    this->MakeSlotAvailable(&this->lhsRenderSlot);
+    this->MakeSlotAvailable(&this->_lhsRenderSlot);
 }
 
 

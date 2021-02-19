@@ -18,10 +18,10 @@ using namespace megamol::core::view;
  */
 View3D::View3D(void)
     : view::AbstractView3D() {
-    this->rhsRenderSlot.SetCompatibleCall<CallRender3DDescription>();
-    this->MakeSlotAvailable(&this->rhsRenderSlot);
+    this->_rhsRenderSlot.SetCompatibleCall<CallRender3DDescription>();
+    this->MakeSlotAvailable(&this->_rhsRenderSlot);
 
-    this->MakeSlotAvailable(&this->lhsRenderSlot);
+    this->MakeSlotAvailable(&this->_lhsRenderSlot);
 
 }
 
@@ -37,7 +37,7 @@ View3D::~View3D(void) {
  */
 void View3D::Render(const mmcRenderViewContext& context, Call* call) {
 
-    CallRender3D* cr3d = this->rhsRenderSlot.CallAs<CallRender3D>();
+    CallRender3D* cr3d = this->_rhsRenderSlot.CallAs<CallRender3D>();
     this->handleCameraMovement();
 
     if (cr3d == NULL) {
@@ -45,8 +45,8 @@ void View3D::Render(const mmcRenderViewContext& context, Call* call) {
     }
 
     if (call == nullptr) {
-        _framebuffer->width = cam.image_tile().width();
-        _framebuffer->height = cam.image_tile().height();
+        _framebuffer->width = _camera.image_tile().width();
+        _framebuffer->height = _camera.image_tile().height();
         cr3d->SetFramebuffer(_framebuffer);
     }
     else {
@@ -56,7 +56,7 @@ void View3D::Render(const mmcRenderViewContext& context, Call* call) {
 
     AbstractView3D::beforeRender(context);
 
-    cr3d->SetCameraState(this->cam);
+    cr3d->SetCameraState(this->_camera);
     (*cr3d)(view::CallRender3D::FnRender);
 
     AbstractView3D::afterRender(context);

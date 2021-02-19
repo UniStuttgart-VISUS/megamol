@@ -24,56 +24,56 @@ enum Orientation { HORIZONTAL = 0, VERTICAL = 1 };
 
 view::SplitViewGL::SplitViewGL()
     : AbstractView()
-    , render1Slot("render1", "Connects to the view 1 (left or top)")
-    , render2Slot("render2", "Connects to the view 2 (right or bottom)")
-    , splitOrientationSlot("split.orientation", "Splitter orientation")
-    , splitPositionSlot("split.pos", "Splitter position")
-    , splitWidthSlot("split.width", "Splitter width")
-    , splitColourSlot("split.colour", "Splitter colour")
-    , enableTimeSyncSlot("timeLord",
+    , _render1Slot("render1", "Connects to the view 1 (left or top)")
+    , _render2Slot("render2", "Connects to the view 2 (right or bottom)")
+    , _splitOrientationSlot("split.orientation", "Splitter orientation")
+    , _splitPositionSlot("split.pos", "Splitter position")
+    , _splitWidthSlot("split.width", "Splitter width")
+    , _splitColourSlot("split.colour", "Splitter colour")
+    , _enableTimeSyncSlot("timeLord",
           "Enables time synchronization between the connected views. The time of this view is then used instead")
-    , inputToBothSlot("inputToBoth", "Forward input to both child views")
-    , overrideCall(nullptr)
-    , clientArea()
-    , clientArea1()
-    , clientArea2()
-    , fbo1()
-    , fbo2()
-    , focus(0)
-    , mouseX(0.0f)
-    , mouseY(0.0f)
-    , dragSplitter(false) {
-    this->render1Slot.SetCompatibleCall<CallRenderViewGLDescription>();
-    this->MakeSlotAvailable(&this->render1Slot);
+    , _inputToBothSlot("inputToBoth", "Forward input to both child views")
+    , _overrideCall(nullptr)
+    , _clientArea()
+    , _clientArea1()
+    , _clientArea2()
+    , _fbo1()
+    , _fbo2()
+    , _focus(0)
+    , _mouseX(0.0f)
+    , _mouseY(0.0f)
+    , _dragSplitter(false) {
+    this->_render1Slot.SetCompatibleCall<CallRenderViewGLDescription>();
+    this->MakeSlotAvailable(&this->_render1Slot);
 
-    this->render2Slot.SetCompatibleCall<CallRenderViewGLDescription>();
-    this->MakeSlotAvailable(&this->render2Slot);
+    this->_render2Slot.SetCompatibleCall<CallRenderViewGLDescription>();
+    this->MakeSlotAvailable(&this->_render2Slot);
 
     auto* orientations = new param::EnumParam(0);
     orientations->SetTypePair(HORIZONTAL, "Horizontal (side by side)");
     orientations->SetTypePair(VERTICAL, "Vertical");
-    this->splitOrientationSlot << orientations;
-    this->MakeSlotAvailable(&this->splitOrientationSlot);
+    this->_splitOrientationSlot << orientations;
+    this->MakeSlotAvailable(&this->_splitOrientationSlot);
 
-    this->splitPositionSlot << new param::FloatParam(0.5f, 0.0f, 1.0f);
-    this->MakeSlotAvailable(&this->splitPositionSlot);
+    this->_splitPositionSlot << new param::FloatParam(0.5f, 0.0f, 1.0f);
+    this->MakeSlotAvailable(&this->_splitPositionSlot);
 
-    this->splitWidthSlot << new param::FloatParam(4.0f, 0.0f, 100.0f);
-    this->MakeSlotAvailable(&this->splitWidthSlot);
+    this->_splitWidthSlot << new param::FloatParam(4.0f, 0.0f, 100.0f);
+    this->MakeSlotAvailable(&this->_splitWidthSlot);
 
-    this->splitColourSlot << new param::ColorParam(0.75f, 0.75f, 0.75f, 1.0f);
-    this->MakeSlotAvailable(&this->splitColourSlot);
+    this->_splitColourSlot << new param::ColorParam(0.75f, 0.75f, 0.75f, 1.0f);
+    this->MakeSlotAvailable(&this->_splitColourSlot);
 
-    this->enableTimeSyncSlot << new param::BoolParam(false);
-    this->MakeSlotAvailable(&this->enableTimeSyncSlot);
+    this->_enableTimeSyncSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->_enableTimeSyncSlot);
 
-    this->inputToBothSlot << new param::BoolParam(false);
-    this->MakeSlotAvailable(&this->inputToBothSlot);
+    this->_inputToBothSlot << new param::BoolParam(false);
+    this->MakeSlotAvailable(&this->_inputToBothSlot);
 }
 
 view::SplitViewGL::~SplitViewGL(void) { this->Release(); }
 
-float view::SplitViewGL::DefaultTime(double instTime) const { return this->timeCtrl.Time(instTime); }
+float view::SplitViewGL::DefaultTime(double instTime) const { return this->_timeCtrl.Time(instTime); }
 
 unsigned int view::SplitViewGL::GetCameraSyncNumber() const {
     Log::DefaultLog.WriteWarn("SplitViewGL::GetCameraSyncNumber unsupported");
@@ -92,17 +92,17 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
     unsigned int vpw = 0;
     unsigned int vph = 0;
 
-    if (this->overrideCall == nullptr) {
+    if (this->_overrideCall == nullptr) {
         GLint vp[4];
         ::glGetIntegerv(GL_VIEWPORT, vp);
         vpw = vp[2];
         vph = vp[3];
     } else {
-        vpw = this->overrideCall->ViewportWidth();
-        vph = this->overrideCall->ViewportHeight();
+        vpw = this->_overrideCall->ViewportWidth();
+        vph = this->_overrideCall->ViewportHeight();
     }
 
-    if (this->enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
+    if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
         auto cr = this->render1();
         (*cr)(CallRenderViewGL::CALL_EXTENTS);
         auto fcount = cr->TimeFramesCount();
@@ -112,7 +112,7 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
         fcount = std::min(fcount, cr->TimeFramesCount());
         insitu = insitu && cr->IsInSituTime();
 
-        this->timeCtrl.SetTimeExtend(fcount, insitu);
+        this->_timeCtrl.SetTimeExtend(fcount, insitu);
         if (time > static_cast<float>(fcount)) {
             time = static_cast<float>(fcount);
         }
@@ -146,14 +146,14 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
     //} else {
     //}
 
-    if (this->splitPositionSlot.IsDirty() || this->splitOrientationSlot.IsDirty() || this->splitWidthSlot.IsDirty() ||
-        !this->fbo1->IsValid() || !this->fbo2->IsValid() ||
-        !vislib::math::IsEqual(this->clientArea.Width(), static_cast<float>(vpw)) ||
-        !vislib::math::IsEqual(this->clientArea.Height(), static_cast<float>(vph))) {
+    if (this->_splitPositionSlot.IsDirty() || this->_splitOrientationSlot.IsDirty() || this->_splitWidthSlot.IsDirty() ||
+        !this->_fbo1->IsValid() || !this->_fbo2->IsValid() ||
+        !vislib::math::IsEqual(this->_clientArea.Width(), static_cast<float>(vpw)) ||
+        !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(vph))) {
         this->updateSize(vpw, vph);
 
-        if (this->overrideCall != nullptr) {
-            this->overrideCall->GetFramebufferObject()->Enable();
+        if (this->_overrideCall != nullptr) {
+            this->_overrideCall->GetFramebufferObject()->Enable();
         }
     }
 
@@ -172,8 +172,8 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
                 static_cast<unsigned int>(clientArea.Width()), static_cast<unsigned int>(clientArea.Height()));
         }
     };
-    propagateViewport(this->render1(), this->clientArea1);
-    propagateViewport(this->render2(), this->clientArea2);
+    propagateViewport(this->render1(), this->_clientArea1);
+    propagateViewport(this->render2(), this->_clientArea2);
 
     auto renderAndBlit = [&](std::shared_ptr<vislib::graphics::gl::FramebufferObject> fbo, CallRenderViewGL* crv,
                              const vislib::math::Rectangle<float>& ca) {
@@ -184,7 +184,7 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
         crv->SetInstanceTime(context.InstanceTime);
         crv->SetTime(-1.0f);
 
-        if (this->enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
+        if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
             crv->SetTime(static_cast<float>(time));
         }
 
@@ -209,8 +209,8 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
         vislib::Trace::GetInstance().SetLevel(otl);
 #endif /* DEBUG || _DEBUG */
 
-        if (this->overrideCall != nullptr) {
-            this->overrideCall->GetFramebufferObject()->Enable();
+        if (this->_overrideCall != nullptr) {
+            this->_overrideCall->GetFramebufferObject()->Enable();
         }
 
         // Bind and blit framebuffer.
@@ -220,24 +220,24 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->GetID());
         glReadBuffer(GL_COLOR_ATTACHMENT0);
-        glBlitFramebuffer(0, 0, fbo->GetWidth(), fbo->GetHeight(), ca.Left(), this->clientArea.Height() - ca.Top(),
-            ca.Right(), this->clientArea.Height() - ca.Bottom(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glBlitFramebuffer(0, 0, fbo->GetWidth(), fbo->GetHeight(), ca.Left(), this->_clientArea.Height() - ca.Top(),
+            ca.Right(), this->_clientArea.Height() - ca.Bottom(), GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, binding);
         glReadBuffer(readBuffer);
     };
 
     // Draw the splitter through clearing without overplotting.
-    auto splitColour = this->splitColourSlot.Param<param::ColorParam>()->Value();
+    auto splitColour = this->_splitColourSlot.Param<param::ColorParam>()->Value();
     ::glClearColor(splitColour[0], splitColour[1], splitColour[2], 1.0f);
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    renderAndBlit(this->fbo1, this->render1(), this->clientArea1);
-    renderAndBlit(this->fbo2, this->render2(), this->clientArea2);
+    renderAndBlit(this->_fbo1, this->render1(), this->_clientArea1);
+    renderAndBlit(this->_fbo2, this->render2(), this->_clientArea2);
 }
 
 bool view::SplitViewGL::GetExtents(core::Call& call) {
-    if (this->enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
+    if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
         auto cr = this->render1();
         if (!(*cr)(CallRenderViewGL::CALL_EXTENTS)) return false;
         auto time = cr->TimeFramesCount();
@@ -262,8 +262,8 @@ void view::SplitViewGL::ResetView() {
 }
 
 void view::SplitViewGL::Resize(unsigned int width, unsigned int height) {
-    if (!vislib::math::IsEqual(this->clientArea.Width(), static_cast<float>(width)) ||
-        !vislib::math::IsEqual(this->clientArea.Height(), static_cast<float>(height))) {
+    if (!vislib::math::IsEqual(this->_clientArea.Width(), static_cast<float>(width)) ||
+        !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(height))) {
         this->updateSize(width, height);
     }
 }
@@ -272,18 +272,18 @@ bool view::SplitViewGL::OnRenderView(Call& call) {
     auto* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
     if (crv == nullptr) return false;
 
-    this->overrideCall = crv;
+    this->_overrideCall = crv;
 
     mmcRenderViewContext context;
     ::ZeroMemory(&context, sizeof(context));
     context.Time = crv->Time();
-    if (this->enableTimeSyncSlot.Param<param::BoolParam>()->Value() && context.Time < 0.0) {
+    if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value() && context.Time < 0.0) {
         context.Time = this->DefaultTime(crv->InstanceTime());
     }
     context.InstanceTime = crv->InstanceTime();
     this->Render(context, &call);
 
-    this->overrideCall = nullptr;
+    this->_overrideCall = nullptr;
 
     return true;
 }
@@ -306,7 +306,7 @@ bool view::SplitViewGL::OnKey(Key key, KeyAction action, Modifiers mods) {
         evt.keyData.action = action;
         evt.keyData.mods = mods;
 
-        if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
+        if (this->_inputToBothSlot.Param<param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
             auto consumed = (*crv1)(view::CallRenderViewGL::FnOnKey);
 
@@ -333,7 +333,7 @@ bool view::SplitViewGL::OnChar(unsigned int codePoint) {
         evt.tag = InputEvent::Tag::Char;
         evt.charData.codePoint = codePoint;
 
-        if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
+        if (this->_inputToBothSlot.Param<param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
             auto consumed = (*crv1)(view::CallRenderViewGL::FnOnChar);
 
@@ -355,11 +355,11 @@ bool view::SplitViewGL::OnMouseButton(MouseButton button, MouseButtonAction acti
     auto* crv1 = this->render1();
     auto* crv2 = this->render2();
 
-    this->dragSplitter = false;
+    this->_dragSplitter = false;
 
     auto down = (action == MouseButtonAction::PRESS);
     if (down && crv != crv1 && crv != crv2) {
-        this->dragSplitter = true;
+        this->_dragSplitter = true;
     }
 
     if (crv != nullptr) {
@@ -369,7 +369,7 @@ bool view::SplitViewGL::OnMouseButton(MouseButton button, MouseButtonAction acti
         evt.mouseButtonData.action = action;
         evt.mouseButtonData.mods = mods;
 
-        if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
+        if (this->_inputToBothSlot.Param<param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
             auto consumed = (*crv1)(view::CallRenderViewGL::FnOnMouseButton);
 
@@ -389,14 +389,14 @@ bool view::SplitViewGL::OnMouseButton(MouseButton button, MouseButtonAction acti
 
 bool view::SplitViewGL::OnMouseMove(double x, double y) {
     // x, y are coordinates in pixel
-    this->mouseX = x;
-    this->mouseY = y;
+    this->_mouseX = x;
+    this->_mouseY = y;
 
-    if (this->dragSplitter) {
-        if (this->splitOrientationSlot.Param<param::EnumParam>()->Value() == HORIZONTAL) {
-            this->splitPositionSlot.Param<param::FloatParam>()->SetValue(x / this->clientArea.Width());
+    if (this->_dragSplitter) {
+        if (this->_splitOrientationSlot.Param<param::EnumParam>()->Value() == HORIZONTAL) {
+            this->_splitPositionSlot.Param<param::FloatParam>()->SetValue(x / this->_clientArea.Width());
         } else {
-            this->splitPositionSlot.Param<param::FloatParam>()->SetValue(y / this->clientArea.Height());
+            this->_splitPositionSlot.Param<param::FloatParam>()->SetValue(y / this->_clientArea.Height());
         }
     }
 
@@ -408,11 +408,11 @@ bool view::SplitViewGL::OnMouseMove(double x, double y) {
     float my;
 
     if (crv == crv1) {
-        mx = this->mouseX - this->clientArea1.Left();
-        my = this->mouseY - this->clientArea1.Bottom();
+        mx = this->_mouseX - this->_clientArea1.Left();
+        my = this->_mouseY - this->_clientArea1.Bottom();
     } else if (crv == crv2) {
-        mx = this->mouseX - this->clientArea2.Left();
-        my = this->mouseY - this->clientArea2.Bottom();
+        mx = this->_mouseX - this->_clientArea2.Left();
+        my = this->_mouseY - this->_clientArea2.Bottom();
     } else {
         return false;
     }
@@ -423,7 +423,7 @@ bool view::SplitViewGL::OnMouseMove(double x, double y) {
         evt.mouseMoveData.x = mx;
         evt.mouseMoveData.y = my;
 
-        if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
+        if (this->_inputToBothSlot.Param<param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
             auto consumed = (*crv1)(view::CallRenderViewGL::FnOnMouseMove);
 
@@ -452,7 +452,7 @@ bool view::SplitViewGL::OnMouseScroll(double dx, double dy) {
         evt.mouseScrollData.dx = dx;
         evt.mouseScrollData.dy = dy;
 
-        if (this->inputToBothSlot.Param<param::BoolParam>()->Value()) {
+        if (this->_inputToBothSlot.Param<param::BoolParam>()->Value()) {
             crv1->SetInputEvent(evt);
             auto consumed = (*crv1)(view::CallRenderViewGL::FnOnMouseScroll);
 
@@ -470,40 +470,40 @@ bool view::SplitViewGL::OnMouseScroll(double dx, double dy) {
 }
 
 bool view::SplitViewGL::create() {
-    this->fbo1 = std::make_shared<vislib::graphics::gl::FramebufferObject>();
-    this->fbo2 = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    this->_fbo1 = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    this->_fbo2 = std::make_shared<vislib::graphics::gl::FramebufferObject>();
     return true;
 }
 
 void view::SplitViewGL::release() {
-    this->overrideCall = nullptr; // do not delete
-    if (this->fbo1->IsValid()) this->fbo1->Release();
-    if (this->fbo2->IsValid()) this->fbo2->Release();
+    this->_overrideCall = nullptr; // do not delete
+    if (this->_fbo1->IsValid()) this->_fbo1->Release();
+    if (this->_fbo2->IsValid()) this->_fbo2->Release();
 }
 
 void view::SplitViewGL::unpackMouseCoordinates(float& x, float& y) {
-    x *= this->clientArea.Width();
-    y *= this->clientArea.Height();
+    x *= this->_clientArea.Width();
+    y *= this->_clientArea.Height();
 }
 
 void view::SplitViewGL::updateSize(size_t width, size_t height) {
-    this->clientArea.SetWidth(static_cast<float>(width));
-    this->clientArea.SetHeight(static_cast<float>(height));
+    this->_clientArea.SetWidth(static_cast<float>(width));
+    this->_clientArea.SetHeight(static_cast<float>(height));
     this->adjustClientAreas();
 
 #if defined(DEBUG) || defined(_DEBUG)
     unsigned int otl = vislib::Trace::GetInstance().GetLevel();
     vislib::Trace::GetInstance().SetLevel(0);
 #endif /* DEBUG || _DEBUG */
-    if (this->fbo1->IsValid()) this->fbo1->Release();
-    this->fbo1->Create(
-        static_cast<unsigned int>(this->clientArea1.Width()), static_cast<unsigned int>(this->clientArea1.Height()));
-    this->fbo1->Disable();
+    if (this->_fbo1->IsValid()) this->_fbo1->Release();
+    this->_fbo1->Create(
+        static_cast<unsigned int>(this->_clientArea1.Width()), static_cast<unsigned int>(this->_clientArea1.Height()));
+    this->_fbo1->Disable();
 
-    if (this->fbo2->IsValid()) this->fbo2->Release();
-    this->fbo2->Create(
-        static_cast<unsigned int>(this->clientArea2.Width()), static_cast<unsigned int>(this->clientArea2.Height()));
-    this->fbo2->Disable();
+    if (this->_fbo2->IsValid()) this->_fbo2->Release();
+    this->_fbo2->Create(
+        static_cast<unsigned int>(this->_clientArea2.Width()), static_cast<unsigned int>(this->_clientArea2.Height()));
+    this->_fbo2->Disable();
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif /* DEBUG || _DEBUG */
@@ -511,25 +511,25 @@ void view::SplitViewGL::updateSize(size_t width, size_t height) {
 }
 
 void view::SplitViewGL::adjustClientAreas() {
-    float sp = this->splitPositionSlot.Param<param::FloatParam>()->Value();
-    float shw = this->splitWidthSlot.Param<param::FloatParam>()->Value() * 0.5f;
-    auto so = static_cast<Orientation>(this->splitOrientationSlot.Param<param::EnumParam>()->Value());
-    this->splitPositionSlot.ResetDirty();
-    this->splitWidthSlot.ResetDirty();
-    this->splitOrientationSlot.ResetDirty();
+    float sp = this->_splitPositionSlot.Param<param::FloatParam>()->Value();
+    float shw = this->_splitWidthSlot.Param<param::FloatParam>()->Value() * 0.5f;
+    auto so = static_cast<Orientation>(this->_splitOrientationSlot.Param<param::EnumParam>()->Value());
+    this->_splitPositionSlot.ResetDirty();
+    this->_splitWidthSlot.ResetDirty();
+    this->_splitOrientationSlot.ResetDirty();
 
     if (so == HORIZONTAL) {
-        this->clientArea1.Set(this->clientArea.Left(), this->clientArea.Bottom(),
-            this->clientArea.Left() + this->clientArea.Width() * sp - shw, this->clientArea.Top());
-        this->clientArea2.Set(this->clientArea.Left() + this->clientArea.Width() * sp + shw, this->clientArea.Bottom(),
-            this->clientArea.Right(), this->clientArea.Top());
+        this->_clientArea1.Set(this->_clientArea.Left(), this->_clientArea.Bottom(),
+            this->_clientArea.Left() + this->_clientArea.Width() * sp - shw, this->_clientArea.Top());
+        this->_clientArea2.Set(this->_clientArea.Left() + this->_clientArea.Width() * sp + shw, this->_clientArea.Bottom(),
+            this->_clientArea.Right(), this->_clientArea.Top());
     } else {
-        this->clientArea1.Set(this->clientArea.Left(), this->clientArea.Bottom(), this->clientArea.Right(),
-            this->clientArea.Bottom() + this->clientArea.Height() * sp - shw);
-        this->clientArea2.Set(this->clientArea.Left(), this->clientArea.Bottom() + this->clientArea.Height() * sp + shw,
-            this->clientArea.Right(), this->clientArea.Top());
+        this->_clientArea1.Set(this->_clientArea.Left(), this->_clientArea.Bottom(), this->_clientArea.Right(),
+            this->_clientArea.Bottom() + this->_clientArea.Height() * sp - shw);
+        this->_clientArea2.Set(this->_clientArea.Left(), this->_clientArea.Bottom() + this->_clientArea.Height() * sp + shw,
+            this->_clientArea.Right(), this->_clientArea.Top());
     }
 
-    this->clientArea1.EnforcePositiveSize();
-    this->clientArea2.EnforcePositiveSize();
+    this->_clientArea1.EnforcePositiveSize();
+    this->_clientArea2.EnforcePositiveSize();
 }

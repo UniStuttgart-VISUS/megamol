@@ -29,97 +29,97 @@ using megamol::core::utility::log::Log;
  */
 view::AbstractView::AbstractView(void)
         : Module()
-        , firstImg(false)
-        , rhsRenderSlot("rendering", "Connects the view to a Renderer")
-        , lhsRenderSlot("render", "Connects modules requesting renderings")
-        , cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")
-        , storeCameraSettingsSlot("camstore::storecam",
+        , _firstImg(false)
+        , _rhsRenderSlot("rendering", "Connects the view to a Renderer")
+        , _lhsRenderSlot("render", "Connects modules requesting renderings")
+        , _cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")
+        , _storeCameraSettingsSlot("camstore::storecam",
               "Triggers the storage of the camera settings. This only works for "
               "multiple cameras if you use .lua project files")
-        , restoreCameraSettingsSlot("camstore::restorecam",
+        , _restoreCameraSettingsSlot("camstore::restorecam",
               "Triggers the restore of the camera settings. This only works "
               "for multiple cameras if you use .lua project files")
-        , overrideCamSettingsSlot("camstore::overrideSettings",
+        , _overrideCamSettingsSlot("camstore::overrideSettings",
               "When activated, existing camera settings files will be overwritten by this "
               "module. This only works if you use .lua project files")
-        , autoSaveCamSettingsSlot("camstore::autoSaveSettings",
+        , _autoSaveCamSettingsSlot("camstore::autoSaveSettings",
               "When activated, the camera settings will be stored to disk whenever a camera checkpoint is saved or "
               "MegaMol "
               "is closed. This only works if you use .lua project files")
-        , autoLoadCamSettingsSlot("camstore::autoLoadSettings",
+        , _autoLoadCamSettingsSlot("camstore::autoLoadSettings",
               "When activated, the view will load the camera settings from disk at startup. "
               "This only works if you use .lua project files")
-        , resetViewSlot("resetView", "Triggers the reset of the view")
-        , resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
-        , hooks()
-        , timeCtrl()
-        , bkgndColSlot("backCol", "The views background colour") {
+        , _resetViewSlot("resetView", "Triggers the reset of the view")
+        , _resetViewOnBBoxChangeSlot("resetViewOnBBoxChange", "whether to reset the view when the bounding boxes change")
+        , _hooks()
+        , _timeCtrl()
+        , _bkgndColSlot("backCol", "The views background colour") {
     // InputCall
-    this->lhsRenderSlot.SetCallback(
+    this->_lhsRenderSlot.SetCallback(
         view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
-    this->lhsRenderSlot.SetCallback(
+    this->_lhsRenderSlot.SetCallback(
         view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnChar), &AbstractView::OnCharCallback);
-    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseButton),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseButton),
         &AbstractView::OnMouseButtonCallback);
-    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
         &AbstractView::OnMouseMoveCallback);
-    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseScroll),
         &AbstractView::OnMouseScrollCallback);
     // AbstractCallRender
-    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
-    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
     // CallRenderView
-    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_FREEZE), &AbstractView::OnFreezeView);
-    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
-    this->lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_RESETVIEW), &AbstractView::onResetView);
     // this->MakeSlotAvailable(&this->renderSlot);
 
-    this->cameraSettingsSlot.SetParameter(new param::StringParam(""));
-    this->MakeSlotAvailable(&this->cameraSettingsSlot);
+    this->_cameraSettingsSlot.SetParameter(new param::StringParam(""));
+    this->MakeSlotAvailable(&this->_cameraSettingsSlot);
 
-    this->storeCameraSettingsSlot.SetParameter(
+    this->_storeCameraSettingsSlot.SetParameter(
         new param::ButtonParam(view::Key::KEY_C, (view::Modifier::SHIFT | view::Modifier::ALT)));
-    this->storeCameraSettingsSlot.SetUpdateCallback(&AbstractView::onStoreCamera);
-    this->MakeSlotAvailable(&this->storeCameraSettingsSlot);
+    this->_storeCameraSettingsSlot.SetUpdateCallback(&AbstractView::onStoreCamera);
+    this->MakeSlotAvailable(&this->_storeCameraSettingsSlot);
 
-    this->restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(view::Key::KEY_C, view::Modifier::ALT));
-    this->restoreCameraSettingsSlot.SetUpdateCallback(&AbstractView::onRestoreCamera);
-    this->MakeSlotAvailable(&this->restoreCameraSettingsSlot);
+    this->_restoreCameraSettingsSlot.SetParameter(new param::ButtonParam(view::Key::KEY_C, view::Modifier::ALT));
+    this->_restoreCameraSettingsSlot.SetUpdateCallback(&AbstractView::onRestoreCamera);
+    this->MakeSlotAvailable(&this->_restoreCameraSettingsSlot);
 
-    this->overrideCamSettingsSlot.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->overrideCamSettingsSlot);
+    this->_overrideCamSettingsSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->_overrideCamSettingsSlot);
 
-    this->autoSaveCamSettingsSlot.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->autoSaveCamSettingsSlot);
+    this->_autoSaveCamSettingsSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->_autoSaveCamSettingsSlot);
 
-    this->autoLoadCamSettingsSlot.SetParameter(new param::BoolParam(true));
-    this->MakeSlotAvailable(&this->autoLoadCamSettingsSlot);
+    this->_autoLoadCamSettingsSlot.SetParameter(new param::BoolParam(true));
+    this->MakeSlotAvailable(&this->_autoLoadCamSettingsSlot);
 
-    this->resetViewSlot.SetParameter(new param::ButtonParam(Key::KEY_HOME));
-    this->resetViewSlot.SetUpdateCallback(&AbstractView::onResetView);
-    this->MakeSlotAvailable(&this->resetViewSlot);
+    this->_resetViewSlot.SetParameter(new param::ButtonParam(Key::KEY_HOME));
+    this->_resetViewSlot.SetUpdateCallback(&AbstractView::onResetView);
+    this->MakeSlotAvailable(&this->_resetViewSlot);
 
-    this->resetViewOnBBoxChangeSlot.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->resetViewOnBBoxChangeSlot);
+    this->_resetViewOnBBoxChangeSlot.SetParameter(new param::BoolParam(false));
+    this->MakeSlotAvailable(&this->_resetViewOnBBoxChangeSlot);
 
-    for (unsigned int i = 0; this->timeCtrl.GetSlot(i) != NULL; i++) {
-        this->MakeSlotAvailable(this->timeCtrl.GetSlot(i));
+    for (unsigned int i = 0; this->_timeCtrl.GetSlot(i) != NULL; i++) {
+        this->MakeSlotAvailable(this->_timeCtrl.GetSlot(i));
     }
 
     // this triggers the initialization
-    this->bboxs.Clear();
+    this->_bboxs.Clear();
 
-    this->bkgndCol[0] = 0.0f;
-    this->bkgndCol[1] = 0.0f;
-    this->bkgndCol[2] = 0.125f;
+    this->_bkgndCol[0] = 0.0f;
+    this->_bkgndCol[1] = 0.0f;
+    this->_bkgndCol[2] = 0.125f;
 
-    this->bkgndColSlot << new param::ColorParam(this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2], 1.0f);
-    this->MakeSlotAvailable(&this->bkgndColSlot);
+    this->_bkgndColSlot << new param::ColorParam(this->_bkgndCol[0], this->_bkgndCol[1], this->_bkgndCol[2], 1.0f);
+    this->MakeSlotAvailable(&this->_bkgndColSlot);
 }
 
 
@@ -127,7 +127,7 @@ view::AbstractView::AbstractView(void)
  * view::AbstractView::~AbstractView
  */
 view::AbstractView::~AbstractView(void) {
-    this->hooks.Clear(); // DO NOT DELETE OBJECTS
+    this->_hooks.Clear(); // DO NOT DELETE OBJECTS
 }
 
 
@@ -308,11 +308,11 @@ bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
  * AbstractView::Resize
  */
 void view::AbstractView::Resize(unsigned int width, unsigned int height) {
-    if (this->cam.resolution_gate().width() != width || this->cam.resolution_gate().height() != height) {
-        this->cam.resolution_gate(cam_type::screen_size_type(static_cast<LONG>(width), static_cast<LONG>(height)));
+    if (this->_camera.resolution_gate().width() != width || this->_camera.resolution_gate().height() != height) {
+        this->_camera.resolution_gate(cam_type::screen_size_type(static_cast<LONG>(width), static_cast<LONG>(height)));
     }
-    if (this->cam.image_tile().width() != width || this->cam.image_tile().height() != height) {
-        this->cam.image_tile(cam_type::screen_rectangle_type(
+    if (this->_camera.image_tile().width() != width || this->_camera.image_tile().height() != height) {
+        this->_camera.image_tile(cam_type::screen_rectangle_type(
             std::array<int, 4>({0, static_cast<int>(height), static_cast<int>(width), 0})));
     }
 }
@@ -326,7 +326,7 @@ void megamol::core::view::AbstractView::beforeRender(const mmcRenderViewContext&
     }
 
     glm::ivec4 currentViewport;
-    AbstractCallRender* cr = this->rhsRenderSlot.CallAs<AbstractCallRender>();
+    AbstractCallRender* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
 
     auto bkgndCol = this->BkgndColour();
 
@@ -338,25 +338,25 @@ void megamol::core::view::AbstractView::beforeRender(const mmcRenderViewContext&
 
     
     if ((*cr)(AbstractCallRender::FnGetExtents)) {
-        if (!(cr->AccessBoundingBoxes() == this->bboxs) && cr->AccessBoundingBoxes().IsAnyValid()) {
-            this->bboxs = cr->AccessBoundingBoxes();
-            glm::vec3 bbcenter = glm::make_vec3(this->bboxs.BoundingBox().CalcCenter().PeekCoordinates());
+        if (!(cr->AccessBoundingBoxes() == this->_bboxs) && cr->AccessBoundingBoxes().IsAnyValid()) {
+            this->_bboxs = cr->AccessBoundingBoxes();
+            glm::vec3 bbcenter = glm::make_vec3(this->_bboxs.BoundingBox().CalcCenter().PeekCoordinates());
 
-            if (resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
+            if (_resetViewOnBBoxChangeSlot.Param<param::BoolParam>()->Value()) {
                 this->ResetView();
             }
         }
 
-        if (this->firstImg) {
+        if (this->_firstImg) {
             this->ResetView();
-            this->firstImg = false;
-            if (this->autoLoadCamSettingsSlot.Param<param::BoolParam>()->Value()) {
-                this->onRestoreCamera(this->restoreCameraSettingsSlot);
+            this->_firstImg = false;
+            if (this->_autoLoadCamSettingsSlot.Param<param::BoolParam>()->Value()) {
+                this->onRestoreCamera(this->_restoreCameraSettingsSlot);
             }
-            this->lastFrameTime = std::chrono::high_resolution_clock::now();
+            this->_lastFrameTime = std::chrono::high_resolution_clock::now();
         }
 
-        this->timeCtrl.SetTimeExtend(cr->TimeFramesCount(), false);
+        this->_timeCtrl.SetTimeExtend(cr->TimeFramesCount(), false);
         if (simulationTime > static_cast<float>(cr->TimeFramesCount())) {
             simulationTime = static_cast<float>(cr->TimeFramesCount());
         }
@@ -370,14 +370,14 @@ void megamol::core::view::AbstractView::beforeRender(const mmcRenderViewContext&
     // TODO!? cr3d->SetLastFrameTime(AbstractRenderingView::lastFrameTime());
 
     auto currentTime = std::chrono::high_resolution_clock::now();
-    this->lastFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - this->lastFrameTime);
-    this->lastFrameTime = currentTime;
+    this->_lastFrameDuration = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - this->_lastFrameTime);
+    this->_lastFrameTime = currentTime;
 
     cr->SetLastFrameTime(std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::time_point_cast<std::chrono::milliseconds>(this->lastFrameTime).time_since_epoch())
+        std::chrono::time_point_cast<std::chrono::milliseconds>(this->_lastFrameTime).time_since_epoch())
                                .count());
 
-    this->cam.CalcClipping(this->bboxs.ClipBox(), 0.1f);
+    this->_camera.CalcClipping(this->_bboxs.ClipBox(), 0.1f);
 }
 
 void megamol::core::view::AbstractView::afterRender(const mmcRenderViewContext& context) {
@@ -484,12 +484,12 @@ bool view::AbstractView::OnMouseScrollCallback(Call& call) {
 bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
     // save the current camera, too
     view::Camera_2::minimal_state_type minstate;
-    this->cam.get_minimal_state(minstate);
-    this->savedCameras[10].first = minstate;
-    this->savedCameras[10].second = true;
-    this->serializer.setPrettyMode(false);
-    std::string camstring = this->serializer.serialize(this->savedCameras[10].first);
-    this->cameraSettingsSlot.Param<param::StringParam>()->SetValue(camstring.c_str());
+    this->_camera.get_minimal_state(minstate);
+    this->_savedCameras[10].first = minstate;
+    this->_savedCameras[10].second = true;
+    this->_cameraSerializer.setPrettyMode(false);
+    std::string camstring = this->_cameraSerializer.serialize(this->_savedCameras[10].first);
+    this->_cameraSettingsSlot.Param<param::StringParam>()->SetValue(camstring.c_str());
 
     auto path = this->determineCameraFilePath();
     if (path.empty()) {
@@ -499,7 +499,7 @@ bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
         return false;
     }
 
-    if (!this->overrideCamSettingsSlot.Param<param::BoolParam>()->Value()) {
+    if (!this->_overrideCamSettingsSlot.Param<param::BoolParam>()->Value()) {
         // check if the file already exists
         std::ifstream file(path);
         if (file.good()) {
@@ -513,8 +513,8 @@ bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
     }
 
 
-    this->serializer.setPrettyMode();
-    auto outString = this->serializer.serialize(this->savedCameras);
+    this->_cameraSerializer.setPrettyMode();
+    auto outString = this->_cameraSerializer.serialize(this->_savedCameras);
 
     std::ofstream file(path);
     if (file.is_open()) {
@@ -535,14 +535,14 @@ bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
  * AbstractView::onRestoreCamera
  */
 bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
-    if (!this->cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
-        std::string camstring(this->cameraSettingsSlot.Param<param::StringParam>()->Value());
+    if (!this->_cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
+        std::string camstring(this->_cameraSettingsSlot.Param<param::StringParam>()->Value());
         cam_type::minimal_state_type minstate;
-        if (!this->serializer.deserialize(minstate, camstring)) {
+        if (!this->_cameraSerializer.deserialize(minstate, camstring)) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "The entered camera string was not valid. No change of the camera has been performed");
         } else {
-            this->cam = minstate;
+            this->_camera = minstate;
             return true;
         }
     }
@@ -564,16 +564,16 @@ bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
             "The camera output file at '%s' could not be opened.", path.c_str());
         return false;
     }
-    auto copy = this->savedCameras;
-    bool success = this->serializer.deserialize(copy, text);
+    auto copy = this->_savedCameras;
+    bool success = this->_cameraSerializer.deserialize(copy, text);
     if (!success) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The reading of the camera parameters did not work properly. No changes were made.");
         return false;
     }
-    this->savedCameras = copy;
-    if (this->savedCameras.back().second) {
-        this->cam = this->savedCameras.back().first;
+    this->_savedCameras = copy;
+    if (this->_savedCameras.back().second) {
+        this->_camera = this->_savedCameras.back().first;
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
             "The stored default cam was not valid. The old default cam is used");
@@ -598,9 +598,9 @@ std::string view::AbstractView::determineCameraFilePath(void) const {
  * view::AbstractView::bkgndColour
  */
 glm::vec4 view::AbstractView::BkgndColour(void) const {
-    if (this->bkgndColSlot.IsDirty()) {
-        this->bkgndColSlot.ResetDirty();
-        this->bkgndColSlot.Param<param::ColorParam>()->Value(this->bkgndCol[0], this->bkgndCol[1], this->bkgndCol[2]);
+    if (this->_bkgndColSlot.IsDirty()) {
+        this->_bkgndColSlot.ResetDirty();
+        this->_bkgndColSlot.Param<param::ColorParam>()->Value(this->_bkgndCol[0], this->_bkgndCol[1], this->_bkgndCol[2]);
     }
-    return this->bkgndCol;
+    return this->_bkgndCol;
 }

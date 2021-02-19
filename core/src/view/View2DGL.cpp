@@ -31,43 +31,43 @@ using namespace megamol::core;
  */
 view::View2DGL::View2DGL(void)
         : view::AbstractView()
-    , height(1.0f)
-    , mouseMode(MouseMode::Propagate)
-    , mouseX(0.0f)
-    , mouseY(0.0f)
-    , viewX(0.0f)
-    , viewY(0.0f)
-    , viewZoom(1.0f)
-    , viewUpdateCnt(0)
-    , width(1.0f) {
+    , _height(1.0f)
+    , _mouseMode(MouseMode::Propagate)
+    , _mouseX(0.0f)
+    , _mouseY(0.0f)
+    , _viewX(0.0f)
+    , _viewY(0.0f)
+    , _viewZoom(1.0f)
+    , _viewUpdateCnt(0)
+    , _width(1.0f) {
 
     // Override renderSlot behavior
-    this->lhsRenderSlot.SetCallback(
+    this->_lhsRenderSlot.SetCallback(
         view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
-    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnChar),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnChar),
         &AbstractView::OnCharCallback);
-    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         InputCall::FunctionName(InputCall::FnOnMouseButton), &AbstractView::OnMouseButtonCallback);
-    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnMouseMove),
         &AbstractView::OnMouseMoveCallback);
-    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         InputCall::FunctionName(InputCall::FnOnMouseScroll), &AbstractView::OnMouseScrollCallback);
     // AbstractCallRender
-    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
-    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
     // CallRenderViewGL
-    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_FREEZE), &AbstractView::OnFreezeView);
-    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
-    this->lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::onResetView);
-    this->MakeSlotAvailable(&this->lhsRenderSlot);
+    this->MakeSlotAvailable(&this->_lhsRenderSlot);
 
-    this->rhsRenderSlot.SetCompatibleCall<CallRender2DGLDescription>();
-    this->MakeSlotAvailable(&this->rhsRenderSlot);
+    this->_rhsRenderSlot.SetCompatibleCall<CallRender2DGLDescription>();
+    this->MakeSlotAvailable(&this->_rhsRenderSlot);
 
     this->ResetView();
 }
@@ -85,7 +85,7 @@ view::View2DGL::~View2DGL(void) {
  * view::View2DGL::GetCameraSyncNumber
  */
 unsigned int view::View2DGL::GetCameraSyncNumber(void) const {
-    return this->viewUpdateCnt;
+    return this->_viewUpdateCnt;
 }
 
 
@@ -96,7 +96,7 @@ void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
 
     AbstractView::beforeRender(context);
 
-    CallRender2DGL* cr2d = this->rhsRenderSlot.CallAs<CallRender2DGL>();
+    CallRender2DGL* cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
 
     if (cr2d == NULL) {
         return;
@@ -104,8 +104,8 @@ void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
 
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
-    float w = this->width;
-    float h = this->height;
+    float w = this->_width;
+    float h = this->_height;
     float asp = h / w;
     //::glScalef(asp, 1.0f, 1.0f);
     //float aMatrix[16];
@@ -116,9 +116,9 @@ void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
     m.SetAt(0,0,asp);
     glLoadMatrixf(m.PeekComponents());
 
-    float vx = this->viewX;
-    float vy = this->viewY;
-    float vz = this->viewZoom;
+    float vx = this->_viewX;
+    float vy = this->_viewY;
+    float vz = this->_viewZoom;
 
     ::glMatrixMode(GL_MODELVIEW);
     ::glLoadIdentity();
@@ -176,35 +176,35 @@ void view::View2DGL::ResetView(void) {
     // using namespace vislib::graphics;
     VLTRACE(VISLIB_TRCELVL_INFO, "View2DGL::ResetView\n");
 
-    CallRender2DGL *cr2d = this->rhsRenderSlot.CallAs<CallRender2DGL>();
+    CallRender2DGL *cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
     if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
-        this->viewX =
+        this->_viewX =
             -0.5f * (cr2d->GetBoundingBoxes().BoundingBox().Left() + cr2d->GetBoundingBoxes().BoundingBox().Right());
-        this->viewY =
+        this->_viewY =
             -0.5f * (cr2d->GetBoundingBoxes().BoundingBox().Bottom() + cr2d->GetBoundingBoxes().BoundingBox().Top());
-        if ((this->width / this->height) > static_cast<float>(cr2d->GetBoundingBoxes().BoundingBox().Width() /
+        if ((this->_width / this->_height) > static_cast<float>(cr2d->GetBoundingBoxes().BoundingBox().Width() /
                                                               cr2d->GetBoundingBoxes().BoundingBox().Height())) {
-            this->viewZoom = 2.0f / cr2d->GetBoundingBoxes().BoundingBox().Height();
+            this->_viewZoom = 2.0f / cr2d->GetBoundingBoxes().BoundingBox().Height();
         } else {
-            this->viewZoom = (2.0f * this->width) / (this->height * cr2d->GetBoundingBoxes().BoundingBox().Width());
+            this->_viewZoom = (2.0f * this->_width) / (this->_height * cr2d->GetBoundingBoxes().BoundingBox().Width());
         }
-        this->viewZoom *= 0.99f;
+        this->_viewZoom *= 0.99f;
 
     } else {
-        this->viewX = 0.0f;
-        this->viewY = 0.0f;
-        this->viewZoom = 1.0f;
+        this->_viewX = 0.0f;
+        this->_viewY = 0.0f;
+        this->_viewZoom = 1.0f;
     }
 
     //  this->cam.projection_type(thecam::Projection_type::orthographic);
-    //  this->cam.eye_position() = glm::vec4(viewX,viewY,0,1);
-    //  cam.film_gate({this->width, this->height});
+    //  this->cam.eye_position() = glm::vec4(_viewX,_viewY,0,1);
+    //  cam.film_gate({this->_width, this->_height});
     //  cam.resolution_gate({static_cast<int>(this->_fbo->GetWidth()), static_cast<int>(this->_fbo->GetHeight())});
     //  cam_type::snapshot_type snapshot;
     //  cam_type::matrix_type viewTemp, projTemp;
     //  cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
-    this->viewUpdateCnt++;
+    this->_viewUpdateCnt++;
 }
 
 
@@ -212,8 +212,8 @@ void view::View2DGL::ResetView(void) {
  * view::View2DGL::Resize
  */
 void view::View2DGL::Resize(unsigned int width, unsigned int height) {
-    this->width = static_cast<float>(width);
-    this->height = static_cast<float>(height);
+    this->_width = static_cast<float>(width);
+    this->_height = static_cast<float>(height);
     // intentionally empty ATM
 }
 
@@ -248,11 +248,11 @@ void view::View2DGL::UpdateFreeze(bool freeze) {
 
 
 bool view::View2DGL::OnKey(Key key, KeyAction action, Modifiers mods) {
-    auto* cr = this->rhsRenderSlot.CallAs<view::CallRender2DGL>();
+    auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender2DGL>();
     if (cr == NULL) return false;
 
     if (key == Key::KEY_HOME) {
-        onResetView(this->resetViewSlot);
+        onResetView(this->_resetViewSlot);
     }
 
     InputEvent evt;
@@ -268,7 +268,7 @@ bool view::View2DGL::OnKey(Key key, KeyAction action, Modifiers mods) {
 
 
 bool view::View2DGL::OnChar(unsigned int codePoint) {
-    auto* cr = this->rhsRenderSlot.CallAs<view::CallRender2DGL>();
+    auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender2DGL>();
     if (cr == NULL) return false;
 
     InputEvent evt;
@@ -282,9 +282,9 @@ bool view::View2DGL::OnChar(unsigned int codePoint) {
 
 
 bool view::View2DGL::OnMouseButton(MouseButton button, MouseButtonAction action, Modifiers mods) {
-	this->mouseMode = MouseMode::Propagate;
+	this->_mouseMode = MouseMode::Propagate;
 
-    auto* cr = this->rhsRenderSlot.CallAs<view::CallRender2DGL>();
+    auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender2DGL>();
     if (cr) {
         InputEvent evt;
         evt.tag = InputEvent::Tag::MouseButton;
@@ -297,9 +297,9 @@ bool view::View2DGL::OnMouseButton(MouseButton button, MouseButtonAction action,
 
     auto down = action == MouseButtonAction::PRESS;
     if (button == MouseButton::BUTTON_LEFT && down) {
-        this->mouseMode = MouseMode::Pan;
+        this->_mouseMode = MouseMode::Pan;
     } else if (button == MouseButton::BUTTON_MIDDLE && down) {
-        this->mouseMode = MouseMode::Zoom;
+        this->_mouseMode = MouseMode::Zoom;
     }
 
     return true;
@@ -307,16 +307,16 @@ bool view::View2DGL::OnMouseButton(MouseButton button, MouseButtonAction action,
 
 
 bool view::View2DGL::OnMouseMove(double x, double y) {
-    if (this->mouseMode == MouseMode::Propagate) {
+    if (this->_mouseMode == MouseMode::Propagate) {
         float mx, my;
-        mx = ((x * 2.0f / this->width) - 1.0f) * this->width / this->height;
-        my = 1.0f - (y * 2.0f / this->height);
-        mx /= this->viewZoom;
-        my /= this->viewZoom;
-        mx -= this->viewX;
-        my -= this->viewY;
+        mx = ((x * 2.0f / this->_width) - 1.0f) * this->_width / this->_height;
+        my = 1.0f - (y * 2.0f / this->_height);
+        mx /= this->_viewZoom;
+        my /= this->_viewZoom;
+        mx -= this->_viewX;
+        my -= this->_viewY;
 
-        auto* cr = this->rhsRenderSlot.CallAs<view::CallRender2DGL>();
+        auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender2DGL>();
         if (cr) {
             InputEvent evt;
             evt.tag = InputEvent::Tag::MouseMove;
@@ -325,43 +325,43 @@ bool view::View2DGL::OnMouseMove(double x, double y) {
             cr->SetInputEvent(evt);
             if ((*cr)(view::CallRender2DGL::FnOnMouseMove)) return true;
         }
-    } else if (this->mouseMode == MouseMode::Pan) {
-        float movSpeed = 2.0f / (this->viewZoom * this->height);
-        this->viewX -= (this->mouseX - x) * movSpeed;
-        this->viewY += (this->mouseY - y) * movSpeed;
-        if (((this->mouseX - x) > 0.0f) || ((this->mouseY - y) > 0.0f)) {
-            this->viewUpdateCnt++;
+    } else if (this->_mouseMode == MouseMode::Pan) {
+        float movSpeed = 2.0f / (this->_viewZoom * this->_height);
+        this->_viewX -= (this->_mouseX - x) * movSpeed;
+        this->_viewY += (this->_mouseY - y) * movSpeed;
+        if (((this->_mouseX - x) > 0.0f) || ((this->_mouseY - y) > 0.0f)) {
+            this->_viewUpdateCnt++;
         }
-    } else if (this->mouseMode == MouseMode::Zoom) {
+    } else if (this->_mouseMode == MouseMode::Zoom) {
         const double spd = 2.0;
         const double logSpd = log(spd);
         float base = 1.0f;
 
-        CallRender2DGL* cr2d = this->rhsRenderSlot.CallAs<CallRender2DGL>();
+        CallRender2DGL* cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
         if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
             base = cr2d->GetBoundingBoxes().BoundingBox().Height();
         }
 
         float newZoom =
-            static_cast<float>(pow(spd, log(static_cast<double>(this->viewZoom / base)) / logSpd +
-                                            static_cast<double>(((this->mouseY - y) * 1.0f / this->height)))) *
+            static_cast<float>(pow(spd, log(static_cast<double>(this->_viewZoom / base)) / logSpd +
+                                            static_cast<double>(((this->_mouseY - y) * 1.0f / this->_height)))) *
             base;
 
-        if (!vislib::math::IsEqual(newZoom, this->viewZoom)) {
-            this->viewUpdateCnt++;
+        if (!vislib::math::IsEqual(newZoom, this->_viewZoom)) {
+            this->_viewUpdateCnt++;
         }
-        this->viewZoom = newZoom;
+        this->_viewZoom = newZoom;
     }
 
-    this->mouseX = x;
-    this->mouseY = y;
+    this->_mouseX = x;
+    this->_mouseY = y;
 
     return true;
 }
 
 
 bool view::View2DGL::OnMouseScroll(double dx, double dy) {
-    auto* cr = this->rhsRenderSlot.CallAs<view::CallRender2DGL>();
+    auto* cr = this->_rhsRenderSlot.CallAs<view::CallRender2DGL>();
     if (cr == NULL) return false;
 
     InputEvent evt;
@@ -379,8 +379,8 @@ bool view::View2DGL::OnMouseScroll(double dx, double dy) {
  * view::View2DGL::unpackMouseCoordinates
  */
 void view::View2DGL::unpackMouseCoordinates(float &x, float &y) {
-    x *= this->width;
-    y *= this->height;
+    x *= this->_width;
+    y *= this->_height;
     y -= 1.0f;
 }
 
@@ -390,7 +390,7 @@ void view::View2DGL::unpackMouseCoordinates(float &x, float &y) {
  */
 bool view::View2DGL::create(void) {
  
-    this->firstImg = true;
+    this->_firstImg = true;
 
     this->_fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
 
@@ -413,7 +413,7 @@ bool view::View2DGL::GetExtents(Call& call) {
     view::CallRenderViewGL* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
     if (crv == nullptr) return false;
 
-    CallRender2DGL* cr2d = this->rhsRenderSlot.CallAs<CallRender2DGL>();
+    CallRender2DGL* cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
     if (cr2d == nullptr) return false;
 
     if (!(*cr2d)(CallRender2DGL::FnGetExtents)) return false;

@@ -147,92 +147,92 @@ protected:
 #    pragma warning(disable : 4251)
 #endif /* _WIN32 */
     /** The orbital arcball manipulator for the camera */
-    arcball_type arcballManipulator;
+    arcball_type _arcballManipulator;
 
     /** The translation manipulator for the camera */
-    xlate_type translateManipulator;
+    xlate_type _translateManipulator;
 
     /** The rotation manipulator for the camera */
-    rotate_type rotateManipulator;
+    rotate_type _rotateManipulator;
 
     /** The orbital manipulator turntable for the camera */
-    turntable_type turntableManipulator;
+    turntable_type _turntableManipulator;
 
     /** The manipulator for changing the orbital altitude */
-    orbit_altitude_type orbitAltitudeManipulator;
+    orbit_altitude_type _orbitAltitudeManipulator;
 
     /** Flag showing the look at point */
-    param::ParamSlot showLookAt;
+    param::ParamSlot _showLookAt;
 
     /** focus distance for stereo projection */
-    param::ParamSlot stereoFocusDistSlot;
+    param::ParamSlot _stereoFocusDistSlot;
 
     /** eye distance for stereo projection */
-    param::ParamSlot stereoEyeDistSlot;
+    param::ParamSlot _stereoEyeDistSlot;
 
     /** The move step size in world coordinates */
-    param::ParamSlot viewKeyMoveStepSlot;
+    param::ParamSlot _viewKeyMoveStepSlot;
 
-    param::ParamSlot viewKeyRunFactorSlot;
+    param::ParamSlot _viewKeyRunFactorSlot;
 
     /** The angle rotate step in degrees */
-    param::ParamSlot viewKeyAngleStepSlot;
+    param::ParamSlot _viewKeyAngleStepSlot;
 
-    param::ParamSlot viewKeyFixToWorldUpSlot;
+    param::ParamSlot _viewKeyFixToWorldUpSlot;
 
     /** sensitivity for mouse rotation in WASD mode */
-    param::ParamSlot mouseSensitivitySlot;
+    param::ParamSlot _mouseSensitivitySlot;
 
     /** The point around which the view will be roateted */
-    param::ParamSlot viewKeyRotPointSlot;
+    param::ParamSlot _viewKeyRotPointSlot;
 
-    param::ParamSlot hookOnChangeOnlySlot;
+    param::ParamSlot _hookOnChangeOnlySlot;
 
     /** Enable selecting mode of mouse (disables camera movement) */
-    param::ParamSlot enableMouseSelectionSlot;
+    param::ParamSlot _enableMouseSelectionSlot;
 
     /** Shows the view cube helper */
-    param::ParamSlot showViewCubeSlot;
+    param::ParamSlot _showViewCubeSlot;
 
     /** Invisible parameters for lua manipulation */
-    param::ParamSlot cameraPositionParam;
-    param::ParamSlot cameraOrientationParam;
-    param::ParamSlot cameraProjectionTypeParam;
-    param::ParamSlot cameraNearPlaneParam;
-    param::ParamSlot cameraFarPlaneParam;
-    param::ParamSlot cameraConvergencePlaneParam;
-    param::ParamSlot cameraEyeParam;
-    param::ParamSlot cameraGateScalingParam;
-    param::ParamSlot cameraFilmGateParam;
-    param::ParamSlot cameraResolutionXParam;
-    param::ParamSlot cameraResolutionYParam;
-    param::ParamSlot cameraCenterOffsetParam;
-    param::ParamSlot cameraHalfApertureDegreesParam;
-    param::ParamSlot cameraHalfDisparityParam;
+    param::ParamSlot _cameraPositionParam;
+    param::ParamSlot _cameraOrientationParam;
+    param::ParamSlot _cameraProjectionTypeParam;
+    param::ParamSlot _cameraNearPlaneParam;
+    param::ParamSlot _cameraFarPlaneParam;
+    param::ParamSlot _cameraConvergencePlaneParam;
+    param::ParamSlot _cameraEyeParam;
+    param::ParamSlot _cameraGateScalingParam;
+    param::ParamSlot _cameraFilmGateParam;
+    param::ParamSlot _cameraResolutionXParam;
+    param::ParamSlot _cameraResolutionYParam;
+    param::ParamSlot _cameraCenterOffsetParam;
+    param::ParamSlot _cameraHalfApertureDegreesParam;
+    param::ParamSlot _cameraHalfDisparityParam;
 
     /** Camara override parameters */
-    param::ParamSlot cameraOvrUpParam;
-    param::ParamSlot cameraOvrLookatParam;
-    param::ParamSlot cameraOvrParam;
+    param::ParamSlot _cameraOvrUpParam;
+    param::ParamSlot _cameraOvrLookatParam;
+    param::ParamSlot _cameraOvrParam;
 
     bool cameraOvrCallback(param::ParamSlot& p);
 
     /** Map storing the pressed state of all keyboard buttons */
-    std::map<view::Key, bool> pressedKeyMap;
+    std::map<view::Key, bool> _pressedKeyMap;
 
     /** Map storing the pressed state of all mouse buttons */
-    std::map<view::MouseButton, bool> pressedMouseMap;
+    std::map<view::MouseButton, bool> _pressedMouseMap;
 
     /** Flag determining whether the arcball is the default steering method of the camera */
-    bool arcballDefault;
+    bool _arcballDefault;
 
     /** Center of rotation for orbital manipulators */
-    glm::vec3 rotCenter;
+    glm::vec3 _rotCenter;
 
     /** Value storing whether there have been read parameter values that came from outside */
-    bool valuesFromOutside;
+    bool _valuesFromOutside;
 
-    bool cameraControlOverrideActive;
+    bool _cameraControlOverrideActive;
 };
 
 } // namespace view

@@ -99,7 +99,7 @@ public:
      * @return The default time
      */
     virtual float DefaultTime(double instTime) const {
-        return this->timeCtrl.Time(instTime);
+        return this->_timeCtrl.Time(instTime);
     }
 
     /**
@@ -169,8 +169,8 @@ public:
      * @param hook The hook to register
      */
     void RegisterHook(Hooks* hook) {
-        if (!this->hooks.Contains(hook)) {
-            this->hooks.Add(hook);
+        if (!this->_hooks.Contains(hook)) {
+            this->_hooks.Add(hook);
         }
     }
 
@@ -179,7 +179,7 @@ public:
      *
      * @param hook The hook to unregister
      */
-    void UnregisterHook(Hooks* hook) { this->hooks.RemoveAll(hook); }
+    void UnregisterHook(Hooks* hook) { this->_hooks.RemoveAll(hook); }
 
     /**
      * Callback requesting a rendering of this view
@@ -285,14 +285,14 @@ protected:
      *
      * @return 'true' if hook code should be run
      */
-    inline bool doHookCode(void) const { return !this->hooks.IsEmpty(); }
+    inline bool doHookCode(void) const { return !this->_hooks.IsEmpty(); }
 
     /**
      * Gets an iterator to the list or registered hooks.
      *
      * @return An iterator to the list of registered hooks.
      */
-    inline HooksIterator getHookIterator(void) { return this->hooks.GetIterator(); }
+    inline HooksIterator getHookIterator(void) { return this->_hooks.GetIterator(); }
 
     /**
      * The code triggering the pre render hook
@@ -370,67 +370,67 @@ protected:
      * Flag if this is the first time an image gets created. Used for
      * initial camera reset
      */
-    bool firstImg;
+    bool _firstImg;
 
     /** Slot to call the renderer to render */
-    CallerSlot rhsRenderSlot;
+    CallerSlot _rhsRenderSlot;
 
     /** Slot for incoming rendering requests */
-    CalleeSlot lhsRenderSlot;
+    CalleeSlot _lhsRenderSlot;
 
     /** The complete scene bounding box */
-    BoundingBoxes_2 bboxs;
+    BoundingBoxes_2 _bboxs;
 
     /** The camera */
-    Camera_2 cam;
+    Camera_2 _camera;
 
     /** Slot containing the settings of the currently stored camera */
-    param::ParamSlot cameraSettingsSlot;
+    param::ParamSlot _cameraSettingsSlot;
 
     /** Triggers the storage of the camera settings */
-    param::ParamSlot storeCameraSettingsSlot;
+    param::ParamSlot _storeCameraSettingsSlot;
 
     /** Triggers the restore of the camera settings */
-    param::ParamSlot restoreCameraSettingsSlot;
+    param::ParamSlot _restoreCameraSettingsSlot;
 
     /** Slot activating or deactivating the override of already present camera settings */
-    param::ParamSlot overrideCamSettingsSlot;
+    param::ParamSlot _overrideCamSettingsSlot;
 
     /** Slot activating or deactivating the automatic save of camera parameters to disk when a camera is saved */
-    param::ParamSlot autoSaveCamSettingsSlot;
+    param::ParamSlot _autoSaveCamSettingsSlot;
 
     /** Slot activating or deactivating the automatic load of camera parameters at program startup */
-    param::ParamSlot autoLoadCamSettingsSlot;
+    param::ParamSlot _autoLoadCamSettingsSlot;
 
     /** Triggers the reset of the view */
-    param::ParamSlot resetViewSlot;
+    param::ParamSlot _resetViewSlot;
 
     /** whether to reset the view when the object bounding box changes */
-    param::ParamSlot resetViewOnBBoxChangeSlot;
+    param::ParamSlot _resetViewOnBBoxChangeSlot;
 
     /** Array that holds the saved camera states */
-    std::array<std::pair<Camera_2::minimal_state_type, bool>, 11> savedCameras;
+    std::array<std::pair<Camera_2::minimal_state_type, bool>, 11> _savedCameras;
 
     /** The object responsible for camera serialization */
-    CameraSerializer serializer;
+    CameraSerializer _cameraSerializer;
 
     /** The time control */
-    view::TimeControl timeCtrl;
+    view::TimeControl _timeCtrl;
 
     /**  */
-    std::chrono::time_point<std::chrono::high_resolution_clock> lastFrameTime;
+    std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
 
-    std::chrono::microseconds lastFrameDuration;
+    std::chrono::microseconds _lastFrameDuration;
 
     /** The background colour for the view */
-    mutable param::ParamSlot bkgndColSlot;
+    mutable param::ParamSlot _bkgndColSlot;
 
 private:
     /** List of registered hooks */
-    vislib::SingleLinkedList<Hooks*> hooks;
+    vislib::SingleLinkedList<Hooks*> _hooks;
 
     /** The background colour for the view */
-    mutable glm::vec4 bkgndCol;
+    mutable glm::vec4 _bkgndCol;
 };
 
 

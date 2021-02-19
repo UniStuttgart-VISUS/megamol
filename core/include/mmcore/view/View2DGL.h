@@ -151,31 +151,31 @@ public:
 private:
 
     /** The viewport height */
-    float height;
+    float _height;
 
     /** The mouse drag mode */
-    MouseMode mouseMode;
+    MouseMode _mouseMode;
 
     /** The mouse x coordinate */
-    float mouseX;
+    float _mouseX;
 
     /** The mouse y coordinate */
-    float mouseY;
+    float _mouseY;
 
     /** The view focus x coordinate */
-    float viewX;
+    float _viewX;
 
     /** The view focus y coordinate */
-    float viewY;
+    float _viewY;
 
     /** The view zoom factor */
-    float viewZoom;
+    float _viewZoom;
 
     /** the update counter for the view settings */
-    unsigned int viewUpdateCnt;
+    unsigned int _viewUpdateCnt;
 
     /** the viewport width */
-    float width;
+    float _width;
 
     std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
 };

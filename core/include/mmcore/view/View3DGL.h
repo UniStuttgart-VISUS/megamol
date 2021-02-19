@@ -85,21 +85,18 @@ protected:
      */
     virtual void release(void);
 
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject> fbo;
+    std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
 
 private:
 
     /** The mouse x coordinate */
-    float mouseX;
+    float _mouseX;
 
     /** The mouse y coordinate */
-    float mouseY;
+    float _mouseY;
 
     /** the 2d cursor of this view */
-    vislib::graphics::Cursor2D cursor2d;
-
-    /** Flag whether mouse control is to be handed over to the renderer */
-    bool toggleMouseSelection;
+    vislib::graphics::Cursor2D _cursor2d;
 
 };
 

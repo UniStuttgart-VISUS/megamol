@@ -163,22 +163,22 @@ private:
      *
      * @return The renderer 1 call
      */
-    inline CallRenderViewGL* render1() const { return this->render1Slot.CallAs<CallRenderViewGL>(); }
+    inline CallRenderViewGL* render1() const { return this->_render1Slot.CallAs<CallRenderViewGL>(); }
 
     /**
      * Answer the renderer 2 call
      *
      * @return The renderer 2 call
      */
-    inline CallRenderViewGL* render2() const { return this->render2Slot.CallAs<CallRenderViewGL>(); }
+    inline CallRenderViewGL* render2() const { return this->_render2Slot.CallAs<CallRenderViewGL>(); }
 
     /**
      * Returns the focused (keyboard input) renderer.
      */
     inline CallRenderViewGL* renderFocused() const {
-        if (this->focus == 1) {
+        if (this->_focus == 1) {
             return this->render1();
-        } else if (this->focus == 2) {
+        } else if (this->_focus == 2) {
             return this->render2();
         } else {
             return nullptr;
@@ -189,10 +189,10 @@ private:
      * Returns the hovered (mouse input) renderer.
      */
     inline CallRenderViewGL* renderHovered() const {
-        auto mousePos = vislib::math::Point<float, 2>(this->mouseX, this->mouseY);
-        if (this->clientArea1.Contains(mousePos)) {
+        auto mousePos = vislib::math::Point<float, 2>(this->_mouseX, this->_mouseY);
+        if (this->_clientArea1.Contains(mousePos)) {
             return this->render1();
-        } else if (this->clientArea2.Contains(mousePos)) {
+        } else if (this->_clientArea2.Contains(mousePos)) {
             return this->render2();
         } else {
             return nullptr;
@@ -207,49 +207,49 @@ private:
     void adjustClientAreas();
 
     /** Connection to the renderer 1 (left, top) */
-    mutable CallerSlot render1Slot;
+    mutable CallerSlot _render1Slot;
 
     /** Connection to the renderer 2 (right, bottom) */
-    mutable CallerSlot render2Slot;
+    mutable CallerSlot _render2Slot;
 
     /** The split orientation slot */
-    param::ParamSlot splitOrientationSlot;
+    param::ParamSlot _splitOrientationSlot;
 
     /** The splitter distance slot */
-    param::ParamSlot splitPositionSlot;
+    param::ParamSlot _splitPositionSlot;
 
     /** The splitter width slot */
-    param::ParamSlot splitWidthSlot;
+    param::ParamSlot _splitWidthSlot;
 
     /** The splitter colour slot */
-    param::ParamSlot splitColourSlot;
+    param::ParamSlot _splitColourSlot;
 
     /** Slot enabling time synchronization */
-    param::ParamSlot enableTimeSyncSlot;
+    param::ParamSlot _enableTimeSyncSlot;
 
     /** Option for forwarding mouse and keyboard events to both child views */
-    param::ParamSlot inputToBothSlot;
+    param::ParamSlot _inputToBothSlot;
 
     /** The override call */
-    CallRenderViewGL* overrideCall;
+    CallRenderViewGL* _overrideCall;
 
-    vislib::math::Rectangle<float> clientArea;
+    vislib::math::Rectangle<float> _clientArea;
 
-    vislib::math::Rectangle<float> clientArea1;
+    vislib::math::Rectangle<float> _clientArea1;
 
-    vislib::math::Rectangle<float> clientArea2;
+    vislib::math::Rectangle<float> _clientArea2;
 
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject> fbo1;
+    std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo1;
 
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject> fbo2;
+    std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo2;
 
-    int focus;
+    int _focus;
 
-    float mouseX;
+    float _mouseX;
 
-    float mouseY;
+    float _mouseY;
 
-    bool dragSplitter;
+    bool _dragSplitter;
 };
 
 
