@@ -13,7 +13,6 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractOverrideView.h"
-#include "vislib/graphics/CameraParameters.h"
 
 
 namespace megamol {
@@ -50,7 +49,7 @@ namespace special {
          *
          * @return The selected stereo projection type
          */
-        vislib::graphics::CameraParameters::ProjectionType getProjectionType(void) const;
+        thecam::Projection_type getProjectionType(void) const;
 
         /**
          * Answer the flag if the eyes should be switched

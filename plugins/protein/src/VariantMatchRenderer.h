@@ -81,7 +81,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(megamol::core::view::CallRender2D& call);
+    virtual bool GetExtents(megamol::core::view::CallRender2DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -94,7 +94,7 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render(megamol::core::view::CallRender2D& call);
+    virtual bool Render(megamol::core::view::CallRender2DGL& call);
 
     /**
      * Update all parameter slots

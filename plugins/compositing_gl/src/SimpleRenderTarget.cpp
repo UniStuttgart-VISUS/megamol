@@ -5,7 +5,7 @@
 #include "compositing/CompositingCalls.h"
 
 megamol::compositing::SimpleRenderTarget::SimpleRenderTarget() 
-    : Renderer3DModule_2()
+    : Renderer3DModuleGL()
     , m_version(0)
     , m_GBuffer(nullptr)
     , m_color_render_target("Color", "Access the color render target texture")
@@ -63,11 +63,11 @@ bool megamol::compositing::SimpleRenderTarget::create() {
 void megamol::compositing::SimpleRenderTarget::release() {
 }
 
-bool megamol::compositing::SimpleRenderTarget::GetExtents(core::view::CallRender3D_2& call) { 
+bool megamol::compositing::SimpleRenderTarget::GetExtents(core::view::CallRender3DGL& call) { 
     return true; 
 }
 
-bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3D_2& call) { 
+bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3DGL& call) { 
 
     ++m_version;
 
@@ -91,7 +91,7 @@ bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3D_2
     return true; 
 }
 
-void megamol::compositing::SimpleRenderTarget::PreRender(core::view::CallRender3D_2& call)
+void megamol::compositing::SimpleRenderTarget::PreRender(core::view::CallRender3DGL& call)
 {
 }
 

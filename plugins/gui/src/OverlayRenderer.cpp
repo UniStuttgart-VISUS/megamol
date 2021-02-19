@@ -15,7 +15,7 @@ using namespace megamol::gui;
 
 
 OverlayRenderer::OverlayRenderer(void)
-        : view::RendererModule<view::CallRender3D_2>()
+        : view::RendererModule<view::CallRender3DGL>()
         , megamol::core::view::RenderUtils()
         , paramMode("mode", "Overlay mode.")
         , paramAnchor("anchor", "Anchor of overlay.")
@@ -417,9 +417,9 @@ void OverlayRenderer::setParameterGUIVisibility(void) {
 }
 
 
-bool OverlayRenderer::GetExtents(view::CallRender3D_2& call) {
+bool OverlayRenderer::GetExtents(view::CallRender3DGL& call) {
 
-    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (chainedCall != nullptr) {
         *chainedCall = call;
         bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
@@ -430,22 +430,29 @@ bool OverlayRenderer::GetExtents(view::CallRender3D_2& call) {
 }
 
 
-bool OverlayRenderer::Render(view::CallRender3D_2& call) {
+bool OverlayRenderer::Render(view::CallRender3DGL& call) {
+
+    // Camera
+    view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
     std::shared_ptr<const view::AbstractView> viewptr =
         std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
 
-    auto viewport = call.GetViewport();
     if (viewptr != nullptr) { // XXX Move this behind the fbo magic?
-        glViewport(viewport.Left(), viewport.Bottom(), viewport.Width(), viewport.Height());
+        auto vp = cam.image_tile();
+        glViewport(vp.left(), vp.bottom(), vp.width(), vp.height());
         auto backCol = call.BackgroundColor();
         glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
     // First call chained renderer
-    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (chainedCall != nullptr) {
         *chainedCall = call;
         if (!(*chainedCall)(view::AbstractCallRender::FnRender)) {
@@ -454,8 +461,9 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
     }
 
     // Get current viewport
-    if ((this->m_viewport.x != viewport.Width()) || (this->m_viewport.y != viewport.Height())) {
-        this->m_viewport = {static_cast<float>(viewport.Width()), static_cast<float>(viewport.Height())};
+    auto viewport = cam.image_tile();
+    if ((this->m_viewport.x != viewport.width()) || (this->m_viewport.y != viewport.height())) {
+        this->m_viewport = {viewport.width(), viewport.height()};
         // Reload rectangle on viewport changes
         this->onTriggerRecalcRectangle(this->paramMode);
     }

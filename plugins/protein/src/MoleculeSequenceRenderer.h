@@ -2,7 +2,7 @@
 #define MOLECULESEQUENCERENDERER_H
 
 #include "mmcore/view/Renderer2DModule.h"
-#include "mmcore/view/CallRender2D.h"
+#include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/MouseFlags.h"
 
 #include "GlWidgetLibrary.h"
@@ -40,8 +40,8 @@ protected:
     virtual bool create(void);
     virtual void release(void);
 
-    virtual bool GetExtents(megamol::core::view::CallRender2D& call);
-	virtual bool Render(megamol::core::view::CallRender2D& call);
+    virtual bool GetExtents(megamol::core::view::CallRender2DGL& call);
+	virtual bool Render(megamol::core::view::CallRender2DGL& call);
     virtual bool MouseEvent(float x, float y, megamol::core::view::MouseFlags flags);
 	
 private: /* methods */

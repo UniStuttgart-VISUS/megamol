@@ -23,7 +23,7 @@ megamol::gui::ParameterGroupsPresentation::ParameterGroupsPresentation(void)
         , image_buttons() {
 
     // Add group widget data for animation widget group
-    /// Paramter namespace: View3D_2::anim
+    /// Paramter namespace: View3DGL::anim
     GroupWidgetData anim_group_widget_data(Param_t::GROUP_ANIMATION);
     anim_group_widget_data.active = false;
 
@@ -43,7 +43,7 @@ megamol::gui::ParameterGroupsPresentation::ParameterGroupsPresentation(void)
     /// ID string must equal parameter group name, which is used for identification
     this->group_widgets["anim"] = anim_group_widget_data;
 
-    /// Paramter namespace: View3D_2::view
+    /// Paramter namespace: View3DGL::view
     GroupWidgetData view_group_widget_data(Param_t::GROUP_3D_CUBE);
     view_group_widget_data.active = false;
 
