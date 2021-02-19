@@ -15,7 +15,8 @@ This guide is intended to give MegaMol developers a useful insight into the inte
 - [Synchronized Selection across Modules](#synchronized-selection-across-modules)
     - [FlagStorage](#flagstorage) 
     - [FlagStorage_GL](#flagstorage_gl) 
-- [Transfer Function](#transfer-function)  
+- [1D Transfer Function](#1d-transfer-function)  
+    - [Usage](#usage)  
 - [Graph Manipulation](#graph-manipulation)
     - [Graph Manipulation Queues](#graph-manipulation-queues) 
 - [Build System](#build-system)
@@ -116,13 +117,10 @@ This FlagStorage variant relies on a shader storage buffer and does not move any
 -----
 ## 1D Transfer Function
 
-### Mechanics
+The whole functionality of a 1D transfer function is given in the module `TransferFunction`.
+Every module can be connected to the `TransferFunction` module holding the actual `TransferFunctionParam` parameter, using a caller slot which is compatible to the call `CallGetTransferFunction`.
 
-The whole functionality of a 1D transfer fucntion is encapsulated in the module `
-Every module can be connected to the `TransferFunction`` module holding the actual `TransferFunctionParam` parameter using a caller slot which is compatible to the call `CallGetTransferFunction`.
-
-
-
+The description of the transfer function is encoded in a string in JSON format, see header `TransferFunctionParam.h`.
 
 ### Usage
 
@@ -132,8 +130,6 @@ If you want to use a transfer function in you renderer module you have to create
     this->MakeSlotAvailable(&this->tfSlot);
 ```
 See the header file of the call `CallGetTransferFunction` for a more detailed interface description of the available functions.
-
-
 The renderer modules `SimpleSphereRenderer` or `ScatterplotMatrixRenderer2D`can be looked at for a example implementation of the transfer function.
 
 
