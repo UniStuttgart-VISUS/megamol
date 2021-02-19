@@ -102,6 +102,8 @@ namespace datatools {
         bool assertData(core::moldyn::MultiParticleDataCall *in,
             core::moldyn::MultiParticleDataCall *outMPDC);
 
+        bool computeCurrentFrame(unsigned int frameID);
+
         float computeTemperature(std::vector<std::pair<size_t, float> > &matches, size_t num_matches, float mass, float freedom);
         float computeFractionalAnisotropy(std::vector<std::pair<size_t, float> > &matches, size_t num_matches);
         float computeDensity(std::vector<std::pair<size_t, float> > &matches, size_t num_matches, float const curPoint[3], float radius, vislib::math::Cuboid<float> const& bbox);
@@ -123,6 +125,7 @@ namespace datatools {
         core::param::ParamSlot fluidDensitySlot;
         core::param::ParamSlot tcSlot;
         core::param::ParamSlot rhocSlot;
+        core::param::ParamSlot timeSmoothSlot;
         
         size_t datahash;
         size_t myHash = 0;
