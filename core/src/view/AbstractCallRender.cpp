@@ -23,7 +23,7 @@ using namespace megamol::core;
 view::AbstractCallRender& view::AbstractCallRender::operator=(
         const view::AbstractCallRender& rhs) {
     this->_cntTimeFrames = rhs._cntTimeFrames;
-    this->_minCamState = rhs._minCamState;
+    this->_camera = rhs._camera;
     this->_bboxs = rhs._bboxs;
     this->_lastFrameTime = rhs._lastFrameTime;
     this->_time = rhs._time;

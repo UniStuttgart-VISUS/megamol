@@ -466,15 +466,6 @@ void ParallelCoordinatesRenderer2D::computeScaling(void) {
 
 bool ParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2DGL& call) {
 
-    // get camera
-    core::view::Camera_2 cam;
-    call.GetCamera(cam);
-
-    cam_type::matrix_type view, proj;
-    cam.calc_matrices(view, proj);
-
-    windowAspect = static_cast<float>(cam.resolution_gate_aspect());
-
     this->assertData(call);
 
     call.AccessBoundingBoxes() = this->bounds;

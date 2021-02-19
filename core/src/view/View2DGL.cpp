@@ -101,7 +101,7 @@ void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
     if (cr2d == NULL) {
         return;
     }
-
+    cr2d->SetCamera(this->cam);
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
     float w = this->width;
@@ -141,18 +141,18 @@ void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
     cr2d->AccessBoundingBoxes().SetBoundingBox(vr.Left(),vr.Bottom(),vr.Right(),vr.Top());
 
     if (call == nullptr) {
-        if (this->_fbo->IsValid()) {
-            if ((this->_fbo->GetWidth() != w) ||
-                (this->_fbo->GetHeight() != h)) {
-                this->_fbo->Release();
-                if (!this->_fbo->Create(w, h, GL_RGBA8, GL_RGBA,
-                        GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE)) {
-                    throw vislib::Exception(
-                        "[View2DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
-                    return;
-                }
+        if ((this->_fbo->GetWidth() != w) ||
+            (this->_fbo->GetHeight() != h) ||
+            !this->_fbo->IsValid() ) {
+            this->_fbo->Release();
+            if (!this->_fbo->Create(w, h, GL_RGBA8, GL_RGBA,
+                    GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE)) {
+                throw vislib::Exception(
+                    "[View2DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
+                return;
             }
         }
+        
         cr2d->SetFramebufferObject(_fbo);
         // TODO here we have to apply the new camera
     } else {
@@ -196,14 +196,6 @@ void view::View2DGL::ResetView(void) {
         this->viewZoom = 1.0f;
     }
 
-    //  this->cam.projection_type(thecam::Projection_type::orthographic);
-    //  this->cam.eye_position() = glm::vec4(viewX,viewY,0,1);
-    //  cam.film_gate({this->width, this->height});
-    //  cam.resolution_gate({static_cast<int>(this->_fbo->GetWidth()), static_cast<int>(this->_fbo->GetHeight())});
-    //  cam_type::snapshot_type snapshot;
-    //  cam_type::matrix_type viewTemp, projTemp;
-    //  cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-
     this->viewUpdateCnt++;
 }
 
@@ -214,7 +206,10 @@ void view::View2DGL::ResetView(void) {
 void view::View2DGL::Resize(unsigned int width, unsigned int height) {
     this->width = static_cast<float>(width);
     this->height = static_cast<float>(height);
-    // intentionally empty ATM
+
+    AbstractView::Resize(width, height);
+
+    //TODO resize/recreate FBO
 }
 
 
@@ -414,7 +409,10 @@ bool view::View2DGL::GetExtents(Call& call) {
     if (crv == nullptr) return false;
 
     CallRender2DGL* cr2d = this->rhsRenderSlot.CallAs<CallRender2DGL>();
-    if (cr2d == nullptr) return false;
+    if (cr2d == nullptr) {
+        return false;
+    }
+    cr2d->SetCamera(this->cam);
 
     if (!(*cr2d)(CallRender2DGL::FnGetExtents)) return false;
 

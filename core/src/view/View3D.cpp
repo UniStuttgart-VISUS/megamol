@@ -56,7 +56,7 @@ void View3D::Render(const mmcRenderViewContext& context, Call* call) {
 
     AbstractView3D::beforeRender(context);
 
-    cr3d->SetCameraState(this->cam);
+    cr3d->SetCamera(this->cam);
     (*cr3d)(view::CallRender3D::FnRender);
 
     AbstractView3D::afterRender(context);
