@@ -45,5 +45,15 @@
 		<snippet type="version">430</snippet>
 		<snippet name="body" type="file">pc_reconstruction3h_f.glsl</snippet>
 	</shader>
-	
+
+    <shader name="vert4">
+        <snippet type="version">430</snippet>
+        <snippet name="body" type="file">pc_reconstruction4_v.glsl</snippet>
+    </shader>
+
+    <shader name="frag4">
+        <snippet type="version">430</snippet>
+        <snippet name="body" type="file">pc_reconstruction4_f.glsl</snippet>
+    </shader>
+
 </btf>

@@ -66,7 +66,7 @@ namespace infovis {
 
     private:
         // required Shaders for different kinds of reconstruction
-        std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction_shdr_array[4];
+        std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction_shdr_array[5];
         vislib::graphics::gl::ShaderSource vertex_shader_src;
         vislib::graphics::gl::ShaderSource fragment_shader_src;
 
@@ -81,6 +81,7 @@ namespace infovis {
         int oldW = -1;
         int oldH = -1;
         int oldssLevel = -1;
+        int oldaLevel = -1;
 
         GLint origFBO = 0;
         int framesNeeded = 1;
@@ -97,6 +98,7 @@ namespace infovis {
         core::param::ParamSlot halveRes;
         core::param::ParamSlot approachSlot;
         core::param::ParamSlot superSamplingLevelSlot;
+        core::param::ParamSlot amortLevel;
     };
 } // namespace infovis
 } // namespace megamol

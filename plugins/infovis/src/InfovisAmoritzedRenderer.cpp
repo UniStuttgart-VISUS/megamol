@@ -21,7 +21,8 @@ InfovisAmortizedRenderer::InfovisAmortizedRenderer()
         , nextRendererSlot("nextRenderer", "connects to following Renderers, that will render in reduced resolution.")
         , halveRes("Halvres", "Turn on switch")
         , approachSlot("Approach", "Approach int")
-        , superSamplingLevelSlot("SSLevel", "Level of Supersampling") {
+        , superSamplingLevelSlot("SSLevel", "Level of Supersampling")
+        , amortLevel("AmortLevel", "Level of Amortization") {
     this->nextRendererSlot.SetCompatibleCall<megamol::core::view::CallRender2DDescription>();
     this->MakeSlotAvailable(&this->nextRendererSlot);
 
@@ -39,6 +40,9 @@ InfovisAmortizedRenderer::InfovisAmortizedRenderer()
 
     this->superSamplingLevelSlot << new core::param::IntParam(1);
     this->MakeSlotAvailable(&superSamplingLevelSlot);
+
+    this->amortLevel << new core::param::IntParam(1);
+    this->MakeSlotAvailable(&amortLevel);
 }
 
 InfovisAmortizedRenderer::~InfovisAmortizedRenderer() {
@@ -119,6 +123,13 @@ void InfovisAmortizedRenderer::makeShaders() {
     pc_reconstruction_shdr_array[3]->Compile(
         vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
     pc_reconstruction_shdr_array[3]->Link();
+
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert4", vertex_shader_src);
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag4", fragment_shader_src);
+    pc_reconstruction_shdr_array[4] = std::make_unique<vislib::graphics::gl::GLSLShader>();
+    pc_reconstruction_shdr_array[4]->Compile(
+        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
+    pc_reconstruction_shdr_array[4]->Link();
 }
 
 void InfovisAmortizedRenderer::setupBuffers() {
@@ -153,8 +164,8 @@ void InfovisAmortizedRenderer::setupBuffers() {
 }
 
 void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLevel) {
-    int w = ow / 2;
-    int h = oh / 2;
+    int w = ow / this->amortLevel.Param<core::param::IntParam>()->Value();
+    int h = oh / this->amortLevel.Param<core::param::IntParam>()->Value();
 
     glm::mat4 pm;
     for (int i = 0; i < 4; i++) {
@@ -171,12 +182,9 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
     auto pmvm = pm * mvm;
 
     if (approach == 0) {
-
         invMatrices[frametype] = pmvm;
-
-        glm::mat4 inversePMVM = glm::inverse(pmvm);
         for (int i = 0; i < framesNeeded; i++)
-            moveMatrices[i] = invMatrices[i] * inversePMVM;
+            moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
 
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
         glActiveTexture(GL_TEXTURE10);
@@ -210,33 +218,28 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, frametype);
     }
-
-    if (false) {
-        glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
-        glActiveTexture(GL_TEXTURE10);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, 4 * ssLevel, 0, GL_RGB, GL_FLOAT, 0);
-
+    if (approach == 4) {
         glm::mat4 jit;
         glm::mat4 pmvm = pm * mvm;
-        int f = floor(frametype / 4);
-
-        //jit = glm::translate(glm::mat4(1.0f), glm::vec3((camOffsets[f].x - 1 + 2 * (frametype % 2)) / ow, (camOffsets[f].y + 1 - 2 * floor((frametype % 4) / 2)) / oh, 0));
+        int a = this->amortLevel.Param<core::param::IntParam>()->Value();
 
         jit = glm::translate(glm::mat4(1.0f), camOffsets[frametype]);
-        invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3((-1.0 + 2.0 * floor(frametype % 2)) / ow, (1 - (2 * floor((frametype % 4)/2))) / oh, 0)) * pmvm;
-
-        glm::mat4 invM = glm::inverse(pmvm);
+        invMatrices[frametype] = jit * pmvm;
         for (int i = 0; i < framesNeeded; i++)
-            moveMatrices[i] = invMatrices[i] * invM;
-        // moveMatrices[i] = glm::mat4(1.0);
+            moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
 
         pm = jit * pm;
         for (int i = 0; i < 16; i++)
             projMatrix_column[i] = glm::value_ptr(pm)[i];
 
+        glBindFramebuffer(GL_FRAMEBUFFER, amortizedFboA);
+        glActiveTexture(GL_TEXTURE10);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, imageArrayA);
+        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, w, h, a * a, 0, GL_RGB, GL_FLOAT, 0);
+
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, frametype);
     }
+
     glClear(GL_COLOR_BUFFER_BIT);
     glViewport(0, 0, w, h);
 
@@ -273,12 +276,11 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
             frametype = 0;
-            camOffsets.resize(4);
+            camOffsets.resize(framesNeeded);
             camOffsets = {glm::vec3(-2.0 / w, 2.0 / h, 0), glm::vec3(0.0 / w, 2.0 / h, 0),
                 glm::vec3(-2.0 / w, 0 / h, 0), glm::vec3(0.0 / w, 0.0 / h, 0)};
         }
     }
-
     if (approach == 3) {
         framesNeeded = 4 * ssLevel;
         if (invMatrices.size() != framesNeeded || camOffsets.size() != ssLevel) {
@@ -289,6 +291,22 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
             frametype = 0;
         }
     }
+    if (approach == 4) {
+        int a = this->amortLevel.Param<core::param::IntParam>()->Value();
+        framesNeeded = a * a;
+        if (invMatrices.size() != framesNeeded) {
+            invMatrices.resize(framesNeeded);
+            moveMatrices.resize(framesNeeded);
+            frametype = 0;
+            camOffsets.resize(framesNeeded);
+            for (int j = 0; j < a; j++) {
+                for (int i = 0; i < a; i++) {
+                    camOffsets[j * a + i] = glm::fvec3(( -1.0 * (float) a + 1.0 + 2.0 * i) / w, ((float) a - 1.0 - 2.0 * j) / h, 0.0);
+                }
+            }
+        }
+    }
+
 }
 
 void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int ssLevel) {
@@ -305,6 +323,8 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("approach"), approach);
         glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("frametype"), frametype);
         glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("ssLevel"), ssLevel);
+        glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("amortLevel"),
+            this->amortLevel.Param<core::param::IntParam>()->Value());
 
         glUniformMatrix4fv(
             pc_reconstruction_shdr_array[approach]->ParameterLocation("moveMatrices"), 4, GL_FALSE, &moveMatrices[0][0][0]);
@@ -323,6 +343,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
 
 bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
     core::view::CallRender2D* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2D>();
+    int a = amortLevel.Param<core::param::IntParam>()->Value();
 
     if (cr2d == NULL) {
         // Nothing to do really
@@ -359,12 +380,10 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
     cr2d->SetOutputBuffer(call.OutputBuffer());
     cr2d->SetGpuAffinity(call.GpuAffinity<megamol::core::view::AbstractCallRender::GpuHandleType>());
 
-    
-
     if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
 
         // check if amortization mode changed
-        if (approach != oldApp || w != oldW || h != oldH || ssLevel != oldssLevel) {
+        if (approach != oldApp || w != oldW || h != oldH || ssLevel != oldssLevel || a != oldaLevel) {
             resizeArrays(approach, w, h, ssLevel);
         }
 
@@ -378,6 +397,7 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
         oldssLevel = ssLevel;
         oldH = h;
         oldW = w;
+        oldaLevel = a;
     } else {
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);
