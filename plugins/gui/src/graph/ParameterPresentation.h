@@ -100,8 +100,8 @@ namespace gui {
         static bool ParameterExtendedModeButton(const std::string& id, bool& inout_extended_mode);
 
         /** Lua parameter command copy button. */
-        static bool LuaButton(const std::string& id, const std::string& param_value, const std::string& param_fullname,
-            const std::string& module_fullname);
+        static bool LuaButton(const std::string& id, const megamol::gui::Parameter& param,
+            const std::string& param_fullname, const std::string& module_fullname);
 
     private:
         // VARIABLES --------------------------------------------------------------
