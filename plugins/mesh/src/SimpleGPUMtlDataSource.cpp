@@ -1,4 +1,4 @@
-#include "mesh/SimpleGPUMtlDataSource.h"
+#include "SimpleGPUMtlDataSource.h"
 
 #include "mesh/MeshCalls.h"
 
