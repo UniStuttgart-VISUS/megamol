@@ -2725,7 +2725,8 @@ void main(void) {
       <!--<snippet type="version">130</snippet>-->
       <snippet type="string">
         <!--
-        #version 120
+        #version 140
+        #extension GL_ARB_compatibility : enable
         -->
       </snippet>
       <snippet name="commondefines"/>

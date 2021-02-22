@@ -14,11 +14,13 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/utility/SDFFont.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "vislib/math/Cuboid.h"
 #include "vislib/memutils.h"
 
 #include <set>
+
+#include "mmcore/view/CallRender3DGL.h"
 
 namespace megamol {
 namespace protein {
@@ -26,7 +28,7 @@ namespace protein {
 /**
  * Renderer for tri-mesh data
  */
-class SombreroMeshRenderer : public core::view::Renderer3DModule {
+class SombreroMeshRenderer : public core::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -72,7 +74,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents(core::Call& call);
+    virtual bool GetExtents(core::view::CallRender3DGL& call);
 
     /**
      * Implementation of 'Release'.
@@ -86,7 +88,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    virtual bool Render(core::Call& call);
+    virtual bool Render(core::view::CallRender3DGL& call);
 
     /**
      * Callback for mouse events (move, press, and release)
@@ -183,9 +185,6 @@ private:
 
     /** Thec color for the font */
     core::param::ParamSlot fontColorSlot;
-
-    /** Slot to activate scaling */
-    core::param::ParamSlot doScaleSlot;
 
     /** Slot to activate the display of the sweatband */
     core::param::ParamSlot showSweatBandSlot;

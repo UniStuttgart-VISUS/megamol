@@ -17,8 +17,8 @@
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/FlagCall.h"
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "vislib/assert.h"
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -36,7 +36,7 @@ namespace rendering {
     /**
      * Renderer for simple sphere glyphs
      */
-    class ArrowRenderer : public view::Renderer3DModule_2 {
+    class ArrowRenderer : public view::Renderer3DModuleGL {
     public:
 
         /**
@@ -90,7 +90,7 @@ namespace rendering {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(view::CallRender3D_2& call);
+        virtual bool GetExtents(view::CallRender3DGL& call);
 
         /**
          * Implementation of 'Release'.
@@ -104,7 +104,7 @@ namespace rendering {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(view::CallRender3D_2& call);
+        virtual bool Render(view::CallRender3DGL& call);
 
     private:
 

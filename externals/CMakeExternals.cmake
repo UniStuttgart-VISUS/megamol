@@ -2,7 +2,7 @@
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/script-externals")
   message(STATUS "Downloading external scripts")
   execute_process(COMMAND
-    ${GIT_EXECUTABLE} clone -b v2.2 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
+    ${GIT_EXECUTABLE} clone -b v2.3 https://github.com/UniStuttgart-VISUS/megamol-cmake-externals.git script-externals --depth 1
     WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
@@ -377,8 +377,8 @@ function(require_external NAME)
     external_get_property(imgui INSTALL_DIR)
 
     add_external_project(imguizmoquat STATIC
-      GIT_REPOSITORY https://github.com/BrutPitt/imGuIZMO.quat.git
-      GIT_TAG "v3.0"
+      GIT_REPOSITORY https://github.com/braunms/imGuIZMO.quat.git
+      GIT_TAG "v3.0a"
       BUILD_BYPRODUCTS "<INSTALL_DIR>/${IMGUIZMOQUAT_LIB}"
       DEPENDS imgui
       CMAKE_ARGS

@@ -58,7 +58,7 @@ namespace gui {
 
         // Init when adding module to graph
         std::string name;
-        std::string main_view_name;
+        std::string graph_entry_name;
 
         // FUNCTIONS --------------------------------------------------------------
 
@@ -75,8 +75,8 @@ namespace gui {
             return this->callslots;
         }
 
-        bool IsMainView(void) {
-            return (!this->main_view_name.empty());
+        bool IsGraphEntry(void) {
+            return (!this->graph_entry_name.empty());
         }
 
         const inline std::string FullName(void) const {

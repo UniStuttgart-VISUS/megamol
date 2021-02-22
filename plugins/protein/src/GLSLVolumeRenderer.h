@@ -17,8 +17,8 @@
 #include "protein_calls/MolecularDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer3DModule.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/SimpleFont.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
@@ -34,7 +34,7 @@ namespace protein {
     /**
      * Protein Renderer class
      */
-    class GLSLVolumeRenderer : public megamol::core::view::Renderer3DModule
+    class GLSLVolumeRenderer : public megamol::core::view::Renderer3DModuleGL
     {
     public:
         /**
@@ -113,7 +113,7 @@ namespace protein {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents( megamol::core::Call& call);
+        virtual bool GetExtents( megamol::core::view::CallRender3DGL& call);
 
         /**
         * The Open GL Render callback.
@@ -121,17 +121,17 @@ namespace protein {
         * @param call The calling call.
         * @return The return value of the function.
         */
-        virtual bool Render( megamol::core::Call& call);
+        virtual bool Render( megamol::core::view::CallRender3DGL& call);
         
         /**
          * Volume rendering using molecular data.
         */
-		bool RenderMolecularData(megamol::core::view::CallRender3D *call, megamol::protein_calls::MolecularDataCall *mol);
+        bool RenderMolecularData(megamol::core::view::CallRender3DGL *call, megamol::protein_calls::MolecularDataCall *mol);
 
         /**
          * Refresh all parameters.
         */
-        void ParameterRefresh( megamol::core::view::CallRender3D *call);
+        void ParameterRefresh( megamol::core::view::CallRender3DGL *call);
     
         /** 
          * Create a volume containing all molecule atoms.
@@ -190,7 +190,7 @@ namespace protein {
         megamol::core::CallerSlot protRendererCallerSlot;
         
         // camera information
-        vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+        core::view::Camera_2 cameraInfo;
         // scaling factor for the scene
         float scale;
         // translation of the scene
@@ -261,7 +261,7 @@ namespace protein {
         unsigned int atomCount;
 
         // FBO for rendering the protein
-        vislib::graphics::gl::FramebufferObject proteinFBO;
+        std::shared_ptr<vislib::graphics::gl::FramebufferObject> proteinFBO;
 
         // volume texture
         GLuint volumeTex;

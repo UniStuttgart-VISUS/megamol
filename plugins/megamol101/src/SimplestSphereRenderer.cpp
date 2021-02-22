@@ -9,7 +9,7 @@
 #include "SimplestSphereRenderer.h"
 #include "CallSpheres.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/view/Camera_2.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
@@ -24,7 +24,7 @@ using namespace megamol::megamol101;
  * SimplestSphereRenderer::SimplestSphereRenderer
  */
 SimplestSphereRenderer::SimplestSphereRenderer(void)
-    : core::view::Renderer3DModule_2()
+    : core::view::Renderer3DModuleGL()
     , sphereDataSlot("inData", "The input data slot for sphere data.")
     , sphereModeSlot("sphere rendering", "Switch for the pretty sphere rendering mode")
     , sizeScalingSlot("scaling factor", "Scaling factor for the size of the rendered GL_POINTS") {
@@ -126,8 +126,8 @@ bool SimplestSphereRenderer::create(void) {
 /*
  * SimplestSphereRenderer::GetExtents
  */
-bool SimplestSphereRenderer::GetExtents(core::view::CallRender3D_2& call) {
-    core::view::CallRender3D_2* cr3d = dynamic_cast<core::view::CallRender3D_2*>(&call);
+bool SimplestSphereRenderer::GetExtents(core::view::CallRender3DGL& call) {
+    core::view::CallRender3DGL* cr3d = dynamic_cast<core::view::CallRender3DGL*>(&call);
     if (cr3d == nullptr) return false;
 
     CallSpheres* cs = this->sphereDataSlot.CallAs<CallSpheres>();
@@ -155,8 +155,8 @@ void SimplestSphereRenderer::release(void) {
 /*
  * SimplestSphereRenderer::Render
  */
-bool SimplestSphereRenderer::Render(core::view::CallRender3D_2& call) {
-    core::view::CallRender3D_2* cr3d = dynamic_cast<core::view::CallRender3D_2*>(&call);
+bool SimplestSphereRenderer::Render(core::view::CallRender3DGL& call) {
+    core::view::CallRender3DGL* cr3d = dynamic_cast<core::view::CallRender3DGL*>(&call);
     if (cr3d == nullptr) return false;
 
     // before rendering, call all necessary data
@@ -221,8 +221,6 @@ bool SimplestSphereRenderer::Render(core::view::CallRender3D_2& call) {
     glm::mat4 proj = projCam;
     glm::mat4 mvp = projCam * viewCam;
 
-    this->GetLights();
-
     // start the rendering
 
     // Scale the point size with the parameter
@@ -254,10 +252,6 @@ bool SimplestSphereRenderer::Render(core::view::CallRender3D_2& call) {
         glUniform1f(this->sphereShader.ParameterLocation("scalingFactor"),
             this->sizeScalingSlot.Param<core::param::FloatParam>()->Value());
 
-        if (this->lightMap.size() >= 1 && this->lightMap.begin()->second.lightType == core::view::light::POINTLIGHT) {
-            auto lightPos = this->lightMap.begin()->second.pl_position;
-            glUniform3f(this->sphereShader.ParameterLocation("lightPos"), lightPos[0], lightPos[1], lightPos[2]);
-        }
     } else {
         glUniformMatrix4fv(this->simpleShader.ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
     }

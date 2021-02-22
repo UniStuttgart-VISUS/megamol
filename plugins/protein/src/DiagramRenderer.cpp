@@ -216,10 +216,10 @@ bool DiagramRenderer::CalcExtents() {
     return true;
 }
 
-bool DiagramRenderer::GetExtents(view::CallRender2D& call) {
+bool DiagramRenderer::GetExtents(view::CallRender2DGL& call) {
     // set the bounding box to 0..1
-    call.SetBoundingBox(0.0f - legendOffset - legendWidth, 0.0f - 2.0f * fontSize,
-        this->aspectRatioParam.Param<param::FloatParam>()->Value() + fontSize, 1.0f + fontSize);
+    call.AccessBoundingBoxes().SetBoundingBox(0.0f - legendOffset - legendWidth, 0.0f - 2.0f * fontSize, 0,
+        this->aspectRatioParam.Param<param::FloatParam>()->Value() + fontSize, 1.0f + fontSize, 0);
 
     //this->CalcExtents();
     ////  ( this->yRange.Second() - this->yRange.First())
@@ -499,7 +499,7 @@ bool DiagramRenderer::onHideAllButton(param::ParamSlot& p) {
 /*
  * Diagram2DRenderer::Render
  */
-bool DiagramRenderer::Render(view::CallRender2D &call) {
+bool DiagramRenderer::Render(view::CallRender2DGL &call) {
     // get pointer to Diagram2DCall
 	diagram = this->dataCallerSlot.CallAs<protein_calls::DiagramCall>();
     if( diagram == NULL ) return false;

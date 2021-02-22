@@ -9,6 +9,96 @@
 
 namespace megamol::core::view {
 
+// STATIC functions -------------------------------------------------------
+
+bool RenderUtils::LoadTextureFromFile(std::shared_ptr<glowl::Texture2D>& out_texture_ptr, const std::string& filename) {
+
+    if (filename.empty())
+        return false;
+    bool retval = false;
+
+    static vislib::graphics::BitmapImage img;
+    static sg::graphics::PngBitmapCodec pbc;
+    pbc.Image() = &img;
+    std::vector<char> buf;
+    size_t size = 0;
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    if (megamol::core::utility::FileUtils::LoadRawFile(filename, buf)) {
+        if (pbc.Load(static_cast<void*>(buf.data()), buf.size())) {
+            img.Convert(vislib::graphics::BitmapImage::TemplateFloatRGBA);
+            retval =
+                RenderUtils::LoadTextureFromData(out_texture_ptr, img.Width(), img.Height(), img.PeekDataAs<FLOAT>());
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
+                __LINE__);
+            retval = false;
+        }
+    } else {
+        retval = false;
+    }
+
+    return retval;
+}
+
+
+bool RenderUtils::LoadTextureFromData(
+    std::shared_ptr<glowl::Texture2D>& out_texture_ptr, int width, int height, float* data) {
+
+    if (data == nullptr)
+        return false;
+    try {
+        glowl::TextureLayout tex_layout(GL_RGBA32F, width, height, 1, GL_RGBA, GL_FLOAT, 1);
+        if (out_texture_ptr == nullptr) {
+            out_texture_ptr =
+                std::make_unique<glowl::Texture2D>("image_widget", tex_layout, static_cast<GLvoid*>(data), false);
+        } else {
+            // Reload data
+            out_texture_ptr->reload(tex_layout, static_cast<GLvoid*>(data), false);
+        }
+    } catch (glowl::TextureException& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Error during texture creation: '%s'. [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__,
+            __LINE__);
+        return false;
+    }
+    return true;
+}
+
+
+bool RenderUtils::CreateShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_ptr, const std::string& vertex_code,
+    const std::string& fragment_code) {
+
+    std::vector<std::pair<glowl::GLSLProgram::ShaderType, std::string>> shader_srcs;
+
+    if (!vertex_code.empty())
+        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Vertex, vertex_code});
+    if (!fragment_code.empty())
+        shader_srcs.push_back({glowl::GLSLProgram::ShaderType::Fragment, fragment_code});
+
+    try {
+        if (out_shader_ptr != nullptr)
+            out_shader_ptr.reset();
+        out_shader_ptr = std::make_unique<glowl::GLSLProgram>(shader_srcs);
+    } catch (glowl::GLSLProgramException const& exc) {
+        std::string debug_label;
+        if (out_shader_ptr != nullptr) {
+            debug_label = out_shader_ptr->getDebugLabel();
+        }
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Error during shader program creation of\"%s\": %s. [%s, %s, line %d]\n ", debug_label.c_str(),
+            exc.what(), __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    return true;
+}
+
+
+// LOCAL functions -------------------------------------------------------
+
+
 RenderUtils::RenderUtils()
         : smooth(true), init_once(false), vertex_array(0), textures(), queues(), shaders(), buffers() {}
 
@@ -16,7 +106,7 @@ RenderUtils::RenderUtils()
 RenderUtils::~RenderUtils() {}
 
 
-bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFactory& factory) {
+bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFactory& shader_factory) {
 
     if (this->init_once) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
@@ -24,45 +114,60 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
     }
 
     // Create shaders
-    std::string vertShaderCode = this->getShaderCode(factory, "primitives::points::vertex");
-    std::string fragShaderCode = this->getShaderCode(factory, "primitives::points::fragment");
-    if (!this->createShader(this->shaders[Primitives::POINTS], &vertShaderCode, &fragShaderCode)) {
+    if (!this->createShader(this->shaders[Primitives::POINTS], shader_factory, "primitives::points::vertex",
+            "primitives::points::fragment")) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Failed to create point shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    this->shaders[Primitives::POINTS]->bindAttribLocation(Buffers::POSITION, "inPosition");
+    this->shaders[Primitives::POINTS]->bindAttribLocation(Buffers::COLOR, "inColor");
+    this->shaders[Primitives::POINTS]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
+    this->shaders[Primitives::POINTS]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
 
-    vertShaderCode = this->getShaderCode(factory, "primitives::lines::vertex");
-    fragShaderCode = this->getShaderCode(factory, "primitives::lines::fragment");
-    if (!this->createShader(this->shaders[Primitives::LINES], &vertShaderCode, &fragShaderCode)) {
+    if (!this->createShader(this->shaders[Primitives::LINES], shader_factory, "primitives::lines::vertex",
+            "primitives::lines::fragment")) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Failed to create line shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    this->shaders[Primitives::LINES]->bindAttribLocation(Buffers::POSITION, "inPosition");
+    this->shaders[Primitives::LINES]->bindAttribLocation(Buffers::COLOR, "inColor");
+    this->shaders[Primitives::LINES]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
+    this->shaders[Primitives::LINES]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
 
-    vertShaderCode = this->getShaderCode(factory, "primitives::quads::vertex");
-    fragShaderCode = this->getShaderCode(factory, "primitives::quads::fragment");
-    if (!this->createShader(this->shaders[Primitives::QUADS], &vertShaderCode, &fragShaderCode)) {
+    if (!this->createShader(this->shaders[Primitives::QUADS], shader_factory, "primitives::quads::vertex",
+            "primitives::quads::fragment")) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Failed to create quad shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    this->shaders[Primitives::QUADS]->bindAttribLocation(Buffers::POSITION, "inPosition");
+    this->shaders[Primitives::QUADS]->bindAttribLocation(Buffers::COLOR, "inColor");
+    this->shaders[Primitives::QUADS]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
+    this->shaders[Primitives::QUADS]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
 
-    vertShaderCode = this->getShaderCode(factory, "primitives::color_texture::vertex");
-    fragShaderCode = this->getShaderCode(factory, "primitives::color_texture::fragment");
-    if (!this->createShader(this->shaders[Primitives::COLOR_TEXTURE], &vertShaderCode, &fragShaderCode)) {
+    if (!this->createShader(this->shaders[Primitives::COLOR_TEXTURE], shader_factory,
+            "primitives::color_texture::vertex", "primitives::color_texture::fragment")) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Failed to create color texture shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocation(Buffers::POSITION, "inPosition");
+    this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocation(Buffers::COLOR, "inColor");
+    this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
+    this->shaders[Primitives::COLOR_TEXTURE]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
 
-    vertShaderCode = this->getShaderCode(factory, "primitives::depth_texture::vertex");
-    fragShaderCode = this->getShaderCode(factory, "primitives::depth_texture::fragment");
-    if (!this->createShader(this->shaders[Primitives::DEPTH_TEXTURE], &vertShaderCode, &fragShaderCode)) {
+    if (!this->createShader(this->shaders[Primitives::DEPTH_TEXTURE], shader_factory,
+            "primitives::depth_texture::vertex", "primitives::depth_texture::fragment")) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "Failed to create depth texture shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::POSITION, "inPosition");
+    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::COLOR, "inColor");
+    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::TEXTURE_COORD, "inTexture");
+    this->shaders[Primitives::DEPTH_TEXTURE]->bindAttribLocation(Buffers::ATTRIBUTES, "inAttributes");
 
     // Create buffers
     this->buffers[Buffers::POSITION] =
@@ -100,64 +205,37 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
     glDisableVertexAttribArray(Buffers::ATTRIBUTES);
 
     this->init_once = true;
-
+ 
     return true;
 }
 
 
-bool RenderUtils::LoadTextureFromFile(std::wstring filename, GLuint& out_texture_id) {
+bool RenderUtils::LoadTextureFromFile(GLuint& out_texture_id, const std::string& filename, bool reload) {
+
+    if (reload) {
+        auto texture_iter = std::find_if(this->textures.begin(), this->textures.end(), [&out_texture_id](std::shared_ptr<glowl::Texture2D> tex_ptr) {
+                return (tex_ptr->getName() == out_texture_id); });
+        if (texture_iter != this->textures.end()) {
+            if (RenderUtils::LoadTextureFromFile(*texture_iter, filename)) {
+                return true;
+            }
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "Unable to reload texture. Texture with given id does not exist. [%s, %s, line %d]\n", __FILE__,
+                __FUNCTION__, __LINE__);
+        }
+    } else {
+        this->textures.push_back(nullptr);
+        if (RenderUtils::LoadTextureFromFile(this->textures.back(), filename)) {
+            out_texture_id = this->textures.back()->getName();
+            return true;
+        } else {
+            this->textures.pop_back();
+        }
+    }
 
     out_texture_id = 0;
-
-    this->textures.emplace_back(std::make_unique<TextureType>());
-    auto texture = this->textures.back();
-
-    vislib::graphics::BitmapImage img;
-    sg::graphics::PngBitmapCodec pbc;
-    pbc.Image() = &img;
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    BYTE* buf = nullptr;
-    size_t size = 0;
-
-    /// megamol::core::utility::ResourceWrapper::LoadResource(this->GetCoreInstance()->Configuration(), filename,
-    /// (void**)(&buf)))
-    if ((size = this->loadRawFile(filename, &buf)) <= 0) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Could not find texture \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
-        ARY_SAFE_DELETE(buf);
-        return false;
-    }
-
-    if (pbc.Load((void*) buf, size)) {
-
-        img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
-
-        if (texture->Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "Could not load texture \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
-                __LINE__);
-            ARY_SAFE_DELETE(buf);
-            return false;
-        }
-
-        // Additional texture options
-        texture->Bind();
-        /// glGenerateMipmap(GL_TEXTURE_2D);
-        /// texture->SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
-        texture->SetFilter(GL_LINEAR, GL_LINEAR);
-        texture->SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        ARY_SAFE_DELETE(buf);
-        out_texture_id = texture->GetId();
-    } else {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Could not read texture \"%s\". [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__, __LINE__);
-        ARY_SAFE_DELETE(buf);
-        return false;
-    }
-
-    return true;
+    return false;
 }
 
 
@@ -274,6 +352,30 @@ void RenderUtils::Push2DDepthTexture(GLuint texture_id, const glm::vec3& pos_bot
 }
 
 
+unsigned int RenderUtils::GetTextureWidth(GLuint texture_id) const {
+
+    unsigned int texture_width = 0;
+    auto texture_iter = std::find_if(this->textures.begin(), this->textures.end(),
+        [&texture_id](std::shared_ptr<glowl::Texture2D> tex_ptr) { return (tex_ptr->getName() == texture_id); });
+    if (texture_iter != this->textures.end()) {
+        texture_width = (*texture_iter)->getWidth();
+    }
+    return texture_width;
+}
+
+
+unsigned int RenderUtils::GetTextureHeight(GLuint texture_id) const {
+
+    unsigned int texture_height = 0;
+    auto texture_iter = std::find_if(this->textures.begin(), this->textures.end(),
+        [&texture_id](std::shared_ptr<glowl::Texture2D> tex_ptr) { return (tex_ptr->getName() == texture_id); });
+    if (texture_iter != this->textures.end()) {
+        texture_height = (*texture_iter)->getHeight();
+    }
+    return texture_height;
+}
+
+
 void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& mat_mvp, glm::vec2 dim_vp) {
 
     if (!this->init_once) {
@@ -338,18 +440,18 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
     }
 
     glBindVertexArray(this->vertex_array);
-    this->shaders[primitive].Enable();
+    this->shaders[primitive]->use();
 
     if (texture_id != 0) {
         glEnable(GL_TEXTURE_2D);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture_id);
-        glUniform1i(this->shaders[primitive].ParameterLocation("tex"), static_cast<GLint>(0));
+        glUniform1i(this->shaders[primitive]->getUniformLocation("tex"), static_cast<GLint>(0));
     }
 
-    glUniform1i(this->shaders[primitive].ParameterLocation("apply_smooth"), static_cast<GLint>(this->smooth));
-    glUniform2fv(this->shaders[primitive].ParameterLocation("viewport"), 1, glm::value_ptr(dim_vp));
-    glUniformMatrix4fv(this->shaders[primitive].ParameterLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mat_mvp));
+    glUniform1i(this->shaders[primitive]->getUniformLocation("apply_smooth"), static_cast<GLint>(this->smooth));
+    glUniform2fv(this->shaders[primitive]->getUniformLocation("viewport"), 1, glm::value_ptr(dim_vp));
+    glUniformMatrix4fv(this->shaders[primitive]->getUniformLocation("mvp"), 1, GL_FALSE, glm::value_ptr(mat_mvp));
 
     glDrawArrays(mode, 0, count);
 
@@ -358,7 +460,7 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
         glDisable(GL_TEXTURE_2D);
     }
 
-    this->shaders[primitive].Disable();
+    glUseProgram(0);
     glBindVertexArray(0);
 
     // Reset OpenGL state --------------------------------------------------
@@ -424,49 +526,6 @@ void RenderUtils::sortPrimitiveQueue(Primitives primitive) {
 }
 
 
-bool RenderUtils::createShader(vislib::graphics::gl::GLSLShader& shader, const std::string* const vertex_code,
-    const std::string* const fragment_code) {
-
-    try {
-        shader.Release();
-        if (!shader.Compile(vertex_code->c_str(), fragment_code->c_str())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "Unable to compile shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-        shader.BindAttribute(Buffers::POSITION, "inPosition");
-        shader.BindAttribute(Buffers::COLOR, "inColor");
-        shader.BindAttribute(Buffers::TEXTURE_COORD, "inTexture");
-        shader.BindAttribute(Buffers::ATTRIBUTES, "inAttributes");
-        if (!shader.Link()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
-                "Unable to link shader. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Unable to create shader. Unknown error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-
-    return true;
-}
-
-
-const std::string RenderUtils::getShaderCode(
-    megamol::core::utility::ShaderSourceFactory& factory, std::string snippet_name) {
-
-    vislib::graphics::gl::ShaderSource source;
-    if (!factory.MakeShaderSource(snippet_name.c_str(), source)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "Failed to make vertex shader source. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return std::string("");
-    }
-    return std::string(source.WholeCode().PeekBuffer());
-}
-
-
 size_t RenderUtils::loadRawFile(std::wstring filename, BYTE** outData) {
 
     // Reset out data
@@ -510,6 +569,30 @@ size_t RenderUtils::loadRawFile(std::wstring filename, BYTE** outData) {
 
     return num;
 }
+
+
+bool RenderUtils::createShader(std::shared_ptr<glowl::GLSLProgram>& out_shader_ptr,
+    megamol::core::utility::ShaderSourceFactory& shader_factory, const std::string& vertex_btf_snipprt,
+    const std::string& fragment_btf_snippet) {
+
+    vislib::graphics::gl::ShaderSource source;
+    if (!shader_factory.MakeShaderSource(vertex_btf_snipprt.c_str(), source)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Failed to make vertex shader source. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    auto vertex_code = std::string(source.WholeCode().PeekBuffer());
+
+    if (!shader_factory.MakeShaderSource(fragment_btf_snippet.c_str(), source)) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Failed to make fragment shader source. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    auto fragment_code = std::string(source.WholeCode().PeekBuffer());
+
+    return RenderUtils::CreateShader(out_shader_ptr, vertex_code, fragment_code);
+}
+
 
 
 void RenderUtils::pushQuad(Primitives primitive, GLuint texture_id, const glm::vec3& pos_bottom_left,

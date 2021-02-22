@@ -70,7 +70,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender3D_2& call);
+    bool GetExtents(core::view::CallRender3DGL& call);
 
     /**
      * The render callback.
@@ -79,7 +79,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender3D_2& call);
+    bool Render(core::view::CallRender3DGL& call);
 
 private:
     double m_cursor_x, m_cursor_y;

@@ -74,7 +74,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender2D& call) override;
+    bool GetExtents(core::view::CallRender2DGL& call) override;
 
     /**
      * The OpenGL Render callback.
@@ -82,9 +82,9 @@ protected:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender2D& call) override;
+    bool Render(core::view::CallRender2DGL& call) override;
 
-    bool handleCall(core::view::CallRender2D& call);
+    bool handleCall(core::view::CallRender2DGL& call);
 
     bool OnMouseButton(
         core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;

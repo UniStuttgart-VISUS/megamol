@@ -11,7 +11,7 @@
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/api/MegaMolCore.std.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/RendererModule.h"
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -23,9 +23,9 @@ namespace view {
 /**
  * Renderer responsible for the rendering of the currently active bounding box as well as the view cube etc.
  * This is a special renderer without the typical structure of other renderers, since it does not inherit from
- * Renderer3DModule_2.
+ * Renderer3DModuleGL.
  */
-class MEGAMOLCORE_API BoundingBoxRenderer : public view::RendererModule<CallRender3D_2> {
+class MEGAMOLCORE_API BoundingBoxRenderer : public view::RendererModule<CallRender3DGL> {
 public:
     /**
      * Answer the name of this module.
@@ -74,7 +74,7 @@ private:
      * @param call The call containing all relevant parameters
      * @return True on success, false otherwise
      */
-    virtual bool GetExtents(core::view::CallRender3D_2& call) override;
+    virtual bool GetExtents(core::view::CallRender3DGL& call) override;
 
     /*
      * Renders the bounding box and the viewcube on top of the other rendered things
@@ -82,7 +82,7 @@ private:
      * @param call The call containing the camera and other parameters
      * @return True on success, false otherwise
      */
-    virtual bool Render(core::view::CallRender3D_2& call) override final;
+    virtual bool Render(core::view::CallRender3DGL& call) override final;
 
     /**
      * Render function for the bounding box front
@@ -110,7 +110,7 @@ private:
      * @param call The call containing the camera and other parameters
      * @return True on success, false otherwise.
      */
-    bool RenderViewCube(core::view::CallRender3D_2& call);
+    bool RenderViewCube(core::view::CallRender3DGL& call);
 
     /** Parameter that enables or disables the bounding box rendering */
     param::ParamSlot enableBoundingBoxSlot;
