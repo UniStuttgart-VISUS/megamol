@@ -808,7 +808,7 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
 
     // GRID
     if (ImGui::BeginMenu("Grid")) {
-        ImGui::MenuItem("Show/Hide", nullptr, &this->show_grid);
+        ImGui::MenuItem("Show", nullptr, &this->show_grid);
         ImGui::EndMenu();
     }
     ImGui::Separator();
