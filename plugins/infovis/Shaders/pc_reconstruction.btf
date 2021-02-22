@@ -56,4 +56,14 @@
         <snippet name="body" type="file">pc_reconstruction4_f.glsl</snippet>
     </shader>
 
+    <shader name="vert5">
+        <snippet type="version">430</snippet>
+        <snippet name="body" type="file">pc_reconstruction5_v.glsl</snippet>
+    </shader>
+
+    <shader name="frag5">
+        <snippet type="version">430</snippet>
+        <snippet name="body" type="file">pc_reconstruction5_f.glsl</snippet>
+    </shader>
+
 </btf>

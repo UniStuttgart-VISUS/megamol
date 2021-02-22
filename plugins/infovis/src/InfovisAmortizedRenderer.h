@@ -66,7 +66,7 @@ namespace infovis {
 
     private:
         // required Shaders for different kinds of reconstruction
-        std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction_shdr_array[5];
+        std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction_shdr_array[6];
         vislib::graphics::gl::ShaderSource vertex_shader_src;
         vislib::graphics::gl::ShaderSource fragment_shader_src;
 
