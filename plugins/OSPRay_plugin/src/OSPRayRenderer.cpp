@@ -60,9 +60,8 @@ bool OSPRayRenderer::create() {
 ospray::OSPRayRenderer::release
 */
 void OSPRayRenderer::release() {
-
+    this->clearOSPRayStuff();
     ospShutdown();
-
 }
 
 /*
@@ -70,7 +69,7 @@ ospray::OSPRayRenderer::Render
 */
 bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
     this->initOSPRay();
-    
+
     // if user wants to switch renderer
     if (this->_rd_type.IsDirty()) {
         //ospRelease(_camera);
@@ -326,9 +325,6 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         //auto dvce_ = ospGetCurrentDevice();
         //auto error_ = std::string(ospDeviceGetLastErrorMsg(dvce_));
         //megamol::core::utility::log::Log::DefaultLog.WriteError(std::string("OSPRAY last ERROR: " + error_).c_str());
-
-        this->releaseOSPRayStuff();
-
 
     } else {
         _framebuffer->renderFrame(*_renderer, *_camera, *_world);
