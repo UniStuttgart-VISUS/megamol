@@ -230,9 +230,6 @@ private:
     /** Option for forwarding mouse and keyboard events to both child views */
     param::ParamSlot _inputToBothSlot;
 
-    /** The override call */
-    CallRenderViewGL* _overrideCall;
-
     vislib::math::Rectangle<float> _clientArea;
 
     vislib::math::Rectangle<float> _clientArea1;
