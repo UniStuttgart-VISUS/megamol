@@ -102,7 +102,7 @@ bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inou
                         ImGui::SameLine();
 
                         // Presentation option
-                        Parameter::OptionButton(
+                        ButtonWidgets::OptionButton(
                             "param_groups", "", (group_widget_data->GetGUIPresentation() != Present_t::Basic));
                         if (ImGui::BeginPopupContextItem("param_present_button_context", 0)) {
                             for (auto& present_name_pair : group_widget_data->GetPresentationNameMap()) {

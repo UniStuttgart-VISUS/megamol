@@ -1421,7 +1421,7 @@ void megamol::gui::Graph::Present(megamol::gui::Graph& inout_graph, GraphState_t
             }
 
             // Draw -----------------------------
-            this->present_menu(inout_graph);
+            this->draw_menu(inout_graph);
 
             if (megamol::gui::gui_scaling.PendingChange()) {
                 this->parameter_sidebar_width *= megamol::gui::gui_scaling.TransitonFactor();
@@ -1466,14 +1466,14 @@ void megamol::gui::Graph::Present(megamol::gui::Graph& inout_graph, GraphState_t
             }
             if (font_ptr != nullptr) {
                 ImGui::PushFont(font_ptr);
-                this->present_canvas(inout_graph, graph_width_auto);
+                this->draw_canvas(inout_graph, graph_width_auto);
                 ImGui::PopFont();
             } else {
                 throw std::invalid_argument("Pointer to font is nullptr.");
             }
             if (this->show_parameter_sidebar) {
                 ImGui::SameLine();
-                this->present_parameters(inout_graph, this->parameter_sidebar_width);
+                this->draw_parameters(inout_graph, this->parameter_sidebar_width);
             }
 
             state.graph_selected_uid = inout_graph.uid;
@@ -1936,7 +1936,7 @@ void megamol::gui::Graph::Present(megamol::gui::Graph& inout_graph, GraphState_t
 }
 
 
-void megamol::gui::Graph::present_menu(megamol::gui::Graph& inout_graph) {
+void megamol::gui::Graph::draw_menu(megamol::gui::Graph& inout_graph) {
 
     ImGuiStyle& style = ImGui::GetStyle();
     auto button_size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
@@ -2135,7 +2135,7 @@ void megamol::gui::Graph::present_menu(megamol::gui::Graph& inout_graph) {
 }
 
 
-void megamol::gui::Graph::present_canvas(megamol::gui::Graph& inout_graph, float graph_width) {
+void megamol::gui::Graph::draw_canvas(megamol::gui::Graph& inout_graph, float graph_width) {
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -2185,7 +2185,7 @@ void megamol::gui::Graph::present_canvas(megamol::gui::Graph& inout_graph, float
 
     // GRID --------------------------------------
     if (this->show_grid) {
-        this->present_canvas_grid();
+        this->draw_canvas_grid();
     }
     ImGui::PopStyleVar(2);
 
@@ -2272,10 +2272,10 @@ void megamol::gui::Graph::present_canvas(megamol::gui::Graph& inout_graph, float
     }
 
     // Multiselection ----------------------------
-    this->present_canvas_multiselection(inout_graph);
+    this->draw_canvas_multiselection(inout_graph);
 
     // Dragged CALL ------------------------------
-    this->present_canvas_dragged_call(inout_graph);
+    this->draw_canvas_dragged_call(inout_graph);
 
     ImGui::PopClipRect();
 
@@ -2345,7 +2345,7 @@ void megamol::gui::Graph::present_canvas(megamol::gui::Graph& inout_graph, float
 }
 
 
-void megamol::gui::Graph::present_parameters(megamol::gui::Graph& inout_graph, float graph_width) {
+void megamol::gui::Graph::draw_parameters(megamol::gui::Graph& inout_graph, float graph_width) {
 
     ImGui::BeginGroup();
 
@@ -2465,7 +2465,7 @@ void megamol::gui::Graph::present_parameters(megamol::gui::Graph& inout_graph, f
 }
 
 
-void megamol::gui::Graph::present_canvas_grid(void) {
+void megamol::gui::Graph::draw_canvas_grid(void) {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -2490,7 +2490,7 @@ void megamol::gui::Graph::present_canvas_grid(void) {
 }
 
 
-void megamol::gui::Graph::present_canvas_dragged_call(megamol::gui::Graph& inout_graph) {
+void megamol::gui::Graph::draw_canvas_dragged_call(megamol::gui::Graph& inout_graph) {
 
     if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
         if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE)) {
@@ -2564,7 +2564,7 @@ void megamol::gui::Graph::present_canvas_dragged_call(megamol::gui::Graph& inout
 }
 
 
-void megamol::gui::Graph::present_canvas_multiselection(Graph& inout_graph) {
+void megamol::gui::Graph::draw_canvas_multiselection(Graph& inout_graph) {
 
     bool no_graph_item_selected = ((this->graph_state.interact.callslot_selected_uid == GUI_INVALID_ID) &&
                                    (this->graph_state.interact.call_selected_uid == GUI_INVALID_ID) &&

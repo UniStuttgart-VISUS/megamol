@@ -196,7 +196,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         float font_size = ImGui::CalcTextSize(label.c_str()).x;
         ImGui::SetCursorPosX(cursor_pos.x + (knob_size - font_size) / 2.0f);
         ImGui::TextUnformatted(label.c_str());
-        Parameter::KnobButton(
+        ButtonWidgets::KnobButton(
             label, knob_size, time, param_time->GetMinValue<float>(), param_time->GetMaxValue<float>());
         ImGui::Text(param_time->FloatFormat().c_str(), time);
         ImGui::EndGroup();
@@ -208,7 +208,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         font_size = ImGui::CalcTextSize(label.c_str()).x;
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (knob_size - font_size) / 2.0f);
         ImGui::TextUnformatted(label.c_str());
-        Parameter::KnobButton(
+        ButtonWidgets::KnobButton(
             label, knob_size, speed, param_speed->GetMinValue<float>(), param_speed->GetMaxValue<float>());
         ImGui::Text(param_speed->FloatFormat().c_str(), speed);
         ImGui::EndGroup();

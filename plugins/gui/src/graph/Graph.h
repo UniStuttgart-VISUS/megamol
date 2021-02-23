@@ -44,8 +44,6 @@ namespace gui {
 
     class Graph {
     public:
-        // friend class GraphPresentation;
-
         enum QueueAction {
             ADD_MODULE,
             DELETE_MODULE,
@@ -63,14 +61,6 @@ namespace gui {
             std::string caller = "";     // Requierd for ADD_CALL, DELETE_CALL
             std::string callee = "";     // Requierd for ADD_CALL, DELETE_CALL
         };
-
-        // VARIABLES --------------------------------------------------------------
-
-        const ImGuiID uid;
-        std::string name;
-        GraphPresentation present;
-
-        // FUNCTIONS --------------------------------------------------------------
 
         Graph(const std::string& graph_name, GraphCoreInterface core_interface);
         ~Graph(void);
@@ -150,6 +140,9 @@ namespace gui {
 
         // VARIABLES --------------------------------------------------------------
 
+        const ImGuiID uid;
+        std::string name;
+
         ModulePtrVector_t modules;
         CallPtrVector_t calls;
         GroupPtrVector_t groups;
@@ -158,9 +151,9 @@ namespace gui {
         SyncQueue_t sync_queue;
         GraphCoreInterface graph_core_interface;
 
-
         // GUI --------------------------------------------------------------
 
+        megamol::gui::GraphItemsState_t graph_state; /// State propagated and shared by all graph items.
         bool update;
         bool show_grid;
         bool show_call_label;
@@ -168,6 +161,9 @@ namespace gui {
         bool show_slot_label;
         bool show_module_label;
         bool show_parameter_sidebar;
+        bool params_visible;
+        bool params_readonly;
+        bool param_extended_mode;
         bool change_show_parameter_sidebar;
         unsigned int graph_layout;
         float parameter_sidebar_width;
@@ -181,24 +177,14 @@ namespace gui {
         bool multiselect_done;
         bool canvas_hovered;
         float current_font_scaling;
-        // State propagated and shared by all graph items.
-        megamol::gui::GraphItemsState_t graph_state;
-
-        // Widgets
         StringSearchWidget search_widget;
         SplitterWidget splitter_widget;
         RenamePopUp rename_popup;
         HoverToolTip tooltip;
 
-        bool params_visible;
-        bool params_readonly;
-        bool param_extended_mode;
-
-
         // FUNCTIONS --------------------------------------------------------------
 
         /*
-
 
         void ForceUpdate(void) {
             this->update = true;
@@ -244,13 +230,15 @@ namespace gui {
         }
 
         */
-        void present_menu(Graph& inout_graph);
-        void present_canvas(Graph& inout_graph, float child_width);
-        void present_parameters(Graph& inout_graph, float child_width);
 
-        void present_canvas_grid(void);
-        void present_canvas_dragged_call(Graph& inout_graph);
-        void present_canvas_multiselection(Graph& inout_graph);
+
+        void draw_menu(Graph& inout_graph);
+        void draw_canvas(Graph& inout_graph, float child_width);
+        void draw_parameters(Graph& inout_graph, float child_width);
+
+        void draw_canvas_grid(void);
+        void draw_canvas_dragged_call(Graph& inout_graph);
+        void draw_canvas_multiselection(Graph& inout_graph);
 
         void layout_graph(Graph& inout_graph);
         void layout(const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, ImVec2 init_position);

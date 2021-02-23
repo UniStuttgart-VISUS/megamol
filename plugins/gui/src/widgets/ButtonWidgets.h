@@ -15,6 +15,7 @@
 namespace megamol {
 namespace gui {
 
+    class Parameter;
 
     /**
      * Different button widgets.
