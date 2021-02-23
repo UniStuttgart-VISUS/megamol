@@ -48,7 +48,7 @@ ImGuiID megamol::gui::GraphCollection::AddGraph(GraphCoreInterface graph_core_in
         GraphPtr_t graph_ptr = std::make_shared<Graph>(this->generate_unique_graph_name(), graph_core_interface);
         if (graph_ptr != nullptr) {
             this->graphs.emplace_back(graph_ptr);
-            retval = graph_ptr->uid;
+            retval = graph_ptr->UID();
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[GUI] Added graph %s' (uid %i). \n", graph_ptr->name.c_str(), graph_ptr->uid);
@@ -71,7 +71,7 @@ ImGuiID megamol::gui::GraphCollection::AddGraph(GraphCoreInterface graph_core_in
 bool megamol::gui::GraphCollection::DeleteGraph(ImGuiID in_graph_uid) {
 
     for (auto iter = this->graphs.begin(); iter != this->graphs.end(); iter++) {
-        if ((*iter)->uid == in_graph_uid) {
+        if ((*iter)->UID() == in_graph_uid) {
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                 "[GUI] Deleted graph %s' (uid %i). \n", (*iter)->name.c_str(), (*iter)->uid);
@@ -96,7 +96,7 @@ bool megamol::gui::GraphCollection::GetGraph(ImGuiID in_graph_uid, megamol::gui:
 
     if (in_graph_uid != GUI_INVALID_ID) {
         for (auto& graph_ptr : this->graphs) {
-            if (graph_ptr->uid == in_graph_uid) {
+            if (graph_ptr->UID() == in_graph_uid) {
                 out_graph_ptr = graph_ptr;
                 return true;
             }

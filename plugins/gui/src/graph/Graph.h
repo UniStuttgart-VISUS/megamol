@@ -134,6 +134,53 @@ namespace gui {
 
         void Draw(GraphState_t& state);
 
+        inline const ImGuiID UID(void) const {
+            return this->uid;
+        };
+
+        void ForceUpdate(void) {
+            this->gui_update = true;
+        }
+        void ResetStatePointers(void) {
+            this->gui_graph_state.interact.callslot_compat_ptr.reset();
+            this->gui_graph_state.interact.interfaceslot_compat_ptr.reset();
+        }
+
+        ImGuiID GetHoveredGroup(void) const {
+            return this->gui_graph_state.interact.group_hovered_uid;
+        }
+        ImGuiID GetSelectedGroup(void) const {
+            return this->gui_graph_state.interact.group_selected_uid;
+        }
+        ImGuiID GetSelectedCallSlot(void) const {
+            return this->gui_graph_state.interact.callslot_selected_uid;
+        }
+        ImGuiID GetSelectedInterfaceSlot(void) const {
+            return this->gui_graph_state.interact.interfaceslot_selected_uid;
+        }
+        ImGuiID GetDropSlot(void) const {
+            return this->gui_graph_state.interact.slot_dropped_uid;
+        }
+        bool GetModuleLabelVisibility(void) const {
+            return this->gui_show_module_label;
+        }
+        bool GetSlotLabelVisibility(void) const {
+            return this->gui_show_slot_label;
+        }
+        bool GetCallLabelVisibility(void) const {
+            return this->gui_show_call_label;
+        }
+        bool GetCallSlotLabelVisibility(void) const {
+            return this->gui_show_call_slots_label;
+        }
+        bool IsCanvasHoverd(void) const {
+            return this->gui_canvas_hovered;
+        }
+
+        void SetLayoutGraph(bool l = true) {
+            this->gui_graph_layout = ((l) ? (1) : (0));
+        }
+
     private:
         typedef std::tuple<QueueAction, QueueData> SyncQueueData_t;
         typedef std::queue<SyncQueueData_t> SyncQueue_t;
@@ -151,86 +198,36 @@ namespace gui {
         SyncQueue_t sync_queue;
         GraphCoreInterface graph_core_interface;
 
-        // GUI --------------------------------------------------------------
-
-        megamol::gui::GraphItemsState_t graph_state; /// State propagated and shared by all graph items.
-        bool update;
-        bool show_grid;
-        bool show_call_label;
-        bool show_call_slots_label;
-        bool show_slot_label;
-        bool show_module_label;
-        bool show_parameter_sidebar;
-        bool params_visible;
-        bool params_readonly;
-        bool param_extended_mode;
-        bool change_show_parameter_sidebar;
-        unsigned int graph_layout;
-        float parameter_sidebar_width;
-        bool reset_zooming;
-        bool increment_zooming;
-        bool decrement_zooming;
-        std::string param_name_space;
-        std::string current_graph_entry_name;
-        ImVec2 multiselect_start_pos;
-        ImVec2 multiselect_end_pos;
-        bool multiselect_done;
-        bool canvas_hovered;
-        float current_font_scaling;
-        StringSearchWidget search_widget;
-        SplitterWidget splitter_widget;
-        RenamePopUp rename_popup;
-        HoverToolTip tooltip;
+        megamol::gui::GraphItemsState_t gui_graph_state; /// State propagated and shared by all graph items
+        bool gui_update;
+        bool gui_show_grid;
+        bool gui_show_call_label;
+        bool gui_show_call_slots_label;
+        bool gui_show_slot_label;
+        bool gui_show_module_label;
+        bool gui_show_parameter_sidebar;
+        bool gui_params_visible;
+        bool gui_params_readonly;
+        bool gui_param_extended_mode;
+        bool gui_change_show_parameter_sidebar;
+        unsigned int gui_graph_layout;
+        float gui_parameter_sidebar_width;
+        bool gui_reset_zooming;
+        bool gui_increment_zooming;
+        bool gui_decrement_zooming;
+        std::string gui_param_name_space;
+        std::string gui_current_graph_entry_name;
+        ImVec2 gui_multiselect_start_pos;
+        ImVec2 gui_multiselect_end_pos;
+        bool gui_multiselect_done;
+        bool gui_canvas_hovered;
+        float gui_current_font_scaling;
+        StringSearchWidget gui_search_widget;
+        SplitterWidget gui_splitter_widget;
+        RenamePopUp gui_rename_popup;
+        HoverToolTip gui_tooltip;
 
         // FUNCTIONS --------------------------------------------------------------
-
-        /*
-
-        void ForceUpdate(void) {
-            this->update = true;
-        }
-        void ResetStatePointers(void) {
-            this->graph_state.interact.callslot_compat_ptr.reset();
-            this->graph_state.interact.interfaceslot_compat_ptr.reset();
-        }
-
-        ImGuiID GetHoveredGroup(void) const {
-            return this->graph_state.interact.group_hovered_uid;
-        }
-        ImGuiID GetSelectedGroup(void) const {
-            return this->graph_state.interact.group_selected_uid;
-        }
-        ImGuiID GetSelectedCallSlot(void) const {
-            return this->graph_state.interact.callslot_selected_uid;
-        }
-        ImGuiID GetSelectedInterfaceSlot(void) const {
-            return this->graph_state.interact.interfaceslot_selected_uid;
-        }
-        ImGuiID GetDropSlot(void) const {
-            return this->graph_state.interact.slot_dropped_uid;
-        }
-        bool GetModuleLabelVisibility(void) const {
-            return this->show_module_label;
-        }
-        bool GetSlotLabelVisibility(void) const {
-            return this->show_slot_label;
-        }
-        bool GetCallLabelVisibility(void) const {
-            return this->show_call_label;
-        }
-        bool GetCallSlotLabelVisibility(void) const {
-            return this->show_call_slots_label;
-        }
-        bool IsCanvasHoverd(void) const {
-            return this->canvas_hovered;
-        }
-
-        void SetLayoutGraph(bool l = true) {
-            this->graph_layout = ((l) ? (1) : (0));
-        }
-
-        */
-
 
         void draw_menu(Graph& inout_graph);
         void draw_canvas(Graph& inout_graph, float child_width);
