@@ -73,11 +73,14 @@ namespace gui {
         bool GetModuleLabelVisibility(void) const {
             return this->show_module_label;
         }
-        bool GetCallSlotLabelVisibility(void) const {
+        bool GetSlotLabelVisibility(void) const {
             return this->show_slot_label;
         }
         bool GetCallLabelVisibility(void) const {
             return this->show_call_label;
+        }
+        bool GetCallSlotLabelVisibility(void) const {
+            return this->show_call_slots_label;
         }
         bool IsCanvasHoverd(void) const {
             return this->canvas_hovered;
