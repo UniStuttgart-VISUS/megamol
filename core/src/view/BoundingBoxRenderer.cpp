@@ -182,16 +182,10 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
     std::shared_ptr<const view::AbstractView> viewptr =
         std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
 
-    Camera_2 cam;
-    call.GetCamera(cam);
+    Camera cam = call.GetCamera();
 
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewT, projT;
-
-    cam.calc_matrices(snapshot, viewT, projT);
-
-    glm::mat4 view = viewT;
-    glm::mat4 proj = projT;
+    glm::mat4 view = cam.getViewMatrix();
+    glm::mat4 proj = cam.getProjectionMatrix();
     glm::mat4 mvp = proj * view;
 
     if (viewptr != nullptr) {

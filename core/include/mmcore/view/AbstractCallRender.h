@@ -15,7 +15,7 @@
 #include "mmcore/view/InputCall.h"
 #include "vislib/Array.h"
 #include "mmcore/BoundingBoxes_2.h"
-#include "mmcore/view/Camera_2.h"
+#include "mmcore/view/Camera.h"
 
 
 
@@ -210,7 +210,7 @@ namespace view {
          *
          * @return A camera object containing the minimal state transferred by this call.
          */
-        inline const Camera_2 GetCamera(void) const {
+        inline const Camera GetCamera(void) const {
             return this->_camera;
         }
 
@@ -221,7 +221,7 @@ namespace view {
          *
          * @param cam The camera object the transferred state is stored in
          */
-        inline void GetCamera(Camera_2& cam) const {
+        inline void GetCamera(Camera& cam) const {
             cam = this->_camera;
         }
 
@@ -231,7 +231,7 @@ namespace view {
          *
          * @param camera The camera the state is adapted from.
          */
-        inline void SetCamera(Camera_2& camera) {
+        inline void SetCamera(Camera const& camera) {
             this->_camera = camera;
         }
 
@@ -272,7 +272,7 @@ namespace view {
         glm::vec4 _backgroundCol;
 
         /** The transferred camera state */
-        Camera_2 _camera;
+        Camera _camera;
 
 
         /** The bounding boxes */
