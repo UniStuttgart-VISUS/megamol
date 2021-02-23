@@ -9,7 +9,8 @@
 #define MEGAMOL_GUI_GRAPH_CALL_H_INCLUDED
 
 
-#include "CallPresentation.h"
+#include "GUIUtils.h"
+#include "widgets/HoverToolTip.h"
 
 
 namespace megamol {
@@ -50,7 +51,6 @@ namespace gui {
         // VARIABLES --------------------------------------------------------------
 
         const ImGuiID uid;
-        CallPresentation present;
 
         // Init when adding call from stock
         std::string class_name;
@@ -68,11 +68,9 @@ namespace gui {
         bool DisconnectCallSlots(ImGuiID calling_callslot_uid = GUI_INVALID_ID);
         const CallSlotPtr_t& GetCallSlot(CallSlotType type);
 
-        // Presentation ----------------------------------------------------
+        // Presentation -------------------------
 
-        inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsState_t& state) {
-            this->present.Present(phase, *this, state);
-        }
+        void Present(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
 
         const std::string GetSlotsLabel(void);
 
@@ -80,6 +78,13 @@ namespace gui {
         // VARIABLES --------------------------------------------------------------
 
         std::map<CallSlotType, CallSlotPtr_t> connected_callslots;
+
+        // Presentation -------------------------
+
+        bool selected;
+        bool label_visible;
+        bool slots_visible;
+        HoverToolTip tooltip;
     };
 
 

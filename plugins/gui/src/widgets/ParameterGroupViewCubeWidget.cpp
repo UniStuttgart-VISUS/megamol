@@ -17,7 +17,7 @@ using namespace megamol::gui;
 
 // *** Pickable Cube ******************************************************** //
 
-megamol::gui::PickableCube::PickableCube(void) : shader(nullptr), render_utils() {}
+megamol::gui::PickableCube::PickableCube(void) : shader(nullptr) {}
 
 
 bool megamol::gui::PickableCube::Draw(unsigned int id, int& inout_view_index, int& inout_orientation_index,

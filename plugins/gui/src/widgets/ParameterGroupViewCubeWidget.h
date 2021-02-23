@@ -32,7 +32,6 @@ namespace gui {
 
     private:
         std::shared_ptr<glowl::GLSLProgram> shader;
-        megamol::core::view::RenderUtils render_utils;
     };
 
 
