@@ -9,7 +9,12 @@
 #define MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
 
 
-#include "GroupPresentation.h"
+#include "GUIUtils.h"
+#include "widgets/RenamePopUp.h"
+
+#include "Call.h"
+#include "InterfaceSlot.h"
+#include "Module.h"
 
 
 namespace megamol {
@@ -29,25 +34,15 @@ namespace gui {
      */
     class Group {
     public:
-        // VARIABLES --------------------------------------------------------------
-
-        const ImGuiID uid;
-        GroupPresentation present;
-
-        // Init when adding group to graph
-        std::string name;
-
-        // FUNCTIONS --------------------------------------------------------------
-
         Group(ImGuiID uid);
         ~Group();
 
         bool AddModule(const ModulePtr_t& module_ptr);
         bool RemoveModule(ImGuiID module_uid);
         bool ContainsModule(ImGuiID module_uid);
-        inline const ModulePtrVector_t& GetModules(void) {
-            return this->modules;
-        }
+        // inline const ModulePtrVector_t& GetModules(void) {
+        //    return this->modules;
+        //}
         inline bool Empty(void) {
             return (this->modules.empty());
         }
@@ -67,23 +62,38 @@ namespace gui {
 
         void RestoreInterfaceslots(void);
 
-        // Presentation ----------------------------------------------------
+        void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
+        void UpdatePositionSize(const GraphCanvas_t& in_canvas);
+        void SetPosition(const GraphCanvas_t& in_canvas, ImVec2 pos);
 
-        inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsState_t& state) {
-            this->present.Present(phase, *this, state);
+        inline ImVec2 Size(void) {
+            return this->gui_size;
         }
-        inline void UpdateGUI(const GraphCanvas_t& in_canvas) {
-            this->present.UpdatePositionSize(*this, in_canvas);
+        inline bool IsViewCollapsed(void) {
+            return this->gui_collapsed_view;
         }
-        inline void SetGUIPosition(const GraphCanvas_t& in_canvas, ImVec2 pos) {
-            this->present.SetPosition(*this, in_canvas, pos);
+        inline void ForceUpdate(void) {
+            this->gui_update = true;
         }
 
     private:
         // VARIABLES --------------------------------------------------------------
 
+        const ImGuiID uid;
+
+        std::string name;
+
         ModulePtrVector_t modules;
         InterfaceSlotPtrMap_t interfaceslots;
+
+        ImVec2 gui_position; /// Relative position without considering canvas offset and zooming
+        ImVec2 gui_size;     /// Relative size without considering zooming
+        bool gui_collapsed_view;
+        bool gui_allow_selection;
+        bool gui_allow_context;
+        bool gui_selected;
+        bool gui_update;
+        RenamePopUp gui_rename_popup;
     };
 
 

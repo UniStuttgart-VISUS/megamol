@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "widgets/ParameterGroupAnimationWidget.h"
-#include "graph/ParameterGroupsPresentation.h"
+#include "graph/ParameterGroups.h"
 
 
 using namespace megamol;
@@ -82,7 +82,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
 
         if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
 
-            ParameterGroupsPresentation::DrawGroupedParameters(
+            ParameterGroups::DrawGroupedParameters(
                 this->name, params, in_module_fullname, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
 
             return true;

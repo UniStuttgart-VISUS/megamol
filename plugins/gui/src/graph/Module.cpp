@@ -28,6 +28,8 @@ megamol::gui::Module::Module(ImGuiID uid, const std::string& class_name, const s
         , is_view(false)
         , name("")
         , graph_entry_name("")
+        , group_uid(GUI_INVALID_ID)
+        , group_name("")
         , gui_label_visible()
         , gui_position(ImVec2(FLT_MAX, FLT_MAX))
         , gui_param_groups()
@@ -37,9 +39,7 @@ megamol::gui::Module::Module(ImGuiID uid, const std::string& class_name, const s
         , gui_param_child_show(false)
         , gui_set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
         , gui_set_selected_slot_position(false)
-        , gui_group_uid(GUI_INVALID_ID)
         , gui_group_visible(false)
-        , gui_group_name("")
         , gui_tooltip()
         , gui_rename_popup() {
 
@@ -199,8 +199,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
         }
 
         // Check if module and call slots are visible
-        bool visible = (this->gui_group_uid == GUI_INVALID_ID) ||
-                       ((this->gui_group_uid != GUI_INVALID_ID) && this->gui_group_visible);
+        bool visible =
+            (this->group_uid == GUI_INVALID_ID) || ((this->group_uid != GUI_INVALID_ID) && this->gui_group_visible);
         for (auto& callslots_map : this->GetCallSlots()) {
             for (auto& callslot_ptr : callslots_map.second) {
                 callslot_ptr->SetVisible(visible);
@@ -308,8 +308,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                             }
                             ImGui::EndMenu();
                         }
-                        if (ImGui::MenuItem(
-                                "Remove from Group", nullptr, false, (this->gui_group_uid != GUI_INVALID_ID))) {
+                        if (ImGui::MenuItem("Remove from Group", nullptr, false, (this->group_uid != GUI_INVALID_ID))) {
                             state.interact.modules_remove_group_uids.clear();
                             if (this->gui_selected) {
                                 for (auto& module_uid : state.interact.modules_selected_uids) {

@@ -7,7 +7,7 @@
 
 #include "stdafx.h"
 #include "widgets/ParameterGroupViewCubeWidget.h"
-#include "graph/ParameterGroupsPresentation.h"
+#include "graph/ParameterGroups.h"
 
 
 using namespace megamol;
@@ -314,7 +314,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
         if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
             // LOCAL
 
-            ParameterGroupsPresentation::DrawGroupedParameters(
+            ParameterGroups::DrawGroupedParameters(
                 this->name, params, in_module_fullname, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
 
             return true;
@@ -330,7 +330,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
         if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
             // LOCAL
 
-            ParameterGroupsPresentation::DrawGroupedParameters(
+            ParameterGroups::DrawGroupedParameters(
                 this->name, params, "", in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
 
             return true;

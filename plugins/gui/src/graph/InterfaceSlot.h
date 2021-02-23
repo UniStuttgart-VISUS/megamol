@@ -73,6 +73,12 @@ namespace gui {
         void SetPosition(ImVec2 pos) {
             this->gui_position = pos;
         }
+        inline void SetGroupViewCollapsed(bool collapsed) {
+            this->gui_group_collapsed_view = collapsed;
+        }
+        inline void SetGroupUID(ImGuiID uid) {
+            this->group_uid = uid;
+        }
 
     private:
         // VARIABLES --------------------------------------------------------------

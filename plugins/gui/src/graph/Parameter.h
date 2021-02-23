@@ -8,8 +8,12 @@
 #ifndef MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
 #define MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
 
-
-#include "ParameterPresentation.h"
+#include "GUIUtils.h"
+#include "widgets/FileBrowserWidget.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/ImageWidget_gl.h"
+#include "widgets/ParameterOrbitalWidget.h"
+#include "widgets/TransferFunctionEditor.h"
 
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
@@ -50,8 +54,14 @@ namespace gui {
     /** ************************************************************************
      * Defines parameter data structure for graph.
      */
-    class Parameter {
+    class Parameter : public megamol::core::param::AbstractParamPresentation {
     public:
+        /*
+         * Globally scoped widgets (widget parts) are always called each frame.
+         * Locally scoped widgets (widget parts) are only called if respective parameter appears in GUI.
+         */
+        enum WidgetScope { GLOBAL, LOCAL };
+
         typedef std::variant<std::monostate, // default  BUTTON
             bool,                            // BOOL
             float,                           // FLOAT
@@ -102,21 +112,9 @@ namespace gui {
             Present_t gui_presentation;
         };
 
-        // VARIABLES --------------------------------------------------------------
+        Parameter(ImGuiID uid, Param_t type, Stroage_t store, Min_t minval, Max_t maxval, const std::string& full_name,
+            const std::string& description);
 
-        const ImGuiID uid;
-        const Param_t type;
-        ParameterPresentation present;
-
-        // Init when adding parameter from stock
-        std::string full_name;
-        std::string description;
-
-        vislib::SmartPtr<megamol::core::param::AbstractParam> core_param_ptr;
-
-        // FUNCTIONS --------------------------------------------------------------
-
-        Parameter(ImGuiID uid, Param_t type, Stroage_t store, Min_t minval, Max_t maxval);
         ~Parameter(void);
 
         bool IsValueDirty(void) {
@@ -199,6 +197,14 @@ namespace gui {
 
         // SET ----------------------------------
 
+        inline void SetName(const std::string& name) {
+            this->full_name = name;
+        }
+
+        inline void SetDescription(const std::string& desc) {
+            this->description = desc;
+        }
+
         bool SetValueString(const std::string& val_str, bool set_default_val = false, bool set_dirty = true);
 
         template<typename T>
@@ -276,23 +282,112 @@ namespace gui {
             }
         }
 
-        // Presentation ----------------------------------------------------
+        // GUI ----------------------------------
 
-        inline bool PresentGUI(ParameterPresentation::WidgetScope scope, const std::string& module_fullname) {
-            return this->present.Present(*this, scope, module_fullname);
+        bool Draw(WidgetScope scope, const std::string& module_fullname);
+
+        bool IsGUIStateDirty(void) {
+            return this->gui_state_dirty;
         }
+        void ResetGUIStateDirty(void) {
+            this->gui_state_dirty = false;
+        }
+        void ForceSetGUIStateDirty(void) {
+            this->gui_state_dirty = true;
+        }
+
+        void SetTransferFunctionEditorHash(size_t hash) {
+            this->tf_editor_hash = hash;
+        }
+        inline void ConnectExternalTransferFunctionEditor(
+            std::shared_ptr<megamol::gui::TransferFunctionEditor> tfe_ptr) {
+            this->tf_editor_external_ptr = tfe_ptr;
+        }
+        void LoadTransferFunctionTexture(
+            std::vector<float>& in_texture_data, int& in_texture_width, int& in_texture_height);
+
+        // Custom Buttons
+
+        /** "Point in Circle" Button for additional drop down Options. */
+        static bool OptionButton(const std::string& id, const std::string& label = "", bool dirty = false);
+
+        /** Knob button for 'circular' float value manipulation. */
+        static bool KnobButton(const std::string& id, float size, float& inout_value, float minval, float maxval);
+
+        /** Extended parameter mode button. */
+        static bool ParameterExtendedModeButton(const std::string& id, bool& inout_extended_mode);
+
+        /** Lua parameter command copy button. */
+        static bool LuaButton(const std::string& id, const megamol::gui::Parameter& param,
+            const std::string& param_fullname, const std::string& module_fullname);
 
     private:
         // VARIABLES --------------------------------------------------------------
+
+        const ImGuiID uid;
+        const Param_t type;
+        std::string full_name;
+        std::string description;
+
+        vislib::SmartPtr<megamol::core::param::AbstractParam> core_param_ptr;
 
         Min_t minval;
         Max_t maxval;
         Stroage_t storage;
         Value_t value;
-        size_t tf_string_hash;
+
         Value_t default_value;
         bool default_value_mismatch;
         bool value_dirty;
+
+        bool gui_extended;
+        const std::string gui_float_format;
+        std::string gui_help;
+        std::string gui_tooltip_text;
+        std::variant<std::monostate, std::string, int, float, glm::vec2, glm::vec3, glm::vec4> gui_widget_store;
+        unsigned int gui_set_focus;
+        bool gui_state_dirty;
+        bool gui_show_minmax;
+        FileBrowserWidget gui_file_browser;
+        HoverToolTip gui_tooltip;
+        ImageWidget gui_image_widget;
+        ParameterOrbitalWidget gui_rotation_widget;
+
+        size_t tf_string_hash;
+        std::shared_ptr<megamol::gui::TransferFunctionEditor> tf_editor_external_ptr;
+        megamol::gui::TransferFunctionEditor tf_editor_inplace;
+        bool tf_use_external_editor;
+        bool tf_show_editor;
+        size_t tf_editor_hash;
+
+        // FUNCTIONS ----------------------------------------------------------
+
+        bool draw_parameter(WidgetScope scope);
+
+        bool widget_button(WidgetScope scope, const std::string& label, const megamol::core::view::KeyCode& keycode);
+        bool widget_bool(WidgetScope scope, const std::string& label, bool& value);
+        bool widget_string(WidgetScope scope, const std::string& label, std::string& value);
+        bool widget_color(WidgetScope scope, const std::string& label, glm::vec4& value);
+        bool widget_enum(WidgetScope scope, const std::string& label, int& value, EnumStorage_t storage);
+        bool widget_flexenum(WidgetScope scope, const std::string& label, std::string& value,
+            megamol::core::param::FlexEnumParam::Storage_t storage);
+        bool widget_filepath(WidgetScope scope, const std::string& label, std::string& value);
+        bool widget_ternary(WidgetScope scope, const std::string& label, vislib::math::Ternary& value);
+        bool widget_int(WidgetScope scope, const std::string& label, int& value, int minval, int maxval);
+        bool widget_float(WidgetScope scope, const std::string& label, float& value, float minval, float maxval);
+        bool widget_vector2f(
+            WidgetScope scope, const std::string& label, glm::vec2& value, glm::vec2 minval, glm::vec2 maxval);
+        bool widget_vector3f(
+            WidgetScope scope, const std::string& label, glm::vec3& value, glm::vec3 minval, glm::vec3 maxval);
+        bool widget_vector4f(
+            WidgetScope scope, const std::string& label, glm::vec4& value, glm::vec4 minval, glm::vec4 maxval);
+        bool widget_pinvaluetomouse(WidgetScope scope, const std::string& label, const std::string& value);
+        bool widget_transfer_function_editor(WidgetScope scope);
+        bool widget_knob(WidgetScope scope, const std::string& label, float& value, float minval, float maxval);
+        bool widget_rotation_axes(
+            WidgetScope scope, const std::string& label, glm::vec4& value, glm::vec4 minval, glm::vec4 maxval);
+        bool widget_rotation_direction(
+            WidgetScope scope, const std::string& label, glm::vec3& value, glm::vec3 minval, glm::vec3 maxval);
     };
 
 

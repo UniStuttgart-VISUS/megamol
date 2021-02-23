@@ -14,7 +14,7 @@
 #include "widgets/RenamePopUp.h"
 
 #include "CallSlot.h"
-#include "ParameterGroupsPresentation.h"
+#include "ParameterGroups.h"
 
 
 namespace megamol {
@@ -49,6 +49,8 @@ namespace gui {
             std::map<CallSlotType, std::vector<CallSlot::StockCallSlot>> callslots;
         };
 
+        static ImVec2 GetDefaultModulePosition(const GraphCanvas_t& canvas);
+
         Module(ImGuiID uid, const std::string& class_name, const std::string& description,
             const std::string& plugin_name, const ParamVector_t& parameters);
         ~Module();
@@ -69,8 +71,8 @@ namespace gui {
 
         const inline std::string FullName(void) const {
             std::string fullname = "::" + this->name;
-            if (!this->gui_group_name.empty()) {
-                fullname = "::" + this->gui_group_name + fullname;
+            if (!this->group_name.empty()) {
+                fullname = "::" + this->group_name + fullname;
             }
             return fullname;
         }
@@ -91,10 +93,23 @@ namespace gui {
             return this->gui_size;
         }
         inline ImGuiID GroupUID(void) const {
-            return this->gui_group_uid;
+            return this->group_uid;
         }
         inline bool IsLabelVisible(void) const {
             return this->gui_label_visible;
+        }
+
+        inline void SetGroupUID(ImGuiID uid) {
+            this->group_uid = uid;
+        }
+        inline void SetGroupVisible(bool visible) {
+            this->gui_group_visible = visible;
+        }
+        inline void SetGroupName(const std::string& name) {
+            this->group_name = name;
+        }
+        inline void SetPosition(ImVec2 pos) {
+            this->gui_position = pos;
         }
 
     private:
@@ -111,25 +126,25 @@ namespace gui {
         bool is_view;
         std::string name;
         std::string graph_entry_name;
+        ImGuiID group_uid;
+        std::string group_name;
 
         bool gui_label_visible;
         ImVec2 gui_position; /// Relative position without considering canvas offset and zooming
-        ParameterGroupsPresentation gui_param_groups;
+        ParameterGroups gui_param_groups;
         ImVec2 gui_size; /// Relative size without considering zooming
         bool gui_selected;
         bool gui_update;
         bool gui_param_child_show;
         ImVec2 gui_set_screen_position;
         bool gui_set_selected_slot_position;
-        ImGuiID gui_group_uid;
         bool gui_group_visible;
-        std::string gui_group_name;
+
         HoverToolTip gui_tooltip;
         RenamePopUp gui_rename_popup;
 
         // FUNCTIONS --------------------------------------------------------------
 
-        static ImVec2 GetDefaultModulePosition(const GraphCanvas_t& canvas);
 
         void SetSelectedSlotPosition(void) {
             this->gui_set_selected_slot_position = true;
