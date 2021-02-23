@@ -390,8 +390,8 @@ bool megamol::gui::Graph::AddCall(
         call_ptr->description = call_stock_data.description;
         call_ptr->plugin_name = call_stock_data.plugin_name;
         call_ptr->functions = call_stock_data.functions;
-        call_ptr->present.label_visible = this->present.GetCallLabelVisibility();
-        call_ptr->present.slots_visible = this->present.GetCallSlotLabelVisibility();
+        call_ptr->gui_label_visible = this->present.GetCallLabelVisibility();
+        call_ptr->gui_slots_visible = this->present.GetCallSlotLabelVisibility();
 
         return this->AddCall(call_ptr, callslot_1, callslot_2);
 
@@ -484,16 +484,14 @@ bool megamol::gui::Graph::AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1,
             ImGuiID slot_1_parent_group_uid = callslot_1->GetParentModule()->present.group.uid;
             ImGuiID slot_2_parent_group_uid = callslot_2->GetParentModule()->present.group.uid;
             if (slot_1_parent_group_uid != slot_2_parent_group_uid) {
-                if ((slot_1_parent_group_uid != GUI_INVALID_ID) &&
-                    (callslot_1->present.group.interfaceslot_ptr == nullptr)) {
+                if ((slot_1_parent_group_uid != GUI_INVALID_ID) && (callslot_1->gui_interfaceslot_ptr == nullptr)) {
                     for (auto& group_ptr : this->groups) {
                         if (group_ptr->uid == slot_1_parent_group_uid) {
                             group_ptr->AddInterfaceSlot(callslot_1);
                         }
                     }
                 }
-                if ((slot_2_parent_group_uid != GUI_INVALID_ID) &&
-                    (callslot_2->present.group.interfaceslot_ptr == nullptr)) {
+                if ((slot_2_parent_group_uid != GUI_INVALID_ID) && (callslot_2->gui_interfaceslot_ptr == nullptr)) {
                     for (auto& group_ptr : this->groups) {
                         if (group_ptr->uid == slot_2_parent_group_uid) {
                             group_ptr->AddInterfaceSlot(callslot_2);
@@ -528,14 +526,14 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                 auto callee = call_ptr->GetCallSlot(CallSlotType::CALLEE);
                 if (caller != nullptr) {
                     caller_uid = caller->uid;
-                    if (caller->present.group.interfaceslot_ptr != nullptr) {
-                        caller_uid = caller->present.group.interfaceslot_ptr->uid;
+                    if (caller->gui_interfaceslot_ptr != nullptr) {
+                        caller_uid = caller->gui_interfaceslot_ptr->uid;
                     }
                 }
                 if (callee != nullptr) {
                     callee_uid = callee->uid;
-                    if (callee->present.group.interfaceslot_ptr != nullptr) {
-                        callee_uid = callee->present.group.interfaceslot_ptr->uid;
+                    if (callee->gui_interfaceslot_ptr != nullptr) {
+                        callee_uid = callee->gui_interfaceslot_ptr->uid;
                     }
                 }
             }
@@ -547,15 +545,15 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                 auto caller = call_ptr->GetCallSlot(CallSlotType::CALLER);
                 auto callee = call_ptr->GetCallSlot(CallSlotType::CALLEE);
                 if (caller != nullptr) {
-                    if (caller->present.group.interfaceslot_ptr != nullptr) {
-                        caller_fits = (caller_uid == caller->present.group.interfaceslot_ptr->uid);
+                    if (caller->gui_interfaceslot_ptr != nullptr) {
+                        caller_fits = (caller_uid == caller->gui_interfaceslot_ptr->uid);
                     } else {
                         caller_fits = (caller_uid == caller->uid);
                     }
                 }
                 if (callee != nullptr) {
-                    if (callee->present.group.interfaceslot_ptr != nullptr) {
-                        callee_fits = (callee_uid == callee->present.group.interfaceslot_ptr->uid);
+                    if (callee->gui_interfaceslot_ptr != nullptr) {
+                        callee_fits = (callee_uid == callee->gui_interfaceslot_ptr->uid);
                     } else {
                         callee_fits = (callee_uid == callee->uid);
                     }
@@ -790,7 +788,7 @@ void megamol::gui::Graph::Clear(void) {
     // 2) Delete all calls
     std::vector<ImGuiID> call_uids;
     for (auto& call_ptr : this->calls) {
-        call_uids.emplace_back(call_ptr->uid);
+        call_uids.emplace_back(call_ptr->GetID());
     }
     for (auto& call_uid : call_uids) {
         this->DeleteCall(call_uid);
@@ -971,13 +969,13 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                         if (megamol::core::utility::get_json_value<bool>(
                                 graph_state, {"show_call_label"}, &this->present.show_call_label)) {
                             for (auto& call : this->GetCalls()) {
-                                call->present.label_visible = this->present.show_call_label;
+                                call->gui_label_visible = this->present.show_call_label;
                             }
                         }
                         if (megamol::core::utility::get_json_value<bool>(
                                 graph_state, {"show_call_slots_label"}, &this->present.show_call_slots_label)) {
                             for (auto& call : this->GetCalls()) {
-                                call->present.slots_visible = this->present.show_call_slots_label;
+                                call->gui_slots_visible = this->present.show_call_slots_label;
                             }
                         }
                         if (megamol::core::utility::get_json_value<bool>(

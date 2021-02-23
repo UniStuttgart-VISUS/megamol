@@ -9,7 +9,8 @@
 #define MEGAMOL_GUI_GRAPH_INTERFACESLOT_H_INCLUDED
 
 
-#include "InterfaceSlotPresentation.h"
+#include "GUIUtils.h"
+#include "widgets/HoverToolTip.h"
 
 
 namespace megamol {
@@ -36,13 +37,6 @@ namespace gui {
      */
     class InterfaceSlot {
     public:
-        // VARIABLES --------------------------------------------------------------
-
-        const ImGuiID uid;
-        InterfaceSlotPresentation present;
-
-        // FUNCTIONS --------------------------------------------------------------
-
         InterfaceSlot(ImGuiID uid, bool auto_create);
         ~InterfaceSlot();
 
@@ -62,20 +56,42 @@ namespace gui {
             return this->auto_created;
         }
 
-        // Presentation ----------------------------------------------------
+        void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
 
-        inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsState_t& state) {
-            this->present.Present(phase, *this, state);
+        inline std::string Label(void) const {
+            return this->gui_label;
         }
-        inline ImVec2 GetGUIPosition(void) {
-            return this->present.GetPosition(*this);
+        inline const ImGuiID UID(void) const {
+            return this->uid;
+        };
+        ImVec2 Position(void);
+
+        inline bool IsGroupViewCollapsed(void) const {
+            return this->gui_group_collapsed_view;
+        }
+
+        void SetPosition(ImVec2 pos) {
+            this->gui_position = pos;
         }
 
     private:
         // VARIABLES --------------------------------------------------------------
 
+        const ImGuiID uid;
+
         bool auto_created;
         CallSlotPtrVector_t callslots;
+        ImGuiID group_uid;
+
+        bool gui_selected;
+        std::string gui_label;
+        ImGuiID gui_last_compat_callslot_uid;
+        ImGuiID gui_last_compat_interface_uid;
+        bool gui_compatible;
+        ImVec2 gui_position; /// Absolute position including canvas offset and zooming
+        bool gui_group_collapsed_view;
+        bool gui_label_visible;
+        HoverToolTip gui_tooltip;
 
         // FUNCTIONS --------------------------------------------------------------
 

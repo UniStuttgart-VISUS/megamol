@@ -769,13 +769,13 @@ void megamol::gui::GraphPresentation::present_menu(megamol::gui::Graph& inout_gr
     if (ImGui::BeginMenu("Calls")) {
         if (ImGui::MenuItem("Label", nullptr, &this->show_call_label)) {
             for (auto& call_ptr : inout_graph.GetCalls()) {
-                call_ptr->present.label_visible = this->show_call_label;
+                call_ptr->gui_label_visible = this->show_call_label;
             }
             this->update = true;
         }
         if (ImGui::MenuItem("Slots", nullptr, &this->show_call_slots_label)) {
             for (auto& call_ptr : inout_graph.GetCalls()) {
-                call_ptr->present.slots_visible = this->show_call_slots_label;
+                call_ptr->gui_slots_visible = this->show_call_slots_label;
             }
             this->update = true;
         }
@@ -1033,7 +1033,7 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
                             }
                             if (caller_group || callee_group) {
 
-                                call_ptr->PresentGUI(phase, this->graph_state);
+                                call_ptr->Draw(phase, this->graph_state);
                             }
                         }
                     }
@@ -1066,7 +1066,7 @@ void megamol::gui::GraphPresentation::present_canvas(megamol::gui::Graph& inout_
                 }
             }
             if ((!caller_group) && (!callee_group)) {
-                call_ptr->PresentGUI(phase, this->graph_state);
+                call_ptr->Draw(phase, this->graph_state);
             }
         }
     }
@@ -1756,9 +1756,8 @@ bool megamol::gui::GraphPresentation::connected_callslot(
                 retval = true;
                 break;
             }
-            if (connected_callslot_ptr->present.group.interfaceslot_ptr != nullptr) {
-                if (this->contains_interfaceslot(
-                        groups, connected_callslot_ptr->present.group.interfaceslot_ptr->uid)) {
+            if (connected_callslot_ptr->gui_interfaceslot_ptr != nullptr) {
+                if (this->contains_interfaceslot(groups, connected_callslot_ptr->gui_interfaceslot_ptr->uid)) {
                     retval = true;
                     break;
                 }
@@ -1783,9 +1782,8 @@ bool megamol::gui::GraphPresentation::connected_interfaceslot(
                     retval = true;
                     break;
                 }
-                if (connected_callslot_ptr->present.group.interfaceslot_ptr != nullptr) {
-                    if (this->contains_interfaceslot(
-                            groups, connected_callslot_ptr->present.group.interfaceslot_ptr->uid)) {
+                if (connected_callslot_ptr->gui_interfaceslot_ptr != nullptr) {
+                    if (this->contains_interfaceslot(groups, connected_callslot_ptr->gui_interfaceslot_ptr->uid)) {
                         retval = true;
                         break;
                     }

@@ -9,7 +9,8 @@
 #define MEGAMOL_GUI_GRAPH_CALLSLOT_H_INCLUDED
 
 
-#include "CallSlotPresentation.h"
+#include "GUIUtils.h"
+#include "widgets/HoverToolTip.h"
 
 
 namespace megamol {
@@ -49,20 +50,8 @@ namespace gui {
             CallSlotType type;
         };
 
-        // VARIABLES --------------------------------------------------------------
-
-        const ImGuiID uid;
-        CallSlotPresentation present;
-
-        // Init when adding call slot from stock
-        std::string name;
-        std::string description;
-        std::vector<size_t> compatible_call_idxs; // Storing only indices of compatible calls for faster comparison.
-        CallSlotType type;
-
-        // FUNCTIONS --------------------------------------------------------------
-
-        CallSlot(ImGuiID uid);
+        CallSlot(ImGuiID uid, const std::string& name, const std::string& description,
+            const std::vector<size_t>& compatible_call_idxs, CallSlotType type);
         ~CallSlot();
 
         bool CallsConnected(void) const;
@@ -82,20 +71,65 @@ namespace gui {
 
         bool IsConnectionValid(CallSlot& callslot);
 
-        // Presentation ----------------------------------------------------
+        void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
+        void Update(const GraphCanvas_t& in_canvas);
 
-        inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsState_t& state) {
-            this->present.Present(phase, *this, state);
+        inline bool IsVisible(void) const {
+            return this->gui_visible;
         }
-        inline void UpdateGUI(const GraphCanvas_t& in_canvas) {
-            this->present.Update(*this, in_canvas);
+        inline bool IsLabelVisible(void) const {
+            return this->gui_label_visible;
+        }
+        inline const ImGuiID UID(void) const {
+            return this->uid;
+        };
+        inline const std::string Name(void) const {
+            return this->name;
+        };
+        inline const CallSlotType Type(void) const {
+            return this->type;
+        };
+        inline InterfaceSlotPtr_t InterfaceSlotPtr(void) const {
+            return this->gui_interfaceslot_ptr;
+        }
+        inline ImVec2 Position(void) const {
+            return this->gui_position;
+        }
+        inline const std::vector<size_t> CompatibleCallIdxs(void) const {
+            return this->compatible_call_idxs;
+        }
+
+        void SetVisible(bool visible) {
+            this->gui_visible = visible;
+        }
+        void SetInterfaceSlotPtr(InterfaceSlotPtr_t interfaceslot_ptr) {
+            this->gui_interfaceslot_ptr = interfaceslot_ptr;
         }
 
     private:
         // VARIABLES --------------------------------------------------------------
 
+        const ImGuiID uid;
+        const std::string name;
+        const std::string description;
+        const std::vector<size_t>
+            compatible_call_idxs; // Storing only indices of compatible calls for faster comparison.
+        const CallSlotType type;
+
         ModulePtr_t parent_module;
         std::vector<CallPtr_t> connected_calls;
+
+        bool gui_visible;
+        bool gui_selected;
+        bool gui_label_visible;
+        ImVec2 gui_position; /// Absolute position including canvas offset and zooming
+        InterfaceSlotPtr_t gui_interfaceslot_ptr;
+        bool gui_update_once;
+        bool gui_show_modulestock;
+        ImGuiID gui_last_compat_callslot_uid;
+        ImGuiID gui_last_compat_interface_uid;
+        bool gui_compatible;
+        HoverToolTip gui_tooltip;
     };
 
 

@@ -48,43 +48,40 @@ namespace gui {
             std::vector<std::string> functions;
         };
 
-        // VARIABLES --------------------------------------------------------------
-
-        const ImGuiID uid;
-
-        // Init when adding call from stock
-        std::string class_name;
-        std::string description;
-        std::string plugin_name;
-        std::vector<std::string> functions;
-
-        // FUNCTIONS --------------------------------------------------------------
-
-        Call(ImGuiID uid);
+        Call(ImGuiID uid, const std::string& class_name, const std::string& description, const std::string& plugin_name,
+            const std::vector<std::string>& functions);
         ~Call();
 
         bool IsConnected(void);
         bool ConnectCallSlots(CallSlotPtr_t callslot_1, CallSlotPtr_t callslot_2);
         bool DisconnectCallSlots(ImGuiID calling_callslot_uid = GUI_INVALID_ID);
-        const CallSlotPtr_t& GetCallSlot(CallSlotType type);
+        const CallSlotPtr_t& CallSlotPtr(CallSlotType type);
 
-        // Presentation -------------------------
+        void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
 
-        void Present(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
-
-        const std::string GetSlotsLabel(void);
+        inline const ImGuiID UID(void) const {
+            return this->uid;
+        };
+        inline const std::string ClassName(void) const {
+            return this->class_name;
+        };
+        const std::string SlotsLabel(void);
 
     private:
         // VARIABLES --------------------------------------------------------------
 
+        const ImGuiID uid;
+        const std::string class_name;
+        const std::string description;
+        const std::string plugin_name;
+        const std::vector<std::string> functions;
+
         std::map<CallSlotType, CallSlotPtr_t> connected_callslots;
 
-        // Presentation -------------------------
-
-        bool selected;
-        bool label_visible;
-        bool slots_visible;
-        HoverToolTip tooltip;
+        bool gui_selected;
+        bool gui_label_visible;
+        bool gui_slots_visible;
+        HoverToolTip gui_tooltip;
     };
 
 
