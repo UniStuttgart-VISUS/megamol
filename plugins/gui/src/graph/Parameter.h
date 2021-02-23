@@ -9,6 +9,7 @@
 #define MEGAMOL_GUI_GRAPH_PARAMETER_H_INCLUDED
 
 #include "GUIUtils.h"
+#include "widgets/ButtonWidgets.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/ImageWidget_gl.h"
@@ -148,7 +149,15 @@ namespace gui {
 
         // Get ----------------------------------
 
-        std::string GetName(void) {
+        inline const ImGuiID UID(void) const {
+            return this->uid;
+        };
+
+        inline std::string GetFullName(void) const {
+            return this->full_name;
+        }
+
+        inline std::string GetName(void) const {
             std::string name = this->full_name;
             auto idx = this->full_name.rfind(':');
             if (idx != std::string::npos) {
@@ -156,7 +165,8 @@ namespace gui {
             }
             return name;
         }
-        std::string GetNameSpace(void) {
+
+        inline std::string GetNameSpace(void) const {
             std::string name_space = "";
             auto idx = this->full_name.rfind(':');
             if (idx != std::string::npos) {
@@ -195,6 +205,18 @@ namespace gui {
             return this->tf_string_hash;
         }
 
+        const Param_t Type(void) const {
+            return this->type;
+        }
+
+        const std::string FloatFormat(void) const {
+            return this->gui_float_format;
+        }
+
+        const bool IsExtended(void) const {
+            return this->gui_extended;
+        }
+
         // SET ----------------------------------
 
         inline void SetName(const std::string& name) {
@@ -229,7 +251,7 @@ namespace gui {
                             std::vector<float> texture_data;
                             if (megamol::core::param::TransferFunctionParam::GetTextureData(
                                     val, texture_data, texture_width, texture_height)) {
-                                this->present.LoadTransferFunctionTexture(texture_data, texture_width, texture_height);
+                                this->LoadTransferFunctionTexture(texture_data, texture_width, texture_height);
                             }
                             this->tf_string_hash = std::hash<std::string>()(val);
                         }
@@ -282,6 +304,10 @@ namespace gui {
             }
         }
 
+        inline void SetExtended(bool extended) {
+            this->gui_extended = extended;
+        }
+
         // GUI ----------------------------------
 
         bool Draw(WidgetScope scope, const std::string& module_fullname);
@@ -305,21 +331,6 @@ namespace gui {
         }
         void LoadTransferFunctionTexture(
             std::vector<float>& in_texture_data, int& in_texture_width, int& in_texture_height);
-
-        // Custom Buttons
-
-        /** "Point in Circle" Button for additional drop down Options. */
-        static bool OptionButton(const std::string& id, const std::string& label = "", bool dirty = false);
-
-        /** Knob button for 'circular' float value manipulation. */
-        static bool KnobButton(const std::string& id, float size, float& inout_value, float minval, float maxval);
-
-        /** Extended parameter mode button. */
-        static bool ParameterExtendedModeButton(const std::string& id, bool& inout_extended_mode);
-
-        /** Lua parameter command copy button. */
-        static bool LuaButton(const std::string& id, const megamol::gui::Parameter& param,
-            const std::string& param_fullname, const std::string& module_fullname);
 
     private:
         // VARIABLES --------------------------------------------------------------

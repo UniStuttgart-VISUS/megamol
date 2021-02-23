@@ -28,6 +28,12 @@
  * - Save Edited Project:       Ctrl + Shift + s
  * - Delete Graph Item:         Delete
  *
+ * ----- Graph -----
+ * - Selection, Drag & Drop:    Left Mouse Button
+ * - Context Menu:              Right Mouse Button
+ * - Zooming:                   Mouse Wheel
+ * - Scrolling:                 Ctrl  +  Left Mouse Button
+ *
  **/
 
 #define IMGUI_DEFINE_MATH_OPERATORS

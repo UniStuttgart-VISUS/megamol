@@ -14,7 +14,13 @@ using namespace megamol;
 using namespace megamol::gui;
 
 
-megamol::gui::GraphCollection::GraphCollection(void) : graphs(), modules_stock(), calls_stock(), graph_name_uid(0) {}
+megamol::gui::GraphCollection::GraphCollection(void)
+        : graphs()
+        , modules_stock()
+        , calls_stock()
+        , graph_name_uid(0)
+        , gui_file_browser()
+        , gui_graph_delete_uid(GUI_INVALID_ID) {}
 
 
 megamol::gui::GraphCollection::~GraphCollection(void) {}
@@ -326,7 +332,7 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
     if (this->AddUpdateProjectFromCore(valid_graph_id, core_instance, megamol_graph, false)) {
         inout_graph_uid = valid_graph_id;
         if (created_new_graph) {
-            graph_ptr->present.SetLayoutGraph();
+            graph_ptr->SetLayoutGraph();
             graph_ptr->ResetDirty();
         }
         return true;
@@ -456,7 +462,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                     /// XXX VIEW TEST
                     core::view::AbstractView* viewptr = dynamic_cast<core::view::AbstractView*>(module_ptr);
                     new_module_ptr->is_view = (viewptr != nullptr);
-                    new_module_ptr->present.label_visible = graph_ptr->present.GetModuleLabelVisibility();
+                    new_module_ptr->label_visible = graph_ptr->GetModuleLabelVisibility();
                 }
             }
             // Check for successfully created module
@@ -540,7 +546,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                         callslot_ptr->description = std::string(caller_slot->Description().PeekBuffer());
                         callslot_ptr->compatible_call_idxs = this->get_compatible_caller_idxs(caller_slot.get());
                         callslot_ptr->type = CallSlotType::CALLER;
-                        callslot_ptr->present.label_visible = graph_ptr->present.GetSlotLabelVisibility();
+                        callslot_ptr->label_visible = graph_ptr->GetSlotLabelVisibility();
                         callslot_ptr->ConnectParentModule(new_module_ptr);
 
                         new_module_ptr->AddCallSlot(callslot_ptr);
@@ -554,7 +560,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                     callslot_ptr->description = std::string(callee_slot->Description().PeekBuffer());
                     callslot_ptr->compatible_call_idxs = this->get_compatible_callee_idxs(callee_slot.get());
                     callslot_ptr->type = CallSlotType::CALLEE;
-                    callslot_ptr->present.label_visible = graph_ptr->present.GetSlotLabelVisibility();
+                    callslot_ptr->label_visible = graph_ptr->GetSlotLabelVisibility();
                     callslot_ptr->ConnectParentModule(new_module_ptr);
 
                     new_module_ptr->AddCallSlot(callslot_ptr);
@@ -1147,7 +1153,7 @@ ImGuiID megamol::gui::GraphCollection::LoadAddProjectFromFile(
         // Load gui state from file
         if (!this->load_state_from_file(project_filename, graph_ptr->uid)) {
             // Layout graph if no positions for modules could be found in state.
-            graph_ptr->present.SetLayoutGraph();
+            graph_ptr->SetLayoutGraph();
         }
         graph_ptr->ResetDirty();
 
@@ -1664,11 +1670,11 @@ std::string megamol::gui::GraphCollection::GetUpdatedGUIState(ImGuiID graph_id, 
         for (auto& module_ptr : graph_ptr->GetModules()) {
             std::string module_full_name = module_ptr->FullName();
             // Parameter Groups
-            module_ptr->present.param_groups.StateToJSON(state_json, module_full_name);
+            module_ptr->param_groups.StateToJSON(state_json, module_full_name);
             // Parameters
             for (auto& param : module_ptr->parameters) {
                 std::string param_full_name = module_full_name + "::" + param.full_name;
-                param.present.StateToJSON(state_json, param_full_name);
+                param.StateToJSON(state_json, param_full_name);
             }
         }
         state_str = state_json.dump(); // No line feed
@@ -1700,23 +1706,123 @@ bool megamol::gui::GraphCollection::load_state_from_file(const std::string& file
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 std::string module_full_name = module_ptr->FullName();
                 // Parameter Groups
-                module_ptr->present.param_groups.StateFromJSON(json, module_full_name);
+                module_ptr->param_groups.StateFromJSON(json, module_full_name);
                 // Parameters
                 for (auto& param : module_ptr->parameters) {
-                    std::string param_full_name = module_full_name + "::" + param.full_name;
-                    param.present.StateFromJSON(json, param_full_name);
-                    param.present.ForceSetGUIStateDirty();
+                    std::string param_full_name = module_full_name + "::" + param.GetFullName();
+                    param.StateFromJSON(json, param_full_name);
+                    param.ForceSetGUIStateDirty();
                 }
             }
 
             // Read GUI_JSON_TAG_PROJECT graph state
             if (graph_ptr->StateFromJSON(json)) {
                 // Disable layouting if graph state was found
-                graph_ptr->present.SetLayoutGraph(false);
+                graph_ptr->SetLayoutGraph(false);
             }
 
             return true;
         }
     }
     return false;
+}
+
+
+void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
+
+    try {
+        if (ImGui::GetCurrentContext() == nullptr) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[GUI] No ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            return;
+        }
+
+        const auto child_flags = ImGuiWindowFlags_None;
+        ImGui::BeginChild("graph_child_window", ImVec2(state.graph_width, 0.0f), true, child_flags);
+
+        // Assuming only one closed tab/graph per frame.
+        bool popup_close_unsaved = false;
+
+        // Draw Graphs
+        ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable;
+        ImGui::BeginTabBar("Graphs", tab_bar_flags);
+
+        for (auto& graph : this->GetGraphs()) {
+
+            // Draw graph
+            graph->Draw(state);
+
+            // Do not delete graph while looping through graphs list
+            if (state.graph_delete) {
+                this->gui_graph_delete_uid = state.graph_selected_uid;
+                if (graph->IsDirty()) {
+                    popup_close_unsaved = true;
+                }
+                state.graph_delete = false;
+            }
+
+            // Catch call drop event and create new call(s) ...
+            if (const ImGuiPayload* payload = ImGui::GetDragDropPayload()) {
+                if (payload->IsDataType(GUI_DND_CALLSLOT_UID_TYPE) && payload->IsDelivery()) {
+                    ImGuiID* dragged_slot_uid_ptr = (ImGuiID*) payload->Data;
+                    auto drag_slot_uid = (*dragged_slot_uid_ptr);
+                    auto drop_slot_uid = graph->GetDropSlot();
+                    graph->AddCall(this->GetCallsStock(), drag_slot_uid, drop_slot_uid);
+                }
+            }
+        }
+        ImGui::EndTabBar();
+
+        // Save selected graph in configurator
+        bool confirmed, aborted;
+        bool popup_failed = false;
+        std::string project_filename;
+        GraphPtr_t graph_ptr;
+        if (state.configurator_graph_save) {
+            if (this->GetGraph(state.graph_selected_uid, graph_ptr)) {
+                project_filename = graph_ptr->GetFilename();
+            }
+        }
+        vislib::math::Ternary save_gui_state(
+            vislib::math::Ternary::TRI_FALSE); // Default for option asking for saving gui state
+        if (this->gui_file_browser.PopUp(project_filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
+                state.configurator_graph_save, "lua", save_gui_state)) {
+
+            std::string gui_state;
+            if (save_gui_state.IsTrue()) {
+                gui_state = this->GetUpdatedGUIState(state.graph_selected_uid, project_filename);
+            }
+
+            popup_failed = !this->SaveProjectToFile(state.graph_selected_uid, project_filename, gui_state);
+        }
+        MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
+            confirmed, "Cancel", aborted);
+        state.configurator_graph_save = false;
+
+        // Delete selected graph when tab is closed and unsaved changes should be discarded.
+        confirmed = false;
+        aborted = false;
+        bool popup_open = MinimalPopUp::PopUp(
+            "Closing unsaved Project", popup_close_unsaved, "Discard changes?", "Yes", confirmed, "No", aborted);
+        if (this->gui_graph_delete_uid != GUI_INVALID_ID) {
+            if (aborted) {
+                this->gui_graph_delete_uid = GUI_INVALID_ID;
+            } else if (confirmed || !popup_open) {
+                this->DeleteGraph(this->gui_graph_delete_uid);
+                this->gui_graph_delete_uid = GUI_INVALID_ID;
+                state.graph_selected_uid = GUI_INVALID_ID;
+            }
+        }
+
+        ImGui::EndChild();
+
+    } catch (std::exception& e) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Error: %s [%s, %s, line %d]\n", e.what(), __FILE__, __FUNCTION__, __LINE__);
+        return;
+    } catch (...) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
 }

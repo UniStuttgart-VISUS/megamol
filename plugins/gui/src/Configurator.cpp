@@ -163,7 +163,7 @@ bool megamol::gui::Configurator::Draw(
             ImGui::SameLine();
         }
         // Graphs
-        this->graph_collection.PresentGUI(this->graph_state);
+        this->graph_collection.Draw(this->graph_state);
 
         // Process Pop-ups
         this->drawPopUps(core_instance);
@@ -291,7 +291,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
     CallSlotPtr_t selected_callslot_ptr;
     GraphPtr_t selected_graph_ptr;
     if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
-        auto callslot_id = selected_graph_ptr->present.GetSelectedCallSlot();
+        auto callslot_id = selected_graph_ptr->GetSelectedCallSlot();
         if (callslot_id != GUI_INVALID_ID) {
             for (auto& module_ptr : selected_graph_ptr->GetModules()) {
                 CallSlotPtr_t callslot_ptr;
@@ -300,7 +300,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                 }
             }
         }
-        auto interfaceslot_id = selected_graph_ptr->present.GetSelectedInterfaceSlot();
+        auto interfaceslot_id = selected_graph_ptr->GetSelectedInterfaceSlot();
         if (interfaceslot_id != GUI_INVALID_ID) {
             for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
                 InterfaceSlotPtr_t interfaceslot_ptr;
@@ -378,7 +378,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                                         added_call = selected_graph_ptr->AddCall(this->graph_collection.GetCallsStock(),
                                             selected_callslot_ptr, callslot_ptr);
                                         if (added_call) {
-                                            module_ptr->present.SetSelectedSlotPosition();
+                                            module_ptr->SetSelectedSlotPosition();
                                         }
                                     }
                                 }
@@ -386,7 +386,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                         }
                         // Place new module at mouse pos if added via separate module list child window.
                         else if (this->show_module_list_popup) {
-                            module_ptr->present.SetScreenPosition(ImGui::GetMousePos());
+                            module_ptr->SetScreenPosition(ImGui::GetMousePos());
                         }
 
                         // If there is a group selected or hoverd or the new call is connceted to module which is part
@@ -394,9 +394,9 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                         if (!interfaceslot_selected) {
                             ImGuiID connceted_group = GUI_INVALID_ID;
                             if (added_call && selected_callslot_ptr->IsParentModuleConnected()) {
-                                connceted_group = selected_callslot_ptr->GetParentModule()->present.group.uid;
+                                connceted_group = selected_callslot_ptr->GetParentModule()->group.uid;
                             }
-                            ImGuiID selected_group_uid = selected_graph_ptr->present.GetSelectedGroup();
+                            ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
                             ImGuiID group_uid = (connceted_group != GUI_INVALID_ID)
                                                     ? (connceted_group)
                                                     : ((selected_group_uid != GUI_INVALID_ID)
@@ -408,7 +408,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                                     if (group_ptr->uid == group_uid) {
                                         Graph::QueueData queue_data;
                                         queue_data.name_id = module_ptr->FullName();
-                                        selected_graph_ptr->present.ResetStatePointers();
+                                        selected_graph_ptr->ResetStatePointers();
                                         group_ptr->AddModule(module_ptr);
                                         queue_data.rename_id = module_ptr->FullName();
                                         selected_graph_ptr->PushSyncQueue(
@@ -510,7 +510,7 @@ bool megamol::gui::Configurator::StateFromJSON(const nlohmann::json& in_json) {
                 if (graph_ptr->HasCoreInterface()) {
                     if (graph_ptr->StateFromJSON(in_json)) {
                         // Disable layouting if graph state was found
-                        graph_ptr->present.SetLayoutGraph(false);
+                        graph_ptr->SetLayoutGraph(false);
                     }
                 }
             }
@@ -570,13 +570,13 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
     GraphPtr_t selected_graph_ptr;
     if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
 
-        ImGuiID selected_callslot_uid = selected_graph_ptr->present.GetSelectedCallSlot();
-        ImGuiID selected_group_uid = selected_graph_ptr->present.GetSelectedGroup();
+        ImGuiID selected_callslot_uid = selected_graph_ptr->GetSelectedCallSlot();
+        ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
 
-        bool valid_double_click = (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->present.IsCanvasHoverd() &&
+        bool valid_double_click = (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->IsCanvasHoverd() &&
                                    (selected_group_uid == GUI_INVALID_ID) && (!this->show_module_list_popup));
         bool valid_double_click_callslot =
-            (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->present.IsCanvasHoverd() &&
+            (ImGui::IsMouseDoubleClicked(0) && selected_graph_ptr->IsCanvasHoverd() &&
                 (selected_callslot_uid != GUI_INVALID_ID) &&
                 ((!this->show_module_list_popup) || (this->last_selected_callslot_uid != selected_callslot_uid)));
 
@@ -591,7 +591,7 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
         this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
         this->show_module_list_popup = true;
         this->module_list_popup_pos = ImGui::GetMousePos();
-        this->module_list_popup_hovered_group_uid = selected_graph_ptr->present.GetHoveredGroup();
+        this->module_list_popup_hovered_group_uid = selected_graph_ptr->GetHoveredGroup();
     }
     if (this->show_module_list_popup) {
 

@@ -242,15 +242,15 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Check(bool only_check, ParamPtr
     bool param_resetView = false;
     bool param_showCube = false;
     for (auto& param_ptr : params) {
-        if ((param_ptr->GetName() == "cubeOrientation") && (param_ptr->type == Param_t::VECTOR4F)) {
+        if ((param_ptr->GetName() == "cubeOrientation") && (param_ptr->Type() == Param_t::VECTOR4F)) {
             param_cubeOrientation = true;
-        } else if ((param_ptr->GetName() == "defaultView") && (param_ptr->type == Param_t::ENUM)) {
+        } else if ((param_ptr->GetName() == "defaultView") && (param_ptr->Type() == Param_t::ENUM)) {
             param_defaultView = true;
-        } else if ((param_ptr->GetName() == "defaultOrientation") && (param_ptr->type == Param_t::ENUM)) {
+        } else if ((param_ptr->GetName() == "defaultOrientation") && (param_ptr->Type() == Param_t::ENUM)) {
             param_defaultOrientation = true;
-        } else if ((param_ptr->GetName() == "resetView") && (param_ptr->type == Param_t::BUTTON)) {
+        } else if ((param_ptr->GetName() == "resetView") && (param_ptr->Type() == Param_t::BUTTON)) {
             param_resetView = true;
-        } else if ((param_ptr->GetName() == "showViewCube") && (param_ptr->type == Param_t::BOOL)) {
+        } else if ((param_ptr->GetName() == "showViewCube") && (param_ptr->Type() == Param_t::BOOL)) {
             param_showCube = true;
         }
     }
@@ -260,8 +260,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Check(bool only_check, ParamPtr
 
 
 bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, const std::string& in_module_fullname,
-    const std::string& in_search, megamol::gui::ParameterPresentation::WidgetScope in_scope,
-    PickingBuffer* inout_picking_buffer) {
+    const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -277,15 +276,15 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
     Parameter* param_showCube = nullptr;
     /// Find specific parameters of group by name because parameter type can occure multiple times.
     for (auto& param_ptr : params) {
-        if ((param_ptr->GetName() == "cubeOrientation") && (param_ptr->type == Param_t::VECTOR4F)) {
+        if ((param_ptr->GetName() == "cubeOrientation") && (param_ptr->Type() == Param_t::VECTOR4F)) {
             param_cubeOrientation = param_ptr;
-        } else if ((param_ptr->GetName() == "defaultView") && (param_ptr->type == Param_t::ENUM)) {
+        } else if ((param_ptr->GetName() == "defaultView") && (param_ptr->Type() == Param_t::ENUM)) {
             param_defaultView = param_ptr;
-        } else if ((param_ptr->GetName() == "defaultOrientation") && (param_ptr->type == Param_t::ENUM)) {
+        } else if ((param_ptr->GetName() == "defaultOrientation") && (param_ptr->Type() == Param_t::ENUM)) {
             param_defaultOrientation = param_ptr;
-        } else if ((param_ptr->GetName() == "resetView") && (param_ptr->type == Param_t::BUTTON)) {
+        } else if ((param_ptr->GetName() == "resetView") && (param_ptr->Type() == Param_t::BUTTON)) {
             param_resetView = param_ptr;
-        } else if ((param_ptr->GetName() == "showViewCube") && (param_ptr->type == Param_t::BOOL)) {
+        } else if ((param_ptr->GetName() == "showViewCube") && (param_ptr->Type() == Param_t::BOOL)) {
             param_showCube = param_ptr;
         }
     }
@@ -311,7 +310,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
 
     if (presentation == param::AbstractParamPresentation::Presentation::Basic) {
 
-        if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+        if (in_scope == Parameter::WidgetScope::LOCAL) {
             // LOCAL
 
             ParameterGroups::DrawGroupedParameters(
@@ -319,7 +318,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
 
             return true;
 
-        } else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
+        } else if (in_scope == Parameter::WidgetScope::GLOBAL) {
 
             // no global implementation ...
             return true;
@@ -327,7 +326,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
 
     } else if (presentation == param::AbstractParamPresentation::Presentation::Group_3D_Cube) {
 
-        if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+        if (in_scope == Parameter::WidgetScope::LOCAL) {
             // LOCAL
 
             ParameterGroups::DrawGroupedParameters(
@@ -335,7 +334,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
 
             return true;
 
-        } else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
+        } else if (in_scope == Parameter::WidgetScope::GLOBAL) {
             // GLOBAL
 
             if (inout_picking_buffer == nullptr) {
@@ -347,7 +346,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
 
             ImGui::PushID(this->uid);
 
-            auto id = param_defaultView->uid;
+            auto id = param_defaultView->UID();
             inout_picking_buffer->AddInteractionObject(id, this->cube_widget.GetInteractions(id));
 
             ImGuiIO& io = ImGui::GetIO();

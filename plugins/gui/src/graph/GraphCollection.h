@@ -9,9 +9,12 @@
 #define MEGAMOL_GUI_GRAPH_GRAPHCOLLECTION_H_INCLUDED
 
 
-#include "GraphCollectionPresentation.h"
+#include "GUIUtils.h"
 
 #include "Graph.h"
+
+#include "widgets/FileBrowserWidget.h"
+#include "widgets/MinimalPopUp.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
@@ -43,10 +46,6 @@ namespace gui {
      */
     class GraphCollection {
     public:
-        // VARIABLES --------------------------------------------------------------
-
-        GraphCollectionPresentation present;
-
         // FUNCTIONS --------------------------------------------------------------
 
         GraphCollection(void);
@@ -103,11 +102,7 @@ namespace gui {
 
         std::string GetUpdatedGUIState(ImGuiID graph_id, const std::string& filename);
 
-        // Presentation ----------------------------------------------------
-
-        void PresentGUI(GraphState_t& state) {
-            this->present.Present(*this, state);
-        }
+        void Draw(GraphState_t& state);
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -116,6 +111,9 @@ namespace gui {
         ModuleStockVector_t modules_stock;
         CallStockVector_t calls_stock;
         unsigned int graph_name_uid;
+
+        FileBrowserWidget gui_file_browser;
+        ImGuiID gui_graph_delete_uid;
 
         // FUNCTIONS --------------------------------------------------------------
 

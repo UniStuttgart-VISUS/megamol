@@ -522,8 +522,8 @@ bool GUIWindows::PostDraw(void) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
 
             module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "",
-                vislib::math::Ternary::TRI_UNKNOWN, false, ParameterPresentation::WidgetScope::GLOBAL,
-                this->tf_editor_ptr, nullptr, GUI_INVALID_ID, &this->picking_buffer);
+                vislib::math::Ternary::TRI_UNKNOWN, false, Parameter::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr,
+                GUI_INVALID_ID, &this->picking_buffer);
         }
     }
 
@@ -1428,8 +1428,7 @@ void GUIWindows::drawConfiguratorWindowCallback(WindowCollection::WindowConfigur
 void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& wc) {
 
     // Mode
-    megamol::gui::ParameterPresentation::ParameterExtendedModeButton(
-        "draw_param_window_callback", wc.param_extended_mode);
+    megamol::gui::Parameter::ParameterExtendedModeButton("draw_param_window_callback", wc.param_extended_mode);
     this->tooltip.Marker("Expert mode enables options for additional parameter presentation options.");
     ImGui::SameLine();
 
@@ -1562,9 +1561,8 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                     if (module_header_open) {
                         bool out_open_external_tf_editor;
                         module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, search_string,
-                            vislib::math::Ternary(wc.param_extended_mode), true,
-                            ParameterPresentation::WidgetScope::LOCAL, this->tf_editor_ptr,
-                            &out_open_external_tf_editor, override_header_state, nullptr);
+                            vislib::math::Ternary(wc.param_extended_mode), true, Parameter::WidgetScope::LOCAL,
+                            this->tf_editor_ptr, &out_open_external_tf_editor, override_header_state, nullptr);
                         if (out_open_external_tf_editor) {
                             const auto func = [](WindowCollection::WindowConfiguration& wc) {
                                 if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {

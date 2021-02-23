@@ -33,11 +33,11 @@ bool megamol::gui::ParameterGroupAnimationWidget::Check(bool only_check, ParamPt
     bool param_time = false;
     bool param_speed = false;
     for (auto& param_ptr : params) {
-        if ((param_ptr->GetName() == "play") && (param_ptr->type == Param_t::BOOL)) {
+        if ((param_ptr->GetName() == "play") && (param_ptr->Type() == Param_t::BOOL)) {
             param_play = true;
-        } else if ((param_ptr->GetName() == "time") && (param_ptr->type == Param_t::FLOAT)) {
+        } else if ((param_ptr->GetName() == "time") && (param_ptr->Type() == Param_t::FLOAT)) {
             param_time = true;
-        } else if ((param_ptr->GetName() == "speed") && (param_ptr->type == Param_t::FLOAT)) {
+        } else if ((param_ptr->GetName() == "speed") && (param_ptr->Type() == Param_t::FLOAT)) {
             param_speed = true;
         }
     }
@@ -46,8 +46,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Check(bool only_check, ParamPt
 
 
 bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, const std::string& in_module_fullname,
-    const std::string& in_search, megamol::gui::ParameterPresentation::WidgetScope in_scope,
-    PickingBuffer* inout_picking_buffer) {
+    const std::string& in_search, megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer) {
 
     if (ImGui::GetCurrentContext() == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -61,11 +60,11 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
     Parameter* param_speed = nullptr;
     /// Find specific parameters of group by name because parameter type can occure multiple times.
     for (auto& param_ptr : params) {
-        if ((param_ptr->GetName() == "play") && (param_ptr->type == Param_t::BOOL)) {
+        if ((param_ptr->GetName() == "play") && (param_ptr->Type() == Param_t::BOOL)) {
             param_play = param_ptr;
-        } else if ((param_ptr->GetName() == "time") && (param_ptr->type == Param_t::FLOAT)) {
+        } else if ((param_ptr->GetName() == "time") && (param_ptr->Type() == Param_t::FLOAT)) {
             param_time = param_ptr;
-        } else if ((param_ptr->GetName() == "speed") && (param_ptr->type == Param_t::FLOAT)) {
+        } else if ((param_ptr->GetName() == "speed") && (param_ptr->Type() == Param_t::FLOAT)) {
             param_speed = param_ptr;
         }
     }
@@ -80,14 +79,14 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
     auto presentation = this->GetGUIPresentation();
     if (presentation == param::AbstractParamPresentation::Presentation::Basic) {
 
-        if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+        if (in_scope == Parameter::WidgetScope::LOCAL) {
 
             ParameterGroups::DrawGroupedParameters(
                 this->name, params, in_module_fullname, in_search, in_scope, nullptr, nullptr, GUI_INVALID_ID);
 
             return true;
 
-        } else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
+        } else if (in_scope == Parameter::WidgetScope::GLOBAL) {
 
             // no global implementation ...
             return true;
@@ -96,7 +95,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
     } else if (presentation == param::AbstractParamPresentation::Presentation::Group_Animation) {
 
         // Early exit for LOCAL widget presentation
-        if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+        if (in_scope == Parameter::WidgetScope::LOCAL) {
             // LOCAL
 
             ImGui::PushID(this->uid);
@@ -105,7 +104,7 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
 
             return true;
         }
-        /// else if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
+        /// else if (in_scope == Parameter::WidgetScope::GLOBAL) {
 
         // Load button textures (once) --------------------------------------------
         if (!this->image_buttons.play.IsLoaded()) {
@@ -136,13 +135,13 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         const float knob_size = 2.5f * ImGui::GetFrameHeightWithSpacing();
 
         ImGuiStyle& style = ImGui::GetStyle();
-        if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
+        if (in_scope == Parameter::WidgetScope::GLOBAL) {
             // GLOBAL
             std::string unique_child_name = this->name + "###" + this->name + std::to_string(this->uid);
             ImGui::Begin(unique_child_name.c_str(), nullptr,
                 ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar |
                     ImGuiWindowFlags_NoCollapse);
-        } else { // if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+        } else { // if (in_scope == Parameter::WidgetScope::LOCAL) {
             /// LOCAL
             // Alternative LOCAL presentation
 
@@ -197,9 +196,9 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         float font_size = ImGui::CalcTextSize(label.c_str()).x;
         ImGui::SetCursorPosX(cursor_pos.x + (knob_size - font_size) / 2.0f);
         ImGui::TextUnformatted(label.c_str());
-        ParameterPresentation::KnobButton(
+        Parameter::KnobButton(
             label, knob_size, time, param_time->GetMinValue<float>(), param_time->GetMaxValue<float>());
-        ImGui::Text(param_time->present.float_format.c_str(), time);
+        ImGui::Text(param_time->FloatFormat().c_str(), time);
         ImGui::EndGroup();
         ImGui::SameLine();
 
@@ -209,9 +208,9 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         font_size = ImGui::CalcTextSize(label.c_str()).x;
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (knob_size - font_size) / 2.0f);
         ImGui::TextUnformatted(label.c_str());
-        ParameterPresentation::KnobButton(
+        Parameter::KnobButton(
             label, knob_size, speed, param_speed->GetMinValue<float>(), param_speed->GetMaxValue<float>());
-        ImGui::Text(param_speed->present.float_format.c_str(), speed);
+        ImGui::Text(param_speed->FloatFormat().c_str(), speed);
         ImGui::EndGroup();
 
         // ------------------------------------------------------------------------
@@ -220,13 +219,13 @@ bool megamol::gui::ParameterGroupAnimationWidget::Draw(ParamPtrVector_t params, 
         param_time->SetValue(time);
         param_speed->SetValue(speed);
 
-        if (in_scope == ParameterPresentation::WidgetScope::GLOBAL) {
+        if (in_scope == Parameter::WidgetScope::GLOBAL) {
             // GLOBAL
 
             ImGui::End();
         }
 
-        else if (in_scope == ParameterPresentation::WidgetScope::LOCAL) {
+        else if (in_scope == Parameter::WidgetScope::LOCAL) {
             /// LOCAL
             // Alternative LOCAL presentation
 

@@ -9,9 +9,16 @@
 #define MEGAMOL_GUI_GRAPH_GRAPH_H_INCLUDED
 
 
-#include "GraphPresentation.h"
+#include "GUIUtils.h"
+#include "widgets/HoverToolTip.h"
+#include "widgets/MinimalPopUp.h"
+#include "widgets/RenamePopUp.h"
+#include "widgets/SplitterWidget.h"
+#include "widgets/StringSearchWidget.h"
 
+#include "Call.h"
 #include "Group.h"
+#include "Module.h"
 
 #include "vislib/math/Ternary.h"
 
@@ -135,11 +142,7 @@ namespace gui {
         bool StateFromJSON(const nlohmann::json& in_json);
         bool StateToJSON(nlohmann::json& inout_json);
 
-        // Presentation ----------------------------------------------------
-
-        inline void PresentGUI(GraphState_t& state) {
-            this->present.Present(*this, state);
-        }
+        void Draw(GraphState_t& state);
 
     private:
         typedef std::tuple<QueueAction, QueueData> SyncQueueData_t;
@@ -155,7 +158,111 @@ namespace gui {
         SyncQueue_t sync_queue;
         GraphCoreInterface graph_core_interface;
 
+
+        // GUI --------------------------------------------------------------
+
+        bool update;
+        bool show_grid;
+        bool show_call_label;
+        bool show_call_slots_label;
+        bool show_slot_label;
+        bool show_module_label;
+        bool show_parameter_sidebar;
+        bool change_show_parameter_sidebar;
+        unsigned int graph_layout;
+        float parameter_sidebar_width;
+        bool reset_zooming;
+        bool increment_zooming;
+        bool decrement_zooming;
+        std::string param_name_space;
+        std::string current_graph_entry_name;
+        ImVec2 multiselect_start_pos;
+        ImVec2 multiselect_end_pos;
+        bool multiselect_done;
+        bool canvas_hovered;
+        float current_font_scaling;
+        // State propagated and shared by all graph items.
+        megamol::gui::GraphItemsState_t graph_state;
+
+        // Widgets
+        StringSearchWidget search_widget;
+        SplitterWidget splitter_widget;
+        RenamePopUp rename_popup;
+        HoverToolTip tooltip;
+
+        bool params_visible;
+        bool params_readonly;
+        bool param_extended_mode;
+
+
         // FUNCTIONS --------------------------------------------------------------
+
+        /*
+
+
+        void ForceUpdate(void) {
+            this->update = true;
+        }
+        void ResetStatePointers(void) {
+            this->graph_state.interact.callslot_compat_ptr.reset();
+            this->graph_state.interact.interfaceslot_compat_ptr.reset();
+        }
+
+        ImGuiID GetHoveredGroup(void) const {
+            return this->graph_state.interact.group_hovered_uid;
+        }
+        ImGuiID GetSelectedGroup(void) const {
+            return this->graph_state.interact.group_selected_uid;
+        }
+        ImGuiID GetSelectedCallSlot(void) const {
+            return this->graph_state.interact.callslot_selected_uid;
+        }
+        ImGuiID GetSelectedInterfaceSlot(void) const {
+            return this->graph_state.interact.interfaceslot_selected_uid;
+        }
+        ImGuiID GetDropSlot(void) const {
+            return this->graph_state.interact.slot_dropped_uid;
+        }
+        bool GetModuleLabelVisibility(void) const {
+            return this->show_module_label;
+        }
+        bool GetSlotLabelVisibility(void) const {
+            return this->show_slot_label;
+        }
+        bool GetCallLabelVisibility(void) const {
+            return this->show_call_label;
+        }
+        bool GetCallSlotLabelVisibility(void) const {
+            return this->show_call_slots_label;
+        }
+        bool IsCanvasHoverd(void) const {
+            return this->canvas_hovered;
+        }
+
+        void SetLayoutGraph(bool l = true) {
+            this->graph_layout = ((l) ? (1) : (0));
+        }
+
+        */
+        void present_menu(Graph& inout_graph);
+        void present_canvas(Graph& inout_graph, float child_width);
+        void present_parameters(Graph& inout_graph, float child_width);
+
+        void present_canvas_grid(void);
+        void present_canvas_dragged_call(Graph& inout_graph);
+        void present_canvas_multiselection(Graph& inout_graph);
+
+        void layout_graph(Graph& inout_graph);
+        void layout(const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, ImVec2 init_position);
+
+        bool connected_callslot(
+            const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, const CallSlotPtr_t& callslot_ptr);
+        bool connected_interfaceslot(const ModulePtrVector_t& modules, const GroupPtrVector_t& groups,
+            const InterfaceSlotPtr_t& interfaceslot_ptr);
+        bool contains_callslot(const ModulePtrVector_t& modules, ImGuiID callslot_uid);
+        bool contains_interfaceslot(const GroupPtrVector_t& groups, ImGuiID interfaceslot_uid);
+        bool contains_module(const ModulePtrVector_t& modules, ImGuiID module_uid);
+        bool contains_group(const GroupPtrVector_t& groups, ImGuiID group_uid);
 
         const std::string generate_unique_group_name(void);
         const std::string generate_unique_module_name(const std::string& name);
