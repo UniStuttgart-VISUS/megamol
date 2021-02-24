@@ -82,8 +82,7 @@ unsigned int view::SplitViewGL::GetCameraSyncNumber() const {
 
 void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) {
     // TODO: Affinity
-
-	 float time = static_cast<float>(context.Time);
+    float time = static_cast<float>(context.Time);
 
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
