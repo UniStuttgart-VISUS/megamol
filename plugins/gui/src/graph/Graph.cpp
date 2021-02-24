@@ -1901,6 +1901,9 @@ void megamol::gui::Graph::draw_menu(void) {
         if (ImGui::MenuItem("Label", nullptr, &this->gui_graph_state.interact.module_show_label)) {
             this->gui_update = true;
         }
+        if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.callslot_show_label)) {
+            this->gui_update = true;
+        }
         ImGui::EndMenu();
     }
     ImGui::Separator();
@@ -1911,15 +1914,6 @@ void megamol::gui::Graph::draw_menu(void) {
             this->gui_update = true;
         }
         if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.call_show_slots_label)) {
-            this->gui_update = true;
-        }
-        ImGui::EndMenu();
-    }
-    ImGui::Separator();
-
-    // SLOTS
-    if (ImGui::BeginMenu("Slots")) {
-        if (ImGui::MenuItem("Label", nullptr, &this->gui_graph_state.interact.callslot_show_label)) {
             this->gui_update = true;
         }
         ImGui::EndMenu();
