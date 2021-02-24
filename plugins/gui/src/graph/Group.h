@@ -84,7 +84,7 @@ namespace gui {
         inline void SetName(const std::string& group_name) {
             this->name = group_name;
         }
-        void SetPosition(const GraphCanvas_t& in_canvas, ImVec2 pos);
+        void SetPosition(const GraphItemsState_t& state, ImVec2 pos);
 
     private:
         // VARIABLES --------------------------------------------------------------

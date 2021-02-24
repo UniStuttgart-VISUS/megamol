@@ -232,7 +232,7 @@ namespace gui {
         inline const bool IsExtended(void) const {
             return this->gui_extended;
         }
-        inline  vislib::SmartPtr<megamol::core::param::AbstractParam>& CoreParamPtr(void) const {
+        inline vislib::SmartPtr<megamol::core::param::AbstractParam> CoreParamPtr(void) const {
             return this->core_param_ptr;
         }
 

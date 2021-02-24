@@ -136,8 +136,8 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
             if ((callerslot_ptr == nullptr) || (calleeslot_ptr == nullptr)) {
                 return;
             }
-            bool visible = ((callerslot_ptr->IsVisible() || (callerslot_ptr->InterfaceSlotPtr() != nullptr)) &&
-                            (calleeslot_ptr->IsVisible() || (calleeslot_ptr->InterfaceSlotPtr() != nullptr)));
+            bool visible = ((!callerslot_ptr->IsClipped() || (callerslot_ptr->InterfaceSlotPtr() != nullptr)) &&
+                            (!calleeslot_ptr->IsClipped() || (calleeslot_ptr->InterfaceSlotPtr() != nullptr)));
             if (visible) {
 
                 ImVec2 caller_position = callerslot_ptr->Position();
@@ -201,21 +201,21 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                     }
                 }
 
-                if (this->gui_label_visible || this->gui_slots_visible) {
+                if (state.interact.call_show_label || state.interact.call_show_slots_label) {
                     std::string slots_label = this->SlotsLabel();
                     auto slots_label_width = ImGui::CalcTextSize(slots_label.c_str()).x;
                     auto class_name_width = ImGui::CalcTextSize(this->class_name.c_str()).x;
                     ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
                     auto call_name_width = 0.0f;
-                    if (this->gui_label_visible) {
+                    if (state.interact.call_show_label) {
                         call_name_width = std::max(call_name_width, class_name_width);
                     }
-                    if (this->gui_slots_visible) {
+                    if (state.interact.call_show_slots_label) {
                         call_name_width = std::max(call_name_width, slots_label_width);
                     }
                     ImVec2 rect_size = ImVec2(call_name_width + (2.0f * style.ItemSpacing.x),
                         ImGui::GetFontSize() + (2.0f * style.ItemSpacing.y));
-                    if (this->gui_label_visible && this->gui_slots_visible) {
+                    if (state.interact.call_show_label && state.interact.call_show_slots_label) {
                         rect_size.y += (ImGui::GetFontSize() + style.ItemSpacing.y);
                     }
                     ImVec2 call_rect_min =
@@ -261,7 +261,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         }
 
                         // Hover Tooltip
-                        if (!this->gui_slots_visible) {
+                        if (!state.interact.call_show_slots_label) {
                             if (state.interact.call_hovered_uid == this->uid) {
                                 this->gui_tooltip.ToolTip(slots_label, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
                             } else {
@@ -311,19 +311,19 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         // Draw Text
                         ImVec2 text_pos_left_upper =
                             (call_center + ImVec2(-(class_name_width / 2.0f), -0.5f * ImGui::GetFontSize()));
-                        if (this->gui_label_visible && this->gui_slots_visible) {
+                        if (state.interact.call_show_label && state.interact.call_show_slots_label) {
                             text_pos_left_upper.y -= (0.5f * ImGui::GetFontSize());
                         }
-                        if (this->gui_label_visible) {
+                        if (state.interact.call_show_label) {
                             draw_list->AddText(text_pos_left_upper,
                                 ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), this->class_name.c_str());
                         }
                         text_pos_left_upper =
                             (call_center + ImVec2(-(slots_label_width / 2.0f), -0.5f * ImGui::GetFontSize()));
-                        if (this->gui_label_visible && this->gui_slots_visible) {
+                        if (state.interact.call_show_label && state.interact.call_show_slots_label) {
                             text_pos_left_upper.y += (0.5f * ImGui::GetFontSize());
                         }
-                        if (this->gui_slots_visible) {
+                        if (state.interact.call_show_slots_label) {
                             draw_list->AddText(text_pos_left_upper,
                                 ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), slots_label.c_str());
                         }

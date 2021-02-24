@@ -101,7 +101,7 @@ namespace gui {
         bool gui_group_collapsed_view;
 
         HoverToolTip gui_tooltip;
-        
+
         // FUNCTIONS --------------------------------------------------------------
 
         bool is_callslot_compatible(CallSlot& callslot);

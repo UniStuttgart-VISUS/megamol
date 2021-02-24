@@ -72,7 +72,7 @@ namespace gui {
         bool IsConnectionValid(CallSlot& callslot);
 
         void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
-        void Update(const GraphCanvas_t& in_canvas);
+        void Update(const GraphItemsState_t& state);
 
         inline const ImGuiID UID(void) const {
             return this->uid;
@@ -85,6 +85,9 @@ namespace gui {
         }
         inline InterfaceSlotPtr_t InterfaceSlotPtr(void) const {
             return this->gui_interfaceslot_ptr;
+        }
+        inline bool IsClipped(void) const {
+            return this->gui_clipped;
         }
         inline ImVec2 Position(void) const {
             return this->gui_position;
@@ -118,6 +121,7 @@ namespace gui {
         ImGuiID gui_last_compat_callslot_uid;
         ImGuiID gui_last_compat_interface_uid;
         bool gui_compatible;
+        bool gui_clipped;
 
         HoverToolTip gui_tooltip;
     };

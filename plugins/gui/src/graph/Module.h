@@ -59,7 +59,7 @@ namespace gui {
         bool DeleteCallSlots(void);
 
         void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
-        void Update(const GraphCanvas_t& in_canvas);
+        void Update(const GraphItemsState_t& state);
 
         // GET ----------------------------------------------------------------
 
@@ -102,7 +102,7 @@ namespace gui {
         inline ParamVector_t& Parameters(void) {
             return this->parameters;
         }
-        inline  bool IsView(void) const {
+        inline bool IsView(void) const {
             return this->is_view;
         }
         inline ParameterGroups& GUIParameterGroups(void) {
@@ -167,7 +167,7 @@ namespace gui {
 
         bool gui_selected;
         ImVec2 gui_position; /// Relative position without considering canvas offset and zooming
-        ImVec2 gui_size; /// Relative size without considering zooming
+        ImVec2 gui_size;     /// Relative size without considering zooming
         bool gui_update;
         bool gui_param_child_show;
         ImVec2 gui_set_screen_position;

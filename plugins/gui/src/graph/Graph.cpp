@@ -23,16 +23,11 @@ megamol::gui::Graph::Graph(const std::string& graph_name, GraphCoreInterface cor
         , filename()
         , sync_queue()
         , graph_core_interface(core_interface)
-        , gui_graph_state() 
+        , gui_graph_state()
         , gui_show_grid(false)
-        , gui_show_call_label(true)
-        , gui_show_call_slots_label(false)
-        , gui_show_slot_label(false)
-        , gui_show_module_label(true)
         , gui_show_parameter_sidebar(true)
         , gui_params_visible(true)
         , gui_params_readonly(false)
-        , gui_param_extended_mode(false)
         , gui_change_show_parameter_sidebar(true)
         , gui_graph_layout(0)
         , gui_parameter_sidebar_width(300.0f)
@@ -73,9 +68,12 @@ megamol::gui::Graph::Graph(const std::string& graph_name, GraphCoreInterface cor
     this->gui_graph_state.interact.module_rename.clear();
     this->gui_graph_state.interact.module_graphentry_changed = vislib::math::Ternary::TRI_UNKNOWN;
     this->gui_graph_state.interact.module_param_child_position = ImVec2(-1.0f, -1.0f);
+    this->gui_graph_state.interact.module_show_label = true;
 
     this->gui_graph_state.interact.call_selected_uid = GUI_INVALID_ID;
     this->gui_graph_state.interact.call_hovered_uid = GUI_INVALID_ID;
+    this->gui_graph_state.interact.call_show_label = true;
+    this->gui_graph_state.interact.call_show_slots_label = true;
 
     this->gui_graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
 
@@ -84,16 +82,18 @@ megamol::gui::Graph::Graph(const std::string& graph_name, GraphCoreInterface cor
     this->gui_graph_state.interact.callslot_add_group_uid = UIDPair_t(GUI_INVALID_ID, GUI_INVALID_ID);
     this->gui_graph_state.interact.callslot_remove_group_uid = UIDPair_t(GUI_INVALID_ID, GUI_INVALID_ID);
     this->gui_graph_state.interact.callslot_compat_ptr.reset();
+    this->gui_graph_state.interact.callslot_show_label = true;
 
     this->gui_graph_state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
     this->gui_graph_state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;
     this->gui_graph_state.interact.interfaceslot_compat_ptr.reset();
 
+    this->gui_graph_state.interact.parameters_extended_mode = false;
+
     this->gui_graph_state.interact.graph_core_interface = GraphCoreInterface::NO_INTERFACE;
 
     this->gui_graph_state.groups.clear();
     // this->gui_graph_state.hotkeys are already initialzed
-
 }
 
 megamol::gui::Graph::~Graph(void) {
@@ -102,7 +102,8 @@ megamol::gui::Graph::~Graph(void) {
 }
 
 
-ModulePtr_t megamol::gui::Graph::AddModule(const std::string& class_name, const std::string& description, const std::string& plugin_name, bool is_view) {
+ModulePtr_t megamol::gui::Graph::AddModule(
+    const std::string& class_name, const std::string& description, const std::string& plugin_name, bool is_view) {
 
     try {
 
@@ -156,7 +157,8 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
 
                 for (auto& callslots_type : mod.callslots) {
                     for (auto& c : callslots_type.second) {
-                        auto callslot_ptr = std::make_shared<CallSlot>(megamol::gui::GenerateUniqueID(), c.name, c.description, c.compatible_call_idxs, c.type);
+                        auto callslot_ptr = std::make_shared<CallSlot>(
+                            megamol::gui::GenerateUniqueID(), c.name, c.description, c.compatible_call_idxs, c.type);
                         callslot_ptr->ConnectParentModule(mod_ptr);
                         mod_ptr->AddCallSlot(callslot_ptr);
                     }
@@ -190,8 +192,8 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
     }
 
     megamol::core::utility::log::Log::DefaultLog.WriteError(
-        "[GUI] Unable to find module in stock: '%s'. [%s, %s, line %d]\n", class_name.c_str(), __FILE__,
-        __FUNCTION__, __LINE__);
+        "[GUI] Unable to find module in stock: '%s'. [%s, %s, line %d]\n", class_name.c_str(), __FILE__, __FUNCTION__,
+        __LINE__);
     return nullptr;
 }
 
@@ -1012,42 +1014,17 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
 
                         megamol::core::utility::get_json_value<bool>(graph_state, {"show_grid"}, &this->gui_show_grid);
 
-                        if (megamol::core::utility::get_json_value<bool>(
-                                graph_state, {"show_call_label"}, &this->gui_show_call_label)) {
-                            for (auto& call : this->GetCalls()) {
-                                call->gui_label_visible = this->gui_show_call_label;
-                            }
-                        }
-                        if (megamol::core::utility::get_json_value<bool>(
-                                graph_state, {"show_call_slots_label"}, &this->gui_show_call_slots_label)) {
-                            for (auto& call : this->GetCalls()) {
-                                call->gui_slots_visible = this->gui_show_call_slots_label;
-                            }
-                        }
-                        if (megamol::core::utility::get_json_value<bool>(
-                                graph_state, {"show_module_label"}, &this->gui_show_module_label)) {
-                            for (auto& mod : this->Modules()) {
-                                mod->label_visible = this->gui_show_module_label;
-                            }
-                        }
+                        megamol::core::utility::get_json_value<bool>(
+                            graph_state, {"show_call_label"}, &this->gui_graph_state.interact.call_show_label);
 
-                        if (megamol::core::utility::get_json_value<bool>(
-                                graph_state, {"show_slot_label"}, &this->gui_show_slot_label)) {
-                            for (auto& mod : this->Modules()) {
-                                for (auto& callslot_types : mod->CallSlots()) {
-                                    for (auto& callslots : callslot_types.second) {
-                                        callslots->label_visible = this->gui_show_slot_label;
-                                    }
-                                }
-                            }
-                            for (auto& group_ptr : this->GetGroups()) {
-                                for (auto& interfaceslots_map : group_ptr->InterfaceSlots()) {
-                                    for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-                                        interfaceslot_ptr->label_visible = this->gui_show_slot_label;
-                                    }
-                                }
-                            }
-                        }
+                        megamol::core::utility::get_json_value<bool>(graph_state, {"show_call_slots_label"},
+                            &this->gui_graph_state.interact.call_show_slots_label);
+
+                        megamol::core::utility::get_json_value<bool>(
+                            graph_state, {"show_module_label"}, &this->gui_graph_state.interact.module_show_label);
+
+                        megamol::core::utility::get_json_value<bool>(
+                            graph_state, {"show_slot_label"}, &this->gui_graph_state.interact.callslot_show_label);
 
                         megamol::core::utility::get_json_value<bool>(
                             graph_state, {"params_visible"}, &this->gui_params_visible);
@@ -1055,14 +1032,8 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                         megamol::core::utility::get_json_value<bool>(
                             graph_state, {"params_readonly"}, &this->gui_params_readonly);
 
-                        if (megamol::core::utility::get_json_value<bool>(
-                                graph_state, {"param_extended_mode"}, &this->gui_param_extended_mode)) {
-                            for (auto& module_ptr : this->Modules()) {
-                                for (auto& parameter : module_ptr->Parameters()) {
-                                    parameter.extended = this->gui_param_extended_mode;
-                                }
-                            }
-                        }
+                        megamol::core::utility::get_json_value<bool>(graph_state, {"param_extended_mode"},
+                            &this->gui_graph_state.interact.parameters_extended_mode);
 
                         std::array<float, 2> canvas_scrolling;
                         megamol::core::utility::get_json_value<float>(
@@ -1160,7 +1131,8 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                                                         group_ptr->AddInterfaceSlot(callslot_ptr);
                                                     if (interfaceslot_uid != GUI_INVALID_ID) {
                                                         InterfaceSlotPtr_t interfaceslot_ptr;
-                                                        if (auto interfaceslot_ptr = group_ptr->InterfaceSlotPtr(interfaceslot_uid)) {
+                                                        if (auto interfaceslot_ptr =
+                                                                group_ptr->InterfaceSlotPtr(interfaceslot_uid)) {
                                                             for (size_t i = 1; i < callslot_ptr_vector.size(); i++) {
                                                                 interfaceslot_ptr->AddCallSlot(
                                                                     callslot_ptr_vector[i], interfaceslot_ptr);
@@ -1212,18 +1184,23 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
         GUIUtils::Utf8Encode(this->name);
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["project_name"] = this->name;
         GUIUtils::Utf8Decode(this->name);
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_parameter_sidebar"] = this->gui_show_parameter_sidebar;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_parameter_sidebar"] =
+            this->gui_show_parameter_sidebar;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["parameter_sidebar_width"] =
             this->gui_parameter_sidebar_width;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_grid"] = this->gui_show_grid;
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_label"] = this->gui_show_call_label;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_label"] =
+            this->gui_graph_state.interact.call_show_label;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_slots_label"] =
-            this->gui_show_call_slots_label;
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_slot_label"] = this->gui_show_slot_label;
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_module_label"] = this->gui_show_module_label;
+            this->gui_graph_state.interact.call_show_slots_label;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_slot_label"] =
+            this->gui_graph_state.interact.callslot_show_label;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_module_label"] =
+            this->gui_graph_state.interact.module_show_label;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["params_visible"] = this->gui_params_visible;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["params_readonly"] = this->gui_params_readonly;
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["param_extended_mode"] = this->gui_param_extended_mode;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["param_extended_mode"] =
+            this->gui_graph_state.interact.parameters_extended_mode;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["canvas_scrolling"] = {
             this->gui_graph_state.canvas.scrolling.x, this->gui_graph_state.canvas.scrolling.y};
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["canvas_zooming"] = this->gui_graph_state.canvas.zooming;
@@ -1243,12 +1220,12 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
                     for (auto& callslot_ptr : interface_ptr->CallSlots()) {
                         std::string callslot_fullname;
                         if (callslot_ptr->IsParentModuleConnected()) {
-                            callslot_fullname = callslot_ptr->GetParentModule()->FullName() + "::" + callslot_ptr->Name();
+                            callslot_fullname =
+                                callslot_ptr->GetParentModule()->FullName() + "::" + callslot_ptr->Name();
                         }
                         GUIUtils::Utf8Encode(callslot_fullname);
                         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT][GUI_JSON_TAG_INTERFACES]
-                                  [group_ptr->Name()]
-                                  [interface_label] += callslot_fullname;
+                                  [group_ptr->Name()][interface_label] += callslot_fullname;
                     }
                     interface_number++;
                 }
@@ -1465,7 +1442,8 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                 ModulePtr_t selected_mod_ptr;
                 if (this->gui_graph_state.interact.modules_selected_uids.size() == 1) {
                     for (auto& mod : this->Modules()) {
-                        if ((this->gui_graph_state.interact.modules_selected_uids.front() == mod->UID()) && (mod->IsView())) {
+                        if ((this->gui_graph_state.interact.modules_selected_uids.front() == mod->UID()) &&
+                            (mod->IsView())) {
                             selected_mod_ptr = mod;
                         }
                     }
@@ -1698,7 +1676,8 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                 if (this->gui_graph_state.interact.interfaceslot_selected_uid != GUI_INVALID_ID) {
                     for (auto& group_ptr : this->GetGroups()) {
                         InterfaceSlotPtr_t interfaceslot_ptr;
-                        if (auto interfaceslot_ptr = group_ptr->InterfaceSlotPtr(this->gui_graph_state.interact.interfaceslot_selected_uid)) {
+                        if (auto interfaceslot_ptr = group_ptr->InterfaceSlotPtr(
+                                this->gui_graph_state.interact.interfaceslot_selected_uid)) {
                             // Delete all calls connected
                             std::vector<ImGuiID> call_uids;
                             for (auto& callslot_ptr : interfaceslot_ptr->CallSlots()) {
@@ -1919,10 +1898,7 @@ void megamol::gui::Graph::draw_menu(void) {
 
     // MODULES
     if (ImGui::BeginMenu("Modules")) {
-        if (ImGui::MenuItem("Label", nullptr, &this->gui_show_module_label)) {
-            for (auto& module_ptr : this->Modules()) {
-                module_ptr->label_visible = this->gui_show_module_label;
-            }
+        if (ImGui::MenuItem("Label", nullptr, &this->gui_graph_state.interact.module_show_label)) {
             this->gui_update = true;
         }
         ImGui::EndMenu();
@@ -1931,16 +1907,10 @@ void megamol::gui::Graph::draw_menu(void) {
 
     // CALLS
     if (ImGui::BeginMenu("Calls")) {
-        if (ImGui::MenuItem("Label", nullptr, &this->gui_show_call_label)) {
-            for (auto& call_ptr : this->GetCalls()) {
-                call_ptr->gui_label_visible = this->gui_show_call_label;
-            }
+        if (ImGui::MenuItem("Label", nullptr, &this->gui_graph_state.interact.call_show_label)) {
             this->gui_update = true;
         }
-        if (ImGui::MenuItem("Slots", nullptr, &this->gui_show_call_slots_label)) {
-            for (auto& call_ptr : this->GetCalls()) {
-                call_ptr->gui_slots_visible = this->gui_show_call_slots_label;
-            }
+        if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.call_show_slots_label)) {
             this->gui_update = true;
         }
         ImGui::EndMenu();
@@ -1949,21 +1919,7 @@ void megamol::gui::Graph::draw_menu(void) {
 
     // SLOTS
     if (ImGui::BeginMenu("Slots")) {
-        if (ImGui::MenuItem("Label", nullptr, &this->gui_show_slot_label)) {
-            for (auto& module_ptr : this->Modules()) {
-                for (auto& callslot_types : module_ptr->CallSlots()) {
-                    for (auto& callslots : callslot_types.second) {
-                        callslots->label_visible = this->gui_show_slot_label;
-                    }
-                }
-            }
-            for (auto& group_ptr : this->GetGroups()) {
-                for (auto& interfaceslots_map : group_ptr->InterfaceSlots()) {
-                    for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-                        interfaceslot_ptr->label_visible = this->gui_show_slot_label;
-                    }
-                }
-            }
+        if (ImGui::MenuItem("Label", nullptr, &this->gui_graph_state.interact.callslot_show_label)) {
             this->gui_update = true;
         }
         ImGui::EndMenu();
@@ -2053,7 +2009,8 @@ void megamol::gui::Graph::draw_menu(void) {
 
     // SCROLLING
     const float scroll_fac = 10.0f;
-    ImGui::Text("Scrolling: %.2f, %.2f", this->gui_graph_state.canvas.scrolling.x, this->gui_graph_state.canvas.scrolling.y);
+    ImGui::Text(
+        "Scrolling: %.2f, %.2f", this->gui_graph_state.canvas.scrolling.x, this->gui_graph_state.canvas.scrolling.y);
     ImGui::TextUnformatted("H:");
     if (ImGui::Button("+###hor_incr_scrolling", button_size)) {
         this->gui_graph_state.canvas.scrolling.x += scroll_fac;
@@ -2126,8 +2083,8 @@ void megamol::gui::Graph::draw_canvas(float graph_width) {
     }
     this->gui_graph_state.canvas.size = new_size;
     // Update canvas offset
-    ImVec2 new_offset =
-        this->gui_graph_state.canvas.position + (this->gui_graph_state.canvas.scrolling * this->gui_graph_state.canvas.zooming);
+    ImVec2 new_offset = this->gui_graph_state.canvas.position +
+                        (this->gui_graph_state.canvas.scrolling * this->gui_graph_state.canvas.zooming);
     if (this->gui_graph_state.canvas.offset != new_offset) {
         this->gui_update = true;
     }
@@ -2136,7 +2093,7 @@ void megamol::gui::Graph::draw_canvas(float graph_width) {
     // Update position and size of modules (and  call slots) and groups.
     if (this->gui_update) {
         for (auto& mod : this->Modules()) {
-            mod->Update(this->gui_graph_state.canvas);
+            mod->Update(this->gui_graph_state);
         }
         for (auto& group : this->GetGroups()) {
             group->UpdatePositionSize(this->gui_graph_state.canvas);
@@ -2144,8 +2101,8 @@ void megamol::gui::Graph::draw_canvas(float graph_width) {
         this->gui_update = false;
     }
 
-    ImGui::PushClipRect(
-        this->gui_graph_state.canvas.position, this->gui_graph_state.canvas.position + this->gui_graph_state.canvas.size, true);
+    ImGui::PushClipRect(this->gui_graph_state.canvas.position,
+        this->gui_graph_state.canvas.position + this->gui_graph_state.canvas.size, true);
 
     // GRID --------------------------------------
     if (this->gui_show_grid) {
@@ -2246,22 +2203,24 @@ void megamol::gui::Graph::draw_canvas(float graph_width) {
     // Zooming and Scaling ----------------------
     // Must be checked inside this canvas child window!
     // Check at the end of drawing for being applied in next frame when font scaling matches zooming.
-    if ((ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) || this->gui_reset_zooming || this->gui_increment_zooming ||
-        this->gui_decrement_zooming) {
+    if ((ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) || this->gui_reset_zooming ||
+        this->gui_increment_zooming || this->gui_decrement_zooming) {
 
         // Scrolling (2 = Middle Mouse Button)
         if (ImGui::IsMouseDragging(2)) { // io.KeyCtrl && ImGui::IsMouseDragging(0)) {
-            this->gui_graph_state.canvas.scrolling =
-                this->gui_graph_state.canvas.scrolling + ImGui::GetIO().MouseDelta / this->gui_graph_state.canvas.zooming;
+            this->gui_graph_state.canvas.scrolling = this->gui_graph_state.canvas.scrolling +
+                                                     ImGui::GetIO().MouseDelta / this->gui_graph_state.canvas.zooming;
             this->gui_update = true;
         }
 
         // Zooming (Mouse Wheel) + Reset
-        if ((io.MouseWheel != 0) || this->gui_reset_zooming || this->gui_increment_zooming || this->gui_decrement_zooming) {
+        if ((io.MouseWheel != 0) || this->gui_reset_zooming || this->gui_increment_zooming ||
+            this->gui_decrement_zooming) {
             float last_zooming = this->gui_graph_state.canvas.zooming;
             // Center mouse position as init value
-            ImVec2 current_mouse_pos = this->gui_graph_state.canvas.offset -
-                                       (this->gui_graph_state.canvas.position + this->gui_graph_state.canvas.size * 0.5f);
+            ImVec2 current_mouse_pos =
+                this->gui_graph_state.canvas.offset -
+                (this->gui_graph_state.canvas.position + this->gui_graph_state.canvas.size * 0.5f);
             const float zoom_fac = 1.1f; // = 10%
             if (this->gui_reset_zooming) {
                 this->gui_graph_state.canvas.zooming = 1.0f;
@@ -2322,15 +2281,10 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
     ImGui::Separator();
 
     // Mode
-    if (megamol::gui::ButtonWidgets::ExtendedModeButton("parameter_search_child", this->gui_param_extended_mode)) {
-        for (auto& module_ptr : this->Modules()) {
-            for (auto& parameter : module_ptr->Parameters()) {
-                parameter.extended = this->gui_param_extended_mode;
-            }
-        }
-    }
+    megamol::gui::ButtonWidgets::ExtendedModeButton(
+        "parameter_search_child", this->gui_graph_state.interact.parameters_extended_mode);
 
-    if (this->gui_param_extended_mode) {
+    if (this->gui_graph_state.interact.parameters_extended_mode) {
         ImGui::SameLine();
 
         // Visibility
@@ -2357,10 +2311,10 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
     if (this->gui_graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH].is_pressed) {
         this->gui_search_widget.SetSearchFocus(true);
     }
-    std::string help_text = "[" +
-                            this->gui_graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH].keycode.ToString() +
-                            "] Set keyboard focus to search input field.\n"
-                            "Case insensitive substring search in module and parameter names.";
+    std::string help_text =
+        "[" + this->gui_graph_state.hotkeys[megamol::gui::HotkeyIndex::PARAMETER_SEARCH].keycode.ToString() +
+        "] Set keyboard focus to search input field.\n"
+        "Case insensitive substring search in module and parameter names.";
     this->gui_search_widget.Widget("graph_parameter_search", help_text);
 
 
@@ -2406,12 +2360,14 @@ void megamol::gui::Graph::draw_parameters(float graph_width) {
                     bool module_header_open =
                         GUIUtils::GroupHeader(megamol::gui::HeaderType::MODULE, module_label, search_string);
                     // Module description as hover tooltip
-                    this->gui_tooltip.ToolTip(module_ptr->Description(), ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
+                    this->gui_tooltip.ToolTip(
+                        module_ptr->Description(), ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
 
                     // Draw parameters
                     if (module_header_open) {
                         module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), module_ptr->FullName(),
-                            search_string, vislib::math::Ternary(this->gui_param_extended_mode), true,
+                            search_string,
+                            vislib::math::Ternary(this->gui_graph_state.interact.parameters_extended_mode), true,
                             Parameter::WidgetScope::LOCAL, nullptr, nullptr, GUI_INVALID_ID, nullptr);
                     }
 
@@ -2551,13 +2507,11 @@ void megamol::gui::Graph::draw_canvas_multiselection(void) {
         const ImU32 COLOR_MULTISELECT_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
 
         draw_list->AddRectFilled(this->gui_multiselect_start_pos, this->gui_multiselect_end_pos,
-            COLOR_MULTISELECT_BACKGROUND,
-            GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All);
+            COLOR_MULTISELECT_BACKGROUND, GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All);
 
         float border = (1.0f * megamol::gui::gui_scaling.Get());
         draw_list->AddRect(this->gui_multiselect_start_pos, this->gui_multiselect_end_pos, COLOR_MULTISELECT_BORDER,
-            GUI_RECT_CORNER_RADIUS,
-            ImDrawCornerFlags_All, border);
+            GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All, border);
     } else if (this->gui_multiselect_done && ImGui::IsWindowHovered() && ImGui::IsMouseReleased(0)) {
         ImVec2 outer_rect_min = ImVec2(std::min(this->gui_multiselect_start_pos.x, this->gui_multiselect_end_pos.x),
             std::min(this->gui_multiselect_start_pos.y, this->gui_multiselect_end_pos.y));
@@ -2827,7 +2781,7 @@ void megamol::gui::Graph::layout(
     size_t layer_count = layers.size();
     for (size_t i = 0; i < layer_count; i++) {
 
-        if (this->gui_show_call_label || this->gui_show_call_slots_label) {
+        if (this->gui_graph_state.interact.call_show_label || this->gui_graph_state.interact.call_show_slots_label) {
             max_call_width = 0.0f;
         }
         max_graph_element_width = 0.0f;
@@ -2839,7 +2793,7 @@ void megamol::gui::Graph::layout(
             auto layer_item = layers[i][j];
 
             if (layer_item.module_ptr != nullptr) {
-                if (this->gui_show_call_label) {
+                if (this->gui_graph_state.interact.call_show_label) {
                     for (auto& callerslot_ptr : layer_item.module_ptr->CallSlots(CallSlotType::CALLER)) {
                         if (callerslot_ptr->CallsConnected() &&
                             this->connected_callslot(modules, groups, callerslot_ptr)) {
@@ -2850,7 +2804,7 @@ void megamol::gui::Graph::layout(
                         }
                     }
                 }
-                if (this->gui_show_call_slots_label) {
+                if (this->gui_graph_state.interact.call_show_slots_label) {
                     for (auto& callerslot_ptr : layer_item.module_ptr->CallSlots(CallSlotType::CALLER)) {
                         if (callerslot_ptr->CallsConnected() &&
                             this->connected_callslot(modules, groups, callerslot_ptr)) {
@@ -2868,7 +2822,7 @@ void megamol::gui::Graph::layout(
                 found_layer_item = true;
 
             } else if (layer_item.group_ptr != nullptr) {
-                if (this->gui_show_call_label) {
+                if (this->gui_graph_state.interact.call_show_label) {
                     for (auto& interfaceslot_slot : layer_item.group_ptr->InterfaceSlots(CallSlotType::CALLER)) {
                         for (auto& callerslot_ptr : interfaceslot_slot->CallSlots()) {
                             if (callerslot_ptr->CallsConnected() &&
@@ -2881,7 +2835,7 @@ void megamol::gui::Graph::layout(
                         }
                     }
                 }
-                if (this->gui_show_call_slots_label) {
+                if (this->gui_graph_state.interact.call_show_slots_label) {
                     for (auto& interfaceslot_slot : layer_item.group_ptr->InterfaceSlots(CallSlotType::CALLER)) {
                         for (auto& callerslot_ptr : interfaceslot_slot->CallSlots()) {
                             if (callerslot_ptr->CallsConnected() &&

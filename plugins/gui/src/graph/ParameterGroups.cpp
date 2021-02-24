@@ -224,7 +224,7 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
     } else {
         /// LOCAL
 
-        auto param_name = inout_param.GetFullName();
+        auto param_name = inout_param.FullName();
         bool param_searched = true;
         bool module_searched = true;
         if (in_scope == Parameter::WidgetScope::LOCAL) {
@@ -241,7 +241,7 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
                     if (out_open_external_tf_editor != nullptr) {
                         (*out_open_external_tf_editor) = true;
                     }
-                    auto param_fullname = std::string(in_module_fullname.c_str()) + "::" + inout_param.GetFullName();
+                    auto param_fullname = std::string(in_module_fullname.c_str()) + "::" + inout_param.FullName();
                     in_external_tf_editor->SetConnectedParameter(&inout_param, param_fullname);
                 }
             }

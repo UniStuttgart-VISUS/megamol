@@ -280,10 +280,10 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
         ImVec2 actual_position = this->Position();
         float radius = GUI_SLOT_RADIUS * state.canvas.zooming;
         this->gui_label.clear();
-        for (auto& callslot_ptr : this->GetCallSlots()) {
+        for (auto& callslot_ptr : this->CallSlots()) {
             this->gui_label += (callslot_ptr->Name() + " ");
         }
-        auto callslot_count = this->GetCallSlots().size();
+        auto callslot_count = this->CallSlots().size();
         if (callslot_count > 1) {
             this->gui_label += ("[" + std::to_string(callslot_count) + "]");
         }
@@ -333,18 +333,16 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
                 if (ImGui::BeginDragDropSource(dnd_flags)) {
                     ImGui::SetDragDropPayload(GUI_DND_CALLSLOT_UID_TYPE, &this->uid, sizeof(ImGuiID));
                     std::string drag_str;
-                    for (auto& callslot_ptr : this->GetCallSlots()) {
+                    for (auto& callslot_ptr : this->CallSlots()) {
                         drag_str += (callslot_ptr->Name() + "\n");
                     }
                     ImGui::TextUnformatted(drag_str.c_str());
                     ImGui::EndDragDropSource();
                 }
-
-
             }
 
             // Hover Tooltip
-            if ((state.interact.interfaceslot_hovered_uid == this->uid) && !this->gui_label_visible) {
+            if ((state.interact.interfaceslot_hovered_uid == this->uid) && !state.interact.callslot_show_label) {
                 this->gui_tooltip.ToolTip(this->gui_label, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
             } else {
                 this->gui_tooltip.Reset();
@@ -433,7 +431,7 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
 
             // Draw Curves
             if (!this->gui_group_collapsed_view) {
-                for (auto& callslot_ptr : this->GetCallSlots()) {
+                for (auto& callslot_ptr : this->CallSlots()) {
                     draw_list->AddLine(actual_position, callslot_ptr->Position(), COLOR_INTERFACE_CURVE,
                         GUI_LINE_THICKNESS * state.canvas.zooming);
                 }
@@ -474,8 +472,8 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
 ImVec2 megamol::gui::InterfaceSlot::Position(void) {
 
     ImVec2 ret_position = this->gui_position;
-    if ((!this->gui_group_collapsed_view) && (this->GetCallSlots().size() > 0)) {
-        auto only_callslot_ptr = this->GetCallSlots().front();
+    if ((!this->gui_group_collapsed_view) && (this->CallSlots().size() > 0)) {
+        auto only_callslot_ptr = this->CallSlots().front();
         ret_position.x = this->gui_position.x;
         ret_position.y = only_callslot_ptr->Position().y;
     }

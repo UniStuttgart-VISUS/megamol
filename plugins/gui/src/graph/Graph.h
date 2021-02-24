@@ -66,7 +66,8 @@ namespace gui {
         ~Graph(void);
 
         ModulePtr_t AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name);
-        ModulePtr_t AddModule(const std::string& class_name, const std::string& description, const std::string& plugin_name, bool is_view);
+        ModulePtr_t AddModule(const std::string& class_name, const std::string& description,
+            const std::string& plugin_name, bool is_view);
         bool DeleteModule(ImGuiID module_uid, bool force = false);
         inline const ModulePtrVector_t& Modules(void) {
             return this->modules;
@@ -192,14 +193,9 @@ namespace gui {
         megamol::gui::GraphItemsState_t gui_graph_state; /// State propagated and shared by all graph items
         bool gui_update;
         bool gui_show_grid;
-        bool gui_show_call_label;
-        bool gui_show_call_slots_label;
-        bool gui_show_slot_label;
-        bool gui_show_module_label;
         bool gui_show_parameter_sidebar;
         bool gui_params_visible;
         bool gui_params_readonly;
-        bool gui_param_extended_mode;
         bool gui_change_show_parameter_sidebar;
         unsigned int gui_graph_layout;
         float gui_parameter_sidebar_width;

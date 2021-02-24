@@ -242,15 +242,15 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Check(bool only_check, ParamPtr
     bool param_resetView = false;
     bool param_showCube = false;
     for (auto& param_ptr : params) {
-        if ((param_ptr->GetName() == "cubeOrientation") && (param_ptr->Type() == Param_t::VECTOR4F)) {
+        if ((param_ptr->Name() == "cubeOrientation") && (param_ptr->Type() == Param_t::VECTOR4F)) {
             param_cubeOrientation = true;
-        } else if ((param_ptr->GetName() == "defaultView") && (param_ptr->Type() == Param_t::ENUM)) {
+        } else if ((param_ptr->Name() == "defaultView") && (param_ptr->Type() == Param_t::ENUM)) {
             param_defaultView = true;
-        } else if ((param_ptr->GetName() == "defaultOrientation") && (param_ptr->Type() == Param_t::ENUM)) {
+        } else if ((param_ptr->Name() == "defaultOrientation") && (param_ptr->Type() == Param_t::ENUM)) {
             param_defaultOrientation = true;
-        } else if ((param_ptr->GetName() == "resetView") && (param_ptr->Type() == Param_t::BUTTON)) {
+        } else if ((param_ptr->Name() == "resetView") && (param_ptr->Type() == Param_t::BUTTON)) {
             param_resetView = true;
-        } else if ((param_ptr->GetName() == "showViewCube") && (param_ptr->Type() == Param_t::BOOL)) {
+        } else if ((param_ptr->Name() == "showViewCube") && (param_ptr->Type() == Param_t::BOOL)) {
             param_showCube = true;
         }
     }
@@ -276,15 +276,15 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
     Parameter* param_showCube = nullptr;
     /// Find specific parameters of group by name because parameter type can occure multiple times.
     for (auto& param_ptr : params) {
-        if ((param_ptr->GetName() == "cubeOrientation") && (param_ptr->Type() == Param_t::VECTOR4F)) {
+        if ((param_ptr->Name() == "cubeOrientation") && (param_ptr->Type() == Param_t::VECTOR4F)) {
             param_cubeOrientation = param_ptr;
-        } else if ((param_ptr->GetName() == "defaultView") && (param_ptr->Type() == Param_t::ENUM)) {
+        } else if ((param_ptr->Name() == "defaultView") && (param_ptr->Type() == Param_t::ENUM)) {
             param_defaultView = param_ptr;
-        } else if ((param_ptr->GetName() == "defaultOrientation") && (param_ptr->Type() == Param_t::ENUM)) {
+        } else if ((param_ptr->Name() == "defaultOrientation") && (param_ptr->Type() == Param_t::ENUM)) {
             param_defaultOrientation = param_ptr;
-        } else if ((param_ptr->GetName() == "resetView") && (param_ptr->Type() == Param_t::BUTTON)) {
+        } else if ((param_ptr->Name() == "resetView") && (param_ptr->Type() == Param_t::BUTTON)) {
             param_resetView = param_ptr;
-        } else if ((param_ptr->GetName() == "showViewCube") && (param_ptr->Type() == Param_t::BOOL)) {
+        } else if ((param_ptr->Name() == "showViewCube") && (param_ptr->Type() == Param_t::BOOL)) {
             param_showCube = param_ptr;
         }
     }

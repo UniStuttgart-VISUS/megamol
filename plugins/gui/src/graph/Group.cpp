@@ -478,7 +478,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                     for (auto& module_ptr : this->modules) {
                         std::string last_module_name = module_ptr->FullName();
                         module_ptr->SetGroupName(this->name);
-                        module_ptr->Update(state.canvas);
+                        module_ptr->Update(state);
                         if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
                             state.interact.module_rename.push_back(StrPair_t(last_module_name, module_ptr->FullName()));
                         }
@@ -602,7 +602,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
 }
 
 
-void megamol::gui::Group::SetPosition(const GraphCanvas_t& in_canvas, ImVec2 pos) {
+void megamol::gui::Group::SetPosition(const GraphItemsState_t& state, ImVec2 pos) {
 
     ImVec2 pos_delta = (pos - this->gui_position);
 
@@ -612,9 +612,9 @@ void megamol::gui::Group::SetPosition(const GraphCanvas_t& in_canvas, ImVec2 pos
         tmp_pos = module_ptr->Position();
         tmp_pos += pos_delta;
         module_ptr->SetPosition(tmp_pos);
-        module_ptr->Update(in_canvas);
+        module_ptr->Update(state);
     }
-    this->UpdatePositionSize(in_canvas);
+    this->UpdatePositionSize(state.canvas);
 }
 
 

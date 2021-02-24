@@ -29,7 +29,6 @@ namespace gui {
      */
     class ParameterGroups {
     public:
-
         ParameterGroups(void);
         ~ParameterGroups(void);
 
@@ -53,7 +52,6 @@ namespace gui {
             ImGuiID in_override_header_state);
 
     private:
-
         typedef std::vector<megamol::gui::Parameter*> ParamPtrVector_t;
         typedef std::map<std::string, ParamPtrVector_t> ParamGroup_t;
 

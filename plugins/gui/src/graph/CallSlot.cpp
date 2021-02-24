@@ -34,6 +34,7 @@ megamol::gui::CallSlot::CallSlot(ImGuiID uid, const std::string& name, const std
         , gui_last_compat_callslot_uid(GUI_INVALID_ID)
         , gui_last_compat_interface_uid(GUI_INVALID_ID)
         , gui_compatible(false)
+        , gui_clipped(false)
         , gui_tooltip() {}
 
 
@@ -280,7 +281,7 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
     try {
         // Apply update of position first
         if (this->gui_update_once) {
-            this->Update(state.canvas);
+            this->Update(state);
             this->gui_update_once = false;
         }
 
@@ -293,7 +294,7 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
             is_parent_module_group_uid = this->GetParentModule()->GroupUID();
         }
         ImVec2 text_pos_left_upper = ImVec2(0.0f, 0.0f);
-        if (this->gui_label_visible) {
+        if (state.interact.callslot_show_label) {
             text_pos_left_upper.y = slot_position.y - ImGui::GetTextLineHeightWithSpacing() / 2.0f;
             if (this->type == CallSlotType::CALLER) {
                 text_pos_left_upper.x = slot_position.x - ImGui::CalcTextSize(this->name.c_str()).x - (1.5f * radius);
@@ -310,7 +311,7 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
         ImVec2 canvas_rect_max = state.canvas.position + state.canvas.size;
         ImVec2 slot_rect_min = ImVec2(slot_position.x - radius, slot_position.y - radius);
         ImVec2 slot_rect_max = ImVec2(slot_position.x + radius, slot_position.y + radius);
-        if (this->gui_label_visible) {
+        if (state.interact.callslot_show_label) {
             if (text_pos_left_upper.x < slot_rect_min.x)
                 slot_rect_min.x = text_pos_left_upper.x;
             if (text_pos_left_upper.x > slot_rect_max.x)
@@ -320,6 +321,7 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
             if (text_pos_left_upper.y > slot_rect_max.y)
                 slot_rect_max.y = text_pos_left_upper.y;
         }
+        this->gui_clipped = false;
         if (!((canvas_rect_min.x < (slot_rect_max.x)) && (canvas_rect_max.x > (slot_rect_min.x)) &&
                 (canvas_rect_min.y < (slot_rect_max.y)) && (canvas_rect_max.y > (slot_rect_min.y)))) {
             if (mouse_clicked_anywhere) {
@@ -328,6 +330,7 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                     state.interact.callslot_selected_uid = GUI_INVALID_ID;
                 }
             }
+            this->gui_clipped = true;
         } else {
             std::string button_label = "callslot_" + std::to_string(this->uid);
 
@@ -392,7 +395,7 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                 }
 
                 // Hover Tooltip
-                if ((state.interact.callslot_hovered_uid == this->uid) && !this->gui_label_visible) {
+                if ((state.interact.callslot_hovered_uid == this->uid) && !state.interact.callslot_show_label) {
                     this->gui_tooltip.ToolTip(this->name, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
                 } else {
                     this->gui_tooltip.Reset();
@@ -480,7 +483,7 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                 draw_list->AddCircle(slot_position, radius, slot_border_color, segment_numer);
 
                 // Text
-                if (this->gui_label_visible) {
+                if (state.interact.callslot_show_label) {
                     ImU32 slot_text_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
                     if (this->type == CallSlotType::CALLEE) {
                         slot_text_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE);
@@ -503,27 +506,27 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
 }
 
 
-void megamol::gui::CallSlot::Update(const GraphCanvas_t& in_canvas) {
+void megamol::gui::CallSlot::Update(const GraphItemsState_t& state) {
 
     if (this->IsParentModuleConnected()) {
-        auto slot_count = this->GetParentModule()->GetCallSlots(this->type).size();
+        auto slot_count = this->GetParentModule()->CallSlots(this->type).size();
         size_t slot_idx = 0;
         for (size_t idx = 0; idx < slot_count; idx++) {
-            if (this->name == this->GetParentModule()->GetCallSlots(this->type)[idx]->name) {
+            if (this->name == this->GetParentModule()->CallSlots(this->type)[idx]->name) {
                 slot_idx = idx;
             }
         }
 
         float line_height = 0.0f;
-        if (this->GetParentModule()->IsLabelVisible()) {
-            line_height = ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming;
+        if (state.interact.module_show_label) {
+            line_height = ImGui::GetTextLineHeightWithSpacing() / state.canvas.zooming;
         }
         auto module_pos = this->GetParentModule()->Position();
         module_pos.y += line_height;
-        ImVec2 pos = in_canvas.offset + module_pos * in_canvas.zooming;
+        ImVec2 pos = state.canvas.offset + module_pos * state.canvas.zooming;
         auto module_size = this->GetParentModule()->Size();
         module_size.y -= line_height;
-        ImVec2 size = module_size * in_canvas.zooming;
+        ImVec2 size = module_size * state.canvas.zooming;
         this->gui_position = ImVec2(pos.x + ((this->type == CallSlotType::CALLER) ? (size.x) : (0.0f)),
             pos.y + size.y * ((float) slot_idx + 1) / ((float) slot_count + 1));
     }

@@ -138,7 +138,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
     try {
         // Update size
         if (this->gui_update || (this->gui_size.x <= 0.0f) || (this->gui_size.y <= 0.0f)) {
-            this->Update(state.canvas);
+            this->Update(state);
             this->gui_update = false;
         }
 
@@ -196,15 +196,8 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
             this->gui_position = this->GetDefaultModulePosition(state.canvas);
         }
 
-        // Check if module and call slots are visible
         bool visible =
             (this->group_uid == GUI_INVALID_ID) || ((this->group_uid != GUI_INVALID_ID) && this->gui_group_visible);
-        for (auto& callslots_map : this->CallSlots()) {
-            for (auto& callslot_ptr : callslots_map.second) {
-                callslot_ptr->SetVisible(visible);
-            }
-        }
-
         if (visible) {
             bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
 
@@ -328,7 +321,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     }
 
                     // Hover Tooltip
-                    if ((state.interact.module_hovered_uid == this->uid) && !this->gui_label_visible) {
+                    if ((state.interact.module_hovered_uid == this->uid) && !state.interact.module_show_label) {
                         this->gui_tooltip.ToolTip(this->name, ImGui::GetID(button_label.c_str()), 0.5f, 5.0f);
                     } else {
                         this->gui_tooltip.Reset();
@@ -346,7 +339,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     } else {
                         std::string last_module_name = this->FullName();
                         if (this->gui_rename_popup.PopUp("Rename Project", popup_rename, this->name)) {
-                            this->Update(state.canvas);
+                            this->Update(state);
                             if (state.interact.graph_core_interface == GraphCoreInterface::MEGAMOL_GRAPH) {
                                 state.interact.module_rename.push_back(StrPair_t(last_module_name, this->FullName()));
                             }
@@ -389,7 +382,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     // Dragging
                     if (this->gui_selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
                         this->gui_position += (ImGui::GetIO().MouseDelta / state.canvas.zooming);
-                        this->Update(state.canvas);
+                        this->Update(state);
                     }
 
                     // Hovering
@@ -431,7 +424,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     bool parameter_button = (this->parameters.size() > 0);
                     bool any_option_button = (graph_entry_button || parameter_button);
 
-                    if (this->gui_label_visible) {
+                    if (state.interact.module_show_label) {
 
                         auto header_color = (this->gui_selected) ? (COLOR_HEADER_HIGHLIGHT) : (COLOR_HEADER);
                         ImVec2 header_rect_max =
@@ -454,7 +447,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                     if (any_option_button) {
                         float item_y_offset = (line_height / 2.0f);
                         float item_x_offset = (ImGui::GetFrameHeight() / 2.0f);
-                        if (!this->gui_label_visible) {
+                        if (!state.interact.module_show_label) {
                             item_y_offset = -(line_height / 2.0f);
                         }
                         if (graph_entry_button && parameter_button) {
@@ -556,14 +549,14 @@ ImVec2 megamol::gui::Module::GetDefaultModulePosition(const GraphCanvas_t& canva
 }
 
 
-void megamol::gui::Module::Update(const GraphCanvas_t& in_canvas) {
+void megamol::gui::Module::Update(const GraphItemsState_t& state) {
 
     ImGuiStyle& style = ImGui::GetStyle();
 
     // WIDTH
     float class_width = 0.0f;
     float max_label_length = 0.0f;
-    if (this->gui_label_visible) {
+    if (state.interact.module_show_label) {
         class_width = ImGui::CalcTextSize(this->class_name.c_str()).x;
         float name_length = ImGui::CalcTextSize(this->name.c_str()).x;
         max_label_length = name_length;
@@ -571,29 +564,29 @@ void megamol::gui::Module::Update(const GraphCanvas_t& in_canvas) {
     float button_width =
         ((this->is_view) ? (2.0f) : (1.0f)) * ImGui::GetTextLineHeightWithSpacing() + style.ItemSpacing.x;
     max_label_length = std::max(max_label_length, button_width);
-    max_label_length /= in_canvas.zooming;
+    max_label_length /= state.canvas.zooming;
     float max_slot_name_length = 0.0f;
-    for (auto& callslots_map : this->CallSlots()) {
-        for (auto& callslot_ptr : callslots_map.second) {
-            if (callslot_ptr->IsLabelVisible()) {
+    if (state.interact.callslot_show_label) {
+        for (auto& callslots_map : this->CallSlots()) {
+            for (auto& callslot_ptr : callslots_map.second) {
                 max_slot_name_length =
                     std::max(ImGui::CalcTextSize(callslot_ptr->Name().c_str()).x, max_slot_name_length);
             }
         }
     }
     if (max_slot_name_length > 0.0f) {
-        max_slot_name_length = (2.0f * max_slot_name_length / in_canvas.zooming) + (1.0f * GUI_SLOT_RADIUS);
+        max_slot_name_length = (2.0f * max_slot_name_length / state.canvas.zooming) + (1.0f * GUI_SLOT_RADIUS);
     }
-    float module_width = std::max((class_width / in_canvas.zooming), (max_label_length + max_slot_name_length)) +
+    float module_width = std::max((class_width / state.canvas.zooming), (max_label_length + max_slot_name_length)) +
                          (3.0f * GUI_SLOT_RADIUS);
 
     // HEIGHT
-    float line_height = (ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming);
+    float line_height = (ImGui::GetTextLineHeightWithSpacing() / state.canvas.zooming);
     auto max_slot_count =
         std::max(this->CallSlots(CallSlotType::CALLEE).size(), this->CallSlots(CallSlotType::CALLER).size());
     float module_slot_height =
         line_height + (static_cast<float>(max_slot_count) * (GUI_SLOT_RADIUS * 2.0f) * 1.5f) + GUI_SLOT_RADIUS;
-    float text_button_height = (line_height * ((this->gui_label_visible) ? (4.0f) : (1.0f)));
+    float text_button_height = (line_height * ((state.interact.module_show_label) ? (4.0f) : (1.0f)));
     float module_height = std::max(module_slot_height, text_button_height);
 
     // Clamp to minimum size
@@ -603,7 +596,7 @@ void megamol::gui::Module::Update(const GraphCanvas_t& in_canvas) {
     // UPDATE all Call Slots ---------------------
     for (auto& slot_pair : this->CallSlots()) {
         for (auto& slot : slot_pair.second) {
-            slot->Update(in_canvas);
+            slot->Update(state);
         }
     }
 }

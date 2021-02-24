@@ -248,6 +248,7 @@ namespace gui {
 
     /* Data type holding information on graph item interaction. */
     typedef struct _interact_state_ {
+
         ImGuiID button_active_uid;  // in out
         ImGuiID button_hovered_uid; // in out
         bool process_deletion;      // out
@@ -264,9 +265,12 @@ namespace gui {
         StrPairVector_t module_rename;                   // out
         vislib::math::Ternary module_graphentry_changed; // out
         ImVec2 module_param_child_position;              // out
+        bool module_show_label;                          // in
 
-        ImGuiID call_selected_uid; // in out
-        ImGuiID call_hovered_uid;  // in out
+        ImGuiID call_selected_uid;  // in out
+        ImGuiID call_hovered_uid;   // in out
+        bool call_show_label;       // in
+        bool call_show_slots_label; // in
 
         ImGuiID slot_dropped_uid; // in out
 
@@ -275,10 +279,13 @@ namespace gui {
         UIDPair_t callslot_add_group_uid;    // in out
         UIDPair_t callslot_remove_group_uid; // in out
         CallSlotPtr_t callslot_compat_ptr;   // in
+        bool callslot_show_label;            // in
 
         ImGuiID interfaceslot_selected_uid;          // in out
         ImGuiID interfaceslot_hovered_uid;           // in out
         InterfaceSlotPtr_t interfaceslot_compat_ptr; // in
+
+        bool parameters_extended_mode; // in
 
         GraphCoreInterface graph_core_interface; // in
 

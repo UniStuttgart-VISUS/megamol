@@ -359,7 +359,8 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
 
             if (add_module) {
                 if (auto selected_graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
-                    if (auto module_ptr = selected_graph_ptr->AddModule(this->graph_collection.GetModulesStock(), mod.class_name)) {
+                    if (auto module_ptr =
+                            selected_graph_ptr->AddModule(this->graph_collection.GetModulesStock(), mod.class_name)) {
 
                         // If there is a call slot selected, create call to compatible call slot of new module
                         bool added_call = false;
