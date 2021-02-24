@@ -32,7 +32,7 @@
  * - Selection, Drag & Drop:    Left Mouse Button
  * - Context Menu:              Right Mouse Button
  * - Zooming:                   Mouse Wheel
- * - Scrolling:                 Ctrl  +  Left Mouse Button
+ * - Scrolling:                 Middle Mouse Button
  *
  **/
 

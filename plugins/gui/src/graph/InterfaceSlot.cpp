@@ -23,13 +23,12 @@ megamol::gui::InterfaceSlot::InterfaceSlot(ImGuiID uid, bool auto_create)
         , callslots()
         , group_uid(GUI_INVALID_ID)
         , gui_selected(false)
+        , gui_position(ImVec2(FLT_MAX, FLT_MAX))
         , gui_label()
         , gui_last_compat_callslot_uid(GUI_INVALID_ID)
         , gui_last_compat_interface_uid(GUI_INVALID_ID)
         , gui_compatible(false)
-        , gui_position(ImVec2(FLT_MAX, FLT_MAX))
         , gui_group_collapsed_view(false)
-        , gui_label_visible(false)
         , gui_tooltip() {}
 
 
@@ -340,6 +339,8 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
                     ImGui::TextUnformatted(drag_str.c_str());
                     ImGui::EndDragDropSource();
                 }
+
+
             }
 
             // Hover Tooltip

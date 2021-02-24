@@ -21,11 +21,11 @@
 
 
 #include "Configurator.h"
-#include "CorporateGreyStyle.h"
-#include "CorporateWhiteStyle.h"
-#include "DefaultStyle.h"
 #include "LogConsole.h"
 #include "WindowCollection.h"
+#include "widgets/DefaultStyle.h"
+#include "widgets/CorporateGreyStyle.h"
+#include "widgets/CorporateWhiteStyle.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/MinimalPopUp.h"

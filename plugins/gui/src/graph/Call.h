@@ -79,8 +79,7 @@ namespace gui {
         std::map<CallSlotType, CallSlotPtr_t> connected_callslots;
 
         bool gui_selected;
-        bool gui_label_visible;
-        bool gui_slots_visible;
+
         HoverToolTip gui_tooltip;
     };
 

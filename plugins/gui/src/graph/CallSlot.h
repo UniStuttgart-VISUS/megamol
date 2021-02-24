@@ -74,12 +74,6 @@ namespace gui {
         void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
         void Update(const GraphCanvas_t& in_canvas);
 
-        inline bool IsVisible(void) const {
-            return this->gui_visible;
-        }
-        inline bool IsLabelVisible(void) const {
-            return this->gui_label_visible;
-        }
         inline const ImGuiID UID(void) const {
             return this->uid;
         }
@@ -99,9 +93,6 @@ namespace gui {
             return this->compatible_call_idxs;
         }
 
-        void SetVisible(bool visible) {
-            this->gui_visible = visible;
-        }
         void SetInterfaceSlotPtr(InterfaceSlotPtr_t interfaceslot_ptr) {
             this->gui_interfaceslot_ptr = interfaceslot_ptr;
         }
@@ -119,9 +110,7 @@ namespace gui {
         ModulePtr_t parent_module;
         std::vector<CallPtr_t> connected_calls;
 
-        bool gui_visible;
         bool gui_selected;
-        bool gui_label_visible;
         ImVec2 gui_position; /// Absolute position including canvas offset and zooming
         InterfaceSlotPtr_t gui_interfaceslot_ptr;
         bool gui_update_once;
@@ -129,6 +118,7 @@ namespace gui {
         ImGuiID gui_last_compat_callslot_uid;
         ImGuiID gui_last_compat_interface_uid;
         bool gui_compatible;
+
         HoverToolTip gui_tooltip;
     };
 

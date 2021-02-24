@@ -45,11 +45,11 @@ namespace gui {
         }
 
         ImGuiID AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr, bool auto_add = true);
-        InterfaceSlotPtr_t GetInterfaceSlot(ImGuiID interfaceslot_uid);
-        inline InterfaceSlotPtrMap_t& GetInterfaceSlots(void) {
+        InterfaceSlotPtr_t InterfaceSlotPtr(ImGuiID interfaceslot_uid);
+        inline InterfaceSlotPtrMap_t& InterfaceSlots(void) {
             return this->interfaceslots;
         }
-        inline InterfaceSlotPtrVector_t& GetInterfaceSlots(CallSlotType type) {
+        inline InterfaceSlotPtrVector_t& InterfaceSlots(CallSlotType type) {
             return this->interfaceslots[type];
         }
         bool DeleteInterfaceSlot(ImGuiID interfaceslot_uid);
@@ -65,6 +65,12 @@ namespace gui {
         inline const ImGuiID UID(void) const {
             return this->uid;
         }
+        inline ModulePtrVector_t& Modules(void) {
+            return this->modules;
+        }
+        inline const std::string Name(void) const {
+            return this->name;
+        }
         inline ImVec2 Size(void) {
             return this->gui_size;
         }
@@ -75,6 +81,9 @@ namespace gui {
             this->gui_update = true;
         }
 
+        inline void SetName(const std::string& group_name) {
+            this->name = group_name;
+        }
         void SetPosition(const GraphCanvas_t& in_canvas, ImVec2 pos);
 
     private:
@@ -87,13 +96,14 @@ namespace gui {
         ModulePtrVector_t modules;
         InterfaceSlotPtrMap_t interfaceslots;
 
+        bool gui_selected;
         ImVec2 gui_position; /// Relative position without considering canvas offset and zooming
         ImVec2 gui_size;     /// Relative size without considering zooming
         bool gui_collapsed_view;
         bool gui_allow_selection;
         bool gui_allow_context;
-        bool gui_selected;
         bool gui_update;
+
         RenamePopUp gui_rename_popup;
     };
 

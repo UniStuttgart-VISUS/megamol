@@ -26,8 +26,6 @@ megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::
         , functions(functions)
         , connected_callslots()
         , gui_selected(false)
-        , gui_label_visible(true)
-        , gui_slots_visible(false)
         , gui_tooltip() {
 
     this->connected_callslots.emplace(CallSlotType::CALLER, nullptr);

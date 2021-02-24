@@ -217,24 +217,23 @@ namespace gui {
             return std::get<T>(this->storage);
         }
 
-        bool DefaultValueMismatch(void) {
+        inline bool DefaultValueMismatch(void) {
             return this->default_value_mismatch;
         }
-
-        size_t GetTransferFunctionHash(void) const {
+        inline size_t GetTransferFunctionHash(void) const {
             return this->tf_string_hash;
         }
-
-        const Param_t Type(void) const {
+        inline const Param_t Type(void) const {
             return this->type;
         }
-
-        const std::string FloatFormat(void) const {
+        inline const std::string FloatFormat(void) const {
             return this->gui_float_format;
         }
-
-        const bool IsExtended(void) const {
+        inline const bool IsExtended(void) const {
             return this->gui_extended;
+        }
+        inline  vislib::SmartPtr<megamol::core::param::AbstractParam>& CoreParamPtr(void) const {
+            return this->core_param_ptr;
         }
 
         // SET ----------------------------------------------------------------

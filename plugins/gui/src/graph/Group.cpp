@@ -89,7 +89,7 @@ bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
             if ((*mod_iter)->UID() == module_uid) {
 
                 // Remove call slots from group interface
-                for (auto& callslot_map : (*mod_iter)->GetCallSlots()) {
+                for (auto& callslot_map : (*mod_iter)->CallSlots()) {
                     for (auto& callslot_ptr : callslot_map.second) {
                         this->InterfaceSlot_RemoveCallSlot(callslot_ptr->UID(), true);
                     }
@@ -242,7 +242,7 @@ bool megamol::gui::Group::InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid) {
 }
 
 
-InterfaceSlotPtr_t megamol::gui::Group::GetInterfaceSlot(ImGuiID interfaceslot_uid) {
+InterfaceSlotPtr_t megamol::gui::Group::InterfaceSlotPtr(ImGuiID interfaceslot_uid) {
 
     if (interfaceslot_uid != GUI_INVALID_ID) {
         for (auto& interfaceslots_map : this->interfaceslots) {
@@ -317,7 +317,7 @@ void megamol::gui::Group::RestoreInterfaceslots(void) {
     /// 1] REMOVE connected call slots of group interface if connected module is part of same group
     for (auto& module_ptr : this->modules) {
         // CALLER
-        for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
+        for (auto& callerslot_ptr : module_ptr->CallSlots(CallSlotType::CALLER)) {
             for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                 auto calleeslot_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLEE);
                 if (calleeslot_ptr->IsParentModuleConnected()) {
@@ -329,7 +329,7 @@ void megamol::gui::Group::RestoreInterfaceslots(void) {
             }
         }
         // CALLEE
-        for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
+        for (auto& calleeslot_ptr : module_ptr->CallSlots(CallSlotType::CALLEE)) {
             for (auto& call_ptr : calleeslot_ptr->GetConnectedCalls()) {
                 auto callerslot_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLER);
                 if (callerslot_ptr->IsParentModuleConnected()) {
@@ -345,7 +345,7 @@ void megamol::gui::Group::RestoreInterfaceslots(void) {
     /// 2] ADD connected call slots to group interface if connected module is not part of same group
     for (auto& module_ptr : this->modules) {
         // CALLER
-        for (auto& callerslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLER)) {
+        for (auto& callerslot_ptr : module_ptr->CallSlots(CallSlotType::CALLER)) {
             for (auto& call_ptr : callerslot_ptr->GetConnectedCalls()) {
                 auto calleeslot_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLEE);
                 if (calleeslot_ptr->IsParentModuleConnected()) {
@@ -357,7 +357,7 @@ void megamol::gui::Group::RestoreInterfaceslots(void) {
             }
         }
         // CALLEE
-        for (auto& calleeslot_ptr : module_ptr->GetCallSlots(CallSlotType::CALLEE)) {
+        for (auto& calleeslot_ptr : module_ptr->CallSlots(CallSlotType::CALLEE)) {
             for (auto& call_ptr : calleeslot_ptr->GetConnectedCalls()) {
                 auto callerslot_ptr = call_ptr->CallSlotPtr(CallSlotType::CALLER);
                 if (callerslot_ptr->IsParentModuleConnected()) {
@@ -575,7 +575,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             for (auto& module_ptr : this->modules) {
                 module_ptr->SetGroupVisible(!this->gui_collapsed_view);
             }
-            for (auto& interfaceslots_map : this->GetInterfaceSlots()) {
+            for (auto& interfaceslots_map : this->InterfaceSlots()) {
                 for (auto& interfaceslot_ptr : interfaceslots_map.second) {
                     interfaceslot_ptr->SetGroupViewCollapsed(this->gui_collapsed_view);
                 }
@@ -584,7 +584,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
         }
 
         // INTERFACE SLOTS -----------------------------------------------------
-        for (auto& interfaceslots_map : this->GetInterfaceSlots()) {
+        for (auto& interfaceslots_map : this->InterfaceSlots()) {
             for (auto& interfaceslot_ptr : interfaceslots_map.second) {
                 interfaceslot_ptr->Draw(phase, state);
             }
@@ -642,15 +642,15 @@ void megamol::gui::Group::UpdatePositionSize(const GraphCanvas_t& in_canvas) {
     // SIZE
     float group_width = 0.0f;
     float group_height = 0.0f;
-    size_t caller_count = this->GetInterfaceSlots().operator[](CallSlotType::CALLER).size();
-    size_t callee_count = this->GetInterfaceSlots().operator[](CallSlotType::CALLEE).size();
+    size_t caller_count = this->InterfaceSlots().operator[](CallSlotType::CALLER).size();
+    size_t callee_count = this->InterfaceSlots().operator[](CallSlotType::CALLEE).size();
     size_t max_slot_count = std::max(caller_count, callee_count);
 
     // WIDTH
     float max_label_length = 0.0f;
     // Consider interface slot label width only in collapsed view
     if (this->gui_collapsed_view) {
-        for (auto& interfaceslot_map : this->GetInterfaceSlots()) {
+        for (auto& interfaceslot_map : this->InterfaceSlots()) {
             for (auto& interfaceslot_ptr : interfaceslot_map.second) {
                 max_label_length =
                     std::max(ImGui::CalcTextSize(interfaceslot_ptr->Label().c_str()).x, max_label_length);
@@ -697,7 +697,7 @@ void megamol::gui::Group::UpdatePositionSize(const GraphCanvas_t& in_canvas) {
     size_t callee_idx = 0;
     ImVec2 callslot_group_position;
 
-    for (auto& interfaceslots_map : this->GetInterfaceSlots()) {
+    for (auto& interfaceslots_map : this->InterfaceSlots()) {
         for (auto& interfaceslot_ptr : interfaceslots_map.second) {
             if (interfaceslots_map.first == CallSlotType::CALLER) {
                 callslot_group_position = ImVec2((group_pos.x + group_size.x),

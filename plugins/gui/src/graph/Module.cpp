@@ -18,23 +18,22 @@ using namespace megamol::gui;
 
 
 megamol::gui::Module::Module(ImGuiID uid, const std::string& class_name, const std::string& description,
-    const std::string& plugin_name, const ParamVector_t& parameters)
+    const std::string& plugin_name, bool is_view)
         : uid(uid)
         , class_name(class_name)
         , description(description)
         , plugin_name(plugin_name)
-        , parameters(parameters)
+        , is_view(is_view)
+        , parameters()
         , callslots()
-        , is_view(false)
         , name("")
         , graph_entry_name("")
         , group_uid(GUI_INVALID_ID)
         , group_name("")
-        , gui_label_visible()
-        , gui_position(ImVec2(FLT_MAX, FLT_MAX))
         , gui_param_groups()
-        , gui_size(ImVec2(0.0f, 0.0f))
         , gui_selected(false)
+        , gui_position(ImVec2(FLT_MAX, FLT_MAX))
+        , gui_size(ImVec2(0.0f, 0.0f))
         , gui_update(true)
         , gui_param_child_show(false)
         , gui_set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
@@ -108,10 +107,10 @@ bool megamol::gui::Module::DeleteCallSlots(void) {
 }
 
 
-CallSlotPtr_t megamol::gui::Module::GetCallSlot(ImGuiID callslot_uid) {
+CallSlotPtr_t megamol::gui::Module::CallSlotPtr(ImGuiID callslot_uid) {
 
     if (callslot_uid != GUI_INVALID_ID) {
-        for (auto& callslot_map : this->GetCallSlots()) {
+        for (auto& callslot_map : this->CallSlots()) {
             for (auto& callslot : callslot_map.second) {
                 if (callslot->UID() == callslot_uid) {
                     return callslot;
@@ -150,7 +149,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
         }
         // Init position using current compatible slot
         if (this->gui_set_selected_slot_position) {
-            for (auto& callslot_map : this->GetCallSlots()) {
+            for (auto& callslot_map : this->CallSlots()) {
                 for (auto& callslot_ptr : callslot_map.second) {
                     CallSlotType callslot_type = (callslot_ptr->Type() == CallSlotType::CALLEE)
                                                      ? (CallSlotType::CALLER)
@@ -200,7 +199,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
         // Check if module and call slots are visible
         bool visible =
             (this->group_uid == GUI_INVALID_ID) || ((this->group_uid != GUI_INVALID_ID) && this->gui_group_visible);
-        for (auto& callslots_map : this->GetCallSlots()) {
+        for (auto& callslots_map : this->CallSlots()) {
             for (auto& callslot_ptr : callslots_map.second) {
                 callslot_ptr->SetVisible(visible);
             }
@@ -529,7 +528,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
             }
 
             // CALL SLOTS ------------------------------------------------------
-            for (auto& callslots_map : this->GetCallSlots()) {
+            for (auto& callslots_map : this->CallSlots()) {
                 for (auto& callslot_ptr : callslots_map.second) {
                     callslot_ptr->Draw(phase, state);
                 }
@@ -574,7 +573,7 @@ void megamol::gui::Module::Update(const GraphCanvas_t& in_canvas) {
     max_label_length = std::max(max_label_length, button_width);
     max_label_length /= in_canvas.zooming;
     float max_slot_name_length = 0.0f;
-    for (auto& callslots_map : this->GetCallSlots()) {
+    for (auto& callslots_map : this->CallSlots()) {
         for (auto& callslot_ptr : callslots_map.second) {
             if (callslot_ptr->IsLabelVisible()) {
                 max_slot_name_length =
@@ -591,7 +590,7 @@ void megamol::gui::Module::Update(const GraphCanvas_t& in_canvas) {
     // HEIGHT
     float line_height = (ImGui::GetTextLineHeightWithSpacing() / in_canvas.zooming);
     auto max_slot_count =
-        std::max(this->GetCallSlots(CallSlotType::CALLEE).size(), this->GetCallSlots(CallSlotType::CALLER).size());
+        std::max(this->CallSlots(CallSlotType::CALLEE).size(), this->CallSlots(CallSlotType::CALLER).size());
     float module_slot_height =
         line_height + (static_cast<float>(max_slot_count) * (GUI_SLOT_RADIUS * 2.0f) * 1.5f) + GUI_SLOT_RADIUS;
     float text_button_height = (line_height * ((this->gui_label_visible) ? (4.0f) : (1.0f)));
@@ -602,7 +601,7 @@ void megamol::gui::Module::Update(const GraphCanvas_t& in_canvas) {
         std::max(module_height, (50.0f * megamol::gui::gui_scaling.Get())));
 
     // UPDATE all Call Slots ---------------------
-    for (auto& slot_pair : this->GetCallSlots()) {
+    for (auto& slot_pair : this->CallSlots()) {
         for (auto& slot : slot_pair.second) {
             slot->Update(in_canvas);
         }

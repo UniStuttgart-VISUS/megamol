@@ -52,7 +52,7 @@ namespace gui {
         static ImVec2 GetDefaultModulePosition(const GraphCanvas_t& canvas);
 
         Module(ImGuiID uid, const std::string& class_name, const std::string& description,
-            const std::string& plugin_name, const ParamVector_t& parameters);
+            const std::string& plugin_name, bool is_view);
         ~Module();
 
         bool AddCallSlot(CallSlotPtr_t callslot);
@@ -63,11 +63,11 @@ namespace gui {
 
         // GET ----------------------------------------------------------------
 
-        CallSlotPtr_t GetCallSlot(ImGuiID callslot_uid);
-        const CallSlotPtrVector_t& GetCallSlots(CallSlotType type) {
+        CallSlotPtr_t CallSlotPtr(ImGuiID callslot_uid);
+        const CallSlotPtrVector_t& CallSlots(CallSlotType type) {
             return this->callslots[type];
         }
-        const CallSlotPtrMap_t& GetCallSlots(void) {
+        const CallSlotPtrMap_t& CallSlots(void) {
             return this->callslots;
         }
 
@@ -99,12 +99,33 @@ namespace gui {
         inline ImGuiID GroupUID(void) const {
             return this->group_uid;
         }
-        inline bool IsLabelVisible(void) const {
-            return this->gui_label_visible;
+        inline ParamVector_t& Parameters(void) {
+            return this->parameters;
+        }
+        inline  bool IsView(void) const {
+            return this->is_view;
+        }
+        inline ParameterGroups& GUIParameterGroups(void) {
+            return this->gui_param_groups;
+        }
+        inline const std::string GroupName(void) const {
+            return this->group_name;
+        }
+        inline const std::string Description(void) const {
+            return this->description;
+        }
+        inline const std::string GraphEntryName(void) const {
+            return this->graph_entry_name;
         }
 
         // SET ----------------------------------------------------------------
 
+        inline void SetName(const std::string& module_name) {
+            this->name = module_name;
+        }
+        inline void SetGraphEntryName(const std::string& graph_entry) {
+            this->graph_entry_name = graph_entry;
+        }
         inline void SetGroupUID(ImGuiID uid) {
             this->group_uid = uid;
         }
@@ -131,21 +152,22 @@ namespace gui {
         const std::string class_name;
         const std::string description;
         const std::string plugin_name;
-        const ParamVector_t parameters;
+        const bool is_view;
 
+        ParamVector_t parameters;
         CallSlotPtrMap_t callslots;
 
-        bool is_view;
         std::string name;
         std::string graph_entry_name;
+
         ImGuiID group_uid;
         std::string group_name;
 
-        bool gui_label_visible;
-        ImVec2 gui_position; /// Relative position without considering canvas offset and zooming
         ParameterGroups gui_param_groups;
-        ImVec2 gui_size; /// Relative size without considering zooming
+
         bool gui_selected;
+        ImVec2 gui_position; /// Relative position without considering canvas offset and zooming
+        ImVec2 gui_size; /// Relative size without considering zooming
         bool gui_update;
         bool gui_param_child_show;
         ImVec2 gui_set_screen_position;

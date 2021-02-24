@@ -46,7 +46,7 @@ namespace gui {
         bool IsConnectionValid(CallSlot& callslot);
         bool IsConnectionValid(InterfaceSlot& interfaceslot);
         CallSlotPtr_t GetCompatibleCallSlot(void);
-        CallSlotPtrVector_t& GetCallSlots(void) {
+        CallSlotPtrVector_t& CallSlots(void) {
             return this->callslots;
         }
         bool IsConnected(void);
@@ -63,6 +63,9 @@ namespace gui {
         }
         inline const ImGuiID UID(void) const {
             return this->uid;
+        }
+        inline const ImGuiID GroupUID(void) const {
+            return this->group_uid;
         }
         ImVec2 Position(void);
 
@@ -90,15 +93,15 @@ namespace gui {
         ImGuiID group_uid;
 
         bool gui_selected;
+        ImVec2 gui_position; /// Absolute position including canvas offset and zooming
         std::string gui_label;
         ImGuiID gui_last_compat_callslot_uid;
         ImGuiID gui_last_compat_interface_uid;
         bool gui_compatible;
-        ImVec2 gui_position; /// Absolute position including canvas offset and zooming
         bool gui_group_collapsed_view;
-        bool gui_label_visible;
-        HoverToolTip gui_tooltip;
 
+        HoverToolTip gui_tooltip;
+        
         // FUNCTIONS --------------------------------------------------------------
 
         bool is_callslot_compatible(CallSlot& callslot);

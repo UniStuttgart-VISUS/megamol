@@ -290,8 +290,8 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
     if (auto selected_graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
         auto callslot_id = selected_graph_ptr->GetSelectedCallSlot();
         if (callslot_id != GUI_INVALID_ID) {
-            for (auto& module_ptr : selected_graph_ptr->GetModules()) {
-                if (auto callslot_ptr = module_ptr->GetCallSlot(callslot_id)) {
+            for (auto& module_ptr : selected_graph_ptr->Modules()) {
+                if (auto callslot_ptr = module_ptr->CallSlotPtr(callslot_id)) {
                     selected_callslot_ptr = callslot_ptr;
                 }
             }
@@ -300,7 +300,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
         if (interfaceslot_id != GUI_INVALID_ID) {
             for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
                 InterfaceSlotPtr_t interfaceslot_ptr;
-                if (auto interfaceslot_ptr = group_ptr->GetInterfaceSlot(interfaceslot_id)) {
+                if (auto interfaceslot_ptr = group_ptr->InterfaceSlotPtr(interfaceslot_id)) {
                     CallSlotPtr_t callslot_ptr;
                     if (auto callslot_ptr = interfaceslot_ptr->GetCompatibleCallSlot()) {
                         selected_callslot_ptr = callslot_ptr;
@@ -359,15 +359,13 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
 
             if (add_module) {
                 if (auto selected_graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
-                    ImGuiID module_uid =
-                        selected_graph_ptr->AddModule(this->graph_collection.GetModulesStock(), mod.class_name);
-                    if (auto module_ptr = selected_graph_ptr->GetModule(module_uid)) {
+                    if (auto module_ptr = selected_graph_ptr->AddModule(this->graph_collection.GetModulesStock(), mod.class_name)) {
 
                         // If there is a call slot selected, create call to compatible call slot of new module
                         bool added_call = false;
                         if (compat_filter && (selected_callslot_ptr != nullptr)) {
                             // Get call slots of last added module
-                            for (auto& callslot_map : module_ptr->GetCallSlots()) {
+                            for (auto& callslot_map : module_ptr->CallSlots()) {
                                 for (auto& callslot_ptr : callslot_map.second) {
                                     if (callslot_ptr->Name() == compat_callslot_name) {
                                         added_call = selected_graph_ptr->AddCall(this->graph_collection.GetCallsStock(),

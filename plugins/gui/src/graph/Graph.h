@@ -65,10 +65,10 @@ namespace gui {
         Graph(const std::string& graph_name, GraphCoreInterface core_interface);
         ~Graph(void);
 
-        ImGuiID AddModule(const ModuleStockVector_t& stock_modules, const std::string& module_class_name);
-        ImGuiID AddEmptyModule(void);
+        ModulePtr_t AddModule(const ModuleStockVector_t& stock_modules, const std::string& class_name);
+        ModulePtr_t AddModule(const std::string& class_name, const std::string& description, const std::string& plugin_name, bool is_view);
         bool DeleteModule(ImGuiID module_uid, bool force = false);
-        inline const ModulePtrVector_t& GetModules(void) {
+        inline const ModulePtrVector_t& Modules(void) {
             return this->modules;
         }
         ModulePtr_t GetModule(ImGuiID module_uid);
@@ -164,18 +164,6 @@ namespace gui {
         ImGuiID GetDropSlot(void) const {
             return this->gui_graph_state.interact.slot_dropped_uid;
         }
-        bool GetModuleLabelVisibility(void) const {
-            return this->gui_show_module_label;
-        }
-        bool GetSlotLabelVisibility(void) const {
-            return this->gui_show_slot_label;
-        }
-        bool GetCallLabelVisibility(void) const {
-            return this->gui_show_call_label;
-        }
-        bool GetCallSlotLabelVisibility(void) const {
-            return this->gui_show_call_slots_label;
-        }
         bool IsCanvasHoverd(void) const {
             return this->gui_canvas_hovered;
         }
@@ -232,15 +220,15 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        void draw_menu(Graph& inout_graph);
-        void draw_canvas(Graph& inout_graph, float child_width);
-        void draw_parameters(Graph& inout_graph, float child_width);
+        void draw_menu(void);
+        void draw_canvas(float child_width);
+        void draw_parameters(float child_width);
 
         void draw_canvas_grid(void);
-        void draw_canvas_dragged_call(Graph& inout_graph);
-        void draw_canvas_multiselection(Graph& inout_graph);
+        void draw_canvas_dragged_call(void);
+        void draw_canvas_multiselection(void);
 
-        void layout_graph(Graph& inout_graph);
+        void layout_graph(void);
         void layout(const ModulePtrVector_t& modules, const GroupPtrVector_t& groups, ImVec2 init_position);
 
         bool connected_callslot(
