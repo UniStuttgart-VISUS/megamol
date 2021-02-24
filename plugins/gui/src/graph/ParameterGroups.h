@@ -15,7 +15,6 @@
 #include "widgets/ImageWidget_gl.h"
 #include "widgets/ParameterGroupAnimationWidget.h"
 #include "widgets/ParameterGroupViewCubeWidget.h"
-#include "widgets/WidgetPicking_gl.h"
 
 #include "vislib/math/Ternary.h"
 

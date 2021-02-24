@@ -2564,10 +2564,10 @@ void megamol::gui::Graph::layout(
         ModulePtr_t module_ptr;
         GroupPtr_t group_ptr;
         bool considered;
-
         LayoutItem() : module_ptr(nullptr), group_ptr(nullptr), considered(false) {}
         ~LayoutItem() {}
     };
+
     std::vector<std::vector<LayoutItem>> layers;
     layers.clear();
 

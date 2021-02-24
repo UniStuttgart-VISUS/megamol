@@ -169,8 +169,8 @@ namespace gui {
             return this->gui_canvas_hovered;
         }
 
-        void SetLayoutGraph(bool l = true) {
-            this->gui_graph_layout = ((l) ? (1) : (0));
+        void SetLayoutGraph(bool layout = true) {
+            this->gui_graph_layout = ((layout) ? (1) : (0));
         }
 
     private:
