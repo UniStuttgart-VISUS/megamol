@@ -54,12 +54,16 @@ public:
     /** Dtor. */
     virtual ~View3DGL(void);
 
+    virtual void Render(double time, double instanceTime) override;
+
+    virtual void Render(double time, double instanceTime, Camera camera) override;
+
     /**
-     * Renders this AbstractView3D in the currently active OpenGL context.
+     * Define pure virtual render function
      *
-     * @param context
+     * @param 
      */
-    virtual void Render(const mmcRenderViewContext& context, Call* call) override;
+    virtual void Render(double time, double instanceTime, Call& call) override;
 
     virtual bool OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) override;
 

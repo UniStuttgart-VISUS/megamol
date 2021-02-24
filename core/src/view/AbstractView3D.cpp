@@ -71,9 +71,6 @@ AbstractView3D::AbstractView3D(void)
 
     using vislib::sys::KeyCode;
 
-    this->_camera.resolution_gate(cam_type::screen_size_type(100, 100));
-    this->_camera.image_tile(cam_type::screen_rectangle_type(std::array<int, 4>{0, 100, 100, 0}));
-
     this->_showLookAt.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->_showLookAt);
 
@@ -205,9 +202,9 @@ unsigned int AbstractView3D::GetCameraSyncNumber(void) const {
 /*
  * AbstractView3D::beforeRender
  */
-void AbstractView3D::beforeRender(const mmcRenderViewContext& context) {
+void AbstractView3D::beforeRender(double time, double instanceTime) {
 
-    AbstractView::beforeRender(context);
+    AbstractView::beforeRender(time, instanceTime);
 
     // get camera values from params(?)
     this->adaptCameraValues(this->_camera);
@@ -235,11 +232,11 @@ void AbstractView3D::beforeRender(const mmcRenderViewContext& context) {
 /*
  * AbstractView3D::afterRender
  */
-void AbstractView3D::afterRender(const mmcRenderViewContext& context) {
+void AbstractView3D::afterRender() {
     // set camera values to params
     this->setCameraValues(this->_camera);
 
-    AbstractView::afterRender(context);
+    AbstractView::afterRender();
 }
 
 /*

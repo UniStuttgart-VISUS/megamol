@@ -150,12 +150,10 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
         }
 
         // obtain camera information
-        core::view::Camera_2 cam = call_camera->getData();
-        cam_type::snapshot_type snapshot;
-        cam_type::matrix_type view_tmp, proj_tmp;
-        cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-        glm::mat4 view_mx = view_tmp;
-        glm::mat4 proj_mx = proj_tmp;
+        core::view::Camera cam = call_camera->getData();
+        auto cam_pose = cam.get<core::view::Camera::Pose>();
+        auto view_mx = cam.getViewMatrix();
+        auto proj_mx = cam.getProjectionMatrix();
 
         if (call_light->hasUpdate()) {
             auto lights = call_light->getData();
@@ -173,8 +171,7 @@ bool megamol::compositing::LocalLighting::getDataCallback(core::Call& caller) {
 
             for (auto dl : distant_lights) {
                 if (dl.eye_direction) {
-                    glm::vec3 cam_dir(snapshot.view_vector.x(), snapshot.view_vector.y(), snapshot.view_vector.z());
-                    cam_dir = glm::normalize(cam_dir);
+                    auto cam_dir = glm::normalize(cam_pose.direction);
                     m_distant_lights.push_back({cam_dir.x, cam_dir.y, cam_dir.z, dl.intensity});
                 } else {
                     m_distant_lights.push_back(

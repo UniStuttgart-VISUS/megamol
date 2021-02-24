@@ -25,7 +25,7 @@
 
 #include "mmcore/view/CameraSerializer.h"
 #include "mmcore/param/ParamSlot.h"
-#include "mmcore/view/Camera_2.h"
+#include "mmcore/view/Camera.h"
 #include "mmcore/view/TimeControl.h"
 
 namespace megamol {
@@ -120,19 +120,30 @@ public:
 
     /**
      * Renders this AbstractView.
+     * The View will use its own camera and framebuffer for the rendering exectuion
      *
-     * @param context The context information like time or GPU affinity.
+     * @param time ...
+     * @param instanceTime ...
      */
-    void Render(const mmcRenderViewContext& context) {
-        this->Render(context, nullptr);
-    };
+    virtual void Render(double time, double instanceTime) = 0;
 
     /**
-     * Renders this AbstractView. Implemented by child classes.
+     * Renders this AbstractView.
+     * The View will use the given camera and its own framebuffer for the rendering exectuion
      *
-     * @param context The context information like time or GPU affinity.
+     * @param time ...
+     * @param instanceTime ...
+     * @param camera Overrides the Views camera. Use for VR and tiled rendering.
      */
-    virtual void Render(const mmcRenderViewContext& context, Call* call) = 0;
+    virtual void Render(double time, double instanceTime, Camera camera) = 0;
+
+    /**
+     * Renders this AbstractView.
+     * The View will simply pass trough all values from the incoming call.
+     *
+     * @param call The incoming (i.e. lhs) RenderViewCall
+     */
+    virtual void Render(double time, double instanceTime, Call& call) = 0;
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -146,7 +157,7 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height);
+    virtual void Resize(unsigned int width, unsigned int height) = 0;
 
     /**
      * Answers the desired window position configuration of this view.
@@ -317,12 +328,12 @@ protected:
     /**
      * ...
      */
-    void beforeRender(const mmcRenderViewContext& context);
+    void beforeRender(double time, double instanceTime);
 
     /**
      * ...
      */
-    void afterRender(const mmcRenderViewContext& context);
+    void afterRender();
 
     /**
      * Unpacks the mouse coordinates, which are relative to the virtual
@@ -382,7 +393,7 @@ protected:
     BoundingBoxes_2 _bboxs;
 
     /** The camera */
-    Camera_2 _camera;
+    Camera _camera;
 
     /** Slot containing the settings of the currently stored camera */
     param::ParamSlot _cameraSettingsSlot;

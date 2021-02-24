@@ -304,28 +304,13 @@ bool view::AbstractView::desiredWindowPosition(const vislib::StringW& str,
     return true;
 }
 
-/*
- * AbstractView::Resize
- */
-void view::AbstractView::Resize(unsigned int width, unsigned int height) {
-    if (this->_camera.resolution_gate().width() != width || this->_camera.resolution_gate().height() != height) {
-        this->_camera.resolution_gate(cam_type::screen_size_type(static_cast<LONG>(width), static_cast<LONG>(height)));
-    }
-    if (this->_camera.image_tile().width() != width || this->_camera.image_tile().height() != height) {
-        this->_camera.image_tile(cam_type::screen_rectangle_type(
-            std::array<int, 4>({0, static_cast<int>(height), static_cast<int>(width), 0})));
-    }
-}
-
-void megamol::core::view::AbstractView::beforeRender(const mmcRenderViewContext& context) {
-    float simulationTime = static_cast<float>(context.Time);
-    float instTime = static_cast<float>(context.InstanceTime);
+void megamol::core::view::AbstractView::beforeRender(double time, double instanceTime) {
+    float simulationTime = static_cast<float>(time);
 
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
 
-    glm::ivec4 currentViewport;
     AbstractCallRender* cr = this->_rhsRenderSlot.CallAs<AbstractCallRender>();
 
     auto bkgndCol = this->BkgndColour();
@@ -335,7 +320,6 @@ void megamol::core::view::AbstractView::beforeRender(const mmcRenderViewContext&
     }
 
     cr->SetBackgroundColor(glm::vec4(bkgndCol[0], bkgndCol[1], bkgndCol[2], 0.0f));
-
     
     if ((*cr)(AbstractCallRender::FnGetExtents)) {
         if (!(cr->AccessBoundingBoxes() == this->_bboxs) && cr->AccessBoundingBoxes().IsAnyValid()) {
@@ -380,7 +364,7 @@ void megamol::core::view::AbstractView::beforeRender(const mmcRenderViewContext&
     this->_camera.CalcClipping(this->_bboxs.ClipBox(), 0.1f);
 }
 
-void megamol::core::view::AbstractView::afterRender(const mmcRenderViewContext& context) {
+void megamol::core::view::AbstractView::afterRender() {
     // this->lastFrameParams->CopyFrom(this->OnGetCamParams, false);
 
     if (this->doHookCode()) {

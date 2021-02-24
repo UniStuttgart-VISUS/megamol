@@ -32,9 +32,9 @@ public:
      */
     virtual unsigned int GetCameraSyncNumber(void) const;
 
-    void beforeRender(const mmcRenderViewContext& context);
+    void beforeRender(double time, double instanceTime);
 
-    void afterRender(const mmcRenderViewContext& context);
+    void afterRender();
 
     /**
      * Resets the view. This normally sets the camera parameters to

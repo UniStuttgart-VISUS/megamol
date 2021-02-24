@@ -56,11 +56,48 @@ View3DGL::~View3DGL(void) {
     this->Release();
 }
 
+void megamol::core::view::View3DGL::Render(double time, double instanceTime) {
+    CallRender3DGL* cr3d = this->_rhsRenderSlot.CallAs<CallRender3DGL>();
+
+    if (cr3d == NULL) {
+        return;
+    }
+
+    if ((this->_fbo->GetWidth() != _camera.image_tile().width()) ||
+        (this->_fbo->GetHeight() != _camera.image_tile().height()) || (!this->_fbo->IsValid())) {
+        this->_fbo->Release();
+        if (!this->_fbo->Create(_camera.image_tile().width(), _camera.image_tile().height(), GL_RGBA8, GL_RGBA,
+                GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
+                GL_DEPTH_COMPONENT)) {
+            throw vislib::Exception("[View3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
+            return;
+        }
+    }
+    this->_fbo->Enable();
+    auto bgcol = this->BkgndColour();
+    glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
+    glClearDepth(1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    cr3d->SetFramebufferObject(this->_fbo);
+
+    AbstractView3D::beforeRender(time, instanceTime);
+
+    cr3d->SetCamera(this->_camera);
+    (*cr3d)(view::CallRender3DGL::FnRender);
+
+    this->_fbo->Disable();
+    this->_fbo->DrawColourTexture();
+    
+    AbstractView3D::afterRender();
+}
+
+void megamol::core::view::View3DGL::Render(double time, double instanceTime, Camera camera) {
+}
 
 /*
  * View3DGL::Render
  */
-void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
+void View3DGL::Render(double time, double instanceTime, Call& call) {
 
     CallRender3DGL* cr3d = this->_rhsRenderSlot.CallAs<CallRender3DGL>();
 
@@ -68,40 +105,15 @@ void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
         return;
     }
 
-    if (call == nullptr) {
-        if ((this->_fbo->GetWidth() != _camera.image_tile().width()) ||
-            (this->_fbo->GetHeight() != _camera.image_tile().height()) ||
-            (!this->_fbo->IsValid()) ) {
-            this->_fbo->Release();
-            if (!this->_fbo->Create(_camera.image_tile().width(), _camera.image_tile().height(), GL_RGBA8, GL_RGBA,
-                    GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
-                    GL_DEPTH_COMPONENT)) {
-                throw vislib::Exception("[View3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
-                return;
-            }
-        }
-        this->_fbo->Enable();
-        auto bgcol = this->BkgndColour();
-        glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
-        glClearDepth(1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        cr3d->SetFramebufferObject(this->_fbo);
-    } else {
-        auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
-        cr3d->SetFramebufferObject(gpu_call->GetFramebufferObject());
-    }
+    auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(&call);
+    cr3d->SetFramebufferObject(gpu_call->GetFramebufferObject());
 
-    AbstractView3D::beforeRender(context);
+    AbstractView3D::beforeRender(time, instanceTime);
 
     cr3d->SetCamera(this->_camera);
     (*cr3d)(view::CallRender3DGL::FnRender);
 
-    if (call == NULL) {
-        this->_fbo->Disable();
-        this->_fbo->DrawColourTexture();
-    }
-
-    AbstractView3D::afterRender(context);
+    AbstractView3D::afterRender();
 }
 
 /*
