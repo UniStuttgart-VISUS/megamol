@@ -117,7 +117,7 @@ protected:
      * @param OSPRay camera object
      * @param CallRenderer3D object
      */
-    void setupOSPRayCamera(megamol::core::view::Camera_2& mmcam);
+    void setupOSPRayCamera(megamol::core::view::Camera& mmcam);
 
 
     /**
@@ -212,7 +212,7 @@ protected:
     // extend map
     OSPRayExtendMap _extendMap;
 
-    void fillLightArray(std::array<float,4> eyeDir);
+    void fillLightArray(std::array<float,3> eyeDir);
 
     long long int _ispcLimit = 1ULL << 30;
     long long int _numCreateGeo;

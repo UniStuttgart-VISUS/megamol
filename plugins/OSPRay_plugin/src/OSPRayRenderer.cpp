@@ -128,39 +128,34 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         _light_has_changed = call_light->hasUpdate();
     }
 
-    core::view::Camera_2 tmp_newcam;
-    cr.GetCamera(tmp_newcam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-
-	// Generate complete snapshot and calculate matrices
-    tmp_newcam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
+    using Camera = core::view::Camera;
+    Camera cam = cr.GetCamera();
 
     // check data and camera hash
-    if (_cam.eye_position().x() != tmp_newcam.eye_position().x() ||
-	    _cam.eye_position().y() != tmp_newcam.eye_position().y() ||
-	    _cam.eye_position().z() != tmp_newcam.eye_position().z() ||
-	    _cam.view_vector() != tmp_newcam.view_vector()
-	    ) {
-	    _cam_has_changed = true;
-    } else {
+    if (_cam.get<Camera::Pose>() == cam.get<Camera::Pose>()){
 	    _cam_has_changed = false;
+    } else {
+	    _cam_has_changed = true;
     }
 
     // Generate complete snapshot and calculate matrices
-    _cam = tmp_newcam;
+    _cam = cam;
 
     // glDisable(GL_CULL_FACE);
 
     // new framebuffer at resize action
+    auto fbo = cr.GetFramebuffer();
+    if (fbo == nullptr) {
+        return false;
+    }
     // bool triggered = false;
-    if (_imgSize[0] != _cam.resolution_gate().width() ||
-        _imgSize[1] != _cam.resolution_gate().height() || _accumulateSlot.IsDirty()) {
+    if (_imgSize[0] != fbo->width ||
+        _imgSize[1] != fbo->height || _accumulateSlot.IsDirty()) {
         // triggered = true;
         // Breakpoint for Screenshooter debugging
         // if (framebuffer != NULL) ospFreeFrameBuffer(framebuffer);
-        _imgSize[0] = _cam.resolution_gate().width();
-        _imgSize[1] = _cam.resolution_gate().height();
+        _imgSize[0] = fbo->width;
+        _imgSize[1] = fbo->height;
         _framebuffer = std::make_shared<::ospray::cpp::FrameBuffer>(_imgSize[0], _imgSize[1], OSP_FB_RGBA8, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_ACCUM);
         _db.resize(_imgSize[0] * _imgSize[1]);
         _framebuffer->commit();
@@ -191,8 +186,9 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
         _transformation_has_changed || !(this->_accumulateSlot.Param<core::param::BoolParam>()->Value()) ||
         _frameID != static_cast<size_t>(cr.Time()) || this->InterfaceIsDirty()) {
 
-        std::array<float, 4> eyeDir = {
-            _cam.view_vector().x(), _cam.view_vector().y(), _cam.view_vector().z(), _cam.view_vector().w()};
+        
+        auto cam_pose = _cam.get<Camera::Pose>();
+        std::array<float, 3> eyeDir = {cam_pose.direction.x, cam_pose.direction.y, cam_pose.direction.z};
         if (_data_has_changed || _frameID != static_cast<size_t>(cr.Time()) || _renderer_has_changed) {
             // || this->InterfaceIsDirty()) {
             if (!this->generateRepresentations()) return false;
@@ -292,7 +288,7 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
 
 
         if (this->_useDB.Param<core::param::BoolParam>()->Value()) {
-            getOpenGLDepthFromOSPPerspective(_db, projTemp);
+            getOpenGLDepthFromOSPPerspective(_db);
         }
 
         // write a sequence of single pictures while the screenshooter is running
@@ -427,13 +423,17 @@ bool OSPRayRenderer::GetExtents(megamol::core::view::CallRender3D& cr) {
     return true;
 }
 
-void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(std::vector<float>& db, cam_type::matrix_type projTemp) {
+void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(std::vector<float>& db) {
 
-    const float fovy = _cam.aperture_angle();
-    const float aspect = _cam.resolution_gate_aspect();
+    auto proj_matrix = _cam.getProjectionMatrix();
+    auto cam_pose = _cam.get<core::view::Camera::Pose>();
+    auto cam_intrinsics = _cam.get<core::view::Camera::PerspectiveParameters>();
 
-    const glm::vec3 cameraUp = {_cam.up_vector().x(), _cam.up_vector().y(), _cam.up_vector().z()};
-    const glm::vec3 cameraDir = {_cam.view_vector().x(), _cam.view_vector().y(), _cam.view_vector().z()};
+    const float fovy = cam_intrinsics.fovy;
+    const float aspect = cam_intrinsics.aspect;
+
+    const glm::vec3 cameraUp = cam_pose.up;
+    const glm::vec3 cameraDir = cam_pose.direction;
 
     // map OSPRay depth buffer from provided frame buffer
     auto ospDepthBuffer = static_cast<float*>(_framebuffer->map(OSP_FB_DEPTH));
@@ -456,8 +456,8 @@ void OSPRayRenderer::getOpenGLDepthFromOSPPerspective(std::vector<float>& db, ca
     const auto dir_00 = cameraDir - .5f * dir_du - .5f * dir_dv;
 
     // transform from linear to nonlinear OpenGL depth
-    const auto A = projTemp.operator()(2,2);
-    const auto B = projTemp.operator()(3, 2);
+    const auto A = proj_matrix[2][2];
+    const auto B = proj_matrix[3][2];
 
     int j, i;
 #pragma omp parallel for private(i)

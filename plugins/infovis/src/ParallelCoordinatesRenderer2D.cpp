@@ -966,20 +966,23 @@ void ParallelCoordinatesRenderer2D::load_filters() {
 bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
 
     // get camera
-    core::view::Camera_2 cam;
-    call.GetCamera(cam);
+    core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto cam_intrinsics = cam.get<core::view::Camera::OrthographicParameters>(); // don't you dare using a perspective cam here...
+    auto fbo = call.GetFramebufferObject();
 
-    cam_type::matrix_type view, proj;
-    cam.calc_matrices(view, proj);
-
-    windowAspect = static_cast<float>(cam.resolution_gate_aspect());
+    // maintainer comment: assuming this wants to know the aspect of the full window, i.e. not onlyof the current image tile
+    windowAspect = static_cast<float>(cam_intrinsics.aspect);
 
     // this is the apex of suck and must die
     glGetFloatv(GL_MODELVIEW_MATRIX, modelViewMatrix_column);
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
     // end suck
-    windowWidth = cam.resolution_gate().width();
-    windowHeight = cam.resolution_gate().height();
+
+    // maintainer comment: assuming this now here wants to know about the current tile's resolution
+    windowWidth = fbo->GetWidth();
+    windowHeight = fbo->GetHeight();
     auto bg = call.BackgroundColor();
     backgroundColor[0] = bg[0] / 255.0f;
     backgroundColor[1] = bg[1] / 255.0f;

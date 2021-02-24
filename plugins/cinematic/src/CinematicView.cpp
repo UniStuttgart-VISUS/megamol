@@ -315,11 +315,11 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
         // Apply selected keyframe parameters only, if at least one valid keyframe exists.
         if (!ccc->GetKeyframes()->empty()) {
             // ! Using only a subset of the keyframe camera state !
-            auto pos = skf.GetCameraState().position;
+            auto pos = skf.GetCamera().position;
             this->_camera.position(glm::vec4(pos[0], pos[1], pos[2], 1.0f));
-            auto ori = skf.GetCameraState().orientation;
+            auto ori = skf.GetCamera().orientation;
             this->_camera.orientation(glm::quat(ori[3], ori[0], ori[1], ori[2]));
-            auto aper = skf.GetCameraState().half_aperture_angle_radians;
+            auto aper = skf.GetCamera().half_aperture_angle_radians;
             this->_camera.half_aperture_angle_radians(aper);
         }
         else {
@@ -330,7 +330,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     // Propagate current camera state to keyframe keeper (before applying following skybox side settings).
     cam_type::minimal_state_type camera_state;
     this->_camera.get_minimal_state(camera_state);
-    ccc->SetCameraState(std::make_shared<camera_state_type>(camera_state));
+    ccc->SetCameraState(std::make_shared<camera_type>(camera_state));
     if (!(*ccc)(CallKeyframeKeeper::CallForSetCameraForKeyframe)) return;
 
     // Apply showing skybox side ONLY if new camera parameters are set.

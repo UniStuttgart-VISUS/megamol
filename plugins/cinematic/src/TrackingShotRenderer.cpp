@@ -164,32 +164,26 @@ bool TrackingShotRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     this->utils.SetBackgroundColor(back_color);
 
     // Get current camera
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    glm::vec4 snap_pos = snapshot.position;
-    glm::vec4 snap_view = snapshot.view_vector;
-    glm::vec3 cam_pos = static_cast<glm::vec3>(snap_pos);
-    glm::vec3 cam_view = static_cast<glm::vec3>(snap_view);
-    glm::mat4 view = viewTemp;
-    glm::mat4 proj = projTemp;
+    core::view::Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto cam_pose = cam.get<core::view::Camera::Pose>();
+    auto fbo = call.GetFramebufferObject();
+
+    glm::vec3 cam_pos = cam_pose.position;
+    glm::vec3 cam_view = cam_pose.direction;
     glm::mat4 mvp = proj * view;
 
     // Get current viewport
-    auto viewport = cam.resolution_gate();
-    const float vp_fw = static_cast<float>(viewport.width());
-    const float vp_fh = static_cast<float>(viewport.height());
+    const float vp_fw = static_cast<float>(fbo->GetWidth());
+    const float vp_fh = static_cast<float>(fbo->GetHeight());
 
     // Get matrix for orthogonal projection of 2D rendering
     glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
 
     // Push manipulators ------------------------------------------------------
     if (keyframes->size() > 0) {
-        cam_type::minimal_state_type camera_state;
-        cam.get_minimal_state(camera_state);
-        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition(), camera_state, glm::vec2(vp_fw, vp_fh), mvp);
+        this->manipulators.UpdateRendering(keyframes, skf, ccc->GetStartControlPointPosition(), ccc->GetEndControlPointPosition(), cam, glm::vec2(vp_fw, vp_fh), mvp);
         this->manipulators.PushRendering(this->utils);
     }
 

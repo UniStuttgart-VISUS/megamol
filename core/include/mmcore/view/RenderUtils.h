@@ -26,7 +26,7 @@
 #include "mmcore/misc/PngBitmapCodec.h"
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
-#include "mmcore/view/Camera_2.h"
+#include "mmcore/view/Camera.h"
 
 
 namespace megamol::core::view {

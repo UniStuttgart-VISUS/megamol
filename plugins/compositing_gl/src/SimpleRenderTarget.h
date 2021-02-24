@@ -136,7 +136,7 @@ protected:
 
 private:
     /** Local copy of last used camera*/
-    core::view::Camera_2 m_last_used_camera;
+    core::view::Camera m_last_used_camera;
 
     core::CalleeSlot m_color_render_target;
     core::CalleeSlot m_normal_render_target;

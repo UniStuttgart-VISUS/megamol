@@ -432,20 +432,15 @@ bool OverlayRenderer::GetExtents(view::CallRender3DGL& call) {
 
 bool OverlayRenderer::Render(view::CallRender3DGL& call) {
 
-    // Camera
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    // Framebuffer object
+    auto fbo = call.GetFramebufferObject();
 
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
     std::shared_ptr<const view::AbstractView> viewptr =
         std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
 
     if (viewptr != nullptr) { // XXX Move this behind the fbo magic?
-        auto vp = cam.image_tile();
-        glViewport(vp.left(), vp.bottom(), vp.width(), vp.height());
+        glViewport(0, 0, fbo->GetWidth(), fbo->GetHeight());
         auto backCol = call.BackgroundColor();
         glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -461,9 +456,8 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // Get current viewport
-    auto viewport = cam.image_tile();
-    if ((this->m_viewport.x != viewport.width()) || (this->m_viewport.y != viewport.height())) {
-        this->m_viewport = {viewport.width(), viewport.height()};
+    if ((this->m_viewport.x != fbo->GetWidth()) || (this->m_viewport.y != fbo->GetHeight())) {
+        this->m_viewport = {fbo->GetWidth(), fbo->GetHeight()};
         // Reload rectangle on viewport changes
         this->onTriggerRecalcRectangle(this->paramMode);
     }

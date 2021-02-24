@@ -374,23 +374,23 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     unsigned int typecnt = pgdc->TypesCount();
 
     // Camera 
-    view::Camera_2 cam;
-    cr->GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    glm::mat4 view_matrix = viewTemp;
-    glm::mat4 proj_matrix = projTemp;
+    core::view::Camera cam = call.GetCamera();
+    auto cam_pose = cam.get<core::view::Camera::Pose>();
+    auto cam_intrinsics = cam.get<core::view::Camera::PerspectiveParameters>();
+    auto fbo = call.GetFramebufferObject();
+
+    glm::mat4 view_matrix = cam.getViewMatrix();
+    glm::mat4 proj_matrix = cam.getProjectionMatrix();
     glm::mat4 view_matrix_inv = glm::inverse(view_matrix);
     glm::mat4 view_matrix_inv_transp = glm::transpose(view_matrix_inv);
     glm::mat4 mvp_matrix = proj_matrix * view_matrix;
     glm::mat4 mvp_matrix_transp = glm::transpose(mvp_matrix);
     glm::mat4 mvp_matrix_inv = glm::inverse(mvp_matrix);
-    glm::vec4 camPos = snapshot.position;
-    glm::vec4 camView = snapshot.view_vector;
-    glm::vec4 camRight = snapshot.right_vector;
-    glm::vec4 camUp = snapshot.up_vector;
-    float half_aperture_angle = cam.half_aperture_angle_radians();
+    glm::vec4 camPos = glm::vec4(cam_pose.position,1.0f);
+    glm::vec4 camView = glm::vec4(cam_pose.direction, 1.0f);
+    glm::vec4 camUp = glm::vec4(cam_pose.up, 1.0f);
+    glm::vec4 camRight = glm::vec4(glm::cross(cam_pose.direction, cam_pose.up), 1.0f);
+    float half_aperture_angle = cam_intrinsics.fovy / 2.0f;
 
     // Lights
     glm::vec4 curlightDir = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -437,21 +437,20 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     }
 
     // update fbo size, if required ///////////////////////////////////////////
-    auto viewport = cam.resolution_gate();
-    if ((this->fbo.GetWidth() != viewport.width())
-            || (this->fbo.GetHeight() != viewport.height())
+    if ((this->fbo.GetWidth() != fbo->GetWidth())
+            || (this->fbo.GetHeight() != fbo->GetHeight())
             || this->deferredShadingSlot.IsDirty()) {
         this->deferredShadingSlot.ResetDirty();
 
         glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, -1, "grim-fbo-resize");
         this->fbo.Release();
-        this->fbo.Create(viewport.width(), viewport.height(),
+        this->fbo.Create(fbo->GetWidth(), fbo->GetHeight(),
                 GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, // colour buffer
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
                 GL_DEPTH_COMPONENT24); // depth buffer
 
-        unsigned int dmw = vislib::math::NextPowerOfTwo(viewport.width());
-        unsigned int dmh = vislib::math::NextPowerOfTwo(viewport.height());
+        unsigned int dmw = vislib::math::NextPowerOfTwo(fbo->GetWidth());
+        unsigned int dmh = vislib::math::NextPowerOfTwo(fbo->GetHeight());
         dmh += dmh / 2;
         if ((this->depthmap[0].GetWidth() != dmw) || (this->depthmap[0].GetHeight() != dmh)) {
             for (int i = 0; i < 2; i++) {
@@ -486,7 +485,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
             sap.format = GL_STENCIL_INDEX;
 
             try {
-                if (!this->dsFBO.Create(viewport.width(), viewport.height(), 3, cap, dap, sap)) {
+                if (!this->dsFBO.Create(fbo->GetWidth(), fbo->GetHeight(), 3, cap, dap, sap)) {
                     throw vislib::Exception("dsFBO.Create failed\n", __FILE__, __LINE__);
                 }
             } catch(vislib::Exception ex) {
@@ -516,7 +515,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     // depth-sort of cells ////////////////////////////////////////////////////
 
-    float viewDist = 0.5f * cam.resolution_gate().height() / tanf(half_aperture_angle);
+    float viewDist = 0.5f * fbo->GetHeight() / tanf(half_aperture_angle);
 
     std::vector<vislib::Pair<unsigned int, float> > &dists = this->cellDists;
     std::vector<CellInfo> &infos = this->cellInfos;
@@ -716,7 +715,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     // init depth disks ///////////////////////////////////////////////////////
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 3, -1, "grim-init-depth-disks");
 
-    float viewportStuff[4] = { 0.0f, 0.0f, viewport.width(), viewport.height() };
+    float viewportStuff[4] = { 0.0f, 0.0f, fbo->GetWidth(), fbo->GetHeight() };
     float defaultPointSize = glm::max(viewportStuff[2], viewportStuff[3]);
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
@@ -1799,7 +1798,7 @@ bool GrimRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
         up *= sinf(half_aperture_angle);
         right *= sinf(half_aperture_angle)
-            * static_cast<float>(viewport.width()) / static_cast<float>(viewport.height());
+            * static_cast<float>(fbo->GetWidth()) / static_cast<float>(fbo->GetHeight());
 
         this->deferredShader.SetParameterArray3("ray", 1, glm::value_ptr(camView));
 

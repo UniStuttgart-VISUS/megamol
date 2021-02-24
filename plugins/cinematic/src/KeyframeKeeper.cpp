@@ -416,7 +416,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
             Keyframe tmp_kf = this->selectedKeyframe;
             glm::vec3 pos_v = view::vislib_vector_to_glm(this->editCurrentPosParam.Param<param::Vector3fParam>()->Value());
             std::array<float, 3> pos = { pos_v.x, pos_v.y, pos_v.z };
-            auto cam_state = this->selectedKeyframe.GetCameraState();
+            auto cam_state = this->selectedKeyframe.GetCamera();
             cam_state.position = pos;
             this->selectedKeyframe.SetCameraState(cam_state);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
@@ -433,7 +433,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
   
-            megamol::core::view::Camera_2 camera(this->selectedKeyframe.GetCameraState());
+            megamol::core::view::Camera camera(this->selectedKeyframe.GetCamera());
             cam_type::snapshot_type snapshot;
             camera.take_snapshot(snapshot, thecam::snapshot_content::all);
             glm::vec4 cam_pos = snapshot.position;
@@ -460,7 +460,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
 
-            megamol::core::view::Camera_2 camera(this->selectedKeyframe.GetCameraState());
+            megamol::core::view::Camera camera(this->selectedKeyframe.GetCamera());
             cam_type::snapshot_type snapshot;
             camera.take_snapshot(snapshot, thecam::snapshot_content::all);
             glm::vec4 cam_up = snapshot.up_vector;
@@ -486,7 +486,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
 
-            megamol::core::view::Camera_2 camera(this->selectedKeyframe.GetCameraState());
+            megamol::core::view::Camera camera(this->selectedKeyframe.GetCamera());
             cam_type::snapshot_type snapshot;
             camera.take_snapshot(snapshot, thecam::snapshot_content::view_vector);
             glm::vec4 cam_view = snapshot.view_vector;
@@ -512,7 +512,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
         if (this->getKeyframeIndex(this->keyframes, this->selectedKeyframe) >= 0) {
             Keyframe tmp_kf = this->selectedKeyframe;
             float aperture = this->editCurrentApertureParam.Param<param::FloatParam>()->Value();
-            auto cam_state = this->selectedKeyframe.GetCameraState();
+            auto cam_state = this->selectedKeyframe.GetCamera();
             cam_state.half_aperture_angle_radians = glm::radians(aperture/2.0f);
             this->selectedKeyframe.SetCameraState(cam_state);
             this->replaceKeyframe(tmp_kf, this->selectedKeyframe, true);
@@ -565,7 +565,7 @@ bool KeyframeKeeper::CallForGetUpdatedKeyframeData(core::Call& c) {
     }
 
     // PROPAGATE UPDATED DATA TO CALL -----------------------------------------
-    ccc->SetCameraState(std::make_shared<camera_state_type>(this->cameraState));
+    ccc->SetCameraState(std::make_shared<camera_type>(this->cameraState));
     ccc->SetKeyframes(std::make_shared<std::vector<Keyframe>>(this->keyframes));
     ccc->SetSelectedKeyframe(this->selectedKeyframe);
     ccc->SetTotalAnimTime(this->totalAnimTime);
@@ -863,12 +863,12 @@ void KeyframeKeeper::refreshInterpolCamPos(unsigned int s) {
 
             for (unsigned int j = 0; j < s; j++) {
                 kf = this->interpolateKeyframe(startTime + deltaTimeStep*(float)j);
-                auto p = kf.GetCameraState().position;
+                auto p = kf.GetCamera().position;
                 this->interpolCamPos.emplace_back(glm::vec3(p[0], p[1], p[2]));
             }
         }
         // Add last existing camera position
-        auto p = this->keyframes.back().GetCameraState().position;
+        auto p = this->keyframes.back().GetCamera().position;
         this->interpolCamPos.emplace_back(glm::vec3(p[0], p[1], p[2]));
     }
 }
@@ -1048,7 +1048,7 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
 
         // New default keyframe
         Keyframe kf = Keyframe();
-        megamol::core::view::Camera_2 cam_kf = kf.GetCameraState();
+        megamol::core::view::Camera cam_kf = kf.GetCamera();
 
         // Nothing to do for animation time
         kf.SetAnimTime(t);
@@ -1073,10 +1073,10 @@ Keyframe KeyframeKeeper::interpolateKeyframe(float time) {
         i0 = (i1 > 0) ? (i1 - 1) : (0);
         i3 = (i2 < kfIdxCnt) ? (i2 + 1) : (kfIdxCnt);
 
-        megamol::core::view::Camera_2 c0(this->keyframes[i0].GetCameraState());
-        megamol::core::view::Camera_2 c1 = this->keyframes[i1].GetCameraState();
-        megamol::core::view::Camera_2 c2 = this->keyframes[i2].GetCameraState();
-        megamol::core::view::Camera_2 c3 = this->keyframes[i3].GetCameraState();
+        megamol::core::view::Camera c0(this->keyframes[i0].GetCamera());
+        megamol::core::view::Camera c1 = this->keyframes[i1].GetCamera();
+        megamol::core::view::Camera c2 = this->keyframes[i2].GetCamera();
+        megamol::core::view::Camera c3 = this->keyframes[i3].GetCamera();
 
         // Interpolate simulation time linear between i1 and i2
         float simT1 = this->keyframes[i1].GetSimTime();
@@ -1319,7 +1319,7 @@ bool KeyframeKeeper::loadKeyframes() {
 void KeyframeKeeper::updateEditParameters(Keyframe kf) {
 
     // Set new parameter values of changed selected keyframe
-    megamol::core::view::Camera_2 camera(kf.GetCameraState());
+    megamol::core::view::Camera camera(kf.GetCamera());
     cam_type::snapshot_type snapshot;
     camera.take_snapshot(snapshot, thecam::snapshot_content::up_vector | thecam::snapshot_content::view_vector | thecam::snapshot_content::camera_coordinate_system);
     glm::vec4 cam_pos = snapshot.position;

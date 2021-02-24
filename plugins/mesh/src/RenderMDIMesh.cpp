@@ -161,12 +161,9 @@ bool RenderMDIMesh::Render(core::view::CallRender3DGL& call) {
 	if (cr == NULL) return false;
 	
     // obtain camera information
-    core::view::Camera_2 cam(cr->GetCamera());
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type view_tmp, proj_tmp;
-    cam.calc_matrices(snapshot, view_tmp, proj_tmp, core::thecam::snapshot_content::all);
-    glm::mat4 view_mx = view_tmp;
-    glm::mat4 proj_mx = proj_tmp;
+    core::view::Camera cam = call.GetCamera();
+    glm::mat4 view_mx = cam.getViewMatrix();
+    glm::mat4 proj_mx = cam.getProjectionMatrix();
 	
 	CallGPURenderTaskData* task_call = this->m_render_task_callerSlot.CallAs<CallGPURenderTaskData>();
 	

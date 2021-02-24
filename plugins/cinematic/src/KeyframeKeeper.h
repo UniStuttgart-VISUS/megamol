@@ -19,6 +19,7 @@
 #include "mmcore/param/FilePathParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/Vector3fParam.h"
+#include "mmcore/view/Camera.h"
 #include "mmcore/AbstractSlot.h"
 #include "mmcore/utility/xml/XmlParser.h"
 #include "mmcore/utility/xml/XmlReader.h"
@@ -92,7 +93,7 @@ namespace cinematic {
         **********************************************************************/
 
         // Variables shared/updated with call ---------------------------------
-        camera_state_type            cameraState;
+        camera_type            cameraState;
 	std::vector<glm::vec3 >      interpolCamPos;
         std::vector<Keyframe>        keyframes;
         Keyframe                     selectedKeyframe;

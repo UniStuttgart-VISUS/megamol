@@ -208,14 +208,13 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
 	if (cgtf == nullptr || !(*cgtf)()) return false;
 
 	// get camera
-	core::view::Camera_2 cam;
-	cr.GetCamera(cam);
-
-	cam_type::matrix_type view, proj;
-	cam.calc_matrices(view, proj);
+    core::view::Camera cam = cr.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
+    auto cr_fbo = cr.GetFramebufferObject();
 
 	// create render target
-	glowl::TextureLayout render_tgt_layout(GL_RGBA8, cam.resolution_gate().width(), cam.resolution_gate().height(),
+    glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr_fbo->GetWidth(), cr_fbo->GetHeight(),
 		1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},

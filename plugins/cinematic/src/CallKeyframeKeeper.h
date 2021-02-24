@@ -147,10 +147,10 @@ namespace cinematic {
         }
 
         // CAMERA STATE
-        inline void SetCameraState(std::shared_ptr<camera_state_type> cs) {
+        inline void SetCameraState(std::shared_ptr<camera_type> cs) {
             this->cameraState = cs;
         }
-        inline std::shared_ptr<camera_state_type> GetCameraState() {
+        inline std::shared_ptr<camera_type> GetCameraState() {
             return this->cameraState;
         }
 
@@ -201,7 +201,7 @@ namespace cinematic {
         **********************************************************************/
 
         // Out Data (set by called KeyframeKeeper) ---------------------------
-	std::shared_ptr<camera_state_type>             cameraState;
+	std::shared_ptr<camera_type>             cameraState;
 	std::shared_ptr<std::vector<glm::vec3>>        interpolCamPos;
 	std::shared_ptr<std::vector<Keyframe>>	       keyframes;
         Keyframe                                       selectedKeyframe;

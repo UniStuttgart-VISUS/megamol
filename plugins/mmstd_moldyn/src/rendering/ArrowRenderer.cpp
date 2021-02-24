@@ -10,6 +10,8 @@
 
 #include "mmcore/view/light/DistantLight.h"
 
+#include <glm/ext.hpp>
+
 using namespace megamol::core;
 using namespace megamol::core::moldyn;
 using namespace megamol::stdplugin::moldyn::rendering;
@@ -170,18 +172,16 @@ bool ArrowRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // Camera
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-    glm::vec4 cam_view = snapshot.view_vector;
-    glm::vec4 cam_right = snapshot.right_vector;
-    glm::vec4 cam_up = snapshot.up_vector;
+    core::view::Camera cam = call.GetCamera();
+    auto cam_pose = cam.get<core::view::Camera::Pose>();
+    glm::vec3 camView = cam_pose.direction;
+    glm::vec3 camUp = cam_pose.up;
+    glm::vec3 camRight = glm::cross(camView, camUp);
+    auto fbo = call.GetFramebufferObject();
 
     // Matrices
-    glm::mat4 view = viewTemp;
-    glm::mat4 proj = projTemp;
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
     glm::mat4 MVinv = glm::inverse(view);
     glm::mat4 MVtransp = glm::transpose(view);
     glm::mat4 MVP = proj * view;
@@ -189,12 +189,11 @@ bool ArrowRenderer::Render(view::CallRender3DGL& call) {
     glm::mat4 MVPtransp = glm::transpose(MVP);
 
     // Viewport
-    auto viewport = cam.resolution_gate();
     glm::vec4 viewportStuff;
     viewportStuff[0] = 0.0f;
     viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(viewport.width());
-    viewportStuff[3] = static_cast<float>(viewport.height());
+    viewportStuff[2] = static_cast<float>(fbo->GetWidth());
+    viewportStuff[3] = static_cast<float>(fbo->GetHeight());
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];
@@ -222,7 +221,7 @@ bool ArrowRenderer::Render(view::CallRender3DGL& call) {
         for (auto const& light : distant_lights) {
             auto use_eyedir = light.eye_direction;
             if (use_eyedir) {
-                curlightDir = -cam_view;
+                curlightDir = glm::vec4(-camView, 1.0);
             } else {
                 auto lightDir = light.direction;
                 if (lightDir.size() == 3) {
@@ -257,9 +256,9 @@ bool ArrowRenderer::Render(view::CallRender3DGL& call) {
     glUniformMatrix4fv(this->arrowShader.ParameterLocation("MVPinv"), 1, GL_FALSE, glm::value_ptr(MVPinv));
     glUniformMatrix4fv(this->arrowShader.ParameterLocation("MVPtransp"), 1, GL_FALSE, glm::value_ptr(MVPtransp));
     glUniform4fv(this->arrowShader.ParameterLocation("viewAttr"), 1, glm::value_ptr(viewportStuff));
-    glUniform3fv(this->arrowShader.ParameterLocation("camIn"), 1, glm::value_ptr(cam_view));
-    glUniform3fv(this->arrowShader.ParameterLocation("camRight"), 1, glm::value_ptr(cam_right));
-    glUniform3fv(this->arrowShader.ParameterLocation("camUp"), 1, glm::value_ptr(cam_up));
+    glUniform3fv(this->arrowShader.ParameterLocation("camIn"), 1, glm::value_ptr(camView));
+    glUniform3fv(this->arrowShader.ParameterLocation("camRight"), 1, glm::value_ptr(camRight));
+    glUniform3fv(this->arrowShader.ParameterLocation("camUp"), 1, glm::value_ptr(camUp));
     glUniform4fv(this->arrowShader.ParameterLocation("lightDir"), 1, glm::value_ptr(curlightDir));
     this->arrowShader.SetParameter("lengthScale", lengthScale);
     this->arrowShader.SetParameter("lengthFilter", lengthFilter);

@@ -183,15 +183,14 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
         std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
 
     Camera cam = call.GetCamera();
+    auto fbo = call.GetFramebufferObject();
 
     glm::mat4 view = cam.getViewMatrix();
     glm::mat4 proj = cam.getProjectionMatrix();
     glm::mat4 mvp = proj * view;
 
-    if (viewptr != nullptr) {
-        // TODO move this behind the fbo magic?
-        auto vp = cam.image_tile();
-        glViewport(vp.left(), vp.bottom(), vp.width(), vp.height());
+    if (viewptr != nullptr) { // XXX Move this behind the fbo magic?
+        glViewport(0, 0, fbo->GetWidth(), fbo->GetHeight());
         auto backCol = call.BackgroundColor();
         glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -206,8 +205,6 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
     *chainedCall = call;
     bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
     call = *chainedCall;
-
-
 
     auto boundingBoxes = chainedCall->AccessBoundingBoxes();
     auto smoothLines = this->smoothLineSlot.Param<param::BoolParam>()->Value();
@@ -328,11 +325,9 @@ bool BoundingBoxRenderer::RenderBoundingBoxBack(const glm::mat4& mvp, const Boun
  */
 bool BoundingBoxRenderer::RenderViewCube(CallRender3DGL& call) {
     // Get camera orientation
-    core::view::Camera_2 cam;
-    call.GetCamera(cam);
+    auto cam = call.GetCamera();
 
-    const auto orientation = cam.orientation();
-    const auto rotation = glm::inverse( glm::mat4_cast(static_cast<glm::quat>(orientation)) );
+    const auto rotation = glm::mat4(glm::inverse(glm::mat3(cam.getViewMatrix())));
 
     // Create view/model and projection matrices
     const float dist = 2.0f / std::tan(thecam::math::angle_deg2rad(30.0f) / 2.0f);
