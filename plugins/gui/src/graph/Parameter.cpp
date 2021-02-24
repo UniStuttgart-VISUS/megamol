@@ -477,7 +477,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToNewParameter(megamol::core::
 
 
 bool megamol::gui::Parameter::ReadCoreParameterToParameter(
-    vislib::SmartPtr<megamol::core::param::AbstractParam>& in_param_ptr, megamol::gui::Parameter& out_param,
+    vislib::SmartPtr<megamol::core::param::AbstractParam> in_param_ptr, megamol::gui::Parameter& out_param,
     bool set_default_val, bool set_dirty) {
 
     out_param.SetGUIVisible(in_param_ptr->IsGUIVisible());
@@ -640,7 +640,7 @@ bool megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(megamol::c
 
 
 bool megamol::gui::Parameter::WriteCoreParameterGUIState(
-    megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr) {
+    megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam> out_param_ptr) {
 
     out_param_ptr->SetGUIVisible(in_param.IsGUIVisible());
     out_param_ptr->SetGUIReadOnly(in_param.IsGUIReadOnly());
@@ -651,7 +651,7 @@ bool megamol::gui::Parameter::WriteCoreParameterGUIState(
 
 
 bool megamol::gui::Parameter::WriteCoreParameterValue(
-    megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr) {
+    megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam> out_param_ptr) {
     bool type_error = false;
 
     if (auto* p_ptr = out_param_ptr.DynamicCast<core::param::ButtonParam>()) {

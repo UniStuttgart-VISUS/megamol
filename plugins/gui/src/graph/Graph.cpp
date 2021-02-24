@@ -2522,7 +2522,7 @@ void megamol::gui::Graph::draw_canvas_multiselection(void) {
         this->gui_graph_state.interact.modules_selected_uids.clear();
         for (auto& module_ptr : this->Modules()) {
             bool group_member = (module_ptr->GroupUID() != GUI_INVALID_ID);
-            if (!group_member || (group_member && module_ptr->group.visible)) {
+            if (!group_member || (group_member && module_ptr->IsGroupCollapsed())) {
                 module_size = module_ptr->Size() * this->gui_graph_state.canvas.zooming;
                 inner_rect_min =
                     this->gui_graph_state.canvas.offset + module_ptr->Position() * this->gui_graph_state.canvas.zooming;
@@ -2848,7 +2848,7 @@ void megamol::gui::Graph::layout(
                         }
                     }
                 }
-                layer_item.group_ptr->SetPosition(this->gui_graph_state.canvas, pos);
+                layer_item.group_ptr->SetPosition(this->gui_graph_state, pos);
                 auto group_size = layer_item.group_ptr->Size();
                 pos.y += (group_size.y + GUI_GRAPH_BORDER);
                 max_graph_element_width = std::max(group_size.x, max_graph_element_width);

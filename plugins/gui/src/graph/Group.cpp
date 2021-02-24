@@ -68,7 +68,7 @@ bool megamol::gui::Group::AddModule(const ModulePtr_t& module_ptr) {
     this->modules.emplace_back(module_ptr);
 
     module_ptr->SetGroupUID(this->uid);
-    module_ptr->SetGroupVisible(!this->gui_collapsed_view);
+    module_ptr->SetGroupCollapsed(this->gui_collapsed_view);
     module_ptr->SetGroupName(this->name);
 
     this->ForceUpdate();
@@ -96,7 +96,7 @@ bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
                 }
 
                 (*mod_iter)->SetGroupUID(GUI_INVALID_ID);
-                (*mod_iter)->SetGroupVisible(false);
+                (*mod_iter)->SetGroupCollapsed(false);
                 (*mod_iter)->SetGroupName("");
 
 #ifdef GUI_VERBOSE
@@ -266,7 +266,7 @@ bool megamol::gui::Group::DeleteInterfaceSlot(ImGuiID interfaceslot_uid) {
 
                     // Remove all call slots from interface slot
                     std::vector<ImGuiID> callslots_uids;
-                    for (auto& callslot_ptr : (*iter)->GetCallSlots()) {
+                    for (auto& callslot_ptr : (*iter)->CallSlots()) {
                         callslots_uids.emplace_back(callslot_ptr->UID());
                     }
                     for (auto& callslot_uid : callslots_uids) {
@@ -390,7 +390,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
         if (this->gui_update || !this->gui_collapsed_view || (this->gui_size.x <= 0.0f) || (this->gui_size.y <= 0.0f)) {
             this->UpdatePositionSize(state.canvas);
             for (auto& mod : this->modules) {
-                mod->SetGroupVisible(!this->gui_collapsed_view);
+                mod->SetGroupCollapsed(this->gui_collapsed_view);
             }
             this->gui_update = false;
         }
@@ -531,8 +531,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
 
             // Dragging
             if (this->gui_selected && ImGui::IsWindowHovered() && ImGui::IsMouseDragging(0)) {
-                this->SetPosition(
-                    state.canvas, (this->gui_position + (ImGui::GetIO().MouseDelta / state.canvas.zooming)));
+                this->SetPosition(state, (this->gui_position + (ImGui::GetIO().MouseDelta / state.canvas.zooming)));
             }
 
             // Colors
@@ -573,7 +572,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
 
         if (changed_view) {
             for (auto& module_ptr : this->modules) {
-                module_ptr->SetGroupVisible(!this->gui_collapsed_view);
+                module_ptr->SetGroupCollapsed(this->gui_collapsed_view);
             }
             for (auto& interfaceslots_map : this->InterfaceSlots()) {
                 for (auto& interfaceslot_ptr : interfaceslots_map.second) {

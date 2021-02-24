@@ -38,7 +38,7 @@ megamol::gui::Module::Module(ImGuiID uid, const std::string& class_name, const s
         , gui_param_child_show(false)
         , gui_set_screen_position(ImVec2(FLT_MAX, FLT_MAX))
         , gui_set_selected_slot_position(false)
-        , gui_group_visible(false)
+        , gui_group_collapsed(false)
         , gui_tooltip()
         , gui_rename_popup() {
 
@@ -197,7 +197,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
         }
 
         bool visible =
-            (this->group_uid == GUI_INVALID_ID) || ((this->group_uid != GUI_INVALID_ID) && this->gui_group_visible);
+            (this->group_uid == GUI_INVALID_ID) || ((this->group_uid != GUI_INVALID_ID) && !this->gui_group_collapsed);
         if (visible) {
             bool mouse_clicked_anywhere = ImGui::IsWindowHovered() && ImGui::GetIO().MouseClicked[0];
 

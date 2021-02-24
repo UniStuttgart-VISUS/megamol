@@ -120,17 +120,17 @@ namespace gui {
             std::shared_ptr<megamol::gui::Parameter>& out_param, bool set_default_val, bool set_dirty,
             bool save_core_param_pointer);
 
-        static bool ReadCoreParameterToParameter(vislib::SmartPtr<megamol::core::param::AbstractParam>& in_param_ptr,
+        static bool ReadCoreParameterToParameter(vislib::SmartPtr<megamol::core::param::AbstractParam> in_param_ptr,
             megamol::gui::Parameter& out_param, bool set_default_val, bool set_dirty);
 
         static bool ReadNewCoreParameterToExistingParameter(megamol::core::param::ParamSlot& in_param_slot,
             megamol::gui::Parameter& out_param, bool set_default_val, bool set_dirty, bool save_core_param_pointer);
 
         static bool WriteCoreParameterGUIState(
-            megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr);
+            megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam> out_param_ptr);
 
         static bool WriteCoreParameterValue(
-            megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr);
+            megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam> out_param_ptr);
 
         Parameter(ImGuiID uid, Param_t type, Stroage_t store, Min_t minval, Max_t maxval, const std::string& full_name,
             const std::string& description);
