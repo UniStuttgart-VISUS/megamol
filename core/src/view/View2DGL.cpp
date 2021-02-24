@@ -63,7 +63,7 @@ view::View2DGL::View2DGL(void)
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::onResetView);
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
 
     this->_rhsRenderSlot.SetCompatibleCall<CallRender2DGLDescription>();
@@ -248,7 +248,7 @@ bool view::View2DGL::OnKey(Key key, KeyAction action, Modifiers mods) {
     if (cr == NULL) return false;
 
     if (key == Key::KEY_HOME) {
-        onResetView(this->_resetViewSlot);
+        OnResetView(this->_resetViewSlot);
     }
 
     InputEvent evt;

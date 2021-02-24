@@ -25,6 +25,24 @@ class MEGAMOLCORE_API AbstractView3D : public view::AbstractView {
 
 public:
 
+    /** Enum for default views from the respective direction */
+    enum defaultview {
+        DEFAULTVIEW_FRONT,
+        DEFAULTVIEW_BACK,
+        DEFAULTVIEW_RIGHT,
+        DEFAULTVIEW_LEFT,
+        DEFAULTVIEW_TOP,
+        DEFAULTVIEW_BOTTOM,
+    };
+
+    /** Enum for default orientations from the respective direction */
+    enum defaultorientation {
+        DEFAULTORIENTATION_TOP,
+        DEFAULTORIENTATION_RIGHT,
+        DEFAULTORIENTATION_BOTTOM,
+        DEFAULTORIENTATION_LEFT
+    };
+
     /**
      * Answer the camera synchronization number.
      *
@@ -191,9 +209,6 @@ protected:
     /** Enable selecting mode of mouse (disables camera movement) */
     param::ParamSlot _enableMouseSelectionSlot;
 
-    /** Shows the view cube helper */
-    param::ParamSlot _showViewCubeSlot;
-
     /** Invisible parameters for lua manipulation */
     param::ParamSlot _cameraPositionParam;
     param::ParamSlot _cameraOrientationParam;
@@ -214,6 +229,14 @@ protected:
     param::ParamSlot _cameraOvrUpParam;
     param::ParamSlot _cameraOvrLookatParam;
     param::ParamSlot _cameraOvrParam;
+
+    /** Shows the view cube helper */
+    param::ParamSlot _showViewCubeParam;
+
+    /** Standard camera views */
+    param::ParamSlot _cameraViewOrientationParam;
+    param::ParamSlot _cameraSetViewChooserParam;
+    param::ParamSlot _cameraSetOrientationChooserParam;
 
     bool cameraOvrCallback(param::ParamSlot& p);
 
