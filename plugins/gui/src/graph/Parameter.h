@@ -113,21 +113,6 @@ namespace gui {
             Present_t gui_presentation;
         };
 
-        Parameter(ImGuiID uid, Param_t type, Stroage_t store, Min_t minval, Max_t maxval, const std::string& full_name,
-            const std::string& description);
-
-        ~Parameter(void);
-
-        bool IsValueDirty(void) {
-            return this->value_dirty;
-        }
-        void ResetValueDirty(void) {
-            this->value_dirty = false;
-        }
-        void ForceSetValueDirty(void) {
-            this->value_dirty = true;
-        }
-
         static bool ReadNewCoreParameterToStockParameter(
             megamol::core::param::ParamSlot& in_param_slot, megamol::gui::Parameter::StockParameter& out_param);
 
@@ -147,17 +132,52 @@ namespace gui {
         static bool WriteCoreParameterValue(
             megamol::gui::Parameter& in_param, vislib::SmartPtr<megamol::core::param::AbstractParam>& out_param_ptr);
 
-        // Get ----------------------------------
+        Parameter(ImGuiID uid, Param_t type, Stroage_t store, Min_t minval, Max_t maxval, const std::string& full_name,
+            const std::string& description);
+
+        ~Parameter(void);
+
+        bool Draw(WidgetScope scope, const std::string& module_fullname);
+
+        bool IsValueDirty(void) {
+            return this->value_dirty;
+        }
+        void ResetValueDirty(void) {
+            this->value_dirty = false;
+        }
+        void ForceSetValueDirty(void) {
+            this->value_dirty = true;
+        }
+
+        bool IsGUIStateDirty(void) {
+            return this->gui_state_dirty;
+        }
+        void ResetGUIStateDirty(void) {
+            this->gui_state_dirty = false;
+        }
+        void ForceSetGUIStateDirty(void) {
+            this->gui_state_dirty = true;
+        }
+
+        void TransferFunctionEditor_SetHash(size_t hash) {
+            this->tf_editor_hash = hash;
+        }
+        inline void TransferFunctionEditor_ConnectExternal(
+            std::shared_ptr<megamol::gui::TransferFunctionEditor> tfe_ptr) {
+            this->tf_editor_external_ptr = tfe_ptr;
+        }
+        void TransferFunction_LoadTexture(
+            std::vector<float>& in_texture_data, int& in_texture_width, int& in_texture_height);
+
+        // GET ----------------------------------------------------------------
 
         inline const ImGuiID UID(void) const {
             return this->uid;
-        };
-
-        inline std::string GetFullName(void) const {
+        }
+        inline std::string FullName(void) const {
             return this->full_name;
         }
-
-        inline std::string GetName(void) const {
+        inline std::string Name(void) const {
             std::string name = this->full_name;
             auto idx = this->full_name.rfind(':');
             if (idx != std::string::npos) {
@@ -217,7 +237,7 @@ namespace gui {
             return this->gui_extended;
         }
 
-        // SET ----------------------------------
+        // SET ----------------------------------------------------------------
 
         inline void SetName(const std::string& name) {
             this->full_name = name;
@@ -251,7 +271,7 @@ namespace gui {
                             std::vector<float> texture_data;
                             if (megamol::core::param::TransferFunctionParam::GetTextureData(
                                     val, texture_data, texture_width, texture_height)) {
-                                this->LoadTransferFunctionTexture(texture_data, texture_width, texture_height);
+                                this->TransferFunction_LoadTexture(texture_data, texture_width, texture_height);
                             }
                             this->tf_string_hash = std::hash<std::string>()(val);
                         }
@@ -307,30 +327,6 @@ namespace gui {
         inline void SetExtended(bool extended) {
             this->gui_extended = extended;
         }
-
-        // GUI ----------------------------------
-
-        bool Draw(WidgetScope scope, const std::string& module_fullname);
-
-        bool IsGUIStateDirty(void) {
-            return this->gui_state_dirty;
-        }
-        void ResetGUIStateDirty(void) {
-            this->gui_state_dirty = false;
-        }
-        void ForceSetGUIStateDirty(void) {
-            this->gui_state_dirty = true;
-        }
-
-        void SetTransferFunctionEditorHash(size_t hash) {
-            this->tf_editor_hash = hash;
-        }
-        inline void ConnectExternalTransferFunctionEditor(
-            std::shared_ptr<megamol::gui::TransferFunctionEditor> tfe_ptr) {
-            this->tf_editor_external_ptr = tfe_ptr;
-        }
-        void LoadTransferFunctionTexture(
-            std::vector<float>& in_texture_data, int& in_texture_width, int& in_texture_height);
 
     private:
         // VARIABLES --------------------------------------------------------------

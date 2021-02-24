@@ -26,7 +26,7 @@ megamol::gui::ParameterGroups::ParameterGroups(void)
 megamol::gui::ParameterGroups::~ParameterGroups(void) {}
 
 
-bool megamol::gui::ParameterGroups::PresentGUI(megamol::gui::ParamVector_t& inout_params,
+bool megamol::gui::ParameterGroups::Draw(megamol::gui::ParamVector_t& inout_params,
     const std::string& in_module_fullname, const std::string& in_search, vislib::math::Ternary in_extended,
     bool in_indent, megamol::gui::Parameter::WidgetScope in_scope,
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
@@ -214,7 +214,7 @@ void megamol::gui::ParameterGroups::DrawParameter(megamol::gui::Parameter& inout
     const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor) {
 
     if (inout_param.Type() == Param_t::TRANSFERFUNCTION) {
-        inout_param.ConnectExternalTransferFunctionEditor(in_external_tf_editor);
+        inout_param.TransferFunctionEditor_ConnectExternal(in_external_tf_editor);
     }
 
     if (in_scope == Parameter::WidgetScope::GLOBAL) {

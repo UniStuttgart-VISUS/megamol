@@ -61,10 +61,10 @@ namespace gui {
 
         inline const ImGuiID UID(void) const {
             return this->uid;
-        };
+        }
         inline const std::string ClassName(void) const {
             return this->class_name;
-        };
+        }
         const std::string SlotsLabel(void);
 
     private:

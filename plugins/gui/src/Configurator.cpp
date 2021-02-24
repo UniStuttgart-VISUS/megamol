@@ -124,8 +124,7 @@ bool megamol::gui::Configurator::Draw(
             (this->graph_state.graph_selected_uid != GUI_INVALID_ID)) {
 
             bool graph_has_core_interface = false;
-            GraphPtr_t graph_ptr;
-            if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
+            if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
                 graph_has_core_interface = graph_ptr->HasCoreInterface();
             }
             if (graph_has_core_interface) {
@@ -225,8 +224,7 @@ void megamol::gui::Configurator::draw_window_menu(megamol::core::CoreInstance* c
                     this->graph_state.hotkeys[megamol::gui::HotkeyIndex::SAVE_PROJECT].keycode.ToString().c_str(),
                     false, ((this->graph_state.graph_selected_uid != GUI_INVALID_ID)))) {
                 bool graph_has_core_interface = false;
-                GraphPtr_t graph_ptr;
-                if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
+                if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
                     graph_has_core_interface = graph_ptr->HasCoreInterface();
                 }
                 if (graph_has_core_interface) {
@@ -289,13 +287,11 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
     bool interfaceslot_selected = false;
     std::string compat_callslot_name;
     CallSlotPtr_t selected_callslot_ptr;
-    GraphPtr_t selected_graph_ptr;
-    if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
+    if (auto selected_graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
         auto callslot_id = selected_graph_ptr->GetSelectedCallSlot();
         if (callslot_id != GUI_INVALID_ID) {
             for (auto& module_ptr : selected_graph_ptr->GetModules()) {
-                CallSlotPtr_t callslot_ptr;
-                if (module_ptr->GetCallSlot(callslot_id, callslot_ptr)) {
+                if (auto callslot_ptr = module_ptr->GetCallSlot(callslot_id)) {
                     selected_callslot_ptr = callslot_ptr;
                 }
             }
@@ -304,9 +300,9 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
         if (interfaceslot_id != GUI_INVALID_ID) {
             for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
                 InterfaceSlotPtr_t interfaceslot_ptr;
-                if (group_ptr->GetInterfaceSlot(interfaceslot_id, interfaceslot_ptr)) {
+                if (auto interfaceslot_ptr = group_ptr->GetInterfaceSlot(interfaceslot_id)) {
                     CallSlotPtr_t callslot_ptr;
-                    if (interfaceslot_ptr->GetCompatibleCallSlot(callslot_ptr)) {
+                    if (auto callslot_ptr = interfaceslot_ptr->GetCompatibleCallSlot()) {
                         selected_callslot_ptr = callslot_ptr;
                         interfaceslot_selected = true;
                     }
@@ -362,11 +358,10 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
             }
 
             if (add_module) {
-                if (selected_graph_ptr != nullptr) {
+                if (auto selected_graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
                     ImGuiID module_uid =
                         selected_graph_ptr->AddModule(this->graph_collection.GetModulesStock(), mod.class_name);
-                    ModulePtr_t module_ptr;
-                    if (selected_graph_ptr->GetModule(module_uid, module_ptr)) {
+                    if (auto module_ptr = selected_graph_ptr->GetModule(module_uid)) {
 
                         // If there is a call slot selected, create call to compatible call slot of new module
                         bool added_call = false;
@@ -374,7 +369,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                             // Get call slots of last added module
                             for (auto& callslot_map : module_ptr->GetCallSlots()) {
                                 for (auto& callslot_ptr : callslot_map.second) {
-                                    if (callslot_ptr->name == compat_callslot_name) {
+                                    if (callslot_ptr->Name() == compat_callslot_name) {
                                         added_call = selected_graph_ptr->AddCall(this->graph_collection.GetCallsStock(),
                                             selected_callslot_ptr, callslot_ptr);
                                         if (added_call) {
@@ -394,7 +389,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
                         if (!interfaceslot_selected) {
                             ImGuiID connceted_group = GUI_INVALID_ID;
                             if (added_call && selected_callslot_ptr->IsParentModuleConnected()) {
-                                connceted_group = selected_callslot_ptr->GetParentModule()->group.uid;
+                                connceted_group = selected_callslot_ptr->GetParentModule()->GroupUID();
                             }
                             ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
                             ImGuiID group_uid = (connceted_group != GUI_INVALID_ID)
@@ -405,7 +400,7 @@ void megamol::gui::Configurator::draw_window_module_list(float width, float heig
 
                             if (group_uid != GUI_INVALID_ID) {
                                 for (auto& group_ptr : selected_graph_ptr->GetGroups()) {
-                                    if (group_ptr->uid == group_uid) {
+                                    if (group_ptr->UID() == group_uid) {
                                         Graph::QueueData queue_data;
                                         queue_data.name_id = module_ptr->FullName();
                                         selected_graph_ptr->ResetStatePointers();
@@ -548,8 +543,7 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
     // Load Project -----------------------------------------------------------
     bool popup_failed = false;
     std::string project_filename;
-    GraphPtr_t graph_ptr;
-    if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, graph_ptr)) {
+    if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
         project_filename = graph_ptr->GetFilename();
     }
     // Try to get current project path from lua in core instance
@@ -567,8 +561,7 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
     this->open_popup_load = false;
 
     // Module Stock List Child Window ------------------------------------------
-    GraphPtr_t selected_graph_ptr;
-    if (this->graph_collection.GetGraph(this->graph_state.graph_selected_uid, selected_graph_ptr)) {
+    if (auto selected_graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
 
         ImGuiID selected_callslot_uid = selected_graph_ptr->GetSelectedCallSlot();
         ImGuiID selected_group_uid = selected_graph_ptr->GetSelectedGroup();
@@ -586,12 +579,13 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
             // Force consume double click!
             ImGui::GetIO().MouseDoubleClicked[0] = false;
         }
+        if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
+            this->module_list_popup_hovered_group_uid = selected_graph_ptr->GetHoveredGroup();
+        }
     }
-    if ( // !this->show_module_list_sidebar &&
-        this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
+    if (this->graph_state.hotkeys[megamol::gui::HotkeyIndex::MODULE_SEARCH].is_pressed) {
         this->show_module_list_popup = true;
         this->module_list_popup_pos = ImGui::GetMousePos();
-        this->module_list_popup_hovered_group_uid = selected_graph_ptr->GetHoveredGroup();
     }
     if (this->show_module_list_popup) {
 

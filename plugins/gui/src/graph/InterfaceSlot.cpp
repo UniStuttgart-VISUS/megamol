@@ -132,16 +132,15 @@ bool megamol::gui::InterfaceSlot::ContainsCallSlot(ImGuiID callslot_uid) {
 
 bool megamol::gui::InterfaceSlot::IsConnectionValid(InterfaceSlot& interfaceslot) {
 
-    CallSlotPtr_t callslot_ptr_1;
-    CallSlotPtr_t callslot_ptr_2;
-    if (this->GetCompatibleCallSlot(callslot_ptr_1) && interfaceslot.GetCompatibleCallSlot(callslot_ptr_2)) {
-        // Check for different group
-        if (this->group_uid != interfaceslot.group_uid) {
-            // Check for compatibility of call slots which are part of the interface slots
-            return (callslot_ptr_1->IsConnectionValid((*callslot_ptr_2)));
+    if (auto callslot_ptr_1 = this->GetCompatibleCallSlot()) {
+        if (auto callslot_ptr_2 = interfaceslot.GetCompatibleCallSlot()) {
+            // Check for different group
+            if (this->group_uid != interfaceslot.group_uid) {
+                // Check for compatibility of call slots which are part of the interface slots
+                return (callslot_ptr_1->IsConnectionValid((*callslot_ptr_2)));
+            }
         }
     }
-
     return false;
 }
 
@@ -164,8 +163,7 @@ bool megamol::gui::InterfaceSlot::IsConnectionValid(CallSlot& callslot) {
             return false;
         }
         // Check for compatibility of call slots
-        CallSlotPtr_t interface_callslot_ptr;
-        if (this->GetCompatibleCallSlot(interface_callslot_ptr)) {
+        if (auto interface_callslot_ptr = this->GetCompatibleCallSlot()) {
             if (interface_callslot_ptr->IsConnectionValid(callslot)) {
                 return true;
             }
@@ -175,14 +173,12 @@ bool megamol::gui::InterfaceSlot::IsConnectionValid(CallSlot& callslot) {
 }
 
 
-bool megamol::gui::InterfaceSlot::GetCompatibleCallSlot(CallSlotPtr_t& out_callslot_ptr) {
+CallSlotPtr_t megamol::gui::InterfaceSlot::GetCompatibleCallSlot(void) {
 
-    out_callslot_ptr.reset();
     if (!this->callslots.empty()) {
-        out_callslot_ptr = this->callslots[0];
-        return true;
+        return this->callslots[0];
     }
-    return false;
+    return nullptr;
 }
 
 

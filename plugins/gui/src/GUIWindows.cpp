@@ -439,7 +439,7 @@ bool GUIWindows::PostDraw(void) {
                         std::string module_full_name = module_ptr->FullName();
                         for (auto& param : module_ptr->parameters) {
                             std::string param_full_name = module_full_name + "::" + param.full_name;
-                            if ((wc.tfe_active_param == param_full_name) && (param.type == Param_t::TRANSFERFUNCTION)) {
+                            if ((wc.tfe_active_param == param_full_name) && (param.Type() == Param_t::TRANSFERFUNCTION)) {
                                 this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
                                 this->tf_editor_ptr->SetTransferFunction(std::get<std::string>(param.GetValue()), true);
                             }
@@ -521,7 +521,7 @@ bool GUIWindows::PostDraw(void) {
     if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
         for (auto& module_ptr : graph_ptr->GetModules()) {
 
-            module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "",
+            module_ptr->param_groups.Draw(module_ptr->parameters, module_ptr->FullName(), "",
                 vislib::math::Ternary::TRI_UNKNOWN, false, Parameter::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr,
                 GUI_INVALID_ID, &this->picking_buffer);
         }
@@ -744,7 +744,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
                 break;
             if (check_all_modules || this->considerModule(module_ptr->FullName(), modules_list)) {
                 for (auto& param : module_ptr->parameters) {
-                    if (param.type == Param_t::BUTTON) {
+                    if (param.Type() == Param_t::BUTTON) {
                         auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
                         if (this->isHotkeyPressed(keyCode)) {
                             // Sync directly button action to parameter in core
@@ -1068,10 +1068,10 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 
                 if (!param.core_param_ptr.IsNull()) {
                     // Write changed gui state to core parameter
-                    if (param.present.IsGUIStateDirty()) {
+                    if (param.IsGUIStateDirty()) {
                         param_sync_success &=
                             megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.core_param_ptr);
-                        param.present.ResetGUIStateDirty();
+                        param.ResetGUIStateDirty();
                     }
                     // Write changed parameter value to core parameter
                     if (param.IsValueDirty()) {
@@ -1479,7 +1479,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
         // Get module groups
         std::map<std::string, std::vector<ModulePtr_t>> group_map;
         for (auto& module_ptr : graph_ptr->GetModules()) {
-            auto group_name = module_ptr->present.group.name;
+            auto group_name = module_ptr->group.name;
             if (!group_name.empty()) {
                 group_map["::" + group_name].emplace_back(module_ptr);
             } else {
@@ -1560,7 +1560,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                     // Draw parameters
                     if (module_header_open) {
                         bool out_open_external_tf_editor;
-                        module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, search_string,
+                        module_ptr->param_groups.PresentGUI(module_ptr->parameters, module_label, search_string,
                             vislib::math::Ternary(wc.param_extended_mode), true, Parameter::WidgetScope::LOCAL,
                             this->tf_editor_ptr, &out_open_external_tf_editor, override_header_state, nullptr);
                         if (out_open_external_tf_editor) {
@@ -2255,7 +2255,7 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 for (auto& param : module_ptr->parameters) {
 
-                    if (param.type == Param_t::BUTTON) {
+                    if (param.Type() == Param_t::BUTTON) {
                         auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
                         // Ignore not set hotekey
                         if (keyCode.key == core::view::Key::KEY_UNKNOWN) {
@@ -2375,12 +2375,12 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 std::string module_full_name = module_ptr->FullName();
                 // Parameter Groups
-                module_ptr->present.param_groups.StateFromJSON(in_json, module_full_name);
+                module_ptr->param_groups.StateFromJSON(in_json, module_full_name);
                 // Parameters
                 for (auto& param : module_ptr->parameters) {
                     std::string param_full_name = module_full_name + "::" + param.full_name;
-                    param.present.StateFromJSON(in_json, param_full_name);
-                    param.present.ForceSetGUIStateDirty();
+                    param.StateFromJSON(in_json, param_full_name);
+                    param.ForceSetGUIStateDirty();
                 }
             }
         }
@@ -2423,11 +2423,11 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
             for (auto& module_ptr : graph_ptr->GetModules()) {
                 std::string module_full_name = module_ptr->FullName();
                 // Parameter Groups
-                module_ptr->present.param_groups.StateToJSON(inout_json, module_full_name);
+                module_ptr->param_groups.StateToJSON(inout_json, module_full_name);
                 // Parameters
                 for (auto& param : module_ptr->parameters) {
                     std::string param_full_name = module_full_name + "::" + param.full_name;
-                    param.present.StateToJSON(inout_json, param_full_name);
+                    param.StateToJSON(inout_json, param_full_name);
                 }
             }
         }

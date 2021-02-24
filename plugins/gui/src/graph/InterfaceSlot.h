@@ -45,7 +45,7 @@ namespace gui {
         bool ContainsCallSlot(ImGuiID callslot_uid);
         bool IsConnectionValid(CallSlot& callslot);
         bool IsConnectionValid(InterfaceSlot& interfaceslot);
-        bool GetCompatibleCallSlot(CallSlotPtr_t& out_callslot_ptr);
+        CallSlotPtr_t GetCompatibleCallSlot(void);
         CallSlotPtrVector_t& GetCallSlots(void) {
             return this->callslots;
         }
@@ -63,7 +63,7 @@ namespace gui {
         }
         inline const ImGuiID UID(void) const {
             return this->uid;
-        };
+        }
         ImVec2 Position(void);
 
         inline bool IsGroupViewCollapsed(void) const {

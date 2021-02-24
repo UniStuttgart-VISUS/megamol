@@ -82,13 +82,13 @@ namespace gui {
         }
         inline const ImGuiID UID(void) const {
             return this->uid;
-        };
+        }
         inline const std::string Name(void) const {
             return this->name;
-        };
+        }
         inline const CallSlotType Type(void) const {
             return this->type;
-        };
+        }
         inline InterfaceSlotPtr_t InterfaceSlotPtr(void) const {
             return this->gui_interfaceslot_ptr;
         }

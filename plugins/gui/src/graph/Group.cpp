@@ -242,19 +242,18 @@ bool megamol::gui::Group::InterfaceSlot_ContainsCallSlot(ImGuiID callslot_uid) {
 }
 
 
-bool megamol::gui::Group::GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtr_t& interfaceslot_ptr) {
+InterfaceSlotPtr_t megamol::gui::Group::GetInterfaceSlot(ImGuiID interfaceslot_uid) {
 
     if (interfaceslot_uid != GUI_INVALID_ID) {
         for (auto& interfaceslots_map : this->interfaceslots) {
             for (auto& interfaceslot : interfaceslots_map.second) {
                 if (interfaceslot->UID() == interfaceslot_uid) {
-                    interfaceslot_ptr = interfaceslot;
-                    return true;
+                    return interfaceslot;
                 }
             }
         }
     }
-    return false;
+    return nullptr;
 }
 
 

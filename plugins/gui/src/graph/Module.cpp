@@ -108,19 +108,18 @@ bool megamol::gui::Module::DeleteCallSlots(void) {
 }
 
 
-bool megamol::gui::Module::GetCallSlot(ImGuiID callslot_uid, megamol::gui::CallSlotPtr_t& out_callslot_ptr) {
+CallSlotPtr_t megamol::gui::Module::GetCallSlot(ImGuiID callslot_uid) {
 
     if (callslot_uid != GUI_INVALID_ID) {
         for (auto& callslot_map : this->GetCallSlots()) {
             for (auto& callslot : callslot_map.second) {
                 if (callslot->UID() == callslot_uid) {
-                    out_callslot_ptr = callslot;
-                    return true;
+                    return callslot;
                 }
             }
         }
     }
-    return false;
+    return nullptr;
 }
 
 

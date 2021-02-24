@@ -71,7 +71,7 @@ namespace gui {
         inline const ModulePtrVector_t& GetModules(void) {
             return this->modules;
         }
-        bool GetModule(ImGuiID module_uid, ModulePtr_t& out_module_ptr);
+        ModulePtr_t GetModule(ImGuiID module_uid);
         bool ModuleExists(const std::string& module_fullname);
 
         bool AddCall(const CallStockVector_t& stock_calls, ImGuiID slot_1_uid, ImGuiID slot_2_uid);
@@ -88,7 +88,7 @@ namespace gui {
         inline const GroupPtrVector_t& GetGroups(void) {
             return this->groups;
         }
-        bool GetGroup(ImGuiID group_uid, GroupPtr_t& out_group_ptr);
+        GroupPtr_t GetGroup(ImGuiID group_uid);
         ImGuiID AddGroupModule(const std::string& group_name, const ModulePtr_t& module_ptr);
 
         void Clear(void);
@@ -136,7 +136,10 @@ namespace gui {
 
         inline const ImGuiID UID(void) const {
             return this->uid;
-        };
+        }
+        inline const std::string Name(void) const {
+            return this->name;
+        }
 
         void ForceUpdate(void) {
             this->gui_update = true;

@@ -40,15 +40,12 @@ namespace gui {
         bool AddModule(const ModulePtr_t& module_ptr);
         bool RemoveModule(ImGuiID module_uid);
         bool ContainsModule(ImGuiID module_uid);
-        // inline const ModulePtrVector_t& GetModules(void) {
-        //    return this->modules;
-        //}
         inline bool Empty(void) {
             return (this->modules.empty());
         }
 
         ImGuiID AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr, bool auto_add = true);
-        bool GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtr_t& interfaceslot_ptr);
+        InterfaceSlotPtr_t GetInterfaceSlot(ImGuiID interfaceslot_uid);
         inline InterfaceSlotPtrMap_t& GetInterfaceSlots(void) {
             return this->interfaceslots;
         }
@@ -64,8 +61,10 @@ namespace gui {
 
         void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
         void UpdatePositionSize(const GraphCanvas_t& in_canvas);
-        void SetPosition(const GraphCanvas_t& in_canvas, ImVec2 pos);
 
+        inline const ImGuiID UID(void) const {
+            return this->uid;
+        }
         inline ImVec2 Size(void) {
             return this->gui_size;
         }
@@ -75,6 +74,8 @@ namespace gui {
         inline void ForceUpdate(void) {
             this->gui_update = true;
         }
+
+        void SetPosition(const GraphCanvas_t& in_canvas, ImVec2 pos);
 
     private:
         // VARIABLES --------------------------------------------------------------

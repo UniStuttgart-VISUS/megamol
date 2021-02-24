@@ -563,7 +563,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                     if (this->GetTransferFunction(tf)) {
                         if (this->connected_parameter_ptr->Type() == Param_t::TRANSFERFUNCTION) {
                             this->connected_parameter_ptr->SetValue(tf);
-                            this->connected_parameter_ptr->SetTransferFunctionEditorHash(
+                            this->connected_parameter_ptr->TransferFunctionEditor_SetHash(
                                 this->connected_parameter_ptr->GetTransferFunctionHash());
                         }
                     }

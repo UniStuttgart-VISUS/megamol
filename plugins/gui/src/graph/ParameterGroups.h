@@ -29,12 +29,11 @@ namespace gui {
      */
     class ParameterGroups {
     public:
-        // FUCNTIONS --------------------------------------------------------------
 
         ParameterGroups(void);
         ~ParameterGroups(void);
 
-        bool PresentGUI(megamol::gui::ParamVector_t& inout_params, const std::string& in_module_fullname,
+        bool Draw(megamol::gui::ParamVector_t& inout_params, const std::string& in_module_fullname,
             const std::string& in_search, vislib::math::Ternary in_extended, bool in_indent,
             megamol::gui::Parameter::WidgetScope in_scope,
             const std::shared_ptr<TransferFunctionEditor> in_external_tf_editor, bool* out_open_external_tf_editor,
@@ -54,6 +53,7 @@ namespace gui {
             ImGuiID in_override_header_state);
 
     private:
+
         typedef std::vector<megamol::gui::Parameter*> ParamPtrVector_t;
         typedef std::map<std::string, ParamPtrVector_t> ParamGroup_t;
 

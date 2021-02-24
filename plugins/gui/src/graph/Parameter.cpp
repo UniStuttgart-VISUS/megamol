@@ -880,7 +880,7 @@ bool megamol::gui::Parameter::Draw(megamol::gui::Parameter::WidgetScope scope, c
 }
 
 
-void megamol::gui::Parameter::LoadTransferFunctionTexture(
+void megamol::gui::Parameter::TransferFunction_LoadTexture(
     std::vector<float>& in_texture_data, int& in_texture_width, int& in_texture_height) {
 
     gui_image_widget.LoadTextureFromData(in_texture_width, in_texture_height, in_texture_data.data());
@@ -891,7 +891,7 @@ bool megamol::gui::Parameter::draw_parameter(megamol::gui::Parameter::WidgetScop
 
     bool retval = false;
     bool error = true;
-    std::string param_label = this->GetName();
+    std::string param_label = this->Name();
 
     // Implementation of presentation with parameter type mapping defined in
     // AbstractParamPresentation::InitPresentation().
@@ -1978,7 +1978,7 @@ bool megamol::gui::Parameter::widget_transfer_function_editor(megamol::gui::Para
     bool isActive = false;
     bool updateEditor = false;
     auto value = std::get<std::string>(this->GetValue());
-    std::string label = this->GetName();
+    std::string label = this->Name();
 
     ImGuiStyle& style = ImGui::GetStyle();
 

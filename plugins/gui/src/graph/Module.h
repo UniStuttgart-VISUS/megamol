@@ -57,7 +57,13 @@ namespace gui {
 
         bool AddCallSlot(CallSlotPtr_t callslot);
         bool DeleteCallSlots(void);
-        bool GetCallSlot(ImGuiID callslot_uid, CallSlotPtr_t& out_callslot_ptr);
+
+        void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
+        void Update(const GraphCanvas_t& in_canvas);
+
+        // GET ----------------------------------------------------------------
+
+        CallSlotPtr_t GetCallSlot(ImGuiID callslot_uid);
         const CallSlotPtrVector_t& GetCallSlots(CallSlotType type) {
             return this->callslots[type];
         }
@@ -65,10 +71,18 @@ namespace gui {
             return this->callslots;
         }
 
+        inline const ImGuiID UID(void) const {
+            return this->uid;
+        }
+        inline const std::string ClassName(void) const {
+            return this->class_name;
+        }
         bool IsGraphEntry(void) {
             return (!this->graph_entry_name.empty());
         }
-
+        inline const std::string Name(void) const {
+            return this->name;
+        }
         const inline std::string FullName(void) const {
             std::string fullname = "::" + this->name;
             if (!this->group_name.empty()) {
@@ -76,16 +90,6 @@ namespace gui {
             }
             return fullname;
         }
-
-        void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
-        void Update(const GraphCanvas_t& in_canvas);
-
-        inline const ImGuiID UID(void) const {
-            return this->uid;
-        };
-        inline const std::string ClassName(void) const {
-            return this->class_name;
-        };
         inline ImVec2 Position(void) const {
             return this->gui_position;
         }
@@ -99,6 +103,8 @@ namespace gui {
             return this->gui_label_visible;
         }
 
+        // SET ----------------------------------------------------------------
+
         inline void SetGroupUID(ImGuiID uid) {
             this->group_uid = uid;
         }
@@ -110,6 +116,12 @@ namespace gui {
         }
         inline void SetPosition(ImVec2 pos) {
             this->gui_position = pos;
+        }
+        void SetSelectedSlotPosition(void) {
+            this->gui_set_selected_slot_position = true;
+        }
+        void SetScreenPosition(ImVec2 pos) {
+            this->gui_set_screen_position = pos;
         }
 
     private:
@@ -144,15 +156,6 @@ namespace gui {
         RenamePopUp gui_rename_popup;
 
         // FUNCTIONS --------------------------------------------------------------
-
-
-        void SetSelectedSlotPosition(void) {
-            this->gui_set_selected_slot_position = true;
-        }
-
-        void SetScreenPosition(ImVec2 pos) {
-            this->gui_set_screen_position = pos;
-        }
 
         inline bool found_uid(UIDVector_t& modules_uid_vector, ImGuiID module_uid) const {
             return (std::find(modules_uid_vector.begin(), modules_uid_vector.end(), module_uid) !=
