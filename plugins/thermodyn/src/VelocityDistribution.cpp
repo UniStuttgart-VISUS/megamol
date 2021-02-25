@@ -66,6 +66,7 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
     auto const mode_type = static_cast<mode>(mode_slot_.Param<core::param::EnumParam>()->Value());
 
     histograms_.resize(pl_count);
+    domain_.resize(pl_count);
 
     col_cnt_ = pl_count;
     row_cnt_ = num_buckets;
@@ -76,6 +77,9 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
         auto& histo = histograms_[pl_idx];
         histo.clear();
         histo.resize(num_buckets, 0);
+        auto& domain = domain_[pl_idx];
+        domain.clear();
+        domain.resize(num_buckets);
 
         auto const p_count = part.GetCount();
 
@@ -88,7 +92,15 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
 
                 auto const fac_i = 1.0f / (max_i - min_i + 1e-8f);
 
+                auto const diff_i = (max_i - min_i) / num_buckets;
+
                 auto const iAcc = part.GetParticleStore().GetCRAcc();
+
+                std::generate(domain.begin(), domain.end(), [diff_i, val = min_i]() mutable {
+                    auto old_val = val;
+                    val += diff_i;
+                    return old_val;
+                });
 
                 for (std::remove_const_t<decltype(p_count)> p_idx = 0; p_idx < p_count; ++p_idx) {
                     auto const val = iAcc->Get_f(p_idx);
@@ -122,6 +134,14 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
 
                 auto const fac_i = 1.0f / (max_i - min_i + 1e-8f);
 
+                auto const diff_i = (max_i - min_i) / num_buckets;
+
+                std::generate(domain.begin(), domain.end(), [diff_i, val = min_i]() mutable {
+                    auto old_val = val;
+                    val += diff_i;
+                    return old_val;
+                });
+
                 for (std::remove_const_t<decltype(p_count)> p_idx = 0; p_idx < p_count; ++p_idx) {
                     auto const val = temp_mag[p_idx];
 
@@ -133,6 +153,7 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
         } break;
         }
     }
+    compute_statistics();
 
     return true;
 }
@@ -141,12 +162,22 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
 bool megamol::thermodyn::VelocityDistribution::dump_histo(core::param::ParamSlot& p) {
     auto const path = std::filesystem::path(path_slot_.Param<core::param::FilePathParam>()->Value().PeekBuffer());
 
+    //compute_statistics();
+
     for (std::size_t pl_idx = 0; pl_idx < histograms_.size(); ++pl_idx) {
         auto const& histo = histograms_[pl_idx];
+        auto const& domain = domain_[pl_idx];
 
         auto const filepath = path / ("histo_" + std::to_string(pl_idx) + ".txt");
 
         auto ofile = std::ofstream(filepath, std::ios::out);
+
+        for (auto const& el : domain) {
+            ofile << std::to_string(el) << ",";
+        }
+
+        ofile.seekp(-1, std::ios::end);
+        ofile << "\n";
 
         for (auto const& el : histo) {
             ofile << std::to_string(el) << ",";
@@ -157,6 +188,35 @@ bool megamol::thermodyn::VelocityDistribution::dump_histo(core::param::ParamSlot
     }
 
     return true;
+}
+
+
+void megamol::thermodyn::VelocityDistribution::compute_statistics() {
+    mean_.resize(histograms_.size());
+    stddev_.resize(histograms_.size());
+
+    for (std::size_t pl_idx = 0; pl_idx < histograms_.size(); ++pl_idx) {
+        auto const& histo = histograms_[pl_idx];
+        auto const& domain = domain_[pl_idx];
+
+        std::vector<float> tmp_avg(histo.size());
+        std::transform(histo.begin(), histo.end(), domain.begin(), tmp_avg.begin(),
+            [](auto const& h, auto const& d) { return static_cast<float>(h) * d; });
+
+        auto const sum_weights = std::accumulate(histo.begin(), histo.end(), 0.0f);
+        auto const weighted_mean = std::accumulate(tmp_avg.begin(), tmp_avg.end(), 0.0f);
+        auto const mean = weighted_mean / sum_weights;
+
+        auto const fac = sum_weights* static_cast<float>((histo.size() - 1)) / static_cast<float>(histo.size());
+        std::transform(histo.begin(), histo.end(), domain.begin(), tmp_avg.begin(),
+            [mean](auto const& h, auto const& d) { return static_cast<float>(h) * (d - mean) * (d - mean); });
+        auto const stddev = std::sqrtf(std::accumulate(tmp_avg.begin(), tmp_avg.end(), 0.0f) / fac);
+
+        mean_[pl_idx] = mean;
+        stddev_[pl_idx] = stddev;
+
+        //core::utility::log::Log::DefaultLog.WriteInfo("[VelocityDistribution] Mean %f Stddev %f", mean, stddev);
+    }
 }
 
 

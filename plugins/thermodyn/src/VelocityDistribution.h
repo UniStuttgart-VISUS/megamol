@@ -37,10 +37,7 @@ protected:
     void release() override;
 
 private:
-    enum class mode : std::uint8_t {
-        icol,
-        dir
-    };
+    enum class mode : std::uint8_t { icol, dir };
 
     core::CalleeSlot out_dist_slot_;
 
@@ -66,13 +63,21 @@ private:
 
     bool dump_histo(core::param::ParamSlot& p);
 
+    void compute_statistics();
+
     bool get_data_cb(core::Call& c);
 
     bool get_extent_sb(core::Call& c);
 
     std::vector<std::vector<std::uint32_t>> histograms_;
 
+    std::vector<std::vector<float>> domain_;
+
     std::vector<float> data_;
+
+    std::vector<float> mean_;
+
+    std::vector<float> stddev_;
 
     std::vector<stdplugin::datatools::table::TableDataCall::ColumnInfo> ci_;
 
