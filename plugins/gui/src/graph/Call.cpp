@@ -136,8 +136,9 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
             if ((callerslot_ptr == nullptr) || (calleeslot_ptr == nullptr)) {
                 return;
             }
-            bool visible = ((!callerslot_ptr->IsClipped() || (callerslot_ptr->InterfaceSlotPtr() != nullptr)) &&
-                            (!calleeslot_ptr->IsClipped() || (calleeslot_ptr->InterfaceSlotPtr() != nullptr)));
+            bool visible = !callerslot_ptr->IsClipped() || !calleeslot_ptr->IsClipped() ||
+                           (callerslot_ptr->InterfaceSlotPtr() != nullptr) ||
+                           (calleeslot_ptr->InterfaceSlotPtr() != nullptr);
             if (visible) {
 
                 ImVec2 caller_position = callerslot_ptr->Position();

@@ -1510,12 +1510,9 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
 
                                 // Remove module from previous associated group
                                 ImGuiID module_group_uid = module_ptr->GroupUID();
-                                bool restore_interfaceslots = false;
-                                auto remove_group_ptr = this->GetGroup(module_group_uid);
-                                if (remove_group_ptr != nullptr) {
+                                if (auto remove_group_ptr = this->GetGroup(module_group_uid)) {
                                     if (remove_group_ptr->UID() != add_group_ptr->UID()) {
                                         remove_group_ptr->RemoveModule(module_ptr->UID());
-                                        restore_interfaceslots = true;
                                     }
                                 }
 
@@ -1524,10 +1521,6 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                                 queue_data.rename_id = module_ptr->FullName();
                                 this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
                                 this->ForceSetDirty();
-                                // Restore interface slots after adding module to new group
-                                if (restore_interfaceslots && (remove_group_ptr != nullptr)) {
-                                    remove_group_ptr->RestoreInterfaceslots();
-                                }
                             }
                         }
                     }
@@ -1835,8 +1828,11 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                             selected_mod_ptr->FullName(), "", vislib::math::Ternary::TRI_UNKNOWN, false,
                             Parameter::WidgetScope::LOCAL, nullptr, nullptr, GUI_INVALID_ID, nullptr);
 
+                        ImVec2 popup_pos = ImGui::GetWindowPos();
                         ImVec2 popup_size = ImGui::GetWindowSize();
+
                         bool param_popup_open = ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId);
+
                         bool module_parm_child_popup_hovered = false;
                         if ((ImGui::GetMousePos().x >= this->gui_graph_state.interact.module_param_child_position.x) &&
                             (ImGui::GetMousePos().x <=
@@ -1844,6 +1840,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                             (ImGui::GetMousePos().y >= this->gui_graph_state.interact.module_param_child_position.y) &&
                             (ImGui::GetMousePos().y <=
                                 (this->gui_graph_state.interact.module_param_child_position.y + popup_size.y))) {
+
                             module_parm_child_popup_hovered = true;
                         }
                         if (!param_popup_open && ((ImGui::IsMouseClicked(0) && !module_parm_child_popup_hovered) ||
@@ -1856,7 +1853,8 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                         }
 
                         // Save actual position since pop-up might be moved away from right edge
-                        this->gui_graph_state.interact.module_param_child_position = ImGui::GetWindowPos();
+                        this->gui_graph_state.interact.module_param_child_position = popup_pos;
+
                         ImGui::EndPopup();
                     }
                 }
@@ -2809,7 +2807,7 @@ void megamol::gui::Graph::layout(
                         }
                     }
                 }
-                layer_item.module_ptr->Position() = pos;
+                layer_item.module_ptr->SetPosition(pos);
                 auto module_size = layer_item.module_ptr->Size();
                 pos.y += (module_size.y + GUI_GRAPH_BORDER);
                 max_graph_element_width = std::max(module_size.x, max_graph_element_width);

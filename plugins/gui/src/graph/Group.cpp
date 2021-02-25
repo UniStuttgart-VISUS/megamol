@@ -107,6 +107,7 @@ bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
                 this->modules.erase(mod_iter);
 
                 this->ForceUpdate();
+                this->RestoreInterfaceslots();
 
                 return true;
             }
