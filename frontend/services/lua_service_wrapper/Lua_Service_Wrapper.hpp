@@ -85,8 +85,6 @@ private:
     std::vector<std::string> m_requestedResourcesNames;
     std::vector<FrontendResource> m_requestedResourceReferences;
 
-    std::vector<std::string> m_queuedProjectFiles;
-
     megamol::frontend_resources::ScriptPaths m_scriptpath_resource;
     std::function<std::tuple<bool,std::string>(std::string const&)> m_executeLuaScript_resource;
 };

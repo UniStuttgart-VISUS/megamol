@@ -18,8 +18,6 @@
 #include "WindowManipulation.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
-#include "Window_Events.h"
-#include "mmcore/utility/graphics/ScreenShotComments.h"
 #include "mmcore/utility/log/Log.h"
 static void log(const char* text) {
     const std::string msg = "Lua_Service_Wrapper: " + std::string(text) + "\n";
@@ -189,18 +187,6 @@ void Lua_Service_Wrapper::updateProvidedResources() {
         }
     }
 
-    for (auto& file : m_queuedProjectFiles) {
-        std::string result;
-        log("running file " + file);
-        if (megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(file, ".png")) {
-            luaAPI.RunString(megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(file), result);
-        } else {
-            luaAPI.RunFile(file, result);
-        }
-        log("executed file " + file + ": " + result);
-    }
-    m_queuedProjectFiles.clear();
-
     need_to_shutdown |= luaAPI.getShutdown();
 
     if (need_to_shutdown)
@@ -209,17 +195,6 @@ void Lua_Service_Wrapper::updateProvidedResources() {
 
 void Lua_Service_Wrapper::digestChangedRequestedResources() {
     recursion_guard;
-
-    // execute lua files dropped into megamol window
-    auto window_events = this->m_requestedResourceReferences[2].getResource<megamol::frontend_resources::WindowEvents>();
-    for(auto& event: window_events.dropped_path_events) {
-        for (auto& file_path : event) {
-            if(megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(file_path, ".lua") ||
-                megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(file_path, ".png")) {
-                m_queuedProjectFiles.push_back(file_path);
-            }
-        }
-    }
 }
 
 void Lua_Service_Wrapper::resetProvidedResources() { recursion_guard; }
