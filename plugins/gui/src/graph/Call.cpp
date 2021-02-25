@@ -136,30 +136,28 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
             if ((callerslot_ptr == nullptr) || (calleeslot_ptr == nullptr)) {
                 return;
             }
-            bool visible = !callerslot_ptr->IsClipped() || !calleeslot_ptr->IsClipped() ||
-                           (callerslot_ptr->InterfaceSlotPtr() != nullptr) ||
-                           (calleeslot_ptr->InterfaceSlotPtr() != nullptr);
-            if (visible) {
-
-                ImVec2 caller_position = callerslot_ptr->Position();
-                ImVec2 callee_position = calleeslot_ptr->Position();
-                bool connect_interface_slot = true;
-                if (callerslot_ptr->IsParentModuleConnected() && calleeslot_ptr->IsParentModuleConnected()) {
-                    if (callerslot_ptr->GetParentModule()->GroupUID() ==
-                        calleeslot_ptr->GetParentModule()->GroupUID()) {
-                        connect_interface_slot = false;
-                    }
+            bool hidden = false;
+            bool connect_interface_slot = true;
+            // Calls lie only completely inside or outside groups.
+            if (callerslot_ptr->IsParentModuleConnected() && calleeslot_ptr->IsParentModuleConnected()) {
+                if (callerslot_ptr->GetParentModule()->GroupUID() == calleeslot_ptr->GetParentModule()->GroupUID()) {
+                    connect_interface_slot = false;
                 }
+                hidden =
+                    (callerslot_ptr->GetParentModule()->IsHidden() && calleeslot_ptr->GetParentModule()->IsHidden());
+            }
+            if (!hidden) {
+
+                ImVec2 caller_pos = callerslot_ptr->Position();
+                ImVec2 callee_pos = calleeslot_ptr->Position();
                 if (connect_interface_slot) {
                     if (callerslot_ptr->InterfaceSlotPtr() != nullptr) {
-                        caller_position = callerslot_ptr->InterfaceSlotPtr()->Position();
+                        caller_pos = callerslot_ptr->InterfaceSlotPtr()->Position();
                     }
                     if (calleeslot_ptr->InterfaceSlotPtr() != nullptr) {
-                        callee_position = calleeslot_ptr->InterfaceSlotPtr()->Position();
+                        callee_pos = calleeslot_ptr->InterfaceSlotPtr()->Position();
                     }
                 }
-                ImVec2 p1 = caller_position;
-                ImVec2 p2 = callee_position;
 
                 ImGui::PushID(this->uid);
 
@@ -194,11 +192,13 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                     }
                     /// Draw simple line if zooming is too small for nice bezier curves.
                     if (state.canvas.zooming < 0.25f) {
-                        draw_list->AddLine(p1, p2, color_curve, GUI_LINE_THICKNESS * state.canvas.zooming);
+                        draw_list->AddLine(
+                            caller_pos, callee_pos, color_curve, GUI_LINE_THICKNESS * state.canvas.zooming);
                     } else {
-                        draw_list->AddBezierCurve(p1, p1 + ImVec2((50.0f * megamol::gui::gui_scaling.Get()), 0.0f),
-                            p2 + ImVec2((-50.0f * megamol::gui::gui_scaling.Get()), 0.0f), p2, color_curve,
-                            GUI_LINE_THICKNESS * state.canvas.zooming);
+                        draw_list->AddBezierCurve(caller_pos,
+                            caller_pos + ImVec2((50.0f * megamol::gui::gui_scaling.Get()), 0.0f),
+                            callee_pos + ImVec2((-50.0f * megamol::gui::gui_scaling.Get()), 0.0f), callee_pos,
+                            color_curve, GUI_LINE_THICKNESS * state.canvas.zooming);
                     }
                 }
 
@@ -206,7 +206,8 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                     std::string slots_label = this->SlotsLabel();
                     auto slots_label_width = ImGui::CalcTextSize(slots_label.c_str()).x;
                     auto class_name_width = ImGui::CalcTextSize(this->class_name.c_str()).x;
-                    ImVec2 call_center = ImVec2(p1.x + (p2.x - p1.x) / 2.0f, p1.y + (p2.y - p1.y) / 2.0f);
+                    ImVec2 call_center = ImVec2(caller_pos.x + (callee_pos.x - caller_pos.x) / 2.0f,
+                        caller_pos.y + (callee_pos.y - caller_pos.y) / 2.0f);
                     auto call_name_width = 0.0f;
                     if (state.interact.call_show_label) {
                         call_name_width = std::max(call_name_width, class_name_width);

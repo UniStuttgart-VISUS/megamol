@@ -86,9 +86,6 @@ namespace gui {
         inline InterfaceSlotPtr_t InterfaceSlotPtr(void) const {
             return this->gui_interfaceslot_ptr;
         }
-        inline bool IsClipped(void) const {
-            return this->gui_clipped;
-        }
         inline ImVec2 Position(void) const {
             return this->gui_position;
         }
@@ -113,15 +110,15 @@ namespace gui {
         ModulePtr_t parent_module;
         std::vector<CallPtr_t> connected_calls;
 
+        InterfaceSlotPtr_t gui_interfaceslot_ptr;
+
         bool gui_selected;
         ImVec2 gui_position; /// Absolute position including canvas offset and zooming
-        InterfaceSlotPtr_t gui_interfaceslot_ptr;
         bool gui_update_once;
         bool gui_show_modulestock;
         ImGuiID gui_last_compat_callslot_uid;
         ImGuiID gui_last_compat_interface_uid;
         bool gui_compatible;
-        bool gui_clipped;
 
         HoverToolTip gui_tooltip;
     };

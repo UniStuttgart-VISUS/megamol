@@ -26,15 +26,14 @@ megamol::gui::CallSlot::CallSlot(ImGuiID uid, const std::string& name, const std
         , type(type)
         , parent_module(nullptr)
         , connected_calls()
+        , gui_interfaceslot_ptr(nullptr)
         , gui_selected(false)
         , gui_position(ImVec2(FLT_MAX, FLT_MAX))
-        , gui_interfaceslot_ptr(nullptr)
         , gui_update_once(true)
         , gui_show_modulestock()
         , gui_last_compat_callslot_uid(GUI_INVALID_ID)
         , gui_last_compat_interface_uid(GUI_INVALID_ID)
         , gui_compatible(false)
-        , gui_clipped(false)
         , gui_tooltip() {}
 
 
@@ -321,7 +320,6 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
             if (text_pos_left_upper.y > slot_rect_max.y)
                 slot_rect_max.y = text_pos_left_upper.y;
         }
-        this->gui_clipped = false;
         if (!((canvas_rect_min.x < (slot_rect_max.x)) && (canvas_rect_max.x > (slot_rect_min.x)) &&
                 (canvas_rect_min.y < (slot_rect_max.y)) && (canvas_rect_max.y > (slot_rect_min.y)))) {
             if (mouse_clicked_anywhere) {
@@ -330,7 +328,6 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                     state.interact.callslot_selected_uid = GUI_INVALID_ID;
                 }
             }
-            this->gui_clipped = true;
         } else {
             std::string button_label = "callslot_" + std::to_string(this->uid);
 

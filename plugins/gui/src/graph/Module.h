@@ -117,8 +117,8 @@ namespace gui {
         inline const std::string GraphEntryName(void) const {
             return this->graph_entry_name;
         }
-        inline bool IsGroupCollapsed(void) const {
-            return this->gui_group_collapsed;
+        inline bool IsHidden(void) const {
+            return this->gui_hidden;
         }
 
         // SET ----------------------------------------------------------------
@@ -132,8 +132,8 @@ namespace gui {
         inline void SetGroupUID(ImGuiID uid) {
             this->group_uid = uid;
         }
-        inline void SetGroupCollapsed(bool collapsed) {
-            this->gui_group_collapsed = collapsed;
+        inline void SetHidden(bool hidden) {
+            this->gui_hidden = hidden;
         }
         inline void SetGroupName(const std::string& name) {
             this->group_name = name;
@@ -175,7 +175,7 @@ namespace gui {
         bool gui_param_child_show;
         ImVec2 gui_set_screen_position;
         bool gui_set_selected_slot_position;
-        bool gui_group_collapsed;
+        bool gui_hidden;
 
         HoverToolTip gui_tooltip;
         RenamePopUp gui_rename_popup;

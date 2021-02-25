@@ -73,7 +73,7 @@ megamol::gui::Graph::Graph(const std::string& graph_name, GraphCoreInterface cor
     this->gui_graph_state.interact.call_selected_uid = GUI_INVALID_ID;
     this->gui_graph_state.interact.call_hovered_uid = GUI_INVALID_ID;
     this->gui_graph_state.interact.call_show_label = true;
-    this->gui_graph_state.interact.call_show_slots_label = true;
+    this->gui_graph_state.interact.call_show_slots_label = false;
 
     this->gui_graph_state.interact.slot_dropped_uid = GUI_INVALID_ID;
 
@@ -82,7 +82,7 @@ megamol::gui::Graph::Graph(const std::string& graph_name, GraphCoreInterface cor
     this->gui_graph_state.interact.callslot_add_group_uid = UIDPair_t(GUI_INVALID_ID, GUI_INVALID_ID);
     this->gui_graph_state.interact.callslot_remove_group_uid = UIDPair_t(GUI_INVALID_ID, GUI_INVALID_ID);
     this->gui_graph_state.interact.callslot_compat_ptr.reset();
-    this->gui_graph_state.interact.callslot_show_label = true;
+    this->gui_graph_state.interact.callslot_show_label = false;
 
     this->gui_graph_state.interact.interfaceslot_selected_uid = GUI_INVALID_ID;
     this->gui_graph_state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;
@@ -2514,7 +2514,7 @@ void megamol::gui::Graph::draw_canvas_multiselection(void) {
         this->gui_graph_state.interact.modules_selected_uids.clear();
         for (auto& module_ptr : this->Modules()) {
             bool group_member = (module_ptr->GroupUID() != GUI_INVALID_ID);
-            if (!group_member || (group_member && module_ptr->IsGroupCollapsed())) {
+            if (!group_member || (group_member && !module_ptr->IsHidden())) {
                 module_size = module_ptr->Size() * this->gui_graph_state.canvas.zooming;
                 inner_rect_min =
                     this->gui_graph_state.canvas.offset + module_ptr->Position() * this->gui_graph_state.canvas.zooming;

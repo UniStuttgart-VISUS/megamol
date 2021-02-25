@@ -68,7 +68,7 @@ bool megamol::gui::Group::AddModule(const ModulePtr_t& module_ptr) {
     this->modules.emplace_back(module_ptr);
 
     module_ptr->SetGroupUID(this->uid);
-    module_ptr->SetGroupCollapsed(this->gui_collapsed_view);
+    module_ptr->SetHidden(this->gui_collapsed_view);
     module_ptr->SetGroupName(this->name);
 
     this->ForceUpdate();
@@ -96,7 +96,7 @@ bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
                 }
 
                 (*mod_iter)->SetGroupUID(GUI_INVALID_ID);
-                (*mod_iter)->SetGroupCollapsed(false);
+                (*mod_iter)->SetHidden(false);
                 (*mod_iter)->SetGroupName("");
 
 #ifdef GUI_VERBOSE
@@ -391,7 +391,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
         if (this->gui_update || !this->gui_collapsed_view || (this->gui_size.x <= 0.0f) || (this->gui_size.y <= 0.0f)) {
             this->UpdatePositionSize(state.canvas);
             for (auto& mod : this->modules) {
-                mod->SetGroupCollapsed(this->gui_collapsed_view);
+                mod->SetHidden(this->gui_collapsed_view);
             }
             this->gui_update = false;
         }
@@ -573,7 +573,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
 
         if (changed_view) {
             for (auto& module_ptr : this->modules) {
-                module_ptr->SetGroupCollapsed(this->gui_collapsed_view);
+                module_ptr->SetHidden(this->gui_collapsed_view);
             }
             for (auto& interfaceslots_map : this->InterfaceSlots()) {
                 for (auto& interfaceslot_ptr : interfaceslots_map.second) {
