@@ -54,11 +54,11 @@ struct CLIConfig {
     unsigned int window_monitor = 0;
 };
 
-CLIConfig handle_cli_inputs(int argc, char* argv[]);
+CLIConfig handle_cli_inputs(const int argc, const char** argv);
 
 bool set_up_example_graph(megamol::core::MegaMolGraph& graph);
 
-int main(int argc, char* argv[]) {
+int main(const int argc, const char** argv) {
 
     auto config = handle_cli_inputs(argc, argv);
 
@@ -276,7 +276,7 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-CLIConfig handle_cli_inputs(int argc, char* argv[]) {
+CLIConfig handle_cli_inputs(const int argc, const char** argv) {
     CLIConfig config;
 
     cxxopts::Options options(argv[0], "MegaMol Frontend 3000");
@@ -304,7 +304,9 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
     options.parse_positional({"project-files"});
 
     try {
-        auto parsed_options = options.parse(argc, argv);
+        int _argc = argc;
+        auto _argv = const_cast<char**>(argv);
+        auto parsed_options = options.parse(_argc, _argv);
         std::string res;
 
         if (parsed_options.count("help")) {
