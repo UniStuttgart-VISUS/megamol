@@ -100,9 +100,17 @@ void Lua_Service_Wrapper::close() {
 }
 
 std::vector<FrontendResource>& Lua_Service_Wrapper::getProvidedResources() {
+    m_executeLuaScript_resource =
+        [&](std::string const& script) -> std::tuple<bool,std::string> {
+            std::string result_str;
+            bool result_b = luaAPI.RunString(script, result_str);
+            return {result_b, result_str};
+        };
+
     this->m_providedResourceReferences =
     {
-        {"LuaScriptPaths", m_scriptpath_resource}
+        {"LuaScriptPaths", m_scriptpath_resource},
+        {"ExecuteLuaScript", m_executeLuaScript_resource}
     };
 
     return m_providedResourceReferences;
