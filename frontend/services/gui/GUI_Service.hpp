@@ -11,22 +11,14 @@
 
 #include "AbstractFrontendService.hpp"
 
-#include "Window_Events.h"
-#include "Framebuffer_Events.h"
-#include "KeyboardMouse_Events.h"
+#include "gui-wrapper.h"
+
 #include "IOpenGL_Context.h"
-#include "Screenshot_Service.hpp"
-#include "ScriptPaths.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/graphics/ScreenShotComments.h"
-
-#include "gui-wrapper.h"
 
 #include <glm/glm.hpp>
-
 
 namespace megamol {
 namespace frontend {
