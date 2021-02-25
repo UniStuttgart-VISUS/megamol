@@ -152,17 +152,23 @@ void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
                 return;
             }
         }
-        
-        cr2d->SetFramebufferObject(_fbo);
-        // TODO here we have to apply the new camera
     } else {
         auto gl_call = dynamic_cast<view::CallRenderViewGL*>(call);
-        cr2d->SetFramebufferObject(gl_call->GetFramebufferObject());
+        this->_fbo = gl_call->GetFramebufferObject();
     }
 
-    // set camera to call
+    this->_fbo->Enable();
+    auto bgcol = this->BkgndColour();
+    glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
+    glClear(GL_COLOR_BUFFER_BIT);
+    cr2d->SetFramebufferObject(_fbo);
 
     (*cr2d)(AbstractCallRender::FnRender);
+
+    this->_fbo->Disable();
+    if (call == nullptr) {
+        this->_fbo->DrawColourTexture();
+    }
 
     //after render
     AbstractView::afterRender(context);
