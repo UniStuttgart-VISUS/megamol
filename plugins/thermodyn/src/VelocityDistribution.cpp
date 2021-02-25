@@ -65,21 +65,20 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
     auto const num_buckets = num_buckets_slot_.Param<core::param::IntParam>()->Value();
     auto const mode_type = static_cast<mode>(mode_slot_.Param<core::param::EnumParam>()->Value());
 
-    histograms_.resize(pl_count);
-    domain_.resize(pl_count);
+    histograms_.clear();
+    domain_.clear();
 
-    col_cnt_ = pl_count;
-    row_cnt_ = num_buckets;
+    
 
     for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
         auto const& part = call.AccessParticles(pl_idx);
 
-        auto& histo = histograms_[pl_idx];
+        /*auto& histo = histograms_[pl_idx];
         histo.clear();
         histo.resize(num_buckets, 0);
         auto& domain = domain_[pl_idx];
         domain.clear();
-        domain.resize(num_buckets);
+        domain.resize(num_buckets);*/
 
         auto const p_count = part.GetCount();
 
@@ -96,6 +95,9 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
 
                 auto const iAcc = part.GetParticleStore().GetCRAcc();
 
+                decltype(histograms_)::value_type histo(num_buckets, 0);
+                decltype(domain_)::value_type domain(num_buckets);
+
                 std::generate(domain.begin(), domain.end(), [diff_i, val = min_i]() mutable {
                     auto old_val = val;
                     val += diff_i;
@@ -109,6 +111,9 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
 
                     ++histo[idx];
                 }
+
+                histograms_.push_back(histo);
+                domain_.push_back(domain);
             }
         } break;
         case mode::dir: {
@@ -118,42 +123,121 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
                 auto const dyAcc = part.GetParticleStore().GetDYAcc();
                 auto const dzAcc = part.GetParticleStore().GetDZAcc();
 
+                std::vector<float> temp_dx(p_count);
+                std::vector<float> temp_dy(p_count);
+                std::vector<float> temp_dz(p_count);
                 std::vector<float> temp_mag(p_count);
 
                 for (std::remove_const_t<decltype(p_count)> p_idx = 0; p_idx < p_count; ++p_idx) {
                     auto const x_val = dxAcc->Get_f(p_idx);
                     auto const y_val = dyAcc->Get_f(p_idx);
                     auto const z_val = dzAcc->Get_f(p_idx);
+                    temp_dx[p_idx] = x_val;
+                    temp_dy[p_idx] = y_val;
+                    temp_dz[p_idx] = z_val;
                     temp_mag[p_idx] = std::sqrtf(x_val * x_val + y_val * y_val + z_val * z_val);
                 }
 
-                auto const minmax = std::minmax_element(temp_mag.begin(), temp_mag.end());
+                auto const minmax_dx = std::minmax_element(temp_dx.begin(), temp_dx.end());
+                auto const minmax_dy = std::minmax_element(temp_dy.begin(), temp_dy.end());
+                auto const minmax_dz = std::minmax_element(temp_dz.begin(), temp_dz.end());
+                auto const minmax_mag = std::minmax_element(temp_mag.begin(), temp_mag.end());
 
-                auto const min_i = *minmax.first;
-                auto const max_i = *minmax.second;
+                decltype(histograms_)::value_type histo_dx(num_buckets, 0);
+                decltype(domain_)::value_type domain_dx(num_buckets);
+                decltype(histograms_)::value_type histo_dy(num_buckets, 0);
+                decltype(domain_)::value_type domain_dy(num_buckets);
+                decltype(histograms_)::value_type histo_dz(num_buckets, 0);
+                decltype(domain_)::value_type domain_dz(num_buckets);
+                decltype(histograms_)::value_type histo_mag(num_buckets, 0);
+                decltype(domain_)::value_type domain_mag(num_buckets);
 
-                auto const fac_i = 1.0f / (max_i - min_i + 1e-8f);
+                auto const min_dx_i = *minmax_dx.first;
+                auto const max_dx_i = *minmax_dx.second;
 
-                auto const diff_i = (max_i - min_i) / num_buckets;
+                auto const fac_dx_i = 1.0f / (max_dx_i - min_dx_i + 1e-8f);
 
-                std::generate(domain.begin(), domain.end(), [diff_i, val = min_i]() mutable {
+                auto const diff_dx_i = (max_dx_i - min_dx_i) / num_buckets;
+
+                auto const min_dy_i = *minmax_dy.first;
+                auto const max_dy_i = *minmax_dy.second;
+
+                auto const fac_dy_i = 1.0f / (max_dy_i - min_dy_i + 1e-8f);
+
+                auto const diff_dy_i = (max_dy_i - min_dy_i) / num_buckets;
+
+                auto const min_dz_i = *minmax_dz.first;
+                auto const max_dz_i = *minmax_dz.second;
+
+                auto const fac_dz_i = 1.0f / (max_dz_i - min_dz_i + 1e-8f);
+
+                auto const diff_dz_i = (max_dz_i - min_dz_i) / num_buckets;
+
+                auto const min_mag_i = *minmax_mag.first;
+                auto const max_mag_i = *minmax_mag.second;
+
+                auto const fac_mag_i = 1.0f / (max_mag_i - min_mag_i + 1e-8f);
+
+                auto const diff_mag_i = (max_mag_i - min_mag_i) / num_buckets;
+
+                std::generate(domain_dx.begin(), domain_dx.end(), [diff_dx_i, val = min_dx_i]() mutable {
                     auto old_val = val;
-                    val += diff_i;
+                    val += diff_dx_i;
+                    return old_val;
+                });
+                std::generate(domain_dy.begin(), domain_dy.end(), [diff_dy_i, val = min_dy_i]() mutable {
+                    auto old_val = val;
+                    val += diff_dy_i;
+                    return old_val;
+                });
+                std::generate(domain_dz.begin(), domain_dz.end(), [diff_dz_i, val = min_dz_i]() mutable {
+                    auto old_val = val;
+                    val += diff_dz_i;
+                    return old_val;
+                });
+                std::generate(domain_mag.begin(), domain_mag.end(), [diff_mag_i, val = min_mag_i]() mutable {
+                    auto old_val = val;
+                    val += diff_mag_i;
                     return old_val;
                 });
 
                 for (std::remove_const_t<decltype(p_count)> p_idx = 0; p_idx < p_count; ++p_idx) {
-                    auto const val = temp_mag[p_idx];
+                    auto const val_dx = temp_dx[p_idx];
+                    auto const val_dy = temp_dy[p_idx];
+                    auto const val_dz = temp_dz[p_idx];
+                    auto const val_mag = temp_mag[p_idx];
 
-                    auto const idx = static_cast<int>(((val - min_i) * fac_i) * static_cast<float>(num_buckets - 1));
+                    auto const idx_dx =
+                        static_cast<int>(((val_dx - min_dx_i) * fac_dx_i) * static_cast<float>(num_buckets - 1));
+                    auto const idx_dy =
+                        static_cast<int>(((val_dy - min_dy_i) * fac_dy_i) * static_cast<float>(num_buckets - 1));
+                    auto const idx_dz =
+                        static_cast<int>(((val_dz - min_dz_i) * fac_dz_i) * static_cast<float>(num_buckets - 1));
+                    auto const idx_mag = static_cast<int>(((val_mag - min_mag_i) * fac_mag_i) * static_cast<float>(num_buckets - 1));
 
-                    ++histo[idx];
+                    ++histo_dx[idx_dx];
+                    ++histo_dy[idx_dy];
+                    ++histo_dz[idx_dz];
+                    ++histo_mag[idx_mag];
                 }
+
+                histograms_.push_back(histo_dx);
+                histograms_.push_back(histo_dy);
+                histograms_.push_back(histo_dz);
+                histograms_.push_back(histo_mag);
+
+                domain_.push_back(domain_dx);
+                domain_.push_back(domain_dy);
+                domain_.push_back(domain_dz);
+                domain_.push_back(domain_mag);
             }
         } break;
         }
     }
     compute_statistics();
+
+    col_cnt_ = histograms_.size();
+    row_cnt_ = num_buckets;
 
     return true;
 }
