@@ -77,7 +77,7 @@ int main(const int argc, const char** argv) {
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
-    openglConfig.windowTitlePrefix = openglConfig.windowTitlePrefix + " ~ Main3000";
+    openglConfig.windowTitlePrefix = "MegaMol";
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 5;
     openglConfig.enableKHRDebug = config.opengl_khr_debug;
