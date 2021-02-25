@@ -67,7 +67,10 @@ namespace gui {
         inline const ImGuiID GroupUID(void) const {
             return this->group_uid;
         }
-        ImVec2 Position(void);
+        ImVec2 Position(void) {
+            return this->Position(this->gui_group_collapsed_view);
+        }
+        ImVec2 Position(bool group_collapsed_view);
 
         inline bool IsGroupViewCollapsed(void) const {
             return this->gui_group_collapsed_view;

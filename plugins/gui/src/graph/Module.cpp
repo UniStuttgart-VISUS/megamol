@@ -42,8 +42,8 @@ megamol::gui::Module::Module(ImGuiID uid, const std::string& class_name, const s
         , gui_tooltip()
         , gui_rename_popup() {
 
-    this->callslots.emplace(megamol::gui::CallSlotType::CALLER, std::vector<CallSlotPtr_t>());
-    this->callslots.emplace(megamol::gui::CallSlotType::CALLEE, std::vector<CallSlotPtr_t>());
+    this->callslots.emplace(megamol::gui::CallSlotType::CALLER, CallSlotPtrVector_t());
+    this->callslots.emplace(megamol::gui::CallSlotType::CALLEE, CallSlotPtrVector_t());
 }
 
 

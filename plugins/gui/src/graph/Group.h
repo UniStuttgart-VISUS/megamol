@@ -44,7 +44,7 @@ namespace gui {
             return (this->modules.empty());
         }
 
-        ImGuiID AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr, bool auto_add = true);
+        InterfaceSlotPtr_t AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr, bool auto_add = true);
         InterfaceSlotPtr_t InterfaceSlotPtr(ImGuiID interfaceslot_uid);
         inline InterfaceSlotPtrMap_t& InterfaceSlots(void) {
             return this->interfaceslots;
@@ -105,6 +105,23 @@ namespace gui {
         bool gui_update;
 
         RenamePopUp gui_rename_popup;
+
+        // FUNCTIONS --------------------------------------------------------------
+
+        void spacial_sort_interfaceslots(void) {
+            for (auto& interfaceslot_map : this->interfaceslots) {
+                std::sort(interfaceslot_map.second.begin(), interfaceslot_map.second.end(),
+                    [](InterfaceSlotPtr_t isptr1, InterfaceSlotPtr_t isptr2) {
+                        float y1 = -FLT_MAX;
+                        if (isptr1 != nullptr)
+                            y1 = isptr1->Position(false).y;
+                        float y2 = -FLT_MAX;
+                        if (isptr2 != nullptr)
+                            y2 = isptr2->Position(false).y;
+                        return (y1 < y2);
+                    });
+            }
+        }
     };
 
 

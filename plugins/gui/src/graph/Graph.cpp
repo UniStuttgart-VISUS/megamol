@@ -250,7 +250,7 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
                 // 3)  Remove call slots
                 (*iter)->DeleteCallSlots();
 
-                // 4) Automatically restore interfaceslots
+                // 4) Automatically restore interfaceslots after connected calls are deleted
                 if (module_group_ptr != nullptr) {
                     module_group_ptr->RestoreInterfaceslots();
                 }
@@ -1127,16 +1127,11 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                                                                 callslot_ptr_vector[i]->UID(), true);
                                                         }
                                                     }
-                                                    ImGuiID interfaceslot_uid =
-                                                        group_ptr->AddInterfaceSlot(callslot_ptr);
-                                                    if (interfaceslot_uid != GUI_INVALID_ID) {
-                                                        InterfaceSlotPtr_t interfaceslot_ptr;
-                                                        if (auto interfaceslot_ptr =
-                                                                group_ptr->InterfaceSlotPtr(interfaceslot_uid)) {
-                                                            for (size_t i = 1; i < callslot_ptr_vector.size(); i++) {
-                                                                interfaceslot_ptr->AddCallSlot(
-                                                                    callslot_ptr_vector[i], interfaceslot_ptr);
-                                                            }
+                                                    if (auto interfaceslot_ptr =
+                                                            group_ptr->AddInterfaceSlot(callslot_ptr)) {
+                                                        for (size_t i = 1; i < callslot_ptr_vector.size(); i++) {
+                                                            interfaceslot_ptr->AddCallSlot(
+                                                                callslot_ptr_vector[i], interfaceslot_ptr);
                                                         }
                                                     }
                                                     group_found = true;
@@ -1513,6 +1508,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                                 if (auto remove_group_ptr = this->GetGroup(module_group_uid)) {
                                     if (remove_group_ptr->UID() != add_group_ptr->UID()) {
                                         remove_group_ptr->RemoveModule(module_ptr->UID());
+                                        remove_group_ptr->RestoreInterfaceslots();
                                     }
                                 }
 
@@ -1548,6 +1544,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                                 Graph::QueueData queue_data;
                                 queue_data.name_id = module_ptr->FullName();
                                 remove_group_ptr->RemoveModule(module_ptr->UID());
+                                remove_group_ptr->RestoreInterfaceslots();
                                 queue_data.rename_id = module_ptr->FullName();
                                 this->PushSyncQueue(Graph::QueueAction::RENAME_MODULE, queue_data);
                                 this->ForceSetDirty();

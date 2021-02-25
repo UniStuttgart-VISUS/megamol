@@ -25,7 +25,11 @@ megamol::gui::Group::Group(ImGuiID uid)
         , gui_allow_context(false)
         , gui_selected(false)
         , gui_update(true)
-        , gui_rename_popup() {}
+        , gui_rename_popup() {
+
+    this->interfaceslots.emplace(megamol::gui::CallSlotType::CALLER, InterfaceSlotPtrVector_t());
+    this->interfaceslots.emplace(megamol::gui::CallSlotType::CALLEE, InterfaceSlotPtrVector_t());
+}
 
 
 megamol::gui::Group::~Group() {
@@ -106,8 +110,12 @@ bool megamol::gui::Group::RemoveModule(ImGuiID module_uid) {
                 (*mod_iter).reset();
                 this->modules.erase(mod_iter);
 
+
+                /// Do not restore interface slots here.
+                /// E.g. RestoreInterfaceslots() should only be triggered,
+                /// after connected calls of deleted module are deleted.
+
                 this->ForceUpdate();
-                this->RestoreInterfaceslots();
 
                 return true;
             }
@@ -139,18 +147,18 @@ bool megamol::gui::Group::ContainsModule(ImGuiID module_uid) {
 }
 
 
-ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr, bool auto_add) {
+InterfaceSlotPtr_t megamol::gui::Group::AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr, bool auto_add) {
 
     if (callslot_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Pointer to call slot is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
+        return nullptr;
     }
 
     // Check if call slot is already part of the group
     for (auto& interfaceslot_ptr : this->interfaceslots[callslot_ptr->Type()]) {
         if (interfaceslot_ptr->ContainsCallSlot(callslot_ptr->UID())) {
-            return interfaceslot_ptr->UID();
+            return interfaceslot_ptr;
         }
     }
 
@@ -166,7 +174,7 @@ ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr,
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Call slot has no parent module connected. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
+        return nullptr;
     }
 
     if (parent_module_group_uid) {
@@ -181,8 +189,11 @@ ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr,
 #endif // GUI_VERBOSE
 
             if (interfaceslot_ptr->AddCallSlot(callslot_ptr, interfaceslot_ptr)) {
+
                 interfaceslot_ptr->SetGroupViewCollapsed(this->gui_collapsed_view);
-                return interfaceslot_ptr->UID();
+                this->ForceUpdate();
+
+                return interfaceslot_ptr;
             }
         }
     } else {
@@ -190,9 +201,9 @@ ImGuiID megamol::gui::Group::AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr,
             "[GUI] Parent module of call slot which should be added to group interface "
             "is not part of any group. [%s, %s, line %d]\n",
             __FILE__, __FUNCTION__, __LINE__);
-        return GUI_INVALID_ID;
+        return nullptr;
     }
-    return GUI_INVALID_ID;
+    return nullptr;
 }
 
 
@@ -288,6 +299,8 @@ bool megamol::gui::Group::DeleteInterfaceSlot(ImGuiID interfaceslot_uid) {
 
                     (*iter).reset();
                     interfaceslot_map.second.erase(iter);
+
+                    this->ForceUpdate();
 
                     return true;
                 }
@@ -388,7 +401,8 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
 
     try {
         // Update size and position if current values are invalid or in expanded view
-        if (this->gui_update || !this->gui_collapsed_view || (this->gui_size.x <= 0.0f) || (this->gui_size.y <= 0.0f)) {
+        /// XXX First condition calls UpdatePositionSize every frame is not collapsed
+        if (!this->gui_collapsed_view || this->gui_update || (this->gui_size.x <= 0.0f) || (this->gui_size.y <= 0.0f)) {
             this->UpdatePositionSize(state.canvas);
             for (auto& mod : this->modules) {
                 mod->SetHidden(this->gui_collapsed_view);
@@ -711,4 +725,5 @@ void megamol::gui::Group::UpdatePositionSize(const GraphCanvas_t& in_canvas) {
             interfaceslot_ptr->SetPosition(callslot_group_position);
         }
     }
+    this->spacial_sort_interfaceslots();
 }

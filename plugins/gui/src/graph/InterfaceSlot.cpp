@@ -469,10 +469,10 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
 }
 
 
-ImVec2 megamol::gui::InterfaceSlot::Position(void) {
+ImVec2 megamol::gui::InterfaceSlot::Position(bool group_collapsed_view) {
 
     ImVec2 ret_position = this->gui_position;
-    if ((!this->gui_group_collapsed_view) && (this->CallSlots().size() > 0)) {
+    if ((!group_collapsed_view) && (this->CallSlots().size() > 0)) {
         auto only_callslot_ptr = this->CallSlots().front();
         ret_position.x = this->gui_position.x;
         ret_position.y = only_callslot_ptr->Position().y;
