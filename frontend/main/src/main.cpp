@@ -39,7 +39,6 @@ struct CLIConfig {
     std::vector<std::string> project_files = {};
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool lua_host_port_retry = true;
-    bool load_example_project = false;
     bool opengl_khr_debug = false;
     bool opengl_vsync = false;
     std::vector<unsigned int> window_size = {}; // if not set, GLFW service will open window with 3/4 of monitor resolution 
@@ -55,8 +54,6 @@ struct CLIConfig {
 };
 
 CLIConfig handle_cli_inputs(const int argc, const char** argv);
-
-bool set_up_example_graph(megamol::core::MegaMolGraph& graph);
 
 int main(const int argc, const char** argv) {
 
@@ -252,13 +249,6 @@ int main(const int argc, const char** argv) {
             run_megamol = false;
         }
     }
-    if (config.load_example_project) {
-        const bool graph_ok = set_up_example_graph(graph);
-        if (!graph_ok) {
-            std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
-            run_megamol = false;
-        }
-    }
 
     while (run_megamol) {
         run_megamol = render_next_frame();
@@ -329,8 +319,6 @@ CLIConfig handle_cli_inputs(const int argc, const char** argv) {
             config.lua_host_address = parsed_options["host"].as<std::string>();
         }
 
-        config.load_example_project = parsed_options["example"].as<bool>();
-
         config.opengl_khr_debug = parsed_options["khrdebug"].as<bool>();
         config.opengl_vsync = parsed_options["vsync"].as<bool>();
 
@@ -366,28 +354,3 @@ CLIConfig handle_cli_inputs(const int argc, const char** argv) {
     return config;
 }
 
-bool set_up_example_graph(megamol::core::MegaMolGraph& graph) {
-#define check(X) \
-    if (!X)      \
-        return false;
-
-    check(graph.CreateModule("View3D_2", "::view"));
-    check(graph.CreateModule("SphereRenderer", "::spheres"));
-    check(graph.CreateModule("TestSpheresDataSource", "::datasource"));
-    check(graph.CreateCall("CallRender3D_2", "::view::rendering", "::spheres::rendering"));
-    check(graph.CreateCall("MultiParticleDataCall", "::spheres::getdata", "::datasource::getData"));
-
-    check(graph.SetGraphEntryPoint("::view", megamol::core::view::get_gl_view_runtime_resources_requests(),
-        megamol::core::view::view_rendering_execution, megamol::core::view::view_init_rendering_state));
-
-    std::string parameter_name("::datasource::numSpheres");
-    auto parameterPtr = graph.FindParameter(parameter_name);
-    if (parameterPtr) {
-        parameterPtr->ParseValue("23");
-    } else {
-        std::cout << "ERROR: could not find parameter: " << parameter_name << std::endl;
-        return false;
-    }
-
-    return true;
-}
