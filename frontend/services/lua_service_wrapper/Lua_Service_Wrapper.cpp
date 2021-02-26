@@ -64,13 +64,23 @@ bool Lua_Service_Wrapper::init(const Config& config) {
 
     m_config = config;
 
-    this->m_providedResourceReferences = {};
+    m_executeLuaScript_resource =
+        [&](std::string const& script) -> std::tuple<bool,std::string> {
+            std::string result_str;
+            bool result_b = luaAPI.RunString(script, result_str);
+            return {result_b, result_str};
+        };
+
+    this->m_providedResourceReferences =
+    {
+        {"LuaScriptPaths", m_scriptpath_resource},
+        {"ExecuteLuaScript", m_executeLuaScript_resource}
+    };
 
     this->m_requestedResourcesNames = 
     {
         "FrontendResourcesList",
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
-        "WindowEvents", // for file drag and drop events
         "FrameStatistics", // for LastFrameTime
         "WindowManipulation" // for Framebuffer resize
     }; //= {"ZMQ_Context"};
@@ -98,19 +108,6 @@ void Lua_Service_Wrapper::close() {
 }
 
 std::vector<FrontendResource>& Lua_Service_Wrapper::getProvidedResources() {
-    m_executeLuaScript_resource =
-        [&](std::string const& script) -> std::tuple<bool,std::string> {
-            std::string result_str;
-            bool result_b = luaAPI.RunString(script, result_str);
-            return {result_b, result_str};
-        };
-
-    this->m_providedResourceReferences =
-    {
-        {"LuaScriptPaths", m_scriptpath_resource},
-        {"ExecuteLuaScript", m_executeLuaScript_resource}
-    };
-
     return m_providedResourceReferences;
 }
 
