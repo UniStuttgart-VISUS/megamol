@@ -169,7 +169,8 @@ void GUIView::Resize(unsigned int width, unsigned int height) {
 void GUIView::UpdateFreeze(bool freeze) {
     auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
     if (crv) {
-        auto callType = freeze ? core::view::CallRenderViewGL::CALL_FREEZE : core::view::CallRenderViewGL::CALL_UNFREEZE;
+        auto callType =
+            freeze ? core::view::CallRenderViewGL::CALL_FREEZE : core::view::CallRenderViewGL::CALL_UNFREEZE;
         (*crv)(callType);
     }
 }

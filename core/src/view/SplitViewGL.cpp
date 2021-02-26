@@ -33,7 +33,6 @@ view::SplitViewGL::SplitViewGL()
     , _enableTimeSyncSlot("timeLord",
           "Enables time synchronization between the connected views. The time of this view is then used instead")
     , _inputToBothSlot("inputToBoth", "Forward input to both child views")
-    , _overrideCall(nullptr)
     , _clientArea()
     , _clientArea1()
     , _clientArea2()
@@ -43,6 +42,31 @@ view::SplitViewGL::SplitViewGL()
     , _mouseX(0.0f)
     , _mouseY(0.0f)
     , _dragSplitter(false) {
+
+    this->_lhsRenderSlot.SetCallback(
+        view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnKey), &AbstractView::OnKeyCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(), InputCall::FunctionName(InputCall::FnOnChar),
+        &AbstractView::OnCharCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseButton), &AbstractView::OnMouseButtonCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseMove), &AbstractView::OnMouseMoveCallback);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        InputCall::FunctionName(InputCall::FnOnMouseScroll), &AbstractView::OnMouseScrollCallback);
+    // AbstractCallRender
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
+    // CallRenderViewGL
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_FREEZE), &AbstractView::OnFreezeView);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
+    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
+    this->MakeSlotAvailable(&this->_lhsRenderSlot);
+
     this->_render1Slot.SetCompatibleCall<CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->_render1Slot);
 
@@ -82,8 +106,7 @@ unsigned int view::SplitViewGL::GetCameraSyncNumber() const {
 
 void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) {
     // TODO: Affinity
-
-	 float time = static_cast<float>(context.Time);
+    float time = static_cast<float>(context.Time);
 
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
@@ -92,14 +115,13 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
     unsigned int vpw = 0;
     unsigned int vph = 0;
 
-    if (this->_overrideCall == nullptr) {
-        GLint vp[4];
-        ::glGetIntegerv(GL_VIEWPORT, vp);
-        vpw = vp[2];
-        vph = vp[3];
+    if (call == nullptr) {
+        vpw = _camera.image_tile().width();
+        vph = _camera.image_tile().height();
     } else {
-        vpw = this->_overrideCall->ViewportWidth();
-        vph = this->_overrideCall->ViewportHeight();
+        auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
+        vpw = gpu_call->GetFramebufferObject()->GetWidth();
+        vph = gpu_call->GetFramebufferObject()->GetHeight();
     }
 
     if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
@@ -152,8 +174,10 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
         !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(vph))) {
         this->updateSize(vpw, vph);
 
-        if (this->_overrideCall != nullptr) {
-            this->_overrideCall->GetFramebufferObject()->Enable();
+        // is the following even needed here?
+        if (call != nullptr) {
+            auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
+            gpu_call->GetFramebufferObject()->Enable();
         }
     }
 
@@ -209,8 +233,9 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
         vislib::Trace::GetInstance().SetLevel(otl);
 #endif /* DEBUG || _DEBUG */
 
-        if (this->_overrideCall != nullptr) {
-            this->_overrideCall->GetFramebufferObject()->Enable();
+        if (call != nullptr) {
+            auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
+            gpu_call->GetFramebufferObject()->Enable();
         }
 
         // Bind and blit framebuffer.
@@ -262,6 +287,8 @@ void view::SplitViewGL::ResetView() {
 }
 
 void view::SplitViewGL::Resize(unsigned int width, unsigned int height) {
+    AbstractView::Resize(width,height);
+
     if (!vislib::math::IsEqual(this->_clientArea.Width(), static_cast<float>(width)) ||
         !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(height))) {
         this->updateSize(width, height);
@@ -272,8 +299,6 @@ bool view::SplitViewGL::OnRenderView(Call& call) {
     auto* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
     if (crv == nullptr) return false;
 
-    this->_overrideCall = crv;
-
     mmcRenderViewContext context;
     ::ZeroMemory(&context, sizeof(context));
     context.Time = crv->Time();
@@ -282,8 +307,6 @@ bool view::SplitViewGL::OnRenderView(Call& call) {
     }
     context.InstanceTime = crv->InstanceTime();
     this->Render(context, &call);
-
-    this->_overrideCall = nullptr;
 
     return true;
 }
@@ -476,7 +499,6 @@ bool view::SplitViewGL::create() {
 }
 
 void view::SplitViewGL::release() {
-    this->_overrideCall = nullptr; // do not delete
     if (this->_fbo1->IsValid()) this->_fbo1->Release();
     if (this->_fbo2->IsValid()) this->_fbo2->Release();
 }

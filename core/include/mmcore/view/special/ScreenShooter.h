@@ -32,6 +32,10 @@ namespace special {
         public view::AbstractView::Hooks {
     public:
 
+        virtual std::vector<std::string> requested_lifetime_resources() {
+            return {"IOpenGL_Context", "MegaMolGraph"};
+        }
+
         /**
          * Answer the name of this module.
          *

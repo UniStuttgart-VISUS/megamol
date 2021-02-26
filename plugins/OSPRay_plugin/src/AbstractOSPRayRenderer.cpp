@@ -115,15 +115,15 @@ namespace ospray {
                 _device = std::make_shared<::ospray::cpp::Device>("mpi_distributed");
                 _device->setParam("masterRank", 0);
                 if (this->_numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
-                    _device->setParam("numThreads", this->_numThreads.Param<megamol::core::param::IntParam>()->Value());
+                    _device->setParam("numThreads", static_cast<int>(this->_numThreads.Param<megamol::core::param::IntParam>()->Value()));
                 }
             } break;
             default: {
                 _device = std::make_shared<::ospray::cpp::Device>("cpu");
                 if (this->_numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
-                    _device->setParam("numThreads", this->_numThreads.Param<megamol::core::param::IntParam>()->Value());
+                    _device->setParam("numThreads", static_cast<int>(this->_numThreads.Param<megamol::core::param::IntParam>()->Value()));
                 } else {
-                    _device->setParam("numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
+                    _device->setParam("numThreads", static_cast<int>(vislib::sys::SystemInformation::ProcessorCount() - 1));
                 }
             }
             }
@@ -401,9 +401,28 @@ namespace ospray {
         // TODO: ospSet1f(_camera, "focalDistance", cr->GetCameraParameters()->FocalDistance());
     }
 
+    void AbstractOSPRayRenderer::clearOSPRayStuff(void) {
+        _lightArray.clear();
+        // OSP objects
+        _framebuffer.reset();
+        _camera.reset();
+        _world.reset();
+        // device
+        _device.reset();
+        // renderer
+        _renderer.reset();
+        // structure vectors
+        _baseStructures.clear();
+        _volumetricModels.clear();
+        _geometricModels.clear();
+        _clippingModels.clear();
+
+        _groups.clear();
+        _instances.clear();
+        _materials.clear();
+    }
 
     AbstractOSPRayRenderer::~AbstractOSPRayRenderer(void) {
-        this->Release();
     }
 
     // helper function to write the rendered image as PPM file
@@ -1302,8 +1321,5 @@ namespace ospray {
             _instances[entry.first].commit();
         }
     }
-
-    void AbstractOSPRayRenderer::releaseOSPRayStuff() {}
-
 } // end namespace ospray
 } // end namespace megamol

@@ -136,9 +136,10 @@ void RainbowAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
     }
 }
 
-std::array<std::tuple<std::string, PresetGenerator>, 20> PRESETS = {
+std::array<std::tuple<std::string, PresetGenerator>, 21> PRESETS = {
     std::make_tuple("Select...", [](auto& nodes, auto n) {}),
     std::make_tuple("Ramp", RampAdapter),
+    std::make_tuple("Cividis", ColormapAdapter<256>(CividisColorMap)),
     std::make_tuple("Hue rotation (rainbow, harmful)", RainbowAdapter),
     std::make_tuple("Inferno", ColormapAdapter<256>(InfernoColorMap)),
     std::make_tuple("Magma", ColormapAdapter<256>(MagmaColorMap)),

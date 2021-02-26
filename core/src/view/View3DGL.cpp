@@ -45,7 +45,7 @@ View3DGL::View3DGL(void) : view::AbstractView3D(), _cursor2d() {
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::onResetView);
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
 }
 
@@ -63,7 +63,6 @@ View3DGL::~View3DGL(void) {
 void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
 
     CallRender3DGL* cr3d = this->_rhsRenderSlot.CallAs<CallRender3DGL>();
-    this->handleCameraMovement();
 
     if (cr3d == NULL) {
         return;
@@ -75,22 +74,33 @@ void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
             (!this->_fbo->IsValid()) ) {
             this->_fbo->Release();
             if (!this->_fbo->Create(_camera.image_tile().width(), _camera.image_tile().height(), GL_RGBA8, GL_RGBA,
-                    GL_UNSIGNED_BYTE,
-                    vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE)) {
+                    GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
+                    GL_DEPTH_COMPONENT)) {
                 throw vislib::Exception("[View3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
                 return;
             }
         }
-        cr3d->SetFramebufferObject(this->_fbo);
     } else {
         auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
-        cr3d->SetFramebufferObject(gpu_call->GetFramebufferObject());
+        this->_fbo = gpu_call->GetFramebufferObject();
     }
+
+    this->_fbo->Enable();
+    auto bgcol = this->BkgndColour();
+    glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
+    glClearDepth(1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    cr3d->SetFramebufferObject(this->_fbo);
 
     AbstractView3D::beforeRender(context);
 
     cr3d->SetCamera(this->_camera);
     (*cr3d)(view::CallRender3DGL::FnRender);
+
+    this->_fbo->Disable();
+    if (call == nullptr) {
+        this->_fbo->DrawColourTexture();
+    }
 
     AbstractView3D::afterRender(context);
 }

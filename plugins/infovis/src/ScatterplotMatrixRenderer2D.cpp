@@ -548,7 +548,8 @@ void ScatterplotMatrixRenderer2D::updateColumns() {
         }
     }
 
-    this->bounds.SetBoundingBox(0, 0, 0, columnCount * (size + margin) - margin, columnCount * (size + margin) - margin, 0);
+    this->bounds.SetBoundingBox(
+        0, 0, 0, columnCount * (size + margin) - margin, columnCount * (size + margin) - margin, 0);
 
     this->plotSSBO.SetData(plots.data(), sizeof(PlotInfo), sizeof(PlotInfo), plots.size());
 }

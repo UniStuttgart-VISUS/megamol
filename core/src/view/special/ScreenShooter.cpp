@@ -16,6 +16,7 @@
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -927,7 +928,23 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
             AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
         AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
         ViewInstance* vi = dynamic_cast<ViewInstance*>(ano.get());
-        auto av = dynamic_cast<AbstractView*>(ano.get());
+        AbstractView* av = dynamic_cast<AbstractView*>(ano.get());
+
+        // Try to find view instance or abstract view in megamolgraph
+        if ((vi == nullptr) && (av == nullptr)) {
+            const megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
+            auto megamolgraph_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
+                [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
+            if (megamolgraph_it != this->frontend_resources.end()) {
+                megamolgraph_ptr = &megamolgraph_it->getResource<megamol::core::MegaMolGraph>();
+            }
+            if (megamolgraph_ptr != nullptr) {
+                auto module_ptr = megamolgraph_ptr->FindModule(std::string(mvn.PeekBuffer()));
+                vi = dynamic_cast<ViewInstance*>(module_ptr.get());
+                av = dynamic_cast<AbstractView*>(module_ptr.get());
+            }
+        }
+
         if (vi != nullptr) {
             if (vi->View() != nullptr) {
                 av = vi->View();
