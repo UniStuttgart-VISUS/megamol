@@ -10,12 +10,12 @@
 #include "Lua_Service_Wrapper.hpp"
 #include "OpenGL_GLFW_Service.hpp"
 #include "Screenshot_Service.hpp"
+#include "ProjectLoader_Service.hpp"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
 
 #include <cxxopts.hpp>
 #include "mmcore/LuaAPI.h"
-#include "mmcore/utility/graphics/ScreenShotComments.h"
 
 // Filesystem
 #if defined(_HAS_CXX17) || ((defined(_MSC_VER) && (_MSC_VER > 1916))) // C++2017 or since VS2019
@@ -54,11 +54,11 @@ struct CLIConfig {
     unsigned int window_monitor = 0;
 };
 
-CLIConfig handle_cli_inputs(int argc, char* argv[]);
+CLIConfig handle_cli_inputs(const int argc, const char** argv);
 
 bool set_up_example_graph(megamol::core::MegaMolGraph& graph);
 
-int main(int argc, char* argv[]) {
+int main(const int argc, const char** argv) {
 
     auto config = handle_cli_inputs(argc, argv);
 
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
-    openglConfig.windowTitlePrefix = openglConfig.windowTitlePrefix + " ~ Main3000";
+    openglConfig.windowTitlePrefix = "MegaMol";
     openglConfig.versionMajor = 4;
     openglConfig.versionMinor = 5;
     openglConfig.enableKHRDebug = config.opengl_khr_debug;
@@ -131,6 +131,11 @@ int main(int argc, char* argv[]) {
     luaConfig.retry_socket_port = config.lua_host_port_retry;
     lua_service_wrapper.setPriority(0);
 
+    megamol::frontend::ProjectLoader_Service projectloader_service;
+    megamol::frontend::ProjectLoader_Service::Config projectloaderConfig;
+    projectloader_service.setPriority(1);
+
+
     // clang-format off
     // the main loop is organized around services that can 'do something' in different parts of the main loop.
     // a service is something that implements the AbstractFrontendService interface from 'megamol\frontend_services\include'.
@@ -151,6 +156,7 @@ int main(int argc, char* argv[]) {
     services.add(lua_service_wrapper, &luaConfig);
     services.add(screenshot_service, &screenshotConfig);
     services.add(framestatistics_service, &framestatisticsConfig);
+    services.add(projectloader_service, &projectloaderConfig);
 
     // clang-format off
     // TODO: port cinematic as frontend service
@@ -241,18 +247,9 @@ int main(int argc, char* argv[]) {
 
     // load project files via lua
     for (auto& file : config.project_files) {
-        std::string result;
-        if (megamol::core::utility::graphics::ScreenShotComments::EndsWithCaseInsensitive(file, ".png")) {
-            if (!lua_api.RunString(
-                    megamol::core::utility::graphics::ScreenShotComments::GetProjectFromPNG(file), result, file)) {
-                std::cout << "Project file \"" << file << "\" did not execute correctly: " << result << std::endl;
-                run_megamol = false;
-            }
-        } else {
-            if (!lua_api.RunFile(file, result)) {
-                std::cout << "Project file \"" << file << "\" did not execute correctly: " << result << std::endl;
-                run_megamol = false;
-            }
+        if (!projectloader_service.load_file(file)) {
+            std::cout << "Project file \"" << file << "\" did not execute correctly"<< std::endl;
+            run_megamol = false;
         }
     }
     if (config.load_example_project) {
@@ -276,7 +273,7 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-CLIConfig handle_cli_inputs(int argc, char* argv[]) {
+CLIConfig handle_cli_inputs(const int argc, const char** argv) {
     CLIConfig config;
 
     cxxopts::Options options(argv[0], "MegaMol Frontend 3000");
@@ -304,7 +301,9 @@ CLIConfig handle_cli_inputs(int argc, char* argv[]) {
     options.parse_positional({"project-files"});
 
     try {
-        auto parsed_options = options.parse(argc, argv);
+        int _argc = argc;
+        auto _argv = const_cast<char**>(argv);
+        auto parsed_options = options.parse(_argc, _argv);
         std::string res;
 
         if (parsed_options.count("help")) {
