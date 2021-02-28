@@ -56,14 +56,19 @@ public:
 
     virtual void Render(double time, double instanceTime) override;
 
-    virtual void Render(double time, double instanceTime, Camera camera) override;
+    /**
+     * Resets the view. This normally sets the camera parameters to
+     * default values.
+     */
+    void ResetView();
 
     /**
-     * Define pure virtual render function
+     * Resizes the View2DGl framebuffer object.
      *
-     * @param 
+     * @param width The new width.
+     * @param height The new height.
      */
-    virtual void Render(double time, double instanceTime, Call& call) override;
+    virtual void Resize(unsigned int width, unsigned int height) override;
 
     virtual bool OnKey(view::Key key, view::KeyAction action, view::Modifiers mods) override;
 

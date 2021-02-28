@@ -37,13 +37,6 @@
 #    pragma managed(push, off)
 #endif /* defined(_WIN32) && defined(_MANAGED) */
 
-#include "mmcore/thecam/utility/config.h"
-
-#include "mmcore/thecam/camera.h"
-
-#include "mmcore/thecam/math/quaternion.h"
-#include "mmcore/thecam/math/vector.h"
-
 
 namespace megamol {
 namespace core {
@@ -60,9 +53,6 @@ template <class T> class manipulator_base {
 public:
     /** The type of the camera to be manipulated by the manipulator. */
     typedef T camera_type;
-
-    /** The mathematical traits of the camera. */
-    typedef typename T::maths_type maths_type;
 
     /**
      * Answer the camera to manipulated.

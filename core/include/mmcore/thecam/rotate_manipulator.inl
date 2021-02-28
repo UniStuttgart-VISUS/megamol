@@ -15,11 +15,11 @@ template <class T> megamol::core::thecam::rotate_manipulator<T>::~rotate_manipul
  */
 template <class T> void megamol::core::thecam::rotate_manipulator<T>::pitch(const world_type angle) {
     if (this->enabled()) {
-        auto cam = this->camera();
-        quaternion_type rotquat;
-        auto right = cam->right_vector();
-        set_from_angle_axis(rotquat, math::angle_deg2rad(angle), right);
-        cam->orientation(rotquat * cam->orientation());
+        auto cam_pose = this->camera()->get<megamol::core::view::Camera::Pose>();
+        auto right = glm::cross(cam_pose.direction, cam_pose.up);
+        cam_pose.direction = glm::rotate(cam_pose.direction,math::angle_deg2rad(angle), right);
+        cam_pose.up = glm::rotate(cam_pose.up, math::angle_deg2rad(angle), right);
+        this->camera()->setPose(cam_pose);
     }
 }
 
@@ -28,11 +28,11 @@ template <class T> void megamol::core::thecam::rotate_manipulator<T>::pitch(cons
  */
 template <class T> void megamol::core::thecam::rotate_manipulator<T>::yaw(const world_type angle, bool fixToWorldUp) {
     if (this->enabled()) {
-        auto cam = this->camera();
-        quaternion_type rotquat;
-        auto up = fixToWorldUp ? vector_type(0.0f, 1.0f, 0.0f, 0.0f) : cam->up_vector();
-        set_from_angle_axis(rotquat, math::angle_deg2rad(angle), up);
-        cam->orientation(rotquat * cam->orientation());
+        auto cam_pose = this->camera()->get<core::view::Camera::Pose>();
+        auto up = fixToWorldUp ? vector_type(0.0f, 1.0f, 0.0f, 0.0f) : cam_pose.up;
+        cam_pose.direction = glm::rotate(cam_pose.direction, math::angle_deg2rad(angle), up);
+        cam_pose.up = glm::rotate(cam_pose.up, math::angle_deg2rad(angle), up);
+        this->camera()->setPose(cam_pose);
     }
 }
 
@@ -41,10 +41,8 @@ template <class T> void megamol::core::thecam::rotate_manipulator<T>::yaw(const 
  */
 template <class T> void megamol::core::thecam::rotate_manipulator<T>::roll(const world_type angle) {
     if (this->enabled()) {
-        auto cam = this->camera();
-        quaternion_type rotquat;
-        auto dir = cam->view_vector();
-        set_from_angle_axis(rotquat, math::angle_deg2rad(angle), dir);
-        cam->orientation(rotquat * cam->orientation());
+        auto cam_pose = this->camera()->get<core::view::Camera::Pose>();
+        cam_pose.up = glm::rotate(cam_pose.up, math::angle_deg2rad(angle), cam_pose.direction);
+        this->camera()->setPose(cam_pose);
     }
 }

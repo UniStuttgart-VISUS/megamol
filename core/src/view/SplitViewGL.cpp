@@ -80,10 +80,7 @@ unsigned int view::SplitViewGL::GetCameraSyncNumber() const {
     return 0u;
 }
 
-void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) {
-    // TODO: Affinity
-
-	 float time = static_cast<float>(context.Time);
+void view::SplitViewGL::Render(double time, double instanceTime) {
 
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
@@ -181,7 +178,7 @@ void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) 
             return;
         }
         crv->SetFramebufferObject(fbo);
-        crv->SetInstanceTime(context.InstanceTime);
+        crv->SetInstanceTime(instanceTime);
         crv->SetTime(-1.0f);
 
         if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
@@ -274,24 +271,17 @@ bool view::SplitViewGL::OnRenderView(Call& call) {
 
     this->_overrideCall = crv;
 
-    mmcRenderViewContext context;
-    ::ZeroMemory(&context, sizeof(context));
-    context.Time = crv->Time();
-    if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value() && context.Time < 0.0) {
-        context.Time = this->DefaultTime(crv->InstanceTime());
+    auto time = crv->Time();
+    if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value() && time < 0.0) {
+        time = this->DefaultTime(crv->InstanceTime());
     }
-    context.InstanceTime = crv->InstanceTime();
-    this->Render(context, &call);
+    auto instanceTime = crv->InstanceTime();
+
+    this->Render(time, instanceTime);
 
     this->_overrideCall = nullptr;
 
     return true;
-}
-
-void view::SplitViewGL::UpdateFreeze(bool freeze) {
-    for (auto crv : {this->render1(), this->render2()}) {
-        if (crv != nullptr) (*crv)(freeze ? CallRenderViewGL::CALL_FREEZE : CallRenderViewGL::CALL_UNFREEZE);
-    }
 }
 
 bool view::SplitViewGL::OnKey(Key key, KeyAction action, Modifiers mods) {

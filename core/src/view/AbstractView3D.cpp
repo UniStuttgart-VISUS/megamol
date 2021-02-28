@@ -54,27 +54,16 @@ AbstractView3D::AbstractView3D(void)
     , _cameraProjectionTypeParam("cam::projectiontype", "")
     , _cameraNearPlaneParam("cam::nearplane", "")
     , _cameraFarPlaneParam("cam::farplane", "")
-    , _cameraConvergencePlaneParam("cam::convergenceplane", "")
-    , _cameraEyeParam("cam::eye", "")
-    , _cameraGateScalingParam("cam::gatescaling", "")
-    , _cameraFilmGateParam("cam::filmgate", "")
-    , _cameraResolutionXParam("cam::resgate::x", "")
-    , _cameraResolutionYParam("cam::resgate::y", "")
-    , _cameraCenterOffsetParam("cam::centeroffset", "")
     , _cameraHalfApertureDegreesParam("cam::halfaperturedegrees", "")
-    , _cameraHalfDisparityParam("cam::halfdisparity", "")
     , _cameraOvrUpParam("cam::ovr::up", "")
     , _cameraOvrLookatParam("cam::ovr::lookat", "")
     , _cameraOvrParam("cam::ovr::override", "")
-    , _valuesFromOutside(false)
     , _cameraControlOverrideActive(false) {
 
     using vislib::sys::KeyCode;
 
     this->_showLookAt.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->_showLookAt);
-
-    this->ResetView();
 
     this->_viewKeyMoveStepSlot.SetParameter(new param::FloatParam(0.5f, 0.001f));
     this->MakeSlotAvailable(&this->_viewKeyMoveStepSlot);
@@ -131,25 +120,10 @@ AbstractView3D::AbstractView3D(void)
     this->_cameraProjectionTypeParam.SetParameter(projectionParam);
     this->MakeSlotAvailable(&this->_cameraProjectionTypeParam);
 
-    auto camconvergenceparam = new param::FloatParam(0.1f, 0.0f);
-    camconvergenceparam->SetGUIVisible(camparamvisibility);
-    this->_cameraConvergencePlaneParam.SetParameter(camconvergenceparam);
-    this->MakeSlotAvailable(&this->_cameraConvergencePlaneParam);
-
-    auto centeroffsetparam = new param::Vector2fParam(vislib::math::Vector<float, 2>());
-    centeroffsetparam->SetGUIVisible(camparamvisibility);
-    this->_cameraCenterOffsetParam.SetParameter(centeroffsetparam);
-    this->MakeSlotAvailable(&this->_cameraCenterOffsetParam);
-
     auto apertureparam = new param::FloatParam(35.0f, 0.0f);
     apertureparam->SetGUIVisible(camparamvisibility);
     this->_cameraHalfApertureDegreesParam.SetParameter(apertureparam);
     this->MakeSlotAvailable(&this->_cameraHalfApertureDegreesParam);
-
-    auto disparityparam = new param::FloatParam(1.0f, 0.0f);
-    disparityparam->SetGUIVisible(camparamvisibility);
-    this->_cameraHalfDisparityParam.SetParameter(disparityparam);
-    this->MakeSlotAvailable(&this->_cameraHalfDisparityParam);
 
     this->_cameraOvrUpParam << new param::Vector3fParam(vislib::math::Vector<float, 3>());
     this->MakeSlotAvailable(&this->_cameraOvrUpParam);
@@ -242,48 +216,43 @@ void AbstractView3D::afterRender() {
 /*
  * AbstractView3D::ResetView
  */
-void AbstractView3D::ResetView(void) {
-    if (!this->_valuesFromOutside) {
-        this->_camera.near_clipping_plane(0.1f);
-        this->_camera.far_clipping_plane(100.0f);
-        this->_camera.aperture_angle(30.0f);
-        this->_camera.disparity(0.05f);
-        this->_camera.eye(thecam::Eye::mono);
-        this->_camera.projection_type(thecam::Projection_type::perspective);
+void AbstractView3D::ResetView(float window_aspect) {
+    if (_cameraIsMutable) { // check if view is in control of the camera
+        Camera::PerspectiveParameters cam_intrinsics;
+        cam_intrinsics.near_plane = 0.1f;
+        cam_intrinsics.far_plane = 100.0f;
+        cam_intrinsics.fovy = 0.5;
+        cam_intrinsics.aspect = window_aspect;
+        cam_intrinsics.image_plane_tile = Camera::ImagePlaneTile(); // view is in control -> no tiling -> use default tile values
+
+        if (!this->_bboxs.IsBoundingBoxValid()) {
+            this->_bboxs.SetBoundingBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
+        }
+        float dist = (0.5f * sqrtf((this->_bboxs.BoundingBox().Width() * this->_bboxs.BoundingBox().Width()) +
+                                   (this->_bboxs.BoundingBox().Depth() * this->_bboxs.BoundingBox().Depth()) +
+                                   (this->_bboxs.BoundingBox().Height() * this->_bboxs.BoundingBox().Height()))) /
+                     tanf(cam_intrinsics.fovy / 2.0f);
+        double fovx = cam_intrinsics.fovy * cam_intrinsics.aspect;
+        double distX = static_cast<double>(this->_bboxs.BoundingBox().Width()) / (2.0 * tan(fovx/2.0));
+        double distY = static_cast<double>(this->_bboxs.BoundingBox().Height()) /
+                       (2.0 * tan(static_cast<double>(cam_intrinsics.fovy / 2.0f)));
+        dist = static_cast<float>((distX > distY) ? distX : distY);
+        dist = dist + (this->_bboxs.BoundingBox().Depth() / 2.0f);
+        auto bbc = this->_bboxs.BoundingBox().CalcCenter();
+
+        auto bbcglm = glm::vec3(bbc.GetX(), bbc.GetY(), bbc.GetZ());
+
+        Camera::Pose cam_pose;
+        cam_pose.position = bbcglm + glm::vec3(0.0f, 0.0f, dist);
+        cam_pose.direction = glm::vec3(0.0, 0.0, -1.0);
+        cam_pose.up = glm::vec3(0.0, 1.0, 0.0);
+
+        _camera = Camera(cam_pose,cam_intrinsics);
+
+        _rotCenter = glm::vec3(bbc.GetX(), bbc.GetY(), bbc.GetZ());
+    } else {
+        // TODO print warning
     }
-    // TODO set distance between eyes
-    if (!this->_bboxs.IsBoundingBoxValid()) {
-        this->_bboxs.SetBoundingBox(-1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f);
-    }
-    float dist = (0.5f * sqrtf((this->_bboxs.BoundingBox().Width() * this->_bboxs.BoundingBox().Width()) +
-                               (this->_bboxs.BoundingBox().Depth() * this->_bboxs.BoundingBox().Depth()) +
-                               (this->_bboxs.BoundingBox().Height() * this->_bboxs.BoundingBox().Height()))) /
-                 tanf(this->_camera.aperture_angle_radians() / 2.0f);
-    auto dim = this->_camera.resolution_gate();
-    double halfFovX =
-        (static_cast<double>(dim.width()) * static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)) /
-        static_cast<double>(dim.height());
-    double distX = static_cast<double>(this->_bboxs.BoundingBox().Width()) / (2.0 * tan(halfFovX));
-    double distY = static_cast<double>(this->_bboxs.BoundingBox().Height()) /
-                   (2.0 * tan(static_cast<double>(this->_camera.aperture_angle_radians() / 2.0f)));
-    dist = static_cast<float>((distX > distY) ? distX : distY);
-    dist = dist + (this->_bboxs.BoundingBox().Depth() / 2.0f);
-    auto bbc = this->_bboxs.BoundingBox().CalcCenter();
-
-    auto bbcglm = glm::vec4(bbc.GetX(), bbc.GetY(), bbc.GetZ(), 1.0f);
-
-    if (!this->_valuesFromOutside) {
-        this->_camera.position(bbcglm + glm::vec4(0.0f, 0.0f, dist, 0.0f));
-        this->_camera.orientation(cam_type::quaternion_type::create_identity());
-    }
-
-    this->_rotCenter = glm::vec3(bbc.GetX(), bbc.GetY(), bbc.GetZ());
-
-    glm::mat4 vm = this->_camera.view_matrix();
-    glm::mat4 pm = this->_camera.projection_matrix();
-
-    // TODO Further manipulators? better value?
-    this->_valuesFromOutside = false;
 }
 
 /*
@@ -293,20 +262,11 @@ bool AbstractView3D::OnRenderView(Call& call) {
     AbstractCallRenderView* crv = dynamic_cast<AbstractCallRenderView*>(&call);
     if (crv == nullptr) return false;
 
-    float time = crv->Time();
+    double time = crv->Time();
     if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
-    mmcRenderViewContext context;
-    ::ZeroMemory(&context, sizeof(context));
-    context.Time = time;
-    context.InstanceTime = crv->InstanceTime();
+    double instanceTime = crv->InstanceTime();
 
-    if (crv->IsTileSet()) {
-        this->_camera.resolution_gate(cam_type::screen_size_type(crv->VirtualWidth(), crv->VirtualHeight()));
-        this->_camera.image_tile(cam_type::screen_rectangle_type::from_bottom_left(
-            crv->TileX(), crv->TileY(), crv->TileWidth(), crv->TileHeight()));
-    }
-
-    this->Render(context, &call);
+    this->Render(time, instanceTime);
 
     return true;
 }
@@ -373,18 +333,14 @@ bool AbstractView3D::OnKey(Key key, KeyAction action, Modifiers mods) {
         index = index < 0 ? index + 10 : index;                         // wrap key '0' to a positive index '9'
 
         if (mods.test(Modifier::CTRL)) {
-            this->_savedCameras[index].first = this->_camera.get_minimal_state(this->_savedCameras[index].first);
+            this->_savedCameras[index].first = this->_camera;
             this->_savedCameras[index].second = true;
             if (this->_autoSaveCamSettingsSlot.Param<param::BoolParam>()->Value()) {
                 this->onStoreCamera(this->_storeCameraSettingsSlot); // manually trigger the storing
             }
         } else {
             if (this->_savedCameras[index].second) {
-                // As a change of camera position should not change the display resolution, we actively save and restore
-                // the old value of the resolution
-                auto oldResolution = this->_camera.resolution_gate; // save old resolution
                 this->_camera = this->_savedCameras[index].first;    // override current camera
-                this->_camera.resolution_gate = oldResolution;      // restore old resolution
             }
         }
     }
@@ -498,7 +454,7 @@ void AbstractView3D::handleCameraMovement(void) {
     float rotationStep = this->_viewKeyAngleStepSlot.Param<param::FloatParam>()->Value();
     rotationStep *= dt;
 
-    glm::vec3 currCamPos(static_cast<glm::vec4>(this->_camera.eye_position()));
+    glm::vec3 currCamPos(_camera.get<Camera::Pose>().position);
     float orbitalAltitude = glm::length(currCamPos - _rotCenter);
 
     if (this->_translateManipulator.manipulating()) {
@@ -541,31 +497,31 @@ void AbstractView3D::handleCameraMovement(void) {
         }
     }
 
-    glm::vec3 newCamPos(static_cast<glm::vec4>(this->_camera.eye_position()));
-    glm::vec3 camDir(static_cast<glm::vec4>(this->_camera.view_vector()));
+    glm::vec3 newCamPos(_camera.get<Camera::Pose>().position);
+    glm::vec3 camDir(_camera.get<Camera::Pose>().direction);
     _rotCenter = newCamPos + orbitalAltitude * glm::normalize(camDir);
 }
 
 /*
  * AbstractView3D::setCameraValues
  */
-void AbstractView3D::setCameraValues(const Camera_2& cam) {
-    glm::vec4 pos = cam.position();
+void AbstractView3D::setCameraValues(Camera const& cam) {
+    auto cam_pose = cam.get<Camera::Pose>();
+
+    glm::vec3 pos = cam_pose.position;
     const bool makeDirty = false;
     this->_cameraPositionParam.Param<param::Vector3fParam>()->SetValue(
         vislib::math::Vector<float, 3>(pos.x, pos.y, pos.z), makeDirty);
     this->_cameraPositionParam.QueueUpdateNotification();
 
-    glm::quat orient = cam.orientation();
+    glm::quat orient(cam_pose.direction, cam_pose.up);
     this->_cameraOrientationParam.Param<param::Vector4fParam>()->SetValue(
         vislib::math::Vector<float, 4>(orient.x, orient.y, orient.z, orient.w), makeDirty);
     this->_cameraOrientationParam.QueueUpdateNotification();
 
-    this->_cameraProjectionTypeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam.projection_type()), makeDirty);
+    auto cam_proj_type = cam.get<Camera::ProjectionType>();
+    this->_cameraProjectionTypeParam.Param<param::EnumParam>()->SetValue(static_cast<int>(cam_proj_type), makeDirty);
     this->_cameraProjectionTypeParam.QueueUpdateNotification();
-
-    this->_cameraConvergencePlaneParam.Param<param::FloatParam>()->SetValue(cam.convergence_plane(), makeDirty);
-    this->_cameraConvergencePlaneParam.QueueUpdateNotification();
 
     /*this->cameraNearPlaneParam.Param<param::FloatParam>()->SetValue(cam.near_clipping_plane(), makeDirty);
     this->cameraFarPlaneParam.Param<param::FloatParam>()->SetValue(cam.far_clipping_plane(), makeDirty);*/
@@ -576,42 +532,44 @@ void AbstractView3D::setCameraValues(const Camera_2& cam) {
     /*this->cameraResolutionXParam.Param<param::IntParam>()->SetValue(cam.resolution_gate().width());
     this->cameraResolutionYParam.Param<param::IntParam>()->SetValue(cam.resolution_gate().height());*/
 
-    this->_cameraCenterOffsetParam.Param<param::Vector2fParam>()->SetValue(
-        vislib::math::Vector<float, 2>(cam.centre_offset().x(), cam.centre_offset().y()), makeDirty);
-    this->_cameraCenterOffsetParam.QueueUpdateNotification();
-
-    this->_cameraHalfApertureDegreesParam.Param<param::FloatParam>()->SetValue(
-        cam.half_aperture_angle_radians() * 180.0f / M_PI, makeDirty);
-    this->_cameraHalfApertureDegreesParam.QueueUpdateNotification();
-
-    this->_cameraHalfDisparityParam.Param<param::FloatParam>()->SetValue(cam.half_disparity(), makeDirty);
-    this->_cameraHalfDisparityParam.QueueUpdateNotification();
+    if (cam_proj_type == Camera::ProjectionType::PERSPECTIVE) {
+        auto cam_intrinsics = cam.get<Camera::PerspectiveParameters>();
+        this->_cameraHalfApertureDegreesParam.Param<param::FloatParam>()->SetValue(
+            cam_intrinsics.fovy * 180.0f / M_PI, makeDirty);
+        this->_cameraHalfApertureDegreesParam.QueueUpdateNotification();
+    }
 }
 
 /*
  * AbstractView3D::adaptCameraValues
  */
-bool AbstractView3D::adaptCameraValues(Camera_2& cam) {
+bool AbstractView3D::adaptCameraValues(Camera& cam) {
     bool result = false;
+    auto cam_pose = cam.get<Camera::Pose>();
     if (this->_cameraPositionParam.IsDirty()) {
         auto val = this->_cameraPositionParam.Param<param::Vector3fParam>()->Value();
-        this->_camera.position(glm::vec4(val.GetX(), val.GetY(), val.GetZ(), 1.0f));
+        cam_pose.position = glm::vec3(val.GetX(), val.GetY(), val.GetZ());
         this->_cameraPositionParam.ResetDirty();
         result = true;
     }
-    if (this->_cameraOrientationParam.IsDirty()) {
-        auto val = this->_cameraOrientationParam.Param<param::Vector4fParam>()->Value();
-        this->_camera.orientation(glm::quat(val.GetW(), val.GetX(), val.GetY(), val.GetZ()));
-        this->_cameraOrientationParam.ResetDirty();
-        result = true;
-    }
-    if (this->_cameraProjectionTypeParam.IsDirty()) {
-        auto val =
-            static_cast<thecam::Projection_type>(this->_cameraProjectionTypeParam.Param<param::EnumParam>()->Value());
-        this->_camera.projection_type(val);
-        this->_cameraProjectionTypeParam.ResetDirty();
-        result = true;
-    }
+    // TODO set vectors from quaternion
+    //  if (this->_cameraOrientationParam.IsDirty()) {
+    //      auto val = this->_cameraOrientationParam.Param<param::Vector4fParam>()->Value();
+    //      this->_camera.orientation(glm::quat(val.GetW(), val.GetX(), val.GetY(), val.GetZ()));
+    //      this->_cameraOrientationParam.ResetDirty();
+    //      result = true;
+    //  }
+    cam.setPose(cam_pose);
+
+    // BIG TODO: manipulation of intrinsics via GUI
+
+    //  if (this->_cameraProjectionTypeParam.IsDirty()) {
+    //      auto val =
+    //          static_cast<thecam::Projection_type>(this->_cameraProjectionTypeParam.Param<param::EnumParam>()->Value());
+    //      this->_camera.projection_type(val);
+    //      this->_cameraProjectionTypeParam.ResetDirty();
+    //      result = true;
+    //  }
     //// setting of near plane and far plane might make no sense as we are setting them new each frame anyway
     // if (this->cameraNearPlaneParam.IsDirty()) {
     //    auto val = this->cameraNearPlaneParam.Param<param::FloatParam>()->Value();
@@ -625,60 +583,12 @@ bool AbstractView3D::adaptCameraValues(Camera_2& cam) {
     //    this->cameraFarPlaneParam.ResetDirty();
     //    result = true;
     //}
-    if (this->_cameraConvergencePlaneParam.IsDirty()) {
-        auto val = this->_cameraConvergencePlaneParam.Param<param::FloatParam>()->Value();
-        this->_camera.convergence_plane(val);
-        this->_cameraConvergencePlaneParam.ResetDirty();
-        result = true;
-    }
-    /*if (this->cameraEyeParam.IsDirty()) {
-        auto val = static_cast<thecam::Eye>(this->cameraEyeParam.Param<param::EnumParam>()->Value());
-        this->cam.eye(val);
-        this->cameraEyeParam.ResetDirty();
-        result = true;
-    }*/
-    /*if (this->cameraGateScalingParam.IsDirty()) {
-        auto val = static_cast<thecam::Gate_scaling>(this->cameraGateScalingParam.Param<param::EnumParam>()->Value());
-        this->cam.gate_scaling(val);
-        this->cameraGateScalingParam.ResetDirty();
-        result = true;
-    }
-    if (this->cameraFilmGateParam.IsDirty()) {
-        auto val = this->cameraFilmGateParam.Param<param::Vector2fParam>()->Value();
-        this->cam.film_gate(thecam::math::size<float, 2>(val.GetX(), val.GetY()));
-        this->cameraFilmGateParam.ResetDirty();
-        result = true;
-    }*/
-    /*if (this->cameraResolutionXParam.IsDirty()) {
-        auto val = this->cameraResolutionXParam.Param<param::IntParam>()->Value();
-        this->cam.resolution_gate({val, this->cam.resolution_gate().height()});
-        this->cameraResolutionXParam.ResetDirty();
-        result = true;
-    }
-    if (this->cameraResolutionYParam.IsDirty()) {
-        auto val = this->cameraResolutionYParam.Param<param::IntParam>()->Value();
-        this->cam.resolution_gate({this->cam.resolution_gate().width(), val});
-        this->cameraResolutionYParam.ResetDirty();
-        result = true;
-    }*/
-    if (this->_cameraCenterOffsetParam.IsDirty()) {
-        auto val = this->_cameraCenterOffsetParam.Param<param::Vector2fParam>()->Value();
-        this->_camera.centre_offset(thecam::math::vector<float, 2>(val.GetX(), val.GetY()));
-        this->_cameraCenterOffsetParam.ResetDirty();
-        result = true;
-    }
-    if (this->_cameraHalfApertureDegreesParam.IsDirty()) {
-        auto val = this->_cameraHalfApertureDegreesParam.Param<param::FloatParam>()->Value();
-        this->_camera.half_aperture_angle_radians(val * M_PI / 180.0f);
-        this->_cameraHalfApertureDegreesParam.ResetDirty();
-        result = true;
-    }
-    if (this->_cameraHalfDisparityParam.IsDirty()) {
-        auto val = this->_cameraHalfDisparityParam.Param<param::FloatParam>()->Value();
-        this->_camera.half_disparity(val);
-        this->_cameraHalfDisparityParam.ResetDirty();
-        result = true;
-    }
+    //  if (this->_cameraHalfApertureDegreesParam.IsDirty()) {
+    //      auto val = this->_cameraHalfApertureDegreesParam.Param<param::FloatParam>()->Value();
+    //      this->_camera.half_aperture_angle_radians(val * M_PI / 180.0f);
+    //      this->_cameraHalfApertureDegreesParam.ResetDirty();
+    //      result = true;
+    //  }
     return result;
 }
 
@@ -693,14 +603,15 @@ bool AbstractView3D::cameraOvrCallback(param::ParamSlot& p) {
     up = glm::normalize(up);
     glm::vec3 lookat(lookat_vis.X(), lookat_vis.Y(), lookat_vis.Z());
 
+    auto cam_pose = this->_camera.get<Camera::Pose>();
     glm::mat3 view;
-    view[2] = -glm::normalize(lookat - glm::vec3(static_cast<glm::vec4>(this->_camera.eye_position())));
+    view[2] = -glm::normalize(lookat - cam_pose.position);
     view[0] = glm::normalize(glm::cross(up, view[2]));
     view[1] = glm::normalize(glm::cross(view[2], view[0]));
 
     auto orientation = glm::quat_cast(view);
 
-    this->_camera.orientation(orientation);
+    this->_camera.setPose(Camera::Pose(cam_pose.position,orientation));
     this->_rotCenter = lookat;
 
     return true;

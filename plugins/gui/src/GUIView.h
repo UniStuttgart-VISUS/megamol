@@ -71,13 +71,11 @@ namespace gui {
 
         virtual bool OnRenderView(megamol::core::Call& call);
 
-        virtual void Render(const mmcRenderViewContext& context, core::Call* call) override;
+        virtual void Render(double time, double instanceTime) override;
 
         virtual void ResetView(void) override;
 
         virtual void Resize(unsigned int width, unsigned int height) override;
-
-        virtual void UpdateFreeze(bool freeze) override;
 
         virtual bool OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action,
             megamol::core::view::Modifiers mods) override;
@@ -102,9 +100,6 @@ namespace gui {
 
     private:
         // VARIABLES --------------------------------------------------------------
-
-        /** The override call */
-        megamol::core::view::CallRenderViewGL* overrideCall;
 
         /** The input renderview slot */
         megamol::core::CallerSlot render_view_slot;

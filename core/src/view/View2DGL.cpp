@@ -59,10 +59,6 @@ view::View2DGL::View2DGL(void)
         AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
     // CallRenderViewGL
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_FREEZE), &AbstractView::OnFreezeView);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::onResetView);
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
 
@@ -92,16 +88,16 @@ unsigned int view::View2DGL::GetCameraSyncNumber(void) const {
 /*
  * view::View2DGL::Render
  */
-void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
+void view::View2DGL::Render(double time, double instanceTime) {
 
-    AbstractView::beforeRender(context);
+    AbstractView::beforeRender(time,instanceTime);
 
     CallRender2DGL* cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
 
     if (cr2d == NULL) {
         return;
     }
-    cr2d->SetCamera(this->_camera);
+
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
     float w = this->_width;
@@ -140,32 +136,13 @@ void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
         (1.0f / vz - vy));
     cr2d->AccessBoundingBoxes().SetBoundingBox(vr.Left(),vr.Bottom(),vr.Right(),vr.Top());
 
-    if (call == nullptr) {
-        if ((this->_fbo->GetWidth() != w) ||
-            (this->_fbo->GetHeight() != h) ||
-            !this->_fbo->IsValid() ) {
-            this->_fbo->Release();
-            if (!this->_fbo->Create(w, h, GL_RGBA8, GL_RGBA,
-                    GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE)) {
-                throw vislib::Exception(
-                    "[View2DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
-                return;
-            }
-        }
-        
-        cr2d->SetFramebufferObject(_fbo);
-        // TODO here we have to apply the new camera
-    } else {
-        auto gl_call = dynamic_cast<view::CallRenderViewGL*>(call);
-        cr2d->SetFramebufferObject(gl_call->GetFramebufferObject());
-    }
-
-    // set camera to call
+    cr2d->SetFramebufferObject(_fbo);
+    cr2d->SetCamera(_camera);
 
     (*cr2d)(AbstractCallRender::FnRender);
 
     //after render
-    AbstractView::afterRender(context);
+    AbstractView::afterRender();
 }
 
 
@@ -208,9 +185,14 @@ void view::View2DGL::Resize(unsigned int width, unsigned int height) {
     this->_width = static_cast<float>(width);
     this->_height = static_cast<float>(height);
 
-    AbstractView::Resize(width, height);
-
-    //TODO resize/recreate FBO
+    if ((this->_fbo->GetWidth() != width) || (this->_fbo->GetHeight() != height)) {
+        this->_fbo->Release();
+        if (!this->_fbo->Create(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE)) {
+            throw vislib::Exception("[View2DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
+            return;
+        }
+    }
 }
 
 
@@ -222,14 +204,15 @@ bool view::View2DGL::OnRenderView(Call& call) {
     view::CallRenderViewGL *crv = dynamic_cast<view::CallRenderViewGL*>(&call);
     if (crv == NULL) return false;
 
-    float time = crv->Time();
+    // get time from incoming call
+    double time = crv->Time();
     if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
-    mmcRenderViewContext context;
-    ::ZeroMemory(&context, sizeof(context));
-    context.Time = time;
-    context.InstanceTime = crv->InstanceTime();
-    // TODO: Affinity
-    this->Render(context, &call);
+    double instanceTime = crv->InstanceTime();
+
+    // get requested view(port) size from incoming call
+    
+
+    this->Render(time, instanceTime);
 
     return true;
 }

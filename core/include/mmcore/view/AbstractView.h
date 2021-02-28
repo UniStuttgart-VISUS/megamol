@@ -26,6 +26,7 @@
 #include "mmcore/view/CameraSerializer.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/Camera.h"
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/view/TimeControl.h"
 
 namespace megamol {
@@ -119,6 +120,19 @@ public:
     virtual unsigned int GetCameraSyncNumber(void) const = 0;
 
     /**
+     * Set the camera for this view externally
+     *
+     * @param camera A fully intialized camera to use for rendering the view
+     * @param isMutable Tell the view whether it can modify, i.e. control, the camera or not
+     */
+    virtual void SetCamera(Camera camera, bool isMutable = true);
+
+    /**
+    * ...
+    */
+    virtual void CalcCameraClippingPlanes(float border);
+
+    /**
      * Renders this AbstractView.
      * The View will use its own camera and framebuffer for the rendering exectuion
      *
@@ -128,28 +142,10 @@ public:
     virtual void Render(double time, double instanceTime) = 0;
 
     /**
-     * Renders this AbstractView.
-     * The View will use the given camera and its own framebuffer for the rendering exectuion
-     *
-     * @param time ...
-     * @param instanceTime ...
-     * @param camera Overrides the Views camera. Use for VR and tiled rendering.
-     */
-    virtual void Render(double time, double instanceTime, Camera camera) = 0;
-
-    /**
-     * Renders this AbstractView.
-     * The View will simply pass trough all values from the incoming call.
-     *
-     * @param call The incoming (i.e. lhs) RenderViewCall
-     */
-    virtual void Render(double time, double instanceTime, Call& call) = 0;
-
-    /**
      * Resets the view. This normally sets the camera parameters to
      * default values.
      */
-    virtual void ResetView(void) = 0;
+    virtual void ResetView() = 0;
 
     /**
      * Resizes the AbstractView3D.
@@ -210,39 +206,6 @@ public:
      * @return The return value
      */
     virtual bool GetExtents(Call& call);
-
-    /**
-     * Callback requesting a rendering of this view
-     *
-     * @param call The calling call
-     *
-     * @return The return value
-     */
-    virtual bool OnFreezeView(Call& call) {
-        this->UpdateFreeze(true);
-        return true;
-    }
-
-    /**
-     * Callback requesting a rendering of this view
-     *
-     * @param call The calling call
-     *
-     * @return The return value
-     */
-    virtual bool OnUnfreezeView(Call& call) {
-        this->UpdateFreeze(false);
-        return true;
-    }
-
-    /**
-     * Freezes, updates, or unfreezes the view onto the scene (not the
-     * rendering, but camera settings, timing, etc).
-     *
-     * @param freeze true means freeze or update freezed settings,
-     *               false means unfreeze
-     */
-    virtual void UpdateFreeze(bool freeze) = 0;
 
     /**
      * Restores the view
@@ -395,6 +358,9 @@ protected:
     /** The camera */
     Camera _camera;
 
+    /** A flag that decides whether the camera is controllable by the view */
+    bool _cameraIsMutable;
+
     /** Slot containing the settings of the currently stored camera */
     param::ParamSlot _cameraSettingsSlot;
 
@@ -420,7 +386,7 @@ protected:
     param::ParamSlot _resetViewOnBBoxChangeSlot;
 
     /** Array that holds the saved camera states */
-    std::array<std::pair<Camera_2::minimal_state_type, bool>, 11> _savedCameras;
+    std::array<std::pair<Camera, bool>, 11> _savedCameras;
 
     /** The object responsible for camera serialization */
     CameraSerializer _cameraSerializer;

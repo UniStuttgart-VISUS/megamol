@@ -41,10 +41,6 @@ View3DGL::View3DGL(void) : view::AbstractView3D(), _cursor2d() {
         AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
     // CallRenderViewGL
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_FREEZE), &AbstractView::OnFreezeView);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::onResetView);
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
 }
@@ -63,16 +59,6 @@ void megamol::core::view::View3DGL::Render(double time, double instanceTime) {
         return;
     }
 
-    if ((this->_fbo->GetWidth() != _camera.image_tile().width()) ||
-        (this->_fbo->GetHeight() != _camera.image_tile().height()) || (!this->_fbo->IsValid())) {
-        this->_fbo->Release();
-        if (!this->_fbo->Create(_camera.image_tile().width(), _camera.image_tile().height(), GL_RGBA8, GL_RGBA,
-                GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
-                GL_DEPTH_COMPONENT)) {
-            throw vislib::Exception("[View3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
-            return;
-        }
-    }
     this->_fbo->Enable();
     auto bgcol = this->BkgndColour();
     glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
@@ -91,29 +77,32 @@ void megamol::core::view::View3DGL::Render(double time, double instanceTime) {
     AbstractView3D::afterRender();
 }
 
-void megamol::core::view::View3DGL::Render(double time, double instanceTime, Camera camera) {
+void megamol::core::view::View3DGL::ResetView() {
+    AbstractView3D::ResetView(static_cast<float>(_fbo->GetWidth())/static_cast<float>(_fbo->GetHeight()));
 }
 
-/*
- * View3DGL::Render
- */
-void View3DGL::Render(double time, double instanceTime, Call& call) {
+void megamol::core::view::View3DGL::Resize(unsigned int width, unsigned int height) {
+    if ( (_fbo->GetWidth() != width) || (_fbo->GetHeight() != height) ) {
+        this->_fbo->Release();
+        if (!this->_fbo->Create(width, height, GL_RGBA8, GL_RGBA,
+                GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT)) {
+            throw vislib::Exception("[View3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
+            return;
+        }
 
-    CallRender3DGL* cr3d = this->_rhsRenderSlot.CallAs<CallRender3DGL>();
-
-    if (cr3d == NULL) {
-        return;
+        if (_cameraIsMutable) { // view seems to be in control of the camera
+            auto cam_pose = _camera.get<Camera::Pose>();
+            if (_camera.get<Camera::ProjectionType>() == Camera::ProjectionType::PERSPECTIVE) {
+                auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
+                cam_intrinsics.aspect = static_cast<float>(width) / static_cast<float>(height);
+                _camera = Camera(cam_pose, cam_intrinsics);
+            } else if (_camera.get<Camera::ProjectionType>() == Camera::ProjectionType::ORTHOGRAPHIC) {
+                auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+                cam_intrinsics.aspect = static_cast<float>(width) / static_cast<float>(height);
+                _camera = Camera(cam_pose, cam_intrinsics);
+            }
+        }
     }
-
-    auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(&call);
-    cr3d->SetFramebufferObject(gpu_call->GetFramebufferObject());
-
-    AbstractView3D::beforeRender(time, instanceTime);
-
-    cr3d->SetCamera(this->_camera);
-    (*cr3d)(view::CallRender3DGL::FnRender);
-
-    AbstractView3D::afterRender();
 }
 
 /*
@@ -170,7 +159,7 @@ bool view::View3DGL::OnKey(view::Key key, view::KeyAction action, view::Modifier
         index = index < 0 ? index + 10 : index;                         // wrap key '0' to a positive index '9'
 
         if (mods.test(view::Modifier::CTRL)) {
-            this->_savedCameras[index].first = this->_camera.get_minimal_state(this->_savedCameras[index].first);
+            this->_savedCameras[index].first = this->_camera;
             this->_savedCameras[index].second = true;
             if (this->_autoSaveCamSettingsSlot.Param<param::BoolParam>()->Value()) {
                 this->onStoreCamera(this->_storeCameraSettingsSlot); // manually trigger the storing
@@ -179,9 +168,7 @@ bool view::View3DGL::OnKey(view::Key key, view::KeyAction action, view::Modifier
             if (this->_savedCameras[index].second) {
                 // As a change of camera position should not change the display resolution, we actively save and restore
                 // the old value of the resolution
-                auto oldResolution = this->_camera.resolution_gate; // save old resolution
                 this->_camera = this->_savedCameras[index].first;    // override current camera
-                this->_camera.resolution_gate = oldResolution;      // restore old resolution
             }
         }
     }
@@ -239,8 +226,26 @@ bool view::View3DGL::OnMouseButton(view::MouseButton button, view::MouseButtonAc
     bool ctrlPressed = mods.test(view::Modifier::CTRL); // this->modkeys.test(view::Modifier::CTRL);
 
     // get window resolution to help computing mouse coordinates
-    auto wndSize = this->_camera.resolution_gate();
+    int wndWidth;
+    int wndHeight;
+    auto projType = _camera.get<Camera::ProjectionType>();
+    if (projType == Camera::ProjectionType::PERSPECTIVE) {
+        auto tile_end = _camera.get<Camera::PerspectiveParameters>().image_plane_tile.tile_end;
+        auto tile_start = _camera.get<Camera::PerspectiveParameters>().image_plane_tile.tile_start;
+        auto tile_size = tile_end - tile_start;
 
+        wndWidth = static_cast<int>(static_cast<float>(_fbo->GetWidth()) / tile_size.x);
+        wndHeight = static_cast<int>(static_cast<float>(_fbo->GetHeight()) / tile_size.y);
+    } else if (projType == Camera::ProjectionType::PERSPECTIVE) {
+        auto tile_end = _camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_end;
+        auto tile_start = _camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_start;
+        auto tile_size = tile_end - tile_start;
+
+        wndWidth = static_cast<int>(static_cast<float>(_fbo->GetWidth()) / tile_size.x);
+        wndHeight = static_cast<int>(static_cast<float>(_fbo->GetHeight()) / tile_size.y);
+    } else {
+        return false; // Oh bother...
+    }
 
     switch (button) {
     case megamol::core::view::MouseButton::BUTTON_LEFT:
@@ -252,11 +257,11 @@ bool view::View3DGL::OnMouseButton(view::MouseButton button, view::MouseButtonAc
                     !ctrlPressed)) // Left mouse press + alt/arcDefault+noCtrl -> activate arcball manipluator
             {
                 this->_arcballManipulator.setActive(
-                    wndSize.width() - static_cast<int>(this->_mouseX), static_cast<int>(this->_mouseY));
+                    wndWidth - static_cast<int>(this->_mouseX), static_cast<int>(this->_mouseY));
             } else if (ctrlPressed) // Left mouse press + Ctrl -> activate orbital manipluator
             {
                 this->_turntableManipulator.setActive(
-                    wndSize.width() - static_cast<int>(this->_mouseX), static_cast<int>(this->_mouseY));
+                    wndWidth - static_cast<int>(this->_mouseX), static_cast<int>(this->_mouseY));
             }
         }
 
@@ -267,11 +272,11 @@ bool view::View3DGL::OnMouseButton(view::MouseButton button, view::MouseButtonAc
         if (!anyManipulatorActive) {
             if ((altPressed ^ this->_arcballDefault) || ctrlPressed) {
                 this->_orbitAltitudeManipulator.setActive(
-                    wndSize.width() - static_cast<int>(this->_mouseX), static_cast<int>(this->_mouseY));
+                    wndWidth - static_cast<int>(this->_mouseX), static_cast<int>(this->_mouseY));
             } else {
                 this->_rotateManipulator.setActive();
                 this->_translateManipulator.setActive(
-                    wndSize.width() - static_cast<int>(this->_mouseX), static_cast<int>(this->_mouseY));
+                    wndWidth - static_cast<int>(this->_mouseX), static_cast<int>(this->_mouseY));
             }
         }
 
@@ -281,7 +286,7 @@ bool view::View3DGL::OnMouseButton(view::MouseButton button, view::MouseButtonAc
 
         if (!anyManipulatorActive) {
             this->_translateManipulator.setActive(
-                wndSize.width() - static_cast<int>(this->_mouseX), static_cast<int>(this->_mouseY));
+                wndWidth - static_cast<int>(this->_mouseX), static_cast<int>(this->_mouseY));
         }
 
         break;
@@ -328,39 +333,72 @@ bool view::View3DGL::OnMouseMove(double x, double y) {
         }
     }
 
-    auto wndSize = this->_camera.resolution_gate();
+    // get window resolution to help computing mouse coordinates
+    int wndWidth;
+    int wndHeight;
+    auto projType = _camera.get<Camera::ProjectionType>();
+    if (projType == Camera::ProjectionType::PERSPECTIVE) {
+        auto tile_end = _camera.get<Camera::PerspectiveParameters>().image_plane_tile.tile_end;
+        auto tile_start = _camera.get<Camera::PerspectiveParameters>().image_plane_tile.tile_start;
+        auto tile_size = tile_end - tile_start;
 
-    this->_cursor2d.SetPosition(x, y, true, wndSize.height());
+        wndWidth = static_cast<int>(static_cast<float>(_fbo->GetWidth()) / tile_size.x);
+        wndHeight = static_cast<int>(static_cast<float>(_fbo->GetHeight()) / tile_size.y);
+    } else if (projType == Camera::ProjectionType::PERSPECTIVE) {
+        auto tile_end = _camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_end;
+        auto tile_start = _camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_start;
+        auto tile_size = tile_end - tile_start;
+
+        wndWidth = static_cast<int>(static_cast<float>(_fbo->GetWidth()) / tile_size.x);
+        wndHeight = static_cast<int>(static_cast<float>(_fbo->GetHeight()) / tile_size.y);
+    } else {
+        return false; // Oh bother...
+    }
+
+    this->_cursor2d.SetPosition(x, y, true, wndHeight);
 
     glm::vec3 newPos;
 
     if (this->_turntableManipulator.manipulating()) {
-        this->_turntableManipulator.on_drag(wndSize.width() - static_cast<int>(this->_mouseX),
-            static_cast<int>(this->_mouseY), glm::vec4(_rotCenter, 1.0));
+        this->_turntableManipulator.on_drag(
+            wndWidth - static_cast<int>(this->_mouseX),
+            static_cast<int>(this->_mouseY),
+            glm::vec4(_rotCenter, 1.0),
+            wndWidth,
+            wndHeight
+        );
     }
 
     if (this->_arcballManipulator.manipulating()) {
-        this->_arcballManipulator.on_drag(wndSize.width() - static_cast<int>(this->_mouseX),
+        this->_arcballManipulator.on_drag(wndWidth - static_cast<int>(this->_mouseX),
             static_cast<int>(this->_mouseY), glm::vec4(_rotCenter, 1.0));
     }
 
     if (this->_orbitAltitudeManipulator.manipulating()) {
-        this->_orbitAltitudeManipulator.on_drag(wndSize.width() - static_cast<int>(this->_mouseX),
+        this->_orbitAltitudeManipulator.on_drag(wndWidth - static_cast<int>(this->_mouseX),
             static_cast<int>(this->_mouseY), glm::vec4(_rotCenter, 1.0));
     }
 
     if (this->_translateManipulator.manipulating() && !this->_rotateManipulator.manipulating() ) {
 
         // compute proper step size by computing pixel world size at distance to rotCenter
-        glm::vec3 currCamPos(static_cast<glm::vec4>(this->_camera.position()));
+        glm::vec3 currCamPos = this->_camera.get<Camera::Pose>().position;
         float orbitalAltitude = glm::length(currCamPos - _rotCenter);
-        auto fovy = _camera.half_aperture_angle_radians();
-        auto vertical_height = 2.0f * std::tan(fovy) * orbitalAltitude;
-        auto pixel_world_size = vertical_height / wndSize.height();
+        float pixel_world_size;
+        if (projType == Camera::ProjectionType::PERSPECTIVE) {
+            auto fovy = _camera.get<Camera::PerspectiveParameters>().fovy;
+            auto vertical_height = std::tan(fovy) * orbitalAltitude;
+            pixel_world_size = vertical_height / static_cast<float>(wndHeight);
+        } else if (projType == Camera::ProjectionType::PERSPECTIVE) {
+            auto vertical_height = _camera.get<Camera::OrthographicParameters>().frustrum_height;
+            pixel_world_size = vertical_height / static_cast<float>(wndHeight);
+        } else {
+            return false; // Oh bother...
+        }
 
         this->_translateManipulator.set_step_size(pixel_world_size);
 
-        this->_translateManipulator.move_horizontally(wndSize.width() - static_cast<int>(this->_mouseX));
+        this->_translateManipulator.move_horizontally(wndWidth - static_cast<int>(this->_mouseX));
         this->_translateManipulator.move_vertically(static_cast<int>(this->_mouseY));
     }
 
@@ -391,16 +429,11 @@ bool view::View3DGL::OnMouseScroll(double dx, double dy) {
                 (dy * 0.1f * this->_viewKeyMoveStepSlot.Param<param::FloatParam>()->Value())
             ); 
         } else {
-            auto cam_pos = this->_camera.eye_position();
-            auto rot_cntr = thecam::math::point<glm::vec4>(glm::vec4(this->_rotCenter, 0.0f));
-
-            cam_pos.w() = 0.0f;
-
-            auto v = thecam::math::normalise(rot_cntr - cam_pos);
-
-            auto altitude = thecam::math::length(rot_cntr - cam_pos);
-
-            this->_camera.position(cam_pos + (v * dy * (altitude / 50.0f)));
+            auto cam_pose = _camera.get<Camera::Pose>();
+            auto v = glm::normalize(_rotCenter - cam_pose.position);
+            auto altitude = thecam::math::length(_rotCenter - cam_pose.position);
+            cam_pose.position = cam_pose.position + (v * static_cast<float>(dy) * (altitude / 50.0f));
+            _camera.setPose(cam_pose);
         }
     }
 

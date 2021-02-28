@@ -48,7 +48,21 @@ public:
      *
      * @param context
      */
-    virtual void Render(const mmcRenderViewContext& context, Call* call);
+    virtual void Render(double time, double instanceTime);
+
+    /**
+     * Resets the view. This normally sets the camera parameters to
+     * default values.
+     */
+    virtual void ResetView();
+
+    /**
+     * Resizes the View3D CPU framebuffer.
+     *
+     * @param width The new width.
+     * @param height The new height.
+     */
+    virtual void Resize(unsigned int width, unsigned int height) override;
 
  protected:
  

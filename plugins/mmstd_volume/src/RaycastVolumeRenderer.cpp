@@ -29,6 +29,8 @@
 #include <memory>
 #include <vector>
 
+#include <glm/ext.hpp>
+
 #include "mmcore/view/light/DistantLight.h"
 
 using namespace megamol::stdplugin::volume;

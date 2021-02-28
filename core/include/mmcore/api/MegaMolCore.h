@@ -535,7 +535,7 @@ MEGAMOLCORE_API bool MEGAMOLCORE_CALL mmcInstantiatePendingJob(void *hCore,
  *                with sizeof(mmcRenderViewContext) before the call is made.
  * @param frameID the count of rendered frames so far               
  */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView, mmcRenderViewContext* context, uint32_t frameID);
+MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcRenderView(void *hView, uint32_t frameID);
 
 /**
  * Registers a view close request function for the view. This function will be
@@ -891,16 +891,6 @@ MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcGetParameterTypeDescription(
  * @return      Updated parameter hash.
  */
 MEGAMOLCORE_API size_t MEGAMOLCORE_CALL mmcGetGlobalParameterHash(void *hCore);
-
-/**
- * Freezes, updates or unfreezes a view (and all associated modules)
- *
- * @param hView The view to be frozen or updated
- * @param freeze The action flag: true means freeze or update,
- *               false means unfreeze.
- */
-MEGAMOLCORE_API void MEGAMOLCORE_CALL mmcFreezeOrUpdateView(
-    void *hView, bool freeze);
 
 #ifndef MEGAMOLCORE_EXT_API
 #define MEGAMOLCORE_EXT_API 1

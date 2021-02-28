@@ -42,24 +42,6 @@ public:
     static const unsigned int CALL_RESETVIEW = 9;
 
     /**
-     * Answer the stereo projection eye
-     *
-     * @return the stereo projection eye
-     */
-    inline thecam::Eye GetEye(void) const {
-        return this->eye;
-    }
-
-    /**
-     * Answer the stereo projection type
-     *
-     * @return the stereo projection type
-     */
-    inline thecam::Projection_type GetProjectionType(void) const {
-        return this->projType;
-    }
-
-    /**
      * Gets the input modifier
      *
      * @return The input modifier
@@ -75,24 +57,6 @@ public:
      */
     inline bool IsBackgroundSet(void) const {
         return this->flagBkgnd;
-    }
-
-    /**
-     * Answers the flag indicating that the projection information has been set
-     *
-     * @return 'true' if the projection information has been set
-     */
-    inline bool IsProjectionSet(void) const {
-        return this->flagProj;
-    }
-
-    /**
-     * Answers the flag indicating that the tile information has been set
-     *
-     * @return 'true' if the tile information has been set
-     */
-    inline bool IsTileSet(void) const {
-        return this->flagTile;
     }
 
     /**
@@ -141,24 +105,10 @@ public:
     }
 
     /**
-     * Propagates the parameters controlled by the frontend via 
-     * mmcRenderViewContext to the call.
-     *
-     * @param context The context to get the data from.
-     */
-    inline void PropagateContext(const mmcRenderViewContext& context) {
-        //this->SetGpuAffinity(context.GpuAffinity);
-        this->SetInstanceTime(context.InstanceTime);
-        this->SetTime(static_cast<float>(context.Time));
-    }
-
-    /**
      * Resets all flags
      */
     inline void ResetAll(void) {
         this->flagBkgnd = false;
-        this->flagProj = false;
-        this->flagTile = false;
     }
 
     /**
@@ -166,89 +116,6 @@ public:
      */
     inline void ResetBackground(void) {
         this->flagBkgnd = false;
-    }
-
-    /**
-     * Resets the flag indicating that the projection had been set.
-     */
-    inline void ResetProjection(void) {
-        this->flagProj = false;
-    }
-
-    /**
-     * Resets the flag indicating that the tile had been set.
-     */
-    inline void ResetTile(void) {
-        this->flagTile = false;
-    }
-
-    /**
-     * Sets the projection information
-     *
-     * @param p The type of projection
-     * @param e The eye used for stereo projections
-     */
-    inline void SetProjection(thecam::Projection_type p,
-            thecam::Eye e = thecam::Eye::right) {
-        this->flagProj = true;
-        this->projType = p;
-        this->eye = e;
-    }
-
-    /**
-     * Sets the tile information
-     *
-     * @param fw The full width of the virtual viewport
-     * @param fh The full height of the virtual viewport
-     * @param x The x coordinate of the tile
-     * @param y The y coordinate of the tile
-     * @param w The width of the tile
-     * @param h The height of the tile
-     */
-    inline void SetTile(float fw, float fh, float x, float y, float w, float h) {
-        this->flagTile = true;
-        this->width = fw;
-        this->height = fh;
-        this->tileX = x;
-        this->tileY = y;
-        this->tileW = w;
-        this->tileH = h;
-    }
-
-    /**
-     * Answer the height of the rendering tile
-     *
-     * @return The height of the rendering tile
-     */
-    inline float TileHeight(void) const {
-        return this->tileH;
-    }
-
-    /**
-     * Answer the width of the rendering tile
-     *
-     * @return The width of the rendering tile
-     */
-    inline float TileWidth(void) const {
-        return this->tileW;
-    }
-
-    /**
-     * Answer the x coordinate of the rendering tile
-     *
-     * @return The x coordinate of the rendering tile
-     */
-    inline float TileX(void) const {
-        return this->tileX;
-    }
-
-    /**
-     * Answer the y coordinate of the rendering tile
-     *
-     * @return The y coordinate of the rendering tile
-     */
-    inline float TileY(void) const {
-        return this->tileY;
     }
 
     /**
@@ -304,35 +171,11 @@ protected:
 
 private:
 
-    /** The stereo projection eye */
-    thecam::Eye eye;
-
     /** Flag indicating that the background colour information has been set */
     bool flagBkgnd : 1;
 
-    /** Flag indicating that the projection information has been set */
-    bool flagProj : 1;
-
-    /** Flag indicating that the tile information has been set */
-    bool flagTile : 1;
-
     /** The height of the virtual viewport */
     float height;
-
-    /** The stereo projection type */
-    thecam::Projection_type projType;
-
-    /** The height of the rendering tile */
-    float tileH;
-
-    /** The width of the rendering tile */
-    float tileW;
-
-    /** The x coordinate of the rendering tile */
-    float tileX;
-
-    /** The y coordinate of the rendering tile */
-    float tileY;
 
     /** The width of the virtual viewport */
     float width;

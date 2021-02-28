@@ -19,6 +19,7 @@
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/memutils.h"
 #include "mmcore/utility/log/Log.h"
+#include <glm/ext.hpp>
 
 namespace megamol {
 namespace demos {

@@ -15,7 +15,6 @@ using namespace megamol::gui;
 
 GUIView::GUIView()
         : core::view::AbstractView()
-        , overrideCall(nullptr)
         , render_view_slot("renderview", "Connects to a preceding RenderView that will be decorated with a GUI")
         , gui() {
 
@@ -51,17 +50,9 @@ void GUIView::release() {}
 
 
 void GUIView::unpackMouseCoordinates(float& x, float& y) {
-    GLint vpw = 1;
-    GLint vph = 1;
-    if (this->overrideCall == nullptr) {
-        GLint vp[4];
-        ::glGetIntegerv(GL_VIEWPORT, vp);
-        vpw = vp[2];
-        vph = vp[3];
-    } else {
-        vpw = this->overrideCall->ViewportWidth();
-        vph = this->overrideCall->ViewportHeight();
-    }
+    GLint vpw = _fbo->GetWidth();
+    GLint vph = _fbo->GetHeight();
+
     x *= static_cast<float>(vpw);
     y *= static_cast<float>(vph);
 }
@@ -79,37 +70,18 @@ unsigned int GUIView::GetCameraSyncNumber(void) const {
     return 0u;
 }
 
-void GUIView::Render(const mmcRenderViewContext& context, core::Call* call) {
+void GUIView::Render(double time, double instanceTime) {
     auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
     if (this->doHookCode()) {
         this->doBeforeRenderHook();
     }
     if (crv) {
         // Camera
-        core::view::Camera_2 cam;
-        crv->GetCamera(cam);
-        cam_type::snapshot_type snapshot;
-        cam_type::matrix_type viewTemp, projTemp;
-        cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
-
-        auto viewport_rect = cam.resolution_gate();
         auto viewport =
-            glm::vec2(static_cast<float>(viewport_rect.width()), static_cast<float>(viewport_rect.height()));
-
-        if (this->_fbo->IsValid()) {
-            if ((this->_fbo->GetWidth() != viewport.x) || (this->_fbo->GetHeight() != viewport.y)) {
-                this->_fbo->Release();
-                if (!this->_fbo->Create(viewport.x, viewport.y, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-                        vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE)) {
-                    throw vislib::Exception(
-                        "[TILEVIEW] Unable to create image framebuffer object.", __FILE__, __LINE__);
-                    return;
-                }
-            }
-        }
+            glm::vec2(static_cast<float>(_fbo->GetWidth()), static_cast<float>(_fbo->GetHeight()));
 
         crv->SetFramebufferObject(_fbo);
-        crv->SetInstanceTime(context.InstanceTime);
+        crv->SetInstanceTime(instanceTime);
         // Should be negative to trigger animation! (see View3DGL.cpp line ~612 | View2DGL.cpp line ~661):
         crv->SetTime(-1.0f);
         this->gui.PreDraw(viewport, viewport, crv->InstanceTime());
@@ -118,24 +90,9 @@ void GUIView::Render(const mmcRenderViewContext& context, core::Call* call) {
     } else {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        if (this->overrideCall != nullptr) {
-            auto override_cam = this->overrideCall->GetCamera();
-            cam_type::snapshot_type override_snapshot;
-            cam_type::matrix_type override_viewTemp, override_projTemp;
-            override_cam.calc_matrices(
-                override_snapshot, override_viewTemp, override_projTemp, core::thecam::snapshot_content::all);
-            auto viewport_rect = override_cam.resolution_gate();
-            auto viewport =
-                glm::vec2(static_cast<float>(viewport_rect.width()), static_cast<float>(viewport_rect.height()));
-            this->gui.PreDraw(viewport, viewport, context.InstanceTime);
-            this->gui.PostDraw();
-        } else {
-            GLint vp[4];
-            glGetIntegerv(GL_VIEWPORT, vp);
-            auto viewport = glm::vec2(static_cast<float>(vp[2]), static_cast<float>(vp[3]));
-            this->gui.PreDraw(viewport, viewport, context.InstanceTime);
-            this->gui.PostDraw();
-        }
+        auto viewport = glm::vec2(static_cast<float>(_fbo->GetWidth()), static_cast<float>(_fbo->GetHeight()));
+        this->gui.PreDraw(viewport, viewport, instanceTime);
+        this->gui.PostDraw();
     }
     if (this->doHookCode()) {
         this->doAfterRenderHook();
@@ -154,26 +111,15 @@ void GUIView::ResetView(void) {
 
 
 void GUIView::Resize(unsigned int width, unsigned int height) {
-    auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
-    if (crv) {
-        // der ganz ganz dicke "because-i-know"-Knueppel
-        AbstractView* view = const_cast<AbstractView*>(
-            dynamic_cast<const AbstractView*>(static_cast<const Module*>(crv->PeekCalleeSlot()->Owner())));
-        if (view != nullptr) {
-            view->Resize(width, height);
+    if ((this->_fbo->GetWidth() != width) || (this->_fbo->GetHeight() != height)) {
+        this->_fbo->Release();
+        if (!this->_fbo->Create(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE)) {
+            throw vislib::Exception("[View2DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
+            return;
         }
     }
 }
-
-
-void GUIView::UpdateFreeze(bool freeze) {
-    auto* crv = this->render_view_slot.CallAs<core::view::CallRenderViewGL>();
-    if (crv) {
-        auto callType = freeze ? core::view::CallRenderViewGL::CALL_FREEZE : core::view::CallRenderViewGL::CALL_UNFREEZE;
-        (*crv)(callType);
-    }
-}
-
 
 bool GUIView::OnKey(core::view::Key key, core::view::KeyAction action, core::view::Modifiers mods) {
 
@@ -284,17 +230,13 @@ bool GUIView::OnRenderView(megamol::core::Call& call) {
     if (crv == nullptr)
         return false;
 
-    this->overrideCall = crv;
+    double time = crv->Time();
+    double instanceTime = crv->InstanceTime();
 
-    mmcRenderViewContext context;
-    ::ZeroMemory(&context, sizeof(context));
-    context.Time = crv->Time();
-    context.InstanceTime = crv->InstanceTime();
-    // XXX Affinity?
+    _camera = crv->GetCamera();
+    this->Resize(crv->GetFramebufferObject()->GetWidth(), crv->GetFramebufferObject()->GetHeight());
 
-    this->Render(context, &call);
-
-    this->overrideCall = nullptr;
+    this->Render(time, instanceTime);
 
     return true;
 }

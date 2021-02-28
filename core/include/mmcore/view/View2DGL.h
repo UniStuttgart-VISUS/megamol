@@ -75,11 +75,9 @@ public:
     virtual unsigned int GetCameraSyncNumber(void) const;
 
     /**
-     * Renders this AbstractView3D in the currently active OpenGL context.
-     *
-     * @param context
+     * ...
      */
-    virtual void Render(const mmcRenderViewContext& context, Call* call = nullptr);
+    virtual void Render(double time, double instanceTime);
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -88,12 +86,12 @@ public:
     virtual void ResetView(void);
 
     /**
-     * Resizes the AbstractView3D.
+     * Resizes the View2DGl framebuffer object.
      *
      * @param width The new width.
      * @param height The new height.
      */
-    virtual void Resize(unsigned int width, unsigned int height);
+    virtual void Resize(unsigned int width, unsigned int height) override;
 
     /**
      * Callback requesting a rendering of this view

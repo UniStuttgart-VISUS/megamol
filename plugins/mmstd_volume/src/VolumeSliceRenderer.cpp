@@ -29,6 +29,8 @@
 #include <array>
 #include <cmath>
 
+#include <glm/ext.hpp>
+
 /*
  * VolumeSliceRenderer::VolumeSliceRenderer
  */

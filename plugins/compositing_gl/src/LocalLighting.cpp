@@ -10,6 +10,8 @@
 
 #include "compositing/CompositingCalls.h"
 
+#include <glm/ext.hpp>
+
 megamol::compositing::LocalLighting::LocalLighting() 
     : core::Module()
     , m_version(0)

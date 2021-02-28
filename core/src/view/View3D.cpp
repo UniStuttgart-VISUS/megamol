@@ -35,7 +35,7 @@ View3D::~View3D(void) {
 /*
  * View3D::Render
  */
-void View3D::Render(const mmcRenderViewContext& context, Call* call) {
+void View3D::Render(double time, double instanceTime) {
 
     CallRender3D* cr3d = this->_rhsRenderSlot.CallAs<CallRender3D>();
     this->handleCameraMovement();
@@ -44,21 +44,23 @@ void View3D::Render(const mmcRenderViewContext& context, Call* call) {
         return;
     }
 
-    if (call == nullptr) {
-        _framebuffer->width = _camera.image_tile().width();
-        _framebuffer->height = _camera.image_tile().height();
-        cr3d->SetFramebuffer(_framebuffer);
-    }
-    else {
-        auto cpu_call = dynamic_cast<view::CallRenderView*>(call);
-        cr3d->SetFramebuffer(cpu_call->GetFramebuffer());
-    }
+    cr3d->SetFramebuffer(_framebuffer);
 
-    AbstractView3D::beforeRender(context);
+    AbstractView3D::beforeRender(time, instanceTime);
 
     cr3d->SetCamera(this->_camera);
     (*cr3d)(view::CallRender3D::FnRender);
 
-    AbstractView3D::afterRender(context);
+    AbstractView3D::afterRender();
 
+}
+
+void megamol::core::view::View3D::ResetView() {
+    AbstractView3D::ResetView(static_cast<float>(_framebuffer->width) / static_cast<float>(_framebuffer->height));
+}
+
+void megamol::core::view::View3D::Resize(unsigned int width, unsigned int height) {
+    _framebuffer->width = width;
+    _framebuffer->height = height;
+    //TODO reallocate buffer?
 }

@@ -11,7 +11,6 @@
 
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/factories/CallAutoDescription.h"
-#include "mmcore/view/Camera_2.h"
 #include "mmcore/view/AbstractCallRender.h"
 #include "mmcore/view/CPUFramebuffer.h"
 

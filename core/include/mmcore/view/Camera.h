@@ -11,6 +11,7 @@
 #include <variant>
 
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
 namespace megamol {
 namespace core {
@@ -22,6 +23,16 @@ namespace view {
         enum ProjectionType { PERSPECTIVE, ORTHOGRAPHIC, UNKNOWN };
 
         struct Pose {
+            Pose() = default;
+            Pose(Pose const& cpy) : position(cpy.position), direction(cpy.direction), up(cpy.up) {}
+            Pose(glm::vec3 const& position, glm::vec3 const& direction, glm::vec3 const& up)
+                    : position(position), direction(direction), up(up) {}
+            Pose(glm::vec3 const& position, glm::quat const& orientation)
+                    : position(position) {
+                direction = glm::rotate(orientation, glm::vec3(0.0, 0.0, -1.0));
+                up = glm::rotate(orientation, glm::vec3(0.0, 0.0, 0.0));
+            }
+
             glm::vec3 position;
             glm::vec3 direction;
             glm::vec3 up;
@@ -56,9 +67,9 @@ namespace view {
         };
 
         Camera();
-        Camera(glm::mat4 view_matrix, glm::mat4 projection_matrix);
-        Camera(Pose pose, PerspectiveParameters intrinsics);
-        Camera(Pose pose, OrthographicParameters intrinsics);
+        Camera(glm::mat4 const& view_matrix, glm::mat4 const& projection_matrix);
+        Camera(Pose const& pose, PerspectiveParameters const& intrinsics);
+        Camera(Pose const& pose, OrthographicParameters const& intrinsics);
         ~Camera() = default;
 
         template<typename CameraInfoType>
@@ -67,6 +78,8 @@ namespace view {
         glm::mat4 getViewMatrix() const;
 
         glm::mat4 getProjectionMatrix() const;
+
+        void setPose(Pose pose);
     
     private:
         
@@ -129,17 +142,22 @@ namespace view {
 
     inline Camera::Camera() : Camera(glm::mat4(1.0f), glm::mat4(1.0)) {}
 
-    inline Camera::Camera(glm::mat4 view_matrix, glm::mat4 projection_matrix)
+    inline Camera::Camera(glm::mat4 const& view_matrix, glm::mat4 const& projection_matrix)
             : _view_matrix(view_matrix), _projection_matrix(projection_matrix), _intrinsics(std::monostate()) {
-        // TODO compute matrices
+        // TODO compute pose from view matrix
     }
 
-    inline Camera::Camera(Pose pose, PerspectiveParameters intrinsics)
+    inline Camera::Camera(Pose const& pose, PerspectiveParameters const& intrinsics)
             : _pose(pose), _intrinsics(intrinsics) {
-        // TODO compute matrices
+        // compute view matrix from pose
+        _view_matrix = glm::lookAt(_pose.position, _pose.position + _pose.direction, _pose.up);
+        // compute projection matrix from intrinsics
+        _projection_matrix =
+            glm::perspective(intrinsics.fovy, intrinsics.aspect, intrinsics.near_plane, intrinsics.far_plane);
+        // TODO check image_tile and compute projection matrix with adjusted fovy and/or off-center
     }
 
-    inline Camera::Camera(Pose pose, OrthographicParameters intrinsics)
+    inline Camera::Camera(Pose const& pose, OrthographicParameters const& intrinsics)
             : _pose(pose), _intrinsics(intrinsics) {
         // TODO compute matrices
     }
@@ -147,11 +165,11 @@ namespace view {
     template<typename CameraInfoType>
     inline CameraInfoType Camera::get() const {
         if constexpr (std::is_same_v<CameraInfoType, ProjectionType>) {
-            if constexpr (_intrinsics.index() == 0) {
+            if (_intrinsics.index() == 0) {
                 return Camera::UNKNOWN;
-            } else if constexpr (_intrinsics.index() == 1) {
+            } else if (_intrinsics.index() == 1) {
                 return Camera::PERSPECTIVE;
-            } else if constexpr (_intrinsics.index() == 2) {
+            } else if (_intrinsics.index() == 2) {
                 return Camera::ORTHOGRAPHIC;
             }
         } else if constexpr (std::is_same_v<CameraInfoType, Pose>) {
@@ -168,6 +186,11 @@ namespace view {
 
     inline glm::mat4 Camera::getProjectionMatrix() const {
         return _projection_matrix;
+    }
+
+    inline void Camera::setPose(Pose pose) {
+        _pose = pose;
+        _view_matrix = glm::lookAt(_pose.position, _pose.position + _pose.direction, _pose.up);
     }
 
 } // namespace view

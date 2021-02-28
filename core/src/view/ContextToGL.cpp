@@ -63,33 +63,36 @@ bool ContextToGL::GetExtents(CallRender3DGL& call) {
 
 bool ContextToGL::Render(CallRender3DGL& call) {
 
-    auto cr = _getContextSlot.CallAs<CallRender3D>();
-    if (cr == nullptr) return false;
-    // no copy constructor available
-    auto cast_in = dynamic_cast<AbstractCallRender*>(&call);
-    auto cast_out = dynamic_cast<AbstractCallRender*>(cr);
-    *cast_out = *cast_in;
-
-    if (!_framebuffer) {
-        _framebuffer = std::make_shared<CPUFramebuffer>();
-    }
-    cr->SetFramebuffer(_framebuffer);
-
-    (*cr)(view::CallRender3D::FnRender);
-
-    Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-
-    // Generate complete snapshot and calculate matrices
-    cam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
-
-    auto width = cam.resolution_gate().width();
-    auto height = cam.resolution_gate().height();
+    Camera cam = call.GetCamera();
+    auto view = cam.getViewMatrix();
+    auto proj = cam.getProjectionMatrix();
 
     auto lhs_fbo = call.GetFramebufferObject();
     if (lhs_fbo != NULL) {
+
+        auto width = lhs_fbo->GetWidth();
+        auto height = lhs_fbo->GetHeight();
+
+        // Call CPU renderings
+        {
+            auto cr = _getContextSlot.CallAs<CallRender3D>();
+            if (cr == nullptr)
+                return false;
+            // no copy constructor available
+            auto cast_in = dynamic_cast<AbstractCallRender*>(&call);
+            auto cast_out = dynamic_cast<AbstractCallRender*>(cr);
+            *cast_out = *cast_in;
+
+            if (!_framebuffer) {
+                _framebuffer = std::make_shared<CPUFramebuffer>();
+            }
+            _framebuffer->width = width;
+            _framebuffer->height = height;
+
+            cr->SetFramebuffer(_framebuffer);
+
+            (*cr)(view::CallRender3D::FnRender);
+        }
 
         // module own fbo
         auto new_fbo = vislib::graphics::gl::FramebufferObject();

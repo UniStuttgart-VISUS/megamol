@@ -96,7 +96,7 @@ public:
      *
      * @param context
      */
-    virtual void Render(const mmcRenderViewContext& context, Call* call) override;
+    virtual void Render(double time, double instanceTime) override;
 
     /**
      * Resets the view. This normally sets the camera parameters to

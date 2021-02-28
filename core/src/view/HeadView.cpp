@@ -24,8 +24,7 @@ using megamol::core::utility::log::Log;
  */
 view::HeadView::HeadView(void) : AbstractView(),
 viewSlot("view", "Connects to a view"),
-tickSlot("tick", "Connects to a module that needs a tick"),
-override_view_call(nullptr) {
+tickSlot("tick", "Connects to a module that needs a tick") {
 
     this->viewSlot.SetCompatibleCall<view::CallRenderViewGLDescription>();
     this->MakeSlotAvailable(&this->viewSlot);
@@ -80,10 +79,8 @@ void view::HeadView::DeserialiseCamera(vislib::Serialiser& serialiser) {
 /*
  * view::HeadView::Render
  */
-void view::HeadView::Render(const mmcRenderViewContext& context, Call* call) {
+void view::HeadView::Render(double time, double instanceTime) {
     CallRenderViewGL *view = this->viewSlot.CallAs<CallRenderViewGL>();
-
-    auto cam  = view->GetCamera();
 
     if (view != nullptr) {
         std::unique_ptr<CallRenderViewGL> last_view_call = nullptr;
@@ -92,18 +89,9 @@ void view::HeadView::Render(const mmcRenderViewContext& context, Call* call) {
             last_view_call = std::make_unique<CallRenderViewGL>(*view);
             *view = *this->override_view_call;
         }
-        else {
-            //const_cast<vislib::math::Rectangle<int>&>(view->GetViewport()).Set(0, 0, this->width, this->height);
-            thecam::math::rectangle<int> rect;
-            rect.bottom() = 0;
-            rect.left() = 0;
-            rect.right() = this->width;
-            rect.top() = this->height;
-            cam.image_tile.operator()(rect);
-        }
 
-        view->SetInstanceTime(context.InstanceTime);
-        view->SetTime(static_cast<float>(context.Time));
+        view->SetInstanceTime(instanceTime);
+        view->SetTime(static_cast<float>(time));
 
         if (this->doHookCode()) {
             this->doBeforeRenderHook();
@@ -167,13 +155,10 @@ bool view::HeadView::OnRenderView(Call& call) {
 
     this->override_view_call = view;
 
-    mmcRenderViewContext context;
-    ::ZeroMemory(&context, sizeof(context));
+    double time = view->Time();
+    double instanceTime = view->InstanceTime();
 
-    context.Time = view->Time();
-    context.InstanceTime = view->InstanceTime();
-
-    this->Render(context, &call);
+    this->Render(time, instanceTime);
 
     this->override_view_call = nullptr;
 

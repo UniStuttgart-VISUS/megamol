@@ -496,8 +496,9 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
             }
             glViewport(0, 0, data.imgWidth, data.imgHeight);
             crv.SetFramebufferObject(currentFbo); //, vislib::math::Rectangle<int>(0, 0, tileW, tileH));
-            crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f,
-                static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
+            // TODO
+            //  crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f,
+            //      static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
             crv.SetTime(frameTime);
             view->OnRenderView(crv); // glClear by SFX
             glFlush();
@@ -709,9 +710,10 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                     }
                     glViewport(0, 0, tileW, tileH);
                     crv.SetFramebufferObject(currentFbo); //, vislib::math::Rectangle<int>(0, 0, tileW, tileH));
-                    crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
-                        static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileW),
-                        static_cast<float>(tileH));
+                    // TODO how should the screenshot tiling be done in the furture?
+                    //  crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
+                    //      static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileW),
+                    //      static_cast<float>(tileH));
                     crv.SetTime(frameTime);
                     view->OnRenderView(crv); // glClear by SFX
                     glFlush();

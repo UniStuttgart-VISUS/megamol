@@ -84,11 +84,12 @@ public:
     unsigned int GetCameraSyncNumber() const override;
 
     /**
-     * Renders this AbstractView3D in the currently active OpenGL context.
+     * Renders this SplitView.
      *
-     * @param context
+     * @param time ...
+     * @param instanceTime ...
      */
-    void Render(const mmcRenderViewContext& context, Call* call) override;
+    virtual void Render(double time, double instanceTime) override;
 
     /**
      * Resets the view. This normally sets the camera parameters to
@@ -112,15 +113,6 @@ public:
      * @return The return value
      */
     bool OnRenderView(Call& call) override;
-
-    /**
-     * Freezes, updates, or unfreezes the view onto the scene (not the
-     * rendering, but camera settings, timing, etc).
-     *
-     * @param freeze true means freeze or update freezed settings,
-     *               false means unfreeze
-     */
-    void UpdateFreeze(bool freeze) override;
 
     bool OnKey(Key key, KeyAction action, Modifiers mods) override;
 

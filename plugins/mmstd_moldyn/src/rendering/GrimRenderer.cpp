@@ -10,6 +10,8 @@
 
 #include "mmcore/view/light/DistantLight.h"
 
+#include <glm/ext.hpp>
+
 
 using namespace megamol::core;
 using namespace megamol::stdplugin::moldyn::rendering;

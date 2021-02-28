@@ -30,6 +30,7 @@ using megamol::core::utility::log::Log;
 view::AbstractView::AbstractView(void)
         : Module()
         , _firstImg(false)
+        , _cameraIsMutable(true)
         , _rhsRenderSlot("rendering", "Connects the view to a Renderer")
         , _lhsRenderSlot("render", "Connects modules requesting renderings")
         , _cameraSettingsSlot("camstore::settings", "Holds the camera settings of the currently stored camera.")
@@ -70,11 +71,6 @@ view::AbstractView::AbstractView(void)
         AbstractCallRender::FunctionName(AbstractCallRender::FnRender), &AbstractView::OnRenderView);
     this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
-    // CallRenderView
-    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
-        view::CallRenderView::FunctionName(view::CallRenderView::CALL_FREEZE), &AbstractView::OnFreezeView);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
-        view::CallRenderView::FunctionName(view::CallRenderView::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
     this->_lhsRenderSlot.SetCallback(view::CallRenderView::ClassName(),
         view::CallRenderView::FunctionName(view::CallRenderView::CALL_RESETVIEW), &AbstractView::onResetView);
     // this->MakeSlotAvailable(&this->renderSlot);
@@ -142,6 +138,92 @@ bool view::AbstractView::IsParamRelevant(
 
     vislib::SingleLinkedList<const AbstractNamedObject*> searched;
     return ano->IsParamRelevant(searched, param);
+}
+
+void megamol::core::view::AbstractView::SetCamera(Camera camera, bool isMutable) {
+    _camera = camera;
+    _cameraIsMutable = isMutable;
+}
+
+void megamol::core::view::AbstractView::CalcCameraClippingPlanes(float border) {
+    if (_cameraIsMutable) {
+        auto cam_pose = _camera.get<Camera::Pose>();
+        glm::vec3 front = cam_pose.direction;
+        glm::vec3 pos = cam_pose.position;
+
+        float dist, minDist, maxDist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetLeftBottomBack().PeekCoordinates()) - pos);
+        minDist = maxDist = dist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetLeftBottomFront().PeekCoordinates()) - pos);
+        if (dist < minDist)
+            minDist = dist;
+        if (dist > maxDist)
+            maxDist = dist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetLeftTopBack().PeekCoordinates()) - pos);
+        if (dist < minDist)
+            minDist = dist;
+        if (dist > maxDist)
+            maxDist = dist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetLeftTopFront().PeekCoordinates()) - pos);
+        if (dist < minDist)
+            minDist = dist;
+        if (dist > maxDist)
+            maxDist = dist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetRightBottomBack().PeekCoordinates()) - pos);
+        if (dist < minDist)
+            minDist = dist;
+        if (dist > maxDist)
+            maxDist = dist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetRightBottomFront().PeekCoordinates()) - pos);
+        if (dist < minDist)
+            minDist = dist;
+        if (dist > maxDist)
+            maxDist = dist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetRightTopBack().PeekCoordinates()) - pos);
+        if (dist < minDist)
+            minDist = dist;
+        if (dist > maxDist)
+            maxDist = dist;
+
+        dist = glm::dot(front, glm::make_vec3(_bboxs.ClipBox().GetRightTopFront().PeekCoordinates()) - pos);
+        if (dist < minDist)
+            minDist = dist;
+        if (dist > maxDist)
+            maxDist = dist;
+
+        minDist -= border;
+        maxDist += border;
+
+        // since the minDist is broken, we fix it here
+        minDist = maxDist * 0.001f;
+
+        auto cam_proj_type = _camera.get<Camera::ProjectionType>();
+
+        if (cam_proj_type == Camera::ProjectionType::PERSPECTIVE) {
+            auto cam_intrinsics = _camera.get<Camera::PerspectiveParameters>();
+            if (!(std::abs(cam_intrinsics.near_plane - minDist) < 0.00001f) ||
+                !(std::abs(cam_intrinsics.far_plane - maxDist) < 0.00001f)) {
+                // TODO set intrinsics with minDist and maxDist
+            }
+        } else if (cam_proj_type == Camera::ProjectionType::ORTHOGRAPHIC) {
+            auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+            if (!(std::abs(cam_intrinsics.near_plane - minDist) < 0.00001f) ||
+                !(std::abs(cam_intrinsics.far_plane - maxDist) < 0.00001f)) {
+                // TODO set intrinsics with minDist and maxDist
+            }
+        } else {
+            // print warning
+        }
+        
+        
+    }
 }
 
 
@@ -361,7 +443,7 @@ void megamol::core::view::AbstractView::beforeRender(double time, double instanc
         std::chrono::time_point_cast<std::chrono::milliseconds>(this->_lastFrameTime).time_since_epoch())
                                .count());
 
-    this->_camera.CalcClipping(this->_bboxs.ClipBox(), 0.1f);
+    CalcCameraClippingPlanes(0.1f);
 }
 
 void megamol::core::view::AbstractView::afterRender() {
@@ -467,9 +549,7 @@ bool view::AbstractView::OnMouseScrollCallback(Call& call) {
  */
 bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
     // save the current camera, too
-    view::Camera_2::minimal_state_type minstate;
-    this->_camera.get_minimal_state(minstate);
-    this->_savedCameras[10].first = minstate;
+    this->_savedCameras[10].first = _camera;
     this->_savedCameras[10].second = true;
     this->_cameraSerializer.setPrettyMode(false);
     std::string camstring = this->_cameraSerializer.serialize(this->_savedCameras[10].first);
@@ -521,12 +601,12 @@ bool view::AbstractView::onStoreCamera(param::ParamSlot& p) {
 bool view::AbstractView::onRestoreCamera(param::ParamSlot& p) {
     if (!this->_cameraSettingsSlot.Param<param::StringParam>()->Value().IsEmpty()) {
         std::string camstring(this->_cameraSettingsSlot.Param<param::StringParam>()->Value());
-        cam_type::minimal_state_type minstate;
-        if (!this->_cameraSerializer.deserialize(minstate, camstring)) {
+        Camera cam;
+        if (!this->_cameraSerializer.deserialize(cam, camstring)) {
             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                 "The entered camera string was not valid. No change of the camera has been performed");
         } else {
-            this->_camera = minstate;
+            this->_camera = cam;
             return true;
         }
     }

@@ -19,6 +19,7 @@
 #include "vislib/graphics/graphicsfunctions.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include <cfloat>
+#include <glm/ext.hpp>
 
 
 namespace megamol {

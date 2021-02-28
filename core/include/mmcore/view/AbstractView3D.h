@@ -14,7 +14,8 @@
 #include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/Camera_2.h"
+#include "mmcore/view/cam_typedefs.h"
+#include "mmcore/view/Camera.h"
 #include "mmcore/view/CallRender3D.h"
 
 namespace megamol {
@@ -35,12 +36,6 @@ public:
     void beforeRender(double time, double instanceTime);
 
     void afterRender();
-
-    /**
-     * Resets the view. This normally sets the camera parameters to
-     * default values.
-     */
-    virtual void ResetView(void);
 
     /**
      * Callback requesting a rendering of this view
@@ -77,6 +72,13 @@ protected:
     /** Dtor. */
     virtual ~AbstractView3D(void);
 
+    /**
+     * Resets the view. This normally sets the camera parameters to
+     * default values.
+     *
+     * @param window_aspect Aspect ratio of the full window. Used to set the camera frustrum aspect ratio.
+     */
+    void ResetView(float window_aspect);
 
     /**
      * Unpacks the mouse coordinates, which are relative to the virtual
@@ -92,7 +94,7 @@ protected:
      *
      * @param cam Camera containing the values that will be set
      */
-    void setCameraValues(const core::view::Camera_2& cam);
+    void setCameraValues(core::view::Camera const& cam);
 
     /**
      * Adapts camera values set by the user if necessary
@@ -100,7 +102,7 @@ protected:
      * @param cam The camera the newly set parameters will be stored in
      * @return True if a camera value had to be adapted, false otherwise
      */
-    bool adaptCameraValues(core::view::Camera_2& cam);
+    bool adaptCameraValues(core::view::Camera& cam);
 
     /**
      * Implementation of 'Create'.
@@ -200,15 +202,7 @@ protected:
     param::ParamSlot _cameraProjectionTypeParam;
     param::ParamSlot _cameraNearPlaneParam;
     param::ParamSlot _cameraFarPlaneParam;
-    param::ParamSlot _cameraConvergencePlaneParam;
-    param::ParamSlot _cameraEyeParam;
-    param::ParamSlot _cameraGateScalingParam;
-    param::ParamSlot _cameraFilmGateParam;
-    param::ParamSlot _cameraResolutionXParam;
-    param::ParamSlot _cameraResolutionYParam;
-    param::ParamSlot _cameraCenterOffsetParam;
     param::ParamSlot _cameraHalfApertureDegreesParam;
-    param::ParamSlot _cameraHalfDisparityParam;
 
     /** Camara override parameters */
     param::ParamSlot _cameraOvrUpParam;
@@ -228,9 +222,6 @@ protected:
 
     /** Center of rotation for orbital manipulators */
     glm::vec3 _rotCenter;
-
-    /** Value storing whether there have been read parameter values that came from outside */
-    bool _valuesFromOutside;
 
     bool _cameraControlOverrideActive;
 };
