@@ -236,7 +236,7 @@ bool view::View3DGL::OnMouseButton(view::MouseButton button, view::MouseButtonAc
 
         wndWidth = static_cast<int>(static_cast<float>(_fbo->GetWidth()) / tile_size.x);
         wndHeight = static_cast<int>(static_cast<float>(_fbo->GetHeight()) / tile_size.y);
-    } else if (projType == Camera::ProjectionType::PERSPECTIVE) {
+    } else if (projType == Camera::ProjectionType::ORTHOGRAPHIC) {
         auto tile_end = _camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_end;
         auto tile_start = _camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_start;
         auto tile_size = tile_end - tile_start;
@@ -344,7 +344,7 @@ bool view::View3DGL::OnMouseMove(double x, double y) {
 
         wndWidth = static_cast<int>(static_cast<float>(_fbo->GetWidth()) / tile_size.x);
         wndHeight = static_cast<int>(static_cast<float>(_fbo->GetHeight()) / tile_size.y);
-    } else if (projType == Camera::ProjectionType::PERSPECTIVE) {
+    } else if (projType == Camera::ProjectionType::ORTHOGRAPHIC) {
         auto tile_end = _camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_end;
         auto tile_start = _camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_start;
         auto tile_size = tile_end - tile_start;
@@ -389,7 +389,7 @@ bool view::View3DGL::OnMouseMove(double x, double y) {
             auto fovy = _camera.get<Camera::PerspectiveParameters>().fovy;
             auto vertical_height = std::tan(fovy) * orbitalAltitude;
             pixel_world_size = vertical_height / static_cast<float>(wndHeight);
-        } else if (projType == Camera::ProjectionType::PERSPECTIVE) {
+        } else if (projType == Camera::ProjectionType::ORTHOGRAPHIC) {
             auto vertical_height = _camera.get<Camera::OrthographicParameters>().frustrum_height;
             pixel_world_size = vertical_height / static_cast<float>(wndHeight);
         } else {

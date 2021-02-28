@@ -110,12 +110,9 @@ AbstractView3D::AbstractView3D(void)
     this->_cameraOrientationParam.SetParameter(camorientparam);
     this->MakeSlotAvailable(&this->_cameraOrientationParam);
 
-    auto projectionParam = new param::EnumParam(static_cast<int>(core::thecam::Projection_type::perspective));
-    projectionParam->SetTypePair(static_cast<int>(core::thecam::Projection_type::perspective), "Perspective");
-    projectionParam->SetTypePair(static_cast<int>(core::thecam::Projection_type::orthographic), "Orthographic");
-    projectionParam->SetTypePair(static_cast<int>(core::thecam::Projection_type::parallel), "Parallel");
-    projectionParam->SetTypePair(static_cast<int>(core::thecam::Projection_type::off_axis), "Off-Axis");
-    projectionParam->SetTypePair(static_cast<int>(core::thecam::Projection_type::converged), "Converged");
+    auto projectionParam = new param::EnumParam(static_cast<int>(Camera::ProjectionType::PERSPECTIVE));
+    projectionParam->SetTypePair(static_cast<int>(Camera::ProjectionType::PERSPECTIVE), "Perspective");
+    projectionParam->SetTypePair(static_cast<int>(Camera::ProjectionType::ORTHOGRAPHIC), "Orthographic");
     projectionParam->SetGUIVisible(camparamvisibility);
     this->_cameraProjectionTypeParam.SetParameter(projectionParam);
     this->MakeSlotAvailable(&this->_cameraProjectionTypeParam);
@@ -563,13 +560,60 @@ bool AbstractView3D::adaptCameraValues(Camera& cam) {
 
     // BIG TODO: manipulation of intrinsics via GUI
 
-    //  if (this->_cameraProjectionTypeParam.IsDirty()) {
-    //      auto val =
-    //          static_cast<thecam::Projection_type>(this->_cameraProjectionTypeParam.Param<param::EnumParam>()->Value());
-    //      this->_camera.projection_type(val);
-    //      this->_cameraProjectionTypeParam.ResetDirty();
-    //      result = true;
-    //  }
+    if (this->_cameraProjectionTypeParam.IsDirty()) {
+        auto curr_proj_type = _camera.get<Camera::ProjectionType>();
+        auto cam_pose = _camera.get<Camera::Pose>();
+        float orbitalAltitude = glm::length(cam_pose.position - _rotCenter);
+        float fovy;
+        float vertical_height;
+        float aspect;
+        float near_plane;
+        float far_plane;
+        Camera::ImagePlaneTile tile;
+        if (curr_proj_type == Camera::ProjectionType::PERSPECTIVE) {
+            fovy = _camera.get<Camera::PerspectiveParameters>().fovy;
+            aspect = _camera.get<Camera::PerspectiveParameters>().aspect;
+            near_plane = _camera.get<Camera::PerspectiveParameters>().near_plane;
+            far_plane = _camera.get<Camera::PerspectiveParameters>().far_plane;
+            vertical_height = std::tan(fovy) * orbitalAltitude;
+            tile = _camera.get<Camera::PerspectiveParameters>().image_plane_tile;
+        } else if (curr_proj_type == Camera::ProjectionType::ORTHOGRAPHIC) {
+            aspect = _camera.get<Camera::OrthographicParameters>().aspect;
+            near_plane = _camera.get<Camera::OrthographicParameters>().near_plane;
+            far_plane = _camera.get<Camera::OrthographicParameters>().far_plane;
+            vertical_height = _camera.get<Camera::OrthographicParameters>().frustrum_height;
+            fovy = std::atan(vertical_height / orbitalAltitude);
+            tile = _camera.get<Camera::OrthographicParameters>().image_plane_tile;
+        } else {
+            return false; // Oh bother...
+        }
+
+        auto val =
+            static_cast<Camera::ProjectionType>(this->_cameraProjectionTypeParam.Param<param::EnumParam>()->Value());
+        if (val == Camera::PERSPECTIVE) {
+            Camera::PerspectiveParameters cam_intrinsics;
+            cam_intrinsics.aspect = aspect;
+            cam_intrinsics.fovy = fovy;
+            cam_intrinsics.near_plane = near_plane;
+            cam_intrinsics.far_plane = far_plane;
+            cam_intrinsics.image_plane_tile = tile;
+
+            _camera = Camera(cam_pose, cam_intrinsics);
+        } else if(val == Camera::ORTHOGRAPHIC){
+            Camera::OrthographicParameters cam_intrinsics;
+            cam_intrinsics.aspect = aspect;
+            cam_intrinsics.frustrum_height = vertical_height;
+            cam_intrinsics.near_plane = near_plane;
+            cam_intrinsics.far_plane = far_plane;
+            cam_intrinsics.image_plane_tile = tile;
+
+            _camera = Camera(cam_pose, cam_intrinsics);
+        }
+
+        this->_cameraProjectionTypeParam.ResetDirty();
+
+        result = true;
+    }
     //// setting of near plane and far plane might make no sense as we are setting them new each frame anyway
     // if (this->cameraNearPlaneParam.IsDirty()) {
     //    auto val = this->cameraNearPlaneParam.Param<param::FloatParam>()->Value();

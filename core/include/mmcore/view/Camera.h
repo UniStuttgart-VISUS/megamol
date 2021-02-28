@@ -159,7 +159,15 @@ namespace view {
 
     inline Camera::Camera(Pose const& pose, OrthographicParameters const& intrinsics)
             : _pose(pose), _intrinsics(intrinsics) {
-        // TODO compute matrices
+        // compute view matrix from pose
+        _view_matrix = glm::lookAt(_pose.position, _pose.position + _pose.direction, _pose.up);
+        // compute projection matrix from intrinsics
+        auto l = -1.0f * (intrinsics.frustrum_height / 2.0f) * intrinsics.aspect;
+        auto r = (intrinsics.frustrum_height / 2.0f) * intrinsics.aspect;
+        auto t = (intrinsics.frustrum_height / 2.0f);
+        auto b = -1.0f * (intrinsics.frustrum_height / 2.0f);
+        _projection_matrix = glm::ortho(l, r, b, t, intrinsics.near_plane, intrinsics.far_plane);
+        // TODO check image_tile and compute projection matrix with adjusted fovy and/or off-center
     }
 
     template<typename CameraInfoType>
