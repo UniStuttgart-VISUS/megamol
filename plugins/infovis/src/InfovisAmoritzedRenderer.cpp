@@ -231,7 +231,8 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         int a = this->amortLevel.Param<core::param::IntParam>()->Value();
 
         jit = glm::translate(glm::mat4(1.0f), camOffsets[frametype]);
-        invMatrices[frametype] = jit * pmvm;
+        //invMatrices[frametype] = jit * pmvm;
+        invMatrices[frametype] = pmvm;
         for (int i = 0; i < framesNeeded; i++)
             moveMatrices[i] = invMatrices[i] * glm::inverse(pmvm);
 
@@ -297,6 +298,11 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
             camOffsets = calculateHammersley(ssLevel, w , h);
             frametype = 0;
         }
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER, framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0], GL_STATIC_READ);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
     if (approach == 4 || approach == 5) {
         int a = this->amortLevel.Param<core::param::IntParam>()->Value();
@@ -308,10 +314,15 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
             camOffsets.resize(framesNeeded);
             for (int j = 0; j < a; j++) {
                 for (int i = 0; i < a; i++) {
-                    camOffsets[j * a + i] = glm::fvec3(( -1.0 * (float) a + 1.0 + 2.0 * i) / w, ((float) a - 1.0 - 2.0 * j) / h, 0.0);
+                    camOffsets[j * a + i] = glm::fvec3(( -1.0 * (float) a - 1.0 - 2.0 * i) / w, ((float) a - 1.0 - 2.0 * j) / h, 0.0);
                 }
             }
         }
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
+        glBufferData(
+            GL_SHADER_STORAGE_BUFFER, framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0], GL_STATIC_READ);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
 
 }
@@ -333,7 +344,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("amortLevel"),
             this->amortLevel.Param<core::param::IntParam>()->Value());
 
-        if (approach == 4) {
+        if (approach == 4 || approach == 5) {
             int a = this->amortLevel.Param<core::param::IntParam>()->Value();
             glUniformMatrix4fv(pc_reconstruction_shdr_array[approach]->ParameterLocation("moveMatrices"), a * a,
                 GL_FALSE, &moveMatrices[0][0][0]);
@@ -342,8 +353,8 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
                 GL_FALSE, &moveMatrices[0][0][0]);
         }
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
-        glBufferData(
-            GL_SHADER_STORAGE_BUFFER, framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0], GL_STATIC_READ);
+        glBufferSubData(
+            GL_SHADER_STORAGE_BUFFER, 0 , framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0]);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
