@@ -96,6 +96,11 @@ public:
     std::string GetScriptPath(void);
 
     /**
+     * Sets the current project file path
+     */
+    void SetScriptPath(std::string const& scriptPath);
+
+    /**
      * Sets the function callback used to trigger rendering of a frame due to mmFlush.
      */
     void setFlushCallback(std::function<bool()> const& callback);

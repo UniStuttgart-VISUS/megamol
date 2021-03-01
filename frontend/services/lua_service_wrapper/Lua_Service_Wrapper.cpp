@@ -71,10 +71,15 @@ bool Lua_Service_Wrapper::init(const Config& config) {
             return {result_b, result_str};
         };
 
+    m_setScriptPath_resource = [&](std::string const& script_path) -> void {
+        luaAPI.SetScriptPath(script_path);
+    };
+
     this->m_providedResourceReferences =
     {
         {"LuaScriptPaths", m_scriptpath_resource},
-        {"ExecuteLuaScript", m_executeLuaScript_resource}
+        {"ExecuteLuaScript", m_executeLuaScript_resource},
+        {"SetScriptPath", m_setScriptPath_resource}
     };
 
     this->m_requestedResourcesNames = 

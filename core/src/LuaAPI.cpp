@@ -185,6 +185,8 @@ bool megamol::core::LuaAPI::StateOk() { return true; }
 
 std::string megamol::core::LuaAPI::GetScriptPath(void) { return this->currentScriptPath; }
 
+void megamol::core::LuaAPI::SetScriptPath(std::string const& scriptPath) { this->currentScriptPath = scriptPath; }
+
 
 bool megamol::core::LuaAPI::RunFile(const std::string& envName, const std::string& fileName, std::string& result) {
     std::ifstream input(fileName, std::ios::in);
