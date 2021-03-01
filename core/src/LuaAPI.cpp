@@ -29,8 +29,6 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/LuaAPI.h"
-#include "mmcore/utility/Configuration.h"
-#include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
 #include "mmcore/view/AbstractView_EventConsumption.h"
 #include "vislib/UTF8Encoder.h"
