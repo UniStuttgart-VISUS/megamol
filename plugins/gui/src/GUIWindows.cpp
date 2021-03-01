@@ -1095,6 +1095,7 @@ bool GUIWindows::createContext(void) {
     bool other_context_exists = (ImGui::GetCurrentContext() != nullptr);
     ImFontAtlas* font_atlas = nullptr;
     ImFont* default_font = nullptr;
+
     /// [DEPRECATED USAGE - only mmconsole] ///
     if (other_context_exists) {
         ImGuiIO& current_io = ImGui::GetIO();
@@ -1299,6 +1300,7 @@ bool GUIWindows::destroyContext(void) {
                 // Last context should delete font atlas
                 ImGui::GetCurrentContext()->FontAtlasOwnedByContext = true;
             }
+
             ImGui::DestroyContext(this->context);
             megamol::gui::gui_context_count--;
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Destroyed ImGui context.");
@@ -1606,7 +1608,14 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
     if (this->core_instance != nullptr) {
         ImGui::TextDisabled("Frame ID:");
         ImGui::SameLine();
-        ImGui::Text("%u", this->core_instance->GetFrameID());
+        auto frameid = this->state.stat_frame_count;
+
+        /// [DEPRECATED USAGE - only mmconsole] ///
+        if (frameid == 0) {
+            frameid = static_cast<size_t>(this->core_instance->GetFrameID());
+        }
+
+        ImGui::Text("%u", frameid);
     }
 
     ImGui::SameLine(
@@ -2436,8 +2445,9 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.font_apply = false;
     this->state.font_file_name = "";
     this->state.request_load_projet_file = "";
-    this->state.last_averaged_fps = 0.0;
-    this->state.last_averaged_mspf = 0.0;
+    this->state.stat_averaged_fps = 0.0;
+    this->state.stat_averaged_mspf = 0.0;
+    this->state.stat_frame_count = 0;
     this->state.font_size = 13;
 
     this->create_not_existing_png_filepath(this->state.screenshot_filepath);
@@ -2466,11 +2476,13 @@ void megamol::gui::GUIWindows::update_frame_statistics(WindowCollection::WindowC
             }
             if (fps_buffer_size > 0) {
                 wc.buf_fps_values.erase(wc.buf_fps_values.begin());
-                if (this->state.last_averaged_fps == 0.0) {
+                if (this->state.stat_averaged_fps == 0.0) {
+
                     /// [DEPRECATED USAGE - only mmconsole] ///
                     wc.buf_fps_values.emplace_back(1.0f / io.DeltaTime);
+
                 } else {
-                    wc.buf_fps_values.emplace_back(static_cast<float>(this->state.last_averaged_fps));
+                    wc.buf_fps_values.emplace_back(static_cast<float>(this->state.stat_averaged_fps));
                 }
                 float max_fps = 0.0f;
                 for (auto& v : wc.buf_fps_values) {
@@ -2492,11 +2504,13 @@ void megamol::gui::GUIWindows::update_frame_statistics(WindowCollection::WindowC
             }
             if (ms_buffer_size > 0) {
                 wc.buf_ms_values.erase(wc.buf_ms_values.begin());
-                if (this->state.last_averaged_mspf == 0.0) {
+                if (this->state.stat_averaged_mspf == 0.0) {
+
                     /// [DEPRECATED USAGE - only mmconsole] ///
                     wc.buf_ms_values.emplace_back(io.DeltaTime * 1000.0f);
+
                 } else {
-                    wc.buf_ms_values.emplace_back(static_cast<float>(this->state.last_averaged_mspf));
+                    wc.buf_ms_values.emplace_back(static_cast<float>(this->state.stat_averaged_mspf));
                 }
                 float max_ms = 0.0f;
                 for (auto& v : wc.buf_ms_values) {

@@ -218,7 +218,7 @@ void GUI_Service::digestChangedRequestedResources() {
 
     /// Get current FPS and MS frame statistic = resource index 9
     auto& frame_statistics =  this->m_requestedResourceReferences[9].getResource<megamol::frontend_resources::FrameStatistics>();
-    gui->SetFrameStatistics(frame_statistics.last_averaged_fps, frame_statistics.last_averaged_mspf);
+    gui->SetFrameStatistics(frame_statistics.last_averaged_fps, frame_statistics.last_averaged_mspf, frame_statistics.rendered_frames_count);
 }
 
 
