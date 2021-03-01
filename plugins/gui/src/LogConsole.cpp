@@ -147,7 +147,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
         ImGui::EndMenuBar();
     }
 
-    // Scroll (requires 2 frames for being applyed)
+    // Scroll - Requires 2 frames for being applied!
     if (this->scroll_down > 0) {
         ImGui::SetScrollY(ImGui::GetScrollMaxY());
         this->scroll_down--;
