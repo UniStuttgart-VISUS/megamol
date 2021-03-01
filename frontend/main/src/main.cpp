@@ -35,11 +35,13 @@ namespace stdfs = std::experimental::filesystem;
 #endif
 
 using megamol::frontend_resources::RuntimeConfig;
-RuntimeConfig handle_cli_inputs(const int argc, const char** argv);
+RuntimeConfig handle_cli_and_config(const int argc, const char** argv);
+RuntimeConfig handle_config(RuntimeConfig config);
+RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv);
 
 int main(const int argc, const char** argv) {
 
-    auto config = handle_cli_inputs(argc, argv);
+    auto config = handle_cli_and_config(argc, argv);
 
     // setup log
     megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
@@ -252,12 +254,38 @@ int main(const int argc, const char** argv) {
     return 0;
 }
 
-RuntimeConfig handle_cli_inputs(const int argc, const char** argv) {
+RuntimeConfig handle_cli_and_config(const int argc, const char** argv) {
     RuntimeConfig config;
 
+    // overwrite default values with values from config file
+    config = handle_config(config);
+
+    // overwrite default and config values with CLI inputs
+    config = handle_cli(config, argc, argv);
+
+    return config;
+}
+
+RuntimeConfig handle_config(RuntimeConfig config) {
+    // load config file
+    auto& file = config.configuration_file;
+    if (!stdfs::exists(file)) {
+        std::cout << "Configuration file \"" << file << "\" does not exist!" << std::endl;
+        std::exit(1);
+    }
+    std::ifstream stream(file);
+    config.configuration_file_contents = std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+
+    const auto run_through_lua = [](std::string const&) { return ""; };
+
+    // interpret lua config commands as CLI commands
+    config.configuration_file_contents_as_cli = run_through_lua(config.configuration_file_contents);
+
+    return config;
+}
 
 
-
+RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv) {
 
     cxxopts::Options options(argv[0], "MegaMol Frontend 3000");
 

@@ -20,14 +20,22 @@ struct RuntimeConfig {
 
     // general stuff
     using Path = std::string;
-    Path configuration_file = "";
-    Path application_directory = "";
-    std::vector<Path> resource_directories = {};
-    std::vector<Path> shader_directories = {};
-    std::map<std::string/*Key*/, std::string/*Value*/> config_values = {};
-    std::vector<Path> project_files = {};
+    Path configuration_file = "megamol_config.lua";                        // mmSetConfigurationFile + mmGetConfigurationFile ?
+    std::string configuration_file_contents = "";                          // mmSetConfiguration + mmGetConfiguration ?
+    std::string configuration_file_contents_as_cli = "";
+    Path application_directory = "";                                       // mmSetAppDir
+    std::vector<Path> resource_directories = {};                           // mmAddResourceDir
+    std::vector<Path> shader_directories = {};                             // mmAddShaderDir
+    std::map<std::string/*Key*/, std::string/*Value*/> config_values = {}; // mmSetConfigValue + mmGetConfigValue
+    Path log_file = "megamol_log.txt";                                     // mmSetLogFile
+    unsigned int log_level = 200;                                          // mmSetLogLevel
+    unsigned int echo_level = 200;                                         // mmSetEchoLevel
+    std::vector<Path> project_files = {};                                  // NEW: mmLoadProject - project files are loaded after services are up
 
-    // service-specific configurations
+    // detailed and service-specific configurations
+    // every CLI option can be set via the config file using mmSetConfigValue
+    // e.g. "--window 100x200" => mmSetConfigValue("window", "100x200")
+    //      "--fullscreen"     => mmSetConfigValue("fullscreen", "on")
     bool interactive = false;
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool lua_host_port_retry = true;
