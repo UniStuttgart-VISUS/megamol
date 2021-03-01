@@ -117,7 +117,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                 for (auto& config_item : header_item.value().items()) {
                     WindowConfiguration tmp_config;
                     tmp_config.win_name = config_item.key();
-                    tmp_config.win_set_pos_size = true;
+                    tmp_config.buf_set_pos_size = true;
                     tmp_config.buf_tfe_reset = true;
                     auto config_values = config_item.value();
 
@@ -193,7 +193,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                         config_values, {"ms_show_options"}, &tmp_config.ms_show_options);
 
                     megamol::core::utility::get_json_value<int>(
-                        config_values, {"ms_max_history_count"}, &tmp_config.ms_max_history_count);
+                        config_values, {"ms_max_value_count"}, &tmp_config.ms_max_value_count);
 
                     megamol::core::utility::get_json_value<float>(
                         config_values, {"ms_refresh_rate"}, &tmp_config.ms_refresh_rate);
@@ -311,8 +311,8 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
                     window_config.param_extended_mode;
 
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_show_options"] = window_config.ms_show_options;
-                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_max_history_count"] =
-                    window_config.ms_max_history_count;
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_max_value_count"] =
+                    window_config.ms_max_value_count;
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_refresh_rate"] = window_config.ms_refresh_rate;
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_mode"] =
                     static_cast<int>(window_config.ms_mode);

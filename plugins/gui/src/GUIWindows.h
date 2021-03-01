@@ -125,7 +125,7 @@ namespace gui {
         /**
          * Pass triggered Shutdown.
          */
-        inline bool GetTriggeredShutdown(void) {
+        inline bool ConsumeTriggeredShutdown(void) {
             bool request_shutdown = this->state.shutdown_triggered;
             this->state.shutdown_triggered = false;
             return request_shutdown;
@@ -145,8 +145,10 @@ namespace gui {
          * Pass project load request.
          * Request is consumed when calling this function.
          */
-        std::string GetProjectLoadRequest(void) {
-            return this->state.request_load_projet_file;
+        std::string ConsumeProjectLoadRequest(void) {
+            auto project_file_name = this->state.request_load_projet_file;
+            this->state.request_load_projet_file.clear();
+            return project_file_name;
         }
 
         ///////// SET ///////////
@@ -163,6 +165,14 @@ namespace gui {
          */
         void SetProjectScriptPaths(const std::vector<std::string>& script_paths) {
             this->state.project_script_paths = script_paths;
+        }
+
+        /**
+         * Set current frame statistics.
+         */
+        void SetFrameStatistics(double last_averaged_fps, double last_averaged_mspf) {
+            this->state.last_averaged_fps = last_averaged_fps;
+            this->state.last_averaged_mspf = last_averaged_mspf;
         }
 
         /**
@@ -238,6 +248,8 @@ namespace gui {
             std::string font_file_name;                    // Font imgui name or font file name.
             int font_size;                                 // Font size (only used whe font file name is given)
             std::string request_load_projet_file; // Project file name which should be loaded by fronted service
+            double last_averaged_fps;             // last average fps value
+            double last_averaged_mspf;            // last average fps value
             bool hotkeys_check_once;              // WORKAROUND: Check multiple hotkey assignments once
         };
 
@@ -294,7 +306,6 @@ namespace gui {
 
         void load_default_fonts(bool reload_font_api);
 
-        // Window Draw Callbacks
         void drawParamWindowCallback(WindowCollection::WindowConfiguration& wc);
         void drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc);
         void drawTransferFunctionWindowCallback(WindowCollection::WindowConfiguration& wc);
@@ -317,6 +328,8 @@ namespace gui {
         bool state_to_string(std::string& out_state);
 
         void init_state(void);
+
+        void update_frame_statistics(WindowCollection::WindowConfiguration& wc);
 
         bool create_not_existing_png_filepath(std::string& inout_filepath);
     };

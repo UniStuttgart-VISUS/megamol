@@ -127,39 +127,37 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
     callbacks.mmScreenshot_callback_ = m_requestedResourceReferences[1].getResource<std::function<bool(std::string const&)> >();
 
     callbacks.mmLastFrameTime_callback_ = [&]() {
-        auto& frame_statistics = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::FrameStatistics>();
+        auto& frame_statistics = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FrameStatistics>();
         return static_cast<float>(frame_statistics.last_rendered_frame_time_milliseconds);
     };
 
     callbacks.mmSetFramebufferSize_callback_ = [&](unsigned int w, unsigned int h) {
-        auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
+        auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
         window_manipulation.set_framebuffer_size(w, h);
     };
 
     callbacks.mmSetWindowPosition_callback_ = [&](unsigned int x, unsigned int y) {
-        auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
+        auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
         window_manipulation.set_window_position(x, y);
     };
 
     callbacks.mmSetFullscreen_callback_ = [&](bool fullscreen) {
-        auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
+        auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
         window_manipulation.set_fullscreen(fullscreen?frontend_resources::WindowManipulation::Fullscreen::Maximize:frontend_resources::WindowManipulation::Fullscreen::Restore);
     };
 
     callbacks.mmSetVsync_callback_= [&](bool state) {
-        auto& window_manipulation = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::WindowManipulation>();
+        auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
         window_manipulation.set_swap_interval(state ? 1 : 0);
     };
 
     callbacks.mmSetGUIState_callback_ = [&](std::string json) {
-        auto& gui_resource =
-            m_requestedResourceReferences[5].getResource<megamol::frontend_resources::GUIResource>();
+        auto& gui_resource =  m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
         gui_resource.provide_gui_state(json);
     };
 
     callbacks.mmShowGUI_callback_ = [&](bool show) {
-        auto& gui_resource =
-            m_requestedResourceReferences[5].getResource<megamol::frontend_resources::GUIResource>();
+        auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
         gui_resource.provide_gui_visibility(show);
     };
 
