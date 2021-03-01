@@ -34,7 +34,7 @@ namespace stdfs = std::experimental::filesystem;
 #endif
 #endif
 
-using RuntimeConfig = megamol::frontend_resources::RuntimeConfig;
+using megamol::frontend_resources::RuntimeConfig;
 RuntimeConfig handle_cli_inputs(const int argc, const char** argv);
 
 int main(const int argc, const char** argv) {
@@ -249,45 +249,24 @@ int main(const int argc, const char** argv) {
 RuntimeConfig handle_cli_inputs(const int argc, const char** argv) {
     RuntimeConfig config;
 
+
+
+
+
     cxxopts::Options options(argv[0], "MegaMol Frontend 3000");
 
     config.program_invocation_string = std::string{argv[0]};
 
-    // clang-format off
-    // parse input project files
-    options.positional_help("<additional project files>");
-    options.add_options()
-        ("project-files", "projects to load", cxxopts::value<std::vector<std::string>>())
-        ("host", "address of lua host server, default: "+config.lua_host_address, cxxopts::value<std::string>())
-        ("example", "load minimal test spheres example project", cxxopts::value<bool>())
-        ("khrdebug", "enable OpenGL KHR debug messages", cxxopts::value<bool>())
-        ("vsync", "enable VSync in OpenGL window", cxxopts::value<bool>())
-        ("window", "set the window size and position, accepted format: WIDTHxHEIGHT[+POSX+POSY]", cxxopts::value<std::string>())
-        ("fullscreen", "open maximized window", cxxopts::value<bool>())
-        ("nodecoration", "open window without decorations", cxxopts::value<bool>())
-        ("topmost", "open window that stays on top of all others", cxxopts::value<bool>())
-        ("nocursor", "do not show mouse cursor inside window", cxxopts::value<bool>())
-        ("help", "print help")
-        ;
-    // clang-format on
+    // option handlers fill config struct with passed options
+    auto empty_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+    {
+    };
 
-    options.parse_positional({"project-files"});
-
-    try {
-        int _argc = argc;
-        auto _argv = const_cast<char**>(argv);
-        auto parsed_options = options.parse(_argc, _argv);
-        std::string res;
-
-        if (parsed_options.count("help")) {
-            std::cout << options.help({""}) << std::endl;
-            exit(0);
-        }
-
-
+    auto project_files_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+    {
         // verify project files exist in file system
-        if (parsed_options.count("project-files")) {
-            const auto& v = parsed_options["project-files"].as<std::vector<std::string>>();
+        if (parsed_options.count(option_name)) {
+            const auto& v = parsed_options[option_name].as<std::vector<std::string>>();
             for (const auto& p : v) {
                 if (!stdfs::exists(p)) {
                     std::cout << "Project file \"" << p << "\" does not exist!" << std::endl;
@@ -297,21 +276,46 @@ RuntimeConfig handle_cli_inputs(const int argc, const char** argv) {
 
             config.project_files = v;
         }
+    };
 
-        if (parsed_options.count("host")) {
-            config.lua_host_address = parsed_options["host"].as<std::string>();
+    auto host_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+    {
+        if (parsed_options.count(option_name)) {
+            config.lua_host_address = parsed_options[option_name].as<std::string>();
         }
+    };
 
-        config.opengl_khr_debug = parsed_options["khrdebug"].as<bool>();
-        config.opengl_vsync = parsed_options["vsync"].as<bool>();
+    auto khrdebug_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+    {
+        config.opengl_khr_debug = parsed_options[option_name].as<bool>();
+    };
+    auto vsync_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+    {
+        config.opengl_vsync = parsed_options[option_name].as<bool>();
+    };
 
-        config.window_mode |= parsed_options["fullscreen"].as<bool>()   * RuntimeConfig::WindowMode::fullscreen;
-        config.window_mode |= parsed_options["nodecoration"].as<bool>() * RuntimeConfig::WindowMode::nodecoration;
-        config.window_mode |= parsed_options["topmost"].as<bool>()      * RuntimeConfig::WindowMode::topmost;
-        config.window_mode |= parsed_options["nocursor"].as<bool>()     * RuntimeConfig::WindowMode::nocursor;
+    auto fullscreen_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+    {
+        config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::fullscreen;
+    };
+    auto nodecoration_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+    {
+        config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::nodecoration;
+    };
+    auto topmost_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+    {
+        config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::topmost;
+    };
+    auto nocursor_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+    {
+        config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::nocursor;
+    };
 
-        if (parsed_options.count("window")) {
-            auto s = parsed_options["window"].as<std::string>();
+
+    auto window_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+    {
+        if (parsed_options.count(option_name)) {
+            auto s = parsed_options[option_name].as<std::string>();
             // 'WIDTHxHEIGHT[+POSX+POSY]'
             // 'wxh+x+y' with optional '+x+y', e.g. 600x800+0+0 opens window in upper left corner
             std::regex geometry("(\\d+)x(\\d+)(?:\\+(\\d+)\\+(\\d+))?");
@@ -328,6 +332,61 @@ RuntimeConfig handle_cli_inputs(const int argc, const char** argv) {
                 std::exit(1);
             }
         }
+    };
+
+    // clang-format off
+    std::vector<std::tuple<std::string, std::string, std::shared_ptr<cxxopts::Value>, std::function<void(std::string const&, cxxopts::ParseResult const&, RuntimeConfig&)>>>
+    options_list =
+    {
+          {"project-files", "projects to load",                                                            cxxopts::value<std::vector<std::string>>(), project_files_handler}
+        , {"host",          "address of lua host server, default: "+config.lua_host_address,               cxxopts::value<std::string>(),              host_handler         }
+        , {"khrdebug",      "enable OpenGL KHR debug messages",                                            cxxopts::value<bool>(),                     khrdebug_handler     }
+        , {"vsync",         "enable VSync in OpenGL window",                                               cxxopts::value<bool>(),                     vsync_handler        }
+        , {"window",        "set the window size and position, accepted format: WIDTHxHEIGHT[+POSX+POSY]", cxxopts::value<std::string>(),              window_handler       }
+        , {"fullscreen",    "open maximized window",                                                       cxxopts::value<bool>(),                     fullscreen_handler   }
+        , {"nodecoration",  "open window without decorations",                                             cxxopts::value<bool>(),                     nodecoration_handler }
+        , {"topmost",       "open window that stays on top of all others",                                 cxxopts::value<bool>(),                     topmost_handler      }
+        , {"nocursor",      "do not show mouse cursor inside window",                                      cxxopts::value<bool>(),                     nocursor_handler     }
+    };
+
+    #define add_option(X) (std::get<0>(X), std::get<1>(X), std::get<2>(X))
+
+    // parse input project files
+    options.positional_help("<additional project files>");
+    options.add_options()
+        add_option(options_list[0])
+        add_option(options_list[1])
+        add_option(options_list[2])
+        add_option(options_list[3])
+        add_option(options_list[4])
+        add_option(options_list[5])
+        add_option(options_list[6])
+        add_option(options_list[7])
+        add_option(options_list[8])
+        ("help", "print help")
+        ;
+    // clang-format on
+
+    options.parse_positional({"project-files"});
+
+    // actually process passed options
+    try {
+        int _argc = argc;
+        auto _argv = const_cast<char**>(argv);
+        auto parsed_options = options.parse(_argc, _argv);
+        std::string res;
+
+        if (parsed_options.count("help")) {
+            std::cout << options.help({""}) << std::endl;
+            exit(0);
+        }
+
+        for (auto& option : options_list) {
+            auto& name = std::get<0>(option);
+            auto& handle = std::get<3>(option);
+            handle(name, parsed_options, config);
+        }
+
     } catch (cxxopts::option_not_exists_exception ex) {
         std::cout << ex.what() << std::endl;
         std::cout << options.help({""}) << std::endl;
