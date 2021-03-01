@@ -67,7 +67,6 @@ namespace gui {
         std::ostream echo_log_stream;
         std::shared_ptr<megamol::core::utility::log::StreamTarget> echo_log_target;
 
-        unsigned int log_level;
         size_t log_msg_count;
         unsigned int scroll_down;
         unsigned int scroll_up;
