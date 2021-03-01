@@ -4,6 +4,7 @@
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/log/DefaultTarget.h"
 
+#include "RuntimeConfig.h"
 #include "FrameStatistics_Service.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
@@ -33,30 +34,8 @@ namespace stdfs = std::experimental::filesystem;
 #endif
 #endif
 
-// make sure that all configuration parameters have sane and useful and EXPLICIT initialization values!
-struct CLIConfig {
-    std::string program_invocation_string = "";
-    std::vector<std::string> project_files = {};
-    std::string lua_host_address = "tcp://127.0.0.1:33333";
-    bool lua_host_port_retry = true;
-    bool load_example_project = false;
-    bool opengl_khr_debug = false;
-    bool opengl_vsync = false;
-    std::vector<unsigned int> window_size = {}; // if not set, GLFW service will open window with 3/4 of monitor resolution 
-    std::vector<unsigned int> window_position = {};
-    enum WindowMode {
-        fullscreen   = 1 << 0,
-        nodecoration = 1 << 1,
-        topmost      = 1 << 2,
-        nocursor     = 1 << 3,
-    };
-    unsigned int window_mode = 0;
-    unsigned int window_monitor = 0;
-};
-
-CLIConfig handle_cli_inputs(const int argc, const char** argv);
-
-bool set_up_example_graph(megamol::core::MegaMolGraph& graph);
+using RuntimeConfig = megamol::frontend_resources::RuntimeConfig;
+RuntimeConfig handle_cli_inputs(const int argc, const char** argv);
 
 int main(const int argc, const char** argv) {
 
@@ -96,10 +75,10 @@ int main(const int argc, const char** argv) {
         openglConfig.windowPlacement.y = config.window_position[1];
     }
     openglConfig.windowPlacement.mon = config.window_monitor;
-    openglConfig.windowPlacement.fullScreen = config.window_mode & CLIConfig::WindowMode::fullscreen;
-    openglConfig.windowPlacement.noDec      = config.window_mode & CLIConfig::WindowMode::nodecoration;
-    openglConfig.windowPlacement.topMost    = config.window_mode & CLIConfig::WindowMode::topmost;
-    openglConfig.windowPlacement.noCursor   = config.window_mode & CLIConfig::WindowMode::nocursor;
+    openglConfig.windowPlacement.fullScreen = config.window_mode & RuntimeConfig::WindowMode::fullscreen;
+    openglConfig.windowPlacement.noDec      = config.window_mode & RuntimeConfig::WindowMode::nodecoration;
+    openglConfig.windowPlacement.topMost    = config.window_mode & RuntimeConfig::WindowMode::topmost;
+    openglConfig.windowPlacement.noCursor   = config.window_mode & RuntimeConfig::WindowMode::nocursor;
     gl_service.setPriority(2);
 
     megamol::frontend::GUI_Service gui_service;
@@ -184,6 +163,7 @@ int main(const int argc, const char** argv) {
 
     // graph is also a resource that may be accessed by services
     services.getProvidedResources().push_back({"MegaMolGraph", graph});
+    services.getProvidedResources().push_back({"RuntimeConfig", config});
 
     // proof of concept: a resource that returns a list of names of available resources
     // used by Lua Wrapper and LuaAPI to return list of available resources via remoteconsole
@@ -252,13 +232,6 @@ int main(const int argc, const char** argv) {
             run_megamol = false;
         }
     }
-    if (config.load_example_project) {
-        const bool graph_ok = set_up_example_graph(graph);
-        if (!graph_ok) {
-            std::cout << "ERROR: frontend could not build graph. abort. " << std::endl;
-            run_megamol = false;
-        }
-    }
 
     while (run_megamol) {
         run_megamol = render_next_frame();
@@ -273,8 +246,8 @@ int main(const int argc, const char** argv) {
     return 0;
 }
 
-CLIConfig handle_cli_inputs(const int argc, const char** argv) {
-    CLIConfig config;
+RuntimeConfig handle_cli_inputs(const int argc, const char** argv) {
+    RuntimeConfig config;
 
     cxxopts::Options options(argv[0], "MegaMol Frontend 3000");
 
@@ -329,15 +302,13 @@ CLIConfig handle_cli_inputs(const int argc, const char** argv) {
             config.lua_host_address = parsed_options["host"].as<std::string>();
         }
 
-        config.load_example_project = parsed_options["example"].as<bool>();
-
         config.opengl_khr_debug = parsed_options["khrdebug"].as<bool>();
         config.opengl_vsync = parsed_options["vsync"].as<bool>();
 
-        config.window_mode |= parsed_options["fullscreen"].as<bool>()   * CLIConfig::WindowMode::fullscreen;
-        config.window_mode |= parsed_options["nodecoration"].as<bool>() * CLIConfig::WindowMode::nodecoration;
-        config.window_mode |= parsed_options["topmost"].as<bool>()      * CLIConfig::WindowMode::topmost;
-        config.window_mode |= parsed_options["nocursor"].as<bool>()     * CLIConfig::WindowMode::nocursor;
+        config.window_mode |= parsed_options["fullscreen"].as<bool>()   * RuntimeConfig::WindowMode::fullscreen;
+        config.window_mode |= parsed_options["nodecoration"].as<bool>() * RuntimeConfig::WindowMode::nodecoration;
+        config.window_mode |= parsed_options["topmost"].as<bool>()      * RuntimeConfig::WindowMode::topmost;
+        config.window_mode |= parsed_options["nocursor"].as<bool>()     * RuntimeConfig::WindowMode::nocursor;
 
         if (parsed_options.count("window")) {
             auto s = parsed_options["window"].as<std::string>();
@@ -366,28 +337,3 @@ CLIConfig handle_cli_inputs(const int argc, const char** argv) {
     return config;
 }
 
-bool set_up_example_graph(megamol::core::MegaMolGraph& graph) {
-#define check(X) \
-    if (!X)      \
-        return false;
-
-    check(graph.CreateModule("View3D_2", "::view"));
-    check(graph.CreateModule("SphereRenderer", "::spheres"));
-    check(graph.CreateModule("TestSpheresDataSource", "::datasource"));
-    check(graph.CreateCall("CallRender3D_2", "::view::rendering", "::spheres::rendering"));
-    check(graph.CreateCall("MultiParticleDataCall", "::spheres::getdata", "::datasource::getData"));
-
-    check(graph.SetGraphEntryPoint("::view", megamol::core::view::get_gl_view_runtime_resources_requests(),
-        megamol::core::view::view_rendering_execution, megamol::core::view::view_init_rendering_state));
-
-    std::string parameter_name("::datasource::numSpheres");
-    auto parameterPtr = graph.FindParameter(parameter_name);
-    if (parameterPtr) {
-        parameterPtr->ParseValue("23");
-    } else {
-        std::cout << "ERROR: could not find parameter: " << parameter_name << std::endl;
-        return false;
-    }
-
-    return true;
-}
