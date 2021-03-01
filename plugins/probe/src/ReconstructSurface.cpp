@@ -11,29 +11,36 @@
 #include "mmcore/param/FloatParam.h"
 #include "adios_plugin/CallADIOSData.h"
 #include "mmcore/param/FlexEnumParam.h"
+#include "mmcore/BoundingBoxes_2.h"
 #include "iterator"
 // normals
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/pca_estimate_normals.h>
 #include <CGAL/mst_orient_normals.h>
 // 
+#include <filesystem>
+#include <random>
 #include <CGAL/Polygon_mesh_processing/remesh.h>
 #include <CGAL/Polygon_mesh_processing/border.h>
+#include <CGAL/Polygon_mesh_processing/corefinement.h>
+#include <CGAL/Polygon_mesh_processing/clip.h>
 
 #include <CGAL/Complex_2_in_triangulation_3.h>
 #include <CGAL/IO/facets_in_complex_2_to_triangle_mesh.h>
-#include <CGAL/Surface_mesh_default_triangulation_3.h>
+#include <CGAL/Polygonal_surface_reconstruction.h>
 #include <CGAL/Implicit_surface_3.h>
+#include <CGAL/Shape_detection/Efficient_RANSAC.h>
+#include <CGAL/grid_simplify_point_set.h>
+#include <CGAL/jet_estimate_normals.h>
+#include <CGAL/poisson_surface_reconstruction.h>
 
+#include <CGAL/Polyhedron_3.h>
 #include <CGAL/Plane_3.h>
 
 namespace megamol {
 namespace probe {
 
     // default triangulation for Surface_mesher
-    typedef CGAL::Surface_mesh_default_triangulation_3 Tr;
-    typedef Tr::Geom_traits GT;
-    typedef GT::Point_3 Point;
     typedef CGAL::Surface_mesh<Point> Surface_mesh;
     // c2t3
     typedef CGAL::Complex_2_in_triangulation_3<Tr> C2t3;
@@ -43,14 +50,11 @@ namespace probe {
     typedef FT (*Function)(Point);
     typedef CGAL::Implicit_surface_3<GT, Function> Surface_3;
     
-
     float a,b,c;
     FT ellipsoid_function(Point p) {
         const FT x2 = (p.x() * p.x()) / (a * a), y2 = (p.y() * p.y()) / (b * b), z2 = (p.z() * p.z()) / (c * c);
         return x2 + y2 + z2 - 1;
     }
-
-
 
     ReconstructSurface::ReconstructSurface()
             : Module()
@@ -110,7 +114,7 @@ namespace probe {
         this->MakeSlotAvailable(&this->_xyzSlot);
 
         this->_showShellSlot << new core::param::IntParam(-1);
-        this->_showShellSlot.SetUpdateCallback(&ReconstructSurface::parameterChanged);
+        this->_showShellSlot.SetUpdateCallback(&ReconstructSurface::shellToShowChanged);
         this->MakeSlotAvailable(&this->_showShellSlot);
 
         this->_numShellsSlot << new core::param::IntParam(10);
@@ -160,7 +164,7 @@ namespace probe {
         _slice_ellipsoid_center_of_mass.resize(num_slices, glm::vec3(0));
 
         auto slice_begin = _bbox.BoundingBox().GetLeftBottomFront()[_main_axis];
-        auto slice_width = (_bbox.BoundingBox().GetSize()[_main_axis] + 1e-3) / (num_slices - 1); // otherwise were getting exact num_slices as factor
+        auto slice_width = (_bbox.BoundingBox().GetSize()[_main_axis] + 1e-3) / (num_slices); // otherwise were getting exact num_slices as factor
 
         // slice data
         for (int i = 0; i < _raw_positions.size() / 3; ++i) {
@@ -360,8 +364,8 @@ namespace probe {
             0.01,                                                // radius bound
             0.01);                                               // distance bound
         // meshing surface
+        _sm.clear();
         CGAL::make_surface_mesh(c2t3, surface, criteria, CGAL::Non_manifold_tag());
-        
         CGAL::facets_in_complex_2_to_triangle_mesh(c2t3, _sm);
         
         //CGAL::Aff_transformation_3<CGAL::Epick> trafo_scale(Kernel::RT(scale_factor), Kernel::RT(0), Kernel::RT(0),
@@ -373,11 +377,16 @@ namespace probe {
         //    Kernel::RT(_data_origin[0]), Kernel::RT(0), Kernel::RT(0), Kernel::RT(0),
         //    Kernel::RT(_data_origin[1]), Kernel::RT(0), Kernel::RT(0), Kernel::RT(0),
         //    Kernel::RT(_data_origin[2]));
+
+        _vertices.clear();
         _vertices.resize(_sm.num_vertices());
+        _ellipsoid_backup.clear();
+        _ellipsoid_backup.resize(_sm.num_vertices());
         for (int i = 0; i < _sm.num_vertices(); ++i) {
             auto it = std::next(_sm.points().begin(), i);
             
             glm::vec3 p = {it->x(), it->y(), it->z()};
+
             p.x = p.x * scale_factor + _data_origin[0];
             p.y = p.y * scale_factor + _data_origin[1];
             p.z = p.z * scale_factor + _data_origin[2];
@@ -388,8 +397,13 @@ namespace probe {
             _vertices[i][0] = it->x();
             _vertices[i][1] = it->y();
             _vertices[i][2] = it->z();
+
+            if (!std::isfinite(_vertices[i][0]) || !std::isfinite(_vertices[i][1]) || !std::isfinite(_vertices[i][2])) {
+                throw std::exception("[ReconstructSurface] Non-finite vertices detected.");
+            }
         }
 
+        _triangles.clear();
         _triangles.resize(_sm.num_faces());
         auto triangle = _triangles.begin();
         for (CGAL::Surface_mesh<Point>::face_index fi : _sm.faces()) {
@@ -401,13 +415,53 @@ namespace probe {
             }
             triangle = std::next(triangle);
         }
+    }
 
+    void ReconstructSurface::generateEllipsoid_3() {
+
+        const float radius_x = _bbox.BoundingBox().GetSize().Width() / 2;
+        const float radius_y = _bbox.BoundingBox().GetSize().Height() / 2;
+        const float radius_z = _bbox.BoundingBox().GetSize().Depth() / 2;
+
+        int num_samples = 2000;
+
+        _vertices.resize(num_samples);
+
+        glm::vec3 leftbottmfront = {_bbox.BoundingBox().GetLeftBottomFront().GetX(),
+            _bbox.BoundingBox().GetLeftBottomFront().GetY(), _bbox.BoundingBox().GetLeftBottomFront().GetZ()};
+        glm::vec3 righttopback = {_bbox.BoundingBox().GetRightTopBack().GetX(),
+            _bbox.BoundingBox().GetRightTopBack().GetY(), _bbox.BoundingBox().GetRightTopBack().GetZ()};
+
+        std::mt19937 rnd;
+        rnd.seed(std::random_device()());
+        std::normal_distribution<float> dist_phi(0, glm::two_pi<float>());
+        std::normal_distribution<float> dist_theta(0, glm::pi<float>());
+
+
+#pragma omp parallel for
+        for (int i = 0; i < num_samples; i++) {
+
+            float phi = dist_phi(rnd);
+
+            float theta = dist_theta(rnd);
+
+            // Vertices with spherical coordinates
+            float x = radius_x * cos(theta) * sin(phi);
+            float y = radius_y * cos(phi);
+            float z = radius_z * sin(theta) * sin(phi);
+
+            _vertices[i][0] = x + _data_origin.x;
+            _vertices[i][1] = y + _data_origin.y;
+            _vertices[i][2] = z + _data_origin.z;
+        }
     }
 
     void ReconstructSurface::tighten() {
 
         // generate kd stuff
+        _kd_indices.clear();
         _kd_indices.resize(_sliced_positions_whalo.size());
+        _data2kd.clear();
         _data2kd.resize(_sliced_positions_whalo.size());
         
         for (int i = 0; i < _kd_indices.size(); ++i) {
@@ -428,7 +482,13 @@ namespace probe {
         not_main_axis[2] = 2;
         not_main_axis.erase(_main_axis);
 
-
+        // point list for triangulation
+        typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
+        typedef Kernel::Point_3 Point;
+        typedef Kernel::Vector_3 Vector;
+        typedef std::pair<Point, Vector> PointVectorPair;
+        std::vector<PointVectorPair> points_for_triangulation;
+        points_for_triangulation.resize(_vertices.size());
         for (int n = 0; n < _slice_ellipsoid.size(); ++n) {
         //for (int n = 0; n < 1; ++n) {
             glm::vec3 center_of_mass_dif = _slice_data_center_of_mass[n] - _slice_ellipsoid_center_of_mass[n];
@@ -564,6 +624,8 @@ namespace probe {
                     _vertices[_slice_ellipsoid[n][i]][0] = new_start.x - direction.x * new_sample_step * predicted_k;
                     _vertices[_slice_ellipsoid[n][i]][1] = new_start.y - direction.y * new_sample_step * predicted_k;
                     _vertices[_slice_ellipsoid[n][i]][2] = new_start.z - direction.z * new_sample_step * predicted_k;
+                    points_for_triangulation[i] = std::make_pair(Point(_vertices[_slice_ellipsoid[n][i]][0],
+                        _vertices[_slice_ellipsoid[n][i]][1], _vertices[_slice_ellipsoid[n][i]][2]), Vector(0,0,0));
                 //} else {
                 //// DEBUG center of mass translation
                 //     _vertices[_slice_ellipsoid[n][i]][0] = vertex[0];
@@ -572,43 +634,99 @@ namespace probe {
                 //}
             }
         }
+
+        // Push new positions in surface mesh
         for (int i = 0; i < _sm.num_vertices(); ++i) {
             auto it = std::next(_sm.points().begin(), i);
 
             const Point point(_vertices[i][0], _vertices[i][1], _vertices[i][2]);
             *it = point;
         }
+
+          // Compute average spacing using neighborhood of 6 points
+        //double spacing = CGAL::compute_average_spacing<CGAL::Parallel_if_available_tag>(points_for_triangulation, 6,
+        //    CGAL::parameters::point_map(CGAL::First_of_pair_property_map<PointVectorPair>())
+        //        .normal_map(CGAL::Second_of_pair_property_map<PointVectorPair>()));
+        // Simplify using a grid of size 2 * average spacing
+        //CGAL::grid_simplify_point_set(points_for_triangulation, 2. * spacing,
+        //    CGAL::parameters::point_map(CGAL::First_of_pair_property_map<PointVectorPair>())
+        //        .normal_map(CGAL::Second_of_pair_property_map<PointVectorPair>()));
+        //auto removed = points_for_triangulation.number_of_removed_points();
+        //points_for_triangulation.collect_garbage();
+
+        //CGAL::pca_estimate_normals<CGAL::Parallel_if_available_tag>(points_for_triangulation, 12,
+        //    CGAL::parameters::point_map(CGAL::First_of_pair_property_map<PointVectorPair>())
+        //        .normal_map(CGAL::Second_of_pair_property_map<PointVectorPair>()));
+        // Orientation of normals, returns iterator to first unoriented point
+        //std::vector<PointVectorPair>::iterator unoriented_points_begin =
+        //    CGAL::mst_orient_normals(points_for_triangulation, 12,
+        //        CGAL::parameters::point_map(CGAL::First_of_pair_property_map<PointVectorPair>())
+        //            .normal_map(CGAL::Second_of_pair_property_map<PointVectorPair>()));
+        //points_for_triangulation.erase(unoriented_points_begin, points_for_triangulation.end());
+
+        //CGAL::poisson_surface_reconstruction_delaunay(points_for_triangulation.begin(), points_for_triangulation.end(),
+        //    CGAL::First_of_pair_property_map<PointVectorPair>(), CGAL::Second_of_pair_property_map<PointVectorPair>(),
+        //    _sm, spacing);
+
+
     }
 
-    void ReconstructSurface::generateNormals() {
+    void ReconstructSurface::do_remeshing(Surface_mesh& mesh, float spacing_) {
+
+        float spacing = 0.0f;
+        if (spacing_ == 0.0f) {
+            spacing = CGAL::compute_average_spacing<CGAL::Parallel_if_available_tag>(mesh.points(), 6);
+        } else {
+            spacing = spacing_;
+        }
+
+        CGAL::Polygon_mesh_processing::split_long_edges(mesh.edges(), spacing, mesh);
+
+        CGAL::Polygon_mesh_processing::isotropic_remeshing(
+            mesh.faces(), spacing, mesh); //, CGAL::Polygon_mesh_processing::parameters::number_of_iterations(3));
+        mesh.collect_garbage();
+
+    }
+
+    void ReconstructSurface::generateNormals(Surface_mesh& mesh) {
+
         typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
         typedef Kernel::Point_3 Point;
         typedef Kernel::Vector_3 Vector;
         typedef std::pair<Point, Vector> PointVectorPair;
 
         std::list<PointVectorPair> points;
-        for (int i = 0;i <_vertices.size(); ++i) {
-            Point point = {_vertices[i][0], _vertices[i][1], _vertices[i][2]};
-            Vector vector;
-            PointVectorPair pvp = std::make_pair(point,vector);
-            points.emplace_back(pvp);
+        //for (auto point : mesh.points()) {
+        //    Vector vector = {0,0,0};
+        //    PointVectorPair pvp = std::make_pair(point,vector);
+        //    points.emplace_back(pvp);
+        //}
+        for (int i = 0; i < mesh.num_vertices(); ++i) {
+            auto it = std::next(mesh.points().begin(),i);
+            points.emplace_back(std::make_pair(*it,Vector(0,0,0)));
         }
 
-        int nb_neighbors = 18;
+        int nb_neighbors = 24;
 
+        try {
         CGAL::pca_estimate_normals<CGAL::Parallel_if_available_tag>(points, nb_neighbors,
             CGAL::parameters::point_map(CGAL::First_of_pair_property_map<PointVectorPair>())
                 .normal_map(CGAL::Second_of_pair_property_map<PointVectorPair>()));
+        } catch (const std::exception& e) {
+            core::utility::log::Log::DefaultLog.WriteError(std::string("[ReconstructSurface] NormalEstimation exited with ").append(e.what()).c_str());
+        }
 
         // Orientation of normals, returns iterator to first unoriented point
         //std::list<PointVectorPair>::iterator unoriented_points_begin = CGAL::mst_orient_normals(points, nb_neighbors,
         //    CGAL::parameters::point_map(CGAL::First_of_pair_property_map<PointVectorPair>())
         //        .normal_map(CGAL::Second_of_pair_property_map<PointVectorPair>()));
-        _normals.resize(_vertices.size());
-        for (int i = 0; i < _vertices.size(); ++i) {
+
+
+        _normals.resize(mesh.num_vertices());
+        for (int i = 0; i < points.size(); ++i) {
             auto it = std::next(points.begin(), i);
             glm::vec3 normal = {it->second.x(), it->second.y(), it->second.z()};
-            glm::vec3 vert0 = {_vertices[i][0], _vertices[i][1], _vertices[i][2]};
+            glm::vec3 vert0 = {it->first.x(), it->first.y(), it->first.z()};
             auto difcenter = vert0 - _data_origin;
 
              if (glm::dot(normal, difcenter) > 0) {
@@ -617,8 +735,41 @@ namespace probe {
 
             _normals[i] = {normal.x, normal.y, normal.z};
         }
+#if 0
+        _normals.resize(_vertices.size());
+        for (int i = 0; i < _vertices.size(); ++i) {
+            glm::vec3 vert0 = {_vertices[i][0], _vertices[i][1], _vertices[i][2]};
+            glm::vec3 normal = vert0 - _data_origin;
+
+            normal = glm::normalize(normal);
+
+            _normals[i] = {normal.x, normal.y, normal.z};
+        }
+#endif
 
         
+    }
+
+    void ReconstructSurface::generateNormals_2(Surface_mesh& mesh) {
+
+        typedef boost::graph_traits<Surface_mesh>::vertex_descriptor vertex_descriptor;
+        typedef boost::graph_traits<Surface_mesh>::face_descriptor face_descriptor;
+        typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+        typedef K::Vector_3 Vector;
+
+        namespace PMP = CGAL::Polygon_mesh_processing;
+
+        auto vnormals = mesh.add_property_map<vertex_descriptor, Vector>("v:normals", CGAL::NULL_VECTOR).first;
+
+        PMP::compute_vertex_normals(mesh, vnormals);
+
+        _normals.clear();
+        _normals.reserve(mesh.num_vertices());
+        for (vertex_descriptor vd : vertices(mesh)) {
+            std::array<float,3> normal = {vnormals[vd].x(), vnormals[vd].y(), vnormals[vd].z()};
+            _normals.emplace_back(normal);
+        }
+
     }
 
     //void ReconstructSurface::isotropicRemeshing() {
@@ -665,13 +816,16 @@ namespace probe {
     //}
 
     void ReconstructSurface::onionize() {
-        typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
         namespace PMP = CGAL::Polygon_mesh_processing;
         namespace params = CGAL::Polygon_mesh_processing::parameters;
+        typedef boost::graph_traits<Surface_mesh>::face_descriptor face_descriptor;
 
         unsigned int num_shells = _numShellsSlot.Param<core::param::IntParam>()->Value();
+        unsigned int num_splits_main_axis = 10;
+        unsigned int num_splits_off_axis = 2;
 
         // translate vertices back to center
+        float min_length = std::numeric_limits<float>::max();
         for (int i = 0; i < _sm.num_vertices(); ++i) {
             auto it = std::next(_sm.points().begin(), i);
 
@@ -679,30 +833,269 @@ namespace probe {
             p.x -= _data_origin[0];
             p.y -= _data_origin[1];
             p.z -= _data_origin[2];
+            min_length = std::min(min_length, glm::length(p));
 
-            const Point point(p.x, p.y, p.z);
-            *it = point;
+            //const Point point(p.x, p.y, p.z);
+            //*it = point;
         }
+        float step_size = 0.5*min_length / (num_shells+1);
+
+        glm::vec3 scale_map = {0,0,0};
+        std::array<float, 3> whd = {
+            _bbox.BoundingBox().Width(), _bbox.BoundingBox().Height(), _bbox.BoundingBox().Depth()};
+        auto min_d = std::min_element(whd.begin(), whd.end());
+
+        for (int i = 0; i < whd.size(); ++i) {
+            scale_map[i] = 1.0f / (min_length / whd[i]);
+        }
+        scale_map = glm::normalize(scale_map);
+
+        core::BoundingBoxes_2 origin_box;
+        origin_box
+            .SetBoundingBox(_bbox.BoundingBox().Left() - _data_origin[0],
+                _bbox.BoundingBox().Bottom() - _data_origin[1],
+                _bbox.BoundingBox().Back() - _data_origin[2],
+                _bbox.BoundingBox().Right() - _data_origin[0],
+                _bbox.BoundingBox().Top() - _data_origin[1],
+                _bbox.BoundingBox().Front() - _data_origin[2]);
+
+        float avg_spacing = 0.0f;
 
         // build initial shells
         _shells.clear();
         _shells.resize(num_shells);
-        for (int i = 0; i < num_shells; ++i) {
-            _shells[i] = _sm;
-            float scale_factor = 1 - i*(1.0f / static_cast<float>(num_shells));
-            for (int j = 0; j < _shells[i].num_vertices(); ++j) {
-                auto it = std::next(_shells[i].points().begin(), j);
+        _scaledHulls.clear();
+        _scaledHulls.resize(num_shells + 1);
+        _shellBBoxes.clear();
+        _shellBBoxes.resize(num_shells);
+        _scaledHulls[0] = _sm;
+        for (int i = 0; i < num_shells + 1; ++i) {
+            //_scaledHulls[i] = _sm;
+            if (i > 0) _scaledHulls[i] = _scaledHulls[i-1];
+            glm::vec3 scale = 1.0f - scale_map * static_cast<float>(i) * (1.8f / static_cast<float>(num_shells));
+            if (i > 0) {
+                auto inv_scale = 1.0f - scale;
+                inv_scale *= 1.0f / std::powf(static_cast<float>(i), 1.0f/3.0f);
+                scale = 1.0f - inv_scale;
+                // relative shell thickness stays the same
+                // but in absolute values: shells get thinner
+            }
+            // also scale bounding box
+            if (i < _shellBBoxes.size()) {
+            _shellBBoxes[i].SetBoundingBox(
+                origin_box.BoundingBox().Left() * scale.x + _data_origin[0],
+               origin_box.BoundingBox().Bottom() * scale.y + _data_origin[1],
+                origin_box.BoundingBox().Back() * scale.z + _data_origin[2],
+                origin_box.BoundingBox().Right() * scale.x + _data_origin[0],
+                origin_box.BoundingBox().Top() * scale.y + _data_origin[1],
+                origin_box.BoundingBox().Front() * scale.z + _data_origin[2]);
+            }
+           
+            // scale hull
+            for (int j = 0; j < _scaledHulls[i].num_vertices(); ++j) {
+                auto it = std::next(_scaledHulls[i].points().begin(), j);
 
-                glm::vec3 p = {it->x(), it->y(), it->z()};
-                p.x *= scale_factor;
-                p.y *= scale_factor;
-                p.z *= scale_factor;
+                glm::vec3 n(_normals[j][0], _normals[j][1], _normals[j][2]);
+                glm::vec3 p(it->x(), it->y(), it->z());
+                //p.x = p.x * scale.x + _data_origin[0];
+                //p.y = p.y * scale.y +_data_origin[1];
+                //p.z = p.z * scale.z + _data_origin[2];
+                //p += _data_origin;
+                //p += n * static_cast<float>(i) * step_size;
+                p += n * step_size;
 
                 const Point point(p.x, p.y, p.z);
                 *it = point;
             }
+
+            bool dhsi = CGAL::Polygon_mesh_processing::does_self_intersect(_scaledHulls[i]);
+            if (dhsi) {
+                //std::vector<std::pair<face_descriptor, face_descriptor>> intersected_tris;
+                //PMP::self_intersections(_scaledHulls[i], std::back_inserter(intersected_tris));
+                //for (std::pair<face_descriptor, face_descriptor>& p : intersected_tris) {
+                //    try {
+                //        auto he = _scaledHulls[i].halfedge(get<0>(p));
+                //        if (!_scaledHulls[i].is_border(he)) {
+                //                CGAL::Euler::remove_face(he, _scaledHulls[i]);
+                //        }
+                //    } catch (...) {
+                //        // skip
+                //        break;
+                //    }
+                //}
+                //_scaledHulls[i].collect_garbage();
+                //dhsi = CGAL::Polygon_mesh_processing::does_self_intersect(_scaledHulls[i]);
+                if (dhsi) {
+                    if (avg_spacing == 0.0f) {
+                        avg_spacing =
+                            CGAL::compute_average_spacing<CGAL::Parallel_if_available_tag>(_scaledHulls[i].points(), 6);
+                    }
+                    this->do_remeshing(_scaledHulls[i], 1.5 * avg_spacing);
+                    this->generateNormals(_scaledHulls[i]);
+                    assert(_scaledHulls[i].num_vertices() == _normals.size());
+                }
+            }
+            if (i > 0 && i < num_shells) {
+                // generate shell
+                try {
+                     //const Point point(_data_origin[0], _data_origin[1], _data_origin[2]);
+                     //const Vector normal(1, 0, 0);
+                     //const Plane plane(point, normal);
+                    Surface_mesh tm1 = _scaledHulls[i - 1];
+                    Surface_mesh tm2 = _scaledHulls[i];
+                    CGAL::Polygon_mesh_processing::corefine_and_compute_difference(tm1, tm2, _shells[i-1]);
+                    bool does_self_intersect = CGAL::Polygon_mesh_processing::does_self_intersect(_shells[i - 1]);
+                    if (does_self_intersect) {
+                        std::vector<std::pair<face_descriptor, face_descriptor>> intersected_tris;
+                        PMP::self_intersections(_shells[i - 1], std::back_inserter(intersected_tris));
+                        for (std::pair<face_descriptor, face_descriptor>& p : intersected_tris) {
+                            auto he = _shells[i - 1].halfedge(get<0>(p));
+                            if (!_shells[i-1].is_border(he)) {
+                                CGAL::Euler::remove_face(he, _shells[i - 1]);
+                            }
+                        }
+                    }
+                } catch (const std::exception& e) {
+                    core::utility::log::Log::DefaultLog.WriteError(
+                        std::string("[ReconstructSurface] Shell generation exited with ").append(e.what()).c_str());
+                }
+            } else if (i == num_shells) {
+                _shells[i - 1] = _scaledHulls[i-1];
+            }
         }
+    }
+
+    void ReconstructSurface::cut() {
+        typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+        typedef K::Plane_3 Plane;
+        typedef K::Vector_3 Vector;
+
+        //Point lbf = Point(_bbox.BoundingBox().Left(), _bbox.BoundingBox().Bottom(), _bbox.BoundingBox().Front());
+        //Point rtb = Point(_bbox.BoundingBox().Right(), _bbox.BoundingBox().Top(), _data_origin[2]);
+
+        //Point p0 = Point(lbf[0], lbf[1], lbf[2]);
+        //Point p1 = Point(rtb[0], lbf[1], lbf[2]);
+        //Point p2 = Point(lbf[0], lbf[1], rtb[2]);
+        //Point p3 = Point(lbf[0], rtb[1], lbf[2]);
+
+        //Point p4 = Point(rtb[0], lbf[1], rtb[2]);
+        //Point p5 = Point(lbf[0], rtb[1], rtb[2]);
+        //Point p6 = Point(rtb[0], rtb[1], lbf[2]);
+        //Point p7 = Point(rtb[0], rtb[1], rtb[2]);
+
+        //Surface_mesh cube;
+        //CGAL::make_hexahedron(p0,p1,p2,p3,p4,p5,p6,p7,cube);
+        //CGAL::Polygon_mesh_processing::triangulate_faces(cube);
+        //CGAL::Polygon_mesh_processing::isotropic_remeshing(cube.faces(), (*min_d/10.0f), cube);
+        //bool is_cube_triangle_mesh = CGAL::is_triangle_mesh(cube);
+        //bool cube_does_self_intersect = CGAL::Polygon_mesh_processing::does_self_intersect(cube);
+        //if (cube_does_self_intersect) {
+        //    std::vector<std::pair<face_descriptor, face_descriptor>> intersected_tris;
+        //    PMP::self_intersections(cube, std::back_inserter(intersected_tris));
+        //    for (std::pair<face_descriptor, face_descriptor>& p : intersected_tris) {
+        //        CGAL::Euler::remove_face(cube.halfedge(get<0>(p)), cube);
+        //    }
+        //}
         
+        // bool is_triangle_mesh = CGAL::is_triangle_mesh(_shells[i]);
+        // bool does_self_intersect = CGAL::Polygon_mesh_processing::does_self_intersect(_shells[i]);
+
+        int splits_main_axis = 10;
+        int splits_phi = 8;
+        float phi_step = glm::pi<float>() / (static_cast<float>(splits_phi)/2.0f);
+
+        auto main_axis_normal0 = glm::vec3(0,0,0);
+        auto main_axis_normal1 = glm::vec3(0, 0, 0);
+        int factor = -1;
+        if (_main_axis == 2) {
+            main_axis_normal0[_main_axis] = 1 * factor;
+            main_axis_normal1[_main_axis] = -1 * factor;
+        } else {
+            main_axis_normal0[_main_axis] = 1;
+            main_axis_normal1[_main_axis] = -1;
+        }
+
+        _shellElements.resize(_shells.size());
+        for (int i = 0; i < _shells.size(); ++i) {
+            _shellElements[i].reserve(splits_main_axis * splits_phi);
+
+            // shell box values
+            auto shell_lbf = glm::vec3(_shellBBoxes[i].BoundingBox().Left(), _shellBBoxes[i].BoundingBox().Bottom(),
+                _shellBBoxes[i].BoundingBox().Front());
+            auto shell_rtb = glm::vec3(_shellBBoxes[i].BoundingBox().Right(), _shellBBoxes[i].BoundingBox().Top(),
+                _shellBBoxes[i].BoundingBox().Back());
+            auto shell_whd = glm::vec3(_shellBBoxes[i].BoundingBox().Width(), _shellBBoxes[i].BoundingBox().Height(),
+                _shellBBoxes[i].BoundingBox().Depth());
+            auto shell_main_axis_step = glm::vec3(0);
+            shell_main_axis_step[_main_axis] = shell_whd[_main_axis] / splits_main_axis;
+
+            for (int n = 0; n < splits_main_axis; ++n) {
+            //for (int n = 0; n < 1; ++n) {
+                auto shell = _shells[i];
+                // split in main axis direction
+                auto p0 = shell_lbf;
+                p0 += static_cast<float>(n)*shell_main_axis_step * main_axis_normal1;
+                const Point point0(p0.x, p0.y, p0.z);
+                Vector normal0(main_axis_normal0[0], main_axis_normal0[1], main_axis_normal0[2]);
+                const Plane plane0(point0, normal0);
+
+                auto p1 = shell_lbf;
+                p1 += static_cast<float>(n+1) * shell_main_axis_step * main_axis_normal1;
+                const Point point1(p1.x, p1.y, p1.z);
+                Vector normal1(main_axis_normal1[0], main_axis_normal1[1], main_axis_normal1[2]);
+                const Plane plane1(point1, normal1);
+                try {
+                    CGAL::Polygon_mesh_processing::clip(
+                        shell, plane0, CGAL::Polygon_mesh_processing::parameters::clip_volume(true));
+                    CGAL::Polygon_mesh_processing::clip(
+                        shell, plane1, CGAL::Polygon_mesh_processing::parameters::clip_volume(true));
+                } catch (const std::exception& e) {
+                    core::utility::log::Log::DefaultLog.WriteError(
+                        std::string("[ReconstructSurface] Element generation exited with ").append(e.what()).c_str());
+                }
+
+                shell.collect_garbage();
+
+                glm::vec3 element_com(0,0,0);
+                for (auto p : shell.points()) {
+                    element_com.x += p.x();
+                    element_com.y += p.y();
+                    element_com.z += p.z();
+                }
+                element_com /= shell.num_vertices();
+
+                auto p_origin = Point(element_com.x, element_com.y, element_com.z);
+                glm::vec3 n2(0);
+                n2[_off_axes[0]] = 1;
+                auto rot_mx = get_rot_mx(phi_step);
+                // DEBUG
+                //_shellElements[i].emplace_back(shell);
+
+                for (int k = 0; k < splits_phi; ++k) {
+                    auto shell_copy = shell;
+                    if (k > 0) {
+                        n2 = rot_mx[_main_axis] * n2;
+                    }
+                    auto n3 = -rot_mx[_main_axis] * n2;
+
+                    const Plane plane2(p_origin, Vector(n2.x,n2.y,n2.z));
+                    const Plane plane3(p_origin, Vector(n3.x, n3.y, n3.z));
+
+                    try {
+                        CGAL::Polygon_mesh_processing::clip(
+                            shell_copy, plane2, CGAL::Polygon_mesh_processing::parameters::clip_volume(true));
+                        CGAL::Polygon_mesh_processing::clip(
+                            shell_copy, plane3, CGAL::Polygon_mesh_processing::parameters::clip_volume(true));
+                    } catch (const std::exception& e) {
+                        core::utility::log::Log::DefaultLog.WriteError(
+                            std::string("[ReconstructSurface] Element generation exited with ")
+                                .append(e.what()).c_str());
+                    }
+                    shell_copy.collect_garbage();
+                    _shellElements[i].emplace_back(shell_copy);
+                }
+            }
+        }
 
     }
 
@@ -729,7 +1122,7 @@ namespace probe {
         toInq.emplace_back(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()));
     }
 
-        // get data from adios
+    // get data from adios
     for (auto var : toInq) {
         if (!cd->inquire(var)) {
             return false;
@@ -758,6 +1151,7 @@ namespace probe {
             auto xminmax = std::minmax_element(x.begin(), x.end());
             auto yminmax = std::minmax_element(y.begin(), y.end());
             auto zminmax = std::minmax_element(z.begin(), z.end());
+
             _bbox.SetBoundingBox(
                 *xminmax.first, *yminmax.first, *zminmax.second, *xminmax.second, *yminmax.second, *zminmax.first);
         } else {
@@ -781,47 +1175,90 @@ namespace probe {
         }
     }
 
-    if (something_changed && !_raw_positions.empty()) {
-        // find main axis
-        std::array<float, 3> whd = {
-            this->_bbox.BoundingBox().Width(), this->_bbox.BoundingBox().Height(), this->_bbox.BoundingBox().Depth()};
-        _main_axis = std::distance(whd.begin(), std::max_element(whd.begin(), whd.end()));
+    if (something_changed && !_raw_positions.empty() || _shellToShowChanged) {
+        if (!_shellToShowChanged || _shells.empty()) {
+            // find main axis
+            std::map<int,int> axes;
+            axes[0] = 0;
+            axes[1] = 1;
+            axes[2] = 2;
+            std::array<float, 3> whd = {
+                this->_bbox.BoundingBox().Width(), this->_bbox.BoundingBox().Height(), this->_bbox.BoundingBox().Depth()};
+            _main_axis = std::distance(whd.begin(), std::max_element(whd.begin(), whd.end()));
+            axes.erase(_main_axis);
+            int l = 0;
+            for (auto ax : axes) {
+                _off_axes[l] = ax.first;
+                ++l;
+            }
 
-        // get origin
-        float center_z;
-        if (std::copysign(1.0f, _bbox.BoundingBox().Front()) != std::copysign(1.0f, _bbox.BoundingBox().Back())) {
-            center_z = (_bbox.BoundingBox().Front() + _bbox.BoundingBox().Back()) / 2;
+
+            // get origin
+            float center_z;
+            if (std::copysign(1.0f, _bbox.BoundingBox().Front()) != std::copysign(1.0f, _bbox.BoundingBox().Back())) {
+                center_z = (_bbox.BoundingBox().Front() + _bbox.BoundingBox().Back()) / 2;
+            } else {
+                center_z = _bbox.BoundingBox().Front() +
+                           std::copysign(1.0f, _bbox.BoundingBox().Front()) * _bbox.BoundingBox().Depth() / 2;
+            }
+            _data_origin = {_bbox.BoundingBox().CalcCenter().GetX(), _bbox.BoundingBox().CalcCenter().GetY(), center_z};
+
+            std::stringstream fname;
+            fname << "mesh.sm";
+
+            if (std::filesystem::exists(fname.str())) {
+                _sm.clear();
+                std::ifstream input_mesh(fname.str());
+                input_mesh >> _sm;
+                this->activateMesh(_sm);
+            } else {
+                this->generateEllipsoid_2();
+                this->sliceData();
+                this->tighten();
+                this->do_remeshing(_sm);
+
+                std::ofstream mesh_to_disc(fname.str());
+                mesh_to_disc.precision(17);
+                mesh_to_disc << _sm;
+            }
+            this->generateNormals(_sm);
+            this->onionize();
+            this->cut();
+        }
+        auto shell = _showShellSlot.Param<core::param::IntParam>()->Value();
+        if (shell > -1) {
+            this->activateMesh(_shellElements[0][shell]);
+            this->generateNormals(_shellElements[0][shell]);
+            //this->activateMesh(_shells[shell]);
+            //this->generateNormals(_shells[shell]);
+
         } else {
-            center_z = _bbox.BoundingBox().Front() +
-                       std::copysign(1.0f, _bbox.BoundingBox().Front()) * _bbox.BoundingBox().Depth() / 2;
-        }
-        _data_origin = {_bbox.BoundingBox().CalcCenter().GetX(), _bbox.BoundingBox().CalcCenter().GetY(), center_z};
-
-        this->generateEllipsoid_2();
-        this->sliceData();
-        this->tighten();
-        this->generateNormals();
-        this->onionize();
-        if (_showShellSlot.Param<core::param::IntParam>()->Value() > 0) {
-            
+            // TODO: get normals into mesh
+            this->activateMesh(_sm);
+            this->generateNormals(_sm);
         }
 
-        _mesh_attribs.resize(2);
-        _mesh_attribs[0].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-        _mesh_attribs[0].byte_size = _vertices.size() * sizeof(std::array<float, 4>);
-        _mesh_attribs[0].component_cnt = 4;
-        _mesh_attribs[0].stride = sizeof(std::array<float, 4>);
-        _mesh_attribs[0].offset = 0;
-        _mesh_attribs[0].data = reinterpret_cast<uint8_t*>(_vertices.data());
-        _mesh_attribs[0].semantic = mesh::MeshDataAccessCollection::POSITION;
+        _mesh_attribs.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute());
+        _mesh_attribs.back().component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+        _mesh_attribs.back().byte_size = _vertices.size() * sizeof(std::array<float, 4>);
+        _mesh_attribs.back().component_cnt = 4;
+        _mesh_attribs.back().stride = sizeof(std::array<float, 4>);
+        _mesh_attribs.back().offset = 0;
+        _mesh_attribs.back().data = reinterpret_cast<uint8_t*>(_vertices.data());
+        _mesh_attribs.back().semantic = mesh::MeshDataAccessCollection::POSITION;
 
-        _mesh_attribs[1].component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-        _mesh_attribs[1].byte_size = _normals.size() * sizeof(std::array<float, 3>);
-        _mesh_attribs[1].component_cnt = 3;
-        _mesh_attribs[1].stride = sizeof(std::array<float, 3>);
-        _mesh_attribs[1].offset = 0;
-        _mesh_attribs[1].data = reinterpret_cast<uint8_t*>(_normals.data());
-        _mesh_attribs[1].semantic = mesh::MeshDataAccessCollection::NORMAL;
+        if (!_normals.empty()) {
+            assert(_normals.size() == _vertices.size());
+            _mesh_attribs.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute());
+            _mesh_attribs.back().component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+            _mesh_attribs.back().byte_size = _normals.size() * sizeof(std::array<float, 3>);
+            _mesh_attribs.back().component_cnt = 3;
+            _mesh_attribs.back().stride = sizeof(std::array<float, 3>);
+            _mesh_attribs.back().offset = 0;
+            _mesh_attribs.back().data = reinterpret_cast<uint8_t*>(_normals.data());
+            _mesh_attribs.back().semantic = mesh::MeshDataAccessCollection::NORMAL;
+        }
+
 
         if (this->_faceTypeSlot.Param<core::param::EnumParam>()->Value() == 0) {
             _mesh_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
@@ -845,6 +1282,7 @@ namespace probe {
         cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)), _version);
         _old_datahash = cd->getDataHash();
         _recalc = false;
+        _shellToShowChanged = false;
 
         auto meta_data = cm->getMetaData();
         meta_data.m_bboxs = _bbox;
@@ -891,13 +1329,13 @@ namespace probe {
     }
 
     bool ReconstructSurface::parameterChanged(core::param::ParamSlot& p) {
-
         _recalc = true;
-        _vertices.clear();
-        _normals.clear();
-        _faces.clear();
-        _triangles.clear();
 
+        return true;
+    }
+
+    bool ReconstructSurface::shellToShowChanged(core::param::ParamSlot& p) {
+        _shellToShowChanged = true;
         return true;
     }
 
@@ -978,9 +1416,40 @@ namespace probe {
         }
 
         if (something_changed && !_raw_positions.empty()) {
-            this->generateEllipsoid();
-            this->sliceData();
-            this->tighten();
+            // get main axis
+            std::array<float, 3> whd = {this->_bbox.BoundingBox().Width(), this->_bbox.BoundingBox().Height(),
+                this->_bbox.BoundingBox().Depth()};
+            _main_axis = std::distance(whd.begin(), std::max_element(whd.begin(), whd.end()));
+
+            // get origin
+            float center_z;
+            if (std::copysign(1.0f, _bbox.BoundingBox().Front()) != std::copysign(1.0f, _bbox.BoundingBox().Back())) {
+                center_z = (_bbox.BoundingBox().Front() + _bbox.BoundingBox().Back()) / 2;
+            } else {
+                center_z = _bbox.BoundingBox().Front() +
+                           std::copysign(1.0f, _bbox.BoundingBox().Front()) * _bbox.BoundingBox().Depth() / 2;
+            }
+            _data_origin = {_bbox.BoundingBox().CalcCenter().GetX(), _bbox.BoundingBox().CalcCenter().GetY(), center_z};
+
+            std::stringstream fname;
+            fname << "mesh.sm";
+
+            if (std::filesystem::exists(fname.str())) {
+                _sm.clear();
+                std::ifstream input_mesh(fname.str());
+                input_mesh >> _sm;
+                this->activateMesh(_sm);
+            } else {
+                this->generateEllipsoid_2();
+                this->sliceData();
+                this->tighten();
+                this->do_remeshing(_sm);
+
+                std::ofstream mesh_to_disc(fname.str());
+                mesh_to_disc.precision(17);
+                mesh_to_disc << _sm;
+            }
+            this->generateNormals(_sm);
         }
 
         // FOR DEBUG
@@ -1045,24 +1514,29 @@ namespace probe {
         return true;
     }
 
-    void ReconstructSurface::displayShell(int shell_number) {
+    void ReconstructSurface::activateMesh(Surface_mesh& shell) {
 
         _vertices.clear();
-        _vertices.resize(_shells[shell_number].num_vertices());
-        for (int i = 0; i < _shells[shell_number].num_vertices(); ++i) {
-            auto it = std::next(_shells[shell_number].points().begin(), i);
-
-            glm::vec3 p = {it->x(), it->y(), it->z()};
-            p.x += _data_origin[0];
-            p.y += _data_origin[1];
-            p.z += _data_origin[2];
-
-            const Point point(p.x, p.y, p.z);
-            *it = point;
+        _vertices.resize(shell.num_vertices());
+        for (int i = 0; i < shell.num_vertices(); ++i) {
+            auto it = std::next(shell.points().begin(), i);
 
             _vertices[i][0] = it->x();
             _vertices[i][1] = it->y();
             _vertices[i][2] = it->z();
+        }
+
+        _triangles.clear();
+        _triangles.resize(shell.num_faces());
+        auto triangle = _triangles.begin();
+        for (CGAL::Surface_mesh<Point>::face_index fi : shell.faces()) {
+            auto hf = shell.halfedge(fi);
+            auto triangle_index = triangle->begin();
+            for (CGAL::Surface_mesh<Point>::Halfedge_index hi : shell.halfedges_around_face(hf)) {
+                *triangle_index = CGAL::target(hi, shell);
+                triangle_index = std::next(triangle_index);
+            }
+            triangle = std::next(triangle);
         }
 
     }

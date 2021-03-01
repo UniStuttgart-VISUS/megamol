@@ -16,6 +16,15 @@
 
 namespace megamol {
 namespace probe {
+
+    inline std::array<glm::mat3,3> get_rot_mx(float angle) {
+        std::array<glm::mat3,3> ret_val;
+        ret_val[0] = glm::mat3(0,0,1,0,glm::cos(angle), glm::sin(angle), 0, -glm::sin(angle), glm::cos(angle));
+        ret_val[1] = glm::mat3(glm::cos(angle), 0, -glm::sin(angle), 0,1,0,glm::sin(angle), 0,glm::cos(angle));
+        ret_val[2] = glm::mat3(glm::cos(angle), glm::sin(angle), 0, -glm::sin(angle), glm::cos(angle), 0, 0,0,1);
+        return ret_val;
+    }
+
     // default triangulation for Surface_mesher
     typedef CGAL::Surface_mesh_default_triangulation_3 Tr;
     typedef Tr::Geom_traits GT;
@@ -122,20 +131,26 @@ private:
     void sliceData();
     void generateEllipsoid();
     void generateEllipsoid_2();
+    void generateEllipsoid_3();
     void tighten();
-    void generateNormals();
+    void do_remeshing(Surface_mesh& mesh, float spacing_ = 0.0f);
+    void generateNormals(Surface_mesh& mesh);
+    void generateNormals_2(Surface_mesh& mesh);
     void onionize();
+    void cut();
 
     bool getMetaData(core::Call& call);
+
     bool getData(core::Call& call);
 
     bool parameterChanged(core::param::ParamSlot& p);
+    bool shellToShowChanged(core::param::ParamSlot& p);
 
     bool getNormalData(core::Call& call);
 
     bool getNormalMetaData(core::Call& call);
 
-    void displayShell(int shell_number);
+    void activateMesh(Surface_mesh& shell);
 
     // CallMesh stuff
     std::vector<mesh::MeshDataAccessCollection::VertexAttribute> _mesh_attribs;
@@ -156,10 +171,16 @@ private:
     std::vector<glm::vec3> _slice_data_center_of_mass;
     std::vector<glm::vec3> _slice_ellipsoid_center_of_mass;
     int _main_axis;
+    std::array<int,2> _off_axes;
     glm::vec3 _data_origin;
+    std::vector<std::array<float, 4>> _ellipsoid_backup;
 
     Surface_mesh _sm;
+    std::vector<Surface_mesh> _scaledHulls;
     std::vector<Surface_mesh> _shells;
+    std::vector<std::vector<Surface_mesh>> _shellElements;
+    std::vector<core::BoundingBoxes_2> _shellBBoxes;
+    bool _shellToShowChanged = false;;
 
     // store surface
     std::vector<std::array<float, 4>> _vertices;
