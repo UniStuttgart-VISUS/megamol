@@ -141,6 +141,14 @@ namespace gui {
             return this->state.screenshot_filepath;
         }
 
+        /**
+         * Pass project load request.
+         * Request is consumed when calling this function.
+         */
+        std::string GetProjectLoadRequest(void) {
+            return this->state.request_load_projet_file;
+        }
+
         ///////// SET ///////////
 
         /**
@@ -229,7 +237,8 @@ namespace gui {
             bool font_apply;                               // Flag indicating whether new font should be applied
             std::string font_file_name;                    // Font imgui name or font file name.
             int font_size;                                 // Font size (only used whe font file name is given)
-            bool hotkeys_check_once;                       // WORKAROUND: Check multiple hotkey assignments once
+            std::string request_load_projet_file; // Project file name which should be loaded by fronted service
+            bool hotkeys_check_once;              // WORKAROUND: Check multiple hotkey assignments once
         };
 
         /** The GUI hotkey array index mapping. */

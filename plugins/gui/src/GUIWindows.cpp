@@ -995,7 +995,6 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             if (!this->state.project_script_paths.empty()) {
                 script_filename = this->state.project_script_paths.front();
             }
-            // Load GUI state from project file when project file changed
             if (!script_filename.empty()) {
                 graph_ptr->SetFilename(script_filename);
             }
@@ -2069,13 +2068,9 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         this->state.open_popup_load |= this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed;
         if (this->file_browser.PopUp(filename, FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project",
                 this->state.open_popup_load, "lua")) {
-            graph_ptr->Clear();
-            popup_failed |= (GUI_INVALID_ID == this->configurator.GetGraphCollection().LoadAddProjectFromFile(
-                                                   this->state.graph_uid, filename));
-            if (!popup_failed) {
-                this->load_state_from_file(filename);
-            }
-            /// XXX TODO Redirect project loading request to Lua_Wrapper_service
+            // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
+            /// GUI graph and GUI state are updated at next synchronization
+            this->state.request_load_projet_file = filename;
         }
         MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
             confirmed, "Cancel", aborted);
@@ -2481,6 +2476,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.hotkeys_check_once = true;
     this->state.font_apply = false;
     this->state.font_file_name = "";
+    this->state.request_load_projet_file = "";
     this->state.font_size = 13;
 
     this->create_not_existing_png_filepath(this->state.screenshot_filepath);

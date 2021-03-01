@@ -20,11 +20,11 @@ struct RuntimeConfig {
 
     // general stuff
     using Path = std::string;
-    Path m_configuration_file = "";
-    Path m_application_directory = "";
-    std::vector<Path> m_resource_directories = {};
-    std::vector<Path> m_shader_directories = {};
-    std::map<std::string/*Key*/, std::string/*Value*/> m_config_values = {};
+    Path configuration_file = "";
+    Path application_directory = "";
+    std::vector<Path> resource_directories = {};
+    std::vector<Path> shader_directories = {};
+    std::map<std::string/*Key*/, std::string/*Value*/> config_values = {};
     std::vector<Path> project_files = {};
 
     // service-specific configurations

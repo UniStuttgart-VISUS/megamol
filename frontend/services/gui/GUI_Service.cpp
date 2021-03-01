@@ -12,6 +12,7 @@
 #include "KeyboardMouse_Events.h"
 #include "Screenshot_Service.hpp"
 #include "ScriptPaths.h"
+#include "ProjectLoader.h"
 
 #include "mmcore/utility/log/Log.h"
 
@@ -54,7 +55,8 @@ bool GUI_Service::init(const Config& config) {
         {"IOpenGL_Context"},                       // resource index 4
         {"FramebufferEvents"},                     // resource index 5
         {"GLFrontbufferToPNG_ScreenshotTrigger"},  // resource index 6
-        {"LuaScriptPaths"}                        // resource index 7
+        {"LuaScriptPaths"},                        // resource index 7
+        {"ProjectLoader"}                          // resource index 8
     };
 
     // init gui
@@ -94,7 +96,8 @@ void GUI_Service::updateProvidedResources() {
 
 void GUI_Service::digestChangedRequestedResources() {
 
-    if (!check_gui_not_nullptr) return;
+    if (!check_gui_not_nullptr)
+        return;
     auto gui = this->m_gui->Get();
 
     // Trigger shutdown
@@ -103,25 +106,30 @@ void GUI_Service::digestChangedRequestedResources() {
     // Check for updates in requested resources --------------------------------
 
     /// MegaMolGraph = resource index 0
-    auto graph_resource_ptr = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>(); 
+    auto graph_resource_ptr = &this->m_requestedResourceReferences[0].getResource<megamol::core::MegaMolGraph>();
 
     // Synchronise changes between core graph and gui graph
     /// WARNING: Changing a constant type will lead to an undefined behavior!
     this->m_megamol_graph = const_cast<megamol::core::MegaMolGraph*>(graph_resource_ptr);
 
     /// WindowEvents = resource index 1
-    auto window_events = &this->m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowEvents>();
+    auto window_events =
+        &this->m_requestedResourceReferences[1].getResource<megamol::frontend_resources::WindowEvents>();
     this->m_time = window_events->time;
     for (auto& size_event : window_events->size_events) {
         m_window_size.x = static_cast<float>(std::get<0>(size_event));
         m_window_size.y = static_cast<float>(std::get<1>(size_event));
     }
-    gui->SetClipboardFunc(window_events->_getClipboardString_Func, window_events->_setClipboardString_Func, window_events->_clipboard_user_data);
+    gui->SetClipboardFunc(window_events->_getClipboardString_Func, window_events->_setClipboardString_Func,
+        window_events->_clipboard_user_data);
 
     /// KeyboardEvents = resource index 2
-    auto keyboard_events = &this->m_requestedResourceReferences[2].getResource<megamol::frontend_resources::KeyboardEvents>();
+    auto keyboard_events =
+        &this->m_requestedResourceReferences[2].getResource<megamol::frontend_resources::KeyboardEvents>();
 
-    std::vector<std::tuple<megamol::frontend_resources::Key, megamol::frontend_resources::KeyAction, megamol::frontend_resources::Modifiers>> pass_key_events;
+    std::vector<std::tuple<megamol::frontend_resources::Key, megamol::frontend_resources::KeyAction,
+        megamol::frontend_resources::Modifiers>>
+        pass_key_events;
     for (auto it = keyboard_events->key_events.begin(); it != keyboard_events->key_events.end(); it++) {
         auto key = std::get<0>((*it));
         auto action = std::get<1>((*it));
@@ -145,7 +153,7 @@ void GUI_Service::digestChangedRequestedResources() {
     /// MouseEvents = resource index 3
     auto mouse_events = &this->m_requestedResourceReferences[3].getResource<megamol::frontend_resources::MouseEvents>();
 
-    std::vector<std::tuple<double, double>>  pass_mouse_pos_events;
+    std::vector<std::tuple<double, double>> pass_mouse_pos_events;
     for (auto it = mouse_events->position_events.begin(); it != mouse_events->position_events.end(); it++) {
         auto x_pos = std::get<0>((*it));
         auto y_pos = std::get<1>((*it));
@@ -167,7 +175,9 @@ void GUI_Service::digestChangedRequestedResources() {
     /// WARNING: Changing a constant type will lead to an undefined behavior!
     const_cast<megamol::frontend_resources::MouseEvents*>(mouse_events)->scroll_events = pass_mouse_scroll_events;
 
-    std::vector<std::tuple<megamol::frontend_resources::MouseButton, megamol::frontend_resources::MouseButtonAction, megamol::frontend_resources::Modifiers>>  pass_mouse_btn_events;
+    std::vector<std::tuple<megamol::frontend_resources::MouseButton, megamol::frontend_resources::MouseButtonAction,
+        megamol::frontend_resources::Modifiers>>
+        pass_mouse_btn_events;
     for (auto it = mouse_events->buttons_events.begin(); it != mouse_events->buttons_events.end(); it++) {
         auto button = std::get<0>((*it));
         auto action = std::get<1>((*it));
@@ -180,10 +190,12 @@ void GUI_Service::digestChangedRequestedResources() {
     const_cast<megamol::frontend_resources::MouseEvents*>(mouse_events)->buttons_events = pass_mouse_btn_events;
 
     /// IOpenGL_Context = resource index 4
-    this->m_opengl_context_ptr = &this->m_requestedResourceReferences[4].getResource<megamol::frontend_resources::IOpenGL_Context>();
-         
+    this->m_opengl_context_ptr =
+        &this->m_requestedResourceReferences[4].getResource<megamol::frontend_resources::IOpenGL_Context>();
+
     /// FramebufferEvents = resource index 5
-    auto framebuffer_events = &this->m_requestedResourceReferences[5].getResource<megamol::frontend_resources::FramebufferEvents>();
+    auto framebuffer_events =
+        &this->m_requestedResourceReferences[5].getResource<megamol::frontend_resources::FramebufferEvents>();
     for (auto& size_event : framebuffer_events->size_events) {
         m_framebuffer_size.x = static_cast<float>(size_event.width);
         m_framebuffer_size.y = static_cast<float>(size_event.height);
@@ -191,13 +203,22 @@ void GUI_Service::digestChangedRequestedResources() {
 
     /// Trigger Screenshot = resource index 6
     if (gui->GetTriggeredScreenshot()) {
-        auto& screenshot_to_file_trigger = this->m_requestedResourceReferences[6].getResource< std::function<bool(std::string const&)> >();
+        auto& screenshot_to_file_trigger =
+            this->m_requestedResourceReferences[6].getResource<std::function<bool(std::string const&)>>();
         screenshot_to_file_trigger(gui->GetScreenshotFileName());
     }
 
     /// Pipe lua script paths to gui = resource index 7
     auto& script_paths = this->m_requestedResourceReferences[7].getResource<megamol::frontend_resources::ScriptPaths>();
     gui->SetProjectScriptPaths(script_paths.lua_script_paths);
+
+    /// Pipe project loading request from GUI to project loader = resource index 8
+    auto requested_project_file = gui->GetProjectLoadRequest();
+    if (!requested_project_file.empty()) {
+        auto& project_loader =
+            this->m_requestedResourceReferences[8].getResource<megamol::frontend_resources::ProjectLoader>();
+        project_loader.load_filename(requested_project_file);
+    }
 }
 
 
