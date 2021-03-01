@@ -52,7 +52,7 @@ public:
      * to avoid having round-trips across frames/threads etc. Basically config/project scripts
      * are reply-less and the LuaHost can get replies.
      */
-    LuaAPI(megamol::core::MegaMolGraph &graph, bool imperativeOnly);
+    LuaAPI(bool imperativeOnly);
 
     ~LuaAPI();
 
@@ -99,6 +99,8 @@ public:
      * Sets the current project file path
      */
     void SetScriptPath(std::string const& scriptPath);
+
+    void SetMegaMolGraph(megamol::core::MegaMolGraph& graph);
 
     /**
      * Sets the function callback used to trigger rendering of a frame due to mmFlush.
@@ -283,7 +285,7 @@ private:
     LuaInterpreter<LuaAPI> luaApiInterpreter_;
 
     /** the respective MegaMol graph */
-    megamol::core::MegaMolGraph& graph_;
+    megamol::core::MegaMolGraph* graph_ptr_ = nullptr;
 
     LuaCallbacks callbacks_;
     // this one is special since the frontend provides it

@@ -35,13 +35,16 @@ namespace stdfs = std::experimental::filesystem;
 #endif
 
 using megamol::frontend_resources::RuntimeConfig;
-RuntimeConfig handle_cli_and_config(const int argc, const char** argv);
-RuntimeConfig handle_config(RuntimeConfig config);
+RuntimeConfig handle_cli_and_config(const int argc, const char** argv, megamol::core::LuaAPI& lua);
+RuntimeConfig handle_config(RuntimeConfig config, megamol::core::LuaAPI& lua);
 RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv);
 
 int main(const int argc, const char** argv) {
 
-    auto config = handle_cli_and_config(argc, argv);
+    bool lua_imperative_only = false; // allow mmFlush, mmList* and mmGetParam*
+    megamol::core::LuaAPI lua_api(lua_imperative_only);
+
+    auto config = handle_cli_and_config(argc, argv, lua_api);
 
     // setup log
     megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
@@ -52,9 +55,6 @@ int main(const int argc, const char** argv) {
 
     megamol::core::CoreInstance core;
     core.Initialise(false); // false makes core not start his own lua service (else we collide on default port)
-
-    const megamol::core::factories::ModuleDescriptionManager& moduleProvider = core.GetModuleDescriptionManager();
-    const megamol::core::factories::CallDescriptionManager& callProvider = core.GetCallDescriptionManager();
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
@@ -101,10 +101,6 @@ int main(const int argc, const char** argv) {
     // needs to execute before gl_service at frame start, after gl service at frame end
     framestatistics_service.setPriority(1);
 
-    megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
-
-    bool lua_imperative_only = false; // allow mmFlush, mmList* and mmGetParam*
-    megamol::core::LuaAPI lua_api(graph, lua_imperative_only);
     megamol::frontend::Lua_Service_Wrapper lua_service_wrapper;
     megamol::frontend::Lua_Service_Wrapper::Config luaConfig;
     luaConfig.lua_api_ptr = &lua_api;
@@ -162,6 +158,11 @@ int main(const int argc, const char** argv) {
         services.close();
         return 1;
     }
+
+    const megamol::core::factories::ModuleDescriptionManager& moduleProvider = core.GetModuleDescriptionManager();
+    const megamol::core::factories::CallDescriptionManager& callProvider = core.GetCallDescriptionManager();
+
+    megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
     // graph is also a resource that may be accessed by services
     services.getProvidedResources().push_back({"MegaMolGraph", graph});
@@ -254,11 +255,11 @@ int main(const int argc, const char** argv) {
     return 0;
 }
 
-RuntimeConfig handle_cli_and_config(const int argc, const char** argv) {
+RuntimeConfig handle_cli_and_config(const int argc, const char** argv, megamol::core::LuaAPI& lua) {
     RuntimeConfig config;
 
     // overwrite default values with values from config file
-    config = handle_config(config);
+    config = handle_config(config, lua);
 
     // overwrite default and config values with CLI inputs
     config = handle_cli(config, argc, argv);
@@ -266,7 +267,13 @@ RuntimeConfig handle_cli_and_config(const int argc, const char** argv) {
     return config;
 }
 
-RuntimeConfig handle_config(RuntimeConfig config) {
+RuntimeConfig handle_config(RuntimeConfig config, megamol::core::LuaAPI& lua) {
+
+    // TODO: both lua and CLI can provide a new config file
+    // this can lead to a cycle of config files referencing each other
+    // lua config file call must happen in first line of script
+    // CLI config file overwrites lua file
+
     // load config file
     auto& file = config.configuration_file;
     if (!stdfs::exists(file)) {
@@ -276,10 +283,8 @@ RuntimeConfig handle_config(RuntimeConfig config) {
     std::ifstream stream(file);
     config.configuration_file_contents = std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
 
-    const auto run_through_lua = [](std::string const&) { return ""; };
-
     // interpret lua config commands as CLI commands
-    config.configuration_file_contents_as_cli = run_through_lua(config.configuration_file_contents);
+    bool lua_config_ok = lua.RunString(config.configuration_file_contents, config.configuration_file_contents_as_cli);
 
     return config;
 }

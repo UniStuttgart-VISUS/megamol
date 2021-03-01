@@ -87,7 +87,8 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "FrontendResourcesList",
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
         "FrameStatistics", // for LastFrameTime
-        "WindowManipulation" // for Framebuffer resize
+        "WindowManipulation", // for Framebuffer resize
+        "MegaMolGraph" // LuaAPI manipulates graph
     }; //= {"ZMQ_Context"};
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
@@ -156,6 +157,8 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
     };
 
     luaAPI.SetCallbacks(callbacks);
+    auto& graph = const_cast<megamol::core::MegaMolGraph&>(m_requestedResourceReferences[4].getResource<megamol::core::MegaMolGraph>());
+    luaAPI.SetMegaMolGraph(graph);
 }
 
 // -------- main loop callbacks ---------

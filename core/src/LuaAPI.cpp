@@ -165,7 +165,7 @@ void megamol::core::LuaAPI::commonInit() {
 /*
  * megamol::core::LuaAPI::LuaAPI
  */
-megamol::core::LuaAPI::LuaAPI(megamol::core::MegaMolGraph &graph, bool imperativeOnly) : graph_(graph), luaApiInterpreter_(this), imperative_only_(imperativeOnly) {
+megamol::core::LuaAPI::LuaAPI(bool imperativeOnly) : graph_ptr_(nullptr), luaApiInterpreter_(this), imperative_only_(imperativeOnly) {
     this->commonInit();
 }
 
@@ -184,6 +184,8 @@ bool megamol::core::LuaAPI::StateOk() { return true; }
 std::string megamol::core::LuaAPI::GetScriptPath(void) { return this->currentScriptPath; }
 
 void megamol::core::LuaAPI::SetScriptPath(std::string const& scriptPath) { this->currentScriptPath = scriptPath; }
+
+void megamol::core::LuaAPI::SetMegaMolGraph(megamol::core::MegaMolGraph& graph) { this->graph_ptr_ = &graph; }
 
 
 bool megamol::core::LuaAPI::RunFile(const std::string& envName, const std::string& fileName, std::string& result) {
@@ -492,6 +494,7 @@ int megamol::core::LuaAPI::GetProcessID(lua_State* L) {
     return 1;
 }
 
+#define graph_ (*graph_ptr_)
 
 int megamol::core::LuaAPI::GetModuleParams(lua_State* L) {
     const auto *moduleName = luaL_checkstring(L, 1);
@@ -608,7 +611,7 @@ int megamol::core::LuaAPI::CreateParamGroup(lua_State* L) {
     auto groupName = luaL_checkstring(L, 1);
     auto groupSize = luaL_checkinteger(L, 2);
 
-    this->graph_.Convenience().CreateParameterGroup(groupName);
+    graph_.Convenience().CreateParameterGroup(groupName);
     // groupSize is ignored because why do we need it?
 
     return 0;
@@ -632,7 +635,7 @@ int megamol::core::LuaAPI::SetParamGroupValue(lua_State* L) {
         luaApiInterpreter_.ThrowError(out.str());
     };
 
-    auto groupPtr = this->graph_.Convenience().FindParameterGroup(paramGroup);
+    auto groupPtr = graph_.Convenience().FindParameterGroup(paramGroup);
     if (!groupPtr) {
         errorMsg();
         return 0;
@@ -658,7 +661,7 @@ int megamol::core::LuaAPI::ApplyParamGroupValues(lua_State* L) {
         luaApiInterpreter_.ThrowError(out.str());
     };
 
-    auto groupPtr = this->graph_.Convenience().FindParameterGroup(paramGroup);
+    auto groupPtr = graph_.Convenience().FindParameterGroup(paramGroup);
     if (!groupPtr) {
         errorMsg("no such group");
         return 0;
@@ -754,7 +757,7 @@ int megamol::core::LuaAPI::CreateChainCall(lua_State* L) {
     std::string chainStart = luaL_checkstring(L, 2);
     std::string to = luaL_checkstring(L, 3);
 
-    return this->graph_.Convenience().CreateChainCall(className, chainStart, to);
+    return graph_.Convenience().CreateChainCall(className, chainStart, to);
 }
 
 
