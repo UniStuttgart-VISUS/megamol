@@ -230,6 +230,12 @@ int main(const int argc, const char** argv) {
         if (!projectloader_service.load_file(file)) {
             std::cout << "Project file \"" << file << "\" did not execute correctly"<< std::endl;
             run_megamol = false;
+
+            // if interactive, continue to run MegaMol
+            if (config.interactive) {
+                std::cout << "Interactive mode: start MegaMol anyway"<< std::endl;
+                run_megamol = true;
+            }
         }
     }
 
@@ -311,6 +317,10 @@ RuntimeConfig handle_cli_inputs(const int argc, const char** argv) {
         config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::nocursor;
     };
 
+    auto interactive_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+    {
+        config.interactive = parsed_options[option_name].as<bool>();
+    };
 
     auto window_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
     {
@@ -347,6 +357,7 @@ RuntimeConfig handle_cli_inputs(const int argc, const char** argv) {
         , {"nodecoration",  "open window without decorations",                                             cxxopts::value<bool>(),                     nodecoration_handler }
         , {"topmost",       "open window that stays on top of all others",                                 cxxopts::value<bool>(),                     topmost_handler      }
         , {"nocursor",      "do not show mouse cursor inside window",                                      cxxopts::value<bool>(),                     nocursor_handler     }
+        , {"interactive",   "open MegaMol even if project files via CLI could not be loaded",              cxxopts::value<bool>(),                     interactive_handler  }
     };
 
     #define add_option(X) (std::get<0>(X), std::get<1>(X), std::get<2>(X))
@@ -363,6 +374,7 @@ RuntimeConfig handle_cli_inputs(const int argc, const char** argv) {
         add_option(options_list[6])
         add_option(options_list[7])
         add_option(options_list[8])
+        add_option(options_list[9])
         ("help", "print help")
         ;
     // clang-format on
