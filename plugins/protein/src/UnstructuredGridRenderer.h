@@ -17,15 +17,16 @@
 #include "SphereDataCall.h"
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/Renderer3DModule.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 
 namespace megamol {
 namespace protein {
 
 
-class UnstructuredGridRenderer : public megamol::core::view::Renderer3DModule {
+class UnstructuredGridRenderer : public megamol::core::view::Renderer3DModuleGL {
 public:
 
     /**
@@ -86,7 +87,7 @@ private:
      *
      * @return The return value of the function.
      */
-    virtual bool GetExtents( megamol::core::Call& call);
+    virtual bool GetExtents(core::view::CallRender3DGL& call);
 
     /**
      * The Open GL Render callback.
@@ -94,7 +95,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    virtual bool Render( megamol::core::Call& call);
+    virtual bool Render(core::view::CallRender3DGL& call);
 
     /// The data caller slot
     megamol::core::CallerSlot dataCallerSlot;
@@ -103,7 +104,7 @@ private:
     core::param::ParamSlot sphereRadSlot;
 
     /// camera information
-    vislib::SmartPtr<vislib::graphics::CameraParameters> cameraInfo;
+    core::view::Camera_2 cameraInfo;
 
     /// Shader for the spheres (raycasting view)
     vislib::graphics::gl::GLSLShader sphereShader;

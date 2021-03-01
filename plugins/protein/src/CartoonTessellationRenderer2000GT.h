@@ -11,7 +11,7 @@
 #pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 #include "vislib/graphics/gl/GLSLShader.h"
 #include "vislib/graphics/gl/GLSLTesselationShader.h"
 #include "vislib/graphics/gl/ShaderSource.h"
@@ -35,7 +35,7 @@ namespace protein {
     /**
      * Renderer for simple sphere glyphs
      */
-    class CartoonTessellationRenderer2000GT : public megamol::core::view::Renderer3DModule_2 {
+    class CartoonTessellationRenderer2000GT : public megamol::core::view::Renderer3DModuleGL {
     public:
 
         /**
@@ -105,7 +105,7 @@ namespace protein {
         *
         * @return The return value of the function.
         */
-        virtual bool GetExtents(view::CallRender3D_2& call);
+        virtual bool GetExtents(view::CallRender3DGL& call);
 
         /**
         * TODO: Document
@@ -119,7 +119,7 @@ namespace protein {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(view::CallRender3D_2& call);
+        virtual bool Render(view::CallRender3DGL& call);
 
     private:
 

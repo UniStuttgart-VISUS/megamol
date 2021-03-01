@@ -16,6 +16,7 @@
 #include "mmcore/AbstractNamedObject.h"
 #include "mmcore/AbstractNamedObjectContainer.h"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -23,12 +24,11 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/param/StringParam.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "png.h"
 #include "mmcore/versioninfo.h"
 #include "vislib/Trace.h"
 #include "vislib/assert.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/math/mathfunctions.h"
 #include "vislib/sys/CriticalSection.h"
@@ -312,7 +312,7 @@ bool view::special::ScreenShooter::Terminate(void) {
  * view::special::ScreenShooter::release
  */
 bool view::special::ScreenShooter::create(void) {
-    // Intentionally empty. Initialization is lazy.
+    currentFbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
     return true;
 }
 
@@ -330,7 +330,6 @@ void view::special::ScreenShooter::release(void) {
  */
 void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
     using megamol::core::utility::log::Log;
-    vislib::graphics::gl::FramebufferObject fbo;
     ShooterData data;
     vislib::sys::Thread t2(&myPngStoreData);
 
@@ -417,7 +416,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         return;
     }
 
-    view::CallRenderView crv;
+    view::CallRenderViewGL crv;
     BYTE* buffer = NULL;
     vislib::sys::FastFile file;
     bool rollback = false;
@@ -462,7 +461,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         if ((data.imgWidth <= data.tileWidth) && (data.imgHeight <= data.tileHeight)) {
             // we can render the whole image in just one call!
 
-            if (!fbo.Create(data.imgWidth, data.imgHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+            if (!currentFbo->Create(data.imgWidth, data.imgHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
                     vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
                 throw vislib::Exception("Unable to create image framebuffer object.", __FILE__, __LINE__);
             }
@@ -476,35 +475,36 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
             case 0: /* don't set bkgnd */
                 break;
             case 1:
-                crv.SetBackground(0, 0, 0);
+                crv.SetBackgroundColor(glm::vec4(0, 0, 0, 1));
                 break;
             case 2:
-                crv.SetBackground(255, 255, 255);
+                crv.SetBackgroundColor(glm::vec4(1, 1, 1, 1));
                 break;
             case 3:
-                crv.SetBackground(0, 0, 0);
+                crv.SetBackgroundColor(glm::vec4(0, 0, 0, 1));
                 break;
             case 4:
-                crv.SetBackground(192, 192, 192);
+                crv.SetBackgroundColor(glm::vec4(255.0f / 192.0f, 255.0f / 192.0f, 255.0f / 192.0f, 1));
                 break;
             default: /* don't set bkgnd */
                 break;
             }
             // don't set projection
-            if (fbo.Enable() != GL_NO_ERROR) {
+            if (currentFbo->Enable() != GL_NO_ERROR) {
                 throw vislib::Exception(
                     "Failed to create Screenshot: Cannot enable Framebuffer object", __FILE__, __LINE__);
             }
             glViewport(0, 0, data.imgWidth, data.imgHeight);
-            crv.SetOutputBuffer(&fbo, vislib::math::Rectangle<int>(0, 0, data.imgWidth, data.imgHeight));
+            crv.SetFramebufferObject(currentFbo); //, vislib::math::Rectangle<int>(0, 0, tileW, tileH));
             crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f,
                 static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
             crv.SetTime(frameTime);
             view->OnRenderView(crv); // glClear by SFX
             glFlush();
-            fbo.Disable();
+            currentFbo->Disable();
 
-            if (fbo.GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
+            if (currentFbo->GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) !=
+                GL_NO_ERROR) {
                 throw vislib::Exception("Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
             }
             if (bkgndMode == 1) {
@@ -556,7 +556,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                 throw vislib::Exception("Cannot allocate temporary image buffer", __FILE__, __LINE__);
             }
 
-            if (!fbo.Create(data.tileWidth, data.tileHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+            if (!currentFbo->Create(data.tileWidth, data.tileHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
                     vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
                 throw vislib::Exception("Unable to create image framebuffer object.", __FILE__, __LINE__);
             }
@@ -684,40 +684,40 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                     case 0: /* don't set bkgnd */
                         break;
                     case 1:
-                        crv.SetBackground(0, 0, 0);
+                        crv.SetBackgroundColor(glm::vec4(0, 0, 0, 1));
                         break;
                     case 2:
-                        crv.SetBackground(255, 255, 255);
+                        crv.SetBackgroundColor(glm::vec4(1, 1, 1,1));
                         break;
                     case 3:
-                        crv.SetBackground(0, 0, 0);
+                        crv.SetBackgroundColor(glm::vec4(0, 0, 0, 1));
                         break;
                     case 4:
                         if ((xi + yi) % 2) {
-                            crv.SetBackground(192, 192, 192);
+                            crv.SetBackgroundColor(glm::vec4(255.0f / 192.0f, 255.0f / 192.0f, 255.0f / 192.0f, 1));
                         } else {
-                            crv.SetBackground(128, 128, 128);
+                            crv.SetBackgroundColor(glm::vec4(255.0f / 128.0f, 255.0f / 128.0f, 255.0f / 128.0f, 1));
                         }
                         break;
                     default: /* don't set bkgnd */
                         break;
                     }
                     // don't set projection
-                    if (fbo.Enable() != GL_NO_ERROR) {
+                    if (currentFbo->Enable() != GL_NO_ERROR) {
                         throw vislib::Exception(
                             "Failed to create Screenshot: Cannot enable Framebuffer object", __FILE__, __LINE__);
                     }
                     glViewport(0, 0, tileW, tileH);
-                    crv.SetOutputBuffer(&fbo, vislib::math::Rectangle<int>(0, 0, tileW, tileH));
+                    crv.SetFramebufferObject(currentFbo); //, vislib::math::Rectangle<int>(0, 0, tileW, tileH));
                     crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
                         static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileW),
                         static_cast<float>(tileH));
                     crv.SetTime(frameTime);
                     view->OnRenderView(crv); // glClear by SFX
                     glFlush();
-                    fbo.Disable();
+                    currentFbo->Disable();
 
-                    if (fbo.GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) !=
+                    if (currentFbo->GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) !=
                         GL_NO_ERROR) {
                         throw vislib::Exception(
                             "Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
@@ -865,7 +865,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         delete data.tmpFiles[1];
     }
     delete[] buffer;
-    fbo.Release();
+    currentFbo->Release();
 
     megamol::core::utility::log::Log::DefaultLog.WriteInfo("Screen shot stored");
 
@@ -928,7 +928,23 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
             AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
         AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
         ViewInstance* vi = dynamic_cast<ViewInstance*>(ano.get());
-        auto av = dynamic_cast<AbstractView*>(ano.get());
+        AbstractView* av = dynamic_cast<AbstractView*>(ano.get());
+
+        // Try to find view instance or abstract view in megamolgraph
+        if ((vi == nullptr) && (av == nullptr)) {
+            const megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
+            auto megamolgraph_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
+                [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
+            if (megamolgraph_it != this->frontend_resources.end()) {
+                megamolgraph_ptr = &megamolgraph_it->getResource<megamol::core::MegaMolGraph>();
+            }
+            if (megamolgraph_ptr != nullptr) {
+                auto module_ptr = megamolgraph_ptr->FindModule(std::string(mvn.PeekBuffer()));
+                vi = dynamic_cast<ViewInstance*>(module_ptr.get());
+                av = dynamic_cast<AbstractView*>(module_ptr.get());
+            }
+        }
+
         if (vi != nullptr) {
             if (vi->View() != nullptr) {
                 av = vi->View();

@@ -20,7 +20,7 @@ namespace gui {
 
 
     /**
-     * String search widget.
+     * Orbital parameter widget.
      */
     class ParameterOrbitalWidget {
     public:

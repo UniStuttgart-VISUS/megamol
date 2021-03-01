@@ -7,6 +7,7 @@
 
 #include "stdafx.h"
 #include "GraphCollection.h"
+#include "mmcore/view/AbstractView.h"
 
 
 using namespace megamol;
@@ -539,7 +540,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                         callslot_ptr->description = std::string(caller_slot->Description().PeekBuffer());
                         callslot_ptr->compatible_call_idxs = this->get_compatible_caller_idxs(caller_slot.get());
                         callslot_ptr->type = CallSlotType::CALLER;
-                        callslot_ptr->present.label_visible = graph_ptr->present.GetCallSlotLabelVisibility();
+                        callslot_ptr->present.label_visible = graph_ptr->present.GetSlotLabelVisibility();
                         callslot_ptr->ConnectParentModule(new_module_ptr);
 
                         new_module_ptr->AddCallSlot(callslot_ptr);
@@ -553,7 +554,7 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
                     callslot_ptr->description = std::string(callee_slot->Description().PeekBuffer());
                     callslot_ptr->compatible_call_idxs = this->get_compatible_callee_idxs(callee_slot.get());
                     callslot_ptr->type = CallSlotType::CALLEE;
-                    callslot_ptr->present.label_visible = graph_ptr->present.GetCallSlotLabelVisibility();
+                    callslot_ptr->present.label_visible = graph_ptr->present.GetSlotLabelVisibility();
                     callslot_ptr->ConnectParentModule(new_module_ptr);
 
                     new_module_ptr->AddCallSlot(callslot_ptr);
@@ -1310,6 +1311,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
         /// XXX VIEW TEST
         std::shared_ptr<const core::view::AbstractView> viewptr =
             std::dynamic_pointer_cast<const core::view::AbstractView>(new_mod);
+
         mod.is_view = (viewptr != nullptr);
 
         std::vector<std::shared_ptr<core::param::ParamSlot>> paramSlots;
