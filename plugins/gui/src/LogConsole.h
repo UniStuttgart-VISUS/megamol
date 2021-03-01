@@ -58,6 +58,8 @@ namespace gui {
          */
         bool Draw(WindowCollection::WindowConfiguration& wc);
 
+        void Update(WindowCollection::WindowConfiguration& wc);
+
     private:
         // VARIABLES --------------------------------------------------------------
 

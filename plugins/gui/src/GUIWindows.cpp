@@ -450,6 +450,11 @@ bool GUIWindows::PostDraw(void) {
             wc.buf_tfe_reset = false;
         }
 
+        // Update log console
+        if (wc.win_callback == WindowCollection::DrawCallbacks::LOGCONSOLE) {
+            this->console.Update(wc);
+        }
+
         // Draw window content
         if (wc.win_show) {
 

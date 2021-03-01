@@ -161,9 +161,7 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
     }
 
     // Print messages
-    auto new_log_msg_count = this->echo_log_buffer.log().size();
-    for (size_t i = 0; i < new_log_msg_count; i++) {
-        auto entry = this->echo_log_buffer.log()[i];
+    for (auto& entry : this->echo_log_buffer.log()) {
         if (entry.level <= this->log_level) {
             if (entry.level >= megamol::core::utility::log::Log::LEVEL_INFO) {
                 ImGui::TextUnformatted(entry.message.c_str());
@@ -173,22 +171,31 @@ bool megamol::gui::LogConsole::Draw(WindowCollection::WindowConfiguration& wc) {
                 ImGui::TextColored(GUI_COLOR_TEXT_ERROR, entry.message.c_str());
             }
         }
-        // New message
-        if (i > this->log_msg_count) {
-            // Bring log console to front on new warnings and errors if log_force_open flag is set.
-            if (wc.log_force_open && (entry.level < megamol::core::utility::log::Log::LEVEL_INFO)) {
-                this->log_level = megamol::core::utility::log::Log::LEVEL_WARN;
-                wc.win_show = true;
-            }
-            // Scroll down if new message came in
-            this->scroll_down = 2;
-        }
     }
 
-    this->log_msg_count = new_log_msg_count;
     wc.log_level = this->log_level;
-
     return true;
+}
+
+
+void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc) {
+
+    auto new_log_msg_count = this->echo_log_buffer.log().size();
+    if (new_log_msg_count > this->log_msg_count) {
+        // Scroll down if new message came in
+        this->scroll_down = 2;
+        // Bring log console to front on new warnings and errors if log_force_open flag is set.
+        if (wc.log_force_open) {
+            for (size_t i = this->log_msg_count; i < new_log_msg_count; i++) {
+                auto entry = this->echo_log_buffer.log()[i];
+                if (entry.level < megamol::core::utility::log::Log::LEVEL_INFO) {
+                    wc.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+                    wc.win_show = true;
+                }
+            }
+        }
+    }
+    this->log_msg_count = new_log_msg_count;
 }
 
 
