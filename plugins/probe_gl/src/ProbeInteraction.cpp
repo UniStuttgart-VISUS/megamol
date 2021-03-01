@@ -15,7 +15,7 @@
 #include "imgui_stdlib.h"
 
 megamol::probe_gl::ProbeInteraction::ProbeInteraction()
-    : Renderer3DModule_2()
+    : Renderer3DModuleGL()
     , m_version(0)
     , m_cursor_x(0)
     , m_cursor_y(0)
@@ -123,11 +123,11 @@ bool megamol::probe_gl::ProbeInteraction::create() { return true; }
 
 void megamol::probe_gl::ProbeInteraction::release() {}
 
-bool megamol::probe_gl::ProbeInteraction::GetExtents(core::view::CallRender3D_2& call) { return true; }
+bool megamol::probe_gl::ProbeInteraction::GetExtents(core::view::CallRender3DGL& call) { return true; }
 
-bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3D_2& call) {
+bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3DGL& call) {
 
-    core::view::CallRender3D_2* cr = dynamic_cast<core::view::CallRender3D_2*>(&call);
+    core::view::CallRender3DGL* cr = dynamic_cast<core::view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
 
     // obtain camera information

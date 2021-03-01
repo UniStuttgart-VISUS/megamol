@@ -90,9 +90,9 @@ void FilterByProbe::release() {
     m_filterAll_prgm.reset();
 }
 
-bool FilterByProbe::GetExtents(core::view::CallRender3D_2& call) { return true; }
+bool FilterByProbe::GetExtents(core::view::CallRender3DGL& call) { return true; }
 
-bool FilterByProbe::Render(core::view::CallRender3D_2& call) {
+bool FilterByProbe::Render(core::view::CallRender3DGL& call) {
     probe::CallProbes* pc = this->m_probes_slot.CallAs<probe::CallProbes>();
     if (pc == NULL) return false;
     if (!(*pc)(0)) return false;
@@ -412,7 +412,7 @@ bool FilterByProbe::Render(core::view::CallRender3D_2& call) {
     return true;
 }
 
-void FilterByProbe::PreRender(core::view::CallRender3D_2& call) {}
+void FilterByProbe::PreRender(core::view::CallRender3DGL& call) {}
 
 } // namespace probe_gl
 } // namespace megamol
