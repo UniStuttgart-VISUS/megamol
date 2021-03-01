@@ -28,6 +28,7 @@ struct RuntimeConfig {
     std::vector<Path> project_files = {};
 
     // service-specific configurations
+    bool interactive = false;
     std::string lua_host_address = "tcp://127.0.0.1:33333";
     bool lua_host_port_retry = true;
     bool opengl_khr_debug = false;
