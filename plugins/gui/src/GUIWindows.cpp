@@ -1792,8 +1792,8 @@ void GUIWindows::drawMenu(void) {
             }
             ImGui::EndMenu();
         }
+        ImGui::Separator();
     }
-    ImGui::Separator();
 
     // RENDER -----------------------------------------------------------------
     if (megamolgraph_interface && (graph_ptr != nullptr)) {
@@ -1831,8 +1831,8 @@ void GUIWindows::drawMenu(void) {
             }
             ImGui::EndMenu();
         }
+        ImGui::Separator();
     }
-    ImGui::Separator();
 
     // SETTINGS ---------------------------------------------------------------
     if (ImGui::BeginMenu("Settings")) {
