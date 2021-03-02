@@ -40,6 +40,12 @@ std::vector<std::string> extract_config_file_paths(const int argc, const char** 
 RuntimeConfig handle_config(RuntimeConfig config, megamol::core::LuaAPI& lua);
 RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv);
 
+void exit(std::string const& reason) {
+    std::cout << "Error :" << reason << std::endl;
+    std::cout << "Shut down MegaMol" << std::endl;
+    std::exit(1);
+}
+
 int main(const int argc, const char** argv) {
 
     bool lua_imperative_only = false; // allow mmFlush, mmList* and mmGetParam*
@@ -272,11 +278,6 @@ std::vector<std::string> extract_config_file_paths(const int argc, const char** 
 
     options.allow_unrecognised_options();
 
-    auto error = [](auto const& what) {
-        std::cout << what << std::endl;
-        std::exit(1);
-    };
-
     try {
         int _argc = argc;
         auto _argv = const_cast<char**>(argv);
@@ -296,17 +297,16 @@ std::vector<std::string> extract_config_file_paths(const int argc, const char** 
         // check files exist
         for (const auto& file : config_files) {
             if (!stdfs::exists(file)) {
-                std::cout << "Config file \"" << file << "\" does not exist!" << std::endl;
-                std::exit(1);
+                exit("Config file \"" + file + "\" does not exist!");
             }
         }
 
         return config_files;
 
     } catch (cxxopts::option_not_exists_exception ex) {
-        error(ex.what());
+        exit(ex.what());
     } catch (cxxopts::missing_argument_exception ex) {
-        error(ex.what());
+        exit(ex.what());
     }
 }
 
@@ -370,8 +370,7 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
         const auto& v = parsed_options[option_name].as<std::vector<std::string>>();
         for (const auto& p : v) {
             if (!stdfs::exists(p)) {
-                std::cout << "Project file \"" << p << "\" does not exist!" << std::endl;
-                std::exit(1);
+                exit("Project file \"" + p + "\" does not exist!");
             }
         }
 
@@ -429,8 +428,7 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
                 config.window_position.push_back( /*y*/ std::stoul(match[4].str(), nullptr, 10) );
             }
         } else {
-            std::cout << "window option needs to be in the following format: wxh+x+y or wxh" << std::endl;
-            std::exit(1);
+            exit("window option needs to be in the following format: wxh+x+y or wxh");
         }
     };
 
@@ -482,7 +480,7 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
 
         if (parsed_options.count("help")) {
             std::cout << options.help({""}) << std::endl;
-            exit(0);
+            std::exit(0);
         }
 
         for (auto& option : options_list) {
@@ -494,9 +492,7 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
         }
 
     } catch (cxxopts::option_not_exists_exception ex) {
-        std::cout << ex.what() << std::endl;
-        std::cout << options.help({""}) << std::endl;
-        std::exit(1);
+        exit(std::string(ex.what()) + "\n" + options.help({""}));
     }
 
     return config;
