@@ -65,5 +65,14 @@
         <snippet type="version">430</snippet>
         <snippet name="body" type="file">pc_reconstruction5_f.glsl</snippet>
     </shader>
+    
+    <shader name="vert6">
+        <snippet type="version">430</snippet>
+        <snippet name="body" type="file">pc_reconstruction6_v.glsl</snippet>
+    </shader>
 
+    <shader name="frag6">
+        <snippet type="version">430</snippet>
+        <snippet name="body" type="file">pc_reconstruction6_f.glsl</snippet>
+    </shader>
 </btf>

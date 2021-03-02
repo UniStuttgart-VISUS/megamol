@@ -66,13 +66,15 @@ namespace infovis {
 
     private:
         // required Shaders for different kinds of reconstruction
-        std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction_shdr_array[6];
+        std::unique_ptr<vislib::graphics::gl::GLSLShader> pc_reconstruction_shdr_array[7];
         vislib::graphics::gl::ShaderSource vertex_shader_src;
         vislib::graphics::gl::ShaderSource fragment_shader_src;
 
         GLuint amortizedFboA = 0;
         GLuint amortizedMsaaFboA = 0;
+        GLuint amortizedPushFBO = 0;
         GLuint msImageArray = 0;
+        GLuint pushImage = 0;
         GLuint imageArrayA = 0;
         GLuint ssboMatrices = 0;
         int frametype = 0;
@@ -91,6 +93,8 @@ namespace infovis {
         std::vector<glm::mat4> moveMatrices;
         std::vector<glm::fvec2> hammerPositions;
         std::vector<glm::vec3> camOffsets;
+        glm::mat4 movePush;
+        glm::mat4 lastPmvm;
 
          float backgroundColor[4];
 

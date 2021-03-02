@@ -137,6 +137,13 @@ void InfovisAmortizedRenderer::makeShaders() {
     pc_reconstruction_shdr_array[5]->Compile(
         vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
     pc_reconstruction_shdr_array[5]->Link();
+
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::vert6", vertex_shader_src);
+    instance()->ShaderSourceFactory().MakeShaderSource("pc_reconstruction::frag6", fragment_shader_src);
+    pc_reconstruction_shdr_array[6] = std::make_unique<vislib::graphics::gl::GLSLShader>();
+    pc_reconstruction_shdr_array[6]->Compile(
+        vertex_shader_src.Code(), vertex_shader_src.Count(), fragment_shader_src.Code(), fragment_shader_src.Count());
+    pc_reconstruction_shdr_array[6]->Link();
 }
 
 void InfovisAmortizedRenderer::setupBuffers() {
@@ -144,8 +151,10 @@ void InfovisAmortizedRenderer::setupBuffers() {
 
     glGenFramebuffers(1, &amortizedFboA);
     glGenFramebuffers(1, &amortizedMsaaFboA);
+    glGenFramebuffers(1, &amortizedPushFBO);
     glGenTextures(1, &imageArrayA);
     glGenTextures(1, &msImageArray);
+    glGenTextures(1, &pushImage);
     glGenBuffers(1, &ssboMatrices);
 
     glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
@@ -166,6 +175,14 @@ void InfovisAmortizedRenderer::setupBuffers() {
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+
+    glBindTexture(GL_TEXTURE_2D, pushImage);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
 
     glBindFramebuffer(GL_FRAMEBUFFER, origFBO);
 }
@@ -247,6 +264,25 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, frametype);
     }
+    if (approach == 6) {
+        glm::mat4 jit;
+        glm::mat4 pmvm = pm * mvm;
+        int a = this->amortLevel.Param<core::param::IntParam>()->Value();
+
+        jit = glm::translate(glm::mat4(1.0f), camOffsets[frametype]);
+
+        movePush = lastPmvm * inverse(pmvm);
+        lastPmvm = pmvm;
+
+        pm = jit * pm;
+        for (int i = 0; i < 16; i++)
+            projMatrix_column[i] = glm::value_ptr(pm)[i];
+
+        glBindFramebuffer(GL_FRAMEBUFFER, amortizedPushFBO);
+        glActiveTexture(GL_TEXTURE10);
+        glBindTexture(GL_TEXTURE_2D, pushImage);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+    }
 
     glClear(GL_COLOR_BUFFER_BIT);
     glViewport(0, 0, w, h);
@@ -324,7 +360,22 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
-
+    if (approach == 6) {
+        int a = this->amortLevel.Param<core::param::IntParam>()->Value();
+        framesNeeded = a * a;
+        frametype = 0;
+        movePush = glm::mat4(1.0);
+        lastPmvm = glm::mat4(1.0);
+        invMatrices.resize(framesNeeded);
+        moveMatrices.resize(framesNeeded);
+        camOffsets.resize(framesNeeded);
+        for (int j = 0; j < a; j++) {
+            for (int i = 0; i < a; i++) {
+                camOffsets[j * a + i] =
+                    glm::fvec3((-1.0 * (float) a - 1.0 - 2.0 * i) / w, ((float) a - 1.0 - 2.0 * j) / h, 0.0);
+            }
+        }
+    }
 }
 
 void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int ssLevel) {
@@ -352,6 +403,8 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
             glUniformMatrix4fv(pc_reconstruction_shdr_array[approach]->ParameterLocation("moveMatrices"), 4,
                 GL_FALSE, &moveMatrices[0][0][0]);
         }
+        glUniformMatrix4fv(pc_reconstruction_shdr_array[approach]->ParameterLocation("moveM"), 1, GL_FALSE,
+            &movePush[0][0]);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
         glBufferSubData(
             GL_SHADER_STORAGE_BUFFER, 0 , framesNeeded * sizeof(moveMatrices[0]), &moveMatrices[0][0][0]);
