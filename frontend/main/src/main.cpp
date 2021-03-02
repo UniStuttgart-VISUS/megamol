@@ -1,9 +1,10 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 
-#include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/log/DefaultTarget.h"
+#include "mmcore/utility/log/Log.h"
 
+#include "CUDA_Service.hpp"
 #include "FrameStatistics_Service.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
@@ -131,6 +132,11 @@ int main(int argc, char* argv[]) {
     luaConfig.retry_socket_port = config.lua_host_port_retry;
     lua_service_wrapper.setPriority(0);
 
+#ifdef MM_CUDA_ENABLED
+    megamol::frontend::CUDA_Service cuda_service;
+    cuda_service.setPriority(24);
+#endif
+
     // clang-format off
     // the main loop is organized around services that can 'do something' in different parts of the main loop.
     // a service is something that implements the AbstractFrontendService interface from 'megamol\frontend_services\include'.
@@ -151,6 +157,9 @@ int main(int argc, char* argv[]) {
     services.add(lua_service_wrapper, &luaConfig);
     services.add(screenshot_service, &screenshotConfig);
     services.add(framestatistics_service, &framestatisticsConfig);
+#ifdef MM_CUDA_ENABLED
+    services.add(cuda_service, nullptr);
+#endif
 
     // clang-format off
     // TODO: port cinematic as frontend service
