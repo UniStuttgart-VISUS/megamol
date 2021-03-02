@@ -9,7 +9,6 @@
 #define MEGAMOL_GUI_GRAPH_PARAMETER_PRESENTATION_H_INCLUDED
 
 
-#include "FileUtils.h"
 #include "GUIUtils.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
@@ -31,6 +30,7 @@
 #include "mmcore/param/Vector2fParam.h"
 #include "mmcore/param/Vector3fParam.h"
 #include "mmcore/param/Vector4fParam.h"
+#include "mmcore/utility/FileUtils.h"
 
 #include <variant>
 
@@ -100,8 +100,8 @@ namespace gui {
         static bool ParameterExtendedModeButton(const std::string& id, bool& inout_extended_mode);
 
         /** Lua parameter command copy button. */
-        static bool LuaButton(const std::string& id, const std::string& param_value, const std::string& param_fullname,
-            const std::string& module_fullname);
+        static bool LuaButton(const std::string& id, const megamol::gui::Parameter& param,
+            const std::string& param_fullname, const std::string& module_fullname);
 
     private:
         // VARIABLES --------------------------------------------------------------

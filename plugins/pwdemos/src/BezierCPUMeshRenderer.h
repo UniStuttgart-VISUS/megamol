@@ -62,7 +62,7 @@ namespace demos {
          *
          * @return The return value of the function
          */
-        virtual bool render(core::view::CallRender3D_2& call);
+        virtual bool render(core::view::CallRender3DGL& call);
 
         /**
          * Informs the class if the shader is required

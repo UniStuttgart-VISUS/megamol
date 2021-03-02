@@ -21,6 +21,8 @@
 #include <climits>
 #include <cmath>
 
+#include "mmcore/BoundingBoxes_2.h"
+
 using namespace megamol::core;
 using namespace megamol::protein;
 
@@ -119,10 +121,7 @@ bool SolPathDataSource::getExtent(megamol::core::Call &call) {
         this->loadData();
     }
 
-    megamol::core::BoundingBoxes &bboxs = spdc->AccessBoundingBoxes();
-    bboxs.SetObjectSpaceBBox(this->bbox);
-    bboxs.SetObjectSpaceClipBox(bboxs.ObjectSpaceBBox());
-    bboxs.MakeScaledWorld(1.0f); // at least this is what i think
+    spdc->AccessBoundingBoxes().SetObjectSpaceBBox(this->bbox);
 
     return false;
 }

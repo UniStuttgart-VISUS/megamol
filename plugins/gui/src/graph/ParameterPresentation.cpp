@@ -111,8 +111,8 @@ bool megamol::gui::ParameterPresentation::Present(
                     ImGui::SameLine();
 
                     // Lua
-                    ParameterPresentation::LuaButton("param_lua_button", inout_parameter.GetValueString(),
-                        inout_parameter.full_name, module_fullname);
+                    ParameterPresentation::LuaButton(
+                        "param_lua_button", inout_parameter, inout_parameter.full_name, module_fullname);
                     this->tooltip.ToolTip("Copy lua command to clipboard.", ImGui::GetItemID(), 1.0f, 3.0f);
 
                     ImGui::SameLine();
@@ -346,7 +346,7 @@ bool megamol::gui::ParameterPresentation::ParameterExtendedModeButton(
 }
 
 
-bool megamol::gui::ParameterPresentation::LuaButton(const std::string& id, const std::string& param_value,
+bool megamol::gui::ParameterPresentation::LuaButton(const std::string& id, const megamol::gui::Parameter& param,
     const std::string& param_fullname, const std::string& module_fullname) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
@@ -385,7 +385,8 @@ bool megamol::gui::ParameterPresentation::LuaButton(const std::string& id, const
         std::string lua_param_cmd;
         std::string mod_name(module_fullname.c_str()); /// local copy required
         if (ImGui::MenuItem("Copy mmSetParamValue")) {
-            lua_param_cmd = "mmSetParamValue(\"" + mod_name + "::" + param_fullname + "\",[=[" + param_value + "]=])";
+            lua_param_cmd =
+                "mmSetParamValue(\"" + mod_name + "::" + param_fullname + "\",[=[" + param.GetValueString() + "]=])";
             copy_to_clipboard = true;
         }
         if (ImGui::MenuItem("Copy mmGetParamValue")) {

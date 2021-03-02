@@ -13,7 +13,7 @@
 
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractOverrideView.h"
-#include "vislib/graphics/CameraParameters.h"
+#include "mmcore/thecam/camera.h"
 #include "vislib/forceinline.h"
 
 
@@ -54,7 +54,7 @@ class MEGAMOLCORE_API AbstractTileView : public AbstractOverrideView {
          *
          * @return The stereo projection eye
          */
-        VISLIB_FORCEINLINE vislib::graphics::CameraParameters::StereoEye getEye(void) const {
+        VISLIB_FORCEINLINE thecam::Eye getEye(void) const {
             return this->eye;
         }
 
@@ -63,7 +63,7 @@ class MEGAMOLCORE_API AbstractTileView : public AbstractOverrideView {
          *
          * @return The stereo projection type
          */
-        VISLIB_FORCEINLINE vislib::graphics::CameraParameters::ProjectionType getProjType(void) const {
+        VISLIB_FORCEINLINE thecam::Projection_type getProjType(void) const {
             return this->projType;
         }
 
@@ -153,13 +153,13 @@ class MEGAMOLCORE_API AbstractTileView : public AbstractOverrideView {
         virtual void packMouseCoordinates(float &x, float &y);
 
         /** The stereo projection eye */
-        vislib::graphics::CameraParameters::StereoEye eye;
+        thecam::Eye eye;
 
         /** The stereo projection eye */
         param::ParamSlot eyeSlot;
 
         /** The stereo projection type */
-        vislib::graphics::CameraParameters::ProjectionType projType;
+        thecam::Projection_type projType;
 
         /** The stereo projection type */
         param::ParamSlot projTypeSlot;

@@ -73,7 +73,7 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                 mod_ptr->plugin_name = mod.plugin_name;
                 mod_ptr->is_view = mod.is_view;
                 mod_ptr->name = this->generate_unique_module_name(mod.class_name);
-                mod_ptr->main_view_name.clear();
+                mod_ptr->graph_entry_name.clear();
                 mod_ptr->present.label_visible = this->present.GetModuleLabelVisibility();
 
                 for (auto& p : mod.parameters) {
@@ -98,7 +98,7 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                         callslot_ptr->description = c.description;
                         callslot_ptr->compatible_call_idxs = c.compatible_call_idxs;
                         callslot_ptr->type = c.type;
-                        callslot_ptr->present.label_visible = this->present.GetCallSlotLabelVisibility();
+                        callslot_ptr->present.label_visible = this->present.GetSlotLabelVisibility();
                         callslot_ptr->ConnectParentModule(mod_ptr);
 
                         mod_ptr->AddCallSlot(callslot_ptr);
@@ -145,10 +145,10 @@ bool megamol::gui::Graph::DeleteModule(ImGuiID module_uid, bool force) {
         for (auto iter = this->modules.begin(); iter != this->modules.end(); iter++) {
             if ((*iter)->uid == module_uid) {
 
-                if (!force && (*iter)->IsMainView()) {
+                if (!force && (*iter)->IsGraphEntry()) {
                     if (this->GetCoreInterface() == GraphCoreInterface::CORE_INSTANCE_GRAPH) {
                         megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-                            "[GUI] The action [Delete main view/ view instance] is not yet supported for the graph "
+                            "[GUI] The action [Delete graph entry/ view instance] is not yet supported for the graph "
                             "using the 'Core Instance Graph' interface. Open project from file to make desired "
                             "changes. [%s, %s, line %d]\n",
                             __FILE__, __FUNCTION__, __LINE__);
@@ -391,6 +391,7 @@ bool megamol::gui::Graph::AddCall(
         call_ptr->plugin_name = call_stock_data.plugin_name;
         call_ptr->functions = call_stock_data.functions;
         call_ptr->present.label_visible = this->present.GetCallLabelVisibility();
+        call_ptr->present.slots_visible = this->present.GetCallSlotLabelVisibility();
 
         return this->AddCall(call_ptr, callslot_1, callslot_2);
 
@@ -902,9 +903,9 @@ bool megamol::gui::Graph::PushSyncQueue(QueueAction action, const QueueData& in_
             return false;
         }
     } break;
-    case (QueueAction::CREATE_MAIN_VIEW): {
+    case (QueueAction::CREATE_GRAPH_ENTRY): {
     } break;
-    case (QueueAction::REMOVE_MAIN_VIEW): {
+    case (QueueAction::REMOVE_GRAPH_ENTRY): {
     } break;
     default: {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -968,31 +969,37 @@ bool megamol::gui::Graph::StateFromJSON(const nlohmann::json& in_json) {
                             graph_state, {"show_grid"}, &this->present.show_grid);
 
                         if (megamol::core::utility::get_json_value<bool>(
-                                graph_state, {"show_call_names"}, &this->present.show_call_names)) {
+                                graph_state, {"show_call_label"}, &this->present.show_call_label)) {
                             for (auto& call : this->GetCalls()) {
-                                call->present.label_visible = this->present.show_call_names;
+                                call->present.label_visible = this->present.show_call_label;
                             }
                         }
                         if (megamol::core::utility::get_json_value<bool>(
-                                graph_state, {"show_module_names"}, &this->present.show_module_names)) {
+                                graph_state, {"show_call_slots_label"}, &this->present.show_call_slots_label)) {
+                            for (auto& call : this->GetCalls()) {
+                                call->present.slots_visible = this->present.show_call_slots_label;
+                            }
+                        }
+                        if (megamol::core::utility::get_json_value<bool>(
+                                graph_state, {"show_module_label"}, &this->present.show_module_label)) {
                             for (auto& mod : this->GetModules()) {
-                                mod->present.label_visible = this->present.show_module_names;
+                                mod->present.label_visible = this->present.show_module_label;
                             }
                         }
 
                         if (megamol::core::utility::get_json_value<bool>(
-                                graph_state, {"show_slot_names"}, &this->present.show_slot_names)) {
+                                graph_state, {"show_slot_label"}, &this->present.show_slot_label)) {
                             for (auto& mod : this->GetModules()) {
                                 for (auto& callslot_types : mod->GetCallSlots()) {
                                     for (auto& callslots : callslot_types.second) {
-                                        callslots->present.label_visible = this->present.show_slot_names;
+                                        callslots->present.label_visible = this->present.show_slot_label;
                                     }
                                 }
                             }
                             for (auto& group_ptr : this->GetGroups()) {
                                 for (auto& interfaceslots_map : group_ptr->GetInterfaceSlots()) {
                                     for (auto& interfaceslot_ptr : interfaceslots_map.second) {
-                                        interfaceslot_ptr->present.label_visible = this->present.show_slot_names;
+                                        interfaceslot_ptr->present.label_visible = this->present.show_slot_label;
                                     }
                                 }
                             }
@@ -1167,9 +1174,11 @@ bool megamol::gui::Graph::StateToJSON(nlohmann::json& inout_json) {
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["parameter_sidebar_width"] =
             this->present.parameter_sidebar_width;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_grid"] = this->present.show_grid;
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_names"] = this->present.show_call_names;
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_slot_names"] = this->present.show_slot_names;
-        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_module_names"] = this->present.show_module_names;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_label"] = this->present.show_call_label;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_call_slots_label"] =
+            this->present.show_call_slots_label;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_slot_label"] = this->present.show_slot_label;
+        inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["show_module_label"] = this->present.show_module_label;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["params_visible"] = this->present.params_visible;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["params_readonly"] = this->present.params_readonly;
         inout_json[GUI_JSON_TAG_GRAPHS][GUI_JSON_TAG_PROJECT]["param_extended_mode"] =
@@ -1254,13 +1263,13 @@ const std::string megamol::gui::Graph::generate_unique_module_name(const std::st
 }
 
 
-const std::string megamol::gui::Graph::GenerateUniqueMainViewName(void) {
+const std::string megamol::gui::Graph::GenerateUniqueGraphEntryName(void) {
 
     int new_name_id = 0;
-    std::string new_name_prefix("MainView_");
+    std::string new_name_prefix("GraphEntry_");
     for (auto& module_ptr : this->modules) {
-        if (module_ptr->main_view_name.find(new_name_prefix) == 0) {
-            std::string int_postfix = module_ptr->main_view_name.substr(new_name_prefix.length());
+        if (module_ptr->graph_entry_name.find(new_name_prefix) == 0) {
+            std::string int_postfix = module_ptr->graph_entry_name.substr(new_name_prefix.length());
             try {
                 int last_id = std::stoi(int_postfix);
                 new_name_id = std::max(new_name_id, last_id);

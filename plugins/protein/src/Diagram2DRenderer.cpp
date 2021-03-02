@@ -78,9 +78,9 @@ void Diagram2DRenderer::release() {
     this->fbo[1].Release();
 }
 
-bool Diagram2DRenderer::GetExtents( view::CallRender2D& call) {
+bool Diagram2DRenderer::GetExtents( view::CallRender2DGL& call) {
     // set the bounding box to 0..1
-    call.SetBoundingBox( 0.0f, 0.0f, 1.0f, 1.0f);
+    call.AccessBoundingBoxes().SetBoundingBox( 0.0f, 0.0f, 0, 1.0f, 1.0f, 0);
 
     return true;
 }
@@ -98,7 +98,7 @@ bool Diagram2DRenderer::MouseEvent(float x, float y, view::MouseFlags flags) {
 /*
  * Diagram2DRenderer::Render
  */
-bool Diagram2DRenderer::Render( view::CallRender2D &call) {
+bool Diagram2DRenderer::Render( view::CallRender2DGL &call) {
     // get pointer to Diagram2DCall
     Diagram2DCall *diagram = this->dataCallerSlot.CallAs<Diagram2DCall>();
     if( diagram == NULL ) return false;

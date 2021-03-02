@@ -106,3 +106,17 @@ const megamol::gui::CallSlotPtr_t& megamol::gui::Call::GetCallSlot(megamol::gui:
     }
     return this->connected_callslots[type];
 }
+
+
+const std::string megamol::gui::Call::GetSlotsLabel(void) {
+
+    std::string caller = "n/a";
+    std::string callee = "n/a";
+    auto callerslot_ptr = this->GetCallSlot(CallSlotType::CALLER);
+    auto calleeslot_ptr = this->GetCallSlot(CallSlotType::CALLEE);
+    if (callerslot_ptr != nullptr)
+        caller = callerslot_ptr->name;
+    if (calleeslot_ptr != nullptr)
+        callee = calleeslot_ptr->name;
+    return std::string("[" + caller + "] > [" + callee + "]");
+}

@@ -168,7 +168,7 @@ namespace gui {
             return name_space;
         }
 
-        std::string GetValueString(void);
+        std::string GetValueString(void) const;
 
         Value_t& GetValue(void) {
             return this->value;

@@ -44,9 +44,9 @@ bool view::special::DemoRenderer2D::create(void) {
 /*
  * view::special::DemoRenderer2D::GetExtents
  */
-bool view::special::DemoRenderer2D::GetExtents(view::CallRender2D& call) {
+bool view::special::DemoRenderer2D::GetExtents(view::CallRender2DGL& call) {
 
-    call.SetBoundingBox(0.0f, 0.0f, 4.0f, 4.0f);
+    call.AccessBoundingBoxes().SetBoundingBox(0.0f, 0.0f,0, 4.0f, 4.0f,0);
 
     return true;
 }
@@ -55,22 +55,24 @@ bool view::special::DemoRenderer2D::GetExtents(view::CallRender2D& call) {
 /*
  * view::special::DemoRenderer2D::Render
  */
-bool view::special::DemoRenderer2D::Render(view::CallRender2D& call) {
+bool view::special::DemoRenderer2D::Render(view::CallRender2DGL& call) {
+
+    auto bbox = call.GetBoundingBoxes().BoundingBox();
 
     ::glColor3ub(255, 0, 0);
     ::glBegin(GL_LINE_LOOP);
-    ::glVertex2f(call.GetBoundingBox().Left(), call.GetBoundingBox().Bottom());
-    ::glVertex2f(call.GetBoundingBox().Right(), call.GetBoundingBox().Bottom());
-    ::glVertex2f(call.GetBoundingBox().Right(), call.GetBoundingBox().Top());
-    ::glVertex2f(call.GetBoundingBox().Left(), call.GetBoundingBox().Top());
+    ::glVertex2f(bbox.Left(), bbox.Bottom());
+    ::glVertex2f(bbox.Right(), bbox.Bottom());
+    ::glVertex2f(bbox.Right(), bbox.Top());
+    ::glVertex2f(bbox.Left(), bbox.Top());
     ::glEnd();
     const float border = 0.1f;
     ::glColor3ub(255, 255, 0);
     ::glBegin(GL_LINE_LOOP);
-    ::glVertex2f(call.GetBoundingBox().Left() + border, call.GetBoundingBox().Bottom() + border);
-    ::glVertex2f(call.GetBoundingBox().Right() - border, call.GetBoundingBox().Bottom() + border);
-    ::glVertex2f(call.GetBoundingBox().Right() - border, call.GetBoundingBox().Top() - border);
-    ::glVertex2f(call.GetBoundingBox().Left() + border, call.GetBoundingBox().Top() - border);
+    ::glVertex2f(bbox.Left() + border, bbox.Bottom() + border);
+    ::glVertex2f(bbox.Right() - border, bbox.Bottom() + border);
+    ::glVertex2f(bbox.Right() - border, bbox.Top() - border);
+    ::glVertex2f(bbox.Left() + border, bbox.Top() - border);
     ::glEnd();
 
     ::glColor3ub(255, 255, 255);

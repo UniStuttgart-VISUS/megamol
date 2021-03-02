@@ -8,7 +8,7 @@
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/SSBOBufferArray.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender2D.h"
+#include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/MouseFlags.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmstd_datatools/table/TableDataCall.h"
@@ -128,7 +128,7 @@ private:
      * @param call The calling call.
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender2D& call) override;
+    bool Render(core::view::CallRender2DGL& call) override;
 
     /**
      * The get extents callback. The module should set the members of
@@ -139,7 +139,7 @@ private:
      *
      * @return The return value of the function.
      */
-    bool GetExtents(core::view::CallRender2D& call) override;
+    bool GetExtents(core::view::CallRender2DGL& call) override;
 
     bool hasDirtyData() const;
 
@@ -149,7 +149,7 @@ private:
 
     void resetDirtyScreen();
 
-    bool validate(core::view::CallRender2D& call, bool ignoreMVP);
+    bool validate(core::view::CallRender2DGL& call, bool ignoreMVP);
 
     void updateColumns();
 
@@ -235,6 +235,10 @@ private:
 
     core::param::ParamSlot axisTickSizeParam;
 
+    core::param::ParamSlot axisTickPrecisionX;
+
+    core::param::ParamSlot axisTickPrecisionY;
+
     core::param::ParamSlot drawOuterLabelsParam;
 
     core::param::ParamSlot drawDiagonalLabelsParam;
@@ -270,7 +274,7 @@ private:
 
     std::vector<PlotInfo> plots;
 
-    vislib::math::Rectangle<float> bounds;
+    core::BoundingBoxes_2 bounds;
 
     vislib::graphics::gl::GLSLShader minimalisticAxisShader;
 
