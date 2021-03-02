@@ -275,16 +275,22 @@ RuntimeConfig handle_config(RuntimeConfig config, megamol::core::LuaAPI& lua) {
     // CLI config file overwrites lua file
 
     // load config file
-    auto& file = config.configuration_file;
-    if (!stdfs::exists(file)) {
-        std::cout << "Configuration file \"" << file << "\" does not exist!" << std::endl;
-        std::exit(1);
-    }
-    std::ifstream stream(file);
-    config.configuration_file_contents = std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+    auto& files = config.configuration_files;
+    for (auto& file : files) {
+        std::ifstream stream(file);
+        std::string file_contents = std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+        std::string file_contents_as_cli;
 
-    // interpret lua config commands as CLI commands
-    bool lua_config_ok = lua.RunString(config.configuration_file_contents, config.configuration_file_contents_as_cli);
+        // interpret lua config commands as CLI commands
+        bool lua_config_ok = lua.RunString(file_contents, file_contents_as_cli);
+
+        if (!lua_config_ok) {
+            // TODO: ERROR
+        }
+
+        config.configuration_file_contents.push_back(file_contents);
+        config.configuration_file_contents_as_cli.push_back(file_contents_as_cli);
+    }
 
     return config;
 }

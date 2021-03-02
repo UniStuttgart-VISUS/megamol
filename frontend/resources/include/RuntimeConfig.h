@@ -22,10 +22,11 @@ struct RuntimeConfig {
     // general stuff
     using Path = std::string;
     using StringPair = std::pair<std::string/*Config*/, std::string/*Value*/>;
-    Path configuration_file = "megamol_config.lua";                        // mmSetConfigurationFile + mmGetConfigurationFile ?
-    std::string configuration_file_contents = "";                          // mmSetConfiguration + mmGetConfiguration ?
-    std::string configuration_file_contents_as_cli = "";
+
+    std::vector<Path> configuration_files = {"megamol_config.lua"};        // set only via (multiple) --configuration in CLI
+    std::vector<std::string> configuration_file_contents = {};
     std::vector<StringPair> configuration_values = {};                     // mmSetConfig - set config/option values accepted in CLI
+    std::vector<std::string> configuration_file_contents_as_cli = {};
     Path application_directory = "";                                       // mmSetAppDir
     std::vector<Path> resource_directories = {};                           // mmAddResourceDir
     std::vector<Path> shader_directories = {};                             // mmAddShaderDir
