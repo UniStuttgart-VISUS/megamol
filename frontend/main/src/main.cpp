@@ -303,25 +303,20 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
 
     auto project_files_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
     {
-        // verify project files exist in file system
-        if (parsed_options.count(option_name)) {
-            const auto& v = parsed_options[option_name].as<std::vector<std::string>>();
-            for (const auto& p : v) {
-                if (!stdfs::exists(p)) {
-                    std::cout << "Project file \"" << p << "\" does not exist!" << std::endl;
-                    std::exit(1);
-                }
+        const auto& v = parsed_options[option_name].as<std::vector<std::string>>();
+        for (const auto& p : v) {
+            if (!stdfs::exists(p)) {
+                std::cout << "Project file \"" << p << "\" does not exist!" << std::endl;
+                std::exit(1);
             }
-
-            config.project_files = v;
         }
+
+        config.project_files = v;
     };
 
     auto host_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
     {
-        if (parsed_options.count(option_name)) {
-            config.lua_host_address = parsed_options[option_name].as<std::string>();
-        }
+        config.lua_host_address = parsed_options[option_name].as<std::string>();
     };
 
     auto khrdebug_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -357,23 +352,21 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
 
     auto window_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
     {
-        if (parsed_options.count(option_name)) {
-            auto s = parsed_options[option_name].as<std::string>();
-            // 'WIDTHxHEIGHT[+POSX+POSY]'
-            // 'wxh+x+y' with optional '+x+y', e.g. 600x800+0+0 opens window in upper left corner
-            std::regex geometry("(\\d+)x(\\d+)(?:\\+(\\d+)\\+(\\d+))?");
-            std::smatch match;
-            if (std::regex_match(s, match, geometry)) {
-                config.window_size.push_back( /*width*/ std::stoul(match[1].str(), nullptr, 10) );
-                config.window_size.push_back( /*height*/ std::stoul(match[2].str(), nullptr, 10) );
-                if (match[3].matched) {
-                    config.window_position.push_back( /*x*/ std::stoul(match[3].str(), nullptr, 10) );
-                    config.window_position.push_back( /*y*/ std::stoul(match[4].str(), nullptr, 10) );
-                }
-            } else {
-                std::cout << "window option needs to be in the following format: wxh+x+y or wxh" << std::endl;
-                std::exit(1);
+        auto s = parsed_options[option_name].as<std::string>();
+        // 'WIDTHxHEIGHT[+POSX+POSY]'
+        // 'wxh+x+y' with optional '+x+y', e.g. 600x800+0+0 opens window in upper left corner
+        std::regex geometry("(\\d+)x(\\d+)(?:\\+(\\d+)\\+(\\d+))?");
+        std::smatch match;
+        if (std::regex_match(s, match, geometry)) {
+            config.window_size.push_back( /*width*/ std::stoul(match[1].str(), nullptr, 10) );
+            config.window_size.push_back( /*height*/ std::stoul(match[2].str(), nullptr, 10) );
+            if (match[3].matched) {
+                config.window_position.push_back( /*x*/ std::stoul(match[3].str(), nullptr, 10) );
+                config.window_position.push_back( /*y*/ std::stoul(match[4].str(), nullptr, 10) );
             }
+        } else {
+            std::cout << "window option needs to be in the following format: wxh+x+y or wxh" << std::endl;
+            std::exit(1);
         }
     };
 
@@ -427,9 +420,11 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
         }
 
         for (auto& option : options_list) {
-            auto& name = std::get<0>(option);
-            auto& handle = std::get<3>(option);
-            handle(name, parsed_options, config);
+            auto& option_name = std::get<0>(option);
+            if (parsed_options.count(option_name)) {
+                auto& option_handler = std::get<3>(option);
+                option_handler(option_name, parsed_options, config);
+            }
         }
 
     } catch (cxxopts::option_not_exists_exception ex) {
