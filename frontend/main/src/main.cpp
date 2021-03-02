@@ -36,6 +36,7 @@ namespace stdfs = std::experimental::filesystem;
 
 using megamol::frontend_resources::RuntimeConfig;
 RuntimeConfig handle_cli_and_config(const int argc, const char** argv, megamol::core::LuaAPI& lua);
+std::vector<std::string> extract_config_file_paths(const int argc, const char** argv);
 RuntimeConfig handle_config(RuntimeConfig config, megamol::core::LuaAPI& lua);
 RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv);
 
@@ -255,8 +256,65 @@ int main(const int argc, const char** argv) {
     return 0;
 }
 
+#define config_option "--config"
+static auto config_name = std::string(config_option).substr(2);
+std::vector<std::string> extract_config_file_paths(const int argc, const char** argv) {
+    // load config files from default paths
+    // setting Config files from Lua is not possible
+    // multiple Config files can be passed via CLI - then default config file paths are ignored
+
+    // clang-format off
+    // find config options in CLI string and overwrite default paths
+    cxxopts::Options options(argv[0], "MegaMol Config Parsing");
+    options.add_options()
+        (config_name, "", cxxopts::value<std::vector<std::string>>());
+    // clang-format on
+
+    options.allow_unrecognised_options();
+
+    auto error = [](auto const& what) {
+        std::cout << what << std::endl;
+        std::exit(1);
+    };
+
+    try {
+        int _argc = argc;
+        auto _argv = const_cast<char**>(argv);
+        auto parsed_options = options.parse(_argc, _argv);
+
+        std::vector<std::string> config_files;
+
+        if (parsed_options.count(config_name) == 0) {
+            // no config files given
+            // use defaults
+            RuntimeConfig config;
+            config_files = config.configuration_files;
+        } else {
+            config_files = parsed_options[config_name].as<std::vector<std::string>>();
+        }
+
+        // check files exist
+        for (const auto& file : config_files) {
+            if (!stdfs::exists(file)) {
+                std::cout << "Config file \"" << file << "\" does not exist!" << std::endl;
+                std::exit(1);
+            }
+        }
+
+        return config_files;
+
+    } catch (cxxopts::option_not_exists_exception ex) {
+        error(ex.what());
+    } catch (cxxopts::missing_argument_exception ex) {
+        error(ex.what());
+    }
+}
+
 RuntimeConfig handle_cli_and_config(const int argc, const char** argv, megamol::core::LuaAPI& lua) {
     RuntimeConfig config;
+
+    // config files are already checked to exist in file system
+    config.configuration_files = extract_config_file_paths(argc, argv);
 
     // overwrite default values with values from config file
     config = handle_config(config, lua);
@@ -268,11 +326,6 @@ RuntimeConfig handle_cli_and_config(const int argc, const char** argv, megamol::
 }
 
 RuntimeConfig handle_config(RuntimeConfig config, megamol::core::LuaAPI& lua) {
-
-    // TODO: both lua and CLI can provide a new config file
-    // this can lead to a cycle of config files referencing each other
-    // lua config file call must happen in first line of script
-    // CLI config file overwrites lua file
 
     // load config file
     auto& files = config.configuration_files;
@@ -305,6 +358,11 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
     // option handlers fill config struct with passed options
     auto empty_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
     {
+    };
+
+    auto config_files_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+    {
+        // is already done by first CLI pass which checks config files before running them through Lua
     };
 
     auto project_files_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -380,7 +438,8 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
     std::vector<std::tuple<std::string, std::string, std::shared_ptr<cxxopts::Value>, std::function<void(std::string const&, cxxopts::ParseResult const&, RuntimeConfig&)>>>
     options_list =
     {
-          {"project-files", "projects to load",                                                            cxxopts::value<std::vector<std::string>>(), project_files_handler}
+          {config_name,     "provide Lua configuration file",                                              cxxopts::value<std::vector<std::string>>(), config_files_handler }
+        , {"project-files", "projects to load",                                                            cxxopts::value<std::vector<std::string>>(), project_files_handler}
         , {"host",          "address of lua host server, default: "+config.lua_host_address,               cxxopts::value<std::string>(),              host_handler         }
         , {"khrdebug",      "enable OpenGL KHR debug messages",                                            cxxopts::value<bool>(),                     khrdebug_handler     }
         , {"vsync",         "enable VSync in OpenGL window",                                               cxxopts::value<bool>(),                     vsync_handler        }
@@ -407,6 +466,7 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
         add_option(options_list[7])
         add_option(options_list[8])
         add_option(options_list[9])
+        add_option(options_list[10])
         ("help", "print help")
         ;
     // clang-format on
