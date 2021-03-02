@@ -34,7 +34,7 @@ bool megamol::frontend::CUDA_Service::init(void* configPtr) {
         return false;
     }
     cuDeviceGet(&ctx_.device_, 0);
-    auto ctx_ptr = reinterpret_cast<CUcontext*>(&ctx_);
+    auto ctx_ptr = reinterpret_cast<CUcontext*>(&ctx_.ctx_);
     cuCtxCreate(ctx_ptr, CU_CTX_SCHED_BLOCKING_SYNC | CU_CTX_MAP_HOST, ctx_.device_);
 
     if (ctx_.ctx_ == nullptr) {
@@ -42,7 +42,7 @@ bool megamol::frontend::CUDA_Service::init(void* configPtr) {
         return false;
     }
 
-    resourceReferences_ = {{"CUDA_Context", ctx_}};
+    resourceReferences_ = {{frontend_resources::CUDA_Context_Req_Name, ctx_}};
 
     log("initialized successfully");
 
