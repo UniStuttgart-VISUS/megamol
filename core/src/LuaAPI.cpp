@@ -187,6 +187,9 @@ void megamol::core::LuaAPI::SetScriptPath(std::string const& scriptPath) { this-
 
 void megamol::core::LuaAPI::SetMegaMolGraph(megamol::core::MegaMolGraph& graph) { this->graph_ptr_ = &graph; }
 
+bool megamol::core::LuaAPI::FillConfigFromString(const std::string& script, std::string& result, LuaConfigCallbacks const& config) {
+    return RunString(script, result);
+}
 
 bool megamol::core::LuaAPI::RunFile(const std::string& envName, const std::string& fileName, std::string& result) {
     std::ifstream input(fileName, std::ios::in);

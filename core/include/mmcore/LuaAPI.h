@@ -20,10 +20,6 @@ struct lua_State; // lua includes should stay in the core
 
 namespace megamol {
 namespace core {
-namespace utility {
-class Configuration;
-}
-
 
 /**
  * This class holds a Lua state. It can be used to interact with a MegaMol instance.
@@ -36,6 +32,19 @@ class Configuration;
 class MEGAMOLCORE_API LuaAPI {
 public:
     static const std::string MEGAMOL_ENV;
+
+    typedef struct {
+        std::function<bool(std::string const&, std::string const&)> mmSetConfig_callback_;
+        std::function<bool(std::string const&)> mmSetAppDir_callback_;
+        std::function<bool(std::string const&)> mmAddResourceDir_callback_;
+        std::function<bool(std::string const&)> mmAddShaderDir_callback_;
+        std::function<bool(std::string const&)> mmSetLogFile_callback_;
+        std::function<bool(int const)> mmSetLogLevel_callback_;
+        std::function<bool(int const)> mmSetEchoLevel_callback_;
+        std::function<bool(std::string const&)> mmLoadProject_callback_;
+        std::function<bool(std::string const&, std::string const&)> mmSetKeyValue_callback_;
+        //std::function<bool(std::string const&, std::string&)> mmGetKeyValue_callback_;
+    } LuaConfigCallbacks;
 
     typedef struct {
         std::function<std::vector<std::string>()> mmListResources_callback_; // returns list of resources available in frontend
@@ -57,6 +66,8 @@ public:
     ~LuaAPI();
 
     // TODO forbid copy-contructor? assignment?
+
+    bool FillConfigFromString(const std::string& script, std::string& result, LuaConfigCallbacks const& config);
 
     /**
      * Run a script file, sandboxed in the environment provided.
