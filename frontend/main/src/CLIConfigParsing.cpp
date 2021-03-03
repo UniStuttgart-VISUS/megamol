@@ -458,7 +458,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(Runtime
             }
         }
 
-    } catch (cxxopts::option_not_exists_exception ex) {
+    } catch (cxxopts::OptionException ex) {
         exit(std::string(ex.what()) + "\n" + options.help({""}));
     }
 
