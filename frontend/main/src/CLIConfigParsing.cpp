@@ -35,7 +35,7 @@ static std::string logfile_option     = "--logfile";
 static std::string loglevel_option    = "--loglevel";
 static std::string echolevel_option   = "--echolevel";
 static std::string project_option     = "--project";
-static std::string var_option         = "--var";
+static std::string global_option      = "--global";
 
 static auto option_name = [](std::string const& s) { return s.substr(2); };
 static auto config_name = option_name(config_option);
@@ -103,7 +103,7 @@ static void project_handler(std::string const& option_name, cxxopts::ParseResult
     config.project_files.insert(config.project_files.end(), v.begin(), v.end());
 };
 
-static void var_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void global_value_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     auto v = parsed_options[option_name].as<std::vector<std::string>>();
 
@@ -115,7 +115,7 @@ static void var_handler(std::string const& option_name, cxxopts::ParseResult con
         auto key   = key_value.substr(0, delimiter);
         auto value = key_value.substr(delimiter+1);
 
-        config.value_insert(key, value);
+        config.global_value_insert(key, value);
     }
 };
 
@@ -131,7 +131,7 @@ std::vector<OptionsListEntry> base_config_list =
         , {option_name(loglevel_option),    "Set logging level",                                               cxxopts::value<int>(),                      loglevel_handler}
         , {option_name(echolevel_option),   "Set echo level",                                                  cxxopts::value<int>(),                      echolevel_handler}
         , {option_name(project_option),     "Project file(s) to load at startup",                              cxxopts::value<std::vector<std::string>>(), project_handler}
-        , {option_name(var_option),         "Set key-value pair(s) in MegaMol environment, syntax: key:value", cxxopts::value<std::vector<std::string>>(), var_handler}
+        , {option_name(global_option),      "Set global key-value pair(s) in MegaMol environment, syntax: --global=key:value", cxxopts::value<std::vector<std::string>>(), global_value_handler}
     };
 
 
@@ -280,8 +280,6 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
     #define check(s) \
                 if (is_weird(s)) \
                     return false;
-    #define opt(o) \
-                std::string option = (o[0] == '-' ? "" : "--") + o;
     #define add(o,v) \
                 file_contents_as_cli.push_back(o + "=" + v);
 
@@ -300,20 +298,22 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         file_contents_as_cli.clear();
 
         auto callbacks = megamol::core::LuaAPI::LuaConfigCallbacks{
-            // mmSetConfig_callback_ std::function<void(std::string const&, std::string const&)> ;
-            [&](std::string const& config, std::string const& value) {
+            // mmSetCliOption_callback_ std::function<void(std::string const&, std::string const&)> ;
+            [&](std::string const& clioption, std::string const& value) {
                 // the usual CLI options
-                check(config);
+                check(clioption);
                 check(value);
-                opt(config);
+
+                std::string option = (clioption[0] == '-' ? "" : "--") + clioption;
 
                 if (value == std::string("on")) {
-                    file_contents_as_cli.push_back(option);
+                    file_contents_as_cli.push_back(clioption);
                 } else 
                 if (value == std::string("off")) {
-                    std::remove(file_contents_as_cli.begin(), file_contents_as_cli.end(), option);
+                    std::remove(file_contents_as_cli.begin(), file_contents_as_cli.end(), clioption);
+                    // TODO: how to _globally_ turn some boolean option off? not really feasible across different config files.
                 } else {
-                    add(option,value);
+                    add(clioption,value);
                 }
 
                 return true;
@@ -335,7 +335,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
                 return true;
             } ,
             make_option_callback(project_option), // mmLoadProject_callback_ std::function<void(std::string const&)> ;
-            // mmSetKeyValue_callback_ std::function<void(std::string const&, std::string const&)> ;
+            // mmSetGlobalValue_callback_ std::function<void(std::string const&, std::string const&)> ;
             [&](std::string const& key, std::string const& value) {
                 check(key); // no space or = in key
 
@@ -343,7 +343,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
                 if (value.find_first_of(" :") != std::string::npos)
                     return false;
 
-                add(var_option, key + ":" + value);
+                add(global_option, key + ":" + value);
                 return true;
             }
             //// mmGetKeyValue_callback_ std::function<std::string(std::string const&)> ;

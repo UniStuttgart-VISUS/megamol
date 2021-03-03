@@ -34,7 +34,7 @@ public:
     static const std::string MEGAMOL_ENV;
 
     typedef struct {
-        std::function<bool(std::string const&, std::string const&)> mmSetConfig_callback_;
+        std::function<bool(std::string const&, std::string const&)> mmSetCliOption_callback_;
         std::function<bool(std::string const&)> mmSetAppDir_callback_;
         std::function<bool(std::string const&)> mmAddResourceDir_callback_;
         std::function<bool(std::string const&)> mmAddShaderDir_callback_;
@@ -42,8 +42,7 @@ public:
         std::function<bool(int const)> mmSetLogLevel_callback_;
         std::function<bool(int const)> mmSetEchoLevel_callback_;
         std::function<bool(std::string const&)> mmLoadProject_callback_;
-        std::function<bool(std::string const&, std::string const&)> mmSetKeyValue_callback_;
-        //std::function<bool(std::string const&, std::string&)> mmGetKeyValue_callback_;
+        std::function<bool(std::string const&, std::string const&)> mmSetGlobalValue_callback_;
     } LuaConfigCallbacks;
 
     typedef struct {
