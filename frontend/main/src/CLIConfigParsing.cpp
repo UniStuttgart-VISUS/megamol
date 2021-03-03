@@ -279,18 +279,20 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
 
 megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(RuntimeConfig config, megamol::core::LuaAPI& lua) {
 
-    // load config file
-    auto& files = config.configuration_files;
+    // the parsing of CLI options inside Lua callbacks is somewhat of a mess
+    // we create lua callbacks on the fly and pass them to Lua to execute during config interpretation
+    // those callbacks fill our local fake "cli inputs" arrays, which we then feed into the CLI interpreter (cxxopt)
 
-    // holds CLI options in each for-loop iteration
-    // gets cleared for each new iteration
-    std::vector<std::string> file_contents_as_cli;
+    auto& files = config.configuration_files;
+    using StringPair = megamol::frontend_resources::RuntimeConfig::StringPair;
+    std::vector<StringPair> cli_options_from_configs;
+
     auto is_weird = [](std::string const& s) { return (s.empty() || s.find_first_of(" =") != std::string::npos); };
     #define check(s) \
                 if (is_weird(s)) \
                     return false;
     #define add(o,v) \
-                file_contents_as_cli.push_back(o + "=" + v);
+                cli_options_from_configs.push_back({o,v})
 
     auto make_option_callback = [&](std::string const& optname) {
         return [&](std::string const& value) {
@@ -301,79 +303,99 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         };
     };
 
-    for (auto& file : files) {
-        std::ifstream stream(file);
-        std::string file_contents = std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
-        file_contents_as_cli.clear();
+    auto lua_config_callbacks = megamol::core::LuaAPI::LuaConfigCallbacks{
+        // mmSetCliOption_callback_ std::function<void(std::string const&, std::string const&)> ;
+        [&](std::string const& clioption, std::string const& value) {
+            // the usual CLI options
+            check(clioption);
+            check(value);
 
-        auto callbacks = megamol::core::LuaAPI::LuaConfigCallbacks{
-            // mmSetCliOption_callback_ std::function<void(std::string const&, std::string const&)> ;
-            [&](std::string const& clioption, std::string const& value) {
-                // the usual CLI options
-                check(clioption);
-                check(value);
+            auto map_option = [](std::string const& option) -> std::string {
 
-                std::string option = (clioption[0] == '-' ? "" : "--") + clioption;
+                // TODO: check that options are actually known!
 
-                if (value == std::string("on")) {
-                    file_contents_as_cli.push_back(clioption);
-                } else 
-                if (value == std::string("off")) {
-                    std::remove(file_contents_as_cli.begin(), file_contents_as_cli.end(), clioption);
-                    // TODO: how to _globally_ turn some boolean option off? not really feasible across different config files.
-                } else {
-                    add(clioption,value);
+                if (option.size() == 1 && option[0] != '-') {
+                    return "-" + option; // e.g. mmSetCliOption("v", "true") for -v
+                }
+                if (option.size() > 2 && option[0] != '-' && option[1] != '-') {
+                    return "--" + option; // e.g. mmSetCliOption("verbose", "true") for --verbose
                 }
 
-                return true;
-            } ,
-            make_option_callback(appdir_option), // mmSetAppDir_callback_ std::function<void(std::string const&)> ;
-            make_option_callback(resourcedir_option), // mmAddResourceDir_callback_ std::function<void(std::string const&)> ;
-            make_option_callback(shaderdir_option), // mmAddShaderDir_callback_ std::function<void(std::string const&)> ;
-            make_option_callback(logfile_option), // mmSetLogFile_callback_ std::function<void(std::string const&)> ;
-            // mmSetLogLevel_callback_ std::function<void(int const)> ;
-            [&](const int log_level) {
-                // Lua checked string to int conversion already
-                add(loglevel_option, std::to_string(log_level));
-                return true;
-            } ,
-            // std::function<void(int const)> mmSetEchoLevel_callback_;
-            [&](const int echo_level) {
-                // Lua checked string to int conversion already
-                add(echolevel_option, std::to_string(echo_level));
-                return true;
-            } ,
-            make_option_callback(project_option), // mmLoadProject_callback_ std::function<void(std::string const&)> ;
-            // mmSetGlobalValue_callback_ std::function<void(std::string const&, std::string const&)> ;
-            [&](std::string const& key, std::string const& value) {
-                check(key); // no space or = in key
+                if (option.size() == 2 && option[0] == '-' && option[1] != '-') {
+                    return option; // e.g. mmSetCliOption("-v", "true") for -v
+                }
+                if (option.size() > 2 && option[0] == '-' && option[1] == '-') {
+                    return option; // e.g. mmSetCliOption("--verbose", "true") for --verbose
+                }
 
-                // no space or : in value
-                if (value.find_first_of(" :") != std::string::npos)
-                    return false;
+                return option; // something weird might happen here
+            };
 
-                add(global_option, key + ":" + value);
-                return true;
-            }
-            //// mmGetKeyValue_callback_ std::function<std::string(std::string const&)> ;
-            //[&](std::string const& maybe_value) {}
-        };
+            // we assume that "on" and "off" are used only for boolean cxxopts values
+            // and so we can map them to "true" and "false"
+            auto map_value = [](std::string const& value) -> std::string {
+                if (value == std::string("on")) {
+                    return "true";
+                }
+                if (value == std::string("off")) {
+                    return "false";
+                }
+
+                return value;
+            };
+
+            add(map_option(clioption),map_value(value));
+
+            return true;
+        } ,
+        make_option_callback(appdir_option), // mmSetAppDir_callback_ std::function<void(std::string const&)> ;
+        make_option_callback(resourcedir_option), // mmAddResourceDir_callback_ std::function<void(std::string const&)> ;
+        make_option_callback(shaderdir_option), // mmAddShaderDir_callback_ std::function<void(std::string const&)> ;
+        make_option_callback(logfile_option), // mmSetLogFile_callback_ std::function<void(std::string const&)> ;
+        // mmSetLogLevel_callback_ std::function<void(int const)> ;
+        [&](const int log_level) {
+            // Lua checked string to int conversion already
+            add(loglevel_option, std::to_string(log_level));
+            return true;
+        } ,
+        // std::function<void(int const)> mmSetEchoLevel_callback_;
+        [&](const int echo_level) {
+            // Lua checked string to int conversion already
+            add(echolevel_option, std::to_string(echo_level));
+            return true;
+        } ,
+        make_option_callback(project_option), // mmLoadProject_callback_ std::function<void(std::string const&)> ;
+        // mmSetGlobalValue_callback_ std::function<void(std::string const&, std::string const&)> ;
+        [&](std::string const& key, std::string const& value) {
+            check(key); // no space or = in key
+
+            // no space or : in value
+            if (value.find_first_of(" :") != std::string::npos)
+                return false;
+
+            add(global_option, key + ":" + value);
+            return true;
+        }
+        //// mmGetKeyValue_callback_ std::function<std::string(std::string const&)> ;
+        //[&](std::string const& maybe_value) {}
+    };
+
+    for (auto& file : files) {
+        cli_options_from_configs.clear();
+        std::ifstream stream(file);
+        std::string file_contents = std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
 
         // interpret lua config commands as CLI commands
         std::string lua_result_string;
-        bool lua_config_ok = lua.FillConfigFromString(file_contents, lua_result_string, callbacks);
+        bool lua_config_ok = lua.FillConfigFromString(file_contents, lua_result_string, lua_config_callbacks);
 
         if (!lua_config_ok) {
             exit("Error in Lua config file " + file + "\n Lua Error: " + lua_result_string);
         }
 
-        auto summarize = [](std::vector<std::string> const& cli) -> std::string
-        {
-            return std::accumulate(cli.begin(), cli.end(), std::string(""),
-                [](std::string const& init, std::string const& elem) { return init + " " + elem; });
-        };
-
-        auto cli = summarize(file_contents_as_cli);
+         std::vector<std::string> file_contents_as_cli {cli_options_from_configs.size()};
+         for (auto& pair : cli_options_from_configs)
+             file_contents_as_cli.push_back(pair.first + "=" + pair.second);
 
         cxxopts::Options options("Lua Config Pass", "MegaMol Lua Config Parsing");
 
@@ -410,7 +432,9 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         }
 
         config.configuration_file_contents.push_back(file_contents);
-        config.configuration_file_contents_as_cli.push_back(cli);
+        config.configuration_file_contents_as_cli.push_back(
+            std::accumulate(file_contents_as_cli.begin(), file_contents_as_cli.end(), std::string(""),
+                [](std::string const& init, std::string const& elem) { return init + " " + elem; }));
     }
 
     return config;
