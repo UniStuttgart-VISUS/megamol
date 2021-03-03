@@ -135,14 +135,6 @@ std::vector<OptionsListEntry> base_config_list =
     };
 
 
-auto project_files_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
-{
-    const auto& v = parsed_options[option_name].as<std::vector<std::string>>();
-    files_exist(v, "Project file");
-
-    config.project_files = v;
-};
-
 auto host_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.lua_host_address = parsed_options[option_name].as<std::string>();
@@ -200,7 +192,7 @@ auto window_handler = [&](std::string const& option_name, cxxopts::ParseResult c
 
 std::vector<OptionsListEntry> config_list =
     {
-          {"project-files", "projects to load",                                                            cxxopts::value<std::vector<std::string>>(), project_files_handler}
+          {"project-files", "projects to load",                                                            cxxopts::value<std::vector<std::string>>(), project_handler}
         , {"host",          "address of lua host server",                                                  cxxopts::value<std::string>(),              host_handler         }
         , {"khrdebug",      "enable OpenGL KHR debug messages",                                            cxxopts::value<bool>(),                     khrdebug_handler     }
         , {"vsync",         "enable VSync in OpenGL window",                                               cxxopts::value<bool>(),                     vsync_handler        }
