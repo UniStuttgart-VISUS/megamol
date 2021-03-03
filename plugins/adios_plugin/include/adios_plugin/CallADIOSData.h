@@ -34,6 +34,13 @@ public:
     virtual const std::string getType() = 0;
     virtual const size_t getTypeSize() = 0;
     virtual size_t size() = 0;
+    std::vector<size_t> getShape() {
+        if (shape.empty()) {
+            std::vector<size_t> size_vec = {size()};
+            return size_vec;
+        }
+        return shape;
+    }
 
     std::vector<size_t> shape;
     bool singleValue = false;
