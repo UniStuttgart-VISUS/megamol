@@ -15,15 +15,15 @@ if(BUILD_FRONTEND_SERVICES)
   # afterwards list the dependencies.
   #set(DEP_LIST "${DEP_LIST};BUILD_MMSTD_DATATOOLS_PLUGIN BUILD_CORE" CACHE INTERNAL "")
 
-  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.hpp" "opengl_glfw/*.h"  "opengl_glfw/*.hpp" "service_collection/*.hpp" "gui/*.hpp" "lua_service_wrapper/*.hpp" "screenshot_service/*.hpp" "framestatistics_service/*.hpp")
-  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "opengl_glfw/*.cpp" "service_collection/*.cpp" "gui/*.cpp" "lua_service_wrapper/*.cpp" "screenshot_service/*.cpp" "framestatistics_service/*.cpp")
+  file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "include/*.h" "include/*.hpp" "cuda/*h" "cuda/*hpp" "opengl_glfw/*.h"  "opengl_glfw/*.hpp" "service_collection/*.hpp" "gui/*.hpp" "lua_service_wrapper/*.hpp" "screenshot_service/*.hpp" "framestatistics_service/*.hpp")
+  file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "cuda/*cpp" "opengl_glfw/*.cpp" "service_collection/*.cpp" "gui/*.cpp" "lua_service_wrapper/*.cpp" "screenshot_service/*.cpp" "framestatistics_service/*.cpp")
 
   # Add target
   add_library(${PROJECT_NAME} STATIC ${header_files} ${source_files})
   set_target_properties(${PROJECT_NAME}
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT_NAME ${PROJECT_NAME})
-  target_include_directories(${PROJECT_NAME} PUBLIC "opengl_glfw" "include" "service_collection" "gui" "lua_service_wrapper" "screenshot_service" "framestatistics_service")
+  target_include_directories(${PROJECT_NAME} PUBLIC "cuda" "opengl_glfw" "include" "service_collection" "gui" "lua_service_wrapper" "screenshot_service" "framestatistics_service")
 
   add_library(abstract_frontend_service INTERFACE)
   target_include_directories(abstract_frontend_service INTERFACE
@@ -31,6 +31,12 @@ if(BUILD_FRONTEND_SERVICES)
     $<INSTALL_INTERFACE:include/>
   )
   target_link_libraries(abstract_frontend_service INTERFACE frontend_resources)
+
+  if(ENABLE_CUDA)
+    find_package(CUDAToolkit)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC MM_CUDA_ENABLED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE CUDA::cuda_driver)
+  endif()
   
   #if(WIN32)
   #  set(VERSION_LIBRARY "Version.lib")
