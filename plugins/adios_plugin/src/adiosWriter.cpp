@@ -309,6 +309,17 @@ bool adiosWriter::run() {
 
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosWriter] Putting Variables");
                     if (adiosVar) writer.Put<unsigned int>(adiosVar, values.data());
+                } else if (cad->getData(var)->getType() == "string") {
+
+                    std::vector<std::string>& values = dynamic_cast<StringContainer*>(cad->getData(var).get())->getVec();
+
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosWriter] Defining Variables");
+                    adios2::Variable<std::string> adiosVar =
+                        io->DefineVariable<std::string>(var, globalDim, offsets, localDim, false);
+
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosWriter] Putting Variables");
+                    if (adiosVar)
+                        writer.Put<std::string>(adiosVar, values.data());
                 }
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
                     "[adiosWriter] Trying to write - var: %s size: %d", var.c_str(), num);

@@ -243,6 +243,20 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 
                             reader->Get<unsigned int>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
+                        } else if (var.second["Type"] == "string") {
+
+                            auto fc = std::make_shared<StringContainer>(StringContainer());
+                            fc->singleValue = singleValue;
+                            std::vector<std::string>& tmp_vec = fc->getVec();
+
+                            adios2::Variable<std::string> advar = io->InquireVariable<std::string>(var.first);
+                            auto info = reader->BlocksInfo(advar, cad->getFrameIDtoLoad());
+                            fc->shape = info[0].Count;
+                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
+                            tmp_vec.resize(num);
+
+                            reader->Get<std::string>(advar, tmp_vec);
+                            dataMap[var.first] = std::move(fc);
                         }
                     }
                 }
