@@ -170,7 +170,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->state.gui_visible = false;
     }
 
-    // Restore GUI after it was disabled (before early exit!)
+    // Show GUI after it was hidden (before early exit!)
     if (!this->state.gui_visible && this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
         this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
         // Restore window 'open' state (Always restore at least menu)
@@ -252,27 +252,9 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     // Process hotkeys
     this->checkMultipleHotkeyAssignement();
-    if (this->state.gui_visible) {
-        // Second frame
-        if (this->state.gui_hide_next_frame) {
-            this->state.gui_hide_next_frame = false;
-            this->state.gui_visible = false;
-        }
-        // First frame
-        if (this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
-            this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
-            // Save 'open' state of windows for later restore. Closing all windows before omitting GUI rendering is
-            // required to set right ImGui state for mouse handling
-            this->state.gui_visible_buffer.clear();
-            const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
-                if (wc.win_show) {
-                    this->state.gui_visible_buffer.push_back(wc.win_callback);
-                    wc.win_show = false;
-                }
-            };
-            this->window_collection.EnumWindows(func);
-            this->state.gui_hide_next_frame = true;
-        }
+    if (this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
+        this->state.gui_hide_next_frame = 2;
+        this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
     }
     if (this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM].is_pressed) {
         this->triggerCoreInstanceShutdown();
@@ -542,6 +524,28 @@ bool GUIWindows::PostDraw(void) {
     // Reset hotkeys ----------------------------------------------------------
     for (auto& h : this->hotkeys) {
         h.is_pressed = false;
+    }
+
+    // Hide GUI if it is currently shown --------------------------------------
+    if (this->state.gui_visible) {
+        if (this->state.gui_hide_next_frame == 2) {
+            // First frame
+            this->state.gui_hide_next_frame--;
+            // Save 'open' state of windows for later restore. Closing all windows before omitting GUI rendering is
+            // required to set right ImGui state for mouse handling
+            this->state.gui_visible_buffer.clear();
+            const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
+                if (wc.win_show) {
+                    this->state.gui_visible_buffer.push_back(wc.win_callback);
+                    wc.win_show = false;
+                }
+            };
+            this->window_collection.EnumWindows(func);
+        } else if (this->state.gui_hide_next_frame == 1) {
+            // Second frame
+            this->state.gui_hide_next_frame = 0;
+            this->state.gui_visible = false;
+        }
     }
 
     // Apply new gui scale -----------------------------------------------------
@@ -1837,10 +1841,9 @@ void GUIWindows::drawMenu(void) {
     // SETTINGS ---------------------------------------------------------------
     if (ImGui::BeginMenu("Settings")) {
 
-        if (ImGui::MenuItem("Enable/Disable GUI",
+        if (ImGui::MenuItem("Show/Hide GUI",
                 this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str())) {
-            /// gui_visible needs to be toggled via hotkey!
-            this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = true;
+            this->state.gui_hide_next_frame = 2;
         }
 
         if (ImGui::BeginMenu("Style")) {
@@ -2443,7 +2446,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.gui_visible = true;
     this->state.gui_visible_post = true;
     this->state.gui_visible_buffer.clear();
-    this->state.gui_hide_next_frame = false;
+    this->state.gui_hide_next_frame = 0;
     this->state.style = GUIWindows::Styles::DarkColors;
     this->state.rescale_windows = false;
     this->state.style_changed = true;
