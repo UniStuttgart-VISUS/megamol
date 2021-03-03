@@ -267,9 +267,7 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
 
         return config_files;
 
-    } catch (cxxopts::option_not_exists_exception ex) {
-        exit(ex.what());
-    } catch (cxxopts::missing_argument_exception ex) {
+    } catch (cxxopts::OptionException ex) {
         exit(ex.what());
     }
 }
@@ -376,8 +374,6 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
 
         cxxopts::Options options("Lua Config Pass", "MegaMol Lua Config Parsing");
 
-        // parse input project files
-        options.positional_help("<additional project files>");
         for (auto& opt : cli_options_list) {
             options.add_options()
                 add_option(opt);
@@ -406,8 +402,8 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
                 }
             }
 
-        } catch (cxxopts::option_not_exists_exception ex) {
-            exit(std::string(ex.what()));
+        } catch (cxxopts::OptionException ex) {
+            exit(std::string(ex.what()) + "\nIn file: " + file);
         }
 
         config.configuration_file_contents.push_back(file_contents);
