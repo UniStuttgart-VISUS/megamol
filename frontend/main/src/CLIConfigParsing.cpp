@@ -74,7 +74,10 @@ static void config_handler(std::string const& option_name, cxxopts::ParseResult 
 
 static void appdir_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
-    config.application_directory = parsed_options[option_name].as<std::string>();
+    auto appdir = parsed_options[option_name].as<std::string>();
+    files_exist({appdir}, "Application directory");
+
+    config.application_directory = appdir;
 };
 
 static void resourcedir_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
