@@ -143,11 +143,7 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
                 auto mod_ptr =
                     std::make_shared<Module>(mod_uid, mod.class_name, mod.description, mod.plugin_name, mod.is_view);
                 mod_ptr->SetName(this->generate_unique_module_name(mod.class_name));
-                if (this->gui_current_graph_entry_name.empty()) {
-                    mod_ptr->SetGraphEntryName(this->GenerateUniqueGraphEntryName());
-                } else {
-                    mod_ptr->SetGraphEntryName("");
-                }
+                mod_ptr->SetGraphEntryName("");
 
                 for (auto& p : mod.parameters) {
                     Parameter param_slot(megamol::gui::GenerateUniqueID(), p.type, p.storage, p.minval, p.maxval,
@@ -175,6 +171,20 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
 
                 this->modules.emplace_back(mod_ptr);
                 this->ForceSetDirty();
+
+                // Automatically set new view module as graph entry, if no other entry point is set
+                bool create_new_graph_entry = true;
+                for (auto module_ptr : this->Modules()) {
+                    if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
+                        create_new_graph_entry = false;
+                    }
+                }
+                if (create_new_graph_entry) {
+                    Graph::QueueData queue_data;
+                    queue_data.name_id = mod_ptr->FullName();
+                    mod_ptr->SetGraphEntryName(this->GenerateUniqueGraphEntryName());
+                    this->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                }
 
 #ifdef GUI_VERBOSE
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
