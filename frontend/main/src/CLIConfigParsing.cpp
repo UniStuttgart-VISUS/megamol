@@ -50,21 +50,21 @@ static void files_exist(std::vector<std::string> vec, std::string const& type) {
 
 // option handlers fill config struct with passed options
 // this is a handler template
-auto empty_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void empty_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
 };
 
-auto config_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void config_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     // is already done by first CLI pass which checks config files before running them through Lua
 };
 
-auto appdir_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void appdir_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.application_directory = parsed_options[option_name].as<std::string>();
 };
 
-auto resourcedir_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void resourcedir_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     auto v = parsed_options[option_name].as<std::vector<std::string>>();
     files_exist(v, "Resource directory");
@@ -72,7 +72,7 @@ auto resourcedir_handler = [&](std::string const& option_name, cxxopts::ParseRes
     config.resource_directories.insert(config.resource_directories.end(), v.begin(), v.end());
 };
 
-auto shaderdir_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void shaderdir_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     auto v = parsed_options[option_name].as<std::vector<std::string>>();
     files_exist(v, "Shader directory");
@@ -80,22 +80,22 @@ auto shaderdir_handler = [&](std::string const& option_name, cxxopts::ParseResul
     config.shader_directories.insert(config.shader_directories.end(), v.begin(), v.end());
 };
 
-auto logfile_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void logfile_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.log_file = parsed_options[option_name].as<std::string>();
 };
 
-auto loglevel_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void loglevel_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.log_level = parsed_options[option_name].as<int>();
 };
 
-auto echolevel_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void echolevel_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.echo_level = parsed_options[option_name].as<int>();
 };
 
-auto project_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void project_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     auto v = parsed_options[option_name].as<std::vector<std::string>>();
     files_exist(v, "Project file");
@@ -103,7 +103,7 @@ auto project_handler = [&](std::string const& option_name, cxxopts::ParseResult 
     config.project_files.insert(config.project_files.end(), v.begin(), v.end());
 };
 
-auto var_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void var_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     auto v = parsed_options[option_name].as<std::vector<std::string>>();
 
@@ -135,43 +135,43 @@ std::vector<OptionsListEntry> base_config_list =
     };
 
 
-auto host_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void host_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.lua_host_address = parsed_options[option_name].as<std::string>();
 };
 
-auto khrdebug_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void khrdebug_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.opengl_khr_debug = parsed_options[option_name].as<bool>();
 };
-auto vsync_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void vsync_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.opengl_vsync = parsed_options[option_name].as<bool>();
 };
 
-auto fullscreen_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void fullscreen_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::fullscreen;
 };
-auto nodecoration_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void nodecoration_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::nodecoration;
 };
-auto topmost_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void topmost_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::topmost;
 };
-auto nocursor_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void nocursor_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.window_mode |= parsed_options[option_name].as<bool>() * RuntimeConfig::WindowMode::nocursor;
 };
 
-auto interactive_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void interactive_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.interactive = parsed_options[option_name].as<bool>();
 };
 
-auto window_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+static void window_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     auto s = parsed_options[option_name].as<std::string>();
     // 'WIDTHxHEIGHT[+POSX+POSY]'
