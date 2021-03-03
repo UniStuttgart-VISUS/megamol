@@ -35,13 +35,23 @@ namespace stdfs = std::experimental::filesystem;
 #endif
 
 using megamol::frontend_resources::RuntimeConfig;
-RuntimeConfig handle_cli_and_config(const int argc, const char** argv);
-RuntimeConfig handle_config(RuntimeConfig config);
+RuntimeConfig handle_cli_and_config(const int argc, const char** argv, megamol::core::LuaAPI& lua);
+std::vector<std::string> extract_config_file_paths(const int argc, const char** argv);
+RuntimeConfig handle_config(RuntimeConfig config, megamol::core::LuaAPI& lua);
 RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv);
+
+void exit(std::string const& reason) {
+    std::cout << "Error :" << reason << std::endl;
+    std::cout << "Shut down MegaMol" << std::endl;
+    std::exit(1);
+}
 
 int main(const int argc, const char** argv) {
 
-    auto config = handle_cli_and_config(argc, argv);
+    bool lua_imperative_only = false; // allow mmFlush, mmList* and mmGetParam*
+    megamol::core::LuaAPI lua_api(lua_imperative_only);
+
+    auto config = handle_cli_and_config(argc, argv, lua_api);
 
     // setup log
     megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
@@ -52,9 +62,6 @@ int main(const int argc, const char** argv) {
 
     megamol::core::CoreInstance core;
     core.Initialise(false); // false makes core not start his own lua service (else we collide on default port)
-
-    const megamol::core::factories::ModuleDescriptionManager& moduleProvider = core.GetModuleDescriptionManager();
-    const megamol::core::factories::CallDescriptionManager& callProvider = core.GetCallDescriptionManager();
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
@@ -101,10 +108,6 @@ int main(const int argc, const char** argv) {
     // needs to execute before gl_service at frame start, after gl service at frame end
     framestatistics_service.setPriority(1);
 
-    megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
-
-    bool lua_imperative_only = false; // allow mmFlush, mmList* and mmGetParam*
-    megamol::core::LuaAPI lua_api(graph, lua_imperative_only);
     megamol::frontend::Lua_Service_Wrapper lua_service_wrapper;
     megamol::frontend::Lua_Service_Wrapper::Config luaConfig;
     luaConfig.lua_api_ptr = &lua_api;
@@ -162,6 +165,11 @@ int main(const int argc, const char** argv) {
         services.close();
         return 1;
     }
+
+    const megamol::core::factories::ModuleDescriptionManager& moduleProvider = core.GetModuleDescriptionManager();
+    const megamol::core::factories::CallDescriptionManager& callProvider = core.GetCallDescriptionManager();
+
+    megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
     // graph is also a resource that may be accessed by services
     services.getProvidedResources().push_back({"MegaMolGraph", graph});
@@ -254,11 +262,73 @@ int main(const int argc, const char** argv) {
     return 0;
 }
 
-RuntimeConfig handle_cli_and_config(const int argc, const char** argv) {
+static auto option_name = [](std::string const& s) { return s.substr(2); };
+static std::string config_option = "--config";
+static std::string appdir_option = "--appdir";
+static std::string resourcedir_option = "--resourcedir";
+static std::string shaderdir_option = "--shaderdir";
+static std::string logfile_option = "--logfile";
+static std::string loglevel_option = "--loglevel";
+static std::string echolevel_option = "--echolevel";
+static std::string project_option = "--project";
+static std::string var_option = "--var";
+static auto config_name = option_name(config_option);
+
+std::vector<std::string> extract_config_file_paths(const int argc, const char** argv) {
+    // load config files from default paths
+    // setting Config files from Lua is not possible
+    // multiple Config files can be passed via CLI - then default config file paths are ignored
+
+    // clang-format off
+    // find config options in CLI string and overwrite default paths
+    cxxopts::Options options(argv[0], "MegaMol Config Parsing");
+    options.add_options()
+        (config_name, "", cxxopts::value<std::vector<std::string>>());
+    // clang-format on
+
+    options.allow_unrecognised_options();
+
+    try {
+        int _argc = argc;
+        auto _argv = const_cast<char**>(argv);
+        auto parsed_options = options.parse(_argc, _argv);
+
+        std::vector<std::string> config_files;
+        auto config_name = option_name(config_option);
+
+        if (parsed_options.count(config_name) == 0) {
+            // no config files given
+            // use defaults
+            RuntimeConfig config;
+            config_files = config.configuration_files;
+        } else {
+            config_files = parsed_options[config_name].as<std::vector<std::string>>();
+        }
+
+        // check files exist
+        for (const auto& file : config_files) {
+            if (!stdfs::exists(file)) {
+                exit("Config file \"" + file + "\" does not exist!");
+            }
+        }
+
+        return config_files;
+
+    } catch (cxxopts::option_not_exists_exception ex) {
+        exit(ex.what());
+    } catch (cxxopts::missing_argument_exception ex) {
+        exit(ex.what());
+    }
+}
+
+RuntimeConfig handle_cli_and_config(const int argc, const char** argv, megamol::core::LuaAPI& lua) {
     RuntimeConfig config;
 
+    // config files are already checked to exist in file system
+    config.configuration_files = extract_config_file_paths(argc, argv);
+
     // overwrite default values with values from config file
-    config = handle_config(config);
+    config = handle_config(config, lua);
 
     // overwrite default and config values with CLI inputs
     config = handle_cli(config, argc, argv);
@@ -266,20 +336,107 @@ RuntimeConfig handle_cli_and_config(const int argc, const char** argv) {
     return config;
 }
 
-RuntimeConfig handle_config(RuntimeConfig config) {
+RuntimeConfig handle_config(RuntimeConfig config, megamol::core::LuaAPI& lua) {
+
     // load config file
-    auto& file = config.configuration_file;
-    if (!stdfs::exists(file)) {
-        std::cout << "Configuration file \"" << file << "\" does not exist!" << std::endl;
-        std::exit(1);
+    auto& files = config.configuration_files;
+
+    // holds CLI options in each for-loop iteration
+    // gets cleared for each new iteration
+    std::vector<std::string> file_contents_as_cli;
+    auto is_weird = [](std::string const& s) { return (s.empty() || s.find_first_of(" =") != std::string::npos); };
+    #define check(s) \
+                if (is_weird(s)) \
+                    return false;
+    #define opt(o) \
+                std::string option = (o[0] == '-' ? "" : "--") + o;
+    #define add(o,v) \
+                file_contents_as_cli.push_back(o + "=" + v);
+
+    auto make_option_callback = [&](std::string const& optname) {
+        return [&](std::string const& value) {
+            check(value);
+            add(optname, value);
+
+            return true;
+        };
+    };
+
+    for (auto& file : files) {
+        std::ifstream stream(file);
+        std::string file_contents = std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+        file_contents_as_cli.clear();
+
+        auto callbacks = megamol::core::LuaAPI::LuaConfigCallbacks{
+            // mmSetConfig_callback_ std::function<void(std::string const&, std::string const&)> ;
+            [&](std::string const& config, std::string const& value) {
+                // the usual CLI options
+
+                check(config);
+                check(value);
+
+                opt(config);
+
+                if (value == std::string("on")) {
+                    file_contents_as_cli.push_back(option);
+                } else 
+                if (value == std::string("off")) {
+                    std::remove(file_contents_as_cli.begin(), file_contents_as_cli.end(), option);
+                } else {
+                    add(option,value);
+                }
+
+                return true;
+            } ,
+            make_option_callback(appdir_option), // mmSetAppDir_callback_ std::function<void(std::string const&)> ;
+            make_option_callback(resourcedir_option), // mmAddResourceDir_callback_ std::function<void(std::string const&)> ;
+            make_option_callback(shaderdir_option), // mmAddShaderDir_callback_ std::function<void(std::string const&)> ;
+            make_option_callback(logfile_option), // mmSetLogFile_callback_ std::function<void(std::string const&)> ;
+            // mmSetLogLevel_callback_ std::function<void(int const)> ;
+            [&](const int log_level) {
+                // Lua checked string to int conversion already
+                add(loglevel_option, std::to_string(log_level));
+                return true;
+            } ,
+            // std::function<void(int const)> mmSetEchoLevel_callback_;
+            [&](const int echo_level) {
+                // Lua checked string to int conversion already
+                add(echolevel_option, std::to_string(echo_level));
+                return true;
+            } ,
+            make_option_callback(project_option), // mmLoadProject_callback_ std::function<void(std::string const&)> ;
+            // mmSetKeyValue_callback_ std::function<void(std::string const&, std::string const&)> ;
+            [&](std::string const& key, std::string const& value) {
+                check(key); // no space or = in key
+
+                // no space or : in value
+                if (value.find_first_of(" :") != std::string::npos)
+                    return false;
+
+                add(var_option, key + ":" + value);
+                return true;
+            }
+            //// mmGetKeyValue_callback_ std::function<std::string(std::string const&)> ;
+            //[&](std::string const& maybe_value) {}
+        };
+
+        // interpret lua config commands as CLI commands
+        std::string lua_result_string;
+        bool lua_config_ok = lua.FillConfigFromString(file_contents, lua_result_string, callbacks);
+
+        if (!lua_config_ok) {
+            exit("Error in Lua config file " + file + "\n Lua Error: " + lua_result_string);
+        }
+
+        auto summarize = [](std::vector<std::string> const& cli) -> std::string
+        {
+            return std::accumulate(cli.begin(), cli.end(), std::string(""),
+                [](std::string const& init, std::string const& elem) { return init + " " + elem; });
+        };
+
+        config.configuration_file_contents.push_back(file_contents);
+        config.configuration_file_contents_as_cli.push_back(summarize(file_contents_as_cli));
     }
-    std::ifstream stream(file);
-    config.configuration_file_contents = std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
-
-    const auto run_through_lua = [](std::string const&) { return ""; };
-
-    // interpret lua config commands as CLI commands
-    config.configuration_file_contents_as_cli = run_through_lua(config.configuration_file_contents);
 
     return config;
 }
@@ -296,27 +453,26 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
     {
     };
 
+    auto config_files_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+    {
+        // is already done by first CLI pass which checks config files before running them through Lua
+    };
+
     auto project_files_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
     {
-        // verify project files exist in file system
-        if (parsed_options.count(option_name)) {
-            const auto& v = parsed_options[option_name].as<std::vector<std::string>>();
-            for (const auto& p : v) {
-                if (!stdfs::exists(p)) {
-                    std::cout << "Project file \"" << p << "\" does not exist!" << std::endl;
-                    std::exit(1);
-                }
+        const auto& v = parsed_options[option_name].as<std::vector<std::string>>();
+        for (const auto& p : v) {
+            if (!stdfs::exists(p)) {
+                exit("Project file \"" + p + "\" does not exist!");
             }
-
-            config.project_files = v;
         }
+
+        config.project_files = v;
     };
 
     auto host_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
     {
-        if (parsed_options.count(option_name)) {
-            config.lua_host_address = parsed_options[option_name].as<std::string>();
-        }
+        config.lua_host_address = parsed_options[option_name].as<std::string>();
     };
 
     auto khrdebug_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -352,23 +508,20 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
 
     auto window_handler = [&](std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
     {
-        if (parsed_options.count(option_name)) {
-            auto s = parsed_options[option_name].as<std::string>();
-            // 'WIDTHxHEIGHT[+POSX+POSY]'
-            // 'wxh+x+y' with optional '+x+y', e.g. 600x800+0+0 opens window in upper left corner
-            std::regex geometry("(\\d+)x(\\d+)(?:\\+(\\d+)\\+(\\d+))?");
-            std::smatch match;
-            if (std::regex_match(s, match, geometry)) {
-                config.window_size.push_back( /*width*/ std::stoul(match[1].str(), nullptr, 10) );
-                config.window_size.push_back( /*height*/ std::stoul(match[2].str(), nullptr, 10) );
-                if (match[3].matched) {
-                    config.window_position.push_back( /*x*/ std::stoul(match[3].str(), nullptr, 10) );
-                    config.window_position.push_back( /*y*/ std::stoul(match[4].str(), nullptr, 10) );
-                }
-            } else {
-                std::cout << "window option needs to be in the following format: wxh+x+y or wxh" << std::endl;
-                std::exit(1);
+        auto s = parsed_options[option_name].as<std::string>();
+        // 'WIDTHxHEIGHT[+POSX+POSY]'
+        // 'wxh+x+y' with optional '+x+y', e.g. 600x800+0+0 opens window in upper left corner
+        std::regex geometry("(\\d+)x(\\d+)(?:\\+(\\d+)\\+(\\d+))?");
+        std::smatch match;
+        if (std::regex_match(s, match, geometry)) {
+            config.window_size.push_back( /*width*/ std::stoul(match[1].str(), nullptr, 10) );
+            config.window_size.push_back( /*height*/ std::stoul(match[2].str(), nullptr, 10) );
+            if (match[3].matched) {
+                config.window_position.push_back( /*x*/ std::stoul(match[3].str(), nullptr, 10) );
+                config.window_position.push_back( /*y*/ std::stoul(match[4].str(), nullptr, 10) );
             }
+        } else {
+            exit("window option needs to be in the following format: wxh+x+y or wxh");
         }
     };
 
@@ -376,7 +529,8 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
     std::vector<std::tuple<std::string, std::string, std::shared_ptr<cxxopts::Value>, std::function<void(std::string const&, cxxopts::ParseResult const&, RuntimeConfig&)>>>
     options_list =
     {
-          {"project-files", "projects to load",                                                            cxxopts::value<std::vector<std::string>>(), project_files_handler}
+          {config_name,     "provide Lua configuration file",                                              cxxopts::value<std::vector<std::string>>(), config_files_handler }
+        , {"project-files", "projects to load",                                                            cxxopts::value<std::vector<std::string>>(), project_files_handler}
         , {"host",          "address of lua host server, default: "+config.lua_host_address,               cxxopts::value<std::string>(),              host_handler         }
         , {"khrdebug",      "enable OpenGL KHR debug messages",                                            cxxopts::value<bool>(),                     khrdebug_handler     }
         , {"vsync",         "enable VSync in OpenGL window",                                               cxxopts::value<bool>(),                     vsync_handler        }
@@ -403,6 +557,7 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
         add_option(options_list[7])
         add_option(options_list[8])
         add_option(options_list[9])
+        add_option(options_list[10])
         ("help", "print help")
         ;
     // clang-format on
@@ -418,19 +573,19 @@ RuntimeConfig handle_cli(RuntimeConfig config, const int argc, const char** argv
 
         if (parsed_options.count("help")) {
             std::cout << options.help({""}) << std::endl;
-            exit(0);
+            std::exit(0);
         }
 
         for (auto& option : options_list) {
-            auto& name = std::get<0>(option);
-            auto& handle = std::get<3>(option);
-            handle(name, parsed_options, config);
+            auto& option_name = std::get<0>(option);
+            if (parsed_options.count(option_name)) {
+                auto& option_handler = std::get<3>(option);
+                option_handler(option_name, parsed_options, config);
+            }
         }
 
     } catch (cxxopts::option_not_exists_exception ex) {
-        std::cout << ex.what() << std::endl;
-        std::cout << options.help({""}) << std::endl;
-        std::exit(1);
+        exit(std::string(ex.what()) + "\n" + options.help({""}));
     }
 
     return config;

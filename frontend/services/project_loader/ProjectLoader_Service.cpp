@@ -57,6 +57,7 @@ bool ProjectLoader_Service::init(const Config& config) {
     this->m_requestedResourcesNames =
     {
         "ExecuteLuaScript",
+        "SetScriptPath",
         "WindowEvents"
     };
 
@@ -124,10 +125,15 @@ bool ProjectLoader_Service::load_file(std::string const& filename) const {
     bool script_ok = std::get<0>(result);
     std::string script_error = std::get<1>(result);
 
+    // TODO: remove this resource from Lua when project-centric struture is in place
+    using SetScriptPath = std::function<void(std::string const&)>;
+    const SetScriptPath& set_script_path = m_requestedResourceReferences[1].getResource<SetScriptPath>();
+
     if (!script_ok) {
         log_error("failed to load file " + filename + "\n\t" + script_error);
         return false;
     }
+    set_script_path(filename);
 
     log("loaded file " + filename + "\n\t" + script_error);
     return true;
@@ -155,7 +161,7 @@ void ProjectLoader_Service::digestChangedRequestedResources() {
     // execute lua files dropped into megamol window
     using WindowEventsType = megamol::frontend_resources::WindowEvents;
     WindowEventsType& window_events =
-        const_cast<WindowEventsType&>(this->m_requestedResourceReferences[1].getResource<WindowEventsType>());
+        const_cast<WindowEventsType&>(this->m_requestedResourceReferences[2].getResource<WindowEventsType>());
 
     for(auto& events: window_events.dropped_path_events)
         std::remove_if(events.begin(), events.end(),

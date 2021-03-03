@@ -20,10 +20,6 @@ struct lua_State; // lua includes should stay in the core
 
 namespace megamol {
 namespace core {
-namespace utility {
-class Configuration;
-}
-
 
 /**
  * This class holds a Lua state. It can be used to interact with a MegaMol instance.
@@ -36,6 +32,19 @@ class Configuration;
 class MEGAMOLCORE_API LuaAPI {
 public:
     static const std::string MEGAMOL_ENV;
+
+    typedef struct {
+        std::function<bool(std::string const&, std::string const&)> mmSetConfig_callback_;
+        std::function<bool(std::string const&)> mmSetAppDir_callback_;
+        std::function<bool(std::string const&)> mmAddResourceDir_callback_;
+        std::function<bool(std::string const&)> mmAddShaderDir_callback_;
+        std::function<bool(std::string const&)> mmSetLogFile_callback_;
+        std::function<bool(int const)> mmSetLogLevel_callback_;
+        std::function<bool(int const)> mmSetEchoLevel_callback_;
+        std::function<bool(std::string const&)> mmLoadProject_callback_;
+        std::function<bool(std::string const&, std::string const&)> mmSetKeyValue_callback_;
+        //std::function<bool(std::string const&, std::string&)> mmGetKeyValue_callback_;
+    } LuaConfigCallbacks;
 
     typedef struct {
         std::function<std::vector<std::string>()> mmListResources_callback_; // returns list of resources available in frontend
@@ -54,11 +63,13 @@ public:
      * to avoid having round-trips across frames/threads etc. Basically config/project scripts
      * are reply-less and the LuaHost can get replies.
      */
-    LuaAPI(megamol::core::MegaMolGraph &graph, bool imperativeOnly);
+    LuaAPI(bool imperativeOnly);
 
     ~LuaAPI();
 
     // TODO forbid copy-contructor? assignment?
+
+    bool FillConfigFromString(const std::string& script, std::string& result, LuaConfigCallbacks const& config);
 
     /**
      * Run a script file, sandboxed in the environment provided.
@@ -96,6 +107,13 @@ public:
      * Answers the current project file path
      */
     std::string GetScriptPath(void);
+
+    /**
+     * Sets the current project file path
+     */
+    void SetScriptPath(std::string const& scriptPath);
+
+    void SetMegaMolGraph(megamol::core::MegaMolGraph& graph);
 
     /**
      * Sets the function callback used to trigger rendering of a frame due to mmFlush.
@@ -282,7 +300,7 @@ private:
     LuaInterpreter<LuaAPI> luaApiInterpreter_;
 
     /** the respective MegaMol graph */
-    megamol::core::MegaMolGraph& graph_;
+    megamol::core::MegaMolGraph* graph_ptr_ = nullptr;
 
     LuaCallbacks callbacks_;
     // this one is special since the frontend provides it
