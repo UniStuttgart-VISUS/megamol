@@ -70,9 +70,10 @@ namespace gui {
         }
 
         /**
-         * Load or update project from grpah of core instance or directly from megamol graph.
+         * Load or update project from graph of core instance or directly from megamol graph.
          *
-         * @param inout_graph_uid  The graph uid to use. If graph uid is GUI_INVALID_ID a new graph is created.
+         * @param inout_graph_uid  The graph uid to use. If graph uid is GUI_INVALID_ID a new graph is created and its
+         * uid is returned.
          * @param core_instance    The pointer to the core instance. If pointer is not null, the core graph is
          * considered.
          * @param megamol_graph    The pointer to the megamol graph. If pointer is not null, the megamol graph is
@@ -100,8 +101,6 @@ namespace gui {
         bool SaveProjectToFile(
             ImGuiID in_graph_uid, const std::string& project_filename, const std::string& state_json);
 
-        std::string GetUpdatedGUIState(ImGuiID graph_id, const std::string& filename);
-
         void Draw(GraphState_t& state);
 
     private:
@@ -116,6 +115,8 @@ namespace gui {
         ImGuiID gui_graph_delete_uid;
 
         // FUNCTIONS --------------------------------------------------------------
+
+        std::string get_state(ImGuiID graph_id, const std::string& filename);
 
         bool get_call_stock_data(
             Call::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);

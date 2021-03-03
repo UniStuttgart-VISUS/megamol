@@ -1625,7 +1625,7 @@ std::vector<size_t> megamol::gui::GraphCollection::get_compatible_caller_idxs(
 }
 
 
-std::string megamol::gui::GraphCollection::GetUpdatedGUIState(ImGuiID graph_id, const std::string& filename) {
+std::string megamol::gui::GraphCollection::get_state(ImGuiID graph_id, const std::string& filename) {
 
     nlohmann::json state_json;
 
@@ -1776,7 +1776,7 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
 
             std::string gui_state;
             if (save_gui_state.IsTrue()) {
-                gui_state = this->GetUpdatedGUIState(state.graph_selected_uid, project_filename);
+                gui_state = this->get_state(state.graph_selected_uid, project_filename);
             }
 
             popup_failed = !this->SaveProjectToFile(state.graph_selected_uid, project_filename, gui_state);
