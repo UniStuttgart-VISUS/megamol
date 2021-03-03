@@ -262,8 +262,18 @@ int main(const int argc, const char** argv) {
     return 0;
 }
 
-#define config_option "--config"
-static auto config_name = std::string(config_option).substr(2);
+static auto option_name = [](std::string const& s) { return s.substr(2); };
+static std::string config_option = "--config";
+static std::string appdir_option = "--appdir";
+static std::string resourcedir_option = "--resourcedir";
+static std::string shaderdir_option = "--shaderdir";
+static std::string logfile_option = "--logfile";
+static std::string loglevel_option = "--loglevel";
+static std::string echolevel_option = "--echolevel";
+static std::string project_option = "--project";
+static std::string var_option = "--var";
+static auto config_name = option_name(config_option);
+
 std::vector<std::string> extract_config_file_paths(const int argc, const char** argv) {
     // load config files from default paths
     // setting Config files from Lua is not possible
@@ -284,6 +294,7 @@ std::vector<std::string> extract_config_file_paths(const int argc, const char** 
         auto parsed_options = options.parse(_argc, _argv);
 
         std::vector<std::string> config_files;
+        auto config_name = option_name(config_option);
 
         if (parsed_options.count(config_name) == 0) {
             // no config files given
@@ -329,20 +340,102 @@ RuntimeConfig handle_config(RuntimeConfig config, megamol::core::LuaAPI& lua) {
 
     // load config file
     auto& files = config.configuration_files;
+
+    // holds CLI options in each for-loop iteration
+    // gets cleared for each new iteration
+    std::vector<std::string> file_contents_as_cli;
+    auto is_weird = [](std::string const& s) { return (s.empty() || s.find_first_of(" =") != std::string::npos); };
+    #define check(s) \
+                if (is_weird(s)) \
+                    return false;
+    #define opt(o) \
+                std::string option = (o[0] == '-' ? "" : "--") + o;
+    #define add(o,v) \
+                file_contents_as_cli.push_back(o + "=" + v);
+
+    auto make_option_callback = [&](std::string const& optname) {
+        return [&](std::string const& value) {
+            check(value);
+            add(optname, value);
+
+            return true;
+        };
+    };
+
     for (auto& file : files) {
         std::ifstream stream(file);
         std::string file_contents = std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
-        std::string file_contents_as_cli;
+        file_contents_as_cli.clear();
+
+        auto callbacks = megamol::core::LuaAPI::LuaConfigCallbacks{
+            // mmSetConfig_callback_ std::function<void(std::string const&, std::string const&)> ;
+            [&](std::string const& config, std::string const& value) {
+                // the usual CLI options
+
+                check(config);
+                check(value);
+
+                opt(config);
+
+                if (value == std::string("on")) {
+                    file_contents_as_cli.push_back(option);
+                } else 
+                if (value == std::string("off")) {
+                    std::remove(file_contents_as_cli.begin(), file_contents_as_cli.end(), option);
+                } else {
+                    add(option,value);
+                }
+
+                return true;
+            } ,
+            make_option_callback(appdir_option), // mmSetAppDir_callback_ std::function<void(std::string const&)> ;
+            make_option_callback(resourcedir_option), // mmAddResourceDir_callback_ std::function<void(std::string const&)> ;
+            make_option_callback(shaderdir_option), // mmAddShaderDir_callback_ std::function<void(std::string const&)> ;
+            make_option_callback(logfile_option), // mmSetLogFile_callback_ std::function<void(std::string const&)> ;
+            // mmSetLogLevel_callback_ std::function<void(int const)> ;
+            [&](const int log_level) {
+                // Lua checked string to int conversion already
+                add(loglevel_option, std::to_string(log_level));
+                return true;
+            } ,
+            // std::function<void(int const)> mmSetEchoLevel_callback_;
+            [&](const int echo_level) {
+                // Lua checked string to int conversion already
+                add(echolevel_option, std::to_string(echo_level));
+                return true;
+            } ,
+            make_option_callback(project_option), // mmLoadProject_callback_ std::function<void(std::string const&)> ;
+            // mmSetKeyValue_callback_ std::function<void(std::string const&, std::string const&)> ;
+            [&](std::string const& key, std::string const& value) {
+                check(key); // no space or = in key
+
+                // no space or : in value
+                if (value.find_first_of(" :") != std::string::npos)
+                    return false;
+
+                add(var_option, key + ":" + value);
+                return true;
+            }
+            //// mmGetKeyValue_callback_ std::function<std::string(std::string const&)> ;
+            //[&](std::string const& maybe_value) {}
+        };
 
         // interpret lua config commands as CLI commands
-        bool lua_config_ok = lua.RunString(file_contents, file_contents_as_cli);
+        std::string lua_result_string;
+        bool lua_config_ok = lua.FillConfigFromString(file_contents, lua_result_string, callbacks);
 
         if (!lua_config_ok) {
-            // TODO: ERROR
+            exit("Error in Lua config file " + file + "\n Lua Error: " + lua_result_string);
         }
 
+        auto summarize = [](std::vector<std::string> const& cli) -> std::string
+        {
+            return std::accumulate(cli.begin(), cli.end(), std::string(""),
+                [](std::string const& init, std::string const& elem) { return init + " " + elem; });
+        };
+
         config.configuration_file_contents.push_back(file_contents);
-        config.configuration_file_contents_as_cli.push_back(file_contents_as_cli);
+        config.configuration_file_contents_as_cli.push_back(summarize(file_contents_as_cli));
     }
 
     return config;
