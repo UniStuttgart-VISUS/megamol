@@ -361,15 +361,15 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         [&](std::string const& key, std::string const& value) {
             check(key); // no space or = in key
 
-            // no space or : in value
+            // no space or : in key and value
+            if (key.find_first_of(" :") != std::string::npos)
+                return false;
             if (value.find_first_of(" :") != std::string::npos)
                 return false;
 
             add(global_option, key + ":" + value);
             return true;
         }
-        //// mmGetKeyValue_callback_ std::function<std::string(std::string const&)> ;
-        //[&](std::string const& maybe_value) {}
     };
 
     for (auto& file : files) {
