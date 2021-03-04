@@ -39,8 +39,8 @@ public:
         std::function<bool(std::string const&)> mmAddResourceDir_callback_;
         std::function<bool(std::string const&)> mmAddShaderDir_callback_;
         std::function<bool(std::string const&)> mmSetLogFile_callback_;
-        std::function<bool(int const)> mmSetLogLevel_callback_;
-        std::function<bool(int const)> mmSetEchoLevel_callback_;
+        std::function<bool(unsigned int const)> mmSetLogLevel_callback_;
+        std::function<bool(unsigned int const)> mmSetEchoLevel_callback_;
         std::function<bool(std::string const&)> mmLoadProject_callback_;
         std::function<bool(std::string const&, std::string const&)> mmSetGlobalValue_callback_;
     } LuaConfigCallbacks;
@@ -146,7 +146,7 @@ protected:
     int GetBitWidth(lua_State* L);
 
     /** mmGetConfiguration: get compile configuration (debug, release) */
-    int GetConfiguration(lua_State* L);
+    int GetCompileMode(lua_State* L);
 
     /** mmGetOS: get operating system (windows, linux, unknown) */
     int GetOS(lua_State* L);
@@ -169,15 +169,6 @@ protected:
      */
     int AddResourceDir(lua_State* L);
 
-    /**
-     * mmPluginLoaderInfo(string path, string fileglob,
-     * string action): action = ('include', 'exclude').
-     * Add information about plugins to load: set a search path
-     * plus a globbing pattern for choosing relevant libraries
-     * to load as plugins.
-     */
-    int PluginLoaderInfo(lua_State* L);
-
     /** mmSetLogFile(string path): set path of the log file. */
     int SetLogFile(lua_State* L);
 
@@ -191,11 +182,11 @@ protected:
     /** mmSetEchoLevel(string level): set level of console output, see SetLogLevel. */
     int SetEchoLevel(lua_State* L);
 
-    /**
-     * mmSetConfigValue(string name, string value): set configuration value 'name'
-     * to 'value'.
-     */
-    int SetConfigValue(lua_State* L);
+    // set global key-value pair in MegaMol key-value store
+    int SetGlobalValue(lua_State* L);
+
+    // set a CLI option to a specific value
+    int SetCliOption(lua_State* L);
 
     /**
      * mmGetConfigValue(string name): get the value of configuration value 'name'
@@ -301,6 +292,7 @@ private:
     /** the respective MegaMol graph */
     megamol::core::MegaMolGraph* graph_ptr_ = nullptr;
 
+    LuaConfigCallbacks config_callbacks_;
     LuaCallbacks callbacks_;
     // this one is special since the frontend provides it
     std::function<bool()> mmFlush_callback_; // renders one next frame via main loop

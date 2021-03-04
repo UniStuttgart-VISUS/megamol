@@ -28,7 +28,7 @@ static void exit(std::string const& reason) {
 using megamol::frontend_resources::RuntimeConfig;
 
 // only for --config pass
-static std::string config_option      = "config";
+static std::string config_option      = "c,config";
 
 // basic options
 static std::string appdir_option      = "appdir";
@@ -37,8 +37,8 @@ static std::string shaderdir_option   = "shaderdir";
 static std::string logfile_option     = "logfile";
 static std::string loglevel_option    = "loglevel";
 static std::string echolevel_option   = "echolevel";
-static std::string project_option     = "project";
-static std::string global_option      = "global";
+static std::string project_option     = "p,project";
+static std::string global_option      = "g,global";
 
 // service-specific options
 // --project and loose project files are both valid ways to provide lua project files
@@ -46,12 +46,21 @@ static std::string project_files_option = "project-files";
 static std::string host_option          = "host";
 static std::string khrdebug_option      = "khrdebug";
 static std::string vsync_option         = "vsync";
-static std::string window_option        = "window";
-static std::string fullscreen_option    = "fullscreen";
+static std::string window_option        = "w,window";
+static std::string fullscreen_option    = "f,fullscreen";
 static std::string nodecoration_option  = "nodecoration";
 static std::string topmost_option       = "topmost";
 static std::string nocursor_option      = "nocursor";
-static std::string interactive_option   = "interactive";
+static std::string interactive_option   = "i,interactive";
+static std::string help_option          = "h,help";
+
+static std::string loong(std::string const& option) {
+    auto f = option.find(',');
+    if (f == std::string::npos)
+        return option;
+
+    return option.substr(f+1);
+}
 
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
     for (const auto& file : vec) {
@@ -103,12 +112,12 @@ static void logfile_handler(std::string const& option_name, cxxopts::ParseResult
 
 static void loglevel_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
-    config.log_level = parsed_options[option_name].as<int>();
+    config.log_level = parsed_options[option_name].as<unsigned int>();
 };
 
 static void echolevel_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
-    config.echo_level = parsed_options[option_name].as<int>();
+    config.echo_level = parsed_options[option_name].as<unsigned int>();
 };
 
 static void project_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -199,21 +208,22 @@ std::vector<OptionsListEntry> cli_options_list =
         , {resourcedir_option,   "Add resource directory(ies)",                                                     cxxopts::value<std::vector<std::string>>(), resourcedir_handler}
         , {shaderdir_option,     "Add shader directory(ies)",                                                       cxxopts::value<std::vector<std::string>>(), shaderdir_handler}
         , {logfile_option,       "Set log file",                                                                    cxxopts::value<std::string>(),              logfile_handler}
-        , {loglevel_option,      "Set logging level",                                                               cxxopts::value<int>(),                      loglevel_handler}
-        , {echolevel_option,     "Set echo level",                                                                  cxxopts::value<int>(),                      echolevel_handler}
+        , {loglevel_option,      "Set logging level",                                                               cxxopts::value<unsigned int>(),             loglevel_handler}
+        , {echolevel_option,     "Set echo level",                                                                  cxxopts::value<unsigned int>(),             echolevel_handler}
         , {project_option,       "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
-        , {global_option,        "Set global key-value pair(s) in MegaMol environment, syntax: --global=key:value", cxxopts::value<std::vector<std::string>>(), global_value_handler}
+        , {global_option,        "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value", cxxopts::value<std::vector<std::string>>(), global_value_handler}
 
-        , {project_files_option, "projects to load",                                                                cxxopts::value<std::vector<std::string>>(), project_handler}
-        , {host_option,          "address of lua host server",                                                      cxxopts::value<std::string>(),              host_handler         }
-        , {khrdebug_option,      "enable OpenGL KHR debug messages",                                                cxxopts::value<bool>(),                     khrdebug_handler     }
-        , {vsync_option,         "enable VSync in OpenGL window",                                                   cxxopts::value<bool>(),                     vsync_handler        }
-        , {window_option,        "set the window size and position, accepted format: WIDTHxHEIGHT[+POSX+POSY]",     cxxopts::value<std::string>(),              window_handler       }
-        , {fullscreen_option,    "open maximized window",                                                           cxxopts::value<bool>(),                     fullscreen_handler   }
-        , {nodecoration_option,  "open window without decorations",                                                 cxxopts::value<bool>(),                     nodecoration_handler }
-        , {topmost_option,       "open window that stays on top of all others",                                     cxxopts::value<bool>(),                     topmost_handler      }
-        , {nocursor_option,      "do not show mouse cursor inside window",                                          cxxopts::value<bool>(),                     nocursor_handler     }
-        , {interactive_option,   "open MegaMol even if project files via CLI could not be loaded",                  cxxopts::value<bool>(),                     interactive_handler  }
+        , {host_option,          "Address of lua host server",                                                      cxxopts::value<std::string>(),              host_handler         }
+        , {khrdebug_option,      "Enable OpenGL KHR debug messages",                                                cxxopts::value<bool>(),                     khrdebug_handler     }
+        , {vsync_option,         "Enable VSync in OpenGL window",                                                   cxxopts::value<bool>(),                     vsync_handler        }
+        , {window_option,        "Set the window size and position, syntax: --window WIDTHxHEIGHT[+POSX+POSY]",     cxxopts::value<std::string>(),              window_handler       }
+        , {fullscreen_option,    "Open maximized window",                                                           cxxopts::value<bool>(),                     fullscreen_handler   }
+        , {nodecoration_option,  "Open window without decorations",                                                 cxxopts::value<bool>(),                     nodecoration_handler }
+        , {topmost_option,       "Open window that stays on top of all others",                                     cxxopts::value<bool>(),                     topmost_handler      }
+        , {nocursor_option,      "Do not show mouse cursor inside window",                                          cxxopts::value<bool>(),                     nocursor_handler     }
+        , {interactive_option,   "Run MegaMol even if some project file failed to load",                            cxxopts::value<bool>(),                     interactive_handler  }
+        , {project_files_option, "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
+        , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
     };
 
 megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli_and_config(const int argc, const char** argv, megamol::core::LuaAPI& lua) {
@@ -236,12 +246,10 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
     // setting Config files from Lua is not possible
     // multiple Config files can be passed via CLI - then default config file paths are ignored
 
-    // clang-format off
     // find config options in CLI string and overwrite default paths
     cxxopts::Options options("Config option pass", "MegaMol Config Parsing");
     options.add_options()
         (config_option, "", cxxopts::value<std::vector<std::string>>());
-    // clang-format on
 
     options.allow_unrecognised_options();
 
@@ -252,21 +260,17 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
 
         std::vector<std::string> config_files;
 
-        if (parsed_options.count(config_option) == 0) {
+        if (parsed_options.count(loong(config_option)) == 0) {
             // no config files given
             // use defaults
             RuntimeConfig config;
             config_files = config.configuration_files;
         } else {
-            config_files = parsed_options[config_option].as<std::vector<std::string>>();
+            config_files = parsed_options[loong(config_option)].as<std::vector<std::string>>();
         }
 
         // check files exist
-        for (const auto& file : config_files) {
-            if (!stdfs::exists(file)) {
-                exit("Config file \"" + file + "\" does not exist!");
-            }
-        }
+        files_exist(config_files, "Config file");
 
         return config_files;
 
@@ -291,17 +295,36 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
     #define check(s) \
                 if (is_weird(s)) \
                     return false;
+    #define file_exists(f) \
+                if (!stdfs::exists(f)) \
+                    return false;
     #define add(o,v) \
-                cli_options_from_configs.push_back({o,v})
+                cli_options_from_configs.push_back({loong(o),v})
 
-    auto make_option_callback = [&](std::string const& optname) {
+    auto make_option_callback = [&](std::string const& optname, bool file_check = false) {
         return [&](std::string const& value) {
             check(value);
+            if (file_check) {
+                file_exists(value);
+            }
             add(optname, value);
 
             return true;
         };
     };
+
+    std::vector<std::string> all_options;
+    for (auto& opt : cli_options_list) {
+        // split "h,help"
+        auto& name = std::get<0>(opt);
+        auto delimiter = name.find(",");
+        if (delimiter == std::string::npos) {
+            all_options.push_back(name);
+        } else {
+            all_options.push_back(name.substr(0, delimiter));
+            all_options.push_back(name.substr(delimiter+1));
+        }
+    }
 
     auto lua_config_callbacks = megamol::core::LuaAPI::LuaConfigCallbacks{
         // mmSetCliOption_callback_ std::function<void(std::string const&, std::string const&)> ;
@@ -309,27 +332,6 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
             // the usual CLI options
             check(clioption);
             check(value);
-
-            auto map_option = [](std::string const& option) -> std::string {
-
-                // TODO: check that options are actually known!
-
-                if (option.size() == 1 && option[0] != '-') {
-                    return "-" + option; // e.g. mmSetCliOption("v", "true") for -v
-                }
-                if (option.size() > 2 && option[0] != '-' && option[1] != '-') {
-                    return "--" + option; // e.g. mmSetCliOption("verbose", "true") for --verbose
-                }
-
-                if (option.size() == 2 && option[0] == '-' && option[1] != '-') {
-                    return option; // e.g. mmSetCliOption("-v", "true") for -v
-                }
-                if (option.size() > 2 && option[0] == '-' && option[1] == '-') {
-                    return option; // e.g. mmSetCliOption("--verbose", "true") for --verbose
-                }
-
-                return option; // something weird might happen here
-            };
 
             // we assume that "on" and "off" are used only for boolean cxxopts values
             // and so we can map them to "true" and "false"
@@ -344,40 +346,50 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
                 return value;
             };
 
-            add(map_option(clioption),map_value(value));
+            auto option_it = std::find(all_options.begin(), all_options.end(), clioption);
+            bool option_unknown = option_it == all_options.end();
+            if (option_unknown)
+                return false;
+
+            // if has option of length one, take the long version
+            auto finalopt = clioption;
+            if (option_it->size() == 1)
+                finalopt = *(option_it+1);
+
+            add(finalopt,map_value(value));
 
             return true;
         } ,
-        make_option_callback(appdir_option), // mmSetAppDir_callback_ std::function<void(std::string const&)> ;
-        make_option_callback(resourcedir_option), // mmAddResourceDir_callback_ std::function<void(std::string const&)> ;
-        make_option_callback(shaderdir_option), // mmAddShaderDir_callback_ std::function<void(std::string const&)> ;
+        make_option_callback(appdir_option, true), // mmSetAppDir_callback_ std::function<void(std::string const&)> ;
+        make_option_callback(resourcedir_option, true), // mmAddResourceDir_callback_ std::function<void(std::string const&)> ;
+        make_option_callback(shaderdir_option, true), // mmAddShaderDir_callback_ std::function<void(std::string const&)> ;
         make_option_callback(logfile_option), // mmSetLogFile_callback_ std::function<void(std::string const&)> ;
         // mmSetLogLevel_callback_ std::function<void(int const)> ;
-        [&](const int log_level) {
+        [&](const unsigned int log_level) {
             // Lua checked string to int conversion already
             add(loglevel_option, std::to_string(log_level));
             return true;
         } ,
         // std::function<void(int const)> mmSetEchoLevel_callback_;
-        [&](const int echo_level) {
+        [&](const unsigned int echo_level) {
             // Lua checked string to int conversion already
             add(echolevel_option, std::to_string(echo_level));
             return true;
         } ,
-        make_option_callback(project_option), // mmLoadProject_callback_ std::function<void(std::string const&)> ;
+        make_option_callback(project_option, true), // mmLoadProject_callback_ std::function<void(std::string const&)> ;
         // mmSetGlobalValue_callback_ std::function<void(std::string const&, std::string const&)> ;
         [&](std::string const& key, std::string const& value) {
             check(key); // no space or = in key
 
-            // no space or : in value
+            // no space or : in key and value
+            if (key.find_first_of(" :") != std::string::npos)
+                return false;
             if (value.find_first_of(" :") != std::string::npos)
                 return false;
 
             add(global_option, key + ":" + value);
             return true;
         }
-        //// mmGetKeyValue_callback_ std::function<std::string(std::string const&)> ;
-        //[&](std::string const& maybe_value) {}
     };
 
     for (auto& file : files) {
@@ -395,10 +407,19 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
 
          std::vector<std::string> file_contents_as_cli {cli_options_from_configs.size()};
          for (auto& pair : cli_options_from_configs)
-             file_contents_as_cli.push_back(pair.first + "=" + pair.second);
+             file_contents_as_cli.push_back("--" + pair.first + "=" + pair.second);
+
+         int argc = file_contents_as_cli.size()+1;
+         std::vector<const char*> argv{static_cast<size_t>(argc)};
+         auto zero = "Lua Config Pass";
+         argv[0] = zero;
+
+         int i = 1;
+         for (auto& arg : file_contents_as_cli) {
+             argv[i++] = arg.data();
+         }
 
         cxxopts::Options options("Lua Config Pass", "MegaMol Lua Config Parsing");
-
         for (auto& opt : cli_options_list) {
             options.add_options()
                 add_option(opt);
@@ -407,20 +428,11 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         // actually process passed options
         try {
             // cxopts can only parse const char**
-            int argc = file_contents_as_cli.size()+1;
-            std::vector<const char*> argv{static_cast<size_t>(argc)};
-            auto zero = "Lua Config Pass";
-            argv[0] = zero;
-
-            int i = 1;
-            for (auto& arg : file_contents_as_cli) {
-                argv[i++] = arg.data();
-            }
             auto parsed_options = options.parse(argc, argv.data());
             std::string res;
 
             for (auto& option : cli_options_list) {
-                auto& option_name = std::get<0>(option);
+                auto option_name = loong(std::get<0>(option));
                 if (parsed_options.count(option_name)) {
                     auto& option_handler = std::get<3>(option);
                     option_handler(option_name, parsed_options, config);
@@ -434,7 +446,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         config.configuration_file_contents.push_back(file_contents);
         config.configuration_file_contents_as_cli.push_back(
             std::accumulate(file_contents_as_cli.begin(), file_contents_as_cli.end(), std::string(""),
-                [](std::string const& init, std::string const& elem) { return init + " " + elem; }));
+                [](std::string const& init, std::string const& elem) { return init + elem + " "; }));
     }
 
     return config;
@@ -447,20 +459,19 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(Runtime
 
     config.program_invocation_string = std::string{argv[0]};
 
+    int _argc = argc;
+    auto _argv = const_cast<char**>(argv);
+
     // parse input project files
     options.positional_help("<additional project files>");
     for (auto& opt : cli_options_list) {
         options.add_options()
             add_option(opt);
     }
-    options.add_options()("help", "print help");
-
     options.parse_positional({project_files_option});
 
     // actually process passed options
     try {
-        int _argc = argc;
-        auto _argv = const_cast<char**>(argv);
         auto parsed_options = options.parse(_argc, _argv);
         std::string res;
 
@@ -470,7 +481,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(Runtime
         }
 
         for (auto& option : cli_options_list) {
-            auto& option_name = std::get<0>(option);
+            auto option_name = loong(std::get<0>(option));
             if (parsed_options.count(option_name)) {
                 auto& option_handler = std::get<3>(option);
                 option_handler(option_name, parsed_options, config);
