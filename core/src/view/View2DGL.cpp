@@ -63,7 +63,7 @@ view::View2DGL::View2DGL(void)
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::onResetView);
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
 
     this->_rhsRenderSlot.SetCompatibleCall<CallRender2DGLDescription>();
@@ -152,17 +152,23 @@ void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
                 return;
             }
         }
-        
-        cr2d->SetFramebufferObject(_fbo);
-        // TODO here we have to apply the new camera
     } else {
         auto gl_call = dynamic_cast<view::CallRenderViewGL*>(call);
-        cr2d->SetFramebufferObject(gl_call->GetFramebufferObject());
+        this->_fbo = gl_call->GetFramebufferObject();
     }
 
-    // set camera to call
+    this->_fbo->Enable();
+    auto bgcol = this->BkgndColour();
+    glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
+    glClear(GL_COLOR_BUFFER_BIT);
+    cr2d->SetFramebufferObject(_fbo);
 
     (*cr2d)(AbstractCallRender::FnRender);
+
+    this->_fbo->Disable();
+    if (call == nullptr) {
+        this->_fbo->DrawColourTexture();
+    }
 
     //after render
     AbstractView::afterRender(context);
@@ -248,7 +254,7 @@ bool view::View2DGL::OnKey(Key key, KeyAction action, Modifiers mods) {
     if (cr == NULL) return false;
 
     if (key == Key::KEY_HOME) {
-        onResetView(this->_resetViewSlot);
+        OnResetView(this->_resetViewSlot);
     }
 
     InputEvent evt;

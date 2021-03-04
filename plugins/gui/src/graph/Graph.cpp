@@ -98,7 +98,7 @@ ImGuiID megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modules,
                         callslot_ptr->description = c.description;
                         callslot_ptr->compatible_call_idxs = c.compatible_call_idxs;
                         callslot_ptr->type = c.type;
-                        callslot_ptr->present.label_visible = this->present.GetCallSlotLabelVisibility();
+                        callslot_ptr->present.label_visible = this->present.GetSlotLabelVisibility();
                         callslot_ptr->ConnectParentModule(mod_ptr);
 
                         mod_ptr->AddCallSlot(callslot_ptr);
@@ -391,6 +391,7 @@ bool megamol::gui::Graph::AddCall(
         call_ptr->plugin_name = call_stock_data.plugin_name;
         call_ptr->functions = call_stock_data.functions;
         call_ptr->present.label_visible = this->present.GetCallLabelVisibility();
+        call_ptr->present.slots_visible = this->present.GetCallSlotLabelVisibility();
 
         return this->AddCall(call_ptr, callslot_1, callslot_2);
 
