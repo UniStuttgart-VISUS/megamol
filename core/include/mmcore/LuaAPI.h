@@ -186,6 +186,9 @@ protected:
     // set a CLI option to a specific value
     int SetCliOption(lua_State* L);
 
+    /** mmLoadProject(string path): load project file after MegaMol started */
+    int LoadProject(lua_State* L);
+
     /**
      * mmGetConfigValue(string name): get the value of configuration value 'name'
      */
