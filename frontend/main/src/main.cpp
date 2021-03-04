@@ -122,12 +122,9 @@ int main(const int argc, const char** argv) {
     // => explicit camera / animation time / FBO resources/modules in graph?
     // => do or dont show GUI in screenshots, depending on ...
     // TODO: ZMQ context as frontend resource
-    // TODO: port CLI commands from mmconsole
     // TODO: eliminate the core instance:
     //  => extract module/call description manager into new factories; remove from core
-    //  => key/value store for CLI configuration as frontend resource (emulate config params)
     // TODO: main3000 raw hot loop performance vs. mmconsole performance
-    // TODO: centralize project loading/saving to/from .lua/.png.
     // => has to collect graph serialization from graph, gui state from gui.
     // clang-format on
 
