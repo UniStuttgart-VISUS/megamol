@@ -104,12 +104,12 @@ static void logfile_handler(std::string const& option_name, cxxopts::ParseResult
 
 static void loglevel_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
-    config.log_level = parsed_options[option_name].as<int>();
+    config.log_level = parsed_options[option_name].as<unsigned int>();
 };
 
 static void echolevel_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
-    config.echo_level = parsed_options[option_name].as<int>();
+    config.echo_level = parsed_options[option_name].as<unsigned int>();
 };
 
 static void project_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -200,8 +200,8 @@ std::vector<OptionsListEntry> cli_options_list =
         , {resourcedir_option,   "Add resource directory(ies)",                                                     cxxopts::value<std::vector<std::string>>(), resourcedir_handler}
         , {shaderdir_option,     "Add shader directory(ies)",                                                       cxxopts::value<std::vector<std::string>>(), shaderdir_handler}
         , {logfile_option,       "Set log file",                                                                    cxxopts::value<std::string>(),              logfile_handler}
-        , {loglevel_option,      "Set logging level",                                                               cxxopts::value<int>(),                      loglevel_handler}
-        , {echolevel_option,     "Set echo level",                                                                  cxxopts::value<int>(),                      echolevel_handler}
+        , {loglevel_option,      "Set logging level",                                                               cxxopts::value<unsigned int>(),             loglevel_handler}
+        , {echolevel_option,     "Set echo level",                                                                  cxxopts::value<unsigned int>(),             echolevel_handler}
         , {project_option,       "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
         , {global_option,        "Set global key-value pair(s) in MegaMol environment, syntax: --global key:value", cxxopts::value<std::vector<std::string>>(), global_value_handler}
 
@@ -345,13 +345,13 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         make_option_callback(shaderdir_option), // mmAddShaderDir_callback_ std::function<void(std::string const&)> ;
         make_option_callback(logfile_option), // mmSetLogFile_callback_ std::function<void(std::string const&)> ;
         // mmSetLogLevel_callback_ std::function<void(int const)> ;
-        [&](const int log_level) {
+        [&](const unsigned int log_level) {
             // Lua checked string to int conversion already
             add(loglevel_option, std::to_string(log_level));
             return true;
         } ,
         // std::function<void(int const)> mmSetEchoLevel_callback_;
-        [&](const int echo_level) {
+        [&](const unsigned int echo_level) {
             // Lua checked string to int conversion already
             add(echolevel_option, std::to_string(echo_level));
             return true;

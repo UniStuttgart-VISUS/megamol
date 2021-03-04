@@ -129,7 +129,7 @@ public:
     }
 
     void UnregisterCallback(std::string const& name) {
-        this->theHelp.erase(std::remove_if(this->theHelp.begin(), this->theHelp.end()), [name](std::pair<std::string, std::string> p){return p.first.compare(name) == 0;});
+        std::remove_if(this->theHelp.begin(), this->theHelp.end(), [name](std::pair<std::string, std::string> const& p){return p.first.compare(name) == 0;});
         luaL_dostring(L, (name + "= nil").c_str());
         for(auto &x: theEnvironments) {
             luaL_dostring(L, (x + "." + name + "= nil").c_str());
