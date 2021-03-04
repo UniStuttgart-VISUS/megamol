@@ -397,22 +397,21 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
                 state.interact.interfaceslot_hovered_uid = GUI_INVALID_ID;
             }
 
-            // Colors
+            /// COLOR_INTERFACE_BACKGROUND
             ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_INTERFACE_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
+            /// COLOR_INTERFACE_BORDER
             tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_INTERFACE_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
+            /// COLOR_INTERFACE_CURVE
             tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_INTERFACE_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
 
-            // Color modification
+            // Color modifications
             ImU32 slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER);
-            ;
             if (this->GetCallSlotType() == CallSlotType::CALLEE) {
                 slot_highlight_color = ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE);
             }

@@ -26,6 +26,8 @@ megamol::gui::Call::Call(ImGuiID uid, const std::string& class_name, const std::
         , functions(functions)
         , connected_callslots()
         , gui_selected(false)
+        , caller_slot_name()
+        , callee_slot_name()
         , gui_tooltip() {
 
     this->connected_callslots.emplace(CallSlotType::CALLER, nullptr);
@@ -136,9 +138,12 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
             if ((callerslot_ptr == nullptr) || (calleeslot_ptr == nullptr)) {
                 return;
             }
+            this->caller_slot_name = callerslot_ptr->Name();
+            this->callee_slot_name = calleeslot_ptr->Name();
+
+            // Calls lie only completely inside or outside groups
             bool hidden = false;
             bool connect_interface_slot = true;
-            // Calls lie only completely inside or outside groups.
             if (callerslot_ptr->IsParentModuleConnected() && calleeslot_ptr->IsParentModuleConnected()) {
                 if (callerslot_ptr->GetParentModule()->GroupUID() == calleeslot_ptr->GetParentModule()->GroupUID()) {
                     connect_interface_slot = false;
@@ -161,26 +166,28 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 
                 ImGui::PushID(this->uid);
 
-                // Colors
+                /// COLOR_CALL_BACKGROUND
                 ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
+                /// COLOR_CALL_HIGHTLIGHT
                 tmpcol = style.Colors[ImGuiCol_FrameBgActive];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
+                /// COLOR_CALL_CURVE
                 tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
+                /// COLOR_CALL_CURVE_HIGHLIGHT
                 tmpcol = style.Colors[ImGuiCol_ButtonActive];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_CURVE_HIGHLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
+                /// COLOR_CALL_GROUP_BORDER
                 tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_CALL_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
+                /// COLOR_TEXT
+                const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
 
                 if (phase == megamol::gui::PresentPhase::RENDERING) {
                     bool hovered = (state.interact.button_hovered_uid == this->uid);
@@ -326,8 +333,16 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                             text_pos_left_upper.y += (0.5f * ImGui::GetFontSize());
                         }
                         if (state.interact.call_show_slots_label) {
+                            // Caller
                             draw_list->AddText(text_pos_left_upper,
-                                ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]), slots_label.c_str());
+                                ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLER), this->caller_slot_name.c_str());
+                            // Separator
+                            text_pos_left_upper.x += ImGui::CalcTextSize(this->caller_slot_name.c_str()).x;
+                            draw_list->AddText(text_pos_left_upper, COLOR_TEXT, this->slot_name_separator.c_str());
+                            // Callee
+                            text_pos_left_upper.x += ImGui::CalcTextSize(this->slot_name_separator.c_str()).x;
+                            draw_list->AddText(text_pos_left_upper,
+                                ImGui::ColorConvertFloat4ToU32(GUI_COLOR_SLOT_CALLEE), this->callee_slot_name.c_str());
                         }
                     }
                 }
@@ -344,18 +359,4 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
             "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
-}
-
-
-const std::string megamol::gui::Call::SlotsLabel(void) {
-
-    std::string caller = "n/a";
-    std::string callee = "n/a";
-    auto callerslot_ptr = this->CallSlotPtr(CallSlotType::CALLER);
-    auto calleeslot_ptr = this->CallSlotPtr(CallSlotType::CALLEE);
-    if (callerslot_ptr != nullptr)
-        caller = callerslot_ptr->Name();
-    if (calleeslot_ptr != nullptr)
-        callee = calleeslot_ptr->Name();
-    return std::string("[" + caller + "] > [" + callee + "]");
 }

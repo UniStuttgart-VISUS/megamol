@@ -2395,7 +2395,7 @@ void megamol::gui::Graph::draw_canvas_grid(void) {
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     assert(draw_list != nullptr);
 
-    // Color
+    /// COLOR_GRID
     const ImU32 COLOR_GRID = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
 
     const float GRID_SIZE = (64.0f * megamol::gui::gui_scaling.Get()) * this->gui_graph_state.canvas.zooming;
@@ -2428,7 +2428,7 @@ void megamol::gui::Graph::draw_canvas_dragged_call(void) {
             ImGuiStyle& style = ImGui::GetStyle();
             ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-            // Color
+            /// COLOR_CALL_CURVE
             const auto COLOR_CALL_CURVE = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Button]);
 
             ImVec2 current_pos = ImGui::GetMousePos();
@@ -2504,9 +2504,11 @@ void megamol::gui::Graph::draw_canvas_multiselection(void) {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         assert(draw_list != nullptr);
 
+        /// COLOR_MULTISELECT_BACKGROUND
         ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
         tmpcol.w = 0.2f; // alpha
         const ImU32 COLOR_MULTISELECT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
+        /// COLOR_MULTISELECT_BORDER
         const ImU32 COLOR_MULTISELECT_BORDER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]);
 
         draw_list->AddRectFilled(this->gui_multiselect_start_pos, this->gui_multiselect_end_pos,

@@ -207,7 +207,7 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
             ImVec2 module_rect_max = module_rect_min + module_size;
             ImVec2 module_center = module_rect_min + ImVec2(module_size.x / 2.0f, module_size.y / 2.0f);
 
-            // Colors
+            /// COLOR_MODULE_BACKGROUND
             ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_MODULE_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
@@ -391,21 +391,21 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                         state.interact.module_hovered_uid = GUI_INVALID_ID;
                     }
 
-                    // Colors (cont.)
+                    /// COLOR_MODULE_HIGHTLIGHT
                     tmpcol = style.Colors[ImGuiCol_FrameBgActive];
                     tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                     const ImU32 COLOR_MODULE_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
+                    /// COLOR_MODULE_BORDER
                     tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
                     tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                     const ImU32 COLOR_MODULE_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-                    const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
-
+                    /// COLOR_HEADER
                     const ImU32 COLOR_HEADER = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_FrameBgHovered]);
-
+                    /// COLOR_HEADER_HIGHLIGHT
                     const ImU32 COLOR_HEADER_HIGHLIGHT =
                         ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_ButtonActive]);
+                    /// COLOR_TEXT
+                    const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
 
                     // Draw Background
                     ImU32 module_bg_color =

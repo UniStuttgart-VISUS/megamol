@@ -291,7 +291,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
     if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
         const char* message = "Changes have no effect.\n"
                               "No transfer function parameter connected for edit.\n";
-        ImGui::TextColored(GUI_COLOR_TEXT_WARN, message);
+        ImGui::TextColored(GUI_COLOR_TEXT_ERROR, message);
     }
 
     assert(ImGui::GetCurrentContext() != nullptr);

@@ -1841,8 +1841,8 @@ void GUIWindows::drawMenu(void) {
     // SETTINGS ---------------------------------------------------------------
     if (ImGui::BeginMenu("Settings")) {
 
-        if (ImGui::MenuItem("Show/Hide GUI",
-                this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str())) {
+        if (ImGui::MenuItem(
+                "Show/Hide GUI", this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str())) {
             this->state.gui_hide_next_frame = 2;
         }
 

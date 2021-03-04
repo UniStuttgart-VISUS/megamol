@@ -446,14 +446,13 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                     state.interact.callslot_hovered_uid = GUI_INVALID_ID;
                 }
 
-                // Colors
                 float brightness = (is_group_interface) ? (0.6f) : (1.0f);
-
+                /// COLOR_SLOT_BACKGROUND
                 ImVec4 tmpcol = style.Colors[ImGuiCol_FrameBg];
                 tmpcol.w *= brightness;
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
                 const ImU32 COLOR_SLOT_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
+                /// COLOR_SLOT_BORDER
                 tmpcol = style.Colors[ImGuiCol_ScrollbarGrabActive];
                 tmpcol.w *= brightness;
                 tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);

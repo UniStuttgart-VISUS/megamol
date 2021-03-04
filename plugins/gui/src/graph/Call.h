@@ -65,7 +65,9 @@ namespace gui {
         inline const std::string ClassName(void) const {
             return this->class_name;
         }
-        const std::string SlotsLabel(void);
+        const std::string SlotsLabel(void) const {
+            return std::string(this->caller_slot_name + this->slot_name_separator + this->callee_slot_name);
+        }
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -79,6 +81,9 @@ namespace gui {
         std::map<CallSlotType, CallSlotPtr_t> connected_callslots;
 
         bool gui_selected;
+        const std::string slot_name_separator = " > ";
+        std::string caller_slot_name;
+        std::string callee_slot_name;
 
         HoverToolTip gui_tooltip;
     };

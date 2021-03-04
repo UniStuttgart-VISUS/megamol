@@ -549,23 +549,24 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                 this->SetPosition(state, (this->gui_position + (ImGui::GetIO().MouseDelta / state.canvas.zooming)));
             }
 
-            // Colors
-            ImVec4 tmpcol = style.Colors[ImGuiCol_ScrollbarBg];
+            /// COLOR_GROUP_BACKGROUND
+            ImVec4 tmpcol = style.Colors[ImGuiCol_ChildBg];
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_GROUP_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
-            tmpcol = style.Colors[ImGuiCol_FrameBg];
+            /// COLOR_GROUP_BACKGROUND_HIGHTLIGHT
+            tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
-            const ImU32 COLOR_GROUP_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
+            const ImU32 COLOR_GROUP_BACKGROUND_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
+            /// COLOR_GROUP_BORDER
             tmpcol = style.Colors[ImGuiCol_ScrollbarGrabHovered];
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_GROUP_BORDER = ImGui::ColorConvertFloat4ToU32(tmpcol);
-
+            /// COLOR_TEXT
             const ImU32 COLOR_TEXT = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
 
             // Background
-            ImU32 group_bg_color = (this->gui_selected) ? (COLOR_GROUP_HIGHTLIGHT) : (COLOR_GROUP_BACKGROUND);
+            ImU32 group_bg_color =
+                (this->gui_selected) ? (COLOR_GROUP_BACKGROUND_HIGHTLIGHT) : (COLOR_GROUP_BACKGROUND);
             draw_list->AddRectFilled(group_rect_min, group_rect_max, group_bg_color, 0.0f);
             draw_list->AddRect(group_rect_min, group_rect_max, COLOR_GROUP_BORDER, 0.0f);
 
