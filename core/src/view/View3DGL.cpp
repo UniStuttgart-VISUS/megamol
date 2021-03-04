@@ -80,24 +80,25 @@ void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
                 return;
             }
         }
-        this->_fbo->Enable();
-        auto bgcol = this->BkgndColour();
-        glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
-        glClearDepth(1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        cr3d->SetFramebufferObject(this->_fbo);
     } else {
         auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
-        cr3d->SetFramebufferObject(gpu_call->GetFramebufferObject());
+        this->_fbo = gpu_call->GetFramebufferObject();
     }
+
+    this->_fbo->Enable();
+    auto bgcol = this->BkgndColour();
+    glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
+    glClearDepth(1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    cr3d->SetFramebufferObject(this->_fbo);
 
     AbstractView3D::beforeRender(context);
 
     cr3d->SetCamera(this->_camera);
     (*cr3d)(view::CallRender3DGL::FnRender);
 
-    if (call == NULL) {
-        this->_fbo->Disable();
+    this->_fbo->Disable();
+    if (call == nullptr) {
         this->_fbo->DrawColourTexture();
     }
 

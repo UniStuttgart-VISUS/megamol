@@ -28,6 +28,12 @@
  * - Save Edited Project:       Ctrl + Shift + s
  * - Delete Graph Item:         Delete
  *
+ * ----- Graph -----
+ * - Selection, Drag & Drop:    Left Mouse Button
+ * - Context Menu:              Right Mouse Button
+ * - Zooming:                   Mouse Wheel
+ * - Scrolling:                 Middle Mouse Button
+ *
  **/
 
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -87,15 +93,15 @@
 #define GUI_PROJECT_GUI_STATE_END_TAG ("</GUI_STATE_JSON>")
 
 // Global Colors
-#define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.0f, 0.0f, 1.0f))
+#define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.1f, 0.0f, 1.0f))
 #define GUI_COLOR_TEXT_WARN (ImVec4(0.75f, 0.75f, 0.0f, 1.0f))
-#define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.6f, 0.0f, 0.3f, 1.0f))
-#define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.45f, 1.0f))
-#define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 0.5f, 1.0f, 1.0f))
-#define GUI_COLOR_SLOT_CALLEE (ImVec4(0.5f, 0.0f, 1.0f, 1.0f))
-#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.4f, 0.8f, 0.0f, 1.0f))
-#define GUI_COLOR_GROUP_HEADER (ImVec4(0.0f, 0.4f, 0.3f, 1.0f))
-#define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.8f, 0.6f, 1.0f))
+#define GUI_COLOR_BUTTON_MODIFIED (ImVec4(0.75f, 0.0f, 0.25f, 1.0f))
+#define GUI_COLOR_BUTTON_MODIFIED_HIGHLIGHT (ImVec4(0.9f, 0.0f, 0.25f, 1.0f))
+#define GUI_COLOR_SLOT_CALLER (ImVec4(0.0f, 0.75f, 1.0f, 1.0f))
+#define GUI_COLOR_SLOT_CALLEE (ImVec4(0.75f, 0.0f, 1.0f, 1.0f))
+#define GUI_COLOR_SLOT_COMPATIBLE (ImVec4(0.5f, 0.9f, 0.0f, 1.0f))
+#define GUI_COLOR_GROUP_HEADER (ImVec4(0.0f, 0.5f, 0.25f, 1.0f))
+#define GUI_COLOR_GROUP_HEADER_HIGHLIGHT (ImVec4(0.0f, 0.75f, 0.5f, 1.0f))
 
 
 namespace {
@@ -242,6 +248,7 @@ namespace gui {
 
     /* Data type holding information on graph item interaction. */
     typedef struct _interact_state_ {
+
         ImGuiID button_active_uid;  // in out
         ImGuiID button_hovered_uid; // in out
         bool process_deletion;      // out
@@ -258,9 +265,12 @@ namespace gui {
         StrPairVector_t module_rename;                   // out
         vislib::math::Ternary module_graphentry_changed; // out
         ImVec2 module_param_child_position;              // out
+        bool module_show_label;                          // in
 
-        ImGuiID call_selected_uid; // in out
-        ImGuiID call_hovered_uid;  // in out
+        ImGuiID call_selected_uid;  // in out
+        ImGuiID call_hovered_uid;   // in out
+        bool call_show_label;       // in
+        bool call_show_slots_label; // in
 
         ImGuiID slot_dropped_uid; // in out
 
@@ -269,10 +279,13 @@ namespace gui {
         UIDPair_t callslot_add_group_uid;    // in out
         UIDPair_t callslot_remove_group_uid; // in out
         CallSlotPtr_t callslot_compat_ptr;   // in
+        bool callslot_show_label;            // in
 
         ImGuiID interfaceslot_selected_uid;          // in out
         ImGuiID interfaceslot_hovered_uid;           // in out
         InterfaceSlotPtr_t interfaceslot_compat_ptr; // in
+
+        bool parameters_extended_mode; // in
 
         GraphCoreInterface graph_core_interface; // in
 
