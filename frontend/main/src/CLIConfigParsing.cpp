@@ -299,33 +299,25 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         };
     };
 
+    std::vector<std::string> all_options;
+    for (auto& opt : cli_options_list) {
+        // split "h,help"
+        auto& name = std::get<0>(opt);
+        auto delimiter = name.find(",");
+        if (delimiter == std::string::npos) {
+            all_options.push_back(name);
+        } else {
+            all_options.push_back(name.substr(0, delimiter));
+            all_options.push_back(name.substr(delimiter+1));
+        }
+    }
+
     auto lua_config_callbacks = megamol::core::LuaAPI::LuaConfigCallbacks{
         // mmSetCliOption_callback_ std::function<void(std::string const&, std::string const&)> ;
         [&](std::string const& clioption, std::string const& value) {
             // the usual CLI options
             check(clioption);
             check(value);
-
-            auto map_option = [](std::string const& option) -> std::string {
-
-                // TODO: check that options are actually known!
-
-                if (option.size() == 1 && option[0] != '-') {
-                    return "-" + option; // e.g. mmSetCliOption("v", "true") for -v
-                }
-                if (option.size() > 2 && option[0] != '-' && option[1] != '-') {
-                    return "--" + option; // e.g. mmSetCliOption("verbose", "true") for --verbose
-                }
-
-                if (option.size() == 2 && option[0] == '-' && option[1] != '-') {
-                    return option; // e.g. mmSetCliOption("-v", "true") for -v
-                }
-                if (option.size() > 2 && option[0] == '-' && option[1] == '-') {
-                    return option; // e.g. mmSetCliOption("--verbose", "true") for --verbose
-                }
-
-                return option; // something weird might happen here
-            };
 
             // we assume that "on" and "off" are used only for boolean cxxopts values
             // and so we can map them to "true" and "false"
@@ -340,7 +332,11 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
                 return value;
             };
 
-            add(map_option(clioption),map_value(value));
+            bool option_unknown = std::find(all_options.begin(), all_options.end(), clioption) == all_options.end();
+            if (option_unknown)
+                return false;
+
+            add(clioption,map_value(value));
 
             return true;
         } ,
