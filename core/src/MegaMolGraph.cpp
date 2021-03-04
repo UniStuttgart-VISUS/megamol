@@ -303,6 +303,11 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
         return {slot_ptr, module_ptr};
     };
 
+    if (call_description == nullptr) {
+        log_error("error. could not find call class name: " + request.className);
+        return false;
+    }
+
     auto from_slot = getCallSlotOfModule(request.from);
     if (!from_slot.first) {
         log_error("error. could not find from-slot: " + request.from +

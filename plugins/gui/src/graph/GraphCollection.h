@@ -9,9 +9,12 @@
 #define MEGAMOL_GUI_GRAPH_GRAPHCOLLECTION_H_INCLUDED
 
 
-#include "GraphCollectionPresentation.h"
+#include "GUIUtils.h"
 
 #include "Graph.h"
+
+#include "widgets/FileBrowserWidget.h"
+#include "widgets/MinimalPopUp.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
@@ -43,10 +46,6 @@ namespace gui {
      */
     class GraphCollection {
     public:
-        // VARIABLES --------------------------------------------------------------
-
-        GraphCollectionPresentation present;
-
         // FUNCTIONS --------------------------------------------------------------
 
         GraphCollection(void);
@@ -56,7 +55,7 @@ namespace gui {
 
         ImGuiID AddGraph(GraphCoreInterface graph_core_interface);
         bool DeleteGraph(ImGuiID in_graph_uid);
-        bool GetGraph(ImGuiID in_graph_uid, GraphPtr_t& out_graph_ptr);
+        GraphPtr_t GetGraph(ImGuiID in_graph_uid);
         const GraphPtrVector_t& GetGraphs(void) {
             return this->graphs;
         }
@@ -71,9 +70,10 @@ namespace gui {
         }
 
         /**
-         * Load or update project from grpah of core instance or directly from megamol graph.
+         * Load or update project from graph of core instance or directly from megamol graph.
          *
-         * @param inout_graph_uid  The graph uid to use. If graph uid is GUI_INVALID_ID a new graph is created.
+         * @param inout_graph_uid  The graph uid to use. If graph uid is GUI_INVALID_ID a new graph is created and its
+         * uid is returned.
          * @param core_instance    The pointer to the core instance. If pointer is not null, the core graph is
          * considered.
          * @param megamol_graph    The pointer to the megamol graph. If pointer is not null, the megamol graph is
@@ -101,13 +101,7 @@ namespace gui {
         bool SaveProjectToFile(
             ImGuiID in_graph_uid, const std::string& project_filename, const std::string& state_json);
 
-        std::string GetUpdatedGUIState(ImGuiID graph_id, const std::string& filename);
-
-        // Presentation ----------------------------------------------------
-
-        void PresentGUI(GraphState_t& state) {
-            this->present.Present(*this, state);
-        }
+        void Draw(GraphState_t& state);
 
     private:
         // VARIABLES --------------------------------------------------------------
@@ -117,7 +111,12 @@ namespace gui {
         CallStockVector_t calls_stock;
         unsigned int graph_name_uid;
 
+        FileBrowserWidget gui_file_browser;
+        ImGuiID gui_graph_delete_uid;
+
         // FUNCTIONS --------------------------------------------------------------
+
+        std::string get_state(ImGuiID graph_id, const std::string& filename);
 
         bool get_call_stock_data(
             Call::StockCall& call, const std::shared_ptr<const megamol::core::factories::CallDescription> call_desc);
@@ -126,7 +125,9 @@ namespace gui {
 
         bool read_project_command_arguments(
             const std::string& line, size_t arg_count, std::vector<std::string>& out_args);
+
         ImVec2 project_read_confpos(const std::string& line);
+
         bool project_separate_name_and_namespace(
             const std::string& full_name, std::string& name_space, std::string& name);
 
