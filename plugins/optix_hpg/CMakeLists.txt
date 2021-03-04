@@ -19,7 +19,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
 
   # Check option dependencies: First list item is always the current build option,
   # afterwards list the dependencies.
-  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE" CACHE INTERNAL "")
+  set(DEP_LIST "${DEP_LIST};BUILD_${EXPORT_NAME}_PLUGIN BUILD_CORE BUILD_MESH_PLUGIN" CACHE INTERNAL "")
 
   require_external(glm)
   get_target_property(GLM_INCLUDES glm INTERFACE_INCLUDE_DIRECTORIES)
@@ -35,15 +35,17 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   cuda_compile_and_embed(embedded_raygen_programs cuda_resources/raygen.cu)
   cuda_compile_and_embed(embedded_miss_programs  cuda_resources/miss.cu)
   cuda_compile_and_embed(embedded_sphere_programs cuda_resources/sphere.cu)
+  cuda_compile_and_embed(embedded_transitioncalculator_programs cuda_resources/transitioncalculator.cu)
 
   # Target definition
   #add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${cuda_resource_include_files} ${embedded_raygen_programs} ${embedded_miss_programs} ${embedded_sphere_programs})
+  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${cuda_resource_include_files}
+    ${embedded_raygen_programs} ${embedded_miss_programs} ${embedded_sphere_programs} ${embedded_transitioncalculator_programs})
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     "include" "src" "${CMAKE_CURRENT_SOURCE_DIR}/cuda_resources/")
-  target_link_libraries(${PROJECT_NAME} PRIVATE core glm CUDA::cuda_driver)
+  target_link_libraries(${PROJECT_NAME} PRIVATE core glm CUDA::cuda_driver mesh)
 
   # Installation rules for generated files
   #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")

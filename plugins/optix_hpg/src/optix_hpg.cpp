@@ -12,6 +12,7 @@
 
 #include "optix/SphereGeometry.h"
 #include "optix/Renderer.h"
+#include "optix/TransitionCalculator.h"
 
 #include "optix/CallGeometry.h"
 
@@ -42,6 +43,7 @@ namespace megamol::optix_hpg {
             // register modules here:
             this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::SphereGeometry>();
             this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::Renderer>();
+            this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::TransitionCalculator>();
             //
             // TODO: Register your plugin's modules here
             // like:
