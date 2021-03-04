@@ -10,6 +10,13 @@
 #include "mmcore/versioninfo.h"
 #include "vislib/vislibversion.h"
 
+#include "optix/SphereGeometry.h"
+#include "optix/Context.h"
+#include "optix/Renderer.h"
+
+#include "optix/CallContext.h"
+#include "optix/CallGeometry.h"
+
 namespace megamol::optix_hpg {
     /** Implementing the instance class of this plugin */
     class plugin_instance : public ::megamol::core::utility::plugins::Plugin200Instance {
@@ -35,7 +42,9 @@ namespace megamol::optix_hpg {
         virtual void registerClasses(void) {
 
             // register modules here:
-
+            this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::SphereGeometry>();
+            this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::Context>();
+            this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::Renderer>();
             //
             // TODO: Register your plugin's modules here
             // like:
@@ -45,7 +54,8 @@ namespace megamol::optix_hpg {
             //
 
             // register calls here:
-
+            this->call_descriptions.RegisterAutoDescription<megamol::optix_hpg::CallContext>();
+            this->call_descriptions.RegisterAutoDescription<megamol::optix_hpg::CallGeometry>();
             //
             // TODO: Register your plugin's calls here
             // like:

@@ -31,15 +31,18 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   #file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Shaders/*")
   file(GLOB_RECURSE cuda_resource_include_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "cuda_resources/*.h")
 
-  include_directories(${GLM_INCLUDES} "${CMAKE_CURRENT_SOURCE_DIR}/include")
+  include_directories(${GLM_INCLUDES} "${CMAKE_CURRENT_SOURCE_DIR}/src")
+  cuda_compile_and_embed(embedded_raygen_programs cuda_resources/raygen.cu)
+  cuda_compile_and_embed(embedded_miss_programs  cuda_resources/miss.cu)
+  cuda_compile_and_embed(embedded_sphere_programs cuda_resources/sphere.cu)
 
   # Target definition
   #add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files})
-  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files})
+  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${cuda_resource_include_files} ${embedded_raygen_programs} ${embedded_miss_programs} ${embedded_sphere_programs})
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    "include" "src")
+    "include" "src" "${CMAKE_CURRENT_SOURCE_DIR}/cuda_resources/")
   target_link_libraries(${PROJECT_NAME} PRIVATE core glm CUDA::cuda_driver)
 
   # Installation rules for generated files
