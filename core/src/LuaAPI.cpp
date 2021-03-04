@@ -193,6 +193,7 @@ bool megamol::core::LuaAPI::FillConfigFromString(const std::string& script, std:
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetLogLevel   >(MMC_LUA_MMSETLOGLEVEL, "(int level)\n\tSets the level of log events to include. Level constants are: LOGINFO, LOGWARNING, LOGERROR.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetEchoLevel  >(MMC_LUA_MMSETECHOLEVEL, "(int level)\n\tSets the level of log events to output to the console (see above).");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetGlobalValue>(MMC_LUA_MMSETGLOBALVALUE, "(string key, string value)\n\tSets the value of name <key> to <value> in the global key-value store.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::LoadProject   >(MMC_LUA_MMLOADPROJECT, "(string path)\n\tLoad lua (project) file after MegaMol startup.");
 
     bool execution_result = RunString(script, result);
 
@@ -204,6 +205,7 @@ bool megamol::core::LuaAPI::FillConfigFromString(const std::string& script, std:
     luaApiInterpreter_.UnregisterCallback(MMC_LUA_MMSETLOGLEVEL);
     luaApiInterpreter_.UnregisterCallback(MMC_LUA_MMSETECHOLEVEL);
     luaApiInterpreter_.UnregisterCallback(MMC_LUA_MMSETGLOBALVALUE);
+    luaApiInterpreter_.UnregisterCallback(MMC_LUA_MMLOADPROJECT);
 
     return execution_result;
 }
@@ -370,6 +372,15 @@ int megamol::core::LuaAPI::SetCliOption(lua_State* L) {
 
     if(!config_callbacks_.mmSetCliOption_callback_(name, value))
         luaApiInterpreter_.ThrowError("mmSetCliOption: CLI option \"" + std::string(name) + "\" or value \"" + std::string(value) + "\" not valid.");
+
+    return 0;
+}
+
+int megamol::core::LuaAPI::LoadProject(lua_State* L) {
+    auto f = luaL_checkstring(L, 1);
+
+    if(!config_callbacks_.mmLoadProject_callback_(f))
+        luaApiInterpreter_.ThrowError("mmLoadProject: no such file \"" + std::string(f) + "\"");
 
     return 0;
 }

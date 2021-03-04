@@ -235,11 +235,10 @@ int main(const int argc, const char** argv) {
         run_megamol = render_next_frame();
     }
 
+    graph.Clear();
+
     // close glfw context, network connections, other system resources
     services.close();
-
-    // clean up modules, calls in graph
-    // TODO: implement graph destructor
 
     return 0;
 }

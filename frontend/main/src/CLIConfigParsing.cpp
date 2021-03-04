@@ -287,7 +287,6 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
     // we create lua callbacks on the fly and pass them to Lua to execute during config interpretation
     // those callbacks fill our local fake "cli inputs" arrays, which we then feed into the CLI interpreter (cxxopt)
 
-    auto& files = config.configuration_files;
     using StringPair = megamol::frontend_resources::RuntimeConfig::StringPair;
     std::vector<StringPair> cli_options_from_configs;
 
@@ -392,7 +391,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         }
     };
 
-    for (auto& file : files) {
+    for (auto& file : config.configuration_files) {
         cli_options_from_configs.clear();
         std::ifstream stream(file);
         std::string file_contents = std::string(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
@@ -405,6 +404,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
             exit("Error in Lua config file " + file + "\n Lua Error: " + lua_result_string);
         }
 
+        // feed the options coming from Lua into CLI parser, which writes option changes into the RuntimeConfig
          std::vector<std::string> file_contents_as_cli {cli_options_from_configs.size()};
          for (auto& pair : cli_options_from_configs)
              file_contents_as_cli.push_back("--" + pair.first + "=" + pair.second);
