@@ -882,17 +882,19 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         return true;
     }
 
-    // 1) Load all known calls and modules from core instance ONCE ---------------------------
+    // 1) Load all known calls from core instance ONCE ---------------------------
     if (!this->configurator.GetGraphCollection().LoadCallStock(core_instance)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
-    if (!this->configurator.GetGraphCollection().LoadModuleStock(core_instance)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Failed to load module stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
+    // Load all known modules from core instance ONCE
+    /// Delayed to first opening of configurator
+    // if (!this->configurator.GetGraphCollection().LoadModuleStock(core_instance)) {
+    //    megamol::core::utility::log::Log::DefaultLog.WriteError(
+    //        "[GUI] Failed to load module stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    //    return false;
+    //}
 
     bool synced = false;
     bool sync_success = false;
