@@ -54,6 +54,14 @@ static std::string nocursor_option      = "nocursor";
 static std::string interactive_option   = "i,interactive";
 static std::string help_option          = "h,help";
 
+static std::string loong(std::string const& option) {
+    auto f = option.find(',');
+    if (f == std::string::npos)
+        return option;
+
+    return option.substr(f+1);
+}
+
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
     for (const auto& file : vec) {
         if (!stdfs::exists(file)) {
@@ -252,13 +260,13 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
 
         std::vector<std::string> config_files;
 
-        if (parsed_options.count(config_option) == 0) {
+        if (parsed_options.count(loong(config_option)) == 0) {
             // no config files given
             // use defaults
             RuntimeConfig config;
             config_files = config.configuration_files;
         } else {
-            config_files = parsed_options[config_option].as<std::vector<std::string>>();
+            config_files = parsed_options[loong(config_option)].as<std::vector<std::string>>();
         }
 
         // check files exist
@@ -287,12 +295,18 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
     #define check(s) \
                 if (is_weird(s)) \
                     return false;
+    #define file_exists(f) \
+                if (!stdfs::exists(f)) \
+                    return false;
     #define add(o,v) \
-                cli_options_from_configs.push_back({o,v})
+                cli_options_from_configs.push_back({loong(o),v})
 
-    auto make_option_callback = [&](std::string const& optname) {
+    auto make_option_callback = [&](std::string const& optname, bool file_check = false) {
         return [&](std::string const& value) {
             check(value);
+            if (file_check) {
+                file_exists(value);
+            }
             add(optname, value);
 
             return true;
@@ -332,17 +346,23 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
                 return value;
             };
 
-            bool option_unknown = std::find(all_options.begin(), all_options.end(), clioption) == all_options.end();
+            auto option_it = std::find(all_options.begin(), all_options.end(), clioption);
+            bool option_unknown = option_it == all_options.end();
             if (option_unknown)
                 return false;
 
-            add(clioption,map_value(value));
+            // if has option of length one, take the long version
+            auto finalopt = clioption;
+            if (option_it->size() == 1)
+                finalopt = *(option_it+1);
+
+            add(finalopt,map_value(value));
 
             return true;
         } ,
-        make_option_callback(appdir_option), // mmSetAppDir_callback_ std::function<void(std::string const&)> ;
-        make_option_callback(resourcedir_option), // mmAddResourceDir_callback_ std::function<void(std::string const&)> ;
-        make_option_callback(shaderdir_option), // mmAddShaderDir_callback_ std::function<void(std::string const&)> ;
+        make_option_callback(appdir_option, true), // mmSetAppDir_callback_ std::function<void(std::string const&)> ;
+        make_option_callback(resourcedir_option, true), // mmAddResourceDir_callback_ std::function<void(std::string const&)> ;
+        make_option_callback(shaderdir_option, true), // mmAddShaderDir_callback_ std::function<void(std::string const&)> ;
         make_option_callback(logfile_option), // mmSetLogFile_callback_ std::function<void(std::string const&)> ;
         // mmSetLogLevel_callback_ std::function<void(int const)> ;
         [&](const unsigned int log_level) {
@@ -356,7 +376,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
             add(echolevel_option, std::to_string(echo_level));
             return true;
         } ,
-        make_option_callback(project_option), // mmLoadProject_callback_ std::function<void(std::string const&)> ;
+        make_option_callback(project_option, true), // mmLoadProject_callback_ std::function<void(std::string const&)> ;
         // mmSetGlobalValue_callback_ std::function<void(std::string const&, std::string const&)> ;
         [&](std::string const& key, std::string const& value) {
             check(key); // no space or = in key
@@ -387,8 +407,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
 
          std::vector<std::string> file_contents_as_cli {cli_options_from_configs.size()};
          for (auto& pair : cli_options_from_configs)
-             file_contents_as_cli.push_back(pair.first + "=" + pair.second);
-
+             file_contents_as_cli.push_back("--" + pair.first + "=" + pair.second);
 
          int argc = file_contents_as_cli.size()+1;
          std::vector<const char*> argv{static_cast<size_t>(argc)};
@@ -413,7 +432,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
             std::string res;
 
             for (auto& option : cli_options_list) {
-                auto& option_name = std::get<0>(option);
+                auto option_name = loong(std::get<0>(option));
                 if (parsed_options.count(option_name)) {
                     auto& option_handler = std::get<3>(option);
                     option_handler(option_name, parsed_options, config);
@@ -427,7 +446,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         config.configuration_file_contents.push_back(file_contents);
         config.configuration_file_contents_as_cli.push_back(
             std::accumulate(file_contents_as_cli.begin(), file_contents_as_cli.end(), std::string(""),
-                [](std::string const& init, std::string const& elem) { return init + " " + elem; }));
+                [](std::string const& init, std::string const& elem) { return init + elem + " "; }));
     }
 
     return config;
@@ -462,7 +481,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(Runtime
         }
 
         for (auto& option : cli_options_list) {
-            auto& option_name = std::get<0>(option);
+            auto option_name = loong(std::get<0>(option));
             if (parsed_options.count(option_name)) {
                 auto& option_handler = std::get<3>(option);
                 option_handler(option_name, parsed_options, config);
