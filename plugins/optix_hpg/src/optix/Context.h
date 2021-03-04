@@ -9,36 +9,55 @@
 #include "cuda.h"
 #include "optix.h"
 
+#include "CUDA_Context.h"
+
 namespace megamol::optix_hpg {
 
-class Context : public core::Module {
+class Context {
 public:
-    static const char* ClassName(void) {
-        return "OptiXContext";
-    }
-
-    static const char* Description(void) {
-        return "Context for OptiX";
-    }
-
-    static bool IsAvailable(void) {
-        return true;
-    }
-
     Context();
+
+    Context(frontend_resources::CUDA_Context const& ctx);
+
+    Context(Context const& rhs) = delete;
+
+    Context& operator=(Context const& rhs) = delete;
 
     virtual ~Context();
 
-protected:
-    bool create() override;
+    CUdevice GetDevice() const {
+        return _device;
+    }
 
-    void release() override;
+    CUcontext GetCUDAContext() const {
+        return _ctx;
+    }
+
+    OptixDeviceContext GetOptiXContext() const {
+        return _optix_ctx;
+    }
+
+    CUstream GetDataStream() const {
+        return _data_stream;
+    }
+
+    CUstream GetExecStream() const {
+        return _exec_stream;
+    }
+
+    OptixModuleCompileOptions const& GetModuleCompileOptions() const {
+        return _module_options;
+    }
+
+    OptixPipelineCompileOptions const& GetPipelineCompileOptions() const {
+        return _pipeline_options;
+    }
+
+    OptixPipelineLinkOptions const& GetPipelineLinkOptions() const {
+        return _pipeline_link_options;
+    }
 
 private:
-    bool get_ctx_cb(core::Call& c);
-
-    core::CalleeSlot _out_ctx_slot;
-
     CUdevice _device;
 
     CUcontext _ctx = nullptr;

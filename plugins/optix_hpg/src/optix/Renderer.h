@@ -27,9 +27,19 @@
 
 #include "vislib/math/Rectangle.h"
 
+#include "CUDA_Context.h"
+
+#include "optix/Context.h"
+
 namespace megamol::optix_hpg {
 class Renderer : public core::view::Renderer3DModuleGL {
 public:
+    std::vector<std::string> requested_lifetime_resources() override {
+        auto res = Renderer3DModuleGL::requested_lifetime_resources();
+        res.push_back(frontend_resources::CUDA_Context_Req_Name);
+        return res;
+    }
+
     static const char* ClassName(void) {
         return "OptixRenderer";
     }
@@ -56,7 +66,7 @@ protected:
     void release() override;
 
 private:
-    void setup(CallContext& ctx);
+    void setup();
 
     bool is_dirty() {
         return spp_slot_.IsDirty() || max_bounces_slot_.IsDirty() || accumulate_slot_.IsDirty();
@@ -69,8 +79,6 @@ private:
     }
 
     core::CallerSlot _in_geo_slot;
-
-    core::CallerSlot _in_ctx_slot;
 
     core::param::ParamSlot spp_slot_;
 
@@ -113,5 +121,7 @@ private:
     cam_type::snapshot_type old_cam_snap;
 
     glm::vec4 old_bg = glm::vec4(-1);
+
+    std::unique_ptr<Context> optix_ctx_;
 };
 } // namespace megamol::optix_hpg

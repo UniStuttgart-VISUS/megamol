@@ -11,10 +11,8 @@
 #include "vislib/vislibversion.h"
 
 #include "optix/SphereGeometry.h"
-#include "optix/Context.h"
 #include "optix/Renderer.h"
 
-#include "optix/CallContext.h"
 #include "optix/CallGeometry.h"
 
 namespace megamol::optix_hpg {
@@ -43,7 +41,6 @@ namespace megamol::optix_hpg {
 
             // register modules here:
             this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::SphereGeometry>();
-            this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::Context>();
             this->module_descriptions.RegisterAutoDescription<megamol::optix_hpg::Renderer>();
             //
             // TODO: Register your plugin's modules here
@@ -54,7 +51,6 @@ namespace megamol::optix_hpg {
             //
 
             // register calls here:
-            this->call_descriptions.RegisterAutoDescription<megamol::optix_hpg::CallContext>();
             this->call_descriptions.RegisterAutoDescription<megamol::optix_hpg::CallGeometry>();
             //
             // TODO: Register your plugin's calls here

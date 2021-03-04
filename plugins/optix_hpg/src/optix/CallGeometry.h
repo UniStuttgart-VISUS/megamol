@@ -4,6 +4,8 @@
 
 #include "optix.h"
 
+#include "optix/Context.h"
+
 namespace megamol::optix_hpg {
 class CallGeometry : public core::AbstractGetData3DCall {
 public:
@@ -23,21 +25,13 @@ public:
         return core::AbstractGetData3DCall::FunctionName(idx);
     }
 
-    /*OWLContext get_ctx() const {
+    Context const* get_ctx() const {
         return _ctx;
     }
 
-    void set_ctx(OWLContext ctx) {
+    void set_ctx(Context const* ctx) {
         _ctx = ctx;
     }
-
-    OWLGroup get_geo() const {
-        return _geo;
-    }
-
-    void set_geo(OWLGroup geo) {
-        _geo = geo;
-    }*/
 
     OptixTraversableHandle const* get_handle() const {
         return _geo_handle;
@@ -88,9 +82,7 @@ public:
     }
 
 private:
-    /*OWLContext _ctx;
-
-    OWLGroup _geo;*/
+    Context const* _ctx;
 
     OptixTraversableHandle const* _geo_handle;
 

@@ -16,7 +16,7 @@ extern "C" const char embedded_sphere_programs[];
 
 
 megamol::optix_hpg::SphereGeometry::SphereGeometry()
-        : _out_geo_slot("outGeo", ""), _in_data_slot("inData", ""), _in_ctx_slot("inCtx", "") {
+        : _out_geo_slot("outGeo", ""), _in_data_slot("inData", "") {
     _out_geo_slot.SetCallback(CallGeometry::ClassName(), CallGeometry::FunctionName(0), &SphereGeometry::get_data_cb);
     _out_geo_slot.SetCallback(
         CallGeometry::ClassName(), CallGeometry::FunctionName(1), &SphereGeometry::get_extents_cb);
@@ -24,9 +24,6 @@ megamol::optix_hpg::SphereGeometry::SphereGeometry()
 
     _in_data_slot.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&_in_data_slot);
-
-    _in_ctx_slot.SetCompatibleCall<CallContextDescription>();
-    MakeSlotAvailable(&_in_ctx_slot);
 }
 
 
@@ -59,18 +56,18 @@ void megamol::optix_hpg::SphereGeometry::release() {
 }
 
 
-void megamol::optix_hpg::SphereGeometry::init(CallContext& ctx) {
-    sphere_module_ = MMOptixModule(embedded_sphere_programs, ctx.get_ctx(), ctx.get_module_options(),
-        ctx.get_pipeline_options(), OPTIX_PROGRAM_GROUP_KIND_HITGROUP, {"sphere_intersect", "sphere_closesthit"});
-    sphere_occlusion_module_ =
-        MMOptixModule(embedded_sphere_programs, ctx.get_ctx(), ctx.get_module_options(), ctx.get_pipeline_options(),
-            OPTIX_PROGRAM_GROUP_KIND_HITGROUP, {"sphere_intersect", "sphere_closesthit_occlusion"});
+void megamol::optix_hpg::SphereGeometry::init(Context const& ctx) {
+    sphere_module_ = MMOptixModule(embedded_sphere_programs, ctx.GetOptiXContext(), &ctx.GetModuleCompileOptions(),
+        &ctx.GetPipelineCompileOptions(), OPTIX_PROGRAM_GROUP_KIND_HITGROUP, {"sphere_intersect", "sphere_closesthit"});
+    sphere_occlusion_module_ = MMOptixModule(embedded_sphere_programs, ctx.GetOptiXContext(),
+        &ctx.GetModuleCompileOptions(), &ctx.GetPipelineCompileOptions(), OPTIX_PROGRAM_GROUP_KIND_HITGROUP,
+        {"sphere_intersect", "sphere_closesthit_occlusion"});
 
     // OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(sphere_module_, &_sbt_record));
 }
 
 
-bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleDataCall& call, CallContext& ctx) {
+bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleDataCall& call, Context const& ctx) {
     auto const pl_count = call.GetParticleListCount();
 
     for (auto const& el : particle_data_) {
@@ -132,16 +129,16 @@ bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleD
             // CUDA_CHECK_ERROR(cuMemFree(color_data_));
             CUDA_CHECK_ERROR(cuMemAlloc(&color_data_[pl_idx], col_count * sizeof(glm::vec4)));
             CUDA_CHECK_ERROR(cuMemcpyHtoDAsync(
-                color_data_[pl_idx], color_data.data(), col_count * sizeof(glm::vec4), ctx.get_exec_stream()));
+                color_data_[pl_idx], color_data.data(), col_count * sizeof(glm::vec4), ctx.GetExecStream()));
         }
         // CUDA_CHECK_ERROR(cuMemFree(_particle_data));
         CUDA_CHECK_ERROR(cuMemAlloc(&particle_data_[pl_idx], p_count * sizeof(device::Particle)));
         CUDA_CHECK_ERROR(cuMemcpyHtoDAsync(
-            particle_data_[pl_idx], data.data(), p_count * sizeof(device::Particle), ctx.get_exec_stream()));
+            particle_data_[pl_idx], data.data(), p_count * sizeof(device::Particle), ctx.GetExecStream()));
 
         CUDA_CHECK_ERROR(cuMemAlloc(&bounds_data[pl_idx], p_count * sizeof(box3f)));
 
-        sphere_module_.ComputeBounds(particle_data_[pl_idx], bounds_data[pl_idx], p_count, ctx.get_exec_stream());
+        sphere_module_.ComputeBounds(particle_data_[pl_idx], bounds_data[pl_idx], p_count, ctx.GetExecStream());
 
         //////////////////////////////////////
         // geometry
@@ -193,7 +190,7 @@ bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleD
 
     OptixAccelBufferSizes bufferSizes = {};
     OPTIX_CHECK_ERROR(optixAccelComputeMemoryUsage(
-        ctx.get_ctx(), &accelOptions, build_inputs.data(), build_inputs.size(), &bufferSizes));
+        ctx.GetOptiXContext(), &accelOptions, build_inputs.data(), build_inputs.size(), &bufferSizes));
 
     CUdeviceptr geo_temp;
     CUDA_CHECK_ERROR(cuMemFree(_geo_buffer));
@@ -201,7 +198,7 @@ bool megamol::optix_hpg::SphereGeometry::assertData(core::moldyn::MultiParticleD
     CUDA_CHECK_ERROR(cuMemAlloc(&geo_temp, bufferSizes.tempSizeInBytes));
 
     OptixTraversableHandle geo_handle = 0;
-    OPTIX_CHECK_ERROR(optixAccelBuild(ctx.get_ctx(), ctx.get_exec_stream(), &accelOptions, build_inputs.data(),
+    OPTIX_CHECK_ERROR(optixAccelBuild(ctx.GetOptiXContext(), ctx.GetExecStream(), &accelOptions, build_inputs.data(),
         build_inputs.size(), geo_temp, bufferSizes.tempSizeInBytes, _geo_buffer, bufferSizes.outputSizeInBytes,
         &_geo_handle, nullptr, 0));
 
@@ -227,15 +224,12 @@ bool megamol::optix_hpg::SphereGeometry::get_data_cb(core::Call& c) {
     auto in_data = _in_data_slot.CallAs<core::moldyn::MultiParticleDataCall>();
     if (in_data == nullptr)
         return false;
-    auto in_ctx = _in_ctx_slot.CallAs<CallContext>();
-    if (in_ctx == nullptr)
-        return false;
-    if (!(*in_ctx)(0))
-        return false;
+
+    auto const ctx = out_geo->get_ctx();
 
     static bool not_init = true;
     if (not_init) {
-        init(*in_ctx);
+        init(*ctx);
         not_init = false;
     }
 
@@ -246,7 +240,7 @@ bool megamol::optix_hpg::SphereGeometry::get_data_cb(core::Call& c) {
         return false;
 
     if (in_data->FrameID() != _frame_id || in_data->DataHash() != _data_hash) {
-        if (!assertData(*in_data, *in_ctx))
+        if (!assertData(*in_data, *ctx))
             return false;
         _frame_id = in_data->FrameID();
         _data_hash = in_data->DataHash();

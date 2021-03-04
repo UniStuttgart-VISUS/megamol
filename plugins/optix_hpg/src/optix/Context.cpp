@@ -5,29 +5,15 @@
 #include "optix_stubs.h"
 
 
-megamol::optix_hpg::Context::Context() : _out_ctx_slot("outCtx", "") {
-    _out_ctx_slot.SetCallback(CallContext::ClassName(), CallContext::FunctionName(0), &Context::get_ctx_cb);
-    MakeSlotAvailable(&_out_ctx_slot);
-}
+megamol::optix_hpg::Context::Context() {}
 
 
-megamol::optix_hpg::Context::~Context() {
-    this->Release();
-}
-
-
-bool megamol::optix_hpg::Context::create() {
+megamol::optix_hpg::Context::Context(frontend_resources::CUDA_Context const& ctx) {
     /////////////////////////////////////
     // cuda
     /////////////////////////////////////
-    CUDA_CHECK_ERROR(cuInit(0));
-    int deviceCount = 0;
-    CUDA_CHECK_ERROR(cuDeviceGetCount(&deviceCount));
-    if (deviceCount == 0) {
-        return false;
-    }
-    CUDA_CHECK_ERROR(cuDeviceGet(&_device, 0));
-    CUDA_CHECK_ERROR(cuCtxCreate(&_ctx, CU_CTX_SCHED_BLOCKING_SYNC | CU_CTX_MAP_HOST, _device));
+    _ctx = reinterpret_cast<CUcontext>(ctx.ctx_);
+    _device = ctx.device_;
     CUDA_CHECK_ERROR(cuStreamCreate(&_data_stream, CU_STREAM_NON_BLOCKING));
     CUDA_CHECK_ERROR(cuStreamCreate(&_exec_stream, CU_STREAM_NON_BLOCKING));
     /////////////////////////////////////
@@ -74,30 +60,17 @@ bool megamol::optix_hpg::Context::create() {
     /////////////////////////////////////
     // end optix
     /////////////////////////////////////
-
-    return true;
 }
 
 
-void megamol::optix_hpg::Context::release() {
-    OPTIX_CHECK_ERROR(optixDeviceContextDestroy(_optix_ctx));
-    CUDA_CHECK_ERROR(cuStreamDestroy(_data_stream));
-    CUDA_CHECK_ERROR(cuStreamDestroy(_exec_stream));
-    CUDA_CHECK_ERROR(cuCtxDestroy(_ctx));
-}
-
-
-bool megamol::optix_hpg::Context::get_ctx_cb(core::Call& c) {
-    auto outCall = dynamic_cast<CallContext*>(&c);
-    if (outCall == nullptr)
-        return false;
-
-    outCall->set_cuda_ctx(_ctx);
-    outCall->set_ctx(_optix_ctx);
-    outCall->set_exec_stream(_exec_stream);
-    outCall->set_module_options(&_module_options);
-    outCall->set_pipeline_options(&_pipeline_options);
-    outCall->set_pipeline_link_options(&_pipeline_link_options);
-
-    return true;
+megamol::optix_hpg::Context::~Context() {
+    if (_optix_ctx != nullptr) {
+        OPTIX_CHECK_ERROR(optixDeviceContextDestroy(_optix_ctx));
+    }
+    if (_data_stream != nullptr) {
+        CUDA_CHECK_ERROR(cuStreamDestroy(_data_stream));
+    }
+    if (_exec_stream != nullptr) {
+        CUDA_CHECK_ERROR(cuStreamDestroy(_exec_stream));
+    }
 }

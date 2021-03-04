@@ -16,6 +16,8 @@
 
 #include "MMOptixModule.h"
 
+#include "optix/Context.h"
+
 namespace megamol::optix_hpg {
 class SphereGeometry : public core::Module {
 public:
@@ -41,9 +43,9 @@ protected:
     void release() override;
 
 private:
-    void init(CallContext &ctx);
+    void init(Context const& ctx);
 
-    bool assertData(core::moldyn::MultiParticleDataCall& call, CallContext& ctx);
+    bool assertData(core::moldyn::MultiParticleDataCall& call, Context const& ctx);
 
     bool get_data_cb(core::Call& c);
 
@@ -52,8 +54,6 @@ private:
     core::CalleeSlot _out_geo_slot;
 
     core::CallerSlot _in_data_slot;
-
-    core::CallerSlot _in_ctx_slot;
 
     MMOptixModule sphere_module_;
 

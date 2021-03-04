@@ -22,15 +22,11 @@ extern "C" const char embedded_miss_programs[];
 
 megamol::optix_hpg::Renderer::Renderer()
         : _in_geo_slot("inGeo", "")
-        , _in_ctx_slot("inCtx", "")
         , spp_slot_("spp", "")
         , max_bounces_slot_("max bounces", "")
         , accumulate_slot_("accumulate", "") {
     _in_geo_slot.SetCompatibleCall<CallGeometryDescription>();
     MakeSlotAvailable(&_in_geo_slot);
-
-    _in_ctx_slot.SetCompatibleCall<CallContextDescription>();
-    MakeSlotAvailable(&_in_ctx_slot);
 
     spp_slot_ << new core::param::IntParam(1, 1);
     MakeSlotAvailable(&spp_slot_);
@@ -48,13 +44,16 @@ megamol::optix_hpg::Renderer::~Renderer() {
 }
 
 
-void megamol::optix_hpg::Renderer::setup(CallContext& ctx) {
-    raygen_module_ = MMOptixModule(embedded_raygen_programs, ctx.get_ctx(), ctx.get_module_options(),
-        ctx.get_pipeline_options(), OPTIX_PROGRAM_GROUP_KIND_RAYGEN, {"raygen_program"});
-    miss_module_ = MMOptixModule(embedded_miss_programs, ctx.get_ctx(), ctx.get_module_options(),
-        ctx.get_pipeline_options(), OPTIX_PROGRAM_GROUP_KIND_MISS, {"miss_program"});
-    miss_occlusion_module_ = MMOptixModule(embedded_miss_programs, ctx.get_ctx(), ctx.get_module_options(),
-        ctx.get_pipeline_options(), OPTIX_PROGRAM_GROUP_KIND_MISS, {"miss_program_occlusion"});
+void megamol::optix_hpg::Renderer::setup() {
+    raygen_module_ =
+        MMOptixModule(embedded_raygen_programs, optix_ctx_->GetOptiXContext(), &optix_ctx_->GetModuleCompileOptions(),
+            &optix_ctx_->GetPipelineCompileOptions(), OPTIX_PROGRAM_GROUP_KIND_RAYGEN, {"raygen_program"});
+    miss_module_ =
+        MMOptixModule(embedded_miss_programs, optix_ctx_->GetOptiXContext(), &optix_ctx_->GetModuleCompileOptions(),
+            &optix_ctx_->GetPipelineCompileOptions(), OPTIX_PROGRAM_GROUP_KIND_MISS, {"miss_program"});
+    miss_occlusion_module_ =
+        MMOptixModule(embedded_miss_programs, optix_ctx_->GetOptiXContext(), &optix_ctx_->GetModuleCompileOptions(),
+            &optix_ctx_->GetPipelineCompileOptions(), OPTIX_PROGRAM_GROUP_KIND_MISS, {"miss_program_occlusion"});
 
     OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(raygen_module_, &_sbt_raygen_record));
     OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(miss_module_, &sbt_miss_records_[0]));
@@ -73,14 +72,8 @@ bool megamol::optix_hpg::Renderer::Render(core::view::CallRender3DGL& call) {
 
     static bool not_init = true;
 
-    auto in_ctx = _in_ctx_slot.CallAs<CallContext>();
-    if (in_ctx == nullptr)
-        return false;
-    if (!(*in_ctx)(0))
-        return false;
-
     if (not_init) {
-        setup(*in_ctx);
+        setup();
 
         _sbt_raygen_record.data.fbSize = glm::uvec2(viewport.Width(), viewport.Height());
 
@@ -93,6 +86,7 @@ bool megamol::optix_hpg::Renderer::Render(core::view::CallRender3DGL& call) {
     if (in_geo == nullptr)
         return false;
 
+    in_geo->set_ctx(optix_ctx_.get());
     if (!(*in_geo)())
         return false;
 
@@ -202,7 +196,7 @@ bool megamol::optix_hpg::Renderer::Render(core::view::CallRender3DGL& call) {
     }
 
     CUDA_CHECK_ERROR(
-        cuMemcpyHtoDAsync(_frame_state_buffer, &_frame_state, sizeof(_frame_state), in_ctx->get_exec_stream()));
+        cuMemcpyHtoDAsync(_frame_state_buffer, &_frame_state, sizeof(_frame_state), optix_ctx_->GetExecStream()));
     // owlBufferUpload(_frame_state_buffer, &_frame_state);
 
     if (in_geo->FrameID() != _frame_id || in_geo->DataHash() != _in_data_hash) {
@@ -222,15 +216,15 @@ bool megamol::optix_hpg::Renderer::Render(core::view::CallRender3DGL& call) {
         std::string log;
         log.resize(log_size);
 
-        OPTIX_CHECK_ERROR(optixPipelineCreate(in_ctx->get_ctx(), in_ctx->get_pipeline_options(),
-            in_ctx->get_pipeline_link_options(), groups.data(), groups.size(), log.data(), &log_size, &_pipeline));
+        OPTIX_CHECK_ERROR(optixPipelineCreate(optix_ctx_->GetOptiXContext(), &optix_ctx_->GetPipelineCompileOptions(),
+            &optix_ctx_->GetPipelineLinkOptions(), groups.data(), groups.size(), log.data(), &log_size, &_pipeline));
 
 
         _frame_id = in_geo->FrameID();
         _in_data_hash = in_geo->DataHash();
     }
 
-    cuGraphicsMapResources(1, &_fbo_res, in_ctx->get_exec_stream());
+    cuGraphicsMapResources(1, &_fbo_res, optix_ctx_->GetExecStream());
     CUdeviceptr pbo_ptr = 0;
     std::size_t pbo_size = 0;
     cuGraphicsResourceGetMappedPointer(&pbo_ptr, &pbo_size, _fbo_res);
@@ -244,13 +238,13 @@ bool megamol::optix_hpg::Renderer::Render(core::view::CallRender3DGL& call) {
     if (rebuild_sbt) {
         sbt_.SetSBT(&_sbt_raygen_record, sizeof(_sbt_raygen_record), nullptr, 0, sbt_miss_records_.data(),
             sizeof(SBTRecord<device::MissData>), sbt_miss_records_.size(), in_geo->get_record(),
-            in_geo->get_record_stride(), in_geo->get_num_records(), nullptr, 0, 0, in_ctx->get_exec_stream());
+            in_geo->get_record_stride(), in_geo->get_num_records(), nullptr, 0, 0, optix_ctx_->GetExecStream());
     }
 
     OPTIX_CHECK_ERROR(
-        optixLaunch(_pipeline, in_ctx->get_exec_stream(), 0, 0, sbt_, viewport.Width(), viewport.Height(), 1));
+        optixLaunch(_pipeline, optix_ctx_->GetExecStream(), 0, 0, sbt_, viewport.Width(), viewport.Height(), 1));
 
-    cuGraphicsUnmapResources(1, &_fbo_res, in_ctx->get_exec_stream());
+    cuGraphicsUnmapResources(1, &_fbo_res, optix_ctx_->GetExecStream());
 
     glDisable(GL_LIGHTING);
     glColor3f(1, 1, 1);
@@ -320,6 +314,14 @@ bool megamol::optix_hpg::Renderer::GetExtents(core::view::CallRender3DGL& call) 
 
 
 bool megamol::optix_hpg::Renderer::create() {
+    auto const fit = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
+        [](auto const& el) { return el.getIdentifier() == frontend_resources::CUDA_Context_Req_Name; });
+
+    if (fit == this->frontend_resources.end())
+        return false;
+
+    optix_ctx_ = std::make_unique<Context>(fit->getResource<frontend_resources::CUDA_Context>());
+
     return true;
 }
 
