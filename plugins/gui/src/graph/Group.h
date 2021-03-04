@@ -9,7 +9,12 @@
 #define MEGAMOL_GUI_GRAPH_GROUP_H_INCLUDED
 
 
-#include "GroupPresentation.h"
+#include "GUIUtils.h"
+#include "widgets/RenamePopUp.h"
+
+#include "Call.h"
+#include "InterfaceSlot.h"
+#include "Module.h"
 
 
 namespace megamol {
@@ -29,35 +34,22 @@ namespace gui {
      */
     class Group {
     public:
-        // VARIABLES --------------------------------------------------------------
-
-        const ImGuiID uid;
-        GroupPresentation present;
-
-        // Init when adding group to graph
-        std::string name;
-
-        // FUNCTIONS --------------------------------------------------------------
-
         Group(ImGuiID uid);
         ~Group();
 
         bool AddModule(const ModulePtr_t& module_ptr);
         bool RemoveModule(ImGuiID module_uid);
         bool ContainsModule(ImGuiID module_uid);
-        inline const ModulePtrVector_t& GetModules(void) {
-            return this->modules;
-        }
         inline bool Empty(void) {
             return (this->modules.empty());
         }
 
-        ImGuiID AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr, bool auto_add = true);
-        bool GetInterfaceSlot(ImGuiID interfaceslot_uid, InterfaceSlotPtr_t& interfaceslot_ptr);
-        inline InterfaceSlotPtrMap_t& GetInterfaceSlots(void) {
+        InterfaceSlotPtr_t AddInterfaceSlot(const CallSlotPtr_t& callslot_ptr, bool auto_add = true);
+        InterfaceSlotPtr_t InterfaceSlotPtr(ImGuiID interfaceslot_uid);
+        inline InterfaceSlotPtrMap_t& InterfaceSlots(void) {
             return this->interfaceslots;
         }
-        inline InterfaceSlotPtrVector_t& GetInterfaceSlots(CallSlotType type) {
+        inline InterfaceSlotPtrVector_t& InterfaceSlots(CallSlotType type) {
             return this->interfaceslots[type];
         }
         bool DeleteInterfaceSlot(ImGuiID interfaceslot_uid);
@@ -67,23 +59,69 @@ namespace gui {
 
         void RestoreInterfaceslots(void);
 
-        // Presentation ----------------------------------------------------
+        void Draw(megamol::gui::PresentPhase phase, GraphItemsState_t& state);
+        void UpdatePositionSize(const GraphCanvas_t& in_canvas);
 
-        inline void PresentGUI(megamol::gui::PresentPhase phase, GraphItemsState_t& state) {
-            this->present.Present(phase, *this, state);
+        inline const ImGuiID UID(void) const {
+            return this->uid;
         }
-        inline void UpdateGUI(const GraphCanvas_t& in_canvas) {
-            this->present.UpdatePositionSize(*this, in_canvas);
+        inline ModulePtrVector_t& Modules(void) {
+            return this->modules;
         }
-        inline void SetGUIPosition(const GraphCanvas_t& in_canvas, ImVec2 pos) {
-            this->present.SetPosition(*this, in_canvas, pos);
+        inline const std::string Name(void) const {
+            return this->name;
         }
+        inline ImVec2 Size(void) {
+            return this->gui_size;
+        }
+        inline bool IsViewCollapsed(void) {
+            return this->gui_collapsed_view;
+        }
+        inline void ForceUpdate(void) {
+            this->gui_update = true;
+        }
+
+        inline void SetName(const std::string& group_name) {
+            this->name = group_name;
+        }
+        void SetPosition(const GraphItemsState_t& state, ImVec2 pos);
 
     private:
         // VARIABLES --------------------------------------------------------------
 
+        const ImGuiID uid;
+
+        std::string name;
+
         ModulePtrVector_t modules;
         InterfaceSlotPtrMap_t interfaceslots;
+
+        bool gui_selected;
+        ImVec2 gui_position; /// Relative position without considering canvas offset and zooming
+        ImVec2 gui_size;     /// Relative size without considering zooming
+        bool gui_collapsed_view;
+        bool gui_allow_selection;
+        bool gui_allow_context;
+        bool gui_update;
+
+        RenamePopUp gui_rename_popup;
+
+        // FUNCTIONS --------------------------------------------------------------
+
+        void spacial_sort_interfaceslots(void) {
+            for (auto& interfaceslot_map : this->interfaceslots) {
+                std::sort(interfaceslot_map.second.begin(), interfaceslot_map.second.end(),
+                    [](InterfaceSlotPtr_t isptr1, InterfaceSlotPtr_t isptr2) {
+                        float y1 = -FLT_MAX;
+                        if (isptr1 != nullptr)
+                            y1 = isptr1->Position(false).y;
+                        float y2 = -FLT_MAX;
+                        if (isptr2 != nullptr)
+                            y2 = isptr2->Position(false).y;
+                        return (y1 < y2);
+                    });
+            }
+        }
     };
 
 

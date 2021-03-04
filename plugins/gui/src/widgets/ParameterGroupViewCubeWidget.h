@@ -32,7 +32,6 @@ namespace gui {
 
     private:
         std::shared_ptr<glowl::GLSLProgram> shader;
-        megamol::core::view::RenderUtils render_utils;
     };
 
 
@@ -48,7 +47,7 @@ namespace gui {
         bool Check(bool only_check, ParamPtrVector_t& params);
 
         bool Draw(ParamPtrVector_t params, const std::string& in_module_fullname, const std::string& in_search,
-            megamol::gui::ParameterPresentation::WidgetScope in_scope, PickingBuffer* inout_picking_buffer);
+            megamol::gui::Parameter::WidgetScope in_scope, PickingBuffer* inout_picking_buffer);
 
     private:
         // VARIABLES --------------------------------------------------------------
