@@ -13,6 +13,7 @@
 #include "nanoflann.hpp"
 #include <CGAL/Surface_mesh/Surface_mesh.h>
 #include <CGAL/Surface_mesh_default_triangulation_3.h>
+#include "adios_plugin/CallADIOSData.h"
 
 namespace megamol {
 namespace probe {
@@ -110,11 +111,12 @@ protected:
     core::CallerSlot _getDataCall;
     core::CalleeSlot _deployMeshCall;
     core::CalleeSlot _deployNormalsCall;
+    core::CalleeSlot _meshToDiscCall;
+    core::CallerSlot _meshFromDiscCall;
 
     core::param::ParamSlot _numSlices;
     core::param::ParamSlot _isoValue;
-    core::param::ParamSlot _meshResolution;
-    core::param::ParamSlot _faceTypeSlot;
+    core::param::ParamSlot _numSamples;
 
     core::param::ParamSlot _xSlot;
     core::param::ParamSlot _ySlot;
@@ -123,7 +125,9 @@ protected:
     core::param::ParamSlot _formatSlot;
     core::param::ParamSlot _showShellSlot;
     core::param::ParamSlot _numShellsSlot;
-
+    core::param::ParamSlot _meshOutputSlot;
+    core::param::ParamSlot _shellSplitsAxis;
+    core::param::ParamSlot _shellSplitsAngle;
 
 private:
     bool InterfaceIsDirty();
@@ -135,13 +139,21 @@ private:
     void tighten();
     void do_remeshing(Surface_mesh& mesh, float spacing_ = 0.0f);
     void generateNormals(Surface_mesh& mesh);
-    void generateNormals_2(Surface_mesh& mesh);
+    void generateNormals_2(Surface_mesh& mesh, std::vector<std::array<float, 3>>& normals);
     void onionize();
     void cut();
+    void remove_self_intersections(Surface_mesh& mesh);
+    void do_smoothing(Surface_mesh& mesh);
+
+    void compute();
+    bool processRawData(adios::CallADIOSData* call, bool& something_changed);
 
     bool getMetaData(core::Call& call);
-
     bool getData(core::Call& call);
+
+    bool getADIOSMetaData(core::Call& call);
+    bool getADIOSData(core::Call& call);
+    bool readMeshElementsFromFile();
 
     bool parameterChanged(core::param::ParamSlot& p);
     bool shellToShowChanged(core::param::ParamSlot& p);
@@ -150,12 +162,13 @@ private:
 
     bool getNormalMetaData(core::Call& call);
 
-    void activateMesh(Surface_mesh& shell);
+    void activateMesh(const Surface_mesh& shell, std::vector<std::array<float, 3>>& vertices,
+        std::vector<std::array<uint32_t, 3>>& indices);
 
     // CallMesh stuff
-    std::vector<mesh::MeshDataAccessCollection::VertexAttribute> _mesh_attribs;
-    mesh::MeshDataAccessCollection::IndexData _mesh_indices;
-    mesh::MeshDataAccessCollection::PrimitiveType _mesh_type;
+    typedef std::pair<
+        mesh::MeshDataAccessCollection::IndexData, std::vector<mesh::MeshDataAccessCollection::VertexAttribute>> Mesh;
+    Mesh _mesh;
     uint32_t _version = 0;
 
     size_t _old_datahash;
@@ -179,13 +192,16 @@ private:
     std::vector<Surface_mesh> _scaledHulls;
     std::vector<Surface_mesh> _shells;
     std::vector<std::vector<Surface_mesh>> _shellElements;
+    std::vector<std::vector<std::vector<std::array<float, 3>>>> _shellElementsVertices;
+    std::vector<std::vector<std::vector<std::array<float, 3>>>> _shellElementsNormals;
+    std::vector<std::vector<std::vector<std::array<uint32_t, 3>>>> _shellElementsTriangles;
     std::vector<core::BoundingBoxes_2> _shellBBoxes;
     bool _shellToShowChanged = false;;
+    std::vector<std::vector<Mesh>> _elementMesh;
 
     // store surface
-    std::vector<std::array<float, 4>> _vertices;
+    std::vector<std::array<float, 3>> _vertices;
     std::vector<std::array<float, 3>> _normals;
-    std::vector<std::array<uint32_t, 4>> _faces;
     std::vector<std::array<uint32_t, 3>> _triangles;
 
     // store bounding box
@@ -195,6 +211,8 @@ private:
         >my_kd_tree_t;
     std::vector<std::shared_ptr<my_kd_tree_t>> _kd_indices;
     std::vector<std::shared_ptr<const data2KD>> _data2kd;
+
+    adios::adiosDataMap _dataMap;
 
 };
 

@@ -33,6 +33,7 @@
 #include "ReconstructSurface.h"
 #include "TessellateBoundingBox.h"
 #include "InjectClusterID.h"
+#include "ElementSampling.h"
 
 namespace megamol::probe {
     /** Implementing the instance class of this plugin */
@@ -77,6 +78,7 @@ namespace megamol::probe {
             this->module_descriptions.RegisterAutoDescription<megamol::probe::ReconstructSurface>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::TessellateBoundingBox>();
             this->module_descriptions.RegisterAutoDescription<megamol::probe::InjectClusterID>();
+            this->module_descriptions.RegisterAutoDescription<megamol::probe::ElementSampling>();
 #ifdef PROBE_HAS_OSPRAY
             this->module_descriptions.RegisterAutoDescription<megamol::probe::OSPRayGlyphGeometry>();
 #endif

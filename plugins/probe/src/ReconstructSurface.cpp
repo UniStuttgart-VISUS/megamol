@@ -25,14 +25,16 @@
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
 #include <CGAL/Polygon_mesh_processing/clip.h>
 
+#include <CGAL/convex_hull_3_to_face_graph.h>
 #include <CGAL/Complex_2_in_triangulation_3.h>
 #include <CGAL/IO/facets_in_complex_2_to_triangle_mesh.h>
 #include <CGAL/Polygonal_surface_reconstruction.h>
 #include <CGAL/Implicit_surface_3.h>
 #include <CGAL/Shape_detection/Efficient_RANSAC.h>
 #include <CGAL/grid_simplify_point_set.h>
-#include <CGAL/jet_estimate_normals.h>
-#include <CGAL/poisson_surface_reconstruction.h>
+#include <CGAL/Polygon_mesh_processing/smooth_mesh.h>
+#include <CGAL/Polygon_mesh_processing/detect_features.h>
+#include <CGAL/Polygon_mesh_processing/smooth_shape.h>
 
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Plane_3.h>
@@ -61,17 +63,22 @@ namespace probe {
             , _getDataCall("getData", "")
             , _deployMeshCall("deployMesh", "")
             , _deployNormalsCall("deployNormals", "")
-            , _numSlices("numSlices", "")
-            , _meshResolution("meshResolution", "")
-            , _faceTypeSlot("FaceType", "")
+            , _numSlices("HullGeneration::numSlices", "")
+            , _numSamples("HullGeneration::numSamples", "")
             , _xSlot("x", "")
             , _ySlot("y", "")
             , _zSlot("z", "")
             , _xyzSlot("xyz", "")
             , _formatSlot("format", "")
-            , _isoValue("isoValue", "")
-            , _showShellSlot("showShell", "")
-            , _numShellsSlot("numShells", "") {
+            , _isoValue("HullGeneration::isoValue", "")
+            , _showShellSlot("Shells::showShell", "")
+            , _numShellsSlot("Shells::numShells", "")
+            , _meshOutputSlot("meshOutput", "")
+            , _meshToDiscCall("deployADIOS","")
+            , _meshFromDiscCall("getMeshElements", "")
+            , _shellSplitsAxis("Elements::splitsAxis", "")
+            , _shellSplitsAngle("Elements::slitsAngle","")
+    {
 
         this->_numSlices << new core::param::IntParam(64);
         this->_numSlices.SetUpdateCallback(&ReconstructSurface::parameterChanged);
@@ -81,21 +88,22 @@ namespace probe {
         this->_isoValue.SetUpdateCallback(&ReconstructSurface::parameterChanged);
         this->MakeSlotAvailable(&this->_isoValue);
 
-        this->_meshResolution << new core::param::IntParam(64);
-        this->_meshResolution.SetUpdateCallback(&ReconstructSurface::parameterChanged);
-        this->MakeSlotAvailable(&this->_meshResolution);
-
-        core::param::EnumParam* ep = new core::param::EnumParam(0);
-        ep->SetTypePair(0, "Trianges");
-        ep->SetTypePair(1, "Quads");
-        this->_faceTypeSlot << ep;
-        this->MakeSlotAvailable(&this->_faceTypeSlot);
+        this->_numSamples << new core::param::IntParam(64);
+        this->_numSamples.SetUpdateCallback(&ReconstructSurface::parameterChanged);
+        this->MakeSlotAvailable(&this->_numSamples);
 
         core::param::EnumParam* fp = new core::param::EnumParam(0);
         fp->SetTypePair(0, "separated");
         fp->SetTypePair(1, "interleaved");
         this->_formatSlot << fp;
         this->MakeSlotAvailable(&this->_formatSlot);
+
+        core::param::EnumParam* mos = new core::param::EnumParam(0);
+        mos->SetTypePair(0, "all");
+        mos->SetTypePair(1, "singleShell");
+        mos->SetTypePair(2, "singleElement");
+        this->_meshOutputSlot << mos;
+        this->MakeSlotAvailable(&this->_meshOutputSlot);
 
         core::param::FlexEnumParam* xEp = new core::param::FlexEnumParam("undef");
         this->_xSlot << xEp;
@@ -121,6 +129,14 @@ namespace probe {
         this->_numShellsSlot.SetUpdateCallback(&ReconstructSurface::parameterChanged);
         this->MakeSlotAvailable(&this->_numShellsSlot);
 
+        this->_shellSplitsAxis << new core::param::IntParam(10);
+        this->_shellSplitsAxis.SetUpdateCallback(&ReconstructSurface::parameterChanged);
+        this->MakeSlotAvailable(&this->_shellSplitsAxis);
+
+        this->_shellSplitsAngle << new core::param::IntParam(8);
+        this->_shellSplitsAngle.SetUpdateCallback(&ReconstructSurface::parameterChanged);
+        this->MakeSlotAvailable(&this->_shellSplitsAngle);
+
         this->_deployMeshCall.SetCallback(
             mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &ReconstructSurface::getData);
         this->_deployMeshCall.SetCallback(
@@ -135,6 +151,15 @@ namespace probe {
 
         this->_getDataCall.SetCompatibleCall<adios::CallADIOSDataDescription>();
         this->MakeSlotAvailable(&this->_getDataCall);
+
+        this->_meshToDiscCall.SetCallback(adios::CallADIOSData::ClassName(), adios::CallADIOSData::FunctionName(0),
+            &ReconstructSurface::getADIOSData);
+        this->_meshToDiscCall.SetCallback(adios::CallADIOSData::ClassName(), adios::CallADIOSData::FunctionName(1),
+            &ReconstructSurface::getADIOSMetaData);
+        this->MakeSlotAvailable(&this->_meshToDiscCall);
+
+        this->_meshFromDiscCall.SetCompatibleCall<adios::CallADIOSDataDescription>();
+        this->MakeSlotAvailable(&this->_meshFromDiscCall);
     }
 
     ReconstructSurface::~ReconstructSurface() {
@@ -148,7 +173,7 @@ namespace probe {
     void ReconstructSurface::release() {}
 
     bool ReconstructSurface::InterfaceIsDirty() {
-        return this->_numSlices.IsDirty() || this->_formatSlot.IsDirty() || this->_meshResolution.IsDirty();
+        return this->_numSlices.IsDirty() || this->_formatSlot.IsDirty() || this->_numSamples.IsDirty();
     }
 
     void ReconstructSurface::sliceData() {
@@ -225,7 +250,7 @@ namespace probe {
     }
 
     void ReconstructSurface::generateEllipsoid() {
-        const int num_ellipsoid_res_theta = this->_meshResolution.Param<core::param::IntParam>()->Value();
+        const int num_ellipsoid_res_theta = this->_numSamples.Param<core::param::IntParam>()->Value();
         const int num_ellipsoid_res_phi = 2 * num_ellipsoid_res_theta;
         const int num_ellipsoid_elements =
             (num_ellipsoid_res_phi) * (num_ellipsoid_res_theta) + num_ellipsoid_res_theta;
@@ -423,7 +448,7 @@ namespace probe {
         const float radius_y = _bbox.BoundingBox().GetSize().Height() / 2;
         const float radius_z = _bbox.BoundingBox().GetSize().Depth() / 2;
 
-        int num_samples = 2000;
+        int num_samples = 5000;
 
         _vertices.resize(num_samples);
 
@@ -482,13 +507,6 @@ namespace probe {
         not_main_axis[2] = 2;
         not_main_axis.erase(_main_axis);
 
-        // point list for triangulation
-        typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
-        typedef Kernel::Point_3 Point;
-        typedef Kernel::Vector_3 Vector;
-        typedef std::pair<Point, Vector> PointVectorPair;
-        std::vector<PointVectorPair> points_for_triangulation;
-        points_for_triangulation.resize(_vertices.size());
         for (int n = 0; n < _slice_ellipsoid.size(); ++n) {
         //for (int n = 0; n < 1; ++n) {
             glm::vec3 center_of_mass_dif = _slice_data_center_of_mass[n] - _slice_ellipsoid_center_of_mass[n];
@@ -624,8 +642,6 @@ namespace probe {
                     _vertices[_slice_ellipsoid[n][i]][0] = new_start.x - direction.x * new_sample_step * predicted_k;
                     _vertices[_slice_ellipsoid[n][i]][1] = new_start.y - direction.y * new_sample_step * predicted_k;
                     _vertices[_slice_ellipsoid[n][i]][2] = new_start.z - direction.z * new_sample_step * predicted_k;
-                    points_for_triangulation[i] = std::make_pair(Point(_vertices[_slice_ellipsoid[n][i]][0],
-                        _vertices[_slice_ellipsoid[n][i]][1], _vertices[_slice_ellipsoid[n][i]][2]), Vector(0,0,0));
                 //} else {
                 //// DEBUG center of mass translation
                 //     _vertices[_slice_ellipsoid[n][i]][0] = vertex[0];
@@ -636,14 +652,31 @@ namespace probe {
         }
 
         // Push new positions in surface mesh
-        for (int i = 0; i < _sm.num_vertices(); ++i) {
-            auto it = std::next(_sm.points().begin(), i);
+        //for (int i = 0; i < _sm.num_vertices(); ++i) {
+        //    auto it = std::next(_sm.points().begin(), i);
 
-            const Point point(_vertices[i][0], _vertices[i][1], _vertices[i][2]);
-            *it = point;
+        //    const Point point(_vertices[i][0], _vertices[i][1], _vertices[i][2]);
+        //    *it = point;
+        //}
+
+        typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+        typedef K::Point_3 Point_3;
+        std::list<Point_3> points_for_triangulation;
+
+        for (int i = 0; i < _vertices.size(); ++i) {
+            points_for_triangulation.push_back(Point(_vertices[i][0], _vertices[i][1], _vertices[i][2]));
         }
 
-          // Compute average spacing using neighborhood of 6 points
+        typedef CGAL::Delaunay_triangulation_3<K> Delaunay;
+        typedef Delaunay::Vertex_handle Vertex_handle;
+        typedef CGAL::Surface_mesh<Point_3> Surface_mesh;
+        //void CGAL::facets_in_complex_2_to_triangle_mesh(c2t3, TriangleMesh & graph) 	
+
+        Delaunay T(points_for_triangulation.begin(), points_for_triangulation.end());
+        _sm.clear();
+        CGAL::convex_hull_3_to_face_graph(T, _sm);
+
+        // Compute average spacing using neighborhood of 6 points
         //double spacing = CGAL::compute_average_spacing<CGAL::Parallel_if_available_tag>(points_for_triangulation, 6,
         //    CGAL::parameters::point_map(CGAL::First_of_pair_property_map<PointVectorPair>())
         //        .normal_map(CGAL::Second_of_pair_property_map<PointVectorPair>()));
@@ -750,7 +783,7 @@ namespace probe {
         
     }
 
-    void ReconstructSurface::generateNormals_2(Surface_mesh& mesh) {
+    void ReconstructSurface::generateNormals_2(Surface_mesh& mesh, std::vector<std::array<float,3>>& normals) {
 
         typedef boost::graph_traits<Surface_mesh>::vertex_descriptor vertex_descriptor;
         typedef boost::graph_traits<Surface_mesh>::face_descriptor face_descriptor;
@@ -763,11 +796,11 @@ namespace probe {
 
         PMP::compute_vertex_normals(mesh, vnormals);
 
-        _normals.clear();
-        _normals.reserve(mesh.num_vertices());
+        normals.clear();
+        normals.reserve(mesh.num_vertices());
         for (vertex_descriptor vd : vertices(mesh)) {
             std::array<float,3> normal = {vnormals[vd].x(), vnormals[vd].y(), vnormals[vd].z()};
-            _normals.emplace_back(normal);
+            normals.emplace_back(normal);
         }
 
     }
@@ -816,16 +849,11 @@ namespace probe {
     //}
 
     void ReconstructSurface::onionize() {
-        namespace PMP = CGAL::Polygon_mesh_processing;
-        namespace params = CGAL::Polygon_mesh_processing::parameters;
-        typedef boost::graph_traits<Surface_mesh>::face_descriptor face_descriptor;
-
         unsigned int num_shells = _numShellsSlot.Param<core::param::IntParam>()->Value();
         unsigned int num_splits_main_axis = 10;
         unsigned int num_splits_off_axis = 2;
 
         // translate vertices back to center
-        float min_length = std::numeric_limits<float>::max();
         for (int i = 0; i < _sm.num_vertices(); ++i) {
             auto it = std::next(_sm.points().begin(), i);
 
@@ -833,22 +861,25 @@ namespace probe {
             p.x -= _data_origin[0];
             p.y -= _data_origin[1];
             p.z -= _data_origin[2];
-            min_length = std::min(min_length, glm::length(p));
 
-            //const Point point(p.x, p.y, p.z);
-            //*it = point;
+            const Point point(p.x, p.y, p.z);
+            *it = point;
         }
-        float step_size = 0.5*min_length / (num_shells+1);
+        glm::vec3 whd = {
+            this->_bbox.BoundingBox().Width(), this->_bbox.BoundingBox().Height(), this->_bbox.BoundingBox().Depth()};
+        
+        float min_length = std::min(whd.x, std::min(whd.y,whd.z));
+        const float step_size = (0.5f*min_length) / (num_shells+1);
 
-        glm::vec3 scale_map = {0,0,0};
-        std::array<float, 3> whd = {
-            _bbox.BoundingBox().Width(), _bbox.BoundingBox().Height(), _bbox.BoundingBox().Depth()};
-        auto min_d = std::min_element(whd.begin(), whd.end());
+        //glm::vec3 scale_map = {0,0,0};
+        //std::array<float, 3> whd = {
+        //    _bbox.BoundingBox().Width(), _bbox.BoundingBox().Height(), _bbox.BoundingBox().Depth()};
+        //auto min_d = std::min_element(whd.begin(), whd.end());
 
-        for (int i = 0; i < whd.size(); ++i) {
-            scale_map[i] = 1.0f / (min_length / whd[i]);
-        }
-        scale_map = glm::normalize(scale_map);
+        //for (int i = 0; i < whd.size(); ++i) {
+        //    scale_map[i] = 1.0f / (min_length / whd[i]);
+        //}
+        //scale_map = glm::normalize(scale_map);
 
         core::BoundingBoxes_2 origin_box;
         origin_box
@@ -865,104 +896,94 @@ namespace probe {
         _shells.clear();
         _shells.resize(num_shells);
         _scaledHulls.clear();
-        _scaledHulls.resize(num_shells + 1);
+        _scaledHulls.resize(num_shells);
         _shellBBoxes.clear();
         _shellBBoxes.resize(num_shells);
         _scaledHulls[0] = _sm;
-        for (int i = 0; i < num_shells + 1; ++i) {
-            //_scaledHulls[i] = _sm;
-            if (i > 0) _scaledHulls[i] = _scaledHulls[i-1];
-            glm::vec3 scale = 1.0f - scale_map * static_cast<float>(i) * (1.8f / static_cast<float>(num_shells));
-            if (i > 0) {
-                auto inv_scale = 1.0f - scale;
-                inv_scale *= 1.0f / std::powf(static_cast<float>(i), 1.0f/3.0f);
-                scale = 1.0f - inv_scale;
-                // relative shell thickness stays the same
-                // but in absolute values: shells get thinner
+        _shellBBoxes[0].SetBoundingBox(_bbox.BoundingBox());
+        for (int i = 1; i < num_shells; ++i) {
+            _scaledHulls[i] = _sm;
+            //_scaledHulls[i] = _scaledHulls[i-1];
+            glm::vec3 scale = glm::vec3(1);
+            for (int k = 0; k < 3; ++k) {
+                scale[k] = (0.5f * whd[k] - i*step_size) / (0.5f*whd[k]);
             }
+            //if (i > 0) {
+            //    auto inv_scale = 1.0f - scale;
+            //    inv_scale *= 1.0f / std::powf(static_cast<float>(i), 1.0f/3.0f);
+            //    scale = 1.0f - inv_scale;
+            //    // relative shell thickness stays the same
+            //    // but in absolute values: shells get thinner
+            //}
             // also scale bounding box
-            if (i < _shellBBoxes.size()) {
-            _shellBBoxes[i].SetBoundingBox(
-                origin_box.BoundingBox().Left() * scale.x + _data_origin[0],
-               origin_box.BoundingBox().Bottom() * scale.y + _data_origin[1],
-                origin_box.BoundingBox().Back() * scale.z + _data_origin[2],
-                origin_box.BoundingBox().Right() * scale.x + _data_origin[0],
-                origin_box.BoundingBox().Top() * scale.y + _data_origin[1],
-                origin_box.BoundingBox().Front() * scale.z + _data_origin[2]);
-            }
-           
+            float xmin = std::numeric_limits<float>::max();
+            float xmax = -std::numeric_limits<float>::max();
+            float ymin = std::numeric_limits<float>::max();
+            float ymax = -std::numeric_limits<float>::max();
+            float zmin = std::numeric_limits<float>::max();
+            float zmax = -std::numeric_limits<float>::max();
+
             // scale hull
+            this->generateNormals(_scaledHulls[i]);
+            assert(_scaledHulls[i].num_vertices() == _normals.size());
             for (int j = 0; j < _scaledHulls[i].num_vertices(); ++j) {
                 auto it = std::next(_scaledHulls[i].points().begin(), j);
 
                 glm::vec3 n(_normals[j][0], _normals[j][1], _normals[j][2]);
                 glm::vec3 p(it->x(), it->y(), it->z());
-                //p.x = p.x * scale.x + _data_origin[0];
-                //p.y = p.y * scale.y +_data_origin[1];
-                //p.z = p.z * scale.z + _data_origin[2];
+                p.x = p.x * scale.x + _data_origin[0];
+                p.y = p.y * scale.y +_data_origin[1];
+                p.z = p.z * scale.z + _data_origin[2];
                 //p += _data_origin;
-                //p += n * static_cast<float>(i) * step_size;
-                p += n * step_size;
+
+                // resize with normal
+                // p += n * step_size;
+
+                xmin = std::min(xmin, p.x);
+                xmax = std::max(xmax, p.x);
+                ymin = std::min(ymin, p.y);
+                ymax = std::max(ymax, p.y);
+                zmin = std::min(zmin, p.z);
+                zmax = std::max(zmax, p.z);
 
                 const Point point(p.x, p.y, p.z);
                 *it = point;
             }
+            _shellBBoxes[i].SetBoundingBox(xmin,ymin,zmax,xmax,ymax,zmin);
 
-            bool dhsi = CGAL::Polygon_mesh_processing::does_self_intersect(_scaledHulls[i]);
-            if (dhsi) {
-                //std::vector<std::pair<face_descriptor, face_descriptor>> intersected_tris;
-                //PMP::self_intersections(_scaledHulls[i], std::back_inserter(intersected_tris));
-                //for (std::pair<face_descriptor, face_descriptor>& p : intersected_tris) {
-                //    try {
-                //        auto he = _scaledHulls[i].halfedge(get<0>(p));
-                //        if (!_scaledHulls[i].is_border(he)) {
-                //                CGAL::Euler::remove_face(he, _scaledHulls[i]);
-                //        }
-                //    } catch (...) {
-                //        // skip
-                //        break;
-                //    }
+            // generate shell
+            try {
+                 //const Point point(_data_origin[0], _data_origin[1], _data_origin[2]);
+                 //const Vector normal(1, 0, 0);
+                 //const Plane plane(point, normal);
+
+
+                bool si1 = CGAL::Polygon_mesh_processing::does_self_intersect(_scaledHulls[i - 1]);
+                if (si1) {
+                    this->remove_self_intersections(_scaledHulls[i - 1]);
+                }
+                bool si2 = CGAL::Polygon_mesh_processing::does_self_intersect(_scaledHulls[i]);
+                if (si2) {
+                    this->remove_self_intersections(_scaledHulls[i]);
+                }
+
+                Surface_mesh tm1 = _scaledHulls[i - 1];
+                Surface_mesh tm2 = _scaledHulls[i];
+                CGAL::Polygon_mesh_processing::corefine_and_compute_difference(
+                    tm1, tm2, _shells[i - 1], CGAL::Polygon_mesh_processing::parameters::throw_on_self_intersection(true));
+
+                //bool does_self_intersect = CGAL::Polygon_mesh_processing::does_self_intersect(_shells[i - 1]);
+                //if (does_self_intersect) {
+
                 //}
-                //_scaledHulls[i].collect_garbage();
-                //dhsi = CGAL::Polygon_mesh_processing::does_self_intersect(_scaledHulls[i]);
-                if (dhsi) {
-                    if (avg_spacing == 0.0f) {
-                        avg_spacing =
-                            CGAL::compute_average_spacing<CGAL::Parallel_if_available_tag>(_scaledHulls[i].points(), 6);
-                    }
-                    this->do_remeshing(_scaledHulls[i], 1.5 * avg_spacing);
-                    this->generateNormals(_scaledHulls[i]);
-                    assert(_scaledHulls[i].num_vertices() == _normals.size());
-                }
-            }
-            if (i > 0 && i < num_shells) {
-                // generate shell
-                try {
-                     //const Point point(_data_origin[0], _data_origin[1], _data_origin[2]);
-                     //const Vector normal(1, 0, 0);
-                     //const Plane plane(point, normal);
-                    Surface_mesh tm1 = _scaledHulls[i - 1];
-                    Surface_mesh tm2 = _scaledHulls[i];
-                    CGAL::Polygon_mesh_processing::corefine_and_compute_difference(tm1, tm2, _shells[i-1]);
-                    bool does_self_intersect = CGAL::Polygon_mesh_processing::does_self_intersect(_shells[i - 1]);
-                    if (does_self_intersect) {
-                        std::vector<std::pair<face_descriptor, face_descriptor>> intersected_tris;
-                        PMP::self_intersections(_shells[i - 1], std::back_inserter(intersected_tris));
-                        for (std::pair<face_descriptor, face_descriptor>& p : intersected_tris) {
-                            auto he = _shells[i - 1].halfedge(get<0>(p));
-                            if (!_shells[i-1].is_border(he)) {
-                                CGAL::Euler::remove_face(he, _shells[i - 1]);
-                            }
-                        }
-                    }
-                } catch (const std::exception& e) {
-                    core::utility::log::Log::DefaultLog.WriteError(
-                        std::string("[ReconstructSurface] Shell generation exited with ").append(e.what()).c_str());
-                }
-            } else if (i == num_shells) {
-                _shells[i - 1] = _scaledHulls[i-1];
+            } catch (const std::exception& e) {
+                core::utility::log::Log::DefaultLog.WriteError(
+                    std::string("[ReconstructSurface] Shell generation exited with ").append(e.what()).c_str());
             }
         }
+
+        _shells[num_shells - 1] = _scaledHulls[num_shells - 1];
+        assert(_shells.size() == num_shells);
     }
 
     void ReconstructSurface::cut() {
@@ -1000,20 +1021,14 @@ namespace probe {
         // bool is_triangle_mesh = CGAL::is_triangle_mesh(_shells[i]);
         // bool does_self_intersect = CGAL::Polygon_mesh_processing::does_self_intersect(_shells[i]);
 
-        int splits_main_axis = 10;
-        int splits_phi = 8;
-        float phi_step = glm::pi<float>() / (static_cast<float>(splits_phi)/2.0f);
+        const int splits_main_axis = _shellSplitsAxis.Param<core::param::IntParam>()->Value();
+        const int splits_phi = _shellSplitsAngle.Param<core::param::IntParam>()->Value();
+        const float phi_step = glm::pi<float>() / (static_cast<float>(splits_phi)/2.0f);
 
         auto main_axis_normal0 = glm::vec3(0,0,0);
         auto main_axis_normal1 = glm::vec3(0, 0, 0);
-        int factor = -1;
-        if (_main_axis == 2) {
-            main_axis_normal0[_main_axis] = 1 * factor;
-            main_axis_normal1[_main_axis] = -1 * factor;
-        } else {
-            main_axis_normal0[_main_axis] = 1;
-            main_axis_normal1[_main_axis] = -1;
-        }
+        main_axis_normal0[_main_axis] = -1;
+        main_axis_normal1[_main_axis] = 1;
 
         _shellElements.resize(_shells.size());
         for (int i = 0; i < _shells.size(); ++i) {
@@ -1045,16 +1060,27 @@ namespace probe {
                 Vector normal1(main_axis_normal1[0], main_axis_normal1[1], main_axis_normal1[2]);
                 const Plane plane1(point1, normal1);
                 try {
+                    bool si = CGAL::Polygon_mesh_processing::does_self_intersect(shell);
+                    if (si) {
+                        this->remove_self_intersections(shell);
+                    }
                     CGAL::Polygon_mesh_processing::clip(
-                        shell, plane0, CGAL::Polygon_mesh_processing::parameters::clip_volume(true));
+                        shell, plane0, CGAL::Polygon_mesh_processing::parameters::clip_volume(true).throw_on_self_intersection(true));
+                    shell.collect_garbage();
+
+                    si = CGAL::Polygon_mesh_processing::does_self_intersect(shell);
+                    if (si) {
+                        this->remove_self_intersections(shell);
+                    }
                     CGAL::Polygon_mesh_processing::clip(
-                        shell, plane1, CGAL::Polygon_mesh_processing::parameters::clip_volume(true));
+                        shell, plane1, CGAL::Polygon_mesh_processing::parameters::clip_volume(true).throw_on_self_intersection(true));
+                    shell.collect_garbage();
+
                 } catch (const std::exception& e) {
                     core::utility::log::Log::DefaultLog.WriteError(
                         std::string("[ReconstructSurface] Element generation exited with ").append(e.what()).c_str());
                 }
 
-                shell.collect_garbage();
 
                 glm::vec3 element_com(0,0,0);
                 for (auto p : shell.points()) {
@@ -1082,10 +1108,21 @@ namespace probe {
                     const Plane plane3(p_origin, Vector(n3.x, n3.y, n3.z));
 
                     try {
+                        bool si = CGAL::Polygon_mesh_processing::does_self_intersect(shell_copy);
+                        if (si) {
+                            this->remove_self_intersections(shell_copy);
+                        }
                         CGAL::Polygon_mesh_processing::clip(
-                            shell_copy, plane2, CGAL::Polygon_mesh_processing::parameters::clip_volume(true));
+                            shell_copy, plane2, CGAL::Polygon_mesh_processing::parameters::clip_volume(true).throw_on_self_intersection(true));
+                        shell_copy.collect_garbage();
+
+                        si = CGAL::Polygon_mesh_processing::does_self_intersect(shell_copy);
+                        if (si) {
+                            this->remove_self_intersections(shell_copy);
+                        }
                         CGAL::Polygon_mesh_processing::clip(
-                            shell_copy, plane3, CGAL::Polygon_mesh_processing::parameters::clip_volume(true));
+                            shell_copy, plane3, CGAL::Polygon_mesh_processing::parameters::clip_volume(true).throw_on_self_intersection(true));
+                        shell_copy.collect_garbage();
                     } catch (const std::exception& e) {
                         core::utility::log::Log::DefaultLog.WriteError(
                             std::string("[ReconstructSurface] Element generation exited with ")
@@ -1097,189 +1134,399 @@ namespace probe {
             }
         }
 
+        // fill shell elements vectors
+        _shellElementsVertices.clear();
+        _shellElementsVertices.resize(_shellElements.size());
+        _shellElementsTriangles.clear();
+        _shellElementsTriangles.resize(_shellElements.size());
+        _shellElementsNormals.clear();
+        _shellElementsNormals.resize(_shellElements.size());
+
+        for (int i = 0; i < _shellElements.size(); ++i) {
+            _shellElementsVertices[i].resize(_shellElements[i].size());
+            _shellElementsTriangles[i].resize(_shellElements[i].size());
+            _shellElementsNormals[i].resize(_shellElements[i].size());
+            for (int j = 0; j < _shellElements[i].size(); ++j) {
+                this->generateNormals_2(_shellElements[i][j], _shellElementsNormals[i][j]);
+                this->activateMesh(_shellElements[i][j], _shellElementsVertices[i][j], _shellElementsTriangles[i][j]);
+            }
+        }
+
+
+
+    }
+
+    void ReconstructSurface::remove_self_intersections(Surface_mesh& mesh_) {
+        typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
+        namespace PMP = CGAL::Polygon_mesh_processing;
+        namespace params = CGAL::Polygon_mesh_processing::parameters;
+        typedef boost::graph_traits<Surface_mesh>::face_descriptor face_descriptor;
+        typedef boost::graph_traits<Surface_mesh>::vertex_descriptor vertex_descriptor;
+        auto mesh = mesh_; // copy
+        try {
+            bool intersect = CGAL::Polygon_mesh_processing::does_self_intersect(mesh);
+            for (int i = 0; i < 10; ++i) {
+                if (!intersect) break;
+                std::vector<std::pair<face_descriptor, face_descriptor>> intersected_tris;
+                PMP::self_intersections(mesh, std::back_inserter(intersected_tris));
+                //std::set<face_descriptor> s(intersected_tris.begin(), intersected_tris.end());
+                //intersected_tris.assign(s.begin(), s.end());
+                std::sort(intersected_tris.begin(), intersected_tris.end());
+                intersected_tris.erase(
+                    std::unique(intersected_tris.begin(), intersected_tris.end()), intersected_tris.end());
+                std::vector<face_descriptor> removed_list;
+                for (std::pair<face_descriptor, face_descriptor>& p : intersected_tris) {
+
+                    if (removed_list.empty() ||
+                        std::find(removed_list.begin(), removed_list.end(), p.first) == removed_list.end()) {
+                        auto he1 = mesh.halfedge(p.first);
+                        CGAL::Euler::remove_face(he1, mesh);
+                        removed_list.emplace_back(p.first);
+                    }
+                    //if (removed_list.empty() ||
+                    //    std::find(removed_list.begin(), removed_list.end(), p.second) == removed_list.end()) {
+                    //    auto he2 = mesh.halfedge(p.second);
+                    //    CGAL::Euler::remove_face(he2, mesh);
+                    //    removed_list.emplace_back(p.second);
+                    //}
+                }
+                for (auto h : halfedges(mesh)) {
+                    if (CGAL::is_border(h, mesh)) {
+                        std::vector<face_descriptor> patch_facets;
+                        std::vector<vertex_descriptor> patch_vertices;
+                        bool success = std::get<0>(PMP::triangulate_refine_and_fair_hole(mesh, h,
+                            std::back_inserter(patch_facets), std::back_inserter(patch_vertices),
+                            CGAL::parameters::vertex_point_map(get(CGAL::vertex_point, mesh)).geom_traits(Kernel())));
+                        if (!success) break;
+                    }
+                }
+                mesh.collect_garbage();
+                intersect = CGAL::Polygon_mesh_processing::does_self_intersect(mesh);
+            }
+            
+            if (!intersect) {
+                mesh_ = mesh;
+                return;
+            }
+            // do shape smoothing
+            for (int i = 0; i < 10; ++i) {
+                if (!intersect) break;
+                this->do_smoothing(mesh_);
+                intersect = CGAL::Polygon_mesh_processing::does_self_intersect(mesh_);
+            }
+            if (!intersect) return;
+
+            // do remeshing
+            //float avg_spacing = CGAL::compute_average_spacing<CGAL::Parallel_if_available_tag>(mesh_.points(), 6);
+            //this->do_remeshing(mesh_, avg_spacing);
+            //intersect = CGAL::Polygon_mesh_processing::does_self_intersect(mesh_);
+            //if (!intersect) return;
+
+            // delete bad vertices and make new triangulation
+            std::vector<std::pair<face_descriptor, face_descriptor>> intersected_tris;
+            PMP::self_intersections(mesh_, std::back_inserter(intersected_tris));
+            std::sort(intersected_tris.begin(), intersected_tris.end());
+            intersected_tris.erase(
+                std::unique(intersected_tris.begin(), intersected_tris.end()), intersected_tris.end());
+            std::vector<face_descriptor> removed_list;
+            for (std::pair<face_descriptor, face_descriptor>& p : intersected_tris) {
+                if (removed_list.empty() || std::find(removed_list.begin(), removed_list.end(), p.first) == removed_list.end()) {
+                    auto he = mesh_.halfedge(p.first);
+                    auto index = CGAL::target(he, mesh_);
+                    mesh_.remove_vertex(index);
+                    removed_list.emplace_back(p.first);
+                }
+            }
+            mesh_.collect_garbage();
+
+            typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+            typedef K::Point_3 Point_3;
+            std::list<Point_3> points_for_triangulation;
+
+            for (auto point: mesh_.points()) {
+                points_for_triangulation.push_back(Point(point.x(), point.y(), point.z()));
+            }
+
+            typedef CGAL::Delaunay_triangulation_3<K> Delaunay;
+            typedef Delaunay::Vertex_handle Vertex_handle;
+            typedef CGAL::Surface_mesh<Point_3> Surface_mesh;
+            // void CGAL::facets_in_complex_2_to_triangle_mesh(c2t3, TriangleMesh & graph)
+
+            Delaunay T(points_for_triangulation.begin(), points_for_triangulation.end());
+            mesh_.clear();
+            CGAL::convex_hull_3_to_face_graph(T, mesh_);
+
+            intersect = CGAL::Polygon_mesh_processing::does_self_intersect(mesh_);
+            if (intersect) {
+                float avg_spacing = CGAL::compute_average_spacing<CGAL::Parallel_if_available_tag>(mesh_.points(), 6);
+                this->do_remeshing(mesh_, avg_spacing);
+            } else {
+                return;
+            }
+            intersect = CGAL::Polygon_mesh_processing::does_self_intersect(mesh_);
+            if (intersect) {
+                this->do_smoothing(mesh_);
+            } else {
+                return;
+            }
+            intersect = CGAL::Polygon_mesh_processing::does_self_intersect(mesh_);
+
+        } catch (const std::exception& e) {
+            core::utility::log::Log::DefaultLog.WriteError(
+                std::string("[ReconstructSurface] Remove self-intersections exited with ").append(e.what()).c_str());
+        }
+    }
+
+    void ReconstructSurface::do_smoothing(Surface_mesh& mesh) {
+        std::set<Surface_mesh::Vertex_index> constrained_vertices;
+        for (Surface_mesh::Vertex_index v : vertices(mesh)) {
+            if (is_border(v, mesh))
+                constrained_vertices.insert(v);
+        }
+        CGAL::Boolean_property_map<std::set<Surface_mesh::Vertex_index>> vcmap(constrained_vertices);
+        CGAL::Polygon_mesh_processing::smooth_shape(mesh, 0.05,
+            CGAL::Polygon_mesh_processing::parameters::number_of_iterations(1).vertex_is_constrained_map(vcmap));
+        mesh.collect_garbage();
+    }
+
+    void ReconstructSurface::compute() {
+        // find main axis
+        std::map<int, int> axes;
+        axes[0] = 0;
+        axes[1] = 1;
+        axes[2] = 2;
+        std::array<float, 3> whd = {
+            this->_bbox.BoundingBox().Width(), this->_bbox.BoundingBox().Height(), this->_bbox.BoundingBox().Depth()};
+        _main_axis = std::distance(whd.begin(), std::max_element(whd.begin(), whd.end()));
+        axes.erase(_main_axis);
+        int l = 0;
+        for (auto ax : axes) {
+            _off_axes[l] = ax.first;
+            ++l;
+        }
+
+
+        // get origin
+        float center_z;
+        if (std::copysign(1.0f, _bbox.BoundingBox().Front()) != std::copysign(1.0f, _bbox.BoundingBox().Back())) {
+            center_z = (_bbox.BoundingBox().Front() + _bbox.BoundingBox().Back()) / 2;
+        } else {
+            center_z = _bbox.BoundingBox().Front() +
+                       std::copysign(1.0f, _bbox.BoundingBox().Front()) * _bbox.BoundingBox().Depth() / 2;
+        }
+        _data_origin = {_bbox.BoundingBox().CalcCenter().GetX(), _bbox.BoundingBox().CalcCenter().GetY(), center_z};
+
+
+        this->generateEllipsoid_3();
+        this->sliceData();
+        this->tighten();
+        this->do_remeshing(_sm);
+        this->do_smoothing(_sm);
+
+        this->generateNormals(_sm);
+        this->onionize();
+        this->cut();
+
+    }
+
+    bool ReconstructSurface::processRawData(adios::CallADIOSData* call, bool& something_changed) {
+        std::vector<std::string> toInq;
+        toInq.clear();
+        if (this->_formatSlot.Param<core::param::EnumParam>()->Value() == 0) {
+            toInq.emplace_back(std::string(this->_xSlot.Param<core::param::FlexEnumParam>()->ValueString()));
+            toInq.emplace_back(std::string(this->_ySlot.Param<core::param::FlexEnumParam>()->ValueString()));
+            toInq.emplace_back(std::string(this->_zSlot.Param<core::param::FlexEnumParam>()->ValueString()));
+        } else {
+            toInq.emplace_back(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()));
+        }
+
+        // get data from adios
+        for (auto var : toInq) {
+            if (!call->inquire(var)) {
+                return false;
+            }
+        }
+
+        if (!(*call)(0))
+            return false;
+
+        // get data from volumetric call
+        if (call->getDataHash() != _old_datahash) {
+            something_changed = true;
+
+            if (this->_formatSlot.Param<core::param::EnumParam>()->Value() == 0) {
+                auto x = call->getData(std::string(this->_xSlot.Param<core::param::FlexEnumParam>()->ValueString()))
+                             ->GetAsFloat();
+                auto y = call->getData(std::string(this->_ySlot.Param<core::param::FlexEnumParam>()->ValueString()))
+                             ->GetAsFloat();
+                auto z = call->getData(std::string(this->_zSlot.Param<core::param::FlexEnumParam>()->ValueString()))
+                             ->GetAsFloat();
+                assert(x.size() == y.size());
+                assert(y.size() == z.size());
+                _raw_positions.resize(x.size() * 3);
+                for (int i = 0; i < x.size(); ++i) {
+                    _raw_positions[3 * i + 0] = x[i];
+                    _raw_positions[3 * i + 1] = y[i];
+                    _raw_positions[3 * i + 2] = z[i];
+                }
+                auto xminmax = std::minmax_element(x.begin(), x.end());
+                auto yminmax = std::minmax_element(y.begin(), y.end());
+                auto zminmax = std::minmax_element(z.begin(), z.end());
+                _bbox.SetBoundingBox(
+                    *xminmax.first, *yminmax.first, *zminmax.second, *xminmax.second, *yminmax.second, *zminmax.first);
+            } else {
+                const std::string varname = std::string(_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString());
+                _raw_positions = call->getData(varname)->GetAsFloat();
+                float xmin = std::numeric_limits<float>::max();
+                float xmax = -std::numeric_limits<float>::max();
+                float ymin = std::numeric_limits<float>::max();
+                float ymax = -std::numeric_limits<float>::max();
+                float zmin = std::numeric_limits<float>::max();
+                float zmax = -std::numeric_limits<float>::max();
+                for (int i = 0; i < _raw_positions.size() / 3; ++i) {
+                    xmin = std::min(xmin, _raw_positions[3 * i + 0]);
+                    xmax = std::max(xmax, _raw_positions[3 * i + 0]);
+                    ymin = std::min(ymin, _raw_positions[3 * i + 1]);
+                    ymax = std::max(ymax, _raw_positions[3 * i + 1]);
+                    zmin = std::min(zmin, _raw_positions[3 * i + 2]);
+                    zmax = std::max(zmax, _raw_positions[3 * i + 2]);
+                }
+                _bbox.SetBoundingBox(xmin, ymin, zmax, xmax, ymax, zmin);
+            }
+        }
+        return true;
     }
 
 
     bool ReconstructSurface::getData(core::Call& call) {
 
-    bool something_changed = _recalc;
+        bool something_changed = _recalc;
 
-    auto cm = dynamic_cast<mesh::CallMesh*>(&call);
-    if (cm == nullptr)
-        return false;
+        auto cm = dynamic_cast<mesh::CallMesh*>(&call);
+        if (cm == nullptr)
+            return false;
 
-    auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
-    if (cd == nullptr)
-        return false;
+        auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
+        if (cd == nullptr)
+            return false;
 
-    std::vector<std::string> toInq;
-    toInq.clear();
-    if (this->_formatSlot.Param<core::param::EnumParam>()->Value() == 0) {
-        toInq.emplace_back(std::string(this->_xSlot.Param<core::param::FlexEnumParam>()->ValueString()));
-        toInq.emplace_back(std::string(this->_ySlot.Param<core::param::FlexEnumParam>()->ValueString()));
-        toInq.emplace_back(std::string(this->_zSlot.Param<core::param::FlexEnumParam>()->ValueString()));
-    } else {
-        toInq.emplace_back(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()));
-    }
-
-    // get data from adios
-    for (auto var : toInq) {
-        if (!cd->inquire(var)) {
+        if (!this->processRawData(cd, something_changed)) {
+            core::utility::log::Log::DefaultLog.WriteError("Could not process incoming data. Abort.");
             return false;
         }
-    }
 
-    if (!(*cd)(0)) return false;
+        if (something_changed && !_raw_positions.empty() || _shellToShowChanged) {
 
-    // get data from volumetric call
-    if (cd->getDataHash() != _old_datahash) {
-        something_changed = true;
-        auto mesh_meta_data = cm->getMetaData();
-
-        if (this->_formatSlot.Param<core::param::EnumParam>()->Value() == 0) {
-            auto x = cd->getData(std::string(this->_xSlot.Param<core::param::FlexEnumParam>()->ValueString()))->GetAsFloat();
-            auto y = cd->getData(std::string(this->_ySlot.Param<core::param::FlexEnumParam>()->ValueString()))->GetAsFloat();
-            auto z = cd->getData(std::string(this->_zSlot.Param<core::param::FlexEnumParam>()->ValueString()))->GetAsFloat();
-            assert(x.size() == y.size());
-            assert(y.size() == z.size());
-            _raw_positions.resize(x.size() * 3);
-            for (int i = 0; i < x.size(); ++i) {
-                _raw_positions[3 * i + 0] = x[i];
-                _raw_positions[3 * i + 1] = y[i];
-                _raw_positions[3 * i + 2] = z[i];
-            }
-            auto xminmax = std::minmax_element(x.begin(), x.end());
-            auto yminmax = std::minmax_element(y.begin(), y.end());
-            auto zminmax = std::minmax_element(z.begin(), z.end());
-
-            _bbox.SetBoundingBox(
-                *xminmax.first, *yminmax.first, *zminmax.second, *xminmax.second, *yminmax.second, *zminmax.first);
-        } else {
-            const std::string varname = std::string(_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString());
-            _raw_positions = cd->getData(varname)->GetAsFloat();
-            float xmin = std::numeric_limits<float>::max();
-            float xmax = -std::numeric_limits<float>::max();
-            float ymin = std::numeric_limits<float>::max();
-            float ymax = -std::numeric_limits<float>::max();
-            float zmin = std::numeric_limits<float>::max();
-            float zmax = -std::numeric_limits<float>::max();
-            for (int i = 0; i < _raw_positions.size()/3; ++i) {
-                xmin = std::min(xmin, _raw_positions[3 * i + 0]);
-                xmax = std::max(xmax, _raw_positions[3 * i + 0]);
-                ymin = std::min(ymin, _raw_positions[3 * i + 1]);
-                ymax = std::max(ymax, _raw_positions[3 * i + 1]);
-                zmin = std::min(zmin, _raw_positions[3 * i + 2]);
-                zmax = std::max(zmax, _raw_positions[3 * i + 2]);
-            }
-            _bbox.SetBoundingBox(xmin, ymin, zmax, xmax, ymax, zmin);
-        }
-    }
-
-    if (something_changed && !_raw_positions.empty() || _shellToShowChanged) {
-        if (!_shellToShowChanged || _shells.empty()) {
-            // find main axis
-            std::map<int,int> axes;
-            axes[0] = 0;
-            axes[1] = 1;
-            axes[2] = 2;
-            std::array<float, 3> whd = {
-                this->_bbox.BoundingBox().Width(), this->_bbox.BoundingBox().Height(), this->_bbox.BoundingBox().Depth()};
-            _main_axis = std::distance(whd.begin(), std::max_element(whd.begin(), whd.end()));
-            axes.erase(_main_axis);
-            int l = 0;
-            for (auto ax : axes) {
-                _off_axes[l] = ax.first;
-                ++l;
-            }
-
-
-            // get origin
-            float center_z;
-            if (std::copysign(1.0f, _bbox.BoundingBox().Front()) != std::copysign(1.0f, _bbox.BoundingBox().Back())) {
-                center_z = (_bbox.BoundingBox().Front() + _bbox.BoundingBox().Back()) / 2;
+            auto mfdc = this->_meshFromDiscCall.CallAs<adios::CallADIOSData>();
+            if (!mfdc) {
+                if (!_shellToShowChanged || _shells.empty()) {
+                    this->compute();
+                }
             } else {
-                center_z = _bbox.BoundingBox().Front() +
-                           std::copysign(1.0f, _bbox.BoundingBox().Front()) * _bbox.BoundingBox().Depth() / 2;
+                if (!_shellToShowChanged || _shells.empty()) {
+                    if (!this->readMeshElementsFromFile()) {
+                        core::utility::log::Log::DefaultLog.WriteError("[ReconstructSurface] Could not load mesh from File. Starting computation ...");
+                        this->compute();
+                    }
+                }
             }
-            _data_origin = {_bbox.BoundingBox().CalcCenter().GetX(), _bbox.BoundingBox().CalcCenter().GetY(), center_z};
 
-            std::stringstream fname;
-            fname << "mesh.sm";
+            auto shell = _showShellSlot.Param<core::param::IntParam>()->Value();
+            if (shell > -1) {
+                if (this->_meshOutputSlot.Param<core::param::EnumParam>()->Value() == 2) {
+                    int shell_i = shell / _shellElements[0].size();
+                    int shell_j = shell % _shellElements[0].size();
+                    this->activateMesh(_shellElements[shell_i][shell_j], _vertices, _triangles);
+                    this->generateNormals(_shellElements[shell_i][shell_j]);
+                } else if (this->_meshOutputSlot.Param<core::param::EnumParam>()->Value() == 1) {
+                    shell = shell % _shells.size();
+                    this->activateMesh(_shells[shell], _vertices, _triangles);
+                    this->generateNormals(_shells[shell]);
+                }
+            }
 
-            if (std::filesystem::exists(fname.str())) {
-                _sm.clear();
-                std::ifstream input_mesh(fname.str());
-                input_mesh >> _sm;
-                this->activateMesh(_sm);
+            if (this->_meshOutputSlot.Param<core::param::EnumParam>()->Value() == 0) {
+                _elementMesh.clear();
+                _elementMesh.resize(_shellElements.size());
+                for (int i = 0; i < _shellElements.size(); ++i) {
+                    _elementMesh[i].resize(_shellElements[i].size());
+                    for (int j = 0; j < _shellElements[i].size(); ++j) {
+                        _elementMesh[i][j].second.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute());
+                        _elementMesh[i][j].second.back().component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+                        _elementMesh[i][j].second.back().byte_size = _shellElementsVertices[i][j].size() * sizeof(std::array<float, 3>);
+                        _elementMesh[i][j].second.back().component_cnt = 3;
+                        _elementMesh[i][j].second.back().stride = sizeof(std::array<float, 3>);
+                        _elementMesh[i][j].second.back().offset = 0;
+                        _elementMesh[i][j].second.back().data =
+                            reinterpret_cast<uint8_t*>(_shellElementsVertices[i][j].data());
+                        _elementMesh[i][j].second.back().semantic = mesh::MeshDataAccessCollection::POSITION;
+
+                        if (!_normals.empty()) {
+                            _elementMesh[i][j].second.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute());
+                            _elementMesh[i][j].second.back().component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+                            _elementMesh[i][j].second.back().byte_size =
+                                _shellElementsNormals[i][j].size() * sizeof(std::array<float, 3>);
+                            _elementMesh[i][j].second.back().component_cnt = 3;
+                            _elementMesh[i][j].second.back().stride = sizeof(std::array<float, 3>);
+                            _elementMesh[i][j].second.back().offset = 0;
+                            _elementMesh[i][j].second.back().data =
+                                reinterpret_cast<uint8_t*>(_shellElementsNormals[i][j].data());
+                            _elementMesh[i][j].second.back().semantic = mesh::MeshDataAccessCollection::NORMAL;
+                        }
+
+                        _elementMesh[i][j].first.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
+                        _elementMesh[i][j].first.byte_size = _shellElementsTriangles[i][j].size() * sizeof(std::array<uint32_t, 3>);
+                        _elementMesh[i][j].first.data =
+                            reinterpret_cast<uint8_t*>(_shellElementsTriangles[i][j].data());
+                    }
+                }
             } else {
-                this->generateEllipsoid_2();
-                this->sliceData();
-                this->tighten();
-                this->do_remeshing(_sm);
+                _mesh.second.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute());
+                _mesh.second.back().component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+                _mesh.second.back().byte_size = _vertices.size() * sizeof(std::array<float, 3>);
+                _mesh.second.back().component_cnt = 3;
+                _mesh.second.back().stride = sizeof(std::array<float, 3>);
+                _mesh.second.back().offset = 0;
+                _mesh.second.back().data = reinterpret_cast<uint8_t*>(_vertices.data());
+                _mesh.second.back().semantic = mesh::MeshDataAccessCollection::POSITION;
 
-                std::ofstream mesh_to_disc(fname.str());
-                mesh_to_disc.precision(17);
-                mesh_to_disc << _sm;
-            }
-            this->generateNormals(_sm);
-            this->onionize();
-            this->cut();
-        }
-        auto shell = _showShellSlot.Param<core::param::IntParam>()->Value();
-        if (shell > -1) {
-            this->activateMesh(_shellElements[0][shell]);
-            this->generateNormals(_shellElements[0][shell]);
-            //this->activateMesh(_shells[shell]);
-            //this->generateNormals(_shells[shell]);
+                if (!_normals.empty()) {
+                    assert(_normals.size() == _vertices.size());
+                    _mesh.second.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute());
+                    _mesh.second.back().component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
+                    _mesh.second.back().byte_size = _normals.size() * sizeof(std::array<float, 3>);
+                    _mesh.second.back().component_cnt = 3;
+                    _mesh.second.back().stride = sizeof(std::array<float, 3>);
+                    _mesh.second.back().offset = 0;
+                    _mesh.second.back().data = reinterpret_cast<uint8_t*>(_normals.data());
+                    _mesh.second.back().semantic = mesh::MeshDataAccessCollection::NORMAL;
+                }
 
-        } else {
-            // TODO: get normals into mesh
-            this->activateMesh(_sm);
-            this->generateNormals(_sm);
-        }
-
-        _mesh_attribs.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute());
-        _mesh_attribs.back().component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-        _mesh_attribs.back().byte_size = _vertices.size() * sizeof(std::array<float, 4>);
-        _mesh_attribs.back().component_cnt = 4;
-        _mesh_attribs.back().stride = sizeof(std::array<float, 4>);
-        _mesh_attribs.back().offset = 0;
-        _mesh_attribs.back().data = reinterpret_cast<uint8_t*>(_vertices.data());
-        _mesh_attribs.back().semantic = mesh::MeshDataAccessCollection::POSITION;
-
-        if (!_normals.empty()) {
-            assert(_normals.size() == _vertices.size());
-            _mesh_attribs.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute());
-            _mesh_attribs.back().component_type = mesh::MeshDataAccessCollection::ValueType::FLOAT;
-            _mesh_attribs.back().byte_size = _normals.size() * sizeof(std::array<float, 3>);
-            _mesh_attribs.back().component_cnt = 3;
-            _mesh_attribs.back().stride = sizeof(std::array<float, 3>);
-            _mesh_attribs.back().offset = 0;
-            _mesh_attribs.back().data = reinterpret_cast<uint8_t*>(_normals.data());
-            _mesh_attribs.back().semantic = mesh::MeshDataAccessCollection::NORMAL;
-        }
-
-
-        if (this->_faceTypeSlot.Param<core::param::EnumParam>()->Value() == 0) {
-            _mesh_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
-            _mesh_indices.byte_size = _triangles.size() * sizeof(std::array<uint32_t, 3>);
-            _mesh_indices.data = reinterpret_cast<uint8_t*>(_triangles.data());
-            _mesh_type = mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES;
-        } else {
-            _mesh_indices.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
-            _mesh_indices.byte_size = _faces.size() * sizeof(std::array<uint32_t, 4>);
-            _mesh_indices.data = reinterpret_cast<uint8_t*>(_faces.data());
-            _mesh_type = mesh::MeshDataAccessCollection::PrimitiveType::QUADS;
-        }
-        ++_version;
-        }
+                _mesh.first.type = mesh::MeshDataAccessCollection::ValueType::UNSIGNED_INT;
+                _mesh.first.byte_size = _triangles.size() * sizeof(std::array<uint32_t, 3>);
+                _mesh.first.data = reinterpret_cast<uint8_t*>(_triangles.data());
+                }
+            ++_version;
+        } // something changed
 
         // put data in mesh
-        mesh::MeshDataAccessCollection mesh;
-
-        std::string identifier = std::string(FullName()) + "_mesh";
-        mesh.addMesh(identifier, _mesh_attribs, _mesh_indices, _mesh_type);
-        cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)), _version);
+        if (this->_meshOutputSlot.Param<core::param::EnumParam>()->Value() == 0) {
+            mesh::MeshDataAccessCollection mesh;
+            for (int i = 0; i < _shellElements.size(); ++i) {
+                 for (int j = 0; j < _shellElements[i].size(); ++j) {
+                    std::string identifier = std::string(FullName()) + "_mesh_" + std::to_string(i) + "," + std::to_string(j);
+                    mesh.addMesh(identifier, _elementMesh[i][j].second, _elementMesh[i][j].first,
+                    mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES);
+                 }
+            }
+            cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)), _version);
+        } else {
+            mesh::MeshDataAccessCollection mesh;
+            std::string identifier = std::string(FullName()) + "_mesh";
+            mesh.addMesh(
+                identifier, _mesh.second, _mesh.first, mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES);
+            cm->setData(std::make_shared<mesh::MeshDataAccessCollection>(std::move(mesh)), _version);
+        }
         _old_datahash = cd->getDataHash();
         _recalc = false;
         _shellToShowChanged = false;
@@ -1287,6 +1534,199 @@ namespace probe {
         auto meta_data = cm->getMetaData();
         meta_data.m_bboxs = _bbox;
         cm->setMetaData(meta_data);
+
+        return true;
+    }
+
+    bool ReconstructSurface::getADIOSMetaData(core::Call& call) {
+        auto out = dynamic_cast<adios::CallADIOSData*>(&call);
+        if (out == nullptr)
+            return false;
+
+        auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
+        if (cd == nullptr)
+            return false;
+
+        // get metadata
+        cd->setFrameIDtoLoad(0); // TODO: just one frame supported now
+        if (!(*cd)(1))
+            return false;
+        if (cd->getDataHash() == _old_datahash) {
+            auto vars = cd->getAvailableVars();
+            for (auto var : vars) {
+                this->_xSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+                this->_ySlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+                this->_zSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+                this->_xyzSlot.Param<core::param::FlexEnumParam>()->AddValue(var);
+            }
+        }
+        out->setFrameCount(cd->getFrameCount());
+        return true;
+    }
+
+    bool ReconstructSurface::getADIOSData(core::Call& call) {
+        bool something_changed = _recalc;
+
+        auto out = dynamic_cast<adios::CallADIOSData*>(&call);
+        if (out == nullptr)
+            return false;
+
+        auto cd = this->_getDataCall.CallAs<adios::CallADIOSData>();
+        if (cd == nullptr)
+            return false;
+
+        if (!this->processRawData(cd, something_changed)) {
+            core::utility::log::Log::DefaultLog.WriteError("Could not process incoming data. Abort.");
+            return false;
+        }
+
+        if (something_changed && !_raw_positions.empty()) {
+            this->compute();
+        }
+
+        assert(!_shellElements.empty());
+        assert(!_shellElements[0].empty());
+
+        auto elementsCont = std::make_shared<adios::CharContainer>(adios::CharContainer());
+        auto elementsOffsetCont = std::make_shared<adios::UInt64Container>(adios::UInt64Container());
+        elementsOffsetCont->shape = {_shellElements.size(), _shellElements[0].size()};
+        std::vector<char>& elements_vec = elementsCont->getVec();
+        std::vector<uint64_t>& elementOffsets_vec = elementsOffsetCont->getVec();
+
+        elementOffsets_vec.reserve(_shellElements.size() * _shellElements[0].size());
+        uint64_t current_element_offset = 0;
+        for (int i = 0; i < _shellElements.size(); ++i) {
+            for (int j = 0; j < _shellElements[0].size(); ++j) {
+                std::stringstream sstream;
+                sstream << _shellElements[i][j];
+                auto current_string = sstream.str();
+                std::copy(current_string.begin(), current_string.end(), std::back_inserter(elements_vec));
+                elementOffsets_vec.emplace_back(current_element_offset);
+                current_element_offset += current_string.size();
+            }
+        }
+
+        auto shellsCont = std::make_shared<adios::CharContainer>(adios::CharContainer());
+        auto shellsOffsetCont = std::make_shared<adios::UInt64Container>(adios::UInt64Container());
+        std::vector<char>& shells_vec = shellsCont->getVec();
+        std::vector<uint64_t>& shells_offsets_vec = shellsOffsetCont->getVec();
+        shells_offsets_vec.reserve(_shells.size());
+        uint64_t current_shell_offset = 0;
+        for (int i = 0; i < _shells.size(); ++i) {
+            std::stringstream sstream;
+            sstream << _shells[i];
+            auto current_string = sstream.str();
+            std::copy(current_string.begin(), current_string.end(), std::back_inserter(shells_vec));
+            shells_offsets_vec.emplace_back(current_shell_offset);
+            current_shell_offset += current_string.size();
+        }
+
+        auto hullCont = std::make_shared<adios::CharContainer>(adios::CharContainer());
+        std::vector<char>& hull_vec = hullCont->getVec();
+
+        std::stringstream hull_sstream;
+        hull_sstream << _sm;
+        auto hull_str = hull_sstream.str();
+
+        hull_vec.reserve(hull_str.size());
+        std::copy(hull_str.begin(), hull_str.end(), std::back_inserter(hull_vec));
+        
+        auto boxCont = std::make_shared<adios::FloatContainer>(adios::FloatContainer());
+        std::vector<float>& box_vec = boxCont->getVec();
+        box_vec = {_bbox.BoundingBox().Left(), _bbox.BoundingBox().Bottom(), _bbox.BoundingBox().Back(),
+                   _bbox.BoundingBox().Right(), _bbox.BoundingBox().Top(), _bbox.BoundingBox().Front()};
+
+
+        _dataMap["hull"] = std::move(hullCont);
+        _dataMap["elements"] = std::move(elementsCont);
+        _dataMap["elements_offsets"] = std::move(elementsOffsetCont);
+        _dataMap["shells"] = std::move(shellsCont);
+        _dataMap["shells_offsets"] = std::move(shellsOffsetCont);
+        _dataMap["bbox"] = std::move(boxCont);
+
+        out->setData(std::make_shared<adios::adiosDataMap>(_dataMap));
+        out->setDataHash(cd->getDataHash());
+
+        _old_datahash = cd->getDataHash();
+        _recalc = false;
+
+        return true;
+
+    }
+
+    bool ReconstructSurface::readMeshElementsFromFile() {
+
+        auto cd = _meshFromDiscCall.CallAs<adios::CallADIOSData>();
+        if (cd == nullptr)
+            return false;
+
+        cd->setFrameIDtoLoad(0); // TODO: maybe support more frames in the future
+        if (!(*cd)(1))
+            return false;
+
+        auto vars = cd->getAvailableVars();
+
+        // get data from adios
+        for (auto var : vars) {
+            if (!cd->inquire(var)) {
+                core::utility::log::Log::DefaultLog.WriteError((std::string("[ReconstructSurface] Could not inquire ") + var).c_str());
+                return false;
+            }
+        }
+
+        if (!(*cd)(0))
+            return false;
+
+        auto hull = cd->getData("hull")->GetAsChar();
+        std::string hull_str(hull.begin(), hull.end());
+        _sm.clear();
+        std::stringstream(hull_str) >> _sm;
+
+        auto shells = cd->getData("shells")->GetAsChar();
+        auto shells_offsets = cd->getData("shells_offsets")->GetAsUInt64();
+        _shells.clear();
+        _shells.resize(shells_offsets.size());
+        for (int i = 0; i < shells_offsets.size(); ++i) {
+            std::string current_shell;
+            if (i < shells_offsets.size() - 1) {
+                current_shell = std::string(shells.begin() + shells_offsets[i], shells.begin() + shells_offsets[i+1]);
+            } else {
+                current_shell = std::string(shells.begin() + shells_offsets[i], shells.end());
+            }
+            std::stringstream(current_shell) >> _shells[i];
+        }
+
+        auto elements = cd->getData("elements")->GetAsChar();
+        auto elements_offsets = cd->getData("elements_offsets")->GetAsUInt64();
+        auto elements_shape = cd->getData("elements_offsets")->getShape();
+
+        _shellElements.clear();
+        _shellElements.resize(elements_shape[0]);
+        _shellElementsVertices.clear();
+        _shellElementsVertices.resize(_shellElements.size());
+        _shellElementsTriangles.clear();
+        _shellElementsTriangles.resize(_shellElements.size());
+        _shellElementsNormals.clear();
+        _shellElementsNormals.resize(_shellElements.size());
+        for (int i = 0; i < elements_shape[0]; ++i) {
+            _shellElements[i].resize(elements_shape[1]);
+            _shellElementsVertices[i].resize(_shellElements[i].size());
+            _shellElementsTriangles[i].resize(_shellElements[i].size());
+            _shellElementsNormals[i].resize(_shellElements[i].size());
+            for (int j = 0; j < elements_shape[1]; ++j) {
+                std::string current_element;
+                if ((i == (elements_shape[0] - 1)) && (j == (elements_shape[1] - 1))) {
+                    current_element =
+                        std::string(elements.begin() + elements_offsets[i * elements_shape[1] + j], elements.end());
+                } else {
+                    current_element = std::string(elements.begin() + elements_offsets[i * elements_shape[1] + j],
+                        elements.begin() + elements_offsets[i * elements_shape[1] + j + 1]);
+                }
+                std::stringstream(current_element) >> _shellElements[i][j];
+                this->generateNormals_2(_shellElements[i][j], _shellElementsNormals[i][j]);
+                this->activateMesh(_shellElements[i][j], _shellElementsVertices[i][j], _shellElementsTriangles[i][j]);
+            }
+        }
 
         return true;
     }
@@ -1350,106 +1790,13 @@ namespace probe {
         if (cd == nullptr)
             return false;
 
-        std::vector<std::string> toInq;
-        toInq.clear();
-        if (this->_formatSlot.Param<core::param::EnumParam>()->Value() == 0) {
-            toInq.emplace_back(std::string(this->_xSlot.Param<core::param::FlexEnumParam>()->ValueString()));
-            toInq.emplace_back(std::string(this->_ySlot.Param<core::param::FlexEnumParam>()->ValueString()));
-            toInq.emplace_back(std::string(this->_zSlot.Param<core::param::FlexEnumParam>()->ValueString()));
-        } else {
-            toInq.emplace_back(std::string(this->_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString()));
-        }
-
-        // get data from adios
-        for (auto var : toInq) {
-            if (!cd->inquire(var)) {
-                return false;
-            }
-        }
-
-        if (!(*cd)(0))
+        if (!this->processRawData(cd, something_changed)) {
+            core::utility::log::Log::DefaultLog.WriteError("Could not process incoming data. Abort.");
             return false;
-
-        // get data from volumetric call
-        if (cd->getDataHash() != _old_datahash) {
-            something_changed = true;
-
-            if (this->_formatSlot.Param<core::param::EnumParam>()->Value() == 0) {
-                auto x = cd->getData(std::string(this->_xSlot.Param<core::param::FlexEnumParam>()->ValueString()))
-                             ->GetAsFloat();
-                auto y = cd->getData(std::string(this->_ySlot.Param<core::param::FlexEnumParam>()->ValueString()))
-                             ->GetAsFloat();
-                auto z = cd->getData(std::string(this->_zSlot.Param<core::param::FlexEnumParam>()->ValueString()))
-                             ->GetAsFloat();
-                assert(x.size() == y.size());
-                assert(y.size() == z.size());
-                _raw_positions.resize(x.size() * 3);
-                for (int i = 0; i < x.size(); ++i) {
-                    _raw_positions[3 * i + 0] = x[i];
-                    _raw_positions[3 * i + 1] = y[i];
-                    _raw_positions[3 * i + 2] = z[i];
-                }
-                auto xminmax = std::minmax_element(x.begin(), x.end());
-                auto yminmax = std::minmax_element(y.begin(), y.end());
-                auto zminmax = std::minmax_element(z.begin(), z.end());
-                _bbox.SetBoundingBox(
-                    *xminmax.first, *yminmax.first, *zminmax.second, *xminmax.second, *yminmax.second, *zminmax.first);
-            } else {
-                const std::string varname = std::string(_xyzSlot.Param<core::param::FlexEnumParam>()->ValueString());
-                _raw_positions = cd->getData(varname)->GetAsFloat();
-                float xmin = std::numeric_limits<float>::max();
-                float xmax = -std::numeric_limits<float>::max();
-                float ymin = std::numeric_limits<float>::max();
-                float ymax = -std::numeric_limits<float>::max();
-                float zmin = std::numeric_limits<float>::max();
-                float zmax = -std::numeric_limits<float>::max();
-                for (int i = 0; i < _raw_positions.size() / 3; ++i) {
-                    xmin = std::min(xmin, _raw_positions[3 * i + 0]);
-                    xmax = std::max(xmax, _raw_positions[3 * i + 0]);
-                    ymin = std::min(ymin, _raw_positions[3 * i + 1]);
-                    ymax = std::max(ymax, _raw_positions[3 * i + 1]);
-                    zmin = std::min(zmin, _raw_positions[3 * i + 2]);
-                    zmax = std::max(zmax, _raw_positions[3 * i + 2]);
-                }
-                _bbox.SetBoundingBox(xmin, ymin, zmax, xmax, ymax, zmin);
-            }
         }
 
         if (something_changed && !_raw_positions.empty()) {
-            // get main axis
-            std::array<float, 3> whd = {this->_bbox.BoundingBox().Width(), this->_bbox.BoundingBox().Height(),
-                this->_bbox.BoundingBox().Depth()};
-            _main_axis = std::distance(whd.begin(), std::max_element(whd.begin(), whd.end()));
-
-            // get origin
-            float center_z;
-            if (std::copysign(1.0f, _bbox.BoundingBox().Front()) != std::copysign(1.0f, _bbox.BoundingBox().Back())) {
-                center_z = (_bbox.BoundingBox().Front() + _bbox.BoundingBox().Back()) / 2;
-            } else {
-                center_z = _bbox.BoundingBox().Front() +
-                           std::copysign(1.0f, _bbox.BoundingBox().Front()) * _bbox.BoundingBox().Depth() / 2;
-            }
-            _data_origin = {_bbox.BoundingBox().CalcCenter().GetX(), _bbox.BoundingBox().CalcCenter().GetY(), center_z};
-
-            std::stringstream fname;
-            fname << "mesh.sm";
-
-            if (std::filesystem::exists(fname.str())) {
-                _sm.clear();
-                std::ifstream input_mesh(fname.str());
-                input_mesh >> _sm;
-                this->activateMesh(_sm);
-            } else {
-                this->generateEllipsoid_2();
-                this->sliceData();
-                this->tighten();
-                this->do_remeshing(_sm);
-
-                std::ofstream mesh_to_disc(fname.str());
-                mesh_to_disc.precision(17);
-                mesh_to_disc << _sm;
-            }
-            this->generateNormals(_sm);
+            this->compute();
         }
 
         // FOR DEBUG
@@ -1514,21 +1861,21 @@ namespace probe {
         return true;
     }
 
-    void ReconstructSurface::activateMesh(Surface_mesh& shell) {
+    void ReconstructSurface::activateMesh(const Surface_mesh& shell, std::vector<std::array<float,3>>& vertices, std::vector<std::array<uint32_t,3>>& indices) {
 
-        _vertices.clear();
-        _vertices.resize(shell.num_vertices());
+        vertices.clear();
+        vertices.resize(shell.num_vertices());
         for (int i = 0; i < shell.num_vertices(); ++i) {
             auto it = std::next(shell.points().begin(), i);
 
-            _vertices[i][0] = it->x();
-            _vertices[i][1] = it->y();
-            _vertices[i][2] = it->z();
+            vertices[i][0] = it->x();
+            vertices[i][1] = it->y();
+            vertices[i][2] = it->z();
         }
 
-        _triangles.clear();
-        _triangles.resize(shell.num_faces());
-        auto triangle = _triangles.begin();
+        indices.clear();
+        indices.resize(shell.num_faces());
+        auto triangle = indices.begin();
         for (CGAL::Surface_mesh<Point>::face_index fi : shell.faces()) {
             auto hf = shell.halfedge(fi);
             auto triangle_index = triangle->begin();
