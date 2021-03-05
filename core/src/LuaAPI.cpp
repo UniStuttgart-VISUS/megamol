@@ -479,6 +479,8 @@ int megamol::core::LuaAPI::GetEnvValue(lua_State* L) {
 }
 
 
+// TODO move helper function into Log, such that for a string we get the corresponding Log Level
+// The CLI parser will benefit form this, so the user can also provide the shorthand notation via CLI
 UINT megamol::core::LuaAPI::parseLevelAttribute(const std::string attr) {
     UINT retval = megamol::core::utility::log::Log::LEVEL_ERROR;
     if (iequals(attr, "error")) {

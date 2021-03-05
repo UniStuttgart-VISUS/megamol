@@ -35,9 +35,9 @@ basePath = "${CMAKE_INSTALL_PREFIX}/"
 -- or one of the following user friendly shorthand identifiers (as string):
 --    error, warn, warning, info, none, null, zero, all, *
 -- Due to restrictions in the Log implementation 
--- the CLI log/echo levels accepts only the magic numbers while 
+-- the CLI log/echo levels accept only the magic numbers while
 -- Config files support numbers and the shorthand notation
-mmSetLogLevel("all")            -- CLI: --loglevel=
+mmSetLogLevel("all")            -- CLI: --loglevel=all
 mmSetEchoLevel("all")           -- CLI: --echolevel=all
 mmSetLogFile("megamol_log.txt") -- CLI: --logfile=megamol_log.txt
 
