@@ -45,8 +45,8 @@ struct RuntimeConfig {
     bool lua_host_port_retry = true;
     bool opengl_khr_debug = false;
     bool opengl_vsync = false;
-    std::vector<unsigned int> window_size = {}; // if not set, GLFW service will open window with 3/4 of monitor resolution 
-    std::vector<unsigned int> window_position = {};
+    std::optional<std::pair<unsigned int /*width*/,unsigned int /*height*/>> window_size = std::nullopt; // if not set, GLFW service will open window with 3/4 of monitor resolution 
+    std::optional<std::pair<unsigned int /*x*/,unsigned int /*y*/>>          window_position = std::nullopt;
     enum WindowMode {
         fullscreen   = 1 << 0,
         nodecoration = 1 << 1,
