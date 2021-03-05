@@ -34,6 +34,10 @@ int main(const int argc, const char** argv) {
     megamol::core::utility::log::Log::DefaultLog.SetLogFileName(config.log_file.data(), false);
 
     megamol::core::CoreInstance core;
+    core.SetConfigurationPaths_Frontend3000Compatibility(
+        config.application_directory,
+        config.shader_directories,
+        config.resource_directories);
     core.Initialise(false); // false makes core not start his own lua service (else we collide on default port)
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
