@@ -27,14 +27,20 @@ int main(const int argc, const char** argv) {
     auto config = megamol::frontend::handle_cli_and_config(argc, argv, lua_api);
 
     // setup log
-    megamol::core::utility::log::Log::DefaultLog.SetLevel(config.log_level);
+    megamol::core::utility::log::Log::DefaultLog.SetLevel(config.echo_level);
     megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(config.echo_level);
-    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(config.log_file.data(), false);
+    megamol::core::utility::log::Log::DefaultLog.SetFileLevel(config.log_level);
     megamol::core::utility::log::Log::DefaultLog.SetOfflineMessageBufferSize(100);
-    megamol::core::utility::log::Log::DefaultLog.SetMainTarget(
-        std::make_shared<megamol::core::utility::log::DefaultTarget>(megamol::core::utility::log::Log::LEVEL_ALL));
+    megamol::core::utility::log::Log::DefaultLog.SetMainTarget(std::make_shared<megamol::core::utility::log::DefaultTarget>());
+    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(config.log_file.data(), false);
+
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(config.as_string().c_str());
 
     megamol::core::CoreInstance core;
+    core.SetConfigurationPaths_Frontend3000Compatibility(
+        config.application_directory,
+        config.shader_directories,
+        config.resource_directories);
     core.Initialise(false); // false makes core not start his own lua service (else we collide on default port)
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
@@ -45,17 +51,15 @@ int main(const int argc, const char** argv) {
     openglConfig.enableKHRDebug = config.opengl_khr_debug;
     openglConfig.enableVsync = config.opengl_vsync;
     // pass window size and position
-    if (!config.window_size.empty()) {
-        assert(config.window_size.size() == 2);
+    if (config.window_size.has_value()) {
         openglConfig.windowPlacement.size = true;
-        openglConfig.windowPlacement.w = config.window_size[0];
-        openglConfig.windowPlacement.h = config.window_size[1];
+        openglConfig.windowPlacement.w = config.window_size.value().first;
+        openglConfig.windowPlacement.h = config.window_size.value().second;
     }
-    if (!config.window_position.empty()) {
-        assert(config.window_position.size() == 2);
+    if (config.window_position.has_value()) {
         openglConfig.windowPlacement.pos = true;
-        openglConfig.windowPlacement.x = config.window_position[0];
-        openglConfig.windowPlacement.y = config.window_position[1];
+        openglConfig.windowPlacement.x = config.window_position.value().first;
+        openglConfig.windowPlacement.y = config.window_position.value().second;
     }
     openglConfig.windowPlacement.mon = config.window_monitor;
     using megamol::frontend_resources::RuntimeConfig;

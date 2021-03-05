@@ -188,11 +188,14 @@ static void window_handler(std::string const& option_name, cxxopts::ParseResult 
     std::regex geometry("(\\d+)x(\\d+)(?:\\+(\\d+)\\+(\\d+))?");
     std::smatch match;
     if (std::regex_match(s, match, geometry)) {
-        config.window_size.push_back( /*width*/ std::stoul(match[1].str(), nullptr, 10) );
-        config.window_size.push_back( /*height*/ std::stoul(match[2].str(), nullptr, 10) );
+        unsigned int width = std::stoul(match[1].str(), nullptr, 10);
+        unsigned int height = std::stoul(match[2].str(), nullptr, 10);
+        config.window_size = {{width, height}};
+
         if (match[3].matched) {
-            config.window_position.push_back( /*x*/ std::stoul(match[3].str(), nullptr, 10) );
-            config.window_position.push_back( /*y*/ std::stoul(match[4].str(), nullptr, 10) );
+            unsigned int x = std::stoul(match[3].str(), nullptr, 10);
+            unsigned int y = std::stoul(match[4].str(), nullptr, 10);
+            config.window_position = {{x, y}};
         }
     } else {
         exit("window option needs to be in the following format: wxh+x+y or wxh");

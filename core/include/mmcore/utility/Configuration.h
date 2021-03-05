@@ -364,6 +364,15 @@ namespace xml {
             vislib::SingleLinkedList<vislib::TString> &plugins);
 
         /**
+         * Sets 'dir' as application directory 
+         *
+         * @param dir The path to be set
+         */
+        void SetApplicationDirectory(const char* dir) {
+            this->appDir = vislib::StringW{dir};
+        }
+
+        /**
          * Adds 'dir' as search path for resource files
          *
          * @param dir The resource path to be added
