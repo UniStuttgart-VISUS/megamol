@@ -49,3 +49,9 @@ if(BUILD_FRONTEND)
   endif()  
 
 endif()
+
+# Copy default configuration file
+configure_file(extra/megamol_config.lua.in ${CMAKE_BINARY_DIR}/megamol_config.lua)
+configure_file(extra/install_megamol_config_lua.cmake.in ${CMAKE_BINARY_DIR}/install_megamol_config_lua.cmake @ONLY)
+
+install(SCRIPT ${CMAKE_BINARY_DIR}/install_megamol_config_lua.cmake)
