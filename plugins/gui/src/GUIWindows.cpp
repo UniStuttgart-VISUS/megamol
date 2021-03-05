@@ -1596,13 +1596,13 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
 
     ImGuiStyle& style = ImGui::GetStyle();
 
-    if (ImGui::RadioButton("fps", (wc.ms_mode == WindowCollection::TimingModes::FPS))) {
-        wc.ms_mode = WindowCollection::TimingModes::FPS;
+    if (ImGui::RadioButton("fps", (wc.fpsms_mode == WindowCollection::TimingModes::FPS))) {
+        wc.fpsms_mode = WindowCollection::TimingModes::FPS;
     }
     ImGui::SameLine();
 
-    if (ImGui::RadioButton("ms", (wc.ms_mode == WindowCollection::TimingModes::MS))) {
-        wc.ms_mode = WindowCollection::TimingModes::MS;
+    if (ImGui::RadioButton("ms", (wc.fpsms_mode == WindowCollection::TimingModes::MS))) {
+        wc.fpsms_mode = WindowCollection::TimingModes::MS;
     }
 
     if (this->core_instance != nullptr) {
@@ -1620,12 +1620,12 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
 
     ImGui::SameLine(
         ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() - style.ItemSpacing.x - style.ItemInnerSpacing.x));
-    if (ImGui::ArrowButton("Options_", ((wc.ms_show_options) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
-        wc.ms_show_options = !wc.ms_show_options;
+    if (ImGui::ArrowButton("Options_", ((wc.fpsms_show_options) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+        wc.fpsms_show_options = !wc.fpsms_show_options;
     }
 
     auto* value_buffer =
-        ((wc.ms_mode == WindowCollection::TimingModes::FPS) ? (&wc.buf_fps_values) : (&wc.buf_ms_values));
+        ((wc.fpsms_mode == WindowCollection::TimingModes::FPS) ? (&wc.buf_fps_values) : (&wc.buf_ms_values));
     int buffer_size = static_cast<int>(value_buffer->size());
 
     std::string value_string;
@@ -1636,18 +1636,18 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
     }
 
     float* value_ptr = value_buffer->data();
-    float max_value = ((wc.ms_mode == WindowCollection::TimingModes::FPS) ? (wc.buf_fps_max) : (wc.buf_ms_max));
+    float max_value = ((wc.fpsms_mode == WindowCollection::TimingModes::FPS) ? (wc.buf_fps_max) : (wc.buf_ms_max));
     ImGui::PlotLines("###msplot", value_ptr, buffer_size, 0, value_string.c_str(), 0.0f, (1.5f * max_value),
         ImVec2(0.0f, (50.0f * megamol::gui::gui_scaling.Get())));
 
-    if (wc.ms_show_options) {
-        if (ImGui::InputFloat("Refresh Rate (per sec.)", &wc.ms_refresh_rate, 1.0f, 10.0f, "%.3f",
+    if (wc.fpsms_show_options) {
+        if (ImGui::InputFloat("Refresh Rate (per sec.)", &wc.fpsms_refresh_rate, 1.0f, 10.0f, "%.3f",
                 ImGuiInputTextFlags_EnterReturnsTrue)) {
-            wc.ms_refresh_rate = std::max(1.0f, wc.ms_refresh_rate);
+            wc.fpsms_refresh_rate = std::max(1.0f, wc.fpsms_refresh_rate);
         }
 
-        if (ImGui::InputInt("History Size", &wc.ms_max_value_count, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue)) {
-            wc.ms_max_value_count = std::max(1, wc.ms_max_value_count);
+        if (ImGui::InputInt("History Size", &wc.fpsms_buffer_size, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            wc.fpsms_buffer_size = std::max(1, wc.fpsms_buffer_size);
         }
 
         if (ImGui::Button("Current Value")) {
@@ -2440,7 +2440,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.font_file_name = "";
     this->state.request_load_projet_file = "";
     this->state.stat_averaged_fps = 0.0;
-    this->state.stat_averaged_mspf = 0.0;
+    this->state.stat_averaged_ms = 0.0;
     this->state.stat_frame_count = 0;
     this->state.font_size = 13;
 
@@ -2453,65 +2453,38 @@ void megamol::gui::GUIWindows::update_frame_statistics(WindowCollection::WindowC
     ImGuiIO& io = ImGui::GetIO();
 
     wc.buf_current_delay += io.DeltaTime;
-    if (wc.ms_refresh_rate > 0.0f) {
-        if (wc.buf_current_delay >= (1.0f / wc.ms_refresh_rate)) {
+    if (wc.fpsms_refresh_rate > 0.0f) {
+        if (wc.buf_current_delay >= (1.0f / wc.fpsms_refresh_rate)) {
 
-            // FPS
-            auto fps_buffer_size = static_cast<int>(wc.buf_fps_values.size());
-            if (fps_buffer_size != wc.ms_max_value_count) {
-                if (fps_buffer_size > wc.ms_max_value_count) {
-                    wc.buf_fps_values.erase(wc.buf_fps_values.begin(),
-                        wc.buf_fps_values.begin() + (fps_buffer_size - wc.ms_max_value_count));
+            auto update_values = [](float current_value, float& max_value, std::vector<float>& values,
+                                     size_t actual_buffer_size) {
+                auto buffer_size = static_cast<int>(values.size());
+                if (buffer_size != actual_buffer_size) {
+                    if (buffer_size > actual_buffer_size) {
+                        values.erase(values.begin(), values.begin() + (buffer_size - actual_buffer_size));
 
-                } else if (fps_buffer_size < wc.ms_max_value_count) {
-                    wc.buf_fps_values.insert(
-                        wc.buf_fps_values.begin(), (wc.ms_max_value_count - fps_buffer_size), 0.0f);
+                    } else if (buffer_size < actual_buffer_size) {
+                        values.insert(values.begin(), (actual_buffer_size - buffer_size), 0.0f);
+                    }
                 }
-            }
-            if (fps_buffer_size > 0) {
-                wc.buf_fps_values.erase(wc.buf_fps_values.begin());
-                if (this->state.stat_averaged_fps == 0.0) {
-
-                    /// [DEPRECATED USAGE - only mmconsole] ///
-                    wc.buf_fps_values.emplace_back(1.0f / io.DeltaTime);
-
-                } else {
-                    wc.buf_fps_values.emplace_back(static_cast<float>(this->state.stat_averaged_fps));
+                if (buffer_size > 0) {
+                    values.erase(values.begin());
+                    values.emplace_back(static_cast<float>(current_value));
+                    float new_max_value = 0.0f;
+                    for (auto& v : values) {
+                        new_max_value = std::max(v, new_max_value);
+                    }
+                    max_value = new_max_value;
                 }
-                float max_fps = 0.0f;
-                for (auto& v : wc.buf_fps_values) {
-                    max_fps = std::max(v, max_fps);
-                }
-                wc.buf_fps_max = max_fps;
-            }
+            };
 
-            // MS
-            auto ms_buffer_size = static_cast<int>(wc.buf_ms_values.size());
-            if (ms_buffer_size != wc.ms_max_value_count) {
-                if (ms_buffer_size > wc.ms_max_value_count) {
-                    wc.buf_ms_values.erase(
-                        wc.buf_ms_values.begin(), wc.buf_ms_values.begin() + (ms_buffer_size - wc.ms_max_value_count));
+            update_values(
+                ((this->state.stat_averaged_fps == 0.0) ? (1.0f / io.DeltaTime) : (this->state.stat_averaged_fps)),
+                wc.buf_fps_max, wc.buf_fps_values, wc.fpsms_buffer_size);
 
-                } else if (ms_buffer_size < wc.ms_max_value_count) {
-                    wc.buf_ms_values.insert(wc.buf_ms_values.begin(), (wc.ms_max_value_count - ms_buffer_size), 0.0f);
-                }
-            }
-            if (ms_buffer_size > 0) {
-                wc.buf_ms_values.erase(wc.buf_ms_values.begin());
-                if (this->state.stat_averaged_mspf == 0.0) {
-
-                    /// [DEPRECATED USAGE - only mmconsole] ///
-                    wc.buf_ms_values.emplace_back(io.DeltaTime * 1000.0f);
-
-                } else {
-                    wc.buf_ms_values.emplace_back(static_cast<float>(this->state.stat_averaged_mspf));
-                }
-                float max_ms = 0.0f;
-                for (auto& v : wc.buf_ms_values) {
-                    max_ms = std::max(v, max_ms);
-                }
-                wc.buf_ms_max = max_ms;
-            }
+            update_values(
+                ((this->state.stat_averaged_ms == 0.0) ? (io.DeltaTime * 1000.0f) : (this->state.stat_averaged_ms)),
+                wc.buf_ms_max, wc.buf_ms_values, wc.fpsms_buffer_size);
 
             wc.buf_current_delay = 0.0f;
         }

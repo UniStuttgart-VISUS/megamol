@@ -58,14 +58,14 @@ namespace gui {
             FilterModes param_module_filter;             // module filter
             bool param_extended_mode;                    // Flag toggling between Expert and Basic parameter mode.
             // ---------- FPS/MS specific configuration ----------
-            bool ms_show_options;              // show/hide fps/ms options.
-            int ms_max_value_count;            // maximum count of values in value array
-            float ms_refresh_rate;             // maximum delay when fps/ms value should be renewed.
-            TimingModes ms_mode;               // mode for displaying either FPS or MS
+            bool fpsms_show_options;           // show/hide fps/ms options.
+            int fpsms_buffer_size;             // maximum count of values in value array
+            float fpsms_refresh_rate;          // maximum delay when fps/ms value should be renewed.
+            TimingModes fpsms_mode;            // mode for displaying either FPS or MS
             float buf_current_delay;           // [NOT SAVED] current delay between frames
             std::vector<float> buf_ms_values;  // [NOT SAVED] current ms values
             std::vector<float> buf_fps_values; // [NOT SAVED] current fps values
-            float buf_ms_max;                  // [NOT SAVED]current ms plot scaling factor
+            float buf_ms_max;                  // [NOT SAVED] current ms plot scaling factor
             float buf_fps_max;                 // [NOT SAVED] current fps plot scaling factor
             // ---------- Transfer Function Editor specific configuration ---------
             bool tfe_view_minimized;      // flag indicating minimized window state
@@ -94,10 +94,10 @@ namespace gui {
                     , param_modules_list()
                     , param_module_filter(FilterModes::ALL)
                     , param_extended_mode(false)
-                    , ms_show_options(false)
-                    , ms_max_value_count(20)
-                    , ms_refresh_rate(2.0f)
-                    , ms_mode(TimingModes::FPS)
+                    , fpsms_show_options(false)
+                    , fpsms_buffer_size(20)
+                    , fpsms_refresh_rate(2.0f)
+                    , fpsms_mode(TimingModes::FPS)
                     , buf_current_delay(0.0f)
                     , buf_ms_values()
                     , buf_fps_values()
