@@ -26,11 +26,11 @@ int main(const int argc, const char** argv) {
     auto config = megamol::frontend::handle_cli_and_config(argc, argv, lua_api);
 
     // setup log
-    megamol::core::utility::log::Log::DefaultLog.SetLevel(config.log_level);
+    megamol::core::utility::log::Log::DefaultLog.SetLevel(config.echo_level);
     megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(config.echo_level);
+    megamol::core::utility::log::Log::DefaultLog.SetFileLevel(config.log_level);
     megamol::core::utility::log::Log::DefaultLog.SetOfflineMessageBufferSize(100);
-    megamol::core::utility::log::Log::DefaultLog.SetMainTarget(
-        std::make_shared<megamol::core::utility::log::DefaultTarget>());
+    megamol::core::utility::log::Log::DefaultLog.SetMainTarget(std::make_shared<megamol::core::utility::log::DefaultTarget>());
     megamol::core::utility::log::Log::DefaultLog.SetLogFileName(config.log_file.data(), false);
 
     megamol::core::CoreInstance core;
