@@ -73,6 +73,59 @@ struct RuntimeConfig {
         }
     }
 
+    std::string as_string() const {
+        auto summarize = [](std::vector<std::string> const& vec) -> std::string {
+            std::string result;
+            for (auto& s: vec) {
+                result += "\n\t\t" + s;
+            }
+            return result;
+        };
+
+        auto summarize_globals = [&]() -> std::string {
+            std::string result;
+            for (auto& kv: global_key_values) {
+                result += "\n\t\t" + kv.first + " : " + kv.second;
+            }
+            return result;
+        };
+
+        auto print_boolean = [](bool value, std::string const& name) -> std::string {
+            // return value ?
+        };
+
+        // clang-format off
+        return std::string("RuntimeConfig values: "  ) +
+            std::string("\n\tProgram invocation: "   ) + program_invocation_string +
+            std::string("\n\tConfiguration files: "  ) + summarize(configuration_files) +
+            std::string("\n\tApplication directory: ") + application_directory +
+            std::string("\n\tResource directories: " ) + summarize(resource_directories) +
+            std::string("\n\tShader directories: "   ) + summarize(shader_directories) +
+            std::string("\n\tLog file: "             ) + log_file +
+            std::string("\n\tLog level: "            ) + std::to_string(log_level) +
+            std::string("\n\tEcho level: "           ) + std::to_string(echo_level) +
+            std::string("\n\tGlobal Key-Values: "    ) + summarize_globals() +
+            std::string("\n\tProject files: "        ) + summarize(project_files) +
+            std::string("\n\tLua host address: "     ) + lua_host_address
+            ;
+            //"\n\t" 
+            //lua_host_port_retry = true;
+            //opengl_khr_debug = false;
+            //opengl_vsync = false;
+
+            //std::optional<std::pair<unsigned int /*width*/,unsigned int /*height*/>> window_size = std::nullopt; // if not set, GLFW service will open window with 3/4 of monitor resolution 
+            //std::optional<std::pair<unsigned int /*x*/,unsigned int /*y*/>>          window_position = std::nullopt;
+            //enum WindowMode {
+            //    fullscreen   = 1 << 0,
+            //    nodecoration = 1 << 1,
+            //    topmost      = 1 << 2,
+            //    nocursor     = 1 << 3,
+
+            //unsigned int window_mode = 0;
+            //unsigned int window_monitor = 0;
+            //bool interactive = false;
+        // clang-format on
+    }
 };
 
 } /* end namespace frontend_resources */

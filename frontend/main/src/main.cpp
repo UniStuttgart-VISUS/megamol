@@ -33,6 +33,8 @@ int main(const int argc, const char** argv) {
     megamol::core::utility::log::Log::DefaultLog.SetMainTarget(std::make_shared<megamol::core::utility::log::DefaultTarget>());
     megamol::core::utility::log::Log::DefaultLog.SetLogFileName(config.log_file.data(), false);
 
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(config.as_string().c_str());
+
     megamol::core::CoreInstance core;
     core.SetConfigurationPaths_Frontend3000Compatibility(
         config.application_directory,
