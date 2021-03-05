@@ -362,6 +362,80 @@ private:
     std::vector<value_type> dataVec;
 };
 
+class CharContainer : public abstractContainer {
+    typedef char value_type;
+
+public:
+    std::vector<float> GetAsFloat() override {
+        return this->getAs<float>();
+    }
+    std::vector<double> GetAsDouble() override {
+        return this->getAs<double>();
+    }
+    std::vector<int32_t> GetAsInt32() override {
+        return this->getAs<int32_t>();
+    }
+    std::vector<uint64_t> GetAsUInt64() override {
+        return this->getAs<uint64_t>();
+    }
+    std::vector<uint32_t> GetAsUInt32() override {
+        return this->getAs<uint32_t>();
+    }
+    std::vector<char> GetAsChar() override {
+        return this->getAs<char>();
+    }
+    std::vector<unsigned char> GetAsUChar() override {
+        return this->getAs<unsigned char>();
+    }
+    std::vector<std::string> GetAsString() override {
+        return this->getAs<std::string>();
+    }
+
+    std::vector<value_type>& getVec() {
+        return dataVec;
+    }
+    size_t size() override {
+        return dataVec.size();
+    }
+    const std::string getType() override {
+        return "char";
+    }
+    const size_t getTypeSize() override {
+        return sizeof(value_type);
+    }
+
+private:
+    // TODO: maybe better in abstract container - no copy paste
+    template<class R>
+    std::vector<std::enable_if_t<std::is_same<value_type, R>::value, R>> getAs() {
+        return dataVec;
+    }
+
+    template<class R>
+    std::vector<std::enable_if_t<(std::is_same<unsigned char, R>::value), R>> getAs() {
+        return reinterpret_cast<std::vector<R>&>(dataVec);
+    }
+
+    template<class R>
+    std::vector<std::enable_if_t<(std::is_same<std::string, R>::value), R>> getAs() {
+        std::vector<R> new_vec(dataVec.size());
+        std::transform(
+            dataVec.begin(), dataVec.end(), new_vec.begin(), [](const value_type& val) { return std::to_string(val); });
+        return new_vec;
+    }
+
+    template<class R>
+    std::vector<std::enable_if_t<!(std::is_same<value_type, R>::value || std::is_same<unsigned char, R>::value ||
+                                     std::is_same<std::string, R>::value),
+        R>>
+    getAs() {
+        std::vector<R> new_vec(dataVec.begin(), dataVec.end());
+        return new_vec;
+    }
+
+    std::vector<value_type> dataVec;
+};
+
 class StringContainer : public abstractContainer {
     typedef std::string value_type;
 

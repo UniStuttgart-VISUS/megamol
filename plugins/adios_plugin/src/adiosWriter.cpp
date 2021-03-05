@@ -190,12 +190,12 @@ bool adiosWriter::run() {
 
             cad->setFrameIDtoLoad(i);
 
-            auto avaiVars = cad->getAvailableVars();
-
             if (!(*cad)(0)) {
                 megamol::core::utility::log::Log::DefaultLog.WriteError("[adiosWriter] Error during GetData");
                 return false;
             }
+
+            auto avaiVars = cad->getAvailableVars();
 
         try {
             if (!this->writer) {
@@ -215,14 +215,9 @@ bool adiosWriter::run() {
                 std::vector<size_t> localDim;
 
                 const size_t num = cad->getData(var)->size();
-
+                std::vector<size_t> shape = cad->getData(var)->getShape();
                 if (this->outputPatternSlot.Param<core::param::EnumParam>()->Value() == 1 && !cad->getData(var)->singleValue) {
-                    std::vector<size_t> shape;
-                    if (!cad->getData(var)->shape.empty())
-                        shape = cad->getData(var)->shape;
-                    else {
-                        shape = {cad->getData(var)->size()};
-                    }
+
                     localDim = shape;
                     globalDim = localDim;
 #ifdef WITH_MPI                  
@@ -242,9 +237,9 @@ bool adiosWriter::run() {
                     offsets = std::vector<size_t>(shape.size(), 0);
 #endif
                 } else {
-                    globalDim = {static_cast<size_t>(num)};
-                    offsets = {static_cast<size_t>(0)};
-                    localDim = {static_cast<size_t>(num)};
+                    localDim = shape;
+                    globalDim = shape;
+                    offsets = std::vector<size_t>(shape.size(), 0);
                 }
 
                 if (cad->getData(var)->getType() == "float") {
@@ -298,6 +293,18 @@ bool adiosWriter::run() {
 
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosWriter] Putting Variables");
                     if (adiosVar) writer.Put<unsigned char>(adiosVar, values.data());
+                } else if (cad->getData(var)->getType() == "char") {
+
+                    std::vector<char>& values =
+                        dynamic_cast<CharContainer*>(cad->getData(var).get())->getVec();
+
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosWriter] Defining Variables");
+                    adios2::Variable<char> adiosVar =
+                        io->DefineVariable<char>(var, globalDim, offsets, localDim, false);
+
+                    megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosWriter] Putting Variables");
+                    if (adiosVar)
+                        writer.Put<char>(adiosVar, values.data());
                 } else if (cad->getData(var)->getType() == "uint32_t") {
 
                     std::vector<unsigned int>& values =
@@ -312,6 +319,11 @@ bool adiosWriter::run() {
                 } else if (cad->getData(var)->getType() == "string") {
 
                     std::vector<std::string>& values = dynamic_cast<StringContainer*>(cad->getData(var).get())->getVec();
+                    //size_t max_dim = std::numeric_limits<size_t>::min();
+                    //for (auto& string : values) {
+                    //    max_dim = std::max(max_dim, string.size());
+                    //}
+                    //auto shape = cad->getData(var)->getShape();
 
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosWriter] Defining Variables");
                     adios2::Variable<std::string> adiosVar =
