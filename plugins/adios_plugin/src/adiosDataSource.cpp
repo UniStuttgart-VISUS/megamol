@@ -202,6 +202,20 @@ bool adiosDataSource::getDataCallback(core::Call& caller) {
 
                             reader->Get<int32_t>(advar, tmp_vec);
                             dataMap[var.first] = std::move(fc);
+                        } else if (var.second["Type"] == "int8_t" || var.second["Type"] == "char") {
+
+                            auto fc = std::make_shared<CharContainer>(CharContainer());
+                            fc->singleValue = singleValue;
+                            std::vector<char>& tmp_vec = fc->getVec();
+
+                            adios2::Variable<char> advar = io->InquireVariable<char>(var.first);
+                            auto info = reader->BlocksInfo(advar, cad->getFrameIDtoLoad());
+                            fc->shape = info[0].Count;
+                            std::for_each(fc->shape.begin(), fc->shape.end(), [&](decltype(num) n) { num *= n; });
+                            tmp_vec.resize(num);
+
+                            reader->Get<char>(advar, tmp_vec);
+                            dataMap[var.first] = std::move(fc);
                         } else if (var.second["Type"] == "uint64_t") {
                             auto fc = std::make_shared<UInt64Container>(UInt64Container());
                             fc->singleValue = singleValue;
