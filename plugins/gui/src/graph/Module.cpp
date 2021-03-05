@@ -508,13 +508,13 @@ void megamol::gui::Module::Draw(megamol::gui::PresentPhase phase, megamol::gui::
                                 other_item_hovered |= this->gui_tooltip.ToolTip("Parameters");
                             }
                         }
-
-                        // Draw Outline
-                        float border = ((!this->graph_entry_name.empty()) ? (4.0f) : (1.0f)) *
-                                       megamol::gui::gui_scaling.Get() * state.canvas.zooming;
-                        draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER,
-                            GUI_RECT_CORNER_RADIUS, ImDrawCornerFlags_All, border);
                     }
+
+                    // Draw Outline
+                    float border = ((!this->graph_entry_name.empty()) ? (4.0f) : (1.0f)) *
+                                   megamol::gui::gui_scaling.Get() * state.canvas.zooming;
+                    draw_list->AddRect(module_rect_min, module_rect_max, COLOR_MODULE_BORDER, GUI_RECT_CORNER_RADIUS,
+                        ImDrawCornerFlags_All, border);
                 }
             }
 
