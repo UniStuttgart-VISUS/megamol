@@ -35,12 +35,13 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   cuda_compile_and_embed(embedded_raygen_programs cuda_resources/raygen.cu)
   cuda_compile_and_embed(embedded_miss_programs  cuda_resources/miss.cu)
   cuda_compile_and_embed(embedded_sphere_programs cuda_resources/sphere.cu)
+  cuda_compile_and_embed(embedded_mesh_programs cuda_resources/mesh.cu)
   cuda_compile_and_embed(embedded_transitioncalculator_programs cuda_resources/transitioncalculator.cu)
 
   # Target definition
   #add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${shader_files} ${source_files})
   add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${cuda_resource_include_files}
-    ${embedded_raygen_programs} ${embedded_miss_programs} ${embedded_sphere_programs} ${embedded_transitioncalculator_programs})
+    ${embedded_raygen_programs} ${embedded_miss_programs} ${embedded_sphere_programs} ${embedded_mesh_programs} ${embedded_transitioncalculator_programs})
   target_compile_definitions(${PROJECT_NAME} PRIVATE ${EXPORT_NAME}_EXPORTS)
   target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
