@@ -20,6 +20,7 @@
 #include "SimpleRenderTarget.h"
 #include "TextureCombine.h"
 #include "TextureDepthCompositing.h"
+#include "ASSAO.h"
 
 namespace megamol::compositing {
     /** Implementing the instance class of this plugin */
@@ -61,6 +62,7 @@ namespace megamol::compositing {
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::SimpleRenderTarget>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureCombine>();
             this->module_descriptions.RegisterAutoDescription<megamol::compositing::TextureDepthCompositing>();
+            this->module_descriptions.RegisterAutoDescription<megamol::compositing::ASSAO>();
 
             // register calls here:
 

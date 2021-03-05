@@ -1,0 +1,41 @@
+void SSAOTap( const int qualityLevel, inout float obscuranceSum, inout float weightSum, const int tapIndex, const mat2 rotScale, const vec3 pixCenterPos, const vec3 negViewspaceDir, vec3 pixelNormal, const vec2 normalizedScreenPos, const float mipOffset, const float falloffCalcMulSq, float weightMod, vec2 normXY, float normXYLength )
+{
+    vec2  sampleOffset;
+    float   samplePow2Len;
+
+    // patterns
+    {
+        vec4 newSample = g_samplePatternMain[tapIndex];
+        sampleOffset    = mul( rotScale, newSample.xy );
+        samplePow2Len   = newSample.w;                      // precalculated, same as: samplePow2Len = log2( length( newSample.xy ) );
+        weightMod *= newSample.z;
+    }
+
+    // snap to pixel center (more correct obscurance math, avoids artifacts)
+    sampleOffset                    = round(sampleOffset);
+
+    // calculate MIP based on the sample distance from the centre, similar to as described
+    // in http://graphics.cs.williams.edu/papers/SAOHPG12/.
+    float mipLevel = ( qualityLevel < SSAO_DEPTH_MIPS_ENABLE_AT_QUALITY_PRESET )?(0):(samplePow2Len + mipOffset);
+
+    vec2 samplingUV = sampleOffset * g_ASSAOConsts.Viewport2xPixelSize + normalizedScreenPos;
+
+    SSAOTapInner( qualityLevel, obscuranceSum, weightSum, samplingUV, mipLevel, pixCenterPos, negViewspaceDir, pixelNormal, falloffCalcMulSq, weightMod, tapIndex * 2 );
+
+    // for the second tap, just use the mirrored offset
+    vec2 sampleOffsetMirroredUV    = -sampleOffset;
+
+    // tilt the second set of samples so that the disk is effectively rotated by the normal
+    // effective at removing one set of artifacts, but too expensive for lower quality settings
+    if( qualityLevel >= SSAO_TILT_SAMPLES_ENABLE_AT_QUALITY_PRESET )
+    {
+        float dotNorm = dot( sampleOffsetMirroredUV, normXY );
+        sampleOffsetMirroredUV -= dotNorm * normXYLength * normXY;
+        sampleOffsetMirroredUV = round(sampleOffsetMirroredUV);
+    }
+
+    // snap to pixel center (more correct obscurance math, avoids artifacts)
+    vec2 samplingMirroredUV = sampleOffsetMirroredUV * g_ASSAOConsts.Viewport2xPixelSize + normalizedScreenPos;
+
+    SSAOTapInner( qualityLevel, obscuranceSum, weightSum, samplingMirroredUV, mipLevel, pixCenterPos, negViewspaceDir, pixelNormal, falloffCalcMulSq, weightMod, tapIndex * 2 + 1 );
+}

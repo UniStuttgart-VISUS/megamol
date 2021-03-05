@@ -16,7 +16,7 @@
         <snippet type="version">430</snippet>
         <snippet name="Main"             type="file">comp/textureAlphaCompositing_c.glsl</snippet>
     </shader>
-    
+
     <shader name="textureDepthCompositing">
         <snippet type="version">430</snippet>
         <snippet name="Main"             type="file">comp/textureDepthCompositing_c.glsl</snippet>
@@ -40,6 +40,210 @@
     <shader name="lambert">
         <snippet type="version">430</snippet>
         <snippet name="Main"             type="file">comp/lambert_c.glsl</snippet>
+    </shader>
+
+    <!-- Adaptive Screen Space Ambient Occlusion shaders -->
+    <!-- Rename PS to CS -->
+    <namespace name="assao">
+        <snippet name="AddSample" type="file">comp/assao/AddSample</snippet>
+        <snippet name="ASSAOConstants" type="file">comp/assao/ASSAOConstants</snippet>
+        <snippet name="CalculateEdges" type="file">comp/assao/CalculateEdges</snippet>
+        <snippet name="CalculateNormal" type="file">comp/assao/CalculateNormal</snippet>
+        <snippet name="CalculatePixelObscurance" type="file">comp/assao/CalculatePixelObscurance</snippet>
+        <snippet name="CalculateRadiusParameters" type="file">comp/assao/CalculateRadiusParameters</snippet>
+        <snippet name="ClipSpaceToViewSpacePosition" type="file">comp/assao/ClipSpaceToViewSpacePosition</snippet>
+        <snippet name="DecodeNormal" type="file">comp/assao/DecodeNormal</snippet>
+        <snippet name="GenerateSSAOShadowsInternal" type="file">comp/assao/GenerateSSAOShadowsInternal</snippet>
+        <snippet name="LoadNormal" type="file">comp/assao/LoadNormal</snippet>
+        <snippet name="LoadNormalOffset" type="file">comp/assao/LoadNormalOffset</snippet>
+        <snippet name="PackEdges" type="file">comp/assao/PackEdges</snippet>
+        <snippet name="PrepareDepthMip" type="file">comp/assao/PrepareDepthMip</snippet>
+        <snippet name="PSApply" type="file">comp/assao/PSApply</snippet>
+        <snippet name="PSGenerateQ0" type="file">comp/assao/PSGenerateQ0</snippet>
+        <snippet name="PSGenerateQ1" type="file">comp/assao/PSGenerateQ1</snippet>
+        <snippet name="PSGenerateQ2" type="file">comp/assao/PSGenerateQ2</snippet>
+        <snippet name="PSGenerateQ3" type="file">comp/assao/PSGenerateQ3</snippet>
+        <snippet name="PSNonSmartApply" type="file">comp/assao/PSNonSmartApply</snippet>
+        <snippet name="PSNonSmartBlur" type="file">comp/assao/PSNonSmartBlur</snippet>
+        <snippet name="PSNonSmartHalfApply" type="file">comp/assao/PSNonSmartHalfApply</snippet>
+        <snippet name="PSPrepareDepthMip1" type="file">comp/assao/PSPrepareDepthMip1</snippet>
+        <snippet name="PSPrepareDepthMip2" type="file">comp/assao/PSPrepareDepthMip2</snippet>
+        <snippet name="PSPrepareDepthMip3" type="file">comp/assao/PSPrepareDepthMip3</snippet>
+        <snippet name="PSPrepareDepths" type="file">comp/assao/PSPrepareDepths</snippet>
+        <snippet name="PSPrepareDepthsAndNormals" type="file">comp/assao/PSPrepareDepthsAndNormals</snippet>
+        <snippet name="PSPrepareDepthsAndNormalsHalf" type="file">comp/assao/PSPrepareDepthsAndNormalsHalf</snippet>
+        <snippet name="PSPrepareDepthsHalf" type="file">comp/assao/PSPrepareDepthsHalf</snippet>
+        <snippet name="PSSmartBlur" type="file">comp/assao/PSSmartBlur</snippet>
+        <snippet name="PSSmartBlurWide" type="file">comp/assao/PSSmartBlurWide</snippet>
+        <snippet name="SampleBlured" type="file">comp/assao/SampleBlured</snippet>
+        <snippet name="SampleBlurredWide" type="file">comp/assao/SampleBlurredWide</snippet>
+        <snippet name="ScreenSpaceToClipSpacePositionXY" type="file">comp/assao/ScreenSpaceToClipSpacePositionXY</snippet>
+        <snippet name="ScreenSpaceToViewSpaceDepth" type="file">comp/assao/ScreenSpaceToViewSpaceDepth</snippet>
+        <snippet name="ScreenSpaceToViewSpacePosition" type="file">comp/assao/ScreenSpaceToViewSpacePosition</snippet>
+        <snippet name="SSAOTap" type="file">comp/assao/SSAOTap</snippet>
+        <snippet name="SSAOTapInner" type="file">comp/assao/SSAOTapInner</snippet>
+        <snippet name="Uniforms" type="file">comp/assao/Uniforms</snippet>
+        <snippet name="UnpackEdges" type="file">comp/assao/UnpackEdges</snippet>
+    </namespace>
+
+    <shader name="CSPrepareDepths">
+        <snippet type="version">430</snippet>
+        <snippet name="assao::ASSAOConstants" />
+        <snippet name="assao::Uniforms" />
+        <snippet name="assao::ScreenSpaceToViewSpaceDepth" />
+        <snippet name="assao::PSPrepareDepths" />
+    </shader>
+
+    <shader name="CSPrepareDepthsHalf">
+        <snippet type="version">430</snippet>
+        <snippet name="assao::Uniforms" />
+        <snippet name="assao::ScreenSpaceToViewSpaceDepth" />
+        <snippet name="assao::PSPrepareDepthsHalf" />
+    </shader>
+
+    <shader name="CSPrepareDepthsAndNormals">
+        <snippet type="version">430</snippet>
+        <snippet name="assao::ASSAOConstants" />
+        <snippet name="assao::Uniforms" />
+        <snippet name="assao::ScreenSpaceToViewSpaceDepth" />
+        <snippet name="assao::CalculateEdges" />
+        <snippet name="assao::NDCToViewspace" />
+        <snippet name="assao::CalculateNormal" />
+        <snippet name="assao::PSPrepareDepthsAndNormals" />
+    </shader>
+
+    <shader name="CSPrepareDepthsAndNormalsHalf">
+        <snippet type="version">430</snippet>
+        <snippet name="assao::ASSAOConstants" />
+        <snippet name="assao::Uniforms" />
+        <snippet name="assao::ScreenSpaceToViewSpaceDepth" />
+        <snippet name="assao::CalculateEdges" />
+        <snippet name="assao::NDCToViewspace" />
+        <snippet name="assao::CalculateNormal" />
+        <snippet name="assao::PSPrepareDepthsAndNormalsHalf" />
+    </shader>
+
+    <!--I think PSPerprareDepthMip{1|2|3} can be implemented as one-->
+    <shader name="CSPrepareDepthMip1">
+        <snippet type="version">430</snippet>
+        <snippet name="assao::Uniforms" />
+        <snippet name="assao::PrepareDepthMip" />
+        <snippet name="assao::CalculateRadiusParameters" />
+        <snippet name="assao::PSPrepareDepthMip1" />
+    </shader>
+
+    <shader name="CSPrepareDepthMip2">
+        <snippet type="version">430</snippet>
+        <snippet name="assao::Uniforms" />
+        <snippet name="assao::PrepareDepthMip" />
+        <snippet name="assao::CalculateRadiusParameters" />
+        <snippet name="assao::PSPrepareDepthMip2" />
+    </shader>
+
+    <shader name="CSPrepareDepthMip3">
+        <snippet type="version">430</snippet>
+        <snippet name="assao::Uniforms" />
+        <snippet name="assao::PrepareDepthMip" />
+        <snippet name="assao::CalculateRadiusParameters" />
+        <snippet name="assao::PSPrepareDepthMip3" />
+    </shader>
+
+    <shader name="CSGenerateQ0">
+        <snippet type="version">430</snippet>
+        <snippet name="assao::ASSAOConstants" />
+        <snippet name="assao::Uniforms" />
+        <snippet name="assao::GenerateSSAOShadowsInternal" />
+        <snippet name="assao::NDCToViewspace" />
+        <snippet name="assao::LoadNormal" />
+        <snippet name="assao::LoadNormalOffset" />
+        <snippet name="assao::DecodeNormal" />
+        <snippet name="assao::CalculateRadiusParameters" />
+        <snippet name="assao::CalculateEdges" />
+        <snippet name="assao::CalculatePixelObscurance" />
+        <snippet name="assao::SSAOTap" />
+        <snippet name="assao::SSAOTapInner" />
+        <snippet name="assao::PSGenerateQ0" />
+    </shader>
+
+    <shader name="CSGenerateQ1">
+        <snippet type="version">430</snippet>
+        <snippet name="assao::ASSAOConstants" />
+        <snippet name="assao::Uniforms" />
+        <snippet name="assao::GenerateSSAOShadowsInternal" />
+        <snippet name="assao::NDCToViewspace" />
+        <snippet name="assao::LoadNormal" />
+        <snippet name="assao::LoadNormalOffset" />
+        <snippet name="assao::DecodeNormal" />
+        <snippet name="assao::CalculateRadiusParameters" />
+        <snippet name="assao::CalculateEdges" />
+        <snippet name="assao::CalculatePixelObscurance" />
+        <snippet name="assao::SSAOTap" />
+        <snippet name="assao::SSAOTapInner" />
+        <snippet name="assao::PSGenerateQ0" />
+    </shader>
+
+    <shader name="CSGenerateQ2">
+        <snippet type="version">430</snippet>
+        <snippet name="assao::ASSAOConstants" />
+        <snippet name="assao::Uniforms" />
+        <snippet name="assao::GenerateSSAOShadowsInternal" />
+        <snippet name="assao::NDCToViewspace" />
+        <snippet name="assao::LoadNormal" />
+        <snippet name="assao::LoadNormalOffset" />
+        <snippet name="assao::DecodeNormal" />
+        <snippet name="assao::CalculateRadiusParameters" />
+        <snippet name="assao::CalculateEdges" />
+        <snippet name="assao::CalculatePixelObscurance" />
+        <snippet name="assao::SSAOTap" />
+        <snippet name="assao::SSAOTapInner" />
+        <snippet name="assao::PSGenerateQ0" />
+    </shader>
+
+    <shader name="CSSmartBlur">
+        <snippet type="version">430</snippet>
+        <snippet name="assao::ASSAOConstants" />
+        <snippet name="assao::Uniforms" />
+        <snippet name="assao::AddSample" />
+        <snippet name="assao::UnpackEdges" />
+        <snippet name="assao::SampleBlured" />
+        <snippet name="assao::PSSmartBlur" />
+    </shader>
+
+    <shader name="CSSmartBlurWide">
+        <snippet type="version">430</snippet>
+        <snippet name="assao::ASSAOConstants" />
+        <snippet name="assao::Uniforms" />
+        <snippet name="assao::AddSample" />
+        <snippet name="assao::UnpackEdges" />
+        <snippet name="assao::SampleBlured" />
+        <snippet name="assao::PSSmartBlurWide" />
+    </shader>
+
+    <shader name="CSApply">
+        <snippet type="version">430</snippet>
+        <snippet name="assao::Uniforms" />
+        <snippet name="assao::ASSAOConstants" />
+        <snippet name="assao::UnpackEdges" />
+        <snippet name="assao::PSApply" />
+    </shader>
+
+    <shader name="CSNonSmartBlur">
+        <snippet type="version">430</snippet>
+        <snippet name="assao::ASSAOConstants" />
+        <snipper name="assao::Uniforms" />
+        <snippet name="assao::PSNonSmartBlur" />
+    </shader>
+
+    <shader name="CSNonSmartApply">
+        <snippet type="version">430</snippet>
+        <snipper name="assao::Uniforms" />
+        <snippet name="assao::PSNonSmartApply" />
+    </shader>
+
+    <shader name="CSNonSmartHalfApply">
+        <snippet type="version">430</snippet>
+        <snipper name="assao::Uniforms" />
+        <snippet name="assao::PSNonSmartHalfApply" />
     </shader>
 
 </btf>
