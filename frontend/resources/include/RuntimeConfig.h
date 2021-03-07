@@ -71,7 +71,7 @@ struct RuntimeConfig {
 
         // clang-format off
         return std::string("RuntimeConfig values: "  ) +
-            std::string("\n\tProgram invocation: "   ) + program_invocation_string +
+            std::string("\n\tProgram invocation: "   ) + "\n\t\t" + program_invocation_string +
             std::string("\n\tConfiguration files: "  ) + summarize(configuration_files) +
             std::string("\n\tApplication directory: ") + application_directory +
             std::string("\n\tResource directories: " ) + summarize(resource_directories) +

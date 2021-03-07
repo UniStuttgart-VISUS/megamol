@@ -459,7 +459,8 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli(Runtime
 
     cxxopts::Options options(argv[0], "MegaMol Frontend 3000");
 
-    config.program_invocation_string = std::string{argv[0]};
+    for (int i = 0; i < argc; i++)
+        config.program_invocation_string += std::string{argv[i]} + " ";
 
     int _argc = argc;
     auto _argv = const_cast<char**>(argv);
