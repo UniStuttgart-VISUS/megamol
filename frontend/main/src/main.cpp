@@ -19,6 +19,16 @@
 
 #include "mmcore/LuaAPI.h"
 
+static void log(std::string const& text) {
+    const std::string msg = "Main: " + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
+}
+
+static void log_error(std::string const& text) {
+    const std::string msg = "Main: " + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
+}
+
 int main(const int argc, const char** argv) {
 
     bool lua_imperative_only = false; // allow mmFlush, mmList* and mmGetParam*
@@ -34,7 +44,8 @@ int main(const int argc, const char** argv) {
     megamol::core::utility::log::Log::DefaultLog.SetMainTarget(std::make_shared<megamol::core::utility::log::DefaultTarget>());
     megamol::core::utility::log::Log::DefaultLog.SetLogFileName(config.log_file.data(), false);
 
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo(config.as_string().c_str());
+    log(config.as_string());
+    log(global_value_store.as_string());
 
     megamol::core::CoreInstance core;
     core.SetConfigurationPaths_Frontend3000Compatibility(
@@ -123,7 +134,7 @@ int main(const int argc, const char** argv) {
     const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
 
     if (!init_ok) {
-        std::cout << "ERROR: some frontend service could not be initialized successfully. abort. " << std::endl;
+        log_error("Some frontend service could not be initialized successfully. Abort.");
         services.close();
         return 1;
     }
@@ -133,7 +144,7 @@ int main(const int argc, const char** argv) {
 
     megamol::core::MegaMolGraph graph(core, moduleProvider, callProvider);
 
-    // graph is also a resource that may be accessed by services
+    // Graph and Config are also a resources that may be accessed by services
     services.getProvidedResources().push_back({"MegaMolGraph", graph});
     services.getProvidedResources().push_back({"RuntimeConfig", config});
     services.getProvidedResources().push_back({"GlobalValueStore", global_value_store});
@@ -157,7 +168,7 @@ int main(const int argc, const char** argv) {
     //    std::vector<std::string> getRequestedResourceNames()
     //    void setRequestedResources(std::vector<FrontendResource>& resources)
     if (!resources_ok) {
-        std::cout << "ERROR: frontend could not assign requested service resources. abort. " << std::endl;
+        log_error("Frontend could not assign requested service resources. Abort.");
         run_megamol = false;
     }
 
@@ -201,12 +212,12 @@ int main(const int argc, const char** argv) {
     // load project files via lua
     for (auto& file : config.project_files) {
         if (!projectloader_service.load_file(file)) {
-            std::cout << "Project file \"" << file << "\" did not execute correctly"<< std::endl;
+            log("Project file \"" + file + "\" did not execute correctly");
             run_megamol = false;
 
             // if interactive, continue to run MegaMol
             if (config.interactive) {
-                std::cout << "Interactive mode: start MegaMol anyway"<< std::endl;
+                log("Interactive mode: start MegaMol anyway");
                 run_megamol = true;
             }
         }
