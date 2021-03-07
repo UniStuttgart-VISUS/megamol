@@ -2,6 +2,7 @@
 #define MEGAMOL_INFOVIS_PARALLELCOORDINATESRENDERER2D_H_INCLUDED
 
 #include "json.hpp"
+#include "mmcore/BoundingBoxes_2.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/FlagStorage.h"
@@ -11,7 +12,6 @@
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/Renderer2DModule.h"
 #include "mmstd_datatools/table/TableDataCall.h"
-#include "mmcore/BoundingBoxes_2.h"
 
 #include "vislib/graphics/gl/FramebufferObject.h"
 

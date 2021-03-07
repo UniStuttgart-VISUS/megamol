@@ -64,7 +64,7 @@ view::SplitViewGL::SplitViewGL()
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::onResetView);
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
 
     this->_render1Slot.SetCompatibleCall<CallRenderViewGLDescription>();
@@ -106,8 +106,7 @@ unsigned int view::SplitViewGL::GetCameraSyncNumber() const {
 
 void view::SplitViewGL::Render(const mmcRenderViewContext& context, Call* call) {
     // TODO: Affinity
-
-	 float time = static_cast<float>(context.Time);
+    float time = static_cast<float>(context.Time);
 
     if (this->doHookCode()) {
         this->doBeforeRenderHook();

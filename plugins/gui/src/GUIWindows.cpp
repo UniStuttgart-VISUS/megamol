@@ -170,7 +170,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->state.gui_visible = false;
     }
 
-    // Restore GUI after it was disabled (before early exit!)
+    // Show GUI after it was hidden (before early exit!)
     if (!this->state.gui_visible && this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
         this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
         // Restore window 'open' state (Always restore at least menu)
@@ -252,27 +252,9 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
 
     // Process hotkeys
     this->checkMultipleHotkeyAssignement();
-    if (this->state.gui_visible) {
-        // Second frame
-        if (this->state.gui_hide_next_frame) {
-            this->state.gui_hide_next_frame = false;
-            this->state.gui_visible = false;
-        }
-        // First frame
-        if (this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
-            this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
-            // Save 'open' state of windows for later restore. Closing all windows before omitting GUI rendering is
-            // required to set right ImGui state for mouse handling
-            this->state.gui_visible_buffer.clear();
-            const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
-                if (wc.win_show) {
-                    this->state.gui_visible_buffer.push_back(wc.win_callback);
-                    wc.win_show = false;
-                }
-            };
-            this->window_collection.EnumWindows(func);
-            this->state.gui_hide_next_frame = true;
-        }
+    if (this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
+        this->state.gui_hide_next_frame = 2;
+        this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
     }
     if (this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM].is_pressed) {
         this->triggerCoreInstanceShutdown();
@@ -289,30 +271,30 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     }
     if (this->state.toggle_graph_entry || this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].is_pressed) {
         GraphPtr_t graph_ptr;
-        if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-            megamol::gui::ModulePtrVector_t::const_iterator module_graph_entry_iter = graph_ptr->GetModules().begin();
+        if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+            megamol::gui::ModulePtrVector_t::const_iterator module_graph_entry_iter = graph_ptr->Modules().begin();
             // Search for first graph entry and set next view to graph entry (= graph entry point)
-            for (auto module_iter = graph_ptr->GetModules().begin(); module_iter != graph_ptr->GetModules().end();
+            for (auto module_iter = graph_ptr->Modules().begin(); module_iter != graph_ptr->Modules().end();
                  module_iter++) {
-                if ((*module_iter)->is_view && (*module_iter)->IsGraphEntry()) {
+                if ((*module_iter)->IsView() && (*module_iter)->IsGraphEntry()) {
                     // Remove all graph entries
-                    (*module_iter)->graph_entry_name.clear();
+                    (*module_iter)->SetGraphEntryName("");
                     Graph::QueueData queue_data;
                     queue_data.name_id = (*module_iter)->FullName();
                     graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                     // Save index of last found graph entry
-                    if (module_iter != graph_ptr->GetModules().end()) {
+                    if (module_iter != graph_ptr->Modules().end()) {
                         module_graph_entry_iter = module_iter + 1;
                     }
                 }
             }
-            if ((module_graph_entry_iter == graph_ptr->GetModules().begin()) ||
-                (module_graph_entry_iter != graph_ptr->GetModules().end())) {
+            if ((module_graph_entry_iter == graph_ptr->Modules().begin()) ||
+                (module_graph_entry_iter != graph_ptr->Modules().end())) {
                 // Search for next graph entry
-                for (auto module_iter = module_graph_entry_iter; module_iter != graph_ptr->GetModules().end();
+                for (auto module_iter = module_graph_entry_iter; module_iter != graph_ptr->Modules().end();
                      module_iter++) {
-                    if ((*module_iter)->is_view) {
-                        (*module_iter)->graph_entry_name = graph_ptr->GenerateUniqueGraphEntryName();
+                    if ((*module_iter)->IsView()) {
+                        (*module_iter)->SetGraphEntryName(graph_ptr->GenerateUniqueGraphEntryName());
                         Graph::QueueData queue_data;
                         queue_data.name_id = (*module_iter)->FullName();
                         graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
@@ -330,7 +312,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     if (this->state.autosave_gui_state && this->state.win_save_state && (this->state.win_save_delay > 1.0f)) {
         // Delayed saving after triggering saving state (in seconds).
         GraphPtr_t graph_ptr;
-        if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+        if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
             std::string filename = graph_ptr->GetFilename();
             this->configurator.GetGraphCollection().SaveProjectToFile(
                 this->state.graph_uid, filename, this->dump_state_to_file(filename));
@@ -433,13 +415,13 @@ bool GUIWindows::PostDraw(void) {
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
 
             if (!wc.tfe_active_param.empty()) {
-                GraphPtr_t graph_ptr;
-                if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-                    for (auto& module_ptr : graph_ptr->GetModules()) {
+                if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+                    for (auto& module_ptr : graph_ptr->Modules()) {
                         std::string module_full_name = module_ptr->FullName();
-                        for (auto& param : module_ptr->parameters) {
-                            std::string param_full_name = module_full_name + "::" + param.full_name;
-                            if ((wc.tfe_active_param == param_full_name) && (param.type == Param_t::TRANSFERFUNCTION)) {
+                        for (auto& param : module_ptr->Parameters()) {
+                            std::string param_full_name = module_full_name + "::" + param.FullName();
+                            if ((wc.tfe_active_param == param_full_name) &&
+                                (param.Type() == Param_t::TRANSFERFUNCTION)) {
                                 this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
                                 this->tf_editor_ptr->SetTransferFunction(std::get<std::string>(param.GetValue()), true);
                             }
@@ -517,13 +499,12 @@ bool GUIWindows::PostDraw(void) {
     /// ! Is only enabled in second frame if interaction objects are added during first frame !
     this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
 
-    GraphPtr_t graph_ptr;
-    if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-        for (auto& module_ptr : graph_ptr->GetModules()) {
+    if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+        for (auto& module_ptr : graph_ptr->Modules()) {
 
-            module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_ptr->FullName(), "",
-                vislib::math::Ternary::TRI_UNKNOWN, false, ParameterPresentation::WidgetScope::GLOBAL,
-                this->tf_editor_ptr, nullptr, GUI_INVALID_ID, &this->picking_buffer);
+            module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), module_ptr->FullName(), "",
+                vislib::math::Ternary::TRI_UNKNOWN, false, Parameter::WidgetScope::GLOBAL, this->tf_editor_ptr, nullptr,
+                GUI_INVALID_ID, &this->picking_buffer);
         }
     }
 
@@ -543,6 +524,28 @@ bool GUIWindows::PostDraw(void) {
     // Reset hotkeys ----------------------------------------------------------
     for (auto& h : this->hotkeys) {
         h.is_pressed = false;
+    }
+
+    // Hide GUI if it is currently shown --------------------------------------
+    if (this->state.gui_visible) {
+        if (this->state.gui_hide_next_frame == 2) {
+            // First frame
+            this->state.gui_hide_next_frame--;
+            // Save 'open' state of windows for later restore. Closing all windows before omitting GUI rendering is
+            // required to set right ImGui state for mouse handling
+            this->state.gui_visible_buffer.clear();
+            const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
+                if (wc.win_show) {
+                    this->state.gui_visible_buffer.push_back(wc.win_callback);
+                    wc.win_show = false;
+                }
+            };
+            this->window_collection.EnumWindows(func);
+        } else if (this->state.gui_hide_next_frame == 1) {
+            // Second frame
+            this->state.gui_hide_next_frame = 0;
+            this->state.gui_visible = false;
+        }
     }
 
     // Apply new gui scale -----------------------------------------------------
@@ -736,21 +739,20 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     this->window_collection.EnumWindows(modfunc);
     // Check for parameter hotkeys
     hotkeyPressed = false;
-    GraphPtr_t graph_ptr;
-    if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-        for (auto& module_ptr : graph_ptr->GetModules()) {
+    if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+        for (auto& module_ptr : graph_ptr->Modules()) {
             // Break loop after first occurrence of parameter hotkey
             if (hotkeyPressed)
                 break;
             if (check_all_modules || this->considerModule(module_ptr->FullName(), modules_list)) {
-                for (auto& param : module_ptr->parameters) {
-                    if (param.type == Param_t::BUTTON) {
+                for (auto& param : module_ptr->Parameters()) {
+                    if (param.Type() == Param_t::BUTTON) {
                         auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
                         if (this->isHotkeyPressed(keyCode)) {
                             // Sync directly button action to parameter in core
                             /// Does not require syncing of graphs
-                            if (param.core_param_ptr != nullptr) {
-                                param.core_param_ptr->setDirty();
+                            if (param.CoreParamPtr() != nullptr) {
+                                param.CoreParamPtr()->setDirty();
                             }
                             /// param.ForceSetValueDirty();
                             hotkeyPressed = true;
@@ -894,10 +896,9 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 
     bool synced = false;
     bool sync_success = false;
-    GraphPtr_t graph_ptr;
-    bool found_graph = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr);
+    GraphPtr_t graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid);
     // 2a) Either synchronize GUI Graph -> Core Graph ... ---------------------
-    if (!synced && found_graph) {
+    if (!synced && (graph_ptr != nullptr)) {
         bool graph_sync_success = true;
 
         Graph::QueueAction action;
@@ -996,37 +997,38 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                 __LINE__);
         }
 
-        GraphPtr_t graph_ptr;
-        if (graph_sync_success && this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-            std::string script_filename = this->state.last_script_filename;
-            if (graph_ptr->GetFilename().empty()) {
-                if (this->core_instance != nullptr) {
-                    // Set project filename from lua state of core instance
-                    script_filename = this->core_instance->GetLuaState()->GetScriptPath();
+        if (graph_sync_success) {
+            if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+                std::string script_filename = this->state.last_script_filename;
+                if (graph_ptr->GetFilename().empty()) {
+                    if (this->core_instance != nullptr) {
+                        // Set project filename from lua state of core instance
+                        script_filename = this->core_instance->GetLuaState()->GetScriptPath();
+                    }
                 }
-            }
-            // Always check for changed script path when project file is dropped
-            if (!this->state.project_script_paths.empty()) {
-                script_filename = this->state.project_script_paths.front();
-            }
-            // Load GUI state from project file when project file changed
-            if (script_filename != this->state.last_script_filename) {
-                graph_ptr->SetFilename(script_filename);
-                this->load_state_from_file(graph_ptr->GetFilename());
-                this->state.last_script_filename = script_filename;
+                // Always check for changed script path when project file is dropped
+                if (!this->state.project_script_paths.empty()) {
+                    script_filename = this->state.project_script_paths.front();
+                }
+                // Load GUI state from project file when project file changed
+                if (script_filename != this->state.last_script_filename) {
+                    graph_ptr->SetFilename(script_filename);
+                    this->load_state_from_file(graph_ptr->GetFilename());
+                    this->state.last_script_filename = script_filename;
+                }
             }
         }
         sync_success &= graph_sync_success;
     }
 
     // 3) Synchronize parameter values -------------------------------------------
-    if (found_graph) {
+    if (graph_ptr != nullptr) {
         bool param_sync_success = true;
-        for (auto& module_ptr : graph_ptr->GetModules()) {
-            for (auto& param : module_ptr->parameters) {
+        for (auto& module_ptr : graph_ptr->Modules()) {
+            for (auto& param : module_ptr->Parameters()) {
 
                 // Try to connect gui parameters to newly created parameters of core modules
-                if (param.core_param_ptr.IsNull()) {
+                if (param.CoreParamPtr().IsNull()) {
                     auto module_name = module_ptr->FullName();
                     megamol::core::Module* core_module_ptr = nullptr;
                     if (megamol_graph != nullptr) {
@@ -1048,8 +1050,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                             auto param_slot = dynamic_cast<megamol::core::param::ParamSlot*>((*si).get());
                             if (param_slot != nullptr) {
                                 std::string param_full_name(param_slot->Name().PeekBuffer());
-                                for (auto& parameter : module_ptr->parameters) {
-                                    if (parameter.full_name == param_full_name) {
+                                for (auto& parameter : module_ptr->Parameters()) {
+                                    if (parameter.FullName() == param_full_name) {
                                         megamol::gui::Parameter::ReadNewCoreParameterToExistingParameter(
                                             (*param_slot), parameter, true, false, true);
                                     }
@@ -1066,22 +1068,22 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 #endif // GUI_VERBOSE
                 }
 
-                if (!param.core_param_ptr.IsNull()) {
+                if (!param.CoreParamPtr().IsNull()) {
                     // Write changed gui state to core parameter
-                    if (param.present.IsGUIStateDirty()) {
+                    if (param.IsGUIStateDirty()) {
                         param_sync_success &=
-                            megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.core_param_ptr);
-                        param.present.ResetGUIStateDirty();
+                            megamol::gui::Parameter::WriteCoreParameterGUIState(param, param.CoreParamPtr());
+                        param.ResetGUIStateDirty();
                     }
                     // Write changed parameter value to core parameter
                     if (param.IsValueDirty()) {
                         param_sync_success &=
-                            megamol::gui::Parameter::WriteCoreParameterValue(param, param.core_param_ptr);
+                            megamol::gui::Parameter::WriteCoreParameterValue(param, param.CoreParamPtr());
                         param.ResetValueDirty();
                     }
                     // Read current parameter value and GUI state fro core parameter
                     param_sync_success &= megamol::gui::Parameter::ReadCoreParameterToParameter(
-                        param.core_param_ptr, param, false, false);
+                        param.CoreParamPtr(), param, false, false);
                 }
             }
         }
@@ -1428,8 +1430,7 @@ void GUIWindows::drawConfiguratorWindowCallback(WindowCollection::WindowConfigur
 void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& wc) {
 
     // Mode
-    megamol::gui::ParameterPresentation::ParameterExtendedModeButton(
-        "draw_param_window_callback", wc.param_extended_mode);
+    megamol::gui::ButtonWidgets::ExtendedModeButton("draw_param_window_callback", wc.param_extended_mode);
     this->tooltip.Marker("Expert mode enables options for additional parameter presentation options.");
     ImGui::SameLine();
 
@@ -1473,14 +1474,13 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
     ImGui::BeginChild("###ParameterList", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_HorizontalScrollbar);
 
     // Listing modules and their parameters
-    GraphPtr_t graph_ptr;
     const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
-    if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+    if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
 
         // Get module groups
         std::map<std::string, std::vector<ModulePtr_t>> group_map;
-        for (auto& module_ptr : graph_ptr->GetModules()) {
-            auto group_name = module_ptr->present.group.name;
+        for (auto& module_ptr : graph_ptr->Modules()) {
+            auto group_name = module_ptr->GroupName();
             if (!group_name.empty()) {
                 group_map["::" + group_name].emplace_back(module_ptr);
             } else {
@@ -1500,7 +1500,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
             if (group_header_open) {
                 for (auto& module_ptr : group.second) {
                     std::string module_label = module_ptr->FullName();
-                    ImGui::PushID(module_ptr->uid);
+                    ImGui::PushID(module_ptr->UID());
 
                     // Check if module should be considered.
                     if (!this->considerModule(module_label, wc.param_modules_list)) {
@@ -1511,7 +1511,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                     bool module_header_open = GUIUtils::GroupHeader(
                         megamol::gui::HeaderType::MODULE, module_label, search_string, override_header_state);
                     // Module description as hover tooltip
-                    this->tooltip.ToolTip(module_ptr->description, ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
+                    this->tooltip.ToolTip(module_ptr->Description(), ImGui::GetID(module_label.c_str()), 0.5f, 5.0f);
 
                     // Context menu
                     if (ImGui::BeginPopupContextItem()) {
@@ -1561,10 +1561,9 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
                     // Draw parameters
                     if (module_header_open) {
                         bool out_open_external_tf_editor;
-                        module_ptr->present.param_groups.PresentGUI(module_ptr->parameters, module_label, search_string,
-                            vislib::math::Ternary(wc.param_extended_mode), true,
-                            ParameterPresentation::WidgetScope::LOCAL, this->tf_editor_ptr,
-                            &out_open_external_tf_editor, override_header_state, nullptr);
+                        module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), module_label, search_string,
+                            vislib::math::Ternary(wc.param_extended_mode), true, Parameter::WidgetScope::LOCAL,
+                            this->tf_editor_ptr, &out_open_external_tf_editor, override_header_state, nullptr);
                         if (out_open_external_tf_editor) {
                             const auto func = [](WindowCollection::WindowConfiguration& wc) {
                                 if (wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) {
@@ -1727,8 +1726,8 @@ void GUIWindows::drawMenu(void) {
     ImGuiStyle& style = ImGui::GetStyle();
 
     bool megamolgraph_interface = false;
-    GraphPtr_t graph_ptr;
-    if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
+    auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid);
+    if (graph_ptr != nullptr) {
         megamolgraph_interface = (graph_ptr->GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH);
     }
 
@@ -1797,32 +1796,32 @@ void GUIWindows::drawMenu(void) {
             }
             ImGui::EndMenu();
         }
+        ImGui::Separator();
     }
-    ImGui::Separator();
 
     // RENDER -----------------------------------------------------------------
     if (megamolgraph_interface && (graph_ptr != nullptr)) {
         if (ImGui::BeginMenu("Render")) {
-            for (auto& module_ptr : graph_ptr->GetModules()) {
-                if (module_ptr->is_view) {
+            for (auto& module_ptr : graph_ptr->Modules()) {
+                if (module_ptr->IsView()) {
                     if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsGraphEntry())) {
                         if (!module_ptr->IsGraphEntry()) {
                             // Remove all graph entries
-                            for (auto module_ptr : graph_ptr->GetModules()) {
-                                if (module_ptr->is_view && module_ptr->IsGraphEntry()) {
-                                    module_ptr->graph_entry_name.clear();
+                            for (auto module_ptr : graph_ptr->Modules()) {
+                                if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
+                                    module_ptr->SetGraphEntryName("");
                                     Graph::QueueData queue_data;
                                     queue_data.name_id = module_ptr->FullName();
                                     graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                                 }
                             }
                             // Add new graph entry
-                            module_ptr->graph_entry_name = graph_ptr->GenerateUniqueGraphEntryName();
+                            module_ptr->SetGraphEntryName(graph_ptr->GenerateUniqueGraphEntryName());
                             Graph::QueueData queue_data;
                             queue_data.name_id = module_ptr->FullName();
                             graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
                         } else {
-                            module_ptr->graph_entry_name.clear();
+                            module_ptr->SetGraphEntryName("");
                             Graph::QueueData queue_data;
                             queue_data.name_id = module_ptr->FullName();
                             graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
@@ -1836,16 +1835,15 @@ void GUIWindows::drawMenu(void) {
             }
             ImGui::EndMenu();
         }
+        ImGui::Separator();
     }
-    ImGui::Separator();
 
     // SETTINGS ---------------------------------------------------------------
     if (ImGui::BeginMenu("Settings")) {
 
-        if (ImGui::MenuItem("Enable/Disable GUI",
-                this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str())) {
-            /// gui_visible needs to be toggled via hotkey!
-            this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = true;
+        if (ImGui::MenuItem(
+                "Show/Hide GUI", this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str())) {
+            this->state.gui_hide_next_frame = 2;
         }
 
         if (ImGui::BeginMenu("Style")) {
@@ -2051,11 +2049,9 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     bool confirmed, aborted;
     bool popup_failed = false;
     std::string filename;
-    GraphPtr_t graph_ptr;
-    if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-        filename = graph_ptr->GetFilename();
-    }
+    GraphPtr_t graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid);
     if (graph_ptr != nullptr) {
+        filename = graph_ptr->GetFilename();
         vislib::math::Ternary save_gui_state(
             vislib::math::Ternary::TRI_FALSE); // Default for option asking for saving gui state
         this->state.open_popup_save |= this->configurator.ConsumeTriggeredGlobalProjectSave();
@@ -2252,12 +2248,11 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
             hotkeylist.emplace_back(h.keycode);
         }
 
-        GraphPtr_t graph_ptr;
-        if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-            for (auto& module_ptr : graph_ptr->GetModules()) {
-                for (auto& param : module_ptr->parameters) {
+        if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+            for (auto& module_ptr : graph_ptr->Modules()) {
+                for (auto& param : module_ptr->Parameters()) {
 
-                    if (param.type == Param_t::BUTTON) {
+                    if (param.Type() == Param_t::BUTTON) {
                         auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
                         // Ignore not set hotekey
                         if (keyCode.key == core::view::Key::KEY_UNKNOWN) {
@@ -2276,7 +2271,7 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
                             megamol::core::utility::log::Log::DefaultLog.WriteWarn(
                                 "[GUI] The hotkey [%s] of the parameter \"%s\" has already been assigned. "
                                 ">>> If this hotkey is pressed, there will be no effect on this parameter!",
-                                keyCode.ToString().c_str(), param.full_name.c_str());
+                                keyCode.ToString().c_str(), param.FullName().c_str());
                         }
                     }
                 }
@@ -2372,17 +2367,16 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
         this->configurator.StateFromJSON(in_json);
 
         // Read GUI state of parameters (groups)
-        GraphPtr_t graph_ptr;
-        if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-            for (auto& module_ptr : graph_ptr->GetModules()) {
+        if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+            for (auto& module_ptr : graph_ptr->Modules()) {
                 std::string module_full_name = module_ptr->FullName();
                 // Parameter Groups
-                module_ptr->present.param_groups.StateFromJSON(in_json, module_full_name);
+                module_ptr->GUIParameterGroups().StateFromJSON(in_json, module_full_name);
                 // Parameters
-                for (auto& param : module_ptr->parameters) {
-                    std::string param_full_name = module_full_name + "::" + param.full_name;
-                    param.present.StateFromJSON(in_json, param_full_name);
-                    param.present.ForceSetGUIStateDirty();
+                for (auto& param : module_ptr->Parameters()) {
+                    std::string param_full_name = module_full_name + "::" + param.FullName();
+                    param.StateFromJSON(in_json, param_full_name);
+                    param.ForceSetGUIStateDirty();
                 }
             }
         }
@@ -2420,16 +2414,15 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
         this->configurator.StateToJSON(inout_json);
 
         // Write GUI state of parameters (groups)
-        GraphPtr_t graph_ptr;
-        if (this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid, graph_ptr)) {
-            for (auto& module_ptr : graph_ptr->GetModules()) {
+        if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+            for (auto& module_ptr : graph_ptr->Modules()) {
                 std::string module_full_name = module_ptr->FullName();
                 // Parameter Groups
-                module_ptr->present.param_groups.StateToJSON(inout_json, module_full_name);
+                module_ptr->GUIParameterGroups().StateToJSON(inout_json, module_full_name);
                 // Parameters
-                for (auto& param : module_ptr->parameters) {
-                    std::string param_full_name = module_full_name + "::" + param.full_name;
-                    param.present.StateToJSON(inout_json, param_full_name);
+                for (auto& param : module_ptr->Parameters()) {
+                    std::string param_full_name = module_full_name + "::" + param.FullName();
+                    param.StateToJSON(inout_json, param_full_name);
                 }
             }
         }
@@ -2453,7 +2446,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.gui_visible = true;
     this->state.gui_visible_post = true;
     this->state.gui_visible_buffer.clear();
-    this->state.gui_hide_next_frame = false;
+    this->state.gui_hide_next_frame = 0;
     this->state.style = GUIWindows::Styles::DarkColors;
     this->state.rescale_windows = false;
     this->state.style_changed = true;
