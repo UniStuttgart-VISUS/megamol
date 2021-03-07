@@ -20,9 +20,10 @@ namespace stdfs = std::experimental::filesystem;
 #endif
 
 using megamol::frontend_resources::RuntimeConfig;
+using megamol::frontend_resources::GlobalValueStore;
 
 // called by main and returns config struct filled with parsed CLI values
-megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli_and_config(const int argc, const char** argv, megamol::core::LuaAPI& lua) {
+std::pair<RuntimeConfig, GlobalValueStore> megamol::frontend::handle_cli_and_config(const int argc, const char** argv, megamol::core::LuaAPI& lua) {
     RuntimeConfig config;
 
     // config files are already checked to exist in file system
@@ -34,7 +35,12 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli_and_con
     // overwrite default and config values with CLI inputs
     config = handle_cli(config, argc, argv);
 
-    return config;
+    GlobalValueStore global_value_store;
+    for (auto& pair : config.global_values) {
+        global_value_store.insert(pair.first, pair.second);
+    }
+
+    return {config, global_value_store};
 }
 
 static void exit(std::string const& reason) {

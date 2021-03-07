@@ -6,6 +6,7 @@
 #include "mmcore/utility/log/DefaultTarget.h"
 
 #include "RuntimeConfig.h"
+#include "GlobalValueStore.h"
 #include "FrameStatistics_Service.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
@@ -23,7 +24,7 @@ int main(const int argc, const char** argv) {
     bool lua_imperative_only = false; // allow mmFlush, mmList* and mmGetParam*
     megamol::core::LuaAPI lua_api(lua_imperative_only);
 
-    auto config = megamol::frontend::handle_cli_and_config(argc, argv, lua_api);
+    auto [config, global_value_store] = megamol::frontend::handle_cli_and_config(argc, argv, lua_api);
 
     // setup log
     megamol::core::utility::log::Log::DefaultLog.SetLevel(config.echo_level);
@@ -135,6 +136,7 @@ int main(const int argc, const char** argv) {
     // graph is also a resource that may be accessed by services
     services.getProvidedResources().push_back({"MegaMolGraph", graph});
     services.getProvidedResources().push_back({"RuntimeConfig", config});
+    services.getProvidedResources().push_back({"GlobalValueStore", global_value_store});
 
     // proof of concept: a resource that returns a list of names of available resources
     // used by Lua Wrapper and LuaAPI to return list of available resources via remoteconsole
