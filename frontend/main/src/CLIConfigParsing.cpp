@@ -19,13 +19,29 @@ namespace stdfs = std::experimental::filesystem;
 #endif
 #endif
 
+using megamol::frontend_resources::RuntimeConfig;
+
+// called by main and returns config struct filled with parsed CLI values
+megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli_and_config(const int argc, const char** argv, megamol::core::LuaAPI& lua) {
+    RuntimeConfig config;
+
+    // config files are already checked to exist in file system
+    config.configuration_files = extract_config_file_paths(argc, argv);
+
+    // overwrite default values with values from config file
+    config = handle_config(config, lua);
+
+    // overwrite default and config values with CLI inputs
+    config = handle_cli(config, argc, argv);
+
+    return config;
+}
+
 static void exit(std::string const& reason) {
     std::cout << "Error: " << reason << std::endl;
     std::cout << "Shut down MegaMol" << std::endl;
     std::exit(1);
 }
-
-using megamol::frontend_resources::RuntimeConfig;
 
 // only for --config pass
 static std::string config_option      = "c,config";
@@ -70,7 +86,7 @@ static void files_exist(std::vector<std::string> vec, std::string const& type) {
     }
 }
 
-// option handlers fill config struct with passed options
+// option handlers fill the config struct with passed options
 // this is a handler template
 static void empty_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
@@ -229,21 +245,6 @@ std::vector<OptionsListEntry> cli_options_list =
         , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
     };
 
-megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_cli_and_config(const int argc, const char** argv, megamol::core::LuaAPI& lua) {
-    RuntimeConfig config;
-
-    // config files are already checked to exist in file system
-    config.configuration_files = extract_config_file_paths(argc, argv);
-
-    // overwrite default values with values from config file
-    config = handle_config(config, lua);
-
-    // overwrite default and config values with CLI inputs
-    config = handle_cli(config, argc, argv);
-
-    return config;
-}
-
 std::vector<std::string> megamol::frontend::extract_config_file_paths(const int argc, const char** argv) {
     // load config files from default paths
     // setting Config files from Lua is not possible
@@ -293,9 +294,8 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
     using StringPair = megamol::frontend_resources::RuntimeConfig::StringPair;
     std::vector<StringPair> cli_options_from_configs;
 
-    auto is_weird = [](std::string const& s) { return (s.empty() || s.find_first_of(" =") != std::string::npos); };
-    #define check(s) \
-                if (is_weird(s)) \
+    #define sane(s) \
+                if (s.empty() || s.find_first_of(" =") != std::string::npos) \
                     return false;
     #define file_exists(f) \
                 if (!stdfs::exists(f)) \
@@ -305,7 +305,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
 
     auto make_option_callback = [&](std::string const& optname, bool file_check = false) {
         return [&](std::string const& value) {
-            check(value);
+            sane(value);
             if (file_check) {
                 file_exists(value);
             }
@@ -315,16 +315,16 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         };
     };
 
-    std::vector<std::string> all_options;
+    std::vector<std::string> all_options_separate;
     for (auto& opt : cli_options_list) {
         // split "h,help"
         auto& name = std::get<0>(opt);
         auto delimiter = name.find(",");
         if (delimiter == std::string::npos) {
-            all_options.push_back(name);
+            all_options_separate.push_back(name);
         } else {
-            all_options.push_back(name.substr(0, delimiter));
-            all_options.push_back(name.substr(delimiter+1));
+            all_options_separate.push_back(name.substr(0, delimiter));
+            all_options_separate.push_back(name.substr(delimiter+1));
         }
     }
 
@@ -341,8 +341,8 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         // mmSetCliOption_callback_
         [&](std::string const& clioption, std::string const& value) {
             // the usual CLI options
-            check(clioption);
-            check(value);
+            sane(clioption);
+            sane(value);
 
             // we assume that "on" and "off" are used only for boolean cxxopts values
             // and so we can map them to "true" and "false"
@@ -357,8 +357,8 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
                 return value;
             };
 
-            auto option_it = std::find(all_options.begin(), all_options.end(), clioption);
-            bool option_unknown = option_it == all_options.end();
+            auto option_it = std::find(all_options_separate.begin(), all_options_separate.end(), clioption);
+            bool option_unknown = option_it == all_options_separate.end();
             if (option_unknown)
                 return false;
 
@@ -373,8 +373,8 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         } ,
         // mmSetGlobalValue_callback_
         [&](std::string const& key, std::string const& value) {
-            check(key);
-            check(value);
+            sane(key);
+            sane(value);
             add(global_option, key + ":" + value);
             return true;
         },
@@ -410,6 +410,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
          auto zero = "Lua Config Pass";
          argv[0] = zero;
 
+         // cxopts can only parse const char**
          int i = 1;
          for (auto& arg : file_contents_as_cli) {
              argv[i++] = arg.data();
@@ -423,7 +424,6 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
 
         // actually process passed options
         try {
-            // cxopts can only parse const char**
             auto parsed_options = options.parse(argc, argv.data());
             std::string res;
 
