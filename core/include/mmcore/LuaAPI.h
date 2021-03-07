@@ -35,14 +35,14 @@ public:
 
     typedef struct {
         std::function<bool(std::string const&, std::string const&)> mmSetCliOption_callback_;
+        std::function<bool(std::string const&, std::string const&)> mmSetGlobalValue_callback_;
         std::function<bool(std::string const&)> mmSetAppDir_callback_;
         std::function<bool(std::string const&)> mmAddResourceDir_callback_;
         std::function<bool(std::string const&)> mmAddShaderDir_callback_;
         std::function<bool(std::string const&)> mmSetLogFile_callback_;
-        std::function<bool(unsigned int const)> mmSetLogLevel_callback_;
-        std::function<bool(unsigned int const)> mmSetEchoLevel_callback_;
+        std::function<bool(std::string const&)> mmSetLogLevel_callback_;
+        std::function<bool(std::string const&)> mmSetEchoLevel_callback_;
         std::function<bool(std::string const&)> mmLoadProject_callback_;
-        std::function<bool(std::string const&, std::string const&)> mmSetGlobalValue_callback_;
     } LuaConfigCallbacks;
 
     typedef struct {

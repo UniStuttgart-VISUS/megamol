@@ -328,8 +328,17 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
         }
     }
 
-    auto lua_config_callbacks = megamol::core::LuaAPI::LuaConfigCallbacks{
-        // mmSetCliOption_callback_ std::function<void(std::string const&, std::string const&)> ;
+    // the thing with the lua callbacks is: 
+    // lua should not know how CLI options are named.
+    // we might want to rename --logfile or --loglevel at some point
+    // but the important thing is that lua should not care. it shoult simply interpret lua.
+    // so we have one callback for each lua config function and we resolve the CLI option names here.
+    // if lua does the name resolving, someone might change cli options in this file and not in the lua callbacks,
+    // and then lua might accept the wrong CLI arguments.
+
+    auto lua_config_callbacks = megamol::core::LuaAPI::LuaConfigCallbacks
+    {
+        // mmSetCliOption_callback_
         [&](std::string const& clioption, std::string const& value) {
             // the usual CLI options
             check(clioption);
@@ -362,36 +371,20 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
 
             return true;
         } ,
-        make_option_callback(appdir_option, true), // mmSetAppDir_callback_ std::function<void(std::string const&)> ;
-        make_option_callback(resourcedir_option, true), // mmAddResourceDir_callback_ std::function<void(std::string const&)> ;
-        make_option_callback(shaderdir_option, true), // mmAddShaderDir_callback_ std::function<void(std::string const&)> ;
-        make_option_callback(logfile_option), // mmSetLogFile_callback_ std::function<void(std::string const&)> ;
-        // mmSetLogLevel_callback_ std::function<void(int const)> ;
-        [&](const unsigned int log_level) {
-            // Lua checked string to int conversion already
-            add(loglevel_option, std::to_string(log_level));
-            return true;
-        } ,
-        // std::function<void(int const)> mmSetEchoLevel_callback_;
-        [&](const unsigned int echo_level) {
-            // Lua checked string to int conversion already
-            add(echolevel_option, std::to_string(echo_level));
-            return true;
-        } ,
-        make_option_callback(project_option, true), // mmLoadProject_callback_ std::function<void(std::string const&)> ;
-        // mmSetGlobalValue_callback_ std::function<void(std::string const&, std::string const&)> ;
+        // mmSetGlobalValue_callback_
         [&](std::string const& key, std::string const& value) {
-            check(key); // no space or = in key
-
-            // no space or : in key and value
-            if (key.find_first_of(" :") != std::string::npos)
-                return false;
-            if (value.find_first_of(" :") != std::string::npos)
-                return false;
-
+            check(key);
+            check(value);
             add(global_option, key + ":" + value);
             return true;
-        }
+        },
+        make_option_callback(appdir_option, true), // mmSetAppDir_callback_ std::function<void(std::string const&)>
+        make_option_callback(resourcedir_option, true), // mmAddResourceDir_callback_
+        make_option_callback(shaderdir_option, true), // mmAddShaderDir_callback_
+        make_option_callback(logfile_option), // mmSetLogFile_callback_
+        make_option_callback(loglevel_option), // mmSetLogLevel_callback_
+        make_option_callback(echolevel_option), // mmSetEchoLevel_callback_
+        make_option_callback(project_option, true) // mmLoadProject_callback_
     };
 
     for (auto& file : config.configuration_files) {

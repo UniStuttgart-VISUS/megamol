@@ -316,7 +316,7 @@ int megamol::core::LuaAPI::SetLogLevel(lua_State* L) {
             result = parseLevelAttribute(l);
         }
 
-        config_callbacks_.mmSetLogLevel_callback_(result);
+        config_callbacks_.mmSetLogLevel_callback_(std::to_string(result));
     }
     catch (...) {
         luaApiInterpreter_.ThrowError("mmSetLogLevel: Could not parse valid log level string or positive integer from argument \"" + std::string(l) + "\"");
@@ -341,7 +341,7 @@ int megamol::core::LuaAPI::SetEchoLevel(lua_State* L) {
             result = parseLevelAttribute(l);
         }
 
-        config_callbacks_.mmSetEchoLevel_callback_(result);
+        config_callbacks_.mmSetEchoLevel_callback_(std::to_string(result));
     }
     catch (...) {
         luaApiInterpreter_.ThrowError("mmSetEchoLevel: Could not parse valid echo level string or positive integer from argument \"" + std::string(l) + "\"");
@@ -356,7 +356,7 @@ int megamol::core::LuaAPI::SetGlobalValue(lua_State* L) {
     auto value = luaL_checkstring(L, 2);
 
     if(!config_callbacks_.mmSetGlobalValue_callback_(key, value))
-        luaApiInterpreter_.ThrowError("mmSetGlobalValue: Global Key-value pair \n\tkey=" + std::string(key) + "\n\tvalue=" + std::string(value) + "\nnot in valid format.");
+        luaApiInterpreter_.ThrowError("mmSetGlobalValue: Global Key-value pair \n\tkey=" + std::string(key) + "\n\tvalue=" + std::string(value) + "\nnot in valid format. Can not contain space or =");
 
     return 0;
 }
