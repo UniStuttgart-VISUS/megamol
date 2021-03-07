@@ -156,7 +156,7 @@ static void global_value_handler(std::string const& option_name, cxxopts::ParseR
         auto key   = key_value.substr(0, delimiter);
         auto value = key_value.substr(delimiter+1);
 
-        config.global_value_insert(key, value);
+        config.global_values.push_back({key, value});
     }
 };
 

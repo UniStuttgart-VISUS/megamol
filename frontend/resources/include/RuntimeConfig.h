@@ -9,7 +9,7 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <utility>
 #include <optional>
 
 namespace megamol {
@@ -34,7 +34,7 @@ struct RuntimeConfig {
     unsigned int log_level = 200;                                                 // mmSetLogLevel
     unsigned int echo_level = 200;                                                // mmSetEchoLevel
     std::vector<Path> project_files = {};                                         // NEW: mmLoadProject - project files are loaded after services are up
-    std::map<std::string/*Key*/, std::string/*Value*/> global_key_values = {};    // mmSetGlobalValue + mmGetGlobalValue
+    std::vector<StringPair> global_values = {}; // use GlobalValueStore resource for access to global values!
 
     // detailed and service-specific configurations
     // every CLI option can be set via the config file using mmSetConfigValue
@@ -56,36 +56,11 @@ struct RuntimeConfig {
     unsigned int window_mode = 0;
     unsigned int window_monitor = 0;
 
-
-    // add or update a key-value pair
-    void global_value_insert(std::string const& key, std::string const& value) {
-        global_key_values.insert_or_assign(key, value);
-    }
-
-    // retrieve value for given key. if key is present, the optional holds the value.
-    std::optional<std::string> global_value_get(std::string const& key) const {
-        auto value_it = global_key_values.find(key);
-        if (value_it != global_key_values.end()) {
-            return std::optional{value_it->second};
-        }
-        else {
-            return std::nullopt;
-        }
-    }
-
     std::string as_string() const {
         auto summarize = [](std::vector<std::string> const& vec) -> std::string {
             std::string result;
             for (auto& s: vec) {
                 result += "\n\t\t" + s;
-            }
-            return result;
-        };
-
-        auto summarize_globals = [&]() -> std::string {
-            std::string result;
-            for (auto& kv: global_key_values) {
-                result += "\n\t\t" + kv.first + " : " + kv.second;
             }
             return result;
         };
@@ -104,7 +79,6 @@ struct RuntimeConfig {
             std::string("\n\tLog file: "             ) + log_file +
             std::string("\n\tLog level: "            ) + std::to_string(log_level) +
             std::string("\n\tEcho level: "           ) + std::to_string(echo_level) +
-            std::string("\n\tGlobal Key-Values: "    ) + summarize_globals() +
             std::string("\n\tProject files: "        ) + summarize(project_files) +
             std::string("\n\tLua host address: "     ) + lua_host_address
             ;
