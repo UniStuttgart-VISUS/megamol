@@ -86,19 +86,19 @@ bool megamol::mesh::MeshBakery::getMeshDataCallback(core::Call& caller) {
 
         mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{
             reinterpret_cast<uint8_t*>(m_vertex_normals.data()), m_vertex_normals.size() * sizeof(float), 3,
-            MeshDataAccessCollection::FLOAT, 0, 0, MeshDataAccessCollection::NORMAL});
+            MeshDataAccessCollection::FLOAT, 12, 0, MeshDataAccessCollection::NORMAL});
 
         mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{
             reinterpret_cast<uint8_t*>(m_vertex_positions.data()), m_vertex_positions.size() * sizeof(float), 3,
-            MeshDataAccessCollection::FLOAT, 0, 0, MeshDataAccessCollection::POSITION});
+            MeshDataAccessCollection::FLOAT, 12, 0, MeshDataAccessCollection::POSITION});
 
         mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{
             reinterpret_cast<uint8_t*>(m_vertex_tangents.data()), m_vertex_tangents.size() * sizeof(float), 3,
-            MeshDataAccessCollection::FLOAT, 0, 0, MeshDataAccessCollection::TANGENT});
+            MeshDataAccessCollection::FLOAT, 12, 0, MeshDataAccessCollection::TANGENT});
 
         mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{
             reinterpret_cast<uint8_t*>(m_vertex_uvs.data()), m_vertex_uvs.size() * sizeof(float), 2,
-            MeshDataAccessCollection::FLOAT, 0, 0, MeshDataAccessCollection::TEXCOORD});
+            MeshDataAccessCollection::FLOAT, 8, 0, MeshDataAccessCollection::TEXCOORD});
 
         auto identifier = std::string(m_geometry_type.Param<core::param::EnumParam>()->ValueString());
         m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices);
