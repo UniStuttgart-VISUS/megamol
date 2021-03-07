@@ -40,7 +40,7 @@ int main(const int argc, const char** argv) {
         config.application_directory,
         config.shader_directories,
         config.resource_directories);
-    core.Initialise(false); // false makes core not start his own lua service (else we collide on default port)
+    core.Initialise(false); // false means the core ignores some mmconsole legacy features, e.g. we don't collide on Lua host ports
 
     megamol::frontend::OpenGL_GLFW_Service gl_service;
     megamol::frontend::OpenGL_GLFW_Service::Config openglConfig;
@@ -97,7 +97,6 @@ int main(const int argc, const char** argv) {
     megamol::frontend::ProjectLoader_Service::Config projectloaderConfig;
     projectloader_service.setPriority(1);
 
-
     // clang-format off
     // the main loop is organized around services that can 'do something' in different parts of the main loop.
     // a service is something that implements the AbstractFrontendService interface from 'megamol\frontend_services\include'.
@@ -119,19 +118,6 @@ int main(const int argc, const char** argv) {
     services.add(screenshot_service, &screenshotConfig);
     services.add(framestatistics_service, &framestatisticsConfig);
     services.add(projectloader_service, &projectloaderConfig);
-
-    // clang-format off
-    // TODO: port cinematic as frontend service
-    // TODO: FBO-centered rendering (View redesign)
-    // => explicit FBOs!
-    // => explicit camera / animation time / FBO resources/modules in graph?
-    // => do or dont show GUI in screenshots, depending on ...
-    // TODO: ZMQ context as frontend resource
-    // TODO: eliminate the core instance:
-    //  => extract module/call description manager into new factories; remove from core
-    // TODO: main3000 raw hot loop performance vs. mmconsole performance
-    // => has to collect graph serialization from graph, gui state from gui.
-    // clang-format on
 
     const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
 
