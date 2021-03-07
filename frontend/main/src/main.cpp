@@ -2,11 +2,13 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
 
-#include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/log/DefaultTarget.h"
+#include "mmcore/utility/log/Log.h"
 
 #include "RuntimeConfig.h"
 #include "GlobalValueStore.h"
+
+#include "CUDA_Service.hpp"
 #include "FrameStatistics_Service.hpp"
 #include "FrontendServiceCollection.hpp"
 #include "GUI_Service.hpp"
@@ -109,6 +111,11 @@ int main(const int argc, const char** argv) {
     megamol::frontend::ProjectLoader_Service::Config projectloaderConfig;
     projectloader_service.setPriority(1);
 
+#ifdef MM_CUDA_ENABLED
+    megamol::frontend::CUDA_Service cuda_service;
+    cuda_service.setPriority(24);
+#endif
+
     // clang-format off
     // the main loop is organized around services that can 'do something' in different parts of the main loop.
     // a service is something that implements the AbstractFrontendService interface from 'megamol\frontend_services\include'.
@@ -130,6 +137,9 @@ int main(const int argc, const char** argv) {
     services.add(screenshot_service, &screenshotConfig);
     services.add(framestatistics_service, &framestatisticsConfig);
     services.add(projectloader_service, &projectloaderConfig);
+#ifdef MM_CUDA_ENABLED
+    services.add(cuda_service, nullptr);
+#endif
 
     const bool init_ok = services.init(); // runs init(config_ptr) on all services with provided config sructs
 

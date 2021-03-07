@@ -14,22 +14,6 @@
 #ifdef _WIN32
 /* Windows includes */
 
-#ifndef WINVER // Windows XP or later.
-#define WINVER 0x0501
-#endif
-
-#ifndef _WIN32_WINNT // Windows Vista or later. (Required for "CaptureStackBackTrace" in core/utility/KHR.cpp)
-#define _WIN32_WINNT 0x0600
-#endif
-
-#ifndef _WIN32_WINDOWS // Windows 98 or later.
-#define _WIN32_WINDOWS 0x0410
-#endif
-
-#ifndef _WIN32_IE // IE 6.0 or later.
-#define _WIN32_IE 0x0600
-#endif
-
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #undef min
