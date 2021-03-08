@@ -137,7 +137,7 @@ void megamol::core::LuaAPI::commonInit() {
 
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetGUIState>(MMC_LUA_MMSETGUISTATE, "(string json)\n\tSet GUI state from given 'json' string.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ShowGUI>(MMC_LUA_MMSHOWGUI, "(bool state)\n\Show (true) or hide (false) the GUI.");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ScaleGUI>(MMC_LUA_MMSCALEGUI, "(float scale)\n\GUI scaling factor.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ScaleGUI>(MMC_LUA_MMSCALEGUI, "(float scale)\n\Set GUI scaling factor.");
 
     if (!imperative_only_) {
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetModuleParams>(MMC_LUA_MMGETMODULEPARAMS, "(string name)\n\tReturns a 0x1-separated list of module name and all parameters."
