@@ -61,7 +61,7 @@ public:
     const std::vector<std::string> getRequestedResourceNames() const override;
     void setRequestedResources(std::vector<FrontendResource> resources) override;
 
-    // from AbstractFrontendService:
+    /// from AbstractFrontendService:
     // int setPriority(const int p) // priority initially 0
     // int getPriority() const;
     // bool shouldShutdown() const; // shutdown initially false

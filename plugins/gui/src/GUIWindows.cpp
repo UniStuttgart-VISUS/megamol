@@ -394,7 +394,7 @@ bool GUIWindows::PostDraw(void) {
 
     // Draw Windows ------------------------------------------------------------
     const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
-        // Loading changed window state of transfer function editor (even if window is not shown)
+        // Update transfer function
         if ((wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) && wc.buf_tfe_reset) {
             this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
@@ -416,10 +416,13 @@ bool GUIWindows::PostDraw(void) {
             }
             wc.buf_tfe_reset = false;
         }
-
         // Update log console
         if (wc.win_callback == WindowCollection::DrawCallbacks::LOGCONSOLE) {
             this->console.Update(wc);
+        }
+        // Update frame statistics
+        if (wc.win_callback == WindowCollection::DrawCallbacks::PERFORMANCE) {
+            this->update_frame_statistics(wc);
         }
 
         // Draw window content
@@ -450,7 +453,7 @@ bool GUIWindows::PostDraw(void) {
             }
 
             // Omit updating size and position of window from imgui for current frame when reset
-            bool update_window_by_imgui = !wc.win_set_pos_size;
+            bool update_window_by_imgui = !wc.buf_set_pos_size;
             bool collapsing_changed = false;
             this->window_sizing_and_positioning(wc, collapsing_changed);
 
@@ -545,7 +548,7 @@ bool GUIWindows::PostDraw(void) {
             const auto size_func = [&, this](WindowCollection::WindowConfiguration& wc) {
                 wc.win_reset_size *= megamol::gui::gui_scaling.TransitonFactor();
                 wc.win_size *= megamol::gui::gui_scaling.TransitonFactor();
-                wc.win_set_pos_size = true;
+                wc.buf_set_pos_size = true;
             };
             this->window_collection.EnumWindows(size_func);
             this->state.rescale_windows = false;
@@ -1000,6 +1003,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                 }
             }
         }
+
         sync_success &= graph_sync_success;
     }
 
@@ -1126,7 +1130,7 @@ bool GUIWindows::createContext(void) {
 
     // Create window configurations
     WindowCollection::WindowConfiguration buf_win;
-    buf_win.win_set_pos_size = true;
+    buf_win.buf_set_pos_size = true;
     buf_win.win_collapsed = false;
     buf_win.win_store_config = true;
 
@@ -1297,6 +1301,7 @@ bool GUIWindows::destroyContext(void) {
                 // Last context should delete font atlas
                 ImGui::GetCurrentContext()->FontAtlasOwnedByContext = true;
             }
+
             ImGui::DestroyContext(this->context);
             megamol::gui::gui_context_count--;
             megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Destroyed ImGui context.");
@@ -1586,117 +1591,80 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
 
 
 void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc) {
-    ImGuiIO& io = ImGui::GetIO();
+
     ImGuiStyle& style = ImGui::GetStyle();
 
-    // Leave some space in histogram for text of current value
-    wc.buf_current_delay += io.DeltaTime;
-    int buffer_size = static_cast<int>(wc.buf_values.size());
-    if (wc.ms_refresh_rate > 0.0f) {
-        if (wc.buf_current_delay >= (1.0f / wc.ms_refresh_rate)) {
-            if (buffer_size != wc.ms_max_history_count) {
-                if (buffer_size > wc.ms_max_history_count) {
-                    wc.buf_values.erase(
-                        wc.buf_values.begin(), wc.buf_values.begin() + (buffer_size - wc.ms_max_history_count));
-
-                } else if (buffer_size < wc.ms_max_history_count) {
-                    wc.buf_values.insert(wc.buf_values.begin(), (wc.ms_max_history_count - buffer_size), 0.0f);
-                }
-            }
-            if (buffer_size > 0) {
-                wc.buf_values.erase(wc.buf_values.begin());
-                wc.buf_values.emplace_back(io.DeltaTime * 1000.0f); // scale to milliseconds
-
-                float max_fps = 0.0f;
-                float max_ms = 0.0f;
-                for (auto& v : wc.buf_values) {
-                    if (v > 0.0f) {
-                        max_fps = ((1.0f / v * 1000.f) > max_fps) ? (1.0f / v * 1000.f) : (max_fps);
-                    }
-                    max_ms = (v > max_ms) ? (v) : (max_ms);
-                }
-
-                wc.buf_plot_fps_scaling = max_fps;
-                wc.buf_plot_ms_scaling = max_ms;
-            }
-            wc.buf_current_delay = 0.0f;
-        }
-    }
-
-    // Draw window content
-    if (ImGui::RadioButton("fps", (wc.ms_mode == WindowCollection::TimingModes::FPS))) {
-        wc.ms_mode = WindowCollection::TimingModes::FPS;
+    if (ImGui::RadioButton("fps", (wc.fpsms_mode == WindowCollection::TimingModes::FPS))) {
+        wc.fpsms_mode = WindowCollection::TimingModes::FPS;
     }
     ImGui::SameLine();
 
-    if (ImGui::RadioButton("ms", (wc.ms_mode == WindowCollection::TimingModes::MS))) {
-        wc.ms_mode = WindowCollection::TimingModes::MS;
+    if (ImGui::RadioButton("ms", (wc.fpsms_mode == WindowCollection::TimingModes::MS))) {
+        wc.fpsms_mode = WindowCollection::TimingModes::MS;
     }
 
     if (this->core_instance != nullptr) {
         ImGui::TextDisabled("Frame ID:");
         ImGui::SameLine();
-        ImGui::Text("%u", this->core_instance->GetFrameID());
+        auto frameid = this->state.stat_frame_count;
+
+        /// [DEPRECATED USAGE - only mmconsole] ///
+        if (frameid == 0) {
+            frameid = static_cast<size_t>(this->core_instance->GetFrameID());
+        }
+
+        ImGui::Text("%u", frameid);
     }
 
     ImGui::SameLine(
         ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() - style.ItemSpacing.x - style.ItemInnerSpacing.x));
-    if (ImGui::ArrowButton("Options_", ((wc.ms_show_options) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
-        wc.ms_show_options = !wc.ms_show_options;
+    if (ImGui::ArrowButton("Options_", ((wc.fpsms_show_options) ? (ImGuiDir_Down) : (ImGuiDir_Up)))) {
+        wc.fpsms_show_options = !wc.fpsms_show_options;
     }
 
-    std::vector<float> value_array = wc.buf_values;
-    if (wc.ms_mode == WindowCollection::TimingModes::FPS) {
-        for (auto& v : value_array) {
-            v = (v > 0.0f) ? (1.0f / v * 1000.f) : (0.0f);
-        }
-    }
-    float* value_ptr = (&value_array)->data();
+    auto* value_buffer =
+        ((wc.fpsms_mode == WindowCollection::TimingModes::FPS) ? (&wc.buf_fps_values) : (&wc.buf_ms_values));
+    int buffer_size = static_cast<int>(value_buffer->size());
 
-    std::string overlay;
+    std::string value_string;
     if (buffer_size > 0) {
         std::stringstream stream;
-        stream << std::fixed << std::setprecision(3) << value_array.back();
-        overlay = stream.str();
+        stream << std::fixed << std::setprecision(3) << value_buffer->back();
+        value_string = stream.str();
     }
 
-    float plot_scale_factor = 1.5f;
-    if (wc.ms_mode == WindowCollection::TimingModes::FPS) {
-        plot_scale_factor *= wc.buf_plot_fps_scaling;
-    } else if (wc.ms_mode == WindowCollection::TimingModes::MS) {
-        plot_scale_factor *= wc.buf_plot_ms_scaling;
-    }
-
-    ImGui::PlotLines("###msplot", value_ptr, buffer_size, 0, overlay.c_str(), 0.0f, plot_scale_factor,
+    float* value_ptr = value_buffer->data();
+    float max_value = ((wc.fpsms_mode == WindowCollection::TimingModes::FPS) ? (wc.buf_fps_max) : (wc.buf_ms_max));
+    ImGui::PlotLines("###msplot", value_ptr, buffer_size, 0, value_string.c_str(), 0.0f, (1.5f * max_value),
         ImVec2(0.0f, (50.0f * megamol::gui::gui_scaling.Get())));
 
-    if (wc.ms_show_options) {
-        if (ImGui::InputFloat("Refresh Rate (per sec.)", &wc.ms_refresh_rate, 1.0f, 10.0f, "%.3f",
+    if (wc.fpsms_show_options) {
+        if (ImGui::InputFloat("Refresh Rate (per sec.)", &wc.fpsms_refresh_rate, 1.0f, 10.0f, "%.3f",
                 ImGuiInputTextFlags_EnterReturnsTrue)) {
-            wc.ms_refresh_rate = std::max(1.0f, wc.ms_refresh_rate);
+            wc.fpsms_refresh_rate = std::max(1.0f, wc.fpsms_refresh_rate);
         }
 
-        if (ImGui::InputInt("History Size", &wc.ms_max_history_count, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue)) {
-            wc.ms_max_history_count = std::max(1, wc.ms_max_history_count);
+        if (ImGui::InputInt("History Size", &wc.fpsms_buffer_size, 1, 10, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            wc.fpsms_buffer_size = std::max(1, wc.fpsms_buffer_size);
         }
 
         if (ImGui::Button("Current Value")) {
-            ImGui::SetClipboardText(overlay.c_str());
+            ImGui::SetClipboardText(value_string.c_str());
         }
         ImGui::SameLine();
 
         if (ImGui::Button("All Values")) {
             std::stringstream stream;
             stream << std::fixed << std::setprecision(3);
-            auto reverse_end = value_array.rend();
-            for (std::vector<float>::reverse_iterator i = value_array.rbegin(); i != reverse_end; ++i) {
+            auto reverse_end = value_buffer->rend();
+            for (std::vector<float>::reverse_iterator i = value_buffer->rbegin(); i != reverse_end; ++i) {
                 stream << (*i) << "\n";
             }
             ImGui::SetClipboardText(stream.str().c_str());
         }
         ImGui::SameLine();
         ImGui::TextUnformatted("Copy to Clipborad");
-        std::string help("Values are copied in chronological order (newest first)");
+        std::string help("Values are listed in chronological order (newest first).");
         this->tooltip.Marker(help);
     }
 }
@@ -2064,13 +2032,9 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         this->state.open_popup_load |= this->hotkeys[GUIWindows::GuiHotkeyIndex::LOAD_PROJECT].is_pressed;
         if (this->file_browser.PopUp(filename, FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project",
                 this->state.open_popup_load, "lua")) {
-            graph_ptr->Clear();
-            popup_failed |= (GUI_INVALID_ID == this->configurator.GetGraphCollection().LoadAddProjectFromFile(
-                                                   this->state.graph_uid, filename));
-            if (!popup_failed) {
-                this->load_state_from_file(filename);
-            }
-            /// XXX TODO Redirect project loading request to Lua_Wrapper_service
+            // Redirect project loading request to Lua_Wrapper_service and load new project to megamol graph
+            /// GUI graph and GUI state are updated at next synchronization
+            this->state.request_load_projet_file = filename;
         }
         MinimalPopUp::PopUp("Failed to Load Project", popup_failed, "See console log output for more information.", "",
             confirmed, "Cancel", aborted);
@@ -2110,7 +2074,7 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
 
         if (ImGui::MenuItem("Full Width", nullptr)) {
             wc.win_size.x = viewport.x;
-            wc.win_set_pos_size = true;
+            wc.buf_set_pos_size = true;
         }
         ImGui::Separator();
 
@@ -2122,25 +2086,25 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
 #endif
         if (ImGui::ArrowButton("dock_left", ImGuiDir_Left)) {
             wc.win_position.x = 0.0f;
-            wc.win_set_pos_size = true;
+            wc.buf_set_pos_size = true;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
         if (ImGui::ArrowButton("dock_up", ImGuiDir_Up)) {
             wc.win_position.y = 0.0f;
-            wc.win_set_pos_size = true;
+            wc.buf_set_pos_size = true;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
         if (ImGui::ArrowButton("dock_down", ImGuiDir_Down)) {
             wc.win_position.y = viewport.y - wc.win_size.y;
-            wc.win_set_pos_size = true;
+            wc.buf_set_pos_size = true;
             ImGui::CloseCurrentPopup();
         }
         ImGui::SameLine();
         if (ImGui::ArrowButton("dock_right", ImGuiDir_Right)) {
             wc.win_position.x = viewport.x - wc.win_size.x;
-            wc.win_set_pos_size = true;
+            wc.buf_set_pos_size = true;
             ImGui::CloseCurrentPopup();
         }
         ImGui::Separator();
@@ -2157,7 +2121,7 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
             // Window is maximized
             wc.win_size = wc.win_reset_size;
             wc.win_position = wc.win_reset_position;
-            wc.win_set_pos_size = true;
+            wc.buf_set_pos_size = true;
         } else {
             // Window is minimized
             ImVec2 window_viewport = ImVec2(viewport.x, viewport.y - y_offset);
@@ -2165,15 +2129,15 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
             wc.win_reset_position = wc.win_position;
             wc.win_size = window_viewport;
             wc.win_position = ImVec2(0.0f, y_offset);
-            wc.win_set_pos_size = true;
+            wc.buf_set_pos_size = true;
         }
     }
 
     // Apply window position and size
-    if (wc.win_set_pos_size || (this->state.menu_visible && ImGui::IsMouseReleased(0) &&
+    if (wc.buf_set_pos_size || (this->state.menu_visible && ImGui::IsMouseReleased(0) &&
                                    ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))) {
         this->window_collection.SetWindowSizePosition(wc, this->state.menu_visible);
-        wc.win_set_pos_size = false;
+        wc.buf_set_pos_size = false;
     }
 }
 
@@ -2472,9 +2436,57 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.hotkeys_check_once = true;
     this->state.font_apply = false;
     this->state.font_file_name = "";
+    this->state.request_load_projet_file = "";
+    this->state.stat_averaged_fps = 0.0;
+    this->state.stat_averaged_ms = 0.0;
+    this->state.stat_frame_count = 0;
     this->state.font_size = 13;
 
     this->create_not_existing_png_filepath(this->state.screenshot_filepath);
+}
+
+
+void megamol::gui::GUIWindows::update_frame_statistics(WindowCollection::WindowConfiguration& wc) {
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    wc.buf_current_delay += io.DeltaTime;
+    if (wc.fpsms_refresh_rate > 0.0f) {
+        if (wc.buf_current_delay >= (1.0f / wc.fpsms_refresh_rate)) {
+
+            auto update_values = [](float current_value, float& max_value, std::vector<float>& values,
+                                     size_t actual_buffer_size) {
+                auto buffer_size = static_cast<int>(values.size());
+                if (buffer_size != actual_buffer_size) {
+                    if (buffer_size > actual_buffer_size) {
+                        values.erase(values.begin(), values.begin() + (buffer_size - actual_buffer_size));
+
+                    } else if (buffer_size < actual_buffer_size) {
+                        values.insert(values.begin(), (actual_buffer_size - buffer_size), 0.0f);
+                    }
+                }
+                if (buffer_size > 0) {
+                    values.erase(values.begin());
+                    values.emplace_back(static_cast<float>(current_value));
+                    float new_max_value = 0.0f;
+                    for (auto& v : values) {
+                        new_max_value = std::max(v, new_max_value);
+                    }
+                    max_value = new_max_value;
+                }
+            };
+
+            update_values(
+                ((this->state.stat_averaged_fps == 0.0) ? (1.0f / io.DeltaTime) : (this->state.stat_averaged_fps)),
+                wc.buf_fps_max, wc.buf_fps_values, wc.fpsms_buffer_size);
+
+            update_values(
+                ((this->state.stat_averaged_ms == 0.0) ? (io.DeltaTime * 1000.0f) : (this->state.stat_averaged_ms)),
+                wc.buf_ms_max, wc.buf_ms_values, wc.fpsms_buffer_size);
+
+            wc.buf_current_delay = 0.0f;
+        }
+    }
 }
 
 

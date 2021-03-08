@@ -88,7 +88,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
         "FrameStatistics", // for LastFrameTime
         "WindowManipulation", // for Framebuffer resize
-        "GUIResource"
+        "GUIResource", // propagate GUI state and visibility
         "MegaMolGraph" // LuaAPI manipulates graph
     }; //= {"ZMQ_Context"};
 
@@ -158,19 +158,17 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
     };
 
     callbacks.mmSetGUIState_callback_ = [&](std::string json) {
-        auto& gui_resource =
-            m_requestedResourceReferences[5].getResource<megamol::frontend_resources::GUIResource>();
+        auto& gui_resource =  m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
         gui_resource.provide_gui_state(json);
     };
 
     callbacks.mmShowGUI_callback_ = [&](bool show) {
-        auto& gui_resource =
-            m_requestedResourceReferences[5].getResource<megamol::frontend_resources::GUIResource>();
+        auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
         gui_resource.provide_gui_visibility(show);
     };
 
     luaAPI.SetCallbacks(callbacks);
-    auto& graph = const_cast<megamol::core::MegaMolGraph&>(m_requestedResourceReferences[4].getResource<megamol::core::MegaMolGraph>());
+    auto& graph = const_cast<megamol::core::MegaMolGraph&>(m_requestedResourceReferences[5].getResource<megamol::core::MegaMolGraph>());
     luaAPI.SetMegaMolGraph(graph);
 }
 
