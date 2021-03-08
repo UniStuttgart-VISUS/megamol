@@ -161,12 +161,10 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
 
 bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time) {
 
-    /// [DEPRECATED USAGE - only mmconsole] ///
-    // Disable GUI drawing if GUIView module is chained
+    /// XXX Catch nested ImGui contexts
     if (this->state.gui_visible && ImGui::GetCurrentContext()->WithinFrameScope) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Chaining GUIVIew modules is not supported. GUI is disabled. [%s, %s, line %d]\n", __FILE__,
-            __FUNCTION__, __LINE__);
+            "[GUI] Nesting ImGui contexts is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         this->state.gui_visible = false;
     }
 
@@ -882,12 +880,13 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         return true;
     }
 
-    // 1) Load all known calls and modules from core instance ONCE ---------------------------
+    // 1) Load all known calls from core instance ONCE ---------------------------
     if (!this->configurator.GetGraphCollection().LoadCallStock(core_instance)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load call stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+    // Load all known modules from core instance ONCE
     if (!this->configurator.GetGraphCollection().LoadModuleStock(core_instance)) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Failed to load module stock once. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
@@ -988,9 +987,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
     // 2b) ... OR (exclusive or) synchronize Core Graph -> GUI Graph ----------
     if (!synced) {
         // Creates new graph at first call
-        bool graph_sync_success =
-            this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(this->state.graph_uid,
-                ((megamol_graph == nullptr) ? (this->core_instance) : (nullptr)), megamol_graph, true);
+        bool graph_sync_success = this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(
+            this->state.graph_uid, this->core_instance, megamol_graph, true);
         if (!graph_sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
@@ -1060,7 +1058,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                         }
                     }
 #ifdef GUI_VERBOSE
-                    if (param.core_param_ptr.IsNull()) {
+                    if (param.CoreParamPtr().IsNull()) {
                         megamol::core::utility::log::Log::DefaultLog.WriteError(
                             "[GUI] Unable to connect core parameter to gui parameter. [%s, %s, line %d]\n", __FILE__,
                             __FUNCTION__, __LINE__);
@@ -1111,7 +1109,7 @@ bool GUIWindows::createContext(void) {
     bool other_context_exists = (ImGui::GetCurrentContext() != nullptr);
     ImFontAtlas* font_atlas = nullptr;
     ImFont* default_font = nullptr;
-    /// [DEPRECATED USAGE - only mmconsole] ///
+    /// XXX Handle multiple ImGui contexts.
     if (other_context_exists) {
         ImGuiIO& current_io = ImGui::GetIO();
         font_atlas = current_io.Fonts;
@@ -1300,8 +1298,8 @@ bool GUIWindows::destroyContext(void) {
     if (this->initialized_api != GUIImGuiAPI::NONE) {
         if (this->context != nullptr) {
 
-            /// [DEPRECATED USAGE - only mmconsole] ///
-            // Shutdown API only if one context is left
+            /// XXX Handle multiple ImGui contexts.
+            // Shutdown API only if only one context is left
             if (megamol::gui::gui_context_count < 2) {
                 ImGui::SetCurrentContext(this->context);
 
@@ -1726,8 +1724,7 @@ void GUIWindows::drawMenu(void) {
     ImGuiStyle& style = ImGui::GetStyle();
 
     bool megamolgraph_interface = false;
-    auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid);
-    if (graph_ptr != nullptr) {
+    if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
         megamolgraph_interface = (graph_ptr->GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH);
     }
 
@@ -1800,42 +1797,44 @@ void GUIWindows::drawMenu(void) {
     }
 
     // RENDER -----------------------------------------------------------------
-    if (megamolgraph_interface && (graph_ptr != nullptr)) {
-        if (ImGui::BeginMenu("Render")) {
-            for (auto& module_ptr : graph_ptr->Modules()) {
-                if (module_ptr->IsView()) {
-                    if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsGraphEntry())) {
-                        if (!module_ptr->IsGraphEntry()) {
-                            // Remove all graph entries
-                            for (auto module_ptr : graph_ptr->Modules()) {
-                                if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
-                                    module_ptr->SetGraphEntryName("");
-                                    Graph::QueueData queue_data;
-                                    queue_data.name_id = module_ptr->FullName();
-                                    graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
+    if (megamolgraph_interface) {
+        if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+            if (ImGui::BeginMenu("Render")) {
+                for (auto& module_ptr : graph_ptr->Modules()) {
+                    if (module_ptr->IsView()) {
+                        if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsGraphEntry())) {
+                            if (!module_ptr->IsGraphEntry()) {
+                                // Remove all graph entries
+                                for (auto module_ptr : graph_ptr->Modules()) {
+                                    if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
+                                        module_ptr->SetGraphEntryName("");
+                                        Graph::QueueData queue_data;
+                                        queue_data.name_id = module_ptr->FullName();
+                                        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
+                                    }
                                 }
+                                // Add new graph entry
+                                module_ptr->SetGraphEntryName(graph_ptr->GenerateUniqueGraphEntryName());
+                                Graph::QueueData queue_data;
+                                queue_data.name_id = module_ptr->FullName();
+                                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                            } else {
+                                module_ptr->SetGraphEntryName("");
+                                Graph::QueueData queue_data;
+                                queue_data.name_id = module_ptr->FullName();
+                                graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                             }
-                            // Add new graph entry
-                            module_ptr->SetGraphEntryName(graph_ptr->GenerateUniqueGraphEntryName());
-                            Graph::QueueData queue_data;
-                            queue_data.name_id = module_ptr->FullName();
-                            graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
-                        } else {
-                            module_ptr->SetGraphEntryName("");
-                            Graph::QueueData queue_data;
-                            queue_data.name_id = module_ptr->FullName();
-                            graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                         }
                     }
                 }
+                if (ImGui::MenuItem("Toggle Graph Entry",
+                        this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].keycode.ToString().c_str())) {
+                    this->state.toggle_graph_entry = true;
+                }
+                ImGui::EndMenu();
             }
-            if (ImGui::MenuItem("Toggle Graph Entry",
-                    this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].keycode.ToString().c_str())) {
-                this->state.toggle_graph_entry = true;
-            }
-            ImGui::EndMenu();
+            ImGui::Separator();
         }
-        ImGui::Separator();
     }
 
     // SETTINGS ---------------------------------------------------------------
@@ -2363,10 +2362,10 @@ bool megamol::gui::GUIWindows::state_from_json(const nlohmann::json& in_json) {
         // Read window configurations
         this->window_collection.StateFromJSON(in_json);
 
-        // Read configurator state
+        // Read configurator and graph state
         this->configurator.StateFromJSON(in_json);
 
-        // Read GUI state of parameters (groups)
+        // Read GUI state of parameters (groups) of running graph
         if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
             for (auto& module_ptr : graph_ptr->Modules()) {
                 std::string module_full_name = module_ptr->FullName();
@@ -2410,10 +2409,10 @@ bool megamol::gui::GUIWindows::state_to_json(nlohmann::json& inout_json) {
         // Write window configuration
         this->window_collection.StateToJSON(inout_json);
 
-        // Write the configurator state
+        // Write the configurator and graph state
         this->configurator.StateToJSON(inout_json);
 
-        // Write GUI state of parameters (groups)
+        // Write GUI state of parameters (groups) of running graph
         if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
             for (auto& module_ptr : graph_ptr->Modules()) {
                 std::string module_full_name = module_ptr->FullName();

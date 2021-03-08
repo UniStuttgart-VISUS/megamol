@@ -173,22 +173,24 @@ ModulePtr_t megamol::gui::Graph::AddModule(const ModuleStockVector_t& stock_modu
                 this->ForceSetDirty();
 
                 // Automatically set new view module as graph entry, if no other entry point is set
-                bool create_new_graph_entry = true;
-                for (auto module_ptr : this->Modules()) {
-                    if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
-                        create_new_graph_entry = false;
+                if (mod_ptr->IsView()) {
+                    bool create_new_graph_entry = true;
+                    for (auto module_ptr : this->Modules()) {
+                        if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
+                            create_new_graph_entry = false;
+                        }
                     }
-                }
-                if (create_new_graph_entry) {
-                    Graph::QueueData queue_data;
-                    queue_data.name_id = mod_ptr->FullName();
-                    mod_ptr->SetGraphEntryName(this->GenerateUniqueGraphEntryName());
-                    this->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                    if (create_new_graph_entry) {
+                        Graph::QueueData queue_data;
+                        queue_data.name_id = mod_ptr->FullName();
+                        mod_ptr->SetGraphEntryName(this->GenerateUniqueGraphEntryName());
+                        this->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                    }
                 }
 
 #ifdef GUI_VERBOSE
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[GUI] Added module '%s' (uid %i) to project '%s'.\n", mod_ptr->class_name.c_str(), mod_ptr->UID(),
+                    "[GUI] Added module '%s' (uid %i) to project '%s'.\n", mod_ptr->ClassName().c_str(), mod_ptr->UID(),
                     this->name.c_str());
 #endif // GUI_VERBOSE
 
@@ -540,7 +542,7 @@ bool megamol::gui::Graph::AddCall(CallPtr_t& call_ptr, CallSlotPtr_t callslot_1,
 
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Added call '%s' (uid %i) to project '%s'.\n",
-            call_ptr->class_name.c_str(), call_ptr->UID(), this->name.c_str());
+            call_ptr->ClassName().c_str(), call_ptr->UID(), this->name.c_str());
 #endif // GUI_VERBOSE
 
         // Add connected call slots to interface of group of the parent module
@@ -679,7 +681,7 @@ bool megamol::gui::Graph::DeleteCall(ImGuiID call_uid) {
                     }
 #ifdef GUI_VERBOSE
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                        "[GUI] Deleted call '%s' (uid %i) from  project '%s'.\n", (*iter)->class_name.c_str(),
+                        "[GUI] Deleted call '%s' (uid %i) from  project '%s'.\n", (*iter)->ClassName().c_str(),
                         (*iter)->UID(), this->name.c_str());
 #endif // GUI_VERBOSE
 
@@ -715,7 +717,7 @@ ImGuiID megamol::gui::Graph::AddGroup(const std::string& group_name) {
 
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Added group '%s' (uid %i) to project '%s'.\n",
-            group_ptr->name.c_str(), group_ptr->UID(), this->name.c_str());
+            group_ptr->Name().c_str(), group_ptr->UID(), this->name.c_str());
 #endif // GUI_VERBOSE
         return group_id;
 
@@ -762,7 +764,7 @@ bool megamol::gui::Graph::DeleteGroup(ImGuiID group_uid) {
                 }
 #ifdef GUI_VERBOSE
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                    "[GUI] Deleted group '%s' (uid %i) from  project '%s'.\n", (*iter)->name.c_str(), (*iter)->UID(),
+                    "[GUI] Deleted group '%s' (uid %i) from  project '%s'.\n", (*iter)->Name().c_str(), (*iter)->UID(),
                     this->name.c_str());
 #endif // GUI_VERBOSE
                 (*iter).reset();

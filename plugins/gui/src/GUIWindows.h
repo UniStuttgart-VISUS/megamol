@@ -160,7 +160,8 @@ namespace gui {
          *                                 pre-rendering step. In this case a new gui graph is created before first
          *                                 call of PreDraw() and a gui graph already exists.
          *
-         * @param megamol_graph    If no megamol_graph is given, 'old' graph is synchronised via core_instance.
+         * @param megamol_graph            If no megamol_graph is given, 'old' graph is synchronised via
+         * core_instance.
          */
         bool SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph = nullptr);
 

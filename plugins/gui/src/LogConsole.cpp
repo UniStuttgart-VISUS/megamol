@@ -184,8 +184,10 @@ void megamol::gui::LogConsole::Update(WindowCollection::WindowConfiguration& wc)
         if (wc.log_force_open) {
             for (size_t i = this->log_msg_count; i < new_log_msg_count; i++) {
                 auto entry = this->echo_log_buffer.log()[i];
-                if (wc.log_level < megamol::core::utility::log::Log::LEVEL_INFO) {
-                    wc.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+                if (entry.level < megamol::core::utility::log::Log::LEVEL_INFO) {
+                    if (wc.log_level < megamol::core::utility::log::Log::LEVEL_WARN) {
+                        wc.log_level = megamol::core::utility::log::Log::LEVEL_WARN;
+                    }
                     wc.win_show = true;
                 }
             }

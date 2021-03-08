@@ -84,18 +84,6 @@ namespace gui {
         bool LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance,
             megamol::core::MegaMolGraph* megamol_graph, bool sync);
 
-        ImGuiID LoadProjectFromCore(
-            megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph) {
-            ImGuiID graph_id = GUI_INVALID_ID;
-            if (LoadUpdateProjectFromCore(graph_id, core_instance, megamol_graph, false)) {
-                return graph_id;
-            }
-            return GUI_INVALID_ID;
-        }
-
-        bool AddUpdateProjectFromCore(ImGuiID in_graph_uid, megamol::core::CoreInstance* core_instance,
-            megamol::core::MegaMolGraph* megamol_graph, bool use_stock);
-
         ImGuiID LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
 
         bool SaveProjectToFile(
@@ -115,6 +103,9 @@ namespace gui {
         ImGuiID gui_graph_delete_uid;
 
         // FUNCTIONS --------------------------------------------------------------
+
+        bool add_update_project_from_core(ImGuiID in_graph_uid, megamol::core::CoreInstance* core_instance,
+            megamol::core::MegaMolGraph* megamol_graph, bool use_stock);
 
         std::string get_state(ImGuiID graph_id, const std::string& filename);
 

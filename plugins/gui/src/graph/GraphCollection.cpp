@@ -51,7 +51,7 @@ ImGuiID megamol::gui::GraphCollection::AddGraph(GraphCoreInterface graph_core_in
             retval = graph_ptr->UID();
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[GUI] Added graph %s' (uid %i). \n", graph_ptr->name.c_str(), graph_ptr->UID());
+                "[GUI] Added graph %s' (uid %i). \n", graph_ptr->Name().c_str(), graph_ptr->UID());
 #endif // GUI_VERBOSE
         }
     } catch (std::exception& e) {
@@ -74,7 +74,7 @@ bool megamol::gui::GraphCollection::DeleteGraph(ImGuiID in_graph_uid) {
         if ((*iter)->UID() == in_graph_uid) {
 #ifdef GUI_VERBOSE
             megamol::core::utility::log::Log::DefaultLog.WriteInfo(
-                "[GUI] Deleted graph %s' (uid %i). \n", (*iter)->name.c_str(), (*iter)->UID());
+                "[GUI] Deleted graph %s' (uid %i). \n", (*iter)->Name().c_str(), (*iter)->UID());
 #endif // GUI_VERBOSE
 
             if ((*iter).use_count() > 1) {
@@ -328,7 +328,7 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
         return false;
     }
 
-    if (this->AddUpdateProjectFromCore(valid_graph_id, core_instance, megamol_graph, false)) {
+    if (this->add_update_project_from_core(valid_graph_id, core_instance, megamol_graph, false)) {
         inout_graph_uid = valid_graph_id;
         if (created_new_graph) {
             graph_ptr->SetLayoutGraph();
@@ -342,7 +342,7 @@ bool megamol::gui::GraphCollection::LoadUpdateProjectFromCore(ImGuiID& inout_gra
 }
 
 
-bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_uid,
+bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_graph_uid,
     megamol::core::CoreInstance* core_instance, megamol::core::MegaMolGraph* megamol_graph, bool use_stock) {
 
     /// TODO
@@ -358,11 +358,17 @@ bool megamol::gui::GraphCollection::AddUpdateProjectFromCore(ImGuiID in_graph_ui
             return false;
         }
 
-        const bool use_megamol_graph = (megamol_graph != nullptr);
-        const bool use_core_instance = (core_instance != nullptr);
-        if (use_megamol_graph == use_core_instance) {
+        bool use_megamol_graph = (megamol_graph != nullptr);
+        bool use_core_instance = (core_instance != nullptr);
+
+        /// XXX Prioritize megamol_Graph oder core_instance graph
+        if (use_megamol_graph) {
+            use_core_instance = false;
+        }
+
+        if ((!use_megamol_graph) && (!use_megamol_graph)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Ambiguous references to the graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "[GUI] Missing references to any graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
