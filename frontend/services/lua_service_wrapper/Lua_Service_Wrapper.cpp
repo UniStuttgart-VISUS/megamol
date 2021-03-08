@@ -16,6 +16,7 @@
 #include "Screenshots.h"
 #include "FrameStatistics.h"
 #include "WindowManipulation.h"
+#include "GUI_Resource.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"

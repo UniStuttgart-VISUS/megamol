@@ -10,6 +10,7 @@
  // to grab GL front buffer
 #include <glad/glad.h>
 #include "IOpenGL_Context.h"
+#include "GUI_Resource.h"
 
 #include "mmcore/MegaMolGraph.h"
 

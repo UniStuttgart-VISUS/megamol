@@ -10,8 +10,6 @@
 #include "AbstractFrontendService.hpp"
 
 #include "ScriptPaths.h"
-#include "GUI_Resource.h"
-
 #include "mmcore/LuaAPI.h"
 
 namespace megamol {

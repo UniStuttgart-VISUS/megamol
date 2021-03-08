@@ -1918,8 +1918,6 @@ void megamol::gui::Graph::draw_menu(void) {
             }
             ImGui::EndMenu();
         }
-        ImGui::Separator();
-
         // CALLS
         if (ImGui::BeginMenu("Calls")) {
             if (ImGui::MenuItem("Name", nullptr, &this->gui_graph_state.interact.call_show_label)) {
