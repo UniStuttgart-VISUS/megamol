@@ -428,42 +428,27 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
             return;
         }
     }
-    if (this->_fbo->Enable() != GL_NO_ERROR) {
-        throw vislib::Exception("[CINEMATIC VIEW] [Render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
-        return;
-    }
 
 /// Reset TRACE output level
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG
 
-    auto bc = Base::BkgndColour();
-    glClearColor(bc[0], bc[1], bc[2], 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    /* Using FBO buffer in call. */
-    
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     cr3d->SetFramebufferObject(this->_fbo);
     
-    //ALTERNATIVE
-    /// XXX Requires View3DGL line 394 to be deleted/commented! 
-        //this->overrideCall->EnableOutputBuffer();
-    /// XXX Requires view::RenderOutputOpenGL::GetViewport() to get viewport always from:
-        /// GLint vp[4];
-        /// ::glGetIntegerv(GL_VIEWPORT, vp);
-        /// this->outputViewport.SetFromSize(vp[0], vp[1], vp[2], vp[3]);
-    /*
-    int fbovp[4] = { 0, 0, fboWidth, fboHeight };
-    glViewport(fbovp[0], fbovp[1], fbovp[2], fbovp[3]);
-    */
-
     // Call Render-Function of parent View3DGL
     Base::Render(context, call);
 
     if (this->_fbo->IsEnabled()) {
         this->_fbo->Disable();
+    }
+
+    auto err = glGetError();
+    if (err != GL_NO_ERROR) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
+        return;
     }
 
     // Write frame to file
@@ -482,6 +467,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     }
 
     // Init rendering ---------------------------------------------------------
+    auto bc = Base::BkgndColour();
     this->utils.SetBackgroundColor(glm::vec4(bc[0], bc[1], bc[2], 1.0f));
     glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
     glClearColor(bc[0], bc[1], bc[2], 0.0f);
@@ -531,6 +517,13 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     }
     std::string rightLabel = "";
     this->utils.PushMenu(leftLabel, midLabel, rightLabel, vp_fw, vp_fh);
+
+    err = glGetError();
+    if (err != GL_NO_ERROR) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
 
     // Draw 2D ----------------------------------------------------------------
     this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
