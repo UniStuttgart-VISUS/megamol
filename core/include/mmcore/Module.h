@@ -49,7 +49,11 @@ namespace core {
 class MEGAMOLCORE_API Module : public AbstractNamedObjectContainer {
 public:
     virtual std::vector<std::string> requested_lifetime_resources() { 
-        return {"IOpenGL_Context"}; // request for this resource may be deleted any time - this is just an example. but GL modules should request the GL context resource.
+        return
+        {
+            "GlobalValueStore"
+            , "IOpenGL_Context" // request for this resource may be deleted any time - this is just an example. but GL modules should request the GL context resource.
+        };
     }
 
     friend class ::megamol::core::factories::ModuleDescription;

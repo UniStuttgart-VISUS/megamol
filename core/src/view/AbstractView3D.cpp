@@ -30,6 +30,8 @@
 
 #include "glm/gtc/matrix_transform.hpp"
 
+#include "GlobalValueStore.h"
+
 using namespace megamol::core::view;
 
 /*
@@ -568,26 +570,38 @@ void AbstractView3D::unpackMouseCoordinates(float& x, float& y) {}
  * AbstractView3D::create
  */
 bool AbstractView3D::create(void) {
-    mmcValueType wpType;
-    this->_arcballDefault = false;
-    auto value = this->GetCoreInstance()->Configuration().GetValue(MMC_CFGID_VARIABLE, _T("arcball"), &wpType);
-    if (value != nullptr) {
-        try {
-            switch (wpType) {
-            case MMC_TYPE_BOOL:
-                this->_arcballDefault = *static_cast<const bool*>(value);
-                break;
+    const auto arcball_key = "arcball";
 
-            case MMC_TYPE_CSTR:
-                this->_arcballDefault = vislib::CharTraitsA::ParseBool(static_cast<const char*>(value));
-                break;
+    if (!this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+        // new frontend has global key-value resource
+        auto maybe = this->frontend_resources[0].getResource<megamol::frontend_resources::GlobalValueStore>().maybe_get(arcball_key);
+        if (maybe.has_value()) {
+            this->_arcballDefault = vislib::CharTraitsA::ParseBool(maybe.value().c_str());
+        }
 
-            case MMC_TYPE_WSTR:
-                this->_arcballDefault = vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(value));
-                break;
-            }
-        } catch (...) {}
+    } else {
+        mmcValueType wpType;
+        this->_arcballDefault = false;
+        auto value = this->GetCoreInstance()->Configuration().GetValue(MMC_CFGID_VARIABLE, _T(arcball_key), &wpType);
+        if (value != nullptr) {
+            try {
+                switch (wpType) {
+                case MMC_TYPE_BOOL:
+                    this->_arcballDefault = *static_cast<const bool*>(value);
+                    break;
+
+                case MMC_TYPE_CSTR:
+                    this->_arcballDefault = vislib::CharTraitsA::ParseBool(static_cast<const char*>(value));
+                    break;
+
+                case MMC_TYPE_WSTR:
+                    this->_arcballDefault = vislib::CharTraitsW::ParseBool(static_cast<const wchar_t*>(value));
+                    break;
+                }
+            } catch (...) {}
+        }
     }
+
     this->_firstImg = true;
     return true;
 }
