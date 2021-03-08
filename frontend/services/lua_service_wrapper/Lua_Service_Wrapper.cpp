@@ -168,6 +168,11 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
         gui_resource.provide_gui_visibility(show);
     };
 
+    callbacks.mmScaleGUI_callback_ = [&](float scale) {
+        auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
+        gui_resource.provide_gui_scale(scale);
+    };
+
     luaAPI.SetCallbacks(callbacks);
     auto& graph = const_cast<megamol::core::MegaMolGraph&>(m_requestedResourceReferences[5].getResource<megamol::core::MegaMolGraph>());
     luaAPI.SetMegaMolGraph(graph);

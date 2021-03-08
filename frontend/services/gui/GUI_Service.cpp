@@ -75,6 +75,9 @@ bool GUI_Service::init(const Config& config) {
                     this->m_providedResource.provide_gui_visibility = [&](bool show) -> void {
                         return this->resource_provide_gui_visibility(show);
                     };
+                    this->m_providedResource.provide_gui_scale = [&](float scale) -> void {
+                        return this->resource_provide_gui_scale(scale);
+                    };
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully.");
                     return true;
                 }
@@ -307,6 +310,14 @@ void GUI_Service::resource_provide_gui_visibility(bool show) {
     gui->SetVisibility(show);
 }
 
+void GUI_Service::resource_provide_gui_scale(float scale) {
+
+    if (!check_gui_not_nullptr) {
+        return;
+    }
+    auto gui = this->m_gui->Get();
+    gui->SetScale(scale);
+}
 
 } // namespace frontend
 } // namespace megamol

@@ -185,6 +185,11 @@ namespace gui {
         }
 
         /**
+         * Set GUI scale.
+         */
+        void SetScale(float scale);
+
+        /**
          * Set externally provided clipboard function and user data
          */
         void SetClipboardFunc(const char* (*get_clipboard_func)(void* user_data),
@@ -327,7 +332,6 @@ namespace gui {
         void triggerCoreInstanceShutdown(void);
 
         std::string project_to_lua_string(void);
-        bool load_state_from_file(const std::string& filename);
         bool state_from_string(const std::string& state);
         bool state_to_string(std::string& out_state);
 

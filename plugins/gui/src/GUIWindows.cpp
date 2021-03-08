@@ -845,6 +845,19 @@ bool megamol::gui::GUIWindows::GetTriggeredScreenshot(void) {
 }
 
 
+void megamol::gui::GUIWindows::SetScale(float scale) {
+    megamol::gui::gui_scaling.Set(scale);
+    if (megamol::gui::gui_scaling.PendingChange()) {
+        // Additionally trigger reload of currently used font
+        this->state.font_apply = true;
+        this->state.font_size =
+            static_cast<int>(static_cast<float>(this->state.font_size) * (megamol::gui::gui_scaling.TransitonFactor()));
+        // Additionally resize all windows
+        this->state.rescale_windows = true;
+    }
+}
+
+
 void megamol::gui::GUIWindows::SetClipboardFunc(const char* (*get_clipboard_func)(void* user_data),
     void (*set_clipboard_func)(void* user_data, const char* string), void* user_data) {
 
@@ -1886,30 +1899,19 @@ void GUIWindows::drawMenu(void) {
         if (ImGui::BeginMenu("Scale")) {
             float scale = megamol::gui::gui_scaling.Get();
             if (ImGui::RadioButton("100%", (scale == 1.0f))) {
-                megamol::gui::gui_scaling.Set(1.0f);
+                this->SetScale(1.0f);
             }
             if (ImGui::RadioButton("150%", (scale == 1.5f))) {
-                megamol::gui::gui_scaling.Set(1.5f);
+                this->SetScale(1.5f);
             }
             if (ImGui::RadioButton("200%", (scale == 2.0f))) {
-                megamol::gui::gui_scaling.Set(2.0f);
+                this->SetScale(2.0f);
             }
             if (ImGui::RadioButton("250%", (scale == 2.5f))) {
-                megamol::gui::gui_scaling.Set(2.5f);
+                this->SetScale(2.5f);
             }
             if (ImGui::RadioButton("300%", (scale == 3.0f))) {
-                megamol::gui::gui_scaling.Set(3.0f);
-            }
-
-            if (megamol::gui::gui_scaling.PendingChange()) {
-
-                // Additionally trigger reload of currently used font
-                this->state.font_apply = true;
-                this->state.font_size = static_cast<int>(
-                    static_cast<float>(this->state.font_size) * (megamol::gui::gui_scaling.TransitonFactor()));
-
-                // Additionally resize all windows
-                this->state.rescale_windows = true;
+                this->SetScale(3.0f);
             }
 
             ImGui::EndMenu();
@@ -2260,37 +2262,14 @@ std::string megamol::gui::GUIWindows::project_to_lua_string(void) {
                             ((this->state.gui_visible) ? ("true") : ("false")) +
                             std::string(GUI_END_TAG_SET_GUI_VISIBILITY) + "\n";
 
+        state += std::string(GUI_START_TAG_SET_GUI_SCALE) + std::to_string(megamol::gui::gui_scaling.Get()) +
+                 std::string(GUI_END_TAG_SET_GUI_SCALE) + "\n";
+
         state += std::string(GUI_START_TAG_SET_GUI_STATE) + gui_state + std::string(GUI_END_TAG_SET_GUI_STATE) + "\n";
 
         return state;
     }
     return std::string();
-}
-
-
-bool megamol::gui::GUIWindows::load_state_from_file(const std::string& filename) {
-
-    bool retval = false;
-    std::string project;
-    if (megamol::core::utility::FileUtils::ReadFile(filename, project, true)) {
-
-        std::string gui_state_str =
-            GUIUtils::ExtractTaggedString(project, GUI_START_TAG_SET_GUI_STATE, GUI_END_TAG_SET_GUI_STATE);
-        retval = this->state_from_string(gui_state_str);
-
-        std::string gui_visible_str =
-            GUIUtils::ExtractTaggedString(project, GUI_START_TAG_SET_GUI_VISIBILITY, GUI_END_TAG_SET_GUI_VISIBILITY);
-        if (!gui_visible_str.empty()) {
-            if ((gui_visible_str == "1") || (gui_visible_str == "True") || (gui_visible_str == "true")) {
-                this->state.gui_visible = true;
-                retval |= true;
-            } else if ((gui_visible_str == "0") || (gui_visible_str == "False") || (gui_visible_str == "false")) {
-                this->state.gui_visible = false;
-                retval |= true;
-            }
-        }
-    }
-    return retval;
 }
 
 
@@ -2318,8 +2297,6 @@ bool megamol::gui::GUIWindows::state_from_string(const std::string& state) {
                 megamol::core::utility::get_json_value<int>(gui_state, {"font_size"}, &this->state.font_size);
                 this->state.font_apply = true;
                 float new_gui_scale = 1.0f;
-                megamol::core::utility::get_json_value<float>(gui_state, {"scale"}, &new_gui_scale);
-                megamol::gui::gui_scaling.Set(new_gui_scale); /// Font and windows are already loaded in correct scale
             }
         }
 
@@ -2370,7 +2347,6 @@ bool megamol::gui::GUIWindows::state_to_string(std::string& out_state) {
         json_state[GUI_JSON_TAG_GUI]["font_file_name"] = this->state.font_file_name;
         GUIUtils::Utf8Decode(this->state.font_file_name);
         json_state[GUI_JSON_TAG_GUI]["font_size"] = this->state.font_size;
-        json_state[GUI_JSON_TAG_GUI]["scale"] = megamol::gui::gui_scaling.Get();
 
         // Write window configuration
         this->window_collection.StateToJSON(json_state);

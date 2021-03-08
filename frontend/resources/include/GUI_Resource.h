@@ -23,6 +23,10 @@ struct GUIResource {
     // Provide GUI visibility
     /// (e.g. Lua_Service_Wrapper loads project providing GUI visibility via mmShowGUI)
     std::function<void(bool)> provide_gui_visibility;
+
+    // Provide GUI scale
+    /// (e.g. Lua_Service_Wrapper loads project providing GUI scale via mmScaleGUI)
+    std::function<void(float)> provide_gui_scale;
 };
 
 } /* end namespace frontend_resources */

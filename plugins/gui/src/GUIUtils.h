@@ -93,6 +93,8 @@
 #define GUI_END_TAG_SET_GUI_STATE ("]=])")
 #define GUI_START_TAG_SET_GUI_VISIBILITY ("mmShowGUI(")
 #define GUI_END_TAG_SET_GUI_VISIBILITY (")")
+#define GUI_START_TAG_SET_GUI_SCALE ("mmScaleGUI(")
+#define GUI_END_TAG_SET_GUI_SCALE (")")
 
 // Global Colors
 #define GUI_COLOR_TEXT_ERROR (ImVec4(0.9f, 0.1f, 0.0f, 1.0f))
@@ -172,7 +174,7 @@ namespace gui {
 
         void Set(float s) {
             this->last_scale = this->scale;
-            this->scale = std::max(1.0f, s);
+            this->scale = std::max(0.0f, s);
             if (this->scale != this->last_scale) {
                 this->pending_change = true;
             }

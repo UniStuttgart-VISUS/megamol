@@ -55,6 +55,7 @@ public:
         std::function<void(const bool)> mmSetVsync_callback_;
         std::function<void(const std::string)> mmSetGUIState_callback_;
         std::function<void(const bool)> mmShowGUI_callback_;
+        std::function<void(const float)> mmScaleGUI_callback_;
     } LuaCallbacks;
 
     /**
@@ -262,8 +263,10 @@ protected:
     int SetWindowPosition(lua_State *L);
     int SetFullscreen(lua_State *L);
     int SetVSync(lua_State *L);
+
     int SetGUIState(lua_State* L);
     int ShowGUI(lua_State* L);
+    int ScaleGUI(lua_State* L);
 
 private:
 

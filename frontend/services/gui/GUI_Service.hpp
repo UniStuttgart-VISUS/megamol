@@ -85,6 +85,7 @@ private:
     std::string resource_request_gui_state(void);
     void resource_provide_gui_state(const std::string& json_state);
     void resource_provide_gui_visibility(bool show);
+    void resource_provide_gui_scale(float scale);
 };
 
 } // namespace frontend

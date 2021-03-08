@@ -95,6 +95,7 @@
 #define MMC_LUA_MMSETVSYNC "mmSetVSync"
 #define MMC_LUA_MMSETGUISTATE "mmSetGUIState"
 #define MMC_LUA_MMSHOWGUI "mmShowGUI"
+#define MMC_LUA_MMSCALEGUI "mmScaleGUI"
 
 void megamol::core::LuaAPI::commonInit() {
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetEnvValue>(MMC_LUA_MMGETENVVALUE, "(string name)\n\tReturn the value of env variable <name>.");
@@ -134,8 +135,9 @@ void megamol::core::LuaAPI::commonInit() {
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetFullscreen>(MMC_LUA_MMSETFULLSCREEN, "(bool fullscreen)\n\tSet window to fullscreen (or restore).");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetVSync>(MMC_LUA_MMSETVSYNC, "(bool state)\n\tSet window VSync off (false) or on (true).");
 
-luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetGUIState>(MMC_LUA_MMSETGUISTATE, "(string json)\n\tSet GUI state from given 'json' string.");
-luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ShowGUI>(MMC_LUA_MMSHOWGUI, "(bool state)\n\Show (true) or hide (false) the GUI.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetGUIState>(MMC_LUA_MMSETGUISTATE, "(string json)\n\tSet GUI state from given 'json' string.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ShowGUI>(MMC_LUA_MMSHOWGUI, "(bool state)\n\Show (true) or hide (false) the GUI.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ScaleGUI>(MMC_LUA_MMSCALEGUI, "(float scale)\n\GUI scaling factor.");
 
     if (!imperative_only_) {
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetModuleParams>(MMC_LUA_MMGETMODULEPARAMS, "(string name)\n\tReturns a 0x1-separated list of module name and all parameters."
@@ -1226,6 +1228,20 @@ int megamol::core::LuaAPI::ShowGUI(lua_State *L) {
         callbacks_.mmShowGUI_callback_(fs);
     } else {
         luaApiInterpreter_.ThrowError(MMC_LUA_MMSHOWGUI " requires one bool parameter");
+    }
+
+  return 0;
+}
+
+int megamol::core::LuaAPI::ScaleGUI(lua_State *L) {
+    int n = lua_gettop(L);
+    if (n == 1) {
+        double scale = 1.0;
+        scale = luaL_checknumber(L, 1);
+
+        callbacks_.mmScaleGUI_callback_(static_cast<float>(scale));
+    } else {
+        luaApiInterpreter_.ThrowError(MMC_LUA_MMSCALEGUI " requires one float parameter");
     }
 
   return 0;
