@@ -1004,7 +1004,9 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                 std::string script_filename;
                 // Get project filename from lua state of core instance
                 if (graph_ptr->GetFilename().empty() && (this->core_instance != nullptr)) {
-                    script_filename = this->core_instance->GetLuaState()->GetScriptPath();
+                    if (auto lua_state = this->core_instance->GetLuaState()) {
+                        script_filename = lua_state->GetScriptPath();
+                    }
                 }
                 // Get project filename from lua state of frontend service
                 if (!this->state.project_script_paths.empty()) {

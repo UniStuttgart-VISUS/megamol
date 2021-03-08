@@ -506,7 +506,9 @@ void megamol::gui::Configurator::drawPopUps(megamol::core::CoreInstance* core_in
     }
     // Try to get current project path from lua in core instance
     if (project_filename.empty() && (core_instance != nullptr)) {
-        project_filename = core_instance->GetLuaState()->GetScriptPath();
+        if (auto lua_state = core_instance->GetLuaState()) {
+            project_filename = lua_state->GetScriptPath();
+        }
     }
     if (this->file_browser.PopUp(
             project_filename, FileBrowserWidget::FileBrowserFlag::LOAD, "Load Project", this->open_popup_load, "lua")) {
