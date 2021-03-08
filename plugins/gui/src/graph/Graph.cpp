@@ -1907,35 +1907,36 @@ void megamol::gui::Graph::draw_menu(void) {
     }
     ImGui::Separator();
 
-    // MODULES
-    if (ImGui::BeginMenu("Modules")) {
-        if (ImGui::MenuItem("Label", nullptr, &this->gui_graph_state.interact.module_show_label)) {
-            this->gui_update = true;
+    if (ImGui::BeginMenu("Labels")) {
+        // MODULES
+        if (ImGui::BeginMenu("Modules")) {
+            if (ImGui::MenuItem("Name", nullptr, &this->gui_graph_state.interact.module_show_label)) {
+                this->gui_update = true;
+            }
+            if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.callslot_show_label)) {
+                this->gui_update = true;
+            }
+            ImGui::EndMenu();
         }
-        if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.callslot_show_label)) {
-            this->gui_update = true;
-        }
-        ImGui::EndMenu();
-    }
-    ImGui::Separator();
+        ImGui::Separator();
 
-    // CALLS
-    if (ImGui::BeginMenu("Calls")) {
-        if (ImGui::MenuItem("Label", nullptr, &this->gui_graph_state.interact.call_show_label)) {
-            this->gui_update = true;
-        }
-        if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.call_show_slots_label)) {
-            this->gui_update = true;
+        // CALLS
+        if (ImGui::BeginMenu("Calls")) {
+            if (ImGui::MenuItem("Name", nullptr, &this->gui_graph_state.interact.call_show_label)) {
+                this->gui_update = true;
+            }
+            if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.call_show_slots_label)) {
+                this->gui_update = true;
+            }
+            ImGui::EndMenu();
         }
         ImGui::EndMenu();
     }
     ImGui::Separator();
 
     // GRID
-    if (ImGui::BeginMenu("Grid")) {
-        ImGui::MenuItem("Show", nullptr, &this->gui_show_grid);
-        ImGui::EndMenu();
-    }
+    ImGui::Checkbox("Grid", &this->gui_show_grid);
+
     ImGui::Separator();
 
     // Choose single selected view module

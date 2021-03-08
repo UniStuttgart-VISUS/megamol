@@ -7,6 +7,14 @@
 
 #include "GUI_Service.hpp"
 
+#include "Window_Events.h"
+#include "Framebuffer_Events.h"
+#include "KeyboardMouse_Events.h"
+#include "Screenshot_Service.hpp"
+#include "ScriptPaths.h"
+
+#include "mmcore/utility/log/Log.h"
+
 
 namespace megamol {
 namespace frontend {

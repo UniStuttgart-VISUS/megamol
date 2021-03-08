@@ -7,6 +7,8 @@
 
 #include "OpenGL_GLFW_Service.hpp"
 
+#include "FrameStatistics.h"
+
 #include <array>
 #include <chrono>
 #include <vector>
@@ -294,7 +296,8 @@ struct OpenGL_GLFW_Service::PimplData {
     GLFWwindow* glfwContextWindowPtr{nullptr};
     OpenGL_GLFW_Service::Config config;    // keep copy of user-provided config
     std::string fullWindowTitle;
-    std::chrono::system_clock::time_point topmost_before_time;
+    std::chrono::system_clock::time_point last_time;
+    megamol::frontend_resources::FrameStatistics* frame_statistics{nullptr};
 };
 
 OpenGL_GLFW_Service::~OpenGL_GLFW_Service() {
@@ -488,24 +491,41 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {"WindowManipulation", m_windowManipulation}
     };
 
-    m_pimpl->topmost_before_time = std::chrono::system_clock::now();
+    m_pimpl->last_time = std::chrono::system_clock::now();
 
     log("initialized successfully");
     return true;
 }
 
-void OpenGL_GLFW_Service::reset_window_topmost() {
-#ifdef _WIN32
+void OpenGL_GLFW_Service::do_every_second() {
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
-    auto& topmost_before_time = m_pimpl->topmost_before_time;
+    auto& last_time = m_pimpl->last_time;
 
-    if (now - topmost_before_time > std::chrono::seconds(1)) {
-        topmost_before_time = now;
+    if (now - last_time > std::chrono::seconds(1)) {
+        last_time = now;
+
+        auto const cut_off = [](std::string const& s) -> std::string {
+            const auto found_dot = s.find_first_of(".,");
+            const auto substr = s.substr(0, found_dot + 1 + 1);
+            return substr;
+        };
+
+        std::string fps = std::to_string(m_pimpl->frame_statistics->last_averaged_fps);
+        std::string mspf = std::to_string(m_pimpl->frame_statistics->last_averaged_mspf);
+        std::string title =
+            m_pimpl->config.windowTitlePrefix
+            + " [" + cut_off(fps) + "f/s, " + cut_off(mspf) + "ms/f]";
+        glfwSetWindowTitle(m_pimpl->glfwContextWindowPtr, title.c_str());
+
+#ifdef _WIN32
         // TODO fix this for EGL + Win
         //log("Periodic reordering of windows.");
-        SetWindowPos(glfwGetWin32Window(m_pimpl->glfwContextWindowPtr), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-    }
+        if (m_pimpl->config.windowPlacement.topMost) {
+            SetWindowPos(glfwGetWin32Window(m_pimpl->glfwContextWindowPtr), HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+        }
 #endif
+
+    }
 }
 
 #define that static_cast<OpenGL_GLFW_Service*>(::glfwGetWindowUserPointer(wnd))
@@ -669,9 +689,7 @@ void OpenGL_GLFW_Service::postGraphRender() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT);
     //::glfwMakeContextCurrent(nullptr);
 
-    if (m_pimpl->config.windowPlacement.topMost) {
-        reset_window_topmost();
-    }
+    do_every_second();
 }
 
 std::vector<FrontendResource>& OpenGL_GLFW_Service::getProvidedResources() {
@@ -679,12 +697,11 @@ std::vector<FrontendResource>& OpenGL_GLFW_Service::getProvidedResources() {
 }
 
 const std::vector<std::string> OpenGL_GLFW_Service::getRequestedResourceNames() const {
-    // we dont depend on outside resources
-    return {};
+    return {"FrameStatistics"};
 }
 
 void OpenGL_GLFW_Service::setRequestedResources(std::vector<FrontendResource> resources) {
-    // we dont depend on outside resources
+    m_pimpl->frame_statistics = &const_cast<megamol::frontend_resources::FrameStatistics&>(resources[0].getResource<megamol::frontend_resources::FrameStatistics>());
 }
 
 void OpenGL_GLFW_Service::glfw_onKey_func(const int key, const int scancode, const int action, const int mods) {

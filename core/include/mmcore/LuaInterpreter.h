@@ -98,7 +98,7 @@ public:
      */
     template <class C, luaCallbackFunc<C> func> void RegisterCallback(std::string const& name, std::string const& help) {
         //this->theCallbacks += name + "=" + name + ",";
-        this->theHelp += name + help + "\n";
+        this->theHelp.push_back(std::make_pair(name,help));
         lua_register(L, name.c_str(), &(dispatch<C, func>));
         for(auto &x: theEnvironments) {
             luaL_dostring(L, (x + "." + name + "="+name).c_str());
@@ -119,12 +119,34 @@ public:
     /**
      * Register a constant in lua and all environments known to date.
      */
-    void RegisterConstant(std::string const &name, uint32_t value) {
+    void RegisterConstant(std::string const& name, uint32_t value) {
         //this->theConstants[name] = value;
         lua_pushinteger(L, value);
         lua_setglobal(L, name.c_str());
         for(auto &x: theEnvironments) {
             luaL_dostring(L, (x + "." + name + "="+name).c_str());
+        }
+    }
+
+    void UnregisterCallback(std::string const& name) {
+        std::remove_if(this->theHelp.begin(), this->theHelp.end(), [name](std::pair<std::string, std::string> const& p){return p.first.compare(name) == 0;});
+        luaL_dostring(L, (name + "= nil").c_str());
+        for(auto &x: theEnvironments) {
+            luaL_dostring(L, (x + "." + name + "= nil").c_str());
+        }
+    }
+
+    void UnregisterAlias(std::string const& alias) {
+        for(auto &x: theEnvironments) {
+            luaL_dostring(L, (x + "." + alias + "= nil").c_str());
+        }
+    }
+
+    void UnregisterConstant(std::string const& name) {
+        lua_pushnil(L);
+        lua_setglobal(L, name.c_str());
+        for(auto &x: theEnvironments) {
+            luaL_dostring(L, (x + "." + name + "= nil").c_str());
         }
     }
 
@@ -172,7 +194,7 @@ private:
 
     T* that;
 
-    std::string theHelp;
+    std::vector<std::pair<std::string, std::string>> theHelp;
 
     std::vector<std::string> theEnvironments;
 
@@ -480,7 +502,9 @@ template <class T> int megamol::core::LuaInterpreter<T>::logInfo(lua_State* L) {
 template <class T> int megamol::core::LuaInterpreter<T>::help(lua_State *L) {
     std::stringstream out;
     out << "MegaMol Lua Help:" << std::endl;
-    out << theHelp;
+    std::string helpString;
+    for (const auto &s : theHelp) helpString += s.first + s.second;
+    out << helpString;
     lua_pushstring(L, out.str().c_str());
     return 1;
 }

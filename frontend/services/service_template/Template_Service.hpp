@@ -1,7 +1,7 @@
 /*
  * Template_Service.hpp
  *
- * Copyright (C) 2020 by MegaMol Team
+ * Copyright (C) 2021 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 

@@ -123,6 +123,7 @@ megamol::core::utility::log::Log::SourceID megamol::core::utility::log::Log::Cur
 megamol::core::utility::log::Log::Log(UINT level, unsigned int msgbufsize)
     : mainTarget(std::make_shared<OfflineTarget>(msgbufsize, level))
     , echoTarget(std::make_shared<OfflineTarget>(msgbufsize, level))
+    , fileTarget(std::make_shared<OfflineTarget>(msgbufsize, level))
     , autoflush(true) {
     // Intentionally empty
 }
@@ -131,7 +132,7 @@ megamol::core::utility::log::Log::Log(UINT level, unsigned int msgbufsize)
  * megamol::core::utility::log::Log::Log
  */
 megamol::core::utility::log::Log::Log(UINT level, const char *filename, bool addSuffix)
-        : mainTarget(nullptr), echoTarget(nullptr), autoflush(true) {
+        : mainTarget(nullptr), echoTarget(nullptr), fileTarget(nullptr), autoflush(true) {
     this->SetLogFileName(filename, addSuffix);
 }
 
@@ -140,7 +141,7 @@ megamol::core::utility::log::Log::Log(UINT level, const char *filename, bool add
  * megamol::core::utility::log::Log::Log
  */
 megamol::core::utility::log::Log::Log(const Log& source) : mainTarget(nullptr),
-        echoTarget(nullptr), autoflush(true) {
+        echoTarget(nullptr), fileTarget(nullptr), autoflush(true) {
     *this = source;
 }
 
@@ -178,6 +179,9 @@ void megamol::core::utility::log::Log::FlushLog(void) {
     if (this->echoTarget != nullptr) {
         this->echoTarget->Flush();
     }
+    if (this->fileTarget != nullptr) {
+        this->fileTarget->Flush();
+    }
 }
 
 
@@ -204,6 +208,17 @@ UINT megamol::core::utility::log::Log::GetLevel(void) const {
 
 
 /*
+ * megamol::core::utility::log::Log::GetFileLevel
+ */
+UINT megamol::core::utility::log::Log::GetFileLevel(void) const {
+    if (this->fileTarget != nullptr) {
+        return this->fileTarget->Level();
+    }
+    return 0;
+}
+
+
+/*
  * megamol::core::utility::log::Log::GetLogFileNameA
  */
 std::string megamol::core::utility::log::Log::GetLogFileNameA(void) const {
@@ -218,11 +233,14 @@ std::string megamol::core::utility::log::Log::GetLogFileNameA(void) const {
 unsigned int megamol::core::utility::log::Log::GetOfflineMessageBufferSize(void) const {
     const std::shared_ptr<OfflineTarget> mot = std::dynamic_pointer_cast<OfflineTarget>(this->mainTarget);
     const std::shared_ptr<OfflineTarget> eot = std::dynamic_pointer_cast<OfflineTarget>(this->echoTarget);
+    const std::shared_ptr<OfflineTarget> fot = std::dynamic_pointer_cast<OfflineTarget>(this->fileTarget);
 
     if (mot != nullptr) {
         return mot->BufferSize();
     } else if (eot != nullptr) {
         return eot->BufferSize();
+    } else if (fot != nullptr) {
+        return fot->BufferSize();
     }
 
     return 0;
@@ -270,20 +288,31 @@ void megamol::core::utility::log::Log::SetLevel(UINT level) {
 
 
 /*
+ * megamol::core::utility::log::Log::SetFileLevel
+ */
+void megamol::core::utility::log::Log::SetFileLevel(UINT level) {
+    if (this->fileTarget != nullptr) {
+        this->fileTarget->SetLevel(level);
+    }
+}
+
+
+
+/*
  * megamol::core::utility::log::Log::SetLogFileName
  */
 bool megamol::core::utility::log::Log::SetLogFileName(const char *filename, bool addSuffix) {
-    std::shared_ptr<Target> omt = this->mainTarget;
-    std::shared_ptr<OfflineTarget> ot = std::dynamic_pointer_cast<OfflineTarget>(omt);
+    std::shared_ptr<Target> oft = this->fileTarget;
+    std::shared_ptr<OfflineTarget> ot = std::dynamic_pointer_cast<OfflineTarget>(oft);
 
     if (filename != nullptr) {
         std::string path(filename);
         if (addSuffix) {
             path += this->getFileNameSuffix();
         }
-        this->mainTarget = std::make_shared<FileTarget>(path, omt->Level());
+        this->fileTarget = std::make_shared<FileTarget>(path, oft->Level());
         if (ot != nullptr) {
-            ot->Reecho(*this->mainTarget);
+            ot->Reecho(*this->fileTarget);
         }
     }
     // ot will be deleted by SFX of omt
@@ -314,12 +343,16 @@ void megamol::core::utility::log::Log::SetMainTarget(
 void megamol::core::utility::log::Log::SetOfflineMessageBufferSize(unsigned int msgbufsize) {
     std::shared_ptr<OfflineTarget> mot = std::dynamic_pointer_cast<OfflineTarget>(this->mainTarget);
     std::shared_ptr<OfflineTarget> eot = std::dynamic_pointer_cast<OfflineTarget>(this->echoTarget);
+    std::shared_ptr<OfflineTarget> fot = std::dynamic_pointer_cast<OfflineTarget>(this->fileTarget);
 
     if (mot != nullptr) {
         mot->SetBufferSize(msgbufsize);
     }
     if (eot != nullptr) {
         eot->SetBufferSize(msgbufsize);
+    }
+    if (fot != nullptr) {
+        fot->SetBufferSize(msgbufsize);
     }
 }
 
@@ -330,6 +363,7 @@ void megamol::core::utility::log::Log::SetOfflineMessageBufferSize(unsigned int 
 void megamol::core::utility::log::Log::ShareTargetStorage(const megamol::core::utility::log::Log& master) {
     this->mainTarget = master.mainTarget;
     this->echoTarget = master.echoTarget;
+    this->fileTarget = master.fileTarget;
 }
 
 
@@ -407,6 +441,12 @@ void megamol::core::utility::log::Log::WriteMessage(UINT level,
             this->echoTarget->Flush();
         }
     }
+    if (this->fileTarget != nullptr) {
+        this->fileTarget->Msg(level, time, sid, msg);
+        if (this->autoflush) {
+            this->fileTarget->Flush();
+        }
+    }
 }
 
 
@@ -474,6 +514,7 @@ void megamol::core::utility::log::Log::WriteWarn(int lvlOff, const char *fmt, ..
 megamol::core::utility::log::Log& megamol::core::utility::log::Log::operator=(const Log& rhs) {
     this->mainTarget = rhs.mainTarget;
     this->echoTarget = rhs.echoTarget;
+    this->fileTarget = rhs.fileTarget;
     this->autoflush = rhs.autoflush;
     return *this;
 }

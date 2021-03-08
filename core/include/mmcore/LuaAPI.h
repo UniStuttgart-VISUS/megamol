@@ -20,10 +20,6 @@ struct lua_State; // lua includes should stay in the core
 
 namespace megamol {
 namespace core {
-namespace utility {
-class Configuration;
-}
-
 
 /**
  * This class holds a Lua state. It can be used to interact with a MegaMol instance.
@@ -36,6 +32,18 @@ class Configuration;
 class MEGAMOLCORE_API LuaAPI {
 public:
     static const std::string MEGAMOL_ENV;
+
+    typedef struct {
+        std::function<bool(std::string const&, std::string const&)> mmSetCliOption_callback_;
+        std::function<bool(std::string const&, std::string const&)> mmSetGlobalValue_callback_;
+        std::function<bool(std::string const&)> mmSetAppDir_callback_;
+        std::function<bool(std::string const&)> mmAddResourceDir_callback_;
+        std::function<bool(std::string const&)> mmAddShaderDir_callback_;
+        std::function<bool(std::string const&)> mmSetLogFile_callback_;
+        std::function<bool(std::string const&)> mmSetLogLevel_callback_;
+        std::function<bool(std::string const&)> mmSetEchoLevel_callback_;
+        std::function<bool(std::string const&)> mmLoadProject_callback_;
+    } LuaConfigCallbacks;
 
     typedef struct {
         std::function<std::vector<std::string>()> mmListResources_callback_; // returns list of resources available in frontend
@@ -54,11 +62,13 @@ public:
      * to avoid having round-trips across frames/threads etc. Basically config/project scripts
      * are reply-less and the LuaHost can get replies.
      */
-    LuaAPI(megamol::core::MegaMolGraph &graph, bool imperativeOnly);
+    LuaAPI(bool imperativeOnly);
 
     ~LuaAPI();
 
     // TODO forbid copy-contructor? assignment?
+
+    bool FillConfigFromString(const std::string& script, std::string& result, LuaConfigCallbacks const& config);
 
     /**
      * Run a script file, sandboxed in the environment provided.
@@ -98,6 +108,13 @@ public:
     std::string GetScriptPath(void);
 
     /**
+     * Sets the current project file path
+     */
+    void SetScriptPath(std::string const& scriptPath);
+
+    void SetMegaMolGraph(megamol::core::MegaMolGraph& graph);
+
+    /**
      * Sets the function callback used to trigger rendering of a frame due to mmFlush.
      */
     void setFlushCallback(std::function<bool()> const& callback);
@@ -129,7 +146,7 @@ protected:
     int GetBitWidth(lua_State* L);
 
     /** mmGetConfiguration: get compile configuration (debug, release) */
-    int GetConfiguration(lua_State* L);
+    int GetCompileMode(lua_State* L);
 
     /** mmGetOS: get operating system (windows, linux, unknown) */
     int GetOS(lua_State* L);
@@ -152,15 +169,6 @@ protected:
      */
     int AddResourceDir(lua_State* L);
 
-    /**
-     * mmPluginLoaderInfo(string path, string fileglob,
-     * string action): action = ('include', 'exclude').
-     * Add information about plugins to load: set a search path
-     * plus a globbing pattern for choosing relevant libraries
-     * to load as plugins.
-     */
-    int PluginLoaderInfo(lua_State* L);
-
     /** mmSetLogFile(string path): set path of the log file. */
     int SetLogFile(lua_State* L);
 
@@ -174,11 +182,14 @@ protected:
     /** mmSetEchoLevel(string level): set level of console output, see SetLogLevel. */
     int SetEchoLevel(lua_State* L);
 
-    /**
-     * mmSetConfigValue(string name, string value): set configuration value 'name'
-     * to 'value'.
-     */
-    int SetConfigValue(lua_State* L);
+    // set global key-value pair in MegaMol key-value store
+    int SetGlobalValue(lua_State* L);
+
+    // set a CLI option to a specific value
+    int SetCliOption(lua_State* L);
+
+    /** mmLoadProject(string path): load project file after MegaMol started */
+    int LoadProject(lua_State* L);
 
     /**
      * mmGetConfigValue(string name): get the value of configuration value 'name'
@@ -282,8 +293,9 @@ private:
     LuaInterpreter<LuaAPI> luaApiInterpreter_;
 
     /** the respective MegaMol graph */
-    megamol::core::MegaMolGraph& graph_;
+    megamol::core::MegaMolGraph* graph_ptr_ = nullptr;
 
+    LuaConfigCallbacks config_callbacks_;
     LuaCallbacks callbacks_;
     // this one is special since the frontend provides it
     std::function<bool()> mmFlush_callback_; // renders one next frame via main loop
