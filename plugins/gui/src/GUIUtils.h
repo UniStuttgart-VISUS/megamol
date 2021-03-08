@@ -26,9 +26,9 @@
  * - Search Module:             Ctrl + Shift + m
  * - Search Parameter:          Ctrl + Shift + p
  * - Save Edited Project:       Ctrl + Shift + s
- * - Delete Graph Item:         Delete
  *
  * ----- Graph -----
+ * - Delete Graph Item:         Delete
  * - Selection, Drag & Drop:    Left Mouse Button
  * - Context Menu:              Right Mouse Button
  * - Zooming:                   Mouse Wheel
