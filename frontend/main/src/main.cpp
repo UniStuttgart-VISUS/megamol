@@ -1,9 +1,11 @@
+#include "mmcore/LuaAPI.h"
 #include "CLIConfigParsing.h"
+
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/log/DefaultTarget.h"
+
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
-
-#include "mmcore/utility/log/DefaultTarget.h"
-#include "mmcore/utility/log/Log.h"
 
 #include "RuntimeConfig.h"
 #include "GlobalValueStore.h"
@@ -17,9 +19,6 @@
 #include "Screenshot_Service.hpp"
 #include "ProjectLoader_Service.hpp"
 
-#include "mmcore/view/AbstractView_EventConsumption.h"
-
-#include "mmcore/LuaAPI.h"
 
 static void log(std::string const& text) {
     const std::string msg = "Main: " + text;
@@ -44,7 +43,8 @@ int main(const int argc, const char** argv) {
     megamol::core::utility::log::Log::DefaultLog.SetFileLevel(config.log_level);
     megamol::core::utility::log::Log::DefaultLog.SetOfflineMessageBufferSize(100);
     megamol::core::utility::log::Log::DefaultLog.SetMainTarget(std::make_shared<megamol::core::utility::log::DefaultTarget>());
-    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(config.log_file.data(), false);
+    if (!config.log_file.empty())
+        megamol::core::utility::log::Log::DefaultLog.SetLogFileName(config.log_file.data(), false);
 
     log(config.as_string());
     log(global_value_store.as_string());
