@@ -21,11 +21,11 @@
 
 
 #include "Configurator.h"
-#include "CorporateGreyStyle.h"
-#include "CorporateWhiteStyle.h"
-#include "DefaultStyle.h"
 #include "LogConsole.h"
 #include "WindowCollection.h"
+#include "widgets/CorporateGreyStyle.h"
+#include "widgets/CorporateWhiteStyle.h"
+#include "widgets/DefaultStyle.h"
 #include "widgets/FileBrowserWidget.h"
 #include "widgets/HoverToolTip.h"
 #include "widgets/MinimalPopUp.h"
@@ -160,7 +160,8 @@ namespace gui {
          *                                 pre-rendering step. In this case a new gui graph is created before first
          *                                 call of PreDraw() and a gui graph already exists.
          *
-         * @param megamol_graph    If no megamol_graph is given, 'old' graph is synchronised via core_instance.
+         * @param megamol_graph            If no megamol_graph is given, 'old' graph is synchronised via
+         * core_instance.
          */
         bool SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph = nullptr);
 
@@ -181,12 +182,13 @@ namespace gui {
             bool gui_visible;      // Flag indicating whether GUI is completely disabled
             bool gui_visible_post; // Required to prevent changes to 'gui_enabled' between pre and post drawing
             std::vector<WindowCollection::DrawCallbacks>
-                gui_visible_buffer;   // List of all visible window IDs for restore when GUI is visible again
-            bool gui_hide_next_frame; // Hiding all GUI windows properly needs two frames for ImGui to apply right state
-            bool rescale_windows;     // Indicates resizing of windows for new gui zoom
-            Styles style;             // Predefined GUI style
-            bool style_changed;       // Flag indicating changed style
-            bool autosave_gui_state;  // Automatically save state after gui has been changed
+                gui_visible_buffer; // List of all visible window IDs for restore when GUI is visible again
+            unsigned int
+                gui_hide_next_frame; // Hiding all GUI windows properly needs two frames for ImGui to apply right state
+            bool rescale_windows;    // Indicates resizing of windows for new gui zoom
+            Styles style;            // Predefined GUI style
+            bool style_changed;      // Flag indicating changed style
+            bool autosave_gui_state; // Automatically save state after gui has been changed
             std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
             ImGuiID graph_uid;                             // UID of currently running graph
             std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.

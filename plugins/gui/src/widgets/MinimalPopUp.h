@@ -17,7 +17,7 @@ namespace gui {
 
 
     /**
-     * String search widget.
+     * Minimal Pup-up widget.
      */
     class MinimalPopUp {
     public:
