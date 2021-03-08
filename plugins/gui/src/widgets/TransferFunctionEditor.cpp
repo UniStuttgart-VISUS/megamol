@@ -136,9 +136,10 @@ void RainbowAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
     }
 }
 
-std::array<std::tuple<std::string, PresetGenerator>, 20> PRESETS = {
+std::array<std::tuple<std::string, PresetGenerator>, 21> PRESETS = {
     std::make_tuple("Select...", [](auto& nodes, auto n) {}),
     std::make_tuple("Ramp", RampAdapter),
+    std::make_tuple("Cividis", ColormapAdapter<256>(CividisColorMap)),
     std::make_tuple("Hue rotation (rainbow, harmful)", RainbowAdapter),
     std::make_tuple("Inferno", ColormapAdapter<256>(InfernoColorMap)),
     std::make_tuple("Magma", ColormapAdapter<256>(MagmaColorMap)),
@@ -266,7 +267,7 @@ void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const s
     this->connected_parameter_ptr = nullptr;
     this->connected_parameter_name = "";
     if (param_ptr != nullptr) {
-        if (param_ptr->type == Param_t::TRANSFERFUNCTION) {
+        if (param_ptr->Type() == Param_t::TRANSFERFUNCTION) {
             if (this->connected_parameter_ptr != param_ptr) {
                 this->connected_parameter_ptr = param_ptr;
                 this->connected_parameter_name = param_full_name;
@@ -290,7 +291,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
     if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
         const char* message = "Changes have no effect.\n"
                               "No transfer function parameter connected for edit.\n";
-        ImGui::TextColored(GUI_COLOR_TEXT_WARN, message);
+        ImGui::TextColored(GUI_COLOR_TEXT_ERROR, message);
     }
 
     assert(ImGui::GetCurrentContext() != nullptr);
@@ -560,9 +561,9 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 if (this->connected_parameter_ptr != nullptr) {
                     std::string tf;
                     if (this->GetTransferFunction(tf)) {
-                        if (this->connected_parameter_ptr->type == Param_t::TRANSFERFUNCTION) {
+                        if (this->connected_parameter_ptr->Type() == Param_t::TRANSFERFUNCTION) {
                             this->connected_parameter_ptr->SetValue(tf);
-                            this->connected_parameter_ptr->present.SetTransferFunctionEditorHash(
+                            this->connected_parameter_ptr->TransferFunctionEditor_SetHash(
                                 this->connected_parameter_ptr->GetTransferFunctionHash());
                         }
                     }

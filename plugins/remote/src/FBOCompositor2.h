@@ -11,7 +11,7 @@
 #include "glad/glad.h"
 
 //#include "mmcore/utility/gl/FramebufferObject.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "FBOCommFabric.h"
 #include "FBOProto.h"
@@ -24,7 +24,7 @@
 namespace megamol {
 namespace remote {
 
-class FBOCompositor2 : public megamol::core::view::Renderer3DModule_2 {
+class FBOCompositor2 : public megamol::core::view::Renderer3DModuleGL {
 public:
     /**
      * Answer the name of this module.
@@ -57,9 +57,9 @@ protected:
     void release(void) override;
 
 private:
-    bool GetExtents(core::view::CallRender3D_2& call) override;
+    bool GetExtents(core::view::CallRender3DGL& call) override;
 
-    bool Render(core::view::CallRender3D_2& call) override;
+    bool Render(core::view::CallRender3DGL& call) override;
 
     void swapBuffers(void) {
         std::scoped_lock<std::mutex, std::mutex> guard{buffer_write_guard_, buffer_recv_guard_};

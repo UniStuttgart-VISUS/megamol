@@ -11,7 +11,7 @@
 #    pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "CallRender2D.h"
+#include "CallRender2DGL.h"
 #include "mmcore/view/RendererModule.h"
 
 
@@ -22,10 +22,10 @@ namespace view {
 /**
  * Base class of rendering graph 2D renderer modules.
  */
-class MEGAMOLCORE_API Renderer2DModule : public RendererModule<CallRender2D> {
+class MEGAMOLCORE_API Renderer2DModule : public RendererModule<CallRender2DGL> {
 public:
     /** Ctor. */
-    Renderer2DModule() :  RendererModule<CallRender2D>() {
+    Renderer2DModule() :  RendererModule<CallRender2DGL>() {
 	    this->MakeSlotAvailable(&this->renderSlot);
 	}
 

@@ -137,24 +137,6 @@ namespace gui {
         }
     };
 
-
-    // Pickable Cube ##########################################################
-
-    class PickableCube {
-    public:
-        PickableCube(void);
-        ~PickableCube(void) = default;
-
-        void Draw(unsigned int id, int& inout_defaultview_index, int& out_hovered_view_index,
-            const glm::vec4& view_orientation, const glm::vec2& vp_dim, ManipVector& pending_manipulations);
-
-        InteractVector GetInteractions(unsigned int id) const;
-
-    private:
-        std::shared_ptr<glowl::GLSLProgram> shader;
-    };
-
-
 } // namespace gui
 } // namespace megamol
 

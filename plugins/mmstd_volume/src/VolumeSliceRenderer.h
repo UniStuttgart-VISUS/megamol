@@ -12,8 +12,8 @@
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "mmcore/CallerSlot.h"
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/Renderer3DModule_2.h"
+#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/Renderer3DModuleGL.h"
 
 #include "vislib/graphics/gl/GLSLComputeShader.h"
 #include "vislib/graphics/gl/GLSLShader.h"
@@ -25,7 +25,7 @@ namespace volume {
     /**
      * Renders one slice of a volume (slow)
      */
-    class VolumeSliceRenderer : public core::view::Renderer3DModule_2 {
+    class VolumeSliceRenderer : public core::view::Renderer3DModuleGL {
     public:
         /**
          * Answer the name of this module.
@@ -79,7 +79,7 @@ namespace volume {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(core::view::CallRender3D_2& call) override;
+        virtual bool GetExtents(core::view::CallRender3DGL& call) override;
 
         /**
          * The render callback.
@@ -88,7 +88,7 @@ namespace volume {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(core::view::CallRender3D_2& call) override;
+        virtual bool Render(core::view::CallRender3DGL& call) override;
 
     private:
         /** The call for data */
