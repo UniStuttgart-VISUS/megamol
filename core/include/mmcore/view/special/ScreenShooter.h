@@ -33,7 +33,9 @@ namespace special {
     public:
 
         virtual std::vector<std::string> requested_lifetime_resources() {
-            return {"IOpenGL_Context", "MegaMolGraph"};
+            auto lifetime_resources = Module::requested_lifetime_resources();
+            lifetime_resources.push_back("MegaMolGraph");
+            return lifetime_resources;
         }
 
         /**
