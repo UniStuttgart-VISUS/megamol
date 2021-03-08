@@ -168,90 +168,25 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->state.gui_visible = false;
     }
 
-    // Show GUI after it was hidden (before early exit!)
-    if (!this->state.gui_visible && this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
-        this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
-        // Restore window 'open' state (Always restore at least menu)
-        this->state.menu_visible = true;
-        const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
-            if (std::find(this->state.gui_visible_buffer.begin(), this->state.gui_visible_buffer.end(),
-                    wc.win_callback) != this->state.gui_visible_buffer.end()) {
-                wc.win_show = true;
-            }
-        };
-        this->window_collection.EnumWindows(func);
-        this->state.gui_visible_buffer.clear();
-        this->state.gui_visible = true;
-    }
-
-    // Required to prevent change in gui drawing between pre and post draw
-    this->state.gui_visible_post = this->state.gui_visible;
-
-    // Early exit when pre step should be omitted
-    if (!this->state.gui_visible) {
-        return true;
-    }
-
-    // Check for initialized imgui api
-    if (this->initialized_api == GUIImGuiAPI::NONE) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] No ImGui API initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-    // Check for existing imgui context
-    if (this->context == nullptr) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    // Set ImGui context
-    ImGui::SetCurrentContext(this->context);
-
-    // Propagate ImGui context to core instance
-    if (this->core_instance != nullptr) {
-        this->core_instance->SetCurrentImGuiContext(this->context);
-    }
-
-    // Create new gui graph once if core instance graph is used (otherwise graph should already exist)
-    if (this->state.graph_uid == GUI_INVALID_ID) {
-        this->SynchronizeGraphs();
-    }
-
-    // Check if gui graph is present
-    if (this->state.graph_uid == GUI_INVALID_ID) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Failed to find required gui graph for running core graph. [%s, %s, line %d]\n", __FILE__,
-            __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    // Set stuff for next frame --------------------------------------------
-
-    // IO
-    ImGuiIO& io = ImGui::GetIO();
-
-    io.DisplaySize = ImVec2(window_size.x, window_size.y);
-    if ((window_size.x > 0.0f) && (window_size.y > 0.0f)) {
-        io.DisplayFramebufferScale = ImVec2(framebuffer_size.x / window_size.x, framebuffer_size.y / window_size.y);
-    }
-
-    if ((instance_time - this->state.last_instance_time) < 0.0) {
-        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
-            "[GUI] Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
-    }
-    io.DeltaTime = ((instance_time - this->state.last_instance_time) > 0.0)
-                       ? (static_cast<float>(instance_time - this->state.last_instance_time))
-                       : (io.DeltaTime);
-    this->state.last_instance_time = ((instance_time - this->state.last_instance_time) > 0.0)
-                                         ? (instance_time)
-                                         : (this->state.last_instance_time + io.DeltaTime);
-
     // Process hotkeys
     this->checkMultipleHotkeyAssignement();
     if (this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed) {
-        this->state.gui_hide_next_frame = 2;
+        if (this->state.gui_visible) {
+            this->state.gui_hide_next_frame = 2;
+        } else { /// !this->state.gui_visible
+            // Show GUI after it was hidden (before early exit!)
+            // Restore window 'open' state (Always restore at least menu)
+            this->state.menu_visible = true;
+            const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
+                if (std::find(this->state.gui_visible_buffer.begin(), this->state.gui_visible_buffer.end(),
+                        wc.win_callback) != this->state.gui_visible_buffer.end()) {
+                    wc.win_show = true;
+                }
+            };
+            this->window_collection.EnumWindows(func);
+            this->state.gui_visible_buffer.clear();
+            this->state.gui_visible = true;
+        }
         this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].is_pressed = false;
     }
     if (this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM].is_pressed) {
@@ -259,16 +194,15 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->state.shutdown_triggered = true;
         return true;
     }
-    if (this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].is_pressed) {
-        this->state.menu_visible = !this->state.menu_visible;
-        this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].is_pressed = false;
-    }
     if (this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT].is_pressed) {
         this->state.screenshot_triggered = true;
         this->hotkeys[GUIWindows::GuiHotkeyIndex::TRIGGER_SCREENSHOT].is_pressed = false;
     }
+    if (this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].is_pressed) {
+        this->state.menu_visible = !this->state.menu_visible;
+        this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].is_pressed = false;
+    }
     if (this->state.toggle_graph_entry || this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].is_pressed) {
-        GraphPtr_t graph_ptr;
         if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
             megamol::gui::ModulePtrVector_t::const_iterator module_graph_entry_iter = graph_ptr->Modules().begin();
             // Search for first graph entry and set next view to graph entry (= graph entry point)
@@ -304,6 +238,64 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->state.toggle_graph_entry = false;
         this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].is_pressed = false;
     }
+
+    // Check for initialized imgui api
+    if (this->initialized_api == GUIImGuiAPI::NONE) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] No ImGui API initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    // Check for existing imgui context
+    if (this->context == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] No valid ImGui context available. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+    // Set ImGui context
+    ImGui::SetCurrentContext(this->context);
+    // Propagate ImGui context to core instance
+    if (this->core_instance != nullptr) {
+        this->core_instance->SetCurrentImGuiContext(this->context);
+    }
+
+    // Create new gui graph once if core instance graph is used (otherwise graph should already exist)
+    if (this->state.graph_uid == GUI_INVALID_ID) {
+        this->SynchronizeGraphs();
+    }
+    // Check if gui graph is present
+    if (this->state.graph_uid == GUI_INVALID_ID) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Failed to find required gui graph for running core graph. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    // Required to prevent change in gui drawing between pre and post draw
+    this->state.gui_visible_post = this->state.gui_visible;
+    // Early exit when pre step should be omitted
+    if (!this->state.gui_visible) {
+        return true;
+    }
+
+    // Set stuff for next frame --------------------------------------------
+    ImGuiIO& io = ImGui::GetIO();
+
+    io.DisplaySize = ImVec2(window_size.x, window_size.y);
+    if ((window_size.x > 0.0f) && (window_size.y > 0.0f)) {
+        io.DisplayFramebufferScale = ImVec2(framebuffer_size.x / window_size.x, framebuffer_size.y / window_size.y);
+    }
+
+    if ((instance_time - this->state.last_instance_time) < 0.0) {
+        megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+            "[GUI] Current instance time results in negative time delta. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
+    }
+    io.DeltaTime = ((instance_time - this->state.last_instance_time) > 0.0)
+                       ? (static_cast<float>(instance_time - this->state.last_instance_time))
+                       : (io.DeltaTime);
+    this->state.last_instance_time = ((instance_time - this->state.last_instance_time) > 0.0)
+                                         ? (instance_time)
+                                         : (this->state.last_instance_time + io.DeltaTime);
 
     // Style
     if (this->state.style_changed) {
@@ -375,13 +367,7 @@ bool GUIWindows::PostDraw(void) {
     ////////// DRAW ///////////////////////////////////////////////////////////
 
     // Main Menu ---------------------------------------------------------------
-    if (this->state.menu_visible) {
-
-        if (ImGui::BeginMainMenuBar()) {
-            this->drawMenu();
-            ImGui::EndMainMenuBar();
-        }
-    }
+    this->drawMenu();
 
     // Global Docking Space ---------------------------------------------------
     /// DOCKING
@@ -646,7 +632,6 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     bool enter_pressed = (!last_num_enter_key && cur_num_enter_key);
     io.KeysDown[static_cast<size_t>(core::view::Key::KEY_ENTER)] = (return_pressed || enter_pressed);
 
-
     bool hotkeyPressed = false;
 
     // GUI
@@ -871,11 +856,6 @@ void megamol::gui::GUIWindows::SetClipboardFunc(const char* (*get_clipboard_func
 
 
 bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* megamol_graph) {
-
-    // Disable synchronizing graphs when pre step is omitted
-    if (!this->state.gui_visible) {
-        return true;
-    }
 
     // 1) Load all known calls from core instance ONCE ---------------------------
     if (!this->configurator.GetGraphCollection().LoadCallStock(core_instance)) {
@@ -1687,6 +1667,9 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
 
 void GUIWindows::drawMenu(void) {
 
+    if (!this->state.menu_visible)
+        return;
+
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -1694,6 +1677,8 @@ void GUIWindows::drawMenu(void) {
     if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
         megamolgraph_interface = (graph_ptr->GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH);
     }
+
+    ImGui::BeginMainMenuBar();
 
     // FILE -------------------------------------------------------------------
     if (ImGui::BeginMenu("File")) {
@@ -1708,7 +1693,8 @@ void GUIWindows::drawMenu(void) {
                 "Save Project", this->hotkeys[GUIWindows::GuiHotkeyIndex::SAVE_PROJECT].keycode.ToString().c_str())) {
             this->state.open_popup_save = true;
         }
-        if (ImGui::MenuItem("Exit", "ALT + 'F4'")) {
+        if (ImGui::MenuItem(
+                "Exit", this->hotkeys[GUIWindows::GuiHotkeyIndex::EXIT_PROGRAM].keycode.ToString().c_str())) {
             this->triggerCoreInstanceShutdown();
             this->state.shutdown_triggered = true;
         }
@@ -1931,6 +1917,8 @@ void GUIWindows::drawMenu(void) {
         ImGui::EndMenu();
     }
     ImGui::Separator();
+
+    ImGui::EndMainMenuBar();
 }
 
 

@@ -330,7 +330,7 @@ namespace gui {
             std::string return_str;
             auto start_idx = str.find(start_tag);
             if (start_idx != std::string::npos) {
-                auto end_idx = str.find(end_tag);
+                auto end_idx = str.find(end_tag, start_idx);
                 if ((end_idx != std::string::npos) && (start_idx < end_idx)) {
                     start_idx += std::string(start_tag).length();
                     return_str = str.substr(start_idx, (end_idx - start_idx));
