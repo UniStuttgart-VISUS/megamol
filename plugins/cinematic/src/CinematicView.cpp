@@ -435,7 +435,13 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
 #endif // DEBUG || _DEBUG
 
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-    cr3d->SetFramebufferObject(this->_fbo);
+    if (auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call)) {
+        gpu_call->SetFramebufferObject(this->_fbo);
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "CallRenderViewGL required to set framebuffer object. [%s, %s, line %d]\n ",  __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
     
     // Call Render-Function of parent View3DGL
     Base::Render(context, call);
