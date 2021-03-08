@@ -12,7 +12,7 @@ namespace frontend_resources {
 
 struct GUIResource {
 
-    // Request updated GUI state as JSON string wrapped into lua command
+    // Request string containing updated GUI state, GUI visibility and GUI scale already wrapped into respective lua commands
     /// (e.g. ScreenshotService saves project with GUI state tp PNG header)
     std::function<std::string(void)> request_gui_state = [&](void){ return std::string(); };
 
