@@ -285,10 +285,17 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
                     static_cast<int>(window_config.win_hotkey.key), window_config.win_hotkey.mods.toInt()};
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_position"] = {
                     window_config.win_position.x, window_config.win_position.y};
+
+                auto rescale_win_size = window_config.win_size;
+                rescale_win_size /= megamol::gui::gui_scaling.Get();
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_size"] = {
-                    window_config.win_size.x, window_config.win_size.y};
+                    rescale_win_size.x, rescale_win_size.y};
+
+                auto rescale_win_reset_size = window_config.win_reset_size;
+                rescale_win_reset_size /= megamol::gui::gui_scaling.Get();
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_reset_size"] = {
-                    window_config.win_reset_size.x, window_config.win_reset_size.y};
+                    rescale_win_reset_size.x, rescale_win_reset_size.y};
+
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_reset_position"] = {
                     window_config.win_reset_position.x, window_config.win_reset_position.y};
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_collapsed"] = window_config.win_collapsed;
