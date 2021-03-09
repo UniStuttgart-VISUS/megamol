@@ -44,8 +44,8 @@ bool view::special::ChronoGraph::create(void) {
 /*
  * view::special::ChronoGraph::GetExtents
  */
-bool view::special::ChronoGraph::GetExtents(view::CallRender2D& call) {
-    call.SetBoundingBox(-1.0f, -1.0f, 1.0f, 1.0f);
+bool view::special::ChronoGraph::GetExtents(view::CallRender2DGL& call) {
+    call.AccessBoundingBoxes().SetBoundingBox(-1.0f, -1.0f, 0, 1.0f, 1.0f, 0);
     return true;
 }
 
@@ -53,7 +53,7 @@ bool view::special::ChronoGraph::GetExtents(view::CallRender2D& call) {
 /*
  * view::special::ChronoGraph::Render
  */
-bool view::special::ChronoGraph::Render(view::CallRender2D& call) {
+bool view::special::ChronoGraph::Render(view::CallRender2DGL& call) {
     ::glEnable(GL_LINE_SMOOTH);
     ::glEnable(GL_BLEND);
     ::glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -61,16 +61,13 @@ bool view::special::ChronoGraph::Render(view::CallRender2D& call) {
     float time = static_cast<float>(call.InstanceTime());
 
     this->renderInfoGrid(time,
-        call.GetBoundingBox().Left(),
-        call.GetBoundingBox().Bottom(),
-        call.GetBoundingBox().Width(),
-        call.GetBoundingBox().Height());
+        call.GetBoundingBoxes().BoundingBox().Left(),
+        call.GetBoundingBoxes().BoundingBox().Bottom(), call.GetBoundingBoxes().BoundingBox().Width(),
+        call.GetBoundingBoxes().BoundingBox().Height());
 
-    this->renderInfoCircle(time,
-        call.GetBoundingBox().Left(),
-        call.GetBoundingBox().Bottom(),
-        call.GetBoundingBox().Width(),
-        call.GetBoundingBox().Height());
+    this->renderInfoCircle(time, call.GetBoundingBoxes().BoundingBox().Left(),
+        call.GetBoundingBoxes().BoundingBox().Bottom(), call.GetBoundingBoxes().BoundingBox().Width(),
+        call.GetBoundingBoxes().BoundingBox().Height());
 
     this->renderInfoCircle(time, -1.0f, -1.0f, 2.0f, 2.0f);
 

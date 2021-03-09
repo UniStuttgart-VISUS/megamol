@@ -50,7 +50,7 @@ protected:
      *
      * @return The return value of the function.
      */
-    bool Render(core::view::CallRender3D_2& call);
+    bool Render(core::view::CallRender3DGL& call);
 
      /**
      *

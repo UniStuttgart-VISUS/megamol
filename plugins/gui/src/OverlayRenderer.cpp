@@ -15,7 +15,8 @@ using namespace megamol::gui;
 
 
 OverlayRenderer::OverlayRenderer(void)
-        : view::RendererModule<view::CallRender3D_2>()
+        : view::RendererModule<view::CallRender3DGL>()
+        , megamol::core::view::RenderUtils()
         , paramMode("mode", "Overlay mode.")
         , paramAnchor("anchor", "Anchor of overlay.")
         , paramCustomPosition("position_offset", "Custom relative position offset in respect to selected anchor.")
@@ -34,7 +35,7 @@ OverlayRenderer::OverlayRenderer(void)
         , paramTimeParameter("transport_ctrl::time_parameter_name",
               "The full parameter name for the animation time, e.g. '::Project_1::View3D_21::anim::time'.")
         , paramPrefix("parameter::prefix", "The parameter value prefix.")
-        , paramSufix("parameter::sufix", "The parameter value sufix.")
+        , paramSuffix("parameter::suffix", "The parameter value suffix.")
         , paramParameterName("parameter::name",
               "The full parameter name, e.g. '::Project_1::View3D_21::cam::position'. "
               "Supprted parameter types: float, int, Vector2f/3f/4f")
@@ -42,9 +43,8 @@ OverlayRenderer::OverlayRenderer(void)
         , paramFontName("font::name", "The font name.")
         , paramFontSize("font::size", "The font size.")
         , paramFontColor("font::color", "The font color.")
-        , m_texture()
-        , m_shader()
-        , m_font(nullptr)
+        , m_texture_id(0)
+        , m_font_ptr(nullptr)
         , m_viewport()
         , m_current_rectangle({0.0f, 0.0f, 0.0f, 0.0f})
         , m_parameter_ptr(nullptr)
@@ -120,8 +120,8 @@ OverlayRenderer::OverlayRenderer(void)
     this->paramPrefix << new param::StringParam("");
     this->MakeSlotAvailable(&this->paramPrefix);
 
-    this->paramSufix << new param::StringParam("");
-    this->MakeSlotAvailable(&this->paramSufix);
+    this->paramSuffix << new param::StringParam("");
+    this->MakeSlotAvailable(&this->paramSuffix);
 
     this->paramParameterName << new param::StringParam("");
     this->paramParameterName.SetUpdateCallback(this, &OverlayRenderer::onParameterName);
@@ -157,46 +157,43 @@ OverlayRenderer::~OverlayRenderer(void) {
 
 void OverlayRenderer::release(void) {
 
-    this->m_font.reset();
+    this->m_font_ptr.reset();
     this->m_parameter_ptr = nullptr;
-    this->m_shader.Release();
-    this->m_texture.tex.Release();
-    for (size_t i = 0; i < this->m_transpctrl_icons.size(); i++) {
-        this->m_transpctrl_icons[i].tex.Release();
-    }
+    this->m_speed_parameter_ptr = nullptr;
+    this->m_time_parameter_ptr = nullptr;
 }
 
 
 bool OverlayRenderer::create(void) {
 
+    if (!this->InitPrimitiveRendering(this->GetCoreInstance()->ShaderSourceFactory())) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
     return this->onToggleMode(this->paramMode);
-    ;
 }
 
 
 bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
 
     slot.ResetDirty();
-    this->m_font.reset();
+    this->m_font_ptr.reset();
     this->m_parameter_ptr = nullptr;
-    this->m_shader.Release();
-    this->m_texture.tex.Release();
-    for (size_t i = 0; i < this->m_transpctrl_icons.size(); i++) {
-        this->m_transpctrl_icons[i].tex.Release();
-    }
+    this->m_speed_parameter_ptr = nullptr;
+    this->m_time_parameter_ptr = nullptr;
+    this->DeleteAllTextures();
+    this->m_texture_id = 0;
 
     this->setParameterGUIVisibility();
 
     auto mode = static_cast<Mode>(this->paramMode.Param<param::EnumParam>()->Value());
     switch (mode) {
     case (Mode::TEXTURE): {
-        if (!this->loadShader(this->m_shader, "overlay::vertex", "overlay::fragment"))
-            return false;
         this->onTextureFileName(this->paramFileName);
     } break;
     case (Mode::TRANSPORT_CTRL): {
-        if (!this->loadShader(this->m_shader, "overlay::vertex", "overlay::fragment"))
-            return false;
         this->onParameterName(this->paramTimeParameter);
         this->onParameterName(this->paramSpeedParameter);
         std::string filename;
@@ -226,8 +223,12 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
             default:
                 break;
             }
-            if (!this->loadTexture(filename, this->m_transpctrl_icons[i]))
+            std::wstring texture_filename(megamol::core::utility::ResourceWrapper::getFileName(
+                this->GetCoreInstance()->Configuration(), vislib::StringA(filename.c_str()))
+                                              .PeekBuffer());
+            if (!this->LoadTextureFromFile(this->m_transpctrl_icons[i], texture_filename)) {
                 return false;
+            }
         }
     } break;
     case (Mode::PARAMETER): {
@@ -239,6 +240,7 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
     } break;
     }
 
+    this->onTriggerRecalcRectangle(slot);
     return true;
 }
 
@@ -246,10 +248,10 @@ bool OverlayRenderer::onToggleMode(param::ParamSlot& slot) {
 bool OverlayRenderer::onTextureFileName(param::ParamSlot& slot) {
 
     slot.ResetDirty();
-    this->m_texture.tex.Release();
     std::string filename = std::string(this->paramFileName.Param<param::FilePathParam>()->Value().PeekBuffer());
-    if (!this->loadTexture(filename, this->m_texture))
+    if (!this->LoadTextureFromFile(this->m_texture_id, filename, (this->m_texture_id != 0))) {
         return false;
+    }
     this->onTriggerRecalcRectangle(slot);
     return true;
 }
@@ -258,11 +260,12 @@ bool OverlayRenderer::onTextureFileName(param::ParamSlot& slot) {
 bool OverlayRenderer::onFontName(param::ParamSlot& slot) {
 
     slot.ResetDirty();
-    this->m_font.reset();
+    this->m_font_ptr.reset();
     auto font_name = static_cast<utility::SDFFont::FontName>(this->paramFontName.Param<param::EnumParam>()->Value());
-    this->m_font = std::make_unique<utility::SDFFont>(font_name);
-    if (!this->m_font->Initialise(this->GetCoreInstance()))
+    this->m_font_ptr = std::make_unique<utility::SDFFont>(font_name);
+    if (!this->m_font_ptr->Initialise(this->GetCoreInstance())) {
         return false;
+    }
     return true;
 }
 
@@ -275,54 +278,75 @@ bool OverlayRenderer::onParameterName(param::ParamSlot& slot) {
     if (parameter_name.IsEmpty()) {
         return false;
     }
-    auto parameter_ptr = this->GetCoreInstance()->FindParameter(parameter_name, false, false);
-    if (parameter_ptr.IsNull()) {
+
+    // Check megamol graph for available parameter:
+    megamol::core::param::AbstractParam* param_ptr = nullptr;
+    const megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
+    auto megamolgraph_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
+        [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
+    if (megamolgraph_it != this->frontend_resources.end()) {
+        megamolgraph_ptr = &megamolgraph_it->getResource<megamol::core::MegaMolGraph>();
+    }
+    if (megamolgraph_ptr != nullptr) {
+        param_ptr = megamolgraph_ptr->FindParameter(std::string(parameter_name.PeekBuffer()));
+    }
+    // Alternatively, check core instance graph for available parameter:
+    if (param_ptr == nullptr) {
+        auto core_parameter_ptr = this->GetCoreInstance()->FindParameter(parameter_name, false, false);
+        if (!core_parameter_ptr.IsNull()) {
+            param_ptr = core_parameter_ptr.DynamicCast<megamol::core::param::AbstractParam>();
+        }
+    }
+    if (param_ptr == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to find parameter by name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "Unable to find parameter by name. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
+
     bool found_valid_param_type = false;
 
     if (&slot == &this->paramTimeParameter) {
-        if (parameter_ptr.DynamicCast<param::FloatParam>() != nullptr) {
+        if (dynamic_cast<param::FloatParam*>(param_ptr) != nullptr) {
             found_valid_param_type = true;
         }
         this->m_time_parameter_ptr = nullptr;
         if (found_valid_param_type) {
-            this->m_time_parameter_ptr = parameter_ptr;
+            this->m_time_parameter_ptr = param_ptr;
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "Parameter type is not supported, only: Float. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     } else if (&slot == &this->paramSpeedParameter) {
-        if (parameter_ptr.DynamicCast<param::FloatParam>() != nullptr) {
+        if (dynamic_cast<param::FloatParam*>(param_ptr) != nullptr) {
             found_valid_param_type = true;
         }
         this->m_speed_parameter_ptr = nullptr;
         if (found_valid_param_type) {
-            this->m_speed_parameter_ptr = parameter_ptr;
+            this->m_speed_parameter_ptr = param_ptr;
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "Parameter type is not supported, only: Float. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         }
     } else if (&slot == &this->paramParameterName) {
-        if (parameter_ptr.DynamicCast<param::FloatParam>() != nullptr) {
+        if (dynamic_cast<param::FloatParam*>(param_ptr) != nullptr) {
             found_valid_param_type = true;
-        } else if (parameter_ptr.DynamicCast<param::IntParam>() != nullptr) {
+        } else if (dynamic_cast<param::IntParam*>(param_ptr) != nullptr) {
             found_valid_param_type = true;
-        } else if (parameter_ptr.DynamicCast<param::Vector2fParam>() != nullptr) {
+        } else if (dynamic_cast<param::Vector2fParam*>(param_ptr) != nullptr) {
             found_valid_param_type = true;
-        } else if (parameter_ptr.DynamicCast<param::Vector3fParam>() != nullptr) {
+        } else if (dynamic_cast<param::Vector3fParam*>(param_ptr) != nullptr) {
             found_valid_param_type = true;
-        } else if (parameter_ptr.DynamicCast<param::Vector4fParam>() != nullptr) {
+        } else if (dynamic_cast<param::Vector4fParam*>(param_ptr) != nullptr) {
             found_valid_param_type = true;
         }
         this->m_parameter_ptr = nullptr;
         if (found_valid_param_type) {
-            this->m_parameter_ptr = parameter_ptr;
+            this->m_parameter_ptr = param_ptr;
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] No valid parameter type. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "Parameter type is not supported, only: Float, Int, Vector2f, Vector3f and Vector4f. [%s, %s, line "
+                "%d]\n",
+                __FILE__, __FUNCTION__, __LINE__);
         }
     }
 
@@ -341,15 +365,18 @@ bool OverlayRenderer::onTriggerRecalcRectangle(core::param::ParamSlot& slot) {
     glm::vec2 rel_pos = glm::vec2(param_position.X() / 100.0f, param_position.Y() / 100.0f);
     auto rel_width = this->paramRelativeWidth.Param<param::FloatParam>()->Value() / 100.0f;
 
-    if (transpctrl_mode) {
+    float width = this->m_viewport.x;
+    float height = this->m_viewport.y;
+    if (mode == Mode::TRANSPORT_CTRL) {
         if (this->m_state.icon != TranspCtrlIcon::NONE_COUNT) {
-            this->m_current_rectangle = this->getScreenSpaceRect(
-                rel_pos, rel_width, anchor, this->m_transpctrl_icons[this->m_state.icon], this->m_viewport);
+            width = this->GetTextureWidth(this->m_transpctrl_icons[this->m_state.icon]);
+            height = this->GetTextureHeight(this->m_transpctrl_icons[this->m_state.icon]);
         }
-    } else {
-        this->m_current_rectangle =
-            this->getScreenSpaceRect(rel_pos, rel_width, anchor, this->m_texture, this->m_viewport);
+    } else if (mode == Mode::TEXTURE) {
+        width = this->GetTextureWidth(this->m_texture_id);
+        height = this->GetTextureHeight(this->m_texture_id);
     }
+    this->m_current_rectangle = this->getScreenSpaceRect(rel_pos, rel_width, anchor, width, height, this->m_viewport);
 
     return true;
 }
@@ -377,7 +404,7 @@ void OverlayRenderer::setParameterGUIVisibility(void) {
 
     // Parameter Mode
     this->paramPrefix.Parameter()->SetGUIVisible(parameter_mode);
-    this->paramSufix.Parameter()->SetGUIVisible(parameter_mode);
+    this->paramSuffix.Parameter()->SetGUIVisible(parameter_mode);
     this->paramParameterName.Parameter()->SetGUIVisible(parameter_mode);
 
     // Label Mode
@@ -390,9 +417,9 @@ void OverlayRenderer::setParameterGUIVisibility(void) {
 }
 
 
-bool OverlayRenderer::GetExtents(view::CallRender3D_2& call) {
+bool OverlayRenderer::GetExtents(view::CallRender3DGL& call) {
 
-    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (chainedCall != nullptr) {
         *chainedCall = call;
         bool retVal = (*chainedCall)(view::AbstractCallRender::FnGetExtents);
@@ -403,21 +430,29 @@ bool OverlayRenderer::GetExtents(view::CallRender3D_2& call) {
 }
 
 
-bool OverlayRenderer::Render(view::CallRender3D_2& call) {
+bool OverlayRenderer::Render(view::CallRender3DGL& call) {
+
+    // Camera
+    view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
     std::shared_ptr<const view::AbstractView> viewptr =
         std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
+
     if (viewptr != nullptr) { // XXX Move this behind the fbo magic?
-        auto vp = call.GetViewport();
-        glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
+        auto vp = cam.image_tile();
+        glViewport(vp.left(), vp.bottom(), vp.width(), vp.height());
         auto backCol = call.BackgroundColor();
         glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
     // First call chained renderer
-    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (chainedCall != nullptr) {
         *chainedCall = call;
         if (!(*chainedCall)(view::AbstractCallRender::FnRender)) {
@@ -426,15 +461,14 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
     }
 
     // Get current viewport
-    auto viewport = call.GetViewport();
-    if ((this->m_viewport.x != viewport.Width()) || (this->m_viewport.y != viewport.Height())) {
-        this->m_viewport = {viewport.Width(), viewport.Height()};
+    auto viewport = cam.image_tile();
+    if ((this->m_viewport.x != viewport.width()) || (this->m_viewport.y != viewport.height())) {
+        this->m_viewport = {viewport.width(), viewport.height()};
         // Reload rectangle on viewport changes
         this->onTriggerRecalcRectangle(this->paramMode);
     }
     // Create 2D orthographic mvp matrix
-    glm::mat4 ortho = glm::ortho(
-        0.0f, static_cast<float>(this->m_viewport.x), 0.0f, static_cast<float>(this->m_viewport.y), -1.0f, 1.0f);
+    glm::mat4 ortho = glm::ortho(0.0f, this->m_viewport.x, 0.0f, this->m_viewport.y, -1.0f, 1.0f);
 
     // Draw mode dependent stuff
     auto mode = this->paramMode.Param<param::EnumParam>()->Value();
@@ -442,7 +476,7 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
     case (Mode::TEXTURE): {
         auto overwrite_color = glm::vec4(0.0f); // Ignored when alpha = 0. Using texture color.
         this->drawScreenSpaceBillboard(
-            ortho, this->m_current_rectangle, this->m_texture, this->m_shader, overwrite_color);
+            ortho, this->m_viewport, this->m_current_rectangle, this->m_texture_id, overwrite_color);
     } break;
     case (Mode::TRANSPORT_CTRL): {
         auto param_color = this->paramIconColor.Param<param::ColorParam>()->Value();
@@ -451,12 +485,16 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         float ultra_fast_speed = this->paramUltraFastSpeed.Param<param::FloatParam>()->Value();
 
         float current_speed = 0.0f;
-        if (auto* float_param = this->m_speed_parameter_ptr.DynamicCast<param::FloatParam>()) {
-            current_speed = float_param->Value();
+        if (this->m_speed_parameter_ptr != nullptr) {
+            if (auto* float_param = dynamic_cast<param::FloatParam*>(this->m_speed_parameter_ptr)) {
+                current_speed = float_param->Value();
+            }
         }
         float current_anim_time = 0.0f;
-        if (auto* float_param = this->m_time_parameter_ptr.DynamicCast<param::FloatParam>()) {
-            current_anim_time = float_param->Value();
+        if (this->m_time_parameter_ptr != nullptr) {
+            if (auto* float_param = dynamic_cast<param::FloatParam*>(this->m_time_parameter_ptr)) {
+                current_anim_time = float_param->Value();
+            }
         }
         float delta_time = current_anim_time - this->m_state.current_anim_time;
         this->m_state.current_anim_time = current_anim_time;
@@ -491,8 +529,8 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         }
 
         if (current_icon != TranspCtrlIcon::NONE_COUNT) {
-            this->drawScreenSpaceBillboard(ortho, this->m_current_rectangle, this->m_transpctrl_icons[current_icon],
-                this->m_shader, overwrite_color);
+            this->drawScreenSpaceBillboard(ortho, this->m_viewport, this->m_current_rectangle,
+                this->m_transpctrl_icons[current_icon], overwrite_color);
         }
     } break;
     case (Mode::PARAMETER): {
@@ -504,45 +542,48 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         auto param_prefix = this->paramPrefix.Param<param::StringParam>()->Value();
         std::string prefix = std::string(param_prefix.PeekBuffer());
 
-        auto param_sufix = this->paramSufix.Param<param::StringParam>()->Value();
+        auto param_sufix = this->paramSuffix.Param<param::StringParam>()->Value();
         std::string sufix = std::string(param_sufix.PeekBuffer());
 
         std::string text("");
-        if (auto* float_param = this->m_parameter_ptr.DynamicCast<param::FloatParam>()) {
-            auto value = float_param->Value();
-            std::stringstream stream;
-            stream << std::fixed << std::setprecision(8) << " " << value << " ";
-            text = prefix + stream.str() + sufix;
-        } else if (auto* int_param = this->m_parameter_ptr.DynamicCast<param::IntParam>()) {
-            auto value = int_param->Value();
-            std::stringstream stream;
-            stream << " " << value << " ";
-            text = prefix + stream.str() + sufix;
-        } else if (auto* vec2_param = this->m_parameter_ptr.DynamicCast<param::Vector2fParam>()) {
-            auto value = vec2_param->Value();
-            std::stringstream stream;
-            stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ") ";
-            text = prefix + stream.str() + sufix;
-        } else if (auto* vec3_param = this->m_parameter_ptr.DynamicCast<param::Vector3fParam>()) {
-            auto value = vec3_param->Value();
-            std::stringstream stream;
-            stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ", " << value.Z()
-                   << ") ";
-            text = prefix + stream.str() + sufix;
-        } else if (auto* vec4_param = this->m_parameter_ptr.DynamicCast<param::Vector4fParam>()) {
-            auto value = vec4_param->Value();
-            std::stringstream stream;
-            stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ", " << value.Z()
-                   << ", " << value.W() << ") ";
-            text = prefix + stream.str() + sufix;
+        if (this->m_parameter_ptr != nullptr) {
+            if (auto* float_param = dynamic_cast<param::FloatParam*>(this->m_parameter_ptr)) {
+                auto value = float_param->Value();
+                std::stringstream stream;
+                stream << std::fixed << std::setprecision(8) << " " << value << " ";
+                text = prefix + stream.str() + sufix;
+            } else if (auto* int_param = dynamic_cast<param::IntParam*>(this->m_parameter_ptr)) {
+                auto value = int_param->Value();
+                std::stringstream stream;
+                stream << " " << value << " ";
+                text = prefix + stream.str() + sufix;
+            } else if (auto* vec2_param = dynamic_cast<param::Vector2fParam*>(this->m_parameter_ptr)) {
+                auto value = vec2_param->Value();
+                std::stringstream stream;
+                stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ") ";
+                text = prefix + stream.str() + sufix;
+            } else if (auto* vec3_param = dynamic_cast<param::Vector3fParam*>(this->m_parameter_ptr)) {
+                auto value = vec3_param->Value();
+                std::stringstream stream;
+                stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ", "
+                       << value.Z() << ") ";
+                text = prefix + stream.str() + sufix;
+            } else if (auto* vec4_param = dynamic_cast<param::Vector4fParam*>(this->m_parameter_ptr)) {
+                auto value = vec4_param->Value();
+                std::stringstream stream;
+                stream << std::fixed << std::setprecision(8) << " (" << value.X() << ", " << value.Y() << ", "
+                       << value.Z() << ", " << value.W() << ") ";
+                text = prefix + stream.str() + sufix;
+            }
         }
         if (text.empty()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unable to read parmeter value [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            // megamol::core::utility::log::Log::DefaultLog.WriteError(
+            //    "Unable to read parmeter value [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
 
-        this->drawScreenSpaceText(ortho, (*this->m_font), text, color, font_size, anchor, this->m_current_rectangle);
+        this->drawScreenSpaceText(
+            ortho, (*this->m_font_ptr), text, color, font_size, anchor, this->m_current_rectangle);
     } break;
     case (Mode::LABEL): {
         auto param_color = this->paramFontColor.Param<param::ColorParam>()->Value();
@@ -553,12 +594,13 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
         auto param_text = this->paramText.Param<param::StringParam>()->Value();
         std::string text = std::string(param_text.PeekBuffer());
 
-        if (this->m_font == nullptr) {
+        if (this->m_font_ptr == nullptr) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unable to read texture: %s [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+                "Unable to read texture: %s [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
         }
-        this->drawScreenSpaceText(ortho, (*this->m_font), text, color, font_size, anchor, this->m_current_rectangle);
+        this->drawScreenSpaceText(
+            ortho, (*this->m_font_ptr), text, color, font_size, anchor, this->m_current_rectangle);
     } break;
     }
 
@@ -566,35 +608,16 @@ bool OverlayRenderer::Render(view::CallRender3D_2& call) {
 }
 
 
-void OverlayRenderer::drawScreenSpaceBillboard(glm::mat4 ortho, Rectangle rectangle, TextureData& texture,
-    vislib::graphics::gl::GLSLShader& shader, glm::vec4 overwrite_color) const {
+void OverlayRenderer::drawScreenSpaceBillboard(
+    glm::mat4 ortho, glm::vec2 viewport, Rectangle rectangle, GLuint texture_id, glm::vec4 overwrite_color) {
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glEnable(GL_TEXTURE_2D);
-    glActiveTexture(GL_TEXTURE0);
-    texture.tex.Bind();
-
-    shader.Enable();
-
-    glUniformMatrix4fv(shader.ParameterLocation("ortho"), 1, GL_FALSE, glm::value_ptr(ortho));
-    glUniform1f(shader.ParameterLocation("left"), rectangle.left);
-    glUniform1f(shader.ParameterLocation("right"), rectangle.right);
-    glUniform1f(shader.ParameterLocation("top"), rectangle.top);
-    glUniform1f(shader.ParameterLocation("bottom"), rectangle.bottom);
-    glUniform4fv(shader.ParameterLocation("overwrite_color"), 1, glm::value_ptr(overwrite_color));
-    glUniform1i(shader.ParameterLocation("tex"), 0);
-
-    // Vertex position is only given via uniforms.
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-    shader.Disable();
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_TEXTURE_2D);
-
-    glDisable(GL_BLEND);
+    glm::vec3 pos_bottom_left = {rectangle.left, rectangle.bottom, 0.0f};
+    glm::vec3 pos_upper_left = {rectangle.left, rectangle.top, 0.0f};
+    glm::vec3 pos_upper_right = {rectangle.right, rectangle.top, 0.0f};
+    glm::vec3 pos_bottom_right = {rectangle.right, rectangle.bottom, 0.0f};
+    this->Push2DColorTexture(
+        texture_id, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true, overwrite_color);
+    this->DrawTextures(ortho, viewport);
 }
 
 void OverlayRenderer::drawScreenSpaceText(glm::mat4 ortho, megamol::core::utility::SDFFont& font,
@@ -602,7 +625,7 @@ void OverlayRenderer::drawScreenSpaceText(glm::mat4 ortho, megamol::core::utilit
 
     float x = rectangle.left;
     float y = rectangle.top;
-    float z = -1.0f;
+    float z = 1.0f;
 
     switch (anchor) {
     case (Anchor::ALIGN_LEFT_TOP): {
@@ -655,13 +678,16 @@ void OverlayRenderer::drawScreenSpaceText(glm::mat4 ortho, megamol::core::utilit
 }
 
 
-OverlayRenderer::Rectangle OverlayRenderer::getScreenSpaceRect(
-    glm::vec2 rel_pos, float rel_width, Anchor anchor, const TextureData& texture, glm::ivec2 viewport) const {
+OverlayRenderer::Rectangle OverlayRenderer::getScreenSpaceRect(glm::vec2 rel_pos, float rel_width, Anchor anchor,
+    unsigned int texture_width, unsigned int texture_height, glm::vec2 viewport) const {
 
     Rectangle rectangle = {0.0f, 0.0f, 0.0f, 0.0f};
+    if ((texture_width == 0) || (texture_height == 0)) {
+        return rectangle;
+    }
 
-    float tex_aspect = static_cast<float>(texture.width) / static_cast<float>(texture.height);
-    float viewport_aspect = static_cast<float>(viewport.x) / static_cast<float>(viewport.y);
+    float tex_aspect = static_cast<float>(texture_width) / static_cast<float>(texture_height);
+    float viewport_aspect = viewport.x / viewport.y;
     float rel_height = rel_width / tex_aspect * viewport_aspect;
 
     switch (anchor) {
@@ -728,147 +754,4 @@ OverlayRenderer::Rectangle OverlayRenderer::getScreenSpaceRect(
     rectangle.bottom *= viewport.y;
 
     return rectangle;
-}
-
-
-bool OverlayRenderer::loadTexture(const std::string& filename, TextureData& texture) const {
-
-    if (filename.empty())
-        return false;
-    if (texture.tex.IsValid())
-        texture.tex.Release();
-
-    static vislib::graphics::BitmapImage img;
-    static sg::graphics::PngBitmapCodec pbc;
-    pbc.Image() = &img;
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    void* buf = nullptr;
-    size_t size = 0;
-
-    size = utility::ResourceWrapper::LoadResource(
-        this->GetCoreInstance()->Configuration(), vislib::StringA(filename.c_str()), (void**) (&buf));
-    if (size == 0) {
-        size = this->loadRawFile(filename, &buf);
-    }
-
-    if (size > 0) {
-        if (pbc.Load(buf, size)) {
-            img.Convert(vislib::graphics::BitmapImage::TemplateByteRGBA);
-            if (texture.tex.Create(img.Width(), img.Height(), false, img.PeekDataAs<BYTE>(), GL_RGBA) != GL_NO_ERROR) {
-                megamol::core::utility::log::Log::DefaultLog.WriteError(
-                    "[GUI] Unable to create texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
-                    __LINE__);
-                ARY_SAFE_DELETE(buf);
-                return false;
-            }
-            texture.width = img.Width();
-            texture.height = img.Height();
-            texture.tex.Bind();
-            /// glGenerateMipmap(GL_TEXTURE_2D);
-            /// texture.tex.SetFilter(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
-            texture.tex.SetFilter(GL_LINEAR, GL_LINEAR); // Uncomment when MipMaps are used.
-            texture.tex.SetWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            ARY_SAFE_DELETE(buf);
-        } else {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unable to read texture: %s [%s, %s, line %d]\n", filename.c_str(), __FILE__, __FUNCTION__,
-                __LINE__);
-            ARY_SAFE_DELETE(buf);
-            return false;
-        }
-    } else {
-        ARY_SAFE_DELETE(buf);
-        return false;
-    }
-
-    return true;
-}
-
-
-bool OverlayRenderer::loadShader(
-    vislib::graphics::gl::GLSLShader& io_shader, const std::string& vert_name, const std::string& frag_name) const {
-
-    io_shader.Release();
-    vislib::graphics::gl::ShaderSource vert, frag;
-    try {
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-                vislib::StringA(vert_name.c_str()), vert)) {
-            return false;
-        }
-        if (!this->GetCoreInstance()->ShaderSourceFactory().MakeShaderSource(
-                vislib::StringA(frag_name.c_str()), frag)) {
-            return false;
-        }
-        if (!io_shader.Create(vert.Code(), vert.Count(), frag.Code(), frag.Count())) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Unable to compile: Unknown error [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-            return false;
-        }
-    } catch (vislib::graphics::gl::AbstractOpenGLShader::CompileException& ce) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to compile shader (@%s): %s [%s, %s, line %d]\n",
-            vislib::graphics::gl::AbstractOpenGLShader::CompileException::CompileActionName(ce.FailedAction()),
-            ce.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    } catch (vislib::Exception& e) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to compile shader: %s [%s, %s, line %d]\n", e.GetMsgA(), __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    } catch (...) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to compile shader: Unknown exception [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
-    }
-
-    return true;
-}
-
-
-size_t OverlayRenderer::loadRawFile(std::string name, void** outData) const {
-
-    *outData = nullptr;
-
-    vislib::StringW filename = static_cast<vislib::StringW>(name.c_str());
-    if (filename.IsEmpty()) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to load file: No file name given. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return 0;
-    }
-
-    if (!vislib::sys::File::Exists(filename)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to load file \"%s\": Not existing. [%s, %s, line %d]\n", name.c_str(), __FILE__, __FUNCTION__,
-            __LINE__);
-        return 0;
-    }
-
-    size_t size = static_cast<size_t>(vislib::sys::File::GetSize(filename));
-    if (size < 1) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to load file \"%s\": File is empty. [%s, %s, line %d]\n", name.c_str(), __FILE__,
-            __FUNCTION__, __LINE__);
-        return 0;
-    }
-
-    vislib::sys::FastFile f;
-    if (!f.Open(filename, vislib::sys::File::READ_ONLY, vislib::sys::File::SHARE_READ, vislib::sys::File::OPEN_ONLY)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to load file \"%s\": Unable to open file. [%s, %s, line %d]\n", name.c_str(), __FILE__,
-            __FUNCTION__, __LINE__);
-        return 0;
-    }
-
-    *outData = new BYTE[size];
-    size_t num = static_cast<size_t>(f.Read(*outData, size));
-    if (num != size) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Unable to load file \"%s\": Unable to read whole file. [%s, %s, line %d]\n", name.c_str(), __FILE__,
-            __FUNCTION__, __LINE__);
-        ARY_SAFE_DELETE(*outData);
-        return 0;
-    }
-
-    return num;
 }

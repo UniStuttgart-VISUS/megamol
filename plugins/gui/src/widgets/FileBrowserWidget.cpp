@@ -24,15 +24,23 @@ megamol::gui::FileBrowserWidget::FileBrowserWidget()
         , file_error()
         , file_warning()
         , child_paths()
-        , additional_lines(0) {}
+        , additional_lines(0)
+        , save_gui_state(vislib::math::Ternary::TRI_UNKNOWN)
+        , tooltip() {}
 
 
-bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::FileBrowserFlag flag,
-    const std::string& label_id, bool open_popup, std::string& inout_filename, const std::string& extension) {
+bool megamol::gui::FileBrowserWidget::PopUp(std::string& inout_filename,
+    megamol::gui::FileBrowserWidget::FileBrowserFlag flag, const std::string& label, bool open_popup,
+    const std::string& extension, vislib::math::Ternary& inout_save_gui_state) {
 
     bool retval = false;
 
     try {
+        std::string label_id = label;
+        if (!extension.empty()) {
+            label_id.append(" (." + extension + ")");
+        }
+
         ImGui::PushID(label_id.c_str());
 
         if (open_popup) {
@@ -42,9 +50,14 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
             this->validate_file(this->file_name_str, extension, flag);
             this->path_changed = true;
 
+            this->search_widget.ClearSearchString();
+
+            this->save_gui_state = inout_save_gui_state;
+
             ImGui::OpenPopup(label_id.c_str());
             // Set initial window size of pop up
-            ImGui::SetNextWindowSize(ImVec2(400.0f, 500.0f));
+            ImGui::SetNextWindowSize(
+                ImVec2((400.0f * megamol::gui::gui_scaling.Get()), (500.0f * megamol::gui::gui_scaling.Get())));
         }
 
         bool open = true;
@@ -82,9 +95,11 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
 
             // File browser selectables ---------------------------------------
             auto select_flags = ImGuiSelectableFlags_DontClosePopups;
+            float footer_height =
+                ImGui::GetFrameHeightWithSpacing() * ((inout_save_gui_state.IsUnknown()) ? (2.0f) : (3.0f));
             float child_select_height =
                 (ImGui::GetContentRegionAvail().y - (ImGui::GetTextLineHeightWithSpacing() * this->additional_lines) -
-                    ImGui::GetFrameHeightWithSpacing() * 2.0f);
+                    footer_height);
             ImGui::BeginChild(
                 "files_list_child_window", ImVec2(0.0f, child_select_height), true, ImGuiWindowFlags_None);
 
@@ -163,7 +178,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                     bool showSearchedParameter = true;
                     if (!currentSearchString.empty()) {
                         showSearchedParameter =
-                            StringSearchWidget::FindCaseInsensitiveSubstring(select_label, currentSearchString);
+                            megamol::gui::GUIUtils::FindCaseInsensitiveSubstring(select_label, currentSearchString);
                     }
                     if (showSearchedParameter) {
                         // Different color for directories
@@ -216,7 +231,16 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                 this->validate_file(this->file_name_str, extension, flag);
             }
 
-            // Buttons ------------------------------
+            // Optional save GUI state option ------------
+            if (!inout_save_gui_state.IsUnknown()) {
+                bool check = this->save_gui_state.IsTrue();
+                ImGui::Checkbox("Save GUI state", &check);
+                this->save_gui_state =
+                    ((check) ? (vislib::math::Ternary::TRI_TRUE) : (vislib::math::Ternary::TRI_FALSE));
+                this->tooltip.Marker("Check this option to also save all settings affecting the GUI.");
+            }
+
+            // Buttons --------------------------
             std::string button_label;
             if (flag == FileBrowserFlag::SAVE) {
                 button_label = "Save";
@@ -231,7 +255,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Cancel")) {
+            if (ImGui::Button("Cancel") || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 ImGui::CloseCurrentPopup();
             }
 
@@ -247,7 +271,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
             if (apply && this->valid_directory && this->valid_file) {
                 // Appending required extension
                 if (!this->valid_ending) {
-                    std::string ext_lower = extension;
+                    std::string ext_lower = "." + extension;
                     this->string_to_lower_case(ext_lower);
                     this->file_name_str.append(ext_lower);
                 }
@@ -255,6 +279,7 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
                     static_cast<stdfs::path>(this->file_path_str) / static_cast<stdfs::path>(this->file_name_str);
                 inout_filename = tmp_file_path.generic_u8string();
                 GUIUtils::Utf8Decode(inout_filename);
+                inout_save_gui_state = this->save_gui_state;
                 ImGui::CloseCurrentPopup();
                 retval = true;
             }
@@ -281,7 +306,8 @@ bool megamol::gui::FileBrowserWidget::PopUp(megamol::gui::FileBrowserWidget::Fil
 }
 
 
-bool megamol::gui::FileBrowserWidget::Button(std::string& inout_filename) {
+bool megamol::gui::FileBrowserWidget::Button(
+    std::string& inout_filename, megamol::gui::FileBrowserWidget::FileBrowserFlag flag, const std::string& extension) {
 
     assert(ImGui::GetCurrentContext() != nullptr);
     ImGuiStyle& style = ImGui::GetStyle();
@@ -320,7 +346,22 @@ bool megamol::gui::FileBrowserWidget::Button(std::string& inout_filename) {
     ImGui::EndChild();
     ImGui::PopStyleColor();
 
-    bool retval = this->PopUp(FileBrowserFlag::SELECT, "Select File", popup_select_file, inout_filename);
+    std::string label;
+    switch (flag) {
+    case (FileBrowserFlag::SELECT):
+        label = "Select File";
+        break;
+    case (FileBrowserFlag::LOAD):
+        label = "Load File";
+        break;
+    case (FileBrowserFlag::SAVE):
+        label = "Save File";
+        break;
+    }
+    if (!extension.empty()) {
+        label.append(" (." + extension + ")");
+    }
+    bool retval = this->PopUp(inout_filename, flag, label, popup_select_file, extension);
 
     return retval;
 }
@@ -332,12 +373,14 @@ std::string megamol::gui::FileBrowserWidget::get_absolute_path(const std::string
     if ((in_path_str == "..") || (in_path_str == ".")) {
         stdfs::path return_path = static_cast<stdfs::path>(in_path_str);
         return_path = stdfs::absolute(return_path);
+#if (_MSC_VER < 1916) /// XXX Fixed/No more required since VS 2019
         if (return_path.has_parent_path()) {
             return_path = return_path.parent_path();
             if ((in_path_str == "..") && return_path.has_parent_path()) {
                 return_path = return_path.parent_path();
             }
         }
+#endif // _MSC_VER > 1916
         return_path_str = return_path.generic_u8string();
         GUIUtils::Utf8Decode(return_path_str);
     }
@@ -416,7 +459,7 @@ void megamol::gui::FileBrowserWidget::validate_file(
         std::string file_lower = file_str;
         this->string_to_lower_case(file_lower);
 
-        std::string ext_lower = extension;
+        std::string ext_lower = "." + extension;
         this->string_to_lower_case(ext_lower);
 
         this->file_error.clear();
@@ -437,7 +480,7 @@ void megamol::gui::FileBrowserWidget::validate_file(
             } else {
                 // Warn when file has not required extension
                 if (!ext_lower.empty()) {
-                    if (!FileUtils::FileHasExtension<std::string>(file_lower, ext_lower)) {
+                    if (!megamol::core::utility::FileUtils::FileHasExtension<std::string>(file_lower, ext_lower)) {
                         this->file_warning += "Appending required file extension '" + ext_lower + "'\n";
                         this->additional_lines++;
                         this->valid_ending = false;
@@ -459,7 +502,7 @@ void megamol::gui::FileBrowserWidget::validate_file(
         } else if (flag == FileBrowserFlag::LOAD) {
             // Error when file has not required extension
             if (!ext_lower.empty()) {
-                if (!FileUtils::FileHasExtension<std::string>(file_lower, ext_lower)) {
+                if (!megamol::core::utility::FileUtils::FileHasExtension<std::string>(file_lower, ext_lower)) {
                     this->file_error += "File with extension '" + ext_lower + "' required.\n";
                     this->additional_lines++;
                     this->valid_ending = false;

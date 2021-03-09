@@ -15,16 +15,15 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/sys/SystemInformation.h"
 #include "mmcore/view/light/AmbientLight.h"
 #include "mmcore/view/light/DistantLight.h"
 #include "mmcore/view/light/HDRILight.h"
 #include "mmcore/view/light/PointLight.h"
 #include "mmcore/view/light/QuadLight.h"
 #include "mmcore/view/light/SpotLight.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/sys/Path.h"
 #include <stdio.h>
+#include "mmcore/utility/sys/SystemInformation.h"
 
 namespace megamol {
 namespace ospray {
@@ -34,7 +33,7 @@ namespace ospray {
     }
 
     AbstractOSPRayRenderer::AbstractOSPRayRenderer(void)
-            : core::view::Renderer3DModule_2()
+            : core::view::Renderer3DModule()
             , _lightSlot("lights",
                   "Lights are retrieved over this slot. If no light is connected") 
             , _accumulateSlot("accumulate", "Activates the accumulation buffer")
@@ -104,130 +103,7 @@ namespace ospray {
         this->MakeSlotAvailable(&this->_deviceTypeSlot);
     }
 
-    void AbstractOSPRayRenderer::renderTexture2D(vislib::graphics::gl::GLSLShader& shader, const uint32_t* fb,
-        const float* db, int& width, int& height, megamol::core::view::CallRender3D_2& cr) {
 
-        auto fbo = cr.FrameBufferObject();
-        // if (fbo != NULL) {
-
-        //    if (fbo->IsValid()) {
-        //        if ((fbo->GetWidth() != width) || (fbo->GetHeight() != height)) {
-        //            fbo->Release();
-        //        }
-        //    }
-        //    if (!fbo->IsValid()) {
-        //        fbo->Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
-        //            vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
-        //    }
-        //    if (fbo->IsValid() && !fbo->IsEnabled()) {
-        //        fbo->Enable();
-        //    }
-
-        //    fbo->BindColourTexture();
-        //    glClear(GL_COLOR_BUFFER_BIT);
-        //    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
-        //    glBindTexture(GL_TEXTURE_2D, 0);
-
-        //    fbo->BindDepthTexture();
-        //    glClear(GL_DEPTH_BUFFER_BIT);
-        //    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
-        //    glBindTexture(GL_TEXTURE_2D, 0);
-
-        //    if (fbo->IsValid()) {
-        //        fbo->Disable();
-        //        // fbo->DrawColourTexture();
-        //        // fbo->DrawDepthTexture();
-        //    }
-        //} else {
-        /*
-        if (this->new_fbo.IsValid()) {
-            if ((this->new_fbo.GetWidth() != width) || (this->new_fbo.GetHeight() != height)) {
-                this->new_fbo.Release();
-            }
-        }
-        if (!this->new_fbo.IsValid()) {
-            this->new_fbo.Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
-        vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
-        }
-        if (this->new_fbo.IsValid() && !this->new_fbo.IsEnabled()) {
-            this->new_fbo.Enable();
-        }
-
-        this->new_fbo.BindColourTexture();
-        glClear(GL_COLOR_BUFFER_BIT);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        this->new_fbo.BindDepthTexture();
-        glClear(GL_DEPTH_BUFFER_BIT);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-
-        glBlitNamedFramebuffer(this->new_fbo.GetID(), 0, 0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT |
-        GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-
-        this->new_fbo.Disable();
-        */
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, this->_tex);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, fb);
-
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, this->_depth);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, db);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, this->_tex);
-        glUniform1i(shader.ParameterLocation("tex"), 0);
-
-
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, this->_depth);
-        glUniform1i(shader.ParameterLocation("depth"), 1);
-
-
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        glDisable(GL_BLEND);
-        glDisable(GL_DEPTH_TEST);
-        //  }
-    }
-
-
-    void AbstractOSPRayRenderer::setupTextureScreen() {
-        // setup color texture
-        glEnable(GL_TEXTURE_2D);
-        glGenTextures(1, &this->_tex);
-        glBindTexture(GL_TEXTURE_2D, this->_tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        
-        //// setup depth texture
-        glGenTextures(1, &this->_depth);
-        glBindTexture(GL_TEXTURE_2D, this->_depth);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glDisable(GL_TEXTURE_2D);
-    }
-
-    void AbstractOSPRayRenderer::releaseTextureScreen() {
-        glDeleteTextures(1, &this->_tex);
-        glDeleteTextures(1, &this->_depth);
-    }
 
 
     void AbstractOSPRayRenderer::initOSPRay() {
@@ -239,15 +115,15 @@ namespace ospray {
                 _device = std::make_shared<::ospray::cpp::Device>("mpi_distributed");
                 _device->setParam("masterRank", 0);
                 if (this->_numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
-                    _device->setParam("numThreads", this->_numThreads.Param<megamol::core::param::IntParam>()->Value());
+                    _device->setParam("numThreads", static_cast<int>(this->_numThreads.Param<megamol::core::param::IntParam>()->Value()));
                 }
             } break;
             default: {
                 _device = std::make_shared<::ospray::cpp::Device>("cpu");
                 if (this->_numThreads.Param<megamol::core::param::IntParam>()->Value() > 0) {
-                    _device->setParam("numThreads", this->_numThreads.Param<megamol::core::param::IntParam>()->Value());
+                    _device->setParam("numThreads", static_cast<int>(this->_numThreads.Param<megamol::core::param::IntParam>()->Value()));
                 } else {
-                    //_device->setParam("numThreads", vislib::sys::SystemInformation::ProcessorCount() - 1);
+                    _device->setParam("numThreads", static_cast<int>(vislib::sys::SystemInformation::ProcessorCount() - 1));
                 }
             }
             }
@@ -525,9 +401,28 @@ namespace ospray {
         // TODO: ospSet1f(_camera, "focalDistance", cr->GetCameraParameters()->FocalDistance());
     }
 
+    void AbstractOSPRayRenderer::clearOSPRayStuff(void) {
+        _lightArray.clear();
+        // OSP objects
+        _framebuffer.reset();
+        _camera.reset();
+        _world.reset();
+        // device
+        _device.reset();
+        // renderer
+        _renderer.reset();
+        // structure vectors
+        _baseStructures.clear();
+        _volumetricModels.clear();
+        _geometricModels.clear();
+        _clippingModels.clear();
+
+        _groups.clear();
+        _instances.clear();
+        _materials.clear();
+    }
 
     AbstractOSPRayRenderer::~AbstractOSPRayRenderer(void) {
-        this->Release();
     }
 
     // helper function to write the rendered image as PPM file
@@ -716,38 +611,38 @@ namespace ospray {
 
             // check if structure should be released first
             if (element.dataChanged) {
-                for (int i = 0; i < _baseStructures[entry.first].size(); ++i) {
-                    if (_baseStructures[entry.first].types[i] == structureTypeEnum::GEOMETRY) {
-                        ospRelease(std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures[i]).handle());
-                    } else {
-                        ospRelease(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures[i]).handle());
-                    }
-                }
+                //for (int i = 0; i < _baseStructures[entry.first].size(); ++i) {
+                //    if (_baseStructures[entry.first].types[i] == structureTypeEnum::GEOMETRY) {
+                //        ospRelease(std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures[i]).handle());
+                //    } else {
+                //        ospRelease(std::get<::ospray::cpp::Volume>(_baseStructures[entry.first].structures[i]).handle());
+                //    }
+                //}
                 _baseStructures[entry.first].clear();
                 _baseStructures.erase(entry.first);
 
-                for (auto& georep : _geometricModels[entry.first]) {
-                    ospRelease(georep.handle());
-                }
+                //for (auto& georep : _geometricModels[entry.first]) {
+                //    ospRelease(georep.handle());
+                //}
                 _geometricModels[entry.first].clear();
                 _geometricModels.erase(entry.first);
 
-                for (auto& volrep : _volumetricModels[entry.first]) {
-                    ospRelease(volrep.handle());
-                }
+                //for (auto& volrep : _volumetricModels[entry.first]) {
+                //    ospRelease(volrep.handle());
+                //}
                 _volumetricModels[entry.first].clear();
                 _volumetricModels.erase(entry.first);
 
-                for (auto& cliprep : _clippingModels[entry.first]) {
-                    ospRelease(cliprep.handle());
-                }
+                //for (auto& cliprep : _clippingModels[entry.first]) {
+                //    ospRelease(cliprep.handle());
+                //}
                 _clippingModels[entry.first].clear();
                 _clippingModels.erase(entry.first);
 
-                if (_groups[entry.first]) {
-                    ospRelease(_groups[entry.first].handle());
-                }
-                _groups[entry.first] = nullptr;
+                //if (_groups[entry.first]) {
+                //    ospRelease(_groups[entry.first].handle());
+                //}
+                //_groups[entry.first] = nullptr;
                 _groups.erase(entry.first);
 
             } else {
@@ -851,6 +746,8 @@ namespace ospray {
                     auto& container = std::get<sphereStructure>(element.structure);
 
                     if (container.vertexData == NULL) {
+                        core::utility::log::Log::DefaultLog.WriteError(
+                            "[OSPRay:generateRepresentations] Representation SPHERES active but no data provided.");
                         // returnValue = false;
                         break;
                     }
@@ -909,6 +806,7 @@ namespace ospray {
                     {
                     auto& container = std::get<sphereStructure>(element.structure);
                     if (container.raw == NULL) {
+                        core::utility::log::Log::DefaultLog.WriteError("[OSPRay:generateRepresentations] Representation NHSPHERES active but no data provided.");
                         // returnValue = false;
                         break;
                     }
@@ -971,8 +869,10 @@ namespace ospray {
                     break;
                 case geometryTypeEnum::MESH:
                     {
-                    auto& container = std::get<meshStrucutre>(element.structure);
+                    auto& container = std::get<meshStructure>(element.structure);
                     if (container.mesh == NULL) {
+                        core::utility::log::Log::DefaultLog.WriteError(
+                            "[OSPRay:generateRepresentations] Representation MESH active but no data provided.");
                         // returnValue = false;
                         break;
                     }
@@ -1047,7 +947,7 @@ namespace ospray {
                                 auto count = mesh.second.indices.byte_size /
                                              mesh::MeshDataAccessCollection::getByteSize(mesh.second.indices.type);
 
-                                unsigned long long stride = 3 * sizeof(unsigned int);
+                                size_t stride = 3 * sizeof(unsigned int);
                                 auto osp_type = OSP_VEC3UI;
 
                                 if (mesh_type == mesh::MeshDataAccessCollection::QUADS) {
@@ -1122,8 +1022,8 @@ namespace ospray {
                     auto& container = std::get<curveStructure>(element.structure);
                     if (container.vertexData == nullptr && container.mesh == nullptr) {
                         // returnValue = false;
-                        megamol::core::utility::log::Log::DefaultLog.WriteError(
-                            "[AbstractOSPRayRenderer]Streamline geometry detected but no data found.");
+                        core::utility::log::Log::DefaultLog.WriteError(
+                            "[OSPRay:generateRepresentations] Representation CURVES active but no data provided.");
                         break;
                     }
                     if (container.mesh != nullptr) {
@@ -1136,7 +1036,7 @@ namespace ospray {
                             for (auto& attrib : mesh.second.attributes) {
 
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::POSITION) {
-                                    const auto count = attrib.byte_size / attrib.stride;
+                                    size_t count = attrib.byte_size / attrib.stride;
                                     auto vertexData = ::ospray::cpp::SharedData(attrib.data, OSP_VEC3F, count, attrib.stride);
                                     vertexData.commit();
                                     std::get<::ospray::cpp::Geometry>(_baseStructures[entry.first].structures.back())
@@ -1147,7 +1047,7 @@ namespace ospray {
                                 if (attrib.semantic == mesh::MeshDataAccessCollection::COLOR) {
                                     ::ospray::cpp::SharedData colorData;
                                     if (attrib.component_type == mesh::MeshDataAccessCollection::ValueType::FLOAT) {
-                                        auto count = attrib.byte_size / attrib.stride;
+                                        size_t count = attrib.byte_size / attrib.stride;
                                         colorData = ::ospray::cpp::SharedData(
                                             attrib.data, OSP_VEC3F, count, attrib.stride);
                                     } else {
@@ -1160,7 +1060,7 @@ namespace ospray {
                             }
                             // check index pointer
                             if (mesh.second.indices.data != nullptr) {
-                                const auto count =
+                                size_t count =
                                     mesh.second.indices.byte_size /
                                     mesh::MeshDataAccessCollection::getByteSize(mesh.second.indices.type);
                                 auto indexData = ::ospray::cpp::SharedData(mesh.second.indices.data, OSP_UINT, count);
@@ -1244,7 +1144,8 @@ namespace ospray {
                 {
                 auto& container = std::get<structuredVolumeStructure>(element.structure);
                 if (container.voxels == NULL) {
-                    // returnValue = false;
+                    core::utility::log::Log::DefaultLog.WriteError(
+                        "[OSPRay:generateRepresentations] Representation VOLUME active but no data provided.");
                     break;
                 }
 
@@ -1420,8 +1321,5 @@ namespace ospray {
             _instances[entry.first].commit();
         }
     }
-
-    void AbstractOSPRayRenderer::releaseOSPRayStuff() {}
-
 } // end namespace ospray
 } // end namespace megamol

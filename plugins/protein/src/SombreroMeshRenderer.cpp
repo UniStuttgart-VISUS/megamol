@@ -11,7 +11,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/StringParam.h"
 #include "mmcore/utility/ColourParser.h"
-#include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/CallRender3DGL.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
 #include "mmcore/FlagCall.h"
@@ -42,7 +42,7 @@ using namespace megamol::core;
  * SombreroMeshRenderer::SombreroMeshRenderer
  */
 SombreroMeshRenderer::SombreroMeshRenderer(void)
-    : Renderer3DModule()
+    : Renderer3DModuleGL()
     , getDataSlot("getData", "The slot to fetch the tri-mesh data")
     , getVolDataSlot("getVolData", "The slot to fetch the volume data (experimental)")
     , getFlagDataSlot("getFlagData", "The slot to fetch the data from the flag storage")
@@ -57,7 +57,6 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
     , outerColorSlot("colors::outerColor", "The color of the outer radius line")
     , borderColorSlot("colors::sweatbandColor", "The color of the sweatband line")
     , fontColorSlot("colors::fontColor", "The color of the font")
-    , doScaleSlot("doScale", "Do Scaling of model data")
     , showRadiiSlot("showRadii", "Enable the textual annotation of the radii")
     , showSweatBandSlot("showSweatband", "Activates the display of the sweatband line")
     , theFont(megamol::core::utility::SDFFont::FontName::ROBOTO_SANS) {
@@ -117,9 +116,6 @@ SombreroMeshRenderer::SombreroMeshRenderer(void)
     this->outerColorSlot.SetParameter(new param::StringParam("red"));
     this->MakeSlotAvailable(&this->outerColorSlot);
 
-    this->doScaleSlot.SetParameter(new param::BoolParam(false));
-    this->MakeSlotAvailable(&this->doScaleSlot);
-
     this->showSweatBandSlot.SetParameter(new param::BoolParam(false));
     this->MakeSlotAvailable(&this->showSweatBandSlot);
 
@@ -146,8 +142,8 @@ bool SombreroMeshRenderer::create(void) {
 /*
  * TriSoupRenderer::GetExtents
  */
-bool SombreroMeshRenderer::GetExtents(Call& call) {
-    view::CallRender3D* cr = dynamic_cast<view::CallRender3D*>(&call);
+bool SombreroMeshRenderer::GetExtents(core::view::CallRender3DGL& call) {
+    view::CallRender3DGL* cr = dynamic_cast<view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
     megamol::geocalls::CallTriMeshData* ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;
@@ -158,13 +154,6 @@ bool SombreroMeshRenderer::GetExtents(Call& call) {
     cr->SetTimeFramesCount(ctmd->FrameCount());
     cr->AccessBoundingBoxes().Clear();
     cr->AccessBoundingBoxes() = ctmd->AccessBoundingBoxes();
-    if (this->doScaleSlot.Param<param::BoolParam>()->Value()) {
-        float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
-        if (scale > 0.0f) scale = 2.0f / scale;
-        cr->AccessBoundingBoxes().MakeScaledWorld(scale);
-    } else {
-        cr->AccessBoundingBoxes().MakeScaledWorld(1.0f);
-    }
 
     return true;
 }
@@ -343,27 +332,14 @@ void SombreroMeshRenderer::overrideColors(const int meshIdx, const vislib::math:
 /*
  * SombreroMeshRenderer::Render
  */
-bool SombreroMeshRenderer::Render(Call& call) {
-    view::CallRender3D* cr = dynamic_cast<view::CallRender3D*>(&call);
+bool SombreroMeshRenderer::Render(core::view::CallRender3DGL& call) {
+    view::CallRender3DGL* cr = dynamic_cast<view::CallRender3DGL*>(&call);
     if (cr == NULL) return false;
     megamol::geocalls::CallTriMeshData* ctmd = this->getDataSlot.CallAs<megamol::geocalls::CallTriMeshData>();
     if (ctmd == NULL) return false;
 
     ctmd->SetFrameID(static_cast<int>(cr->Time()));
     if (!(*ctmd)(1)) return false;
-    if (this->doScaleSlot.Param<param::BoolParam>()->Value()) {
-        float scale = ctmd->AccessBoundingBoxes().ClipBox().LongestEdge();
-        if (scale > 0.0f) scale = 2.0f / scale;
-        // float mat[16] = {
-        //    scale, 0.0f, 0.0f, 0.0f,
-        //    0.0f, scale, 0.0f, 0.0f,
-        //    0.0f, 0.0f, scale, 0.0f,
-        //    0.0f, 0.0f, 0.0f, 1.0f
-        //};
-        //::glMultMatrixf(mat);
-        glPushMatrix();
-        ::glScalef(scale, scale, scale);
-    }
 
     this->lastTime = cr->Time();
     ctmd->SetFrameID(static_cast<int>(cr->Time()));
@@ -1004,8 +980,8 @@ bool SombreroMeshRenderer::Render(Call& call) {
         if (this->theFont.Initialise(this->GetCoreInstance())) {
             float distleft = std::abs(bbCenter.GetX() - closest.GetX());
             float distright = std::abs(closest.GetX() - bb.Right());
-            vislib::StringA textleft = (trunc(distleft, 2) + " Å").c_str();
-            vislib::StringA textright = (trunc(distright, 2) + " Å").c_str();
+            vislib::StringA textleft = (trunc(distleft, 2) + " Ã…").c_str();
+            vislib::StringA textright = (trunc(distright, 2) + " Ã…").c_str();
 
             float sizeleft = 5.0f;
             float sizeright = 5.0f;
@@ -1050,11 +1026,16 @@ bool SombreroMeshRenderer::Render(Call& call) {
     modelMatrix.Invert();
     projectionMatrix.Invert();
 
-    auto cam = cr->GetCameraParameters();
-    auto viewport = cr->GetViewport().GetSize();
-
+    // Camera
+    view::Camera_2 cam;
+    cr->GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
+    auto viewport = cam.resolution_gate();
+    
     // the camera position from the matrix seems to be wrong
-    this->lastCamState.camPos = cam->Position();
+    this->lastCamState.camPos = vislib::math::Vector<float,3>(cam.position().x(), cam.position().y(), cam.position().x());
     this->lastCamState.camDir =
         vislib::math::Vector<float, 3>(-modelMatrix.GetAt(0, 2), -modelMatrix.GetAt(1, 2), -modelMatrix.GetAt(2, 2));
     this->lastCamState.camUp =
@@ -1064,16 +1045,16 @@ bool SombreroMeshRenderer::Render(Call& call) {
     this->lastCamState.camDir.Normalise();
     this->lastCamState.camUp.Normalise();
     this->lastCamState.camRight.Normalise();
-    this->lastCamState.zNear = cam->NearClip();
-    this->lastCamState.zFar = cam->FarClip();
-    this->lastCamState.fovy = (float)(cam->ApertureAngle() * M_PI / 180.0f);
-    this->lastCamState.aspect = (float)viewport.GetWidth() / (float)viewport.GetHeight();
-    if (viewport.GetHeight() == 0) {
+    this->lastCamState.zNear = cam.near_clipping_plane();
+    this->lastCamState.zFar = cam.far_clipping_plane();
+    this->lastCamState.fovy = (float) (cam.aperture_angle() * M_PI / 180.0f);
+    this->lastCamState.aspect = (float)viewport.width() / (float)viewport.height();
+    if (viewport.height() == 0) {
         this->lastCamState.aspect = 0.0f;
     }
     this->lastCamState.fovx = 2.0f * atan(tan(this->lastCamState.fovy / 2.0f) * this->lastCamState.aspect);
-    this->lastCamState.width = viewport.GetWidth();
-    this->lastCamState.height = viewport.GetHeight();
+    this->lastCamState.width = viewport.width();
+    this->lastCamState.height = viewport.height();
 
     ::glCullFace(cfm);
     ::glFrontFace(twr);

@@ -17,7 +17,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   file(GLOB_RECURSE source_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.cpp")
   file(GLOB_RECURSE header_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "src/*.h")
   file(GLOB_RECURSE resource_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "resources/*")
-  file(GLOB_RECURSE shader_files RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "shaders/*")
 
   # glm
   require_external(glm)
@@ -30,14 +29,7 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   require_external(imguizmoquat)
 
   # target definition
-  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${imgui_files} ${shader_files} ${resource_files})
-
-  # glfw
-  if(USE_GLFW)
-    require_external(glfw3)
-    target_link_libraries(${PROJECT_NAME} PRIVATE glfw3)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE GUI_USE_GLFW)
-  endif()
+  add_library(${PROJECT_NAME} STATIC ${public_header_files} ${header_files} ${source_files} ${imgui_files} ${resource_files})
 
   # Add C++ filesystem support.
   if(UNIX)
@@ -54,7 +46,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   # Installation rules for generated files
   #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION "include")
   install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION "share/resources")
-  install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/shaders/ DESTINATION "share/shaders")  
   if(WIN32)
     #install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION "bin")
     #install(TARGETS ${PROJECT_NAME} ARCHIVE DESTINATION "lib")
@@ -85,7 +76,6 @@ if(BUILD_${EXPORT_NAME}_PLUGIN)
   source_group("Version" FILES ${version_files})
   source_group("ImGui Files" FILES ${imgui_files})
   source_group("Resources" FILES ${resource_files})
-  source_group("Shaders" FILES ${shader_files})  
 
   # Format
   add_clang_format(${PROJECT_NAME}

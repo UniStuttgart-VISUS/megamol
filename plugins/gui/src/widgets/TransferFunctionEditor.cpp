@@ -136,9 +136,10 @@ void RainbowAdapter(param::TransferFunctionParam::TFNodeType& nodes, size_t n) {
     }
 }
 
-std::array<std::tuple<std::string, PresetGenerator>, 20> PRESETS = {
+std::array<std::tuple<std::string, PresetGenerator>, 21> PRESETS = {
     std::make_tuple("Select...", [](auto& nodes, auto n) {}),
     std::make_tuple("Ramp", RampAdapter),
+    std::make_tuple("Cividis", ColormapAdapter<256>(CividisColorMap)),
     std::make_tuple("Hue rotation (rainbow, harmful)", RainbowAdapter),
     std::make_tuple("Inferno", ColormapAdapter<256>(InfernoColorMap)),
     std::make_tuple("Magma", ColormapAdapter<256>(MagmaColorMap)),
@@ -266,7 +267,7 @@ void TransferFunctionEditor::SetConnectedParameter(Parameter* param_ptr, const s
     this->connected_parameter_ptr = nullptr;
     this->connected_parameter_name = "";
     if (param_ptr != nullptr) {
-        if (param_ptr->type == Param_t::TRANSFERFUNCTION) {
+        if (param_ptr->Type() == Param_t::TRANSFERFUNCTION) {
             if (this->connected_parameter_ptr != param_ptr) {
                 this->connected_parameter_ptr = param_ptr;
                 this->connected_parameter_name = param_full_name;
@@ -290,7 +291,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
     if (connected_parameter_mode && (this->connected_parameter_ptr == nullptr)) {
         const char* message = "Changes have no effect.\n"
                               "No transfer function parameter connected for edit.\n";
-        ImGui::TextColored(GUI_COLOR_TEXT_WARN, message);
+        ImGui::TextColored(GUI_COLOR_TEXT_ERROR, message);
     }
 
     assert(ImGui::GetCurrentContext() != nullptr);
@@ -303,8 +304,8 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         this->currentNode = 0;
     }
 
-    const float height = 30.0f;
-    const float width = 300.0f;
+    const float height = (30.0f * megamol::gui::gui_scaling.Get());
+    const float width = (300.0f * megamol::gui::gui_scaling.Get());
     const float tfw_item_width = ImGui::GetContentRegionAvail().x * 0.75f;
     ImGui::PushItemWidth(tfw_item_width); // set general proportional item width
     ImVec2 image_size = ImVec2(width, height);
@@ -436,7 +437,7 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         }
 
         // Plot ---------------------------------------------------------------
-        ImVec2 canvas_size = ImVec2(tfw_item_width, 150.0f);
+        ImVec2 canvas_size = ImVec2(tfw_item_width, (150.0f * megamol::gui::gui_scaling.Get()));
         this->drawFunctionPlot(canvas_size);
 
         // Color channels -----------------------------------------------------
@@ -560,9 +561,9 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
                 if (this->connected_parameter_ptr != nullptr) {
                     std::string tf;
                     if (this->GetTransferFunction(tf)) {
-                        if (this->connected_parameter_ptr->type == Param_t::TRANSFERFUNCTION) {
+                        if (this->connected_parameter_ptr->Type() == Param_t::TRANSFERFUNCTION) {
                             this->connected_parameter_ptr->SetValue(tf);
-                            this->connected_parameter_ptr->present.SetTransferFunctionEditorHash(
+                            this->connected_parameter_ptr->TransferFunctionEditor_SetHash(
                                 this->connected_parameter_ptr->GetTransferFunctionHash());
                         }
                     }
@@ -630,8 +631,8 @@ void TransferFunctionEditor::drawScale(const ImVec2& pos, const ImVec2& size, bo
     float item_y_spacing = style.ItemInnerSpacing.y;
 
     // Draw scale lines
-    const float line_length = 5.0f;
-    const float line_thickness = 2.0f;
+    const float line_length = (5.0f * megamol::gui::gui_scaling.Get());
+    const float line_thickness = (2.0f * megamol::gui::gui_scaling.Get());
     const ImU32 line_color = ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Text]);
 
     ImVec2 init_pos = pos;
@@ -747,9 +748,9 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
     }
     ImU32 frameBkgrd = ImGui::ColorConvertFloat4ToU32(tmp_frameBkgrd);
 
-    const float line_width = 2.0f;
-    const float point_radius = 6.0f;
-    const float point_border_width = 1.5f;
+    const float line_width = (2.0f * megamol::gui::gui_scaling.Get());
+    const float point_radius = (6.0f * megamol::gui::gui_scaling.Get());
+    const float point_border_width = (1.5f * megamol::gui::gui_scaling.Get());
     const int circle_subdiv = 12;
     ImVec2 delta_border = style.ItemInnerSpacing;
 
@@ -774,7 +775,7 @@ void TransferFunctionEditor::drawFunctionPlot(const ImVec2& size) {
         if (!this->activeChannels[c])
             continue;
 
-        const float pointAndBorderRadius = point_radius + point_border_width - 2.0f;
+        const float pointAndBorderRadius = point_radius + point_border_width - (2.0f * megamol::gui::gui_scaling.Get());
 
         // Draw lines.
         drawList->PathClear();

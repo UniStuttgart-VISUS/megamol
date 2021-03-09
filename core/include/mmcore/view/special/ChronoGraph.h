@@ -89,7 +89,7 @@ namespace special {
          *
          * @return 'true' on success
          */
-        virtual bool GetExtents(view::CallRender2D& call);
+        virtual bool GetExtents(view::CallRender2DGL& call);
 
         /**
          * Renders the scene
@@ -98,7 +98,7 @@ namespace special {
          *
          * @return 'true' on success
          */
-        virtual bool Render(view::CallRender2D& call);
+        virtual bool Render(view::CallRender2DGL& call);
 
         /**
          * Releases all resources of the module

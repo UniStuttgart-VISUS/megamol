@@ -27,7 +27,6 @@ namespace gui {
             MAIN_PARAMETERS = 1,
             PARAMETERS = 2,
             PERFORMANCE = 3,
-            FONT = 4,
             TRANSFER_FUNCTION = 5,
             CONFIGURATOR = 6,
             LOGCONSOLE = 7
@@ -49,11 +48,10 @@ namespace gui {
             core::view::KeyCode win_hotkey; // hotkey for opening/closing window
             ImVec2 win_position;            // position for reset on state loading (current position)
             ImVec2 win_size;                // size for reset on state loading (current size)
-            bool win_soft_reset;            // soft reset of window position and size
             ImVec2 win_reset_size;          // minimum window size for soft reset
             ImVec2 win_reset_position;      // window position for minimize reset
-            bool win_reset;                 // flag for reset window position and size on state loading [NOT SAVED]
             bool win_collapsed;             // flag indicating whether window is collapsed or not.
+            bool win_set_pos_size; // set window position and size to fit current viewport           [NOT SAVED]
             // ---------- Parameter specific configuration ----------
             bool param_show_hotkeys;                     // flag to toggle showing only parameter hotkeys
             std::vector<std::string> param_modules_list; // modules to show in a parameter window (show all if empty)
@@ -68,11 +66,6 @@ namespace gui {
             std::vector<float> buf_values; // current ms values                                         [NOT SAVED]
             float buf_plot_ms_scaling;     // current ms plot scaling factor                            [NOT SAVED]
             float buf_plot_fps_scaling;    // current fps plot scaling factor                           [NOT SAVED]
-            // ---------- Font specific configuration ---------
-            std::string font_name;     // font name (only already loaded font names will be restored)
-            bool buf_font_reset;       // flag for reset of font on state loading                       [NOT SAVED]
-            std::string buf_font_file; // current font file name                                        [NOT SAVED]
-            float buf_font_size;       // current font size                                             [NOT SAVED]
             // ---------- Transfer Function Editor specific configuration ---------
             bool tfe_view_minimized;      // flag indicating minimized window state
             bool tfe_view_vertical;       // flag indicating vertical window state
@@ -91,11 +84,10 @@ namespace gui {
                     , win_hotkey(megamol::core::view::KeyCode())
                     , win_position(ImVec2(0.0f, 0.0f))
                     , win_size(ImVec2(0.0f, 0.0f))
-                    , win_soft_reset(true)
                     , win_reset_size(ImVec2(0.0f, 0.0f))
                     , win_reset_position(ImVec2(0.0f, 0.0f))
-                    , win_reset(true)
                     , win_collapsed(false)
+                    , win_set_pos_size(true)
                     // Window specific configurations
                     , param_show_hotkeys(false)
                     , param_modules_list()
@@ -109,10 +101,6 @@ namespace gui {
                     , buf_values()
                     , buf_plot_ms_scaling(1.0f)
                     , buf_plot_fps_scaling(1.0f)
-                    , font_name()
-                    , buf_font_reset(false)
-                    , buf_font_file()
-                    , buf_font_size(13.0f)
                     , tfe_view_minimized(false)
                     , tfe_view_vertical(false)
                     , tfe_active_param("")
@@ -154,24 +142,11 @@ namespace gui {
         }
 
         /**
-         * Reset position and size of currently active window to fit into current viewport.
-         * Should be triggered via the window configuration flag: soft_reset
-         * Processes window configuration flag: soft_reset_size
-         * Should be called between ImGui::Begin() and ImGui::End().
+         * Set position and size of currently active window to fit into current viewport.
          *
          * @param window_config  The window configuration.
          */
-        void SoftResetWindowSizePosition(WindowConfiguration& window_config);
-
-        /**
-         * Reset position and size after new state has been loaded.
-         * Should be triggered via the window configuration flag: state_reset
-         * Processes window configuration flags: state_position and state_size
-         * Should be called between ImGui::Begin() and ImGui::End().
-         *
-         * @param window_config  The window configuration.
-         */
-        void ResetWindowSizePosition(WindowConfiguration& window_config);
+        void SetWindowSizePosition(WindowConfiguration& window_config, bool consider_menu);
 
         // --------------------------------------------------------------------
         // CONFIGURATIONs

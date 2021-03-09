@@ -8,7 +8,7 @@
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
-#include "mmcore/view/CallRender2D.h"
+#include "mmcore/view/CallRender2DGL.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
@@ -23,7 +23,7 @@ InfovisAmortizedRenderer::InfovisAmortizedRenderer()
         , approachSlot("Approach", "Approach int")
         , superSamplingLevelSlot("SSLevel", "Level of Supersampling")
         , amortLevel("AmortLevel", "Level of Amortization") {
-    this->nextRendererSlot.SetCompatibleCall<megamol::core::view::CallRender2DDescription>();
+    this->nextRendererSlot.SetCompatibleCall<megamol::core::view::CallRender2DGLDescription>();
     this->MakeSlotAvailable(&this->nextRendererSlot);
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
@@ -464,8 +464,8 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
     frametype = (frametype + 1) % framesNeeded;
 }
 
-bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
-    core::view::CallRender2D* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2D>();
+bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
+    core::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2DGL>();
     int a = amortLevel.Param<core::param::IntParam>()->Value();
 
     if (cr2d == NULL) {
@@ -473,8 +473,15 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
         return true;
     }
 
-    int w = call.GetViewport().Width();
-    int h = call.GetViewport().Height();
+    // get camera
+    core::view::Camera_2 cam;
+    call.GetCamera(cam);
+
+    cam_type::matrix_type view, proj;
+    cam.calc_matrices(view, proj);
+
+    int w = cam.resolution_gate().width();
+    int h = cam.resolution_gate().height();
     int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
     int approach = this->approachSlot.Param<core::param::IntParam>()->Value();
 
@@ -482,7 +489,7 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
     cr2d->SetInstanceTime(call.InstanceTime());
     cr2d->SetLastFrameTime(call.LastFrameTime());
 
-    auto bg = call.GetBackgroundColour();
+    auto bg = call.BackgroundColor();
 
     backgroundColor[0] = (float) bg[0] / 255.0;
     backgroundColor[1] = (float) bg[1] / 255.0;
@@ -498,10 +505,9 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
     glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    cr2d->SetBackgroundColour(call.GetBackgroundColour());
-    cr2d->SetBoundingBox(call.GetBoundingBox());
-    cr2d->SetOutputBuffer(call.OutputBuffer());
-    cr2d->SetGpuAffinity(call.GpuAffinity<megamol::core::view::AbstractCallRender::GpuHandleType>());
+    cr2d->SetBackgroundColor(call.BackgroundColor());
+    cr2d->AccessBoundingBoxes() = call.GetBoundingBoxes();
+    cr2d->SetFramebufferObject(call.GetFramebufferObject());
 
     if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
 
@@ -530,18 +536,18 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {
     return true;
 }
 
-bool megamol::infovis::InfovisAmortizedRenderer::GetExtents(core::view::CallRender2D& call) {
-    core::view::CallRender2D* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2D>();
+bool megamol::infovis::InfovisAmortizedRenderer::GetExtents(core::view::CallRender2DGL& call) {
+    core::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2DGL>();
     if (cr2d == nullptr)
         return false;
 
-    if (!(*cr2d)(core::view::CallRender2D::FnGetExtents))
+    if (!(*cr2d)(core::view::CallRender2DGL::FnGetExtents))
         return false;
 
     cr2d->SetTimeFramesCount(call.TimeFramesCount());
     cr2d->SetIsInSituTime(call.IsInSituTime());
 
-    call.SetBoundingBox(cr2d->GetBoundingBox());
+    call.AccessBoundingBoxes() = cr2d->GetBoundingBoxes();
 
     return true;
 }

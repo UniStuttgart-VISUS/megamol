@@ -25,7 +25,7 @@
 #include <memory.h>
 
 #ifndef NULL
-#   define NULL 0
+#define NULL 0
 #endif
 
 #endif /* _WIN32 */
@@ -33,30 +33,30 @@
 #include "vislib/types.h"
 
 // VISlib includes
-#include "vislib/graphics/gl/ShaderSource.h"
+#include "mmcore/utility/log/Log.h"
+#include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/gl/GLSLGeometryShader.h"
 #include "vislib/graphics/gl/GLSLTesselationShader.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
-#include "vislib/types.h"
-#include "vislib/math/Vector.h"
+#include "vislib/graphics/gl/ShaderSource.h"
 #include "vislib/math/Matrix.h"
-#include "mmcore/utility/log/Log.h"
+#include "vislib/math/Vector.h"
+#include "vislib/types.h"
 
 // C++ includes
-#include <array>
-#include <vector>
 #include <algorithm>
-#include <ctime>
-#include <mutex>
-#include <thread>
+#include <array>
 #include <cfloat>
-#include <set>
+#include <ctime>
 #include <iostream>
-#include <queue>
-#include <valarray>
-#include <queue> 
 #include <map>
+#include <mutex>
 #include <ppl.h>
+#include <queue>
+#include <queue>
+#include <set>
+#include <thread>
+#include <valarray>
+#include <vector>
 
 // MolecularMpas inclues
 #include "Types.h"
@@ -64,7 +64,9 @@
 // MolecularMaps defines
 static clock_t begin, end;
 #define TIME_START begin = clock();
-#define TIME_END(name) end = clock(); \
-megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, "%s took %f seconds.", name, double(end - begin) / CLOCKS_PER_SEC);
+#define TIME_END(name)                                                                                  \
+    end = clock();                                                                                      \
+    megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO, \
+        "%s took %f seconds.", name, double(end - begin) / CLOCKS_PER_SEC);
 
 #endif /* MOLECULARMAPS_STDAFX_H_INCLUDED */

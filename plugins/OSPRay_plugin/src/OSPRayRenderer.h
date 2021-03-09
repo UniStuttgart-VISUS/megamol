@@ -5,13 +5,8 @@
 */
 #pragma once
 
-#include "vislib/graphics/gl/GLSLShader.h"
 #include "AbstractOSPRayRenderer.h"
-#include "mmcore/view/CallRender3D.h"
 #include "mmcore/CallerSlot.h"
-#include "mmcore/param/ParamSlot.h"
-#include "mmcore/moldyn/MultiParticleDataCall.h"
-#include <chrono>
 
 
 namespace megamol {
@@ -44,7 +39,7 @@ public:
     * @return 'true' if the module is available, 'false' otherwise.
     */
     static bool IsAvailable(void) {
-        return vislib::graphics::gl::GLSLShader::AreExtensionsAvailable();
+        return true;
     }
 
     /** Dtor. */
@@ -74,7 +69,7 @@ protected:
     *
     * @return The return value of the function.
     */
-    virtual bool Render(megamol::core::view::CallRender3D_2& call);
+    virtual bool Render(megamol::core::view::CallRender3D& call);
 
 private:
 
@@ -87,14 +82,11 @@ private:
     *
     * @return The return value of the function.
     */
-    virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
+    virtual bool GetExtents(megamol::core::view::CallRender3D& call);
 
     /** The call for data */
     core::CallerSlot _getStructureSlot;
 
-
-    /** The texture shader */
-    vislib::graphics::gl::GLSLShader _osprayShader;
 
     // Interface dirty flag
     bool InterfaceIsDirty();
@@ -114,9 +106,9 @@ private:
     std::array<int,2> _imgSize;
 
     // OSPRay textures
-    uint32_t* _fb;
+    std::vector<uint32_t> _fb;
     std::vector<float> _db;
-    void getOpenGLDepthFromOSPPerspective(float* db);
+    void getOpenGLDepthFromOSPPerspective(std::vector<float>& db, cam_type::matrix_type projTemp);
 
     bool _renderer_has_changed;
 

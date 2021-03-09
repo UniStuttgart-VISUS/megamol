@@ -11,7 +11,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/misc/PngBitmapCodec.h"
+#include "mmcore/MegaMolGraph.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/ColorParam.h"
 #include "mmcore/param/EnumParam.h"
@@ -27,13 +27,9 @@
 #include "mmcore/utility/SDFFont.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRender3D_2.h"
+#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/RenderUtils.h"
 #include "mmcore/view/RendererModule.h"
-
-#include "vislib/graphics/gl/GLSLShader.h"
-#include "vislib/graphics/gl/IncludeAllGL.h"
-#include "vislib/graphics/gl/OpenGLTexture2D.h"
-#include "vislib/sys/File.h"
 
 #include <chrono>
 #include <glm/gtc/matrix_transform.hpp>
@@ -45,8 +41,13 @@ namespace gui {
     /**
      * Renders various kinds of overlays.
      */
-    class OverlayRenderer : public megamol::core::view::RendererModule<megamol::core::view::CallRender3D_2> {
+    class OverlayRenderer : public megamol::core::view::RendererModule<megamol::core::view::CallRender3DGL>,
+                            megamol::core::view::RenderUtils {
     public:
+        virtual std::vector<std::string> requested_lifetime_resources() {
+            return {"IOpenGL_Context", "MegaMolGraph"};
+        }
+
         /**
          * Answer the name of this module.
          *
@@ -102,7 +103,7 @@ namespace gui {
          *
          * @return The return value of the function.
          */
-        virtual bool GetExtents(megamol::core::view::CallRender3D_2& call);
+        virtual bool GetExtents(megamol::core::view::CallRender3DGL& call);
 
         /**
          * The render callback.
@@ -111,15 +112,9 @@ namespace gui {
          *
          * @return The return value of the function.
          */
-        virtual bool Render(megamol::core::view::CallRender3D_2& call);
+        virtual bool Render(megamol::core::view::CallRender3DGL& call);
 
     private:
-        struct TextureData {
-            vislib::graphics::gl::OpenGLTexture2D tex;
-            unsigned int width;
-            unsigned int height;
-        };
-
         struct Rectangle {
             float left;
             float right;
@@ -170,7 +165,7 @@ namespace gui {
         core::param::ParamSlot paramTimeParameter;
         // Parameter Mode
         core::param::ParamSlot paramPrefix;
-        core::param::ParamSlot paramSufix;
+        core::param::ParamSlot paramSuffix;
         core::param::ParamSlot paramParameterName;
         // Label Mode
         core::param::ParamSlot paramText;
@@ -182,19 +177,17 @@ namespace gui {
         /**********************************************************************
          * variables
          **********************************************************************/
-
-        TextureData m_texture;
-        vislib::graphics::gl::GLSLShader m_shader;
-        std::unique_ptr<megamol::core::utility::SDFFont> m_font;
-        glm::ivec2 m_viewport;
+        GLuint m_texture_id;
+        std::unique_ptr<megamol::core::utility::SDFFont> m_font_ptr;
+        glm::vec2 m_viewport;
         Rectangle m_current_rectangle;
         // Parameter Mode
-        vislib::SmartPtr<megamol::core::param::AbstractParam> m_parameter_ptr;
+        megamol::core::param::AbstractParam* m_parameter_ptr;
         // TranspCtrl Icons
-        std::array<TextureData, NONE_COUNT> m_transpctrl_icons;
+        std::array<GLuint, NONE_COUNT> m_transpctrl_icons;
         TranspCtrlIconState m_state;
-        vislib::SmartPtr<megamol::core::param::AbstractParam> m_speed_parameter_ptr;
-        vislib::SmartPtr<megamol::core::param::AbstractParam> m_time_parameter_ptr;
+        megamol::core::param::AbstractParam* m_speed_parameter_ptr;
+        megamol::core::param::AbstractParam* m_time_parameter_ptr;
 
         /**********************************************************************
          * functions
@@ -202,21 +195,14 @@ namespace gui {
 
         void setParameterGUIVisibility(void);
 
-        void drawScreenSpaceBillboard(glm::mat4 ortho, Rectangle rectangle, TextureData& texture,
-            vislib::graphics::gl::GLSLShader& shader, glm::vec4 overwrite_color) const;
+        void drawScreenSpaceBillboard(
+            glm::mat4 ortho, glm::vec2 viewport, Rectangle rectangle, GLuint texture_id, glm::vec4 overwrite_color);
 
         void drawScreenSpaceText(glm::mat4 ortho, megamol::core::utility::SDFFont& font, const std::string& text,
             glm::vec4 color, float size, Anchor anchor, Rectangle rectangle) const;
 
-        Rectangle getScreenSpaceRect(
-            glm::vec2 rel_pos, float rel_width, Anchor anchor, const TextureData& texture, glm::ivec2 viewport) const;
-
-        bool loadTexture(const std::string& filename, TextureData& texture) const;
-
-        bool loadShader(
-            vislib::graphics::gl::GLSLShader& shader, const std::string& vert_name, const std::string& frag_name) const;
-
-        size_t loadRawFile(std::string name, void** outData) const;
+        Rectangle getScreenSpaceRect(glm::vec2 rel_pos, float rel_width, Anchor anchor, unsigned int texture_width,
+            unsigned int texture_height, glm::vec2 viewport) const;
 
         /* parameter callbacks --------------------------------------------- */
 

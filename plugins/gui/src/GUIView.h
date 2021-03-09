@@ -13,7 +13,7 @@
 
 #include "mmcore/CallerSlot.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 
 
 namespace megamol {
@@ -69,13 +69,9 @@ namespace gui {
 
         virtual unsigned int GetCameraSyncNumber(void) const override;
 
-        virtual void SerialiseCamera(vislib::Serialiser& serialiser) const override;
-
-        virtual void DeserialiseCamera(vislib::Serialiser& serialiser) override;
-
         virtual bool OnRenderView(megamol::core::Call& call);
 
-        virtual void Render(const mmcRenderViewContext& context) override;
+        virtual void Render(const mmcRenderViewContext& context, core::Call* call) override;
 
         virtual void ResetView(void) override;
 
@@ -108,13 +104,15 @@ namespace gui {
         // VARIABLES --------------------------------------------------------------
 
         /** The override call */
-        megamol::core::view::CallRenderView* overrideCall;
+        megamol::core::view::CallRenderViewGL* overrideCall;
 
         /** The input renderview slot */
         megamol::core::CallerSlot render_view_slot;
 
         /** The gui */
         megamol::gui::GUIWindows gui;
+
+        std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
 
         // ------------------------------------------------------------------------
     };

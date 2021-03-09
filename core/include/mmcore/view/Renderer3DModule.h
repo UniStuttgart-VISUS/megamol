@@ -1,67 +1,84 @@
 /*
  * Renderer3DModule.h
  *
- * Copyright (C) 2008 by Universitaet Stuttgart (VIS). 
+ * Copyright (C) 2021 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
-#ifndef MEGAMOLCORE_RENDERER3DMODULE_H_INCLUDED
-#define MEGAMOLCORE_RENDERER3DMODULE_H_INCLUDED
-#if (defined(_MSC_VER) && (_MSC_VER > 1000))
 #pragma once
-#endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
-#include "mmcore/view/RendererModule.h"
+#include "mmcore/api/MegaMolCore.std.h"
 #include "mmcore/view/CallRender3D.h"
+#include "mmcore/view/RendererModule.h"
 
 namespace megamol {
 namespace core {
 namespace view {
 
+/**
+ * New and improved base class of rendering graph 3D renderer modules.
+ */
+class MEGAMOLCORE_API Renderer3DModule : public view::RendererModule<CallRender3D> {
+public:
+    /** Ctor. */
+    Renderer3DModule(void);
+
+    /** Dtor. */
+    virtual ~Renderer3DModule(void);
+
+protected:
+    /**
+     * The get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times).
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetExtents(CallRender3D& call) = 0;
 
     /**
-     * Base class of rendering graph 3D renderer modules.
+     * The render callback.
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
      */
-    class MEGAMOLCORE_API Renderer3DModule : public RendererModule<CallRender3D>{
-    public:
+    virtual bool Render(CallRender3D& call) = 0;
 
-        /** Ctor. */
-        Renderer3DModule(void);
+    /**
+     * Method that gets called before the rendering is started for all changed modules
+     *
+     * @param call The rendering call that contains the camera
+     */
+    virtual void PreRender(CallRender3D& call);
 
-        /** Dtor. */
-        virtual ~Renderer3DModule(void) = default;
+private:
+    /**
+     * The chained get extents callback. The module should set the members of
+     * 'call' to tell the caller the extents of its data (bounding boxes
+     * and times). This version of the method calls the respective method of alle chained renderers
+     *
+     * @param call The calling call.
+     *
+     * @return The return value of the function.
+     */
+    virtual bool GetExtentsChain(CallRender3D& call) override final;
 
-    protected:
-		/**
-         * The get extents callback. The module should set the members of
-         * 'call' to tell the caller the extents of its data (bounding boxes
-         * and times).
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-        [[deprecated("Use CallRender3D version instead")]]
-        virtual bool GetExtents(Call& call) { return false; };
+    /**
+     * The callback that triggers the rendering of all chained render modules
+     * as well as the own rendering
+     *
+     * @param call The calling call.
+     *
+     * @return True on success, false otherwise
+     */
+    virtual bool RenderChain(CallRender3D& call) override final;
 
-		virtual bool GetExtents(CallRender3D& call) override { return this->GetExtents(static_cast<Call&>(call)); }
+    // TODO events
+};
 
-        /**
-         * The render callback.
-         *
-         * @param call The calling call.
-         *
-         * @return The return value of the function.
-         */
-		[[deprecated("Use CallRender3D version instead")]]
-        virtual bool Render(Call& call) { return false; };
-
-		virtual bool Render(CallRender3D& call) override { return this->Render(static_cast<Call&>(call)); }
-    };
-
-
-} /* end namespace view */
+} // namespace view
 } /* end namespace core */
 } /* end namespace megamol */
-
-#endif /* MEGAMOLCORE_RENDERERMODULE_H_INCLUDED */
