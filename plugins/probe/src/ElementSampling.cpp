@@ -284,6 +284,8 @@ void ElementSampling::placeProbes(const std::vector<std::vector<Surface_mesh>>& 
             start.y += point.y();
             start.z += point.z();
         }
+        const auto num_points = elements[0][j].num_vertices();
+        start /= num_points;
         new_probe.m_position = {start.x, start.y, start.z};
 
         glm::vec3 end = glm::vec3(0);
@@ -292,6 +294,7 @@ void ElementSampling::placeProbes(const std::vector<std::vector<Surface_mesh>>& 
             end.y += point.y();
             end.z += point.z();
         }
+        end /= num_points;
         auto dir = glm::normalize(end - start);
         new_probe.m_direction = {dir.x, dir.y, dir.z};
         new_probe.m_end = glm::length(end - start);
