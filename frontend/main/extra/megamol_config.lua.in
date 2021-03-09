@@ -28,7 +28,7 @@ print("Default MegaMol Frontend 3000 Configuration:")
 --   mmLoadProject(string file_path)
 
 -- Global values are key-value pairs accessible to services and modules 
--- via the RuntimeConfig frontend resource.
+-- via the GlobalValueStore frontend resource.
 -- The key and value strings must not contain space, = or : characters
 mmSetGlobalValue("MegaMol", "Frontend3000") -- CLI: --global=MegaMol:Frontend3000
  
