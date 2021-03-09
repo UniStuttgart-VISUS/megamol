@@ -200,6 +200,9 @@ bool adiosWriter::run() {
         try {
             if (!this->writer) {
                 const std::string fname = std::string(T2A(this->filename.Param<core::param::FilePathParam>()->Value()));
+#ifdef _WIN32
+                std::replace(fname.begin(), fname.end(), '/', '\\');
+#endif
                 megamol::core::utility::log::Log::DefaultLog.WriteInfo("[adiosWriter] Opening File %s", fname.c_str());
                 writer = io->Open(fname, adios2::Mode::Write);
             }
