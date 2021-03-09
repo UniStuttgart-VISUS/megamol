@@ -310,7 +310,7 @@ int megamol::core::LuaAPI::SetLogFile(lua_State* L) {
 int megamol::core::LuaAPI::SetLogLevel(lua_State* L) {
     auto l = luaL_checkstring(L, 1);
 
-    int result = 0;
+    unsigned int result = 0;
     try {
         if (std::string(l).find_first_of("0123456789") != std::string::npos) {
             result = std::stoi(l);
@@ -335,7 +335,7 @@ int megamol::core::LuaAPI::SetLogLevel(lua_State* L) {
 int megamol::core::LuaAPI::SetEchoLevel(lua_State* L) {
     auto l = luaL_checkstring(L, 1);
 
-    int result = 0;
+    unsigned int result = 0;
     try {
         if (std::string(l).find_first_of("0123456789") != std::string::npos) {
             result = std::stoi(l);
