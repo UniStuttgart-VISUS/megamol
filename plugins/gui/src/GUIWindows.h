@@ -248,6 +248,7 @@ namespace gui {
             std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
             ImGuiID graph_uid;                             // UID of currently running graph
             std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.
+            bool load_fonts;                               // Flag indicating font loading
             std::string win_delete;                        // Name of the window to delete.
             double last_instance_time;                     // Last instance time.
             bool open_popup_about;                         // Flag for opening about pop-up
@@ -323,7 +324,7 @@ namespace gui {
         bool createContext(void);
         bool destroyContext(void);
 
-        void load_default_fonts(bool reload_font_api);
+        void load_default_fonts(void);
 
         void drawParamWindowCallback(WindowCollection::WindowConfiguration& wc);
         void drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc);

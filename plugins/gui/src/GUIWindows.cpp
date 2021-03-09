@@ -161,11 +161,17 @@ bool GUIWindows::CreateContext(GUIImGuiAPI imgui_api, megamol::core::CoreInstanc
 
 bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, double instance_time) {
 
-    /// XXX Catch nested ImGui contexts
+    // Handle multiple ImGui contexts.
     if (this->state.gui_visible && ImGui::GetCurrentContext()->WithinFrameScope) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[GUI] Nesting ImGui contexts is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         this->state.gui_visible = false;
+    }
+
+    // (Delayed font loading for being resource directories available via resource in frontend)
+    if (this->state.load_fonts) {
+        this->load_default_fonts();
+        this->state.load_fonts = false;
     }
 
     // Process hotkeys
@@ -527,22 +533,22 @@ bool GUIWindows::PostDraw(void) {
     if (megamol::gui::gui_scaling.ConsumePendingChange()) {
 
         // Scale all ImGui style options
-        style.ScaleAllSizes(megamol::gui::gui_scaling.TransitonFactor());
+        style.ScaleAllSizes(megamol::gui::gui_scaling.TransitionFactor());
 
         // Scale all windows
         if (this->state.rescale_windows) {
             // Do not adjust window scale after loading from project file (window size is already fine)
             const auto size_func = [&, this](WindowCollection::WindowConfiguration& wc) {
-                wc.win_reset_size *= megamol::gui::gui_scaling.TransitonFactor();
-                wc.win_size *= megamol::gui::gui_scaling.TransitonFactor();
+                wc.win_reset_size *= megamol::gui::gui_scaling.TransitionFactor();
+                wc.win_size *= megamol::gui::gui_scaling.TransitionFactor();
                 wc.buf_set_pos_size = true;
             };
             this->window_collection.EnumWindows(size_func);
             this->state.rescale_windows = false;
         }
 
-        // Scale all fonts
-        this->load_default_fonts(true);
+        // Reload and scale all fonts
+        this->state.load_fonts = true;
     }
 
     // Loading new font -------------------------------------------------------
@@ -836,8 +842,8 @@ void megamol::gui::GUIWindows::SetScale(float scale) {
     if (megamol::gui::gui_scaling.PendingChange()) {
         // Additionally trigger reload of currently used font
         this->state.font_apply = true;
-        this->state.font_size =
-            static_cast<int>(static_cast<float>(this->state.font_size) * (megamol::gui::gui_scaling.TransitonFactor()));
+        this->state.font_size = static_cast<int>(
+            static_cast<float>(this->state.font_size) * (megamol::gui::gui_scaling.TransitionFactor()));
         // Additionally resize all windows
         this->state.rescale_windows = true;
     }
@@ -1099,7 +1105,7 @@ bool GUIWindows::createContext(void) {
     bool other_context_exists = (ImGui::GetCurrentContext() != nullptr);
     ImFontAtlas* font_atlas = nullptr;
     ImFont* default_font = nullptr;
-    /// XXX Handle multiple ImGui contexts.
+    // Handle multiple ImGui contexts.
     if (other_context_exists) {
         ImGuiIO& current_io = ImGui::GetIO();
         font_atlas = current_io.Fonts;
@@ -1276,7 +1282,7 @@ bool GUIWindows::createContext(void) {
         }
 
     } else {
-        this->load_default_fonts(false);
+        this->state.load_fonts = true;
     }
 
     return true;
@@ -1288,11 +1294,10 @@ bool GUIWindows::destroyContext(void) {
     if (this->initialized_api != GUIImGuiAPI::NONE) {
         if (this->context != nullptr) {
 
-            /// XXX Handle multiple ImGui contexts.
-            // Shutdown API only if only one context is left
+            // Handle multiple ImGui contexts.
             if (megamol::gui::gui_context_count < 2) {
                 ImGui::SetCurrentContext(this->context);
-
+                // Shutdown API only if only one context is left
                 switch (this->initialized_api) {
                 case (GUIImGuiAPI::OPEN_GL):
                     ImGui_ImplOpenGL3_Shutdown();
@@ -1323,7 +1328,7 @@ bool GUIWindows::destroyContext(void) {
 }
 
 
-void megamol::gui::GUIWindows::load_default_fonts(bool reload_font_api) {
+void megamol::gui::GUIWindows::load_default_fonts(void) {
 
     ImGuiIO& io = ImGui::GetIO();
     io.Fonts->Clear();
@@ -1390,21 +1395,19 @@ void megamol::gui::GUIWindows::load_default_fonts(bool reload_font_api) {
         }
     }
 
-    if (reload_font_api) {
-        switch (this->initialized_api) {
-        case (GUIImGuiAPI::NONE): {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] Fonts can only be loaded after API was initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-                __LINE__);
-        } break;
-        case (GUIImGuiAPI::OPEN_GL): {
-            ImGui_ImplOpenGL3_CreateFontsTexture();
-        } break;
-        default: {
-            megamol::core::utility::log::Log::DefaultLog.WriteError(
-                "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        } break;
-        }
+    switch (this->initialized_api) {
+    case (GUIImGuiAPI::NONE): {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] Fonts can only be loaded after API was initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
+    } break;
+    case (GUIImGuiAPI::OPEN_GL): {
+        ImGui_ImplOpenGL3_CreateFontsTexture();
+    } break;
+    default: {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[GUI] ImGui API is not supported. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    } break;
     }
 }
 
@@ -2398,6 +2401,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.project_script_paths.clear();
     this->state.graph_uid = GUI_INVALID_ID;
     this->state.font_utf8_ranges.clear();
+    this->state.load_fonts = false;
     this->state.win_delete = "";
     this->state.last_instance_time = 0.0;
     this->state.open_popup_about = false;

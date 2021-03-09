@@ -157,7 +157,7 @@ namespace gui {
             return this->scale;
         }
 
-        float TransitonFactor(void) const {
+        float TransitionFactor(void) const {
             return (this->scale / this->last_scale);
         }
 

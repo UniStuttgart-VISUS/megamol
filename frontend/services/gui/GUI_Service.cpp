@@ -68,7 +68,11 @@ bool GUI_Service::init(const Config& config) {
         if (this->m_gui == nullptr) {
             this->m_gui = std::make_shared<megamol::gui::GUIWrapper>();
             if (check_gui_not_nullptr) {
-                if (this->m_gui->Get()->CreateContext(megamol::gui::GUIImGuiAPI::OPEN_GL, config.core_instance)) {
+                auto gui = this->m_gui->Get();
+
+                // Create context
+                if (gui->CreateContext(megamol::gui::GUIImGuiAPI::OPEN_GL, config.core_instance)) {
+
                     // Set function pointer in resource once
                     this->m_providedResource.request_gui_state = [&](void) -> std::string {return this->resource_request_gui_state();};
                     this->m_providedResource.provide_gui_state = [&](std::string json_state) -> void {
@@ -80,6 +84,7 @@ bool GUI_Service::init(const Config& config) {
                     this->m_providedResource.provide_gui_scale = [&](float scale) -> void {
                         return this->resource_provide_gui_scale(scale);
                     };
+
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully.");
                     return true;
                 }
@@ -226,8 +231,11 @@ void GUI_Service::digestChangedRequestedResources() {
     gui->SetFrameStatistics(frame_statistics.last_averaged_fps, frame_statistics.last_averaged_mspf, frame_statistics.rendered_frames_count);
 
     /// Get resource directories = resource index 10
-    auto& runtime_config = this->m_requestedResourceReferences[10].getResource<megamol::frontend_resources::RuntimeConfig>();
-    gui->SetResourceDirectories(runtime_config.resource_directories);
+    auto& runtime_config =
+        this->m_requestedResourceReferences[10].getResource<megamol::frontend_resources::RuntimeConfig>();
+    if (!runtime_config.resource_directories.empty()) {
+        gui->SetResourceDirectories(runtime_config.resource_directories);
+    }
 }
 
 

@@ -525,13 +525,6 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     std::string rightLabel = "";
     this->utils.PushMenu(leftLabel, midLabel, rightLabel, vp_fw, vp_fh);
 
-    err = glGetError();
-    if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
-        return;
-    }
-
     // Draw 2D ----------------------------------------------------------------
     this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
 }

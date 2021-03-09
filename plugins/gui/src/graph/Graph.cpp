@@ -1380,7 +1380,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             this->draw_menu();
 
             if (megamol::gui::gui_scaling.PendingChange()) {
-                this->gui_parameter_sidebar_width *= megamol::gui::gui_scaling.TransitonFactor();
+                this->gui_parameter_sidebar_width *= megamol::gui::gui_scaling.TransitionFactor();
             }
             float graph_width_auto = 0.0f;
             if (this->gui_show_parameter_sidebar) {

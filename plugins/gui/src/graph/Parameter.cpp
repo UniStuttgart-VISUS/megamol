@@ -1518,7 +1518,12 @@ bool megamol::gui::Parameter::widget_filepath(
             this->gui_widget_store = utf8Str;
         }
         ImGuiStyle& style = ImGui::GetStyle();
+
         float widget_width = ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() + style.ItemSpacing.x);
+        float text_width = ImGui::CalcTextSize(std::get<std::string>(this->gui_widget_store).c_str()).x +
+                           (2.0f * style.ItemInnerSpacing.x);
+        widget_width = std::max(widget_width, text_width);
+
         ImGui::PushItemWidth(widget_width);
         bool button_edit = this->gui_file_browser.Button(std::get<std::string>(this->gui_widget_store),
             megamol::gui::FileBrowserWidget::FileBrowserFlag::SELECT, "");
