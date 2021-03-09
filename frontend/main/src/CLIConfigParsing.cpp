@@ -19,6 +19,17 @@ namespace stdfs = std::experimental::filesystem;
 #endif
 #endif
 
+// find user home
+#include <stdlib.h>
+#include <stdio.h>
+static std::string getHomeDir() {
+#ifdef _WIN32
+    return std::string(getenv("HOMEDRIVE")) + std::string(getenv("HOMEPATH"));
+#else // LINUX
+    return std::string(getenv("HOME"));
+#endif
+}
+
 using megamol::frontend_resources::RuntimeConfig;
 using megamol::frontend_resources::GlobalValueStore;
 
@@ -270,13 +281,21 @@ std::vector<std::string> megamol::frontend::extract_config_file_paths(const int 
 
         std::vector<std::string> config_files;
 
+        auto personal_config = stdfs::path(getHomeDir()) / stdfs::path(".megamol_config.lua");
+        if (stdfs::exists(personal_config)) {
+            config_files.push_back(personal_config.string());
+        }
+
+        // the personal config should be loaded after the default config to overwrite it
+        // but before configs passed via CLI to be overwritten by them
         if (parsed_options.count(loong(config_option)) == 0) {
             // no config files given
             // use defaults
             RuntimeConfig config;
-            config_files = config.configuration_files;
+            config_files.insert(config_files.begin(), config.configuration_files.begin(), config.configuration_files.end());
         } else {
-            config_files = parsed_options[loong(config_option)].as<std::vector<std::string>>();
+            auto cli_config_files = parsed_options[loong(config_option)].as<std::vector<std::string>>();
+            config_files.insert(config_files.end(), cli_config_files.begin(), cli_config_files.end());
         }
 
         // remove empty files: enables to start megamol without config file

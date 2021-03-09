@@ -194,7 +194,7 @@ int main(const int argc, const char** argv) {
         services.updateProvidedResources();
 
         // aka simulation step
-        // services: digest new inputs via ModuleResources (GUI digest user inputs, lua digest inputs, network ?)
+        // services: digest new inputs via FrontendResources (GUI digest user inputs, lua digest inputs, network ?)
         // e.g. graph updates, module and call creation via lua and GUI happen here
         services.digestChangedRequestedResources();
 
