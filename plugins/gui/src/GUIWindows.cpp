@@ -991,19 +991,20 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             this->state.new_gui_state.clear();
         }
 
-        // Check for script path name
+        // Check for new script path name
         if (graph_sync_success) {
             if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
                 std::string script_filename;
                 // Get project filename from lua state of core instance
-                if (graph_ptr->GetFilename().empty() && (this->core_instance != nullptr)) {
+                if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
                     if (auto lua_state = this->core_instance->GetLuaState()) {
                         script_filename = lua_state->GetScriptPath();
                     }
-                }
-                // Get project filename from lua state of frontend service
-                if (!this->state.project_script_paths.empty()) {
-                    script_filename = this->state.project_script_paths.front();
+                } else {
+                    // Get project filename from lua state of frontend service
+                    if (!this->state.project_script_paths.empty()) {
+                        script_filename = this->state.project_script_paths.front();
+                    }
                 }
                 // Load GUI state from project file when project file changed
                 if (!script_filename.empty()) {
@@ -1027,7 +1028,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     megamol::core::Module* core_module_ptr = nullptr;
                     if (megamol_graph != nullptr) {
                         core_module_ptr = megamol_graph->FindModule(module_name).get();
-                    } else if (this->core_instance != nullptr) {
+                    } else if ((this->core_instance != nullptr) &&
+                               core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
                         // New core module will only be available next frame after module request is processed.
                         std::function<void(megamol::core::Module*)> fun = [&](megamol::core::Module* mod) {
                             core_module_ptr = mod;
@@ -1617,13 +1619,11 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
     ImGui::TextDisabled("Frame ID:");
     ImGui::SameLine();
     auto frameid = this->state.stat_frame_count;
-
     if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
         if (frameid == 0) {
             frameid = static_cast<size_t>(this->core_instance->GetFrameID());
         }
     }
-
     ImGui::Text("%u", frameid);
 
     ImGui::SameLine(
