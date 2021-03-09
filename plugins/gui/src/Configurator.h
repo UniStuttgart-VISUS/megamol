@@ -111,7 +111,7 @@ namespace gui {
 
         // FUNCTIONS --------------------------------------------------------------
 
-        void draw_window_menu(megamol::core::CoreInstance* core_instance);
+        void draw_window_menu(void);
         void draw_window_module_list(float width, float height, bool apply_focus);
 
         void drawPopUps(megamol::core::CoreInstance* core_instance);
