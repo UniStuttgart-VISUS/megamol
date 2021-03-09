@@ -254,7 +254,8 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // Set ImGui context
     ImGui::SetCurrentContext(this->context);
     // Propagate ImGui context to core instance
-    if (this->core_instance != nullptr) {
+    if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
+        /// TODO Also for new frontend?
         this->core_instance->SetCurrentImGuiContext(this->context);
     }
 
@@ -885,7 +886,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             case (Graph::QueueAction::ADD_MODULE): {
                 if (megamol_graph != nullptr) {
                     graph_sync_success &= megamol_graph->CreateModule(data.class_name, data.name_id);
-                } else if (this->core_instance != nullptr) {
+                } else if ((this->core_instance != nullptr) &&
+                           core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
                     graph_sync_success &= this->core_instance->RequestModuleInstantiation(
                         vislib::StringA(data.class_name.c_str()), vislib::StringA(data.name_id.c_str()));
                 }
@@ -894,7 +896,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                 if (megamol_graph != nullptr) {
                     bool rename_success = megamol_graph->RenameModule(data.name_id, data.rename_id);
                     graph_sync_success &= rename_success;
-                } else if (this->core_instance != nullptr) {
+                } else if ((this->core_instance != nullptr) &&
+                           core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
                     /* XXX Currently not supported by core graph
                     bool rename_success = false;
                     std::function<void(megamol::core::Module*)> fun = [&](megamol::core::Module* mod) {
@@ -917,7 +920,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             case (Graph::QueueAction::ADD_CALL): {
                 if (megamol_graph != nullptr) {
                     graph_sync_success &= megamol_graph->CreateCall(data.class_name, data.caller, data.callee);
-                } else if (this->core_instance != nullptr) {
+                } else if ((this->core_instance != nullptr) &&
+                           core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
                     graph_sync_success &=
                         this->core_instance->RequestCallInstantiation(vislib::StringA(data.class_name.c_str()),
                             vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
@@ -926,7 +930,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             case (Graph::QueueAction::DELETE_CALL): {
                 if (megamol_graph != nullptr) {
                     graph_sync_success &= megamol_graph->DeleteCall(data.caller, data.callee);
-                } else if (this->core_instance != nullptr) {
+                } else if ((this->core_instance != nullptr) &&
+                           core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
                     graph_sync_success &= this->core_instance->RequestCallDeletion(
                         vislib::StringA(data.caller.c_str()), vislib::StringA(data.callee.c_str()));
                 }
@@ -936,7 +941,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                     megamol_graph->SetGraphEntryPoint(data.name_id,
                         megamol::core::view::get_gl_view_runtime_resources_requests(),
                         megamol::core::view::view_rendering_execution, megamol::core::view::view_init_rendering_state);
-                } else if (this->core_instance != nullptr) {
+                } else if ((this->core_instance != nullptr) &&
+                           core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
                     /* XXX Currently not supported by core graph
                      */
                 }
@@ -944,7 +950,8 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             case (Graph::QueueAction::REMOVE_GRAPH_ENTRY): {
                 if (megamol_graph != nullptr) {
                     megamol_graph->RemoveGraphEntryPoint(data.name_id);
-                } else if (this->core_instance != nullptr) {
+                } else if ((this->core_instance != nullptr) &&
+                           core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
                     /* XXX Currently not supported by core graph
                      */
                 }
@@ -1329,41 +1336,47 @@ void megamol::gui::GUIWindows::load_default_fonts(bool reload_font_api) {
     config.OversampleH = 4;
     config.OversampleV = 4;
     config.GlyphRanges = this->state.font_utf8_ranges.data();
-    std::string configurator_font;
-    std::string default_font;
 
     // Get other known fonts
     std::vector<std::string> font_paths;
-    if (this->core_instance != nullptr) {
+    std::string configurator_font_path;
+    std::string default_font_path;
+
+    auto get_preset_font_path = [&](auto directory) {
+        std::string font_path = megamol::core::utility::FileUtils::SearchFileRecursive(directory, "Roboto-Regular.ttf");
+        if (!font_path.empty()) {
+            font_paths.emplace_back(font_path);
+            configurator_font_path = font_path;
+            default_font_path = font_path;
+        }
+        font_path = megamol::core::utility::FileUtils::SearchFileRecursive(directory, "SourceCodePro-Regular.ttf");
+        if (!font_path.empty()) {
+            font_paths.emplace_back(font_path);
+        }
+    };
+
+    if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
         auto search_paths = this->core_instance->Configuration().ResourceDirectories();
         for (size_t i = 0; i < search_paths.Count(); ++i) {
-            std::wstring search_path(search_paths[i].PeekBuffer());
-            std::string font_path = megamol::core::utility::FileUtils::SearchFileRecursive<std::wstring, std::string>(
-                search_path, "Roboto-Regular.ttf");
-            if (!font_path.empty()) {
-                font_paths.emplace_back(font_path);
-                configurator_font = font_path;
-                default_font = font_path;
-            }
-            font_path = megamol::core::utility::FileUtils::SearchFileRecursive<std::wstring, std::string>(
-                search_path, "SourceCodePro-Regular.ttf");
-            if (!font_path.empty()) {
-                font_paths.emplace_back(font_path);
-            }
+            get_preset_font_path(std::wstring(search_paths[i].PeekBuffer()));
+        }
+    } else {
+        for (auto& resource_directory : this->state.resource_directories) {
+            get_preset_font_path(resource_directory);
         }
     }
 
     // Configurator Graph Font: Add default font at first n indices for exclusive use in configurator graph.
     /// Workaround: Using different font sizes for different graph zooming factors to improve font readability when
     /// zooming.
-    if (configurator_font.empty()) {
+    if (configurator_font_path.empty()) {
         for (unsigned int i = 0; i < this->state.graph_fonts_reserved; i++) {
             io.Fonts->AddFontDefault(&config);
         }
     } else {
         for (unsigned int i = 0; i < this->state.graph_fonts_reserved; i++) {
             io.Fonts->AddFontFromFileTTF(
-                configurator_font.c_str(), default_font_size * graph_font_scalings[i], &config);
+                configurator_font_path.c_str(), default_font_size * graph_font_scalings[i], &config);
         }
     }
 
@@ -1372,7 +1385,7 @@ void megamol::gui::GUIWindows::load_default_fonts(bool reload_font_api) {
     io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
     for (auto& font_path : font_paths) {
         io.Fonts->AddFontFromFileTTF(font_path.c_str(), default_font_size, &config);
-        if (default_font == font_path) {
+        if (default_font_path == font_path) {
             io.FontDefault = io.Fonts->Fonts[(io.Fonts->Fonts.Size - 1)];
         }
     }
@@ -1405,7 +1418,7 @@ void GUIWindows::drawTransferFunctionWindowCallback(WindowCollection::WindowConf
 
 void GUIWindows::drawConfiguratorWindowCallback(WindowCollection::WindowConfiguration& wc) {
 
-    this->configurator.Draw(wc, this->core_instance);
+    this->configurator.Draw(wc);
 }
 
 
@@ -1598,18 +1611,17 @@ void GUIWindows::drawFpsWindowCallback(WindowCollection::WindowConfiguration& wc
         wc.fpsms_mode = WindowCollection::TimingModes::MS;
     }
 
-    if (this->core_instance != nullptr) {
-        ImGui::TextDisabled("Frame ID:");
-        ImGui::SameLine();
-        auto frameid = this->state.stat_frame_count;
+    ImGui::TextDisabled("Frame ID:");
+    ImGui::SameLine();
+    auto frameid = this->state.stat_frame_count;
 
-        /// [DEPRECATED USAGE - only mmconsole] ///
+    if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
         if (frameid == 0) {
             frameid = static_cast<size_t>(this->core_instance->GetFrameID());
         }
-
-        ImGui::Text("%u", frameid);
     }
+
+    ImGui::Text("%u", frameid);
 
     ImGui::SameLine(
         ImGui::CalcItemWidth() - (ImGui::GetFrameHeightWithSpacing() - style.ItemSpacing.x - style.ItemInnerSpacing.x));
@@ -2235,7 +2247,7 @@ bool megamol::gui::GUIWindows::isHotkeyPressed(megamol::core::view::KeyCode keyc
 
 void megamol::gui::GUIWindows::triggerCoreInstanceShutdown(void) {
 
-    if (this->core_instance != nullptr) {
+    if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
 #ifdef GUI_VERBOSE
         megamol::core::utility::log::Log::DefaultLog.WriteInfo("[GUI] Shutdown MegaMol instance.");
 #endif // GUI_VERBOSE
@@ -2407,6 +2419,7 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.stat_averaged_ms = 0.0;
     this->state.stat_frame_count = 0;
     this->state.font_size = 13;
+    this->state.resource_directories.clear();
 
     this->create_not_existing_png_filepath(this->state.screenshot_filepath);
 }

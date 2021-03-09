@@ -28,6 +28,11 @@ CinematicUtils::~CinematicUtils(void) {
 
 bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
 
+    if (core_instance == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Pointer to core isntance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
+
     if (this->init_once) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("Primitive rendering has already been initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }

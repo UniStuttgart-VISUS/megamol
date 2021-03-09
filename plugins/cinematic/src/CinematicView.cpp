@@ -10,6 +10,7 @@
 
 #include "mmcore/thecam/utility/types.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
+#include "mmcore/MegaMolGraph.h"
 
 
 using namespace megamol;
@@ -662,7 +663,21 @@ bool CinematicView::render_to_file_write() {
         }
         png_set_write_fn(this->png_data.structptr, static_cast<void*>(&this->png_data.file), &this->pngWrite, &this->pngFlush);
 
-        megamol::core::utility::graphics::ScreenShotComments ssc(this->GetCoreInstance()->SerializeGraph());
+        std::string project;
+        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+            project = this->GetCoreInstance()->SerializeGraph();
+        } else {
+            auto megamolgraph_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
+                [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
+            if (megamolgraph_it != this->frontend_resources.end()) {
+                if (auto megamolgraph_ptr = &megamolgraph_it->getResource<megamol::core::MegaMolGraph>()) {
+                    project =
+                        const_cast<megamol::core::MegaMolGraph*>(megamolgraph_ptr)->Convenience().SerializeGraph();
+                }
+            }
+        }
+
+        megamol::core::utility::graphics::ScreenShotComments ssc(project);
         png_set_text(this->png_data.structptr, this->png_data.infoptr, ssc.GetComments().data(), ssc.GetComments().size());
         png_set_IHDR(this->png_data.structptr, this->png_data.infoptr, this->png_data.width, this->png_data.height, 8,
             PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);

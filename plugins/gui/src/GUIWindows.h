@@ -161,6 +161,21 @@ namespace gui {
         }
 
         /**
+         * Set GUI visibility.
+         */
+        void SetVisibility(bool visible) {
+            // In order to take immediate effect, the GUI visibility directly is set (and not indirectly via hotkey)
+            this->state.gui_visible = visible;
+        }
+
+        /**
+         * Set GUI scale.
+         */
+        void SetScale(float scale);
+
+        // --------------------------------------
+
+        /**
          * Set project script paths.
          */
         void SetProjectScriptPaths(const std::vector<std::string>& script_paths) {
@@ -177,17 +192,11 @@ namespace gui {
         }
 
         /**
-         * Set GUI visibility.
+         * Set resource directories.
          */
-        void SetVisibility(bool visible) {
-            // In order to take immediate effect, the GUI visibility directly is set (and not indirectly via hotkey)
-            this->state.gui_visible = visible;
+        void SetResourceDirectories(const std::vector<std::string>& resource_directories) {
+            this->state.resource_directories = resource_directories;
         }
-
-        /**
-         * Set GUI scale.
-         */
-        void SetScale(float scale);
 
         /**
          * Set externally provided clipboard function and user data
@@ -259,7 +268,8 @@ namespace gui {
             double stat_averaged_fps;             // current average fps value
             double stat_averaged_ms;              // current average fps value
             size_t stat_frame_count;              // current fame count
-            bool hotkeys_check_once;              // WORKAROUND: Check multiple hotkey assignments once
+            std::vector<std::string> resource_directories; // the global resource directories
+            bool hotkeys_check_once;                       // WORKAROUND: Check multiple hotkey assignments once
         };
 
         /** The GUI hotkey array index mapping. */

@@ -87,13 +87,35 @@ bool TimeLineRenderer::create(void) {
     }
 
     // Load texture
-    vislib::StringA shortfilename = "arrow.png";
-    auto fullfilename = megamol::core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), shortfilename);
-    if (!this->utils.LoadTextureFromFile(this->texture_id, std::wstring(fullfilename.PeekBuffer()))) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+    std::string texture_shortfilename = "arrow.png";
+    bool loaded_texture = false;
+    if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+        auto fullfilename = megamol::core::utility::ResourceWrapper::getFileName(
+            this->GetCoreInstance()->Configuration(), vislib::StringA(texture_shortfilename.c_str()));
+        std::wstring texture_filename = std::wstring(fullfilename.PeekBuffer());
+        loaded_texture = this->utils.LoadTextureFromFile(this->texture_id, texture_filename);
+    } else {
+        auto resource_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
+            [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "RuntimeConfig"); });
+        if (resource_it != this->frontend_resources.end()) {
+            std::string texture_filepath;
+            auto resource_directories =
+                resource_it->getResource<megamol::frontend_resources::RuntimeConfig>().resource_directories;
+            for (auto& resource_directory : resource_directories) {
+                auto found_filepath = megamol::core::utility::FileUtils::SearchFileRecursive(
+                    resource_directory, texture_shortfilename);
+                if (!found_filepath.empty()) {
+                    texture_filepath = found_filepath;
+                }
+            }
+            loaded_texture = this->utils.LoadTextureFromFile(this->texture_id, texture_filepath);
+        }
     }
 
+    if (!loaded_texture) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+     }
     return true;
 }
 

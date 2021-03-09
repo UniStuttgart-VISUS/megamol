@@ -14,6 +14,7 @@
 #include "ScriptPaths.h"
 #include "ProjectLoader.h"
 #include "FrameStatistics.h"
+#include "RuntimeConfig.h"
 
 #include "mmcore/utility/log/Log.h"
 
@@ -58,7 +59,8 @@ bool GUI_Service::init(const Config& config) {
         "GLFrontbufferToPNG_ScreenshotTrigger",  // 6 - trigger screenshot
         "LuaScriptPaths",                        // 7 - current project path
         "ProjectLoader",                         // 8 - trigger loading of new running project
-        "FrameStatistics"                        // 9 - current fps and ms value
+        "FrameStatistics",                       // 9 - current fps and ms value
+        "RuntimeConfig"                          // 10 - resource paths
     };
 
     // init gui
@@ -222,6 +224,10 @@ void GUI_Service::digestChangedRequestedResources() {
     /// Get current FPS and MS frame statistic = resource index 9
     auto& frame_statistics =  this->m_requestedResourceReferences[9].getResource<megamol::frontend_resources::FrameStatistics>();
     gui->SetFrameStatistics(frame_statistics.last_averaged_fps, frame_statistics.last_averaged_mspf, frame_statistics.rendered_frames_count);
+
+    /// Get resource directories = resource index 10
+    auto& runtime_config = this->m_requestedResourceReferences[10].getResource<megamol::frontend_resources::RuntimeConfig>();
+    gui->SetResourceDirectories(runtime_config.resource_directories);
 }
 
 

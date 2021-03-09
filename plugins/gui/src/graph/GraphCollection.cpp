@@ -189,7 +189,7 @@ bool megamol::gui::GraphCollection::LoadModuleStock(const megamol::core::CoreIns
 
     if (core_instance == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Pointer to Core Instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+            "[GUI] Pointer to core instance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
     if (this->calls_stock.empty()) {
@@ -360,13 +360,11 @@ bool megamol::gui::GraphCollection::add_update_project_from_core(ImGuiID in_grap
 
         bool use_megamol_graph = (megamol_graph != nullptr);
         bool use_core_instance = (core_instance != nullptr);
-
-        /// XXX Prioritize megamol_Graph oder core_instance graph
+        /// XXX Prioritize megamol_graph over core_instance graph
         if (use_megamol_graph) {
             use_core_instance = false;
         }
-
-        if ((!use_megamol_graph) && (!use_megamol_graph)) {
+        if ((!use_megamol_graph) && (!use_core_instance)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Missing references to any graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
             return false;
