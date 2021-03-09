@@ -17,7 +17,7 @@ namespace mesh {
     class MeshDataAccessCollection {
     public:
         enum ValueType { BYTE, UNSIGNED_BYTE, SHORT, UNSIGNED_SHORT, INT, UNSIGNED_INT, HALF_FLOAT, FLOAT, DOUBLE };
-        enum AttributeSemanticType { POSITION, NORMAL, COLOR, TEXCOORD, TANGENT };
+        enum AttributeSemanticType { POSITION, NORMAL, COLOR, TEXCOORD, TANGENT, UNKNOWN };
         enum PrimitiveType { TRIANGLES, QUADS, LINES };
 
         static constexpr unsigned int convertToGLType(ValueType value_type) {
@@ -173,6 +173,17 @@ namespace mesh {
 
         Mesh const& accessMesh(std::string const& identifier);
 
+        /**
+         * Get attributes of a mesh grouped by vertex buffer format (non-interleaved vs interleaved mostly).
+         * Is computed by checking the data pointers of individual attributes.
+         *
+         * @param identifier The identifier string of the mesh
+         *
+         * @return Returns indices into attribute array. Inner vector contains indices of attributes that use the same
+         * data buffer. Outer vector contains all groups of indices.
+         */
+        std::vector<std::vector<unsigned int>> getFormattedAttributeIndices(std::string const& identifier);
+
     private:
         std::unordered_map<std::string, Mesh> meshes;
     };
@@ -208,6 +219,32 @@ namespace mesh {
 
         if (query != meshes.end()) {
             return query->second;
+        } else {
+            megamol::core::utility::log::Log::DefaultLog.WriteError("accessMesh error: identifier not found.");
+        }
+
+        return retval;
+    }
+
+    inline std::vector<std::vector<unsigned int>> MeshDataAccessCollection::getFormattedAttributeIndices(
+        std::string const& identifier) {
+        auto retval = std::vector<std::vector<unsigned int>>();
+
+        auto query = meshes.find(identifier);
+
+        if (query != meshes.end()) {
+            for (unsigned int attrib_idx = 0; attrib_idx < query->second.attributes.size(); ++attrib_idx) {
+                bool attrib_added = false;
+                for (auto& val : retval) {
+                    if (query->second.attributes[attrib_idx].data == query->second.attributes[val.front()].data) {
+                        val.push_back(attrib_idx);
+                        attrib_added = true;
+                    }
+                }
+                if (!attrib_added) {
+                    retval.push_back({attrib_idx});
+                }
+            }
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError("accessMesh error: identifier not found.");
         }

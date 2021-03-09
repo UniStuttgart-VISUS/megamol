@@ -139,23 +139,46 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
                         attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::NORMAL;
                     } else if (attrib.first == "TANGENT") {
                         attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::TANGENT;
-                    } else if (attrib.first == "TEXCOORD") {
+                    } else if (attrib.first == "TEXCOORD_0") {
                         attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::TEXCOORD;
+                    } else if (attrib.first == "COLOR_0") {
+                        attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::COLOR;
+                    } else {
+                        attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::UNKNOWN;
                     }
 
-                    mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{
-                        reinterpret_cast<uint8_t*>(vertexAttrib_buffer.data.data() +
-                                                   vertexAttrib_bufferView.byteOffset +
-                                                   vertexAttrib_accessor.byteOffset),
-                        (vertexAttrib_accessor.count * vertexAttrib_accessor.ByteStride(vertexAttrib_bufferView)),
+
+                    uint8_t* data_ptr = nullptr;
+                    size_t attrib_byte_stride = vertexAttrib_accessor.ByteStride(vertexAttrib_bufferView);
+                    size_t attrib_byte_offset = 0;
+                    // check bufferView stride for 0 to detect interleaved data
+                    if (vertexAttrib_bufferView.byteStride == 0) {
+                        // if interleaved, do not apply accessor byte offset to data pointer
+                        data_ptr = reinterpret_cast<uint8_t*>(
+                            vertexAttrib_buffer.data.data() + vertexAttrib_bufferView.byteOffset);
+                        // and instead use attribute offset
+                        attrib_byte_offset = vertexAttrib_accessor.byteOffset;
+                    } else {
+                        // if non-interleaved, apply accessor byte offset to data pointer
+                        data_ptr = reinterpret_cast<uint8_t*>(vertexAttrib_buffer.data.data() +
+                                                              vertexAttrib_bufferView.byteOffset +
+                                                              vertexAttrib_accessor.byteOffset);
+                        // and do not set any attribute offset because offset > 0 with non-interleaved
+                        // attributes suggests a (VVVNNNCCC) layout which we will use as a
+                        // (VVV)(NNN)(CCC) layout instead
+                    }
+
+                    mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{data_ptr,
+                        (vertexAttrib_accessor.count * attrib_byte_stride),
                         static_cast<unsigned int>(vertexAttrib_accessor.type),
-                        MeshDataAccessCollection::covertToValueType(vertexAttrib_accessor.componentType), 0, 0,
-                        attrib_semantic});
+                        MeshDataAccessCollection::covertToValueType(vertexAttrib_accessor.componentType),
+                        attrib_byte_stride, attrib_byte_offset, attrib_semantic});
                 }
 
                 std::string identifier = std::string(m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value()) +
                                          model->meshes[mesh_idx].name + "_" + std::to_string(primitive_idx);
                 m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices);
+                m_mesh_access_collection.second.push_back(identifier);
 
                 auto max_data =
                     model

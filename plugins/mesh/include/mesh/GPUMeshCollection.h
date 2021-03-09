@@ -126,8 +126,12 @@ namespace mesh {
             [&vertex_descriptor, index_type, req_vertex_cnt, req_index_cnt](
                 std::shared_ptr<BatchedMeshes> const& batched_meshes) {
                 bool retval = true;
-                for (int i = 0; i < vertex_descriptor.size(); ++i) {
-                    retval &= vertex_descriptor[i] == batched_meshes->mesh->getVertexLayouts()[i];
+                if (vertex_descriptor.size() == batched_meshes->mesh->getVertexLayouts().size()) {
+                    for (int i = 0; i < vertex_descriptor.size(); ++i) {
+                        retval &= vertex_descriptor[i] == batched_meshes->mesh->getVertexLayouts()[i];
+                    }
+                } else {
+                    retval = false;
                 }
                 retval &= index_type == batched_meshes->mesh->getIndexType();
 
@@ -160,6 +164,7 @@ namespace mesh {
             batched_mesh->mesh = std::make_shared<glowl::Mesh>(alloc_data, alloc_vb_byte_sizes, nullptr,
                 new_allocation_index_cnt * glowl::computeByteSize(index_type), vertex_descriptor, index_type, usage,
                 primitive_type);
+            
         } else {
             batched_mesh = (*query);
         }

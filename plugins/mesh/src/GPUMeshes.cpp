@@ -63,21 +63,41 @@ bool megamol::mesh::GPUMeshes::getDataCallback(core::Call& caller) {
 
                 ib_iterators = {mesh.second.indices.data, mesh.second.indices.data + mesh.second.indices.byte_size};
 
-                for (auto attrib : mesh.second.attributes) {
+                auto formated_attrib_indices = mc->getData()->getFormattedAttributeIndices(mesh.first);
 
-                    vb_layouts.push_back(glowl::VertexLayout(
-                        attrib.component_cnt * MeshDataAccessCollection::getByteSize(attrib.component_type),
-                        {glowl::VertexLayout::Attribute(attrib.component_cnt,
+                for (auto vb_attribs : formated_attrib_indices) {
+
+                    // for each set of attribute indices, create a vertex buffer layout and set data pointers
+                    // using the first attribute (could be any from the set, data pointer and stride should be equal)
+                    auto first_attrib = mesh.second.attributes[vb_attribs.front()];
+                    vb_layouts.push_back(glowl::VertexLayout(first_attrib.stride, {} ));
+                    vb_iterators.push_back({first_attrib.data, first_attrib.data + first_attrib.byte_size});
+
+                    // for each attribute in the set, add it to the attributes of the vertex buffer layout
+                    for (auto const& attrib_idx : vb_attribs) {
+                        auto const& attrib = mesh.second.attributes[attrib_idx];
+                        vb_layouts.back().attributes.push_back(glowl::VertexLayout::Attribute(attrib.component_cnt,
                             MeshDataAccessCollection::convertToGLType(attrib.component_type), GL_FALSE /*ToDO*/,
-                            attrib.offset)}));
-
-                    // TODO vb_iterators
-                    vb_iterators.push_back({attrib.data, attrib.data + attrib.byte_size});
+                            attrib.offset));
+                    }
                 }
 
-                m_mesh_collection.first->addMesh(mesh.first, vb_layouts, vb_iterators, ib_iterators,
-                    MeshDataAccessCollection::convertToGLType(mesh.second.indices.type), GL_STATIC_DRAW, primtive_type);
-                m_mesh_collection.second.push_back(mesh.first);
+                try {
+                    m_mesh_collection.first->addMesh(mesh.first, vb_layouts, vb_iterators, ib_iterators,
+                        MeshDataAccessCollection::convertToGLType(mesh.second.indices.type), GL_STATIC_DRAW,
+                        primtive_type);
+                    m_mesh_collection.second.push_back(mesh.first);
+                } catch (glowl::MeshException const& exc) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "Failed to add GPU mesh \"%s\": %s. [%s, %s, line %d]\n", mesh.first.c_str(), exc.what(),
+                        __FILE__, __FUNCTION__, __LINE__);
+
+                } catch (glowl::BufferObjectException const& exc) {
+                    megamol::core::utility::log::Log::DefaultLog.WriteError(
+                        "Failed to add GPU mesh \"%s\": %s. [%s, %s, line %d]\n", mesh.first.c_str(), exc.what(),
+                        __FILE__, __FUNCTION__, __LINE__);
+                }
+                
             }
         }
 
