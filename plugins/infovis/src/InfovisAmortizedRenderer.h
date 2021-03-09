@@ -77,6 +77,7 @@ namespace infovis {
         GLuint pushImage = 0;
         GLuint imageArrayA = 0;
         GLuint ssboMatrices = 0;
+        GLuint imStoreArray = 0;
         GLuint imStoreA = 0;
         GLuint imStoreB = 0;
         int frametype = 0;

@@ -155,6 +155,7 @@ void InfovisAmortizedRenderer::setupBuffers() {
     glGenTextures(1, &imageArrayA);
     glGenTextures(1, &msImageArray);
     glGenTextures(1, &pushImage);
+    glGenTextures(1, &imStoreArray);
     glGenTextures(1, &imStoreA);
     glGenTextures(1, &imStoreB);
     glGenBuffers(1, &ssboMatrices);
@@ -185,6 +186,14 @@ void InfovisAmortizedRenderer::setupBuffers() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+
+    glBindTexture(GL_TEXTURE_2D_ARRAY, imStoreArray);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, 1, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
 
     glBindTexture(GL_TEXTURE_2D, imStoreA);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -388,6 +397,9 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
                     glm::fvec3((-1.0 * (float) a - 1.0 - 2.0 * i) / w, ((float) a - 1.0 - 2.0 * j) / h, 0.0);
             }
         }
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, imStoreArray);
+        glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA32F, w, h, 2);
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, imStoreA);
         glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
@@ -432,6 +444,11 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
             glBindTexture(GL_TEXTURE_2D, imStoreB);
             glBindImageTexture(6, imStoreB, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
             glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("StoreB"), 6);
+
+            glActiveTexture(GL_TEXTURE4);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, imStoreArray);
+            glBindImageTexture(4, imStoreArray, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
+            glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("StoreArray"), 4);
         }
         glUniformMatrix4fv(pc_reconstruction_shdr_array[approach]->ParameterLocation("moveM"), 1, GL_FALSE,
             &movePush[0][0]);
