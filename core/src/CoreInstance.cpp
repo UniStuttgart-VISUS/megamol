@@ -151,13 +151,6 @@ megamol::core::CoreInstance::CoreInstance(void)
     , all_call_descriptions()
     , all_module_descriptions()
     , parameterHash(1) {
-    megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
-    megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
-#ifdef _DEBUG
-    megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
-#else
-    megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ERROR);
-#endif
 
 #ifdef ULTRA_SOCKET_STARTUP
     vislib::net::Socket::Startup();
@@ -292,6 +285,15 @@ void megamol::core::CoreInstance::Initialise(bool mmconsole_frontend_compatible)
 
     // logging mechanism
     if (mmconsole_frontend_compatible) {
+
+        megamol::core::utility::log::Log::DefaultLog.SetLogFileName(static_cast<const char*>(NULL), false);
+        megamol::core::utility::log::Log::DefaultLog.SetLevel(megamol::core::utility::log::Log::LEVEL_ALL);
+#ifdef _DEBUG
+        megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
+#else
+        megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ERROR);
+#endif
+
         if (this->preInit->IsLogEchoLevelSet()) {
             megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(this->preInit->GetLogEchoLevel());
             this->config.logEchoLevelLocked = true;
