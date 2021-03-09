@@ -332,7 +332,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
                 cli_options_from_configs.push_back({loong(o),v})
 
     auto make_option_callback = [&](std::string const& optname, bool file_check = false) {
-        return [&](std::string const& value) {
+        return [file_check, optname, &cli_options_from_configs](std::string const& value) {
             sane(value);
             if (file_check) {
                 file_exists(value);
