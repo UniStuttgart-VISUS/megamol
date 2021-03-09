@@ -1,5 +1,9 @@
 print("Default MegaMol Frontend 3000 Configuration:")
 
+-- You can provide your personal MegaMol configuration file in ~/.megamol_config.lua
+-- It will overwrite this MegaMol Default Configuration
+-- but will be overwritten by Configuration files passed via CLI
+
 -- All Config files provided by CLI via --config (or -c)
 -- get interpreted by Lua in the given order
 --
