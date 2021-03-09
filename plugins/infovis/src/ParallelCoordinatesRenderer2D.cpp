@@ -1193,30 +1193,26 @@ void ParallelCoordinatesRenderer2D::setupAccel(int approach, int ow, int oh, int
             invMatrices.resize(framesNeeded);
             moveMatrices.resize(framesNeeded);
         }
-        
+
         glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
 
         float factor = this->testingFloat.Param<core::param::FloatParam>()->Value();
         glm::mat4 jit;
         glm::mat4 pmvm = pm * mvm;
         if (frametype == 0) {
-            jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(-1.0 / ow, 1.0 / oh, 0));
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / ow, 1.0 / oh, 0));
             invMatrices[frametype] = jit * pmvm;
         }
         if (frametype == 1) {
-            jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(1.0 / ow, 1.0 / oh, 0));
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / ow, 1.0 / oh, 0));
             invMatrices[frametype] = jit * pmvm;
         }
         if (frametype == 2) {
-            jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(-1.0 / ow, -1.0 / oh, 0));
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / ow, -1.0 / oh, 0));
             invMatrices[frametype] = jit * pmvm;
         }
         if (frametype == 3) {
-            jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(1.0 / ow, -1.0 / oh, 0));
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / ow, -1.0 / oh, 0));
             invMatrices[frametype] = jit * pmvm;
         }
 
@@ -1266,20 +1262,16 @@ void ParallelCoordinatesRenderer2D::setupAccel(int approach, int ow, int oh, int
         glm::mat4 jit;
         glm::mat4 pmvm = pm * mvm;
         if (frametype == 0) {
-            jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(-2.0 / ow, 2.0 / oh, 0));
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0 / ow, 2.0 / oh, 0));
         }
         if (frametype == 1) {
-            jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(0 / ow, 2.0 / oh, 0));
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3(0 / ow, 2.0 / oh, 0));
         }
         if (frametype == 2) {
-            jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(-2.0 / ow, 0 / oh, 0));
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3(-2.0 / ow, 0 / oh, 0));
         }
         if (frametype == 3) {
-            jit = glm::translate(
-                glm::mat4(1.0f), glm::vec3(0.0 / ow, 0 / oh, 0));
+            jit = glm::translate(glm::mat4(1.0f), glm::vec3(0.0 / ow, 0 / oh, 0));
         }
         invMatrices[frametype] = jit * pmvm;
         for (int i = 0; i < framesNeeded; i++)
@@ -1334,32 +1326,24 @@ void ParallelCoordinatesRenderer2D::setupAccel(int approach, int ow, int oh, int
         glm::mat4 pmvm = pm * mvm;
         int f = floor(frametype / 4);
         if (frametype % 4 == 0) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x - 1) / ow,
-                                                      (hammerPositions[f].y + 1) / oh, 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / ow,
-                                                                         1.0 / oh, 0)) *
-                                     pmvm;
+            jit = glm::translate(
+                glm::mat4(1.0f), glm::vec3((hammerPositions[f].x - 1) / ow, (hammerPositions[f].y + 1) / oh, 0));
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / ow, 1.0 / oh, 0)) * pmvm;
         }
         if (frametype % 4 == 1) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x + 1) / ow,
-                                                      (hammerPositions[f].y + 1) / oh, 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / ow,
-                                                                         1.0 / oh, 0)) *
-                                     pmvm;
+            jit = glm::translate(
+                glm::mat4(1.0f), glm::vec3((hammerPositions[f].x + 1) / ow, (hammerPositions[f].y + 1) / oh, 0));
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / ow, 1.0 / oh, 0)) * pmvm;
         }
         if (frametype % 4 == 2) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x - 1) / ow,
-                                                      (hammerPositions[f].y - 1) / oh, 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / ow,
-                                                                         -1.0 / oh, 0)) *
-                                     pmvm;
+            jit = glm::translate(
+                glm::mat4(1.0f), glm::vec3((hammerPositions[f].x - 1) / ow, (hammerPositions[f].y - 1) / oh, 0));
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0 / ow, -1.0 / oh, 0)) * pmvm;
         }
         if (frametype % 4 == 3) {
-            jit = glm::translate(glm::mat4(1.0f), glm::vec3((hammerPositions[f].x + 1) / ow,
-                                                      (hammerPositions[f].y - 1) / oh, 0));
-            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / ow,
-                                                                         -1.0 / oh, 0)) *
-                                     pmvm;
+            jit = glm::translate(
+                glm::mat4(1.0f), glm::vec3((hammerPositions[f].x + 1) / ow, (hammerPositions[f].y - 1) / oh, 0));
+            invMatrices[frametype] = glm::translate(glm::mat4(1.0f), glm::vec3(1.0 / ow, -1.0 / oh, 0)) * pmvm;
         }
         glm::mat4 invM = glm::inverse(pmvm);
         for (int i = 0; i < framesNeeded; i++)
@@ -1613,7 +1597,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2D& call) {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     glDepthMask(GL_TRUE);
 
-   doReconstruction(approach, w, h, ssLevel);
+    doReconstruction(approach, w, h, ssLevel);
 
     return true;
 }

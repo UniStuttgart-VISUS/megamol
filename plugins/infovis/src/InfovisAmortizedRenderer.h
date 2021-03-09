@@ -6,8 +6,8 @@
 #include "mmcore/view/Renderer2DModule.h"
 #include "vislib/graphics/gl/FramebufferObject.h"
 
-#include "glowl/FramebufferObject.hpp"
 #include "glm/matrix.hpp"
+#include "glowl/FramebufferObject.hpp"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
@@ -30,7 +30,7 @@ namespace infovis {
             return "Amortized Renderer.\n"
                    "Amortizes following Renderers to improve response time\n";
         }
-        
+
 
         static inline bool IsAvailable(void) {
             return true;
@@ -99,7 +99,7 @@ namespace infovis {
         glm::mat4 movePush;
         glm::mat4 lastPmvm;
 
-         float backgroundColor[4];
+        float backgroundColor[4];
 
         megamol::core::CallerSlot nextRendererSlot;
         core::param::ParamSlot halveRes;
