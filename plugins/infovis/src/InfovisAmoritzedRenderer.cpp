@@ -155,6 +155,8 @@ void InfovisAmortizedRenderer::setupBuffers() {
     glGenTextures(1, &imageArrayA);
     glGenTextures(1, &msImageArray);
     glGenTextures(1, &pushImage);
+    glGenTextures(1, &imStoreA);
+    glGenTextures(1, &imStoreB);
     glGenBuffers(1, &ssboMatrices);
 
     glBindFramebuffer(GL_FRAMEBUFFER, amortizedMsaaFboA);
@@ -180,6 +182,16 @@ void InfovisAmortizedRenderer::setupBuffers() {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_FLOAT, 0);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+
+    glBindTexture(GL_TEXTURE_2D, imStoreA);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+
+    glBindTexture(GL_TEXTURE_2D, imStoreB);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
@@ -282,6 +294,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
         glActiveTexture(GL_TEXTURE10);
         glBindTexture(GL_TEXTURE_2D, pushImage);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, pushImage, 0);
     }
 
     glClear(GL_COLOR_BUFFER_BIT);
@@ -375,6 +388,12 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
                     glm::fvec3((-1.0 * (float) a - 1.0 - 2.0 * i) / w, ((float) a - 1.0 - 2.0 * j) / h, 0.0);
             }
         }
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, imStoreA);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, imStoreB);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
     }
 }
 
@@ -403,6 +422,17 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
             glUniformMatrix4fv(pc_reconstruction_shdr_array[approach]->ParameterLocation("moveMatrices"), 4,
                 GL_FALSE, &moveMatrices[0][0][0]);
         }
+        if (approach == 6) {
+            glActiveTexture(GL_TEXTURE5);
+            glBindTexture(GL_TEXTURE_2D, imStoreA);
+            glBindImageTexture(5, imStoreA, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
+            glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("StoreA"), 5);
+
+            glActiveTexture(GL_TEXTURE6);
+            glBindTexture(GL_TEXTURE_2D, imStoreB);
+            glBindImageTexture(6, imStoreB, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
+            glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("StoreB"), 6);
+        }
         glUniformMatrix4fv(pc_reconstruction_shdr_array[approach]->ParameterLocation("moveM"), 1, GL_FALSE,
             &movePush[0][0]);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboMatrices);
@@ -414,7 +444,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pc_reconstruction_shdr_array[approach]->Disable();
 
-        frametype = (frametype + 1) % framesNeeded; 
+        frametype = (frametype + 1) % framesNeeded;
 }
 
 bool InfovisAmortizedRenderer::Render(core::view::CallRender2D& call) {

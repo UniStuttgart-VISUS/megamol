@@ -1,8 +1,8 @@
 //#version 440
 uniform sampler2D src_tex2D;
 
-layout (binding=0, rgba32f) uniform image2D StoreA;
-layout (binding=1, rgba32f) uniform image2D StoreB;
+layout (binding=5, rgba32f) uniform image2D StoreA;
+layout (binding=6, rgba32f) uniform image2D StoreB;
 
 uniform int frametype;
 uniform int h;
@@ -22,14 +22,21 @@ void main()
     vec4 p = vec4(2*uv_coord-vec2(1.0), 0.0, 1.0);
     //int i = (amortLevel * (line+1) - 1 - col);
     ivec2 iCoord = ivec2(int(uv_coord.x * w), int(uv_coord.y * h));
+    vec2 moveP = (moveM * p).xy;
+    ivec2 movedICoord = ivec2((moveP.x / 2 + 0.5) * w , (moveP.y / 2 + 0.5) * h);
     int i = (amortLevel * line + col);
-    //movewrite
-    imageStore(StoreA, iCoord, imageLoad(StoreB, ivec2(w, h) * ivec2(0.5 * (moveM * p).xy + vec2(0.5))) );
-    if (i == frametype){
-        imageStore(StoreA, iCoord, texture(src_tex2D, p.xy));
+
+    if(frametype % 2 == 0){
+        imageStore(StoreA, iCoord, imageLoad(StoreB, movedICoord));
+        if(frametype == i){
+            imageStore(StoreA, iCoord, texture(src_tex2D, uv_coord));
+        }
+        frag_out = imageLoad(StoreA, iCoord);
     }else{
-        frag_out = vec4(0,0,0.40,1);
-    }//frag_out = vec4(0.2, 0.2, 0.2, 1);
-    frag_out = imageLoad(StoreA, iCoord);
-    imageStore(StoreB, iCoord, imageLoad(StoreA, iCoord));
+        imageStore(StoreB, iCoord, imageLoad(StoreA, movedICoord));
+        if(frametype == i){
+            imageStore(StoreB, iCoord, texture(src_tex2D, uv_coord));
+        }
+        frag_out = imageLoad(StoreB, iCoord);
+    }
 }
