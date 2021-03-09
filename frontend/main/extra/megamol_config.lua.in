@@ -1,5 +1,9 @@
 print("Default MegaMol Frontend 3000 Configuration:")
 
+-- You can provide your personal MegaMol configuration file in ~/.megamol_config.lua
+-- It will overwrite this MegaMol Default Configuration
+-- but will be overwritten by Configuration files passed via CLI
+
 -- All Config files provided by CLI via --config (or -c)
 -- get interpreted by Lua in the given order
 --
@@ -24,7 +28,7 @@ print("Default MegaMol Frontend 3000 Configuration:")
 --   mmLoadProject(string file_path)
 
 -- Global values are key-value pairs accessible to services and modules 
--- via the RuntimeConfig frontend resource.
+-- via the GlobalValueStore frontend resource.
 -- The key and value strings must not contain space, = or : characters
 mmSetGlobalValue("MegaMol", "Frontend3000") -- CLI: --global=MegaMol:Frontend3000
  
