@@ -188,7 +188,7 @@ void ElementSampling::doScalarSampling(const std::vector<std::vector<Surface_mes
                 }
             }
 
-            value /= nb_inside;
+            value = nb_inside > 0 ? value / nb_inside : value;
             samples->samples[i] = value;
 
             min_value = std::min(min_value, value);

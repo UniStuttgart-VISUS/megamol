@@ -157,11 +157,11 @@ bool ElementSampling::getData(core::Call& call) {
         //        this->doScalarSampling<double>(_elements, data, raw_positions);
 
         //} else
-        if (cd->getData(var_str)->getType() == "float") {
-            std::vector<float> data = cd->getData(var_str)->GetAsFloat();
-            placeProbes(_elements);
-            doScalarSampling(_elements, data, raw_positions);
-        }
+        //if (cd->getData(var_str)->getType() == "float") {
+        std::vector<float> data = cd->getData(var_str)->GetAsFloat();
+        placeProbes(_elements);
+        doScalarSampling(_elements, data, raw_positions);
+        //}
     } 
 
 
