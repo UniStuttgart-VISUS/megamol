@@ -423,13 +423,6 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
             return;
         }
     }
-    this->_fbo->Enable();
-    auto bgcol = this->BkgndColour();
-    this->utils.SetBackgroundColor(bgcol);
-    glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
-    glClearDepth(1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    this->_fbo->Disable();
 
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     if (auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call)) {
@@ -475,15 +468,18 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     // Actual Rendering -------------------------------------------------------
 
     // Set letter box background ----------------------------------------------
+    auto bgcol = this->BkgndColour();
+    this->utils.SetBackgroundColor(bgcol);
     bgcol = this->utils.Color(CinematicUtils::Colors::LETTER_BOX);
     this->utils.SetBackgroundColor(bgcol);
-    glClearColor(bgcol.r, bgcol.g, bgcol.b, 0.0);
+    glClearColor(bgcol.r, bgcol.g, bgcol.b, 0.0f);
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
 
     // Push fbo texture -------------------------------------------------------
+    /*
     float right = (vp_fw + static_cast<float>(texWidth)) / 2.0f;
     float left = (vp_fw - static_cast<float>(texWidth)) / 2.0f;
     float bottom = (vp_fh_reduced + static_cast<float>(texHeight)) / 2.0f;
@@ -492,8 +488,12 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     glm::vec3 pos_upper_left = {left, up, 0.0f};
     glm::vec3 pos_upper_right = {right, up, 0.0f};
     glm::vec3 pos_bottom_right = {right, bottom, 0.0f};
-    this->utils.Push2DColorTexture(
-        this->_fbo->GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
+    glm::vec4 color = {1.0f, 1.0f, 1.0f, 1.0f};
+    this->utils.Push2DColorTexture(this->_fbo->GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right,
+        pos_bottom_right, true);
+    */
+
+    this->_fbo->DrawColourTexture();
 
     // Push menu --------------------------------------------------------------
     std::string leftLabel = " CINEMATIC ";

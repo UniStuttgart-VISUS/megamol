@@ -142,6 +142,8 @@ void TimeLineRenderer::release(void) {
 
 bool TimeLineRenderer::GetExtents(view::CallRender2DGL& call) {
 
+    call.AccessBoundingBoxes().SetBoundingBox(0.0f, 0.0f, 0.0f, this->viewport.x, this->viewport.y, 0.0f);
+
     return true;
 }
 
@@ -154,8 +156,6 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     glm::vec2 currentViewport;
     currentViewport.x = cam.resolution_gate().width();
     currentViewport.y = cam.resolution_gate().height();
-    call.AccessBoundingBoxes().SetBoundingBox(
-        cam.image_tile().left(), cam.image_tile().bottom(), 0, cam.image_tile().right(), cam.image_tile().top(), 0);
     if (currentViewport != this->viewport) {
         this->viewport = currentViewport;
         // Set axes position depending on font size
@@ -448,6 +448,8 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     this->utils.PushMenu(leftLabel, midLabel, rightLabel, this->viewport.x, this->viewport.y);
 
     // Draw all ---------------------------------------------------------------
+    glClearDepth(1.0f);
+    glClear(GL_DEPTH_BUFFER_BIT);
     this->utils.DrawAll(ortho, this->viewport);
 
 	return true;
