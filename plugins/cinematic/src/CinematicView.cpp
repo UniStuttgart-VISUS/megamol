@@ -44,6 +44,7 @@ CinematicView::CinematicView(void)
               "cinematic::addSBSideToName", "Toggle whether skybox side should be added to output filename")
         , eyeParam("cinematic::stereo_eye", "Select eye position (for stereo view).")
         , projectionParam("cinematic::stereo_projection", "Select camera projection.")
+        , cinematic_fbo(nullptr)
         , png_data()
         , utils()
         , deltaAnimTime(clock())
@@ -126,19 +127,28 @@ CinematicView::CinematicView(void)
     this->projectionParam << pep;
     this->MakeSlotAvailable(&this->projectionParam);
     pep = nullptr;
+
+    this->cinematic_fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
 }
 
 
 CinematicView::~CinematicView(void) {
 
     this->render_to_file_cleanup();
-    if (this->_fbo != nullptr) {
-        this->_fbo->Release();
+    if (this->cinematic_fbo != nullptr) {
+        this->cinematic_fbo->Release();
     }
 }
 
 
 void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call) {
+
+    if (this->cinematic_fbo == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "[CINEMATIC VIEW] [Render] Failed to create frambuffer object. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
+            __LINE__);
+        return;
+    }
 
     // Get update data from keyframe keeper -----------------------------------
     auto cr3d = this->_rhsRenderSlot.CallAs<core::view::CallRender3DGL>();
@@ -272,8 +282,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     animTimeParam->Param<param::FloatParam>()->SetValue(simTime * static_cast<float>(cr3d->TimeFramesCount()), true);
 
     // Viewport ---------------------------------------------------------------
-    /// Viewport of camera will only be set when Base::Render(context) was called, so we have tot grab it from OpenGL
-    /// (!?)
+    /// Viewport of camera will only be set when Base::Render(context) was called, so we have to grab it from OpenGL
     glm::ivec4 viewport;
     glGetIntegerv(GL_VIEWPORT, glm::value_ptr(viewport));
     const int vp_iw = viewport[2];
@@ -415,11 +424,10 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     }
 
     // Render to texture ------------------------------------------------------------
-    auto bgcol = this->BkgndColour();
-
-    if (!this->_fbo->IsValid() || (this->_fbo->GetWidth() != fboWidth) || (this->_fbo->GetHeight() != fboHeight)) {
-        if (!this->_fbo->Create(fboWidth, fboHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT24)) {
+    if (!this->cinematic_fbo->IsValid() || (this->cinematic_fbo->GetWidth() != fboWidth) ||
+        (this->cinematic_fbo->GetHeight() != fboHeight)) {
+        if (!this->cinematic_fbo->Create(fboWidth, fboHeight, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT)) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[CINEMATIC VIEW] Unable to create image framebuffer object. [%s, %s, line %d]\n ", __FILE__,
                 __FUNCTION__, __LINE__);
@@ -429,7 +437,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
 
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     if (auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call)) {
-        gpu_call->SetFramebufferObject(this->_fbo);
+        gpu_call->SetFramebufferObject(this->cinematic_fbo);
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "CallRenderViewGL required to set framebuffer object. [%s, %s, line %d]\n ", __FILE__, __FUNCTION__,
@@ -439,10 +447,6 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
 
     // Call Render-Function of parent View3DGL
     Base::Render(context, call);
-
-    if (this->_fbo->IsEnabled()) {
-        this->_fbo->Disable();
-    }
 
     auto err = glGetError();
     if (err != GL_NO_ERROR) {
@@ -469,16 +473,16 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     }
 
     // Actual Rendering -------------------------------------------------------
-
+  
     // Set letter box background ----------------------------------------------
+    auto bgcol = this->BkgndColour();
     this->utils.SetBackgroundColor(bgcol);
     bgcol = this->utils.Color(CinematicUtils::Colors::LETTER_BOX);
     this->utils.SetBackgroundColor(bgcol);
     glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
+    glViewport(0, 0, vp_fw, vp_fh);
 
     // Push fbo texture -------------------------------------------------------
     float right = (vp_fw + static_cast<float>(texWidth)) / 2.0f;
@@ -489,9 +493,9 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     glm::vec3 pos_upper_left = {left, up, 0.0f};
     glm::vec3 pos_upper_right = {right, up, 0.0f};
     glm::vec3 pos_bottom_right = {right, bottom, 0.0f};
-    glm::vec4 color = {1.0f, 1.0f, 1.0f, 1.0f};
-    this->utils.Push2DColorTexture(this->_fbo->GetColourTextureID(), pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right);
-
+    this->utils.Push2DColorTexture(this->cinematic_fbo->GetColourTextureID(), pos_bottom_left, pos_upper_left,
+        pos_upper_right, pos_bottom_right, false, glm::vec4(0.0f), true);
+    
     // Push menu --------------------------------------------------------------
     std::string leftLabel = " CINEMATIC ";
     std::string midLabel = "";
@@ -504,7 +508,14 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     this->utils.PushMenu(leftLabel, midLabel, rightLabel, vp_fw, vp_fh);
 
     // Draw 2D ----------------------------------------------------------------
+    glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
     this->utils.DrawAll(ortho, glm::vec2(vp_fw, vp_fh));
+
+    err = glGetError();
+    if (err != GL_NO_ERROR) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
+    }
 }
 
 
@@ -660,7 +671,7 @@ bool CinematicView::render_to_file_write() {
         png_set_IHDR(this->png_data.structptr, this->png_data.infoptr, this->png_data.width, this->png_data.height, 8,
             PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
-        if (this->_fbo->GetColourTexture(this->png_data.buffer, 0, GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
+        if (this->cinematic_fbo->GetColourTexture(this->png_data.buffer, 0, GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
             throw vislib::Exception(
                 "[CINEMATIC VIEW] [render_to_file_write] Unable to read color texture. ", __FILE__, __LINE__);
         }

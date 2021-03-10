@@ -117,6 +117,7 @@ view::AbstractView::AbstractView(void)
     this->_bkgndCol[0] = 0.0f;
     this->_bkgndCol[1] = 0.0f;
     this->_bkgndCol[2] = 0.125f;
+    this->_bkgndCol[3] = 0.0f; //!
 
     this->_bkgndColSlot << new param::ColorParam(this->_bkgndCol[0], this->_bkgndCol[1], this->_bkgndCol[2], 1.0f);
     this->MakeSlotAvailable(&this->_bkgndColSlot);

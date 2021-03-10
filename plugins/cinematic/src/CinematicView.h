@@ -54,12 +54,6 @@ namespace cinematic {
 
         typedef core::view::View3DGL Base;
 
-        std::vector<std::string> requested_lifetime_resources() {
-            auto lifetime_resources = Module::requested_lifetime_resources();
-            lifetime_resources.push_back("MegaMolGraph");
-            return lifetime_resources;
-        }
-
         /**
          * Answer the name of this module.
          *
@@ -139,6 +133,7 @@ namespace cinematic {
             unsigned int          exp_frame_cnt;
         };
 
+        std::shared_ptr<vislib::graphics::gl::FramebufferObject> cinematic_fbo;
         PngData                                 png_data;
         CinematicUtils                          utils;
         clock_t                                 deltaAnimTime;
