@@ -1,6 +1,7 @@
 build/**/*
 build-*/**/*
 build_*/**/*
+out/**/*
 cmake-build-*/**/*
 bin/**/*
 include/**/*
