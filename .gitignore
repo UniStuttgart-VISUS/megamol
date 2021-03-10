@@ -30,3 +30,7 @@ utils/MMPLD/SphereTest.bat
 examples/
 solution/**/*
 deploy/**/*
+
+CMakeSettings.json
+
+.vs/
