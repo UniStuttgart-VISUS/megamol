@@ -248,6 +248,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
                         }
 
                         // Context Menu
+                        ImGui::PushFont(state.canvas.gui_font_ptr);
                         if (ImGui::BeginPopupContextItem()) {
                             state.interact.button_active_uid = this->uid;
 
@@ -268,6 +269,7 @@ void megamol::gui::Call::Draw(megamol::gui::PresentPhase phase, megamol::gui::Gr
 
                             ImGui::EndPopup();
                         }
+                        ImGui::PopFont();
 
                         // Hover Tooltip
                         if (!state.interact.call_show_slots_label) {
