@@ -237,11 +237,12 @@ namespace gui {
 
     /* Data type holding information of graph canvas. */
     typedef struct _canvas_ {
-        ImVec2 position;  // in
-        ImVec2 size;      // in
-        ImVec2 scrolling; // in
-        float zooming;    // in
-        ImVec2 offset;    // in
+        ImVec2 position;      // in
+        ImVec2 size;          // in
+        ImVec2 scrolling;     // in
+        float zooming;        // in
+        ImVec2 offset;        // in
+        ImFont* gui_font_ptr; // in
     } GraphCanvas_t;
 
     enum GraphCoreInterface {

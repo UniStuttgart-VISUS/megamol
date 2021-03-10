@@ -217,7 +217,7 @@ namespace gui {
         // FUNCTIONS --------------------------------------------------------------
 
         void draw_menu(void);
-        void draw_canvas(float child_width);
+        void draw_canvas(float child_width, GraphState_t& state);
         void draw_parameters(float child_width);
 
         void draw_canvas_grid(void);

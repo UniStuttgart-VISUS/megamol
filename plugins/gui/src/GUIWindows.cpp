@@ -2088,9 +2088,10 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
 /// DOCKING
 #if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
         ImGui::MenuItem("Docking", "Shift + Left-Drag", false, false);
-#else
-        ImGui::MenuItem("Docking", nullptr, false, false);
+        ImGui::Separator();
 #endif
+        ImGui::MenuItem("Snap", nullptr, false, false);
+
         if (ImGui::ArrowButton("dock_left", ImGuiDir_Left)) {
             wc.win_position.x = 0.0f;
             wc.buf_set_pos_size = true;
