@@ -11,6 +11,7 @@
 #include "mmcore/MegaMolGraph.h"
 #include "mmcore/thecam/utility/types.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
+#include "mmcore/MegaMolGraph.h"
 
 
 using namespace megamol;
@@ -655,8 +656,7 @@ bool CinematicView::render_to_file_write() {
         }
 
         megamol::core::utility::graphics::ScreenShotComments ssc(project);
-        png_set_text(
-            this->png_data.structptr, this->png_data.infoptr, ssc.GetComments().data(), ssc.GetComments().size());
+        png_set_text(this->png_data.structptr, this->png_data.infoptr, ssc.GetComments().data(), ssc.GetComments().size());
         png_set_IHDR(this->png_data.structptr, this->png_data.infoptr, this->png_data.width, this->png_data.height, 8,
             PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 

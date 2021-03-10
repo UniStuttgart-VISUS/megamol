@@ -194,8 +194,7 @@ bool RenderUtils::InitPrimitiveRendering(megamol::core::utility::ShaderSourceFac
 
     auto err = glGetError();
     if (err != GL_NO_ERROR) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 
@@ -385,11 +384,17 @@ void RenderUtils::drawPrimitives(RenderUtils::Primitives primitive, glm::mat4& m
 
     this->sortPrimitiveQueue(primitive);
 
+    auto err = glGetError();
+    if (err != GL_NO_ERROR) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("OpenGL Error: %i [%s, %s, line %d]\n ",  err, __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
+
     auto texture_id = this->queues[primitive].texture_id;
-    this->buffers[Buffers::POSITION]->rebuffer<std::vector<float>>(this->queues[primitive].position);
-    this->buffers[Buffers::COLOR]->rebuffer<std::vector<float>>(this->queues[primitive].color);
-    this->buffers[Buffers::TEXTURE_COORD]->rebuffer<std::vector<float>>(this->queues[primitive].texture_coord);
-    this->buffers[Buffers::ATTRIBUTES]->rebuffer<std::vector<float>>(this->queues[primitive].attributes);
+    this->buffers[Buffers::POSITION]->rebuffer(this->queues[primitive].position);
+    this->buffers[Buffers::COLOR]->rebuffer(this->queues[primitive].color);
+    this->buffers[Buffers::TEXTURE_COORD]->rebuffer(this->queues[primitive].texture_coord);
+    this->buffers[Buffers::ATTRIBUTES]->rebuffer(this->queues[primitive].attributes);
 
     // Set OpenGL state ----------------------------------------------------
     // Blending

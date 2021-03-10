@@ -8,14 +8,13 @@
 #ifndef ABSTRACT_GPU_RENDER_TASK_DATA_SOURCE_H_INCLUDED
 #define ABSTRACT_GPU_RENDER_TASK_DATA_SOURCE_H_INCLUDED
 #if (defined(_MSC_VER) && (_MSC_VER > 1000))
-#    pragma once
+#pragma once
 #endif /* (defined(_MSC_VER) && (_MSC_VER > 1000)) */
 
 #include "GPURenderTaskCollection.h"
+#include "mesh/MeshCalls.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
-#include "mesh/MeshCalls.h"
-
 #include "mmcore/view/light/CallLight.h"
 
 namespace megamol {
@@ -57,11 +56,15 @@ protected:
      */
     virtual void release();
 
-    void syncRenderTaskCollection(CallGPURenderTaskData* lhs_call);
+    /**
+     * Clears all render tasks
+     */
+    void clearRenderTaskCollection();
 
     /**
-     * Render task collection that is used with a list of indices of all RenderTasks that this module added to the used rt collection.
-     * Needed to delete/update RenderTasks if the rt collection is shared across a chain of rt data sources.
+     * Render task collection that is used with a list of indices of all RenderTasks that this module added to the
+     * used rt collection. Needed to delete/update RenderTasks if the rt collection is shared across a chain of rt
+     * data sources.
      */
     std::pair<std::shared_ptr<GPURenderTaskCollection>, std::vector<std::string>> m_rendertask_collection;
 
@@ -71,15 +74,8 @@ protected:
     /** The slot for querying chained render tasks, i.e. a rhs connection */
     megamol::core::CallerSlot m_renderTask_rhs_slot;
 
-    /** The slot for querying material data, i.e. a rhs connection */
-    megamol::core::CallerSlot m_material_slot;
-
     /** The slot for querying mesh data, i.e. a rhs connection */
     megamol::core::CallerSlot m_mesh_slot;
-
-    /** Slot to retrieve the light information */
-    megamol::core::CallerSlot m_light_slot;
-    size_t m_light_cached_hash;
 };
 
 } // namespace mesh

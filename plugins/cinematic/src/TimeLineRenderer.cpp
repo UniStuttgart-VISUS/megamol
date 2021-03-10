@@ -87,17 +87,6 @@ bool TimeLineRenderer::create(void) {
     }
 
     // Load texture
-    vislib::StringA shortfilename = "arrow.png";
-    auto fullfilename =
-        megamol::core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), shortfilename);
-    if (!this->utils.LoadTextureFromFile(this->texture_id, std::wstring(fullfilename.PeekBuffer()))) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
-        return false;
-    }
-
-    /* XXX
     std::string texture_shortfilename = "arrow.png";
     bool loaded_texture = false;
     if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
@@ -113,8 +102,8 @@ bool TimeLineRenderer::create(void) {
             auto resource_directories =
                 resource_it->getResource<megamol::frontend_resources::RuntimeConfig>().resource_directories;
             for (auto& resource_directory : resource_directories) {
-                auto found_filepath =
-                    megamol::core::utility::FileUtils::SearchFileRecursive(resource_directory, texture_shortfilename);
+                auto found_filepath = megamol::core::utility::FileUtils::SearchFileRecursive(
+                    resource_directory, texture_shortfilename);
                 if (!found_filepath.empty()) {
                     texture_filepath = found_filepath;
                 }
@@ -124,12 +113,9 @@ bool TimeLineRenderer::create(void) {
     }
 
     if (!loaded_texture) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
-            __LINE__);
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
-    }
-    */
+     }
 
     return true;
 }

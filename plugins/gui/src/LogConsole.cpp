@@ -209,6 +209,7 @@ bool megamol::gui::LogConsole::connect_log(void) {
     /// connected and the taget is not the default OfflineTarget.
     if ((offline_echo_target != nullptr) && (this->echo_log_target != nullptr)) {
         megamol::core::utility::log::Log::DefaultLog.SetEchoTarget(this->echo_log_target);
+        megamol::core::utility::log::Log::DefaultLog.SetEchoLevel(megamol::core::utility::log::Log::LEVEL_ALL);
     }
 
     return true;

@@ -29,8 +29,6 @@
 #include "mmcore/CallerSlot.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/LuaAPI.h"
-#include "mmcore/utility/Configuration.h"
-#include "mmcore/utility/log/Log.h"
 #include "mmcore/utility/sys/SystemInformation.h"
 #include "mmcore/view/AbstractView_EventConsumption.h"
 #include "vislib/UTF8Encoder.h"
@@ -46,20 +44,24 @@
 /*****************************************************************************/
 
 // clang-format off
-#define MMC_LUA_MMGETBITHWIDTH "mmGetBitWidth"
-#define MMC_LUA_MMGETCONFIGURATION "mmGetConfiguration"
-#define MMC_LUA_MMGETOS "mmGetOS"
-#define MMC_LUA_MMGETMACHINENAME "mmGetMachineName"
+#define MMC_LUA_MMSETCLIOPTION "mmSetCliOption"
 #define MMC_LUA_MMSETAPPDIR "mmSetAppDir"
-#define MMC_LUA_MMADDSHADERDIR "mmAddShaderDir"
 #define MMC_LUA_MMADDRESOURCEDIR "mmAddResourceDir"
-#define MMC_LUA_MMPLUGINLOADERINFO "mmPluginLoaderInfo"
-#define MMC_LUA_MMGETMODULEPARAMS "mmGetModuleParams"
+#define MMC_LUA_MMADDSHADERDIR "mmAddShaderDir"
 #define MMC_LUA_MMSETLOGFILE "mmSetLogFile"
 #define MMC_LUA_MMSETLOGLEVEL "mmSetLogLevel"
 #define MMC_LUA_MMSETECHOLEVEL "mmSetEchoLevel"
-#define MMC_LUA_MMSETCONFIGVALUE "mmSetConfigValue"
-#define MMC_LUA_MMGETCONFIGVALUE "mmGetConfigValue"
+#define MMC_LUA_MMLOADPROJECT "mmLoadProject"
+#define MMC_LUA_MMSETGLOBALVALUE "mmSetGlobalValue"
+#define MMC_LUA_MMGETGLOBALVALUE "mmGetGlobalValue"
+
+#define MMC_LUA_MMGETENVVALUE "mmGetEnvValue"
+#define MMC_LUA_MMGETCOMPILEMODE "mmGetCompileMode"
+#define MMC_LUA_MMGETBITHWIDTH "mmGetBitWidth"
+#define MMC_LUA_MMGETOS "mmGetOS"
+#define MMC_LUA_MMGETMACHINENAME "mmGetMachineName"
+#define MMC_LUA_MMPLUGINLOADERINFO "mmPluginLoaderInfo"
+#define MMC_LUA_MMGETMODULEPARAMS "mmGetModuleParams"
 #define MMC_LUA_MMGETPROCESSID "mmGetProcessID"
 #define MMC_LUA_MMGETPARAMDESCRIPTION "mmGetParamDescription"
 #define MMC_LUA_MMGETPARAMVALUE "mmGetParamValue"
@@ -78,7 +80,6 @@
 #define MMC_LUA_MMLISTCALLS "mmListCalls"
 #define MMC_LUA_MMLISTRESOURCES "mmListResources"
 #define MMC_LUA_MMLISTINSTANTIATIONS "mmListInstantiations"
-#define MMC_LUA_MMGETENVVALUE "mmGetEnvValue"
 #define MMC_LUA_MMQUIT "mmQuit"
 #define MMC_LUA_MMREADTEXTFILE "mmReadTextFile"
 #define MMC_LUA_MMWRITETEXTFILE "mmWriteTextFile"
@@ -92,25 +93,16 @@
 #define MMC_LUA_MMSETWINDOWPOSITION "mmSetWindowPosition"
 #define MMC_LUA_MMSETFULLSCREEN "mmSetFullscreen"
 #define MMC_LUA_MMSETVSYNC "mmSetVSync"
-
+#define MMC_LUA_MMSETGUISTATE "mmSetGUIState"
+#define MMC_LUA_MMSHOWGUI "mmShowGUI"
+#define MMC_LUA_MMSCALEGUI "mmScaleGUI"
 
 void megamol::core::LuaAPI::commonInit() {
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetEnvValue>(MMC_LUA_MMGETENVVALUE, "(string name)\n\tReturn the value of env variable <name>.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetCompileMode>(MMC_LUA_MMGETCOMPILEMODE, "()\n\tReturns the compilation mode ('debug' or 'release').");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetOS>(MMC_LUA_MMGETOS, "()\n\tReturns the operating system ('windows', 'linux', or 'unknown').");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetBitWidth>(MMC_LUA_MMGETBITHWIDTH, "()\n\tReturns the bit width of the compiled executable.");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetConfiguration>(MMC_LUA_MMGETCONFIGURATION, "()\n\tReturns the configuration ('debug' or 'release').");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetMachineName>(MMC_LUA_MMGETMACHINENAME, "()\n\tReturns the machine name.");
-
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetAppDir>(MMC_LUA_MMSETAPPDIR, "(string dir)\n\tSets the path where the mmconsole.exe is located.");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::AddShaderDir>(MMC_LUA_MMADDSHADERDIR, "(string dir)\n\tAdds a shader/btf search path.");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::AddResourceDir>(MMC_LUA_MMADDRESOURCEDIR, "(string dir)\n\tAdds a resource search path.");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::PluginLoaderInfo>(MMC_LUA_MMPLUGINLOADERINFO, "(string glob, string action)\n\tTell the core how to load plugins. Glob a path and ('include' | 'exclude') it.");
-
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetLogFile>(MMC_LUA_MMSETLOGFILE, "(string path)\n\tSets the full path of the log file.");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetLogLevel>(MMC_LUA_MMSETLOGLEVEL, "(int level)\n\tSets the level of log events to include. Level constants are: LOGINFO, LOGWARNING, LOGERROR.");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetEchoLevel>(MMC_LUA_MMSETECHOLEVEL, "(int level)\n\tSets the level of log events to output to the console (see above).");
-
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetConfigValue>(MMC_LUA_MMSETCONFIGVALUE, "(string name, string value)\n\tSets the config value <name> to <value>.");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetConfigValue>(MMC_LUA_MMGETCONFIGVALUE, "(string name)\n\tGets the value of config value <name>.");
 
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetProcessID>(MMC_LUA_MMGETPROCESSID, "()\n\tReturns the process id of the running MegaMol.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetParamValue>(MMC_LUA_MMSETPARAMVALUE, "(string name, string value)\n\tSet the value of a parameter slot.");
@@ -126,7 +118,6 @@ void megamol::core::LuaAPI::commonInit() {
         "<className>, connection the rightmost CallerSlot starting at <chainStart> and CalleeSlot <to>.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::DeleteCall>(MMC_LUA_MMDELETECALL, "(string from, string to)\n\tDelete the call connecting CallerSlot <from> and CalleeSlot <to>.");
 
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetEnvValue>(MMC_LUA_MMGETENVVALUE, "(string name)\n\tReturn the value of env variable <name>.");
     // TODO: imperative?
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::Quit>(MMC_LUA_MMQUIT, "()\n\tClose the MegaMol instance.");
 
@@ -143,6 +134,10 @@ void megamol::core::LuaAPI::commonInit() {
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetWindowPosition>(MMC_LUA_MMSETWINDOWPOSITION, "(int x, int y)\n\tSet window position to x,y.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetFullscreen>(MMC_LUA_MMSETFULLSCREEN, "(bool fullscreen)\n\tSet window to fullscreen (or restore).");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetVSync>(MMC_LUA_MMSETVSYNC, "(bool state)\n\tSet window VSync off (false) or on (true).");
+
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetGUIState>(MMC_LUA_MMSETGUISTATE, "(string json)\n\tSet GUI state from given 'json' string.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ShowGUI>(MMC_LUA_MMSHOWGUI, "(bool state)\n\Show (true) or hide (false) the GUI.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ScaleGUI>(MMC_LUA_MMSCALEGUI, "(float scale)\n\Set GUI scaling factor.");
 
     if (!imperative_only_) {
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetModuleParams>(MMC_LUA_MMGETMODULEPARAMS, "(string name)\n\tReturns a 0x1-separated list of module name and all parameters."
@@ -167,7 +162,7 @@ void megamol::core::LuaAPI::commonInit() {
 /*
  * megamol::core::LuaAPI::LuaAPI
  */
-megamol::core::LuaAPI::LuaAPI(megamol::core::MegaMolGraph &graph, bool imperativeOnly) : graph_(graph), luaApiInterpreter_(this), imperative_only_(imperativeOnly) {
+megamol::core::LuaAPI::LuaAPI(bool imperativeOnly) : graph_ptr_(nullptr), luaApiInterpreter_(this), imperative_only_(imperativeOnly) {
     this->commonInit();
 }
 
@@ -185,6 +180,37 @@ bool megamol::core::LuaAPI::StateOk() { return true; }
 
 std::string megamol::core::LuaAPI::GetScriptPath(void) { return this->currentScriptPath; }
 
+void megamol::core::LuaAPI::SetScriptPath(std::string const& scriptPath) { this->currentScriptPath = scriptPath; }
+
+void megamol::core::LuaAPI::SetMegaMolGraph(megamol::core::MegaMolGraph& graph) { this->graph_ptr_ = &graph; }
+
+bool megamol::core::LuaAPI::FillConfigFromString(const std::string& script, std::string& result, LuaConfigCallbacks const& config) {
+    this->config_callbacks_ = config;
+
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetCliOption  >(MMC_LUA_MMSETCLIOPTION, "(string name, string value)\n\tSet CLI option to a specific value.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetAppDir     >(MMC_LUA_MMSETAPPDIR, "(string dir)\n\tSets the path where the mmconsole.exe is located.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::AddShaderDir  >(MMC_LUA_MMADDSHADERDIR, "(string dir)\n\tAdds a shader/btf search path.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::AddResourceDir>(MMC_LUA_MMADDRESOURCEDIR, "(string dir)\n\tAdds a resource search path.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetLogFile    >(MMC_LUA_MMSETLOGFILE, "(string path)\n\tSets the full path of the log file.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetLogLevel   >(MMC_LUA_MMSETLOGLEVEL, "(int level)\n\tSets the level of log events to include. Level constants are: LOGINFO, LOGWARNING, LOGERROR.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetEchoLevel  >(MMC_LUA_MMSETECHOLEVEL, "(int level)\n\tSets the level of log events to output to the console (see above).");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetGlobalValue>(MMC_LUA_MMSETGLOBALVALUE, "(string key, string value)\n\tSets the value of name <key> to <value> in the global key-value store.");
+    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::LoadProject   >(MMC_LUA_MMLOADPROJECT, "(string path)\n\tLoad lua (project) file after MegaMol startup.");
+
+    bool execution_result = RunString(script, result);
+
+    luaApiInterpreter_.UnregisterCallback(MMC_LUA_MMSETCLIOPTION);
+    luaApiInterpreter_.UnregisterCallback(MMC_LUA_MMSETAPPDIR);
+    luaApiInterpreter_.UnregisterCallback(MMC_LUA_MMADDSHADERDIR);
+    luaApiInterpreter_.UnregisterCallback(MMC_LUA_MMADDRESOURCEDIR);
+    luaApiInterpreter_.UnregisterCallback(MMC_LUA_MMSETLOGFILE);
+    luaApiInterpreter_.UnregisterCallback(MMC_LUA_MMSETLOGLEVEL);
+    luaApiInterpreter_.UnregisterCallback(MMC_LUA_MMSETECHOLEVEL);
+    luaApiInterpreter_.UnregisterCallback(MMC_LUA_MMSETGLOBALVALUE);
+    luaApiInterpreter_.UnregisterCallback(MMC_LUA_MMLOADPROJECT);
+
+    return execution_result;
+}
 
 bool megamol::core::LuaAPI::RunFile(const std::string& envName, const std::string& fileName, std::string& result) {
     std::ifstream input(fileName, std::ios::in);
@@ -240,13 +266,135 @@ bool megamol::core::LuaAPI::RunString(const std::string& script, std::string& re
 }
 
 
+int megamol::core::LuaAPI::SetAppDir(lua_State* L) {
+    auto p = luaL_checkstring(L, 1);
+
+    if(!config_callbacks_.mmSetAppDir_callback_(p))
+        luaApiInterpreter_.ThrowError("mmSetAppDir: Application directory \"" + std::string(p) + "\" does not exist.");
+
+    return 0;
+}
+
+
+int megamol::core::LuaAPI::AddResourceDir(lua_State* L) {
+    // TODO do we need to make an OS-dependent path here?
+    auto p = luaL_checkstring(L, 1);
+
+    if(!config_callbacks_.mmAddResourceDir_callback_(p))
+        luaApiInterpreter_.ThrowError("mmAddResourceDir: Resource directory \"" + std::string(p) + "\" does not exist.");
+
+    return 0;
+}
+
+
+int megamol::core::LuaAPI::AddShaderDir(lua_State* L) {
+    // TODO do we need to make an OS-dependent path here?
+    auto p = luaL_checkstring(L, 1);
+
+    if(!config_callbacks_.mmAddShaderDir_callback_(p))
+        luaApiInterpreter_.ThrowError("mmAddShaderDir: Shader directory \"" + std::string(p) + "\" does not exist.");
+
+    return 0;
+}
+
+
+int megamol::core::LuaAPI::SetLogFile(lua_State* L) {
+    auto p = luaL_checkstring(L, 1);
+
+    config_callbacks_.mmSetLogFile_callback_(p);
+
+    return 0;
+}
+
+
+int megamol::core::LuaAPI::SetLogLevel(lua_State* L) {
+    auto l = luaL_checkstring(L, 1);
+
+    unsigned int result = 0;
+    try {
+        if (std::string(l).find_first_of("0123456789") != std::string::npos) {
+            result = std::stoi(l);
+
+            if(result < 0)
+                throw std::exception();
+        }
+        else {
+            result = parseLevelAttribute(l);
+        }
+
+        config_callbacks_.mmSetLogLevel_callback_(std::to_string(result));
+    }
+    catch (...) {
+        luaApiInterpreter_.ThrowError("mmSetLogLevel: Could not parse valid log level string or positive integer from argument \"" + std::string(l) + "\"");
+    }
+
+    return 0;
+}
+
+
+int megamol::core::LuaAPI::SetEchoLevel(lua_State* L) {
+    auto l = luaL_checkstring(L, 1);
+
+    unsigned int result = 0;
+    try {
+        if (std::string(l).find_first_of("0123456789") != std::string::npos) {
+            result = std::stoi(l);
+
+            if(result < 0)
+                throw std::exception();
+        }
+        else {
+            result = parseLevelAttribute(l);
+        }
+
+        config_callbacks_.mmSetEchoLevel_callback_(std::to_string(result));
+    }
+    catch (...) {
+        luaApiInterpreter_.ThrowError("mmSetEchoLevel: Could not parse valid echo level string or positive integer from argument \"" + std::string(l) + "\"");
+    }
+
+    return 0;
+}
+
+
+int megamol::core::LuaAPI::SetGlobalValue(lua_State* L) {
+    auto key = luaL_checkstring(L, 1);
+    auto value = luaL_checkstring(L, 2);
+
+    if(!config_callbacks_.mmSetGlobalValue_callback_(key, value))
+        luaApiInterpreter_.ThrowError("mmSetGlobalValue: Global Key-value pair \n\tkey=" + std::string(key) + "\n\tvalue=" + std::string(value) + "\nnot in valid format. Can not contain space or =");
+
+    return 0;
+}
+
+
+int megamol::core::LuaAPI::SetCliOption(lua_State* L) {
+    auto name = luaL_checkstring(L, 1);
+    auto value = luaL_checkstring(L, 2);
+
+    if(!config_callbacks_.mmSetCliOption_callback_(name, value))
+        luaApiInterpreter_.ThrowError("mmSetCliOption: CLI option \"" + std::string(name) + "\" or value \"" + std::string(value) + "\" not valid.");
+
+    return 0;
+}
+
+int megamol::core::LuaAPI::LoadProject(lua_State* L) {
+    auto f = luaL_checkstring(L, 1);
+
+    if(!config_callbacks_.mmLoadProject_callback_(f))
+        luaApiInterpreter_.ThrowError("mmLoadProject: no such file \"" + std::string(f) + "\"");
+
+    return 0;
+}
+
+
 int megamol::core::LuaAPI::GetBitWidth(lua_State* L) {
     lua_pushinteger(L, vislib::sys::SystemInformation::SelfWordSize());
     return 1;
 }
 
 
-int megamol::core::LuaAPI::GetConfiguration(lua_State* L) {
+int megamol::core::LuaAPI::GetCompileMode(lua_State* L) {
 #ifdef _DEBUG
     lua_pushstring(L, "debug");
 #else
@@ -275,108 +423,6 @@ int megamol::core::LuaAPI::GetOS(lua_State* L) {
 int megamol::core::LuaAPI::GetMachineName(lua_State* L) {
     lua_pushstring(L, vislib::sys::SystemInformation::ComputerNameA());
     return 1;
-}
-
-
-int megamol::core::LuaAPI::SetAppDir(lua_State* L) {
-    // TODO do we need to make an OS-dependent path here?
-    auto p = luaL_checkstring(L, 1);
-    // TODO
-    //this->conf->appDir = vislib::StringW(p);
-    luaApiInterpreter_.ThrowError("Cannot currently change the configuration via Lua!");
-    return 0;
-}
-
-
-int megamol::core::LuaAPI::AddShaderDir(lua_State* L) {
-    // TODO do we need to make an OS-dependent path here?
-    auto p = luaL_checkstring(L, 1);
-    // TODO
-    //this->conf->AddShaderDirectory(p);
-    luaApiInterpreter_.ThrowError("Cannot currently change the configuration via Lua!");
-    return 0;
-}
-
-
-int megamol::core::LuaAPI::AddResourceDir(lua_State* L) {
-    // TODO do we need to make an OS-dependent path here?
-    auto p = luaL_checkstring(L, 1);
-    // TODO
-    //this->conf->AddResourceDirectory(p);
-    luaApiInterpreter_.ThrowError("Cannot currently change the configuration via Lua!");
-    return 0;
-}
-
-
-int megamol::core::LuaAPI::PluginLoaderInfo(lua_State* L) {
-    // TODO do we need to make an OS-dependent path here?
-    auto p = luaL_checkstring(L, 1);
-    auto f = luaL_checkstring(L, 2);
-    std::string a = luaL_checkstring(L, 3);
-    bool inc = true;
-    if (iequals(a, "include")) {
-        inc = true;
-    }
-    else if (iequals(a, "exclude")) {
-        inc = false;
-    }
-    else {
-        luaApiInterpreter_.ThrowError("the third parameter of mmPluginLoaderInfo must be 'include' or 'exclude'.");
-    }
-    // TODO
-    //this->conf->AddPluginLoadInfo(vislib::TString(p), vislib::TString(f), inc);
-    luaApiInterpreter_.ThrowError("Cannot currently change the configuration via Lua!");
-    return 0;
-}
-
-
-int megamol::core::LuaAPI::SetLogFile(lua_State* L) {
-    // TODO do we need to make an OS-dependent path here?
-    auto p = luaL_checkstring(L, 1);
-    // TODO
-    //if (!megamol::core::utility::Configuration::logFilenameLocked) {
-    //    if (this->conf->instanceLog != nullptr) {
-    //        this->conf->instanceLog->SetLogFileName(vislib::sys::Path::Resolve(p), USE_LOG_SUFFIX);
-    //    }
-    //}
-    luaApiInterpreter_.ThrowError("Cannot currently change the configuration via Lua!");
-    return 0;
-}
-
-
-int megamol::core::LuaAPI::SetLogLevel(lua_State* L) {
-    auto l = luaL_checkstring(L, 1);
-    // TODO
-    //if (!megamol::core::utility::Configuration::logLevelLocked) {
-    //    if (this->conf->instanceLog != nullptr) {
-    //        this->conf->instanceLog->SetLevel(parseLevelAttribute(l));
-    //    }
-    //}
-    luaApiInterpreter_.ThrowError("Cannot currently change the configuration via Lua!");
-    return 0;
-}
-
-
-int megamol::core::LuaAPI::SetEchoLevel(lua_State* L) {
-    auto l = luaL_checkstring(L, 1);
-    // TODO
-    //if (!megamol::core::utility::Configuration::logEchoLevelLocked) {
-    //    if (this->conf->instanceLog != nullptr) {
-    //        this->conf->instanceLog->SetEchoLevel(parseLevelAttribute(l));
-    //    }
-    //}
-    luaApiInterpreter_.ThrowError("Cannot currently change the configuration via Lua!");
-    return 0;
-}
-
-
-int megamol::core::LuaAPI::SetConfigValue(lua_State* L) {
-    auto name = luaL_checkstring(L, 1);
-    auto value = luaL_checkstring(L, 2);
-    // TODO
-    //this->conf->setConfigValue(name, value);
-    luaApiInterpreter_.ThrowError("Cannot currently change the configuration via Lua!");
-    return 0;
 }
 
 
@@ -439,6 +485,8 @@ int megamol::core::LuaAPI::GetEnvValue(lua_State* L) {
 }
 
 
+// TODO move helper function into Log, such that for a string we get the corresponding Log Level
+// The CLI parser will benefit form this, so the user can also provide the shorthand notation via CLI
 UINT megamol::core::LuaAPI::parseLevelAttribute(const std::string attr) {
     UINT retval = megamol::core::utility::log::Log::LEVEL_ERROR;
     if (iequals(attr, "error")) {
@@ -469,12 +517,9 @@ UINT megamol::core::LuaAPI::parseLevelAttribute(const std::string attr) {
         retval = megamol::core::utility::log::Log::LEVEL_ALL;
     }
     else {
-        try {
-            retval = std::stoi(attr);
-        }
-        catch (...) {
-            retval = megamol::core::utility::log::Log::LEVEL_ERROR;
-        }
+        retval = std::stoi(attr);
+        // dont catch stoi exceptions
+        // let exception be handled by the one who called me
     }
     return retval;
 }
@@ -492,6 +537,7 @@ int megamol::core::LuaAPI::GetProcessID(lua_State* L) {
     return 1;
 }
 
+#define graph_ (*graph_ptr_)
 
 int megamol::core::LuaAPI::GetModuleParams(lua_State* L) {
     const auto *moduleName = luaL_checkstring(L, 1);
@@ -608,7 +654,7 @@ int megamol::core::LuaAPI::CreateParamGroup(lua_State* L) {
     auto groupName = luaL_checkstring(L, 1);
     auto groupSize = luaL_checkinteger(L, 2);
 
-    this->graph_.Convenience().CreateParameterGroup(groupName);
+    graph_.Convenience().CreateParameterGroup(groupName);
     // groupSize is ignored because why do we need it?
 
     return 0;
@@ -632,7 +678,7 @@ int megamol::core::LuaAPI::SetParamGroupValue(lua_State* L) {
         luaApiInterpreter_.ThrowError(out.str());
     };
 
-    auto groupPtr = this->graph_.Convenience().FindParameterGroup(paramGroup);
+    auto groupPtr = graph_.Convenience().FindParameterGroup(paramGroup);
     if (!groupPtr) {
         errorMsg();
         return 0;
@@ -658,7 +704,7 @@ int megamol::core::LuaAPI::ApplyParamGroupValues(lua_State* L) {
         luaApiInterpreter_.ThrowError(out.str());
     };
 
-    auto groupPtr = this->graph_.Convenience().FindParameterGroup(paramGroup);
+    auto groupPtr = graph_.Convenience().FindParameterGroup(paramGroup);
     if (!groupPtr) {
         errorMsg("no such group");
         return 0;
@@ -754,7 +800,7 @@ int megamol::core::LuaAPI::CreateChainCall(lua_State* L) {
     std::string chainStart = luaL_checkstring(L, 2);
     std::string to = luaL_checkstring(L, 3);
 
-    return this->graph_.Convenience().CreateChainCall(className, chainStart, to);
+    return graph_.Convenience().CreateChainCall(className, chainStart, to);
 }
 
 
@@ -1160,3 +1206,43 @@ int megamol::core::LuaAPI::SetVSync(lua_State *L) {
   return 0;
 }
 
+int megamol::core::LuaAPI::SetGUIState(lua_State *L) {
+    int n = lua_gettop(L);
+    if (n == 1) {
+        std::string fs = lua_tostring(L, 1);
+
+        callbacks_.mmSetGUIState_callback_(fs);
+    } else {
+        luaApiInterpreter_.ThrowError(MMC_LUA_MMSETGUISTATE " requires one string parameter");
+    }
+
+  return 0;
+}
+
+int megamol::core::LuaAPI::ShowGUI(lua_State *L) {
+    int n = lua_gettop(L);
+    if (n == 1) {
+        bool fs = false;
+        fs = lua_toboolean(L, 1);
+
+        callbacks_.mmShowGUI_callback_(fs);
+    } else {
+        luaApiInterpreter_.ThrowError(MMC_LUA_MMSHOWGUI " requires one bool parameter");
+    }
+
+  return 0;
+}
+
+int megamol::core::LuaAPI::ScaleGUI(lua_State *L) {
+    int n = lua_gettop(L);
+    if (n == 1) {
+        double scale = 1.0;
+        scale = luaL_checknumber(L, 1);
+
+        callbacks_.mmScaleGUI_callback_(static_cast<float>(scale));
+    } else {
+        luaApiInterpreter_.ThrowError(MMC_LUA_MMSCALEGUI " requires one float parameter");
+    }
+
+  return 0;
+}

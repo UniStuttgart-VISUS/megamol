@@ -117,7 +117,7 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
                 for (auto& config_item : header_item.value().items()) {
                     WindowConfiguration tmp_config;
                     tmp_config.win_name = config_item.key();
-                    tmp_config.win_set_pos_size = true;
+                    tmp_config.buf_set_pos_size = true;
                     tmp_config.buf_tfe_reset = true;
                     auto config_values = config_item.value();
 
@@ -190,17 +190,17 @@ bool WindowCollection::StateFromJSON(const nlohmann::json& in_json) {
 
                     // FpsMs Config --------------------------------------------
                     megamol::core::utility::get_json_value<bool>(
-                        config_values, {"ms_show_options"}, &tmp_config.ms_show_options);
+                        config_values, {"fpsms_show_options"}, &tmp_config.fpsms_show_options);
 
                     megamol::core::utility::get_json_value<int>(
-                        config_values, {"ms_max_history_count"}, &tmp_config.ms_max_history_count);
+                        config_values, {"fpsms_max_value_count"}, &tmp_config.fpsms_buffer_size);
 
                     megamol::core::utility::get_json_value<float>(
-                        config_values, {"ms_refresh_rate"}, &tmp_config.ms_refresh_rate);
+                        config_values, {"fpsms_refresh_rate"}, &tmp_config.fpsms_refresh_rate);
 
                     int mode = 0;
-                    megamol::core::utility::get_json_value<int>(config_values, {"ms_mode"}, &mode);
-                    tmp_config.ms_mode = static_cast<TimingModes>(mode);
+                    megamol::core::utility::get_json_value<int>(config_values, {"fpsms_mode"}, &mode);
+                    tmp_config.fpsms_mode = static_cast<TimingModes>(mode);
 
                     // TFE Config ---------------------------------------------
                     megamol::core::utility::get_json_value<bool>(
@@ -285,10 +285,17 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
                     static_cast<int>(window_config.win_hotkey.key), window_config.win_hotkey.mods.toInt()};
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_position"] = {
                     window_config.win_position.x, window_config.win_position.y};
+
+                auto rescale_win_size = window_config.win_size;
+                rescale_win_size /= megamol::gui::gui_scaling.Get();
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_size"] = {
-                    window_config.win_size.x, window_config.win_size.y};
+                    rescale_win_size.x, rescale_win_size.y};
+
+                auto rescale_win_reset_size = window_config.win_reset_size;
+                rescale_win_reset_size /= megamol::gui::gui_scaling.Get();
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_reset_size"] = {
-                    window_config.win_reset_size.x, window_config.win_reset_size.y};
+                    rescale_win_reset_size.x, rescale_win_reset_size.y};
+
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_reset_position"] = {
                     window_config.win_reset_position.x, window_config.win_reset_position.y};
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["win_collapsed"] = window_config.win_collapsed;
@@ -310,12 +317,14 @@ bool WindowCollection::StateToJSON(nlohmann::json& inout_json) {
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["param_extended_mode"] =
                     window_config.param_extended_mode;
 
-                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_show_options"] = window_config.ms_show_options;
-                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_max_history_count"] =
-                    window_config.ms_max_history_count;
-                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_refresh_rate"] = window_config.ms_refresh_rate;
-                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["ms_mode"] =
-                    static_cast<int>(window_config.ms_mode);
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["fpsms_show_options"] =
+                    window_config.fpsms_show_options;
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["fpsms_max_value_count"] =
+                    window_config.fpsms_buffer_size;
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["fpsms_refresh_rate"] =
+                    window_config.fpsms_refresh_rate;
+                inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["fpsms_mode"] =
+                    static_cast<int>(window_config.fpsms_mode);
 
                 inout_json[GUI_JSON_TAG_WINDOW_CONFIGS][window_name]["tfe_view_minimized"] =
                     window_config.tfe_view_minimized;
