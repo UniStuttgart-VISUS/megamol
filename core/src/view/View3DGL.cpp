@@ -68,12 +68,16 @@ void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
         return;
     }
 
+    AbstractView3D::beforeRender(context);
+
+    auto current_frame_fbo = _fbo;
+
     if (call == nullptr) {
-        if ((this->_fbo->GetWidth() != _camera.image_tile().width()) ||
-            (this->_fbo->GetHeight() != _camera.image_tile().height()) ||
+        if ((this->_fbo->GetWidth() != _camera.resolution_gate().width()) ||
+            (this->_fbo->GetHeight() != _camera.resolution_gate().height()) ||
             (!this->_fbo->IsValid()) ) {
             this->_fbo->Release();
-            if (!this->_fbo->Create(_camera.image_tile().width(), _camera.image_tile().height(), GL_RGBA8, GL_RGBA,
+            if (!this->_fbo->Create(_camera.resolution_gate().width(), _camera.resolution_gate().height(), GL_RGBA8, GL_RGBA,
                     GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
                     GL_DEPTH_COMPONENT)) {
                 throw vislib::Exception("[View3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
@@ -82,24 +86,24 @@ void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
         }
     } else {
         auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
-        this->_fbo = gpu_call->GetFramebufferObject();
+        current_frame_fbo = gpu_call->GetFramebufferObject();
     }
 
-    this->_fbo->Enable();
+    current_frame_fbo->Enable();
     auto bgcol = this->BkgndColour();
     glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    cr3d->SetFramebufferObject(this->_fbo);
+    glViewport(0, 0, current_frame_fbo->GetWidth(), current_frame_fbo->GetHeight());
 
-    AbstractView3D::beforeRender(context);
-
+    cr3d->SetFramebufferObject(current_frame_fbo);
     cr3d->SetCamera(this->_camera);
+
     (*cr3d)(view::CallRender3DGL::FnRender);
 
-    this->_fbo->Disable();
+    current_frame_fbo->Disable();
     if (call == nullptr) {
-        this->_fbo->DrawColourTexture();
+        current_frame_fbo->DrawColourTexture(); // TODO replace me
     }
 
     AbstractView3D::afterRender(context);

@@ -490,18 +490,18 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                 break;
             }
             // don't set projection
-            if (currentFbo->Enable() != GL_NO_ERROR) {
-                throw vislib::Exception(
-                    "Failed to create Screenshot: Cannot enable Framebuffer object", __FILE__, __LINE__);
-            }
-            glViewport(0, 0, data.imgWidth, data.imgHeight);
+            ///if (currentFbo->Enable() != GL_NO_ERROR) {
+            ///    throw vislib::Exception(
+            ///        "Failed to create Screenshot: Cannot enable Framebuffer object", __FILE__, __LINE__);
+            ///}
+            ///glViewport(0, 0, data.imgWidth, data.imgHeight);
             crv.SetFramebufferObject(currentFbo); //, vislib::math::Rectangle<int>(0, 0, tileW, tileH));
-            crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f,
-                static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
+            ///crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f,
+            ///    static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
             crv.SetTime(frameTime);
             view->OnRenderView(crv); // glClear by SFX
             glFlush();
-            currentFbo->Disable();
+            ///currentFbo->Disable();
 
             if (currentFbo->GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) !=
                 GL_NO_ERROR) {
@@ -703,19 +703,19 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                         break;
                     }
                     // don't set projection
-                    if (currentFbo->Enable() != GL_NO_ERROR) {
-                        throw vislib::Exception(
-                            "Failed to create Screenshot: Cannot enable Framebuffer object", __FILE__, __LINE__);
-                    }
-                    glViewport(0, 0, tileW, tileH);
+                    ///if (currentFbo->Enable() != GL_NO_ERROR) {
+                    ///    throw vislib::Exception(
+                    ///        "Failed to create Screenshot: Cannot enable Framebuffer object", __FILE__, __LINE__);
+                    ///}
+                    ///glViewport(0, 0, tileW, tileH);
                     crv.SetFramebufferObject(currentFbo); //, vislib::math::Rectangle<int>(0, 0, tileW, tileH));
-                    crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
-                        static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileW),
-                        static_cast<float>(tileH));
+                    ///crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
+                    ///    static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileW),
+                    ///    static_cast<float>(tileH));
                     crv.SetTime(frameTime);
                     view->OnRenderView(crv); // glClear by SFX
                     glFlush();
-                    currentFbo->Disable();
+                    ///currentFbo->Disable();
 
                     if (currentFbo->GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) !=
                         GL_NO_ERROR) {

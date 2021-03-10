@@ -196,8 +196,9 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
 
     if (viewptr != nullptr) {
         // TODO move this behind the fbo magic?
-        auto vp = cam.image_tile();
-        glViewport(vp.left(), vp.bottom(), vp.width(), vp.height());
+        // auto vp = cam.image_tile();
+        // glViewport(vp.left(), vp.bottom(), vp.width(), vp.height());
+        glViewport(0, 0, call.GetFramebufferObject()->GetWidth(), call.GetFramebufferObject()->GetHeight());
         auto backCol = call.BackgroundColor();
         glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
