@@ -1,7 +1,7 @@
 /*
  * View2DGL.cpp
  *
- * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart). 
+ * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
@@ -167,7 +167,23 @@ void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
 
     this->_fbo->Disable();
     if (call == nullptr) {
-        this->_fbo->DrawColourTexture();
+        // TODO This does not work (i.e. disable the drawAxes checkbox in PCP Renderer):
+        //this->_fbo->DrawColourTexture();
+
+        // TODO Best fix for now steal blitting from splitview:
+        // Bind and blit framebuffer.
+        GLint binding, readBuffer;
+        glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &binding);
+        glGetIntegerv(GL_READ_BUFFER, &readBuffer);
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, _fbo->GetID());
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+        glBlitFramebuffer(0, 0, _fbo->GetWidth(), _fbo->GetHeight(), 0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, binding);
+        glReadBuffer(readBuffer);
+
+        // TODO VISLIB MUST DIE AND BURN IN HELL!!!
     }
 
     //after render
@@ -391,7 +407,7 @@ void view::View2DGL::unpackMouseCoordinates(float &x, float &y) {
  * view::View2DGL::create
  */
 bool view::View2DGL::create(void) {
- 
+
     this->_firstImg = true;
 
     this->_fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();

@@ -22,7 +22,6 @@ namespace mesh {
 
             rts->draw_cnt -= 1;
 
-
             if (rts->draw_cnt == 0) {
                 for (size_t i = 0; i < m_gpu_render_tasks.size(); ++i) {
                     if (m_gpu_render_tasks[i] == rts) {
@@ -60,8 +59,7 @@ namespace mesh {
                     rts->draw_commands = new_dcs_buffer;
                     rts->per_draw_data = new_pdd_buffer;
 
-                    // TODO!!!! iterate all meta data entries: do nothing if byte offset < delete; decrement if byte
-                    // offset > delete
+                    // adjust byte offsets of remaining render tasks
                     for (auto& rtm : m_render_task_meta_data) {
                         if (rtm.second.draw_command_byteOffset > rt_meta.draw_command_byteOffset) {
                             rtm.second.draw_command_byteOffset -= sizeof(glowl::DrawElementsCommand);
@@ -70,7 +68,6 @@ namespace mesh {
                             rtm.second.per_draw_data_byteOffset -= rt_meta.per_draw_data_byteSize;
                         }
                     }
-
 
                 } catch (glowl::BufferObjectException const& e) {
                     megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_ERROR,
@@ -92,6 +89,7 @@ namespace mesh {
 
     void GPURenderTaskCollection::clear() {
         m_gpu_render_tasks.clear();
+        m_render_task_meta_data.clear();
         m_per_frame_data_buffers.clear();
     }
 

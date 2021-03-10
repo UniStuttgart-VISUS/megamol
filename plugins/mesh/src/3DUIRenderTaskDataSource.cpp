@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "mesh/3DUIRenderTaskDataSource.h"
+#include "3DUIRenderTaskDataSource.h"
 
 #include "tiny_gltf.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
@@ -10,13 +10,13 @@
 
 
 megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::ThreeDimensionalUIRenderTaskDataSource()
-    : m_version(0)
-    , m_interaction_collection(new ThreeDimensionalInteractionCollection)
-    , m_3DInteraction_calleeSlot("getInteraction", "The slot publishing available interactions and receiving pending manipulations")
-    , m_3DInteraction_callerSlot("","")
-    , m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file")
-    , m_glTF_cached_hash(0)
-{
+        : m_version(0)
+        , m_interaction_collection(new ThreeDimensionalInteractionCollection)
+        , m_material_collection(nullptr)
+        , m_3DInteraction_calleeSlot(
+              "getInteraction", "The slot publishing available interactions and receiving pending manipulations")
+        , m_3DInteraction_callerSlot("", "")
+        , m_glTF_callerSlot("getGlTFFile", "Connects the data source with a loaded glTF file") {
     this->m_3DInteraction_calleeSlot.SetCallback(
         Call3DInteraction::ClassName(), "GetData", &ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback);
     this->m_3DInteraction_calleeSlot.SetCallback(
@@ -32,44 +32,61 @@ megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::ThreeDimensionalUIRenderT
 
 megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::~ThreeDimensionalUIRenderTaskDataSource() {}
 
-bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core::Call& caller)
-{
+bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::create(void) {
+    AbstractGPURenderTaskDataSource::create();
+
+    m_material_collection = std::make_shared<GPUMaterialCollection>();
+    m_material_collection->addMaterial(this->instance(), "3DUI", "3DUI");
+
+    return true;
+}
+
+bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core::Call& caller) {
     CallGPURenderTaskData* lhs_rtc = dynamic_cast<CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == NULL) return false;
+    if (lhs_rtc == nullptr) {
+        return false;
+    }
 
-    syncRenderTaskCollection(lhs_rtc);
+    CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
 
-    CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<CallGPUMaterialData>();
-    if (mtlc == NULL) return false;
-    if (!(*mtlc)(0)) return false;
+    std::vector<std::shared_ptr<GPURenderTaskCollection>> gpu_render_tasks;
+    if (rhs_rtc != nullptr) {
+        if (!(*rhs_rtc)(0)) {
+            return false;
+        }
+        if (rhs_rtc->hasUpdate()) {
+            ++m_version;
+        }
+        gpu_render_tasks = rhs_rtc->getData();
+    }
+    gpu_render_tasks.push_back(m_rendertask_collection.first);
 
     CallGPUMeshData* mc = this->m_mesh_slot.CallAs<CallGPUMeshData>();
-    if (mc == NULL) return false;
-    if (!(*mc)(0)) return false;
+    if (mc == NULL)
+        return false;
+    if (!(*mc)(0))
+        return false;
 
     CallGlTFData* gltf_call = this->m_glTF_callerSlot.CallAs<CallGlTFData>();
-    if (gltf_call == NULL) return false;
-    if (!(*gltf_call)(0)) return false;
+    if (gltf_call == NULL)
+        return false;
+    if (!(*gltf_call)(0))
+        return false;
 
-    
-    bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate() || gltf_call->hasUpdate();
+    bool something_has_changed = mc->hasUpdate() || gltf_call->hasUpdate();
 
-    if (something_has_changed)
-    {
+    if (something_has_changed) {
         ++m_version;
 
-        for (auto& idx : m_rendertask_collection.second) {
-            m_rendertask_collection.first->deleteRenderTask(idx);
-        }
+        clearRenderTaskCollection();
 
         auto model = gltf_call->getData().second;
-        auto gpu_mtl_storage = mtlc->getData();
         auto gpu_mesh_storage = mc->getData();
 
         for (size_t node_idx = 0; node_idx < model->nodes.size(); node_idx++) {
             if (node_idx < model->nodes.size() && model->nodes[node_idx].mesh != -1) {
 
-                std::array<PerObjectShaderParams,1> per_obj_data;
+                std::array<PerObjectShaderParams, 1> per_obj_data;
 
                 if (model->nodes[node_idx].matrix.size() != 0) // has matrix transform
                 {
@@ -85,11 +102,9 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
                         per_obj_data[0].object_transform.SetAt(2, 3, translation[2]);
                     }
 
-                    if (scale.size() != 0) {
-                    }
+                    if (scale.size() != 0) {}
 
-                    if (rotation.size() != 0) {
-                    }
+                    if (rotation.size() != 0) {}
                 }
 
                 // TODO check node name for UI element names
@@ -97,55 +112,54 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
                     per_obj_data[0].color = {1.0f, 0.0f, 0.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[0].first = gpu_mesh_storage->getSubMesh("axisX_arrow");
+                    m_UI_template_elements[0].first = gpu_mesh_storage[0]->getSubMesh("axisX_arrow");
                     m_UI_template_elements[0].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "axisY_arrow") {
                     per_obj_data[0].color = {0.0f, 1.0f, 0.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[1].first = gpu_mesh_storage->getSubMesh("axisY_arrow");
+                    m_UI_template_elements[1].first = gpu_mesh_storage[0]->getSubMesh("axisY_arrow");
                     m_UI_template_elements[1].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "axisZ_arrow") {
                     per_obj_data[0].color = {0.0f, 0.0f, 1.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[2].first = gpu_mesh_storage->getSubMesh("axisZ_arrow");
+                    m_UI_template_elements[2].first = gpu_mesh_storage[0]->getSubMesh("axisZ_arrow");
                     m_UI_template_elements[2].second = per_obj_data;
 
                 } else if (model->nodes[node_idx].name == "slider_arrow") {
                     per_obj_data[0].color = {1.0f, 0.0f, 1.0f, 1.0f};
                     per_obj_data[0].id = 0;
 
-                    m_UI_template_elements[3].first = gpu_mesh_storage->getSubMesh("slider_arrow");
+                    m_UI_template_elements[3].first = gpu_mesh_storage[0]->getSubMesh("slider_arrow");
                     m_UI_template_elements[3].second = per_obj_data;
                 }
-
             }
         }
 
+        auto const& shader = m_material_collection->getMaterials().find("3DUI")->second.shader_program;
 
         int render_task_index = 0;
         {
-            //TODO create debug scene from UI template obejcts
-            m_scene.push_back({0,{PerObjectShaderParams()}});
+            // TODO create debug scene from UI template obejcts
+            m_scene.push_back({0, {PerObjectShaderParams()}});
             m_scene.back().second = m_UI_template_elements[3].second;
             m_scene.back().second[0].id = 1;
-            
+
             auto const& sub_mesh = m_UI_template_elements[3].first;
             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(
-                rt_identifier, shader, gpu_batch_mesh,
-                sub_mesh.sub_mesh_draw_command, m_scene.back().second);
+                rt_identifier, shader, gpu_batch_mesh, sub_mesh.sub_mesh_draw_command, m_scene.back().second);
             m_rendertask_collection.second.push_back(rt_identifier);
-            
+
             m_scene.back().first = m_rendertask_collection.second.back();
 
-            m_interaction_collection->addInteractionObject(1,{ThreeDimensionalInteraction{InteractionType::MOVE_ALONG_AXIS, 1, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
+            m_interaction_collection->addInteractionObject(1,
+                {ThreeDimensionalInteraction{InteractionType::MOVE_ALONG_AXIS, 1, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}});
         }
         {
             m_scene.push_back({0, {PerObjectShaderParams()}});
@@ -154,7 +168,6 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             auto const& sub_mesh = m_UI_template_elements[2].first;
             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(
@@ -173,7 +186,6 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             auto const& sub_mesh = m_UI_template_elements[1].first;
             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(
@@ -192,7 +204,6 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 
             auto const& sub_mesh = m_UI_template_elements[0].first;
             auto const& gpu_batch_mesh = sub_mesh.mesh->mesh;
-            auto const& shader = gpu_mtl_storage->getMaterials().at(0).shader_program;
 
             std::string rt_identifier(std::string(this->FullName()) + "_" + std::to_string(++render_task_index));
             m_rendertask_collection.first->addRenderTask(
@@ -223,18 +234,10 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
         lights.push_back({-5000.0, 5000.0, -5000.0, 1000.0f});
 
         m_rendertask_collection.first->deletePerFrameDataBuffer(1);
-        m_rendertask_collection.first->addPerFrameDataBuffer("lights",lights, 1);
-
+        m_rendertask_collection.first->addPerFrameDataBuffer("lights", lights, 1);
     }
 
-    lhs_rtc->setData(m_rendertask_collection.first,m_version);
-
-    CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<CallGPURenderTaskData>();
-    if (rhs_rtc != NULL) {
-        rhs_rtc->setData(m_rendertask_collection.first,0);
-
-        (*rhs_rtc)(0);
-    }
+    lhs_rtc->setData(gpu_render_tasks, m_version);
 
     return true;
 }
@@ -242,10 +245,11 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getDataCallback(core
 bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallback(core::Call& caller) {
 
     Call3DInteraction* ci = dynamic_cast<Call3DInteraction*>(&caller);
-    if (ci == NULL) return false;
+    if (ci == NULL)
+        return false;
 
-    if (ci->getData() == nullptr){
-        ci->setData(this->m_interaction_collection,m_version);
+    if (ci->getData() == nullptr) {
+        ci->setData(this->m_interaction_collection, m_version);
     }
 
     // clear non persistent changes, such has highlighting
@@ -254,15 +258,14 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
     }
 
     // TODO consume pending manipulations
-    while(!ci->getData()->accessPendingManipulations().empty())
-    {
+    while (!ci->getData()->accessPendingManipulations().empty()) {
         ThreeDimensionalManipulation manipulation = ci->getData()->accessPendingManipulations().front();
 
         std::list<std::pair<std::string, std::array<PerObjectShaderParams, 1>>>::iterator it = m_scene.begin();
-        std::advance(it, manipulation.obj_id-1);
+        std::advance(it, manipulation.obj_id - 1);
 
         std::array<PerObjectShaderParams, 1> per_obj_data = it->second;
-        
+
         vislib::math::Vector<float, 4> translate_col;
 
         switch (manipulation.type) {
@@ -285,7 +288,7 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
         case HIGHLIGHT:
             std::cout << "Hightlight: " << manipulation.obj_id << std::endl;
             per_obj_data[0].highlighted = 1;
-            //per_obj_data[0].color = {1.0f, 1.0f, 0.0f, 1.0f};a
+            // per_obj_data[0].color = {1.0f, 1.0f, 0.0f, 1.0f};a
             break;
         default:
             break;
@@ -301,5 +304,5 @@ bool megamol::mesh::ThreeDimensionalUIRenderTaskDataSource::getInteractionCallba
         this->m_rendertask_collection.first->updatePerDrawData(entity.first, entity.second);
     }
 
-    return true; 
+    return true;
 }
