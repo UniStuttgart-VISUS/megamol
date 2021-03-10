@@ -853,6 +853,10 @@ namespace probe {
         unsigned int num_splits_main_axis = 10;
         unsigned int num_splits_off_axis = 2;
 
+        _scaledHulls.clear();
+        _scaledHulls.resize(num_shells);
+        _scaledHulls[0] = _sm;
+
         // translate vertices back to center
         for (int i = 0; i < _sm.num_vertices(); ++i) {
             auto it = std::next(_sm.points().begin(), i);
@@ -895,11 +899,8 @@ namespace probe {
         // build initial shells
         _shells.clear();
         _shells.resize(num_shells);
-        _scaledHulls.clear();
-        _scaledHulls.resize(num_shells);
         _shellBBoxes.clear();
         _shellBBoxes.resize(num_shells);
-        _scaledHulls[0] = _sm;
         _shellBBoxes[0].SetBoundingBox(_bbox.BoundingBox());
         for (int i = 1; i < num_shells; ++i) {
             _scaledHulls[i] = _sm;
@@ -932,7 +933,7 @@ namespace probe {
                 glm::vec3 n(_normals[j][0], _normals[j][1], _normals[j][2]);
                 glm::vec3 p(it->x(), it->y(), it->z());
                 p.x = p.x * scale.x + _data_origin[0];
-                p.y = p.y * scale.y +_data_origin[1];
+                p.y = p.y * scale.y + _data_origin[1];
                 p.z = p.z * scale.z + _data_origin[2];
                 //p += _data_origin;
 
