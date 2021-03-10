@@ -12,13 +12,22 @@
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
-static void log(const char* text) {
-    const std::string msg = "Template_Service: " + std::string(text); 
+
+static void log(std::string const& text) {
+    const std::string msg = "Template_Service: " + text;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
-static void log(std::string text) {
-    log(text.c_str());
+
+static void log_error(std::string const& text) {
+    const std::string msg = "Template_Service: " + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
 }
+
+static void log_warning(std::string const& text) {
+    const std::string msg = "Template_Service: " + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.c_str());
+}
+
 
 namespace megamol {
 namespace frontend {
@@ -45,7 +54,7 @@ bool Template_Service::init(const Config& config) {
     // but maybe more instances of your service will get created? this may be relevant for central resources you manage (like libraries, network connections).
 
     if (init_failed) {
-        log("failed initialization because");
+        log_error("failed initialization because");
         return false;
     }
 
