@@ -23,6 +23,7 @@ megamol::mesh::GlTFFileLoader::GlTFFileLoader()
         , m_gltf_slot("gltfModels", "The slot publishing the loaded data") {
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetData", &GlTFFileLoader::getGltfDataCallback);
     this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "GetMetaData", &GlTFFileLoader::getGltfMetaDataCallback);
+    this->m_gltf_slot.SetCallback(CallGlTFData::ClassName(), "Disconnect", &GlTFFileLoader::disconnectGltfCallback);
     this->MakeSlotAvailable(&this->m_gltf_slot);
 
     this->m_glTFFilename_slot << new core::param::FilePathParam("");
@@ -31,10 +32,6 @@ megamol::mesh::GlTFFileLoader::GlTFFileLoader()
 
 megamol::mesh::GlTFFileLoader::~GlTFFileLoader() {
     this->Release();
-}
-
-bool megamol::mesh::GlTFFileLoader::create(void) {
-    return true;
 }
 
 bool megamol::mesh::GlTFFileLoader::getGltfDataCallback(core::Call& caller) {
@@ -68,7 +65,7 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
         return false;
     }
 
-    syncMeshAccessCollection(lhs_mesh_call,rhs_mesh_call);
+    syncMeshAccessCollection(lhs_mesh_call, rhs_mesh_call);
 
     // if there is a mesh connection to the right, pass on the mesh collection
     if (rhs_mesh_call != NULL) {
@@ -142,23 +139,46 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
                         attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::NORMAL;
                     } else if (attrib.first == "TANGENT") {
                         attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::TANGENT;
-                    } else if (attrib.first == "TEXCOORD") {
+                    } else if (attrib.first == "TEXCOORD_0") {
                         attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::TEXCOORD;
+                    } else if (attrib.first == "COLOR_0") {
+                        attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::COLOR;
+                    } else {
+                        attrib_semantic = MeshDataAccessCollection::AttributeSemanticType::UNKNOWN;
                     }
 
-                    mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{
-                        reinterpret_cast<uint8_t*>(vertexAttrib_buffer.data.data() +
-                                                   vertexAttrib_bufferView.byteOffset +
-                                                   vertexAttrib_accessor.byteOffset),
-                        (vertexAttrib_accessor.count * vertexAttrib_accessor.ByteStride(vertexAttrib_bufferView)),
+
+                    uint8_t* data_ptr = nullptr;
+                    size_t attrib_byte_stride = vertexAttrib_accessor.ByteStride(vertexAttrib_bufferView);
+                    size_t attrib_byte_offset = 0;
+                    // check bufferView stride for 0 to detect interleaved data
+                    if (vertexAttrib_bufferView.byteStride == 0) {
+                        // if interleaved, do not apply accessor byte offset to data pointer
+                        data_ptr = reinterpret_cast<uint8_t*>(
+                            vertexAttrib_buffer.data.data() + vertexAttrib_bufferView.byteOffset);
+                        // and instead use attribute offset
+                        attrib_byte_offset = vertexAttrib_accessor.byteOffset;
+                    } else {
+                        // if non-interleaved, apply accessor byte offset to data pointer
+                        data_ptr = reinterpret_cast<uint8_t*>(vertexAttrib_buffer.data.data() +
+                                                              vertexAttrib_bufferView.byteOffset +
+                                                              vertexAttrib_accessor.byteOffset);
+                        // and do not set any attribute offset because offset > 0 with non-interleaved
+                        // attributes suggests a (VVVNNNCCC) layout which we will use as a
+                        // (VVV)(NNN)(CCC) layout instead
+                    }
+
+                    mesh_attributes.emplace_back(MeshDataAccessCollection::VertexAttribute{data_ptr,
+                        (vertexAttrib_accessor.count * attrib_byte_stride),
                         static_cast<unsigned int>(vertexAttrib_accessor.type),
-                        MeshDataAccessCollection::covertToValueType(vertexAttrib_accessor.componentType), 0, 0,
-                        attrib_semantic});
+                        MeshDataAccessCollection::covertToValueType(vertexAttrib_accessor.componentType),
+                        attrib_byte_stride, attrib_byte_offset, attrib_semantic});
                 }
 
                 std::string identifier = std::string(m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value()) +
                                          model->meshes[mesh_idx].name + "_" + std::to_string(primitive_idx);
                 m_mesh_access_collection.first->addMesh(identifier, mesh_attributes, mesh_indices);
+                m_mesh_access_collection.second.push_back(identifier);
 
                 auto max_data =
                     model
@@ -180,6 +200,18 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
             }
         }
 
+        if (bbox[0] == std::numeric_limits<float>::max() || bbox[1] == std::numeric_limits<float>::max() ||
+            bbox[2] == std::numeric_limits<float>::max() || bbox[3] == std::numeric_limits<float>::min() ||
+            bbox[4] == std::numeric_limits<float>::min() || bbox[5] == std::numeric_limits<float>::min()) {
+
+            bbox[0] = -0.5;
+            bbox[1] = -0.5;
+            bbox[2] = -0.5;
+            bbox[3] = 0.5;
+            bbox[4] = 0.5;
+            bbox[5] = 0.5;
+        }
+
         auto meta_data = lhs_mesh_call->getMetaData();
         meta_data.m_bboxs.SetBoundingBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
         meta_data.m_bboxs.SetClipBox(bbox[0], bbox[1], bbox[2], bbox[3], bbox[4], bbox[5]);
@@ -190,41 +222,10 @@ bool megamol::mesh::GlTFFileLoader::getMeshDataCallback(core::Call& caller) {
 }
 
 bool megamol::mesh::GlTFFileLoader::getMeshMetaDataCallback(core::Call& caller) {
+    return AbstractMeshDataSource::getMeshMetaDataCallback(caller);
+}
 
-    CallMesh* lhs_mesh_call = dynamic_cast<CallMesh*>(&caller);
-    CallMesh* rhs_mesh_call = m_mesh_rhs_slot.CallAs<CallMesh>();
-
-    if (lhs_mesh_call == NULL) {
-        return false;
-    }
-
-    auto lhs_meta_data = lhs_mesh_call->getMetaData();
-    lhs_meta_data.m_frame_cnt = 1;
-    core::Spatial3DMetaData rhs_meta_data;
-
-    if (rhs_mesh_call != NULL) {
-        rhs_meta_data = rhs_mesh_call->getMetaData();
-        rhs_meta_data.m_frame_ID = lhs_meta_data.m_frame_ID;
-        rhs_mesh_call->setMetaData(rhs_meta_data);
-        if (!(*rhs_mesh_call)(1))
-            return false;
-        rhs_meta_data = rhs_mesh_call->getMetaData();
-    } else {
-        rhs_meta_data.m_frame_cnt = 1;
-    }
-
-    lhs_meta_data.m_frame_cnt = std::min(lhs_meta_data.m_frame_cnt, rhs_meta_data.m_frame_cnt);
-
-    auto bbox = lhs_meta_data.m_bboxs.BoundingBox();
-    bbox.Union(rhs_meta_data.m_bboxs.BoundingBox());
-    lhs_meta_data.m_bboxs.SetBoundingBox(bbox);
-
-    auto cbbox = lhs_meta_data.m_bboxs.ClipBox();
-    cbbox.Union(rhs_meta_data.m_bboxs.ClipBox());
-    lhs_meta_data.m_bboxs.SetClipBox(cbbox);
-
-    lhs_mesh_call->setMetaData(lhs_meta_data);
-
+bool megamol::mesh::GlTFFileLoader::disconnectGltfCallback(core::Call& caller) {
     return true;
 }
 
@@ -235,19 +236,21 @@ bool megamol::mesh::GlTFFileLoader::checkAndLoadGltfModel() {
 
         auto vislib_filename = m_glTFFilename_slot.Param<core::param::FilePathParam>()->Value();
         std::string filename(vislib_filename.PeekBuffer());
-
         m_gltf_model = std::make_shared<tinygltf::Model>();
-        tinygltf::TinyGLTF loader;
-        std::string err;
-        std::string war;
 
-        bool ret = loader.LoadASCIIFromFile(&*m_gltf_model, &err, &war, filename);
-        if (!err.empty()) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Err: %s\n", err.c_str());
-        }
+        if (filename != "") {
+            tinygltf::TinyGLTF loader;
+            std::string err;
+            std::string war;
 
-        if (!ret) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to parse glTF\n");
+            bool ret = loader.LoadASCIIFromFile(&*m_gltf_model, &err, &war, filename);
+            if (!err.empty()) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Err: %s\n", err.c_str());
+            }
+
+            if (!ret) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError("Failed to parse glTF\n");
+            }
         }
 
         return true;
