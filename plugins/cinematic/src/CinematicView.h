@@ -46,6 +46,12 @@ namespace cinematic {
     class CinematicView : public core::view::View3DGL {
     public:
 
+        std::vector<std::string> requested_lifetime_resources() {
+            auto lifetime_resources = Module::requested_lifetime_resources();
+            lifetime_resources.push_back("MegaMolGraph");
+            return lifetime_resources;
+        }
+
         typedef core::view::View3DGL Base;
 
         /**
