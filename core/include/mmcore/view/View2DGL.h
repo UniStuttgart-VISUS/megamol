@@ -104,15 +104,6 @@ public:
 
     virtual bool GetExtents(Call& call) override;
 
-    /**
-     * Freezes, updates, or unfreezes the view onto the scene (not the
-     * rendering, but camera settings, timing, etc).
-     *
-     * @param freeze true means freeze or update freezed settings,
-     *               false means unfreeze
-     */
-    virtual void UpdateFreeze(bool freeze);
-
     virtual bool OnKey(Key key, KeyAction action, Modifiers mods) override;
 
     virtual bool OnChar(unsigned int codePoint) override;
@@ -122,15 +113,6 @@ public:
     virtual bool OnMouseMove(double x, double y) override;
 
     virtual bool OnMouseScroll(double dx, double dy) override;
-
-    /**
-     * Unpacks the mouse coordinates, which are relative to the virtual
-     * viewport size.
-     *
-     * @param x The x coordinate of the mouse position
-     * @param y The y coordinate of the mouse position
-     */
-    virtual void unpackMouseCoordinates(float &x, float &y);
 
     enum MouseMode : uint8_t { Propagate, Pan, Zoom };
 
@@ -147,9 +129,6 @@ public:
     virtual void release(void);
 
 private:
-
-    /** The viewport height */
-    float _height;
 
     /** The mouse drag mode */
     MouseMode _mouseMode;
@@ -171,9 +150,6 @@ private:
 
     /** the update counter for the view settings */
     unsigned int _viewUpdateCnt;
-
-    /** the viewport width */
-    float _width;
 
     std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
 };

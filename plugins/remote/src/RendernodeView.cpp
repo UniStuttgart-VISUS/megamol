@@ -140,7 +140,7 @@ bool megamol::remote::RendernodeView::process_msgs(Message_t const& msgs) {
 }
 
 
-void megamol::remote::RendernodeView::Render(const mmcRenderViewContext& context, core::Call* call) {
+void megamol::remote::RendernodeView::Render(double time, double instanceTime) {
 #ifdef WITH_MPI
     static bool first_frame = true;
 
@@ -267,12 +267,9 @@ bool megamol::remote::RendernodeView::OnRenderView(core::Call& call) {
 
     float time = crv->Time();
     if (time < 0.0f) time = this->DefaultTime(crv->InstanceTime());
-    mmcRenderViewContext context;
-    ::ZeroMemory(&context, sizeof(context));
-    context.Time = time;
-    context.InstanceTime = crv->InstanceTime();
+    auto instanceTime = crv->InstanceTime();
 
-    this->Render(context, &call);
+    this->Render(time, instanceTime);
 
     return true;
 }

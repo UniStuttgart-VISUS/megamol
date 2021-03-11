@@ -31,15 +31,13 @@ using namespace megamol::core;
  */
 view::View2DGL::View2DGL(void)
         : view::AbstractView()
-    , _height(1.0f)
     , _mouseMode(MouseMode::Propagate)
     , _mouseX(0.0f)
     , _mouseY(0.0f)
     , _viewX(0.0f)
     , _viewY(0.0f)
     , _viewZoom(1.0f)
-    , _viewUpdateCnt(0)
-    , _width(1.0f) {
+    , _viewUpdateCnt(0) {
 
     // Override renderSlot behavior
     this->_lhsRenderSlot.SetCallback(
@@ -100,8 +98,8 @@ void view::View2DGL::Render(double time, double instanceTime) {
 
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
-    float w = this->_width;
-    float h = this->_height;
+    float w = _fbo->GetWidth();
+    float h = _fbo->GetHeight();
     float asp = h / w;
     //::glScalef(asp, 1.0f, 1.0f);
     //float aMatrix[16];
@@ -159,11 +157,11 @@ void view::View2DGL::ResetView(void) {
             -0.5f * (cr2d->GetBoundingBoxes().BoundingBox().Left() + cr2d->GetBoundingBoxes().BoundingBox().Right());
         this->_viewY =
             -0.5f * (cr2d->GetBoundingBoxes().BoundingBox().Bottom() + cr2d->GetBoundingBoxes().BoundingBox().Top());
-        if ((this->_width / this->_height) > static_cast<float>(cr2d->GetBoundingBoxes().BoundingBox().Width() /
+        if ((_fbo->GetWidth() / _fbo->GetHeight()) > static_cast<float>(cr2d->GetBoundingBoxes().BoundingBox().Width() /
                                                               cr2d->GetBoundingBoxes().BoundingBox().Height())) {
             this->_viewZoom = 2.0f / cr2d->GetBoundingBoxes().BoundingBox().Height();
         } else {
-            this->_viewZoom = (2.0f * this->_width) / (this->_height * cr2d->GetBoundingBoxes().BoundingBox().Width());
+            this->_viewZoom = (2.0f * _fbo->GetWidth()) / (this->_fbo->GetHeight() * cr2d->GetBoundingBoxes().BoundingBox().Width());
         }
         this->_viewZoom *= 0.99f;
 
@@ -181,10 +179,6 @@ void view::View2DGL::ResetView(void) {
  * view::View2DGL::Resize
  */
 void view::View2DGL::Resize(unsigned int width, unsigned int height) {
-
-    this->_width = static_cast<float>(width);
-    this->_height = static_cast<float>(height);
-
     if ((this->_fbo->GetWidth() != width) || (this->_fbo->GetHeight() != height)) {
         this->_fbo->Release();
         if (!this->_fbo->Create(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
@@ -215,14 +209,6 @@ bool view::View2DGL::OnRenderView(Call& call) {
     this->Render(time, instanceTime);
 
     return true;
-}
-
-
-/*
- * view::View2DGL::UpdateFreeze
- */
-void view::View2DGL::UpdateFreeze(bool freeze) {
-    // currently not supported
 }
 
 
@@ -288,8 +274,8 @@ bool view::View2DGL::OnMouseButton(MouseButton button, MouseButtonAction action,
 bool view::View2DGL::OnMouseMove(double x, double y) {
     if (this->_mouseMode == MouseMode::Propagate) {
         float mx, my;
-        mx = ((x * 2.0f / this->_width) - 1.0f) * this->_width / this->_height;
-        my = 1.0f - (y * 2.0f / this->_height);
+        mx = ((x * 2.0f / _fbo->GetWidth()) - 1.0f) * _fbo->GetWidth() / _fbo->GetHeight();
+        my = 1.0f - (y * 2.0f / _fbo->GetHeight());
         mx /= this->_viewZoom;
         my /= this->_viewZoom;
         mx -= this->_viewX;
@@ -305,7 +291,7 @@ bool view::View2DGL::OnMouseMove(double x, double y) {
             if ((*cr)(view::CallRender2DGL::FnOnMouseMove)) return true;
         }
     } else if (this->_mouseMode == MouseMode::Pan) {
-        float movSpeed = 2.0f / (this->_viewZoom * this->_height);
+        float movSpeed = 2.0f / (this->_viewZoom * _fbo->GetHeight());
         this->_viewX -= (this->_mouseX - x) * movSpeed;
         this->_viewY += (this->_mouseY - y) * movSpeed;
         if (((this->_mouseX - x) > 0.0f) || ((this->_mouseY - y) > 0.0f)) {
@@ -323,7 +309,7 @@ bool view::View2DGL::OnMouseMove(double x, double y) {
 
         float newZoom =
             static_cast<float>(pow(spd, log(static_cast<double>(this->_viewZoom / base)) / logSpd +
-                                            static_cast<double>(((this->_mouseY - y) * 1.0f / this->_height)))) *
+                                            static_cast<double>(((this->_mouseY - y) * 1.0f / _fbo->GetHeight())))) *
             base;
 
         if (!vislib::math::IsEqual(newZoom, this->_viewZoom)) {
@@ -351,16 +337,6 @@ bool view::View2DGL::OnMouseScroll(double dx, double dy) {
     if (!(*cr)(view::CallRender2DGL::FnOnMouseScroll)) return false;
 
     return true;
-}
-
-
-/*
- * view::View2DGL::unpackMouseCoordinates
- */
-void view::View2DGL::unpackMouseCoordinates(float &x, float &y) {
-    x *= this->_width;
-    y *= this->_height;
-    y -= 1.0f;
 }
 
 
