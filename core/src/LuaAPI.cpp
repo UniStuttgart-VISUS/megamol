@@ -488,46 +488,6 @@ int megamol::core::LuaAPI::GetEnvValue(lua_State* L) {
 }
 
 
-// TODO move helper function into Log, such that for a string we get the corresponding Log Level
-// The CLI parser will benefit form this, so the user can also provide the shorthand notation via CLI
-UINT megamol::core::LuaAPI::parseLevelAttribute(const std::string attr) {
-    UINT retval = megamol::core::utility::log::Log::LEVEL_ERROR;
-    if (iequals(attr, "error")) {
-        retval = megamol::core::utility::log::Log::LEVEL_ERROR;
-    }
-    else if (iequals(attr, "warn")) {
-        retval = megamol::core::utility::log::Log::LEVEL_WARN;
-    }
-    else if (iequals(attr, "warning")) {
-        retval = megamol::core::utility::log::Log::LEVEL_WARN;
-    }
-    else if (iequals(attr, "info")) {
-        retval = megamol::core::utility::log::Log::LEVEL_INFO;
-    }
-    else if (iequals(attr, "none")) {
-        retval = megamol::core::utility::log::Log::LEVEL_NONE;
-    }
-    else if (iequals(attr, "null")) {
-        retval = megamol::core::utility::log::Log::LEVEL_NONE;
-    }
-    else if (iequals(attr, "zero")) {
-        retval = megamol::core::utility::log::Log::LEVEL_NONE;
-    }
-    else if (iequals(attr, "all")) {
-        retval = megamol::core::utility::log::Log::LEVEL_ALL;
-    }
-    else if (iequals(attr, "*")) {
-        retval = megamol::core::utility::log::Log::LEVEL_ALL;
-    }
-    else {
-        retval = std::stoi(attr);
-        // dont catch stoi exceptions
-        // let exception be handled by the one who called me
-    }
-    return retval;
-}
-
-
 int megamol::core::LuaAPI::GetProcessID(lua_State* L) {
     vislib::StringA str;
 #ifdef _WIN32    

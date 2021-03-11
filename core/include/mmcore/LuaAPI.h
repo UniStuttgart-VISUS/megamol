@@ -289,16 +289,6 @@ private:
     /** gets a string from the stack position i. returns false if it's not a string */
     //bool getString(int i, std::string& out);
 
-    /** interpret string log levels */
-    static UINT parseLevelAttribute(const std::string attr);
-
-    inline static bool iequals(const std::string& one, const std::string& other) {
-
-        return ((one.size() == other.size()) &&
-                std::equal(one.begin(), one.end(), other.begin(),
-                    [](const char& c1, const char& c2) { return (c1 == c2 || std::toupper(c1) == std::toupper(c2)); }));
-    }
-
     /** the one Lua state */
     LuaInterpreter<LuaAPI> luaApiInterpreter_;
 
