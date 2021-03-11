@@ -122,6 +122,8 @@ Every module can be connected to the `TransferFunction` module holding the actua
 
 The description of the transfer function is encoded in a string in JSON format, see header `TransferFunctionParam.h`.
 
+***... TODO ...***
+
 ### Usage
 
 If you want to use a transfer function in you renderer module you have to create a caller slot, which is compatible to the call `CallGetTransferFunction`:
@@ -132,6 +134,7 @@ If you want to use a transfer function in you renderer module you have to create
 See the header file of the call `CallGetTransferFunction` for a more detailed interface description of the available functions.
 The renderer modules `SimpleSphereRenderer` or `ScatterplotMatrixRenderer2D`can be looked at for a example implementation of the transfer function.
 
+***... TODO ...***
 
 <!-- ###################################################################### -->
 -----
