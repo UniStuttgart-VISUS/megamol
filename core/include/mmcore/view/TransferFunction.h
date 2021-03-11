@@ -125,10 +125,7 @@ namespace view {
         /** The value range */
         std::array<float, 2> range;
 
-        /** Flag indicating that there should be no changes applied if the 
-         * parameter has an inital value loaded from project file. */
-        bool tfparam_check_init_value;
-        bool tfparam_skip_changes_once;
+        bool check_once_ignore_range_on_project_load;
 
         /** Version of texture */
         uint32_t version;

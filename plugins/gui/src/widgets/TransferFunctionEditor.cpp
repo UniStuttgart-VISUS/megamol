@@ -213,9 +213,8 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
     std::array<float, 2> new_range;
     megamol::core::param::TransferFunctionParam::TFNodeType new_nodes;
     megamol::core::param::TransferFunctionParam::InterpolationMode new_mode;
-    bool ok = megamol::core::param::TransferFunctionParam::ParseTransferFunction(
-        tfs, new_nodes, new_mode, new_tex_size, new_range);
-    if (!ok) {
+    if (!megamol::core::param::TransferFunctionParam::GetParsedTransferFunctionData(
+            tfs, new_nodes, new_mode, new_tex_size, new_range)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[GUI] Could not parse transfer function");
         return;
     }
@@ -237,10 +236,11 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
     }
     if (this->range != new_range) {
         this->range_overwrite = false;
+        this->last_range = this->range;
         this->range = new_range;
-        this->last_range = new_range;
         tf_changed = true;
     }
+
     if (this->widget_buffer.tex_size != static_cast<int>(new_tex_size)) {
         this->widget_buffer.tex_size = static_cast<int>(new_tex_size);
         tf_changed = true;
@@ -258,8 +258,8 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
 }
 
 bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
-    return param::TransferFunctionParam::DumpTransferFunction(
-        tfs, this->nodes, this->mode, static_cast<unsigned int>(this->textureSize), this->range);
+    return param::TransferFunctionParam::GetDumpedTransferFunction(tfs, this->nodes, this->mode,
+        static_cast<unsigned int>(this->textureSize), this->range, !this->range_overwrite);
 }
 
 
@@ -511,11 +511,11 @@ bool TransferFunctionEditor::Widget(bool connected_parameter_mode) {
         this->pendingChanges = true;
         std::vector<float> texture_data;
         if (this->mode == param::TransferFunctionParam::InterpolationMode::LINEAR) {
-            param::TransferFunctionParam::LinearInterpolation(
-                texture_data, static_cast<unsigned int>(this->textureSize), this->nodes);
+            texture_data = param::TransferFunctionParam::LinearInterpolation(
+                static_cast<unsigned int>(this->textureSize), this->nodes);
         } else if (this->mode == param::TransferFunctionParam::InterpolationMode::GAUSS) {
-            param::TransferFunctionParam::GaussInterpolation(
-                texture_data, static_cast<unsigned int>(this->textureSize), this->nodes);
+            texture_data = param::TransferFunctionParam::GaussInterpolation(
+                static_cast<unsigned int>(this->textureSize), this->nodes);
         }
 
         if (!this->flip_legend) {

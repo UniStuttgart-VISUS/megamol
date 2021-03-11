@@ -401,7 +401,7 @@ bool GUIWindows::PostDraw(void) {
                             if ((wc.tfe_active_param == param_full_name) &&
                                 (param.Type() == Param_t::TRANSFERFUNCTION)) {
                                 this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
-                                this->tf_editor_ptr->SetTransferFunction(std::get<std::string>(param.GetValue()), true);
+                                param.TransferFunctionEditor_ConnectExternal(this->tf_editor_ptr, true);
                             }
                         }
                     }
