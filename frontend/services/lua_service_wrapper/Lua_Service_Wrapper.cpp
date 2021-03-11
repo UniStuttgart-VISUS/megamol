@@ -10,7 +10,6 @@
 #define _WINSOCKAPI_
 #include "Lua_Service_Wrapper.hpp"
 
-
 #include "mmcore/utility/LuaHostService.h"
 
 #include "Screenshots.h"
@@ -36,6 +35,8 @@ namespace {
         bool abort() { return state > 1; }
     };
 }
+
+
 
 namespace megamol {
 namespace frontend {
@@ -76,11 +77,16 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         luaAPI.SetScriptPath(script_path);
     };
 
+    m_registerLuaCallbacks_resource = [&](megamol::frontend_resources::LuaCallbacksCollection const& callbacks) {
+        luaAPI.AddCallbacks(callbacks);
+    };
+
     this->m_providedResourceReferences =
     {
         {"LuaScriptPaths", m_scriptpath_resource},
         {"ExecuteLuaScript", m_executeLuaScript_resource},
-        {"SetScriptPath", m_setScriptPath_resource}
+        {"SetScriptPath", m_setScriptPath_resource},
+        {"RegisterLuaCallbacks", m_registerLuaCallbacks_resource},
     };
 
     this->m_requestedResourcesNames = 

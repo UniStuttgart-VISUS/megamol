@@ -1250,6 +1250,30 @@ int megamol::core::LuaAPI::ScaleGUI(lua_State *L) {
   return 0;
 }
 
+
+void megamol::core::LuaAPI::AddCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks) {
+    registered_callbacks.push_back(callbacks);
+
+    register_callbacks(registered_callbacks.back());
+}
+
+void megamol::core::LuaAPI::register_callbacks(megamol::frontend_resources::LuaCallbacksCollection& callbacks) {
+    if (!callbacks.is_registered) {
+        for (auto& c : callbacks.callbacks) {
+            auto& name = std::get<0>(c);
+            auto& description = std::get<1>(c);
+            auto& func = std::get<2>(c);
+            translated_callbacks.push_back(
+                std::function<int(lua_State*)>{
+                    [=](lua_State *L) -> int { return func({L}); }
+            });
+            luaApiInterpreter_.RegisterCallback(name, description, translated_callbacks.back());
+        }
+        callbacks.is_registered = true;
+    }
+
+}
+
 void megamol::frontend_resources::LuaCallbacksCollection::LuaState::error(std::string reason) {
     luaApiInterpreter_ptr->ThrowError(reason);
 }

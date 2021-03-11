@@ -132,6 +132,8 @@ public:
      */
     void SetCallbacks(LuaCallbacks c) { callbacks_ = c; }
 
+    void AddCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks);
+
     /**
      * Communicates mmQuit request to rest of MegaMol main loop.
      */
@@ -302,6 +304,11 @@ private:
 
     LuaConfigCallbacks config_callbacks_;
     LuaCallbacks callbacks_;
+
+    std::list<megamol::frontend_resources::LuaCallbacksCollection> registered_callbacks;
+    std::list<std::function<int(lua_State*)>> translated_callbacks;
+    void register_callbacks(megamol::frontend_resources::LuaCallbacksCollection& callbacks);
+
     // this one is special since the frontend provides it
     std::function<bool()> mmFlush_callback_; // renders one next frame via main loop
 
