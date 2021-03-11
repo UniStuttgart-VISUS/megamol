@@ -48,6 +48,21 @@ template <class C, luaCallbackFunc<C> func> int dispatch(lua_State* L) {
     return (ptr->*func)(L);
 }
 
+static int invoke_lua_std_function(lua_State* L){
+    const int argc = lua_gettop(L);
+
+    if (lua_islightuserdata(L, -1))
+    {
+        const void* ptr = lua_touserdata(L, -1);
+        const auto func_ptr = reinterpret_cast<std::function<int(lua_State *)> const*>(ptr);
+        return (*func_ptr)(L);
+
+    } else {
+        std::cout << "PANIC: NO USER DATA" << std::endl;
+    }
+    return 0;
+};
+
 // clang-format off
 #define MMC_LUA_MMLOG "mmLog"
 #define MMC_LUA_MMLOGINFO "mmLogInfo"
@@ -100,6 +115,23 @@ public:
         //this->theCallbacks += name + "=" + name + ",";
         this->theHelp.push_back(std::make_pair(name,help));
         lua_register(L, name.c_str(), &(dispatch<C, func>));
+        for(auto &x: theEnvironments) {
+            luaL_dostring(L, (x + "." + name + "="+name).c_str());
+        }
+    }
+
+    /**
+     * Register callback function in lua and all environments known to date
+     */
+    void RegisterCallback(std::string const& name, std::string const& help, std::function<int(lua_State*)>& func) {
+        //this->theCallbacks += name + "=" + name + ",";
+        this->theHelp.push_back(std::make_pair(name,help));
+
+        lua_pushlightuserdata(L, &func); // push ptr to func as user data to be used by invoke_lua_std_function onto stack
+        lua_pushcclosure(L, &invoke_lua_std_function, 1); // register invoke_lua_std_function as closure that gets ptr to func
+        lua_setglobal(L, name.c_str()); // set pushed closure as global under name "name"
+
+        //lua_register(L, name.c_str(), &func);
         for(auto &x: theEnvironments) {
             luaL_dostring(L, (x + "." + name + "="+name).c_str());
         }
