@@ -653,8 +653,8 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
     m_volume_resolution[1] = metadata->Resolution[1];
     m_volume_resolution[2] = metadata->Resolution[2];
 
-    valRange[0] = metadata->MinValues[0];
-    valRange[1] = metadata->MaxValues[0];
+    valRange[0] = 0.0f;
+    valRange[1] = 1.0f;
 
     GLenum internal_format;
     GLenum format;
@@ -666,6 +666,9 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
             internal_format = GL_R32F;
             format = GL_RED;
             type = GL_FLOAT;
+            // this only makes sense here, all other data types are normalized anyway
+            valRange[0] = metadata->MinValues[0];
+            valRange[1] = metadata->MaxValues[0];
         } else {
             megamol::core::utility::log::Log::DefaultLog.WriteError("Floating point values with a length != 4 byte are invalid.");
             return false;

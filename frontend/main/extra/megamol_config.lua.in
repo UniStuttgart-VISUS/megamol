@@ -1,0 +1,74 @@
+print("Default MegaMol Frontend 3000 Configuration:")
+
+-- You can provide your personal MegaMol configuration file in ~/.megamol_config.lua
+-- It will overwrite this MegaMol Default Configuration
+-- but will be overwritten by Configuration files passed via CLI
+
+-- All Config files provided by CLI via --config (or -c)
+-- get interpreted by Lua in the given order
+--
+-- Config files can set all CLI options accepted by MegaMol, and vice versa
+-- (in fact, the Config files get translated to CLI inputs at MegaMol startup)
+-- To see which CLI options MegaMol provides, check ./megamol.exe --help
+-- 
+-- In Config files, Lua is restriced to standard Lua code,
+-- the following MegaMol config-specific functions,
+-- and some MegaMol functions that do not manipulate the graph or services.
+--   mmSetCliOption(string option,  string argument)
+--   mmSetGlobalValue(string key, string value)
+--
+--   mmSetLogLevel(sring level)
+--   mmSetEchoLevel(sring level)
+--   mmSetLogFile(string file_path)
+--
+--   mmSetAppDir(string dir_path)
+--   mmAddShaderDir(string dir_path)
+--   mmAddResourceDir(string dir_path)
+--
+--   mmLoadProject(string file_path)
+
+-- Global values are key-value pairs accessible to services and modules 
+-- via the GlobalValueStore frontend resource.
+-- The key and value strings must not contain space, = or : characters
+mmSetGlobalValue("MegaMol", "Frontend3000") -- CLI: --global=MegaMol:Frontend3000
+ 
+basePath = "${CMAKE_INSTALL_PREFIX}/"
+
+-- Log Levels: 0=None, 1=Error, 100=Warn, 200=INFO, *=ALL
+-- You can provide an integer (as string) 
+-- or one of the following user friendly shorthand identifiers (as string):
+--    error, warn, warning, info, none, null, zero, all, *
+-- Due to restrictions in the Log implementation 
+-- the CLI log/echo levels accept only the magic numbers while
+-- Config files support numbers and the shorthand notation
+mmSetLogLevel("all")            -- CLI: --loglevel=all
+mmSetEchoLevel("all")           -- CLI: --echolevel=all
+mmSetLogFile("megamol_log.txt") -- CLI: --logfile=megamol_log.txt
+
+-- There is only one application directory
+-- Shader and Resource directory paths are added to a list of such directories
+mmSetAppDir(basePath .. "${MMPLG_DIR}")       -- CLI: --appdir=...
+mmAddShaderDir(basePath .. "share/shaders")   -- CLI: --shaderdir=...
+mmAddResourceDir(basePath .. "share/shaders") -- CLI: --resourcedir=...
+mmAddResourceDir(basePath .. "share/resources")
+
+computer = mmGetMachineName()
+mmSetGlobalValue("MachineName", computer) -- CLI: -g MachineName:WhateverYourMachineNameIs
+
+-- You can provide the same options and arguments
+-- as shown by MegaMol via CLI with --help
+-- Boolean options accept on, off, true and false.
+-- on and off arguments get translated to true and false for CLI.
+-- By default, boolean options are false. Providing an option sets it to true,
+-- e.g.   ./megamol.exe --fullscreen 
+-- equals ./megamol.exe --fullscreen=true
+mmSetCliOption("fullscreen",  "off")       -- CLI: --fullscreen=false
+mmSetCliOption("vsync",       "off")       -- CLI: --vsync=false
+mmSetCliOption("interactive", "off")       -- CLI: --interactive=false
+mmSetCliOption("window",      "1920x1080") -- CLI: --window 1920x1080
+mmSetCliOption("khrdebug",    "off")       -- CLI: --khrdebug=false
+mmSetGlobalValue("arcball",   "off")       -- CLI: -g arcball:off
+
+-- You can queue Lua files (project files) for execution after MegaMol started
+-- Project files provided via CLI get loaded after those provided via config
+-- mmLoadProject(string file_path) -- CLI: --project=file_path -p file_path

@@ -1,7 +1,7 @@
 /*
  * Template_Service.cpp
  *
- * Copyright (C) 2020 by MegaMol Team
+ * Copyright (C) 2021 by MegaMol Team
  * Alle Rechte vorbehalten.
  */
 
@@ -12,13 +12,22 @@
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
-static void log(const char* text) {
-    const std::string msg = "Template_Service: " + std::string(text); 
+
+static void log(std::string const& text) {
+    const std::string msg = "Template_Service: " + text;
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
-static void log(std::string text) {
-    log(text.c_str());
+
+static void log_error(std::string const& text) {
+    const std::string msg = "Template_Service: " + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
 }
+
+static void log_warning(std::string const& text) {
+    const std::string msg = "Template_Service: " + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.c_str());
+}
+
 
 namespace megamol {
 namespace frontend {
@@ -45,7 +54,7 @@ bool Template_Service::init(const Config& config) {
     // but maybe more instances of your service will get created? this may be relevant for central resources you manage (like libraries, network connections).
 
     if (init_failed) {
-        log("failed initialization because");
+        log_error("failed initialization because");
         return false;
     }
 
@@ -59,14 +68,14 @@ void Template_Service::close() {
     // after this, at some point only the destructor of your service gets called
 }
 
-std::vector<ModuleResource>& Template_Service::getProvidedResources() {
+std::vector<FrontendResource>& Template_Service::getProvidedResources() {
     this->m_providedResource1 = MyProvidedResource_1{...};
     this->m_providedResource2 = MyProvidedResource_2{...};
     this->m_providedResource3 = MyProvidedResource_3{...};
 
     this->m_providedResourceReferences =
     { // construct std::vector
-        {"MyProvidedResource_1", m_providedResource1}, // constructor ModuleResource{"MyProvidedResource_1", m_providedResource1}
+        {"MyProvidedResource_1", m_providedResource1}, // constructor FrontendResource{"MyProvidedResource_1", m_providedResource1}
         {"MyProvidedResource_2", m_providedResource2 /*reference to resource gets passed around*/ },
         {"MyProvidedResource_3" /*resources are identified using unique names in the system*/ , m_providedResource3}
     };
@@ -93,7 +102,7 @@ const std::vector<std::string> Template_Service::getRequestedResourceNames() con
     };
 }
 
-void Template_Service::setRequestedResources(std::vector<ModuleResource> resources) {
+void Template_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     // maybe we want to keep the list of requested resources
     this->m_requestedResourceReferences = resources;
 
@@ -117,7 +126,7 @@ void Template_Service::digestChangedRequestedResources() {
     digest_changes(*this->m_externalResource_1_ptr); // not that the pointer should never become invalid by design
     digest_changes(*this->m_externalResource_2_ptr); // not that the pointer should never become invalid by design
 
-    // ModuleResource::getResource<>() returns CONST references. if you know what you are doing you may modify resources that are not yours.
+    // FrontendResource::getResource<>() returns CONST references. if you know what you are doing you may modify resources that are not yours.
     modify_resource(const_cast<ExternalResource_1&>( resources[0].getResource<ExternalResource_1>() ));
 
     if (need_to_shutdown)

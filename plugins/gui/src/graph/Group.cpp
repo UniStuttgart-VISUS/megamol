@@ -450,6 +450,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             }
 
             // Context menu
+            ImGui::PushFont(state.canvas.gui_font_ptr);
             bool popup_rename = false;
             if (ImGui::BeginPopupContextItem("invisible_button_context")) { /// this->allow_context &&
 
@@ -478,6 +479,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
                 }
                 ImGui::EndPopup();
             } /// else { this->allow_context = false; }
+            ImGui::PopFont();
 
             // Rename pop-up
             if (state.interact.graph_core_interface == GraphCoreInterface::CORE_INSTANCE_GRAPH) {

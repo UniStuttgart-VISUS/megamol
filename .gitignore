@@ -1,6 +1,7 @@
 build/**/*
 build-*/**/*
 build_*/**/*
+out/**/*
 cmake-build-*/**/*
 bin/**/*
 include/**/*
@@ -29,3 +30,7 @@ utils/MMPLD/SphereTest.bat
 examples/
 solution/**/*
 deploy/**/*
+
+CMakeSettings.json
+
+.vs/

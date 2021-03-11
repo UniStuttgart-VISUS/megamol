@@ -51,6 +51,7 @@ megamol::gui::Graph::Graph(const std::string& graph_name, GraphCoreInterface cor
     this->gui_graph_state.canvas.scrolling = ImVec2(0.0f, 0.0f);
     this->gui_graph_state.canvas.zooming = 1.0f;
     this->gui_graph_state.canvas.offset = ImVec2(0.0f, 0.0f);
+    this->gui_graph_state.canvas.gui_font_ptr = nullptr;
 
     this->gui_graph_state.interact.process_deletion = false;
     this->gui_graph_state.interact.button_active_uid = GUI_INVALID_ID;
@@ -1380,7 +1381,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             this->draw_menu();
 
             if (megamol::gui::gui_scaling.PendingChange()) {
-                this->gui_parameter_sidebar_width *= megamol::gui::gui_scaling.TransitonFactor();
+                this->gui_parameter_sidebar_width *= megamol::gui::gui_scaling.TransitionFactor();
             }
             float graph_width_auto = 0.0f;
             if (this->gui_show_parameter_sidebar) {
@@ -1388,45 +1389,8 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                     SplitterWidget::FixedSplitterSide::RIGHT, graph_width_auto, this->gui_parameter_sidebar_width);
             }
 
-            // Load font for canvas
-            ImFont* font_ptr = nullptr;
-            unsigned int scalings_count = static_cast<unsigned int>(state.font_scalings.size());
-            if (scalings_count == 0) {
-                throw std::invalid_argument("Array for graph fonts is empty.");
-            } else if (scalings_count == 1) {
-                font_ptr = io.Fonts->Fonts[0];
-                this->gui_current_font_scaling = state.font_scalings[0];
-            } else {
-                for (unsigned int i = 0; i < scalings_count; i++) {
-                    bool apply = false;
-                    if (i == 0) {
-                        if (this->gui_graph_state.canvas.zooming <= state.font_scalings[i]) {
-                            apply = true;
-                        }
-                    } else if (i == (scalings_count - 1)) {
-                        if (this->gui_graph_state.canvas.zooming >= state.font_scalings[i]) {
-                            apply = true;
-                        }
-                    } else {
-                        if ((state.font_scalings[i - 1] < this->gui_graph_state.canvas.zooming) &&
-                            (this->gui_graph_state.canvas.zooming < state.font_scalings[i + 1])) {
-                            apply = true;
-                        }
-                    }
-                    if (apply) {
-                        font_ptr = io.Fonts->Fonts[i];
-                        this->gui_current_font_scaling = state.font_scalings[i];
-                        break;
-                    }
-                }
-            }
-            if (font_ptr != nullptr) {
-                ImGui::PushFont(font_ptr);
-                this->draw_canvas(graph_width_auto);
-                ImGui::PopFont();
-            } else {
-                throw std::invalid_argument("Pointer to font is nullptr.");
-            }
+            this->draw_canvas(graph_width_auto, state);
+
             if (this->gui_show_parameter_sidebar) {
                 ImGui::SameLine();
                 this->draw_parameters(this->gui_parameter_sidebar_width);
@@ -1907,35 +1871,34 @@ void megamol::gui::Graph::draw_menu(void) {
     }
     ImGui::Separator();
 
-    // MODULES
-    if (ImGui::BeginMenu("Modules")) {
-        if (ImGui::MenuItem("Label", nullptr, &this->gui_graph_state.interact.module_show_label)) {
-            this->gui_update = true;
+    if (ImGui::BeginMenu("Labels")) {
+        // MODULES
+        if (ImGui::BeginMenu("Modules")) {
+            if (ImGui::MenuItem("Name", nullptr, &this->gui_graph_state.interact.module_show_label)) {
+                this->gui_update = true;
+            }
+            if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.callslot_show_label)) {
+                this->gui_update = true;
+            }
+            ImGui::EndMenu();
         }
-        if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.callslot_show_label)) {
-            this->gui_update = true;
-        }
-        ImGui::EndMenu();
-    }
-    ImGui::Separator();
-
-    // CALLS
-    if (ImGui::BeginMenu("Calls")) {
-        if (ImGui::MenuItem("Label", nullptr, &this->gui_graph_state.interact.call_show_label)) {
-            this->gui_update = true;
-        }
-        if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.call_show_slots_label)) {
-            this->gui_update = true;
+        // CALLS
+        if (ImGui::BeginMenu("Calls")) {
+            if (ImGui::MenuItem("Name", nullptr, &this->gui_graph_state.interact.call_show_label)) {
+                this->gui_update = true;
+            }
+            if (ImGui::MenuItem("Slots", nullptr, &this->gui_graph_state.interact.call_show_slots_label)) {
+                this->gui_update = true;
+            }
+            ImGui::EndMenu();
         }
         ImGui::EndMenu();
     }
     ImGui::Separator();
 
     // GRID
-    if (ImGui::BeginMenu("Grid")) {
-        ImGui::MenuItem("Show", nullptr, &this->gui_show_grid);
-        ImGui::EndMenu();
-    }
+    ImGui::Checkbox("Grid", &this->gui_show_grid);
+
     ImGui::Separator();
 
     // Choose single selected view module
@@ -2061,9 +2024,48 @@ void megamol::gui::Graph::draw_menu(void) {
 }
 
 
-void megamol::gui::Graph::draw_canvas(float graph_width) {
+void megamol::gui::Graph::draw_canvas(float graph_width, GraphState_t& state) {
 
     ImGuiIO& io = ImGui::GetIO();
+
+    // Load font for canvas
+    ImFont* gui_font_ptr = io.FontDefault;
+    ImFont* graph_font_ptr = nullptr;
+    unsigned int scalings_count = static_cast<unsigned int>(state.font_scalings.size());
+    if (scalings_count == 0) {
+        throw std::invalid_argument("Bug: Array for graph fonts is empty.");
+    } else if (scalings_count == 1) {
+        graph_font_ptr = io.Fonts->Fonts[0];
+        this->gui_current_font_scaling = state.font_scalings[0];
+    } else {
+        for (unsigned int i = 0; i < scalings_count; i++) {
+            bool apply = false;
+            if (i == 0) {
+                if (this->gui_graph_state.canvas.zooming <= state.font_scalings[i]) {
+                    apply = true;
+                }
+            } else if (i == (scalings_count - 1)) {
+                if (this->gui_graph_state.canvas.zooming >= state.font_scalings[i]) {
+                    apply = true;
+                }
+            } else {
+                if ((state.font_scalings[i - 1] < this->gui_graph_state.canvas.zooming) &&
+                    (this->gui_graph_state.canvas.zooming < state.font_scalings[i + 1])) {
+                    apply = true;
+                }
+            }
+            if (apply) {
+                graph_font_ptr = io.Fonts->Fonts[i];
+                this->gui_current_font_scaling = state.font_scalings[i];
+                break;
+            }
+        }
+    }
+    if ((graph_font_ptr == nullptr) || (gui_font_ptr == nullptr)) {
+        throw std::invalid_argument("Bug: Required fonts not available.");
+    }
+    this->gui_graph_state.canvas.gui_font_ptr = gui_font_ptr;
+    ImGui::PushFont(graph_font_ptr);
 
     // Colors
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1, 1));
@@ -2270,6 +2272,8 @@ void megamol::gui::Graph::draw_canvas(float graph_width) {
     // Font scaling is applied next frame after ImGui::Begin()
     // Font for graph should not be the currently used font of the gui.
     ImGui::GetFont()->Scale = font_scaling;
+
+    ImGui::PopFont();
 }
 
 
