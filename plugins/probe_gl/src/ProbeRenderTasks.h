@@ -46,6 +46,13 @@ namespace probe_gl {
         ~ProbeRenderTasks();
 
     protected:
+        /**
+         * Implementation of 'Create'.
+         *
+         * @return 'true' on success, 'false' otherwise.
+         */
+        virtual bool create();
+
         virtual bool getDataCallback(core::Call& caller);
 
         virtual bool getMetaDataCallback(core::Call& caller);
@@ -60,6 +67,9 @@ namespace probe_gl {
         };
 
         uint32_t m_version;
+
+        /** In-place material collection (initialized with probe btf) */
+        std::shared_ptr<mesh::GPUMaterialCollection> m_material_collection;
 
         std::vector<std::string> m_identifiers;
 

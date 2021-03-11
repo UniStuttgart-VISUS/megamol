@@ -57,6 +57,7 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
         , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
         , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
         , m_event_slot("GetProbeEvents", "")
+        , m_material_slot("GetProbeGlyphMaterials", "")
         , m_billboard_dummy_mesh(nullptr)
         , m_billboard_size_slot("BillBoardSize", "Sets the scaling factor of the texture billboards")
         , m_rendering_mode_slot("RenderingMode", "Glyph rendering mode")
@@ -70,6 +71,9 @@ megamol::probe_gl::ProbeBillboardGlyphRenderTasks::ProbeBillboardGlyphRenderTask
 
     this->m_probes_slot.SetCompatibleCall<probe::CallProbesDescription>();
     this->MakeSlotAvailable(&this->m_probes_slot);
+
+    this->m_material_slot.SetCompatibleCall<mesh::CallGPUMaterialDataDescription>();
+    this->MakeSlotAvailable(&this->m_material_slot);
 
     this->m_event_slot.SetCompatibleCall<megamol::core::CallEventDescription>();
     this->MakeSlotAvailable(&this->m_event_slot);
@@ -102,15 +106,19 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         return false;
     }
 
-    syncRenderTaskCollection(lhs_rtc);
-
-    // if there is a render task connection to the right, pass on the render task collection
     mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
-    if (rhs_rtc != NULL) {
-        rhs_rtc->setData(m_rendertask_collection.first, 0);
-        if (!(*rhs_rtc)(0))
+
+    std::vector<std::shared_ptr<mesh::GPURenderTaskCollection>> gpu_render_tasks;
+    if (rhs_rtc != nullptr) {
+        if (!(*rhs_rtc)(0)) {
             return false;
+        }
+        if (rhs_rtc->hasUpdate()) {
+            ++m_version;
+        }
+        gpu_render_tasks = rhs_rtc->getData();
     }
+    gpu_render_tasks.push_back(m_rendertask_collection.first);
 
     mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
     if (mtlc == NULL)
@@ -203,7 +211,16 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         if (m_rendering_mode_slot.Param<core::param::EnumParam>()->Value() == 0) {
             // use precomputed textures if available
 
-            if (gpu_mtl_storage->getMaterial("ProbeBillboard_Textured").textures.size() > 0) {
+            mesh::GPUMaterialCollection::Material mat;
+            for (int i = 0; i < gpu_mtl_storage.size(); ++i) {
+                auto query = gpu_mtl_storage[i]->getMaterial("ProbeBillboard_Textured");
+                if (mat.shader_program != nullptr) {
+                    mat = query;
+                    break;
+                }
+            }
+
+            if (mat.textures.size() > 0) {
                 for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
 
                     assert(
@@ -211,11 +228,9 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
 
                     auto generic_probe = probes->getGenericProbe(probe_idx);
 
-                    GLuint64 texture_handle = gpu_mtl_storage->getMaterial("ProbeBillboard_Textured")
-                                                  .textures[probe_idx / 2048]
-                                                  ->getTextureHandle();
+                    GLuint64 texture_handle = mat.textures[probe_idx / 2048]->getTextureHandle();
                     float slice_idx = probe_idx % 2048;
-                    gpu_mtl_storage->getMaterial("ProbeBillboard_Textured").textures[probe_idx / 2048]->makeResident();
+                    mat.textures[probe_idx / 2048]->makeResident();
 
                     auto visitor = [draw_command, scale, texture_handle, slice_idx, probe_idx, this](auto&& arg) {
                         using T = std::decay_t<decltype(arg)>;
@@ -636,10 +651,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
         }
     }
 
-
-    if (lhs_rtc->version() < m_version) {
-        lhs_rtc->setData(m_rendertask_collection.first, m_version);
-    }
+    lhs_rtc->setData(gpu_render_tasks, m_version);
 
     return true;
 }
@@ -685,10 +697,54 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
     if (!(*mtlc)(0))
         return false;
 
+    std::shared_ptr<glowl::GLSLProgram> textured_shader(nullptr);
+    std::shared_ptr<glowl::GLSLProgram> scalar_shader(nullptr);
+    std::shared_ptr<glowl::GLSLProgram> vector_shader(nullptr);
+    std::shared_ptr<glowl::GLSLProgram> clusterID_shader(nullptr);
+
     auto gpu_mtl_storage = mtlc->getData();
+    for (int i = 0; i < gpu_mtl_storage.size(); ++i)
+    {
+        auto textured_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_Textured");
+        auto scalar_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_Scalar");
+        auto vector_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_Vector");
+        auto clusterID_query = gpu_mtl_storage[i]->getMaterials().find("ProbeBillboard_ClusterID");
+
+        if (textured_query != gpu_mtl_storage[i]->getMaterials().end()) {
+            textured_shader = textured_query->second.shader_program;
+        }
+        if (scalar_query != gpu_mtl_storage[i]->getMaterials().end()) {
+            scalar_shader = scalar_query->second.shader_program;
+        }
+        if (vector_query != gpu_mtl_storage[i]->getMaterials().end()) {
+            vector_shader = vector_query->second.shader_program;
+        }
+        if (clusterID_query != gpu_mtl_storage[i]->getMaterials().end()) {
+            clusterID_shader = clusterID_query->second.shader_program;
+        }
+    }
+
+    if (textured_shader == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Could not get ProbeBillboard_Textured material, identifier not found. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
+    if (scalar_shader == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Could not get ProbeBillboard_Scalar material, identifier not found. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
+    }
+    if (vector_shader == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Could not get ProbeBillboard_Vector material, identifier not found. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
+    }
+    if (clusterID_shader == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Could not get ProbeBillboard_ClusterID material, identifier not found. [%s, %s, line %d]\n", __FILE__,
+            __FUNCTION__, __LINE__);
+    }
 
     if (!m_textured_gylph_draw_commands.empty()) {
-        auto const& textured_shader = gpu_mtl_storage->getMaterial("ProbeBillboard_Textured").shader_program;
         m_rendertask_collection.first->addRenderTasks(m_textured_glyph_identifiers, textured_shader,
             m_billboard_dummy_mesh, m_textured_gylph_draw_commands, m_textured_glyph_data);
         m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
@@ -696,7 +752,6 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
     }
 
     if (!m_scalar_probe_glyph_data.empty()) {
-        auto const& scalar_shader = gpu_mtl_storage->getMaterial("ProbeBillboard_Scalar").shader_program;
         m_rendertask_collection.first->addRenderTasks(m_scalar_probe_glyph_identifiers, scalar_shader,
             m_billboard_dummy_mesh, m_scalar_probe_gylph_draw_commands, m_scalar_probe_glyph_data);
         m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
@@ -704,7 +759,6 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
     }
 
     if (!m_vector_probe_glyph_data.empty()) {
-        auto const& vector_shader = gpu_mtl_storage->getMaterial("ProbeBillboard_Vector").shader_program;
         m_rendertask_collection.first->addRenderTasks(m_vector_probe_glyph_identifiers, vector_shader,
             m_billboard_dummy_mesh, m_vector_probe_gylph_draw_commands, m_vector_probe_glyph_data);
         m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
@@ -712,9 +766,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::addAllRenderTasks() {
     }
 
     if (!m_clusterID_gylph_draw_commands.empty()) {
-        auto const& vector_shader = gpu_mtl_storage->getMaterial("ProbeBillboard_ClusterID").shader_program;
-
-        m_rendertask_collection.first->addRenderTasks(m_clusterID_glyph_identifiers, vector_shader,
+        m_rendertask_collection.first->addRenderTasks(m_clusterID_glyph_identifiers, clusterID_shader,
             m_billboard_dummy_mesh, m_clusterID_gylph_draw_commands, m_clusterID_glyph_data);
         m_rendertask_collection.second.insert(m_rendertask_collection.second.end(),
             m_clusterID_glyph_identifiers.begin(), m_clusterID_glyph_identifiers.end());

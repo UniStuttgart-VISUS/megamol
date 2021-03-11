@@ -128,18 +128,22 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::create() {
 bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call& caller) {
 
     mesh::CallGPUMaterialData* lhs_mtl_call = dynamic_cast<mesh::CallGPUMaterialData*>(&caller);
-    if (lhs_mtl_call == NULL)
-        return false;
-
-    syncMaterialCollection(lhs_mtl_call);
-
-    // if there is a material connection to the right, pass on the material collection
     mesh::CallGPUMaterialData* rhs_mtl_call = this->m_mtl_callerSlot.CallAs<mesh::CallGPUMaterialData>();
-    if (rhs_mtl_call != NULL) {
-        auto rhs_version = rhs_mtl_call->version();
-        rhs_mtl_call->setData(m_material_collection.first, rhs_version);
-        (*rhs_mtl_call)(0);
+
+    if (lhs_mtl_call == NULL) {
+        return false;
     }
+
+    std::vector<std::shared_ptr<mesh::GPUMaterialCollection>> gpu_mtl_collections;
+    // if there is a material connection to the right, issue callback
+    if (rhs_mtl_call != nullptr) {
+        (*rhs_mtl_call)(0);
+        if (rhs_mtl_call->hasUpdate()) {
+            ++m_version;
+        }
+        gpu_mtl_collections = rhs_mtl_call->getData();
+    }
+    gpu_mtl_collections.push_back(m_material_collection.first);
 
     mesh::CallImage* ic = this->m_glyph_images_slot.CallAs<mesh::CallImage>();
     if (ic != NULL) {
@@ -215,9 +219,7 @@ bool megamol::probe_gl::ProbeBillboardGlyphMaterial::getDataCallback(core::Call&
         }
     }
 
-    if (lhs_mtl_call->version() < m_version) {
-        lhs_mtl_call->setData(m_material_collection.first, m_version);
-    }
+    lhs_mtl_call->setData(gpu_mtl_collections, m_version);
 
     return true;
 }

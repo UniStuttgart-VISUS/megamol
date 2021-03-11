@@ -30,6 +30,10 @@ bool megamol::probe_gl::ProbeHullRenderTasks::create() {
 
     m_rendertask_collection.first->addPerFrameDataBuffer("", per_frame_data, 1);
 
+    m_material_collection = std::make_shared<mesh::GPUMaterialCollection>();
+    m_material_collection->addMaterial(this->instance(), "ProbeHull", "ProbeHull");
+    //TODO add other shader for e.g. triangle-based meshes ? switch automatically of course
+
     return true;
 }
 
@@ -54,135 +58,138 @@ megamol::probe_gl::ProbeHullRenderTasks::ProbeHullRenderTasks()
 megamol::probe_gl::ProbeHullRenderTasks::~ProbeHullRenderTasks() {}
 
 bool megamol::probe_gl::ProbeHullRenderTasks::getDataCallback(core::Call& caller) {
-
     mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
     if (lhs_rtc == NULL)
         return false;
 
-    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
-    if (mtlc == NULL)
-        return false;
-    if (!(*mtlc)(0))
-        return false;
+    mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
+
+    std::vector<std::shared_ptr<mesh::GPURenderTaskCollection>> gpu_render_tasks;
+    if (rhs_rtc != nullptr) {
+        if (!(*rhs_rtc)(0)) {
+            return false;
+        }
+        if (rhs_rtc->hasUpdate()) {
+            ++m_version;
+        }
+        gpu_render_tasks = rhs_rtc->getData();
+    }
+    gpu_render_tasks.push_back(m_rendertask_collection.first);
 
     mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
-    if (mc == NULL)
-        return false;
-    if (!(*mc)(0))
-        return false;
 
-    syncRenderTaskCollection(lhs_rtc);
 
-    if (m_shading_mode_slot.IsDirty()) {
-        m_shading_mode_slot.ResetDirty();
-
-        struct PerFrameData {
-            int shading_mode;
-        };
-
-        std::array<PerFrameData, 1> per_frame_data;
-        per_frame_data[0].shading_mode = m_shading_mode_slot.Param<core::param::EnumParam>()->Value();
-
-        m_rendertask_collection.first->updatePerFrameDataBuffer("", per_frame_data, 1);
-    }
-
-    bool something_has_changed = mtlc->hasUpdate() || mc->hasUpdate();
-
-    if (something_has_changed) {
-        ++m_version;
-
-        for (auto& identifier : m_rendertask_collection.second) {
-            m_rendertask_collection.first->deleteRenderTask(identifier);
-        }
-        m_rendertask_collection.second.clear();
-
-        m_identifiers.clear();
-        m_draw_commands.clear();
-        m_object_transforms.clear();
-        m_batch_meshes.clear();
-
-        auto gpu_mtl_storage = mtlc->getData();
-        auto gpu_mesh_storage = mc->getData();
-
-        std::shared_ptr<glowl::Mesh> prev_mesh(nullptr);
-
-        for (auto& sub_mesh : gpu_mesh_storage->getSubMeshData()) {
-            auto const& gpu_batch_mesh = sub_mesh.second.mesh->mesh;
-
-            if (gpu_batch_mesh != prev_mesh) {
-                m_draw_commands.emplace_back(std::vector<glowl::DrawElementsCommand>());
-                m_object_transforms.emplace_back(std::vector<std::array<float, 16>>());
-                m_batch_meshes.push_back(gpu_batch_mesh);
-
-                prev_mesh = gpu_batch_mesh;
-            }
-
-            float scale = 1.0f;
-            std::array<float, 16> obj_xform = {
-                scale, 0.0f, 0.0f, 0.0f, 0.0f, scale, 0.0f, 0.0f, 0.0f, 0.0f, scale, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
-
-            m_identifiers.emplace_back(std::string(FullName()) + "_" + sub_mesh.first);
-            m_draw_commands.back().push_back(sub_mesh.second.sub_mesh_draw_command);
-            m_object_transforms.back().push_back(obj_xform);
-        }
-
-        if (m_show_hull) {
-            auto const& shader = gpu_mtl_storage->getMaterial("ProbeHull").shader_program;
-
-            for (int i = 0; i < m_batch_meshes.size(); ++i) {
-                m_rendertask_collection.first->addRenderTasks(
-                    m_identifiers, shader, m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
-                m_rendertask_collection.second.insert(
-                    m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
-            }
-        }
-    }
-
-    // check for pending events
-    auto call_event_storage = this->m_event_slot.CallAs<core::CallEvent>();
-    if (call_event_storage != NULL) {
-        if ((!(*call_event_storage)(0)))
+    if (mc != nullptr) {
+        if (!(*mc)(0))
             return false;
 
-        auto event_collection = call_event_storage->getData();
-        auto gpu_mtl_storage = mtlc->getData();
+        if (m_shading_mode_slot.IsDirty()) {
+            m_shading_mode_slot.ResetDirty();
 
-        // process toggle show glyph events
-        {
-            auto pending_deselect_events = event_collection->get<ToggleShowHull>();
-            for (auto& evt : pending_deselect_events) {
-                m_show_hull = !m_show_hull;
+            struct PerFrameData {
+                int shading_mode;
+            };
 
-                if (m_show_hull) {
-                    auto const& shader = gpu_mtl_storage->getMaterial("ProbeHull").shader_program;
-                    for (int i = 0; i < m_batch_meshes.size(); ++i) {
-                        m_rendertask_collection.first->addRenderTasks(
-                            m_identifiers, shader, m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
-                        m_rendertask_collection.second.insert(
-                            m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
+            std::array<PerFrameData, 1> per_frame_data;
+            per_frame_data[0].shading_mode = m_shading_mode_slot.Param<core::param::EnumParam>()->Value();
+
+            m_rendertask_collection.first->updatePerFrameDataBuffer("", per_frame_data, 1);
+        }
+
+        bool something_has_changed = mc->hasUpdate();
+
+        if (something_has_changed) {
+            ++m_version;
+
+            for (auto& identifier : m_rendertask_collection.second) {
+                m_rendertask_collection.first->deleteRenderTask(identifier);
+            }
+            m_rendertask_collection.second.clear();
+
+            m_identifiers.clear();
+            m_draw_commands.clear();
+            m_object_transforms.clear();
+            m_batch_meshes.clear();
+
+            auto gpu_mesh_storage = mc->getData();
+
+            
+
+            for (auto& mesh_collection : gpu_mesh_storage) {
+
+                std::shared_ptr<glowl::Mesh> prev_mesh(nullptr);
+
+                for (auto& sub_mesh : mesh_collection->getSubMeshData()) {
+                    auto const& gpu_batch_mesh = sub_mesh.second.mesh->mesh;
+
+                    if (gpu_batch_mesh != prev_mesh) {
+                        m_draw_commands.emplace_back(std::vector<glowl::DrawElementsCommand>());
+                        m_object_transforms.emplace_back(std::vector<std::array<float, 16>>());
+                        m_batch_meshes.push_back(gpu_batch_mesh);
+
+                        prev_mesh = gpu_batch_mesh;
                     }
-                } else {
-                    for (auto& identifier : m_rendertask_collection.second) {
-                        m_rendertask_collection.first->deleteRenderTask(identifier);
-                    }
-                    m_rendertask_collection.second.clear();
+
+                    float scale = 1.0f;
+                    std::array<float, 16> obj_xform = {scale, 0.0f, 0.0f, 0.0f, 0.0f, scale, 0.0f, 0.0f, 0.0f, 0.0f,
+                        scale, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+
+                    m_identifiers.emplace_back(std::string(FullName()) + "_" + sub_mesh.first);
+                    m_draw_commands.back().push_back(sub_mesh.second.sub_mesh_draw_command);
+                    m_object_transforms.back().push_back(obj_xform);
+                }
+            }
+
+            if (m_show_hull) {
+                auto const& shader = m_material_collection->getMaterial("ProbeHull").shader_program;
+
+                for (int i = 0; i < m_batch_meshes.size(); ++i) {
+                    m_rendertask_collection.first->addRenderTasks(
+                        m_identifiers, shader, m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
+                    m_rendertask_collection.second.insert(
+                        m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
                 }
             }
         }
+
+        // check for pending events
+        auto call_event_storage = this->m_event_slot.CallAs<core::CallEvent>();
+        if (call_event_storage != NULL) {
+            if ((!(*call_event_storage)(0)))
+                return false;
+
+            auto event_collection = call_event_storage->getData();
+
+            // process toggle show glyph events
+            {
+                auto pending_deselect_events = event_collection->get<ToggleShowHull>();
+                for (auto& evt : pending_deselect_events) {
+                    m_show_hull = !m_show_hull;
+
+                    if (m_show_hull) {
+                        auto const& shader = m_material_collection->getMaterial("ProbeHull").shader_program;
+                        for (int i = 0; i < m_batch_meshes.size(); ++i) {
+                            m_rendertask_collection.first->addRenderTasks(
+                                m_identifiers, shader, m_batch_meshes[i], m_draw_commands[i], m_object_transforms[i]);
+                            m_rendertask_collection.second.insert(
+                                m_rendertask_collection.second.end(), m_identifiers.begin(), m_identifiers.end());
+                        }
+                    } else {
+                        for (auto& identifier : m_rendertask_collection.second) {
+                            m_rendertask_collection.first->deleteRenderTask(identifier);
+                        }
+                        m_rendertask_collection.second.clear();
+                    }
+                }
+            }
+        }
+
+        // TODO merge meta data stuff, i.e. bounding box
+        auto mesh_meta_data = mc->getMetaData();
     }
 
-    mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
-    if (rhs_rtc != NULL) {
-        rhs_rtc->setData(m_rendertask_collection.first, 0);
-        (*rhs_rtc)(0);
-    }
-
-    // TODO merge meta data stuff, i.e. bounding box
-    auto mesh_meta_data = mc->getMetaData();
-
-    // TODO set data if necessary
-    lhs_rtc->setData(m_rendertask_collection.first, m_version);
-
+    // set data if necessary
+    lhs_rtc->setData(gpu_render_tasks, m_version);
 
     return true;
 }

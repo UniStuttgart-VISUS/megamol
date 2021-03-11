@@ -13,18 +13,12 @@
 #include "mmcore/param/FloatParam.h"
 
 megamol::probe::TessellateBoundingBox::TessellateBoundingBox(void)
-        : _mesh_access_collection({std::make_shared<mesh::MeshDataAccessCollection>(), {}})
+        : AbstractMeshDataSource()
         , _bounding_box_rhs_slot("adios", "Connect to rendering call to access bounding box")
-        , _mesh_lhs_slot("mesh", "")
         , _x_subdiv_slot("x_subdiv_param", "")
         , _y_subdiv_slot("y_subdiv_param", "")
         , _z_subdiv_slot("z_subdiv_param", "")
         , _padding_slot("padding_param","") {
-    this->_mesh_lhs_slot.SetCallback(
-        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &TessellateBoundingBox::getData);
-    this->_mesh_lhs_slot.SetCallback(
-        mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(1), &TessellateBoundingBox::getMetaData);
-    this->MakeSlotAvailable(&this->_mesh_lhs_slot);
 
     this->_bounding_box_rhs_slot.SetCompatibleCall<adios::CallADIOSDataDescription>();
     this->MakeSlotAvailable(&this->_bounding_box_rhs_slot);
@@ -54,7 +48,7 @@ bool megamol::probe::TessellateBoundingBox::InterfaceIsDirty() {
     return _x_subdiv_slot.IsDirty() || _y_subdiv_slot.IsDirty() || _z_subdiv_slot.IsDirty() || _padding_slot.IsDirty();
 }
 
-bool megamol::probe::TessellateBoundingBox::getMetaData(core::Call& call) {
+bool megamol::probe::TessellateBoundingBox::getMeshMetaDataCallback(core::Call& call) {
 
     auto cm = dynamic_cast<mesh::CallMesh*>(&call);
     if (cm == nullptr) {
@@ -77,11 +71,26 @@ bool megamol::probe::TessellateBoundingBox::getMetaData(core::Call& call) {
     return true;
 }
 
-bool megamol::probe::TessellateBoundingBox::getData(core::Call& call) {
+bool megamol::probe::TessellateBoundingBox::getMeshDataCallback(core::Call& call) {
 
-    auto cm = dynamic_cast<mesh::CallMesh*>(&call);
-    if (cm == nullptr) {
+    mesh::CallMesh* lhs_mesh_call = dynamic_cast<mesh::CallMesh*>(&call);
+    mesh::CallMesh* rhs_mesh_call = m_mesh_rhs_slot.CallAs<mesh::CallMesh>();
+
+    if (lhs_mesh_call == NULL) {
         return false;
+    }
+
+    syncMeshAccessCollection(lhs_mesh_call, rhs_mesh_call);
+
+    // if there is a mesh connection to the right, pass on the mesh collection
+    if (rhs_mesh_call != NULL) {
+        if (!(*rhs_mesh_call)(0)) {
+            return false;
+        }
+        if (rhs_mesh_call->hasUpdate()) {
+            ++_version;
+            rhs_mesh_call->getData();
+        }
     }
 
     adios::CallADIOSData* bboxc = this->_bounding_box_rhs_slot.CallAs<adios::CallADIOSData>();
@@ -98,7 +107,7 @@ bool megamol::probe::TessellateBoundingBox::getData(core::Call& call) {
             _z_subdiv_slot.ResetDirty();
             _padding_slot.ResetDirty();
 
-            auto meta_data = cm->getMetaData();
+            auto meta_data = lhs_mesh_call->getMetaData();
             //bboxc->setFrameIDtoLoad(meta_data.m_frame_ID);
             //if (!(*bboxc)(1)) {
             //    return false;
@@ -131,8 +140,8 @@ bool megamol::probe::TessellateBoundingBox::getData(core::Call& call) {
                 _faces[i].clear();
                 _probe_index[i].clear();
             }
-            _mesh_access_collection.first->clear();
-            _mesh_access_collection.second.clear();
+
+            clearMeshAccessCollection();
 
             // compute mesh call specific update
             std::array<float, 6> bbox;
@@ -276,16 +285,16 @@ bool megamol::probe::TessellateBoundingBox::getData(core::Call& call) {
                 mesh_type = mesh::MeshDataAccessCollection::PrimitiveType::QUADS;
 
                 std::string identifier = std::string(FullName()) + "_mesh_" + std::to_string(i);
-                _mesh_access_collection.first->addMesh(identifier, mesh_attribs, mesh_indices, mesh_type);
-                _mesh_access_collection.second.push_back(identifier);
+                m_mesh_access_collection.first->addMesh(identifier, mesh_attribs, mesh_indices, mesh_type);
+                m_mesh_access_collection.second.push_back(identifier);
             }
 
             meta_data.m_bboxs = _bboxs;
-            cm->setMetaData(meta_data);
+            lhs_mesh_call->setMetaData(meta_data);
         }
     }
 
-    cm->setData(_mesh_access_collection.first, _version);
+    lhs_mesh_call->setData(m_mesh_access_collection.first, _version);
 
     return true;
 }

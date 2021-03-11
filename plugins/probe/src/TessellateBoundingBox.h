@@ -7,6 +7,7 @@
 #define TESSELLATE_BOUNDING_BOX_H_INCLUDED
 
 #include "mesh/MeshCalls.h"
+#include "mesh/AbstractMeshDataSource.h"
 #include "mmcore/CalleeSlot.h"
 #include "mmcore/CallerSlot.h"
 #include "mmcore/Module.h"
@@ -14,7 +15,7 @@
 namespace megamol {
 namespace probe {
 
-    class TessellateBoundingBox : public core::Module {
+    class TessellateBoundingBox : public mesh::AbstractMeshDataSource {
     public:
         /**
          * Answer the name of this module.
@@ -55,7 +56,6 @@ namespace probe {
 
 
         core::CallerSlot _bounding_box_rhs_slot;
-        core::CalleeSlot _mesh_lhs_slot;
 
         core::param::ParamSlot _x_subdiv_slot;
         core::param::ParamSlot _y_subdiv_slot;
@@ -66,19 +66,13 @@ namespace probe {
     private:
         bool InterfaceIsDirty();
 
-        bool getMetaData(core::Call& call);
-        bool getData(core::Call& call);
+        bool getMeshDataCallback(core::Call& caller);
+
+        bool getMeshMetaDataCallback(core::Call& caller);
 
         uint32_t _version = 0;
         size_t _old_datahash;
         bool _recalc = false;
-
-        /**
-         * Mesh access collection that is used with a list of identifier strings of meshs accesses that this module added to
-         * the mesh collection. Needed to delete/update submeshes if the collection is shared across a chain of data
-         * sources modules.
-         */
-        std::pair<std::shared_ptr<mesh::MeshDataAccessCollection>, std::vector<std::string>> _mesh_access_collection;
 
         // store surfaces of the six tessellated sides of the bounding box
         std::array<std::vector<std::array<float, 3>>,6>    _vertices;

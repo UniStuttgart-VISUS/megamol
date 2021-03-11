@@ -66,6 +66,10 @@ namespace probe_gl {
 
         core::CallerSlot m_event_slot;
 
+        /** In-place material collection (initialized with probe hull btf) */
+        std::shared_ptr<mesh::GPUMaterialCollection> m_material_collection;
+
+        /** Slot for setting different rendering mode in hull shader */
         core::param::ParamSlot m_shading_mode_slot;
     };
 

@@ -31,18 +31,6 @@ bool megamol::mesh::SimpleGPUMtlDataSource::getDataCallback(core::Call& caller) 
     }
     gpu_mtl_collections.push_back(m_material_collection.first);
 
-    // if there is a material connection to the right, pass on the material collection
-    CallGPUMaterialData* rhs_mtl_call = this->m_mtl_callerSlot.CallAs<CallGPUMaterialData>();
-    // if there is a material connection to the right, issue callback
-    if (rhs_mtl_call != nullptr) {
-        rhs_mtl_call->setData(m_material_collection.first, rhs_mtl_call->version());
-        (*rhs_mtl_call)(0);
-        if (rhs_mtl_call->hasUpdate()) {
-            ++m_version;
-            rhs_mtl_call->getData();
-        }
-    }
-
     if (this->m_btf_filename_slot.IsDirty()) {
         m_btf_filename_slot.ResetDirty();
 
@@ -57,9 +45,7 @@ bool megamol::mesh::SimpleGPUMtlDataSource::getDataCallback(core::Call& caller) 
         m_material_collection.second.push_back(filename);
     }
 
-    if (lhs_mtl_call->version() < m_version) {
-        lhs_mtl_call->setData(gpu_mtl_collections, m_version);
-    }
+    lhs_mtl_call->setData(gpu_mtl_collections, m_version);
 
     return true;
 }

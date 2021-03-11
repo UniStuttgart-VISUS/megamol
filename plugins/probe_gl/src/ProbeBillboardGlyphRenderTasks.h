@@ -69,6 +69,8 @@ namespace probe_gl {
 
         core::CallerSlot m_event_slot;
 
+        core::CallerSlot m_material_slot;
+
         core::param::ParamSlot m_billboard_size_slot;
 
         core::param::ParamSlot m_rendering_mode_slot;

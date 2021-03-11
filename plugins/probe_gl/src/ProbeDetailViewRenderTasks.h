@@ -65,6 +65,9 @@ namespace probe_gl {
 
         core::CallerSlot m_event_slot;
 
+        /** In-place material collection (initialized with probe detail view btf) */
+        std::shared_ptr<mesh::GPUMaterialCollection> m_material_collection;
+
         std::shared_ptr<glowl::Mesh> m_ui_mesh; // for depth scale (parallel to probe, offset by cam right vector)
 
         std::shared_ptr<glowl::Mesh> m_probes_mesh;

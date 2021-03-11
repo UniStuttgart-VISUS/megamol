@@ -14,6 +14,7 @@ megamol::probe_gl::ProbeDetailViewRenderTasks::ProbeDetailViewRenderTasks()
         , m_transfer_function_Slot("GetTransferFunction", "Slot for accessing a transfer function")
         , m_probes_slot("GetProbes", "Slot for accessing a probe collection")
         , m_event_slot("GetProbeManipulation", "")
+        , m_material_collection(nullptr)
         , m_ui_mesh(nullptr)
         , m_probes_mesh(nullptr)
         , m_tf_min(0.0f)
@@ -56,6 +57,9 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::create() {
     }
     // TODO intialize with value indicating that no transfer function is connected
     this->m_transfer_function->makeResident();
+
+    m_material_collection = std::make_shared<mesh::GPUMaterialCollection>();
+    m_material_collection->addMaterial(this->instance(), "ProbeDetailView", "ProbeDetailView");
 
     // TODO ui mesh
     {
@@ -108,21 +112,24 @@ void megamol::probe_gl::ProbeDetailViewRenderTasks::release() {}
 bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& caller) {
 
     mesh::CallGPURenderTaskData* lhs_rtc = dynamic_cast<mesh::CallGPURenderTaskData*>(&caller);
-    if (lhs_rtc == NULL) return false;
-
-    syncRenderTaskCollection(lhs_rtc);
+    if (lhs_rtc == nullptr){
+        return false;
+    }
 
     // if there is a render task connection to the right, pass on the render task collection
     mesh::CallGPURenderTaskData* rhs_rtc = this->m_renderTask_rhs_slot.CallAs<mesh::CallGPURenderTaskData>();
-    if (rhs_rtc != NULL) {
-        rhs_rtc->setData(m_rendertask_collection.first, 0);
-        if (!(*rhs_rtc)(0)) return false;
-    }
 
-    // check/get material 
-    mesh::CallGPUMaterialData* mtlc = this->m_material_slot.CallAs<mesh::CallGPUMaterialData>();
-    if (mtlc == NULL) return false;
-    if (!(*mtlc)(0)) return false;
+    std::vector<std::shared_ptr<mesh::GPURenderTaskCollection>> gpu_render_tasks;
+    if (rhs_rtc != nullptr) {
+        if (!(*rhs_rtc)(0)) {
+            return false;
+        }
+        if (rhs_rtc->hasUpdate()) {
+            ++m_version;
+        }
+        gpu_render_tasks = rhs_rtc->getData();
+    }
+    gpu_render_tasks.push_back(m_rendertask_collection.first);
 
     // check/get mesh data 
     mesh::CallGPUMeshData* mc = this->m_mesh_slot.CallAs<mesh::CallGPUMeshData>();
@@ -141,19 +148,17 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         if (!(*tfc)(0)) return false;
     }
 
-    bool something_has_changed = pc->hasUpdate() || mtlc->hasUpdate() || ((tfc != NULL) ? tfc->IsDirty() : false);
+    bool something_has_changed = pc->hasUpdate() || ((tfc != NULL) ? tfc->IsDirty() : false);
 
     if (something_has_changed) {
         ++m_version;
-        lhs_rtc->setData(m_rendertask_collection.first,m_version);
 
         for (auto& identifier : m_rendertask_collection.second) {
             m_rendertask_collection.first->deleteRenderTask(identifier);
         }
         m_rendertask_collection.second.clear();
 
-        auto gpu_mtl_storage = mtlc->getData();
-        auto const& ui_shader = gpu_mtl_storage->getMaterial("ProbeDetailViewUI").shader_program;
+        auto const& ui_shader = m_material_collection->getMaterial("ProbeDetailViewUI").shader_program;
         std::vector<glowl::DrawElementsCommand> draw_commands = {glowl::DrawElementsCommand()};
         draw_commands[0].cnt = 12;
         draw_commands[0].instance_cnt = 1;
@@ -358,7 +363,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         }
         
         if (!m_vector_probe_draw_commands.empty()) {
-            auto const& probe_shader = gpu_mtl_storage->getMaterial("ProbeDetailView").shader_program;
+            auto const& probe_shader = m_material_collection->getMaterial("ProbeDetailView").shader_program;
             m_rendertask_collection.first->addRenderTasks(m_vector_probe_identifiers,probe_shader, m_probes_mesh, m_vector_probe_draw_commands, m_vector_probe_data);
             m_rendertask_collection.second.insert(
                             m_rendertask_collection.second.end(), m_vector_probe_identifiers.begin(), m_vector_probe_identifiers.end());
@@ -446,8 +451,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                 }
                 
                 if (!m_vector_probe_draw_commands.empty()) {
-                    auto gpu_mtl_storage = mtlc->getData();
-                    auto const& probe_shader = gpu_mtl_storage->getMaterial("ProbeDetailView").shader_program;
+                    auto const& probe_shader = m_material_collection->getMaterial("ProbeDetailView").shader_program;
                     std::string identifier = std::string(FullName()) + std::to_string(probe_idx);
                     m_rendertask_collection.first->addRenderTask(identifier,
                     probe_shader, m_probes_mesh, m_vector_probe_draw_commands[probe_idx], m_vector_probe_data[probe_idx]);
@@ -456,9 +460,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                     m_vector_probe_selected[probe_idx] = true;
                 }
 
-
-                auto gpu_mtl_storage = mtlc->getData();
-                auto const& ui_shader = gpu_mtl_storage->getMaterial("ProbeDetailViewUI").shader_program;
+                auto const& ui_shader = m_material_collection->getMaterial("ProbeDetailViewUI").shader_program;
                 std::vector<glowl::DrawElementsCommand> draw_commands = {glowl::DrawElementsCommand()};
                 draw_commands[0].cnt = 12;
                 draw_commands[0].instance_cnt = 1;
@@ -482,8 +484,7 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
                 if (!m_vector_probe_draw_commands.empty()) {
                     std::string identifier = std::string(FullName()) + std::to_string(probe_idx);
                     if (!m_vector_probe_selected[probe_idx]) {
-                        auto gpu_mtl_storage = mtlc->getData();
-                        auto const& probe_shader = gpu_mtl_storage->getMaterial("ProbeDetailView").shader_program;
+                        auto const& probe_shader = m_material_collection->getMaterial("ProbeDetailView").shader_program;
 
                         m_rendertask_collection.first->addRenderTask(identifier,
                         probe_shader, m_probes_mesh, m_vector_probe_draw_commands[probe_idx], m_vector_probe_data[probe_idx]);
@@ -500,6 +501,8 @@ bool megamol::probe_gl::ProbeDetailViewRenderTasks::getDataCallback(core::Call& 
         }
 
     }
+
+    lhs_rtc->setData(gpu_render_tasks, m_version);
 
     return true;
 }
