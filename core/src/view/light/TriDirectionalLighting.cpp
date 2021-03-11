@@ -68,6 +68,9 @@ void TriDirectionalLighting::readParams() {
 
     // Read tri-directional lighting parameters
     light->in_view_space = this->m_in_view_space.Param<core::param::BoolParam>()->Value();
+    if (light->in_view_space) {
+        ++version; // force update every frame is eye direction is used
+    } 
 
     auto& key_dir = this->m_key_direction.Param<core::param::Vector3fParam>()->Value();
     glm::vec3 key_dir_normalized(key_dir.X(), key_dir.Y(), key_dir.Z());
