@@ -1,5 +1,5 @@
 /*
- * FlagStorage_GL.h
+ * UniFlagStorage.h
  *
  * Copyright (C) 2019-2021 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
@@ -11,7 +11,7 @@
 
 #include "vislib/graphics/gl/IncludeAllGL.h"
 
-#include "FlagCollection_GL.h"
+#include "FlagCollections.h"
 #include "FlagStorage.h"
 #include "glowl/BufferObject.hpp"
 #include "mmcore/Call.h"
@@ -28,7 +28,7 @@ namespace core {
      * Can be used for storing selection etc. Should be kept in sync with the normal
      * FlagStorage, which resides on CPU.
      */
-    class MEGAMOLCORE_API FlagStorage_GL : public core::Module {
+    class MEGAMOLCORE_API UniFlagStorage : public core::Module {
     public:
         // enum { ENABLED = 1 << 0, FILTERED = 1 << 1, SELECTED = 1 << 2, SOFTSELECTED = 1 << 3 };
 
@@ -38,7 +38,7 @@ namespace core {
          * @return The name of this module.
          */
         static const char* ClassName(void) {
-            return "FlagStorage_GL";
+            return "UniFlagStorage";
         }
 
         /**
@@ -60,10 +60,10 @@ namespace core {
         }
 
         /** Ctor. */
-        FlagStorage_GL(void);
+        UniFlagStorage(void);
 
         /** Dtor. */
-        virtual ~FlagStorage_GL(void);
+        virtual ~UniFlagStorage(void);
 
     protected:
         /**
@@ -80,7 +80,7 @@ namespace core {
 
     private:
         /**
-         * Access the flags provided by the FlagStorage_GL
+         * Access the flags provided by the UniFlagStorage
          *
          * @param caller The calling call.
          *
@@ -89,7 +89,7 @@ namespace core {
         bool readDataCallback(core::Call& caller);
 
         /**
-         * Write/update the flags provided by the FlagStorage_GL
+         * Write/update the flags provided by the UniFlagStorage
          *
          * @param caller The calling call.
          *
@@ -98,7 +98,7 @@ namespace core {
         bool writeDataCallback(core::Call& caller);
 
         /**
-         * Access the flags provided by the FlagStorage_GL
+         * Access the flags provided by the UniFlagStorage
          *
          * @param caller The calling call.
          *
@@ -107,7 +107,7 @@ namespace core {
         bool readCPUDataCallback(core::Call& caller);
 
         /**
-         * Write/update the flags provided by the FlagStorage_GL
+         * Write/update the flags provided by the UniFlagStorage
          *
          * @param caller The calling call.
          *
@@ -116,7 +116,7 @@ namespace core {
         bool writeCPUDataCallback(core::Call& caller);
 
         /**
-         * Access the metadata provided by the FlagStorage_GL
+         * Access the metadata provided by the UniFlagStorage
          *
          * @param caller The calling call.
          *
@@ -125,7 +125,7 @@ namespace core {
         bool readMetaDataCallback(core::Call& caller);
 
         /**
-         * Write/update the metadata provided by the FlagStorage_GL
+         * Write/update the metadata provided by the UniFlagStorage
          *
          * @param caller The calling call.
          *

@@ -13,7 +13,7 @@
 #include "FlagStorage.h"
 #include "glowl/BufferObject.hpp"
 #include "mmcore/CallGeneric.h"
-#include "mmcore/FlagStorage_GL.h"
+#include "mmcore/UniFlagStorage.h"
 #include "mmcore/factories/CallAutoDescription.h"
 
 namespace megamol {

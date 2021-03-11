@@ -1,49 +1,49 @@
 #include "stdafx.h"
-#include "mmcore/FlagStorage_GL.h"
-#include "mmcore/FlagCall_GL.h"
+#include "mmcore/UniFlagStorage.h"
+#include "mmcore/UniFlagCalls.h"
 
 using namespace megamol;
 using namespace megamol::core;
 
 
-FlagStorage_GL::FlagStorage_GL(void)
+UniFlagStorage::UniFlagStorage(void)
         : readFlagsSlot("readFlags", "Provides flag data to clients.")
         , writeFlagsSlot("writeFlags", "Accepts updated flag data from clients.")
         , readCPUFlagsSlot("readCPUFlags", "Provides flag data to clients.")
         , writeCPUFlagsSlot("writeCPUFlags", "Accepts updated flag data from clients.") {
 
     this->readFlagsSlot.SetCallback(FlagCallRead_GL::ClassName(),
-        FlagCallRead_GL::FunctionName(FlagCallRead_GL::CallGetData), &FlagStorage_GL::readDataCallback);
+        FlagCallRead_GL::FunctionName(FlagCallRead_GL::CallGetData), &UniFlagStorage::readDataCallback);
     this->readFlagsSlot.SetCallback(FlagCallRead_GL::ClassName(),
-        FlagCallRead_GL::FunctionName(FlagCallRead_GL::CallGetMetaData), &FlagStorage_GL::readMetaDataCallback);
+        FlagCallRead_GL::FunctionName(FlagCallRead_GL::CallGetMetaData), &UniFlagStorage::readMetaDataCallback);
     this->MakeSlotAvailable(&this->readFlagsSlot);
 
     this->writeFlagsSlot.SetCallback(FlagCallWrite_GL::ClassName(),
-        FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetData), &FlagStorage_GL::writeDataCallback);
+        FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetData), &UniFlagStorage::writeDataCallback);
     this->writeFlagsSlot.SetCallback(FlagCallWrite_GL::ClassName(),
-        FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetMetaData), &FlagStorage_GL::writeMetaDataCallback);
+        FlagCallWrite_GL::FunctionName(FlagCallWrite_GL::CallGetMetaData), &UniFlagStorage::writeMetaDataCallback);
     this->MakeSlotAvailable(&this->writeFlagsSlot);
 
     this->readCPUFlagsSlot.SetCallback(FlagCallRead_CPU::ClassName(),
-        FlagCallRead_CPU::FunctionName(FlagCallRead_CPU::CallGetData), &FlagStorage_GL::readDataCallback);
+        FlagCallRead_CPU::FunctionName(FlagCallRead_CPU::CallGetData), &UniFlagStorage::readDataCallback);
     this->readCPUFlagsSlot.SetCallback(FlagCallRead_CPU::ClassName(),
-        FlagCallRead_CPU::FunctionName(FlagCallRead_CPU::CallGetMetaData), &FlagStorage_GL::readMetaDataCallback);
+        FlagCallRead_CPU::FunctionName(FlagCallRead_CPU::CallGetMetaData), &UniFlagStorage::readMetaDataCallback);
     this->MakeSlotAvailable(&this->readCPUFlagsSlot);
 
     this->writeCPUFlagsSlot.SetCallback(FlagCallWrite_CPU::ClassName(),
-        FlagCallWrite_CPU::FunctionName(FlagCallWrite_CPU::CallGetData), &FlagStorage_GL::writeDataCallback);
+        FlagCallWrite_CPU::FunctionName(FlagCallWrite_CPU::CallGetData), &UniFlagStorage::writeDataCallback);
     this->writeCPUFlagsSlot.SetCallback(FlagCallWrite_CPU::ClassName(),
-        FlagCallWrite_CPU::FunctionName(FlagCallWrite_CPU::CallGetMetaData), &FlagStorage_GL::writeMetaDataCallback);
+        FlagCallWrite_CPU::FunctionName(FlagCallWrite_CPU::CallGetMetaData), &UniFlagStorage::writeMetaDataCallback);
     this->MakeSlotAvailable(&this->writeCPUFlagsSlot);
 }
 
 
-FlagStorage_GL::~FlagStorage_GL(void) {
+UniFlagStorage::~UniFlagStorage(void) {
     this->Release();
 };
 
 
-bool FlagStorage_GL::create(void) {
+bool UniFlagStorage::create(void) {
     this->theData = std::make_shared<FlagCollection_GL>();
     const int num = 10;
     std::vector<uint32_t> temp_data(num, FlagStorage::ENABLED);
@@ -54,11 +54,11 @@ bool FlagStorage_GL::create(void) {
 }
 
 
-void FlagStorage_GL::release(void) {
+void UniFlagStorage::release(void) {
     // intentionally empty
 }
 
-bool FlagStorage_GL::readDataCallback(core::Call& caller) {
+bool UniFlagStorage::readDataCallback(core::Call& caller) {
     auto fc = dynamic_cast<FlagCallRead_GL*>(&caller);
     if (fc == nullptr)
         return false;
@@ -67,7 +67,7 @@ bool FlagStorage_GL::readDataCallback(core::Call& caller) {
     return true;
 }
 
-bool FlagStorage_GL::writeDataCallback(core::Call& caller) {
+bool UniFlagStorage::writeDataCallback(core::Call& caller) {
     auto fc = dynamic_cast<FlagCallWrite_GL*>(&caller);
     if (fc == nullptr)
         return false;
@@ -80,7 +80,7 @@ bool FlagStorage_GL::writeDataCallback(core::Call& caller) {
     return true;
 }
 
-bool FlagStorage_GL::readCPUDataCallback(core::Call& caller) {
+bool UniFlagStorage::readCPUDataCallback(core::Call& caller) {
     auto fc = dynamic_cast<FlagCallRead_CPU*>(&caller);
     if (fc == nullptr)
         return false;
@@ -89,7 +89,7 @@ bool FlagStorage_GL::readCPUDataCallback(core::Call& caller) {
     return true;
 }
 
-bool FlagStorage_GL::writeCPUDataCallback(core::Call& caller) {
+bool UniFlagStorage::writeCPUDataCallback(core::Call& caller) {
     auto fc = dynamic_cast<FlagCallWrite_CPU*>(&caller);
     if (fc == nullptr)
         return false;
@@ -102,14 +102,14 @@ bool FlagStorage_GL::writeCPUDataCallback(core::Call& caller) {
     return true;
 }
 
-bool FlagStorage_GL::readMetaDataCallback(core::Call& caller) {
+bool UniFlagStorage::readMetaDataCallback(core::Call& caller) {
     // auto fc = dynamic_cast<FlagCallRead_GL*>(&caller);
     // if (fc == nullptr) return false;
 
     return true;
 }
 
-bool FlagStorage_GL::writeMetaDataCallback(core::Call& caller) {
+bool UniFlagStorage::writeMetaDataCallback(core::Call& caller) {
     // auto fc = dynamic_cast<FlagCallWrite_GL*>(&caller);
     // if (fc == nullptr) return false;
 
