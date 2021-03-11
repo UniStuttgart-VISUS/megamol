@@ -142,98 +142,108 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3DGL& cal
     auto call_hull_fbo = this->m_hull_fbo_slot.CallAs<compositing::CallFramebufferGL>();
     auto call_glyph_fbo = this->m_glyph_fbo_slot.CallAs<compositing::CallFramebufferGL>();
 
-    if (call_probe_fbo == NULL) return false;
-    if (call_hull_fbo == NULL) return false;
-    if (call_glyph_fbo == NULL) return false;
+    float hull_depth_pixel_data = 0.0f;
+    float probe_depth_pixel_data = 0.0f;
+    float glyph_depth_pixel_data = 0.0f;
 
-    if ((!(*call_probe_fbo)(0))) return false;
-    if ((!(*call_hull_fbo)(0))) return false;
-    if ((!(*call_glyph_fbo)(0))) return false;
-
-    auto probe_fbo = call_probe_fbo->getData();
-    auto hull_fbo = call_hull_fbo->getData();
-    auto glyph_fbo = call_glyph_fbo->getData();
-
-    // TODO read obj ids from FBOs...
-
-    // bind fbo to read buffer for retrieving pixel data and bliting to default framebuffer
-    hull_fbo->bindToRead(2);
-    {
-        // auto err = glGetError();
-        // std::cerr << err << std::endl;
-    }
-    // get object id at cursor location from framebuffer's second color attachment
-    float hull_depth_pixel_data = 0.0;
-    // TODO check if cursor position is within framebuffer pixel range?
-    glReadPixels(static_cast<GLint>(this->m_cursor_x), probe_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1,
-        1, GL_RED, GL_FLOAT, &hull_depth_pixel_data);
-    {
-        // auto err = glGetError();
-        // std::cerr << err << std::endl;
-    }
-
-    // bind fbo to read buffer for retrieving pixel data and bliting to default framebuffer
-    probe_fbo->bindToRead(2);
-    {
-        // auto err = glGetError();
-        // std::cerr << err << std::endl;
-    }
-    // get object id at cursor location from framebuffer's second color attachment
-    float probe_depth_pixel_data = 0.0;
-    // TODO check if cursor position is within framebuffer pixel range?
-    glReadPixels(static_cast<GLint>(this->m_cursor_x), probe_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1,
-        1, GL_RED, GL_FLOAT, &probe_depth_pixel_data);
-    {
-        // auto err = glGetError();
-        // std::cerr << err << std::endl;
-    }
-
-    // bind fbo to read buffer for retrieving pixel data and bliting to default framebuffer
-    glyph_fbo->bindToRead(2);
-    {
-        // auto err = glGetError();
-        // std::cerr << err << std::endl;
-    }
-    // get object id at cursor location from framebuffer's second color attachment
-    float glyph_depth_pixel_data = 0.0;
-    // TODO check if cursor position is within framebuffer pixel range?
-    glReadPixels(static_cast<GLint>(this->m_cursor_x), glyph_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1,
-        1, GL_RED, GL_FLOAT, &glyph_depth_pixel_data);
-    {
-        // auto err = glGetError();
-        // std::cerr << err << std::endl;
-    }
-
-    // bind fbo to read buffer for retrieving pixel data
-    glyph_fbo->bindToRead(3);
-    {
-        // auto err = glGetError();
-        // std::cerr << err << std::endl;
-    }
-    // get object id at cursor location from framebuffer's second color attachment
     GLint glyph_objId_pixel_data = -1;
-    // TODO check if cursor position is within framebuffer pixel range?
-    glReadPixels(static_cast<GLint>(this->m_cursor_x), glyph_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1,
-        1, GL_RED_INTEGER, GL_INT, &glyph_objId_pixel_data);
-    {
-        // auto err = glGetError();
-        // std::cerr << err << std::endl;
+    GLint probe_objId_pixel_data = -1;
+
+    if (call_hull_fbo != nullptr) {
+        if ((!(*call_hull_fbo)(0))) {
+            return false;
+        }
+        auto hull_fbo = call_hull_fbo->getData();
+
+        hull_fbo->bindToRead(2);
+        {
+            // auto err = glGetError();
+            // std::cerr << err << std::endl;
+        }
+        // get depth at cursor location from framebuffer's second color attachment
+        // TODO check if cursor position is within framebuffer pixel range?
+        glReadPixels(static_cast<GLint>(this->m_cursor_x), hull_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y),
+            1, 1, GL_RED, GL_FLOAT,
+            &hull_depth_pixel_data);
+        {
+            // auto err = glGetError();
+            // std::cerr << err << std::endl;
+        }
+    }
+    
+    if (call_probe_fbo != nullptr) {
+        if ((!(*call_probe_fbo)(0))) {
+            return false;
+        }
+        auto probe_fbo = call_probe_fbo->getData();
+
+        probe_fbo->bindToRead(2);
+        {
+            // auto err = glGetError();
+            // std::cerr << err << std::endl;
+        }
+        // get depth at cursor location from framebuffer's second color attachment
+        // TODO check if cursor position is within framebuffer pixel range?
+        glReadPixels(static_cast<GLint>(this->m_cursor_x),
+            probe_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1, 1, GL_RED, GL_FLOAT,
+            &probe_depth_pixel_data);
+        {
+            // auto err = glGetError();
+            // std::c+err << err << std::endl;
+        }
+
+        probe_fbo->bindToRead(3);
+        {
+            // auto err = glGetError();
+            // std::cerr << err << std::endl;
+        }
+        // get object id at cursor location from framebuffer's third color attachment
+        // TODO check if cursor position is within framebuffer pixel range?
+        glReadPixels(static_cast<GLint>(this->m_cursor_x),
+            probe_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1, 1, GL_RED_INTEGER, GL_INT,
+            &probe_objId_pixel_data);
+        {
+            // auto err = glGetError();
+            // std::cerr << err << std::endl;
+        }
     }
 
-    // bind fbo to read buffer for retrieving pixel data and bliting to default framebuffer
-    probe_fbo->bindToRead(3);
-    {
-        // auto err = glGetError();
-        // std::cerr << err << std::endl;
-    }
-    // get object id at cursor location from framebuffer's second color attachment
-    GLint probe_objId_pixel_data = -1;
-    // TODO check if cursor position is within framebuffer pixel range?
-    glReadPixels(static_cast<GLint>(this->m_cursor_x), probe_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1,
-        1, GL_RED_INTEGER, GL_INT, &probe_objId_pixel_data);
-    {
-        // auto err = glGetError();
-        // std::cerr << err << std::endl;
+    if (call_glyph_fbo != nullptr) {
+        if ((!(*call_glyph_fbo)(0))) {
+            return false;
+        }
+        auto glyph_fbo = call_glyph_fbo->getData();
+
+        
+        glyph_fbo->bindToRead(2);
+        {
+            // auto err = glGetError();
+            // std::cerr << err << std::endl;
+        }
+        // get depth at cursor location from framebuffer's second color attachment
+        // TODO check if cursor position is within framebuffer pixel range?
+        glReadPixels(static_cast<GLint>(this->m_cursor_x),
+            glyph_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1, 1, GL_RED, GL_FLOAT,
+            &glyph_depth_pixel_data);
+        {
+            // auto err = glGetError();
+            // std::cerr << err << std::endl;
+        }
+
+        glyph_fbo->bindToRead(3);
+        {
+            // auto err = glGetError();
+            // std::cerr << err << std::endl;
+        }
+        // get object id at cursor location from framebuffer's thrid color attachment
+        // TODO check if cursor position is within framebuffer pixel range?
+        glReadPixels(static_cast<GLint>(this->m_cursor_x),
+            glyph_fbo->getHeight() - static_cast<GLint>(this->m_cursor_y), 1, 1, GL_RED_INTEGER, GL_INT,
+            &glyph_objId_pixel_data);
+        {
+            // auto err = glGetError();
+            // std::cerr << err << std::endl;
+        }
     }
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
@@ -258,7 +268,6 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3DGL& cal
         objId = glyph_objId_pixel_data;
         depth = glyph_depth_pixel_data;
     }
-
 
     if (depth > hull_depth_pixel_data) {
         objId = -1;
