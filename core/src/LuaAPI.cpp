@@ -1137,6 +1137,10 @@ void megamol::frontend_resources::LuaCallbacksCollection::LuaState::error(std::s
 #define lua_state \
     reinterpret_cast<lua_State*>(this->state_ptr)
 
+int megamol::frontend_resources::LuaCallbacksCollection::LuaState::stack_size() {
+    return lua_gettop(lua_state);
+}
+
 template <>
 typename std::remove_reference<bool>::type
 megamol::frontend_resources::LuaCallbacksCollection::LuaState::read<typename std::remove_reference<bool>::type>(size_t index) {

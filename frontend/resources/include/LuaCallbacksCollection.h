@@ -16,6 +16,25 @@
 namespace megamol {
 namespace frontend_resources {
 
+namespace {
+    template <typename T>
+    std::string type_name();
+
+#define make_name(Type) \
+    template <> \
+    std::string type_name<Type>() { \
+        return {#Type}; \
+    }
+
+    make_name(bool);
+    make_name(int);
+    make_name(long);
+    make_name(float);
+    make_name(double);
+    template <> std::string type_name<std::string>() { return "string"; }
+#undef make_name
+}
+
 struct LuaCallbacksCollection {
 
     struct LuaState {
@@ -27,6 +46,7 @@ struct LuaCallbacksCollection {
         void write(T item);
 
         void error(std::string reason);
+        int stack_size();
 
         void* state_ptr = nullptr;
     };
@@ -78,7 +98,14 @@ struct LuaCallbacksCollection {
     std::function<int(LuaState)> resolve(std::string func_name, FuncType func) {
         return
             [=](LuaState state) -> int {
-                //const bool stack_size_ok = (sizeof...(FuncArgs) == state.read<>(0));
+                if (sizeof...(FuncArgs) != state.stack_size()) {
+                    std::string args {((type_name<FuncArgs>() + ", ") + ...)};
+                    state.error(func_name + ": " +
+                        " expects " + std::to_string(sizeof...(FuncArgs)) +
+                        " arguments of type (" + args.substr(0, args.find_last_of(','))+ ")"+
+                        " but has " +  std::to_string(state.stack_size()));
+                    return 0;
+                }
 
                 const Result result = unpack<Result>(state, func, std::tuple<FuncArgs...> {} , std::index_sequence_for<FuncArgs...> {});
 
