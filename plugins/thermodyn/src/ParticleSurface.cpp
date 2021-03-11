@@ -71,10 +71,10 @@ bool megamol::thermodyn::ParticleSurface::create() {
 void megamol::thermodyn::ParticleSurface::release() {}
 
 
-bool compute_touchingsphere_radius(megamol::thermodyn::ParticleSurface::Point_3 const& a_pos, float a_r,
-    megamol::thermodyn::ParticleSurface::Point_3 const& b_pos, float b_r,
-    megamol::thermodyn::ParticleSurface::Point_3 const& c_pos, float c_r,
-    megamol::thermodyn::ParticleSurface::Point_3 const& d_pos, float d_r, float& res) {
+bool compute_touchingsphere_radius(megamol::thermodyn::Point_3 const& a_pos, float a_r,
+    megamol::thermodyn::Point_3 const& b_pos, float b_r,
+    megamol::thermodyn::Point_3 const& c_pos, float c_r,
+    megamol::thermodyn::Point_3 const& d_pos, float d_r, float& res) {
     Eigen::Vector3f a_vec;
     a_vec << a_pos.x(), a_pos.y(), a_pos.z();
     Eigen::Vector3f b_vec;
@@ -174,7 +174,7 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
             auto const dyAcc = parts.GetParticleStore().GetDYAcc();
             auto const dzAcc = parts.GetParticleStore().GetDZAcc();
 
-            std::vector<std::pair<Point_3, float>> points;
+            std::vector<std::pair<Point_3, std::size_t>> points;
             points.reserve(p_count);
 
             for (std::remove_const_t<decltype(p_count)> pidx = 0; pidx < p_count; ++pidx) {
@@ -194,7 +194,7 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
                 as->get_alpha_shape_vertices(std::back_inserter(as_vertices), vert_type);
                 core::utility::log::Log::DefaultLog.WriteInfo(
                     "[ParticleSurface]: Extracted %d vertices", as_vertices.size());
-
+                
                 vertices.clear();
                 vertices.reserve(facets.size() * 9);
                 normals.clear();
@@ -892,33 +892,10 @@ bool megamol::thermodyn::ParticleSurface::get_part_data_cb(core::Call& c) {
         (cgtf != nullptr && (tf_changed = cgtf->IsDirty()))) {
         auto const res = assert_data(*in_data);
 
-        out_part->SetParticleListCount(in_data->GetParticleListCount());
-
-        for (std::remove_const_t<decltype(in_data->GetParticleListCount())> pl_idx = 0;
-             pl_idx < in_data->GetParticleListCount(); ++pl_idx) {
-
-            auto const& part_data = _part_data[pl_idx];
-            auto& parts = out_part->AccessParticles(pl_idx);
-
-            parts.SetCount(part_data.size() / 7);
-            parts.SetVertexData(
-                core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, part_data.data(), 7 * sizeof(float));
-            parts.SetColourData(core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I,
-                part_data.data() + 3, 7 * sizeof(float));
-            parts.SetDirData(
-                core::moldyn::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, part_data.data() + 4, 7 * sizeof(float));
-            parts.SetGlobalRadius(in_data->AccessParticles(pl_idx).GetGlobalRadius());
-            parts.SetColourMapIndexValues(in_data->AccessParticles(pl_idx).GetMinColourIndexValue(),
-                in_data->AccessParticles(pl_idx).GetMaxColourIndexValue());
-
-        }
+        
 
 
-        auto const bbox = in_data->AccessBoundingBoxes().ObjectSpaceBBox();
-        auto const cbox = in_data->AccessBoundingBoxes().ObjectSpaceClipBox();
-
-        out_part->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
-        out_part->AccessBoundingBoxes().SetObjectSpaceClipBox(cbox);
+        
 
         _frame_id = in_data->FrameID();
         _in_data_hash = in_data->DataHash();
@@ -928,6 +905,32 @@ bool megamol::thermodyn::ParticleSurface::get_part_data_cb(core::Call& c) {
             cgtf->ResetDirty();
         }
         ++_out_data_hash;
+    }
+
+    auto const bbox = in_data->AccessBoundingBoxes().ObjectSpaceBBox();
+    auto const cbox = in_data->AccessBoundingBoxes().ObjectSpaceClipBox();
+
+    out_part->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
+    out_part->AccessBoundingBoxes().SetObjectSpaceClipBox(cbox);
+
+    out_part->SetParticleListCount(in_data->GetParticleListCount());
+
+    for (std::remove_const_t<decltype(in_data->GetParticleListCount())> pl_idx = 0;
+         pl_idx < in_data->GetParticleListCount(); ++pl_idx) {
+
+        auto const& part_data = _part_data[pl_idx];
+        auto& parts = out_part->AccessParticles(pl_idx);
+
+        parts.SetCount(part_data.size() / 7);
+        parts.SetVertexData(
+            core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, part_data.data(), 7 * sizeof(float));
+        parts.SetColourData(
+            core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, part_data.data() + 3, 7 * sizeof(float));
+        parts.SetDirData(
+            core::moldyn::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, part_data.data() + 4, 7 * sizeof(float));
+        parts.SetGlobalRadius(in_data->AccessParticles(pl_idx).GetGlobalRadius());
+        parts.SetColourMapIndexValues(in_data->AccessParticles(pl_idx).GetMinColourIndexValue(),
+            in_data->AccessParticles(pl_idx).GetMaxColourIndexValue());
     }
 
     out_part->SetFrameCount(in_data->FrameCount());
