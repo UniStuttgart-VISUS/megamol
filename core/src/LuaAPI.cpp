@@ -1252,9 +1252,50 @@ int megamol::core::LuaAPI::ScaleGUI(lua_State *L) {
 
 
 void megamol::core::LuaAPI::AddCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks) {
-    registered_callbacks.push_back(callbacks);
+    verbatim_lambda_callbacks_.push_back(callbacks);
 
-    register_callbacks(registered_callbacks.back());
+    for (auto& c : callbacks.callbacks) {
+        assert(!std::get<0>(c).empty());
+    }
+
+    register_callbacks(verbatim_lambda_callbacks_.back());
+}
+
+static std::vector<std::string> getNames(megamol::frontend_resources::LuaCallbacksCollection const& callbacks) {
+    std::vector<std::string> names{callbacks.callbacks.size()};
+
+    for (auto& c : callbacks.callbacks) {
+        names.push_back(std::get<0>(c));
+    }
+
+    return names;
+}
+
+void megamol::core::LuaAPI::RemoveCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks, bool delete_verbatim) {
+    RemoveCallbacks( getNames(callbacks) );
+
+    if(delete_verbatim)
+    verbatim_lambda_callbacks_.remove_if([&](auto& item){
+        return item.callbacks.empty() ||
+            (item.callbacks.size() == callbacks.callbacks.size()
+                && std::get<0>(item.callbacks.front()) == std::get<0>(callbacks.callbacks.front()));
+        });
+}
+
+void megamol::core::LuaAPI::RemoveCallbacks(std::vector<std::string> const& callback_names) {
+    for (auto& name : callback_names) {
+        luaApiInterpreter_.UnregisterCallback(name);
+        wrapped_lambda_callbacks_.remove_if([&](auto& item){ return std::get<0>(item) == name; });
+    }
+}
+
+void megamol::core::LuaAPI::ClearCallbacks() {
+    for (auto& callbacks: verbatim_lambda_callbacks_) {
+        RemoveCallbacks( getNames(callbacks) );
+    }
+    assert(wrapped_lambda_callbacks_.empty());
+
+    verbatim_lambda_callbacks_.clear();
 }
 
 void megamol::core::LuaAPI::register_callbacks(megamol::frontend_resources::LuaCallbacksCollection& callbacks) {
@@ -1263,11 +1304,19 @@ void megamol::core::LuaAPI::register_callbacks(megamol::frontend_resources::LuaC
             auto& name = std::get<0>(c);
             auto& description = std::get<1>(c);
             auto& func = std::get<2>(c);
-            translated_callbacks.push_back(
+
+            if (auto found_it = std::find_if(wrapped_lambda_callbacks_.begin(), wrapped_lambda_callbacks_.end(), [&](auto const& elem) { return std::get<0>(elem) == name; });
+                found_it != wrapped_lambda_callbacks_.end()) {
+
+                RemoveCallbacks({std::get<0>(*found_it)});
+            }
+
+            wrapped_lambda_callbacks_.push_back({
+                name,
                 std::function<int(lua_State*)>{
                     [=](lua_State *L) -> int { return func({L}); }
-            });
-            luaApiInterpreter_.RegisterCallback(name, description, translated_callbacks.back());
+            }});
+            luaApiInterpreter_.RegisterCallback(name, description, std::get<1>(wrapped_lambda_callbacks_.back()));
         }
         callbacks.is_registered = true;
     }

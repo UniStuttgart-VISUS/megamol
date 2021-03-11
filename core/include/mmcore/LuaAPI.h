@@ -133,6 +133,9 @@ public:
     void SetCallbacks(LuaCallbacks c) { callbacks_ = c; }
 
     void AddCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks);
+    void RemoveCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks, bool delete_verbatim = true);
+    void RemoveCallbacks(std::vector<std::string> const& callback_names);
+    void ClearCallbacks();
 
     /**
      * Communicates mmQuit request to rest of MegaMol main loop.
@@ -305,8 +308,8 @@ private:
     LuaConfigCallbacks config_callbacks_;
     LuaCallbacks callbacks_;
 
-    std::list<megamol::frontend_resources::LuaCallbacksCollection> registered_callbacks;
-    std::list<std::function<int(lua_State*)>> translated_callbacks;
+    std::list<megamol::frontend_resources::LuaCallbacksCollection> verbatim_lambda_callbacks_;
+    std::list<std::tuple<std::string, std::function<int(lua_State*)>>> wrapped_lambda_callbacks_;
     void register_callbacks(megamol::frontend_resources::LuaCallbacksCollection& callbacks);
 
     // this one is special since the frontend provides it
