@@ -79,7 +79,6 @@ public:
     * @param out_nodes                              The transfer function node output.
     * @param out_interpolmode                       The transfer function interpolation mode output.
     * @param out_texsize                            The transfer function texture size output.
-    * @param out_ignore_range_on_project_load       Flag to ignore range of parameter on project load.
     *
     * @return True if JSON string was successfully converted into transfer function data, false otherwise.
     */
@@ -89,17 +88,17 @@ public:
     /**
      * Get transfer function JSON string from data.
      *
-     * @param out_tfs                               The transfer function output encoded as string in JSON format.
-     * @param in_nodes                              The transfer function node input.
-     * @param in_interpolmode                       The transfer function interpolation mode input.
-     * @param in_texsize                            The transfer function texture size input.
-     * @param in_ignore_range_on_project_load       Flag to ignore range of parameter on project load.
+     * @param out_tfs                       The transfer function output encoded as string in JSON format.
+     * @param in_nodes                      The transfer function node input.
+     * @param in_interpolmode               The transfer function interpolation mode input.
+     * @param in_texsize                    The transfer function texture size input.
+     * @param in_ignore_call_range_once     Flag to ignore range of parameter on project load.
      *
      * @return True if transfer function data was successfully converted into JSON string, false otherwise.
      */
     static bool GetDumpedTransferFunction(std::string& out_tfs, const TFNodeType& in_nodes,
         const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range,
-        bool in_ignore_range_on_project_load = false);
+        bool in_ignore_call_range_once = false);
 
     /**
      * Check given transfer function data.
@@ -259,7 +258,7 @@ public:
     /**
      * Return flag 'IgnoreRangeOnProjectLoad'
      */
-    bool IgnoreRangeOnProjectLoad(void);
+    bool IgnoreCallRangeOnce(void);
 
 private:
 

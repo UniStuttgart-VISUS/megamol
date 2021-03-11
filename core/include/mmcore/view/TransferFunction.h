@@ -125,7 +125,8 @@ namespace view {
         /** The value range */
         std::array<float, 2> range;
 
-        bool check_once_ignore_range_on_project_load;
+        bool check_ignore_call_range;
+        bool ignore_call_range_once;
 
         /** Version of texture */
         uint32_t version;

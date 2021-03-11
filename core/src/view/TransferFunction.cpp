@@ -25,7 +25,8 @@ TransferFunction::TransferFunction(void)
     , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGBA)
     , interpolMode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , range({0.0f, 1.0f})
-    , check_once_ignore_range_on_project_load(true)
+    , check_ignore_call_range(true)
+    , ignore_call_range_once(false)
     , version(0)
     , last_frame_id(0) {
 
@@ -65,13 +66,14 @@ bool TransferFunction::requestTF(Call& call) {
     param::TransferFunctionParam::TFNodeType tmp_nodes;
 
     // Check if range of initially loaded project value should be ignored
-    bool tmp_ignore_range_on_project_load = false;
-    if (this->check_once_ignore_range_on_project_load) {
-        tmp_ignore_range_on_project_load = this->tfParam.Param<param::TransferFunctionParam>()->IgnoreRangeOnProjectLoad();
-        this->check_once_ignore_range_on_project_load = false;
+    if (this->check_ignore_call_range) {
+        this->ignore_call_range_once =
+            this->tfParam.Param<param::TransferFunctionParam>()->IgnoreCallRangeOnce();
+        this->check_ignore_call_range = false;
     }
+
     // Update changed range propagated from the module via the call
-    if (tmp_ignore_range_on_project_load && cgtf->ConsumeRangeUpdate()) {
+    if (!this->ignore_call_range_once && cgtf->ConsumeRangeUpdate()) {
         // Get current values from parameter string 
         if (megamol::core::param::TransferFunctionParam::GetParsedTransferFunctionData(
                 this->tfParam.Param<param::TransferFunctionParam>()->Value(), tmp_nodes, tmp_interpol, tmp_tex_size,
@@ -82,6 +84,7 @@ bool TransferFunction::requestTF(Call& call) {
                 this->tfParam.Param<param::TransferFunctionParam>()->SetValue(tf_str);
             }
         }
+        this->ignore_call_range_once = false;
     }
 
     if ((this->texID == 0) || this->tfParam.IsDirty()) {

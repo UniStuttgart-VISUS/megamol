@@ -390,6 +390,7 @@ bool GUIWindows::PostDraw(void) {
     const auto func = [&, this](WindowCollection::WindowConfiguration& wc) {
         // Update transfer function
         if ((wc.win_callback == WindowCollection::DrawCallbacks::TRANSFER_FUNCTION) && wc.buf_tfe_reset) {
+
             this->tf_editor_ptr->SetMinimized(wc.tfe_view_minimized);
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
 
