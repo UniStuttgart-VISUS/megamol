@@ -116,7 +116,6 @@ bool TimeLineRenderer::create(void) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return false;
      }
-
     return true;
 }
 
