@@ -1,6 +1,10 @@
 #include "stdafx.h"
 #include "TransitionCalculator.h"
 
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/IntParam.h"
+#include "mmcore/view/CallGetTransferFunction.h"
+
 #include "glm/glm.hpp"
 
 #include "optix/utils_host.h"
@@ -14,7 +18,13 @@ extern "C" const char embedded_transitioncalculator_programs[];
 
 
 megamol::optix_hpg::TransitionCalculator::TransitionCalculator()
-        : out_transitions_slot_("outTransitions", ""), in_mesh_slot_("inMesh", ""), in_paths_slot_("inPaths", "") {
+        : out_transitions_slot_("outTransitions", "")
+        , in_mesh_slot_("inMesh", "")
+        , in_paths_slot_("inPaths", "")
+        , in_tf_slot_("inTF", "")
+        , output_type_slot_("output type", "")
+        , frame_count_slot_("frame count", "")
+        , frame_skip_slot_("frame skip", "") {
     out_transitions_slot_.SetCallback(
         mesh::CallMesh::ClassName(), mesh::CallMesh::FunctionName(0), &TransitionCalculator::get_data_cb);
     out_transitions_slot_.SetCallback(
@@ -26,6 +36,22 @@ megamol::optix_hpg::TransitionCalculator::TransitionCalculator()
 
     in_paths_slot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&in_paths_slot_);
+
+    in_tf_slot_.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
+    MakeSlotAvailable(&in_tf_slot_);
+
+    using output_type_ut = std::underlying_type_t<output_type>;
+    auto ep = new core::param::EnumParam(static_cast<output_type_ut>(output_type::outbound));
+    ep->SetTypePair(static_cast<output_type_ut>(output_type::inbound), "inbound");
+    ep->SetTypePair(static_cast<output_type_ut>(output_type::outbound), "outbound");
+    output_type_slot_ << ep;
+    MakeSlotAvailable(&output_type_slot_);
+
+    frame_count_slot_ << new core::param::IntParam(10, 1);
+    MakeSlotAvailable(&frame_count_slot_);
+
+    frame_skip_slot_ << new core::param::IntParam(1, 1);
+    MakeSlotAvailable(&frame_skip_slot_);
 }
 
 
@@ -81,8 +107,28 @@ bool megamol::optix_hpg::TransitionCalculator::init() {
 }
 
 
-bool megamol::optix_hpg::TransitionCalculator::assertData(
-    mesh::CallMesh& mesh, core::moldyn::MultiParticleDataCall& particles, unsigned int frameID) {
+inline float tf_lerp(float a, float b, float inter) {
+    return a * (1.0f - inter) + b * inter;
+}
+
+
+inline glm::vec4 sample_tf(float const* tf, unsigned int tf_size, int base, float rest) {
+    if (base < 0 || tf_size == 0)
+        return glm::vec4(0);
+    auto const last_el = tf_size - 1;
+    if (base >= last_el)
+        return glm::vec4(tf[last_el * 4], tf[last_el * 4 + 1], tf[last_el * 4 + 2], tf[last_el * 4 + 3]);
+
+    auto const a = base;
+    auto const b = base + 1;
+
+    return glm::vec4(tf_lerp(tf[a * 4], tf[b * 4], rest), tf_lerp(tf[a * 4 + 1], tf[b * 4 + 1], rest),
+        tf_lerp(tf[a * 4 + 2], tf[b * 4 + 2], rest), tf_lerp(tf[a * 4 + 3], tf[b * 4 + 3], rest));
+}
+
+
+bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
+    core::moldyn::MultiParticleDataCall& particles, core::view::CallGetTransferFunction& tf, unsigned int frameID) {
     // fetch data for current and subsequent timestep
     // create array of rays for the current particle configuration
     // upload mesh as geometry
@@ -119,6 +165,7 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(
     auto num_vertices = 0;
 
     std::vector<float> tmp_data;
+    float* vert_ptr = nullptr;
 
     for (auto const& attr : attributes) {
         if (attr.semantic != mesh::MeshDataAccessCollection::AttributeSemanticType::POSITION)
@@ -129,7 +176,7 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(
         num_vertices = attr.byte_size / (3 * sizeof(float));
         tmp_data.reserve(num_vertices * 3);
 
-        auto vert_ptr = reinterpret_cast<float*>(attr.data);
+        vert_ptr = reinterpret_cast<float*>(attr.data);
         for (std::size_t idx = 0; idx < 3 * num_vertices; ++idx) {
             tmp_data.push_back(vert_ptr[idx]);
         }
@@ -137,6 +184,8 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(
 
     if (tmp_data.empty())
         return false;
+
+    mesh_access_collection_ = std::make_shared<mesh::MeshDataAccessCollection>();
 
     CUdeviceptr mesh_pos_data;
     CUDA_CHECK_ERROR(cuMemAlloc(&mesh_pos_data, tmp_data.size() * sizeof(float)));
@@ -198,135 +247,157 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(
 
     ///----------------------------------------------
 
+    CUdeviceptr mesh_inbound_ctr, mesh_outbound_ctr, ray_state;
+
     for (auto el : ray_buffer_) {
         CUDA_CHECK_ERROR(cuMemFree(el));
     }
-
-    bool got_0 = false;
-    do {
-        particles.SetFrameID(frameID, true);
-        got_0 = particles(1);
-        got_0 = got_0 && particles(0);
-    } while (particles.FrameID() != frameID && !got_0);
-
     auto const plCount0 = particles.GetParticleListCount();
+    std::vector<std::vector<RayH>> rays(plCount0);
 
-    std::vector<std::vector<std::pair<glm::vec3, glm::vec3>>> origins(plCount0);
-    std::vector<std::vector<std::uint64_t>> idx_map(plCount0);
+    CUDA_CHECK_ERROR(cuMemAlloc(&mesh_inbound_ctr, (num_vertices / 3) * sizeof(std::uint32_t)));
+    CUDA_CHECK_ERROR(cuMemAlloc(&mesh_outbound_ctr, (num_vertices / 3) * sizeof(std::uint32_t)));
 
-    for (unsigned int plIdx = 0; plIdx < plCount0; ++plIdx) {
-        auto const& parts = particles.AccessParticles(plIdx);
-        auto const pCount = parts.GetCount();
 
-        auto& orgs = origins[plIdx];
-        orgs.resize(pCount);
+    CUDA_CHECK_ERROR(cuMemsetD32Async(mesh_inbound_ctr, 0, (num_vertices / 3), optix_ctx_->GetExecStream()));
+    CUDA_CHECK_ERROR(cuMemsetD32Async(mesh_outbound_ctr, 0, (num_vertices / 3), optix_ctx_->GetExecStream()));
 
-        auto& idc = idx_map[plIdx];
-        idc.resize(pCount);
+    auto const frame_count = frame_count_slot_.Param<core::param::IntParam>()->Value();
+    auto const frame_skip = frame_skip_slot_.Param<core::param::IntParam>()->Value();
 
-        auto xAcc = parts.GetParticleStore().GetXAcc();
-        auto yAcc = parts.GetParticleStore().GetYAcc();
-        auto zAcc = parts.GetParticleStore().GetZAcc();
-        auto idAcc = parts.GetParticleStore().GetIDAcc();
+    for (int fid = frameID; fid < frameID + frame_count; fid += frame_skip) {
 
-        for (std::size_t pIdx = 0; pIdx < pCount; ++pIdx) {
-            orgs[pIdx] = std::make_pair(glm::vec3(xAcc->Get_f(pIdx), yAcc->Get_f(pIdx), zAcc->Get_f(pIdx)),
-                glm::vec3(std::numeric_limits<float>::lowest()));
-            idc[pIdx] = idAcc->Get_u64(pIdx);
-        }
-    }
+        bool got_0 = false;
+        do {
+            particles.SetFrameID(fid, true);
+            got_0 = particles(1);
+            got_0 = got_0 && particles(0);
+        } while (particles.FrameID() != fid && !got_0);
 
-    bool got_1 = false;
-    do {
-        particles.SetFrameID(frameID + 1, true);
-        got_1 = particles(1);
-        got_1 = got_1 && particles(0);
-    } while (particles.FrameID() != frameID + 1 && !got_1);
 
-    auto const plCount1 = particles.GetParticleListCount();
+        std::vector<std::vector<std::pair<glm::vec3, glm::vec3>>> origins(plCount0);
+        std::vector<std::vector<std::uint64_t>> idx_map(plCount0);
 
-    for (unsigned int plIdx = 0; plIdx < plCount1; ++plIdx) {
-        auto const& parts = particles.AccessParticles(plIdx);
-        auto const pCount = parts.GetCount();
+        for (unsigned int plIdx = 0; plIdx < plCount0; ++plIdx) {
+            auto const& parts = particles.AccessParticles(plIdx);
+            auto const pCount = parts.GetCount();
 
-        auto& orgs = origins[plIdx];
-        auto const& idc = idx_map[plIdx];
+            auto& orgs = origins[plIdx];
+            orgs.resize(pCount);
 
-        auto xAcc = parts.GetParticleStore().GetXAcc();
-        auto yAcc = parts.GetParticleStore().GetYAcc();
-        auto zAcc = parts.GetParticleStore().GetZAcc();
-        auto idAcc = parts.GetParticleStore().GetIDAcc();
+            auto& idc = idx_map[plIdx];
+            idc.resize(pCount);
 
-        for (std::size_t pIdx = 0; pIdx < pCount; ++pIdx) {
-            auto const id = idAcc->Get_u64(pIdx);
-            auto fit = std::find(idc.begin(), idc.end(), id);
-            if (fit != idc.end()) {
-                auto const idx = std::distance(idc.begin(), fit);
-                orgs[idx].second = glm::vec3(xAcc->Get_f(pIdx), yAcc->Get_f(pIdx), zAcc->Get_f(pIdx));
+            auto xAcc = parts.GetParticleStore().GetXAcc();
+            auto yAcc = parts.GetParticleStore().GetYAcc();
+            auto zAcc = parts.GetParticleStore().GetZAcc();
+            auto idAcc = parts.GetParticleStore().GetIDAcc();
+
+            for (std::size_t pIdx = 0; pIdx < pCount; ++pIdx) {
+                orgs[pIdx] = std::make_pair(glm::vec3(xAcc->Get_f(pIdx), yAcc->Get_f(pIdx), zAcc->Get_f(pIdx)),
+                    glm::vec3(std::numeric_limits<float>::lowest()));
+                idc[pIdx] = idAcc->Get_u64(pIdx);
             }
         }
-    }
 
+        bool got_1 = false;
+        do {
+            particles.SetFrameID(fid + frame_skip, true);
+            got_1 = particles(1);
+            got_1 = got_1 && particles(0);
+        } while (particles.FrameID() != fid + frame_skip && !got_1);
 
-    std::vector<std::vector<RayH>> rays(plCount0);
-    for (unsigned int plIdx = 0; plIdx < plCount0; ++plIdx) {
-        auto const& orgs = origins[plIdx];
+        auto const plCount1 = particles.GetParticleListCount();
 
-        auto& ray_vec = rays[plIdx];
-        ray_vec.reserve(orgs.size());
+        for (unsigned int plIdx = 0; plIdx < plCount1; ++plIdx) {
+            auto const& parts = particles.AccessParticles(plIdx);
+            auto const pCount = parts.GetCount();
 
-        for (auto const& el : orgs) {
-            auto const& origin = el.first;
-            auto const& dest = el.second;
+            auto& orgs = origins[plIdx];
+            auto const& idc = idx_map[plIdx];
 
-            if (dest.x < std::numeric_limits<float>::lowest() + std::numeric_limits<float>::epsilon() &&
-                dest.y < std::numeric_limits<float>::lowest() + std::numeric_limits<float>::epsilon() &&
-                dest.z < std::numeric_limits<float>::lowest() + std::numeric_limits<float>::epsilon())
-                continue;
+            auto xAcc = parts.GetParticleStore().GetXAcc();
+            auto yAcc = parts.GetParticleStore().GetYAcc();
+            auto zAcc = parts.GetParticleStore().GetZAcc();
+            auto idAcc = parts.GetParticleStore().GetIDAcc();
 
-            auto const& dir = dest - origin;
-            auto const tMax = glm::length(dir);
-            ray_vec.emplace_back(origin, glm::normalize(dir), 0.f, tMax);
+            for (std::size_t pIdx = 0; pIdx < pCount; ++pIdx) {
+                auto const id = idAcc->Get_u64(pIdx);
+                auto fit = std::find(idc.begin(), idc.end(), id);
+                if (fit != idc.end()) {
+                    auto const idx = std::distance(idc.begin(), fit);
+                    orgs[idx].second = glm::vec3(xAcc->Get_f(pIdx), yAcc->Get_f(pIdx), zAcc->Get_f(pIdx));
+                }
+            }
         }
 
-        ray_buffer_.push_back(0);
-        CUDA_CHECK_ERROR(cuMemAlloc(&ray_buffer_.back(), ray_vec.size() * sizeof(RayH)));
-        CUDA_CHECK_ERROR(cuMemcpyHtoDAsync(
-            ray_buffer_.back(), ray_vec.data(), ray_vec.size() * sizeof(RayH), optix_ctx_->GetExecStream()));
 
-        CUdeviceptr mesh_inbound_ctr, mesh_outbound_ctr, ray_state;
+        positions_.resize(plCount0);
+        colors_.resize(plCount0);
+        indices_.resize(plCount0);
+        for (unsigned int plIdx = 0; plIdx < plCount0; ++plIdx) {
+            auto const& orgs = origins[plIdx];
 
-        CUDA_CHECK_ERROR(cuMemAlloc(&mesh_inbound_ctr, (num_vertices / 3) * sizeof(std::uint32_t)));
-        CUDA_CHECK_ERROR(cuMemAlloc(&mesh_outbound_ctr, (num_vertices / 3) * sizeof(std::uint32_t)));
-        CUDA_CHECK_ERROR(cuMemAlloc(&ray_state, ray_vec.size()));
+            auto& ray_vec = rays[plIdx];
+            ray_vec.clear();
+            ray_vec.reserve(orgs.size());
 
-        CUDA_CHECK_ERROR(cuMemsetD32Async(mesh_inbound_ctr, 0, (num_vertices / 3), optix_ctx_->GetExecStream()));
-        CUDA_CHECK_ERROR(cuMemsetD32Async(mesh_outbound_ctr, 0, (num_vertices / 3), optix_ctx_->GetExecStream()));
-        CUDA_CHECK_ERROR(cuMemsetD8Async(ray_state, 0, ray_vec.size(), optix_ctx_->GetExecStream()));
 
-        mesh_sbt_record.data.mesh_inbound_ctr_ptr = (std::uint32_t*) mesh_inbound_ctr;
-        mesh_sbt_record.data.mesh_outbound_ctr_ptr = (std::uint32_t*) mesh_outbound_ctr;
-        mesh_sbt_record.data.ray_state = (std::uint8_t*) ray_state;
-        mesh_sbt_record.data.ray_buffer = (void*) ray_buffer_.back();
-        mesh_sbt_record.data.num_rays = ray_vec.size();
-        mesh_sbt_record.data.num_tris = num_vertices / 3;
-        mesh_sbt_record.data.world = geo_handle;
+            for (auto const& el : orgs) {
+                auto const& origin = el.first;
+                auto const& dest = el.second;
 
-        SBTRecord<device::TransitionCalculatorData> raygen_record;
-        OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(raygen_module_, &raygen_record));
-        raygen_record.data = mesh_sbt_record.data;
-        SBTRecord<device::TransitionCalculatorData> miss_record;
-        OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(miss_module_, &miss_record));
-        miss_record.data = mesh_sbt_record.data;
+                if (dest.x <= std::numeric_limits<float>::lowest() + std::numeric_limits<float>::epsilon() ||
+                    dest.y <= std::numeric_limits<float>::lowest() + std::numeric_limits<float>::epsilon() ||
+                    dest.z <= std::numeric_limits<float>::lowest() + std::numeric_limits<float>::epsilon())
+                    continue;
 
-        // launch
-        sbt_.SetSBT(&raygen_record, sizeof(raygen_record), nullptr, 0, &miss_record, sizeof(miss_record), 1,
-            &mesh_sbt_record, sizeof(mesh_sbt_record), 1, nullptr, 0, 0, optix_ctx_->GetExecStream());
+                auto const& dir = dest - origin;
+                auto const tMax = glm::length(dir);
+                ray_vec.emplace_back(origin, glm::normalize(dir), 0.f, tMax);
+            }
 
-        glm::uvec2 launch_dim = glm::uvec2(std::ceilf(std::sqrtf(static_cast<float>(ray_vec.size()))));
-        OPTIX_CHECK_ERROR(
-            optixLaunch(pipeline_, optix_ctx_->GetExecStream(), 0, 0, sbt_, launch_dim.x, launch_dim.y, 1));
+            ray_buffer_.push_back(0);
+            CUDA_CHECK_ERROR(cuMemAlloc(&ray_buffer_.back(), ray_vec.size() * sizeof(RayH)));
+            CUDA_CHECK_ERROR(cuMemcpyHtoDAsync(
+                ray_buffer_.back(), ray_vec.data(), ray_vec.size() * sizeof(RayH), optix_ctx_->GetExecStream()));
 
+            CUDA_CHECK_ERROR(cuMemAlloc(&ray_state, ray_vec.size()));
+            CUDA_CHECK_ERROR(cuMemsetD8Async(ray_state, 0, ray_vec.size(), optix_ctx_->GetExecStream()));
+
+
+            mesh_sbt_record.data.mesh_inbound_ctr_ptr = (std::uint32_t*) mesh_inbound_ctr;
+            mesh_sbt_record.data.mesh_outbound_ctr_ptr = (std::uint32_t*) mesh_outbound_ctr;
+            mesh_sbt_record.data.ray_state = (std::uint8_t*) ray_state;
+            mesh_sbt_record.data.ray_buffer = (void*) ray_buffer_.back();
+            mesh_sbt_record.data.num_rays = ray_vec.size();
+            mesh_sbt_record.data.num_tris = num_vertices / 3;
+            mesh_sbt_record.data.world = geo_handle;
+
+            SBTRecord<device::TransitionCalculatorData> raygen_record;
+            OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(raygen_module_, &raygen_record));
+            raygen_record.data = mesh_sbt_record.data;
+            SBTRecord<device::TransitionCalculatorData> miss_record;
+            OPTIX_CHECK_ERROR(optixSbtRecordPackHeader(miss_module_, &miss_record));
+            miss_record.data = mesh_sbt_record.data;
+
+            core::utility::log::Log::DefaultLog.WriteInfo("[TransitionCalculator] Starting computation");
+            // launch
+            sbt_.SetSBT(&raygen_record, sizeof(raygen_record), nullptr, 0, &miss_record, sizeof(miss_record), 1,
+                &mesh_sbt_record, sizeof(mesh_sbt_record), 1, nullptr, 0, 0, optix_ctx_->GetExecStream());
+
+            glm::uvec2 launch_dim = glm::uvec2(std::ceilf(std::sqrtf(static_cast<float>(ray_vec.size()))));
+            OPTIX_CHECK_ERROR(
+                optixLaunch(pipeline_, optix_ctx_->GetExecStream(), 0, 0, sbt_, launch_dim.x, launch_dim.y, 1));
+        }
+    }
+
+    for (unsigned int plIdx = 0; plIdx < plCount0; ++plIdx) {
+        auto& positions = positions_[plIdx];
+        auto& colors = colors_[plIdx];
+        auto& indices = indices_[plIdx];
+
+        auto& ray_vec = rays[plIdx];
 
         std::vector<std::uint32_t> mesh_inbound_vec(num_vertices / 3, 0);
         std::vector<std::uint32_t> mesh_outbound_vec(num_vertices / 3, 0);
@@ -342,8 +413,161 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(
         CUDA_CHECK_ERROR(cuMemFree(mesh_inbound_ctr));
         CUDA_CHECK_ERROR(cuMemFree(mesh_outbound_ctr));
         CUDA_CHECK_ERROR(cuMemFree(ray_state));
+
+        core::utility::log::Log::DefaultLog.WriteInfo("[TransitionCalculator] Ending computation");
+
+        auto mesh_indices = reinterpret_cast<glm::u32vec3 const*>(mesh_data.indices.data);
+        auto vert_glm_ptr = reinterpret_cast<glm::vec3 const*>(vert_ptr);
+
+        using output_type_ut = std::underlying_type_t<output_type>;
+        auto const type = static_cast<output_type>(output_type_slot_.Param<core::param::EnumParam>()->Value());
+        auto data_ptr = &mesh_outbound_vec;
+        switch (type) {
+        case output_type::inbound: {
+            data_ptr = &mesh_inbound_vec;
+            /*colors.clear();
+            colors.reserve(mesh_inbound_vec.size() * 3);
+            positions.clear();
+            positions.reserve(mesh_inbound_vec.size() * 3);
+            indices.clear();
+            indices.reserve(num_vertices / 3);
+            auto const minmax = std::minmax_element(mesh_inbound_vec.begin(), mesh_inbound_vec.end());
+            tf.SetRange({static_cast<float>(*minmax.first), static_cast<float>(*minmax.second)});
+            tf();
+            auto const range = tf.Range();
+
+            auto const color_tf = tf.GetTextureData();
+            auto const color_tf_size = tf.TextureSize();
+
+            for (std::size_t i = 0; i < mesh_inbound_vec.size(); ++i) {
+                auto const val_a = (static_cast<float>(mesh_inbound_vec[i]) - range[0]) / (range[1] - range[0]);
+                std::remove_const_t<decltype(val_a)> main_a = 0;
+                auto rest_a = std::modf(val_a, &main_a);
+                rest_a = static_cast<int>(main_a) >= 0 && static_cast<int>(main_a) < color_tf_size ? rest_a : 0.0f;
+
+                main_a = std::clamp<float>(static_cast<int>(main_a), 0, color_tf_size - 1);
+
+                auto const col = sample_tf(color_tf, color_tf_size, static_cast<int>(main_a), rest_a);
+                colors.push_back(col);
+                colors.push_back(col);
+                colors.push_back(col);
+
+                auto const idx = mesh_indices[i];
+                positions.push_back(vert_glm_ptr[idx.x]);
+                positions.push_back(vert_glm_ptr[idx.y]);
+                positions.push_back(vert_glm_ptr[idx.z]);
+
+                indices.push_back(idx.x);
+                indices.push_back(idx.y);
+                indices.push_back(idx.z);
+            }*/
+        } break;
+        case output_type::outbound: {
+            data_ptr = &mesh_outbound_vec;
+            // colors.clear();
+            // colors.reserve(mesh_outbound_vec.size() * 3);
+            // positions.clear();
+            // positions.reserve(mesh_outbound_vec.size() * 3);
+            // auto const minmax = std::minmax_element(mesh_outbound_vec.begin(), mesh_outbound_vec.end());
+            // tf.SetRange({static_cast<float>(*minmax.first), static_cast<float>(*minmax.second)});
+            // tf();
+            ////auto const range = tf.Range();
+            // auto const range =
+            //    std::array<float, 2>({static_cast<float>(*minmax.first), static_cast<float>(*minmax.second)});
+
+            // auto const color_tf = tf.GetTextureData();
+            // auto const color_tf_size = tf.TextureSize();
+
+            // for (std::size_t i = 0; i < mesh_outbound_vec.size(); ++i) {
+            //    auto const val_a = (static_cast<float>(mesh_outbound_vec[i]) - range[0]) / (range[1] - range[0]) *
+            //                       static_cast<float>(color_tf_size);
+            //    std::remove_const_t<decltype(val_a)> main_a = 0;
+            //    auto rest_a = std::modf(val_a, &main_a);
+            //    rest_a = static_cast<int>(main_a) >= 0 && static_cast<int>(main_a) < color_tf_size ? rest_a : 0.0f;
+
+            //    main_a = std::clamp<float>(static_cast<int>(main_a), 0, color_tf_size - 1);
+
+            //    auto const col = sample_tf(color_tf, color_tf_size, static_cast<int>(main_a), rest_a);
+            //    // auto const col = glm::vec4(1.0f);
+            //    colors.push_back(col);
+            //    colors.push_back(col);
+            //    colors.push_back(col);
+
+            //    auto const idx = mesh_indices[i];
+            //    positions.push_back(vert_glm_ptr[idx.x]);
+            //    positions.push_back(vert_glm_ptr[idx.y]);
+            //    positions.push_back(vert_glm_ptr[idx.z]);
+
+            //    indices.push_back(idx.x);
+            //    indices.push_back(idx.y);
+            //    indices.push_back(idx.z);
+            //}
+        } break;
+        }
+        colors.clear();
+        colors.reserve(data_ptr->size() * 3);
+        positions.clear();
+        positions.reserve(data_ptr->size() * 3);
+        indices.clear();
+        indices.reserve(num_vertices / 3);
+        auto const minmax = std::minmax_element(data_ptr->begin(), data_ptr->end());
+        tf.SetRange({static_cast<float>(*minmax.first), static_cast<float>(*minmax.second)});
+        tf();
+        // auto const range = tf.Range();
+        auto const range =
+            std::array<float, 2>({static_cast<float>(*minmax.first), static_cast<float>(*minmax.second)});
+
+        auto const color_tf = tf.GetTextureData();
+        auto const color_tf_size = tf.TextureSize();
+
+        for (std::size_t i = 0; i < data_ptr->size(); ++i) {
+            auto const val_a = (static_cast<float>((*data_ptr)[i]) - range[0]) / (range[1] - range[0]) *
+                               static_cast<float>(color_tf_size);
+            std::remove_const_t<decltype(val_a)> main_a = 0;
+            auto rest_a = std::modf(val_a, &main_a);
+            rest_a = static_cast<int>(main_a) >= 0 && static_cast<int>(main_a) < color_tf_size ? rest_a : 0.0f;
+
+            main_a = std::clamp<float>(static_cast<int>(main_a), 0, color_tf_size - 1);
+
+            auto const col = sample_tf(color_tf, color_tf_size, static_cast<int>(main_a), rest_a);
+            colors.push_back(col);
+            colors.push_back(col);
+            colors.push_back(col);
+
+            auto const idx = mesh_indices[i];
+            positions.push_back(vert_glm_ptr[idx.x]);
+            positions.push_back(vert_glm_ptr[idx.y]);
+            positions.push_back(vert_glm_ptr[idx.z]);
+
+            indices.push_back(idx.x);
+            indices.push_back(idx.y);
+            indices.push_back(idx.z);
+        }
+
+        // std::iota(indices.begin(), indices.end(), 0);
+
+        std::vector<mesh::MeshDataAccessCollection::VertexAttribute> mesh_attributes;
+        mesh::MeshDataAccessCollection::IndexData cmd_indices;
+
+        cmd_indices.byte_size = indices.size() * sizeof(uint32_t);
+        cmd_indices.data = reinterpret_cast<uint8_t*>(indices.data());
+        cmd_indices.type = mesh::MeshDataAccessCollection::UNSIGNED_INT;
+
+        /*mesh_attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
+            reinterpret_cast<uint8_t*>(normals.data()), normals.size() * sizeof(float), 3,
+            mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 3, 0, mesh::MeshDataAccessCollection::NORMAL});*/
+        mesh_attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
+            reinterpret_cast<uint8_t*>(colors.data()), colors.size() * 4 * sizeof(float), 4,
+            mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 4, 0, mesh::MeshDataAccessCollection::COLOR});
+        mesh_attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
+            reinterpret_cast<uint8_t*>(positions.data()), positions.size() * 3 * sizeof(float), 3,
+            mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 3, 0, mesh::MeshDataAccessCollection::POSITION});
+
+        auto identifier = std::string("particle_surface_") + std::to_string(plIdx);
+        mesh_access_collection_->addMesh(identifier, mesh_attributes, cmd_indices);
     }
 
+    ++out_data_hash_;
 
     return true;
 }
@@ -358,6 +582,9 @@ bool megamol::optix_hpg::TransitionCalculator::get_data_cb(core::Call& c) {
         return false;
     auto in_paths = in_paths_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
     if (in_paths == nullptr)
+        return false;
+    auto in_tf = in_tf_slot_.CallAs<core::view::CallGetTransferFunction>();
+    if (in_tf == nullptr)
         return false;
 
     static bool not_init = true;
@@ -387,7 +614,7 @@ bool megamol::optix_hpg::TransitionCalculator::get_data_cb(core::Call& c) {
         return false;
 
     if (/*in_data->hasUpdate()*/ meta.m_frame_ID != _frame_id /*|| meta.m_data_hash != _data_hash*/) {
-        if (!assertData(*in_mesh, *in_paths, meta.m_frame_ID))
+        if (!assertData(*in_mesh, *in_paths, *in_tf, meta.m_frame_ID))
             return false;
         _frame_id = meta.m_frame_ID;
         //_data_hash = meta.m_data_hash;
@@ -402,8 +629,10 @@ bool megamol::optix_hpg::TransitionCalculator::get_data_cb(core::Call& c) {
     out_geo->set_record(sbt_records_.data());
     out_geo->set_record_stride(sizeof(SBTRecord<device::MeshGeoData>));
     out_geo->set_num_records(sbt_records_.size());*/
+
     out_geo->setMetaData(meta);
-    out_geo->setData(in_mesh->getData(), in_mesh->version());
+    // out_geo->setData(in_mesh->getData(), in_mesh->version());
+    out_geo->setData(mesh_access_collection_, out_data_hash_);
 
     return true;
 }
