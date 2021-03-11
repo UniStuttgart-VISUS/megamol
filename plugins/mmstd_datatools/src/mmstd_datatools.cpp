@@ -98,6 +98,7 @@
 #include "clustering/ParticleIColClustering.h"
 #include "AddParticleColors.h"
 #include "ColorToDir.h"
+#include "SmoothingOverTime.h"
 
 namespace megamol::stdplugin::datatools {
 /** Implementing the instance class of this plugin */
@@ -208,6 +209,7 @@ public:
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::clustering::ParticleIColClustering>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::AddParticleColors>();
         this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::ColorToDir>();
+        this->module_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::SmoothingOverTime>();
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::stdplugin::datatools::table::TableDataCall>();
