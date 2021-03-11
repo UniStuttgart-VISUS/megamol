@@ -49,18 +49,19 @@ template <class C, luaCallbackFunc<C> func> int dispatch(lua_State* L) {
 }
 
 static int invoke_lua_std_function(lua_State* L){
-    const int argc = lua_gettop(L);
+    //const int argc = lua_gettop(L);
 
-    if (lua_islightuserdata(L, -1))
-    {
-        const void* ptr = lua_touserdata(L, -1);
+    const auto index = lua_upvalueindex(1);
+    //if (lua_islightuserdata(L, index))
+    //{
+        const void* ptr = lua_touserdata(L, index);
         const auto func_ptr = reinterpret_cast<std::function<int(lua_State *)> const*>(ptr);
         return (*func_ptr)(L);
 
-    } else {
-        std::cout << "PANIC: NO USER DATA" << std::endl;
-    }
-    return 0;
+    //} else {
+    //    std::cout << "PANIC: NO USER DATA" << std::endl;
+    //}
+    //return 0;
 };
 
 // clang-format off
