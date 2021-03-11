@@ -87,16 +87,17 @@ void TransferFunctionParam::SetValue(const std::string& v, bool setDirty) {
 
 
 vislib::TString TransferFunctionParam::ValueString(void) const {
+
     return vislib::TString(this->val.c_str());
 }
 
 
-bool megamol::core::param::TransferFunctionParam::IgnoreCallRangeOnce(void) {
+bool megamol::core::param::TransferFunctionParam::IgnoreCallRangeOnce(const std::string& in_tfs) {
 
-    bool ignore_call_range_once = true;
+    bool ignore_call_range_once = false;
     try {
-        if (!this->val.empty()) {
-            nlohmann::json json = nlohmann::json::parse(this->val);
+        if (!in_tfs.empty()) {
+            nlohmann::json json = nlohmann::json::parse(in_tfs);
             json.at("IgnoreCallRangeOnce").get_to(ignore_call_range_once);
         }
     } catch (...) {

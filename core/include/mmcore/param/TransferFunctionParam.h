@@ -150,6 +150,11 @@ public:
      */
     static bool GetTextureData(const std::string& in_tfs, std::vector<float>& out_tex_data, int& out_width, int& out_height);
 
+    /**
+     * Return flag 'IgnoreCallRangeOnce'
+     */
+    static bool IgnoreCallRangeOnce(const std::string& in_tfs);
+
     /** Calculates gauss function value. 
     *
     * @param x  The current x position to calculate the gauss function value for.
@@ -254,11 +259,6 @@ public:
     inline const size_t ValueHash(void) const {
         return this->hash;
     }
-
-    /**
-     * Return flag 'IgnoreRangeOnProjectLoad'
-     */
-    bool IgnoreCallRangeOnce(void);
 
 private:
 

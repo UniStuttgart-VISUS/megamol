@@ -180,6 +180,7 @@ TransferFunctionEditor::TransferFunctionEditor(void)
         , showOptions(true)
         , widget_buffer()
         , flip_legend(false)
+        , check_once_force_set_overwrite_range(true)
         , tooltip()
         , image_widget() {
 
@@ -241,6 +242,11 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
         tf_changed = true;
     }
 
+    if (this->check_once_force_set_overwrite_range) {
+        this->range_overwrite = megamol::core::param::TransferFunctionParam::IgnoreCallRangeOnce(tfs);
+        this->check_once_force_set_overwrite_range = false;
+    }
+
     if (this->widget_buffer.tex_size != static_cast<int>(new_tex_size)) {
         this->widget_buffer.tex_size = static_cast<int>(new_tex_size);
         tf_changed = true;
@@ -258,8 +264,8 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
 }
 
 bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
-    return param::TransferFunctionParam::GetDumpedTransferFunction(tfs, this->nodes, this->mode,
-        static_cast<unsigned int>(this->textureSize), this->range, !this->range_overwrite);
+    return param::TransferFunctionParam::GetDumpedTransferFunction(
+        tfs, this->nodes, this->mode, static_cast<unsigned int>(this->textureSize), this->range, this->range_overwrite);
 }
 
 

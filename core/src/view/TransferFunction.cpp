@@ -64,20 +64,19 @@ bool TransferFunction::requestTF(Call& call) {
     auto tmp_interpol = this->interpolMode;
     auto tmp_tex_size = this->texSize;
     param::TransferFunctionParam::TFNodeType tmp_nodes;
-
+    
     // Check if range of initially loaded project value should be ignored
     if (this->check_ignore_call_range) {
-        this->ignore_call_range_once =
-            this->tfParam.Param<param::TransferFunctionParam>()->IgnoreCallRangeOnce();
+        auto tf_param_value = this->tfParam.Param<param::TransferFunctionParam>()->Value();
+        this->ignore_call_range_once = megamol::core::param::TransferFunctionParam::IgnoreCallRangeOnce(tf_param_value);
         this->check_ignore_call_range = false;
     }
 
     // Update changed range propagated from the module via the call
     if (!this->ignore_call_range_once && cgtf->ConsumeRangeUpdate()) {
-        // Get current values from parameter string 
-        if (megamol::core::param::TransferFunctionParam::GetParsedTransferFunctionData(
-                this->tfParam.Param<param::TransferFunctionParam>()->Value(), tmp_nodes, tmp_interpol, tmp_tex_size,
-                tmp_range)) {
+        // Get current values from parameter string
+        auto tf_param_value = this->tfParam.Param<param::TransferFunctionParam>()->Value();
+        if (megamol::core::param::TransferFunctionParam::GetParsedTransferFunctionData( tf_param_value, tmp_nodes, tmp_interpol, tmp_tex_size,tmp_range)) {
             // Set transfer function parameter value using updated range
             std::string tf_str;
             if (megamol::core::param::TransferFunctionParam::GetDumpedTransferFunction(tf_str, tmp_nodes, tmp_interpol, tmp_tex_size, cgtf->Range())) {
