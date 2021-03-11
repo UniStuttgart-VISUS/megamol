@@ -182,6 +182,23 @@ int main(const int argc, const char** argv) {
         run_megamol = false;
     }
 
+    using megamol::frontend_resources::LuaCallbacksCollection;
+    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::LuaResult<void>;
+    LuaCallbacksCollection lua_callbacks;
+    lua_callbacks.add<VoidResult>(
+        "mmHelloLambda", "()\n\tExample callback via lambda binding",
+            std::function{
+                [&]() -> VoidResult {
+                    log(">> Hello Lua Lambda!");
+                    return VoidResult{};
+                }
+            }
+        );
+    lua_api.AddCallbacks(lua_callbacks);
+
+    std::string result;
+    lua_api.RunString("mmHelloLambda()", result);
+
     auto frontend_resources = services.getProvidedResources();
     graph.AddModuleDependencies(frontend_resources);
 
