@@ -183,8 +183,10 @@ int main(const int argc, const char** argv) {
     }
 
     using megamol::frontend_resources::LuaCallbacksCollection;
-    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::LuaResult<void>;
-    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::LuaResult<std::string>;
+    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
+    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
+    using FloatResult = megamol::frontend_resources::LuaCallbacksCollection::FloatResult;
+    using LuaError = megamol::frontend_resources::LuaCallbacksCollection::LuaError;
     LuaCallbacksCollection lua_callbacks;
     lua_callbacks.add<VoidResult>(
         "mmHelloLambda", "()\n\tExample callback via lambda binding",
@@ -210,6 +212,18 @@ int main(const int argc, const char** argv) {
                 [&]() -> StringResult {
                     log(">> run third Lua Lambda Callback (see Lua Result) [3]");
                     return StringResult{">> Hello Hello Hello Lua Lambda! [3]"};
+                }
+            });
+
+    lua_callbacks.add<FloatResult, int>(
+        "mmHelloLambdaIntToFloat", "()\n\tExample callback via lambda binding",
+            std::function{
+                [&](int i) -> FloatResult {
+                    if (i < 0) {
+                        log_error(">> integer is less than 0");
+                        return LuaError{"integer is less than 0: " + std::to_string(i)};
+                    }
+                    return FloatResult{ static_cast<float>(i) };
                 }
             });
 

@@ -69,6 +69,13 @@ struct LuaCallbacksCollection {
         std::string exit_reason = "unknown reason";
     };
 
+    using VoidResult = LuaResult<void>;
+    using BoolResult = LuaResult<bool>;
+    using LongResult = LuaResult<long>;
+    using FloatResult = LuaResult<float>;
+    using DoubleResult = LuaResult<double>;
+    using StringResult = LuaResult<std::string>;
+
     template <typename ReturnType, typename FuncType, typename... FuncArgs, size_t... I>
     ReturnType unpack(LuaState state, FuncType func, std::tuple<FuncArgs...> tuple, std::index_sequence<I...>) {
         return func( state.read< typename std::tuple_element<I, std::tuple<FuncArgs...>>::type >(I+1)... );
