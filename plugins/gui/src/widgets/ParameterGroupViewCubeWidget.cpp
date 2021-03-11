@@ -298,6 +298,7 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
 
     // Parameter presentation -------------------------------------------------
     auto presentation = this->GetGUIPresentation();
+    this->active = std::get<bool>(param_showCube->GetValue());
     // Switch presentation via parameter
     if (param_showCube->IsValueDirty()) {
         if (std::get<bool>(param_showCube->GetValue())) {
