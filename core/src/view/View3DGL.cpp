@@ -71,6 +71,7 @@ void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
     AbstractView3D::beforeRender(context);
 
     auto current_frame_fbo = _fbo;
+    auto bgcol = this->BkgndColour();
 
     if (call == nullptr) {
         if ((this->_fbo->GetWidth() != _camera.resolution_gate().width()) ||
@@ -87,10 +88,10 @@ void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
     } else {
         auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
         current_frame_fbo = gpu_call->GetFramebufferObject();
+        bgcol = gpu_call->BackgroundColor();
     }
 
     current_frame_fbo->Enable();
-    auto bgcol = this->BkgndColour();
     glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

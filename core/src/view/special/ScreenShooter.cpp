@@ -216,7 +216,7 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
         animStepSlot("anim::step", "The time step"),
         animAddTime2FrameSlot("anim::addTime2Fname", "Add animation time to the output filenames"),
         makeAnimSlot("anim::makeAnim", "Flag whether or not to make an animation of screen shots"),
-        animTimeParamNameSlot("anim::paramname", "Name of the time parameter"),
+        animTimeParamNameSlot("anim::paramname", "Name of the time parameter. Default if blank: 'anim::time'"),
         disableCompressionSlot("disableCompressionSlot", "set compression level to 0"),
         running(false),
         animLastFrameTime(std::numeric_limits<decltype(animLastFrameTime)>::lowest()),
@@ -952,7 +952,7 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
         }
         if (av != nullptr) {
             if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
-                param::ParamSlot* timeSlot = this->findTimeParam(vi->View());
+                param::ParamSlot* timeSlot = this->findTimeParam(av);
                 if (timeSlot != nullptr) {
                     auto startTime = static_cast<float>(this->animFromSlot.Param<param::IntParam>()->Value());
                     Log::DefaultLog.WriteInfo("Starting animation of screen shots at %f.", time);
@@ -1005,8 +1005,19 @@ param::ParamSlot* view::special::ScreenShooter::findTimeParam(view::AbstractView
     if (name.IsEmpty()) {
         timeSlot = dynamic_cast<param::ParamSlot*>(view->FindNamedObject("anim::time").get());
     } else {
-        AbstractNamedObjectContainer* anoc = dynamic_cast<AbstractNamedObjectContainer*>(view->RootModule().get());
-        timeSlot = dynamic_cast<param::ParamSlot*>(anoc->FindNamedObject(vislib::StringA(name)).get());
+        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+            AbstractNamedObjectContainer* anoc = dynamic_cast<AbstractNamedObjectContainer*>(view->RootModule().get());
+            timeSlot = dynamic_cast<param::ParamSlot*>(anoc->FindNamedObject(vislib::StringA(name)).get());
+        } else {
+            auto resource_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
+                [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
+            if (resource_it != this->frontend_resources.end()) {
+                if (auto megamolgraph_ptr = &resource_it->getResource<megamol::core::MegaMolGraph>()) {
+                    std::string fullname = std::string(view->Name().PeekBuffer()) + "::" + std::string(name.PeekBuffer());
+                    timeSlot = megamolgraph_ptr->FindParameterSlot(fullname);
+                }
+            }
+        }
     }
 
     return timeSlot;
