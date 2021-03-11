@@ -643,6 +643,12 @@ megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenienc
     return this->convenience_functions;
 }
 
+void megamol::core::MegaMolGraph::Clear() {
+    graph_entry_points.clear();
+    call_list_.clear();
+    module_list_.clear();
+}
+
 std::vector<megamol::frontend::FrontendResource> megamol::core::MegaMolGraph::get_requested_resources(std::vector<std::string> resource_requests) {
     std::vector<megamol::frontend::FrontendResource> result;
     result.reserve(resource_requests.size());

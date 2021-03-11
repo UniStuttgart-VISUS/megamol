@@ -11,22 +11,15 @@
 
 #include "AbstractFrontendService.hpp"
 
-#include "Window_Events.h"
-#include "Framebuffer_Events.h"
-#include "KeyboardMouse_Events.h"
+#include "gui-wrapper.h"
+
 #include "IOpenGL_Context.h"
-#include "Screenshot_Service.hpp"
-#include "ScriptPaths.h"
+#include "GUI_Resource.h"
 
 #include "mmcore/CoreInstance.h"
 #include "mmcore/MegaMolGraph.h"
-#include "mmcore/utility/log/Log.h"
-#include "mmcore/utility/graphics/ScreenShotComments.h"
-
-#include "gui-wrapper.h"
 
 #include <glm/glm.hpp>
-
 
 namespace megamol {
 namespace frontend {
@@ -68,7 +61,7 @@ public:
     const std::vector<std::string> getRequestedResourceNames() const override;
     void setRequestedResources(std::vector<FrontendResource> resources) override;
 
-    // from AbstractFrontendService:
+    /// from AbstractFrontendService:
     // int setPriority(const int p) // priority initially 0
     // int getPriority() const;
     // bool shouldShutdown() const; // shutdown initially false
@@ -76,21 +69,23 @@ public:
 
 private:
 
-    struct ResourceState {
-        double time;
-        glm::vec2 framebuffer_size;
-        glm::vec2 window_size;
-        megamol::core::MegaMolGraph* megamol_graph;
-        megamol::frontend_resources::IOpenGL_Context const* opengl_context_ptr;
-    };
+    double m_time;
+    glm::vec2 m_framebuffer_size;
+    glm::vec2 m_window_size;
+    megamol::core::MegaMolGraph* m_megamol_graph;
+    megamol::frontend_resources::IOpenGL_Context const* m_opengl_context_ptr;
+    std::shared_ptr<megamol::gui::GUIWrapper> m_gui = nullptr;
+    std::vector<std::string> m_queuedProjectFiles;
 
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<FrontendResource> m_requestedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;
+    megamol::frontend_resources::GUIResource m_providedResource;
 
-    std::shared_ptr<megamol::gui::GUIWrapper> m_gui = nullptr;
-    ResourceState m_resource_state;
-    std::vector<std::string> m_queuedProjectFiles;
+    std::string resource_request_gui_state(void);
+    void resource_provide_gui_state(const std::string& json_state);
+    void resource_provide_gui_visibility(bool show);
+    void resource_provide_gui_scale(float scale);
 };
 
 } // namespace frontend

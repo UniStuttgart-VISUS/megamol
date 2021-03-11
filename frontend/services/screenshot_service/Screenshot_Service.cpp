@@ -10,6 +10,7 @@
  // to grab GL front buffer
 #include <glad/glad.h>
 #include "IOpenGL_Context.h"
+#include "GUI_Resource.h"
 
 #include "mmcore/MegaMolGraph.h"
 
@@ -30,6 +31,7 @@ static void log(std::string text) { log(text.c_str()); }
 // need this to pass GL context to screenshot source. this a hack and needs to be properly designed.
 static megamol::frontend_resources::IOpenGL_Context* gl_context_ptr = nullptr;
 static megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
+static megamol::frontend_resources::GUIResource* guiresources_ptr = nullptr;
 
 static void PNGAPI pngErrorFunc(png_structp pngPtr, png_const_charp msg) {
     log("PNG Error: " + std::string(msg));
@@ -80,13 +82,14 @@ static bool write_png_to_file(megamol::frontend_resources::ImageData const& imag
     png_set_compression_level(pngPtr, 0);
 
     // todo: camera settings are not stored without magic knowledge about the view
-    megamol::core::utility::graphics::ScreenShotComments ssc(megamolgraph_ptr->Convenience().SerializeGraph());
+    std::string project = megamolgraph_ptr->Convenience().SerializeGraph();
+    project.append(guiresources_ptr->request_gui_state());
+    megamol::core::utility::graphics::ScreenShotComments ssc(project);
     png_set_text(pngPtr, pngInfoPtr, ssc.GetComments().data(), ssc.GetComments().size());
 
     png_set_IHDR(pngPtr, pngInfoPtr, image.width, image.height, 8,
         PNG_COLOR_TYPE_RGB_ALPHA /* PNG_COLOR_TYPE_RGB */, PNG_INTERLACE_NONE,
         PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-
 
     png_set_rows(pngPtr, pngInfoPtr, const_cast<png_byte**>(reinterpret_cast<png_byte* const*>(image.flipped_rows.data())));
 
@@ -174,7 +177,8 @@ bool Screenshot_Service::init(const Config& config) {
     m_requestedResourcesNames =
     {
         "IOpenGL_Context",
-        "MegaMolGraph"
+        "MegaMolGraph",
+        "GUIResource"
     };
 
     this->m_frontbufferToPNG_trigger = [&](std::string const& filename) -> bool
@@ -211,6 +215,8 @@ const std::vector<std::string> Screenshot_Service::getRequestedResourceNames() c
 void Screenshot_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     gl_context_ptr = const_cast<megamol::frontend_resources::IOpenGL_Context*>(&resources[0].getResource<megamol::frontend_resources::IOpenGL_Context>());
     megamolgraph_ptr = const_cast<megamol::core::MegaMolGraph*>(&resources[1].getResource<megamol::core::MegaMolGraph>());
+    guiresources_ptr = const_cast<megamol::frontend_resources::GUIResource*>(
+        &resources[2].getResource<megamol::frontend_resources::GUIResource>());
 }
 
 void Screenshot_Service::updateProvidedResources() {

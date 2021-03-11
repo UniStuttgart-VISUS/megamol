@@ -383,11 +383,11 @@ To do this, try:
 
 **Linux:**
 
-    $ ./megamol ../examples/testspheres_megamol.lua
+    $ ./megamol ../examples/testspheres.lua
 
 **Windows:** 
 
-    > megamol.exe ..\examples\testspheres_megamol.lua
+    > megamol.exe ..\examples\testspheres.lua
 
 MegaMol should now open a rendering window showing a generated dataset with several colored spheres and the outline of the bounding box. 
 Hitting the `space` key starts and stops the animation playback.
@@ -532,7 +532,7 @@ Some useful controls assuming the *arcball* option is set to **on**:
 
 Project files are [`lua`](https://www.lua.org/) scripts using special custom functions to define any module graph for MegaMol.
 Some predefined example project script files are available in the `examples` directory, which is installed next to the `bin` directory.
-Here you can see the example project script `..\examples\testspheres_megamol.lua`:
+Here you can see the example project script `..\examples\testspheres.lua`:
 
 ```lua
     mmCreateView("testspheres", "View3D_2","::view")

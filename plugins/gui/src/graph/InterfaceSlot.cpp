@@ -306,6 +306,7 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
             }
 
             // Context Menu
+            ImGui::PushFont(state.canvas.gui_font_ptr);
             if (ImGui::BeginPopupContextItem("invisible_button_context")) {
                 state.interact.button_active_uid = this->uid;
 
@@ -319,6 +320,7 @@ void megamol::gui::InterfaceSlot::Draw(PresentPhase phase, megamol::gui::GraphIt
 
                 ImGui::EndPopup();
             }
+            ImGui::PopFont();
 
             // Drag & Drop
             if (ImGui::BeginDragDropTarget()) {

@@ -924,24 +924,24 @@ bool view::special::ScreenShooter::triggerButtonClicked(param::ParamSlot& slot) 
 
     vislib::sys::AutoLock lock(this->ModuleGraphLock());
     {
-        AbstractNamedObjectContainer::ptr_type anoc =
-            AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
-        AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
-        ViewInstance* vi = dynamic_cast<ViewInstance*>(ano.get());
-        AbstractView* av = dynamic_cast<AbstractView*>(ano.get());
+        ViewInstance* vi = nullptr;
+        AbstractView* av = nullptr;
 
-        // Try to find view instance or abstract view in megamolgraph
-        if ((vi == nullptr) && (av == nullptr)) {
-            const megamol::core::MegaMolGraph* megamolgraph_ptr = nullptr;
-            auto megamolgraph_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
+        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+            AbstractNamedObjectContainer::ptr_type anoc =
+                AbstractNamedObjectContainer::dynamic_pointer_cast(this->RootModule());
+            AbstractNamedObject::ptr_type ano = anoc->FindChild(mvn);
+            vi = dynamic_cast<ViewInstance*>(ano.get());
+            av = dynamic_cast<AbstractView*>(ano.get());
+        } else {
+            auto resource_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
                 [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
-            if (megamolgraph_it != this->frontend_resources.end()) {
-                megamolgraph_ptr = &megamolgraph_it->getResource<megamol::core::MegaMolGraph>();
-            }
-            if (megamolgraph_ptr != nullptr) {
-                auto module_ptr = megamolgraph_ptr->FindModule(std::string(mvn.PeekBuffer()));
-                vi = dynamic_cast<ViewInstance*>(module_ptr.get());
-                av = dynamic_cast<AbstractView*>(module_ptr.get());
+            if (resource_it != this->frontend_resources.end()) {
+                if (auto megamolgraph_ptr = &resource_it->getResource<megamol::core::MegaMolGraph>()) {
+                    auto module_ptr = megamolgraph_ptr->FindModule(std::string(mvn.PeekBuffer()));
+                    vi = dynamic_cast<ViewInstance*>(module_ptr.get());
+                    av = dynamic_cast<AbstractView*>(module_ptr.get());
+                }
             }
         }
 

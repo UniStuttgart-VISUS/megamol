@@ -68,6 +68,12 @@ namespace gui {
         inline const CallStockVector_t& GetCallsStock(void) {
             return this->calls_stock;
         }
+        bool IsCallStockLoaded(void) const {
+            return (!this->calls_stock.empty());
+        }
+        bool IsModuleStockLoaded(void) const {
+            return (!this->modules_stock.empty());
+        }
 
         /**
          * Load or update project from graph of core instance or directly from megamol graph.

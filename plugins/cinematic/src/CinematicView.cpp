@@ -10,6 +10,7 @@
 
 #include "mmcore/thecam/utility/types.h"
 #include "mmcore/utility/graphics/ScreenShotComments.h"
+#include "mmcore/MegaMolGraph.h"
 
 
 using namespace megamol;
@@ -428,42 +429,33 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
             return;
         }
     }
-    if (this->_fbo->Enable() != GL_NO_ERROR) {
-        throw vislib::Exception("[CINEMATIC VIEW] [Render] Cannot enable Framebuffer object.", __FILE__, __LINE__);
-        return;
-    }
 
 /// Reset TRACE output level
 #if defined(DEBUG) || defined(_DEBUG)
     vislib::Trace::GetInstance().SetLevel(otl);
 #endif // DEBUG || _DEBUG
 
-    auto bc = Base::BkgndColour();
-    glClearColor(bc[0], bc[1], bc[2], 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    /* Using FBO buffer in call. */
-    
     // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
-    cr3d->SetFramebufferObject(this->_fbo);
+    if (auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call)) {
+        gpu_call->SetFramebufferObject(this->_fbo);
+    } else {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "CallRenderViewGL required to set framebuffer object. [%s, %s, line %d]\n ",  __FILE__, __FUNCTION__, __LINE__);
+        return;
+    }
     
-    //ALTERNATIVE
-    /// XXX Requires View3DGL line 394 to be deleted/commented! 
-        //this->overrideCall->EnableOutputBuffer();
-    /// XXX Requires view::RenderOutputOpenGL::GetViewport() to get viewport always from:
-        /// GLint vp[4];
-        /// ::glGetIntegerv(GL_VIEWPORT, vp);
-        /// this->outputViewport.SetFromSize(vp[0], vp[1], vp[2], vp[3]);
-    /*
-    int fbovp[4] = { 0, 0, fboWidth, fboHeight };
-    glViewport(fbovp[0], fbovp[1], fbovp[2], fbovp[3]);
-    */
-
     // Call Render-Function of parent View3DGL
     Base::Render(context, call);
 
     if (this->_fbo->IsEnabled()) {
         this->_fbo->Disable();
+    }
+
+    auto err = glGetError();
+    if (err != GL_NO_ERROR) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
+        return;
     }
 
     // Write frame to file
@@ -482,6 +474,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     }
 
     // Init rendering ---------------------------------------------------------
+    auto bc = Base::BkgndColour();
     this->utils.SetBackgroundColor(glm::vec4(bc[0], bc[1], bc[2], 1.0f));
     glm::mat4 ortho = glm::ortho(0.0f, vp_fw, 0.0f, vp_fh, -1.0f, 1.0f);
     glClearColor(bc[0], bc[1], bc[2], 0.0f);
@@ -663,7 +656,21 @@ bool CinematicView::render_to_file_write() {
         }
         png_set_write_fn(this->png_data.structptr, static_cast<void*>(&this->png_data.file), &this->pngWrite, &this->pngFlush);
 
-        megamol::core::utility::graphics::ScreenShotComments ssc(this->GetCoreInstance()->SerializeGraph());
+        std::string project;
+        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+            project = this->GetCoreInstance()->SerializeGraph();
+        } else {
+            auto megamolgraph_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
+                [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "MegaMolGraph"); });
+            if (megamolgraph_it != this->frontend_resources.end()) {
+                if (auto megamolgraph_ptr = &megamolgraph_it->getResource<megamol::core::MegaMolGraph>()) {
+                    project =
+                        const_cast<megamol::core::MegaMolGraph*>(megamolgraph_ptr)->Convenience().SerializeGraph();
+                }
+            }
+        }
+
+        megamol::core::utility::graphics::ScreenShotComments ssc(project);
         png_set_text(this->png_data.structptr, this->png_data.infoptr, ssc.GetComments().data(), ssc.GetComments().size());
         png_set_IHDR(this->png_data.structptr, this->png_data.infoptr, this->png_data.width, this->png_data.height, 8,
             PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
