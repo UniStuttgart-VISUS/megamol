@@ -16,7 +16,7 @@
 #include "mmcore/special/ClusterDisplayPlane.h"
 #include "mmcore/special/ClusterDisplayTile.h"
 #include "mmcore/view/AbstractView.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRenderViewGL.h"
 
 
 namespace megamol {
@@ -95,8 +95,8 @@ namespace special {
          *
          * @return The connected call from the renderViewSlot or NULL
          */
-        inline view::CallRenderView *getCallRenderView(void) {
-            return this->renderViewSlot.CallAs<view::CallRenderView>();
+        inline view::CallRenderViewGL *getCallRenderView(void) {
+            return this->renderViewSlot.CallAs<view::CallRenderViewGL>();
         }
 
         /**

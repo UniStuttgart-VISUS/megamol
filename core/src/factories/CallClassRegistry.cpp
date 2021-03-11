@@ -14,20 +14,12 @@
 #include "mmcore/DataWriterCtrlCall.h"
 #include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/cluster/CallRegisterAtController.h"
-#include "mmcore/cluster/simple/ClientViewRegistration.h"
 #include "mmcore/view/CallClipPlane.h"
 #include "mmcore/view/CallGetTransferFunction.h"
-#include "mmcore/view/CallRender2D.h"
-#include "mmcore/view/CallRender3D.h"
-#include "mmcore/view/CallRender3D_2.h"
-#include "mmcore/view/CallRenderDeferred3D.h"
-#include "mmcore/view/CallRenderView.h"
+#include "mmcore/view/CallRender2DGL.h"
+#include "mmcore/view/CallRender3DGL.h"
+#include "mmcore/view/CallRenderViewGL.h"
 #include "mmcore/view/CallTimeControl.h"
-#ifdef MEGAMOLCORE_WITH_DIRECT3D11
-#include "mmcore/view/CallUpdateDirect3D.h"
-#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
-#include "mmcore/view/CallCamParams.h"
-#include "mmcore/view/CallCamParamSync.h"
 #include "mmcore/CallVolumeData.h"
 #include "mmcore/moldyn/VolumeDataCall.h"
 #include "mmcore/misc/BezierCurvesListDataCall.h"
@@ -45,6 +37,7 @@
 #include "mmcore/view/special/CallbackScreenShooter.h"
 #include "mmcore/FlagCall.h"
 #include "mmcore/FlagCall_GL.h"
+#include "mmcore/view/CallRender3D.h"
 
 using namespace megamol::core;
 
@@ -57,26 +50,18 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     // Register all rendering graph call descriptions here
     //////////////////////////////////////////////////////////////////////
     instance.RegisterAutoDescription<cluster::CallRegisterAtController>();
-    instance.RegisterAutoDescription<cluster::simple::ClientViewRegistration>();
     instance.RegisterAutoDescription<moldyn::MultiParticleDataCall>();
     instance.RegisterAutoDescription<view::CallClipPlane>();
     instance.RegisterAutoDescription<view::CallGetTransferFunction>();
-    instance.RegisterAutoDescription<view::CallRender2D>();
-    instance.RegisterAutoDescription<view::CallRender3D>();
-    instance.RegisterAutoDescription<view::CallRender3D_2>();
-    instance.RegisterAutoDescription<view::CallRenderDeferred3D>();
-    instance.RegisterAutoDescription<view::CallRenderView>();
+    instance.RegisterAutoDescription<view::CallRender2DGL>();
+    instance.RegisterAutoDescription<view::CallRender3DGL>();
+    instance.RegisterAutoDescription<view::CallRenderViewGL>();
     instance.RegisterAutoDescription<view::CallTimeControl>();
     instance.RegisterAutoDescription<DataWriterCtrlCall>();
     instance.RegisterAutoDescription<CallVolumeData>();
     instance.RegisterAutoDescription<moldyn::VolumeDataCall>();
     instance.RegisterAutoDescription<misc::BezierCurvesListDataCall>();
     instance.RegisterAutoDescription<misc::VolumetricDataCall>();
-#ifdef MEGAMOLCORE_WITH_DIRECT3D11
-    instance.RegisterAutoDescription<view::CallUpdateDirect3D>();
-#endif /* MEGAMOLCORE_WITH_DIRECT3D11 */
-    instance.RegisterAutoDescription<view::CallCamParams>();
-    instance.RegisterAutoDescription<view::CallCamParamSync>();
     instance.RegisterAutoDescription<misc::QRCodeDataCall>();
     instance.RegisterAutoDescription<misc::CalloutImageCall>();
     instance.RegisterAutoDescription<view::Call6DofInteraction>();
@@ -91,4 +76,5 @@ void factories::register_call_classes(factories::CallDescriptionManager& instanc
     instance.RegisterAutoDescription<FlagCall>();
     instance.RegisterAutoDescription<FlagCallRead_GL>();
     instance.RegisterAutoDescription<FlagCallWrite_GL>();
+    instance.RegisterAutoDescription<view::CallRender3D>();
 }

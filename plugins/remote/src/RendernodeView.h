@@ -69,7 +69,7 @@ public:
      */
     virtual ~RendernodeView(void);
 
-    void Render(const mmcRenderViewContext& context) override;
+    void Render(const mmcRenderViewContext& context, core::Call* call) override;
 
     bool OnRenderView(core::Call& call) override;
 
@@ -176,6 +176,9 @@ private:
     int bcast_rank_;
 
     int comm_size_;
+
+    std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
+
 }; // end class RendernodeView
 
 } // end namespace remote

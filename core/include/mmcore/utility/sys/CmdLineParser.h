@@ -941,7 +941,7 @@ namespace sys {
 
             /**
              * Toggels the selection of this argument. If it was selected, it
-             * becomes deselected and vis-à-vis.
+             * becomes deselected and vis-Ã -vis.
              */
             inline void ToggleSelect(void) {
                 this->selected = !this->selected;
@@ -1519,7 +1519,7 @@ namespace sys {
 
         /**
          * Toggels selection of all arguments of the command line list. 
-         * Previously selected arguments become deselected and vis-à-vis.
+         * Previously selected arguments become deselected and vis-Ã -vis.
          */
         inline void InvertArgumentSelection(void) {
             for (unsigned int i = 0; i < this->arglistSize; i++) {

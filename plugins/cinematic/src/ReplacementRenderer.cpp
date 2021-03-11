@@ -7,6 +7,10 @@
 
 #include "stdafx.h"
 #include "ReplacementRenderer.h"
+#include "mmcore/param/BoolParam.h"
+#include "mmcore/param/FloatParam.h"
+#include "mmcore/param/EnumParam.h"
+#include "mmcore/param/ButtonParam.h"
 
 
 using namespace megamol;
@@ -16,7 +20,7 @@ using namespace megamol::cinematic;
 using namespace vislib;
 
 
-ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererModule<megamol::core::view::CallRender3D_2>(),
+ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererModule<megamol::core::view::CallRender3DGL>(),
     alphaParam("alpha", "The alpha value of the replacement rendering."),
     replacementRenderingParam("replacement", "Show/hide replacement rendering for chained renderer."),
     replacementKeyParam("hotkeyAssignment", "Choose hotkey for replacement rendering button."),
@@ -80,9 +84,9 @@ bool ReplacementRenderer::create(void) {
 }
 
 
-bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) {
+bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3DGL& call) {
 
-    auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+    auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
 
     bool retVal = true;
     if (cr3d_out != nullptr) {
@@ -102,14 +106,20 @@ bool ReplacementRenderer::GetExtents(megamol::core::view::CallRender3D_2& call) 
 }
 
 
-bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
+bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     auto leftSlotParent = call.PeekCallerSlot()->Parent();
     std::shared_ptr<const view::AbstractView> viewptr =
         std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
+    // Camera
+    view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
     if (viewptr != nullptr) { // TODO move this behind the fbo magic?
-        auto vp = call.GetViewport();
-        glViewport(vp.Left(), vp.Bottom(), vp.Width(), vp.Height());
+        auto vp = cam.image_tile();
+        glViewport(vp.left(), vp.bottom(), vp.width(), vp.height());
         auto backCol = call.BackgroundColor();
         glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -166,9 +176,9 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
         glm::mat4 view = viewTemp;
         glm::mat4 mvp = proj * view;
 
-        auto viewport = call.GetViewport();
-        float vp_fw = static_cast<float>(viewport.Width());
-        float vp_fh = static_cast<float>(viewport.Height());
+        auto viewport = cam.resolution_gate();
+        float vp_fw = static_cast<float>(viewport.width());
+        float vp_fh = static_cast<float>(viewport.height());
 
         float alpha = alphaParam.Param<param::FloatParam>()->Value();
 
@@ -200,7 +210,7 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3D_2& call) {
     }
     else {
 
-        auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3D_2>();
+        auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
         if (cr3d_out != nullptr) {
             *cr3d_out = call;
             return (*cr3d_out)(core::view::AbstractCallRender::FnRender);

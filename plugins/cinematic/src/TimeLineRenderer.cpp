@@ -25,7 +25,7 @@ TimeLineRenderer::TimeLineRenderer(void) : view::Renderer2DModule()
     , resetPanScaleParam("resetAxes", "Reset shifted and scaled time axes.")
     , axes()
     , utils()
-    , texture(0)
+    , texture_id(0)
     , yAxisParam(ActiveParam::SIMULATION_TIME)
     , dragDropKeyframe()
     , dragDropActive(false)
@@ -87,13 +87,35 @@ bool TimeLineRenderer::create(void) {
     }
 
     // Load texture
-    vislib::StringA shortfilename = "arrow.png";
-    auto fullfilename = megamol::core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), shortfilename);
-    if (!this->utils.LoadTextureFromFile(std::wstring(fullfilename.PeekBuffer()), this->texture)) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+    std::string texture_shortfilename = "arrow.png";
+    bool loaded_texture = false;
+    if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+        auto fullfilename = megamol::core::utility::ResourceWrapper::getFileName(
+            this->GetCoreInstance()->Configuration(), vislib::StringA(texture_shortfilename.c_str()));
+        std::wstring texture_filename = std::wstring(fullfilename.PeekBuffer());
+        loaded_texture = this->utils.LoadTextureFromFile(this->texture_id, texture_filename);
+    } else {
+        auto resource_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
+            [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "RuntimeConfig"); });
+        if (resource_it != this->frontend_resources.end()) {
+            std::string texture_filepath;
+            auto resource_directories =
+                resource_it->getResource<megamol::frontend_resources::RuntimeConfig>().resource_directories;
+            for (auto& resource_directory : resource_directories) {
+                auto found_filepath = megamol::core::utility::FileUtils::SearchFileRecursive(
+                    resource_directory, texture_shortfilename);
+                if (!found_filepath.empty()) {
+                    texture_filepath = found_filepath;
+                }
+            }
+            loaded_texture = this->utils.LoadTextureFromFile(this->texture_id, texture_filepath);
+        }
     }
 
+    if (!loaded_texture) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+     }
     return true;
 }
 
@@ -103,12 +125,21 @@ void TimeLineRenderer::release(void) {
 }
 
 
-bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
+bool TimeLineRenderer::GetExtents(view::CallRender2DGL& call) {
+
+    // Camera
+    view::Camera_2 cam;
+    call.GetCamera(cam);
+    cam_type::snapshot_type snapshot;
+    cam_type::matrix_type viewTemp, projTemp;
+    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
     glm::vec2 currentViewport;
-    currentViewport.x = static_cast<float>(call.GetViewport().GetSize().GetWidth());
-    currentViewport.y = static_cast<float>(call.GetViewport().GetSize().GetHeight());
-    call.SetBoundingBox(call.GetViewport());
+    currentViewport.x = cam.resolution_gate().width();
+    currentViewport.y = cam.resolution_gate().height();
+    
+    call.AccessBoundingBoxes().SetBoundingBox(
+        cam.image_tile().left(), cam.image_tile().bottom(), 0, cam.image_tile().right(), cam.image_tile().top(), 0);
 
     if (currentViewport != this->viewport) {
         this->viewport = currentViewport;
@@ -141,7 +172,7 @@ bool TimeLineRenderer::GetExtents(view::CallRender2D& call) {
 }
 
 
-bool TimeLineRenderer::Render(view::CallRender2D& call) {
+bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
 
     // Get update data from keyframe keeper
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
@@ -220,7 +251,7 @@ bool TimeLineRenderer::Render(view::CallRender2D& call) {
     glm::vec3 cam_pos = { 0.0f, 0.0f, 1.0f };
     glm::vec3 origin = { this->axes[Axis::X].startPos.x, this->axes[Axis::X].startPos.y, 0.0f };
     float yAxisValue = 0.0f;
-    auto cbc = call.GetBackgroundColour();
+    auto cbc = call.BackgroundColor();
     glm::vec4 back_color = glm::vec4(static_cast<float>(cbc[0]) / 255.0f, static_cast<float>(cbc[1]) / 255.0f, static_cast<float>(cbc[2]) / 255.0f, 1.0f);
     this->utils.SetBackgroundColor(back_color);
     glm::mat4 ortho = glm::ortho(0.0f, this->viewport.x, 0.0f, this->viewport.y, -1.0f, 1.0f);
@@ -422,7 +453,8 @@ void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, g
     glm::vec3 pos_upper_left   = { pos_x - (size / 2.0f), pos_y + size, 0.0f };
     glm::vec3 pos_upper_right  = { pos_x + (size / 2.0f), pos_y + size, 0.0f };
     glm::vec3 pos_bottom_right = { pos_x + (size / 2.0f), pos_y, 0.0f };
-    this->utils.Push2DColorTexture(this->texture, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true, color);
+    this->utils.Push2DColorTexture(
+        this->texture_id, pos_bottom_left, pos_upper_left, pos_upper_right, pos_bottom_right, true, color);
 }
 
 
