@@ -144,7 +144,7 @@ bool megamol::probe_gl::ProbeRenderTasks::getDataCallback(core::Call& caller) {
 
                 // TODO create and add new render task for probe
 
-                assert(gpu_mesh_storage->getSubMeshData().size() > 0);
+                assert(gpu_mesh_storage.front()->getSubMeshData().size() > 0);
 
                 m_identifiers[probe_idx] = (std::string(FullName()) + "_probe_" + std::to_string(probe_idx));
 

@@ -223,8 +223,8 @@ bool megamol::probe_gl::ProbeBillboardGlyphRenderTasks::getDataCallback(core::Ca
             if (mat.textures.size() > 0) {
                 for (int probe_idx = 0; probe_idx < probe_cnt; ++probe_idx) {
 
-                    assert(
-                        probe_cnt <= (gpu_mtl_storage->getMaterial("ProbeBillboard_Textured").textures.size() * 2048));
+                    assert(probe_cnt <=
+                           (gpu_mtl_storage.front()->getMaterial("ProbeBillboard_Textured").textures.size() * 2048));
 
                     auto generic_probe = probes->getGenericProbe(probe_idx);
 
