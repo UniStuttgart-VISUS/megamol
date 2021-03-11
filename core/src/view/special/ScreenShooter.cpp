@@ -549,6 +549,10 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         } else {
             // here we have to render tiles of the image. Woho for optimizing!
 
+
+            throw vislib::Exception("[ScreenShooter] Tiling is currently not supported.", __FILE__, __LINE__);
+
+
             buffer = new BYTE[data.tileWidth * data.tileHeight * data.bpp];
             if (buffer == NULL) {
                 throw vislib::Exception("Cannot allocate temporary image buffer", __FILE__, __LINE__);
@@ -577,7 +581,6 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                     crv.SetFramebufferObject(overlayfbo);
                     crv.SetTime(frameTime);
                     view->OnRenderView(crv); // glClear by SFX
-                    view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
                     glFlush();
                 } else {
                     overlayfbo.reset();
@@ -703,7 +706,6 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                     crv.SetTime(frameTime);
                     crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileW), static_cast<float>(tileH));
                     view->OnRenderView(crv); // glClear by SFX
-                    view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
                     glFlush();
 
                     if (currentFbo->GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) !=
@@ -789,6 +791,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                 data.tmpFileLocks[tmpid].Unlock();
 
             } /* end for yi */
+
+            view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
 
             t2.Join();
 
