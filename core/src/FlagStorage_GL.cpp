@@ -38,14 +38,17 @@ FlagStorage_GL::FlagStorage_GL(void)
 }
 
 
-FlagStorage_GL::~FlagStorage_GL(void) { this->Release(); };
+FlagStorage_GL::~FlagStorage_GL(void) {
+    this->Release();
+};
 
 
 bool FlagStorage_GL::create(void) {
     this->theData = std::make_shared<FlagCollection_GL>();
     const int num = 10;
     std::vector<uint32_t> temp_data(num, FlagStorage::ENABLED);
-    this->theData->flags = std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, temp_data.data(), num, GL_DYNAMIC_DRAW);
+    this->theData->flags =
+        std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, temp_data.data(), num, GL_DYNAMIC_DRAW);
     this->theCPUData->flags->resize(num, FlagStorage::ENABLED);
     return true;
 }
@@ -57,7 +60,8 @@ void FlagStorage_GL::release(void) {
 
 bool FlagStorage_GL::readDataCallback(core::Call& caller) {
     auto fc = dynamic_cast<FlagCallRead_GL*>(&caller);
-    if (fc == nullptr) return false;
+    if (fc == nullptr)
+        return false;
 
     fc->setData(this->theData, this->version);
     return true;
@@ -65,7 +69,8 @@ bool FlagStorage_GL::readDataCallback(core::Call& caller) {
 
 bool FlagStorage_GL::writeDataCallback(core::Call& caller) {
     auto fc = dynamic_cast<FlagCallWrite_GL*>(&caller);
-    if (fc == nullptr) return false;
+    if (fc == nullptr)
+        return false;
 
     if (fc->version() > this->version) {
         this->theData = fc->getData();
@@ -98,15 +103,15 @@ bool FlagStorage_GL::writeCPUDataCallback(core::Call& caller) {
 }
 
 bool FlagStorage_GL::readMetaDataCallback(core::Call& caller) {
-    //auto fc = dynamic_cast<FlagCallRead_GL*>(&caller);
-    //if (fc == nullptr) return false;
+    // auto fc = dynamic_cast<FlagCallRead_GL*>(&caller);
+    // if (fc == nullptr) return false;
 
     return true;
 }
 
 bool FlagStorage_GL::writeMetaDataCallback(core::Call& caller) {
-    //auto fc = dynamic_cast<FlagCallWrite_GL*>(&caller);
-    //if (fc == nullptr) return false;
+    // auto fc = dynamic_cast<FlagCallWrite_GL*>(&caller);
+    // if (fc == nullptr) return false;
 
     return true;
 }
