@@ -1,7 +1,7 @@
 /*
  * FlagStorage_GL.h
  *
- * Copyright (C) 2019 by Universitaet Stuttgart (VISUS).
+ * Copyright (C) 2019-2021 by Universitaet Stuttgart (VISUS).
  * Alle Rechte vorbehalten.
  */
 
@@ -100,6 +100,24 @@ private:
     bool writeDataCallback(core::Call& caller);
 
     /**
+     * Access the flags provided by the FlagStorage_GL
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool readCPUDataCallback(core::Call& caller);
+
+    /**
+     * Write/update the flags provided by the FlagStorage_GL
+     *
+     * @param caller The calling call.
+     *
+     * @return 'true' on success, 'false' on failure.
+     */
+    bool writeCPUDataCallback(core::Call& caller);
+
+    /**
      * Access the metadata provided by the FlagStorage_GL
      *
      * @param caller The calling call.
@@ -117,13 +135,37 @@ private:
      */
     bool writeMetaDataCallback(core::Call& caller);
 
+    /**
+    * Helper to copy CPU flags to GL flags
+    */
+    void CPU2GLCopy() {
+        theData->validateFlagCount(theCPUData->flags->size());
+        theData->flags->bufferSubData(*(theCPUData->flags));
+    }
+
+    /**
+    * Helper to copy GL flags to CPU flags
+    */
+    void GL2CPUCopy() {
+        auto const num = theData->flags->getByteSize() / sizeof(uint32_t);
+        theCPUData->validateFlagCount(num);
+        glGetNamedBufferSubData(theData->flags->getName(), 0, theData->flags->getByteSize(), theCPUData->flags->data());
+    }
+
     /** The slot for reading the data */
     core::CalleeSlot readFlagsSlot;
 
     /** The slot for writing the data */
     core::CalleeSlot writeFlagsSlot;
 
+    /** The slot for reading the data */
+    core::CalleeSlot readCPUFlagsSlot;
+
+    /** The slot for writing the data */
+    core::CalleeSlot writeCPUFlagsSlot;
+
     std::shared_ptr<FlagCollection_GL> theData;
+    std::shared_ptr<FlagCollection_CPU> theCPUData;
     uint32_t version = 0;
 };
 
