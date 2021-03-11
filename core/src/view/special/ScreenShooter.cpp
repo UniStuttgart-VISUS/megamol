@@ -420,7 +420,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
     BYTE* buffer = NULL;
     vislib::sys::FastFile file;
     bool rollback = false;
-    vislib::graphics::gl::FramebufferObject* overlayfbo = NULL;
+    std::shared_ptr<vislib::graphics::gl::FramebufferObject> overlayfbo;
+    float bckcolalpha = 1.0f;
 
     try {
 
@@ -472,7 +473,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
             }
             crv.ResetAll();
             switch (bkgndMode) {
-            case 0: /* don't set bkgnd */
+            case 0:
+                crv.SetBackgroundColor(view->BkgndColour());
                 break;
             case 1:
                 crv.SetBackgroundColor(glm::vec4(0, 0, 0, 1));
@@ -489,19 +491,15 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
             default: /* don't set bkgnd */
                 break;
             }
-            // don't set projection
-            ///if (currentFbo->Enable() != GL_NO_ERROR) {
-            ///    throw vislib::Exception(
-            ///        "Failed to create Screenshot: Cannot enable Framebuffer object", __FILE__, __LINE__);
-            ///}
-            ///glViewport(0, 0, data.imgWidth, data.imgHeight);
-            crv.SetFramebufferObject(currentFbo); //, vislib::math::Rectangle<int>(0, 0, tileW, tileH));
-            ///crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f,
-            ///    static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
+
+            int vp[4];
+            glGetIntegerv(GL_VIEWPORT, vp);
+            crv.SetFramebufferObject(currentFbo);
             crv.SetTime(frameTime);
+            crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f, static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
             view->OnRenderView(crv); // glClear by SFX
+            view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
             glFlush();
-            ///currentFbo->Disable();
 
             if (currentFbo->GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) !=
                 GL_NO_ERROR) {
@@ -568,24 +566,21 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
             }
             Log::DefaultLog.WriteMsg(Log::LEVEL_INFO + 100, "%d tile(s) scheduled for rendering", xSteps * ySteps);
 
+            int vp[4];
+            glGetIntegerv(GL_VIEWPORT, vp);
+
             // overlay for user information
-            overlayfbo = new vislib::graphics::gl::FramebufferObject();
+            overlayfbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
             if (overlayfbo != NULL) {
-                int vp[4];
-                glGetIntegerv(GL_VIEWPORT, vp);
-                if (overlayfbo->Create(vp[0] + vp[2], vp[1] + vp[3], GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-                        vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
-                    if (overlayfbo->Enable() == GL_NO_ERROR) {
-                        crv.ResetAll();
-                        crv.SetTime(frameTime);
-                        view->OnRenderView(crv); // glClear by SFX
-                        glFlush();
-                        overlayfbo->Disable();
-                    } else {
-                        SAFE_DELETE(overlayfbo);
-                    }
+                if (overlayfbo->Create(vp[0] + vp[2], vp[1] + vp[3], GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
+                    crv.ResetAll();
+                    crv.SetFramebufferObject(overlayfbo);
+                    crv.SetTime(frameTime);
+                    view->OnRenderView(crv); // glClear by SFX
+                    view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
+                    glFlush();
                 } else {
-                    SAFE_DELETE(overlayfbo);
+                    overlayfbo.reset();
                 }
             }
 
@@ -681,13 +676,14 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                     // render a tile
                     crv.ResetAll();
                     switch (bkgndMode) {
-                    case 0: /* don't set bkgnd */
+                    case 0:
+                        crv.SetBackgroundColor(view->BkgndColour());
                         break;
                     case 1:
                         crv.SetBackgroundColor(glm::vec4(0, 0, 0, 1));
                         break;
                     case 2:
-                        crv.SetBackgroundColor(glm::vec4(1, 1, 1,1));
+                        crv.SetBackgroundColor(glm::vec4(1, 1, 1, 1));
                         break;
                     case 3:
                         crv.SetBackgroundColor(glm::vec4(0, 0, 0, 1));
@@ -702,20 +698,13 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                     default: /* don't set bkgnd */
                         break;
                     }
-                    // don't set projection
-                    ///if (currentFbo->Enable() != GL_NO_ERROR) {
-                    ///    throw vislib::Exception(
-                    ///        "Failed to create Screenshot: Cannot enable Framebuffer object", __FILE__, __LINE__);
-                    ///}
-                    ///glViewport(0, 0, tileW, tileH);
-                    crv.SetFramebufferObject(currentFbo); //, vislib::math::Rectangle<int>(0, 0, tileW, tileH));
-                    ///crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
-                    ///    static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileW),
-                    ///    static_cast<float>(tileH));
+
+                    crv.SetFramebufferObject(currentFbo);
                     crv.SetTime(frameTime);
+                    crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileW), static_cast<float>(tileH));
                     view->OnRenderView(crv); // glClear by SFX
+                    view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
                     glFlush();
-                    ///currentFbo->Disable();
 
                     if (currentFbo->GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) !=
                         GL_NO_ERROR) {
@@ -820,12 +809,12 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         data.imgHeight = 0;
         t2.Join();
     }
-    if (overlayfbo != NULL) {
+    if (overlayfbo != nullptr) {
         try {
             overlayfbo->Release();
         } catch (...) {
         }
-        delete overlayfbo;
+        overlayfbo.reset();
     }
     if (data.pngPtr != NULL) {
         if (data.pngInfoPtr != NULL) {

@@ -433,8 +433,6 @@ bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
     this->utils.PushMenu(leftLabel, midLabel, rightLabel, this->viewport.x, this->viewport.y);
 
     // Draw all ---------------------------------------------------------------
-    glClearDepth(1.0f);
-    glClear(GL_DEPTH_BUFFER_BIT);
     this->utils.DrawAll(ortho, this->viewport);
 
 	return true;

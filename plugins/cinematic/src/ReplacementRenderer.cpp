@@ -115,6 +115,21 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
     cam_type::matrix_type viewTemp, projTemp;
     cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
 
+    // XXX Move this behind the fbo magic?
+    auto leftSlotParent = call.PeekCallerSlot()->Parent();
+    std::shared_ptr<const view::AbstractView> viewptr =
+        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
+    if (viewptr != nullptr) { 
+        /// auto vp = cam.image_tile();
+        /// glViewport(vp.left(), vp.bottom(), vp.width(), vp.height());
+        auto vp = cam.resolution_gate();
+        glViewport(0, 0, vp.width(), vp.height());
+        /// glViewport(0, 0, call.GetFramebufferObject()->GetWidth(), call.GetFramebufferObject()->GetHeight());
+        auto backCol = call.BackgroundColor();
+        glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
+
     if (this->replacementRenderingParam.IsDirty()) {
         this->replacementRenderingParam.ResetDirty();
         this->toggle = this->replacementRenderingParam.Param<param::BoolParam>()->Value();

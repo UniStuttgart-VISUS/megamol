@@ -605,3 +605,13 @@ glm::vec4 view::AbstractView::BkgndColour(void) const {
     }
     return this->_bkgndCol;
 }
+
+/*
+ * view::AbstractView::SetBkgndColour
+ */
+void view::AbstractView::SetBkgndColour(glm::vec4 bkgndCol) {
+
+    this->_bkgndCol = bkgndCol;
+    param::ColorParam::ColorType paramBkgndCol = {this->_bkgndCol.r, this->_bkgndCol.g, this->_bkgndCol.b, 1.0f};
+    this->_bkgndColSlot.Param<param::ColorParam>()->SetValue(paramBkgndCol, false);
+}

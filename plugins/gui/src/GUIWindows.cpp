@@ -261,7 +261,6 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     ImGui::SetCurrentContext(this->context);
     // Propagate ImGui context to core instance
     if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
-        /// TODO Also for new frontend?
         this->core_instance->SetCurrentImGuiContext(this->context);
     }
 
