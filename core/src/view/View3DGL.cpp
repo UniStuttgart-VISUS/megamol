@@ -59,35 +59,45 @@ void megamol::core::view::View3DGL::Render(double time, double instanceTime) {
         return;
     }
 
-    this->_fbo->Enable();
+    AbstractView3D::beforeRender(time, instanceTime);
+
+    // clear fbo before sending it down the rendering call
+    // the view is the owner of this fbo and therefore responsible
+    // for clearing it at the beginning of a render frame
+    _fbo->bind();
     auto bgcol = this->BkgndColour();
     glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
     glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    cr3d->SetFramebufferObject(this->_fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    AbstractView3D::beforeRender(time, instanceTime);
-
+    // set camera and fbo in rendering call
+    cr3d->SetFramebufferObject(_fbo);
     cr3d->SetCamera(this->_camera);
-    (*cr3d)(view::CallRender3DGL::FnRender);
 
-    this->_fbo->Disable();
-    this->_fbo->DrawColourTexture();
+    // call the rendering call
+    (*cr3d)(view::CallRender3DGL::FnRender);
     
     AbstractView3D::afterRender();
 }
 
 void megamol::core::view::View3DGL::ResetView() {
-    AbstractView3D::ResetView(static_cast<float>(_fbo->GetWidth())/static_cast<float>(_fbo->GetHeight()));
+    AbstractView3D::ResetView(static_cast<float>(_fbo->getWidth())/static_cast<float>(_fbo->getHeight()));
 }
 
 void megamol::core::view::View3DGL::Resize(unsigned int width, unsigned int height) {
-    if ( (_fbo->GetWidth() != width) || (_fbo->GetHeight() != height) ) {
-        this->_fbo->Release();
-        if (!this->_fbo->Create(width, height, GL_RGBA8, GL_RGBA,
-                GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT)) {
-            throw vislib::Exception("[View3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
-            return;
+    if ( (_fbo->getWidth() != width) || (_fbo->getHeight() != height) ) {
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
+        try {
+            _fbo = std::make_shared<glowl::FramebufferObject>(width, height);
+            _fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+
+            //TODO: check completness and throw if not?
+        }
+        catch (glowl::FramebufferObjectException const& exc) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[View3DGL] Unable to create framebuffer object: %s\n", exc.what());
         }
 
         if (_cameraIsMutable) { // view seems to be in control of the camera
@@ -234,15 +244,15 @@ bool view::View3DGL::OnMouseButton(view::MouseButton button, view::MouseButtonAc
         auto tile_start = _camera.get<Camera::PerspectiveParameters>().image_plane_tile.tile_start;
         auto tile_size = tile_end - tile_start;
 
-        wndWidth = static_cast<int>(static_cast<float>(_fbo->GetWidth()) / tile_size.x);
-        wndHeight = static_cast<int>(static_cast<float>(_fbo->GetHeight()) / tile_size.y);
+        wndWidth = static_cast<int>(static_cast<float>(_fbo->getWidth()) / tile_size.x);
+        wndHeight = static_cast<int>(static_cast<float>(_fbo->getHeight()) / tile_size.y);
     } else if (projType == Camera::ProjectionType::ORTHOGRAPHIC) {
         auto tile_end = _camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_end;
         auto tile_start = _camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_start;
         auto tile_size = tile_end - tile_start;
 
-        wndWidth = static_cast<int>(static_cast<float>(_fbo->GetWidth()) / tile_size.x);
-        wndHeight = static_cast<int>(static_cast<float>(_fbo->GetHeight()) / tile_size.y);
+        wndWidth = static_cast<int>(static_cast<float>(_fbo->getWidth()) / tile_size.x);
+        wndHeight = static_cast<int>(static_cast<float>(_fbo->getHeight()) / tile_size.y);
     } else {
         return false; // Oh bother...
     }
@@ -342,15 +352,15 @@ bool view::View3DGL::OnMouseMove(double x, double y) {
         auto tile_start = _camera.get<Camera::PerspectiveParameters>().image_plane_tile.tile_start;
         auto tile_size = tile_end - tile_start;
 
-        wndWidth = static_cast<int>(static_cast<float>(_fbo->GetWidth()) / tile_size.x);
-        wndHeight = static_cast<int>(static_cast<float>(_fbo->GetHeight()) / tile_size.y);
+        wndWidth = static_cast<int>(static_cast<float>(_fbo->getWidth()) / tile_size.x);
+        wndHeight = static_cast<int>(static_cast<float>(_fbo->getHeight()) / tile_size.y);
     } else if (projType == Camera::ProjectionType::ORTHOGRAPHIC) {
         auto tile_end = _camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_end;
         auto tile_start = _camera.get<Camera::OrthographicParameters>().image_plane_tile.tile_start;
         auto tile_size = tile_end - tile_start;
 
-        wndWidth = static_cast<int>(static_cast<float>(_fbo->GetWidth()) / tile_size.x);
-        wndHeight = static_cast<int>(static_cast<float>(_fbo->GetHeight()) / tile_size.y);
+        wndWidth = static_cast<int>(static_cast<float>(_fbo->getWidth()) / tile_size.x);
+        wndHeight = static_cast<int>(static_cast<float>(_fbo->getHeight()) / tile_size.y);
     } else {
         return false; // Oh bother...
     }
@@ -448,7 +458,8 @@ bool View3DGL::create(void) {
 
     AbstractView3D::create();
 
-    this->_fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    // intialize fbo with dummy size until the actual size is set during first call to Resize
+    this->_fbo = std::make_shared<glowl::FramebufferObject>(1,1);
 
     this->_cursor2d.SetButtonCount(3);
 

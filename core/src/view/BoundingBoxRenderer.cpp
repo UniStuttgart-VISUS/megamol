@@ -190,13 +190,6 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
     glm::mat4 proj = cam.getProjectionMatrix();
     glm::mat4 mvp = proj * view;
 
-    if (viewptr != nullptr) { // XXX Move this behind the fbo magic?
-        glViewport(0, 0, fbo->GetWidth(), fbo->GetHeight());
-        auto backCol = call.BackgroundColor();
-        glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-
     CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<CallRender3DGL>();
     if (chainedCall == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -209,6 +202,10 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
 
     auto boundingBoxes = chainedCall->AccessBoundingBoxes();
     auto smoothLines = this->smoothLineSlot.Param<param::BoolParam>()->Value();
+
+    if (viewptr != nullptr) { // XXX Move this behind the fbo magic?
+        glViewport(0, 0, fbo->getWidth(), fbo->getHeight());
+    }
 
     bool renderRes = true;
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {

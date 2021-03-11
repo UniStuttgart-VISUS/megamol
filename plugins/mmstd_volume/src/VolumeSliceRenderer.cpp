@@ -216,7 +216,7 @@ bool megamol::stdplugin::volume::VolumeSliceRenderer::Render(core::view::CallRen
     auto cr_fbo = cr.GetFramebufferObject();
 
 	// create render target
-    glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr_fbo->GetWidth(), cr_fbo->GetHeight(),
+    glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr_fbo->getWidth(), cr_fbo->getHeight(),
 		1, GL_RGBA, GL_UNSIGNED_BYTE, 1,
         {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
             {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},

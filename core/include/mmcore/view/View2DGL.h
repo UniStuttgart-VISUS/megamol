@@ -16,7 +16,9 @@
 #include "mmcore/param/ParamSlot.h"
 #include "mmcore/view/AbstractView.h"
 #include "mmcore/view/TimeControl.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
+
+#define GLOWL_OPENGL_INCLUDE_GLAD
+#include <glowl/FramebufferObject.hpp>
 
 namespace megamol {
 namespace core {
@@ -151,7 +153,7 @@ private:
     /** the update counter for the view settings */
     unsigned int _viewUpdateCnt;
 
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
+    std::shared_ptr<glowl::FramebufferObject> _fbo;
 };
 } /* end namespace view */
 } /* end namespace core */

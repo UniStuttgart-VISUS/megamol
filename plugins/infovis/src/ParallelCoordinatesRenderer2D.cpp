@@ -981,8 +981,8 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     // end suck
 
     // maintainer comment: assuming this now here wants to know about the current tile's resolution
-    windowWidth = fbo->GetWidth();
-    windowHeight = fbo->GetHeight();
+    windowWidth = fbo->getWidth();
+    windowHeight = fbo->getHeight();
     auto bg = call.BackgroundColor();
     backgroundColor[0] = bg[0] / 255.0f;
     backgroundColor[1] = bg[1] / 255.0f;

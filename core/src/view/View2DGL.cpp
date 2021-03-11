@@ -98,8 +98,8 @@ void view::View2DGL::Render(double time, double instanceTime) {
 
     ::glMatrixMode(GL_PROJECTION);
     ::glLoadIdentity();
-    float w = _fbo->GetWidth();
-    float h = _fbo->GetHeight();
+    float w = _fbo->getWidth();
+    float h = _fbo->getHeight();
     float asp = h / w;
     //::glScalef(asp, 1.0f, 1.0f);
     //float aMatrix[16];
@@ -157,11 +157,11 @@ void view::View2DGL::ResetView(void) {
             -0.5f * (cr2d->GetBoundingBoxes().BoundingBox().Left() + cr2d->GetBoundingBoxes().BoundingBox().Right());
         this->_viewY =
             -0.5f * (cr2d->GetBoundingBoxes().BoundingBox().Bottom() + cr2d->GetBoundingBoxes().BoundingBox().Top());
-        if ((_fbo->GetWidth() / _fbo->GetHeight()) > static_cast<float>(cr2d->GetBoundingBoxes().BoundingBox().Width() /
+        if ((_fbo->getWidth() / _fbo->getHeight()) > static_cast<float>(cr2d->GetBoundingBoxes().BoundingBox().Width() /
                                                               cr2d->GetBoundingBoxes().BoundingBox().Height())) {
             this->_viewZoom = 2.0f / cr2d->GetBoundingBoxes().BoundingBox().Height();
         } else {
-            this->_viewZoom = (2.0f * _fbo->GetWidth()) / (this->_fbo->GetHeight() * cr2d->GetBoundingBoxes().BoundingBox().Width());
+            this->_viewZoom = (2.0f * _fbo->getWidth()) / (this->_fbo->getHeight() * cr2d->GetBoundingBoxes().BoundingBox().Width());
         }
         this->_viewZoom *= 0.99f;
 
@@ -179,12 +179,17 @@ void view::View2DGL::ResetView(void) {
  * view::View2DGL::Resize
  */
 void view::View2DGL::Resize(unsigned int width, unsigned int height) {
-    if ((this->_fbo->GetWidth() != width) || (this->_fbo->GetHeight() != height)) {
-        this->_fbo->Release();
-        if (!this->_fbo->Create(width, height, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE)) {
-            throw vislib::Exception("[View2DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);
-            return;
+    if ((this->_fbo->getWidth() != width) || (this->_fbo->getHeight() != height)) {
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // better safe then sorry, "unbind" fbo before delting one
+        try {
+            _fbo = std::make_shared<glowl::FramebufferObject>(width, height);
+            _fbo->createColorAttachment(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+
+            // TODO: check completness and throw if not?
+        } catch (glowl::FramebufferObjectException const& exc) {
+            megamol::core::utility::log::Log::DefaultLog.WriteError(
+                "[View3DGL] Unable to create framebuffer object: %s\n", exc.what());
         }
     }
 }
@@ -274,8 +279,8 @@ bool view::View2DGL::OnMouseButton(MouseButton button, MouseButtonAction action,
 bool view::View2DGL::OnMouseMove(double x, double y) {
     if (this->_mouseMode == MouseMode::Propagate) {
         float mx, my;
-        mx = ((x * 2.0f / _fbo->GetWidth()) - 1.0f) * _fbo->GetWidth() / _fbo->GetHeight();
-        my = 1.0f - (y * 2.0f / _fbo->GetHeight());
+        mx = ((x * 2.0f / _fbo->getWidth()) - 1.0f) * _fbo->getWidth() / _fbo->getHeight();
+        my = 1.0f - (y * 2.0f / _fbo->getHeight());
         mx /= this->_viewZoom;
         my /= this->_viewZoom;
         mx -= this->_viewX;
@@ -291,7 +296,7 @@ bool view::View2DGL::OnMouseMove(double x, double y) {
             if ((*cr)(view::CallRender2DGL::FnOnMouseMove)) return true;
         }
     } else if (this->_mouseMode == MouseMode::Pan) {
-        float movSpeed = 2.0f / (this->_viewZoom * _fbo->GetHeight());
+        float movSpeed = 2.0f / (this->_viewZoom * _fbo->getHeight());
         this->_viewX -= (this->_mouseX - x) * movSpeed;
         this->_viewY += (this->_mouseY - y) * movSpeed;
         if (((this->_mouseX - x) > 0.0f) || ((this->_mouseY - y) > 0.0f)) {
@@ -309,7 +314,7 @@ bool view::View2DGL::OnMouseMove(double x, double y) {
 
         float newZoom =
             static_cast<float>(pow(spd, log(static_cast<double>(this->_viewZoom / base)) / logSpd +
-                                            static_cast<double>(((this->_mouseY - y) * 1.0f / _fbo->GetHeight())))) *
+                                            static_cast<double>(((this->_mouseY - y) * 1.0f / _fbo->getHeight())))) *
             base;
 
         if (!vislib::math::IsEqual(newZoom, this->_viewZoom)) {
@@ -347,7 +352,8 @@ bool view::View2DGL::create(void) {
  
     this->_firstImg = true;
 
-    this->_fbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
+    // intialize fbo with dummy size until the actual size is set during first call to Resize
+    this->_fbo = std::make_shared<glowl::FramebufferObject>(1,1);
 
     return true;
 }

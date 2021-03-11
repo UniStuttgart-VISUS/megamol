@@ -1137,8 +1137,8 @@ bool SphereRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // Viewport
-    this->curVpWidth = fbo->GetWidth();
-    this->curVpHeight = fbo->GetHeight();
+    this->curVpWidth = fbo->getWidth();
+    this->curVpHeight = fbo->getHeight();
     this->curViewAttrib[0] = 0.0f;
     this->curViewAttrib[1] = 0.0f;
     this->curViewAttrib[2] = static_cast<float>(this->curVpWidth);

@@ -7,8 +7,10 @@
 
 #pragma once
 #include "mmcore/view/AbstractView3D.h"
-#include "vislib/graphics/gl/FramebufferObject.h"
 #include "vislib/graphics/Cursor2D.h"
+
+#define GLOWL_OPENGL_INCLUDE_GLAD
+#include "glowl/FramebufferObject.hpp"
 
 namespace megamol {
 namespace core {
@@ -94,7 +96,7 @@ protected:
      */
     virtual void release(void);
 
-    std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
+    std::shared_ptr<glowl::FramebufferObject> _fbo;
 
 private:
 

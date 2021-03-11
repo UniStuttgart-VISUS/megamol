@@ -192,8 +192,8 @@ bool ArrowRenderer::Render(view::CallRender3DGL& call) {
     glm::vec4 viewportStuff;
     viewportStuff[0] = 0.0f;
     viewportStuff[1] = 0.0f;
-    viewportStuff[2] = static_cast<float>(fbo->GetWidth());
-    viewportStuff[3] = static_cast<float>(fbo->GetHeight());
+    viewportStuff[2] = static_cast<float>(fbo->getWidth());
+    viewportStuff[3] = static_cast<float>(fbo->getHeight());
     if (viewportStuff[2] < 1.0f) viewportStuff[2] = 1.0f;
     if (viewportStuff[3] < 1.0f) viewportStuff[3] = 1.0f;
     viewportStuff[2] = 2.0f / viewportStuff[2];

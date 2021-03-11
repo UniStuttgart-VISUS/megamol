@@ -440,7 +440,7 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
         std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
 
     if (viewptr != nullptr) { // XXX Move this behind the fbo magic?
-        glViewport(0, 0, fbo->GetWidth(), fbo->GetHeight());
+        glViewport(0, 0, fbo->getWidth(), fbo->getHeight());
         auto backCol = call.BackgroundColor();
         glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -456,8 +456,8 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     }
 
     // Get current viewport
-    if ((this->m_viewport.x != fbo->GetWidth()) || (this->m_viewport.y != fbo->GetHeight())) {
-        this->m_viewport = {fbo->GetWidth(), fbo->GetHeight()};
+    if ((this->m_viewport.x != fbo->getWidth()) || (this->m_viewport.y != fbo->getHeight())) {
+        this->m_viewport = {fbo->getWidth(), fbo->getHeight()};
         // Reload rectangle on viewport changes
         this->onTriggerRecalcRectangle(this->paramMode);
     }

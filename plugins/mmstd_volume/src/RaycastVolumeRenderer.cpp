@@ -243,7 +243,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
         if (this->m_mode.Param<core::param::EnumParam>()->Value() == 0 ||
             this->m_mode.Param<core::param::EnumParam>()->Value() == 2) {
             if (this->fbo.IsValid()) this->fbo.Release();
-            this->fbo.Create(cr_fbo->GetWidth(), cr_fbo->GetHeight(), GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+            this->fbo.Create(cr_fbo->getWidth(), cr_fbo->getHeight(), GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
                 vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE);
             this->fbo.Enable();
         }
@@ -260,10 +260,10 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     }
 
     // create render target texture
-    if (this->m_render_target == nullptr || this->m_render_target->getWidth() != cr_fbo->GetWidth() ||
-        this->m_render_target->getHeight() != cr_fbo->GetHeight()) {
+    if (this->m_render_target == nullptr || this->m_render_target->getWidth() != cr_fbo->getWidth() ||
+        this->m_render_target->getHeight() != cr_fbo->getHeight()) {
 
-        glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr_fbo->GetWidth(), cr_fbo->GetHeight(), 1,
+        glowl::TextureLayout render_tgt_layout(GL_RGBA8, cr_fbo->getWidth(), cr_fbo->getHeight(), 1,
             GL_RGBA, GL_UNSIGNED_BYTE, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
@@ -273,7 +273,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
             std::make_unique<glowl::Texture2D>("raycast_volume_render_target", render_tgt_layout, nullptr);
 
         // create normal target texture
-        glowl::TextureLayout normal_tgt_layout(GL_RGBA32F, cr_fbo->GetWidth(), cr_fbo->GetHeight(), 1,
+        glowl::TextureLayout normal_tgt_layout(GL_RGBA32F, cr_fbo->getWidth(), cr_fbo->getHeight(), 1,
             GL_RGBA, GL_FLOAT, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},
@@ -283,7 +283,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
             std::make_unique<glowl::Texture2D>("raycast_volume_normal_target", normal_tgt_layout, nullptr);
 
         // create depth target texture
-        glowl::TextureLayout depth_tgt_layout(GL_R32F, cr_fbo->GetWidth(), cr_fbo->GetHeight(), 1, GL_R,
+        glowl::TextureLayout depth_tgt_layout(GL_R32F, cr_fbo->getWidth(), cr_fbo->getHeight(), 1, GL_R,
             GL_FLOAT, 1,
             {{GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER},
                 {GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER}, {GL_TEXTURE_MIN_FILTER, GL_LINEAR},

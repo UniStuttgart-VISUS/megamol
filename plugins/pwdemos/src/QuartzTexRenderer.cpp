@@ -97,7 +97,7 @@ bool QuartzTexRenderer::Render(core::view::CallRender3DGL& call) {
     auto cam_pose = cam.get<core::view::Camera::Pose>();
     auto fbo = call.GetFramebufferObject();
 
-    glm::vec4 viewport = glm::vec4(0, 0, fbo->GetWidth(), fbo->GetHeight());
+    glm::vec4 viewport = glm::vec4(0, 0, fbo->getWidth(), fbo->getHeight());
     if (viewport.z < 1.0f) viewport.z = 1.0f;
     if (viewport.w < 1.0f) viewport.w = 1.0f;
     float shaderPointSize = vislib::math::Max(viewport.z, viewport.w);

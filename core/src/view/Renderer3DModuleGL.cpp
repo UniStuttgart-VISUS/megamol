@@ -69,19 +69,6 @@ bool Renderer3DModuleGL::GetExtentsChain(CallRender3DGL& call) {
  * Renderer3DModuleGL::RenderChain
  */
 bool Renderer3DModuleGL::RenderChain(CallRender3DGL& call) {
-    auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractView> viewptr =
-        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
-
-    // maintainer comment: this will probably become obsolete in the near future...
-    if (viewptr != nullptr) {
-        auto fbo = call.GetFramebufferObject();
-        glViewport(0, 0, fbo->GetWidth(), fbo->GetHeight());
-        auto backCol = call.BackgroundColor();
-        glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
-        glClearDepth(1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
 
     this->PreRender(call);
 
@@ -97,6 +84,10 @@ bool Renderer3DModuleGL::RenderChain(CallRender3DGL& call) {
         call = *chainedCall;
     }
 
+    // bind fbo and set viewport before rendering your own stuff
+    auto fbo = call.GetFramebufferObject();
+    glViewport(0, 0, fbo->getWidth(), fbo->getHeight());
+    
     // render our own stuff
     this->Render(call);
 

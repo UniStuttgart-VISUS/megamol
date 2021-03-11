@@ -70,8 +70,8 @@ bool ContextToGL::Render(CallRender3DGL& call) {
     auto lhs_fbo = call.GetFramebufferObject();
     if (lhs_fbo != NULL) {
 
-        auto width = lhs_fbo->GetWidth();
-        auto height = lhs_fbo->GetHeight();
+        auto width = lhs_fbo->getWidth();
+        auto height = lhs_fbo->getHeight();
 
         // Call CPU renderings
         {
@@ -131,22 +131,16 @@ bool ContextToGL::Render(CallRender3DGL& call) {
         new_fbo.Disable();
 
         // draw into lhs fbo
-        if ((lhs_fbo->GetWidth() != width) || (lhs_fbo->GetHeight() != height)) {
-            lhs_fbo->Release();
-            lhs_fbo->Create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE,
-                vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE, GL_DEPTH_COMPONENT);
-        }
-        if (lhs_fbo->IsValid() && !lhs_fbo->IsEnabled()) {
-            lhs_fbo->Enable();
-        }
+        lhs_fbo->bind();
+        glViewport(0, 0, lhs_fbo->getWidth(), lhs_fbo->getHeight());
 
         glm::mat4 ortho = glm::ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -1.0f, 1.0f);
 
         _utils.DrawTextures(ortho, glm::vec2(width, height));
 
-        if (lhs_fbo->IsValid()) {
-            lhs_fbo->Disable();
-        }
+        glBindFramebuffer(GL_FRAMEBUFFER,0);
+
+
     } else {
         return false;
     }
