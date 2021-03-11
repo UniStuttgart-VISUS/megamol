@@ -36,18 +36,6 @@ public:
     static const std::string MEGAMOL_ENV;
 
     typedef struct {
-        std::function<bool(std::string const&, std::string const&)> mmSetCliOption_callback_;
-        std::function<bool(std::string const&, std::string const&)> mmSetGlobalValue_callback_;
-        std::function<bool(std::string const&)> mmSetAppDir_callback_;
-        std::function<bool(std::string const&)> mmAddResourceDir_callback_;
-        std::function<bool(std::string const&)> mmAddShaderDir_callback_;
-        std::function<bool(std::string const&)> mmSetLogFile_callback_;
-        std::function<bool(std::string const&)> mmSetLogLevel_callback_;
-        std::function<bool(std::string const&)> mmSetEchoLevel_callback_;
-        std::function<bool(std::string const&)> mmLoadProject_callback_;
-    } LuaConfigCallbacks;
-
-    typedef struct {
         std::function<std::vector<std::string>()> mmListResources_callback_; // returns list of resources available in frontend
         std::function<void(std::string const&)> mmScreenshot_callback_;
         std::function<float()> mmLastFrameTime_callback_;
@@ -70,8 +58,6 @@ public:
     ~LuaAPI();
 
     // TODO forbid copy-contructor? assignment?
-
-    bool FillConfigFromString(const std::string& script, std::string& result, LuaConfigCallbacks const& config);
 
     /**
      * Run a script file, sandboxed in the environment provided.
@@ -295,7 +281,6 @@ private:
     /** the respective MegaMol graph */
     megamol::core::MegaMolGraph* graph_ptr_ = nullptr;
 
-    LuaConfigCallbacks config_callbacks_;
     LuaCallbacks callbacks_;
 
     std::list<megamol::frontend_resources::LuaCallbacksCollection> verbatim_lambda_callbacks_;
