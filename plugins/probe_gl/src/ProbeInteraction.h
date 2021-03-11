@@ -133,9 +133,9 @@ private:
         {core::view::MouseButton::BUTTON_RIGHT, false}
     };
 
-    int64_t last_active_probe_id;
+    int32_t last_active_probe_id;
 
-    std::vector<int64_t> m_selected_probes;
+    std::vector<int32_t> m_selected_probes;
 
     megamol::core::CallerSlot m_probe_fbo_slot;
     megamol::core::CallerSlot m_hull_fbo_slot;

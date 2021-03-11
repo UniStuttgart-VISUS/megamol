@@ -68,7 +68,7 @@ bool megamol::probe_gl::ProbeInteraction::OnMouseButton(
                 this->GetCoreInstance()->GetFrameID(), static_cast<uint32_t>(last_active_probe_id));
             event_collection->add<ProbeSelectExclusive>(std::move(evt));
             megamol::core::utility::log::Log::DefaultLog.WriteMsg(megamol::core::utility::log::Log::LEVEL_INFO,
-                "Selected probe: %s\n", std::to_string(last_active_probe_id));
+                "Selected probe: %d\n", last_active_probe_id);
         } else {
             auto evt = std::make_unique<ProbeClearSelection>(this->GetCoreInstance()->GetFrameID());
             event_collection->add<ProbeClearSelection>(std::move(evt));
@@ -269,7 +269,7 @@ bool megamol::probe_gl::ProbeInteraction::Render(core::view::CallRender3DGL& cal
         depth = glyph_depth_pixel_data;
     }
 
-    if (depth > hull_depth_pixel_data) {
+    if (hull_depth_pixel_data > 0.0f && depth > hull_depth_pixel_data) {
         objId = -1;
     }
 

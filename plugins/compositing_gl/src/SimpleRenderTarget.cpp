@@ -84,6 +84,7 @@ bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3DGL
 
     // get clear color
     glClearColor(0, 0, 0, 0);
+    glClearDepth(1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // TODO: query old clear color, set 0 clear color, reset old clear color? -> wtf, profit!
