@@ -182,53 +182,6 @@ int main(const int argc, const char** argv) {
         run_megamol = false;
     }
 
-    using megamol::frontend_resources::LuaCallbacksCollection;
-    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
-    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
-    using FloatResult = megamol::frontend_resources::LuaCallbacksCollection::FloatResult;
-    using LuaError = megamol::frontend_resources::LuaCallbacksCollection::LuaError;
-    LuaCallbacksCollection lua_callbacks;
-    lua_callbacks.add<VoidResult>(
-        "mmHelloLambda", "()\n\tExample callback via lambda binding",
-            std::function{
-                [&]() -> VoidResult {
-                    log(">> Hello Lua Lambda! [1]");
-                    return VoidResult{};
-                }
-            });
-
-    lua_callbacks.add<VoidResult>(
-        "mmHelloLambda2", "()\n\tExample callback via lambda binding",
-            std::function{
-                [&]() -> VoidResult {
-                    log(">> Hello again, Lua Lambda! [2]");
-                    return VoidResult{};
-                }
-            });
-
-    lua_callbacks.add<StringResult>(
-        "mmHelloLambda3", "()\n\tExample callback via lambda binding",
-            std::function{
-                [&]() -> StringResult {
-                    log(">> run third Lua Lambda Callback (see Lua Result) [3]");
-                    return StringResult{">> Hello Hello Hello Lua Lambda! [3]"};
-                }
-            });
-
-    lua_callbacks.add<FloatResult, int>(
-        "mmHelloLambdaIntToFloat", "()\n\tExample callback via lambda binding",
-            std::function{
-                [&](int i) -> FloatResult {
-                    if (i < 0) {
-                        log_error(">> integer is less than 0");
-                        return LuaError{"integer is less than 0: " + std::to_string(i)};
-                    }
-                    return FloatResult{ static_cast<float>(i) };
-                }
-            });
-
-    lua_api.AddCallbacks(lua_callbacks);
-
     auto frontend_resources = services.getProvidedResources();
     graph.AddModuleDependencies(frontend_resources);
 

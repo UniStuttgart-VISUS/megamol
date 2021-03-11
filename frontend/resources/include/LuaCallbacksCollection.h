@@ -69,13 +69,6 @@ struct LuaCallbacksCollection {
         std::string exit_reason = "unknown reason";
     };
 
-    using VoidResult = LuaResult<void>;
-    using BoolResult = LuaResult<bool>;
-    using LongResult = LuaResult<long>;
-    using FloatResult = LuaResult<float>;
-    using DoubleResult = LuaResult<double>;
-    using StringResult = LuaResult<std::string>;
-
     template <typename ReturnType, typename FuncType, typename... FuncArgs, size_t... I>
     ReturnType unpack(LuaState state, FuncType func, std::tuple<FuncArgs...> tuple, std::index_sequence<I...>) {
         return func( state.read< typename std::tuple_element<I, std::tuple<FuncArgs...>>::type >(I+1)... );
@@ -105,9 +98,12 @@ struct LuaCallbacksCollection {
 
     template <typename Result, typename... FuncArgs>
     void add(std::string func_name, std::string func_description, std::function<Result(FuncArgs...)> func) {
-        callbacks.push_back({ func_name, func_description, 
-            resolve<std::function<Result(FuncArgs...)>, Result, FuncArgs...>(func_name, func) }
-        );
+        callbacks.push_back(
+        {
+            func_name,
+            func_description,
+            resolve<std::function<Result(FuncArgs...)>, Result, FuncArgs...>(func_name, func)
+        });
     }
 
     using LuaCallbackEntryType = std::function<int(LuaState)>;
@@ -117,6 +113,15 @@ struct LuaCallbacksCollection {
     bool is_registered = false;
     bool config_valid = false;
     bool render_valid = false;
+
+    using VoidResult = LuaCallbacksCollection::LuaResult<void>;
+    using BoolResult = LuaCallbacksCollection::LuaResult<bool>;
+    using LongResult = LuaCallbacksCollection::LuaResult<long>;
+    using FloatResult = LuaCallbacksCollection::LuaResult<float>;
+    using DoubleResult = LuaCallbacksCollection::LuaResult<double>;
+    using StringResult = LuaCallbacksCollection::LuaResult<std::string>;
+    using Error = LuaCallbacksCollection::LuaError;
+    using LuaError = LuaCallbacksCollection::LuaError;
 };
 
 // we implement reading/writing the lua stack in LuaAPI.cpp
@@ -135,6 +140,7 @@ struct LuaCallbacksCollection {
     make_read_write(float);
     make_read_write(double);
     make_read_write(std::string);
+#undef make_read_write
 
 } /* end namespace frontend_resources */
 } /* end namespace megamol */
