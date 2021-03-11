@@ -93,10 +93,12 @@ vislib::TString TransferFunctionParam::ValueString(void) const {
 
 bool megamol::core::param::TransferFunctionParam::IgnoreRangeOnProjectLoad(void) {
 
-    bool ignore_range_on_project_load = false;
+    bool ignore_range_on_project_load = true;
     try {
-        nlohmann::json json = nlohmann::json::parse(this->val);
-        json.at("IgnoreRangeOnProjectLoad").get_to(ignore_range_on_project_load);
+        if (!this->val.empty()) {
+            nlohmann::json json = nlohmann::json::parse(this->val);
+            json.at("IgnoreRangeOnProjectLoad").get_to(ignore_range_on_project_load);
+        }
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "[IgnoreRangeOnProjectLoad] JSON Error - Unable to read flag 'IgnoreRangeOnProjectLoad' from transfer function JSON string.");

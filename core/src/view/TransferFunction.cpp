@@ -25,7 +25,7 @@ TransferFunction::TransferFunction(void)
     , texFormat(CallGetTransferFunction::TEXTURE_FORMAT_RGBA)
     , interpolMode(param::TransferFunctionParam::InterpolationMode::LINEAR)
     , range({0.0f, 1.0f})
-        , check_once_ignore_range_on_project_load(true)
+    , check_once_ignore_range_on_project_load(true)
     , version(0)
     , last_frame_id(0) {
 
