@@ -159,11 +159,14 @@ void megamol::core::LuaAPI::commonInit() {
 }
 
 
+// we need the static variable to expose the interpreter to the register mechanism of arbitrary lambdas as lua callbacks
+static megamol::core::LuaInterpreter<megamol::core::LuaAPI>* luaApiInterpreter_ptr = nullptr;
 /*
  * megamol::core::LuaAPI::LuaAPI
  */
 megamol::core::LuaAPI::LuaAPI(bool imperativeOnly) : graph_ptr_(nullptr), luaApiInterpreter_(this), imperative_only_(imperativeOnly) {
     this->commonInit();
+    luaApiInterpreter_ptr = &luaApiInterpreter_;
 }
 
 
@@ -171,7 +174,7 @@ megamol::core::LuaAPI::LuaAPI(bool imperativeOnly) : graph_ptr_(nullptr), luaApi
  * megamol::core::LuaAPI::~LuaAPI
  */
 megamol::core::LuaAPI::~LuaAPI() {
-
+    luaApiInterpreter_ptr = nullptr;
 }
 
 
@@ -1246,3 +1249,77 @@ int megamol::core::LuaAPI::ScaleGUI(lua_State *L) {
 
   return 0;
 }
+
+void megamol::frontend_resources::LuaCallbacksCollection::LuaState::error(std::string reason) {
+    luaApiInterpreter_ptr->ThrowError(reason);
+}
+
+#define lua_state \
+    reinterpret_cast<lua_State*>(this->state_ptr)
+
+template <>
+typename std::remove_reference<bool>::type
+megamol::frontend_resources::LuaCallbacksCollection::LuaState::read<typename std::remove_reference<bool>::type>(size_t index) {
+        bool b = lua_toboolean(lua_state, index);
+        return b;
+}
+template <>
+void megamol::frontend_resources::LuaCallbacksCollection::LuaState::write(bool item) {
+    lua_pushboolean(lua_state, static_cast<int>(item));
+}
+
+template <>
+typename std::remove_reference<int>::type
+megamol::frontend_resources::LuaCallbacksCollection::LuaState::read<typename std::remove_reference<int>::type>(size_t index) {
+    int i = luaL_checkinteger(lua_state, index);
+    return i;
+}
+template <>
+void megamol::frontend_resources::LuaCallbacksCollection::LuaState::write(int item) {
+    lua_pushinteger(lua_state, item);
+}
+
+template <>
+typename std::remove_reference<long>::type
+megamol::frontend_resources::LuaCallbacksCollection::LuaState::read<typename std::remove_reference<long>::type>(size_t index) {
+    long l = luaL_checkinteger(lua_state, index);
+    return l;
+}
+template <>
+void megamol::frontend_resources::LuaCallbacksCollection::LuaState::write(long item) {
+    lua_pushinteger(lua_state, item);
+}
+
+template <>
+typename std::remove_reference<float>::type
+megamol::frontend_resources::LuaCallbacksCollection::LuaState::read<typename std::remove_reference<float>::type>(size_t index) {
+    float f = luaL_checknumber(lua_state, index);
+    return f;
+}
+template <>
+void megamol::frontend_resources::LuaCallbacksCollection::LuaState::write(float item) {
+    lua_pushnumber(lua_state, item);
+}
+
+template <>
+typename std::remove_reference<double>::type
+megamol::frontend_resources::LuaCallbacksCollection::LuaState::read<typename std::remove_reference<double>::type>(size_t index) {
+    double d = luaL_checknumber(lua_state, index);
+    return d;
+}
+template <>
+void megamol::frontend_resources::LuaCallbacksCollection::LuaState::write(double item) {
+    lua_pushnumber(lua_state, item);
+}
+
+template <>
+typename std::remove_reference<std::string>::type
+megamol::frontend_resources::LuaCallbacksCollection::LuaState::read<typename std::remove_reference<std::string>::type>(size_t index) {
+    std::string s = luaL_checkstring(lua_state, index);
+    return s;
+}
+template <>
+void megamol::frontend_resources::LuaCallbacksCollection::LuaState::write(std::string item) {
+    lua_pushstring(lua_state, item.c_str());
+}
+

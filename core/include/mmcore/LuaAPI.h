@@ -16,6 +16,8 @@
 #include "LuaInterpreter.h"
 #include "mmcore/MegaMolGraph.h"
 
+#include "LuaCallbacksCollection.h"
+
 struct lua_State; // lua includes should stay in the core
 
 namespace megamol {
