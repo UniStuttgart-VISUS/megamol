@@ -223,7 +223,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<StringResult>(
         "mmListResources",
         "()\n\tReturn a list of available resources in the frontend.",
-        std::function{[&]() -> StringResult {
+        {[&]() -> StringResult {
             auto resources_list = m_requestedResourceReferences[0].getResource<std::function<std::vector<std::string>(void)>>()();
             std::ostringstream answer;
 
@@ -241,7 +241,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string>(
         "mmScreenshot",
         "(string filename)\n\tSave a screen shot of the GL front buffer under 'filename'.",
-        std::function{[&](std::string file) -> VoidResult
+        {[&](std::string file) -> VoidResult
         {
             m_requestedResourceReferences[1].getResource<std::function<bool(std::string const&)> >()(file);
             return VoidResult{};
@@ -250,7 +250,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<DoubleResult>(
         "mmLastFrameTime",
         "()\n\tReturns the graph execution time of the last frame in ms.",
-        std::function{[&]() -> DoubleResult
+        {[&]() -> DoubleResult
         {
             auto& frame_statistics = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FrameStatistics>();
             return DoubleResult{frame_statistics.last_rendered_frame_time_milliseconds};
@@ -259,7 +259,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, int, int>(
         "mmSetFramebufferSize",
         "(int width, int height)\n\tSet framebuffer dimensions to width x height.",
-        std::function{[&](int width, int height) -> VoidResult
+        {[&](int width, int height) -> VoidResult
         {
             if (width <= 0 || height <= 0) {
                 return Error {"framebuffer dimensions must be positive, but given values are: " + std::to_string(width) + " x " + std::to_string(height)};
@@ -273,7 +273,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, int, int>(
         "mmSetWindowPosition",
         "(int x, int y)\n\tSet window position to x,y.",
-        std::function{[&](int x, int y) -> VoidResult
+        {[&](int x, int y) -> VoidResult
         {
             auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
             window_manipulation.set_window_position(x, y);
@@ -283,7 +283,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, bool>(
         "mmSetFullscreen",
         "(bool fullscreen)\n\tSet window to fullscreen (or restore).",
-        std::function{[&](bool fullscreen) -> VoidResult
+        {[&](bool fullscreen) -> VoidResult
         {
             auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
             window_manipulation.set_fullscreen(fullscreen?frontend_resources::WindowManipulation::Fullscreen::Maximize:frontend_resources::WindowManipulation::Fullscreen::Restore);
@@ -293,7 +293,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, bool>(
         "mmSetVSync",
         "(bool state)\n\tSet window VSync off (false) or on (true).",
-        std::function{[&](bool state) -> VoidResult
+        {[&](bool state) -> VoidResult
         {
             auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
             window_manipulation.set_swap_interval(state ? 1 : 0);
@@ -303,7 +303,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string>(
         "mmSetGUIState",
         "(string json)\n\tSet GUI state from given 'json' string.",
-        std::function{[&](std::string json) -> VoidResult
+        {[&](std::string json) -> VoidResult
         {
             auto& gui_resource =  m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
             gui_resource.provide_gui_state(json);
@@ -313,7 +313,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, bool>(
         "mmShowGUI",
         "(bool state)\n\tShow (true) or hide (false) the GUI.",
-        std::function{[&](bool show) -> VoidResult
+        {[&](bool show) -> VoidResult
         {
             auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
             gui_resource.provide_gui_visibility(show);
@@ -323,7 +323,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, float>(
         "mmScaleGUI",
         "(float scale)\n\tSet GUI scaling factor.",
-        std::function{[&](float scale) -> VoidResult
+        {[&](float scale) -> VoidResult
         {
             auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
             gui_resource.provide_gui_scale(scale);
@@ -333,7 +333,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<VoidResult>(
         "mmQuit",
         "()\n\tClose the MegaMol instance.",
-        std::function{[&]() -> VoidResult
+        {[&]() -> VoidResult
         {
             this->setShutdown();
             return VoidResult{};
@@ -342,7 +342,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<VoidResult>(
         "mmRenderNextFrame",
         "()\n\tAdvances rendering by one frame by poking the main rendering loop.",
-        std::function{[&]() -> VoidResult
+        {[&]() -> VoidResult
         {
             auto& render_next_frame = m_requestedResourceReferences[6].getResource<std::function<bool()>>();
             render_next_frame();
@@ -352,7 +352,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string, std::string>(
         "mmSetGlobalValue",
         "(string key, string value)\n\t Sets a global key-value pair. If the key is already present, overwrites the value.",
-        std::function{[&](std::string key, std::string value) -> VoidResult
+        {[&](std::string key, std::string value) -> VoidResult
         {
             auto& global_value_store = const_cast<megamol::frontend_resources::GlobalValueStore&>(m_requestedResourceReferences[7].getResource<megamol::frontend_resources::GlobalValueStore>());
             global_value_store.insert(key, value);
@@ -362,7 +362,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     callbacks.add<StringResult, std::string>(
         "mmGetGlobalValue",
         "(string key)\n\t Returns the value for the given global key. If no key with that name is known, returns empty string.",
-        std::function{[&](std::string key) -> StringResult
+        {[&](std::string key) -> StringResult
         {
             auto& global_value_store = m_requestedResourceReferences[7].getResource<megamol::frontend_resources::GlobalValueStore>();
             std::optional<std::string> maybe_value = global_value_store.maybe_get(key);
@@ -383,7 +383,7 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     //frontend_resource_callbacks.add<>(
     //    "name",
     //    "()\n\t help",
-    //    std::function{[&]() -> VoidResult
+    //    {[&]() -> VoidResult
     //    {
     //        return VoidResult{};
     //    }});
@@ -402,7 +402,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string, std::string, std::string>(
         "mmCreateView",
         "(string graphName, string className, string moduleName)\n\tCreate a view module instance of class <className> called <moduleName>. The view module is registered as graph entry point. <graphName> is ignored.",
-        std::function{[&](std::string baseName, std::string className, std::string instanceName) -> VoidResult
+        {[&](std::string baseName, std::string className, std::string instanceName) -> VoidResult
         {
             if (!graph.CreateModule(className, instanceName)) {
                 return Error{"graph could not create module for: " + baseName + " , " + className + " , " + instanceName};
@@ -423,7 +423,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string, std::string>(
         "mmCreateModule",
         "(string className, string moduleName)\n\tCreate a module instance of class <className> called <moduleName>.",
-        std::function{[&](std::string className, std::string instanceName) -> VoidResult
+        {[&](std::string className, std::string instanceName) -> VoidResult
         {
             if (!graph.CreateModule(className, instanceName)) {
                 return Error{"graph could not create module: " + className + " , " + instanceName};
@@ -434,7 +434,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string>(
         "mmDeleteModule",
         "(string name)\n\tDelete the module called <name>.",
-        std::function{[&](std::string moduleName) -> VoidResult
+        {[&](std::string moduleName) -> VoidResult
         {
             if (!graph.DeleteModule(moduleName)) {
                 return Error{"graph could not delete module: " + moduleName};
@@ -445,7 +445,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string, std::string, std::string>(
         "mmCreateCall",
         "(string className, string from, string to)\n\tCreate a call of type <className>, connecting CallerSlot <from> and CalleeSlot <to>.",
-        std::function{[&](std::string className, std::string from, std::string to) -> VoidResult
+        {[&](std::string className, std::string from, std::string to) -> VoidResult
         {
             if (!graph.CreateCall(className, from, to)) {
                 return Error{"graph could not create call: " + className + " , " + from + " -> " + to};
@@ -456,7 +456,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string, std::string>(
         "mmDeleteCall",
         "(string from, string to)\n\tDelete the call connecting CallerSlot <from> and CalleeSlot <to>.",
-        std::function{[&](std::string from, std::string to) -> VoidResult
+        {[&](std::string from, std::string to) -> VoidResult
         {
             if (!graph.DeleteCall(from, to)) {
                 return Error{"graph could not delete call: " + from + " -> " + to};
@@ -467,7 +467,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string, std::string, std::string>(
         "mmCreateChainCall",
         "(string className, string chainStart, string to)\n\tAppend a call of type <className>, connection the rightmost CallerSlot starting at <chainStart> and CalleeSlot <to>.",
-        std::function{[&](std::string className, std::string chainStart, std::string to) -> VoidResult
+        {[&](std::string className, std::string chainStart, std::string to) -> VoidResult
         {
             if (!graph.Convenience().CreateChainCall(className, chainStart, to)) {
                 return Error{"graph could not create chain call: " + className + " , " + chainStart + " -> " + to};
@@ -478,7 +478,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<StringResult, std::string>(
         "mmGetModuleParams",
         "(string name)\n\tReturns a 0x1-separated list of module name and all parameters.\n\tFor each parameter the name, description, definition, and value are returned.",
-        std::function{[&](std::string moduleName) -> StringResult
+        {[&](std::string moduleName) -> StringResult
         {
             auto mod = graph.FindModule(moduleName);
             if (mod == nullptr) {
@@ -505,7 +505,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<StringResult, std::string>(
         "mmGetParamDescription",
         "(string name)\n\tReturn the description of a parameter slot.",
-        std::function{[&](std::string paramName) -> StringResult
+        {[&](std::string paramName) -> StringResult
         {
             core::param::ParamSlot* ps = graph.FindParameterSlot(paramName);
             if (ps == nullptr) {
@@ -521,7 +521,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<StringResult, std::string>(
         "mmGetParamValue",
         "(string name)\n\tReturn the value of a parameter slot.",
-        std::function{[&](std::string paramName) -> StringResult
+        {[&](std::string paramName) -> StringResult
         {
             const auto* param = graph.FindParameter(paramName);
             if (param == nullptr) {
@@ -534,7 +534,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string, std::string>(
         "mmSetParamValue",
         "(string name, string value)\n\tSet the value of a parameter slot.",
-        std::function{[&](std::string paramName, std::string paramValue) -> VoidResult
+        {[&](std::string paramName, std::string paramValue) -> VoidResult
         {
             auto* param = graph.FindParameter(paramName);
             if (param == nullptr) {
@@ -551,7 +551,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string>(
         "mmCreateParamGroup",
         "(string name, string size)\n\tGenerate a param group that can only be set at once. Sets are queued until size is reached.",
-        std::function{[&](std::string groupName) -> VoidResult
+        {[&](std::string groupName) -> VoidResult
         {
             graph.Convenience().CreateParameterGroup(groupName);
             return VoidResult{};
@@ -560,7 +560,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string, std::string, std::string>(
         "mmSetParamGroupValue",
         "(string groupname, string paramname, string value)\n\tQueue the value of a grouped parameter.",
-        std::function{[&](std::string paramGroup, std::string paramName, std::string paramValue) -> VoidResult
+        {[&](std::string paramGroup, std::string paramName, std::string paramValue) -> VoidResult
         {
             auto groupPtr = graph.Convenience().FindParameterGroup(paramGroup);
             if (!groupPtr) {
@@ -577,7 +577,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<VoidResult, std::string>(
         "mmApplyParamGroupValues",
         "(string groupname)\n\tApply queued parameter values of group to graph.",
-        std::function{[&](std::string paramGroup) -> VoidResult
+        {[&](std::string paramGroup) -> VoidResult
         {
             auto groupPtr = graph.Convenience().FindParameterGroup(paramGroup);
             if (!groupPtr) {
@@ -594,7 +594,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<StringResult, std::string>(
         "mmListModules",
         "(string basemodule_or_namespace)\n\tReturn a list of instantiated modules (class id, instance id), starting from a certain module downstream or inside a namespace.\n\tWill use the graph root if an empty string is passed.",
-        std::function{[&](std::string starting_point) -> StringResult
+        {[&](std::string starting_point) -> StringResult
         {
             // actually putting an empty string as an argument on purpose is OK too
             auto modules_list = starting_point.empty() ? graph.ListModules() : graph.Convenience().ListModules(starting_point);
@@ -614,7 +614,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     callbacks.add<StringResult>(
         "mmListCalls",
         "()\n\tReturn a list of instantiated calls.",
-        std::function{[&]() -> StringResult
+        {[&]() -> StringResult
         {
             std::ostringstream answer;
             auto& calls_list = graph.ListCalls();
@@ -663,7 +663,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
     //callbacks.add<>(
     //    "name",
     //    "()\n\t help",
-    //    std::function{[&]() -> VoidResult
+    //    {[&]() -> VoidResult
     //    {
     //        return VoidResult{};
     //    }});
@@ -674,7 +674,7 @@ void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_coll
 //        "(string baseModule_or_namespace)"
 //            "\n\tReturn all parameters, their type and value, starting from a certain module downstream or inside a namespace."
 //            "\n\tWill use the graph root if an empty string is passed.",
-//        std::function{[&]() -> StringResult
+//        {[&]() -> StringResult
 //        {
 //            return StringResult{"mmListParameters currently not implemented!"};
 //

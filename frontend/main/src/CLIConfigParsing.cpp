@@ -412,7 +412,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
     lua_config_callbacks.add<VoidResult, std::string, std::string>(
         "mmSetCliOption",
         "(string name, string value)\n\tSet CLI option to a specific value.",
-        std::function{[&](std::string clioption, std::string value) -> VoidResult {
+        {[&](std::string clioption, std::string value) -> VoidResult {
             // the usual CLI options
             sane(clioption);
             sane(value);
@@ -449,7 +449,7 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
     lua_config_callbacks.add<VoidResult, std::string, std::string>(
         "mmSetGlobalValue",
         "(string key, string value)\n\tSets the value of name <key> to <value> in the global key-value store.",
-        std::function{[&](std::string key, std::string value) -> VoidResult {
+        {[&](std::string key, std::string value) -> VoidResult {
             sane(key);
             sane(value);
             add_cli(global_option, key + ":" + value);
@@ -463,37 +463,37 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmSetAppDir",
         "(string dir)\n\tSets the path where the mmconsole.exe is located.",
-        std::function{ make_option_callback(appdir_option, true) });
+        { make_option_callback(appdir_option, true) });
 
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmAddShaderDir",
         "(string dir)\n\tAdds a shader/btf search path.",
-        std::function{ make_option_callback(shaderdir_option, true) });
+        { make_option_callback(shaderdir_option, true) });
 
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmAddResourceDir",
         "(string dir)\n\tAdds a resource search path.",
-        std::function{ make_option_callback(resourcedir_option, true) });
+        { make_option_callback(resourcedir_option, true) });
 
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmLoadProject",
         "(string path)\n\tLoad lua (project) file after MegaMol startup.",
-        std::function{ make_option_callback(project_option, true) });
+        { make_option_callback(project_option, true) });
 
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmSetLogFile",
         "(string path)\n\tSets the full path of the log file.",
-        std::function{ make_option_callback(logfile_option) });
+        { make_option_callback(logfile_option) });
 
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmSetLogLevel",
         "(string level)\n\tSets the level of log events to include. Level values: ('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')",
-        std::function{ make_log_level_callback(loglevel_option) });
+        { make_log_level_callback(loglevel_option) });
 
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmSetEchoLevel",
         "(string level)\n\tSets the level of log events to output to the console. Level values: ('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')",
-        std::function{ make_log_level_callback(echolevel_option) });
+        { make_log_level_callback(echolevel_option) });
 
     lua.AddCallbacks(lua_config_callbacks);
 
