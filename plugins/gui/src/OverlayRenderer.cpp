@@ -435,17 +435,6 @@ bool OverlayRenderer::Render(view::CallRender3DGL& call) {
     // Framebuffer object
     auto fbo = call.GetFramebufferObject();
 
-    auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractView> viewptr =
-        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
-
-    if (viewptr != nullptr) { // XXX Move this behind the fbo magic?
-        glViewport(0, 0, fbo->getWidth(), fbo->getHeight());
-        auto backCol = call.BackgroundColor();
-        glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-
     // First call chained renderer
     auto* chainedCall = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
     if (chainedCall != nullptr) {

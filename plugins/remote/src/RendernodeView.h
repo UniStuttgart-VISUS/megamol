@@ -176,6 +176,9 @@ private:
     int bcast_rank_;
 
     int comm_size_;
+
+    std::shared_ptr<vislib::graphics::gl::FramebufferObject> _fbo;
+
 }; // end class RendernodeView
 
 } // end namespace remote

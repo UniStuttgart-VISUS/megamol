@@ -303,6 +303,11 @@ bool megamol::core::MegaMolGraph::add_call(CallInstantiationRequest_t const& req
         return {slot_ptr, module_ptr};
     };
 
+    if (call_description == nullptr) {
+        log_error("error. could not find call class name: " + request.className);
+        return false;
+    }
+
     auto from_slot = getCallSlotOfModule(request.from);
     if (!from_slot.first) {
         log_error("error. could not find from-slot: " + request.from +
@@ -636,6 +641,12 @@ void megamol::core::MegaMolGraph::AddModuleDependencies(std::vector<megamol::fro
 
 megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenience() {
     return this->convenience_functions;
+}
+
+void megamol::core::MegaMolGraph::Clear() {
+    graph_entry_points.clear();
+    call_list_.clear();
+    module_list_.clear();
 }
 
 std::vector<megamol::frontend::FrontendResource> megamol::core::MegaMolGraph::get_requested_resources(std::vector<std::string> resource_requests) {

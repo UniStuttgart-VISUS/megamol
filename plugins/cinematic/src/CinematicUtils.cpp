@@ -28,6 +28,11 @@ CinematicUtils::~CinematicUtils(void) {
 
 bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
 
+    if (core_instance == nullptr) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError(
+            "Pointer to core isntance is nullptr. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+    }
+
     if (this->init_once) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("Primitive rendering has already been initialized. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
     }
@@ -42,6 +47,12 @@ bool CinematicUtils::Initialise(megamol::core::CoreInstance* core_instance) {
     // Initialise rendering
     if (!this->InitPrimitiveRendering(core_instance->ShaderSourceFactory())) {
         megamol::core::utility::log::Log::DefaultLog.WriteError("Couldn't initialize primitive rendering. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    auto err = glGetError();
+    if (err != GL_NO_ERROR) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("OpenGL Error: %i [%s, %s, line %d]\n ", err, __FILE__, __FUNCTION__, __LINE__);
         return false;
     }
 

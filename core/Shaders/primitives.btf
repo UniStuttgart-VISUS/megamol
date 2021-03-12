@@ -63,7 +63,8 @@
     flat out vec2 center;
     flat out float radius;
     out vec2 texcoord;
-        
+    flat out vec4 attributes;
+            
     ]]>
     </snippet>
 
@@ -76,7 +77,8 @@
     flat in vec2 center;
     flat in float radius;
     in vec2 texcoord;
-                   
+    flat in vec4 attributes;
+
     uniform vec2 viewport;                   
     uniform sampler2D tex;
     uniform int apply_smooth;
@@ -250,6 +252,7 @@
                 gl_Position = inPos; 
                 color = inColor;
                 texcoord = inTexture;
+                attributes = inAttributes;
             }
 
             ]]>
@@ -267,12 +270,17 @@
             void main() {
                
                 vec4 texcolor =  texture(tex, texcoord);
+                float forced_alpha = attributes.x;
                 float alpha = texcolor.a;
+                if (forced_alpha > 0.0) {
+                    alpha = forced_alpha;
+                }                  
                 if (alpha <= 0.0) {
                     discard;
-                }                    
+                }
                 outColor = vec4(texcolor.rgb, alpha);
-                if (color.a > 0.0) {            
+
+                if ((forced_alpha <= 0.0) && (color.a > 0.0)) {
                     outColor = vec4(color.rgb, alpha);
                 }
             }

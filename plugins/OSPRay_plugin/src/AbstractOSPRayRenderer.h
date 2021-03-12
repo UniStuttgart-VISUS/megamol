@@ -118,6 +118,7 @@ protected:
      * @param CallRenderer3D object
      */
     void setupOSPRayCamera(megamol::core::view::Camera& mmcam);
+    void clearOSPRayStuff();
 
 
     /**
@@ -148,12 +149,6 @@ protected:
     void changeMaterial();
 
     void changeTransformation();
-
-    /**
-     * Releases the created geometries and volumes.
-     *
-     */
-    void releaseOSPRayStuff();
 
     // Call slots
     megamol::core::CallerSlot _lightSlot;

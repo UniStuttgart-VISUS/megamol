@@ -1,7 +1,7 @@
 /*
  * View2DGL.cpp
  *
- * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart). 
+ * Copyright (C) 2009 - 2010 by VISUS (Universitaet Stuttgart).
  * Alle Rechte vorbehalten.
  */
 
@@ -134,10 +134,38 @@ void view::View2DGL::Render(double time, double instanceTime) {
         (1.0f / vz - vy));
     cr2d->AccessBoundingBoxes().SetBoundingBox(vr.Left(),vr.Bottom(),vr.Right(),vr.Top());
 
+    this->_fbo->Enable();
+    auto bgcol = this->BkgndColour();
+    glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
+    glClearDepth(1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
+
     cr2d->SetFramebufferObject(_fbo);
     cr2d->SetCamera(_camera);
 
     (*cr2d)(AbstractCallRender::FnRender);
+
+    this->_fbo->Disable();
+    if (call == nullptr) {
+        // TODO This does not work (i.e. disable the drawAxes checkbox in PCP Renderer):
+        //this->_fbo->DrawColourTexture();
+
+        // TODO Best fix for now steal blitting from splitview:
+        // Bind and blit framebuffer.
+        GLint binding, readBuffer;
+        glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &binding);
+        glGetIntegerv(GL_READ_BUFFER, &readBuffer);
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, _fbo->GetID());
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+        glBlitFramebuffer(0, 0, _fbo->GetWidth(), _fbo->GetHeight(), 0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, binding);
+        glReadBuffer(readBuffer);
+
+        // TODO VISLIB MUST DIE AND BURN IN HELL!!!
+    }
 
     //after render
     AbstractView::afterRender();
@@ -222,7 +250,7 @@ bool view::View2DGL::OnKey(Key key, KeyAction action, Modifiers mods) {
     if (cr == NULL) return false;
 
     if (key == Key::KEY_HOME) {
-        onResetView(this->_resetViewSlot);
+        OnResetView(this->_resetViewSlot);
     }
 
     InputEvent evt;
@@ -349,7 +377,7 @@ bool view::View2DGL::OnMouseScroll(double dx, double dy) {
  * view::View2DGL::create
  */
 bool view::View2DGL::create(void) {
- 
+
     this->_firstImg = true;
 
     // intialize fbo with dummy size until the actual size is set during first call to Resize

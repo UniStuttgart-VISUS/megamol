@@ -178,6 +178,7 @@ bool ParallelCoordinatesRenderer2D::enableProgramAndBind(vislib::graphics::gl::G
     // bindbuffer?
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, dataBuffer);
     auto flags = this->readFlagsSlot.CallAs<core::FlagCallRead_GL>();
+    flags->getData()->validateFlagCount(this->itemCount);
     flags->getData()->flags->bind(1);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, minimumsBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, maximumsBuffer);
@@ -361,7 +362,6 @@ void ParallelCoordinatesRenderer2D::assertData(core::view::CallRender2DGL& call)
     (*flagsc)(core::FlagCallRead_GL::CallGetData);
     if (flagsc->hasUpdate()) {
         this->currentFlagsVersion = flagsc->version();
-        flagsc->getData()->validateFlagCount(floats->GetRowsCount());
     }
 
     if (hash != this->currentHash || this->lastTimeStep != static_cast<unsigned int>(call.Time()) ||
@@ -461,7 +461,7 @@ void ParallelCoordinatesRenderer2D::computeScaling(void) {
     auto bottom = 0.0f;
     auto top = 3.0f * marginY + this->axisHeight;
 
-    bounds.SetBoundingBox(left,bottom,0,right,top,0);
+    bounds.SetBoundingBox(left, bottom, 0, right, top, 0);
 }
 
 bool ParallelCoordinatesRenderer2D::GetExtents(core::view::CallRender2DGL& call) {

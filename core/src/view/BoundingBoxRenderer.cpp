@@ -179,9 +179,6 @@ bool BoundingBoxRenderer::GetExtents(CallRender3DGL& call) {
  * BoundingBoxRenderer::Render
  */
 bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
-    auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractView> viewptr =
-        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
 
     Camera cam = call.GetCamera();
     auto fbo = call.GetFramebufferObject();

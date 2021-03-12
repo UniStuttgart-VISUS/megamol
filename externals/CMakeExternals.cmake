@@ -61,7 +61,7 @@ function(require_external NAME)
 
     add_external_headeronly_project(glowl
       GIT_REPOSITORY https://github.com/invor/glowl.git
-      GIT_TAG "v0.4c"
+      GIT_TAG "v0.4e"
       INCLUDE_DIR "include")
 
   # json
@@ -83,7 +83,9 @@ function(require_external NAME)
     add_external_headeronly_project(libcxxopts
       DEPENDS libzmq
       GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
-      GIT_TAG "v2.1.1"
+      # we are waiting for v3 which brings allowing unrecognized options
+      #GIT_TAG "v2.1.1"
+      GIT_TAG "dd45a0801c99d62109aaa29f8c410ba8def2fbf2"
       INCLUDE_DIR "include")
 
   # mmpld_io

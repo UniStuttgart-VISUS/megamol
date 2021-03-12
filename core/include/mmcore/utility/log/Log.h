@@ -206,6 +206,15 @@ namespace log {
             return this->mainTarget;
         }
 
+        /**
+         * Access the file log target
+         *
+         * @return The file log target
+         */
+        inline const std::shared_ptr<Target> AccessFileTarget(void) const {
+            return this->fileTarget;
+        }
+
         /** Disable the autoflush flag. */
         inline void DisableAutoFlush(void) {
             this->SetAutoFlush(false);
@@ -244,6 +253,15 @@ namespace log {
          * @return The current log level.
          */
         UINT GetLevel(void) const;
+
+        /**
+         * Answer the current echo level. Messages above this level will be
+         * ignored, while the other messages will be echoed to the echo output
+         * stream.
+         *
+         * @return The current echo level.
+         */
+        UINT GetFileLevel(void) const;
 
         /**
          * Answer the file name of the log file as ANSI string.
@@ -302,6 +320,13 @@ namespace log {
          * @param level The new log level.
          */
         void SetLevel(UINT level);
+
+        /**
+         * Set a new log file level. Messages above this level will be ignored.
+         *
+         * @param level The new log level.
+         */
+        void SetFileLevel(UINT level);
 
         /**
          * Specifies the location of the physical log file. Any physical log
@@ -458,6 +483,9 @@ namespace log {
 
         /** The log echo target */
         std::shared_ptr<Target> echoTarget;
+
+        /** The log file target */
+        std::shared_ptr<Target> fileTarget;
 
         /** Flag whether or not to flush any targets after each message */
         bool autoflush;

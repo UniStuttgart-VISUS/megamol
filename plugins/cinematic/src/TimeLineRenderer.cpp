@@ -87,13 +87,35 @@ bool TimeLineRenderer::create(void) {
     }
 
     // Load texture
-    vislib::StringA shortfilename = "arrow.png";
-    auto fullfilename = megamol::core::utility::ResourceWrapper::getFileName(this->GetCoreInstance()->Configuration(), shortfilename);
-    if (!this->utils.LoadTextureFromFile(this->texture_id, std::wstring(fullfilename.PeekBuffer()))) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
-        return false;
+    std::string texture_shortfilename = "arrow.png";
+    bool loaded_texture = false;
+    if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+        auto fullfilename = megamol::core::utility::ResourceWrapper::getFileName(
+            this->GetCoreInstance()->Configuration(), vislib::StringA(texture_shortfilename.c_str()));
+        std::wstring texture_filename = std::wstring(fullfilename.PeekBuffer());
+        loaded_texture = this->utils.LoadTextureFromFile(this->texture_id, texture_filename);
+    } else {
+        auto resource_it = std::find_if(this->frontend_resources.begin(), this->frontend_resources.end(),
+            [&](megamol::frontend::FrontendResource& dep) { return (dep.getIdentifier() == "RuntimeConfig"); });
+        if (resource_it != this->frontend_resources.end()) {
+            std::string texture_filepath;
+            auto resource_directories =
+                resource_it->getResource<megamol::frontend_resources::RuntimeConfig>().resource_directories;
+            for (auto& resource_directory : resource_directories) {
+                auto found_filepath = megamol::core::utility::FileUtils::SearchFileRecursive(
+                    resource_directory, texture_shortfilename);
+                if (!found_filepath.empty()) {
+                    texture_filepath = found_filepath;
+                }
+            }
+            loaded_texture = this->utils.LoadTextureFromFile(this->texture_id, texture_filepath);
+        }
     }
 
+    if (!loaded_texture) {
+        megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [create] Couldn't load marker texture. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+        return false;
+     }
     return true;
 }
 
@@ -105,23 +127,22 @@ void TimeLineRenderer::release(void) {
 
 bool TimeLineRenderer::GetExtents(view::CallRender2DGL& call) {
 
-    // Camera
+    call.AccessBoundingBoxes().SetBoundingBox(0.0f, 0.0f, 0.0f, this->viewport.x, this->viewport.y, 0.0f);
+
+    return true;
+}
+
+
+bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
+
+    // Viewport
     view::Camera_2 cam;
     call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-
     glm::vec2 currentViewport;
     currentViewport.x = cam.resolution_gate().width();
     currentViewport.y = cam.resolution_gate().height();
-    
-    call.AccessBoundingBoxes().SetBoundingBox(
-        cam.image_tile().left(), cam.image_tile().bottom(), 0, cam.image_tile().right(), cam.image_tile().top(), 0);
-
     if (currentViewport != this->viewport) {
         this->viewport = currentViewport;
-
         // Set axes position depending on font size
         vislib::StringA tmpStr;
         if (this->axes[Axis::Y].maxValue > this->axes[Axis::X].maxValue) {
@@ -129,28 +150,22 @@ bool TimeLineRenderer::GetExtents(view::CallRender2DGL& call) {
         } else {
             tmpStr.Format("%.6f ", this->axes[Axis::X].maxValue);
         }
-
         float strHeight = this->utils.GetTextLineHeight();
         float strWidth = this->utils.GetTextLineWidth(std::string(tmpStr.PeekBuffer()));
         this->rulerMarkHeight = strHeight / 2.0f;
-        this->keyframeMarkHeight = strHeight*1.5f;
-
-        this->axes[Axis::X].startPos = this->axes[Axis::Y].startPos = glm::vec2(strWidth + strHeight * 1.5f, strHeight*2.5f);
+        this->keyframeMarkHeight = strHeight * 1.5f;
+        this->axes[Axis::X].startPos = this->axes[Axis::Y].startPos =
+            glm::vec2(strWidth + strHeight * 1.5f, strHeight * 2.5f);
         this->axes[Axis::X].endPos = glm::vec2(this->viewport.x - strWidth, strHeight * 2.5f);
-        this->axes[Axis::Y].endPos = glm::vec2(strWidth + strHeight * 1.5f, this->viewport.y - (this->keyframeMarkHeight * 1.1f) - strHeight);
+        this->axes[Axis::Y].endPos = glm::vec2(
+            strWidth + strHeight * 1.5f, this->viewport.y - (this->keyframeMarkHeight * 1.1f) - strHeight);
         for (size_t i = 0; i < Axis::COUNT; ++i) {
             this->axes[i].length = glm::length(this->axes[i].endPos - this->axes[i].startPos);
             this->axes[i].scaleFactor = 1.0f;
         }
 
-        return this->recalcAxesData();
+        this->recalcAxesData();
     }
-
-    return true;
-}
-
-
-bool TimeLineRenderer::Render(view::CallRender2DGL& call) {
 
     // Get update data from keyframe keeper
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
@@ -438,9 +453,6 @@ void TimeLineRenderer::pushMarkerTexture(float pos_x, float pos_y, float size, g
 
 bool TimeLineRenderer::recalcAxesData(void) {
 
-    vislib::StringA tmpStr;
-
-    // Check for too small viewport
     if ((this->axes[Axis::X].startPos.x >= this->axes[Axis::X].endPos.x) ||
         (this->axes[Axis::Y].startPos.y >= this->axes[Axis::Y].endPos.y)) {
         megamol::core::utility::log::Log::DefaultLog.WriteWarn("[TIMELINE RENDERER] [GetExtents] Viewport is too small to calculate proper dimensions of time line diagram.");
@@ -448,7 +460,6 @@ bool TimeLineRenderer::recalcAxesData(void) {
     }
 
     for (size_t i = 0; i < Axis::COUNT; ++i) {
-
         if (this->axes[i].maxValue <= 0.0f) {
             megamol::core::utility::log::Log::DefaultLog.WriteError("[TIMELINE RENDERER] [recalcAxesData] Invalid max value %f of axis %d. [%s, %s, line %d]", this->axes[i].maxValue, i, __FILE__, __FUNCTION__, __LINE__);
             return false;
@@ -464,7 +475,6 @@ bool TimeLineRenderer::recalcAxesData(void) {
 
         unsigned int animPot = 0;
         unsigned int refine = 1;
-
         while (refine != 0) {
             float div = 5.0f;
             if (refine % 2 == 1) {

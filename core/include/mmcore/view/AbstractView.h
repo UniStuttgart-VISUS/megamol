@@ -214,7 +214,7 @@ public:
      *
      * @return true
      */
-    bool onResetView(Call& call);
+    bool OnResetView(Call& call);
 
     bool OnKeyCallback(Call& call);
 
@@ -232,6 +232,16 @@ public:
      * @return The background colour for the view
      */
     glm::vec4 BkgndColour(void) const;
+
+    /**
+     * Restores the view
+     *
+     * @param p Must be resetViewSlot
+     *
+     * @return true
+     */
+    bool OnResetView(param::ParamSlot& p);
+
 
 protected:
     /** Typedef alias */
@@ -323,15 +333,6 @@ protected:
      * @return true
      */
     bool onRestoreCamera(param::ParamSlot& p);
-
-    /**
-     * Restores the view
-     *
-     * @param p Must be resetViewSlot
-     *
-     * @return true
-     */
-    bool onResetView(param::ParamSlot& p);
 
     /**
      * This method determines the file path the camera file should have
