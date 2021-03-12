@@ -64,7 +64,7 @@ protected:
     core::CallerSlot getTrimeshDataSlot;
     core::CallerSlot getMeshDataSlot;
     std::vector<float> _color;
-
+    std::vector<size_t> mesh_prefix_count_;
 };
 
 } // namespace ospray

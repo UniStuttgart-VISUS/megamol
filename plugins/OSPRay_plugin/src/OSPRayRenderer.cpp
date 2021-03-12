@@ -24,6 +24,7 @@ OSPRayRenderer::OSPRayRenderer(void)
     : AbstractOSPRayRenderer()
     , _cam()
     , _getStructureSlot("getStructure", "Connects to an OSPRay structure")
+        , enablePickingSlot_("enable picking", "")
 
 {
     this->_getStructureSlot.SetCompatibleCall<CallOSPRayStructureDescription>();
@@ -38,6 +39,9 @@ OSPRayRenderer::OSPRayRenderer(void)
 
     _accum_time.count = 0;
     _accum_time.amount = 0;
+
+    enablePickingSlot_ << new core::param::BoolParam(false);
+    MakeSlotAvailable(&enablePickingSlot_);
 }
 
 
@@ -132,18 +136,18 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
     cam_type::snapshot_type snapshot;
     cam_type::matrix_type viewTemp, projTemp;
 
-	// Generate complete snapshot and calculate matrices
+    // Generate complete snapshot and calculate matrices
     tmp_newcam.calc_matrices(snapshot, viewTemp, projTemp, core::thecam::snapshot_content::all);
 
     // check data and camera hash
     if (_cam.eye_position().x() != tmp_newcam.eye_position().x() ||
-	    _cam.eye_position().y() != tmp_newcam.eye_position().y() ||
-	    _cam.eye_position().z() != tmp_newcam.eye_position().z() ||
-	    _cam.view_vector() != tmp_newcam.view_vector()
-	    ) {
-	    _cam_has_changed = true;
+        _cam.eye_position().y() != tmp_newcam.eye_position().y() ||
+        _cam.eye_position().z() != tmp_newcam.eye_position().z() ||
+        _cam.view_vector() != tmp_newcam.view_vector()
+        ) {
+        _cam_has_changed = true;
     } else {
-	    _cam_has_changed = false;
+        _cam_has_changed = false;
     }
 
     // Generate complete snapshot and calculate matrices
@@ -341,6 +345,36 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
     }
 
     return true;
+}
+
+bool OSPRayRenderer::OnMouseButton(
+    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+    if (mods.test(core::view::Modifier::SHIFT) && action == core::view::MouseButtonAction::PRESS &&
+        enablePickingSlot_.Param<core::param::BoolParam>()->Value()) {
+        auto const screenX = mouseX / _imgSize[0];
+        auto const screenY = mouseY / _imgSize[1];
+        auto const pick_res = _framebuffer->pick(*_renderer, *_camera, *_world, screenX, screenY);
+
+        for (auto const& entry : _geometricModels) {
+            entry.first->setPickResult(-1, -1);
+            if (pick_res.hasHit) {
+                auto const fit = std::find(entry.second.begin(), entry.second.end(), pick_res.model);
+                if (fit != entry.second.end()) {
+                    entry.first->setPickResult(std::distance(entry.second.begin(), fit), pick_res.primID);
+                }
+            }
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+bool OSPRayRenderer::OnMouseMove(double x, double y) {
+    this->mouseX = static_cast<float>(x);
+    this->mouseY = static_cast<float>(y);
+    return false;
 }
 
 /*
