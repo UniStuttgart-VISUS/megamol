@@ -92,19 +92,19 @@ vislib::TString TransferFunctionParam::ValueString(void) const {
 }
 
 
-bool megamol::core::param::TransferFunctionParam::IgnoreCallRangeOnce(const std::string& in_tfs) {
+bool megamol::core::param::TransferFunctionParam::IgnoreProjectRange(const std::string& in_tfs) {
 
-    bool ignore_call_range_once = false;
+    bool ignore_project_range = true;
     try {
         if (!in_tfs.empty()) {
             nlohmann::json json = nlohmann::json::parse(in_tfs);
-            json.at("IgnoreCallRangeOnce").get_to(ignore_call_range_once);
+            json.at("IgnoreProjectRange").get_to(ignore_project_range);
         }
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[IgnoreRangeOnProjectLoad] JSON Error - Unable to read flag 'IgnoreRangeOnProjectLoad' from transfer function JSON string.");
+            "[IgnoreProjectRange] JSON Error - Unable to read flag 'IgnoreProjectRange' from transfer function JSON string.");
     }
-    return ignore_call_range_once;
+    return ignore_project_range;
 }
 
 
@@ -191,7 +191,7 @@ bool TransferFunctionParam::GetParsedTransferFunctionData(const std::string& in_
 
 bool TransferFunctionParam::GetDumpedTransferFunction(std::string& out_tfs, const TFNodeType& in_nodes,
     const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range,
-    bool in_ignore_call_range_once) {
+    bool in_ignore_project_range) {
 
     try {
         nlohmann::json json;
@@ -214,7 +214,7 @@ bool TransferFunctionParam::GetDumpedTransferFunction(std::string& out_tfs, cons
         json["TextureSize"] = in_texsize;
         json["Nodes"] = in_nodes;
         json["ValueRange"] = in_range;
-        json["IgnoreCallRangeOnce"] = in_ignore_call_range_once;
+        json["IgnoreProjectRange"] = in_ignore_project_range;
 
         out_tfs = json.dump(2); // Dump with indent of 2 spaces and new lines.
     }

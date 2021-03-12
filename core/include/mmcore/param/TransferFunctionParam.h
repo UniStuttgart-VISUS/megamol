@@ -92,13 +92,13 @@ public:
      * @param in_nodes                      The transfer function node input.
      * @param in_interpolmode               The transfer function interpolation mode input.
      * @param in_texsize                    The transfer function texture size input.
-     * @param in_ignore_call_range_once     Flag to ignore range of parameter on project load.
+     * @param in_ignore_project_range_once  Flag to ignore range of tf parameter given in project file.
      *
      * @return True if transfer function data was successfully converted into JSON string, false otherwise.
      */
     static bool GetDumpedTransferFunction(std::string& out_tfs, const TFNodeType& in_nodes,
         const InterpolationMode in_interpolmode, const unsigned int in_texsize, std::array<float, 2> in_range,
-        bool in_ignore_call_range_once = false);
+        bool in_ignore_project_range = true);
 
     /**
      * Check given transfer function data.
@@ -151,9 +151,9 @@ public:
     static bool GetTextureData(const std::string& in_tfs, std::vector<float>& out_tex_data, int& out_width, int& out_height);
 
     /**
-     * Return flag 'IgnoreCallRangeOnce'
+     * Return flag 'IgnoreProjectRange'
      */
-    static bool IgnoreCallRangeOnce(const std::string& in_tfs);
+    static bool IgnoreProjectRange(const std::string& in_tfs);
 
     /** Calculates gauss function value. 
     *

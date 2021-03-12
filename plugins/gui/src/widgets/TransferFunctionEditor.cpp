@@ -243,7 +243,7 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
     }
 
     if (this->check_once_force_set_overwrite_range) {
-        this->range_overwrite = megamol::core::param::TransferFunctionParam::IgnoreCallRangeOnce(tfs);
+        this->range_overwrite = !megamol::core::param::TransferFunctionParam::IgnoreProjectRange(tfs);
         this->check_once_force_set_overwrite_range = false;
     }
 
@@ -264,8 +264,8 @@ void TransferFunctionEditor::SetTransferFunction(const std::string& tfs, bool co
 }
 
 bool TransferFunctionEditor::GetTransferFunction(std::string& tfs) {
-    return param::TransferFunctionParam::GetDumpedTransferFunction(
-        tfs, this->nodes, this->mode, static_cast<unsigned int>(this->textureSize), this->range, this->range_overwrite);
+    return param::TransferFunctionParam::GetDumpedTransferFunction(tfs, this->nodes, this->mode,
+        static_cast<unsigned int>(this->textureSize), this->range, !this->range_overwrite);
 }
 
 
