@@ -99,7 +99,13 @@ struct LuaCallbacksCollection {
         return
             [=](LuaState state) -> int {
                 if (sizeof...(FuncArgs) != state.stack_size()) {
-                    std::string args {((type_name<FuncArgs>() + ", ") + ...)};
+                    // if no function arguments given, cant expand FuncArgs during compile time - need to catch that case
+                    std::string args;
+                    if constexpr (sizeof...(FuncArgs) > 0) {
+                        args = {((type_name<FuncArgs>() + ", ") + ...)};
+                    } else {
+                        args = "";
+                    }
                     state.error(func_name + ": " +
                         " expects " + std::to_string(sizeof...(FuncArgs)) +
                         " arguments of type (" + args.substr(0, args.find_last_of(','))+ ")"+
