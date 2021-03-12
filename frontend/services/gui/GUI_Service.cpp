@@ -85,12 +85,16 @@ bool GUI_Service::init(const Config& config) {
                         return this->resource_provide_gui_scale(scale);
                     };
 
+                    resource_provide_gui_visibility(config.gui_show);
+                    resource_provide_gui_scale(config.gui_scale);
+
                     megamol::core::utility::log::Log::DefaultLog.WriteInfo("GUI_Service: initialized successfully.");
                     return true;
                 }
             }
         }
     }
+
 
     return false;
 }

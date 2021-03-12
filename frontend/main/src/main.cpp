@@ -90,6 +90,8 @@ int main(const int argc, const char** argv) {
     megamol::frontend::GUI_Service::Config guiConfig;
     guiConfig.imgui_api = megamol::frontend::GUI_Service::ImGuiAPI::OPEN_GL;
     guiConfig.core_instance = &core;
+    guiConfig.gui_show = config.gui_show;
+    guiConfig.gui_scale = config.gui_scale;
     // priority must be higher than priority of gl_service (=1)
     // service callbacks get called in order of priority of the service.
     // postGraphRender() and close() are called in reverse order of priorities.

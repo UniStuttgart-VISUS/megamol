@@ -85,6 +85,8 @@ static std::string nodecoration_option  = "nodecoration";
 static std::string topmost_option       = "topmost";
 static std::string nocursor_option      = "nocursor";
 static std::string interactive_option   = "i,interactive";
+static std::string guishow_option       = "guishow";
+static std::string guiscale_option      = "guiscale";
 static std::string help_option          = "h,help";
 
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
@@ -99,6 +101,17 @@ static void files_exist(std::vector<std::string> vec, std::string const& type) {
 // this is a handler template
 static void empty_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
+    // config.option = parsed_options[option_name].as<bool>();
+};
+
+static void guishow_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.gui_show = parsed_options[option_name].as<bool>();
+};
+
+static void guiscale_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.gui_scale = parsed_options[option_name].as<float>();
 };
 
 static void config_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -251,6 +264,8 @@ std::vector<OptionsListEntry> cli_options_list =
         , {nocursor_option,      "Do not show mouse cursor inside window",                                          cxxopts::value<bool>(),                     nocursor_handler     }
         , {interactive_option,   "Run MegaMol even if some project file failed to load",                            cxxopts::value<bool>(),                     interactive_handler  }
         , {project_files_option, "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
+        , {guishow_option,       "Render GUI overlay",                                                              cxxopts::value<bool>(),                     guishow_handler}
+        , {guiscale_option,      "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",           cxxopts::value<float>(),                    guiscale_handler}
         , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
     };
 

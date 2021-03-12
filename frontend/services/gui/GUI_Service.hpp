@@ -36,6 +36,8 @@ public:
     struct Config {
         ImGuiAPI imgui_api = GUI_Service::ImGuiAPI::OPEN_GL;
         megamol::core::CoreInstance* core_instance = nullptr;
+        bool gui_show = true;
+        float gui_scale = 1.0f;
     };
 
     std::string serviceName() const override { return "GUI_Service"; }
