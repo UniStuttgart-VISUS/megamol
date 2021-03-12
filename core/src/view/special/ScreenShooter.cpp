@@ -225,14 +225,14 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
     this->viewNameSlot << new param::StringParam("");
     this->MakeSlotAvailable(&this->viewNameSlot);
 
-    this->imgWidthSlot << new param::IntParam(1024, 1);
+    this->imgWidthSlot << new param::IntParam(1920, 1);
     this->MakeSlotAvailable(&this->imgWidthSlot);
-    this->imgHeightSlot << new param::IntParam(768, 1);
+    this->imgHeightSlot << new param::IntParam(1080, 1);
     this->MakeSlotAvailable(&this->imgHeightSlot);
 
-    this->tileWidthSlot << new param::IntParam(1024, 1);
+    this->tileWidthSlot << new param::IntParam(1920, 1);
     this->MakeSlotAvailable(&this->tileWidthSlot);
-    this->tileHeightSlot << new param::IntParam(1024, 1);
+    this->tileHeightSlot << new param::IntParam(1080, 1);
     this->MakeSlotAvailable(&this->tileHeightSlot);
 
     this->imageFilenameSlot << new param::FilePathParam("Unnamed.png", param::FilePathParam::FLAG_TOBECREATED);
@@ -275,6 +275,11 @@ view::special::ScreenShooter::ScreenShooter(const bool reducedParameters) : job:
 
     this->animTimeParamNameSlot << new param::StringParam("");
     if (!reducedParameters) this->MakeSlotAvailable(&this->animTimeParamNameSlot);
+
+    /// XXX Disable tiling option since it is not working for new megamol frontend (yet)
+    this->tileWidthSlot.Parameter()->SetGUIVisible(false);
+    this->tileHeightSlot.Parameter()->SetGUIVisible(false);
+    this->closeAfterShotSlot.Parameter()->SetGUIVisible(false);
 }
 
 
@@ -339,6 +344,11 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
     data.imgHeight = static_cast<UINT>(vislib::math::Max(0, this->imgHeightSlot.Param<param::IntParam>()->Value()));
     data.tileWidth = static_cast<UINT>(vislib::math::Max(0, this->tileWidthSlot.Param<param::IntParam>()->Value()));
     data.tileHeight = static_cast<UINT>(vislib::math::Max(0, this->tileHeightSlot.Param<param::IntParam>()->Value()));
+
+    /// XXX Disable tiling option since it is not working for new megamol frontend (yet)
+    data.tileWidth = data.imgWidth;
+    data.tileHeight = data.imgHeight;
+
     vislib::TString filename = this->imageFilenameSlot.Param<param::FilePathParam>()->Value();
     float frameTime = -1.0f;
     if (this->makeAnimSlot.Param<param::BoolParam>()->Value()) {
@@ -359,8 +369,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
 
                 if (this->animAddTime2FrameSlot.Param<param::BoolParam>()->Value()) {
                     int intPart = static_cast<int>(floor(this->animLastFrameTime));
-                    float fractPart = this->animLastFrameTime - (float)intPart;
-                    ext.Format(_T(".%.5d.%03d.png"), intPart, (int)(fractPart * 1000.0f));
+                    float fractPart = this->animLastFrameTime - (float) intPart;
+                    ext.Format(_T(".%.5d.%03d.png"), intPart, (int) (fractPart * 1000.0f));
                 } else {
                     ext.Format(_T(".%.5u.png"), this->outputCounter);
                 }
@@ -496,7 +506,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
             glGetIntegerv(GL_VIEWPORT, vp);
             crv.SetFramebufferObject(currentFbo);
             crv.SetTime(frameTime);
-            crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f, static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
+            crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f,
+                static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
             view->OnRenderView(crv); // glClear by SFX
             view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
             glFlush();
@@ -510,7 +521,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                 for (UINT x = 0; x < data.imgWidth; x++) {
                     for (UINT y = 0; y < data.imgHeight; y++) {
                         BYTE* cptr = buffer + 4 * (x + y * data.imgWidth);
-                        if (cptr[3] == 0) continue;
+                        if (cptr[3] == 0)
+                            continue;
                         float r = static_cast<float>(cptr[0]) / 255.0f;
                         float g = static_cast<float>(cptr[1]) / 255.0f;
                         float b = static_cast<float>(cptr[2]) / 255.0f;
@@ -549,9 +561,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
         } else {
             // here we have to render tiles of the image. Woho for optimizing!
 
-
+            /// XXX Tiling currently breaks for unknown reason ...
             throw vislib::Exception("[ScreenShooter] Tiling is currently not supported.", __FILE__, __LINE__);
-
 
             buffer = new BYTE[data.tileWidth * data.tileHeight * data.bpp];
             if (buffer == NULL) {
@@ -576,12 +587,13 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
             // overlay for user information
             overlayfbo = std::make_shared<vislib::graphics::gl::FramebufferObject>();
             if (overlayfbo != NULL) {
-                if (overlayfbo->Create(vp[0] + vp[2], vp[1] + vp[3], GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
+                if (overlayfbo->Create(vp[0] + vp[2], vp[1] + vp[3], GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE,
+                        vislib::graphics::gl::FramebufferObject::ATTACHMENT_RENDERBUFFER, GL_DEPTH_COMPONENT24)) {
                     crv.ResetAll();
                     crv.SetFramebufferObject(overlayfbo);
                     crv.SetTime(frameTime);
                     view->OnRenderView(crv); // glClear by SFX
-                    ///view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
+                    /// view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
                     glFlush();
                 } else {
                     overlayfbo.reset();
@@ -614,7 +626,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                 int tileY = yi * data.tileHeight;
                 int tileH = vislib::math::Min(data.tileHeight, data.imgHeight - tileY);
                 int xid = (yi % 2) * 2 - 1; // for the coolness!
-                for (int xi = (xid > 0) ? 0 : (xSteps - 1); ((xid > 0) && (xi < xSteps)) || ((xid < 0) && (xi >= 0)); xi += xid) {
+                for (int xi = (xid > 0) ? 0 : (xSteps - 1); ((xid > 0) && (xi < xSteps)) || ((xid < 0) && (xi >= 0));
+                     xi += xid) {
                     int tileX = xi * data.tileWidth;
                     int tileW = vislib::math::Min(data.tileWidth, data.imgWidth - tileX);
 
@@ -704,13 +717,15 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
 
                     crv.SetFramebufferObject(currentFbo);
                     crv.SetTime(frameTime);
-                    crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileW), static_cast<float>(tileH));
+                    crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight),
+                        static_cast<float>(tileX), static_cast<float>(tileY), static_cast<float>(tileW),
+                        static_cast<float>(tileH));
                     view->OnRenderView(crv); // glClear by SFX
-                    ///view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
+                    /// view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
                     glFlush();
 
-                    if (currentFbo->GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) !=
-                        GL_NO_ERROR) {
+                    if (currentFbo->GetColourTexture(
+                            buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) != GL_NO_ERROR) {
                         throw vislib::Exception(
                             "Failed to create Screenshot: Cannot read image data", __FILE__, __LINE__);
                     }
@@ -719,7 +734,8 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
                         for (UINT x = 0; x < data.tileWidth; x++) {
                             for (UINT y = 0; y < data.tileHeight; y++) {
                                 BYTE* cptr = buffer + 4 * (x + y * data.tileWidth);
-                                if (cptr[3] == 0) continue;
+                                if (cptr[3] == 0)
+                                    continue;
                                 float r = static_cast<float>(cptr[0]) / 255.0f;
                                 float g = static_cast<float>(cptr[1]) / 255.0f;
                                 float b = static_cast<float>(cptr[2]) / 255.0f;
@@ -817,45 +833,39 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
     if (overlayfbo != nullptr) {
         try {
             overlayfbo->Release();
-        } catch (...) {
-        }
+        } catch (...) {}
         overlayfbo.reset();
     }
     if (data.pngPtr != NULL) {
         if (data.pngInfoPtr != NULL) {
             png_destroy_write_struct(&data.pngPtr, &data.pngInfoPtr);
         } else {
-            png_destroy_write_struct(&data.pngPtr, (png_infopp)NULL);
+            png_destroy_write_struct(&data.pngPtr, (png_infopp) NULL);
         }
     }
     try {
         file.Flush();
-    } catch (...) {
-    }
+    } catch (...) {}
     try {
         file.Close();
-    } catch (...) {
-    }
+    } catch (...) {}
     if (rollback) {
         try {
             if (vislib::sys::File::Exists(filename)) {
                 vislib::sys::File::Delete(filename);
             }
-        } catch (...) {
-        }
+        } catch (...) {}
     }
     if (data.tmpFiles[0] != NULL) {
         try {
             data.tmpFiles[0]->Close();
-        } catch (...) {
-        }
+        } catch (...) {}
         delete data.tmpFiles[0];
     }
     if (data.tmpFiles[1] != NULL) {
         try {
             data.tmpFiles[1]->Close();
-        } catch (...) {
-        }
+        } catch (...) {}
         delete data.tmpFiles[1];
     }
     delete[] buffer;
@@ -890,7 +900,12 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
 
     if (closeAfter) {
         this->running = false;
-        this->GetCoreInstance()->Shutdown();
+        if (this->GetCoreInstance()->IsmmconsoleFrontendCompatible()) {
+            this->GetCoreInstance()->Shutdown();
+        } else {
+            /// XXX TODO Tell any frontend service to shutdown
+            Log::DefaultLog.WriteError("'close after' option is not yet supported for new megamol frontend.");
+        }
     }
 }
 
