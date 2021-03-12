@@ -114,7 +114,8 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
 
                 auto const idx = os->getPickResult();
                 if (std::get<0>(idx) != -1 && std::get<0>(idx) < mesh_prefix_count_.size()) {
-                    auto const a_idx = mesh_prefix_count_[std::get<0>(idx)] + std::get<1>(idx);
+                    auto const base_idx = std::get<0>(idx) == 0 ? 0 : mesh_prefix_count_[std::get<0>(idx) - 1];
+                    auto const a_idx = base_idx + std::get<1>(idx);
                     if (a_idx < mesh_prefix_count_.back()) {
                         auto const cur_sel = data->flags->operator[](a_idx);
                         data->flags->operator[](a_idx) = cur_sel == core::FlagStorage::ENABLED
@@ -122,6 +123,7 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
                                                              : core::FlagStorage::ENABLED;
                         fcw->setData(data, version + 1);
                         (*fcw)(core::FlagCallWrite_CPU::CallGetData);
+                        os->setPickResult(-1, -1);
                     }
                 }
             }
