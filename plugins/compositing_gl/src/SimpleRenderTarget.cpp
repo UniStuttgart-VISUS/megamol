@@ -98,6 +98,9 @@ bool megamol::compositing::SimpleRenderTarget::Render(core::view::CallRender3DGL
     core::view::CallRender3DGL* chained_call = this->chainRenderSlot.CallAs<core::view::CallRender3DGL>();
     if (chained_call != nullptr) {
         *chained_call = call;
+
+        chained_call->SetFramebufferObject(m_GBuffer);
+
         if (!((*chained_call)(core::view::AbstractCallRender::FnRender))) {
             return false;
         }

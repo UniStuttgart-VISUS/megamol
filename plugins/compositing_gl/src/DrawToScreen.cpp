@@ -69,9 +69,6 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
     megamol::core::view::CallRender3DGL* cr = &call;
     if (cr == NULL) return false;
 
-    // Restore framebuffer that was bound on the way in
-    glBindFramebuffer(GL_FRAMEBUFFER, m_screenRestoreFBO);
-
     // get rhs texture call
     CallTexture2D* ct = this->m_input_texture_call.CallAs<CallTexture2D>();
     if (ct == NULL) return false;
@@ -110,7 +107,4 @@ bool megamol::compositing::DrawToScreen::Render(core::view::CallRender3DGL& call
 }
 
 void megamol::compositing::DrawToScreen::PreRender(core::view::CallRender3DGL& call) {
-
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_screenRestoreFBO);
-
 }

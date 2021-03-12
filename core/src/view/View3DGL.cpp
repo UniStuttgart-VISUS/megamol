@@ -79,6 +79,18 @@ void megamol::core::view::View3DGL::Render(double time, double instanceTime) {
     (*cr3d)(view::CallRender3DGL::FnRender);
     
     AbstractView3D::afterRender();
+
+    // Blit the final image to the default framebuffer of the window.
+    // Technically, the view's fbo should always match the size of the window so a blit is fine.
+    // Eventually, presenting the fbo will become the frontends job.
+    // Bind and blit framebuffer.
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    _fbo->bindToRead(0);
+    glBlitFramebuffer(0, 0, _fbo->getWidth(), _fbo->getHeight(), 0, 0, _fbo->getWidth(), _fbo->getHeight(),
+        GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 }
 
 void megamol::core::view::View3DGL::ResetView() {
