@@ -46,6 +46,9 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
 
     mesh::CallMesh* cm = this->getMeshDataSlot.CallAs<mesh::CallMesh>();
 
+    auto fcw = writeFlagsSlot.CallAs<core::FlagCallWrite_CPU>();
+    auto fcr = readFlagsSlot.CallAs<core::FlagCallRead_CPU>();
+
     if (cm != nullptr) {
         auto meta_data = cm->getMetaData();
         this->structureContainer.dataChanged = false;
@@ -69,6 +72,59 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
             meshStructure mesh_str;
             mesh_str.mesh = cm->getData();
             this->structureContainer.structure = mesh_str;
+
+            mesh_prefix_count_.clear();
+            auto const& meshes = mesh_str.mesh->accessMeshes();
+            mesh_prefix_count_.resize(meshes.size());
+            auto counter = 0u;
+            for (auto const& entry : meshes) {
+                auto c_count = 0;
+                switch (entry.second.primitive_type) {
+                case mesh::MeshDataAccessCollection::PrimitiveType::TRIANGLES: {
+                    c_count = 3;
+                } break;
+                case mesh::MeshDataAccessCollection::PrimitiveType::QUADS: {
+                    c_count = 4;
+                } break;
+                }
+                if (c_count == 0) {
+                    mesh_prefix_count_[counter] = counter == 0 ? 0 : mesh_prefix_count_[counter - 1];
+                    ++counter;
+                    break;
+                }
+                auto const c_bs = mesh::MeshDataAccessCollection::getByteSize(entry.second.indices.type);
+                auto const num_el = entry.second.indices.byte_size / (c_bs * c_count);
+                mesh_prefix_count_[counter] = counter == 0 ? num_el : mesh_prefix_count_[counter - 1] + num_el;
+                ++counter;
+            }
+            if (fcw != nullptr && fcr != nullptr && !mesh_prefix_count_.empty()) {
+                if ((*fcr)(core::FlagCallWrite_CPU::CallGetData)) {
+                    auto data = fcr->getData();
+                    auto version = fcr->version();
+                    data->validateFlagCount(mesh_prefix_count_.back());
+                    fcw->setData(data, version + 1);
+                    (*fcw)(core::FlagCallWrite_CPU::CallGetData);
+                }
+            }
+        }
+        if (fcw != nullptr && fcr != nullptr && !mesh_prefix_count_.empty()) {
+            if ((*fcr)(core::FlagCallWrite_CPU::CallGetData)) {
+                auto data = fcr->getData();
+                auto version = fcr->version();
+
+                auto const idx = os->getPickResult();
+                if (std::get<0>(idx) != -1 && std::get<0>(idx) < mesh_prefix_count_.size()) {
+                    auto const a_idx = mesh_prefix_count_[std::get<0>(idx)] + std::get<1>(idx);
+                    if (a_idx < mesh_prefix_count_.back()) {
+                        auto const cur_sel = data->flags->operator[](a_idx);
+                        data->flags->operator[](a_idx) = cur_sel == core::FlagStorage::ENABLED
+                                                             ? core::FlagStorage::SELECTED
+                                                             : core::FlagStorage::ENABLED;
+                        fcw->setData(data, version + 1);
+                        (*fcw)(core::FlagCallWrite_CPU::CallGetData);
+                    }
+                }
+            }
         }
     } else {
 
