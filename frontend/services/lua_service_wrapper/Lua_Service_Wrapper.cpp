@@ -235,7 +235,7 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
 
     frontend_resource_callbacks.add<VoidResult, bool>(
         "mmShowGUI",
-        "(bool state)\n\Show (true) or hide (false) the GUI.",
+        "(bool state)\n\tShow (true) or hide (false) the GUI.",
         std::function{[&](bool show) -> VoidResult
         {
             auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
@@ -245,7 +245,7 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
 
     frontend_resource_callbacks.add<VoidResult, float>(
         "mmScaleGUI",
-        "(float scale)\n\Set GUI scaling factor.",
+        "(float scale)\n\tSet GUI scaling factor.",
         std::function{[&](float scale) -> VoidResult
         {
             auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();

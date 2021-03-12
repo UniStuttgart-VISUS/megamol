@@ -159,7 +159,9 @@ public:
     }
 
     void UnregisterCallback(std::string const& name) {
-        std::remove_if(this->theHelp.begin(), this->theHelp.end(), [name](std::pair<std::string, std::string> const& p){return p.first.compare(name) == 0;});
+        auto remove_end = std::remove_if(this->theHelp.begin(), this->theHelp.end(), [name](std::pair<std::string, std::string> const& p){return p.first == name;});
+        this->theHelp.erase(remove_end, this->theHelp.end());
+
         luaL_dostring(L, (name + "= nil").c_str());
         for(auto &x: theEnvironments) {
             luaL_dostring(L, (x + "." + name + "= nil").c_str());
@@ -533,7 +535,8 @@ template <class T> int megamol::core::LuaInterpreter<T>::help(lua_State *L) {
     std::stringstream out;
     out << "MegaMol Lua Help:" << std::endl;
     std::string helpString;
-    for (const auto &s : theHelp) helpString += s.first + s.second + "\n";
+    for (const auto &s : theHelp)
+        helpString += s.first + s.second + "\n";
     out << helpString;
     lua_pushstring(L, out.str().c_str());
     return 1;
