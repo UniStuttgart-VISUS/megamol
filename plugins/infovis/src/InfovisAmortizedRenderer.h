@@ -70,6 +70,8 @@ namespace infovis {
         vislib::graphics::gl::ShaderSource vertex_shader_src;
         vislib::graphics::gl::ShaderSource fragment_shader_src;
 
+        enum AmortizationModes {MS_AR = 0, QUAD_AR, QUAD_AR_C, SS_AR, PARAMETER_AR, DEBUG_PLACEHOLDER, PUSH_AR};
+
         GLuint amortizedFboA = 0;
         GLuint amortizedMsaaFboA = 0;
         GLuint amortizedPushFBO = 0;
@@ -103,7 +105,7 @@ namespace infovis {
 
         megamol::core::CallerSlot nextRendererSlot;
         core::param::ParamSlot halveRes;
-        core::param::ParamSlot approachSlot;
+        core::param::ParamSlot approachEnumSlot;
         core::param::ParamSlot superSamplingLevelSlot;
         core::param::ParamSlot amortLevel;
     };

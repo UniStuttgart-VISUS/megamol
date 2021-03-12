@@ -4,6 +4,7 @@
 #include "glm/gtc/functions.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "mmcore/CoreInstance.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/BoolParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
@@ -20,7 +21,7 @@ InfovisAmortizedRenderer::InfovisAmortizedRenderer()
         : Renderer2D()
         , nextRendererSlot("nextRenderer", "connects to following Renderers, that will render in reduced resolution.")
         , halveRes("Halvres", "Turn on switch")
-        , approachSlot("Approach", "Approach int")
+        , approachEnumSlot("AmortizationMode", "Which amortization approach to use.")
         , superSamplingLevelSlot("SSLevel", "Level of Supersampling")
         , amortLevel("AmortLevel", "Level of Amortization") {
     this->nextRendererSlot.SetCompatibleCall<megamol::core::view::CallRender2DGLDescription>();
@@ -35,13 +36,21 @@ InfovisAmortizedRenderer::InfovisAmortizedRenderer()
     this->halveRes << new core::param::BoolParam(false);
     this->MakeSlotAvailable(&halveRes);
 
-    this->approachSlot << new core::param::IntParam(0);
-    this->MakeSlotAvailable(&approachSlot);
+    auto* approachMappings = new core::param::EnumParam(0);
+    approachMappings->SetTypePair(MS_AR, "MS-AR");
+    approachMappings->SetTypePair(QUAD_AR, "4xAR");
+    approachMappings->SetTypePair(QUAD_AR_C, "4xAR-C");
+    approachMappings->SetTypePair(SS_AR, "SS-AR");
+    approachMappings->SetTypePair(PARAMETER_AR, "Parameterized-AR");
+    approachMappings->SetTypePair(DEBUG_PLACEHOLDER, "debug");
+    approachMappings->SetTypePair(PUSH_AR, "Push-AR");
+    this->approachEnumSlot<<approachMappings;
+    this->MakeSlotAvailable(&approachEnumSlot);
 
-    this->superSamplingLevelSlot << new core::param::IntParam(1);
+    this->superSamplingLevelSlot << new core::param::IntParam(1, 1);
     this->MakeSlotAvailable(&superSamplingLevelSlot);
 
-    this->amortLevel << new core::param::IntParam(1);
+    this->amortLevel << new core::param::IntParam(1, 1);
     this->MakeSlotAvailable(&amortLevel);
 }
 
@@ -466,7 +475,6 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
 
 bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
     core::view::CallRender2DGL* cr2d = this->nextRendererSlot.CallAs<core::view::CallRender2DGL>();
-    int a = amortLevel.Param<core::param::IntParam>()->Value();
 
     if (cr2d == NULL) {
         // Nothing to do really
@@ -480,20 +488,15 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
     cam_type::matrix_type view, proj;
     cam.calc_matrices(view, proj);
 
-    int w = cam.resolution_gate().width();
-    int h = cam.resolution_gate().height();
-    int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
-    int approach = this->approachSlot.Param<core::param::IntParam>()->Value();
-
     cr2d->SetTime(call.Time());
     cr2d->SetInstanceTime(call.InstanceTime());
     cr2d->SetLastFrameTime(call.LastFrameTime());
 
     auto bg = call.BackgroundColor();
 
-    backgroundColor[0] = (float) bg[0] / 255.0;
-    backgroundColor[1] = (float) bg[1] / 255.0;
-    backgroundColor[2] = (float) bg[2] / 255.0;
+    backgroundColor[0] = bg[0];
+    backgroundColor[1] = bg[1];
+    backgroundColor[2] = bg[2];
     backgroundColor[3] = 1.0;
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
@@ -502,14 +505,17 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
     // end suck
 
-    glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-    glClear(GL_COLOR_BUFFER_BIT);
-
     cr2d->SetBackgroundColor(call.BackgroundColor());
     cr2d->AccessBoundingBoxes() = call.GetBoundingBoxes();
-    cr2d->SetFramebufferObject(call.GetFramebufferObject());
+
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("param: %i", this->approachEnumSlot.Param<core::param::EnumParam>()->Value());
 
     if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
+        int a = amortLevel.Param<core::param::IntParam>()->Value();
+        int w = cam.resolution_gate().width();
+        int h = cam.resolution_gate().height();
+        int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
+        int approach = this->approachEnumSlot.Param<core::param::EnumParam>()->Value();
 
         // check if amortization mode changed
         if (approach != oldApp || w != oldW || h != oldH || ssLevel != oldssLevel || a != oldaLevel) {
@@ -517,8 +523,11 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
         }
 
         setupAccel(approach, w, h, ssLevel);
+        cr2d->SetFramebufferObject(call.GetFramebufferObject());
+
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);
+
         doReconstruction(approach, w, h, ssLevel);
 
         // to avoid excessive resizing, retain last render variables and check if changed
@@ -528,8 +537,11 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
         oldW = w;
         oldaLevel = a;
     } else {
+        cr2d->SetFramebufferObject(call.GetFramebufferObject());
+
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);
+
     }
 
 

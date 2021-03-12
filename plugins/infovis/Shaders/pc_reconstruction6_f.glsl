@@ -41,6 +41,6 @@ void main()
         }
         frag_out = imageLoad(StoreB, iCoord);
     }
-    imageStore(StoreArray, ivec3(iCoord.x, iCoord.y, frametype % 2), imageLoad(StoreB, iCoord));
-    frag_out = imageLoad(StoreArray, ivec3(iCoord.x, iCoord.y, frametype % 2));
+    //imageStore(StoreArray, ivec3(iCoord.x, iCoord.y, frametype % 2), imageLoad(StoreB, iCoord));
+    //frag_out = imageLoad(StoreArray, ivec3(iCoord.x, iCoord.y, frametype % 2));
 }
