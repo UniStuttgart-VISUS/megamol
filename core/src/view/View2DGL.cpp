@@ -160,7 +160,8 @@ void view::View2DGL::Render(const mmcRenderViewContext& context, Call* call) {
     this->_fbo->Enable();
     auto bgcol = this->BkgndColour();
     glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClearDepth(1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     cr2d->SetFramebufferObject(_fbo);
 
     (*cr2d)(AbstractCallRender::FnRender);
