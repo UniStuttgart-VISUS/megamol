@@ -533,7 +533,7 @@ template <class T> int megamol::core::LuaInterpreter<T>::help(lua_State *L) {
     std::stringstream out;
     out << "MegaMol Lua Help:" << std::endl;
     std::string helpString;
-    for (const auto &s : theHelp) helpString += s.first + s.second;
+    for (const auto &s : theHelp) helpString += s.first + s.second + "\n";
     out << helpString;
     lua_pushstring(L, out.str().c_str());
     return 1;
