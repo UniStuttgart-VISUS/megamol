@@ -171,20 +171,6 @@ int main(const int argc, const char** argv) {
     };
     services.getProvidedResources().push_back({"FrontendResourcesList", resource_lister});
 
-    // distribute registered resources among registered services.
-    const bool resources_ok = services.assignRequestedResources();
-    // for each service we call their resource callbacks here:
-    //    std::vector<FrontendResource>& getProvidedResources()
-    //    std::vector<std::string> getRequestedResourceNames()
-    //    void setRequestedResources(std::vector<FrontendResource>& resources)
-    if (!resources_ok) {
-        log_error("Frontend could not assign requested service resources. Abort.");
-        run_megamol = false;
-    }
-
-    auto frontend_resources = services.getProvidedResources();
-    graph.AddModuleDependencies(frontend_resources);
-
     uint32_t frameID = 0;
     const auto render_next_frame = [&]() -> bool {
         // set global Frame Counter
@@ -216,8 +202,23 @@ int main(const int argc, const char** argv) {
         return true;
     };
 
-    // lua can issue rendering of frames
-    lua_api.setFlushCallback(render_next_frame);
+    // lua can issue rendering of frames, we provide a resource for this
+    const std::function<bool()> render_next_frame_func = [&]() -> bool { return render_next_frame(); };
+    services.getProvidedResources().push_back({"RenderNextFrame", render_next_frame_func});
+
+    // distribute registered resources among registered services.
+    const bool resources_ok = services.assignRequestedResources();
+    // for each service we call their resource callbacks here:
+    //    std::vector<FrontendResource>& getProvidedResources()
+    //    std::vector<std::string> getRequestedResourceNames()
+    //    void setRequestedResources(std::vector<FrontendResource>& resources)
+    if (!resources_ok) {
+        log_error("Frontend could not assign requested service resources. Abort.");
+        run_megamol = false;
+    }
+
+    auto frontend_resources = services.getProvidedResources();
+    graph.AddModuleDependencies(frontend_resources);
 
     // load project files via lua
     for (auto& file : config.project_files) {
