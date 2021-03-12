@@ -445,53 +445,39 @@ megamol::frontend_resources::RuntimeConfig megamol::frontend::handle_config(Runt
 #undef file_exists
 #undef add_cli
 
-    // mmSetAppDir
-    // std::string
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmSetAppDir",
         "(string dir)\n\tSets the path where the mmconsole.exe is located.",
         std::function{ make_option_callback(appdir_option, true) });
 
-    // mmAddShaderDir
-    // std::string
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmAddShaderDir",
         "(string dir)\n\tAdds a shader/btf search path.",
         std::function{ make_option_callback(shaderdir_option, true) });
 
-    // mmAddResourceDir
-    // std::string
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmAddResourceDir",
         "(string dir)\n\tAdds a resource search path.",
         std::function{ make_option_callback(resourcedir_option, true) });
 
-    // mmLoadProject
-    // std::string
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmLoadProject",
         "(string path)\n\tLoad lua (project) file after MegaMol startup.",
         std::function{ make_option_callback(project_option, true) });
 
-    // mmSetLogFile
-    // std::string
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmSetLogFile",
         "(string path)\n\tSets the full path of the log file.",
         std::function{ make_option_callback(logfile_option) });
 
-    // mmSetLogLevel
-    // std::string
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmSetLogLevel",
-        "(string level)\n\tSets the level of log events to include. Level constants are: LOGINFO, LOGWARNING, LOGERROR.",
+        "(string level)\n\tSets the level of log events to include. Level values: ('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')",
         std::function{ make_log_level_callback(loglevel_option) });
 
-    // mmSetEchoLevel
-    // std::string
     lua_config_callbacks.add<VoidResult, std::string>(
         "mmSetEchoLevel",
-        "(string level)\n\tSets the level of log events to output to the console (see above).",
+        "(string level)\n\tSets the level of log events to output to the console. Level values: ('error', 'warn', 'warning', 'info', 'none', 'null', 'zero', 'all', '*')",
         std::function{ make_log_level_callback(echolevel_option) });
 
     lua.AddCallbacks(lua_config_callbacks);
