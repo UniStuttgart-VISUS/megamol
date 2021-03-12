@@ -25,13 +25,13 @@ UniFlagStorage::UniFlagStorage(void)
     this->MakeSlotAvailable(&this->writeFlagsSlot);
 
     this->readCPUFlagsSlot.SetCallback(FlagCallRead_CPU::ClassName(),
-        FlagCallRead_CPU::FunctionName(FlagCallRead_CPU::CallGetData), &UniFlagStorage::readDataCallback);
+        FlagCallRead_CPU::FunctionName(FlagCallRead_CPU::CallGetData), &UniFlagStorage::readCPUDataCallback);
     this->readCPUFlagsSlot.SetCallback(FlagCallRead_CPU::ClassName(),
         FlagCallRead_CPU::FunctionName(FlagCallRead_CPU::CallGetMetaData), &UniFlagStorage::readMetaDataCallback);
     this->MakeSlotAvailable(&this->readCPUFlagsSlot);
 
     this->writeCPUFlagsSlot.SetCallback(FlagCallWrite_CPU::ClassName(),
-        FlagCallWrite_CPU::FunctionName(FlagCallWrite_CPU::CallGetData), &UniFlagStorage::writeDataCallback);
+        FlagCallWrite_CPU::FunctionName(FlagCallWrite_CPU::CallGetData), &UniFlagStorage::writeCPUDataCallback);
     this->writeCPUFlagsSlot.SetCallback(FlagCallWrite_CPU::ClassName(),
         FlagCallWrite_CPU::FunctionName(FlagCallWrite_CPU::CallGetMetaData), &UniFlagStorage::writeMetaDataCallback);
     this->MakeSlotAvailable(&this->writeCPUFlagsSlot);
@@ -49,7 +49,8 @@ bool UniFlagStorage::create(void) {
     std::vector<uint32_t> temp_data(num, FlagStorage::ENABLED);
     this->theData->flags =
         std::make_shared<glowl::BufferObject>(GL_SHADER_STORAGE_BUFFER, temp_data.data(), num, GL_DYNAMIC_DRAW);
-    this->theCPUData->flags->resize(num, FlagStorage::ENABLED);
+    this->theCPUData = std::make_shared<FlagCollection_CPU>();
+    this->theCPUData->flags = std::make_shared<FlagStorage::FlagVectorType>(num, FlagStorage::ENABLED);
     return true;
 }
 
