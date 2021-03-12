@@ -1069,7 +1069,8 @@ void megamol::core::LuaAPI::AddCallbacks(megamol::frontend_resources::LuaCallbac
 }
 
 static std::vector<std::string> getNames(megamol::frontend_resources::LuaCallbacksCollection const& callbacks) {
-    std::vector<std::string> names{callbacks.callbacks.size()};
+    std::vector<std::string> names{};
+    names.reserve(callbacks.callbacks.size());
 
     for (auto& c : callbacks.callbacks) {
         names.push_back(std::get<0>(c));

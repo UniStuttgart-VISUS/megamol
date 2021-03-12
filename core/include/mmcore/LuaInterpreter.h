@@ -127,12 +127,9 @@ public:
     void RegisterCallback(std::string const& name, std::string const& help, std::function<int(lua_State*)>& func) {
         //this->theCallbacks += name + "=" + name + ",";
         this->theHelp.push_back(std::make_pair(name,help));
-
         lua_pushlightuserdata(L, &func); // push ptr to func as user data to be used by invoke_lua_std_function onto stack
         lua_pushcclosure(L, &invoke_lua_std_function, 1); // register invoke_lua_std_function as closure that gets ptr to func
         lua_setglobal(L, name.c_str()); // set pushed closure as global under name "name"
-
-        //lua_register(L, name.c_str(), &func);
         for(auto &x: theEnvironments) {
             luaL_dostring(L, (x + "." + name + "="+name).c_str());
         }
