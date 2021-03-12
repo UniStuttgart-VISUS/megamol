@@ -137,185 +137,11 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
     m_requestedResourceReferences = resources;
 
     using megamol::frontend_resources::LuaCallbacksCollection;
-    using Error = megamol::frontend_resources::LuaCallbacksCollection::Error;
-    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
-    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
-    using DoubleResult = megamol::frontend_resources::LuaCallbacksCollection::DoubleResult;
     LuaCallbacksCollection frontend_resource_callbacks;
 
-    frontend_resource_callbacks.add<StringResult>(
-        "mmListResources",
-        "()\n\tReturn a list of available resources in the frontend.",
-        std::function{[&]() -> StringResult {
-            auto resources_list = resources[0].getResource<std::function<std::vector<std::string>(void)>>()();
-            std::ostringstream answer;
-
-            for (auto& resource_name: resources_list) {
-                answer << resource_name << std::endl;
-            }
-
-            if (resources_list.empty()) {
-                answer << "(none)" << std::endl;
-            }
-
-            return StringResult{answer.str().c_str()};
-        }});
-
-    frontend_resource_callbacks.add<VoidResult, std::string>(
-        "mmScreenshot",
-        "(string filename)\n\tSave a screen shot of the GL front buffer under 'filename'.",
-        std::function{[&](std::string file) -> VoidResult
-        {
-            m_requestedResourceReferences[1].getResource<std::function<bool(std::string const&)> >()(file);
-            return VoidResult{};
-        }});
-
-    frontend_resource_callbacks.add<DoubleResult>(
-        "mmLastFrameTime",
-        "()\n\tReturns the graph execution time of the last frame in ms.",
-        std::function{[&]() -> DoubleResult
-        {
-            auto& frame_statistics = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FrameStatistics>();
-            return DoubleResult{frame_statistics.last_rendered_frame_time_milliseconds};
-        }});
-
-    frontend_resource_callbacks.add<VoidResult, int, int>(
-        "mmSetFramebufferSize",
-        "(int width, int height)\n\tSet framebuffer dimensions to width x height.",
-        std::function{[&](int width, int height) -> VoidResult
-        {
-            if (width <= 0 || height <= 0) {
-                return Error {"framebuffer dimensions must be positive, but given values are: " + std::to_string(width) + " x " + std::to_string(height)};
-            }
-
-            auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
-            window_manipulation.set_framebuffer_size(width, height);
-            return VoidResult{};
-        }});
-
-    frontend_resource_callbacks.add<VoidResult, int, int>(
-        "mmSetWindowPosition",
-        "(int x, int y)\n\tSet window position to x,y.",
-        std::function{[&](int x, int y) -> VoidResult
-        {
-            auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
-            window_manipulation.set_window_position(x, y);
-            return VoidResult{};
-        }});
-
-    frontend_resource_callbacks.add<VoidResult, bool>(
-        "mmSetFullscreen",
-        "(bool fullscreen)\n\tSet window to fullscreen (or restore).",
-        std::function{[&](bool fullscreen) -> VoidResult
-        {
-            auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
-            window_manipulation.set_fullscreen(fullscreen?frontend_resources::WindowManipulation::Fullscreen::Maximize:frontend_resources::WindowManipulation::Fullscreen::Restore);
-            return VoidResult{};
-        }});
-
-    frontend_resource_callbacks.add<VoidResult, bool>(
-        "mmSetVSync",
-        "(bool state)\n\tSet window VSync off (false) or on (true).",
-        std::function{[&](bool state) -> VoidResult
-        {
-            auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
-            window_manipulation.set_swap_interval(state ? 1 : 0);
-            return VoidResult{};
-        }});
-
-    frontend_resource_callbacks.add<VoidResult, std::string>(
-        "mmSetGUIState",
-        "(string json)\n\tSet GUI state from given 'json' string.",
-        std::function{[&](std::string json) -> VoidResult
-        {
-            auto& gui_resource =  m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
-            gui_resource.provide_gui_state(json);
-            return VoidResult{};
-        }});
-
-    frontend_resource_callbacks.add<VoidResult, bool>(
-        "mmShowGUI",
-        "(bool state)\n\tShow (true) or hide (false) the GUI.",
-        std::function{[&](bool show) -> VoidResult
-        {
-            auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
-            gui_resource.provide_gui_visibility(show);
-            return VoidResult{};
-        }});
-
-    frontend_resource_callbacks.add<VoidResult, float>(
-        "mmScaleGUI",
-        "(float scale)\n\tSet GUI scaling factor.",
-        std::function{[&](float scale) -> VoidResult
-        {
-            auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
-            gui_resource.provide_gui_scale(scale);
-            return VoidResult{};
-        }});
-
-    frontend_resource_callbacks.add<VoidResult>(
-        "mmQuit",
-        "()\n\tClose the MegaMol instance.",
-        std::function{[&]() -> VoidResult
-        {
-            this->setShutdown();
-            return VoidResult{};
-        }});
-
-    frontend_resource_callbacks.add<VoidResult>(
-        "mmRenderNextFrame",
-        "()\n\tAdvances rendering by one frame by poking the main rendering loop.",
-        std::function{[&]() -> VoidResult
-        {
-            auto& render_next_frame = m_requestedResourceReferences[6].getResource<std::function<bool()>>();
-            render_next_frame();
-            return VoidResult{};
-        }});
-
-    frontend_resource_callbacks.add<VoidResult, std::string, std::string>(
-        "mmSetGlobalValue",
-        "(string key, string value)\n\t Sets a global key-value pair. If the key is already present, overwrites the value.",
-        std::function{[&](std::string key, std::string value) -> VoidResult
-        {
-            auto& global_value_store = const_cast<megamol::frontend_resources::GlobalValueStore&>(m_requestedResourceReferences[7].getResource<megamol::frontend_resources::GlobalValueStore>());
-            global_value_store.insert(key, value);
-            return VoidResult{};
-        }});
-
-    frontend_resource_callbacks.add<StringResult, std::string>(
-        "mmGetGlobalValue",
-        "(string key)\n\t Returns the value for the given global key. If no key with that name is known, returns empty string.",
-        std::function{[&](std::string key) -> StringResult
-        {
-            auto& global_value_store = m_requestedResourceReferences[7].getResource<megamol::frontend_resources::GlobalValueStore>();
-            std::optional<std::string> maybe_value = global_value_store.maybe_get(key);
-
-            if (maybe_value.has_value()) {
-                return StringResult{maybe_value.value()};
-            }
-
-            // TODO: maybe we want to LuaError?
-            return StringResult{""};
-        }});
-
-    // mmLoadProject ?
-    // the ProjectLoader resource immediately executes the file contents as lua code
-    // -> what happens if this is done inside a lua callback?
-
-    // template for futher callbacks
-    //frontend_resource_callbacks.add<>(
-    //    "name",
-    //    "()\n\t help",
-    //    std::function{[&]() -> VoidResult
-    //    {
-    //        return VoidResult{};
-    //    }});
+    fill_frontend_resources_callbacks(&frontend_resource_callbacks);
 
     luaAPI.AddCallbacks(frontend_resource_callbacks);
-
-    auto& graph = const_cast<megamol::core::MegaMolGraph&>(m_requestedResourceReferences[5].getResource<megamol::core::MegaMolGraph>());
-
-    luaAPI.SetMegaMolGraph(graph);
 }
 
 // -------- main loop callbacks ---------
@@ -379,6 +205,195 @@ void Lua_Service_Wrapper::postGraphRender() {
     // e.g. end frame timer
     // update window name
     // swap buffers, glClear
+}
+
+
+void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_collection_ptr) {
+    using megamol::frontend_resources::LuaCallbacksCollection;
+    using Error = megamol::frontend_resources::LuaCallbacksCollection::Error;
+    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
+    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
+    using DoubleResult = megamol::frontend_resources::LuaCallbacksCollection::DoubleResult;
+
+    auto& callbacks = *reinterpret_cast<LuaCallbacksCollection*>(callbacks_collection_ptr);
+
+    callbacks.add<StringResult>(
+        "mmListResources",
+        "()\n\tReturn a list of available resources in the frontend.",
+        std::function{[&]() -> StringResult {
+            auto resources_list = m_requestedResourceReferences[0].getResource<std::function<std::vector<std::string>(void)>>()();
+            std::ostringstream answer;
+
+            for (auto& resource_name: resources_list) {
+                answer << resource_name << std::endl;
+            }
+
+            if (resources_list.empty()) {
+                answer << "(none)" << std::endl;
+            }
+
+            return StringResult{answer.str().c_str()};
+        }});
+
+    callbacks.add<VoidResult, std::string>(
+        "mmScreenshot",
+        "(string filename)\n\tSave a screen shot of the GL front buffer under 'filename'.",
+        std::function{[&](std::string file) -> VoidResult
+        {
+            m_requestedResourceReferences[1].getResource<std::function<bool(std::string const&)> >()(file);
+            return VoidResult{};
+        }});
+
+    callbacks.add<DoubleResult>(
+        "mmLastFrameTime",
+        "()\n\tReturns the graph execution time of the last frame in ms.",
+        std::function{[&]() -> DoubleResult
+        {
+            auto& frame_statistics = m_requestedResourceReferences[2].getResource<megamol::frontend_resources::FrameStatistics>();
+            return DoubleResult{frame_statistics.last_rendered_frame_time_milliseconds};
+        }});
+
+    callbacks.add<VoidResult, int, int>(
+        "mmSetFramebufferSize",
+        "(int width, int height)\n\tSet framebuffer dimensions to width x height.",
+        std::function{[&](int width, int height) -> VoidResult
+        {
+            if (width <= 0 || height <= 0) {
+                return Error {"framebuffer dimensions must be positive, but given values are: " + std::to_string(width) + " x " + std::to_string(height)};
+            }
+
+            auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
+            window_manipulation.set_framebuffer_size(width, height);
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, int, int>(
+        "mmSetWindowPosition",
+        "(int x, int y)\n\tSet window position to x,y.",
+        std::function{[&](int x, int y) -> VoidResult
+        {
+            auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
+            window_manipulation.set_window_position(x, y);
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, bool>(
+        "mmSetFullscreen",
+        "(bool fullscreen)\n\tSet window to fullscreen (or restore).",
+        std::function{[&](bool fullscreen) -> VoidResult
+        {
+            auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
+            window_manipulation.set_fullscreen(fullscreen?frontend_resources::WindowManipulation::Fullscreen::Maximize:frontend_resources::WindowManipulation::Fullscreen::Restore);
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, bool>(
+        "mmSetVSync",
+        "(bool state)\n\tSet window VSync off (false) or on (true).",
+        std::function{[&](bool state) -> VoidResult
+        {
+            auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
+            window_manipulation.set_swap_interval(state ? 1 : 0);
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, std::string>(
+        "mmSetGUIState",
+        "(string json)\n\tSet GUI state from given 'json' string.",
+        std::function{[&](std::string json) -> VoidResult
+        {
+            auto& gui_resource =  m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
+            gui_resource.provide_gui_state(json);
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, bool>(
+        "mmShowGUI",
+        "(bool state)\n\tShow (true) or hide (false) the GUI.",
+        std::function{[&](bool show) -> VoidResult
+        {
+            auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
+            gui_resource.provide_gui_visibility(show);
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, float>(
+        "mmScaleGUI",
+        "(float scale)\n\tSet GUI scaling factor.",
+        std::function{[&](float scale) -> VoidResult
+        {
+            auto& gui_resource = m_requestedResourceReferences[4].getResource<megamol::frontend_resources::GUIResource>();
+            gui_resource.provide_gui_scale(scale);
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult>(
+        "mmQuit",
+        "()\n\tClose the MegaMol instance.",
+        std::function{[&]() -> VoidResult
+        {
+            this->setShutdown();
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult>(
+        "mmRenderNextFrame",
+        "()\n\tAdvances rendering by one frame by poking the main rendering loop.",
+        std::function{[&]() -> VoidResult
+        {
+            auto& render_next_frame = m_requestedResourceReferences[6].getResource<std::function<bool()>>();
+            render_next_frame();
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, std::string, std::string>(
+        "mmSetGlobalValue",
+        "(string key, string value)\n\t Sets a global key-value pair. If the key is already present, overwrites the value.",
+        std::function{[&](std::string key, std::string value) -> VoidResult
+        {
+            auto& global_value_store = const_cast<megamol::frontend_resources::GlobalValueStore&>(m_requestedResourceReferences[7].getResource<megamol::frontend_resources::GlobalValueStore>());
+            global_value_store.insert(key, value);
+            return VoidResult{};
+        }});
+
+    callbacks.add<StringResult, std::string>(
+        "mmGetGlobalValue",
+        "(string key)\n\t Returns the value for the given global key. If no key with that name is known, returns empty string.",
+        std::function{[&](std::string key) -> StringResult
+        {
+            auto& global_value_store = m_requestedResourceReferences[7].getResource<megamol::frontend_resources::GlobalValueStore>();
+            std::optional<std::string> maybe_value = global_value_store.maybe_get(key);
+
+            if (maybe_value.has_value()) {
+                return StringResult{maybe_value.value()};
+            }
+
+            // TODO: maybe we want to LuaError?
+            return StringResult{""};
+        }});
+
+    // mmLoadProject ?
+    // the ProjectLoader resource immediately executes the file contents as lua code
+    // -> what happens if this is done inside a lua callback?
+
+    // template for futher callbacks
+    //frontend_resource_callbacks.add<>(
+    //    "name",
+    //    "()\n\t help",
+    //    std::function{[&]() -> VoidResult
+    //    {
+    //        return VoidResult{};
+    //    }});
+}
+
+
+
+
+
+
+
+
+
 }
 
 

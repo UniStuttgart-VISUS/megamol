@@ -93,6 +93,8 @@ private:
     std::function<std::tuple<bool,std::string>(std::string const&)> m_executeLuaScript_resource;
     std::function<void(std::string const&)> m_setScriptPath_resource;
     std::function<void(megamol::frontend_resources::LuaCallbacksCollection const&)> m_registerLuaCallbacks_resource;
+
+    void fill_frontend_resources_callbacks(void* callbacks_collection_ptr);
 };
 
 } // namespace frontend
