@@ -25,6 +25,11 @@ static void log(std::string const& text) {
     megamol::core::utility::log::Log::DefaultLog.WriteInfo(msg.c_str());
 }
 
+static void log_warning(std::string const& text) {
+    const std::string msg = "Main: " + text;
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(msg.c_str());
+}
+
 static void log_error(std::string const& text) {
     const std::string msg = "Main: " + text;
     megamol::core::utility::log::Log::DefaultLog.WriteError(msg.c_str());
@@ -228,7 +233,7 @@ int main(const int argc, const char** argv) {
 
             // if interactive, continue to run MegaMol
             if (config.interactive) {
-                log("Interactive mode: start MegaMol anyway");
+                log_warning("Interactive mode: start MegaMol anyway");
                 run_megamol = true;
             }
         }
