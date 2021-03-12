@@ -95,6 +95,7 @@ private:
     std::function<void(megamol::frontend_resources::LuaCallbacksCollection const&)> m_registerLuaCallbacks_resource;
 
     void fill_frontend_resources_callbacks(void* callbacks_collection_ptr);
+    void fill_graph_manipulation_callbacks(void* callbacks_collection_ptr);
 };
 
 } // namespace frontend

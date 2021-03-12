@@ -30,7 +30,6 @@
 #include "mmcore/CoreInstance.h"
 #include "mmcore/LuaAPI.h"
 #include "mmcore/utility/sys/SystemInformation.h"
-#include "mmcore/view/AbstractView_EventConsumption.h"
 #include "vislib/UTF8Encoder.h"
 #include "vislib/sys/AutoLock.h"
 #include "vislib/sys/Environment.h"

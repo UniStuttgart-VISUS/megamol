@@ -18,6 +18,8 @@
 #include "GUI_Resource.h"
 #include "GlobalValueStore.h"
 
+#include "mmcore/view/AbstractView_EventConsumption.h"
+
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
 static void log(const char* text) {
@@ -140,6 +142,7 @@ void Lua_Service_Wrapper::setRequestedResources(std::vector<FrontendResource> re
     LuaCallbacksCollection frontend_resource_callbacks;
 
     fill_frontend_resources_callbacks(&frontend_resource_callbacks);
+    fill_graph_manipulation_callbacks(&frontend_resource_callbacks);
 
     luaAPI.AddCallbacks(frontend_resource_callbacks);
 }
@@ -386,13 +389,418 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
     //    }});
 }
 
+void Lua_Service_Wrapper::fill_graph_manipulation_callbacks(void* callbacks_collection_ptr) {
+    using megamol::frontend_resources::LuaCallbacksCollection;
+    using Error = megamol::frontend_resources::LuaCallbacksCollection::Error;
+    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
+    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
+    using DoubleResult = megamol::frontend_resources::LuaCallbacksCollection::DoubleResult;
+
+    auto& callbacks = *reinterpret_cast<LuaCallbacksCollection*>(callbacks_collection_ptr);
+    auto& graph = const_cast<megamol::core::MegaMolGraph&>(m_requestedResourceReferences[5].getResource<megamol::core::MegaMolGraph>());
+
+    callbacks.add<VoidResult, std::string, std::string, std::string>(
+        "mmCreateView",
+        "(string graphName, string className, string moduleName)\n\tCreate a view module instance of class <className> called <moduleName>. The view module is registered as graph entry point. <graphName> is ignored.",
+        std::function{[&](std::string baseName, std::string className, std::string instanceName) -> VoidResult
+        {
+            if (!graph.CreateModule(className, instanceName)) {
+                return Error{"graph could not create module for: " + baseName + " , " + className + " , " + instanceName};
+            }
+
+            if (!graph.SetGraphEntryPoint(
+                instanceName,
+                megamol::core::view::get_gl_view_runtime_resources_requests(),
+                megamol::core::view::view_rendering_execution,
+                megamol::core::view::view_init_rendering_state))
+            {
+                return Error{"graph could not set graph entry point for: " + baseName + " , " + className + " , " + instanceName};
+            }
+
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, std::string, std::string>(
+        "mmCreateModule",
+        "(string className, string moduleName)\n\tCreate a module instance of class <className> called <moduleName>.",
+        std::function{[&](std::string className, std::string instanceName) -> VoidResult
+        {
+            if (!graph.CreateModule(className, instanceName)) {
+                return Error{"graph could not create module: " + className + " , " + instanceName};
+            }
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, std::string>(
+        "mmDeleteModule",
+        "(string name)\n\tDelete the module called <name>.",
+        std::function{[&](std::string moduleName) -> VoidResult
+        {
+            if (!graph.DeleteModule(moduleName)) {
+                return Error{"graph could not delete module: " + moduleName};
+            }
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, std::string, std::string, std::string>(
+        "mmCreateCall",
+        "(string className, string from, string to)\n\tCreate a call of type <className>, connecting CallerSlot <from> and CalleeSlot <to>.",
+        std::function{[&](std::string className, std::string from, std::string to) -> VoidResult
+        {
+            if (!graph.CreateCall(className, from, to)) {
+                return Error{"graph could not create call: " + className + " , " + from + " -> " + to};
+            }
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, std::string, std::string>(
+        "mmDeleteCall",
+        "(string from, string to)\n\tDelete the call connecting CallerSlot <from> and CalleeSlot <to>.",
+        std::function{[&](std::string from, std::string to) -> VoidResult
+        {
+            if (!graph.DeleteCall(from, to)) {
+                return Error{"graph could not delete call: " + from + " -> " + to};
+            }
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, std::string, std::string, std::string>(
+        "mmCreateChainCall",
+        "(string className, string chainStart, string to)\n\tAppend a call of type <className>, connection the rightmost CallerSlot starting at <chainStart> and CalleeSlot <to>.",
+        std::function{[&](std::string className, std::string chainStart, std::string to) -> VoidResult
+        {
+            if (!graph.Convenience().CreateChainCall(className, chainStart, to)) {
+                return Error{"graph could not create chain call: " + className + " , " + chainStart + " -> " + to};
+            }
+            return VoidResult{};
+        }});
+
+    callbacks.add<StringResult, std::string>(
+        "mmGetModuleParams",
+        "(string name)\n\tReturns a 0x1-separated list of module name and all parameters.\n\tFor each parameter the name, description, definition, and value are returned.",
+        std::function{[&](std::string moduleName) -> StringResult
+        {
+            auto mod = graph.FindModule(moduleName);
+            if (mod == nullptr) {
+                return Error{"graph could not find module: " + moduleName};
+            }
+
+            auto slots = graph.EnumerateModuleParameterSlots(moduleName);
+            std::ostringstream answer;
+            answer << mod->FullName() << "\1";
+
+            for (auto &ps : slots) {
+                answer << ps->Name() << "\1";
+                answer << ps->Description() << "\1";
+                auto par = ps->Parameter();
+                if (par.IsNull()) {
+                    return Error{"ParamSlot does not seem to hold a parameter: " + std::string(ps->FullName().PeekBuffer())};
+                }
+                answer << par->ValueString() << "\1";
+            }
+
+            return StringResult{answer.str()};
+        }});
+
+    callbacks.add<StringResult, std::string>(
+        "mmGetParamDescription",
+        "(string name)\n\tReturn the description of a parameter slot.",
+        std::function{[&](std::string paramName) -> StringResult
+        {
+            core::param::ParamSlot* ps = graph.FindParameterSlot(paramName);
+            if (ps == nullptr) {
+                return Error{"graph could not find parameter: " + paramName};
+            }
+
+            vislib::StringA valUTF8;
+            vislib::UTF8Encoder::Encode(valUTF8, ps->Description());
+            
+            return StringResult{valUTF8.PeekBuffer()};
+        }});
+
+    callbacks.add<StringResult, std::string>(
+        "mmGetParamValue",
+        "(string name)\n\tReturn the value of a parameter slot.",
+        std::function{[&](std::string paramName) -> StringResult
+        {
+            const auto* param = graph.FindParameter(paramName);
+            if (param == nullptr) {
+                return Error{"graph could not find parameter: " + paramName};
+            }
+
+            return StringResult{param->ValueString().PeekBuffer()};
+        }});
+
+    callbacks.add<VoidResult, std::string, std::string>(
+        "mmSetParamValue",
+        "(string name, string value)\n\tSet the value of a parameter slot.",
+        std::function{[&](std::string paramName, std::string paramValue) -> VoidResult
+        {
+            auto* param = graph.FindParameter(paramName);
+            if (param == nullptr) {
+                return Error{"graph could not find parameter: " + paramName};
+            }
+
+            if (!param->ParseValue(paramValue.c_str())) {
+                return Error{"parameter could not be set to value: " + paramName + " : " + paramValue};
+            }
+
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, std::string>(
+        "mmCreateParamGroup",
+        "(string name, string size)\n\tGenerate a param group that can only be set at once. Sets are queued until size is reached.",
+        std::function{[&](std::string groupName) -> VoidResult
+        {
+            graph.Convenience().CreateParameterGroup(groupName);
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, std::string, std::string, std::string>(
+        "mmSetParamGroupValue",
+        "(string groupname, string paramname, string value)\n\tQueue the value of a grouped parameter.",
+        std::function{[&](std::string paramGroup, std::string paramName, std::string paramValue) -> VoidResult
+        {
+            auto groupPtr = graph.Convenience().FindParameterGroup(paramGroup);
+            if (!groupPtr) {
+                return Error{"graph could not find parameter group: " + paramGroup};
+            }
+            
+            bool queued = groupPtr->QueueParameterValue(paramName, paramValue);
+            if (!queued) {
+                return Error{"graph could not queue param group value: " + paramGroup + " , " + paramName + " : " + paramValue};
+            }
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, std::string>(
+        "mmApplyParamGroupValues",
+        "(string groupname)\n\tApply queued parameter values of group to graph.",
+        std::function{[&](std::string paramGroup) -> VoidResult
+        {
+            auto groupPtr = graph.Convenience().FindParameterGroup(paramGroup);
+            if (!groupPtr) {
+                return Error{"graph could not apply param group: no such group: " + paramGroup};
+            }
+            
+            bool applied = groupPtr->ApplyQueuedParameterValues();
+            if (!applied) {
+                return Error{"graph could not apply param group: some parameter values did not parse."};
+            }
+            return VoidResult{};
+        }});
+
+    callbacks.add<StringResult, std::string>(
+        "mmListModules",
+        "(string basemodule_or_namespace)\n\tReturn a list of instantiated modules (class id, instance id), starting from a certain module downstream or inside a namespace.\n\tWill use the graph root if an empty string is passed.",
+        std::function{[&](std::string starting_point) -> StringResult
+        {
+            // actually putting an empty string as an argument on purpose is OK too
+            auto modules_list = starting_point.empty() ? graph.ListModules() : graph.Convenience().ListModules(starting_point);
+            
+            std::ostringstream answer;
+            for (auto& module: modules_list) {
+                answer << module.modulePtr->ClassName() << ";" << module.modulePtr->Name() << std::endl;
+            }
+            
+            if (modules_list.empty()) {
+                answer << "(none)" << std::endl;
+            }
+
+            return StringResult{answer.str().c_str()};
+        }});
+
+    callbacks.add<StringResult>(
+        "mmListCalls",
+        "()\n\tReturn a list of instantiated calls.",
+        std::function{[&]() -> StringResult
+        {
+            std::ostringstream answer;
+            auto& calls_list = graph.ListCalls();
+            for (auto& call: calls_list) {
+                answer << call.callPtr->ClassName() << ";" << call.callPtr->PeekCallerSlot()->Parent()->Name() << ","
+                       << call.callPtr->PeekCalleeSlot()->Parent()->Name() << ";" << call.callPtr->PeekCallerSlot()->Name() << ","
+                       << call.callPtr->PeekCalleeSlot()->Name() << std::endl;
+            }
+            
+            if (calls_list.empty()) {
+                answer << "(none)" << std::endl;
+            }
+
+            return StringResult{answer.str().c_str()};
+        }});
+            // TODO
+            //const auto fun = [&answer](Module* mod) {
+            //    AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
+            //    for (AbstractNamedObjectContainer::child_list_type::const_iterator si = mod->ChildList_Begin(); si != se;
+            //         ++si) {
+            //        const auto slot = dynamic_cast<CallerSlot*>((*si).get());
+            //        if (slot) {
+            //            const Call* c = const_cast<CallerSlot*>(slot)->CallAs<Call>();
+            //            if (c != nullptr) {
+            //                answer << c->ClassName() << ";" << c->PeekCallerSlot()->Parent()->Name() << ","
+            //                       << c->PeekCalleeSlot()->Parent()->Name() << ";" << c->PeekCallerSlot()->Name() << ","
+            //                       << c->PeekCalleeSlot()->Name() << std::endl;
+            //            }
+            //        }
+            //    }
+            //};
+            
+            //if (n == 1) {
+            //    const auto starting_point = luaL_checkstring(L, 1);
+            //    if (!std::string(starting_point).empty()) {
+            //        this->coreInst->EnumModulesNoLock(starting_point, fun);
+            //    } else {
+            //        this->coreInst->EnumModulesNoLock(nullptr, fun);
+            //    }
+            //} else {
+            //    this->coreInst->EnumModulesNoLock(nullptr, fun);
+            //}
 
 
+    // template for futher callbacks
+    //callbacks.add<>(
+    //    "name",
+    //    "()\n\t help",
+    //    std::function{[&]() -> VoidResult
+    //    {
+    //        return VoidResult{};
+    //    }});
 
 
+//    callbacks.add<StringResult>(
+//        "mmListParameters",
+//        "(string baseModule_or_namespace)"
+//            "\n\tReturn all parameters, their type and value, starting from a certain module downstream or inside a namespace."
+//            "\n\tWill use the graph root if an empty string is passed.",
+//        std::function{[&]() -> StringResult
+//        {
+//            return StringResult{"mmListParameters currently not implemented!"};
+//
+//            std::ostringstream answer;
+//            
+//            // TODO
+//            
+//            //const auto fun = [&answer](Module* mod) {
+//            //    AbstractNamedObjectContainer::child_list_type::const_iterator se = mod->ChildList_End();
+//            //    for (AbstractNamedObjectContainer::child_list_type::const_iterator si = mod->ChildList_Begin(); si != se;
+//            //         ++si) {
+//            //        const auto slot = dynamic_cast<param::ParamSlot*>((*si).get());
+//            //        if (slot) {
+//            //            answer << slot->FullName() << "\1" << slot->Parameter()->ValueString() << "\1";
+//            //        }
+//            //    }
+//            //};
+//            
+//            //if (n == 1) {
+//            //    const auto starting_point = luaL_checkstring(L, 1);
+//            //    if (!std::string(starting_point).empty()) {
+//            //        this->coreInst->EnumModulesNoLock(starting_point, fun);
+//            //    } else {
+//            //        this->coreInst->EnumModulesNoLock(nullptr, fun);
+//            //    }
+//            //} else {
+//            //    this->coreInst->EnumModulesNoLock(nullptr, fun);
+//            //}
+//            
+//            lua_pushstring(L, answer.str().c_str());
+//        }});
 
 
+// #define MMC_LUA_MMQUERYMODULEGRAPH "mmQueryModuleGraph"
+//    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::QueryModuleGraph>(MMC_LUA_MMQUERYMODULEGRAPH, "()\n\tShow the instantiated modules and their children.");
+// int mmQueryModuleGraph(lua_State* L) {
+// 
+//     std::ostringstream answer;
+// 
+//     // TODO
+// 
+//     // queryModules(answer, anoc);
+//     //std::vector<AbstractNamedObjectContainer::const_ptr_type> anoStack;
+//     //anoStack.push_back(anoc);
+//     //while (!anoStack.empty()) {
+//     //    anoc = anoStack.back();
+//     //    anoStack.pop_back();
+// 
+//     //    if (anoc) {
+//     //        const auto m = Module::dynamic_pointer_cast(anoc);
+//     //        answer << (m != nullptr ? "Module:    " : "Container: ") << anoc.get()->FullName() << std::endl;
+//     //        if (anoc.get()->Parent() != nullptr) {
+//     //            answer << "Parent:    " << anoc.get()->Parent()->FullName() << std::endl;
+//     //        } else {
+//     //            answer << "Parent:    none" << std::endl;
+//     //        }
+//     //        const char* cn = nullptr;
+//     //        if (m != nullptr) {
+//     //            cn = m->ClassName();
+//     //        }
+//     //        answer << "Class:     " << ((cn != nullptr) ? cn : "unknown") << std::endl;
+//     //        answer << "Children:  ";
+//     //        auto it_end = anoc->ChildList_End();
+//     //        int numChildren = 0;
+//     //        for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+//     //            AbstractNamedObject::const_ptr_type ano = *it;
+//     //            AbstractNamedObjectContainer::const_ptr_type anoc =
+//     //                std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+//     //            if (anoc) {
+//     //                if (numChildren == 0) {
+//     //                    answer << std::endl;
+//     //                }
+//     //                answer << anoc.get()->FullName() << std::endl;
+//     //                numChildren++;
+//     //            }
+//     //        }
+//     //        for (auto it = anoc->ChildList_Begin(); it != it_end; ++it) {
+//     //            AbstractNamedObject::const_ptr_type ano = *it;
+//     //            AbstractNamedObjectContainer::const_ptr_type anoc =
+//     //                std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+//     //            if (anoc) {
+//     //                anoStack.push_back(anoc);
+//     //            }
+//     //        }
+//     //        if (numChildren == 0) {
+//     //            answer << "none" << std::endl;
+//     //        }
+//     //    }
+//     //}
+// 
+//     lua_pushstring(L, answer.str().c_str());
+//     return 1;
+// }
 
+// "mmListInstantiations",
+// "()\n\tReturn a list of instantiation names",
+// int mmListInstantiations(lua_State* L) {
+// 
+//     std::ostringstream answer;
+// 
+//     // TODO
+// 
+//     //AbstractNamedObject::const_ptr_type ano = this->coreInst->ModuleGraphRoot();
+//     //AbstractNamedObjectContainer::const_ptr_type anor =
+//     //    std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(ano);
+//     //if (!ano) {
+//     //    luaApiInterpreter_.ThrowError(MMC_LUA_MMLISTINSTANTIATIONS ": no root");
+//     //    return 0;
+//     //}
+// 
+// 
+//     //if (anor) {
+//     //    const auto it_end = anor->ChildList_End();
+//     //    for (auto it = anor->ChildList_Begin(); it != it_end; ++it) {
+//     //        if (!dynamic_cast<const Module*>(it->get())) {
+//     //            AbstractNamedObjectContainer::const_ptr_type anoc =
+//     //                std::dynamic_pointer_cast<const AbstractNamedObjectContainer>(*it);
+//     //            answer << anoc->FullName() << std::endl;
+//     //            // TODO: the immediate child view should be it, generally
+//     //        }
+//     //    }
+//     //}
+// 
+//     lua_pushstring(L, answer.str().c_str());
+//     return 1;
+// }
 
 }
 
