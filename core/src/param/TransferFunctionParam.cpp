@@ -97,8 +97,9 @@ bool megamol::core::param::TransferFunctionParam::IgnoreProjectRange(const std::
     bool ignore_project_range = true;
     try {
         if (!in_tfs.empty()) {
+            ignore_project_range = false;
             nlohmann::json json = nlohmann::json::parse(in_tfs);
-            json.at("IgnoreProjectRange").get_to(ignore_project_range);
+            megamol::core::utility::get_json_value<bool>(json, {"IgnoreProjectRange"}, &ignore_project_range);
         }
     } catch (...) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
@@ -130,44 +131,19 @@ bool TransferFunctionParam::GetParsedTransferFunctionData(const std::string& in_
         try {
             nlohmann::json json = nlohmann::json::parse(in_tfs);
 
-            // Get texture size
-            json.at("TextureSize").get_to(tmp_texsize);
-
-            // Get interpolation method
-            json.at("Interpolation").get_to(tmp_interpolmode_str);
+            megamol::core::utility::get_json_value<unsigned int>(json, {"TextureSize"}, &tmp_texsize);
+            megamol::core::utility::get_json_value<float>(json, {"ValueRange"}, tmp_range.data(), 2);
+            megamol::core::utility::get_json_value<std::string>(json, {"Interpolation"}, &tmp_interpolmode_str);
             if (tmp_interpolmode_str == "LINEAR") {
                 tmp_interpolmode = InterpolationMode::LINEAR;
             } else if (tmp_interpolmode_str == "GAUSS") {
                 tmp_interpolmode = InterpolationMode::GAUSS;
             }
-
-            // Get nodes data
-            unsigned int tf_size = (unsigned int)json.at("Nodes").size();
-            tmp_nodes.resize(tf_size);
-            for (unsigned int i = 0; i < tf_size; ++i) {
+            auto node_count = json.at("Nodes").size(); // unknown size
+            tmp_nodes.resize(node_count);
+            for (size_t i = 0; i < node_count; ++i) {
                 json.at("Nodes")[i].get_to(tmp_nodes[i]);
             }
-
-            // Get value range
-            json.at("ValueRange")[0].get_to(tmp_range[0]);
-            json.at("ValueRange")[1].get_to(tmp_range[1]);
-
-        }
-        catch (nlohmann::json::type_error& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::invalid_iterator& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::out_of_range& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
-        }
-        catch (nlohmann::json::other_error& e) {
-            megamol::core::utility::log::Log::DefaultLog.WriteError("JSON ERROR - %s: %s (%s:%d)", __FUNCTION__, e.what(), __FILE__, __LINE__);
-            return false;
         }
         catch (...) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(

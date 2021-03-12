@@ -10,11 +10,12 @@
 #include <string>
 #include <cmath>
 
-#include "mmcore/api/MegaMolCore.std.h"
 #include "AbstractParam.h"
+#include "mmcore/api/MegaMolCore.std.h"
+#include "mmcore/utility/log/Log.h"
+#include "mmcore/utility/JSONHelper.h"
 
 #include "vislib/String.h"
-#include "mmcore/utility/log/Log.h"
 
 #include "json.hpp"
 
