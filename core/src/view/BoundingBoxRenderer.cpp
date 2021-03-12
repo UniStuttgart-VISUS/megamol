@@ -188,21 +188,6 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
     glm::mat4 proj = projT;
     glm::mat4 mvp = proj * view;
 
-    // XXX Move this behind the fbo magic?
-    auto leftSlotParent = call.PeekCallerSlot()->Parent();
-    std::shared_ptr<const view::AbstractView> viewptr =
-        std::dynamic_pointer_cast<const view::AbstractView>(leftSlotParent);
-    if (viewptr != nullptr) {
-        auto vp = cam.image_tile();
-        glViewport(vp.left(), vp.bottom(), vp.width(), vp.height());
-        // auto vp = cam.resolution_gate();
-        // glViewport(0,0,  vp.width(), vp.height());
-        // glViewport(0, 0, call.GetFramebufferObject()->GetWidth(), call.GetFramebufferObject()->GetHeight());
-        // auto backCol = call.BackgroundColor();
-        // glClearColor(backCol.x, backCol.y, backCol.z, 0.0f);
-        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-
     CallRender3DGL* chainedCall = this->chainRenderSlot.CallAs<CallRender3DGL>();
     if (chainedCall == nullptr) {
         megamol::core::utility::log::Log::DefaultLog.WriteError(

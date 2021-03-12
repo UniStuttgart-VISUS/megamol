@@ -260,11 +260,6 @@ public:
     glm::vec4 BkgndColour(void) const;
 
     /**
-     * Set the background colour for the view
-     */
-    void SetBkgndColour(glm::vec4 bkgndCol);
-
-    /**
      * Restores the view
      *
      * @param p Must be resetViewSlot
