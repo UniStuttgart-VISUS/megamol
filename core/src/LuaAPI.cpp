@@ -52,21 +52,8 @@
 #define MMC_LUA_MMGETPROCESSID "mmGetProcessID"
 
 #define MMC_LUA_MMPLUGINLOADERINFO "mmPluginLoaderInfo"
-#define MMC_LUA_MMLISTRESOURCES "mmListResources"
 
 #define MMC_LUA_MMCURRENTSCRIPTPATH "mmCurrentScriptPath"
-
-#define MMC_LUA_MMFLUSH "mmRenderNextFrame"
-#define MMC_LUA_MMSCREENSHOT "mmScreenShot"
-#define MMC_LUA_MMLASTFRAMETIME "mmLastFrameTime"
-#define MMC_LUA_MMSETFRAMEBUFFERSIZE "mmSetFramebufferSize"
-#define MMC_LUA_MMSETWINDOWPOSITION "mmSetWindowPosition"
-#define MMC_LUA_MMSETFULLSCREEN "mmSetFullscreen"
-#define MMC_LUA_MMSETVSYNC "mmSetVSync"
-#define MMC_LUA_MMSETGUISTATE "mmSetGUIState"
-#define MMC_LUA_MMSHOWGUI "mmShowGUI"
-#define MMC_LUA_MMSCALEGUI "mmScaleGUI"
-#define MMC_LUA_MMQUIT "mmQuit"
 
 // ??
 #define MMC_LUA_MMLISTINSTANTIATIONS "mmListInstantiations"
@@ -114,26 +101,11 @@ void megamol::core::LuaAPI::commonInit() {
         "<className>, connection the rightmost CallerSlot starting at <chainStart> and CalleeSlot <to>.");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::DeleteCall>(MMC_LUA_MMDELETECALL, "(string from, string to)\n\tDelete the call connecting CallerSlot <from> and CalleeSlot <to>.");
 
-    // TODO: imperative?
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::Quit>(MMC_LUA_MMQUIT, "()\n\tClose the MegaMol instance.");
-
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ReadTextFile>(MMC_LUA_MMREADTEXTFILE, "(string fileName, function func)\n\tReturn the file contents after processing it with func(content).");
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::WriteTextFile>(MMC_LUA_MMWRITETEXTFILE, "(string fileName, string content)\n\tWrite content to file. You CANNOT overwrite existing files!");
 
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::CurrentScriptPath>(MMC_LUA_MMCURRENTSCRIPTPATH, "()\n\tReturns the path of the currently running script, if possible. Empty string otherwise.");
-    // TODO: imperative?
     luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::Invoke>(MMC_LUA_MMINVOKE, "(string command)\n\tInvoke an abstracted input command like 'move_left'.");
-
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::Screenshot>(MMC_LUA_MMSCREENSHOT, "(string filename)\n\tSave a screen shot of the GL front buffer under 'filename'.");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::LastFrameTime>(MMC_LUA_MMLASTFRAMETIME, "()\n\tReturns the graph execution time of the last frame in ms.");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetFramebufferSize>(MMC_LUA_MMSETFRAMEBUFFERSIZE, "(int width, int height)\n\tSet framebuffer dimensions to width x height.");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetWindowPosition>(MMC_LUA_MMSETWINDOWPOSITION, "(int x, int y)\n\tSet window position to x,y.");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetFullscreen>(MMC_LUA_MMSETFULLSCREEN, "(bool fullscreen)\n\tSet window to fullscreen (or restore).");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetVSync>(MMC_LUA_MMSETVSYNC, "(bool state)\n\tSet window VSync off (false) or on (true).");
-
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::SetGUIState>(MMC_LUA_MMSETGUISTATE, "(string json)\n\tSet GUI state from given 'json' string.");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ShowGUI>(MMC_LUA_MMSHOWGUI, "(bool state)\n\Show (true) or hide (false) the GUI.");
-    luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ScaleGUI>(MMC_LUA_MMSCALEGUI, "(float scale)\n\Set GUI scaling factor.");
 
     if (!imperative_only_) {
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetModuleParams>(MMC_LUA_MMGETMODULEPARAMS, "(string name)\n\tReturns a 0x1-separated list of module name and all parameters."
@@ -142,7 +114,6 @@ void megamol::core::LuaAPI::commonInit() {
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::GetParamValue>(MMC_LUA_MMGETPARAMVALUE, "(string name)\n\tReturn the value of a parameter slot.");
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::QueryModuleGraph>(MMC_LUA_MMQUERYMODULEGRAPH, "()\n\tShow the instantiated modules and their children.");
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ListCalls>(MMC_LUA_MMLISTCALLS, "()\n\tReturn a list of instantiated calls.");
-        luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ListResources>(MMC_LUA_MMLISTRESOURCES, "()\n\tReturn a list of available resources in the frontend.");
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ListModules>(MMC_LUA_MMLISTMODULES, "(string basemodule_or_namespace)"
             "\n\tReturn a list of instantiated modules (class id, instance id), starting from a certain module downstream or inside a namespace."
             "\n\tWill use the graph root if an empty string is passed.");
@@ -150,9 +121,9 @@ void megamol::core::LuaAPI::commonInit() {
         luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::ListParameters>(MMC_LUA_MMLISTPARAMETERS, "(string baseModule_or_namespace)"
             "\n\tReturn all parameters, their type and value, starting from a certain module downstream or inside a namespace."
             "\n\tWill use the graph root if an empty string is passed.");
-        luaApiInterpreter_.RegisterCallback<LuaAPI, &LuaAPI::Flush>(MMC_LUA_MMFLUSH, "()\n\tInserts a flush event into graph manipulation queues.");
     }
 }
+
 
 
 // we need the static variable to expose the interpreter to the register mechanism of arbitrary lambdas as lua callbacks
@@ -272,52 +243,6 @@ int megamol::core::LuaAPI::GetOS(lua_State* L) {
 
 int megamol::core::LuaAPI::GetMachineName(lua_State* L) {
     lua_pushstring(L, vislib::sys::SystemInformation::ComputerNameA());
-    return 1;
-}
-
-
-int megamol::core::LuaAPI::GetConfigValue(lua_State* L) {
-    std::ostringstream out;
-    auto name = luaL_checkstring(L, 1);
-    mmcValueType t;
-    // TODO
-    int64_t v = 0;
-    const void* val = &v;
-    //const void* val = this->coreInst->Configuration().GetValue(MMC_CFGID_VARIABLE, name, &t);
-    switch (t) {
-    case MMC_TYPE_INT32:
-        out << *(static_cast<const int32_t*>(val));
-        break;
-    case MMC_TYPE_UINT32:
-        out << *(static_cast<const uint32_t*>(val));
-        break;
-    case MMC_TYPE_INT64:
-        out << *(static_cast<const int64_t*>(val));
-        break;
-    case MMC_TYPE_UINT64:
-        out << *(static_cast<const uint64_t*>(val));
-        break;
-    case MMC_TYPE_BYTE:
-        out << *(static_cast<const char*>(val));
-        break;
-    case MMC_TYPE_BOOL:
-        out << *(static_cast<const bool*>(val));
-        break;
-    case MMC_TYPE_FLOAT:
-        out << *(static_cast<const float*>(val));
-        break;
-    case MMC_TYPE_CSTR:
-        out << *(static_cast<const char*>(val));
-        break;
-    case MMC_TYPE_WSTR:
-        out << vislib::StringA(vislib::StringW(static_cast<const wchar_t*>(val)));
-        break;
-    default:
-        // also includes MMC_TYPE_VOIDP
-        out << "unknown";
-        break;
-    }
-    lua_pushstring(L, out.str().c_str());
     return 1;
 }
 
@@ -733,24 +658,6 @@ int megamol::core::LuaAPI::ListCalls(lua_State* L) {
     return 1;
 }
 
-int megamol::core::LuaAPI::ListResources(lua_State* L) {
-
-    const int n = lua_gettop(L);
-    std::ostringstream answer;
-    auto resources_list = this->callbacks_.mmListResources_callback_();
-
-    for (auto& resource_name: resources_list) {
-        answer << resource_name << std::endl;
-    }
-
-    if (resources_list.empty()) {
-        answer << "(none)" << std::endl;
-    }
-
-    lua_pushstring(L, answer.str().c_str());
-    return 1;
-}
-
 int megamol::core::LuaAPI::ListModules(lua_State* L) {
     const int n = lua_gettop(L);
 
@@ -836,11 +743,6 @@ int megamol::core::LuaAPI::ListParameters(lua_State* L) {
     return 1;
 }
 
-int megamol::core::LuaAPI::Quit(lua_State* L) {
-    this->shutdown_ = true;
-    return 0;
-}
-
 int megamol::core::LuaAPI::ReadTextFile(lua_State* L) {
     int n = lua_gettop(L);
     if (n == 2) {
@@ -917,16 +819,6 @@ int megamol::core::LuaAPI::WriteTextFile(lua_State* L) {
     return 0;
 }
 
-void megamol::core::LuaAPI::setFlushCallback(std::function<bool()> const& callback) {
-    mmFlush_callback_ = callback;
-}
-
-int megamol::core::LuaAPI::Flush(lua_State* L) {
-    bool result = mmFlush_callback_();
-
-    return result ? 0 : 1;
-}
-
 int megamol::core::LuaAPI::CurrentScriptPath(struct lua_State* L) {
     lua_pushstring(L, this->currentScriptPath.c_str());
     return 1;
@@ -936,125 +828,6 @@ int megamol::core::LuaAPI::CurrentScriptPath(struct lua_State* L) {
 int megamol::core::LuaAPI::Invoke(lua_State *L) {
     // TODO
     return 0;
-}
-
-
-int megamol::core::LuaAPI::Screenshot(lua_State* L) {
-    int n = lua_gettop(L);
-    if (n == 1) {
-        const std::string filename (luaL_checkstring(L, 1));
-        callbacks_.mmScreenshot_callback_(filename);
-    } else {
-        luaApiInterpreter_.ThrowError(MMC_LUA_MMSCREENSHOT " requires one parameter: fileName");
-    }
-
-    return 0;
-}
-
-
-int megamol::core::LuaAPI::LastFrameTime(lua_State *L) {
-    lua_pushnumber(L, callbacks_.mmLastFrameTime_callback_());
-    return 1;
-}
-
-
-int megamol::core::LuaAPI::SetFramebufferSize(lua_State *L) {
-    int n = lua_gettop(L);
-    if (n == 2) {
-        unsigned int width = 0, height = 0;
-        width = luaL_checkinteger(L,1);
-        height = luaL_checkinteger(L, 2);
-
-        callbacks_.mmSetFramebufferSize_callback_(width, height);
-    } else {
-        luaApiInterpreter_.ThrowError(MMC_LUA_MMSETFRAMEBUFFERSIZE " requires two parameters: width, height");
-    }
-
-  return 0;
-}
-
-int megamol::core::LuaAPI::SetWindowPosition(lua_State *L) {
-    int n = lua_gettop(L);
-    if (n == 2) {
-        unsigned int x = 0, y = 0;
-        x = luaL_checkinteger(L,1);
-        y = luaL_checkinteger(L, 2);
-
-        callbacks_.mmSetWindowPosition_callback_(x, y);
-    } else {
-        luaApiInterpreter_.ThrowError(MMC_LUA_MMSETWINDOWPOSITION " requires two parameters: x, y");
-    }
-
-  return 0;
-}
-
-int megamol::core::LuaAPI::SetFullscreen(lua_State *L) {
-    int n = lua_gettop(L);
-    if (n == 1) {
-        bool fs = false;
-        fs = lua_toboolean(L, 1);
-
-        callbacks_.mmSetFullscreen_callback_(fs);
-    } else {
-        luaApiInterpreter_.ThrowError(MMC_LUA_MMSETFULLSCREEN " requires one bool parameter");
-    }
-
-  return 0;
-}
-
-int megamol::core::LuaAPI::SetVSync(lua_State *L) {
-    int n = lua_gettop(L);
-    if (n == 1) {
-        bool fs = false;
-        fs = lua_toboolean(L, 1);
-
-        callbacks_.mmSetVsync_callback_(fs);
-    } else {
-        luaApiInterpreter_.ThrowError(MMC_LUA_MMSETVSYNC " requires one bool parameter");
-    }
-
-  return 0;
-}
-
-int megamol::core::LuaAPI::SetGUIState(lua_State *L) {
-    int n = lua_gettop(L);
-    if (n == 1) {
-        std::string fs = lua_tostring(L, 1);
-
-        callbacks_.mmSetGUIState_callback_(fs);
-    } else {
-        luaApiInterpreter_.ThrowError(MMC_LUA_MMSETGUISTATE " requires one string parameter");
-    }
-
-  return 0;
-}
-
-int megamol::core::LuaAPI::ShowGUI(lua_State *L) {
-    int n = lua_gettop(L);
-    if (n == 1) {
-        bool fs = false;
-        fs = lua_toboolean(L, 1);
-
-        callbacks_.mmShowGUI_callback_(fs);
-    } else {
-        luaApiInterpreter_.ThrowError(MMC_LUA_MMSHOWGUI " requires one bool parameter");
-    }
-
-  return 0;
-}
-
-int megamol::core::LuaAPI::ScaleGUI(lua_State *L) {
-    int n = lua_gettop(L);
-    if (n == 1) {
-        double scale = 1.0;
-        scale = luaL_checknumber(L, 1);
-
-        callbacks_.mmScaleGUI_callback_(static_cast<float>(scale));
-    } else {
-        luaApiInterpreter_.ThrowError(MMC_LUA_MMSCALEGUI " requires one float parameter");
-    }
-
-  return 0;
 }
 
 

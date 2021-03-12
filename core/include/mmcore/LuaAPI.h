@@ -35,19 +35,6 @@ class MEGAMOLCORE_API LuaAPI {
 public:
     static const std::string MEGAMOL_ENV;
 
-    typedef struct {
-        std::function<std::vector<std::string>()> mmListResources_callback_; // returns list of resources available in frontend
-        std::function<void(std::string const&)> mmScreenshot_callback_;
-        std::function<float()> mmLastFrameTime_callback_;
-        std::function<void(const unsigned int, const unsigned int)> mmSetFramebufferSize_callback_;
-        std::function<void(const unsigned int, const unsigned int)> mmSetWindowPosition_callback_;
-        std::function<void(const bool)> mmSetFullscreen_callback_;
-        std::function<void(const bool)> mmSetVsync_callback_;
-        std::function<void(const std::string)> mmSetGUIState_callback_;
-        std::function<void(const bool)> mmShowGUI_callback_;
-        std::function<void(const float)> mmScaleGUI_callback_;
-    } LuaCallbacks;
-
     /**
      * @param imperativeOnly choose whether only reply-less commands will be made available
      * to avoid having round-trips across frames/threads etc. Basically config/project scripts
@@ -103,30 +90,10 @@ public:
 
     void SetMegaMolGraph(megamol::core::MegaMolGraph& graph);
 
-    /**
-     * Sets the function callback used to trigger rendering of a frame due to mmFlush.
-     */
-    void setFlushCallback(std::function<bool()> const& callback);
-
-    /**
-     * Sets the function callback used to trigger rendering of a frame due to mmFlush.
-     * Sets the function callback used to trigger screenshots from frontbuffer into a png file.
-     * Sets the function call used to retrieve the time in millis the last frame took until swapbuffers
-     * Sets the function call used to resize the framebuffer/window
-     * Sets the function call used to reposition the window
-     * Sets the function call used to set/unset fullscreen mode
-     */
-    void SetCallbacks(LuaCallbacks c) { callbacks_ = c; }
-
     void AddCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks);
     void RemoveCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks, bool delete_verbatim = true);
     void RemoveCallbacks(std::vector<std::string> const& callback_names);
     void ClearCallbacks();
-
-    /**
-     * Communicates mmQuit request to rest of MegaMol main loop.
-     */
-    bool getShutdown() { return shutdown_; }
 
     // ************************************************************
     // Lua interface routines, published to Lua as mm<name>
@@ -147,48 +114,6 @@ protected:
 
     /** mmGetMachineName: get machine name */
     int GetMachineName(lua_State* L);
-
-    /** mmSetAppDir(string path) */
-    int SetAppDir(lua_State* L);
-
-    /**
-     * mmAddShaderDir(string path): add path for searching shaders
-     * and .btf files.
-     */
-    int AddShaderDir(lua_State* L);
-
-    /**
-     * mmAddResourceDir(string path): add path for searching generic
-     * resources.
-     */
-    int AddResourceDir(lua_State* L);
-
-    /** mmSetLogFile(string path): set path of the log file. */
-    int SetLogFile(lua_State* L);
-
-    /**
-     * mmSetLogLevel(string level): set log level of the log file.
-     * level = ('error', 'warn', 'warning', 'info', 'none', 'null',
-     * 'zero', 'all', '*')
-     */
-    int SetLogLevel(lua_State* L);
-
-    /** mmSetEchoLevel(string level): set level of console output, see SetLogLevel. */
-    int SetEchoLevel(lua_State* L);
-
-    // set global key-value pair in MegaMol key-value store
-    int SetGlobalValue(lua_State* L);
-
-    // set a CLI option to a specific value
-    int SetCliOption(lua_State* L);
-
-    /** mmLoadProject(string path): load project file after MegaMol started */
-    int LoadProject(lua_State* L);
-
-    /**
-     * mmGetConfigValue(string name): get the value of configuration value 'name'
-     */
-    int GetConfigValue(lua_State* L);
 
     /**
      * mmGetEnvValue(string name): get the value of environment variable 'name'
@@ -235,31 +160,18 @@ protected:
 
     int QueryModuleGraph(lua_State* L);
     int ListCalls(lua_State* L);
-    int ListResources(lua_State* L);
     int ListModules(lua_State* L);
     int ListInstatiations(lua_State* L);
     int ListParameters(lua_State* L);
 
     int Help(lua_State* L);
-    int Quit(lua_State* L);
 
     int ReadTextFile(lua_State* L);
     int WriteTextFile(lua_State* L);
 
-    int Flush(lua_State* L);
     int CurrentScriptPath(lua_State* L);
 
     int Invoke(lua_State* L);
-    int Screenshot(lua_State* L);
-    int LastFrameTime(lua_State* L);
-    int SetFramebufferSize(lua_State *L);
-    int SetWindowPosition(lua_State *L);
-    int SetFullscreen(lua_State *L);
-    int SetVSync(lua_State *L);
-
-    int SetGUIState(lua_State* L);
-    int ShowGUI(lua_State* L);
-    int ScaleGUI(lua_State* L);
 
 private:
 
@@ -281,17 +193,9 @@ private:
     /** the respective MegaMol graph */
     megamol::core::MegaMolGraph* graph_ptr_ = nullptr;
 
-    LuaCallbacks callbacks_;
-
     std::list<megamol::frontend_resources::LuaCallbacksCollection> verbatim_lambda_callbacks_;
     std::list<std::tuple<std::string, std::function<int(lua_State*)>>> wrapped_lambda_callbacks_;
     void register_callbacks(megamol::frontend_resources::LuaCallbacksCollection& callbacks);
-
-    // this one is special since the frontend provides it
-    std::function<bool()> mmFlush_callback_; // renders one next frame via main loop
-
-
-    bool shutdown_ = false;
 
     /** no two threads must interfere with the reentrant L */
     std::mutex stateLock;
