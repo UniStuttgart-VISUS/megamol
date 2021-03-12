@@ -37,8 +37,7 @@ static void log_error(std::string const& text) {
 
 int main(const int argc, const char** argv) {
 
-    bool lua_imperative_only = false; // allow mmFlush, mmList* and mmGetParam*
-    megamol::core::LuaAPI lua_api(lua_imperative_only);
+    megamol::core::LuaAPI lua_api;
 
     auto [config, global_value_store] = megamol::frontend::handle_cli_and_config(argc, argv, lua_api);
 

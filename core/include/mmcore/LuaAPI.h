@@ -40,7 +40,7 @@ public:
      * to avoid having round-trips across frames/threads etc. Basically config/project scripts
      * are reply-less and the LuaHost can get replies.
      */
-    LuaAPI(bool imperativeOnly);
+    LuaAPI();
 
     ~LuaAPI();
 
@@ -88,16 +88,10 @@ public:
      */
     void SetScriptPath(std::string const& scriptPath);
 
-    void SetMegaMolGraph(megamol::core::MegaMolGraph& graph);
-
     void AddCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks);
     void RemoveCallbacks(megamol::frontend_resources::LuaCallbacksCollection const& callbacks, bool delete_verbatim = true);
     void RemoveCallbacks(std::vector<std::string> const& callback_names);
     void ClearCallbacks();
-
-    // ************************************************************
-    // Lua interface routines, published to Lua as mm<name>
-    // ************************************************************
 
 protected:
 
@@ -120,51 +114,8 @@ protected:
      */
     int GetEnvValue(lua_State* L);
 
-    // ** MegaMol API provided for runtime manipulation / Configurator live connection
-
     /** answer the ProcessID of the running MegaMol */
     int GetProcessID(lua_State* L);
-
-    /**
-     * mmGetModuleParams(string name): list all parameters of a module
-     * along with their description, type and value.
-     */
-    int GetModuleParams(lua_State* L);
-
-    /**
-     * mmGetParamDescription(string name): get the description of a specific parameter.
-     */
-    int GetParamDescription(lua_State* L);
-
-    /**
-     * mmGetParamValue(string name): get the value of a specific parameter.
-     */
-    int GetParamValue(lua_State* L);
-
-    /**
-     * mmSetParamValue(string name, string value):
-     * set the value of a specific parameter.
-     */
-    int SetParamValue(lua_State* L);
-
-    int CreateParamGroup(lua_State* L);
-    int SetParamGroupValue(lua_State* L);
-    int ApplyParamGroupValues(lua_State* L);
-
-    int CreateView(lua_State* L);
-    int CreateModule(lua_State* L);
-    int DeleteModule(lua_State* L);
-    int CreateCall(lua_State* L);
-    int CreateChainCall(lua_State* L);
-    int DeleteCall(lua_State* L);
-
-    int QueryModuleGraph(lua_State* L);
-    int ListCalls(lua_State* L);
-    int ListModules(lua_State* L);
-    int ListInstatiations(lua_State* L);
-    int ListParameters(lua_State* L);
-
-    int Help(lua_State* L);
 
     int ReadTextFile(lua_State* L);
     int WriteTextFile(lua_State* L);
@@ -178,20 +129,11 @@ private:
     /** all of the Lua startup code */
     void commonInit();
 
-    /**
-     * shorthand to ask graph for the param slot, returned in 'out'.
-     * WARNING: assumes the graph is ALREADY LOCKED!
-     */
-    bool getParamSlot(const std::string routine, const char* paramName, core::param::ParamSlot** out);
-
     /** gets a string from the stack position i. returns false if it's not a string */
     //bool getString(int i, std::string& out);
 
     /** the one Lua state */
     LuaInterpreter<LuaAPI> luaApiInterpreter_;
-
-    /** the respective MegaMol graph */
-    megamol::core::MegaMolGraph* graph_ptr_ = nullptr;
 
     std::list<megamol::frontend_resources::LuaCallbacksCollection> verbatim_lambda_callbacks_;
     std::list<std::tuple<std::string, std::function<int(lua_State*)>>> wrapped_lambda_callbacks_;
@@ -201,8 +143,6 @@ private:
     std::mutex stateLock;
 
     std::string currentScriptPath = "";
-
-    bool imperative_only_;
 };
 
 } /* namespace core */
