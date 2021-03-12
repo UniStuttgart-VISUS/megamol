@@ -4,12 +4,13 @@
 #include "glm/gtc/functions.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/BoolParam.h"
+#include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/utility/log/Log.h"
 #include "mmcore/view/CallRender2DGL.h"
+#include "mmcore/view/MouseFlags.h"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
 
@@ -44,7 +45,7 @@ InfovisAmortizedRenderer::InfovisAmortizedRenderer()
     approachMappings->SetTypePair(PARAMETER_AR, "Parameterized-AR");
     approachMappings->SetTypePair(DEBUG_PLACEHOLDER, "debug");
     approachMappings->SetTypePair(PUSH_AR, "Push-AR");
-    this->approachEnumSlot<<approachMappings;
+    this->approachEnumSlot << approachMappings;
     this->MakeSlotAvailable(&approachEnumSlot);
 
     this->superSamplingLevelSlot << new core::param::IntParam(1, 1);
@@ -419,6 +420,80 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
     }
 }
 
+bool InfovisAmortizedRenderer::OnMouseButton(
+    core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
+    megamol::core::utility::log::Log::DefaultLog.WriteInfo("yes, maybe");
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    if (cr) {
+        megamol::core::view::InputEvent evt;
+        evt.tag = megamol::core::view::InputEvent::Tag::MouseButton;
+        evt.mouseButtonData.button = button;
+        evt.mouseButtonData.action = action;
+        evt.mouseButtonData.mods = mods;
+        cr->SetInputEvent(evt);
+        if ((*cr)(megamol::core::view::CallRender2DGL::FnOnMouseButton))
+            return true;
+    }
+    return false;
+}
+
+bool InfovisAmortizedRenderer::OnMouseMove(double x, double y) {
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    if (cr) {
+        megamol::core::view::InputEvent evt;
+        evt.tag = megamol::core::view::InputEvent::Tag::MouseMove;
+        evt.mouseMoveData.x = x;
+        evt.mouseMoveData.y = y;
+        cr->SetInputEvent(evt);
+        if ((*cr)(megamol::core::view::CallRender2DGL::FnOnMouseMove))
+            return true;
+    }
+}
+
+bool InfovisAmortizedRenderer::OnMouseScroll(double dx, double dy) {
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    if (cr == NULL)
+        return false;
+
+    megamol::core::view::InputEvent evt;
+    evt.tag = megamol::core::view::InputEvent::Tag::MouseScroll;
+    evt.mouseScrollData.dx = dx;
+    evt.mouseScrollData.dy = dy;
+    cr->SetInputEvent(evt);
+    if (!(*cr)(megamol::core::view::CallRender2DGL::FnOnMouseScroll))
+        return false;
+    return false;
+}
+
+bool InfovisAmortizedRenderer::OnChar(unsigned int codePoint) {
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    if (cr == NULL)
+        return false;
+
+    megamol::core::view::InputEvent evt;
+    evt.tag = megamol::core::view::InputEvent::Tag::Char;
+    evt.charData.codePoint = codePoint;
+    cr->SetInputEvent(evt);
+    (*cr)(megamol::core::view::CallRender2DGL::FnOnChar);
+    return false;
+}
+
+bool InfovisAmortizedRenderer::OnKey(
+    megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) {
+    auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
+    if (cr == NULL)
+        return false;
+
+    megamol::core::view::InputEvent evt;
+    evt.tag = megamol::core::view::InputEvent::Tag::Key;
+    evt.keyData.key = key;
+    evt.keyData.action = action;
+    evt.keyData.mods = mods;
+    cr->SetInputEvent(evt);
+    (*cr)(megamol::core::view::CallRender2DGL::FnOnKey);
+    return false;
+}
+
 void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int ssLevel) {
     glViewport(0, 0, w, h);
 
@@ -508,8 +583,6 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
     cr2d->SetBackgroundColor(call.BackgroundColor());
     cr2d->AccessBoundingBoxes() = call.GetBoundingBoxes();
 
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("param: %i", this->approachEnumSlot.Param<core::param::EnumParam>()->Value());
-
     if (this->halveRes.Param<core::param::BoolParam>()->Value()) {
         int a = amortLevel.Param<core::param::IntParam>()->Value();
         int w = cam.resolution_gate().width();
@@ -541,7 +614,6 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
 
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);
-
     }
 
 

@@ -10,7 +10,9 @@
 #include "glowl/FramebufferObject.hpp"
 #include "vislib/graphics/gl/IncludeAllGL.h"
 #include "vislib/graphics/gl/ShaderSource.h"
+#include "mmcore/view/MouseFlags.h"
 
+//#include "mmcore/view/MouseFlags.h"
 #include "Renderer2D.h"
 
 namespace megamol {
@@ -63,6 +65,17 @@ namespace infovis {
         void doReconstruction(int approach, int w, int h, int ssLevel);
 
         void resizeArrays(int approach, int w, int h, int ssLevel);
+
+        bool OnMouseButton(
+            core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) override;
+
+        bool OnMouseMove(double x, double y) override;
+
+        bool OnMouseScroll(double dx, double dy) override;
+
+        bool OnChar(unsigned int codePoint) override;
+
+        bool OnKey(megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) override;
 
     private:
         // required Shaders for different kinds of reconstruction
