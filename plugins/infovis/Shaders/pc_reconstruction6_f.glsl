@@ -7,6 +7,7 @@ layout (binding=6, rgba32f) uniform image2D StoreB;
 layout (binding = 4, rgba32f) uniform image2DArray StoreArray;
 
 uniform int frametype;
+uniform int parity;
 uniform int h;
 uniform int w;
 uniform int approach;
@@ -27,15 +28,33 @@ void main()
     vec2 moveP = (moveM * p).xy;
     ivec2 movedICoord = ivec2((moveP.x / 2 + 0.5) * w , (moveP.y / 2 + 0.5) * h);
     int i = (amortLevel * line + col);
+    vec4 scaleOffsets[5];
+    scaleOffsets[0] = vec4(0, 0, 0, 0);
+    scaleOffsets[1] = vec4(0.125/w, 0.125/h, 0, 0);
+    scaleOffsets[2] = vec4(-0.125/w, 0.125/h, 0, 0);
+    scaleOffsets[3] = vec4(-0.125/w, -0.125/h, 0, 0);
+    scaleOffsets[4] = vec4(0.125/w, -0.125/h, 0, 0);
 
-    if(frametype % 2 == 0){
-        imageStore(StoreA, iCoord, imageLoad(StoreB, movedICoord));
+    if(parity == 0){
+        vec4 tempColor = vec4(0,0,0,0);
+        for(int q = 0; q < 5; q++){
+            vec2 moveP = (moveM * (p + scaleOffsets[q])).xy;
+            ivec2 movedICoord = ivec2((moveP.x / 2 + 0.5) * w , (moveP.y / 2 + 0.5) * h);
+            tempColor += 0.2 * imageLoad(StoreB, movedICoord);
+        }
+        imageStore(StoreA, iCoord, tempColor);
         if(frametype == i){
             imageStore(StoreA, iCoord, texture(src_tex2D, uv_coord));
         }
         frag_out = imageLoad(StoreA, iCoord);
     }else{
-        imageStore(StoreB, iCoord, imageLoad(StoreA, movedICoord));
+        vec4 tempColor = vec4(0,0,0,0);
+        for(int q = 0; q < 5; q++){
+            vec2 moveP = (moveM * (p + scaleOffsets[q])).xy;
+            ivec2 movedICoord = ivec2((moveP.x / 2 + 0.5) * w , (moveP.y / 2 + 0.5) * h);
+            tempColor += 0.2 * imageLoad(StoreA, movedICoord);
+        }
+        imageStore(StoreB, iCoord, tempColor);
         if(frametype == i){
             imageStore(StoreB, iCoord, texture(src_tex2D, uv_coord));
         }

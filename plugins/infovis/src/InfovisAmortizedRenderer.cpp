@@ -273,7 +273,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, frametype);
     }
-    if (approach == 4 || approach == 5) {
+    if (approach == 4) {
         glm::mat4 jit;
         glm::mat4 pmvm = pm * mvm;
         int a = this->amortLevel.Param<core::param::IntParam>()->Value();
@@ -295,7 +295,7 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
 
         glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, imageArrayA, 0, frametype);
     }
-    if (approach == 6) {
+    if (approach == 6 || approach == 5) {
         glm::mat4 jit;
         glm::mat4 pmvm = pm * mvm;
         int a = this->amortLevel.Param<core::param::IntParam>()->Value();
@@ -372,7 +372,7 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
-    if (approach == 4 || approach == 5) {
+    if (approach == 4) {
         int a = this->amortLevel.Param<core::param::IntParam>()->Value();
         framesNeeded = a * a;
         if (invMatrices.size() != framesNeeded) {
@@ -393,7 +393,7 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, ssboMatrices);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
-    if (approach == 6) {
+    if (approach == 6 || approach == 5) {
         int a = this->amortLevel.Param<core::param::IntParam>()->Value();
         framesNeeded = a * a;
         frametype = 0;
@@ -510,8 +510,9 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
     glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("ssLevel"), ssLevel);
     glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("amortLevel"),
         this->amortLevel.Param<core::param::IntParam>()->Value());
+    glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("parity"), parity);
 
-    if (approach == 4 || approach == 5) {
+    if (approach == 4) {
         int a = this->amortLevel.Param<core::param::IntParam>()->Value();
         glUniformMatrix4fv(pc_reconstruction_shdr_array[approach]->ParameterLocation("moveMatrices"), a * a, GL_FALSE,
             &moveMatrices[0][0][0]);
@@ -519,7 +520,7 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         glUniformMatrix4fv(pc_reconstruction_shdr_array[approach]->ParameterLocation("moveMatrices"), 4, GL_FALSE,
             &moveMatrices[0][0][0]);
     }
-    if (approach == 6) {
+    if (approach == 6 || approach == 5) {
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, imStoreA);
         glBindImageTexture(5, imStoreA, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
@@ -545,7 +546,14 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
     glDrawArrays(GL_TRIANGLES, 0, 6);
     pc_reconstruction_shdr_array[approach]->Disable();
 
-    frametype = (frametype + 1) % framesNeeded;
+    if (approach == 6) {
+        frametype = (frametype + (this->amortLevel.Param<core::param::IntParam>()->Value() - 1) *
+                                     (this->amortLevel.Param<core::param::IntParam>()->Value() - 1)) %
+                    framesNeeded;
+        parity = (parity + 1) % 2;
+    } else {
+        frametype = frametype + 1 % framesNeeded;
+    }
 }
 
 bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
@@ -559,6 +567,7 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
     // get camera
     core::view::Camera_2 cam;
     call.GetCamera(cam);
+    cr2d->SetCamera(cam);
 
     cam_type::matrix_type view, proj;
     cam.calc_matrices(view, proj);

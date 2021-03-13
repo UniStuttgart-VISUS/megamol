@@ -96,6 +96,7 @@ namespace infovis {
         GLuint imStoreA = 0;
         GLuint imStoreB = 0;
         int frametype = 0;
+        int parity = 0;
 
         int oldApp = -1;
         int oldW = -1;
