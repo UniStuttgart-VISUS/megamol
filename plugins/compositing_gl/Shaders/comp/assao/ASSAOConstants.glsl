@@ -113,7 +113,6 @@ struct ASSAOConstants
 #define SSAO_REDUCE_RADIUS_NEAR_SCREEN_BORDER_ENABLE_AT_QUALITY_PRESET  (99)        // 99 means disabled; only helpful if artifacts at the edges caused by lack of out of screen depth data are not acceptable with the depth sampler in either clamp or mirror modes
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-cbuffer SSAOConstantsBuffer                     : register( b0 )    // corresponds to SSAO_CONSTANTS_BUFFERSLOT
-{
-    ASSAOConstants                    g_ASSAOConsts;
+layout( std430, binding = 0 ) readonly buffer SSAOConstantsBuffer {
+    ASSAOConstants g_ASSAOConsts;
 }
