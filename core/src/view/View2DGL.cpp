@@ -57,7 +57,7 @@ view::View2DGL::View2DGL(void)
         AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
     // CallRenderViewGL
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::onResetView);
+        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
 
     this->_rhsRenderSlot.SetCompatibleCall<CallRender2DGLDescription>();
@@ -134,7 +134,7 @@ void view::View2DGL::Render(double time, double instanceTime) {
         (1.0f / vz - vy));
     cr2d->AccessBoundingBoxes().SetBoundingBox(vr.Left(),vr.Bottom(),vr.Right(),vr.Top());
 
-    this->_fbo->Enable();
+    this->_fbo->bind();
     auto bgcol = this->BkgndColour();
     glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
     glClearDepth(1.0f);
@@ -146,29 +146,16 @@ void view::View2DGL::Render(double time, double instanceTime) {
 
     (*cr2d)(AbstractCallRender::FnRender);
 
-    this->_fbo->Disable();
-    if (call == nullptr) {
-        // TODO This does not work (i.e. disable the drawAxes checkbox in PCP Renderer):
-        //this->_fbo->DrawColourTexture();
-
-        // TODO Best fix for now steal blitting from splitview:
-        // Bind and blit framebuffer.
-        GLint binding, readBuffer;
-        glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &binding);
-        glGetIntegerv(GL_READ_BUFFER, &readBuffer);
-
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, _fbo->GetID());
-        glReadBuffer(GL_COLOR_ATTACHMENT0);
-        glBlitFramebuffer(0, 0, _fbo->GetWidth(), _fbo->GetHeight(), 0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, binding);
-        glReadBuffer(readBuffer);
-
-        // TODO VISLIB MUST DIE AND BURN IN HELL!!!
-    }
-
-    //after render
+    // after render
     AbstractView::afterRender();
+
+    // TODO Best fix for now steal blitting from splitview:
+    // Bind and blit framebuffer.
+    _fbo->bind();
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    glBlitFramebuffer(0, 0, _fbo->getWidth(), _fbo->getHeight(), 0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 }
 
 

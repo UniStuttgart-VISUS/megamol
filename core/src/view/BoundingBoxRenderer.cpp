@@ -200,10 +200,6 @@ bool BoundingBoxRenderer::Render(CallRender3DGL& call) {
     auto boundingBoxes = chainedCall->AccessBoundingBoxes();
     auto smoothLines = this->smoothLineSlot.Param<param::BoolParam>()->Value();
 
-    if (viewptr != nullptr) { // XXX Move this behind the fbo magic?
-        glViewport(0, 0, fbo->getWidth(), fbo->getHeight());
-    }
-
     bool renderRes = true;
     if (this->enableBoundingBoxSlot.Param<param::BoolParam>()->Value()) {
         renderRes &= this->RenderBoundingBoxBack(mvp, boundingBoxes, smoothLines);

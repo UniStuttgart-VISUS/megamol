@@ -60,10 +60,6 @@ view::SplitViewGL::SplitViewGL()
         AbstractCallRender::FunctionName(AbstractCallRender::FnGetExtents), &AbstractView::GetExtents);
     // CallRenderViewGL
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_FREEZE), &AbstractView::OnFreezeView);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
-        view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_UNFREEZE), &AbstractView::OnUnfreezeView);
-    this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
 
@@ -110,17 +106,9 @@ void view::SplitViewGL::Render(double time, double instanceTime) {
         this->doBeforeRenderHook();
     }
 
+    // TODO SplitViewGL needs its own full view fbo
     unsigned int vpw = 0;
     unsigned int vph = 0;
-
-    if (call == nullptr) {
-        vpw = _camera.image_tile().width();
-        vph = _camera.image_tile().height();
-    } else {
-        auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
-        vpw = gpu_call->GetFramebufferObject()->GetWidth();
-        vph = gpu_call->GetFramebufferObject()->GetHeight();
-    }
 
     if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value()) {
         auto cr = this->render1();
@@ -171,12 +159,6 @@ void view::SplitViewGL::Render(double time, double instanceTime) {
         !vislib::math::IsEqual(this->_clientArea.Width(), static_cast<float>(vpw)) ||
         !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(vph))) {
         this->updateSize(vpw, vph);
-
-        // is the following even needed here?
-        if (call != nullptr) {
-            auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
-            gpu_call->GetFramebufferObject()->Enable();
-        }
     }
 
     // Propagate viewport changes to connected views.
@@ -231,10 +213,7 @@ void view::SplitViewGL::Render(double time, double instanceTime) {
         vislib::Trace::GetInstance().SetLevel(otl);
 #endif /* DEBUG || _DEBUG */
 
-        if (call != nullptr) {
-            auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call);
-            gpu_call->GetFramebufferObject()->Enable();
-        }
+        //TODO SplitViewGL need its own full view fbo
 
         // Bind and blit framebuffer.
         GLint binding, readBuffer;
@@ -285,7 +264,6 @@ void view::SplitViewGL::ResetView() {
 }
 
 void view::SplitViewGL::Resize(unsigned int width, unsigned int height) {
-    AbstractView::Resize(width,height);
 
     if (!vislib::math::IsEqual(this->_clientArea.Width(), static_cast<float>(width)) ||
         !vislib::math::IsEqual(this->_clientArea.Height(), static_cast<float>(height))) {
@@ -296,8 +274,6 @@ void view::SplitViewGL::Resize(unsigned int width, unsigned int height) {
 bool view::SplitViewGL::OnRenderView(Call& call) {
     auto* crv = dynamic_cast<view::CallRenderViewGL*>(&call);
     if (crv == nullptr) return false;
-
-    this->_overrideCall = crv;
 
     auto time = crv->Time();
     if (this->_enableTimeSyncSlot.Param<param::BoolParam>()->Value() && time < 0.0) {

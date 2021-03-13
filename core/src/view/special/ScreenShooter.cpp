@@ -508,7 +508,7 @@ void view::special::ScreenShooter::BeforeRender(view::AbstractView* view) {
             //crv.SetTile(static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight), 0.0f, 0.0f,
             //    static_cast<float>(data.imgWidth), static_cast<float>(data.imgHeight));
             view->OnRenderView(crv); // glClear by SFX
-            view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
+            //view->Resize(static_cast<unsigned int>(vp[2]), static_cast<unsigned int>(vp[3]));
             glFlush();
 
             if (currentFbo->GetColourTexture(buffer, 0, (bkgndMode == 1) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE) !=

@@ -103,7 +103,7 @@ public:
      * @param width The new width.
      * @param height The new height.
      */
-    void Resize(unsigned int width, unsigned int height) override;
+    virtual void Resize(unsigned int width, unsigned int height) override;
 
     /**
      * Callback requesting a rendering of this view
