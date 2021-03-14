@@ -90,6 +90,7 @@ void view_poke_rendering(AbstractView& view, megamol::frontend_resources::ImageW
             dummyRenderViewContext.Time = view.DefaultTime(time);
 
         view.Render(dummyRenderViewContext);
+        frontend_image = view.GetRenderingResult();
     };
     
     render();
