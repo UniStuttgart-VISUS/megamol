@@ -81,7 +81,7 @@ bool megamol::gui::Configurator::Draw(WindowCollection::WindowConfiguration& wc)
 
         bool graph_has_core_interface = false;
         if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
-            graph_has_core_interface = graph_ptr->HasCoreInterface();
+            graph_has_core_interface = graph_ptr->IsRunning();
         }
         if (graph_has_core_interface) {
             this->graph_state.global_graph_save = true;
@@ -161,7 +161,7 @@ void megamol::gui::Configurator::draw_window_menu(void) {
                     false, ((this->graph_state.graph_selected_uid != GUI_INVALID_ID)))) {
                 bool graph_has_core_interface = false;
                 if (auto graph_ptr = this->graph_collection.GetGraph(this->graph_state.graph_selected_uid)) {
-                    graph_has_core_interface = graph_ptr->HasCoreInterface();
+                    graph_has_core_interface = graph_ptr->IsRunning();
                 }
                 if (graph_has_core_interface) {
                     this->graph_state.global_graph_save = true;
@@ -381,7 +381,7 @@ bool megamol::gui::Configurator::StateToJSON(nlohmann::json& inout_json) {
         // Write graph states
         for (auto& graph_ptr : this->GetGraphCollection().GetGraphs()) {
             // For graphs with no interface to core save only file name of loaded project
-            if (graph_ptr->HasCoreInterface()) {
+            if (graph_ptr->IsRunning()) {
                 graph_ptr->StateToJSON(inout_json);
             } else {
                 std::string filename = graph_ptr->GetFilename();
@@ -430,7 +430,7 @@ bool megamol::gui::Configurator::StateFromJSON(const nlohmann::json& in_json) {
 
         // Read graph states
         for (auto& graph_ptr : this->GetGraphCollection().GetGraphs()) {
-            if (graph_ptr->HasCoreInterface()) {
+            if (graph_ptr->IsRunning()) {
                 if (graph_ptr->StateFromJSON(in_json)) {
                     // Disable layouting if graph state was found
                     graph_ptr->SetLayoutGraph(false);

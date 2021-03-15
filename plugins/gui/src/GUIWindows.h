@@ -246,7 +246,6 @@ namespace gui {
             bool style_changed;      // Flag indicating changed style
             std::string new_gui_state; // If set, new gui state is applied in next graph synchronisation step
             std::vector<std::string> project_script_paths; // Project Script Path provided by Lua
-            ImGuiID graph_uid;                             // UID of currently running graph
             std::vector<ImWchar> font_utf8_ranges;         // Additional UTF-8 glyph ranges for all ImGui fonts.
             bool load_fonts;                               // Flag indicating font loading
             std::string win_delete;                        // Name of the window to delete.

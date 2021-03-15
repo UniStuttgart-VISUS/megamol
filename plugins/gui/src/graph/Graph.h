@@ -121,10 +121,10 @@ namespace gui {
             }
         }
 
-        inline GraphCoreInterface GetCoreInterface(void) {
+        inline GraphCoreInterface GetCoreInterface(void) const {
             return this->graph_core_interface;
         }
-        inline bool HasCoreInterface(void) {
+        inline bool IsRunning(void) const {
             return (this->graph_core_interface != GraphCoreInterface::NO_INTERFACE);
         }
 

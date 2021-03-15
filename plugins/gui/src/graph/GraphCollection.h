@@ -59,6 +59,7 @@ namespace gui {
         const GraphPtrVector_t& GetGraphs(void) {
             return this->graphs;
         }
+        GraphPtr_t GetRunningGraph(void);
 
         bool LoadModuleStock(const megamol::core::CoreInstance* core_instance);
         bool LoadCallStock(const megamol::core::CoreInstance* core_instance);

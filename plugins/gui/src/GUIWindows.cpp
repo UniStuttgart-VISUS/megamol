@@ -209,7 +209,7 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
         this->hotkeys[GUIWindows::GuiHotkeyIndex::MENU].is_pressed = false;
     }
     if (this->state.toggle_graph_entry || this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].is_pressed) {
-        if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+        if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
             megamol::gui::ModulePtrVector_t::const_iterator module_graph_entry_iter = graph_ptr->Modules().begin();
             // Search for first graph entry and set next view to graph entry (= graph entry point)
             for (auto module_iter = graph_ptr->Modules().begin(); module_iter != graph_ptr->Modules().end();
@@ -266,16 +266,10 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     /// !!! TODO Move to separate GUI resource which is available in modules
     //}
 
-    // Create new gui graph once if core instance graph is used (otherwise graph should already exist)
-    if (this->state.graph_uid == GUI_INVALID_ID) {
+    // Create new running gui graph once if core instance graph is used (otherwise graph should already exist) ///
+    // mmconsole?
+    if (this->configurator.GetGraphCollection().GetRunningGraph() == nullptr) {
         this->SynchronizeGraphs();
-    }
-    // Check if gui graph is present
-    if (this->state.graph_uid == GUI_INVALID_ID) {
-        megamol::core::utility::log::Log::DefaultLog.WriteError(
-            "[GUI] Failed to find required gui graph for running core graph. [%s, %s, line %d]\n", __FILE__,
-            __FUNCTION__, __LINE__);
-        return false;
     }
 
     // Required to prevent change in gui drawing between pre and post draw
@@ -395,7 +389,7 @@ bool GUIWindows::PostDraw(void) {
             this->tf_editor_ptr->SetVertical(wc.tfe_view_vertical);
 
             if (!wc.tfe_active_param.empty()) {
-                if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+                if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
                     for (auto& module_ptr : graph_ptr->Modules()) {
                         std::string module_full_name = module_ptr->FullName();
                         for (auto& param : module_ptr->Parameters()) {
@@ -482,7 +476,7 @@ bool GUIWindows::PostDraw(void) {
     /// ! Is only enabled in second frame if interaction objects are added during first frame !
     this->picking_buffer.EnableInteraction(glm::vec2(io.DisplaySize.x, io.DisplaySize.y));
 
-    if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+    if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
         for (auto& module_ptr : graph_ptr->Modules()) {
 
             module_ptr->GUIParameterGroups().Draw(module_ptr->Parameters(), module_ptr->FullName(), "",
@@ -721,7 +715,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
     this->window_collection.EnumWindows(modfunc);
     // Check for parameter hotkeys
     hotkeyPressed = false;
-    if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+    if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
         for (auto& module_ptr : graph_ptr->Modules()) {
             // Break loop after first occurrence of parameter hotkey
             if (hotkeyPressed)
@@ -881,7 +875,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 
     bool synced = false;
     bool sync_success = false;
-    GraphPtr_t graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid);
+    GraphPtr_t graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph();
     // 2a) Either synchronize GUI Graph -> Core Graph ... ---------------------
     if (!synced && (graph_ptr != nullptr)) {
         bool graph_sync_success = true;
@@ -979,8 +973,9 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
     // 2b) ... OR (exclusive or) synchronize Core Graph -> GUI Graph ----------
     if (!synced) {
         // Creates new graph at first call
+        ImGuiID running_graph_uid = (graph_ptr != nullptr) ? (graph_ptr->UID()) : (GUI_INVALID_ID);
         bool graph_sync_success = this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(
-            this->state.graph_uid, this->core_instance, megamol_graph, true);
+            running_graph_uid, this->core_instance, megamol_graph, true);
         if (!graph_sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
@@ -995,7 +990,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
 
         // Check for new script path name
         if (graph_sync_success) {
-            if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+            if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
                 std::string script_filename;
                 // Get project filename from lua state of core instance
                 if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
@@ -1323,8 +1318,13 @@ bool GUIWindows::destroyContext(void) {
 
     this->window_collection.DeleteWindowConfigurations();
 
-    this->configurator.GetGraphCollection().DeleteGraph(this->state.graph_uid);
-    this->state.graph_uid = GUI_INVALID_ID;
+    // Delete running graph
+    /// XXX ???
+    if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
+        auto running_graph_uid = graph_ptr->UID();
+        graph_ptr.reset();
+        this->configurator.GetGraphCollection().DeleteGraph(running_graph_uid);
+    }
 
     this->core_instance = nullptr;
 
@@ -1477,7 +1477,7 @@ void GUIWindows::drawParamWindowCallback(WindowCollection::WindowConfiguration& 
 
     // Listing modules and their parameters
     const size_t dnd_size = 2048; // Set same max size of all module labels for drag and drop.
-    if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+    if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
 
         // Get module groups
         std::map<std::string, std::vector<ModulePtr_t>> group_map;
@@ -1691,7 +1691,7 @@ void GUIWindows::drawMenu(void) {
     ImGuiStyle& style = ImGui::GetStyle();
 
     bool megamolgraph_interface = false;
-    if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+    if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
         megamolgraph_interface = (graph_ptr->GetCoreInterface() == GraphCoreInterface::MEGAMOL_GRAPH);
     }
 
@@ -1768,7 +1768,7 @@ void GUIWindows::drawMenu(void) {
 
     // RENDER -----------------------------------------------------------------
     if (megamolgraph_interface) {
-        if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+        if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
             if (ImGui::BeginMenu("Render")) {
                 for (auto& module_ptr : graph_ptr->Modules()) {
                     if (module_ptr->IsView()) {
@@ -2009,7 +2009,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
     bool confirmed, aborted;
     bool popup_failed = false;
     std::string filename;
-    GraphPtr_t graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid);
+    GraphPtr_t graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph();
     if (graph_ptr != nullptr) {
         filename = graph_ptr->GetFilename();
         vislib::math::Ternary save_gui_state(
@@ -2027,7 +2027,7 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
             }
 
             popup_failed |=
-                !this->configurator.GetGraphCollection().SaveProjectToFile(this->state.graph_uid, filename, gui_state);
+                !this->configurator.GetGraphCollection().SaveProjectToFile(graph_ptr->UID(), filename, gui_state);
         }
         MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
             confirmed, "Cancel", aborted);
@@ -2206,7 +2206,7 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
             hotkeylist.emplace_back(h.keycode);
         }
 
-        if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+        if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
             for (auto& module_ptr : graph_ptr->Modules()) {
                 for (auto& param : module_ptr->Parameters()) {
 
@@ -2315,7 +2315,7 @@ bool megamol::gui::GUIWindows::state_from_string(const std::string& state) {
         this->configurator.StateFromJSON(state_json);
 
         // Read GUI state of parameters (groups) of running graph
-        if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+        if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
             for (auto& module_ptr : graph_ptr->Modules()) {
                 std::string module_full_name = module_ptr->FullName();
                 // Parameter Groups
@@ -2363,7 +2363,7 @@ bool megamol::gui::GUIWindows::state_to_string(std::string& out_state) {
         this->configurator.StateToJSON(json_state);
 
         // Write GUI state of parameters (groups) of running graph
-        if (auto graph_ptr = this->configurator.GetGraphCollection().GetGraph(this->state.graph_uid)) {
+        if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
             for (auto& module_ptr : graph_ptr->Modules()) {
                 std::string module_full_name = module_ptr->FullName();
                 // Parameter Groups
@@ -2402,7 +2402,6 @@ void megamol::gui::GUIWindows::init_state(void) {
     this->state.style_changed = true;
     this->state.new_gui_state = "";
     this->state.project_script_paths.clear();
-    this->state.graph_uid = GUI_INVALID_ID;
     this->state.font_utf8_ranges.clear();
     this->state.load_fonts = false;
     this->state.win_delete = "";

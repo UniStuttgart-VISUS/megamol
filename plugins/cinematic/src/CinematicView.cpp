@@ -316,7 +316,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     // Set camera settings ----------------------------------------------------
     auto res = cam_type::screen_size_type(glm::ivec2(fboWidth, fboHeight));
     this->_camera.resolution_gate(res);
-    auto tile = cam_type::screen_rectangle_type(std::array<int, 4>{0, 0, fboWidth, fboHeight});
+    auto tile = cam_type::screen_rectangle_type(std::array<int, 4>{0, fboHeight, fboWidth, 0}); // left, top, right, bottom!
     this->_camera.image_tile(tile);
 
     // Set camera parameters of selected keyframe for this view.
@@ -480,7 +480,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
     glm::vec3 pos_upper_right = {right, up, 0.0f};
     glm::vec3 pos_bottom_right = {right, bottom, 0.0f};
     this->utils.Push2DColorTexture(this->_fbo->GetColourTextureID(), pos_bottom_left, pos_upper_left,
-        pos_upper_right, pos_bottom_right, false, glm::vec4(0.0f), true);
+        pos_upper_right, pos_bottom_right, true, glm::vec4(0.0f), true);
     
     // Push menu --------------------------------------------------------------
     std::string leftLabel = " CINEMATIC ";

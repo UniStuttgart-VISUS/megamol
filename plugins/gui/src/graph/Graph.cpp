@@ -91,7 +91,7 @@ megamol::gui::Graph::Graph(const std::string& graph_name, GraphCoreInterface cor
 
     this->gui_graph_state.interact.parameters_extended_mode = false;
 
-    this->gui_graph_state.interact.graph_core_interface = GraphCoreInterface::NO_INTERFACE;
+    this->gui_graph_state.interact.graph_core_interface = this->GetCoreInterface();
 
     this->gui_graph_state.groups.clear();
     // this->gui_graph_state.hotkeys are already initialzed
@@ -891,7 +891,7 @@ bool megamol::gui::Graph::UniqueModuleRename(const std::string& module_full_name
 bool megamol::gui::Graph::PushSyncQueue(QueueAction action, const QueueData& in_data) {
 
     // Use sync queue only when interface to core graph is available
-    if (!this->HasCoreInterface())
+    if (!this->IsRunning())
         return false;
 
     // Validate and process given data
@@ -1279,7 +1279,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             tab_flags |= ImGuiTabItemFlags_UnsavedDocument;
         }
         std::string graph_label = "    " + this->name + "  ###graph" + std::to_string(graph_uid);
-        if (this->HasCoreInterface()) {
+        if (this->IsRunning()) {
             graph_label = "    [RUNNING]  " + graph_label;
         }
 
@@ -1353,7 +1353,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                 ImGui::Separator();
 
                 if (ImGui::MenuItem("Save")) {
-                    if (this->HasCoreInterface()) {
+                    if (this->IsRunning()) {
                         state.global_graph_save = true;
                     } else {
                         state.configurator_graph_save = true;
@@ -1752,7 +1752,7 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
             // Set delete flag if tab was closed ----------------------------------
             bool popup_prevent_close_permanent = false;
             if (!open) {
-                if (this->HasCoreInterface()) {
+                if (this->IsRunning()) {
                     popup_prevent_close_permanent = true;
                 } else {
                     state.graph_delete = true;
@@ -1864,6 +1864,17 @@ void megamol::gui::Graph::draw_menu(void) {
     ImGui::BeginChild("graph_menu", ImVec2(0.0f, child_height), false, child_flags);
 
     ImGui::BeginMenuBar();
+
+    // RUNNING
+    ImGui::BeginGroup();
+    if (megamol::gui::ButtonWidgets::OptionButton("graph_running_button", "Running", this->IsRunning())) {
+        if (!this->IsRunning()) {
+            // Allow toggle of running graph only for not running graphs
+        }
+    }
+    ImGui::EndGroup();
+
+    ImGui::Separator();
 
     // GRAPH LAYOUT
     if (ImGui::Button("Layout Graph")) {

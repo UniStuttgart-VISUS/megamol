@@ -108,6 +108,20 @@ megamol::gui::GraphPtr_t megamol::gui::GraphCollection::GetGraph(ImGuiID in_grap
 }
 
 
+megamol::gui::GraphPtr_t megamol::gui::GraphCollection::GetRunningGraph(void) {
+
+    for (auto& graph_ptr : this->graphs) {
+        if (graph_ptr->IsRunning()) {
+            return graph_ptr;
+        }
+    }
+    megamol::core::utility::log::Log::DefaultLog.WriteWarn(
+        "[GUI] Unable to find running graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
+
+    return nullptr;
+}
+
+
 bool megamol::gui::GraphCollection::LoadCallStock(const megamol::core::CoreInstance* core_instance) {
 
     if (core_instance == nullptr) {
@@ -1205,7 +1219,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                         // - Write all parameters for running graph (default value is not available)
                         // - For other graphs only write parameters with other values than the default
                         // - Ignore button parameters
-                        if ((graph_ptr->HasCoreInterface() || parameter.DefaultValueMismatch()) &&
+                        if ((graph_ptr->IsRunning() || parameter.DefaultValueMismatch()) &&
                             (parameter.Type() != Param_t::BUTTON)) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
