@@ -168,12 +168,12 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
         float alpha = alphaParam.Param<param::FloatParam>()->Value();
 
-        glm::vec4 dark_blue = { 0.0f, 0.0f, 0.25f, alpha };
-        glm::vec4 light_blue = { 0.0f, 0.0f, 0.75f, alpha };
-        glm::vec4 dark_red = { 0.25f, 0.0f, 0.0f, alpha };
-        glm::vec4 light_red = { 0.75f, 0.0f, 0.0f, alpha };
-        glm::vec4 dark_green = { 0.0f, 0.25f, 0.0f, alpha };
-        glm::vec4 light_green = { 0.0f, 0.75f, 0.0f, alpha };
+        glm::vec4 front  = {0.0f, 0.0f, 1.0f, alpha};
+        glm::vec4 back   = {0.0f, 1.0f, 1.0f, alpha};
+        glm::vec4 left   = {1.0f, 1.0f, 0.0f, alpha};
+        glm::vec4 right  = {0.0f, 1.0f, 0.0f, alpha};
+        glm::vec4 top    = {1.0f, 0.0f, 0.0f, alpha};
+        glm::vec4 bottom = {1.0f, 0.0f, 1.0f, alpha};
 
         glm::vec3 left_top_back = { this->bbox.Left(), this->bbox.Top(), this->bbox.Back() };
         glm::vec3 left_bottom_back = { this->bbox.Left(), this->bbox.Bottom(), this->bbox.Back() };
@@ -184,12 +184,12 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         glm::vec3 right_top_front = { this->bbox.Right(), this->bbox.Top(), this->bbox.Front() };
         glm::vec3 right_bottom_front = { this->bbox.Right(), this->bbox.Bottom(), this->bbox.Front() };
 
-        this->utils.PushQuadPrimitive(left_bottom_back, left_top_back, right_top_back, right_bottom_back, dark_blue);
-        this->utils.PushQuadPrimitive(left_bottom_front, right_bottom_front, right_top_front, left_top_front, light_blue);
-        this->utils.PushQuadPrimitive(left_top_back, left_top_front, right_top_front, right_top_back, dark_green);
-        this->utils.PushQuadPrimitive(left_bottom_back, right_bottom_back, right_bottom_front, left_bottom_front, light_green);
-        this->utils.PushQuadPrimitive(left_bottom_back, left_bottom_front, left_top_front, left_top_back, dark_red);
-        this->utils.PushQuadPrimitive(right_bottom_back, right_top_back, right_top_front, right_bottom_front, light_red);
+        this->utils.PushQuadPrimitive(left_bottom_front, right_bottom_front, right_top_front, left_top_front, front); // Front
+        this->utils.PushQuadPrimitive(left_bottom_back, left_top_back, right_top_back, right_bottom_back, back); // Back
+        this->utils.PushQuadPrimitive(left_top_back, left_top_front, right_top_front, right_top_back, top); // Top
+        this->utils.PushQuadPrimitive(left_bottom_back, right_bottom_back, right_bottom_front, left_bottom_front, bottom); // Bottom
+        this->utils.PushQuadPrimitive(left_bottom_back, left_bottom_front, left_top_front, left_top_back, left); // Left
+        this->utils.PushQuadPrimitive(right_bottom_back, right_top_back, right_top_front, right_bottom_front, right); // Right
 
         this->utils.DrawQuadPrimitives(mvp, glm::vec2(vp_fw, vp_fh));
 
@@ -198,7 +198,7 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
         if (cr3d_out != nullptr) {
             *cr3d_out = call;
-            return (*cr3d_out)(view::AbstractCallRender::FnRender);
+            return (*cr3d_out)(core::view::AbstractCallRender::FnRender);
         }
     }
 

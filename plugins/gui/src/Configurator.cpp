@@ -41,7 +41,7 @@ megamol::gui::Configurator::Configurator()
         megamol::core::view::KeyCode(core::view::Key::KEY_S, core::view::Modifier::CTRL | core::view::Modifier::SHIFT),
         false};
 
-    this->graph_state.graph_zoom_font_scalings = {0.75f, 0.95f, 1.0f, 1.5f, 2.5f};
+    this->graph_state.graph_zoom_font_scalings = {0.85f, 0.95f, 1.0f, 1.5f, 2.5f};
     this->graph_state.graph_width = 0.0f;
     this->graph_state.show_parameter_sidebar = false;
     this->graph_state.graph_selected_uid = GUI_INVALID_ID;

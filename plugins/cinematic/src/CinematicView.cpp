@@ -338,7 +338,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
             auto aper = skf.GetCameraState().half_aperture_angle_radians;
             this->_camera.half_aperture_angle_radians(aper);
         } else {
-            /// XXX this->ResetView();
+            this->ResetView();
         }
     }
 

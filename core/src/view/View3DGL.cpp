@@ -74,11 +74,11 @@ void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
     auto bgcol = this->BkgndColour();
 
     if (call == nullptr) {
-        if ((this->_fbo->GetWidth() != _camera.resolution_gate().width()) ||
-            (this->_fbo->GetHeight() != _camera.resolution_gate().height()) ||
+        if ((this->_fbo->GetWidth() != _camera.image_tile().width()) ||
+            (this->_fbo->GetHeight() != _camera.image_tile().height()) ||
             (!this->_fbo->IsValid()) ) {
             this->_fbo->Release();
-            if (!this->_fbo->Create(_camera.resolution_gate().width(), _camera.resolution_gate().height(), GL_RGBA8,
+            if (!this->_fbo->Create(_camera.image_tile().width(), _camera.image_tile().height(), GL_RGBA8,
                     GL_RGBA,
                     GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
                     GL_DEPTH_COMPONENT)) {
