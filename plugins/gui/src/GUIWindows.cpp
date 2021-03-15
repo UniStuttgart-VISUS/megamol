@@ -260,10 +260,11 @@ bool GUIWindows::PreDraw(glm::vec2 framebuffer_size, glm::vec2 window_size, doub
     // Set ImGui context
     ImGui::SetCurrentContext(this->context);
     // Propagate ImGui context to core instance
-    if ((this->core_instance != nullptr)) { /// mmconsole
-        /// TODO Also for new frontend?
-        this->core_instance->SetCurrentImGuiContext(this->context);
-    }
+    // if ((this->core_instance != nullptr) && core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
+    this->core_instance->SetCurrentImGuiContext(this->context);
+    //} else {
+    /// !!! TODO Move to separate GUI resource which is available in modules
+    //}
 
     // Create new gui graph once if core instance graph is used (otherwise graph should already exist)
     if (this->state.graph_uid == GUI_INVALID_ID) {

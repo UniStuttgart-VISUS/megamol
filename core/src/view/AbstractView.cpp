@@ -117,6 +117,7 @@ view::AbstractView::AbstractView(void)
     this->_bkgndCol[0] = 0.0f;
     this->_bkgndCol[1] = 0.0f;
     this->_bkgndCol[2] = 0.125f;
+    this->_bkgndCol[3] = 0.0f;
 
     this->_bkgndColSlot << new param::ColorParam(this->_bkgndCol[0], this->_bkgndCol[1], this->_bkgndCol[2], 1.0f);
     this->MakeSlotAvailable(&this->_bkgndColSlot);
@@ -595,12 +596,12 @@ std::string view::AbstractView::determineCameraFilePath(void) const {
 }
 
 /*
- * view::AbstractView::bkgndColour
+ * view::AbstractView::BkgndColour
  */
 glm::vec4 view::AbstractView::BkgndColour(void) const {
     if (this->_bkgndColSlot.IsDirty()) {
         this->_bkgndColSlot.ResetDirty();
-        this->_bkgndColSlot.Param<param::ColorParam>()->Value(this->_bkgndCol[0], this->_bkgndCol[1], this->_bkgndCol[2]);
+        this->_bkgndColSlot.Param<param::ColorParam>()->Value(this->_bkgndCol.r, this->_bkgndCol.g, this->_bkgndCol.b);
     }
     return this->_bkgndCol;
 }
