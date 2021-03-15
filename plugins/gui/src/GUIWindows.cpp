@@ -373,7 +373,7 @@ bool GUIWindows::PostDraw(void) {
 
     // Global Docking Space ---------------------------------------------------
     /// DOCKING
-#if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
+#ifdef IMGUI_HAS_DOCK
     auto child_bg = style.Colors[ImGuiCol_ChildBg];
     style.Colors[ImGuiCol_ChildBg] = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
@@ -702,37 +702,25 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
         return true;
     }
 
-    // Collect modules which should be considered for parameter hotkey check.
-    bool check_all_modules = false;
-    std::vector<std::string> modules_list;
-    const auto modfunc = [&](WindowCollection::WindowConfiguration& wc) {
-        for (auto& m : wc.param_modules_list) {
-            modules_list.emplace_back(m);
-        }
-        if (wc.param_modules_list.empty())
-            check_all_modules = true;
-    };
-    this->window_collection.EnumWindows(modfunc);
     // Check for parameter hotkeys
     hotkeyPressed = false;
     if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
         for (auto& module_ptr : graph_ptr->Modules()) {
             // Break loop after first occurrence of parameter hotkey
-            if (hotkeyPressed)
+            if (hotkeyPressed) {
                 break;
-            if (check_all_modules || this->considerModule(module_ptr->FullName(), modules_list)) {
-                for (auto& param : module_ptr->Parameters()) {
-                    if (param.Type() == Param_t::BUTTON) {
-                        auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
-                        if (this->isHotkeyPressed(keyCode)) {
-                            // Sync directly button action to parameter in core
-                            /// Does not require syncing of graphs
-                            if (param.CoreParamPtr() != nullptr) {
-                                param.CoreParamPtr()->setDirty();
-                            }
-                            /// param.ForceSetValueDirty();
-                            hotkeyPressed = true;
+            }
+            for (auto& param : module_ptr->Parameters()) {
+                if (param.Type() == Param_t::BUTTON) {
+                    auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
+                    if (this->isHotkeyPressed(keyCode)) {
+                        // Sync directly button action to parameter in core
+                        /// Does not require syncing of graphs
+                        if (param.CoreParamPtr() != nullptr) {
+                            param.CoreParamPtr()->setDirty();
                         }
+                        /// param.ForceSetValueDirty();
+                        hotkeyPressed = true;
                     }
                 }
             }
@@ -975,7 +963,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
         // Creates new graph at first call
         ImGuiID running_graph_uid = (graph_ptr != nullptr) ? (graph_ptr->UID()) : (GUI_INVALID_ID);
         bool graph_sync_success = this->configurator.GetGraphCollection().LoadUpdateProjectFromCore(
-            running_graph_uid, this->core_instance, megamol_graph, true);
+            running_graph_uid, this->core_instance, megamol_graph);
         if (!graph_sync_success) {
             megamol::core::utility::log::Log::DefaultLog.WriteError(
                 "[GUI] Failed to synchronize core graph with gui graph. [%s, %s, line %d]\n", __FILE__, __FUNCTION__,
@@ -1005,7 +993,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
                 }
                 // Load GUI state from project file when project file changed
                 if (!script_filename.empty()) {
-                    graph_ptr->SetFilename(script_filename);
+                    graph_ptr->SetFilename(script_filename, false);
                 }
             }
         }
@@ -1223,7 +1211,7 @@ bool GUIWindows::createContext(void) {
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
 
 /// DOCKING
-#if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
+#ifdef IMGUI_HAS_DOCK
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // enable window docking
     io.ConfigDockingWithShift = true;                 // activate docking on pressing 'shift'
 #endif
@@ -1746,6 +1734,13 @@ void GUIWindows::drawMenu(void) {
         };
         this->window_collection.EnumWindows(func);
 
+        ImGui::Separator();
+
+        if (ImGui::MenuItem(
+                "Show/Hide GUI", this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str())) {
+            this->state.gui_hide_next_frame = 2;
+        }
+
         ImGui::EndMenu();
     }
     ImGui::Separator();
@@ -1809,11 +1804,6 @@ void GUIWindows::drawMenu(void) {
 
     // SETTINGS ---------------------------------------------------------------
     if (ImGui::BeginMenu("Settings")) {
-
-        if (ImGui::MenuItem(
-                "Show/Hide GUI", this->hotkeys[GUIWindows::GuiHotkeyIndex::SHOW_HIDE_GUI].keycode.ToString().c_str())) {
-            this->state.gui_hide_next_frame = 2;
-        }
 
         if (ImGui::BeginMenu("Style")) {
 
@@ -2019,8 +2009,6 @@ void megamol::gui::GUIWindows::drawPopUps(void) {
         if (this->file_browser.PopUp(filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
                 this->state.open_popup_save, "lua", save_gui_state)) {
 
-            graph_ptr->SetFilename(filename);
-
             std::string gui_state;
             if (save_gui_state.IsTrue()) {
                 gui_state = this->project_to_lua_string();
@@ -2088,7 +2076,7 @@ void megamol::gui::GUIWindows::window_sizing_and_positioning(
         ImGui::Separator();
 
 /// DOCKING
-#if (defined(IMGUI_HAS_VIEWPORT) && defined(IMGUI_HAS_DOCK))
+#ifdef IMGUI_HAS_DOCK
         ImGui::MenuItem("Docking", "Shift + Left-Drag", false, false);
         ImGui::Separator();
 #endif

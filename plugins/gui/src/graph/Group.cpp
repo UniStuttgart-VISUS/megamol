@@ -556,7 +556,7 @@ void megamol::gui::Group::Draw(megamol::gui::PresentPhase phase, GraphItemsState
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_GROUP_BACKGROUND = ImGui::ColorConvertFloat4ToU32(tmpcol);
             /// COLOR_GROUP_BACKGROUND_HIGHTLIGHT
-            tmpcol = style.Colors[ImGuiCol_FrameBgHovered];
+            tmpcol = style.Colors[ImGuiCol_FrameBgActive];
             tmpcol = ImVec4(tmpcol.x * tmpcol.w, tmpcol.y * tmpcol.w, tmpcol.z * tmpcol.w, 1.0f);
             const ImU32 COLOR_GROUP_BACKGROUND_HIGHTLIGHT = ImGui::ColorConvertFloat4ToU32(tmpcol);
             /// COLOR_GROUP_BORDER

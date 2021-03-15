@@ -132,18 +132,22 @@ CinematicView::CinematicView(void)
 CinematicView::~CinematicView(void) {
 
     this->render_to_file_cleanup();
+    this->Release();
 }
+
 
 
 void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call) {
 
     // Get update data from keyframe keeper -----------------------------------
     auto cr3d = this->_rhsRenderSlot.CallAs<core::view::CallRender3DGL>();
-    if (cr3d == nullptr)
+    if (cr3d == nullptr) {
         return;
+    }
     auto ccc = this->keyframeKeeperSlot.CallAs<CallKeyframeKeeper>();
-    if (ccc == nullptr)
+    if (ccc == nullptr) {
         return;
+    }
     if (!(*ccc)(CallKeyframeKeeper::CallForGetUpdatedKeyframeData))
         return;
     ccc->SetBboxCenter(vislib_point_to_glm(cr3d->AccessBoundingBoxes().BoundingBox().CalcCenter()));

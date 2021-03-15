@@ -20,15 +20,15 @@ using namespace megamol::cinematic;
 using namespace vislib;
 
 
-ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererModule<megamol::core::view::CallRender3DGL>(),
-    alphaParam("alpha", "The alpha value of the replacement rendering."),
-    replacementRenderingParam("replacement", "Show/hide replacement rendering for chained renderer."),
-    replacementKeyParam("hotkeyAssignment", "Choose hotkey for replacement rendering button."),
-    toggleReplacementParam("toggleReplacement", "Toggle replacement rendering."),
-    toggle(false),
-    utils(),
-    bbox()
-{
+ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererModule<megamol::core::view::CallRender3DGL>()
+    , alphaParam("alpha", "The alpha value of the replacement rendering.")
+    , replacementRenderingParam("replacement", "Show/hide replacement rendering for chained renderer.")
+    , replacementKeyParam("hotkeyAssignment", "Choose hotkey for replacement rendering button.")
+    , toggleReplacementParam("toggleReplacement", "Toggle replacement rendering.")
+    , draw_replacement(false)
+    , utils()
+    , bbox() {
+
     // Make render slots available
     this->MakeSlotAvailable(&this->chainRenderSlot);
     this->MakeSlotAvailable(&this->renderSlot);
@@ -40,7 +40,7 @@ ReplacementRenderer::ReplacementRenderer(void) : megamol::core::view::RendererMo
     this->toggleReplacementParam.SetParameter(new param::ButtonParam());
     this->MakeSlotAvailable(&this->toggleReplacementParam);
 
-    this->replacementRenderingParam.SetParameter(new param::BoolParam(this->toggle));
+    this->replacementRenderingParam.SetParameter(new param::BoolParam(this->draw_replacement));
     this->MakeSlotAvailable(&this->replacementRenderingParam);
 
     param::EnumParam *tmpEnum = new param::EnumParam(static_cast<int>(KeyAssignment::KEY_ASSIGN_NONE));
@@ -117,13 +117,13 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
 
     if (this->replacementRenderingParam.IsDirty()) {
         this->replacementRenderingParam.ResetDirty();
-        this->toggle = this->replacementRenderingParam.Param<param::BoolParam>()->Value();
+        this->draw_replacement = this->replacementRenderingParam.Param<param::BoolParam>()->Value();
     }
 
     if (this->toggleReplacementParam.IsDirty()) {
         this->toggleReplacementParam.ResetDirty();
-        this->toggle = !this->toggle;
-        this->replacementRenderingParam.Param<param::BoolParam>()->SetValue(this->toggle, false);
+        this->draw_replacement = !this->draw_replacement;
+        this->replacementRenderingParam.Param<param::BoolParam>()->SetValue(this->draw_replacement, false);
     }
 
     if (this->replacementKeyParam.IsDirty()) {
@@ -155,13 +155,9 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         }
     }
 
-    if (this->toggle) {
+    if (this->draw_replacement) {
+        // Render bounding box as replacement
 
-        view::Camera_2 cam;
-        call.GetCamera(cam);
-        cam_type::snapshot_type snapshot;
-        cam_type::matrix_type viewTemp, projTemp;
-        cam.calc_matrices(snapshot, viewTemp, projTemp);
         glm::mat4 proj = projTemp;
         glm::mat4 view = viewTemp;
         glm::mat4 mvp = proj * view;
@@ -195,15 +191,14 @@ bool ReplacementRenderer::Render(megamol::core::view::CallRender3DGL& call) {
         this->utils.PushQuadPrimitive(left_bottom_back, left_bottom_front, left_top_front, left_top_back, dark_red);
         this->utils.PushQuadPrimitive(right_bottom_back, right_top_back, right_top_front, right_bottom_front, light_red);
 
-        // Render bounding box as replacement
         this->utils.DrawQuadPrimitives(mvp, glm::vec2(vp_fw, vp_fh));
-    }
-    else {
+
+    } else {
 
         auto cr3d_out = this->chainRenderSlot.CallAs<view::CallRender3DGL>();
         if (cr3d_out != nullptr) {
             *cr3d_out = call;
-            return (*cr3d_out)(core::view::AbstractCallRender::FnRender);
+            return (*cr3d_out)(view::AbstractCallRender::FnRender);
         }
     }
 

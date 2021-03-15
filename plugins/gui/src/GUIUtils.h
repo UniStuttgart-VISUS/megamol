@@ -68,7 +68,7 @@
 #include "vislib/math/Ternary.h"
 
 
-/// #define GUI_VERBOSE
+#define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f * megamol::gui::gui_scaling.Get())
@@ -306,14 +306,15 @@ namespace gui {
 
     /* Data type holding shared state of graphs. */
     typedef struct _graph_state_ {
-        FontScalingArray_t font_scalings;    // in
-        float graph_width;                   // in
-        bool show_parameter_sidebar;         // in
-        megamol::gui::HotkeyArray_t hotkeys; // in out
-        ImGuiID graph_selected_uid;          // out
-        bool graph_delete;                   // out
-        bool configurator_graph_save;        // out
-        bool global_graph_save;              // out
+        FontScalingArray_t graph_zoom_font_scalings; // in
+        float graph_width;                           // in
+        bool show_parameter_sidebar;                 // in
+        megamol::gui::HotkeyArray_t hotkeys;         // in out
+        ImGuiID graph_selected_uid;                  // out
+        bool graph_delete;                           // out
+        bool configurator_graph_save;                // out
+        bool global_graph_save;                      // out
+        ImGuiID new_running_graph_uid;               // out
     } GraphState_t;
 
     enum class HeaderType { MODULE_GROUP, MODULE, PARAMETERG_ROUP };

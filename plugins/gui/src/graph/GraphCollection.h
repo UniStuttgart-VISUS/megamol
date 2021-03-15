@@ -53,7 +53,7 @@ namespace gui {
 
         bool AddEmptyProject(void);
 
-        ImGuiID AddGraph(GraphCoreInterface graph_core_interface);
+        ImGuiID AddGraph(void);
         bool DeleteGraph(ImGuiID in_graph_uid);
         GraphPtr_t GetGraph(ImGuiID in_graph_uid);
         const GraphPtrVector_t& GetGraphs(void) {
@@ -89,7 +89,7 @@ namespace gui {
          * @return                 True on success, false otherwise.
          */
         bool LoadUpdateProjectFromCore(ImGuiID& inout_graph_uid, megamol::core::CoreInstance* core_instance,
-            megamol::core::MegaMolGraph* megamol_graph, bool sync);
+            megamol::core::MegaMolGraph* megamol_graph);
 
         ImGuiID LoadAddProjectFromFile(ImGuiID in_graph_uid, const std::string& project_filename);
 

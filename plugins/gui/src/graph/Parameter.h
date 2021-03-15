@@ -238,6 +238,9 @@ namespace gui {
         inline vislib::SmartPtr<megamol::core::param::AbstractParam> CoreParamPtr(void) const {
             return this->core_param_ptr;
         }
+        inline void ResetCoreParamPtr(void) {
+            this->core_param_ptr = nullptr;
+        }
 
         // SET ----------------------------------------------------------------
 
