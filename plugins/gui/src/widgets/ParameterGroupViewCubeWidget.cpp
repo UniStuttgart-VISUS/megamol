@@ -227,7 +227,10 @@ InteractVector megamol::gui::PickableCube::GetInteractions(unsigned int id) cons
 // *** Parameter Group View Cube Widget ************************************ //
 
 megamol::gui::ParameterGroupViewCubeWidget::ParameterGroupViewCubeWidget(void)
-        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID()), tooltip(), cube_widget() {
+        : AbstractParameterGroupWidget(megamol::gui::GenerateUniqueID())
+        , tooltip()
+        , cube_widget()
+        , last_presentation(param::AbstractParamPresentation::Presentation::Basic) {
 
     this->InitPresentation(Param_t::GROUP_3D_CUBE);
     this->name = "view";
@@ -298,16 +301,18 @@ bool megamol::gui::ParameterGroupViewCubeWidget::Draw(ParamPtrVector_t params, c
 
     // Parameter presentation -------------------------------------------------
     auto presentation = this->GetGUIPresentation();
-    this->active = std::get<bool>(param_showCube->GetValue());
-    // Switch presentation via parameter
-    if (param_showCube->IsValueDirty()) {
+    if (presentation != this->last_presentation) {
+        param_showCube->SetValue((presentation == param::AbstractParamPresentation::Presentation::Group_3D_Cube));
+        this->last_presentation = presentation;
+    } else {
         if (std::get<bool>(param_showCube->GetValue())) {
-            this->SetGUIPresentation(param::AbstractParamPresentation::Presentation::Group_3D_Cube);
+            this->last_presentation = param::AbstractParamPresentation::Presentation::Group_3D_Cube;
+            this->SetGUIPresentation(this->last_presentation);
         } else {
-            this->SetGUIPresentation(param::AbstractParamPresentation::Presentation::Basic);
+            this->last_presentation = param::AbstractParamPresentation::Presentation::Basic;
+            this->SetGUIPresentation(this->last_presentation);
         }
     }
-    param_showCube->SetValue((presentation == param::AbstractParamPresentation::Presentation::Group_3D_Cube));
 
     if (presentation == param::AbstractParamPresentation::Presentation::Basic) {
 

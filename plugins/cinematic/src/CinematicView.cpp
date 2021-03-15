@@ -334,7 +334,7 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
             auto aper = skf.GetCameraState().half_aperture_angle_radians;
             this->_camera.half_aperture_angle_radians(aper);
         } else {
-            this->ResetView();
+            /// XXX this->ResetView();
         }
     }
 
@@ -422,9 +422,9 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
         }
     }
 
-    // Set output buffer for override call (otherwise render call is overwritten in Base::Render(context))
     if (auto gpu_call = dynamic_cast<view::CallRenderViewGL*>(call)) {
         gpu_call->SetFramebufferObject(this->_fbo);
+        gpu_call->SetBackgroundColor(this->BkgndColour());
     } else {
         megamol::core::utility::log::Log::DefaultLog.WriteError(
             "CallRenderViewGL required to set framebuffer object. [%s, %s, line %d]\n ", __FILE__, __FUNCTION__,
@@ -432,7 +432,6 @@ void CinematicView::Render(const mmcRenderViewContext& context, core::Call* call
         return;
     }
 
-    // Call Render-Function of parent View3DGL
     Base::Render(context, call);
 
     auto err = glGetError();
