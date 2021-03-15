@@ -19,6 +19,7 @@
 #include "rendering/BoxRenderer.h"
 
 #include "thermodyn/BoxDataCall.h"
+#include "thermodyn/CallStatsInfo.h"
 
 namespace megamol::thermodyn {
 /** Implementing the instance class of this plugin */
@@ -60,6 +61,7 @@ public:
 
         // register calls here:
         this->call_descriptions.RegisterAutoDescription<megamol::thermodyn::BoxDataCall>();
+        this->call_descriptions.RegisterAutoDescription<megamol::thermodyn::CallStatsInfo>();
         //
         // TODO: Register your plugin's calls here
         // like:

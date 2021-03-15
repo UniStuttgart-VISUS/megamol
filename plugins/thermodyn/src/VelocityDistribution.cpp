@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 #include "mmcore/param/ButtonParam.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FilePathParam.h"
@@ -13,6 +14,8 @@
 
 megamol::thermodyn::VelocityDistribution::VelocityDistribution()
         : out_dist_slot_("outDist", "")
+        , out_stat_slot_("outStats", "")
+        , out_part_slot_("outPart", "")
         , in_data_slot_("inData", "")
         , num_buckets_slot_("num buckets", "")
         , dump_histo_slot_("dump", "")
@@ -21,8 +24,20 @@ megamol::thermodyn::VelocityDistribution::VelocityDistribution()
     out_dist_slot_.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
         stdplugin::datatools::table::TableDataCall::FunctionName(0), &VelocityDistribution::get_data_cb);
     out_dist_slot_.SetCallback(stdplugin::datatools::table::TableDataCall::ClassName(),
-        stdplugin::datatools::table::TableDataCall::FunctionName(1), &VelocityDistribution::get_extent_sb);
+        stdplugin::datatools::table::TableDataCall::FunctionName(1), &VelocityDistribution::get_extent_cb);
     MakeSlotAvailable(&out_dist_slot_);
+
+    out_stat_slot_.SetCallback(
+        CallStatsInfo::ClassName(), CallStatsInfo::FunctionName(0), &VelocityDistribution::get_stats_data_cb);
+    out_stat_slot_.SetCallback(
+        CallStatsInfo::ClassName(), CallStatsInfo::FunctionName(1), &VelocityDistribution::get_stats_extent_cb);
+    MakeSlotAvailable(&out_stat_slot_);
+
+    out_part_slot_.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
+        core::moldyn::MultiParticleDataCall::FunctionName(0), &VelocityDistribution::get_parts_data_cb);
+    out_part_slot_.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
+        core::moldyn::MultiParticleDataCall::FunctionName(1), &VelocityDistribution::get_parts_extent_cb);
+    MakeSlotAvailable(&out_part_slot_);
 
     in_data_slot_.SetCompatibleCall<core::moldyn::MultiParticleDataCallDescription>();
     MakeSlotAvailable(&in_data_slot_);
@@ -68,11 +83,11 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
     histograms_.clear();
     domain_.clear();
 
-    
+    part_data_.resize(pl_count);
 
     for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
         auto const& part = call.AccessParticles(pl_idx);
-
+        core::utility::log::Log::DefaultLog.WriteInfo("[VelocityDistribution] Computing stuff");
         /*auto& histo = histograms_[pl_idx];
         histo.clear();
         histo.resize(num_buckets, 0);
@@ -81,6 +96,10 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
         domain.resize(num_buckets);*/
 
         auto const p_count = part.GetCount();
+
+        auto& part_data = part_data_[pl_idx];
+        part_data.clear();
+        part_data.reserve(p_count * 7);
 
         switch (mode_type) {
         case mode::icol: {
@@ -92,6 +111,10 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
                 auto const fac_i = 1.0f / (max_i - min_i + 1e-8f);
 
                 auto const diff_i = (max_i - min_i) / num_buckets;
+
+                auto const xAcc = part.GetParticleStore().GetXAcc();
+                auto const yAcc = part.GetParticleStore().GetYAcc();
+                auto const zAcc = part.GetParticleStore().GetZAcc();
 
                 auto const iAcc = part.GetParticleStore().GetCRAcc();
 
@@ -110,6 +133,14 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
                     auto const idx = static_cast<int>(((val - min_i) * fac_i) * static_cast<float>(num_buckets - 1));
 
                     ++histo[idx];
+
+                    part_data.push_back(xAcc->Get_f(p_idx));
+                    part_data.push_back(yAcc->Get_f(p_idx));
+                    part_data.push_back(zAcc->Get_f(p_idx));
+                    part_data.push_back(iAcc->Get_f(p_idx));
+                    part_data.push_back(0.0f);
+                    part_data.push_back(0.0f);
+                    part_data.push_back(0.0f);
                 }
 
                 histograms_.push_back(histo);
@@ -119,6 +150,9 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
         case mode::dir: {
             auto const type = part.GetDirDataType();
             if (type != core::moldyn::SimpleSphericalParticles::DirDataType::DIRDATA_NONE) {
+                auto const xAcc = part.GetParticleStore().GetXAcc();
+                auto const yAcc = part.GetParticleStore().GetYAcc();
+                auto const zAcc = part.GetParticleStore().GetZAcc();
                 auto const dxAcc = part.GetParticleStore().GetDXAcc();
                 auto const dyAcc = part.GetParticleStore().GetDYAcc();
                 auto const dzAcc = part.GetParticleStore().GetDZAcc();
@@ -219,6 +253,14 @@ bool megamol::thermodyn::VelocityDistribution::assert_data(megamol::core::moldyn
                     ++histo_dy[idx_dy];
                     ++histo_dz[idx_dz];
                     ++histo_mag[idx_mag];
+
+                    part_data.push_back(xAcc->Get_f(p_idx));
+                    part_data.push_back(yAcc->Get_f(p_idx));
+                    part_data.push_back(zAcc->Get_f(p_idx));
+                    part_data.push_back(val_mag);
+                    part_data.push_back(val_dx);
+                    part_data.push_back(val_dy);
+                    part_data.push_back(val_dz);
                 }
 
                 histograms_.push_back(histo_dx);
@@ -355,7 +397,7 @@ bool megamol::thermodyn::VelocityDistribution::get_data_cb(core::Call& c) {
 }
 
 
-bool megamol::thermodyn::VelocityDistribution::get_extent_sb(core::Call& c) {
+bool megamol::thermodyn::VelocityDistribution::get_extent_cb(core::Call& c) {
     auto out_dist = dynamic_cast<stdplugin::datatools::table::TableDataCall*>(&c);
     if (out_dist == nullptr)
         return false;
@@ -368,6 +410,157 @@ bool megamol::thermodyn::VelocityDistribution::get_extent_sb(core::Call& c) {
 
     out_dist->SetFrameCount(in_data->FrameCount());
     out_dist->SetDataHash(out_data_hash_);
+
+    return true;
+}
+
+
+bool megamol::thermodyn::VelocityDistribution::get_stats_data_cb(core::Call& c) {
+    auto out_stats = dynamic_cast<CallStatsInfo*>(&c);
+    if (out_stats == nullptr)
+        return false;
+
+    auto in_data = in_data_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    if (in_data == nullptr)
+        return false;
+
+    //in_data->SetFrameID(out_dist->GetFrameID());
+    auto meta = out_stats->getMetaData();
+
+    in_data->SetFrameID(meta.m_frame_ID);
+    if (!(*in_data)(1))
+        return false;
+    if (!(*in_data)(0))
+        return false;
+
+    if (in_data->DataHash() != in_data_hash_ || in_data->FrameID() != frame_id_ || is_dirty()) {
+        auto const res = assert_data(*in_data);
+
+        in_data_hash_ = in_data->DataHash();
+        frame_id_ = in_data->FrameID();
+        reset_dirty();
+    }
+
+    CallStatsInfo::data_type tmp_data(mean_.size());
+
+    for (auto i = 0ull; i < tmp_data.size(); ++i) {
+        tmp_data[i].name = std::string("d") + std::to_string(i);
+        tmp_data[i].mean = mean_[i];
+        tmp_data[i].stddev = stddev_[i];
+    }
+
+    out_stats->setData(tmp_data, out_data_hash_);
+    //core::utility::log::Log::DefaultLog.WriteInfo("[VelocityDistribution] Setting stats data %d", tmp_data.size());
+
+    meta.m_frame_ID = in_data->FrameID();
+
+    out_stats->setMetaData(meta);
+
+    return true;
+}
+
+
+bool megamol::thermodyn::VelocityDistribution::get_stats_extent_cb(core::Call& c) {
+    auto out_stats = dynamic_cast<CallStatsInfo*>(&c);
+    if (out_stats == nullptr)
+        return false;
+
+    auto in_data = in_data_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    if (in_data == nullptr)
+        return false;
+
+    auto meta = out_stats->getMetaData();
+
+    in_data->SetFrameID(meta.m_frame_ID);
+    if (!(*in_data)(1))
+        return false;
+
+    meta.m_frame_cnt = in_data->FrameCount();
+    meta.m_frame_ID = in_data->FrameID();
+
+    out_stats->setMetaData(meta);
+
+    return true;
+}
+
+
+bool megamol::thermodyn::VelocityDistribution::get_parts_data_cb(core::Call& c) {
+    auto out_data = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
+    if (out_data == nullptr)
+        return false;
+
+    auto in_data = in_data_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    if (in_data == nullptr)
+        return false;
+
+    in_data->SetFrameID(out_data->FrameID());
+    if (!(*in_data)(1))
+        return false;
+    if (!(*in_data)(0))
+        return false;
+
+    if (in_data->DataHash() != in_data_hash_ || in_data->FrameID() != frame_id_ || is_dirty()) {
+        auto const res = assert_data(*in_data);
+
+        in_data_hash_ = in_data->DataHash();
+        frame_id_ = in_data->FrameID();
+        reset_dirty();
+    }
+
+
+    out_data->SetParticleListCount(in_data->GetParticleListCount());
+
+    for (std::remove_const_t<decltype(in_data->GetParticleListCount())> pl_idx = 0;
+         pl_idx < in_data->GetParticleListCount(); ++pl_idx) {
+
+        auto const& part_data = part_data_[pl_idx];
+        auto& parts = out_data->AccessParticles(pl_idx);
+
+        parts.SetCount(part_data.size() / 7);
+        parts.SetVertexData(
+            core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, part_data.data(), 7 * sizeof(float));
+        parts.SetColourData(
+            core::moldyn::SimpleSphericalParticles::COLDATA_FLOAT_I, part_data.data() + 3, 7 * sizeof(float));
+        parts.SetDirData(
+            core::moldyn::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, part_data.data() + 4, 7 * sizeof(float));
+        parts.SetGlobalRadius(in_data->AccessParticles(pl_idx).GetGlobalRadius());
+        parts.SetColourMapIndexValues(in_data->AccessParticles(pl_idx).GetMinColourIndexValue(),
+            in_data->AccessParticles(pl_idx).GetMaxColourIndexValue());
+    }
+
+
+    auto const bbox = in_data->AccessBoundingBoxes().ObjectSpaceBBox();
+    auto const cbox = in_data->AccessBoundingBoxes().ObjectSpaceClipBox();
+
+    out_data->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
+    out_data->AccessBoundingBoxes().SetObjectSpaceClipBox(cbox);
+    
+
+    return true;
+}
+
+
+bool megamol::thermodyn::VelocityDistribution::get_parts_extent_cb(core::Call& c) {
+    auto out_data = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
+    if (out_data == nullptr)
+        return false;
+
+    auto in_data = in_data_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    if (in_data == nullptr)
+        return false;
+
+    in_data->SetFrameID(out_data->FrameID());
+    if (!(*in_data)(1))
+        return false;
+
+    auto const bbox = in_data->AccessBoundingBoxes().ObjectSpaceBBox();
+    auto const cbox = in_data->AccessBoundingBoxes().ObjectSpaceClipBox();
+
+    out_data->AccessBoundingBoxes().SetObjectSpaceBBox(bbox);
+    out_data->AccessBoundingBoxes().SetObjectSpaceClipBox(cbox);
+
+    out_data->SetFrameCount(in_data->FrameCount());
+    out_data->SetFrameID(in_data->FrameID());
 
     return true;
 }

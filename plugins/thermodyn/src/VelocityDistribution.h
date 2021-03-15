@@ -9,6 +9,8 @@
 
 #include "mmstd_datatools/table/TableDataCall.h"
 
+#include "thermodyn/CallStatsInfo.h"
+
 namespace megamol::thermodyn {
 class VelocityDistribution : public core::Module {
 public:
@@ -41,6 +43,10 @@ private:
 
     core::CalleeSlot out_dist_slot_;
 
+    core::CalleeSlot out_stat_slot_;
+
+    core::CalleeSlot out_part_slot_;
+
     core::CallerSlot in_data_slot_;
 
     core::param::ParamSlot num_buckets_slot_;
@@ -67,7 +73,15 @@ private:
 
     bool get_data_cb(core::Call& c);
 
-    bool get_extent_sb(core::Call& c);
+    bool get_extent_cb(core::Call& c);
+
+    bool get_stats_data_cb(core::Call& c);
+
+    bool get_stats_extent_cb(core::Call& c);
+
+    bool get_parts_data_cb(core::Call& c);
+
+    bool get_parts_extent_cb(core::Call& c);
 
     std::vector<std::vector<std::uint32_t>> histograms_;
 
@@ -78,6 +92,8 @@ private:
     std::vector<float> mean_;
 
     std::vector<float> stddev_;
+
+    std::vector<std::vector<float>> part_data_;
 
     std::vector<stdplugin::datatools::table::TableDataCall::ColumnInfo> ci_;
 
