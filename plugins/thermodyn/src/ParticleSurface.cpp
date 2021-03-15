@@ -5,6 +5,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/UniFlagCalls.h"
 
 #include "Eigen/Dense"
 
@@ -16,6 +17,7 @@ megamol::thermodyn::ParticleSurface::ParticleSurface()
         , _out_part_slot("outPart", "")
         , _in_data_slot("inData", "")
         , _tf_slot("inTF", "")
+        , _flags_read_slot("readFlags", "")
         , _alpha_slot("alpha", "")
         , _type_slot("type", "")
         , _vert_type_slot("vert type", "") {
@@ -36,6 +38,9 @@ megamol::thermodyn::ParticleSurface::ParticleSurface()
 
     _tf_slot.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     MakeSlotAvailable(&_tf_slot);
+
+    _flags_read_slot.SetCompatibleCall<core::FlagCallRead_CPUDescription>();
+    MakeSlotAvailable(&_flags_read_slot);
 
     _alpha_slot << new core::param::FloatParam(1.25f, 0.0f);
     MakeSlotAvailable(&_alpha_slot);
@@ -123,6 +128,8 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
     core::view::CallGetTransferFunction* cgtf = _tf_slot.CallAs<core::view::CallGetTransferFunction>();
     if (cgtf != nullptr && !(*cgtf)())
         return false;
+
+    auto fcr = _flags_read_slot.CallAs<core::FlagCallRead_CPU>();
 
     bool tf_changed = false;
 
@@ -446,32 +453,161 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
             }
         }
 
-        for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
-            auto& vertices = _vertices[pl_idx];
-            auto& normals = _normals[pl_idx];
-            auto& colors = _colors[pl_idx];
-            auto& indices = _indices[pl_idx];
+        _unsel_colors = _colors;
+    }
 
-            std::vector<mesh::MeshDataAccessCollection::VertexAttribute> mesh_attributes;
-            mesh::MeshDataAccessCollection::IndexData mesh_indices;
+    /*bool flags_changed = false;
+    if (fcr != nullptr) {
+        (*fcr)(0);
+        flags_changed = fcr->version() != _fcr_version;
+        _fcr_version = fcr->version();
+    }*/
 
-            mesh_indices.byte_size = indices.size() * sizeof(uint32_t);
-            mesh_indices.data = reinterpret_cast<uint8_t*>(indices.data());
-            mesh_indices.type = mesh::MeshDataAccessCollection::UNSIGNED_INT;
+    if (call.DataHash() != _in_data_hash || call.FrameID() != _frame_id || is_dirty() ||
+        (cgtf != nullptr && (tf_changed = cgtf->IsDirty())) || (fcr != nullptr && fcr->hasUpdate())) {
+        _colors = _unsel_colors;
 
-            mesh_attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
-                reinterpret_cast<uint8_t*>(normals.data()), normals.size() * sizeof(float), 3,
-                mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 3, 0, mesh::MeshDataAccessCollection::NORMAL});
-            mesh_attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
-                reinterpret_cast<uint8_t*>(colors.data()), colors.size() * sizeof(float), 4,
-                mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 4, 0, mesh::MeshDataAccessCollection::COLOR});
-            mesh_attributes.emplace_back(mesh::MeshDataAccessCollection::VertexAttribute{
-                reinterpret_cast<uint8_t*>(vertices.data()), vertices.size() * sizeof(float), 3,
-                mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 3, 0, mesh::MeshDataAccessCollection::POSITION});
+        std::vector<size_t> sel_jobs;
+        //std::vector<std::tuple<size_t, size_t, glm::vec4, glm::vec4, glm::vec4>> unsel;
+        bool data_flag_change = false;
+        if ((fcr != nullptr && fcr->hasUpdate())) {
+            auto const data = fcr->getData();
+            auto fit = data->flags->begin();
+            do {
+                fit = std::find_if(fit, data->flags->end(),
+                    [](auto const& el) { return el == core::FlagStorage::SELECTED; });
+                if (fit != data->flags->end()) {
+                    sel_jobs.push_back(std::distance(data->flags->begin(), fit));
+                    //core::utility::log::Log::DefaultLog.WriteInfo("[ParticleSurface] Selected %d", sel_jobs.back());
+                    //break;
+                    fit = std::next(fit);
+                }
+            } while (fit != data->flags->end());
 
-            auto identifier = std::string("particle_surface_") + std::to_string(pl_idx);
-            _mesh_access_collection = std::make_shared<mesh::MeshDataAccessCollection>();
-            _mesh_access_collection->addMesh(identifier, mesh_attributes, mesh_indices);
+            std::vector<size_t> base_sizes;
+            base_sizes.reserve(pl_count);
+            for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
+                auto& indices = _indices[pl_idx];
+                auto const num_el = indices.size() / 3;
+                base_sizes.push_back(num_el);
+            }
+            std::vector<std::tuple<size_t, size_t>> tmp_sel;
+            for (auto sel : sel_jobs) {
+                size_t pl_idx = 0;
+                for (size_t i = 0; i < base_sizes.size(); ++i) {
+                    if (sel > base_sizes[i]) {
+                        sel -= base_sizes[i];
+                        ++pl_idx;
+                    }
+                }
+                /*auto& colors = _colors[pl_idx];
+                auto const i0 = _indices[pl_idx][sel * 3];
+                auto const i1 = _indices[pl_idx][sel * 3 + 1];
+                auto const i2 = _indices[pl_idx][sel * 3 + 2];*/
+                tmp_sel.push_back(std::make_tuple(pl_idx, sel/*,
+                    glm::vec4(colors[i0 * 4], colors[i0 * 4 + 1], colors[i0 * 4 + 2], colors[i0 * 4 + 3]),
+                    glm::vec4(colors[i1 * 4], colors[i1 * 4 + 1], colors[i1 * 4 + 2], colors[i1 * 4 + 3]),
+                    glm::vec4(colors[i2 * 4], colors[i2 * 4 + 1], colors[i2 * 4 + 2], colors[i2 * 4 + 3])*/));
+
+
+                /*auto fit = std::find_if(_sel.begin(), _sel.end(),
+                    [pl_idx, sel](auto const& el) { return std::get<0>(el) == pl_idx && std::get<1>(el) == sel; });
+                if (fit != _sel.end()) {
+                    unsel.push_back(*fit);
+                    _sel.erase(fit);
+                } else {
+                    auto& colors = _colors[pl_idx];
+                    _sel.push_back(std::make_tuple(pl_idx, sel,
+                        glm::vec4(colors[sel * 4], colors[sel * 4 + 1], colors[sel * 4 + 2], colors[sel * 4 + 3])));
+                }*/
+            }
+
+            /*for (auto const& el : _sel) {
+                auto fit = std::find_if(tmp_sel.begin(), tmp_sel.end(),
+                    [&el](auto const& val) { return std::get<0>(val) == std::get<0>(el) && std::get<1>(val) == std::get<1>(el); });
+                if (fit == tmp_sel.end()) {
+                    unsel.push_back(el);
+                }
+            }*/
+            _sel = tmp_sel;
+
+            /*for (auto const& el : unsel) {
+                auto const i0 = _indices[std::get<0>(el)][std::get<1>(el) * 3];
+                auto const i1 = _indices[std::get<0>(el)][std::get<1>(el) * 3 + 1];
+                auto const i2 = _indices[std::get<0>(el)][std::get<1>(el) * 3 + 2];
+                _colors[std::get<0>(el)][i0 * 4 + 0] = std::get<2>(el).r;
+                _colors[std::get<0>(el)][i0 * 4 + 1] = std::get<2>(el).g;
+                _colors[std::get<0>(el)][i0 * 4 + 2] = std::get<2>(el).b;
+                _colors[std::get<0>(el)][i0 * 4 + 3] = std::get<2>(el).a;
+                _colors[std::get<0>(el)][i1 * 4 + 0] = std::get<3>(el).r;
+                _colors[std::get<0>(el)][i1 * 4 + 1] = std::get<3>(el).g;
+                _colors[std::get<0>(el)][i1 * 4 + 2] = std::get<3>(el).b;
+                _colors[std::get<0>(el)][i1 * 4 + 3] = std::get<3>(el).a;
+                _colors[std::get<0>(el)][i2 * 4 + 0] = std::get<4>(el).r;
+                _colors[std::get<0>(el)][i2 * 4 + 1] = std::get<4>(el).g;
+                _colors[std::get<0>(el)][i2 * 4 + 2] = std::get<4>(el).b;
+                _colors[std::get<0>(el)][i2 * 4 + 3] = std::get<4>(el).a;
+                core::utility::log::Log::DefaultLog.WriteInfo("[ParticleSurface] Reverting %d", std::get<1>(el));
+                data_flag_change = true;
+            }*/
+
+            for (auto const& el : _sel) {
+                auto const pl_i = std::get<0>(el);
+                // auto const p_i = std::get<1>(el) * 4;
+                auto const i0 = _indices[pl_i][std::get<1>(el) * 3];
+                auto const i1 = _indices[pl_i][std::get<1>(el) * 3 + 1];
+                auto const i2 = _indices[pl_i][std::get<1>(el) * 3 + 2];
+                _colors[pl_i][i0 * 4 + 0] = 1.f;
+                _colors[pl_i][i0 * 4 + 1] = 0.f;
+                _colors[pl_i][i0 * 4 + 2] = 0.f;
+                _colors[pl_i][i0 * 4 + 3] = 1.0f;
+                _colors[pl_i][i1 * 4 + 0] = 1.f;
+                _colors[pl_i][i1 * 4 + 1] = 0.f;
+                _colors[pl_i][i1 * 4 + 2] = 0.f;
+                _colors[pl_i][i1 * 4 + 3] = 1.0f;
+                _colors[pl_i][i2 * 4 + 0] = 1.f;
+                _colors[pl_i][i2 * 4 + 1] = 0.f;
+                _colors[pl_i][i2 * 4 + 2] = 0.f;
+                _colors[pl_i][i2 * 4 + 3] = 1.0f;
+                //core::utility::log::Log::DefaultLog.WriteInfo("[ParticleSurface] Selecting %d", std::get<1>(el));
+                data_flag_change = true;
+            }
+        }
+        //flags_changed = false;
+
+        if (call.DataHash() != _in_data_hash || call.FrameID() != _frame_id || is_dirty() ||
+            (cgtf != nullptr && (tf_changed = cgtf->IsDirty())) || data_flag_change) {
+            for (std::remove_const_t<decltype(pl_count)> pl_idx = 0; pl_idx < pl_count; ++pl_idx) {
+                auto& vertices = _vertices[pl_idx];
+                auto& normals = _normals[pl_idx];
+                auto& colors = _colors[pl_idx];
+                auto& indices = _indices[pl_idx];
+
+                std::vector<mesh::MeshDataAccessCollection::VertexAttribute> mesh_attributes;
+                mesh::MeshDataAccessCollection::IndexData mesh_indices;
+
+                mesh_indices.byte_size = indices.size() * sizeof(uint32_t);
+                mesh_indices.data = reinterpret_cast<uint8_t*>(indices.data());
+                mesh_indices.type = mesh::MeshDataAccessCollection::UNSIGNED_INT;
+
+                mesh_attributes.emplace_back(
+                    mesh::MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(normals.data()),
+                        normals.size() * sizeof(float), 3, mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 3, 0,
+                        mesh::MeshDataAccessCollection::NORMAL});
+                mesh_attributes.emplace_back(
+                    mesh::MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(colors.data()),
+                        colors.size() * sizeof(float), 4, mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 4, 0,
+                        mesh::MeshDataAccessCollection::COLOR});
+                mesh_attributes.emplace_back(
+                    mesh::MeshDataAccessCollection::VertexAttribute{reinterpret_cast<uint8_t*>(vertices.data()),
+                        vertices.size() * sizeof(float), 3, mesh::MeshDataAccessCollection::FLOAT, sizeof(float) * 3, 0,
+                        mesh::MeshDataAccessCollection::POSITION});
+
+                auto identifier = std::string("particle_surface_") + std::to_string(pl_idx);
+                _mesh_access_collection = std::make_shared<mesh::MeshDataAccessCollection>();
+                _mesh_access_collection->addMesh(identifier, mesh_attributes, mesh_indices);
+            }
+            ++_out_data_hash;
         }
     }
 
@@ -500,8 +636,15 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
 
     bool tf_changed = false;
 
+    auto fcr = _flags_read_slot.CallAs<core::FlagCallRead_CPU>();
+    //bool flags_changed = false;
+    if (fcr != nullptr) {
+        (*fcr)(0);
+        //flags_changed = fcr->version() != _fcr_version;
+    }
+
     if (in_data->DataHash() != _in_data_hash || in_data->FrameID() != _frame_id || is_dirty() ||
-        (cgtf != nullptr && (tf_changed = cgtf->IsDirty()))) {
+        (cgtf != nullptr && (tf_changed = cgtf->IsDirty())) || (fcr != nullptr && fcr->hasUpdate())) {
         auto const res = assert_data(*in_data);
 
         //auto const pl_count = in_data->GetParticleListCount();
@@ -830,7 +973,7 @@ bool megamol::thermodyn::ParticleSurface::get_data_cb(core::Call& c) {
         if (cgtf != nullptr) {
             cgtf->ResetDirty();
         }
-        ++_out_data_hash;
+        
     }
 
     meta_data.m_frame_cnt = in_data->FrameCount();

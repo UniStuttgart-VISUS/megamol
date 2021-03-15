@@ -108,6 +108,8 @@ private:
 
     core::CallerSlot _tf_slot;
 
+    core::CallerSlot _flags_read_slot;
+
     core::param::ParamSlot _alpha_slot;
 
     core::param::ParamSlot _type_slot;
@@ -119,6 +121,8 @@ private:
     std::vector<std::vector<float>> _normals;
 
     std::vector<std::vector<float>> _colors;
+
+    std::vector<std::vector<float>> _unsel_colors;
 
     std::vector<std::vector<std::uint32_t>> _indices;
 
@@ -137,5 +141,9 @@ private:
     std::vector<std::list<Vertex>> _as_vertices;
 
     std::vector<std::vector<float>> _part_data;
+
+    int _fcr_version = -1;
+
+    std::vector<std::tuple<size_t, size_t>> _sel;
 };
 } // namespace megamol::thermodyn
