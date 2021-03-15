@@ -145,11 +145,7 @@ namespace gui {
          * Pass project load request.
          * Request is consumed when calling this function.
          */
-        std::string ConsumeProjectLoadRequest(void) {
-            auto project_file_name = this->state.request_load_projet_file;
-            this->state.request_load_projet_file.clear();
-            return project_file_name;
-        }
+        std::string ConsumeProjectLoadRequest(void);
 
         ///////// SET ///////////
 

@@ -19,6 +19,7 @@ megamol::gui::GraphCollection::GraphCollection(void)
         , modules_stock()
         , calls_stock()
         , graph_name_uid(0)
+        , request_load_projet_file()
         , gui_file_browser()
         , gui_graph_delete_uid(GUI_INVALID_ID) {}
 
@@ -1775,7 +1776,7 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
 
         // Process changed running graph --------------------------------------
         if (state.new_running_graph_uid != GUI_INVALID_ID) {
-            // There should always be only one running graph at a time
+            /// There should always be only one running graph at a time
 
             // Get currently running graph
             GraphPtr_t last_running_graph = nullptr;
@@ -1786,12 +1787,23 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
                 graph_ptr->SetRunning(false);
             }
             if (last_running_graph != nullptr) {
-
-                // Fill queue to get new running graph synchronized to core graph
                 if (auto running_graph = this->GetGraph(state.new_running_graph_uid)) {
+
+                    // 1] Save project which should be loaded as running
+                    auto project_filename = running_graph->GetFilename();
+                    std::string gui_state = this->get_state(state.graph_selected_uid, project_filename);
+                    this->SaveProjectToFile(state.graph_selected_uid, project_filename, gui_state);
+
+                    // 2] Request loading of this project
+                    this->request_load_projet_file = project_filename;
+
+                    // 3] Clear graph
+                    running_graph->Clear();
+
+                    // 4] Set graph running
                     running_graph->SetRunning(true);
 
-                    // Removed all calls and modules from core graph, but keep GUI graph untouched
+                    // 5] Remove all calls and modules from core graph, but keep GUI graph in project untouched
                     for (auto& call_ptr : last_running_graph->Calls()) {
                         Graph::QueueData queue_data;
                         auto caller_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLER);
@@ -1823,69 +1835,19 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
                         }
                     }
 
-                    // Push queue for new modules and calls
-                    for (auto& module_ptr : running_graph->Modules()) {
-                        Graph::QueueData queue_data;
-                        queue_data.name_id = module_ptr->FullName();
-                        queue_data.class_name = module_ptr->ClassName();
-                        running_graph->PushSyncQueue(Graph::QueueAction::ADD_MODULE, queue_data);
-                        if (module_ptr->IsGraphEntry()) {
-                            running_graph->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
-                        }
-                    }
-                    for (auto& call_ptr : running_graph->Calls()) {
-                        Graph::QueueData queue_data;
-                        queue_data.class_name = call_ptr->ClassName();
-                        auto caller_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLER);
-                        if (caller_ptr != nullptr) {
-                            if (caller_ptr->GetParentModule() != nullptr) {
-                                queue_data.caller =
-                                    caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->Name();
-                            }
-                        }
-                        auto callee_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLEE);
-                        if (callee_ptr != nullptr) {
-                            if (callee_ptr->GetParentModule() != nullptr) {
-                                queue_data.callee =
-                                    callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->Name();
-                            }
-                        }
-                        running_graph->PushSyncQueue(Graph::QueueAction::ADD_CALL, queue_data);
-                    }
+                    // 6] Graph is loaded to core and synchronized to empty running GUI graph
                 }
             }
             state.new_running_graph_uid = GUI_INVALID_ID;
         }
 
         // Save selected graph in configurator --------------------------------
-        bool confirmed, aborted;
-        bool popup_failed = false;
-        std::string project_filename;
-        GraphPtr_t graph_ptr;
-        if (state.configurator_graph_save) {
-            if (auto graph_ptr = this->GetGraph(state.graph_selected_uid)) {
-                project_filename = graph_ptr->GetFilename();
-            }
-        }
-        vislib::math::Ternary save_gui_state(
-            vislib::math::Ternary::TRI_FALSE); // Default for option asking for saving gui state
-        if (this->gui_file_browser.PopUp(project_filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
-                state.configurator_graph_save, "lua", save_gui_state)) {
-
-            std::string gui_state;
-            if (save_gui_state.IsTrue()) {
-                gui_state = this->get_state(state.graph_selected_uid, project_filename);
-            }
-
-            popup_failed = !this->SaveProjectToFile(state.graph_selected_uid, project_filename, gui_state);
-        }
-        MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
-            confirmed, "Cancel", aborted);
+        this->save_graph_dialog(state.graph_selected_uid, state.configurator_graph_save);
         state.configurator_graph_save = false;
 
         // Delete selected graph when tab is closed and unsaved changes should be discarded
-        confirmed = false;
-        aborted = false;
+        bool confirmed = false;
+        bool aborted = false;
         bool popup_open = MinimalPopUp::PopUp(
             "Closing unsaved Project", popup_close_unsaved, "Discard changes?", "Yes", confirmed, "No", aborted);
         if (this->gui_graph_delete_uid != GUI_INVALID_ID) {
@@ -1909,4 +1871,34 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
             "[GUI] Unknown Error. [%s, %s, line %d]\n", __FILE__, __FUNCTION__, __LINE__);
         return;
     }
+}
+
+
+bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool open_dialog) {
+
+    bool confirmed, aborted;
+    bool popup_failed = false;
+    std::string project_filename;
+    GraphPtr_t graph_ptr;
+    if (open_dialog) {
+        if (auto graph_ptr = this->GetGraph(graph_uid)) {
+            project_filename = graph_ptr->GetFilename();
+        }
+    }
+    // Default for option asking for saving gui state
+    vislib::math::Ternary save_gui_state(vislib::math::Ternary::TRI_FALSE);
+    if (this->gui_file_browser.PopUp(project_filename, FileBrowserWidget::FileBrowserFlag::SAVE, "Save Project",
+            open_dialog, "lua", save_gui_state)) {
+
+        std::string gui_state;
+        if (save_gui_state.IsTrue()) {
+            gui_state = this->get_state(graph_uid, project_filename);
+        }
+
+        popup_failed = !this->SaveProjectToFile(graph_uid, project_filename, gui_state);
+    }
+    MinimalPopUp::PopUp("Failed to Save Project", popup_failed, "See console log output for more information.", "",
+        confirmed, "Cancel", aborted);
+
+    return !popup_failed;
 }

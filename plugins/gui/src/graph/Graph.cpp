@@ -846,7 +846,6 @@ ImGuiID megamol::gui::Graph::AddGroupModule(const std::string& group_name, const
 void megamol::gui::Graph::Clear(void) {
 
     this->ResetStatePointers();
-    // Groups are implicitly deleted when last module of group is deleted.
 
     // 1) Delete all modules
     std::vector<ImGuiID> module_uids;
@@ -864,6 +863,15 @@ void megamol::gui::Graph::Clear(void) {
     }
     for (auto& call_uid : call_uids) {
         this->DeleteCall(call_uid);
+    }
+
+    // 3) Delete all groups
+    std::vector<ImGuiID> group_uids;
+    for (auto& group_ptr : this->groups) {
+        group_uids.emplace_back(group_ptr->UID());
+    }
+    for (auto& group_uid : group_uids) {
+        this->DeleteGroup(group_uid);
     }
 }
 
@@ -1420,12 +1428,6 @@ void megamol::gui::Graph::Draw(GraphState_t& state) {
                     popup_rename = true;
                 }
 
-                if (ImGui::MenuItem("Running", nullptr, this->IsRunning())) {
-                    if (!this->IsRunning()) {
-                        state.new_running_graph_uid = this->uid;
-                    }
-                }
-
                 if (!this->GetFilename().empty()) {
                     ImGui::Separator();
                     ImGui::TextDisabled("Filename");
@@ -1920,11 +1922,18 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     // RUNNING
     ImGui::BeginGroup();
     bool button = megamol::gui::ButtonWidgets::OptionButton("graph_running_button", "", this->IsRunning());
-    bool readonly = this->IsRunning();
+    bool empty_projectfile = this->GetFilename().empty();
+    bool readonly = (this->IsRunning() || empty_projectfile);
     if (readonly) {
         gui::GUIUtils::ReadOnlyWigetStyle(true);
     }
-    button |= ImGui::Button(((this->IsRunning()) ? ("Running") : ("Stopped")));
+    if (empty_projectfile) {
+        ImGui::PushStyleColor(ImGuiCol_Text, GUI_COLOR_TEXT_ERROR);
+    }
+    button |= ImGui::Button(((this->IsRunning()) ? ("Running") : ("Run")));
+    if (empty_projectfile) {
+        ImGui::PopStyleColor();
+    }
     if (readonly) {
         gui::GUIUtils::ReadOnlyWigetStyle(false);
     }
@@ -1932,8 +1941,12 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
         state.new_running_graph_uid = this->uid;
     }
     ImGui::EndGroup();
-    if (!this->IsRunning()) {
-        this->gui_tooltip.ToolTip("Click to run project.");
+    std::string tooltip_str;
+    if (empty_projectfile) {
+        tooltip_str.append("Save project to activate this option");
+    }
+    if (!tooltip_str.empty()) {
+        this->gui_tooltip.ToolTip(tooltip_str.c_str());
     }
 
     ImGui::Separator();

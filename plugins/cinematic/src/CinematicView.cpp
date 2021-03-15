@@ -131,6 +131,13 @@ CinematicView::CinematicView(void)
 
 CinematicView::~CinematicView(void) {
 
+    if (this->_fbo != nullptr) {
+        if (this->_fbo->IsEnabled()) {
+            this->_fbo->Disable();
+        }
+        this->_fbo->Release();
+        this->_fbo.reset();
+    }
     this->render_to_file_cleanup();
     this->Release();
 }

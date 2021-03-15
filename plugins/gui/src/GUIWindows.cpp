@@ -821,6 +821,17 @@ bool megamol::gui::GUIWindows::GetTriggeredScreenshot(void) {
 }
 
 
+std::string megamol::gui::GUIWindows::ConsumeProjectLoadRequest(void) {
+
+    auto project_file_name = this->state.request_load_projet_file;
+    this->state.request_load_projet_file.clear();
+    if (project_file_name.empty()) {
+        project_file_name = this->configurator.GetGraphCollection().ConsumeProjectLoadRequest();
+    }
+    return project_file_name;
+}
+
+
 void megamol::gui::GUIWindows::SetScale(float scale) {
     megamol::gui::gui_scaling.Set(scale);
     if (megamol::gui::gui_scaling.PendingChange()) {
