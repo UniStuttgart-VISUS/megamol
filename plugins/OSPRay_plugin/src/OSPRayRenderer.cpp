@@ -352,7 +352,7 @@ bool OSPRayRenderer::OnMouseButton(
     if (mods.test(core::view::Modifier::SHIFT) && action == core::view::MouseButtonAction::PRESS &&
         enablePickingSlot_.Param<core::param::BoolParam>()->Value()) {
         auto const screenX = mouseX / _imgSize[0];
-        auto const screenY = mouseY / _imgSize[1];
+        auto const screenY = 1.f - (mouseY / _imgSize[1]);
         auto const pick_res = _framebuffer->pick(*_renderer, *_camera, *_world, screenX, screenY);
 
         for (auto const& entry : _geometricModels) {
@@ -362,6 +362,7 @@ bool OSPRayRenderer::OnMouseButton(
                 if (fit != entry.second.end()) {
                     entry.first->setPickResult(std::distance(entry.second.begin(), fit), pick_res.primID);
                 }
+                //core::utility::log::Log::DefaultLog.WriteInfo("[OSPRayRenderer] Pick result %d", pick_res.primID);
             }
         }
 
