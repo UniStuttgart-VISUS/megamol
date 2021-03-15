@@ -102,20 +102,23 @@ bool OSPRayMeshGeometry::readData(megamol::core::Call& call) {
                     auto data = fcr->getData();
                     auto version = fcr->version();
                     data->validateFlagCount(mesh_prefix_count_.back());
-                    fcw->setData(data, version + 1);
-                    (*fcw)(core::FlagCallWrite_CPU::CallGetData);
+                    /*fcw->setData(data, version + 1);
+                    (*fcw)(core::FlagCallWrite_CPU::CallGetData);*/
                 }
             }
         }
         if (fcw != nullptr && fcr != nullptr && !mesh_prefix_count_.empty()) {
-            if ((*fcr)(core::FlagCallWrite_CPU::CallGetData)) {
-                auto data = fcr->getData();
-                auto version = fcr->version();
+            auto const idx = os->getPickResult();
+            if (std::get<0>(idx) != -1 && std::get<0>(idx) < mesh_prefix_count_.size()) {
+                if ((*fcr)(core::FlagCallWrite_CPU::CallGetData)) {
+                    auto data = fcr->getData();
+                    auto version = fcr->version();
 
-                auto const idx = os->getPickResult();
-                if (std::get<0>(idx) != -1 && std::get<0>(idx) < mesh_prefix_count_.size()) {
                     auto const base_idx = std::get<0>(idx) == 0 ? 0 : mesh_prefix_count_[std::get<0>(idx) - 1];
                     auto const a_idx = base_idx + std::get<1>(idx);
+                    /*core::utility::log::Log::DefaultLog.WriteInfo(
+                        "[OSPRayMeshGeometry] Got prim id %d, setting id %d", std::get<1>(idx), a_idx);*/
+
                     if (a_idx < mesh_prefix_count_.back()) {
                         auto const cur_sel = data->flags->operator[](a_idx);
                         data->flags->operator[](a_idx) = cur_sel == core::FlagStorage::ENABLED
