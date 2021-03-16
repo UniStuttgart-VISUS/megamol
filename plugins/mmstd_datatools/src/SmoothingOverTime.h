@@ -74,7 +74,7 @@ private:
 
     std::size_t out_data_hash_ = 0;
 
-    int frame_id_ = 0;
+    int frame_id_ = -1;
 
     std::vector<std::vector<float>> smoothed_icol_;
 
