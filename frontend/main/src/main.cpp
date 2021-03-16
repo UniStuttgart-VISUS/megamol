@@ -18,6 +18,7 @@
 #include "OpenGL_GLFW_Service.hpp"
 #include "Screenshot_Service.hpp"
 #include "ProjectLoader_Service.hpp"
+#include "ImagePresentation_Service.hpp"
 
 
 static void log(std::string const& text) {
@@ -117,6 +118,10 @@ int main(const int argc, const char** argv) {
     megamol::frontend::ProjectLoader_Service::Config projectloaderConfig;
     projectloader_service.setPriority(1);
 
+    megamol::frontend::ImagePresentation_Service imagepresentation_service;
+    megamol::frontend::ImagePresentation_Service::Config imagepresentationConfig;
+    imagepresentation_service.setPriority(3); // before render: do things after GL; post render: do things before GL
+
 #ifdef MM_CUDA_ENABLED
     megamol::frontend::CUDA_Service cuda_service;
     cuda_service.setPriority(24);
@@ -143,6 +148,7 @@ int main(const int argc, const char** argv) {
     services.add(screenshot_service, &screenshotConfig);
     services.add(framestatistics_service, &framestatisticsConfig);
     services.add(projectloader_service, &projectloaderConfig);
+    services.add(imagepresentation_service, &imagepresentationConfig);
 #ifdef MM_CUDA_ENABLED
     services.add(cuda_service, nullptr);
 #endif
@@ -198,6 +204,7 @@ int main(const int argc, const char** argv) {
         {
             services.preGraphRender(); // e.g. start frame timer, clear render buffers
 
+            imagepresentation_service.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
             graph.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
 
             services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
@@ -205,12 +212,17 @@ int main(const int argc, const char** argv) {
 
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
 
+        imagepresentation_service.PresentRenderedImages(); // draws rendering results to GLFW window, writes images to disk, sends images via network...
         return true;
     };
 
     // lua can issue rendering of frames, we provide a resource for this
     const std::function<bool()> render_next_frame_func = [&]() -> bool { return render_next_frame(); };
     services.getProvidedResources().push_back({"RenderNextFrame", render_next_frame_func});
+
+    // image presentation service needs to assign frontend resources to entry points
+    auto& frontend_resources = services.getProvidedResources();
+    services.getProvidedResources().push_back({"FrontendResources",frontend_resources});
 
     // distribute registered resources among registered services.
     const bool resources_ok = services.assignRequestedResources();
@@ -223,7 +235,6 @@ int main(const int argc, const char** argv) {
         run_megamol = false;
     }
 
-    auto frontend_resources = services.getProvidedResources();
     bool graph_resources_ok = graph.AddFrontendResources(frontend_resources);
     if (!graph_resources_ok) {
         log_error("Graph did not get resources he needs from frontend. Abort.");
