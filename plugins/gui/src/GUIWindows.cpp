@@ -395,7 +395,7 @@ bool GUIWindows::PostDraw(void) {
                         for (auto& param : module_ptr->Parameters()) {
                             std::string param_full_name = module_full_name + "::" + param.FullName();
                             if ((wc.tfe_active_param == param_full_name) &&
-                                (param.Type() == Param_t::TRANSFERFUNCTION)) {
+                                (param.Type() == ParamType_t::TRANSFERFUNCTION)) {
                                 this->tf_editor_ptr->SetConnectedParameter(&param, param_full_name);
                                 param.TransferFunctionEditor_ConnectExternal(this->tf_editor_ptr, true);
                             }
@@ -711,7 +711,7 @@ bool GUIWindows::OnKey(core::view::Key key, core::view::KeyAction action, core::
                 break;
             }
             for (auto& param : module_ptr->Parameters()) {
-                if (param.Type() == Param_t::BUTTON) {
+                if (param.Type() == ParamType_t::BUTTON) {
                     auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
                     if (this->isHotkeyPressed(keyCode)) {
                         // Sync directly button action to parameter in core
@@ -825,9 +825,6 @@ std::string megamol::gui::GUIWindows::ConsumeProjectLoadRequest(void) {
 
     auto project_file_name = this->state.request_load_projet_file;
     this->state.request_load_projet_file.clear();
-    if (project_file_name.empty()) {
-        project_file_name = this->configurator.GetGraphCollection().ConsumeProjectLoadRequest();
-    }
     return project_file_name;
 }
 
@@ -2209,7 +2206,7 @@ void GUIWindows::checkMultipleHotkeyAssignement(void) {
             for (auto& module_ptr : graph_ptr->Modules()) {
                 for (auto& param : module_ptr->Parameters()) {
 
-                    if (param.Type() == Param_t::BUTTON) {
+                    if (param.Type() == ParamType_t::BUTTON) {
                         auto keyCode = param.GetStorage<megamol::core::view::KeyCode>();
                         // Ignore not set hotekey
                         if (keyCode.key == core::view::Key::KEY_UNKNOWN) {

@@ -19,7 +19,6 @@ megamol::gui::GraphCollection::GraphCollection(void)
         , modules_stock()
         , calls_stock()
         , graph_name_uid(0)
-        , request_load_projet_file()
         , gui_file_browser()
         , gui_graph_delete_uid(GUI_INVALID_ID) {}
 
@@ -1217,7 +1216,7 @@ bool megamol::gui::GraphCollection::SaveProjectToFile(
                         // - For other graphs only write parameters with other values than the default
                         // - Ignore button parameters
                         if ((graph_ptr->IsRunning() || parameter.DefaultValueMismatch()) &&
-                            (parameter.Type() != Param_t::BUTTON)) {
+                            (parameter.Type() != ParamType_t::BUTTON)) {
                             // Encode to UTF-8 string
                             vislib::StringA valueString;
                             vislib::UTF8Encoder::Encode(
@@ -1789,21 +1788,10 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
             if (last_running_graph != nullptr) {
                 if (auto running_graph = this->GetGraph(state.new_running_graph_uid)) {
 
-                    // 1] Save project which should be loaded as running
-                    auto project_filename = running_graph->GetFilename();
-                    std::string gui_state = this->get_state(state.graph_selected_uid, project_filename);
-                    this->SaveProjectToFile(state.graph_selected_uid, project_filename, gui_state);
-
-                    // 2] Request loading of this project
-                    this->request_load_projet_file = project_filename;
-
-                    // 3] Clear graph
-                    running_graph->Clear();
-
-                    // 4] Set graph running
+                    // 1] Set new graph running to enable queue
                     running_graph->SetRunning(true);
 
-                    // 5] Remove all calls and modules from core graph, but keep GUI graph in project untouched
+                    // 2] Remove all calls and modules from core graph, but keep stopped GUI graph in project untouched
                     for (auto& call_ptr : last_running_graph->Calls()) {
                         Graph::QueueData queue_data;
                         auto caller_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLER);
@@ -1835,7 +1823,44 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
                         }
                     }
 
-                    // 6] Graph is loaded to core and synchronized to empty running GUI graph
+                    // 3] Create new modules and calls in core graph, but keep newly running GUI graph in project
+                    // untouched
+                    for (auto& module_ptr : running_graph->Modules()) {
+                        Graph::QueueData queue_data;
+                        queue_data.name_id = module_ptr->FullName();
+                        queue_data.class_name = module_ptr->ClassName();
+                        running_graph->PushSyncQueue(Graph::QueueAction::ADD_MODULE, queue_data);
+                        if (module_ptr->IsGraphEntry()) {
+                            running_graph->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                        }
+                        // Set all parameters in GUI graph dirty in order to propagate current values to new core
+                        // modules
+                        for (auto& param : module_ptr->Parameters()) {
+                            if (param.Type() != ParamType_t::BUTTON) {
+                                param.ForceSetValueDirty();
+                                param.ForceSetGUIStateDirty();
+                            }
+                        }
+                    }
+                    for (auto& call_ptr : running_graph->Calls()) {
+                        Graph::QueueData queue_data;
+                        queue_data.class_name = call_ptr->ClassName();
+                        auto caller_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLER);
+                        if (caller_ptr != nullptr) {
+                            if (caller_ptr->GetParentModule() != nullptr) {
+                                queue_data.caller =
+                                    caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->Name();
+                            }
+                        }
+                        auto callee_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLEE);
+                        if (callee_ptr != nullptr) {
+                            if (callee_ptr->GetParentModule() != nullptr) {
+                                queue_data.callee =
+                                    callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->Name();
+                            }
+                        }
+                        running_graph->PushSyncQueue(Graph::QueueAction::ADD_CALL, queue_data);
+                    }
                 }
             }
             state.new_running_graph_uid = GUI_INVALID_ID;

@@ -98,16 +98,6 @@ namespace gui {
 
         void Draw(GraphState_t& state);
 
-        /**
-         * Pass project load request.
-         * Request is consumed when calling this function.
-         */
-        std::string ConsumeProjectLoadRequest(void) {
-            auto project_file_name = this->request_load_projet_file;
-            this->request_load_projet_file.clear();
-            return project_file_name;
-        }
-
     private:
         // VARIABLES --------------------------------------------------------------
 
@@ -115,7 +105,6 @@ namespace gui {
         ModuleStockVector_t modules_stock;
         CallStockVector_t calls_stock;
         unsigned int graph_name_uid;
-        std::string request_load_projet_file;
 
         FileBrowserWidget gui_file_browser;
         ImGuiID gui_graph_delete_uid;

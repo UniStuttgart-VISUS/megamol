@@ -68,7 +68,7 @@
 #include "vislib/math/Ternary.h"
 
 
-#define GUI_VERBOSE
+/// #define GUI_VERBOSE
 
 #define GUI_INVALID_ID (UINT_MAX)
 #define GUI_SLOT_RADIUS (8.0f * megamol::gui::gui_scaling.Get())
@@ -216,7 +216,7 @@ namespace gui {
     typedef std::array<megamol::gui::HotkeyData_t, megamol::gui::HotkeyIndex::INDEX_COUNT> HotkeyArray_t;
 
     typedef megamol::core::param::AbstractParamPresentation::Presentation Present_t;
-    typedef megamol::core::param::AbstractParamPresentation::ParamType Param_t;
+    typedef megamol::core::param::AbstractParamPresentation::ParamType ParamType_t;
     typedef std::map<int, std::string> EnumStorage_t;
 
     typedef std::array<float, 5> FontScalingArray_t;
