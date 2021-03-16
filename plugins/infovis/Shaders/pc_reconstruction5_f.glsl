@@ -1,10 +1,8 @@
 //#version 440
-uniform sampler2D src_tex2D;
+layout (binding = 4) uniform sampler2D src_tex2D;
 
 layout (binding=5, rgba32f) uniform image2D StoreA;
 layout (binding=6, rgba32f) uniform image2D StoreB;
-
-layout (binding = 4, rgba32f) uniform image2DArray StoreArray;
 
 uniform int frametype;
 uniform int h;
@@ -43,4 +41,5 @@ void main()
     }
     //imageStore(StoreArray, ivec3(iCoord.x, iCoord.y, frametype % 2), imageLoad(StoreB, iCoord));
     //frag_out = imageLoad(StoreArray, ivec3(iCoord.x, iCoord.y, frametype % 2));
+    //frag_out = texture(src_tex2D, uv_coord);
 }

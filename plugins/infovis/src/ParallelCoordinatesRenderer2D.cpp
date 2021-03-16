@@ -1484,10 +1484,10 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     auto bg = call.BackgroundColor();
     int ssLevel = this->superSamplingLevelSlot.Param<core::param::IntParam>()->Value();
 
-    backgroundColor[0] = bg[0] / 255.0f;
-    backgroundColor[1] = bg[1] / 255.0f;
-    backgroundColor[2] = bg[2] / 255.0f;
-    backgroundColor[3] = bg[3] / 255.0f;
+    backgroundColor[0] = bg[0];
+    backgroundColor[1] = bg[1];
+    backgroundColor[2] = bg[2];
+    backgroundColor[3] = bg[3];
 
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &origFBO);
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &origFBOr);
@@ -1499,7 +1499,7 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     int approach = this->approachSlot.Param<core::param::IntParam>()->Value();
 
     glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
-    glClear(GL_COLOR_BUFFER_BIT);
+    //glClear(GL_COLOR_BUFFER_BIT);
     // Intel MSAA 2 frame restoration
     setupAccel(approach, windowWidth, windowHeight, ssLevel);
 

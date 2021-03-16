@@ -310,12 +310,11 @@ void InfovisAmortizedRenderer::setupAccel(int approach, int ow, int oh, int ssLe
             projMatrix_column[i] = glm::value_ptr(pm)[i];
 
         glBindFramebuffer(GL_FRAMEBUFFER, amortizedPushFBO);
-        glActiveTexture(GL_TEXTURE10);
+        glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, pushImage);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_FLOAT, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, GL_FLOAT, 0);
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, pushImage, 0);
     }
-
     glClear(GL_COLOR_BUFFER_BIT);
     glViewport(0, 0, w, h);
 
@@ -408,9 +407,9 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
                     glm::fvec3((-1.0 * (float) a - 1.0 - 2.0 * i) / w, ((float) a - 1.0 - 2.0 * j) / h, 0.0);
             }
         }
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, imStoreArray);
-        glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA32F, w, h, 2);
+        //glActiveTexture(GL_TEXTURE4);
+        //glBindTexture(GL_TEXTURE_2D, pushImage);
+        //glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
         glActiveTexture(GL_TEXTURE5);
         glBindTexture(GL_TEXTURE_2D, imStoreA);
         glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, w, h);
@@ -422,7 +421,6 @@ void InfovisAmortizedRenderer::resizeArrays(int approach, int w, int h, int ssLe
 
 bool InfovisAmortizedRenderer::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
-    megamol::core::utility::log::Log::DefaultLog.WriteInfo("yes, maybe");
     auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
     if (cr) {
         megamol::core::view::InputEvent evt;
@@ -431,8 +429,7 @@ bool InfovisAmortizedRenderer::OnMouseButton(
         evt.mouseButtonData.action = action;
         evt.mouseButtonData.mods = mods;
         cr->SetInputEvent(evt);
-        if ((*cr)(megamol::core::view::CallRender2DGL::FnOnMouseButton))
-            return true;
+        return (*cr)(megamol::core::view::CallRender2DGL::FnOnMouseButton);
     }
     return false;
 }
@@ -448,20 +445,20 @@ bool InfovisAmortizedRenderer::OnMouseMove(double x, double y) {
         if ((*cr)(megamol::core::view::CallRender2DGL::FnOnMouseMove))
             return true;
     }
+    return false;
 }
 
 bool InfovisAmortizedRenderer::OnMouseScroll(double dx, double dy) {
     auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
-    if (cr == NULL)
-        return false;
-
-    megamol::core::view::InputEvent evt;
-    evt.tag = megamol::core::view::InputEvent::Tag::MouseScroll;
-    evt.mouseScrollData.dx = dx;
-    evt.mouseScrollData.dy = dy;
-    cr->SetInputEvent(evt);
-    if (!(*cr)(megamol::core::view::CallRender2DGL::FnOnMouseScroll))
-        return false;
+    if (cr) {
+        megamol::core::view::InputEvent evt;
+        evt.tag = megamol::core::view::InputEvent::Tag::MouseScroll;
+        evt.mouseScrollData.dx = dx;
+        evt.mouseScrollData.dy = dy;
+        cr->SetInputEvent(evt);
+        if (!(*cr)(megamol::core::view::CallRender2DGL::FnOnMouseScroll))
+            return true;
+    }
     return false;
 }
 
@@ -469,28 +466,30 @@ bool InfovisAmortizedRenderer::OnChar(unsigned int codePoint) {
     auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
     if (cr == NULL)
         return false;
+    if (cr) {
 
-    megamol::core::view::InputEvent evt;
-    evt.tag = megamol::core::view::InputEvent::Tag::Char;
-    evt.charData.codePoint = codePoint;
-    cr->SetInputEvent(evt);
-    (*cr)(megamol::core::view::CallRender2DGL::FnOnChar);
+        megamol::core::view::InputEvent evt;
+        evt.tag = megamol::core::view::InputEvent::Tag::Char;
+        evt.charData.codePoint = codePoint;
+        cr->SetInputEvent(evt);
+        if ((*cr)(megamol::core::view::CallRender2DGL::FnOnChar))
+            return true;       
+    }
     return false;
 }
 
 bool InfovisAmortizedRenderer::OnKey(
     megamol::core::view::Key key, megamol::core::view::KeyAction action, megamol::core::view::Modifiers mods) {
     auto* cr = this->nextRendererSlot.CallAs<megamol::core::view::CallRender2DGL>();
-    if (cr == NULL)
-        return false;
-
-    megamol::core::view::InputEvent evt;
-    evt.tag = megamol::core::view::InputEvent::Tag::Key;
-    evt.keyData.key = key;
-    evt.keyData.action = action;
-    evt.keyData.mods = mods;
-    cr->SetInputEvent(evt);
-    (*cr)(megamol::core::view::CallRender2DGL::FnOnKey);
+    if (cr) {
+        megamol::core::view::InputEvent evt;
+        evt.tag = megamol::core::view::InputEvent::Tag::Key;
+        evt.keyData.key = key;
+        evt.keyData.action = action;
+        evt.keyData.mods = mods;
+        cr->SetInputEvent(evt);
+        if((*cr)(megamol::core::view::CallRender2DGL::FnOnKey)) return true;
+    }
     return false;
 }
 
@@ -532,9 +531,8 @@ void InfovisAmortizedRenderer::doReconstruction(int approach, int w, int h, int 
         glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("StoreB"), 6);
 
         glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, imStoreArray);
-        glBindImageTexture(4, imStoreArray, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F);
-        glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("StoreArray"), 4);
+        glBindTexture(GL_TEXTURE_2D, pushImage);
+        glUniform1i(pc_reconstruction_shdr_array[approach]->ParameterLocation("src_tex2D"), 4);
     }
     glUniformMatrix4fv(
         pc_reconstruction_shdr_array[approach]->ParameterLocation("moveM"), 1, GL_FALSE, &movePush[0][0]);
@@ -609,7 +607,7 @@ bool InfovisAmortizedRenderer::Render(core::view::CallRender2DGL& call) {
 
         // send call to next renderer in line
         (*cr2d)(core::view::AbstractCallRender::FnRender);
-
+        glClearColor(bg.x, bg.y, bg.z, bg.a);
         doReconstruction(approach, w, h, ssLevel);
 
         // to avoid excessive resizing, retain last render variables and check if changed
