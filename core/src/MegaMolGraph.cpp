@@ -635,8 +635,9 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string moduleName) 
     return true;
 }
 
-void megamol::core::MegaMolGraph::AddModuleDependencies(std::vector<megamol::frontend::FrontendResource> const& resources) {
+bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::frontend::FrontendResource> const& resources) {
     this->provided_resources.insert(provided_resources.end(), resources.begin(), resources.end());
+    return true;
 }
 
 megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenience() {

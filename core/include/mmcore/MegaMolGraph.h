@@ -140,7 +140,7 @@ public:
 
     void RenderNextFrame();
 
-    void AddModuleDependencies(std::vector<megamol::frontend::FrontendResource> const& resources);
+    bool AddFrontendResources(std::vector<megamol::frontend::FrontendResource> const& resources);
 
     // shut down all calls, modules, graph entry points
     void Clear();
