@@ -136,8 +136,6 @@ public:
 
     bool RemoveGraphEntryPoint(std::string moduleName);
 
-    void RenderNextFrame();
-
     bool AddFrontendResources(std::vector<megamol::frontend::FrontendResource> const& resources);
 
     // shut down all calls, modules, graph entry points

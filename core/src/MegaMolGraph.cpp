@@ -447,10 +447,6 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
     return true;
 }
 
-
-void megamol::core::MegaMolGraph::RenderNextFrame() {
-}
-
 megamol::core::Module::ptr_type megamol::core::MegaMolGraph::FindModule(std::string const& moduleName) const {
     auto module_it = find_module(moduleName);
 

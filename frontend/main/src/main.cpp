@@ -205,7 +205,6 @@ int main(const int argc, const char** argv) {
             services.preGraphRender(); // e.g. start frame timer, clear render buffers
 
             imagepresentation_service.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
-            graph.RenderNextFrame(); // executes graph views, those digest input events like keyboard/mouse, then render
 
             services.postGraphRender(); // render GUI, glfw swap buffers, stop frame timer
         }
@@ -213,6 +212,7 @@ int main(const int argc, const char** argv) {
         services.resetProvidedResources(); // clear buffers holding glfw keyboard+mouse input
 
         imagepresentation_service.PresentRenderedImages(); // draws rendering results to GLFW window, writes images to disk, sends images via network...
+
         return true;
     };
 
