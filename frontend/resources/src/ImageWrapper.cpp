@@ -72,3 +72,44 @@ size_t megamol::frontend_resources::channels_count(ImageWrapper::DataChannels ch
     }
 }
 
+#define images \
+    (*(static_cast< std::list<std::pair<std::string, megamol::frontend_resources::ImageWrapper>>* >(pimpl)))
+
+megamol::frontend_resources::ImageWrapper& megamol::frontend_resources::ImageRegistry::make(std::string const& name) {
+    images.push_back({name, megamol::frontend_resources::ImageWrapper{}});
+    updates = true;
+    return images.back().second;
+}
+bool megamol::frontend_resources::ImageRegistry::rename(std::string const& old_name, std::string const& new_name) {
+    auto find_it = std::find_if(images.begin(), images.end(), [&](auto const& elem) { return elem.first == old_name; });
+    if (find_it == images.end())
+        return false;
+
+    find_it->first = new_name;
+    updates = true;
+    return true;
+}
+bool megamol::frontend_resources::ImageRegistry::remove(std::string const& name) {
+    auto find_it = std::find_if(images.begin(), images.end(), [&](auto const& elem) { return elem.first == name; });
+    if (find_it == images.end())
+        return false;
+
+    images.erase(find_it);
+    updates = true;
+    return true;
+}
+std::optional<std::reference_wrapper<megamol::frontend_resources::ImageWrapper const>>
+megamol::frontend_resources::ImageRegistry::find(std::string const& name) const {
+    auto find_it = std::find_if(images.begin(), images.end(), [&](auto const& elem) { return elem.first == name; });
+    if (find_it == images.end())
+        return std::nullopt;
+
+    return std::make_optional(std::reference_wrapper<megamol::frontend_resources::ImageWrapper const>{find_it->second});
+}
+void megamol::frontend_resources::ImageRegistry::iterate_over_entries(
+    std::function<void(std::string /*name*/, ImageWrapper const& /*image*/)> const& callback) const
+{
+    std::for_each(images.begin(), images.end(), [&](auto const& elem) { callback(elem.first, elem.second); });
+}
+#undef images
+

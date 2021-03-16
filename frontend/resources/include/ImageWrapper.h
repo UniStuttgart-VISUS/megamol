@@ -71,5 +71,20 @@ ImageWrapper wrap_image(ImageWrapper::ImageSize size, std::vector<unsigned char>
 
 size_t channels_count(ImageWrapper::DataChannels channels);
 
+struct ImageRegistry {
+    ImageWrapper& make(std::string const& name);
+    bool rename(std::string const& old_name, std::string const& new_name);
+    bool remove(std::string const& name);
+    std::optional<std::reference_wrapper<ImageWrapper const>> find(std::string const& name) const;
+
+    bool has_updates() const { return updates; }
+    void set_updates(bool update = true) { updates = update; }
+
+    void iterate_over_entries(std::function<void(std::string /*name*/, ImageWrapper const& /*image*/)> const& callback) const;
+
+    void* pimpl = nullptr;
+    bool updates = false;
+};
+
 } /* end namespace frontend_resources */
 } /* end namespace megamol */
