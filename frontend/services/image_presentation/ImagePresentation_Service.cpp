@@ -9,6 +9,8 @@
 // you should also delete the FAQ comments in these template files after you read and understood them
 #include "ImagePresentation_Service.hpp"
 
+#include "mmcore/view/AbstractView_EventConsumption.h"
+
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
 
@@ -64,6 +66,7 @@ bool ImagePresentation_Service::init(const Config& config) {
 
     this->m_requestedResourcesNames =
     {
+        "FrontendResources" // std::vector<FrontendResource>
     };
 
     log("initialized successfully");
@@ -111,7 +114,74 @@ void ImagePresentation_Service::RenderNextFrame() {
 void ImagePresentation_Service::PresentRenderedImages() {
 }
 
+// clang-format off
+using FrontendResource = megamol::frontend::FrontendResource;
+using EntryPointExecutionCallback = std::function<bool(void*, std::vector<FrontendResource> const&, ImageWrapper&)>;
+
+using EntryPointInitFunctions =
+std::tuple<
+    // rendering execution function
+    EntryPointExecutionCallback,
+    // set inital state function
+    EntryPointExecutionCallback,
+    // get requested resources function
+    std::function<std::vector<std::string>()>
+>;
+// clang-format on
+static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
+    if (auto module_ptr = static_cast<megamol::core::Module*>(ptr); module_ptr != nullptr) {
+        if (auto view_ptr = dynamic_cast<megamol::core::view::AbstractView*>(module_ptr); view_ptr != nullptr) {
+            return EntryPointInitFunctions{
+                std::function{megamol::core::view::view_rendering_execution},
+                std::function{megamol::core::view::view_init_rendering_state},
+                std::function{megamol::core::view::get_gl_view_runtime_resources_requests}
+            };
+        }
+    }
+
+    log_error("Fatal Error setting Graph Entry Point callback functions. Unknown Entry Point type.");
+    throw std::exception("Fatal Error setting Graph Entry Point callback functions");
+}
+
+std::vector<FrontendResource> ImagePresentation_Service::map_resources(std::vector<std::string> const& requests) {
+    auto& frontend_resources = m_requestedResourceReferences[0].getResource<std::vector<megamol::frontend::FrontendResource>>();
+
+    std::vector<FrontendResource> result;
+
+    for (auto& request: requests) {
+        auto find_it = std::find_if(frontend_resources.begin(), frontend_resources.end(),
+            [&](FrontendResource const& resource) { return resource.getIdentifier() == request; });
+
+        if (find_it == frontend_resources.end())
+            return {};
+
+        result.push_back(*find_it);
+    }
+
+    return result;
+}
+
 bool ImagePresentation_Service::add_entry_point(std::string name, void* module_raw_ptr) {
+    auto& image = m_image_registry_resource.make(name);
+
+    auto [execute_etry, init_entry, entry_resource_requests] = get_init_execute_resources(module_raw_ptr);
+
+    auto resource_requests = entry_resource_requests();
+    auto resources = map_resources(resource_requests);
+
+    if (resources.empty() && !resource_requests.empty())
+        return false;
+
+    if (!init_entry(module_raw_ptr, resources, image))
+        return false;
+
+    m_entry_points.push_back(GraphEntryPoint{
+        name,
+        module_raw_ptr,
+        resources,
+        execute_etry,
+        image
+        });
 
     return true;
 }
