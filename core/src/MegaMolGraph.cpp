@@ -585,12 +585,12 @@ std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::L
     return parameters;
 }
 
-bool megamol::core::MegaMolGraph::SetGraphEntryPoint(
-    std::string moduleName,
-    std::vector<std::string> execution_resource_requests,
-    EntryPointExecutionCallback render_callback,
-    EntryPointExecutionCallback init_callback)
+bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName)
 {
+    auto execution_resource_requests = megamol::core::view::get_gl_view_runtime_resources_requests();
+    auto render_callback = megamol::core::view::view_rendering_execution;
+    auto init_callback = megamol::core::view::view_init_rendering_state;
+
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {

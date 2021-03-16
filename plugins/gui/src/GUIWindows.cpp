@@ -962,9 +962,7 @@ bool megamol::gui::GUIWindows::SynchronizeGraphs(megamol::core::MegaMolGraph* me
             } break;
             case (Graph::QueueAction::CREATE_GRAPH_ENTRY): {
                 if (megamol_graph != nullptr) {
-                    megamol_graph->SetGraphEntryPoint(data.name_id,
-                        megamol::core::view::get_gl_view_runtime_resources_requests(),
-                        megamol::core::view::view_rendering_execution, megamol::core::view::view_init_rendering_state);
+                    megamol_graph->SetGraphEntryPoint(data.name_id);
                 } else if ((this->core_instance != nullptr) &&
                            core_instance->IsmmconsoleFrontendCompatible()) { /// mmconsole
                     /* XXX Currently not supported by core graph
