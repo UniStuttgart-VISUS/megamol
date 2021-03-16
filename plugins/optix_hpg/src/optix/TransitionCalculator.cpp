@@ -44,6 +44,7 @@ megamol::optix_hpg::TransitionCalculator::TransitionCalculator()
     auto ep = new core::param::EnumParam(static_cast<output_type_ut>(output_type::outbound));
     ep->SetTypePair(static_cast<output_type_ut>(output_type::inbound), "inbound");
     ep->SetTypePair(static_cast<output_type_ut>(output_type::outbound), "outbound");
+    ep->SetTypePair(static_cast<output_type_ut>(output_type::diff), "diff");
     output_type_slot_ << ep;
     MakeSlotAvailable(&output_type_slot_);
 
@@ -396,8 +397,8 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
             CUDA_CHECK_ERROR(cuMemsetD8Async(ray_state, 0, ray_vec.size(), optix_ctx_->GetExecStream()));
 
 
-            mesh_sbt_record.data.mesh_inbound_ctr_ptr = (std::uint32_t*) mesh_inbound_ctr;
-            mesh_sbt_record.data.mesh_outbound_ctr_ptr = (std::uint32_t*) mesh_outbound_ctr;
+            mesh_sbt_record.data.mesh_inbound_ctr_ptr = (std::int32_t*) mesh_inbound_ctr;
+            mesh_sbt_record.data.mesh_outbound_ctr_ptr = (std::int32_t*) mesh_outbound_ctr;
             mesh_sbt_record.data.ray_state = (std::uint8_t*) ray_state;
             mesh_sbt_record.data.ray_buffer = (void*) ray_buffer_.back();
             mesh_sbt_record.data.num_rays = ray_vec.size();
@@ -438,8 +439,8 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
         }
         file.close();*/
 
-        std::vector<std::uint32_t> mesh_inbound_vec(num_vertices / 3, 0);
-        std::vector<std::uint32_t> mesh_outbound_vec(num_vertices / 3, 0);
+        std::vector<std::int32_t> mesh_inbound_vec(num_vertices / 3, 0);
+        std::vector<std::int32_t> mesh_outbound_vec(num_vertices / 3, 0);
         std::vector<std::uint8_t> ray_state_vec(ray_vec.size());
 
         CUDA_CHECK_ERROR(cuMemcpyDtoHAsync(mesh_inbound_vec.data(), mesh_inbound_ctr,
@@ -472,6 +473,7 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
         using output_type_ut = std::underlying_type_t<output_type>;
         auto const type = static_cast<output_type>(output_type_slot_.Param<core::param::EnumParam>()->Value());
         auto data_ptr = &mesh_outbound_vec;
+        std::vector<int> diff_vec(mesh_outbound_vec.size());
         switch (type) {
         case output_type::inbound: {
             data_ptr = &mesh_inbound_vec;
@@ -552,6 +554,11 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
             //    indices.push_back(idx.y);
             //    indices.push_back(idx.z);
             //}
+        } break;
+        case output_type::diff: {
+            std::transform(mesh_outbound_vec.begin(), mesh_outbound_vec.end(), mesh_inbound_vec.begin(),
+                diff_vec.begin(), [](auto out, auto in) { return static_cast<int>(out) - static_cast<int>(in); });
+            data_ptr = &diff_vec;
         } break;
         }
         colors.clear();

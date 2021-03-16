@@ -53,7 +53,7 @@ protected:
     void release() override;
 
 private:
-    enum class output_type : std::uint8_t { outbound, inbound };
+    enum class output_type : std::uint8_t { outbound, inbound, diff };
 
     bool init();
 
