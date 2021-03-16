@@ -13,26 +13,60 @@ namespace optix_hpg {
 
             const auto& self = getProgramData<TransitionCalculatorData>();
 
-            auto ray_state = self.ray_state[primID];
+            auto const index = optixGetLaunchIndex();
+            auto const dim = optixGetLaunchDimensions();
+
+            auto const rayIdx = index.x + index.y * dim.x;
+
+            auto ray_state = self.ray_state[rayIdx];
 
             if (optixIsTriangleFrontFaceHit()) {
                 ++(self.mesh_inbound_ctr_ptr[primID]);
                 if (ray_state == 0) {
-                    self.ray_state[primID] = 2;
+                    self.ray_state[rayIdx] = 2;
                 }
                 if (ray_state == 1) {
-                    self.ray_state[primID] = 3;
-                }
-            } else if (optixIsTriangleBackFaceHit()) {
-                ++(self.mesh_outbound_ctr_ptr[primID]);
-                if (ray_state == 0) {
-                    self.ray_state[primID] = 1;
-                }
-                if (ray_state == 2) {
-                    self.ray_state[primID] = 4;
+                    self.ray_state[rayIdx] = 3;
                 }
             }
+            if (optixIsTriangleBackFaceHit()) {
+                ++(self.mesh_outbound_ctr_ptr[primID]);
+                if (ray_state == 0) {
+                    self.ray_state[rayIdx] = 1;
+                }
+                if (ray_state == 2) {
+                    self.ray_state[rayIdx] = 4;
+                }
+            }
+            //++(self.ray_state[primID]);
         }
+
+        //MM_OPTIX_ANYHIT_KERNEL(tc_anyhit)() {
+        //    const int primID = optixGetPrimitiveIndex();
+        //    // PerRayData& prd = getPerRayData<PerRayData>();
+
+        //    const auto& self = getProgramData<TransitionCalculatorData>();
+
+        //    auto ray_state = self.ray_state[primID];
+
+        //    if (optixIsTriangleFrontFaceHit()) {
+        //        ++(self.mesh_inbound_ctr_ptr[primID]);
+        //        if (ray_state == 0) {
+        //            self.ray_state[primID] = 2;
+        //        }
+        //        if (ray_state == 1) {
+        //            self.ray_state[primID] = 3;
+        //        }
+        //    } else if (optixIsTriangleBackFaceHit()) {
+        //        ++(self.mesh_outbound_ctr_ptr[primID]);
+        //        if (ray_state == 0) {
+        //            self.ray_state[primID] = 1;
+        //        }
+        //        if (ray_state == 2) {
+        //            self.ray_state[primID] = 4;
+        //        }
+        //    }
+        //}
 
         MM_OPTIX_RAYGEN_KERNEL(tc_raygen_program)() {
             const auto& self = getProgramData<TransitionCalculatorData>();

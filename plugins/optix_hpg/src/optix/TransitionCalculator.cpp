@@ -194,6 +194,7 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
 
     OptixBuildInput build_input = {};
     unsigned int geo_flag = OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT;
+    //unsigned int geo_flag = OPTIX_GEOMETRY_FLAG_REQUIRE_SINGLE_ANYHIT_CALL;
     memset(&build_input, 0, sizeof(OptixBuildInput));
     build_input.type = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
     auto& tr_input = build_input.triangleArray;
@@ -254,6 +255,8 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
     }
     auto const plCount0 = particles.GetParticleListCount();
     std::vector<std::vector<RayH>> rays(plCount0);
+    std::vector<std::vector<std::pair<glm::vec3, glm::vec3>>> origins(plCount0);
+    std::vector<std::vector<std::uint64_t>> idx_map(plCount0);
 
     CUDA_CHECK_ERROR(cuMemAlloc(&mesh_inbound_ctr, (num_vertices / 3) * sizeof(std::uint32_t)));
     CUDA_CHECK_ERROR(cuMemAlloc(&mesh_outbound_ctr, (num_vertices / 3) * sizeof(std::uint32_t)));
@@ -275,28 +278,52 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
         } while (particles.FrameID() != fid && !got_0);
 
 
-        std::vector<std::vector<std::pair<glm::vec3, glm::vec3>>> origins(plCount0);
-        std::vector<std::vector<std::uint64_t>> idx_map(plCount0);
+        /*std::vector<std::vector<std::pair<glm::vec3, glm::vec3>>> origins(plCount0);
+        std::vector<std::vector<std::uint64_t>> idx_map(plCount0);*/
 
         for (unsigned int plIdx = 0; plIdx < plCount0; ++plIdx) {
             auto const& parts = particles.AccessParticles(plIdx);
             auto const pCount = parts.GetCount();
 
             auto& orgs = origins[plIdx];
-            orgs.resize(pCount);
-
             auto& idc = idx_map[plIdx];
-            idc.resize(pCount);
+            if (fid == frameID) {
+                orgs.resize(pCount);
+                /*std::fill(orgs.begin(), orgs.end(),
+                    std::make_pair<glm::vec3, glm::vec3>(glm::vec3(std::numeric_limits<float>::lowest()),
+                        glm::vec3(std::numeric_limits<float>::lowest())));*/
+                idc.resize(pCount);
+            }
+            std::fill(orgs.begin(), orgs.end(),
+                std::make_pair<glm::vec3, glm::vec3>(
+                    glm::vec3(std::numeric_limits<float>::lowest()), glm::vec3(std::numeric_limits<float>::lowest())));
 
             auto xAcc = parts.GetParticleStore().GetXAcc();
             auto yAcc = parts.GetParticleStore().GetYAcc();
             auto zAcc = parts.GetParticleStore().GetZAcc();
             auto idAcc = parts.GetParticleStore().GetIDAcc();
 
-            for (std::size_t pIdx = 0; pIdx < pCount; ++pIdx) {
-                orgs[pIdx] = std::make_pair(glm::vec3(xAcc->Get_f(pIdx), yAcc->Get_f(pIdx), zAcc->Get_f(pIdx)),
-                    glm::vec3(std::numeric_limits<float>::lowest()));
-                idc[pIdx] = idAcc->Get_u64(pIdx);
+            if (fid == frameID) {
+                for (std::size_t pIdx = 0; pIdx < pCount; ++pIdx) {
+                    orgs[pIdx] = std::make_pair(glm::vec3(xAcc->Get_f(pIdx), yAcc->Get_f(pIdx), zAcc->Get_f(pIdx)),
+                        glm::vec3(std::numeric_limits<float>::lowest()));
+                    idc[pIdx] = idAcc->Get_u64(pIdx);
+                }
+            } else {
+                for (std::size_t pIdx = 0; pIdx < pCount; ++pIdx) {
+                    auto const id = idAcc->Get_u64(pIdx);
+                    auto fit = std::find(idc.begin(), idc.end(), id);
+                    if (fit != idc.end()) {
+                        auto const idx = std::distance(idc.begin(), fit);
+                        orgs[idx] = std::make_pair(glm::vec3(xAcc->Get_f(pIdx), yAcc->Get_f(pIdx), zAcc->Get_f(pIdx)),
+                            glm::vec3(std::numeric_limits<float>::lowest()));
+                        // idc[pIdx] = idAcc->Get_u64(pIdx);
+                    }
+
+                    /*orgs[pIdx] = std::make_pair(glm::vec3(xAcc->Get_f(pIdx), yAcc->Get_f(pIdx), zAcc->Get_f(pIdx)),
+                        glm::vec3(std::numeric_limits<float>::lowest()));
+                    idc[pIdx] = idAcc->Get_u64(pIdx);*/
+                }
             }
         }
 
@@ -347,7 +374,10 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
                 auto const& origin = el.first;
                 auto const& dest = el.second;
 
-                if (dest.x <= std::numeric_limits<float>::lowest() + std::numeric_limits<float>::epsilon() ||
+                if (origin.x <= std::numeric_limits<float>::lowest() + std::numeric_limits<float>::epsilon() ||
+                    origin.y <= std::numeric_limits<float>::lowest() + std::numeric_limits<float>::epsilon() ||
+                    origin.z <= std::numeric_limits<float>::lowest() + std::numeric_limits<float>::epsilon() ||
+                    dest.x <= std::numeric_limits<float>::lowest() + std::numeric_limits<float>::epsilon() ||
                     dest.y <= std::numeric_limits<float>::lowest() + std::numeric_limits<float>::epsilon() ||
                     dest.z <= std::numeric_limits<float>::lowest() + std::numeric_limits<float>::epsilon())
                     continue;
@@ -399,6 +429,15 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
 
         auto& ray_vec = rays[plIdx];
 
+        /*auto file = std::ofstream("bla1.txt");
+        for (size_t i = 0; i < ray_vec.size(); ++i) {
+            file << std::to_string(ray_vec[i].origin.x) << std::to_string(ray_vec[i].origin.y)
+                 << std::to_string(ray_vec[i].origin.z) << std::to_string(ray_vec[i].direction.x)
+                 << std::to_string(ray_vec[i].direction.y) << std::to_string(ray_vec[i].direction.z)
+                 << std::to_string(ray_vec[i].tMin) << std::to_string(ray_vec[i].tMax) << '\n';
+        }
+        file.close();*/
+
         std::vector<std::uint32_t> mesh_inbound_vec(num_vertices / 3, 0);
         std::vector<std::uint32_t> mesh_outbound_vec(num_vertices / 3, 0);
         std::vector<std::uint8_t> ray_state_vec(ray_vec.size());
@@ -414,7 +453,18 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
         CUDA_CHECK_ERROR(cuMemFree(mesh_outbound_ctr));
         CUDA_CHECK_ERROR(cuMemFree(ray_state));
 
-        core::utility::log::Log::DefaultLog.WriteInfo("[TransitionCalculator] Ending computation");
+        auto const num_rel_trans =
+            std::count_if(ray_state_vec.begin(), ray_state_vec.end(), [](auto el) { return el == 3; });
+
+        int best_idx = -1;
+        auto best_fit = std::find(ray_state_vec.begin(), ray_state_vec.end(), 3);
+        if (best_fit != ray_state_vec.end()) {
+            best_idx = std::distance(ray_state_vec.begin(), best_fit);
+            best_idx = idx_map[plIdx][best_idx];
+        }
+
+        core::utility::log::Log::DefaultLog.WriteInfo(
+            "[TransitionCalculator] Ending computation with %d relevant transitions from %d particles at base %d beginning at %d", num_rel_trans, ray_vec.size(), frameID, best_idx);
 
         auto mesh_indices = reinterpret_cast<glm::u32vec3 const*>(mesh_data.indices.data);
         auto vert_glm_ptr = reinterpret_cast<glm::vec3 const*>(vert_ptr);
@@ -645,11 +695,29 @@ bool megamol::optix_hpg::TransitionCalculator::get_extent_cb(core::Call& c) {
     auto in_data = in_mesh_slot_.CallAs<mesh::CallMesh>();
     if (in_data == nullptr)
         return false;
+    auto in_paths = in_paths_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    if (in_paths == nullptr)
+        return false;
 
-    if ((*in_data)(1) && (*in_data)(0)) {
-        auto const meta = in_data->getMetaData();
-        out_geo->setMetaData(meta);
-    }
+    auto out_meta = out_geo->getMetaData();
+    auto in_meta = in_data->getMetaData();
+    in_meta = out_meta;
+    in_data->setMetaData(in_meta);
+    if (!(*in_data)(1))
+        return false;
+    in_paths->SetFrameCount(in_meta.m_frame_cnt);
+    in_paths->SetFrameID(in_meta.m_frame_ID);
+    if (!(*in_paths)(1))
+        return false;
+
+    in_meta = in_data->getMetaData();
+    out_meta = in_meta;
+    out_geo->setMetaData(out_meta);
+
+    //if ((*in_data)(1) && (*in_data)(0)) {
+    //    auto const meta = in_data->getMetaData();
+    //    out_geo->setMetaData(meta);
+    //}
 
     return true;
 }

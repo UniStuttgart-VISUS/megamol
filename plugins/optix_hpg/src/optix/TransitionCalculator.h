@@ -107,5 +107,9 @@ private:
     std::shared_ptr<mesh::MeshDataAccessCollection> mesh_access_collection_;
 
     std::size_t out_data_hash_ = 0;
+
+    std::vector<std::vector<uint64_t>> ray_vec_ident_;
+
+    std::vector<std::vector<uint8_t>> ray_vec_active_;
 };
 } // namespace megamol::optix_hpg
