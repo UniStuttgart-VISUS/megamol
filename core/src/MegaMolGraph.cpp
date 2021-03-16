@@ -4,7 +4,6 @@
 #include "mmcore/MegaMolGraph.h"
 
 #include "mmcore/AbstractSlot.h"
-#include "mmcore/view/AbstractView_EventConsumption.h"
 
 #include "mmcore/utility/log/Log.h"
 
@@ -156,6 +155,15 @@ bool megamol::core::MegaMolGraph::RenameModule(std::string const& oldId, std::st
         }
         if (matches_old_prefix(call.request.to)) {
             put_new_prefix(call.request.to);
+        }
+    }
+
+    // dont know what we are supposed to do when entry point renaming fails... how can it fail?
+    if (module_it->isGraphEntryPoint) {
+        bool view_rename_ok = m_image_presentation->rename_entry_point(oldId, newId);
+        if (!view_rename_ok) {
+            log_error("error renaming graph entry point. image presentation service could not rename module: " + oldId + " -> " + newId);
+            return false;
         }
     }
 
@@ -441,9 +449,6 @@ bool megamol::core::MegaMolGraph::delete_call(CallDeletionRequest_t const& reque
 
 
 void megamol::core::MegaMolGraph::RenderNextFrame() {
-    for (auto& entry : graph_entry_points) {
-        entry.execute(entry.modulePtr, entry.entry_point_resources);
-    }
 }
 
 megamol::core::Module::ptr_type megamol::core::MegaMolGraph::FindModule(std::string const& moduleName) const {
@@ -587,10 +592,7 @@ std::vector<megamol::core::param::AbstractParam*> megamol::core::MegaMolGraph::L
 
 bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName)
 {
-    auto execution_resource_requests = megamol::core::view::get_gl_view_runtime_resources_requests();
-    auto render_callback = megamol::core::view::view_rendering_execution;
-    auto init_callback = megamol::core::view::view_init_rendering_state;
-
+    // currently, we expect the entry point to be derived from AbstractView
     auto module_it = find_module(moduleName);
 
     if (module_it == module_list_.end()) {
@@ -598,20 +600,20 @@ bool megamol::core::MegaMolGraph::SetGraphEntryPoint(std::string moduleName)
         return false;
     }
     
-    auto module_ptr = module_it->modulePtr;
+    auto module_shared_ptr = module_it->modulePtr; // we cant cast shared_ptr to void* for image presentation rendering
+    auto& module_ref = *module_shared_ptr;
+    auto* module_raw_ptr = &module_ref;
 
-    auto resources = get_requested_resources(execution_resource_requests);
+    // the image presentation will issue the rendering and provide the view with resources for rendering
+    // probably we dont care or dont check wheter the same view is added as entry point multiple times
+    bool view_presentation_ok = m_image_presentation->add_entry_point(moduleName, static_cast<void*>(module_raw_ptr));
 
-    if (resources.size() != execution_resource_requests.size() ||
-        !std::equal<>(resources.begin(), resources.end(), 
-            execution_resource_requests.begin(), execution_resource_requests.end(), 
-            [](megamol::frontend::FrontendResource& l, std::string& r) { return l.getIdentifier() == r; })) 
-    {
+    if (!view_presentation_ok) {
+        log_error("error adding graph entry point. image presentation service rejected module: " + moduleName);
         return false;
     }
 
-    this->graph_entry_points.push_back({moduleName, module_ptr, resources, render_callback});
-    init_callback(module_ptr, resources);
+    this->graph_entry_points.push_back(module_shared_ptr);
 
     module_it->isGraphEntryPoint = true;
     log("set graph entry point: " + moduleName);
@@ -627,7 +629,18 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string moduleName) 
         return false;
     }
 
-    this->graph_entry_points.remove_if([&](GraphEntryPoint& entry) { return entry.moduleName == moduleName; });
+    bool view_removal_ok = m_image_presentation->remove_entry_point(moduleName);
+
+    // note that for us it is not an error to try to remove a module as graph entry point
+    // if that module is not registered as an entry point
+    // but maybe image presentation may tell us that for some other reason removal failed?
+    if (!view_removal_ok) {
+        log_error("error adding graph entry point. image presentation service could not remove module: " + moduleName);
+        return false;
+    }
+
+    this->graph_entry_points.remove_if(
+        [&](Module::ptr_type& module) { return std::string{module->Name().PeekBuffer()} == moduleName; });
 
     module_it->isGraphEntryPoint = false;
     log("remove graph entry point: " + moduleName);
@@ -637,6 +650,19 @@ bool megamol::core::MegaMolGraph::RemoveGraphEntryPoint(std::string moduleName) 
 
 bool megamol::core::MegaMolGraph::AddFrontendResources(std::vector<megamol::frontend::FrontendResource> const& resources) {
     this->provided_resources.insert(provided_resources.end(), resources.begin(), resources.end());
+
+    auto find_it = std::find_if(provided_resources.begin(), provided_resources.end(),
+        [&](megamol::frontend::FrontendResource const& resource) {
+            return resource.getIdentifier() == "ImagePresentationEntryPoints";
+        });
+
+    if (find_it == provided_resources.end()) {
+        return false;
+    }
+
+    m_image_presentation = & const_cast<megamol::frontend_resources::ImagePresentationEntryPoints&>(
+        find_it->getResource<megamol::frontend_resources::ImagePresentationEntryPoints>());
+
     return true;
 }
 
@@ -645,6 +671,9 @@ megamol::core::MegaMolGraph_Convenience& megamol::core::MegaMolGraph::Convenienc
 }
 
 void megamol::core::MegaMolGraph::Clear() {
+    // currently entry points are expected to be graph modules, i.e. views
+    // therefore it is ok for us to clear all entry points if the graph shuts down
+    m_image_presentation->clear_entry_points();
     graph_entry_points.clear();
     call_list_.clear();
     module_list_.clear();

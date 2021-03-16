@@ -20,6 +20,7 @@
 #include "mmcore/RootModuleNamespace.h"
 
 #include "FrontendResource.h"
+#include "ImagePresentationEntryPoints.h"
 
 namespace megamol {
 namespace core {
@@ -131,9 +132,6 @@ public:
 
     std::vector<megamol::core::param::ParamSlot*> ListParameterSlots() const;
 
-    using EntryPointExecutionCallback =
-        std::function<void(Module::ptr_type, std::vector<megamol::frontend::FrontendResource> const&)>;
-
     bool SetGraphEntryPoint(std::string moduleName);
 
     bool RemoveGraphEntryPoint(std::string moduleName);
@@ -190,19 +188,11 @@ private:
 
     std::vector<megamol::frontend::FrontendResource> provided_resources;
 
-    // for each View in the MegaMol graph we create a GraphEntryPoint with corresponding callback for resource/input
-    // consumption the graph makes sure that the (lifetime and rendering) resources/dependencies requested by the module
-    // are satisfied, which means that the execute() callback for the entry point is provided the requested
-    // dependencies/resources for rendering and the Create() and Release() mehods of all modules receive the
-    // dependencies/resources they request for their lifetime
-    struct GraphEntryPoint {
-        std::string moduleName;
-        Module::ptr_type modulePtr = nullptr;
-        std::vector<megamol::frontend::FrontendResource> entry_point_resources;
-
-        EntryPointExecutionCallback execute;
-    };
-    std::list<GraphEntryPoint> graph_entry_points;
+    // for each View in the MegaMol graph we create a GraphEntryPoint
+    // that entry point is used by the Image Presentation Service to
+    // poke the rendering, collect the resulting View renderings and present them to the user appropriately
+    std::list<Module::ptr_type> graph_entry_points;
+    megamol::frontend_resources::ImagePresentationEntryPoints* m_image_presentation = nullptr;
 
     MegaMolGraph_Convenience convenience_functions;
 
