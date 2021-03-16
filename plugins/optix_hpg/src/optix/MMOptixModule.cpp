@@ -87,10 +87,25 @@ megamol::optix_hpg::MMOptixModule::MMOptixModule(const char* ptx_code, OptixDevi
         pgDesc.hitgroup.moduleIS = module_;
         cb_names.push_back(std::string(MM_OPTIX_INTERSECTION_ANNOTATION_STRING) + names[0]);
         pgDesc.hitgroup.entryFunctionNameIS = cb_names.back().c_str();
-        pgDesc.hitgroup.moduleCH = module_;
+        /*pgDesc.hitgroup.moduleCH = module_;
         cb_names.push_back(std::string(MM_OPTIX_CLOSESTHIT_ANNOTATION_STRING) + names[1]);
         pgDesc.hitgroup.entryFunctionNameCH = cb_names.back().c_str();
-        pgDesc.hitgroup.moduleAH = nullptr;
+        pgDesc.hitgroup.moduleAH = nullptr;*/
+        if (names.size() < 3) {
+            pgDesc.hitgroup.moduleCH = module_;
+            cb_names.push_back(std::string(MM_OPTIX_CLOSESTHIT_ANNOTATION_STRING) + names[1]);
+            pgDesc.hitgroup.entryFunctionNameCH = cb_names.back().c_str();
+            pgDesc.hitgroup.moduleAH = nullptr;
+        } else {
+            if (names[1] != "") {
+                pgDesc.hitgroup.moduleCH = module_;
+                cb_names.push_back(std::string(MM_OPTIX_CLOSESTHIT_ANNOTATION_STRING) + names[1]);
+                pgDesc.hitgroup.entryFunctionNameCH = cb_names.back().c_str();
+            }
+            pgDesc.hitgroup.moduleAH = module_;
+            cb_names.push_back(std::string(MM_OPTIX_ANYHIT_ANNOTATION_STRING) + names[2]);
+            pgDesc.hitgroup.entryFunctionNameAH = cb_names.back().c_str();
+        }
     } break;
     }
 
@@ -185,10 +200,21 @@ megamol::optix_hpg::MMOptixModule::MMOptixModule(const char* ptx_code, OptixDevi
             cb_names.push_back(std::string(MM_OPTIX_INTERSECTION_ANNOTATION_STRING) + names[0]);
             pgDesc.hitgroup.entryFunctionNameIS = cb_names.back().c_str();
         }
-        pgDesc.hitgroup.moduleCH = module_;
-        cb_names.push_back(std::string(MM_OPTIX_CLOSESTHIT_ANNOTATION_STRING) + names[1]);
-        pgDesc.hitgroup.entryFunctionNameCH = cb_names.back().c_str();
-        pgDesc.hitgroup.moduleAH = nullptr;
+        if (names.size() < 3) {
+            pgDesc.hitgroup.moduleCH = module_;
+            cb_names.push_back(std::string(MM_OPTIX_CLOSESTHIT_ANNOTATION_STRING) + names[1]);
+            pgDesc.hitgroup.entryFunctionNameCH = cb_names.back().c_str();
+            pgDesc.hitgroup.moduleAH = nullptr;
+        } else {
+            if (names[1] != "") {
+                pgDesc.hitgroup.moduleCH = module_;
+                cb_names.push_back(std::string(MM_OPTIX_CLOSESTHIT_ANNOTATION_STRING) + names[1]);
+                pgDesc.hitgroup.entryFunctionNameCH = cb_names.back().c_str();
+            }
+            pgDesc.hitgroup.moduleAH = module_;
+            cb_names.push_back(std::string(MM_OPTIX_ANYHIT_ANNOTATION_STRING) + names[2]);
+            pgDesc.hitgroup.entryFunctionNameAH = cb_names.back().c_str();
+        }
     } break;
     }
 
