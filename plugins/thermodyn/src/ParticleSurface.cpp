@@ -227,8 +227,8 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
                 for (auto& face : facets) {
 
                     auto const& vert_a = face.first->vertex(as->vertex_triple_index(face.second, 0));
-                    auto const& vert_b = face.first->vertex(as->vertex_triple_index(face.second, 1));
-                    auto const& vert_c = face.first->vertex(as->vertex_triple_index(face.second, 2));
+                    auto const& vert_b = face.first->vertex(as->vertex_triple_index(face.second, as->ccw(0)));
+                    auto const& vert_c = face.first->vertex(as->vertex_triple_index(face.second, as->cw(0)));
 
                     auto const& a = vert_a->point();
                     auto const& b = vert_b->point();
@@ -410,8 +410,8 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
 
             for (auto& face : facets) {
                 auto const& vert_a = face.first->vertex(as->vertex_triple_index(face.second, 0));
-                auto const& vert_b = face.first->vertex(as->vertex_triple_index(face.second, 1));
-                auto const& vert_c = face.first->vertex(as->vertex_triple_index(face.second, 2));
+                auto const& vert_b = face.first->vertex(as->vertex_triple_index(face.second, as->ccw(0)));
+                auto const& vert_c = face.first->vertex(as->vertex_triple_index(face.second, as->cw(0)));
 
                 auto col_a = def_color;
                 auto col_b = def_color;
