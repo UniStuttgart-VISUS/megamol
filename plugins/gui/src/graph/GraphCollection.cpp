@@ -1774,97 +1774,8 @@ void megamol::gui::GraphCollection::Draw(GraphState_t& state) {
         ImGui::EndTabBar();
 
         // Process changed running graph --------------------------------------
-        if (state.new_running_graph_uid != GUI_INVALID_ID) {
-            /// There should always be only one running graph at a time
-
-            // Get currently running graph
-            GraphPtr_t last_running_graph = nullptr;
-            for (auto& graph_ptr : this->GetGraphs()) {
-                if (graph_ptr->IsRunning()) {
-                    last_running_graph = graph_ptr;
-                }
-                graph_ptr->SetRunning(false);
-            }
-            if (last_running_graph != nullptr) {
-                if (auto running_graph = this->GetGraph(state.new_running_graph_uid)) {
-
-                    // 1] Set new graph running to enable queue
-                    running_graph->SetRunning(true);
-
-                    // 2] Remove all calls and modules from core graph, but keep stopped GUI graph in project untouched
-                    for (auto& call_ptr : last_running_graph->Calls()) {
-                        Graph::QueueData queue_data;
-                        auto caller_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLER);
-                        if (caller_ptr != nullptr) {
-                            if (caller_ptr->GetParentModule() != nullptr) {
-                                queue_data.caller =
-                                    caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->Name();
-                            }
-                        }
-                        auto callee_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLEE);
-                        if (callee_ptr != nullptr) {
-                            if (callee_ptr->GetParentModule() != nullptr) {
-                                queue_data.callee =
-                                    callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->Name();
-                            }
-                        }
-                        running_graph->PushSyncQueue(Graph::QueueAction::DELETE_CALL, queue_data);
-                    }
-                    for (auto& module_ptr : last_running_graph->Modules()) {
-                        Graph::QueueData queue_data;
-                        queue_data.name_id = module_ptr->FullName();
-                        if (module_ptr->IsGraphEntry()) {
-                            running_graph->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
-                        }
-                        running_graph->PushSyncQueue(Graph::QueueAction::DELETE_MODULE, queue_data);
-                        // Reset pointers to core parameters
-                        for (auto& param : module_ptr->Parameters()) {
-                            param.ResetCoreParamPtr();
-                        }
-                    }
-
-                    // 3] Create new modules and calls in core graph, but keep newly running GUI graph in project
-                    // untouched
-                    for (auto& module_ptr : running_graph->Modules()) {
-                        Graph::QueueData queue_data;
-                        queue_data.name_id = module_ptr->FullName();
-                        queue_data.class_name = module_ptr->ClassName();
-                        running_graph->PushSyncQueue(Graph::QueueAction::ADD_MODULE, queue_data);
-                        if (module_ptr->IsGraphEntry()) {
-                            running_graph->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
-                        }
-                        // Set all parameters in GUI graph dirty in order to propagate current values to new core
-                        // modules
-                        for (auto& param : module_ptr->Parameters()) {
-                            if (param.Type() != ParamType_t::BUTTON) {
-                                param.ForceSetValueDirty();
-                                param.ForceSetGUIStateDirty();
-                            }
-                        }
-                    }
-                    for (auto& call_ptr : running_graph->Calls()) {
-                        Graph::QueueData queue_data;
-                        queue_data.class_name = call_ptr->ClassName();
-                        auto caller_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLER);
-                        if (caller_ptr != nullptr) {
-                            if (caller_ptr->GetParentModule() != nullptr) {
-                                queue_data.caller =
-                                    caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->Name();
-                            }
-                        }
-                        auto callee_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLEE);
-                        if (callee_ptr != nullptr) {
-                            if (callee_ptr->GetParentModule() != nullptr) {
-                                queue_data.callee =
-                                    callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->Name();
-                            }
-                        }
-                        running_graph->PushSyncQueue(Graph::QueueAction::ADD_CALL, queue_data);
-                    }
-                }
-            }
-            state.new_running_graph_uid = GUI_INVALID_ID;
-        }
+        this->change_running_graph(state.new_running_graph_uid);
+        state.new_running_graph_uid = GUI_INVALID_ID;
 
         // Save selected graph in configurator --------------------------------
         this->save_graph_dialog(state.graph_selected_uid, state.configurator_graph_save);
@@ -1926,4 +1837,99 @@ bool megamol::gui::GraphCollection::save_graph_dialog(ImGuiID graph_uid, bool op
         confirmed, "Cancel", aborted);
 
     return !popup_failed;
+}
+
+
+bool megamol::gui::GraphCollection::change_running_graph(ImGuiID graph_uid) {
+
+    if (graph_uid != GUI_INVALID_ID) {
+        /// There should always be only one running graph at a time
+
+        // Get currently running graph
+        GraphPtr_t last_running_graph = nullptr;
+        for (auto& graph_ptr : this->GetGraphs()) {
+            if (graph_ptr->IsRunning()) {
+                last_running_graph = graph_ptr;
+            }
+            graph_ptr->SetRunning(false);
+        }
+        if (last_running_graph != nullptr) {
+            if (auto running_graph = this->GetGraph(graph_uid)) {
+
+                // 1] Set new graph running to enable queue
+                running_graph->SetRunning(true);
+
+                // 2] Remove all calls and modules from core graph, but keep stopped GUI graph in project untouched
+                for (auto& call_ptr : last_running_graph->Calls()) {
+                    Graph::QueueData queue_data;
+                    auto caller_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLER);
+                    if (caller_ptr != nullptr) {
+                        if (caller_ptr->GetParentModule() != nullptr) {
+                            queue_data.caller = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->Name();
+                        }
+                    }
+                    auto callee_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLEE);
+                    if (callee_ptr != nullptr) {
+                        if (callee_ptr->GetParentModule() != nullptr) {
+                            queue_data.callee = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->Name();
+                        }
+                    }
+                    running_graph->PushSyncQueue(Graph::QueueAction::DELETE_CALL, queue_data);
+                }
+                for (auto& module_ptr : last_running_graph->Modules()) {
+                    Graph::QueueData queue_data;
+                    queue_data.name_id = module_ptr->FullName();
+                    if (module_ptr->IsGraphEntry()) {
+                        running_graph->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
+                    }
+                    running_graph->PushSyncQueue(Graph::QueueAction::DELETE_MODULE, queue_data);
+                    // Reset pointers to core parameters
+                    for (auto& param : module_ptr->Parameters()) {
+                        param.ResetCoreParamPtr();
+                    }
+                }
+
+                // 3] Create new modules and calls in core graph, but keep newly running GUI graph in project
+                // untouched
+                for (auto& module_ptr : running_graph->Modules()) {
+                    Graph::QueueData queue_data;
+                    queue_data.name_id = module_ptr->FullName();
+                    queue_data.class_name = module_ptr->ClassName();
+                    running_graph->PushSyncQueue(Graph::QueueAction::ADD_MODULE, queue_data);
+                    if (module_ptr->IsGraphEntry()) {
+                        running_graph->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                    }
+                    // Set all parameters in GUI graph dirty in order to propagate current values to new core
+                    // modules
+                    for (auto& param : module_ptr->Parameters()) {
+                        if (param.Type() != ParamType_t::BUTTON) {
+                            param.ForceSetValueDirty();
+                            param.ForceSetGUIStateDirty();
+                        }
+                    }
+                }
+                for (auto& call_ptr : running_graph->Calls()) {
+                    Graph::QueueData queue_data;
+                    queue_data.class_name = call_ptr->ClassName();
+                    auto caller_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLER);
+                    if (caller_ptr != nullptr) {
+                        if (caller_ptr->GetParentModule() != nullptr) {
+                            queue_data.caller = caller_ptr->GetParentModule()->FullName() + "::" + caller_ptr->Name();
+                        }
+                    }
+                    auto callee_ptr = call_ptr->CallSlotPtr(megamol::gui::CallSlotType::CALLEE);
+                    if (callee_ptr != nullptr) {
+                        if (callee_ptr->GetParentModule() != nullptr) {
+                            queue_data.callee = callee_ptr->GetParentModule()->FullName() + "::" + callee_ptr->Name();
+                        }
+                    }
+                    running_graph->PushSyncQueue(Graph::QueueAction::ADD_CALL, queue_data);
+                }
+
+                return true;
+            }
+        }
+    }
+
+    return false;
 }

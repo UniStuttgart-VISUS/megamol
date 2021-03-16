@@ -98,6 +98,10 @@ namespace gui {
 
         void Draw(GraphState_t& state);
 
+        void RequestNewRunningGraph(ImGuiID graph_uid) {
+            this->change_running_graph(graph_uid);
+        }
+
     private:
         // VARIABLES --------------------------------------------------------------
 
@@ -146,6 +150,8 @@ namespace gui {
         bool load_state_from_file(const std::string& filename, ImGuiID graph_id);
 
         bool save_graph_dialog(ImGuiID graph_uid, bool open_dialog);
+
+        bool change_running_graph(ImGuiID graph_uid);
     };
 
 

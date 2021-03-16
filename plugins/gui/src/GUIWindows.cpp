@@ -1771,43 +1771,67 @@ void GUIWindows::drawMenu(void) {
 
     // RENDER -----------------------------------------------------------------
     if (megamolgraph_interface) {
-        if (auto graph_ptr = this->configurator.GetGraphCollection().GetRunningGraph()) {
-            if (ImGui::BeginMenu("Render")) {
-                for (auto& module_ptr : graph_ptr->Modules()) {
-                    if (module_ptr->IsView()) {
-                        if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsGraphEntry())) {
-                            if (!module_ptr->IsGraphEntry()) {
-                                // Remove all graph entries
-                                for (auto module_ptr : graph_ptr->Modules()) {
-                                    if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
-                                        module_ptr->SetGraphEntryName("");
-                                        Graph::QueueData queue_data;
-                                        queue_data.name_id = module_ptr->FullName();
-                                        graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
+        if (ImGui::BeginMenu("Projects")) {
+            for (auto& graph_ptr : this->configurator.GetGraphCollection().GetGraphs()) {
+                bool running = graph_ptr->IsRunning();
+                std::string button_label = "graph_running_button" + std::to_string(graph_ptr->UID());
+                if (megamol::gui::ButtonWidgets::OptionButton(button_label.c_str(), "", running)) {
+                    if (!running) {
+                        this->configurator.GetGraphCollection().RequestNewRunningGraph(graph_ptr->UID());
+                    }
+                }
+                std::string tooltip_str = "Click to run project";
+                if (running) {
+                    tooltip_str = "Project is running";
+                }
+                this->tooltip.ToolTip(tooltip_str.c_str());
+                ImGui::SameLine();
+                ImGui::AlignTextToFramePadding();
+
+                if (ImGui::BeginMenu(graph_ptr->Name().c_str(), running)) {
+                    ImGui::TextDisabled("Graph Entry");
+                    ImGui::Separator();
+                    for (auto& module_ptr : graph_ptr->Modules()) {
+                        if (module_ptr->IsView()) {
+                            if (ImGui::MenuItem(module_ptr->FullName().c_str(), "", module_ptr->IsGraphEntry())) {
+                                if (!module_ptr->IsGraphEntry()) {
+                                    // Remove all graph entries
+                                    for (auto module_ptr : graph_ptr->Modules()) {
+                                        if (module_ptr->IsView() && module_ptr->IsGraphEntry()) {
+                                            module_ptr->SetGraphEntryName("");
+                                            Graph::QueueData queue_data;
+                                            queue_data.name_id = module_ptr->FullName();
+                                            graph_ptr->PushSyncQueue(
+                                                Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
+                                        }
                                     }
+                                    // Add new graph entry
+                                    module_ptr->SetGraphEntryName(graph_ptr->GenerateUniqueGraphEntryName());
+                                    Graph::QueueData queue_data;
+                                    queue_data.name_id = module_ptr->FullName();
+                                    graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
+                                } else {
+                                    module_ptr->SetGraphEntryName("");
+                                    Graph::QueueData queue_data;
+                                    queue_data.name_id = module_ptr->FullName();
+                                    graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                                 }
-                                // Add new graph entry
-                                module_ptr->SetGraphEntryName(graph_ptr->GenerateUniqueGraphEntryName());
-                                Graph::QueueData queue_data;
-                                queue_data.name_id = module_ptr->FullName();
-                                graph_ptr->PushSyncQueue(Graph::QueueAction::CREATE_GRAPH_ENTRY, queue_data);
-                            } else {
-                                module_ptr->SetGraphEntryName("");
-                                Graph::QueueData queue_data;
-                                queue_data.name_id = module_ptr->FullName();
-                                graph_ptr->PushSyncQueue(Graph::QueueAction::REMOVE_GRAPH_ENTRY, queue_data);
                             }
                         }
                     }
+
+                    ImGui::Separator();
+                    if (ImGui::MenuItem("Toggle Graph Entry",
+                            this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].keycode.ToString().c_str())) {
+                        this->state.toggle_graph_entry = true;
+                    }
+
+                    ImGui::EndMenu();
                 }
-                if (ImGui::MenuItem("Toggle Graph Entry",
-                        this->hotkeys[GUIWindows::GuiHotkeyIndex::TOGGLE_GRAPH_ENTRY].keycode.ToString().c_str())) {
-                    this->state.toggle_graph_entry = true;
-                }
-                ImGui::EndMenu();
             }
-            ImGui::Separator();
+            ImGui::EndMenu();
         }
+        ImGui::Separator();
     }
 
     // SETTINGS ---------------------------------------------------------------

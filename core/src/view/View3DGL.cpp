@@ -78,8 +78,7 @@ void View3DGL::Render(const mmcRenderViewContext& context, Call* call) {
             (this->_fbo->GetHeight() != _camera.image_tile().height()) ||
             (!this->_fbo->IsValid()) ) {
             this->_fbo->Release();
-            if (!this->_fbo->Create(_camera.image_tile().width(), _camera.image_tile().height(), GL_RGBA8,
-                    GL_RGBA,
+            if (!this->_fbo->Create(_camera.image_tile().width(), _camera.image_tile().height(), GL_RGBA8, GL_RGBA,
                     GL_UNSIGNED_BYTE, vislib::graphics::gl::FramebufferObject::ATTACHMENT_TEXTURE,
                     GL_DEPTH_COMPONENT)) {
                 throw vislib::Exception("[View3DGL] Unable to create image framebuffer object.", __FILE__, __LINE__);

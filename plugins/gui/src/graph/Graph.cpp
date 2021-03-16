@@ -1922,18 +1922,11 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
     // RUNNING
     ImGui::BeginGroup();
     bool button = megamol::gui::ButtonWidgets::OptionButton("graph_running_button", "", this->IsRunning());
-    bool empty_projectfile = this->GetFilename().empty();
-    bool readonly = (this->IsRunning() || empty_projectfile);
+    bool readonly = this->IsRunning();
     if (readonly) {
         gui::GUIUtils::ReadOnlyWigetStyle(true);
     }
-    if (empty_projectfile) {
-        ImGui::PushStyleColor(ImGuiCol_Text, GUI_COLOR_TEXT_ERROR);
-    }
     button |= ImGui::Button(((this->IsRunning()) ? ("Running") : ("Run")));
-    if (empty_projectfile) {
-        ImGui::PopStyleColor();
-    }
     if (readonly) {
         gui::GUIUtils::ReadOnlyWigetStyle(false);
     }
@@ -1941,13 +1934,6 @@ void megamol::gui::Graph::draw_menu(GraphState_t& state) {
         state.new_running_graph_uid = this->uid;
     }
     ImGui::EndGroup();
-    std::string tooltip_str;
-    if (empty_projectfile) {
-        tooltip_str.append("Save project to activate this option");
-    }
-    if (!tooltip_str.empty()) {
-        this->gui_tooltip.ToolTip(tooltip_str.c_str());
-    }
 
     ImGui::Separator();
 
