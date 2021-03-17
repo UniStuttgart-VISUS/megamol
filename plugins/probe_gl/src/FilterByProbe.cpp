@@ -6,7 +6,7 @@
 #include "ProbeGlCalls.h"
 #include "mmcore/CoreInstance.h"
 #include "mmcore/EventCall.h"
-#include "mmcore/FlagCall_GL.h"
+#include "mmcore/UniFlagCalls.h"
 
 #include "ProbeCollection.h"
 

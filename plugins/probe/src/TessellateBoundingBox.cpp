@@ -39,6 +39,7 @@ megamol::probe::TessellateBoundingBox::~TessellateBoundingBox(void) {
 }
 
 bool megamol::probe::TessellateBoundingBox::create() {
+    AbstractMeshDataSource::create();
     return true;
 }
 
