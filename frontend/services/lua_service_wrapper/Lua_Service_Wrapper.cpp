@@ -95,7 +95,7 @@ bool Lua_Service_Wrapper::init(const Config& config) {
         "FrontendResourcesList",
         "GLFrontbufferToPNG_ScreenshotTrigger", // for screenshots
         "FrameStatistics", // for LastFrameTime
-        "WindowManipulation", // for Framebuffer resize
+        "WindowManipulation", // for window resize
         "GUIResource", // propagate GUI state and visibility
         "MegaMolGraph", // LuaAPI manipulates graph
         "RenderNextFrame", // LuaAPI can render one frame
@@ -255,16 +255,16 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
         }});
 
     callbacks.add<VoidResult, int, int>(
-        "mmSetFramebufferSize",
-        "(int width, int height)\n\tSet framebuffer dimensions to width x height.",
+        "mmSetWindowSize",
+        "(int width, int height)\n\tSet GLFW window dimensions to width x height.",
         {[&](int width, int height) -> VoidResult
         {
             if (width <= 0 || height <= 0) {
-                return Error {"framebuffer dimensions must be positive, but given values are: " + std::to_string(width) + " x " + std::to_string(height)};
+                return Error {"window dimensions must be positive, but given values are: " + std::to_string(width) + " x " + std::to_string(height)};
             }
 
             auto& window_manipulation = m_requestedResourceReferences[3].getResource<megamol::frontend_resources::WindowManipulation>();
-            window_manipulation.set_framebuffer_size(width, height);
+            window_manipulation.set_window_size(width, height);
             return VoidResult{};
         }});
 

@@ -232,32 +232,33 @@ void megamol::frontend_resources::WindowManipulation::set_window_title(const cha
     glfwSetWindowTitle(reinterpret_cast<GLFWwindow*>(window_ptr), title);
 }
 
-void megamol::frontend_resources::WindowManipulation::set_framebuffer_size(const unsigned int width, const unsigned int height) const {
+void megamol::frontend_resources::WindowManipulation::set_window_size(const unsigned int width, const unsigned int height) const {
     auto window = reinterpret_cast<GLFWwindow*>(this->window_ptr);
 
-    int fbo_width = 0, fbo_height = 0;
-    int window_width = 0, window_height = 0;
 
     glfwSetWindowSizeLimits(window, GLFW_DONT_CARE, GLFW_DONT_CARE, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwSetWindowSize(window, width, height);
+
+    // TODO: wait for async window systems to get "the real" new FBO size or something?
+
+    int fbo_width = 0, fbo_height = 0;
+    int window_width = 0, window_height = 0;
     glfwGetFramebufferSize(window, &fbo_width, &fbo_height);
     glfwGetWindowSize(window, &window_width, &window_height);
 
-    if (fbo_width != width || fbo_height != height) {
-        log("WindowManipulation::set_framebuffer_size(): forcing window size limits to " + std::to_string(width) + "x" + std::to_string(height) + ". You wont be able to resize the window manually after this.");
-        glfwSetWindowSizeLimits(window, width, height, width, height);
-        glfwSetWindowSize(window, width, height);
-        glfwGetFramebufferSize(window, &fbo_width, &fbo_height);
-        glfwGetWindowSize(window, &window_width, &window_height);
-    }
+    //if (fbo_width != width || fbo_height != height) {
+    //    log("WindowManipulation::set_window_size(): forcing window size limits to " + std::to_string(width) + "x" + std::to_string(height) + ". You wont be able to resize the window manually after this.");
+    //    glfwSetWindowSizeLimits(window, width, height, width, height);
+    //    glfwSetWindowSize(window, width, height);
+    //    glfwGetFramebufferSize(window, &fbo_width, &fbo_height);
+    //    glfwGetWindowSize(window, &window_width, &window_height);
+    //}
 
     if(fbo_width != width || fbo_height != height) {
-        log_error("WindowManipulation::set_framebuffer_size() could not enforce window size to achieve requested framebuffer size of w: "
-            + std::to_string(width) + ", h: " + std::to_string(height)
-            + ".\n Framebuffer has size w: " + std::to_string(fbo_width) + ", h: " + std::to_string(fbo_height)
-            + "\n Requesting shutdown.");
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-        static_cast<megamol::frontend::OpenGL_GLFW_Service*>(glfwGetWindowUserPointer(window))->setShutdown();
+        log_warning("WindowManipulation::set_window_size() set a window size but the framebuffer size does not match:"
+              "\n Window has size w: " + std::to_string(width) + ", h: " + std::to_string(height)
+            + "\n Framebuffer has size w: " + std::to_string(fbo_width) + ", h: " + std::to_string(fbo_height)
+            + "\n Look at the CLI --framebuffer option and the Lua mmSetFramebuffer command if you want to set the framebuffer size directly.");
     }
 }
 
