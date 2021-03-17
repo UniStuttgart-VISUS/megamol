@@ -236,15 +236,6 @@ void Lua_Service_Wrapper::fill_frontend_resources_callbacks(void* callbacks_coll
             return StringResult{answer.str().c_str()};
         }});
 
-    callbacks.add<VoidResult, std::string>(
-        "mmScreenshot",
-        "(string filename)\n\tSave a screen shot of the GL front buffer under 'filename'.",
-        {[&](std::string file) -> VoidResult
-        {
-            m_requestedResourceReferences[1].getResource<std::function<bool(std::string const&)> >()(file);
-            return VoidResult{};
-        }});
-
     callbacks.add<DoubleResult>(
         "mmLastFrameTime",
         "()\n\tReturns the graph execution time of the last frame in ms.",

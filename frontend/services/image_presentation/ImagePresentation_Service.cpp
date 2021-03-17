@@ -68,8 +68,9 @@ bool ImagePresentation_Service::init(const Config& config) {
 
     this->m_requestedResourcesNames =
     {
-            "FrontendResources" // std::vector<FrontendResource>
-          , "RegisterLuaCallbacks"
+          "FrontendResources" // std::vector<FrontendResource>
+        , "RegisterLuaCallbacks"
+        , "ImageWrapperToPNG_ScreenshotTrigger"
     };
 
     log("initialized successfully");
@@ -348,6 +349,71 @@ void ImagePresentation_Service::register_lua_framebuffer_callbacks() {
             for (auto& entry : m_entry_points) {
                 entry.framebuffer_events.size_events.push_back({width, height});
                 entry.framebuffer_events_source = GraphEntryPoint::FboEventsSource::Manual;
+            }
+
+            return VoidResult{};
+        }});
+
+    callbacks.add<VoidResult, std::string>(
+        "mmScreenshot",
+        "(string filename)\n\tSave a screen shot of all entry point views as 'filename' + 'viewname'.",
+        {[&](std::string file) -> VoidResult
+        {
+            auto maybe_triggerscreenshot_ptr = maybeGetResource<std::function<bool(ImageWrapper const&, std::string const&)>>("ImageWrapperToPNG_ScreenshotTrigger", m_frontend_resources);
+            auto& triggerscreenshot = *maybe_triggerscreenshot_ptr;
+
+            if (m_entry_points.empty()) {
+                log_warning("no views registered as entry points. nothing to write as screenshot into " + file);
+                return VoidResult{};
+            }
+
+            auto clear = [](std::string name) {
+                auto forbidden = "<>:“/\|?*";
+                auto replace = '_';
+
+                // credit goes to https://thispointer.com/find-and-replace-all-occurrences-of-a-sub-string-in-c/
+                size_t pos = name.find_first_of(forbidden);
+
+                while (pos != std::string::npos) {
+                    name.replace(pos, 1, 1, replace);
+                    pos = name.find_first_of(forbidden, pos + 1);
+                }
+
+                return name;
+            };
+
+            auto append_view_name = [&](std::string const& file, std::string const& name) {
+                // put view name (cleared of ::) before .png
+                auto dot = file.find_last_of('.');
+                auto prefix = file.substr(0, dot);
+                auto suffix = (dot > file.size()) ? "" : file.substr(dot); // may turn out empty
+
+                if (suffix != ".png" && suffix != ".PNG")
+                    suffix = ".png";
+
+                auto final_name = (name.size() ? "-" : "") + clear(name);
+
+                return prefix + final_name + suffix;
+            };
+
+            auto error = [](auto const& name, auto const& file) {
+                return Error{"error writing screenshot for entry point " + name + " into file " + file};
+            };
+
+            // if only one view, write to file directly
+            bool write_ok = true;
+            if (m_entry_points.size() == 1) {
+                if (!triggerscreenshot(m_entry_points.back().execution_result_image, append_view_name(file,""))) {
+                    return error(m_entry_points.back().moduleName, file);
+                }
+            } else {
+                // if has many entry points and we dont have mmScreenshot with view parameter yet - screenshot all views
+                for (auto& entry : m_entry_points) {
+                    auto new_file = append_view_name(file, entry.moduleName);
+                    if (!triggerscreenshot(entry.execution_result_image, new_file)) {
+                        return error(entry.moduleName, new_file + " (multiple views, view name appended)");
+                    }
+                }
             }
 
             return VoidResult{};
