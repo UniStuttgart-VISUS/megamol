@@ -51,7 +51,7 @@ static void PNGAPI pngFlushFileFunc(png_structp pngPtr) {
     f->Flush();
 }
 
-static bool write_png_to_file(megamol::frontend_resources::ImageData const& image, std::string const& filename) {
+static bool write_png_to_file(megamol::frontend_resources::ScreenshotImageData const& image, std::string const& filename) {
     vislib::sys::FastFile file;
     try {
         // open final image file
@@ -128,7 +128,7 @@ void megamol::frontend_resources::GLScreenshotSource::set_read_buffer(ReadBuffer
     }
 }
 
-megamol::frontend_resources::ImageData megamol::frontend_resources::GLScreenshotSource::take_screenshot() const {
+megamol::frontend_resources::ScreenshotImageData megamol::frontend_resources::GLScreenshotSource::take_screenshot() const {
     if (gl_context_ptr)
         gl_context_ptr->activate();
 
@@ -140,7 +140,7 @@ megamol::frontend_resources::ImageData megamol::frontend_resources::GLScreenshot
     GLint fbWidth = viewport_dims[2];
     GLint fbHeight = viewport_dims[3];
 
-    ImageData result;
+    ScreenshotImageData result;
     result.resize(static_cast<size_t>(fbWidth), static_cast<size_t>(fbHeight));
 
     glReadBuffer(m_read_buffer);
@@ -155,7 +155,7 @@ megamol::frontend_resources::ImageData megamol::frontend_resources::GLScreenshot
     return std::move(result);
 }
 
-bool megamol::frontend_resources::ImageDataToPNGWriter::write_image(ImageData image, std::string const& filename) const {
+bool megamol::frontend_resources::ScreenshotImageDataToPNGWriter::write_image(ScreenshotImageData image, std::string const& filename) const {
     return write_png_to_file(std::move(image), filename);
 }
 

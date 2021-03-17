@@ -8,11 +8,12 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 namespace megamol {
 namespace frontend_resources {
 
-struct ImageData {
+struct ScreenshotImageData {
     struct Pixel {
         std::uint8_t r = 255;
         std::uint8_t g = 0;
@@ -49,7 +50,7 @@ struct ImageData {
 
 class IScreenshotSource {
 public:
-    virtual ImageData take_screenshot() const = 0;
+    virtual ScreenshotImageData take_screenshot() const = 0;
 
     ~IScreenshotSource() = default;
 };
@@ -60,7 +61,7 @@ public:
         return this->write_image(std::move(image_source.take_screenshot()), filename);
     }
 
-    virtual bool write_image(ImageData image, std::string const& filename) const = 0;
+    virtual bool write_image(ScreenshotImageData image, std::string const& filename) const = 0;
 
     ~IImageDataWriter() = default;
 };
@@ -71,15 +72,15 @@ public:
 
     void set_read_buffer(ReadBuffer buffer);
 
-    ImageData take_screenshot() const override;
+    ScreenshotImageData take_screenshot() const override;
 
 private:
     ReadBuffer m_read_buffer = FRONT;
 };
 
-class ImageDataToPNGWriter : public IImageDataWriter {
+class ScreenshotImageDataToPNGWriter : public IImageDataWriter {
 public:
-    bool write_image(ImageData image, std::string const& filename) const override;
+    bool write_image(ScreenshotImageData image, std::string const& filename) const override;
 };
 
 
