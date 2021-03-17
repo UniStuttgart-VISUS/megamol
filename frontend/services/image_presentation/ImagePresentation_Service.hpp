@@ -103,6 +103,7 @@ private:
     bool clear_entry_points();
 
     void register_lua_framebuffer_callbacks();
+    std::function<bool(std::string const&, std::string const&)> m_entrypointToPNG_trigger;
 };
 
 } // namespace frontend

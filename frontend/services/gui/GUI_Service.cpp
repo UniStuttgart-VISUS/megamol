@@ -10,7 +10,6 @@
 #include "Window_Events.h"
 #include "Framebuffer_Events.h"
 #include "KeyboardMouse_Events.h"
-#include "Screenshot_Service.hpp"
 #include "ScriptPaths.h"
 #include "ProjectLoader.h"
 #include "FrameStatistics.h"
@@ -60,7 +59,7 @@ bool GUI_Service::init(const Config& config) {
         "MouseEvents",                           // 3 - mouse click
         "IOpenGL_Context",                       // 4 - graphics api for imgui context
         "WindowFramebufferEvents",               // 5 - viewport size
-        "GLFrontbufferToPNG_ScreenshotTrigger",  // 6 - trigger screenshot
+        "EntryPointToPNG_ScreenshotTrigger",     // 6 - trigger screenshot
         "LuaScriptPaths",                        // 7 - current project path
         "ProjectLoader",                         // 8 - trigger loading of new running project
         "FrameStatistics",                       // 9 - current fps and ms value
@@ -222,8 +221,10 @@ void GUI_Service::digestChangedRequestedResources() {
     /// Trigger Screenshot = resource index 6
     if (gui->GetTriggeredScreenshot()) {
         auto& screenshot_to_file_trigger =
-            this->m_requestedResourceReferences[6].getResource<std::function<bool(std::string const&)>>();
-        screenshot_to_file_trigger(gui->GetScreenshotFileName());
+            this->m_requestedResourceReferences[6].getResource<std::function<bool(std::string const&, std::string const&)>>();
+
+        std::string entrypoint_name = "currently not handled";
+        screenshot_to_file_trigger(entrypoint_name, gui->GetScreenshotFileName());
     }
 
     /// Pipe lua script paths to gui = resource index 7
