@@ -13,8 +13,8 @@ namespace megamol {
 namespace frontend_resources {
 
 struct FramebufferState {
-    int width = 1;
-    int height = 1;
+    int width = 0;
+    int height = 0;
 
     bool operator==(const FramebufferState& other) {
         return this->width == other.width && this->height == other.height;
