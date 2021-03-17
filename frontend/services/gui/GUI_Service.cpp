@@ -17,6 +17,9 @@
 #include "RuntimeConfig.h"
 #include "WindowManipulation.h"
 
+#include "ImageWrapper.h"
+#include "ImageWrapper_to_GLTexture.h"
+
 #include "mmcore/utility/log/Log.h"
 
 
@@ -62,6 +65,7 @@ bool GUI_Service::init(const Config& config) {
         "FrameStatistics",                       // 9 - current fps and ms value
         "RuntimeConfig",                         // 10 - resource paths
         "WindowManipulation"                     // 11 - GLFW window pointer
+        , "ImageRegistry" // 12 - frontend images test
     };
 
     // init gui
@@ -274,6 +278,15 @@ void GUI_Service::postGraphRender() {
     if (is_gui_nullptr) return;
 
     auto gui = this->m_gui->Get();
+
+    std::vector<std::tuple<std::string, unsigned int, unsigned int, unsigned int>> textures;
+    this->m_requestedResourceReferences[12]
+        .getResource<megamol::frontend_resources::ImageRegistry>()
+        .iterate_over_entries([&](std::string const& image_name, megamol::frontend_resources::ImageWrapper const& image)
+            {
+                textures.push_back({image_name, megamol::frontend_resources::to_gl_texture(image).as_gl_handle(), image.size().width, image.size().height});
+            });
+    gui->SetEntryPointTextures(textures);
 
     gui->PostDraw();
 }
