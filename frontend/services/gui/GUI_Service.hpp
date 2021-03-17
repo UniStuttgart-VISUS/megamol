@@ -38,6 +38,7 @@ public:
         megamol::core::CoreInstance* core_instance = nullptr;
         bool gui_show = true;
         float gui_scale = 1.0f;
+        bool show_fbos_test = false;
     };
 
     std::string serviceName() const override { return "GUI_Service"; }
@@ -89,6 +90,8 @@ private:
     void resource_provide_gui_state(const std::string& json_state);
     void resource_provide_gui_visibility(bool show);
     void resource_provide_gui_scale(float scale);
+
+    Config m_config_frontend_fbos_test;
 };
 
 } // namespace frontend

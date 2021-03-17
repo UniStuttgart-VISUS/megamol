@@ -42,6 +42,7 @@ bool GUI_Service::init(void* configPtr) {
 
 
 bool GUI_Service::init(const Config& config) {
+    m_config_frontend_fbos_test = config;
 
     this->m_time = 0.0;
     this->m_framebuffer_size = glm::vec2(1.0f, 1.0f);
@@ -279,14 +280,16 @@ void GUI_Service::postGraphRender() {
 
     auto gui = this->m_gui->Get();
 
-    std::vector<std::tuple<std::string, unsigned int, unsigned int, unsigned int>> textures;
-    this->m_requestedResourceReferences[12]
-        .getResource<megamol::frontend_resources::ImageRegistry>()
-        .iterate_over_entries([&](std::string const& image_name, megamol::frontend_resources::ImageWrapper const& image)
-            {
-                textures.push_back({image_name, megamol::frontend_resources::to_gl_texture(image).as_gl_handle(), image.size().width, image.size().height});
-            });
-    gui->SetEntryPointTextures(textures);
+    if (m_config_frontend_fbos_test.show_fbos_test) {
+        std::vector<std::tuple<std::string, unsigned int, unsigned int, unsigned int>> textures;
+        this->m_requestedResourceReferences[12]
+            .getResource<megamol::frontend_resources::ImageRegistry>()
+            .iterate_over_entries([&](std::string const& image_name, megamol::frontend_resources::ImageWrapper const& image)
+                {
+                    textures.push_back({image_name, megamol::frontend_resources::to_gl_texture(image).as_gl_handle(), image.size().width, image.size().height});
+                });
+        gui->SetEntryPointTextures(textures);
+    }
 
     gui->PostDraw();
 }

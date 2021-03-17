@@ -93,6 +93,7 @@ int main(const int argc, const char** argv) {
     guiConfig.core_instance = &core;
     guiConfig.gui_show = config.gui_show;
     guiConfig.gui_scale = config.gui_scale;
+    guiConfig.show_fbos_test = config.gui_show_entryfbos;
     // priority must be higher than priority of gl_service (=1)
     // service callbacks get called in order of priority of the service.
     // postGraphRender() and close() are called in reverse order of priorities.

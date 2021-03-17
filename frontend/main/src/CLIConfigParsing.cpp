@@ -87,6 +87,7 @@ static std::string nocursor_option      = "nocursor";
 static std::string interactive_option   = "i,interactive";
 static std::string guishow_option       = "guishow";
 static std::string guiscale_option      = "guiscale";
+static std::string entryfbos_option     = "entryfbos";
 static std::string help_option          = "h,help";
 
 static void files_exist(std::vector<std::string> vec, std::string const& type) {
@@ -112,6 +113,11 @@ static void guishow_handler(std::string const& option_name, cxxopts::ParseResult
 static void guiscale_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
 {
     config.gui_scale = parsed_options[option_name].as<float>();
+};
+
+static void entryfbos_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
+{
+    config.gui_show_entryfbos = parsed_options[option_name].as<bool>();
 };
 
 static void config_handler(std::string const& option_name, cxxopts::ParseResult const& parsed_options, RuntimeConfig& config)
@@ -266,6 +272,7 @@ std::vector<OptionsListEntry> cli_options_list =
         , {project_files_option, "Project file(s) to load at startup",                                              cxxopts::value<std::vector<std::string>>(), project_handler}
         , {guishow_option,       "Render GUI overlay, use '=false' to disable",                                     cxxopts::value<bool>(),                     guishow_handler}
         , {guiscale_option,      "Set scale of GUI, expects float >= 1.0. e.g. 1.0 => 100%, 2.1 => 210%",           cxxopts::value<float>(),                    guiscale_handler}
+        , {entryfbos_option,     "[Experimental] Show result images of graph entry point views in GUI",             cxxopts::value<bool>(),                     entryfbos_handler}
         , {help_option,          "Print help message",                                                              cxxopts::value<bool>(),                     empty_handler}
     };
 

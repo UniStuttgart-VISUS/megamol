@@ -57,6 +57,7 @@ struct RuntimeConfig {
     unsigned int window_monitor = 0;
     bool gui_show = true;
     float gui_scale = 1.0f;
+    bool gui_show_entryfbos = false;
 
     std::string as_string() const {
         auto summarize = [](std::vector<std::string> const& vec) -> std::string {
