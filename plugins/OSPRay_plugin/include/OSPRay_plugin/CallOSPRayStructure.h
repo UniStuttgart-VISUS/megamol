@@ -208,11 +208,20 @@ public:
     void setTime(float time);
     float getTime();
 
+    void setPickResult(uint32_t structure_id, uint32_t prim_id) {
+        this->s_id = structure_id;
+        this->p_id = prim_id;
+    }
+    std::tuple<uint32_t, uint32_t> getPickResult() const {
+        return std::make_tuple(s_id, p_id);
+    }
 
 private:
     OSPRayStrcutrureMap* structureMap;
     float time;
     OSPRayExtendMap* extendMap;
+    uint32_t s_id = -1;
+    uint32_t p_id = -1;
 };
 typedef core::factories::CallAutoDescription<CallOSPRayStructure> CallOSPRayStructureDescription;
 } // namespace ospray

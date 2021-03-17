@@ -48,9 +48,6 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
     , m_opacity_threshold("opacity threshold", "Opacity threshold for integrative rendering")
     , m_iso_value("isovalue", "Isovalue for isosurface rendering")
     , m_opacity("opacity", "Surface opacity for blending")
-    , paramOverride("override::enable", "Enable override of range")
-    , paramMinOverride("override::min", "Override the minimum value provided by the data set")
-    , paramMaxOverride("override::max", "Override the maximum value provided by the data set")
     , m_renderer_callerSlot("Renderer", "Renderer for chaining")
     , m_volumetricData_callerSlot("getData", "Connects the volume renderer with a voluemtric data source")
     , m_lights_callerSlot("lights", "Lights are retrieved over this slot.")
@@ -109,15 +106,6 @@ RaycastVolumeRenderer::RaycastVolumeRenderer()
 
     this->m_material_color << new core::param::ColorParam(0.95f, 0.67f, 0.47f, 1.0f);
     this->MakeSlotAvailable(&this->m_material_color);
-
-    this->paramOverride << new megamol::core::param::BoolParam(false);
-    this->MakeSlotAvailable(&this->paramOverride);
-
-    this->paramMinOverride << new megamol::core::param::FloatParam(0.0f);
-    this->MakeSlotAvailable(&this->paramMinOverride);
-
-    this->paramMaxOverride << new megamol::core::param::FloatParam(1.0f);
-    this->MakeSlotAvailable(&this->paramMaxOverride);
 }
 
 RaycastVolumeRenderer::~RaycastVolumeRenderer() { this->Release(); }
@@ -379,15 +367,7 @@ bool RaycastVolumeRenderer::Render(megamol::core::view::CallRender3DGL& cr) {
     auto const maxExtents = std::max(m_volume_extents[0], std::max(m_volume_extents[1], m_volume_extents[2]));
     glUniform1f(compute_shdr->ParameterLocation("voxelSize"), maxExtents / (maxResolution - 1.0f));
 
-    // Force value range to user-defined range if requested.
-    if (this->paramOverride.Param<core::param::BoolParam>()->Value()) {
-        std::array<float, 2> overrideRange = {this->paramMinOverride.Param<core::param::FloatParam>()->Value(),
-            this->paramMaxOverride.Param<core::param::FloatParam>()->Value()};
-        glUniform2fv(compute_shdr->ParameterLocation("valRange"), 1, overrideRange.data());
-
-    } else {
-        glUniform2fv(compute_shdr->ParameterLocation("valRange"), 1, valRange.data());
-    }
+    glUniform2fv(compute_shdr->ParameterLocation("valRange"), 1, valRange.data());
 
     glUniform1f(compute_shdr->ParameterLocation("rayStepRatio"),
         this->m_ray_step_ratio_param.Param<core::param::FloatParam>()->Value());
@@ -629,6 +609,9 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
     } while (cd->FrameID() != frameID);
 
     // TODO check time and frame id or whatever else
+    if (this->m_volume_datahash != cd->DataHash()) {
+        valRangeNeedsUpdate = true;
+    }
     if (this->m_volume_datahash != cd->DataHash() || this->m_frame_id != cd->FrameID()) {
         this->m_volume_datahash = cd->DataHash();
         this->m_frame_id = cd->FrameID();
@@ -723,9 +706,13 @@ bool RaycastVolumeRenderer::updateVolumeData(const unsigned int frameID) {
 bool RaycastVolumeRenderer::updateTransferFunction() {
     core::view::CallGetTransferFunction* ct =
         this->m_transferFunction_callerSlot.CallAs<core::view::CallGetTransferFunction>();
-
+    if (valRangeNeedsUpdate) {
+        ct->SetRange(valRange);
+        valRangeNeedsUpdate = false;
+    }
     if (ct != NULL && ((*ct)())) {
         tf_texture = ct->OpenGLTexture();
+        valRange = ct->Range();
     }
 
     return true;
