@@ -7,6 +7,7 @@
 #include "stdafx.h"
 #include "OSPRay_plugin/AbstractOSPRayStructure.h"
 
+
 namespace megamol {
 namespace ospray {
 
@@ -16,7 +17,9 @@ AbstractOSPRayStructure::AbstractOSPRayStructure()
     , deployStructureSlot("deployStructureSlot", "Connects to the OSPRayRenderer or another OSPRayStructure")
     , getStructureSlot("getStructureSlot", "Connects to the another OSPRayStructure")
     , getMaterialSlot("getMaterialSlot", "Connects to an OSPRayMaterial") 
-    , getTransformationSlot("getTransformationSlot", "Connects to an OSPRayTransform") {
+    , getTransformationSlot("getTransformationSlot", "Connects to an OSPRayTransform")
+    , writeFlagsSlot("writeFlags", "")
+    , readFlagsSlot("readFlags", "") {
 
     this->deployStructureSlot.SetCallback(CallOSPRayStructure::ClassName(), CallOSPRayStructure::FunctionName(0),
         &AbstractOSPRayStructure::getStructureCallback);
@@ -32,6 +35,11 @@ AbstractOSPRayStructure::AbstractOSPRayStructure()
 
     this->getTransformationSlot.SetCompatibleCall<CallOSPRayTransformationDescription>();
     this->MakeSlotAvailable(&this->getTransformationSlot);
+
+    writeFlagsSlot.SetCompatibleCall<core::FlagCallWrite_CPUDescription>();
+    MakeSlotAvailable(&this->writeFlagsSlot);
+    readFlagsSlot.SetCompatibleCall<core::FlagCallRead_CPUDescription>();
+    MakeSlotAvailable(&this->readFlagsSlot);
 
     this->structureContainer.isValid = true;
     this->time = -1.0f;
