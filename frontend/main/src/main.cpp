@@ -218,7 +218,7 @@ int main(const int argc, const char** argv) {
     };
 
     // lua can issue rendering of frames, we provide a resource for this
-    const std::function<bool()> render_next_frame_func = [&]() -> bool { return render_next_frame(); };
+    const std::function<bool()> render_next_frame_func = render_next_frame; // can not pass anonymous type of lambda directly
     services.getProvidedResources().push_back({"RenderNextFrame", render_next_frame_func});
 
     // image presentation service needs to assign frontend resources to entry points
