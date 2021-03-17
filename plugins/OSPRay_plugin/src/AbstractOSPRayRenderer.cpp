@@ -137,7 +137,6 @@ namespace ospray {
     void AbstractOSPRayRenderer::setupOSPRay(const char* renderer_name) {
         // create and setup renderer
         _renderer = std::make_shared<::ospray::cpp::Renderer>(renderer_name);
-        _camera = std::make_shared<::ospray::cpp::Camera>("perspective");
         _world = std::make_shared<::ospray::cpp::World>();
     }
 
@@ -381,6 +380,20 @@ namespace ospray {
                     static_cast<float>(mmcam.resolution_gate().width());
         imgEnd[1] = (mmcam.image_tile().bottom() + mmcam.image_tile().height()) /
                     static_cast<float>(mmcam.resolution_gate().height());
+
+        if (_currentProjectionType != mmcam.projection_type() || !_camera){
+            if (mmcam.projection_type() == core::thecam::Projection_type::perspective) {
+                _camera = std::make_shared<::ospray::cpp::Camera>("perspective");
+                _currentProjectionType = core::thecam::Projection_type::perspective;
+            } else if (mmcam.projection_type() == core::thecam::Projection_type::orthographic) {
+                _camera = std::make_shared<::ospray::cpp::Camera>("orthographic");
+                _currentProjectionType = core::thecam::Projection_type::orthographic;
+            } else {
+                core::utility::log::Log::DefaultLog.WriteWarn("[AbstractOSPRayRenderer] Projection type not supported. Falling back to perspective.");
+                _camera = std::make_shared<::ospray::cpp::Camera>("perspective");
+                _currentProjectionType = core::thecam::Projection_type::perspective;
+            } //TODO: Implement panoramic camera
+        }
 
         // setup ospcam
         _camera->setParam("imageStart", convertToVec2f(imgStart));
