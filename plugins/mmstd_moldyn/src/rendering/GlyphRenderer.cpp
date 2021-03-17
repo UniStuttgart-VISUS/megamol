@@ -13,7 +13,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "inttypes.h"
 #include "mmcore/CoreInstance.h"
-#include "mmcore/FlagCall_GL.h"
+#include "mmcore/UniFlagCalls.h"
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/FloatParam.h"
 #include "mmcore/utility/ShaderSourceFactory.h"
