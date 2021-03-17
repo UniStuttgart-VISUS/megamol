@@ -10,6 +10,7 @@
 #include "ImagePresentation_Service.hpp"
 
 #include "mmcore/view/AbstractView_EventConsumption.h"
+#include "LuaCallbacksCollection.h"
 
 // local logging wrapper for your convenience until central MegaMol logger established
 #include "mmcore/utility/log/Log.h"
@@ -67,7 +68,8 @@ bool ImagePresentation_Service::init(const Config& config) {
 
     this->m_requestedResourcesNames =
     {
-        "FrontendResources" // std::vector<FrontendResource>
+            "FrontendResources" // std::vector<FrontendResource>
+          , "RegisterLuaCallbacks"
     };
 
     log("initialized successfully");
@@ -89,6 +91,8 @@ void ImagePresentation_Service::setRequestedResources(std::vector<FrontendResour
     this->m_requestedResourceReferences = resources;
 
     m_frontend_resources_ptr = & m_requestedResourceReferences[0].getResource<std::vector<megamol::frontend::FrontendResource>>();
+
+    register_lua_framebuffer_callbacks();
 }
 #define m_frontend_resources (*m_frontend_resources_ptr)
     
@@ -226,9 +230,11 @@ void ImagePresentation_Service::distribute_changed_resources_to_entry_points() {
             for (auto& size: maybe_window_fbo_events_ptr->size_events) {
                 entry.framebuffer_events.size_events.push_back({size.width, size.height});
             }
+        } else if (entry.framebuffer_events_source == GraphEntryPoint::FboEventsSource::Manual) {
+            // FBO size was set manually once via Lua or CLI - we dont need to issue any events
         } else {
-            log_error("entry point " + entry.moduleName + " demands Fbo Size events to be fed from WindowFramebufferEvents resource. "
-                      "\nBut i could not find that resource. Requesting to shut down MegaMol.");
+            log_error("entry point " + entry.moduleName + " encountered unhandled GraphEntryPoint::FboEventsSource value."
+                      "\nRequesting to shut down MegaMol.");
             this->setShutdown();
         }
     }
@@ -321,6 +327,37 @@ bool ImagePresentation_Service::clear_entry_points() {
     return true;
 }
 
+void ImagePresentation_Service::register_lua_framebuffer_callbacks() {
+    megamol::frontend_resources::LuaCallbacksCollection callbacks;
+
+    using Error = megamol::frontend_resources::LuaCallbacksCollection::Error;
+    using StringResult = megamol::frontend_resources::LuaCallbacksCollection::StringResult;
+    using VoidResult = megamol::frontend_resources::LuaCallbacksCollection::VoidResult;
+    using DoubleResult = megamol::frontend_resources::LuaCallbacksCollection::DoubleResult;
+
+    callbacks.add<VoidResult, int, int>(
+        "mmSetFramebufferSize",
+        "(int width, int height)\n\tSet framebuffer dimensions to width x height.",
+        {[&](int width, int height) -> VoidResult
+        {
+            if (width <= 0 || height <= 0) {
+                return Error {"framebuffer dimensions must be positive, but given values are: " + std::to_string(width) + " x " + std::to_string(height)};
+            }
+
+            // after manual resize of FBO, decouple FBO size of Views (entry points) from window size forever
+            for (auto& entry : m_entry_points) {
+                entry.framebuffer_events.size_events.push_back({width, height});
+                entry.framebuffer_events_source = GraphEntryPoint::FboEventsSource::Manual;
+            }
+
+            return VoidResult{};
+        }});
+
+    auto maybe_register_lua_callbacks_ptr = maybeGetResource<std::function<void(megamol::frontend_resources::LuaCallbacksCollection const&)>>("RegisterLuaCallbacks", m_frontend_resources);
+    auto& register_lua_callbacks = *maybe_register_lua_callbacks_ptr; // we requested this resource as a service - if it was not present MegaMol would have shut down
+
+    register_lua_callbacks(callbacks);
+}
 
 } // namespace frontend
 } // namespace megamol

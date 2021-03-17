@@ -101,6 +101,8 @@ private:
     bool remove_entry_point(std::string name);
     bool rename_entry_point(std::string oldName, std::string newName);
     bool clear_entry_points();
+
+    void register_lua_framebuffer_callbacks();
 };
 
 } // namespace frontend
