@@ -187,7 +187,7 @@ public:
                 this->id_acc_ = std::make_shared<Accessor_Impl<uint64_t>>(reinterpret_cast<char const*>(p), s);
             } break;
             case SimpleSphericalParticles::IDDATA_NONE:
-            default: { this->id_acc_ = std ::make_shared<Accessor_0>(); }
+            default: { this->id_acc_ = std ::make_shared<Accessor_Reflect>(); }
             }
         }
 

@@ -146,6 +146,49 @@ private:
 
 
 /**
+ * Accessor class reflecting accessed index.
+ */
+class Accessor_Reflect : public Accessor {
+public:
+    Accessor_Reflect() {}
+
+    Accessor_Reflect(Accessor_Reflect const& rhs) = default;
+
+    Accessor_Reflect(Accessor_Reflect&& rhs) = default;
+
+    Accessor_Reflect& operator=(Accessor_Reflect const& rhs) = default;
+
+    Accessor_Reflect& operator=(Accessor_Reflect&& rhs) = default;
+
+    float Get_f(size_t idx) const override {
+        return static_cast<float>(idx);
+    }
+
+    double Get_d(size_t idx) const override {
+        return static_cast<double>(idx);
+    }
+
+    uint64_t Get_u64(size_t idx) const override {
+        return static_cast<uint64_t>(idx);
+    }
+
+    unsigned int Get_u32(size_t idx) const override {
+        return static_cast<unsigned int>(idx);
+    }
+
+    unsigned short Get_u16(size_t idx) const override {
+        return static_cast<unsigned short>(idx);
+    }
+
+    unsigned char Get_u8(size_t idx) const override {
+        return static_cast<unsigned char>(idx);
+    }
+
+    virtual ~Accessor_Reflect() = default;
+};
+
+
+/**
  * Dummy accessor for an empty array;
  */
 class Accessor_0 : public Accessor {
