@@ -86,6 +86,8 @@ private:
     std::list<GraphEntryPoint> m_entry_points;
 
     std::vector<megamol::frontend::FrontendResource> map_resources(std::vector<std::string> const& requests);
+    const std::vector<FrontendResource>* m_frontend_resources_ptr = nullptr;
+
     bool add_entry_point(std::string name, void* module_raw_ptr);
     bool remove_entry_point(std::string name);
     bool rename_entry_point(std::string oldName, std::string newName);

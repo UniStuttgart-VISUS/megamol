@@ -86,7 +86,10 @@ const std::vector<std::string> ImagePresentation_Service::getRequestedResourceNa
 
 void ImagePresentation_Service::setRequestedResources(std::vector<FrontendResource> resources) {
     this->m_requestedResourceReferences = resources;
+
+    m_frontend_resources_ptr = & m_requestedResourceReferences[0].getResource<std::vector<megamol::frontend::FrontendResource>>();
 }
+#define m_frontend_resources (*m_frontend_resources_ptr)
     
 void ImagePresentation_Service::updateProvidedResources() {
 }
@@ -144,16 +147,18 @@ static EntryPointInitFunctions get_init_execute_resources(void* ptr) {
 }
 
 std::vector<FrontendResource> ImagePresentation_Service::map_resources(std::vector<std::string> const& requests) {
-    auto& frontend_resources = m_requestedResourceReferences[0].getResource<std::vector<megamol::frontend::FrontendResource>>();
-
     std::vector<FrontendResource> result;
 
     for (auto& request: requests) {
-        auto find_it = std::find_if(frontend_resources.begin(), frontend_resources.end(),
+        auto find_it = std::find_if(m_frontend_resources.begin(), m_frontend_resources.end(),
             [&](FrontendResource const& resource) { return resource.getIdentifier() == request; });
+        bool found_request = find_it != m_frontend_resources.end();
 
-        if (find_it == frontend_resources.end())
+
+        if (!found_request) {
+            log_error("could not find requested resource " + request);
             return {};
+        }
 
         result.push_back(*find_it);
     }
@@ -169,11 +174,11 @@ bool ImagePresentation_Service::add_entry_point(std::string name, void* module_r
     auto resource_requests = entry_resource_requests();
     auto resources = map_resources(resource_requests);
 
-    if (resources.empty() && !resource_requests.empty())
+    if (resources.empty() && !resource_requests.empty()) {
+        log_error("could not assign resources requested by entry point " + name + ". Entry point not created.");
         return false;
+    }
 
-    if (!init_entry(module_raw_ptr, resources, image))
-        return false;
 
     m_entry_points.push_back(GraphEntryPoint{
         name,
@@ -182,6 +187,14 @@ bool ImagePresentation_Service::add_entry_point(std::string name, void* module_r
         execute_etry,
         image
         });
+
+    auto& entry_point = m_entry_points.back();
+
+    if (!init_entry(entry_point.modulePtr, entry_point.entry_point_resources, entry_point.execution_result_image)) {
+        log_error("init function for entry point " + entry_point.moduleName + " failed. Entry point not created.");
+        m_entry_points.pop_back();
+        return false;
+    }
 
     return true;
 }
