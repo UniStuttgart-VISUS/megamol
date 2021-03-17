@@ -22,7 +22,7 @@ namespace demos {
 /*
  * QuartzPlaneRenderer::QuartzPlaneRenderer
  */
-QuartzPlaneRenderer::QuartzPlaneRenderer(void) : core::view::Renderer2DModule(),
+QuartzPlaneRenderer::QuartzPlaneRenderer(void) : core::view::Renderer2DModuleGL(),
 AbstractMultiShaderQuartzRenderer(),
 useClipColSlot("useClipCol", "Use clipping plane or grain colour for grains") {
 

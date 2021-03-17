@@ -134,6 +134,9 @@ void view::View2DGL::Render(double time, double instanceTime) {
         (1.0f / vz - vy));
     cr2d->AccessBoundingBoxes().SetBoundingBox(vr.Left(),vr.Bottom(),vr.Right(),vr.Top());
 
+    // clear fbo before sending it down the rendering call
+    // the view is the owner of this fbo and therefore responsible
+    // for clearing it at the beginning of a render frame
     this->_fbo->bind();
     auto bgcol = this->BkgndColour();
     glClearColor(bgcol.r, bgcol.g, bgcol.b, bgcol.a);
@@ -144,16 +147,29 @@ void view::View2DGL::Render(double time, double instanceTime) {
     cr2d->SetFramebufferObject(_fbo);
     cr2d->SetCamera(_camera);
 
+    ///// use this to keep supporting text rendering without additional changes for now
+    ::glMatrixMode(GL_PROJECTION);
+    ::glLoadIdentity();
+    glLoadMatrixf(glm::value_ptr(_camera.getProjectionMatrix()));
+    ::glMatrixMode(GL_MODELVIEW);
+    ::glLoadIdentity();
+    glLoadMatrixf(glm::value_ptr(_camera.getViewMatrix()));
+    /////
+
     (*cr2d)(AbstractCallRender::FnRender);
 
     // after render
     AbstractView::afterRender();
 
-    // TODO Best fix for now steal blitting from splitview:
+    // Blit the final image to the default framebuffer of the window.
+    // Technically, the view's fbo should always match the size of the window so a blit is fine.
+    // Eventually, presenting the fbo will become the frontends job.
     // Bind and blit framebuffer.
-    _fbo->bind();
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
-    glBlitFramebuffer(0, 0, _fbo->getWidth(), _fbo->getHeight(), 0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    _fbo->bindToRead(0);
+    glBlitFramebuffer(0, 0, _fbo->getWidth(), _fbo->getHeight(), 0, 0, _fbo->getWidth(), _fbo->getHeight(),
+        GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 }
@@ -163,30 +179,57 @@ void view::View2DGL::Render(double time, double instanceTime) {
  * view::View2DGL::ResetView
  */
 void view::View2DGL::ResetView(void) {
-    // using namespace vislib::graphics;
-    VLTRACE(VISLIB_TRCELVL_INFO, "View2DGL::ResetView\n");
+    if (_cameraIsMutable) { // check if view is in control of the camera
+        CallRender2DGL* cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
+        if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
+            this->_viewX = -0.5f * (cr2d->GetBoundingBoxes().BoundingBox().Left() +
+                                       cr2d->GetBoundingBoxes().BoundingBox().Right());
+            this->_viewY = -0.5f * (cr2d->GetBoundingBoxes().BoundingBox().Bottom() +
+                                       cr2d->GetBoundingBoxes().BoundingBox().Top());
+            if (( static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight()) ) >
+                static_cast<float>(
+                    cr2d->GetBoundingBoxes().BoundingBox().Width() / cr2d->GetBoundingBoxes().BoundingBox().Height())) {
+                this->_viewZoom = 2.0f / cr2d->GetBoundingBoxes().BoundingBox().Height();
+            } else {
+                this->_viewZoom = (2.0f * _fbo->getWidth()) /
+                                  (this->_fbo->getHeight() * cr2d->GetBoundingBoxes().BoundingBox().Width());
+            }
+            this->_viewZoom *= 0.99f;
 
-    CallRender2DGL *cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
-    if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
-        this->_viewX =
-            -0.5f * (cr2d->GetBoundingBoxes().BoundingBox().Left() + cr2d->GetBoundingBoxes().BoundingBox().Right());
-        this->_viewY =
-            -0.5f * (cr2d->GetBoundingBoxes().BoundingBox().Bottom() + cr2d->GetBoundingBoxes().BoundingBox().Top());
-        if ((_fbo->getWidth() / _fbo->getHeight()) > static_cast<float>(cr2d->GetBoundingBoxes().BoundingBox().Width() /
-                                                              cr2d->GetBoundingBoxes().BoundingBox().Height())) {
-            this->_viewZoom = 2.0f / cr2d->GetBoundingBoxes().BoundingBox().Height();
+            Camera::OrthographicParameters cam_intrinsics;
+            cam_intrinsics.near_plane = 0.1f;
+            cam_intrinsics.far_plane = 100.0f;
+            cam_intrinsics.frustrum_height = cr2d->GetBoundingBoxes().BoundingBox().Height();
+            cam_intrinsics.aspect = static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight());
+            cam_intrinsics.image_plane_tile =
+                Camera::ImagePlaneTile(); // view is in control -> no tiling -> use default tile values
+
+            if ((static_cast<float>(_fbo->getWidth()) / static_cast<float>(_fbo->getHeight())) <
+                (static_cast<float>(cr2d->GetBoundingBoxes().BoundingBox().Width()) / cr2d->GetBoundingBoxes().BoundingBox().Height()))
+            {
+                cam_intrinsics.frustrum_height = cr2d->GetBoundingBoxes().BoundingBox().Width() / cam_intrinsics.aspect;
+            }
+
+            Camera::Pose cam_pose;
+            cam_pose.position = glm::vec3(
+                0.5f * (cr2d->GetBoundingBoxes().BoundingBox().Right() + cr2d->GetBoundingBoxes().BoundingBox().Left()),
+                 0.5f * (cr2d->GetBoundingBoxes().BoundingBox().Top() + cr2d->GetBoundingBoxes().BoundingBox().Bottom()), 1.0f);
+            cam_pose.direction = glm::vec3(0.0, 0.0, -1.0);
+            cam_pose.up = glm::vec3(0.0, 1.0, 0.0);
+
+            _camera = Camera(cam_pose, cam_intrinsics);
+
         } else {
-            this->_viewZoom = (2.0f * _fbo->getWidth()) / (this->_fbo->getHeight() * cr2d->GetBoundingBoxes().BoundingBox().Width());
+            this->_viewX = 0.0f;
+            this->_viewY = 0.0f;
+            this->_viewZoom = 1.0f;
         }
-        this->_viewZoom *= 0.99f;
+
+        this->_viewUpdateCnt++;
 
     } else {
-        this->_viewX = 0.0f;
-        this->_viewY = 0.0f;
-        this->_viewZoom = 1.0f;
+        // TODO print warning
     }
-
-    this->_viewUpdateCnt++;
 }
 
 
@@ -293,6 +336,10 @@ bool view::View2DGL::OnMouseButton(MouseButton button, MouseButtonAction action,
 
 bool view::View2DGL::OnMouseMove(double x, double y) {
     if (this->_mouseMode == MouseMode::Propagate) {
+
+        // TODO
+        // how to 2D renderer except their mouse coordinates? normalized in bounding box ?
+
         float mx, my;
         mx = ((x * 2.0f / _fbo->getWidth()) - 1.0f) * _fbo->getWidth() / _fbo->getHeight();
         my = 1.0f - (y * 2.0f / _fbo->getHeight());
@@ -311,31 +358,56 @@ bool view::View2DGL::OnMouseMove(double x, double y) {
             if ((*cr)(view::CallRender2DGL::FnOnMouseMove)) return true;
         }
     } else if (this->_mouseMode == MouseMode::Pan) {
-        float movSpeed = 2.0f / (this->_viewZoom * _fbo->getHeight());
-        this->_viewX -= (this->_mouseX - x) * movSpeed;
-        this->_viewY += (this->_mouseY - y) * movSpeed;
-        if (((this->_mouseX - x) > 0.0f) || ((this->_mouseY - y) > 0.0f)) {
-            this->_viewUpdateCnt++;
-        }
-    } else if (this->_mouseMode == MouseMode::Zoom) {
-        const double spd = 2.0;
-        const double logSpd = log(spd);
-        float base = 1.0f;
 
+        if (_cameraIsMutable) { // check if view is in control of the camera
+            // compute size of a pixel in world space
+            float stepSize = _camera.get<Camera::OrthographicParameters>().frustrum_height / _fbo->getHeight();
+            auto dx = (this->_mouseX - x) * stepSize;
+            auto dy = (this->_mouseY - y) * stepSize;
+
+            auto cam_pose = _camera.get<Camera::Pose>();
+            cam_pose.position += glm::vec3(dx,-dy,0.0f);
+
+            _camera.setPose(cam_pose);
+
+            if (dx > 0.0f || dy > 0.0f) {
+                this->_viewUpdateCnt++;
+            }
+        }
+
+    } else if (this->_mouseMode == MouseMode::Zoom) {
+        //const double spd = 2.0;
+        //const double logSpd = log(spd);
+        //float base = 1.0f;
+        //
+        //CallRender2DGL* cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
+        //if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
+        //    base = cr2d->GetBoundingBoxes().BoundingBox().Height();
+        //}
+        //
+        //float newZoom =
+        //    static_cast<float>(pow(spd, log(static_cast<double>(this->_viewZoom / base)) / logSpd +
+        //                                    static_cast<double>(((this->_mouseY - y) * 1.0f / _fbo->getHeight())))) *
+        //    base;
+        //
+        //if (!vislib::math::IsEqual(newZoom, this->_viewZoom)) {
+        //    this->_viewUpdateCnt++;
+        //}
+        //this->_viewZoom = newZoom;
+
+        auto dy = (this->_mouseY - y);
+
+        auto cam_pose = _camera.get<Camera::Pose>();
+        auto cam_intrinsics = _camera.get<Camera::OrthographicParameters>();
+
+        float bbox_height = cam_intrinsics.frustrum_height;
         CallRender2DGL* cr2d = this->_rhsRenderSlot.CallAs<CallRender2DGL>();
         if ((cr2d != NULL) && ((*cr2d)(AbstractCallRender::FnGetExtents))) {
-            base = cr2d->GetBoundingBoxes().BoundingBox().Height();
+            bbox_height = cr2d->GetBoundingBoxes().BoundingBox().Height();
         }
+        cam_intrinsics.frustrum_height -= (dy /_fbo->getHeight()) * (cam_intrinsics.frustrum_height);
 
-        float newZoom =
-            static_cast<float>(pow(spd, log(static_cast<double>(this->_viewZoom / base)) / logSpd +
-                                            static_cast<double>(((this->_mouseY - y) * 1.0f / _fbo->getHeight())))) *
-            base;
-
-        if (!vislib::math::IsEqual(newZoom, this->_viewZoom)) {
-            this->_viewUpdateCnt++;
-        }
-        this->_viewZoom = newZoom;
+        _camera = Camera(cam_pose, cam_intrinsics);
     }
 
     this->_mouseX = x;

@@ -20,7 +20,7 @@ namespace demos {
     /**
      * QuartzPlaneRenderer
      */
-    class QuartzPlaneRenderer : public core::view::Renderer2DModule, public AbstractMultiShaderQuartzRenderer {
+    class QuartzPlaneRenderer : public core::view::Renderer2DModuleGL, public AbstractMultiShaderQuartzRenderer {
     public:
 
         /**

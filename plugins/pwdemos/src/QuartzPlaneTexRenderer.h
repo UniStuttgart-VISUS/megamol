@@ -21,7 +21,7 @@ namespace demos {
     /**
      * QuartzPlaneTexRenderer
      */
-    class QuartzPlaneTexRenderer : public core::view::Renderer2DModule, public AbstractTexQuartzRenderer {
+    class QuartzPlaneTexRenderer : public core::view::Renderer2DModuleGL, public AbstractTexQuartzRenderer {
     public:
 
         /**

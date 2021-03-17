@@ -24,7 +24,7 @@ namespace special {
     /**
      * A simple 2d renderer which just creates a circle
      */
-    class ChronoGraph : public view::Renderer2DModule {
+    class ChronoGraph : public view::Renderer2DModuleGL {
     public:
 
         /**

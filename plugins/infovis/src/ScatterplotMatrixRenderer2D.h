@@ -10,7 +10,7 @@
 #include "mmcore/view/CallGetTransferFunction.h"
 #include "mmcore/view/CallRender2DGL.h"
 #include "mmcore/view/MouseFlags.h"
-#include "mmcore/view/Renderer2DModule.h"
+#include "mmcore/view/Renderer2DModuleGL.h"
 #include "mmstd_datatools/table/TableDataCall.h"
 
 #include <glowl/FramebufferObject.hpp>

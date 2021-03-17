@@ -980,6 +980,9 @@ bool ParallelCoordinatesRenderer2D::Render(core::view::CallRender2DGL& call) {
     glGetFloatv(GL_PROJECTION_MATRIX, projMatrix_column);
     // end suck
 
+    std::copy(glm::value_ptr(view), glm::value_ptr(view) + 16, &modelViewMatrix_column[0]);
+    std::copy(glm::value_ptr(proj), glm::value_ptr(proj) + 16, &projMatrix_column[0]);
+
     // maintainer comment: assuming this now here wants to know about the current tile's resolution
     windowWidth = fbo->getWidth();
     windowHeight = fbo->getHeight();

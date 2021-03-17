@@ -25,7 +25,7 @@ namespace special {
     /**
      * A simple 2d renderer which just creates a circle
      */
-    class DemoRenderer2D : public view::Renderer2DModule {
+    class DemoRenderer2D : public view::Renderer2DModuleGL {
     public:
 
         /**
