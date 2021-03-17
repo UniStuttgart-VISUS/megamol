@@ -317,21 +317,10 @@ bool GlyphRenderer::Render(core::view::CallRender3DGL& call) {
         break;
     }
 
-    view::Camera_2 cam;
-    call.GetCamera(cam);
-    cam_type::snapshot_type snapshot;
-    cam_type::matrix_type viewTemp, projTemp;
-
-    // Generate complete snapshot and calculate matrices
-    cam.calc_matrices(snapshot, viewTemp, projTemp, thecam::snapshot_content::all);
-
-    glm::vec4 CamPos = snapshot.position;
-    auto CamView = snapshot.view_vector;
-    auto CamRight = snapshot.right_vector;
-    auto CamUp = snapshot.up_vector;
-    auto CamNearClip = snapshot.frustum_near;
-    auto Eye = cam.eye();
-    bool rightEye = (Eye == core::thecam::Eye::right);
+    view::Camera cam = call.GetCamera();
+    auto viewTemp = cam.getViewMatrix();
+    auto projTemp = cam.getProjectionMatrix();
+    auto cam_pos = cam.get<view::Camera::Pose>().position;
 
     // todo...
     //glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
@@ -339,8 +328,8 @@ bool GlyphRenderer::Render(core::view::CallRender3DGL& call) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    int w = call.GetFramebufferObject()->GetWidth();
-    int h = call.GetFramebufferObject()->GetHeight();
+    int w = call.GetFramebufferObject()->getWidth();
+    int h = call.GetFramebufferObject()->getHeight();
     glm::vec4 viewportStuff;
     viewportStuff[0] = 0.0f;
     viewportStuff[1] = 0.0f;
@@ -382,7 +371,7 @@ bool GlyphRenderer::Render(core::view::CallRender3DGL& call) {
     glUniformMatrix4fv(shader->ParameterLocation("MVP_T"), 1, GL_TRUE, glm::value_ptr(mvp_matrix));
     glUniformMatrix4fv(shader->ParameterLocation("MVP_I"), 1, GL_FALSE, glm::value_ptr(mvp_matrix_i));
     //glUniform4fv(shader->ParameterLocation("light"), 1, glm::value_ptr(light));
-    glUniform4fv(shader->ParameterLocation("cam"), 1, glm::value_ptr(CamPos));
+    glUniform4fv(shader->ParameterLocation("cam"), 1, glm::value_ptr(cam_pos));
     glUniform1f(shader->ParameterLocation("scaling"), this->scaleParam.Param<param::FloatParam>()->Value());
     //glUniform2f(shader->ParameterLocation("far_near"), cam.far_clipping_plane(), cam.near_clipping_plane());
 
