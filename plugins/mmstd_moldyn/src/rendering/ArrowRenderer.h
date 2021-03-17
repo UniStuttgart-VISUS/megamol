@@ -135,6 +135,9 @@ namespace rendering {
         /** Length filter for arrow lengths */
         param::ParamSlot lengthFilterSlot;
 
+        /** Scaling factor for the arrow width */
+        param::ParamSlot widthScaleSlot;
+
     };
 
 } /* end namespace rendering */
