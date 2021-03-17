@@ -493,7 +493,7 @@ bool OpenGL_GLFW_Service::init(const Config& config) {
         {"KeyboardEvents", m_keyboardEvents},
         {"MouseEvents", m_mouseEvents},
         {"WindowEvents", m_windowEvents},
-        {"FramebufferEvents", m_framebufferEvents},
+        {"WindowFramebufferEvents", m_framebufferEvents},
         {"IOpenGL_Context", *m_opengl_context},
         {"WindowManipulation", m_windowManipulation}
     };

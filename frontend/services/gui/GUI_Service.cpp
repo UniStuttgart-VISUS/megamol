@@ -59,7 +59,7 @@ bool GUI_Service::init(const Config& config) {
         "KeyboardEvents",                        // 2 - key press
         "MouseEvents",                           // 3 - mouse click
         "IOpenGL_Context",                       // 4 - graphics api for imgui context
-        "FramebufferEvents",                     // 5 - viewport size
+        "WindowFramebufferEvents",               // 5 - viewport size
         "GLFrontbufferToPNG_ScreenshotTrigger",  // 6 - trigger screenshot
         "LuaScriptPaths",                        // 7 - current project path
         "ProjectLoader",                         // 8 - trigger loading of new running project
