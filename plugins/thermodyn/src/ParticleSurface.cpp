@@ -209,7 +209,7 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
                 /*colors.clear();
                 colors.reserve(facets.size() * 12);*/
                 indices.clear();
-                indices.resize(facets.size() * 3);
+                indices.reserve(facets.size() * 3);
 
                 part_data.clear();
                 part_data.reserve(as_vertices.size() * 7);
@@ -224,7 +224,9 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
                     part_data.push_back(dzAcc->Get_f(vert->info()));
                 }
 
-                for (auto& face : facets) {
+                /*std::vector<Point_3> tmp_points;
+                tmp_points.reserve(facets.size() * 3);*/
+                /*for (auto& face : facets) {
 
                     auto const& vert_a = face.first->vertex(as->vertex_triple_index(face.second, 0));
                     auto const& vert_b = face.first->vertex(as->vertex_triple_index(face.second, as->ccw(0)));
@@ -233,6 +235,43 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
                     auto const& a = vert_a->point();
                     auto const& b = vert_b->point();
                     auto const& c = vert_c->point();
+
+                    tmp_points.push_back(a);
+                    tmp_points.push_back(b);
+                    tmp_points.push_back(c);
+                }*/
+
+                //std::vector<std::vector<size_t>> tmp_ind;
+                ////(indices.size() / 3);
+                //tmp_ind.reserve(indices.size() / 3);
+                /*size_t counter = 0;
+                std::for_each(tmp_ind.begin(), tmp_ind.end(), [&counter](auto& el) {
+                    el = {counter, counter + 1, counter + 2};
+                    counter += 3;
+                });
+
+                CGAL::Polygon_mesh_processing::orient_polygon_soup(tmp_points, tmp_ind);*/
+
+                // https://stackoverflow.com/questions/15905833/saving-cgal-alpha-shape-surface-mesh
+                std::size_t ih = 0;
+                for (auto& face : facets) {
+                    if (as->classify(face.first) != Alpha_shape_3::EXTERIOR)
+                        face = as->mirror_facet(face);
+                    // CGAL_assertion(as.classify(facets[i].first) == Alpha_shape_3::EXTERIOR);
+
+                    int idx[3] = {
+                        (face.second + 1) % 4,
+                        (face.second + 2) % 4,
+                        (face.second + 3) % 4,
+                    };
+
+                    if (face.second % 2 == 0)
+                        std::swap(idx[0], idx[1]);
+
+
+                    auto const& a = (face.first->vertex(idx[0])->point());
+                    auto const& b = (face.first->vertex(idx[1])->point());
+                    auto const& c = (face.first->vertex(idx[2])->point());
 
                     vertices.push_back(a.x());
                     vertices.push_back(a.y());
@@ -246,21 +285,6 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
                     vertices.push_back(c.y());
                     vertices.push_back(c.z());
 
-                    /*part_data.push_back(a.x());
-                    part_data.push_back(a.y());
-                    part_data.push_back(a.z());
-                    part_data.push_back(vert_a->info());
-
-                    part_data.push_back(b.x());
-                    part_data.push_back(b.y());
-                    part_data.push_back(b.z());
-                    part_data.push_back(vert_b->info());
-
-                    part_data.push_back(c.x());
-                    part_data.push_back(c.y());
-                    part_data.push_back(c.z());
-                    part_data.push_back(vert_c->info());*/
-
                     auto normal = CGAL::normal(a, b, c);
                     auto const length = std::sqrtf(normal.squared_length());
                     normal /= length;
@@ -273,9 +297,79 @@ bool megamol::thermodyn::ParticleSurface::assert_data(core::moldyn::MultiParticl
                     normals.push_back(normal.x());
                     normals.push_back(normal.y());
                     normals.push_back(normal.z());
+
+                    indices.push_back(3 * ih);
+                    indices.push_back(3 * ih + 1);
+                    indices.push_back(3 * ih + 2);
+                    ++ih;
                 }
 
-                std::iota(indices.begin(), indices.end(), 0);
+                //for (auto& ind : tmp_ind) {
+                //    auto const& a = tmp_points[ind[0]];
+                //    auto const& b = tmp_points[ind[1]];
+                //    auto const& c = tmp_points[ind[2]];
+
+                //    /*indices.push_back(ind[0]);
+                //    indices.push_back(ind[1]);
+                //    indices.push_back(ind[2]);*/
+
+                //    vertices.push_back(a.x());
+                //    vertices.push_back(a.y());
+                //    vertices.push_back(a.z());
+
+                //    vertices.push_back(b.x());
+                //    vertices.push_back(b.y());
+                //    vertices.push_back(b.z());
+
+                //    vertices.push_back(c.x());
+                //    vertices.push_back(c.y());
+                //    vertices.push_back(c.z());
+
+                //    /*part_data.push_back(a.x());
+                //    part_data.push_back(a.y());
+                //    part_data.push_back(a.z());
+                //    part_data.push_back(vert_a->info());
+
+                //    part_data.push_back(b.x());
+                //    part_data.push_back(b.y());
+                //    part_data.push_back(b.z());
+                //    part_data.push_back(vert_b->info());
+
+                //    part_data.push_back(c.x());
+                //    part_data.push_back(c.y());
+                //    part_data.push_back(c.z());
+                //    part_data.push_back(vert_c->info());*/
+
+                //    auto normal = CGAL::normal(a, b, c);
+                //    auto const length = std::sqrtf(normal.squared_length());
+                //    normal /= length;
+                //    normals.push_back(normal.x());
+                //    normals.push_back(normal.y());
+                //    normals.push_back(normal.z());
+                //    normals.push_back(normal.x());
+                //    normals.push_back(normal.y());
+                //    normals.push_back(normal.z());
+                //    normals.push_back(normal.x());
+                //    normals.push_back(normal.y());
+                //    normals.push_back(normal.z());
+                //}
+
+                //std::iota(indices.begin(), indices.end(), 0);
+
+                //std::vector<std::vector<size_t>> tmp_ind(indices.size() / 3);
+                //size_t counter = 0;
+                //std::for_each(tmp_ind.begin(), tmp_ind.end(), [&counter](auto& el) {
+                //    el = {counter, counter + 1, counter + 2};
+                //    counter += 3;
+                //});
+
+                ////CGAL::Surface_mesh<Point_3> mesh;
+                ////CGAL::Polygon_mesh_processing::polygon_soup_to_polygon_mesh(tmp_points, tmp_ind, mesh);
+                ////mesh.
+                ////std::list<CGAL::Surface_mesh<Point_3>::Face_iterator::value_type> tmp_iter;
+                ////auto fit = CGAL::Polygon_mesh_processing::connected_component(*mesh.faces_begin(), mesh, std::back_inserter(tmp_iter));
+                ////CGAL::Polygon_mesh_processing::is_outward_oriented(mesh);
+                //CGAL::Polygon_mesh_processing::orient_polygon_soup(tmp_points, tmp_ind);
             }
             //} else {
             //    Delaunay tri = Delaunay(points.cbegin(), points.cend());
