@@ -1343,6 +1343,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
             csd.description = std::string(caller_slot->Description().PeekBuffer());
             csd.compatible_call_idxs = this->get_compatible_caller_idxs(caller_slot.get());
             csd.type = CallSlotType::CALLER;
+            csd.necessity = caller_slot->GetNecessity();
 
             mod.callslots[csd.type].emplace_back(csd);
         }
@@ -1354,6 +1355,7 @@ bool megamol::gui::GraphCollection::get_module_stock_data(
             csd.description = std::string(callee_slot->Description().PeekBuffer());
             csd.compatible_call_idxs = this->get_compatible_callee_idxs(callee_slot.get());
             csd.type = CallSlotType::CALLEE;
+            csd.necessity = callee_slot->GetNecessity();
 
             mod.callslots[csd.type].emplace_back(csd);
         }

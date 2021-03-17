@@ -10,6 +10,7 @@
 
 
 #include "GUIUtils.h"
+#include "mmcore/AbstractSlot.h"
 #include "widgets/HoverToolTip.h"
 
 
@@ -48,6 +49,7 @@ namespace gui {
             std::string description;
             std::vector<size_t> compatible_call_idxs;
             CallSlotType type;
+            megamol::core::AbstractSlot::Necessity necessity;
         };
 
         CallSlot(ImGuiID uid, const std::string& name, const std::string& description,
@@ -103,9 +105,10 @@ namespace gui {
         const ImGuiID uid;
         const std::string name;
         const std::string description;
-        const std::vector<size_t>
-            compatible_call_idxs; // Storing only indices of compatible calls for faster comparison.
+        // Storing only indices of compatible calls for faster comparison.
+        const std::vector<size_t> compatible_call_idxs;
         const CallSlotType type;
+        megamol::core::AbstractSlot::Necessity necessity;
 
         ModulePtr_t parent_module;
         std::vector<CallPtr_t> connected_calls;

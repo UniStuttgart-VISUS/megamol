@@ -24,6 +24,7 @@ megamol::gui::CallSlot::CallSlot(ImGuiID uid, const std::string& name, const std
         , description(description)
         , compatible_call_idxs(compatible_call_idxs)
         , type(type)
+        , necessity(megamol::core::AbstractSlot::Necessity::SLOT_OPTIONAL)
         , parent_module(nullptr)
         , connected_calls()
         , gui_interfaceslot_ptr(nullptr)
@@ -463,6 +464,9 @@ void megamol::gui::CallSlot::Draw(PresentPhase phase, megamol::gui::GraphItemsSt
                 // Draw Slot
                 ImU32 slot_border_color = COLOR_SLOT_BORDER;
                 ImU32 slot_background_color = COLOR_SLOT_BACKGROUND;
+                if (this->necessity == megamol::core::AbstractSlot::Necessity::SLOT_REQUIRED) {
+                    slot_border_color = ImGui::ColorConvertFloat4ToU32(ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+                }
                 if (this->gui_compatible) {
                     tmpcol = GUI_COLOR_SLOT_COMPATIBLE;
                     tmpcol = ImVec4(tmpcol.x * brightness, tmpcol.y * brightness, tmpcol.z * brightness, tmpcol.w);

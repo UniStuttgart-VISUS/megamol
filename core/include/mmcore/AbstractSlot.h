@@ -30,7 +30,7 @@ namespace core {
      * owner in the ctor would require the use of 'this' in the initialisation
      * list, which is not allowed.
      */
-    class MEGAMOLCORE_API AbstractSlot: public AbstractNamedObject {
+    class MEGAMOLCORE_API AbstractSlot : public AbstractNamedObject {
     public:
 
         /**
@@ -149,6 +149,15 @@ namespace core {
 		 */
 		virtual bool IsCallCompatible(factories::CallDescription::ptr desc) const { return false; };
 
+        // Flag for GUI sot presentation
+        enum Necessity { SLOT_OPTIONAL, SLOT_REQUIRED };
+        void SetNecessity(Necessity n) {
+            this->necessity = n;
+        }
+        Necessity GetNecessity(void) {
+            return this->necessity;
+        }
+
     protected:
 
         /**
@@ -200,6 +209,9 @@ namespace core {
 
         /** List of listeners */
         vislib::SingleLinkedList<Listener*> listeners;
+
+        /** Slot necessity */
+        Necessity necessity;
 #ifdef _WIN32
 #pragma warning (default: 4251)
 #endif /* _WIN32 */

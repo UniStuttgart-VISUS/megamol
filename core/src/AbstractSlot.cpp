@@ -59,9 +59,14 @@ bool AbstractSlot::IsParamRelevant(
 /*
  * AbstractSlot::AbstractSlot
  */
-AbstractSlot::AbstractSlot(const vislib::StringA& name,
-        const vislib::StringA& desc) : AbstractNamedObject(), desc(desc),
-        status(STATUS_UNAVAILABLE), connectedRefCnt(0), listeners() {
+AbstractSlot::AbstractSlot(const vislib::StringA& name, const vislib::StringA& desc)
+    : AbstractNamedObject()
+    , desc(desc)
+    , status(STATUS_UNAVAILABLE)
+    , connectedRefCnt(0)
+    , listeners()
+    , necessity(Necessity::SLOT_REQUIRED)
+{
     this->setName(name);
 }
 

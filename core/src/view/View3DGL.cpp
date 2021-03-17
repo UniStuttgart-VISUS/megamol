@@ -47,6 +47,9 @@ View3DGL::View3DGL(void) : view::AbstractView3D(), _cursor2d() {
     this->_lhsRenderSlot.SetCallback(view::CallRenderViewGL::ClassName(),
         view::CallRenderViewGL::FunctionName(view::CallRenderViewGL::CALL_RESETVIEW), &AbstractView::OnResetView);
     this->MakeSlotAvailable(&this->_lhsRenderSlot);
+
+    this->_lhsRenderSlot.SetNecessity(megamol::core::AbstractSlot::Necessity::SLOT_OPTIONAL);
+    this->_rhsRenderSlot.SetNecessity(megamol::core::AbstractSlot::Necessity::SLOT_REQUIRED);
 }
 
 /*
