@@ -118,7 +118,7 @@ bool view_rendering_execution(
     // resources are in order of initial requests from get_gl_view_runtime_resources_requests()
     megamol::core::view::view_consume_keyboard_events(view, resources[0]);
     megamol::core::view::view_consume_mouse_events(view, resources[1]);
-    megamol::core::view::view_consume_window_events(view, resources[2]);
+    //megamol::core::view::view_consume_window_events(view, resources[2]);
     megamol::core::view::view_consume_framebuffer_events(view, resources[3]);
     megamol::core::view::view_poke_rendering(view, frontend_image);
     
@@ -145,14 +145,7 @@ bool view_init_rendering_state(
     auto& framebuffer_size = framebuffer_events.previous_state;
     framebuffer_events.size_events.push_back(framebuffer_size);
     
-    auto& window_events = const_cast<megamol::frontend_resources::WindowEvents&>(resources[2].getResource<megamol::frontend_resources::WindowEvents>());
-    auto& window_width = window_events.previous_state.width;
-    auto& window_height = window_events.previous_state.height;
-    if(window_width <= 1 || window_height <= 1) {
-        window_width = framebuffer_size.width;
-        window_height = framebuffer_size.height;
-    }
-    window_events.size_events.push_back({window_width, window_height});
+    //auto& window_events = resources[2].getResource<megamol::frontend_resources::WindowEvents>();
     
     auto& mouse_events = const_cast<megamol::frontend_resources::MouseEvents&>(resources[1].getResource<megamol::frontend_resources::MouseEvents>());
     mouse_events.position_events.push_back({
@@ -161,7 +154,7 @@ bool view_init_rendering_state(
 
     // resources are in order of initial requests from get_gl_view_runtime_resources_requests()
     megamol::core::view::view_consume_mouse_events(view, resources[1]);
-    megamol::core::view::view_consume_window_events(view, resources[2]);
+    //megamol::core::view::view_consume_window_events(view, resources[2]);
     megamol::core::view::view_consume_framebuffer_events(view, resources[3]);
 
     return true;
