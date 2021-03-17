@@ -75,7 +75,6 @@ private:
     glm::vec2 m_framebuffer_size;
     glm::vec2 m_window_size;
     megamol::core::MegaMolGraph* m_megamol_graph;
-    megamol::frontend_resources::IOpenGL_Context const* m_opengl_context_ptr;
     std::shared_ptr<megamol::gui::GUIWrapper> m_gui = nullptr;
     std::vector<std::string> m_queuedProjectFiles;
 
