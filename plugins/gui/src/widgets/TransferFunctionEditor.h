@@ -165,6 +165,8 @@ namespace gui {
         /** Legend alignment flag. */
         bool flip_legend;
 
+        bool check_once_force_set_overwrite_range;
+
         // Widgets
         HoverToolTip tooltip;
         ImageWidget image_widget;
