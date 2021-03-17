@@ -66,6 +66,17 @@ public:
     ~IImageDataWriter() = default;
 };
 
+struct ImageWrapper;
+class ImageWrapperScreenshotSource : public IScreenshotSource {
+public:
+    ImageWrapperScreenshotSource(ImageWrapper const& image);
+
+    ScreenshotImageData take_screenshot() const override;
+
+private:
+    ImageWrapper* m_image = nullptr;
+};
+
 class GLScreenshotSource : public IScreenshotSource {
 public:
     enum ReadBuffer { FRONT, BACK, COLOR_ATT0, COLOR_ATT1, COLOR_ATT2, COLOR_ATT3};

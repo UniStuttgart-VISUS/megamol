@@ -58,6 +58,7 @@ private:
     megamol::frontend_resources::ScreenshotImageDataToPNGWriter m_toFileWriter_resource;
 
     std::function<bool(std::string const&)> m_frontbufferToPNG_trigger;
+    std::function<bool(megamol::frontend_resources::ImageWrapper const&, std::string const&)> m_genericimageToPNG_trigger;
 
     std::vector<FrontendResource> m_providedResourceReferences;
     std::vector<std::string> m_requestedResourcesNames;

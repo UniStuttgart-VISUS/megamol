@@ -11,6 +11,9 @@
 #include <glad/glad.h>
 #include "GUIState.h"
 
+#include "ImageWrapper.h"
+#include "ImageWrapper_to_ByteArray.h"
+
 #include "mmcore/MegaMolGraph.h"
 
 // to write png files
@@ -107,6 +110,30 @@ static bool write_png_to_file(megamol::frontend_resources::ScreenshotImageData c
     return true;
 }
 
+megamol::frontend_resources::ImageWrapperScreenshotSource::ImageWrapperScreenshotSource(ImageWrapper const& image)
+    : m_image{& const_cast<ImageWrapper&>(image)}
+{}
+
+megamol::frontend_resources::ScreenshotImageData megamol::frontend_resources::ImageWrapperScreenshotSource::take_screenshot() const {
+    ScreenshotImageData screenshot_image;
+
+    auto image_bytes = megamol::frontend_resources::to_bytes(*m_image);
+    auto& byte_vector = image_bytes.as_byte_vector();
+
+    screenshot_image.resize(m_image->size().width, m_image->size().height);
+
+    for (size_t i = 0, j = 0; i < byte_vector.size();) {
+        auto r = [&]() { return byte_vector[i++]; };
+        auto g = [&]() { return byte_vector[i++]; };
+        auto b = [&]() { return byte_vector[i++]; };
+        auto a = [&]() { return (m_image->channels == ImageWrapper::DataChannels::RGBA8) ? byte_vector[i++] : 255; }; // alpha either from image or 1.0
+        ScreenshotImageData::Pixel pixel = { r(), g(), b(), a() };
+        screenshot_image.image[j++] = pixel;
+    }
+
+    return screenshot_image;
+}
+
 void megamol::frontend_resources::GLScreenshotSource::set_read_buffer(ReadBuffer buffer) {
     m_read_buffer = buffer;
     GLenum read_buffer;
@@ -188,6 +215,12 @@ bool Screenshot_Service::init(const Config& config) {
         return m_toFileWriter_resource.write_screenshot(m_frontbufferSource_resource, filename);
     };
 
+    this->m_genericimageToPNG_trigger = [&](megamol::frontend_resources::ImageWrapper const& image, std::string const& filename) -> bool
+    {
+        log("write screenshot to " + filename);
+        return m_toFileWriter_resource.write_screenshot(megamol::frontend_resources::ImageWrapperScreenshotSource(image), filename);
+    };
+
     log("initialized successfully");
     return true;
 }
@@ -203,7 +236,8 @@ std::vector<FrontendResource>& Screenshot_Service::getProvidedResources() {
     {
         {"GLScreenshotSource", m_frontbufferSource_resource},
         {"ImageDataToPNGWriter", m_toFileWriter_resource},
-        {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger}
+        {"GLFrontbufferToPNG_ScreenshotTrigger", m_frontbufferToPNG_trigger},
+        {"ImageWrapperToPNG_ScreenshotTrigger", m_genericimageToPNG_trigger}
     };
 
     return m_providedResourceReferences;
