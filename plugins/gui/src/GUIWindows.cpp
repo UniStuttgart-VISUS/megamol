@@ -8,7 +8,6 @@
 #include "stdafx.h"
 #include "GUIWindows.h"
 
-
 using namespace megamol;
 using namespace megamol::gui;
 
@@ -441,6 +440,14 @@ bool GUIWindows::PostDraw(void) {
                 return;
             }
 
+/// DOCKING
+#ifdef IMGUI_HAS_DOCK
+            auto window_dock_id = ImGui::GetWindowDockID();
+            if (window_dock_id != 0) {
+                megamol::core::utility::log::Log::DefaultLog.WriteError(
+                    "[GUI] WINDOW DOCK ID: %i \n", static_cast<int>(window_dock_id), __FILE__, __FUNCTION__, __LINE__);
+            }
+#endif
             // Omit updating size and position of window from imgui for current frame when reset
             bool update_window_by_imgui = !wc.buf_set_pos_size;
             bool collapsing_changed = false;
@@ -1137,6 +1144,7 @@ bool GUIWindows::createContext(void) {
     buf_win.win_collapsed = false;
     buf_win.win_store_config = true;
 
+    /// XXX
     float vp[4] = {0.0f, 0.0f, 0.0f, 0.0f};
     ::glGetFloatv(GL_VIEWPORT, vp);
 
@@ -1212,17 +1220,36 @@ bool GUIWindows::createContext(void) {
 
     // IO settings ------------------------------------------------------------
     ImGuiIO& io = ImGui::GetIO();
-    io.IniSavingRate = 5.0f;                              //  in seconds
+    io.IniSavingRate = 5.0f;                              //  in seconds - unused
     io.IniFilename = nullptr;                             // "imgui.ini" - disabled, using own window settings profile
     io.LogFilename = nullptr;                             // "imgui_log.txt" - disabled
     io.FontAllowUserScaling = false;                      // disable font scaling using ctrl + mouse wheel
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // allow keyboard navigation
 
-/// DOCKING
+/// DOCKING https://github.com/ocornut/imgui/issues/2109
 #ifdef IMGUI_HAS_DOCK
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // enable window docking
     io.ConfigDockingWithShift = true;                 // activate docking on pressing 'shift'
 #endif
+
+/// MULTI-VIEWPORT https://github.com/ocornut/imgui/issues/1542
+#ifdef IMGUI_HAS_VIEWPORT
+    /*
+    #include "GLFW/glfw3.h"
+    #include "imgui_impl_glfw.h"*
+    * See ...\build\_deps\imgui-src\examples\example_glfw_opengl3\main.cpp for required setup
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // enable multi-viewport
+    // Add ...\plugins\gui\CMakeLists.txt
+        #GLFW
+        if (USE_GLFW)
+            require_external(glfw3) target_link_libraries(${PROJECT_NAME} PRIVATE glfw3) endif()
+    // (get glfw_win via WindowManipulation glfw resource)
+    ImGui_ImplGlfw_InitForOpenGL(glfw_win, true);
+    // ...
+    ImGui_ImplGlfw_NewFrame();
+    */
+#endif
+
     // ImGui Key Map
     io.KeyMap[ImGuiKey_Tab] = static_cast<int>(core::view::Key::KEY_TAB);
     io.KeyMap[ImGuiKey_LeftArrow] = static_cast<int>(core::view::Key::KEY_LEFT);
