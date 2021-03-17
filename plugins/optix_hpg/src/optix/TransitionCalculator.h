@@ -64,6 +64,10 @@ private:
 
     bool get_extent_cb(core::Call& c);
 
+    bool get_arr_data_cb(core::Call& c);
+
+    bool get_arr_extent_cb(core::Call& c);
+
     core::CalleeSlot out_transitions_slot_;
 
     core::CallerSlot in_mesh_slot_;
@@ -71,6 +75,8 @@ private:
     core::CallerSlot in_paths_slot_;
 
     core::CallerSlot in_tf_slot_;
+
+    core::CalleeSlot out_arrows_slot_;
 
     core::param::ParamSlot output_type_slot_;
 
@@ -108,8 +114,12 @@ private:
 
     std::size_t out_data_hash_ = 0;
 
-    std::vector<std::vector<uint64_t>> ray_vec_ident_;
+    // std::vector<std::vector<uint64_t>> ray_vec_ident_;
 
-    std::vector<std::vector<uint8_t>> ray_vec_active_;
+    // std::vector<std::vector<uint8_t>> ray_vec_active_;
+
+    std::vector<std::vector<float>> out_arrows_pos_;
+
+    std::vector<std::vector<float>> out_arrows_dir_;
 };
 } // namespace megamol::optix_hpg

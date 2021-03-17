@@ -4,6 +4,7 @@
 #include "mmcore/param/EnumParam.h"
 #include "mmcore/param/IntParam.h"
 #include "mmcore/view/CallGetTransferFunction.h"
+#include "mmcore/moldyn/MultiParticleDataCall.h"
 
 #include "glm/glm.hpp"
 
@@ -22,6 +23,7 @@ megamol::optix_hpg::TransitionCalculator::TransitionCalculator()
         , in_mesh_slot_("inMesh", "")
         , in_paths_slot_("inPaths", "")
         , in_tf_slot_("inTF", "")
+        , out_arrows_slot_("outArrows", "")
         , output_type_slot_("output type", "")
         , frame_count_slot_("frame count", "")
         , frame_skip_slot_("frame skip", "") {
@@ -39,6 +41,12 @@ megamol::optix_hpg::TransitionCalculator::TransitionCalculator()
 
     in_tf_slot_.SetCompatibleCall<core::view::CallGetTransferFunctionDescription>();
     MakeSlotAvailable(&in_tf_slot_);
+
+    out_arrows_slot_.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
+        core::moldyn::MultiParticleDataCall::FunctionName(0), &TransitionCalculator::get_arr_data_cb);
+    out_arrows_slot_.SetCallback(core::moldyn::MultiParticleDataCall::ClassName(),
+        core::moldyn::MultiParticleDataCall::FunctionName(1), &TransitionCalculator::get_arr_extent_cb);
+    MakeSlotAvailable(&out_arrows_slot_);
 
     using output_type_ut = std::underlying_type_t<output_type>;
     auto ep = new core::param::EnumParam(static_cast<output_type_ut>(output_type::outbound));
@@ -69,6 +77,8 @@ bool megamol::optix_hpg::TransitionCalculator::create() {
         return false;
 
     optix_ctx_ = std::make_unique<Context>(fit->getResource<frontend_resources::CUDA_Context>());
+
+    init();
 
     return true;
 }
@@ -257,7 +267,7 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
     auto const plCount0 = particles.GetParticleListCount();
     std::vector<std::vector<RayH>> rays(plCount0);
     std::vector<std::vector<std::pair<glm::vec3, glm::vec3>>> origins(plCount0);
-    std::vector<std::vector<std::uint64_t>> idx_map(plCount0);
+    std::vector<std::unordered_map<std::uint64_t, std::uint64_t>> idx_map(plCount0);
 
     CUDA_CHECK_ERROR(cuMemAlloc(&mesh_inbound_ctr, (num_vertices / 3) * sizeof(std::uint32_t)));
     CUDA_CHECK_ERROR(cuMemAlloc(&mesh_outbound_ctr, (num_vertices / 3) * sizeof(std::uint32_t)));
@@ -268,6 +278,9 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
 
     auto const frame_count = frame_count_slot_.Param<core::param::IntParam>()->Value();
     auto const frame_skip = frame_skip_slot_.Param<core::param::IntParam>()->Value();
+
+    out_arrows_pos_.resize(plCount0);
+    out_arrows_dir_.resize(plCount0);
 
     for (int fid = frameID; fid < frameID + frame_count; fid += frame_skip) {
 
@@ -293,7 +306,7 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
                 /*std::fill(orgs.begin(), orgs.end(),
                     std::make_pair<glm::vec3, glm::vec3>(glm::vec3(std::numeric_limits<float>::lowest()),
                         glm::vec3(std::numeric_limits<float>::lowest())));*/
-                idc.resize(pCount);
+                idc.reserve(pCount);
             }
             std::fill(orgs.begin(), orgs.end(),
                 std::make_pair<glm::vec3, glm::vec3>(
@@ -308,14 +321,17 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
                 for (std::size_t pIdx = 0; pIdx < pCount; ++pIdx) {
                     orgs[pIdx] = std::make_pair(glm::vec3(xAcc->Get_f(pIdx), yAcc->Get_f(pIdx), zAcc->Get_f(pIdx)),
                         glm::vec3(std::numeric_limits<float>::lowest()));
-                    idc[pIdx] = idAcc->Get_u64(pIdx);
+                    //idc[pIdx] = idAcc->Get_u64(pIdx);
+                    idc[idAcc->Get_u64(pIdx)] = pIdx;
                 }
             } else {
                 for (std::size_t pIdx = 0; pIdx < pCount; ++pIdx) {
                     auto const id = idAcc->Get_u64(pIdx);
-                    auto fit = std::find(idc.begin(), idc.end(), id);
+                    auto fit = idc.find(id);
+                    //auto fit = std::find(idc.begin(), idc.end(), id);
                     if (fit != idc.end()) {
-                        auto const idx = std::distance(idc.begin(), fit);
+                        //auto const idx = std::distance(idc.begin(), fit);
+                        auto const idx = fit->second;
                         orgs[idx] = std::make_pair(glm::vec3(xAcc->Get_f(pIdx), yAcc->Get_f(pIdx), zAcc->Get_f(pIdx)),
                             glm::vec3(std::numeric_limits<float>::lowest()));
                         // idc[pIdx] = idAcc->Get_u64(pIdx);
@@ -351,9 +367,11 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
 
             for (std::size_t pIdx = 0; pIdx < pCount; ++pIdx) {
                 auto const id = idAcc->Get_u64(pIdx);
-                auto fit = std::find(idc.begin(), idc.end(), id);
+                //auto fit = std::find(idc.begin(), idc.end(), id);
+                auto fit = idc.find(id);
                 if (fit != idc.end()) {
-                    auto const idx = std::distance(idc.begin(), fit);
+                    //auto const idx = std::distance(idc.begin(), fit);
+                    auto const idx = fit->second;
                     orgs[idx].second = glm::vec3(xAcc->Get_f(pIdx), yAcc->Get_f(pIdx), zAcc->Get_f(pIdx));
                 }
             }
@@ -458,11 +476,11 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
             std::count_if(ray_state_vec.begin(), ray_state_vec.end(), [](auto el) { return el == 3; });
 
         int best_idx = -1;
-        auto best_fit = std::find(ray_state_vec.begin(), ray_state_vec.end(), 3);
+        /*auto best_fit = std::find(ray_state_vec.begin(), ray_state_vec.end(), 3);
         if (best_fit != ray_state_vec.end()) {
             best_idx = std::distance(ray_state_vec.begin(), best_fit);
             best_idx = idx_map[plIdx][best_idx];
-        }
+        }*/
 
         core::utility::log::Log::DefaultLog.WriteInfo(
             "[TransitionCalculator] Ending computation with %d relevant transitions from %d particles at base %d beginning at %d", num_rel_trans, ray_vec.size(), frameID, best_idx);
@@ -622,6 +640,33 @@ bool megamol::optix_hpg::TransitionCalculator::assertData(mesh::CallMesh& mesh,
 
         auto identifier = std::string("particle_surface_") + std::to_string(plIdx);
         mesh_access_collection_->addMesh(identifier, mesh_attributes, cmd_indices);
+
+        // set arrows
+        auto& out_arr_pos = out_arrows_pos_[plIdx];
+        auto& out_arr_dir = out_arrows_dir_[plIdx];
+
+        auto const num_arrs = indices.size() / 3;
+        out_arr_pos.resize(indices.size());
+        out_arr_dir.resize(indices.size());
+
+        for (size_t i = 0; i < num_arrs; ++i) {
+            auto const i_a = indices[i * 3];
+            auto const i_b = indices[i * 3 + 1];
+            auto const i_c = indices[i * 3 + 2];
+            auto const a = positions[i_a];
+            auto const b = positions[i_b];
+            auto const c = positions[i_c];
+            auto const pos = (a + b + c) / 3.0f;
+            auto dir = glm::normalize(glm::cross((b - a), (c - a)));
+            auto const val_a = (static_cast<float>((*data_ptr)[i]) - range[0]) / (range[1] - range[0]);
+            dir = dir * val_a;
+            out_arr_pos[i * 3 + 0] = pos.x;
+            out_arr_pos[i * 3 + 1] = pos.y;
+            out_arr_pos[i * 3 + 2] = pos.z;
+            out_arr_dir[i * 3 + 0] = dir.x;
+            out_arr_dir[i * 3 + 1] = dir.y;
+            out_arr_dir[i * 3 + 2] = dir.z;
+        }
     }
 
     ++out_data_hash_;
@@ -644,11 +689,11 @@ bool megamol::optix_hpg::TransitionCalculator::get_data_cb(core::Call& c) {
     if (in_tf == nullptr)
         return false;
 
-    static bool not_init = true;
+    /*static bool not_init = true;
     if (not_init) {
         init();
         not_init = false;
-    }
+    }*/
 
     if (!(*in_mesh)(1))
         return false;
@@ -725,6 +770,117 @@ bool megamol::optix_hpg::TransitionCalculator::get_extent_cb(core::Call& c) {
     //    auto const meta = in_data->getMetaData();
     //    out_geo->setMetaData(meta);
     //}
+
+    return true;
+}
+
+
+bool megamol::optix_hpg::TransitionCalculator::get_arr_data_cb(core::Call& c) {
+    auto out_arr = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
+    if (out_arr == nullptr)
+        return false;
+    auto in_mesh = in_mesh_slot_.CallAs<mesh::CallMesh>();
+    if (in_mesh == nullptr)
+        return false;
+    auto in_paths = in_paths_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    if (in_paths == nullptr)
+        return false;
+    auto in_tf = in_tf_slot_.CallAs<core::view::CallGetTransferFunction>();
+    if (in_tf == nullptr)
+        return false;
+
+    /*static bool not_init = true;
+    if (not_init) {
+        init();
+        not_init = false;
+    }*/
+
+    if (!(*in_mesh)(1))
+        return false;
+    if (!(*in_paths)(1))
+        return false;
+
+    auto meta = in_mesh->getMetaData();
+    meta.m_frame_ID = out_arr->FrameID();
+    in_mesh->setMetaData(meta);
+    if (!(*in_mesh)(1))
+        return false;
+    if (!(*in_mesh)(0))
+        return false;
+    meta = in_mesh->getMetaData();
+    in_paths->SetFrameID(out_arr->FrameID());
+    if (!(*in_paths)(1))
+        return false;
+    if (!(*in_paths)(0))
+        return false;
+
+    if (/*in_data->hasUpdate()*/ meta.m_frame_ID != _frame_id /*|| meta.m_data_hash != _data_hash*/) {
+        if (!assertData(*in_mesh, *in_paths, *in_tf, meta.m_frame_ID))
+            return false;
+        _frame_id = meta.m_frame_ID;
+        //_data_hash = meta.m_data_hash;
+    }
+
+    /*program_groups_[0] = mesh_module_;
+    program_groups_[1] = mesh_occlusion_module_;
+
+    out_geo->set_handle(&_geo_handle);
+    out_geo->set_program_groups(program_groups_.data());
+    out_geo->set_num_programs(2);
+    out_geo->set_record(sbt_records_.data());
+    out_geo->set_record_stride(sizeof(SBTRecord<device::MeshGeoData>));
+    out_geo->set_num_records(sbt_records_.size());*/
+
+    //out_geo->setMetaData(meta);
+    // out_geo->setData(in_mesh->getData(), in_mesh->version());
+    //out_geo->setData(mesh_access_collection_, out_data_hash_);
+
+    out_arr->SetParticleListCount(out_arrows_pos_.size());
+    for (unsigned int plIdx = 0; plIdx < out_arrows_pos_.size(); ++plIdx) {
+        auto& part = out_arr->AccessParticles(plIdx);
+        auto const& arr_pos = out_arrows_pos_[plIdx];
+        auto const& arr_dir = out_arrows_dir_[plIdx];
+        part.SetCount(arr_pos.size() / 3);
+        part.SetGlobalColour(255, 0, 0);
+        part.SetVertexData(core::moldyn::SimpleSphericalParticles::VERTDATA_FLOAT_XYZ, arr_pos.data());
+        part.SetDirData(core::moldyn::SimpleSphericalParticles::DIRDATA_FLOAT_XYZ, arr_dir.data());
+        part.SetGlobalRadius(0.5f);
+    }
+    out_arr->AccessBoundingBoxes() = in_paths->AccessBoundingBoxes();
+    out_arr->SetFrameCount(meta.m_frame_cnt);
+    out_arr->SetFrameID(meta.m_frame_ID);
+    out_arr->SetDataHash(out_data_hash_);
+
+    return true;
+}
+
+
+bool megamol::optix_hpg::TransitionCalculator::get_arr_extent_cb(core::Call& c) {
+    auto out_arr = dynamic_cast<core::moldyn::MultiParticleDataCall*>(&c);
+    if (out_arr == nullptr)
+        return false;
+    auto in_data = in_mesh_slot_.CallAs<mesh::CallMesh>();
+    if (in_data == nullptr)
+        return false;
+    auto in_paths = in_paths_slot_.CallAs<core::moldyn::MultiParticleDataCall>();
+    if (in_paths == nullptr)
+        return false;
+
+    auto out_frame_id = out_arr->FrameID();
+    auto in_meta = in_data->getMetaData();
+    in_meta.m_frame_ID = out_frame_id;
+    in_data->setMetaData(in_meta);
+    if (!(*in_data)(1))
+        return false;
+    in_paths->SetFrameCount(in_meta.m_frame_cnt);
+    in_paths->SetFrameID(in_meta.m_frame_ID);
+    if (!(*in_paths)(1))
+        return false;
+
+    in_meta = in_data->getMetaData();
+    out_frame_id = in_meta.m_frame_ID;
+    out_arr->SetFrameID(out_frame_id);
+    out_arr->SetFrameCount(in_meta.m_frame_cnt);
 
     return true;
 }
