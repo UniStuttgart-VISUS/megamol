@@ -11,6 +11,7 @@
 
 #include "ImageWrapper.h"
 #include "ImagePresentationEntryPoints.h"
+#include "Framebuffer_Events.h"
 
 #include <utility>
 
@@ -80,12 +81,20 @@ private:
         void* modulePtr = nullptr;
         std::vector<megamol::frontend::FrontendResource> entry_point_resources;
 
+        enum class FboEventsSource { WindowSize, Manual };
+        FboEventsSource framebuffer_events_source;
+        megamol::frontend_resources::FramebufferEvents framebuffer_events;
+
         EntryPointExecutionCallback execute;
         std::reference_wrapper<ImageWrapper> execution_result_image;
     };
     std::list<GraphEntryPoint> m_entry_points;
+    GraphEntryPoint::FboEventsSource m_default_fbo_events_source = GraphEntryPoint::FboEventsSource::WindowSize;
 
     std::vector<megamol::frontend::FrontendResource> map_resources(std::vector<std::string> const& requests);
+    void remap_individual_resources(GraphEntryPoint& entry);
+    void distribute_changed_resources_to_entry_points();
+    void set_individual_entry_point_resources_defaults(GraphEntryPoint& entry);
     const std::vector<FrontendResource>* m_frontend_resources_ptr = nullptr;
 
     bool add_entry_point(std::string name, void* module_raw_ptr);

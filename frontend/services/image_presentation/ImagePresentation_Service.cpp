@@ -95,6 +95,9 @@ void ImagePresentation_Service::updateProvidedResources() {
 }
 
 void ImagePresentation_Service::digestChangedRequestedResources() {
+
+    distribute_changed_resources_to_entry_points();
+
     if (false)
         this->setShutdown();
 }
@@ -154,6 +157,22 @@ std::vector<FrontendResource> ImagePresentation_Service::map_resources(std::vect
             [&](FrontendResource const& resource) { return resource.getIdentifier() == request; });
         bool found_request = find_it != m_frontend_resources.end();
 
+        // intercept our special-needs resources and treat specially
+        auto fbo_events_name = std::string{"FramebufferEvents"};
+        if (request == fbo_events_name) {
+            // each entry point gets its own framebuffer size
+            // what we do here is add a temporary object that gets switches for the real deal later on
+            //
+            // WARNING: we now create a dingling reference to the temp object - which is really stupid
+            // but we need to keep the requested resource at exactly this place in the result array
+            // and the resource object that is going to be actually used later does not exist after we filled this resource array
+            // so we need this temp variable
+            megamol::frontend_resources::FramebufferEvents temp_fbo_events;
+
+            // we mark the resource name with # at the end to later recognize it as an individual resource
+            result.push_back({fbo_events_name + '#', temp_fbo_events});
+            continue;
+        }
 
         if (!found_request) {
             log_error("could not find requested resource " + request);
@@ -164,6 +183,67 @@ std::vector<FrontendResource> ImagePresentation_Service::map_resources(std::vect
     }
 
     return result;
+}
+
+void ImagePresentation_Service::remap_individual_resources(GraphEntryPoint& entry) {
+    auto with_hash = [&](std::string const& in) { return in + '#'; };
+
+    for (auto& resource : entry.entry_point_resources) {
+        auto& name = resource.getIdentifier();
+        if (name.back() == '#') {
+            // switch over possible individual resources
+            // that we need to remap/replace with references to data/objects held by us
+
+            auto fbo_events = "FramebufferEvents";
+            if (name == with_hash(fbo_events)) {
+                resource = {fbo_events, entry.framebuffer_events};
+            }
+        }
+    }
+}
+
+template <typename ResourceType>
+static
+const ResourceType* maybeGetResource(std::string const& name, std::vector<FrontendResource> const& resources) {
+    auto resource_it = std::find_if(resources.begin(), resources.end(),
+        [&](FrontendResource const& resource) {
+            return resource.getIdentifier() == name;
+        });
+    bool no_resource = resource_it == resources.end();
+
+    if (no_resource)
+        return nullptr;
+
+    return &resource_it->getResource<ResourceType>();
+}
+
+void ImagePresentation_Service::distribute_changed_resources_to_entry_points() {
+    auto maybe_window_fbo_events_ptr = maybeGetResource<megamol::frontend_resources::FramebufferEvents>("WindowFramebufferEvents", m_frontend_resources);
+
+    for (auto& entry : m_entry_points) {
+        if (maybe_window_fbo_events_ptr && entry.framebuffer_events_source == GraphEntryPoint::FboEventsSource::WindowSize) {
+            for (auto& size: maybe_window_fbo_events_ptr->size_events) {
+                entry.framebuffer_events.size_events.push_back({size.width, size.height});
+            }
+        } else {
+            log_error("entry point " + entry.moduleName + " demands Fbo Size events to be fed from WindowFramebufferEvents resource. "
+                      "\nBut i could not find that resource. Requesting to shut down MegaMol.");
+            this->setShutdown();
+        }
+    }
+}
+
+void ImagePresentation_Service::set_individual_entry_point_resources_defaults(GraphEntryPoint& entry) {
+    auto maybe_window_fbo_events_ptr = maybeGetResource<megamol::frontend_resources::FramebufferEvents>("WindowFramebufferEvents", m_frontend_resources);
+
+    if (entry.framebuffer_events_source == GraphEntryPoint::FboEventsSource::WindowSize && maybe_window_fbo_events_ptr) {
+        entry.framebuffer_events.previous_state = maybe_window_fbo_events_ptr->previous_state;
+        entry.framebuffer_events.size_events = maybe_window_fbo_events_ptr->size_events;
+    } else {
+        log_error("entry point " + entry.moduleName + " demands Fbo Size initial values from WindowFramebufferEvents resource. "
+                  "\nBut i could not find that resource. Requesting to shut down MegaMol.");
+        this->setShutdown();
+    }
 }
 
 bool ImagePresentation_Service::add_entry_point(std::string name, void* module_raw_ptr) {
@@ -179,16 +259,23 @@ bool ImagePresentation_Service::add_entry_point(std::string name, void* module_r
         return false;
     }
 
+    // TODO: making entry points with non-window fbo size how?
+    const auto fbo_events_source = m_default_fbo_events_source;
 
     m_entry_points.push_back(GraphEntryPoint{
         name,
         module_raw_ptr,
         resources,
+        fbo_events_source,
+        megamol::frontend_resources::FramebufferEvents{},
         execute_etry,
         image
         });
 
     auto& entry_point = m_entry_points.back();
+
+    remap_individual_resources(entry_point);
+    set_individual_entry_point_resources_defaults(entry_point);
 
     if (!init_entry(entry_point.modulePtr, entry_point.entry_point_resources, entry_point.execution_result_image)) {
         log_error("init function for entry point " + entry_point.moduleName + " failed. Entry point not created.");
