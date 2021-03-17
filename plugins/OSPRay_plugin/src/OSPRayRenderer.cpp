@@ -24,7 +24,7 @@ OSPRayRenderer::OSPRayRenderer(void)
     : AbstractOSPRayRenderer()
     , _cam()
     , _getStructureSlot("getStructure", "Connects to an OSPRay structure")
-        , enablePickingSlot_("enable picking", "")
+        , _enablePickingSlot("enable picking", "")
 
 {
     this->_getStructureSlot.SetCompatibleCall<CallOSPRayStructureDescription>();
@@ -40,8 +40,8 @@ OSPRayRenderer::OSPRayRenderer(void)
     _accum_time.count = 0;
     _accum_time.amount = 0;
 
-    enablePickingSlot_ << new core::param::BoolParam(false);
-    MakeSlotAvailable(&enablePickingSlot_);
+    _enablePickingSlot << new core::param::BoolParam(false);
+    MakeSlotAvailable(&_enablePickingSlot);
 }
 
 
@@ -350,9 +350,9 @@ bool OSPRayRenderer::Render(megamol::core::view::CallRender3D& cr) {
 bool OSPRayRenderer::OnMouseButton(
     core::view::MouseButton button, core::view::MouseButtonAction action, core::view::Modifiers mods) {
     if (mods.test(core::view::Modifier::SHIFT) && action == core::view::MouseButtonAction::PRESS &&
-        enablePickingSlot_.Param<core::param::BoolParam>()->Value()) {
-        auto const screenX = mouseX / _imgSize[0];
-        auto const screenY = 1.f - (mouseY / _imgSize[1]);
+        _enablePickingSlot.Param<core::param::BoolParam>()->Value()) {
+        auto const screenX = _mouse_x / _imgSize[0];
+        auto const screenY = 1.f - (_mouse_y / _imgSize[1]);
         auto const pick_res = _framebuffer->pick(*_renderer, *_camera, *_world, screenX, screenY);
 
         for (auto const& entry : _geometricModels) {
@@ -373,8 +373,8 @@ bool OSPRayRenderer::OnMouseButton(
 }
 
 bool OSPRayRenderer::OnMouseMove(double x, double y) {
-    this->mouseX = static_cast<float>(x);
-    this->mouseY = static_cast<float>(y);
+    this->_mouse_x = static_cast<float>(x);
+    this->_mouse_y = static_cast<float>(y);
     return false;
 }
 

@@ -93,7 +93,7 @@ private:
     /** The call for data */
     core::CallerSlot _getStructureSlot;
 
-    core::param::ParamSlot enablePickingSlot_;
+    core::param::ParamSlot _enablePickingSlot;
 
 
     // Interface dirty flag
@@ -125,8 +125,8 @@ private:
         unsigned long long int amount;
     } _accum_time;
 
-    float mouseX;
-    float mouseY;
+    float _mouse_x;
+    float _mouse_y;
 };
 
 } /*end namespace ospray*/
