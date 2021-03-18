@@ -10,7 +10,7 @@
 #define _WINSOCKAPI_
 #include "Lua_Service_Wrapper.hpp"
 
-#include "mmcore/utility/LuaHostService.h"
+#include "LuaRemoteConnectionsBroker.h"
 
 #include "Screenshots.h"
 #include "FrameStatistics.h"
@@ -57,7 +57,7 @@ bool Lua_Service_Wrapper::init(void* configPtr) {
 }
 
 #define luaAPI (*m_config.lua_api_ptr)
-#define m_network_host reinterpret_cast<megamol::core::utility::LuaHostNetworkConnectionsBroker*>(m_network_host_pimpl.get())
+#define m_network_host reinterpret_cast<megamol::frontend_resources::LuaRemoteConnectionsBroker*>(m_network_host_pimpl.get())
 
 bool Lua_Service_Wrapper::init(const Config& config) {
     if (!config.lua_api_ptr) {
@@ -103,8 +103,8 @@ bool Lua_Service_Wrapper::init(const Config& config) {
     }; //= {"ZMQ_Context"};
 
     m_network_host_pimpl = std::unique_ptr<void, std::function<void(void*)>>(
-        new megamol::core::utility::LuaHostNetworkConnectionsBroker{},
-        [](void* ptr) { delete reinterpret_cast<megamol::core::utility::LuaHostNetworkConnectionsBroker*>(ptr); }
+        new megamol::frontend_resources::LuaRemoteConnectionsBroker{},
+        [](void* ptr) { delete reinterpret_cast<megamol::frontend_resources::LuaRemoteConnectionsBroker*>(ptr); }
     );
 
     bool host_ok = m_network_host->spawn_connection_broker(m_config.host_address, m_config.retry_socket_port);
